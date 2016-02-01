@@ -297,11 +297,15 @@ def change_permissions(request, shortkey, *args, **kwargs):
         frm = AddUserForm(data=request.POST)
         _share_resource_with_user(request, frm, res, user, PrivilegeCodes.OWNER)
     elif t == 'make_public':
-        _set_resource_sharing_status(request, user, res, is_public=True)
+        _set_resource_sharing_status(request, user, res, flag_to_set='public', flag_value=True)
     elif t == 'make_private' or t == 'make_not_discoverable':
-        _set_resource_sharing_status(request, user, res, is_public=False)
+        _set_resource_sharing_status(request, user, res, flag_to_set='public', flag_value=False)
     elif t == 'make_discoverable':
-        _set_resource_sharing_status(request, user, res, is_public=False, is_discoverable=True)
+        _set_resource_sharing_status(request, user, res, flag_to_set='discoverable', flag_value=True)
+    elif t == 'make_not_shareable':
+        _set_resource_sharing_status(request, user, res, flag_to_set='shareable', flag_value=False)
+    elif t == 'make_shareable':
+       _set_resource_sharing_status(request, user, res, flag_to_set='shareable', flag_value=True)
 
     # due to self unsharing of a private resource the user will have no access to that resource
     # so need to redirect to the resource listing page
@@ -313,7 +317,7 @@ def change_permissions(request, shortkey, *args, **kwargs):
 
 # Needed for new access control UI functionality being developed by Mauriel
 def share_resource_with_user(request, shortkey, privilege, user_id, *args, **kwargs):
-    res, _, user = authorize(request, shortkey, edit=True, full=True, superuser=True)
+    res, _, user = authorize(request, shortkey, view=True, edit=True, full=True, superuser=True)
     user_to_share_with = utils.user_from_id(user_id)
     status = 'success'
     err_message = ''
@@ -362,7 +366,7 @@ def share_resource_with_user(request, shortkey, privilege, user_id, *args, **kwa
 
 # Needed for new access control UI functionality being developed by Mauriel
 def unshare_resource_with_user(request, shortkey, user_id, *args, **kwargs):
-    res, _, user = authorize(request, shortkey, edit=True, full=True, superuser=True)
+    res, _, user = authorize(request, shortkey, view=True, edit=True, full=True, superuser=True)
     user_to_unshare_with = utils.user_from_id(user_id)
 
     try:
@@ -653,14 +657,22 @@ def _unshare_resource_with_users(request, requesting_user, users_to_unshare_with
     return go_to_resource_listing_page
 
 
-def _set_resource_sharing_status(request, user, resource, is_public, is_discoverable=False):
+def _set_resource_sharing_status(request, user, resource, flag_to_set, flag_value):
     if not user.uaccess.can_change_resource_flags(resource):
         messages.error(request, "You don't have permission to change resource sharing status")
         return
 
+    if flag_to_set == 'shareable':
+        if resource.raccess.shareable != flag_value:
+            resource.raccess.shareable = flag_value
+            resource.raccess.save()
+            return
+
     has_files = False
     has_metadata = False
     can_resource_be_public_or_discoverable = False
+    is_public = (flag_to_set == 'public' and flag_value)
+    is_discoverable = (flag_to_set == 'discoverable' and flag_value)
     if is_public or is_discoverable:
         has_files = resource.has_required_content_files()
         has_metadata = resource.metadata.has_all_required_elements()
@@ -684,7 +696,6 @@ def _set_resource_sharing_status(request, user, resource, is_public, is_discover
         # set isPublic metadata AVU accordingly
         istorage = IrodsStorage()
         istorage.setAVU(resource.short_id, "isPublic", str(resource.raccess.public))
-
 
 def _get_message_for_setting_resource_flag(has_files, has_metadata, resource_flag):
     msg = ''
