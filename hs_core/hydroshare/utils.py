@@ -381,6 +381,10 @@ def add_file_to_resource(resource, f):
 
 
 class ZipContents(object):
+    """
+    Extract the contents of a zip file one file at a time
+    using a generator.
+    """
     def __init__(self, zip_file):
         self.zip_file = zip_file
 
@@ -394,7 +398,15 @@ class ZipContents(object):
         logger = logging.getLogger('django')
         temp_dir = tempfile.mkdtemp()
         try:
+            file_path = None
             for name_path in self.zip_file.namelist():
+                if file_path:
+                    # Delete previously unzipped file as it is no longer
+                    # needed.  This will keep the space required to unzip
+                    # at most the size of the largest single file in the
+                    # archive.
+                    os.unlink(file_path)
+
                 if not self.black_list_path(name_path):
                     name = os.path.basename(name_path)
                     if name != '':
