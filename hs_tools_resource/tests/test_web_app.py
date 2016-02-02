@@ -127,19 +127,19 @@ class TestWebAppFeature(TransactionTestCase):
         self.assertEqual(ToolIcon.objects.all().count(), 0)
 
         # create 1 ToolIcon obj with required params
-        resource.create_metadata_element(self.resWebApp.short_id, 'ToolIcon', icon='https://test_icon_url.png')
+        resource.create_metadata_element(self.resWebApp.short_id, 'ToolIcon', url='https://test_icon_url.png')
         self.assertEqual(ToolIcon.objects.all().count(), 1)
 
         # may not create additional instance of ToolIcon
         with self.assertRaises(Exception):
-            resource.create_metadata_element(self.resWebApp.short_id, 'ToolIcon', icon='https://test_icon_url_2.png')
+            resource.create_metadata_element(self.resWebApp.short_id, 'ToolIcon', url='https://test_icon_url_2.png')
         self.assertEqual(ToolIcon.objects.all().count(), 1)
 
         # update existing meta
         resource.update_metadata_element(self.resWebApp.short_id, 'ToolIcon',
                                          element_id=ToolIcon.objects.first().id,
-                                         icon='https://test_icon_url_3.png')
-        self.assertEqual(ToolIcon.objects.first().icon, 'https://test_icon_url_3.png')
+                                         url='https://test_icon_url_3.png')
+        self.assertEqual(ToolIcon.objects.first().url, 'https://test_icon_url_3.png')
 
         # delete ToolIcon obj
         resource.delete_metadata_element(self.resWebApp.short_id, 'ToolIcon',

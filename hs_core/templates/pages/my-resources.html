@@ -1,7 +1,5 @@
 {% extends "pages/page.html" %}
 {% load geoanalytics_tags pages_tags mezzanine_tags keyword_tags comment_tags hydroshare_tags %}
-
-{# {% block title %}{{ user|best_name }}'s Resources{% endblock %}#}
 {% block title %}My Resources{% endblock %}
 
 {% block main %}
@@ -201,31 +199,31 @@
                                 <span class="resource-type-text">{{ res|resource_type }}</span>
                                 {% if res|resource_type == "Generic" %}
                                     <img src="{{ STATIC_URL }}img/resource-icons/generic48x48.png"
-                                         alt="{{ res|resource_type }}" title="{{ res|resource_type }}"/>
+                                         alt="{{ res|resource_type }}" title="{{ res|resource_type }}" class="table-res-type-icon"/>
                                 {% elif res|resource_type == "Geographic Raster" %}
                                     <img src="{{ STATIC_URL }}img/resource-icons/geographicraster48x48.png"
-                                         alt="{{ res|resource_type }}" title="{{ res|resource_type }}"/>
+                                         alt="{{ res|resource_type }}" title="{{ res|resource_type }}" class="table-res-type-icon"/>
                                 {% elif res|resource_type == "Model Program Resource" %}
                                     <img src="{{ STATIC_URL }}img/resource-icons/modelprogram48x48.png"
-                                         alt="{{ res|resource_type }}" title="{{ res|resource_type }}"/>
+                                         alt="{{ res|resource_type }}" title="{{ res|resource_type }}" class="table-res-type-icon"/>
                                 {% elif res|resource_type == "Model Instance Resource" %}
                                     <img src="{{ STATIC_URL }}img/resource-icons/modelinstance48x48.png"
-                                         alt="{{ res|resource_type }}" title="{{ res|resource_type }}"/>
+                                         alt="{{ res|resource_type }}" title="{{ res|resource_type }}" class="table-res-type-icon"/>
                                 {% elif res|resource_type == "SWAT Model Instance Resource" %}
                                     <img src="{{ STATIC_URL }}img/resource-icons/swat48x48.png"
-                                         alt="{{ res|resource_type }}" title="{{ res|resource_type }}"/>
+                                         alt="{{ res|resource_type }}" title="{{ res|resource_type }}" class="table-res-type-icon"/>
                                 {% elif res|resource_type == "Multidimensional (NetCDF)" %}
                                     <img src="{{ STATIC_URL }}img/resource-icons/multidimensional48x48.png"
-                                         alt="{{ res|resource_type }}" title="{{ res|resource_type }}"/>
+                                         alt="{{ res|resource_type }}" title="{{ res|resource_type }}" class="table-res-type-icon"/>
                                 {% elif res|resource_type == "Time Series" %}
                                     <img src="{{ STATIC_URL }}img/resource-icons/timeseries48x48.png"
-                                         alt="{{ res|resource_type }}" title="{{ res|resource_type }}"/>
+                                         alt="{{ res|resource_type }}" title="{{ res|resource_type }}" class="table-res-type-icon"/>
                                 {% elif res|resource_type == "Geographic Feature (ESRI Shapefiles)" %}
                                     <img src="{{ STATIC_URL }}img/resource-icons/geographicfeature48x48.png"
-                                         alt="{{ res|resource_type }}" title="{{ res|resource_type }}"/>
+                                         alt="{{ res|resource_type }}" title="{{ res|resource_type }}" class="table-res-type-icon"/>
                                 {% elif res|resource_type == "Web App Resource" %}
                                     <img src="{{ STATIC_URL }}img/resource-icons/webapp48x48.png"
-                                         alt="{{ res|resource_type }}" title="{{ res|resource_type }}"/>
+                                         alt="{{ res|resource_type }}" title="{{ res|resource_type }}" class="table-res-type-icon"/>
                                 {% endif %}
                             </td>
                             <td><a href="{{ res.get_absolute_url }}">{{ res.metadata.title }}</a></td>
@@ -401,6 +399,20 @@
     <script type="text/javascript">
         var resourceTable;
 
+        function getTableMaxScrollSize() {
+            /* Large Devices, Wide Screens
+             @media only screen and (min-width : 1200px)*/
+            var largeDeviceScreenSize = 1200;
+            if ($(window).width() >= largeDeviceScreenSize) {
+                scrollY = $("body > .container").height();
+            }
+            else {
+                scrollY = Math.max(500, ($("body > .container").height() - $("#facets").height()));
+            }
+
+            return scrollY;
+        }
+
         $(document).ready(function () {
 
         /*==================================================
@@ -422,7 +434,7 @@
                 "order": [[4, "asc"]],
                 "paging": false,
                 "info": false,
-                "scrollY": "523px",
+                "scrollY": getTableMaxScrollSize(),
                 "scrollCollapse": true,
                 "columnDefs": [
                     {
@@ -469,8 +481,11 @@
                         "visible": false,
                         "searchable": true
                     }
-
                 ]
+            });
+
+            $(window).resize(function () {
+                $('.dataTables_scrollBody').css('max-height', getTableMaxScrollSize());
             });
 
             // Trigger label creation when pressing Enter

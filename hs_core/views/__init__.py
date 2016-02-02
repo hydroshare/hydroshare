@@ -5,7 +5,7 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import Group, User
 from django.contrib.sites.models import Site
 from django.contrib import messages
-from django.core.exceptions import ValidationError
+from django.core.exceptions import ValidationError, PermissionDenied
 from django.http import HttpResponseRedirect, HttpResponse
 from django.shortcuts import get_object_or_404, render_to_response, render
 from django.core import exceptions as ex
@@ -21,7 +21,7 @@ import autocomplete_light
 from inplaceeditform.commons import get_dict_from_obj, apply_filters
 from inplaceeditform.views import _get_http_response, _get_adaptor
 from django_irods.storage import IrodsStorage
-from hs_access_control.models import PrivilegeCodes, HSAccessException
+from hs_access_control.models import PrivilegeCodes
 
 from django_irods.icommands import SessionException
 from hs_core import hydroshare
@@ -297,11 +297,15 @@ def change_permissions(request, shortkey, *args, **kwargs):
         frm = AddUserForm(data=request.POST)
         _share_resource_with_user(request, frm, res, user, PrivilegeCodes.OWNER)
     elif t == 'make_public':
-        _set_resource_sharing_status(request, user, res, is_public=True)
+        _set_resource_sharing_status(request, user, res, flag_to_set='public', flag_value=True)
     elif t == 'make_private' or t == 'make_not_discoverable':
-        _set_resource_sharing_status(request, user, res, is_public=False)
+        _set_resource_sharing_status(request, user, res, flag_to_set='public', flag_value=False)
     elif t == 'make_discoverable':
-        _set_resource_sharing_status(request, user, res, is_public=False, is_discoverable=True)
+        _set_resource_sharing_status(request, user, res, flag_to_set='discoverable', flag_value=True)
+    elif t == 'make_not_shareable':
+        _set_resource_sharing_status(request, user, res, flag_to_set='shareable', flag_value=False)
+    elif t == 'make_shareable':
+       _set_resource_sharing_status(request, user, res, flag_to_set='shareable', flag_value=True)
 
     # due to self unsharing of a private resource the user will have no access to that resource
     # so need to redirect to the resource listing page
@@ -313,7 +317,7 @@ def change_permissions(request, shortkey, *args, **kwargs):
 
 # Needed for new access control UI functionality being developed by Mauriel
 def share_resource_with_user(request, shortkey, privilege, user_id, *args, **kwargs):
-    res, _, user = authorize(request, shortkey, edit=True, full=True, superuser=True)
+    res, _, user = authorize(request, shortkey, view=True, edit=True, full=True, superuser=True)
     user_to_share_with = utils.user_from_id(user_id)
     status = 'success'
     err_message = ''
@@ -330,13 +334,13 @@ def share_resource_with_user(request, shortkey, privilege, user_id, *args, **kwa
     if access_privilege != PrivilegeCodes.NONE:
         try:
             user.uaccess.share_resource_with_user(res, user_to_share_with, access_privilege)
-        except HSAccessException as exp:
+        except PermissionDenied as exp:
             status = 'error'
             err_message = exp.message
     else:
         status = 'error'
 
-    current_user_privilege = res.raccess.get_combined_privilege(user)
+    current_user_privilege = res.raccess.get_effective_privilege(user)
     if current_user_privilege == PrivilegeCodes.VIEW:
         current_user_privilege = "view"
     elif current_user_privilege == PrivilegeCodes.CHANGE:
@@ -362,7 +366,7 @@ def share_resource_with_user(request, shortkey, privilege, user_id, *args, **kwa
 
 # Needed for new access control UI functionality being developed by Mauriel
 def unshare_resource_with_user(request, shortkey, user_id, *args, **kwargs):
-    res, _, user = authorize(request, shortkey, edit=True, full=True, superuser=True)
+    res, _, user = authorize(request, shortkey, view=True, edit=True, full=True, superuser=True)
     user_to_unshare_with = utils.user_from_id(user_id)
 
     try:
@@ -371,13 +375,15 @@ def unshare_resource_with_user(request, shortkey, user_id, *args, **kwargs):
             user.uaccess.unshare_resource_with_user(res, user_to_unshare_with)
         else:
             # requesting user is the original grantor of privilege to user_to_unshare_with
+            # COUCH: This can raise a PermissionDenied exception without a guard such as 
+            # user.uaccess.can_undo_share_resource_with_user(res, user_to_unshare_with)
             user.uaccess.undo_share_resource_with_user(res, user_to_unshare_with)
 
         messages.success(request, "Resource unsharing was successful")
         if user == user_to_unshare_with and not res.raccess.public:
             # user has no access to the resource - redirect to resource listing page
             return HttpResponseRedirect('/my-resources/')
-    except HSAccessException as exp:
+    except PermissionDenied as exp:
         messages.error(request, exp.message)
 
     return HttpResponseRedirect(request.META['HTTP_REFERER'])
@@ -613,7 +619,7 @@ def _share_resource_with_user(request, frm, resource, requesting_user, privilege
     if frm.is_valid():
         try:
             requesting_user.uaccess.share_resource_with_user(resource, frm.cleaned_data['user'], privilege)
-        except HSAccessException as exp:
+        except PermissionDenied as exp:
             messages.error(request, exp.message)
     else:
         messages.error(request, frm.errors.as_json())
@@ -643,24 +649,34 @@ def _unshare_resource_with_users(request, requesting_user, users_to_unshare_with
                     requesting_user.uaccess.unshare_resource_with_user(resource, user)
                 else:
                     # requesting user is the original grantor of privilege to user
+                    # TODO from @alvacouch: This can raise a PermissionDenied exception without a guard such as 
+                    # user.uaccess.can_undo_share_resource_with_user(res, user_to_unshare_with)
                     requesting_user.uaccess.undo_share_resource_with_user(resource, user)
 
                 if requesting_user == user and not resource.raccess.public:
                     go_to_resource_listing_page = True
-            except HSAccessException as exp:
+            except PermissionDenied as exp:
                 messages.error(request, exp.message)
                 break
     return go_to_resource_listing_page
 
 
-def _set_resource_sharing_status(request, user, resource, is_public, is_discoverable=False):
+def _set_resource_sharing_status(request, user, resource, flag_to_set, flag_value):
     if not user.uaccess.can_change_resource_flags(resource):
         messages.error(request, "You don't have permission to change resource sharing status")
         return
 
+    if flag_to_set == 'shareable':
+        if resource.raccess.shareable != flag_value:
+            resource.raccess.shareable = flag_value
+            resource.raccess.save()
+            return
+
     has_files = False
     has_metadata = False
     can_resource_be_public_or_discoverable = False
+    is_public = (flag_to_set == 'public' and flag_value)
+    is_discoverable = (flag_to_set == 'discoverable' and flag_value)
     if is_public or is_discoverable:
         has_files = resource.has_required_content_files()
         has_metadata = resource.metadata.has_all_required_elements()
@@ -684,7 +700,6 @@ def _set_resource_sharing_status(request, user, resource, is_public, is_discover
         # set isPublic metadata AVU accordingly
         istorage = IrodsStorage()
         istorage.setAVU(resource.short_id, "isPublic", str(resource.raccess.public))
-
 
 def _get_message_for_setting_resource_flag(has_files, has_metadata, resource_flag):
     msg = ''

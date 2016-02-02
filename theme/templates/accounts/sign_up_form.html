@@ -1,0 +1,77 @@
+<form id=form-signup action="/accounts/signup/" method="post" role="form">
+    {% csrf_token %}
+    {{ form.non_field_errors }}
+    <!-- recaptcha -->
+    <input type="hidden" name="challenge" />
+    <input type="hidden" name="response" />
+    <div class="row">
+        <div class="form-group">
+            {% include "includes/form_field.html" with field=form.first_name inline_label=True %}
+        </div>
+        <div class="form-group">
+            {% include "includes/form_field.html" with field=form.last_name inline_label=True %}
+        </div>
+        <div class="form-group">
+            {% include "includes/form_field.html" with field=form.email inline_label=True %}
+        </div>
+        <div class="form-group">
+            {% include "includes/form_field.html" with field=form.username inline_label=True %}
+        </div>
+        <div class="form-group">
+            {% include "includes/form_field.html" with field=form.password1 inline_label=True %}
+        </div>
+        <div class="form-group">
+            {% include "includes/form_field.html" with field=form.password2 inline_label=True %}
+        </div>
+    </div>
+    <div class="row">
+
+      <div id="recaptcha-div"></div>
+
+      <input class="btn btn-primary" type="button" id="signup" value="Join HydroShare & start collaborating">
+  </div>
+</form>
+
+<script type="text/javascript" src="//www.google.com/recaptcha/api/js/recaptcha_ajax.js"></script>
+<script type="text/javascript">
+    $(function() {
+        function cb() {
+            $("#recaptcha_privacy").attr('style', "display:none");
+            Recaptcha.focus_response_field();
+        }
+
+        Recaptcha.create("6LdNC_USAAAAAHSocU3ZpfEFHBwORoMdOBcrSUPP",
+        "recaptcha-div", {
+          theme: "clean",
+          callback: cb // Recaptcha.focus_response_field
+        });
+
+        $("#signup").click(function() {
+            var username = $("#username").val();
+            var firstName = $("#firstname").val();
+            var lastName = $("#lastname").val();
+            var email = $("#email").val();
+            var password = $("#password").val();
+            var pwconfirm = $("#pwconfirm").val();
+
+            function onSuccess() {
+                document.location.href = '/verify-account/';
+            }
+            function onFailure(data, stuff) {
+                console.log(data);
+                console.log(stuff);
+                alert('cannot create account');
+            }
+            if (password === pwconfirm) {
+                $("[name=challenge]").val(Recaptcha.get_challenge());
+                $("[name=response]").val(Recaptcha.get_response());
+
+                $('#form-signup').submit();
+            } else {
+                $("#password").val('');
+                $("#pwconfirm").val('');
+                $("div.showcase").append('<p class="alert alert-danger">Passwords do not match</p>');
+            }
+        });
+    });
+</script>

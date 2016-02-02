@@ -24,7 +24,7 @@ OTHER_DOCKER_CONTAINERS=(hydroshare_postgis_1 hydroshare_rabbitmq_1 hydroshare_r
 HTTP_RECAPTCHA='http://www.google.com/recaptcha/api/js/recaptcha_ajax.js'
 HTTPS_RECAPTCHA='https://www.google.com/recaptcha/api/js/recaptcha_ajax.js'
 DEV_SERVER='python manage.py runserver 0.0.0.0:8000'
-PROD_SERVER='uwsgi --socket :8001 --ini uwsgi.ini'
+PROD_SERVER='uwsgi --ini uwsgi.ini'
 
 display_usage() {
 	echo "*** HydroShare Control script ***"
@@ -60,8 +60,8 @@ restart_hs() {
     echo "*** ${1^^} ***"
     stop_nginx
     preflight_hs
-    docker stop hydroshare_hydroshare_1
-    docker start hydroshare_hydroshare_1
+    docker-compose stop hydroshare
+    docker-compose up -d hydroshare
     if [ "${USE_NGINX,,}" = true ]; then
         start_nginx
     fi
@@ -148,7 +148,9 @@ preflight_hs() {
             echo "*** Using SSL: USE_SSL = ${USE_SSL} ***"
             # copy ssl cert and ssl key to hs-certs directory
             yes | cp -rf ${SSL_CERT_DIR}/${SSL_CERT_FILE} ${HOST_SSL_DIR}
-            yes | cp -rf ${SSL_CERT_DIR}/${SSL_KEY_FILE} ${HOST_SSL_DIR};
+            yes | cp -rf ${SSL_CERT_DIR}/${SSL_KEY_FILE} ${HOST_SSL_DIR}
+            # disable SSH server from running
+            sed -i 's!'"/usr/sbin/sshd"'!'"# REMOVED SSH COMPONENT"'!g' ${HS_PATH}/init;
         else
             echo "*** Not using SSL: USE_SSL = ${USE_SSL} ***"
         fi
@@ -209,7 +211,7 @@ loaddb_hs() {
     docker exec $CID psql -U postgres -h postgis -w -c 'create extension postgis;'
     echo "*** load database with contents of ${HS_DATABASE} ***"
     docker exec $CID psql -U postgres -h postgis -f ${HS_DATABASE}
-    echo "*** mangae.py collectstatic ***"
+    echo "*** manage.py collectstatic ***"
     docker exec $CID python manage.py collectstatic -v0 --noinput
     #echo "*** manage.py makemigrations ***"
     #docker exec $CID python manage.py makemigrations
@@ -294,9 +296,7 @@ update_solr_index() {
 }
 
 rebuild_solr_index() {
-    cd scripts
-    ./rebuild-index-solr
-    cd -
+    docker exec hydroshare_hydroshare_1 python manage.py rebuild_index --noinput
 }
 
 reset_all_hs() {
