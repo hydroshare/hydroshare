@@ -6,7 +6,7 @@ class HSTaskRouter(object):
             return {
                 'exchange': 'default',
                 'exchange_type': 'topic',
-                'routing_key': 'task.#',
+                'routing_key': 'task.default',
             }
 
         return None
