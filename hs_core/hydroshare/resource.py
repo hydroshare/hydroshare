@@ -18,7 +18,6 @@ from hs_core import signals
 from hs_core.hydroshare import utils
 from hs_access_control.models import ResourceAccess, UserResourcePrivilege, PrivilegeCodes
 from hs_labels.models import ResourceLabels
-
 from hs_core.tasks import add_zip_file_contents_to_resource
 
 file_size_limit = 10*(1024 ** 3)
@@ -306,11 +305,35 @@ def check_resource_type(resource_type):
         raise NotImplementedError("Type {resource_type} does not exist".format(resource_type=resource_type))
     return res_cls
 
+def add_zip_file_contents_to_resource_async(resource, f):
+    """
+    Launch asynchronous celery task to add zip file contents to a resource.
+    Note: will copy the zip file into a temporary space accessible to both
+    the Django server and the Celery worker.
+    :param resource: Resource to which file should be added
+    :param f: TemporaryUploadedFile object (or object that implements temporary_file_path())
+     representing a zip file whose contents are to be added to a resource.
+    """
+    # Add contents of zipfile asynchronously; wait 30 seconds to be "sure" that resource creation
+    # has finished.
+    logger = logging.getLogger('django')
+    uploaded_filepath = f.temporary_file_path()
+    tmp_dir = '/shared_temp'
+    logger.debug("Copying uploaded file from {0} to {1}".format(uploaded_filepath,
+                                                                tmp_dir))
+    shutil.copy(uploaded_filepath, tmp_dir)
+    zfile_name = os.path.join(tmp_dir, os.path.basename(uploaded_filepath))
+    logger.debug("Retained upload as {0}".format(zfile_name))
+    add_zip_file_contents_to_resource.apply_async((resource.short_id, zfile_name),
+                                                  countdown=30)
+    resource.file_unpack_status = 'Pending'
+    resource.save()
+
 def create_resource(
         resource_type, owner, title,
         edit_users=None, view_users=None, edit_groups=None, view_groups=None,
         keywords=(), metadata=None, content=None,
-        files=(), res_type_cls=None, resource=None, unpack_file=False, **kwargs):
+        files=(), res_type_cls=None, resource=None, unpack_file=True, **kwargs):
     """
     Called by a client to add a new resource to HydroShare. The caller must have authorization to write content to
     HydroShare. The pid for the resource is assigned by HydroShare upon inserting the resource.  The create method
@@ -384,19 +407,7 @@ def create_resource(
             metadata = []
 
         if len(files) == 1 and unpack_file and zipfile.is_zipfile(files[0]):
-            # Add contents of zipfile asynchronously; wait 30 seconds to be "sure" that resource creation
-            # has finished.
-            logger = logging.getLogger('django')
-            tmp_dir = '/shared_temp'
-            logger.debug("Copying uploaded file from {0} to {1}".format(files[0].temporary_file_path(),
-                                                                        tmp_dir))
-            shutil.copy(files[0].temporary_file_path(), tmp_dir)
-            zfile_name = os.path.join(tmp_dir, os.path.basename(files[0].temporary_file_path()))
-            logger.debug("Retained upload as {0}".format(zfile_name))
-            add_zip_file_contents_to_resource.apply_async((resource.short_id, zfile_name),
-                                                          countdown=30)
-            resource.file_unpack_status = 'Pending'
-            resource.save()
+            add_zip_file_contents_to_resource_async(resource, files[0])
         else:
             # Add resource file(s) now
             add_resource_files(resource.short_id, *files)
