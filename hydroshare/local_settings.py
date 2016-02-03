@@ -62,7 +62,7 @@ DOCKER_EXCHANGE=Exchange('docker', type='direct')
 DEFAULT_EXCHANGE=Exchange('default', type='topic')
 
 CELERY_QUEUES = (
-    Queue('default', routing_key='task.#'),
+    Queue('default', DEFAULT_EXCHANGE, routing_key='task.default'),
     Queue('docker_container_tasks', DOCKER_EXCHANGE, routing_key='docker.container'),
     Broadcast('docker_broadcast_tasks', DOCKER_EXCHANGE, routing_key='docker.broadcast'),
 )

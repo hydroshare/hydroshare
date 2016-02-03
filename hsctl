@@ -61,7 +61,7 @@ restart_hs() {
     stop_nginx
     preflight_hs
     docker-compose stop hydroshare
-    docker-compose up -d hydroshare
+    docker-compose start hydroshare
     if [ "${USE_NGINX,,}" = true ]; then
         start_nginx
     fi
