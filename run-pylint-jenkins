@@ -1,0 +1,6 @@
+#!/usr/bin/env bash
+
+PYTHON_MODULES="$(find hs_* -not -path '*migration*' -name '*.py' )"
+pylint $PYTHON_MODULES --output-format=html > pylint-results.html
+
+exit 0;
