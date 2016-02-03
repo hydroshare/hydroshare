@@ -15,18 +15,7 @@
                 <div class="row">
                     {% if profile_user.id == user.id %}
                         <div class="col-xs-12 col-sm-12">
-                            <div class="dropdown" style="float:right; right:100px; font-size:22px;">
-                                <a id="profile-actions" data-toggle="dropdown" aria-haspopup="true"
-                                   aria-expanded="true">
-                                    <span data-page-mode="view" class="glyphicon glyphicon-cog"></span>
-                                </a>
-
-                                <ul class="dropdown-menu" aria-labelledby="profile-actions" style="background: #FFF;">
-                                    <li id="btn-edit-profile"><a>Edit profile</a></li>
-                                    <li role="separator" class="divider"></li>
-                                    <li id="btn-delete-profile"><a>Delete profile</a></li>
-                                </ul>
-                            </div>
+                            <span data-page-mode="view" id="btn-edit-profile" class="glyphicon glyphicon-pencil pull-right icon-button btn-edit" title="Edit profile"></span>
 
                             <span data-page-mode="edit" id="btn-save-profile" class="btn btn-primary"
                                     style="float:right;margin:5px">Save changes
@@ -48,8 +37,6 @@
                         <div data-page-mode="edit">
                             <div class="profile-picture-controls">
                             {% if profile.picture and profile.picture.url %}
-{#                                <button class="btn btn-default"><span class="glyphicon glyphicon-upload"></span>&nbsp;Replace</button>#}
-{#                                <button class="btn btn-default"><span class="glyphicon glyphicon-remove"></span>&nbsp;Remove</button>#}
                                 <label>Profile picture</label>
                                 <fieldset>
                                     <span class="btn btn-default btn-file">Change<input type="file"></span>
@@ -60,6 +47,8 @@
                                     <span class="btn btn-default btn-file">Add a photo<input type="file"></span>
                                 </fieldset>
                             {% endif %}
+                                <!-- Button trigger modal -->
+                                <a data-toggle="modal" data-target="#deactivate-account-dialog">Deactivate account</a>
                             </div>
                         </div>
                     </div>
@@ -136,12 +125,12 @@
                                 {# Organization #}
                                 <fieldset class="col-sm-6">
                                     <label>Organization</label>
-                                    <input class="form-control" value="{{ profile.organization }}">
+                                    <input class="form-control" {% if profile.organization %}value="{{ profile.organization }}"{% endif %}>
                                 </fieldset>
                                 {# Title #}
                                 <fieldset class="col-sm-6">
                                     <label>Title</label>
-                                    <input class="form-control" value="{{ profile.title }}">
+                                    <input class="form-control" {% if profile.title %}value="{{ profile.title }}"{% endif %}>
                                     <small class="text-muted">e.g. Assistant Professor, Program Director, Adjunct
                                         Professor, Software Developer.
                                     </small>
@@ -152,7 +141,7 @@
                                 {# Subject areas #}
                                 <fieldset class="col-sm-12">
                                     <label>Subject areas</label>
-                                    <input class="form-control" value="{{ profile.subject_areas }}">
+                                    <input class="form-control" {% if profile.subject_areas %}value="{{ profile.subject_areas }}"{% endif %}>
                                     <small class="text-muted">A comma-separated list of subject areas you are interested
                                         in researching. e.g. "Computer Science, Hydrology, Water Management"
                                     </small>
@@ -380,7 +369,7 @@
                                                     </select>
                                                 </div>
                                                 <div class="col-sm-6">
-                                                    <input id="phone1" class="form-control phone" value="{{ profile.phone_1 }}">
+                                                    <input id="phone1" class="form-control phone" {% if profile.phone_1 %}value="{{ profile.phone_1 }}"{% endif %}>
                                                 </div>
                                             </fieldset>
 
@@ -401,7 +390,7 @@
                                                     </select>
                                                 </div>
                                                 <div class="col-sm-6">
-                                                    <input id="phone2" class="form-control phone" value="{{ profile.phone_2 }}">
+                                                    <input id="phone2" class="form-control phone" {% if profile.phone_2 %}value="{{ profile.phone_2 }}"{% endif %}>
                                                 </div>
                                             </fieldset>
                                             <fieldset class="col-sm-12">
@@ -550,6 +539,29 @@
             </div>
         </div>
         </form>
+
+        <!-- Modal -->
+        <div class="modal fade" id="deactivate-account-dialog" tabindex="-1" role="dialog"
+             aria-labelledby="Deactivate account">
+            <div class="modal-dialog" role="document">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <button type="button" class="close" data-dismiss="modal"
+                                aria-label="Close"><span aria-hidden="true">&times;</span>
+                        </button>
+                        <h4 class="modal-title" id="myModalLabel">Deactivate Account</h4>
+                    </div>
+                    <div class="modal-body">
+                        <h5><span class="glyphicon glyphicon-warning-sign"></span> WARNING: THIS IS A PERMANENT ACTION</h5>
+                        <span>Are you sure you want to deactivate your account?</span>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+                        <button type="button" class="btn btn-danger">Confirm</button>
+                    </div>
+                </div>
+            </div>
+        </div>
     {% endwith %}
 {% endblock %}
 
