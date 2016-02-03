@@ -8,7 +8,6 @@ from lxml import etree
 
 from django.contrib.contenttypes import generic
 from django.contrib.auth.models import User, Group
-from django.contrib.auth import settings
 from django.contrib.contenttypes.models import ContentType
 from django.db import models
 from django.db.models import Q
@@ -1541,8 +1540,7 @@ class CoreMetaData(models.Model):
         etree.SubElement(head, 'timestamp').text = arrow.get(resource.updated).format("YYYYMMDDHHmmss")
         depositor = etree.SubElement(head, 'depositor')
         etree.SubElement(depositor, 'depositor_name').text = 'HydroShare'
-        #etree.SubElement(depositor, 'email_address').text = 'support@hydroshare.org'
-        etree.SubElement(depositor, 'email_address').text = 'hongyi@renci.org'
+        etree.SubElement(depositor, 'email_address').text = settings.DEFAULT_SUPPORT_EMAIL
         # The organization that owns the information being registered.
         etree.SubElement(head, 'registrant').text = 'Consortium of Universities for the Advancement of Hydrologic Science, Inc. (CUAHSI)'
 

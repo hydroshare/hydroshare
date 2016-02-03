@@ -47,6 +47,6 @@ def check_doi_activation():
 
     if msg_lst:
         email_msg = '\n'.join(msg_lst)
-        # send email to support@hydroshare.org
+        # send email for people monitoring and follow-up as needed
         send_mail('Notification of pending DOI activation of published resources', email_msg,
-                   settings.DEFAULT_FROM_EMAIL, ['hongyi@renci.org'])
+                   settings.DEFAULT_FROM_EMAIL, [settings.DEFAULT_SUPPORT_EMAIL])
