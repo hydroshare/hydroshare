@@ -732,44 +732,11 @@ class Publisher(AbstractMetaDataElement):
 
     @classmethod
     def update(cls, element_id, **kwargs):
-        pub = Publisher.objects.get(id=element_id)
-
-        metadata_obj = kwargs['content_object']
-        # get matching resource
-        resource = BaseResource.objects.filter(object_id=metadata_obj.id).first()
-        publisher_CUAHSI = "Consortium of Universities for the Advancement of Hydrologic Science, Inc. (CUAHSI)"
-        if 'name' in kwargs:
-            if pub.name.lower() != kwargs['name'].lower():
-                if pub.name.lower() == publisher_CUAHSI.lower():
-                    if resource.files.all():
-                        raise ValidationError("Publisher 'HydroShare/CUAHSI' can't be changed for a resource that has "
-                                              "content files.")
-                elif kwargs['name'].lower() == publisher_CUAHSI.lower():
-                    if not resource.files.all():
-                        raise ValidationError("'HydroShare/CUAHSI' can't be a publisher for a resource that has no "
-                                              "content files.")
-
-        if 'url' in kwargs:
-            if pub.url.lower() != kwargs['url'].lower():
-                # make sure we are not changing the url for hydroshare publisher when there are content files
-                if pub.url.lower() == 'https://www.cuahsi.org':
-                    if resource.files.all():
-                        raise ValidationError("Publisher 'HydroShare/CUAHSI' can't be changed for a resource that has "
-                                              "content files.")
-
-        super(Publisher, cls).update(element_id, **kwargs)
+        raise ValidationError("Publisher element can't be updated.")
 
     @classmethod
     def remove(cls, element_id):
-        pub = Publisher.objects.get(id=element_id)
-
-        # get matching resource
-        resource = BaseResource.objects.filter(object_id=pub.content_object.id).first()
-
-        if resource.raccess.published:
-            raise ValidationError("Resource publisher can't be deleted for a published resource.")
-
-        pub.delete()
+        raise ValidationError("Publisher element can't be deleted.")
 
 
 class Language(AbstractMetaDataElement):
