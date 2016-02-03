@@ -24,7 +24,8 @@ OTHER_DOCKER_CONTAINERS=(hydroshare_postgis_1 hydroshare_rabbitmq_1 hydroshare_r
 HTTP_RECAPTCHA='http://www.google.com/recaptcha/api/js/recaptcha_ajax.js'
 HTTPS_RECAPTCHA='https://www.google.com/recaptcha/api/js/recaptcha_ajax.js'
 DEV_SERVER='python manage.py runserver 0.0.0.0:8000'
-PROD_SERVER='uwsgi --ini uwsgi.ini'
+#PROD_SERVER='uwsgi --ini uwsgi.ini'
+PROD_SERVER='uwsgi --ini emperor.ini'
 
 display_usage() {
 	echo "*** HydroShare Control script ***"
@@ -61,7 +62,7 @@ restart_hs() {
     stop_nginx
     preflight_hs
     docker-compose stop hydroshare
-    docker-compose up -d hydroshare
+    docker-compose start hydroshare
     if [ "${USE_NGINX,,}" = true ]; then
         start_nginx
     fi
