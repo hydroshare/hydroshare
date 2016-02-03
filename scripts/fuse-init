@@ -8,7 +8,7 @@ display_usage() {
 	echo "FUSE mount local directory to an iRODS resource/collection"
 	echo " local/PATH - PATH in local file system"
 	echo "Optional"
-	echo " iRODS/PATH - PATH in iRODS space that will be mount to local/PATH"
+	echo " iRODS/PATH - PATH in iRODS space that will be mounted as local/PATH"
 }
 
 # get iRODS credentials from local_settings.py
@@ -55,6 +55,7 @@ elif [[ $# -eq 1 ]]; then
     iinit < IRODS_CONFIG
     echo "*** INFO: FUSE mount default iRODS:$(ipwd) to ${1} ***"
     fuse_mount_resource $1;
+    echo "*** NOTE: *** unmount using - fusermount -u ${1}"
 else
     get_irods_settings
     check_previous_credentials
@@ -67,6 +68,7 @@ else
         exit 1;
     fi
     fuse_mount_resource $1;
+    echo "*** NOTE: *** unmount using - fusermount -u ${1}"
 fi
 
 exit 0;
