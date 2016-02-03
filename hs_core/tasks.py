@@ -12,9 +12,8 @@ from celery.schedules import crontab
 
 from hs_core.models import BaseResource
 from hs_core.hydroshare.resource import get_activated_doi
-#periodic_task(ignore_result=True, run_every=crontab(minute=0, hour=0)) execute daily at midnight
 
-@periodic_task(ignore_result=True, run_every=crontab(minute='*/3'))
+@periodic_task(ignore_result=True, run_every=crontab(minute=0, hour=0))
 def check_doi_activation():
     msg_lst = []
     pending_resources = BaseResource.objects.filter(raccess__published=True, doi__contains='pending')
