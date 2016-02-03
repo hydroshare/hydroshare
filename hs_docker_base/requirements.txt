@@ -80,6 +80,7 @@ protobuf==2.5.0
 psycopg2==2.4.5
 pyasn1==0.1.7
 pycrypto==2.6.1
+pylint==1.5.0
 pyparsing==2.0.1
 pyproj==1.9.3
 pysolr==3.3.3
