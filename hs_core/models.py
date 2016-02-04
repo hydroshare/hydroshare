@@ -12,6 +12,7 @@ from django.contrib.contenttypes.models import ContentType
 from django.db import models
 from django.db.models import Q
 from django.db.models.signals import post_save
+from django.db import transaction
 from django.dispatch import receiver
 from django import forms
 from django.utils.timezone import now
@@ -475,7 +476,7 @@ class Date(AbstractMetaDataElement):
             if not kwargs['type'] in dict(cls.DATE_TYPE_CHOICES).keys():
                 raise ValidationError('Invalid date type:%s' % kwargs['type'])
 
-             # get matching resource
+            # get matching resource
             metadata_obj = kwargs['content_object']
             resource = BaseResource.objects.filter(object_id=metadata_obj.id).first()
 
@@ -483,14 +484,19 @@ class Date(AbstractMetaDataElement):
                 if 'end_date' in kwargs:
                     del kwargs['end_date']
 
+            if 'start_date' in kwargs:
+                if isinstance(kwargs['start_date'], basestring):
+                    kwargs['start_date'] = parser.parse(kwargs['start_date'])
             if kwargs['type'] == 'published':
                 if not resource.raccess.published:
                     raise ValidationError("Resource is not published yet.")
             elif kwargs['type'] == 'available':
                 if not resource.raccess.public:
-                    raise ValidationError("Resource has not been shared yet.")
+                    raise ValidationError("Resource has not been made public yet.")
             elif kwargs['type'] == 'valid':
                 if 'end_date' in kwargs:
+                    if isinstance(kwargs['end_date'], basestring):
+                        kwargs['end_date'] = parser.parse(kwargs['end_date'])
                     if kwargs['start_date'] > kwargs['end_date']:
                         raise ValidationError("For date type valid, end date must be a date after the start date.")
 
@@ -504,6 +510,8 @@ class Date(AbstractMetaDataElement):
         dt = Date.objects.get(id=element_id)
 
         if 'start_date' in kwargs:
+            if isinstance(kwargs['start_date'], basestring):
+                kwargs['start_date'] = parser.parse(kwargs['start_date'])
             if dt.type == 'created':
                 raise ValidationError("Resource creation date can't be changed")
             elif dt.type == 'modified':
@@ -511,6 +519,8 @@ class Date(AbstractMetaDataElement):
                 dt.save()
             elif dt.type == 'valid':
                 if 'end_date' in kwargs:
+                    if isinstance(kwargs['end_date'], basestring):
+                        kwargs['end_date'] = parser.parse(kwargs['end_date'])
                     if kwargs['start_date'] > kwargs['end_date']:
                         raise ValidationError("For date type valid, end date must be a date after the start date.")
                     dt.start_date = kwargs['start_date']
@@ -696,76 +706,44 @@ class Publisher(AbstractMetaDataElement):
 
     @classmethod
     def create(cls, **kwargs):
-        if 'name' in kwargs:
-            metadata_obj = kwargs['content_object']
-            # get matching resource
-            resource = BaseResource.objects.filter(object_id=metadata_obj.id).first()
-
-            if not resource.raccess.public and resource.raccess.published:
-                raise ValidationError("Publisher element can't be created for a resource that is not yet shared "
-                                      "nor published.")
-
-            if kwargs['name'].lower() == 'hydroshare':
-                if not resource.files.all():
-                    raise ValidationError("Hydroshare can't be the publisher for a resource that has no content "
-                                          "files.")
-
-                kwargs['name'] = 'HydroShare'
-                kwargs['url'] = 'http://hydroshare.org'
-
-            return super(Publisher, cls).create(**kwargs)
-
-        else:
-            raise ValidationError("Name of publisher is missing.")
-
-    @classmethod
-    def update(cls, element_id, **kwargs):
-        pub = Publisher.objects.get(id=element_id)
-
         metadata_obj = kwargs['content_object']
         # get matching resource
         resource = BaseResource.objects.filter(object_id=metadata_obj.id).first()
+        if not resource.raccess.published:
+            raise ValidationError("Publisher element can't be created for a resource that is not yet published.")
 
-        if 'name' in kwargs:
-            if pub.name.lower() != kwargs['name'].lower():
-                if pub.name.lower() == 'hydroshare':
-                    if resource.files.all():
-                        raise ValidationError("Publisher 'HydroShare' can't be changed for a resource that has "
-                                              "content files.")
-                elif kwargs['name'].lower() == 'hydroshare':
-                    if not resource.files.all():
-                        raise ValidationError("'HydroShare' can't be a publisher for a resource that has no "
-                                              "content files.")
+        publisher_CUAHSI = "Consortium of Universities for the Advancement of Hydrologic Science, Inc. (CUAHSI)"
 
-                if resource.files.all():
-                    kwargs['name'] = 'HydroShare'
+        if resource.files.all():
+            # if the resource has content files, set CUAHSI as the publisher
+            if 'name' in kwargs:
+                if kwargs['name'].lower() != publisher_CUAHSI.lower():
+                    raise ValidationError("Invalid publisher name")
 
-        if 'url' in kwargs:
-            if pub.url != kwargs['url']:
-                # make sure we are not changing the url for hydroshare publisher
-                if pub.name.lower() == 'hydroshare':
-                    kwargs['url'] = 'http://hydroshare.org'
+            kwargs['name'] = publisher_CUAHSI
+            if 'url' in kwargs:
+                if kwargs['url'].lower() != 'https://www.cuahsi.org':
+                    raise ValidationError("Invalid publisher URL")
 
-        super(Publisher, cls).update(element_id, **kwargs)
+            kwargs['url'] = 'https://www.cuahsi.org'
+        else:
+            # make sure we are not setting CUAHSI as publisher for a resource that has no content files
+            if 'name' in kwargs:
+                if kwargs['name'].lower() == publisher_CUAHSI.lower():
+                    raise ValidationError("Invalid publisher name")
+            if 'url' in kwargs:
+                if kwargs['url'].lower() == 'https://www.cuahsi.org':
+                    raise ValidationError("Invalid publisher URL")
+
+        return super(Publisher, cls).create(**kwargs)
+
+    @classmethod
+    def update(cls, element_id, **kwargs):
+        raise ValidationError("Publisher element can't be updated.")
 
     @classmethod
     def remove(cls, element_id):
-        pub = Publisher.objects.get(id=element_id)
-
-        # get matching resource
-        resource = BaseResource.objects.filter(object_id=pub.content_object.id).first()
-
-        if resource.raccess.public:
-            raise ValidationError("Resource publisher can't be deleted for shared resource.")
-
-        if pub.name.lower() == 'hydroshare':
-            if resource.files.all():
-                raise ValidationError("Publisher HydroShare can't be deleted for a resource that has content files.")
-
-        if resource.raccess.public:
-            raise ValidationError("Publisher can't be deleted for a public resource.")
-
-        pub.delete()
+        raise ValidationError("Publisher element can't be deleted.")
 
 
 class Language(AbstractMetaDataElement):
@@ -1517,6 +1495,46 @@ class CoreMetaData(models.Model):
         self.sources.all().delete()
         self.relations.all().delete()
 
+    # this method needs to be overriden by any subclass of this class
+    # to allow updating of extended (resource specific) metadata
+    def update(self, metadata):
+        # updating non-repeatable elements
+        with transaction.atomic():
+            for element_name in ('title', 'description', 'language', 'rights'):
+                for dict_item in metadata:
+                    if element_name in dict_item:
+                        element = getattr(self, element_name, None)
+                        if element:
+                            self.update_element(element_id=element.id, element_model_name=element_name,
+                                                **dict_item[element_name])
+                        else:
+                            self.create_element(element_model_name=element_name, **dict_item[element_name])
+
+            for element_name in ('creator', 'contributor', 'coverage', 'source', 'relation', 'subject'):
+                self._update_repeatable_element(element_name=element_name, metadata=metadata)
+
+            # allow only updating or creating date element of type valid
+            element_name = 'date'
+            date_list = [date_dict for date_dict in metadata if element_name in date_dict]
+            if len(date_list) > 0:
+                for date_item in date_list:
+                    if 'type' in date_item[element_name]:
+                        if date_item[element_name]['type'] == 'valid':
+                            self.dates.filter(type='valid').delete()
+                            self.create_element(element_model_name=element_name, **date_item[element_name])
+                            break
+
+            # allow only updating or creating identifiers which does not have name value 'hydroShareIdentifier'
+            element_name = 'identifier'
+            identifier_list = [id_dict for id_dict in metadata if element_name in id_dict]
+            if len(identifier_list) > 0:
+                for id_item in identifier_list:
+                    if 'name' in id_item[element_name]:
+                        if id_item[element_name]['name'].lower() != 'hydroshareidentifier':
+                            self.identifiers.filter(name=id_item[element_name]['name']).delete()
+                            self.create_element(element_model_name=element_name, **id_item[element_name])
+
+
     # create crossref deposit xml for resource publication
     def get_crossref_deposit_xml(self, pretty_print=True):
         # importing here to avoid circular import problem
@@ -1567,6 +1585,7 @@ class CoreMetaData(models.Model):
         etree.SubElement(doi_data, 'resource').text = self.identifiers.all().filter(name='hydroShareIdentifier')[0].url
 
         return '<?xml version="1.0" encoding="UTF-8"?>\n' + etree.tostring(ROOT, pretty_print=pretty_print)
+
 
     def get_xml(self, pretty_print=True):
         # importing here to avoid circular import problem
@@ -1874,6 +1893,15 @@ class CoreMetaData(models.Model):
     def _is_valid_element(self, element_name):
         allowed_elements = [el.lower() for el in self.get_supported_element_names()]
         return element_name.lower() in allowed_elements
+
+    def _update_repeatable_element(self, element_name, metadata):
+        # make a list of dict that are for a specific element as specified by element_name
+        element_list = [element_dict for element_dict in metadata if element_name in element_dict]
+        if len(element_list) > 0:
+            elements = getattr(self, element_name + 's')
+            elements.all().delete()
+            for element in element_list:
+                self.create_element(element_model_name=element_name, **element[element_name])
 
 
 def resource_processor(request, page):

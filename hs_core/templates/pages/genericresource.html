@@ -990,6 +990,7 @@
 
                 </div>
                 <!-- Buttons -->
+                {% block download_bag %}
                 <div>
                     {% for b in cm.bags.all %}
                         <a id="btn-download-all" type="button" class="btn btn-default row-selector" href="{{ bag_url }}">
@@ -1000,6 +1001,7 @@
                         </a>
                     {% endfor %}
                 </div>
+                {% endblock %}
 
             {% else %}
                 <i class="glyphicon glyphicon-eye-close text-danger no-access-icon"></i>&nbsp;
