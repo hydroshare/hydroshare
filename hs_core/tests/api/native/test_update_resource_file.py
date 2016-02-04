@@ -1,5 +1,3 @@
-__author__ = 'Pabitra'
-
 import os
 import unittest
 
@@ -8,17 +6,18 @@ from django.core.exceptions import ObjectDoesNotExist
 
 from hs_core import hydroshare
 from hs_core.models import GenericResource
+from hs_core.testing import MockIRODSTestCaseMixin
 
 
-class TestUpdateResourceFileAPI(unittest.TestCase):
-
+class TestUpdateResourceFileAPI(MockIRODSTestCaseMixin, unittest.TestCase):
     def setUp(self):
+        super(TestUpdateResourceFileAPI, self).setUp()
         self.hydroshare_author_group, _ = Group.objects.get_or_create(name='Hydroshare Author')
 
     def tearDown(self):
-        self.user_creator.uaccess.delete()
+        super(TestUpdateResourceFileAPI, self).tearDown()
         User.objects.all().delete()
-        self.hydroshare_author_group.delete()
+        Group.objects.all().delete()
         GenericResource.objects.all().delete()
         self.original_file.close()
         os.remove(self.original_file.name)
@@ -63,7 +62,7 @@ class TestUpdateResourceFileAPI(unittest.TestCase):
         self.assertIn(
             original_file_name,
             [os.path.basename(f.resource_file.name) for f in new_res.files.all()],
-            msg= '%s is not one of the resource files.' % original_file_name
+            msg='%s is not one of the resource files.' % original_file_name
         )
 
         # create a file that will be used to update the original file -1st update
@@ -107,7 +106,6 @@ class TestUpdateResourceFileAPI(unittest.TestCase):
 
         # exception ObjectDoesNotExist should be raised if resource does not have a file
         # for the given file name (file_not_in_resource.txt) to update
-        self.assertRaises(
-            ObjectDoesNotExist,
-            lambda: hydroshare.update_resource_file(new_res.short_id, 'file_not_in_resource.txt', new_file)
-        )
+        with self.assertRaises(ObjectDoesNotExist):
+            hydroshare.update_resource_file(new_res.short_id, 'file_not_in_resource.txt', new_file)
+

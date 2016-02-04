@@ -1,24 +1,18 @@
-__author__ = 'Pabitra'
-
-import unittest
-
+from django.contrib.auth.models import User, Group
 from django.test import TestCase
-from django.contrib.auth.models import User
+
 from mezzanine.generic.models import Rating
+
 from hs_core import hydroshare
 from hs_core.models import GenericResource
+from hs_core.testing import MockIRODSTestCaseMixin
 
-class TestEndorseResourceAPI(TestCase):
+
+class TestEndorseResourceAPI(MockIRODSTestCaseMixin, TestCase):
     def setUp(self):
-        pass
+        super(TestEndorseResourceAPI, self).setUp()
+        self.group, _ = Group.objects.get_or_create(name='Hydroshare Author')
 
-    def tearDown(self):
-        User.objects.all().delete()
-        GenericResource.objects.all().delete()
-        Rating.objects.all().delete()
-        pass
-
-    @unittest.skip
     def test_endorse_resource(self):
         # create a user to be used for creating the resource
         user_creator = hydroshare.create_account(
@@ -81,8 +75,7 @@ class TestEndorseResourceAPI(TestCase):
         ratings = Rating.objects.filter(object_pk=new_resource.id)
         self.assertEqual(len(ratings), 2)
 
-        # test removing endorsement
-        # this is the api call we are testing
+        # test removing endorsement - this is the api call we are testing
         hydroshare.endorse_resource(new_resource.short_id, user_rater_1, endorse=False)
         # test that we have no rating object for the given resource and given rater
         ratings = Rating.objects.filter(object_pk=new_resource.id, user=user_rater_1)
