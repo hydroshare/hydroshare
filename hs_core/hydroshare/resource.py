@@ -4,11 +4,7 @@ import requests
 from django.core.exceptions import ObjectDoesNotExist
 from django.core.files import File
 from django.core.files.uploadedfile import UploadedFile
-<<<<<<< HEAD
 from django.core.exceptions import ValidationError
-=======
-from django.utils.timezone import now
->>>>>>> develop
 from django.db import transaction
 from django.conf import settings
 from rest_framework import status
