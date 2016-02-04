@@ -7,6 +7,7 @@ from hs_core.views import add_generic_context
 from forms import CollectionItemsForm, get_res_id_list
 from models import CollectionResource
 from hs_access_control.models import PrivilegeCodes, HSAccessException
+from hs_core.views.utils import authorize
 
 @processor_for(CollectionResource)
 def landing_page(request, page):
@@ -37,7 +38,6 @@ def landing_page(request, page):
 
     user_all_accessible_resource_list = (owned_resources + editable_resources + viewable_resources + discovered_resources)
 
-
     collection_items_list = None
     collection_items_accessible = []
     collection_items_inaccessible = []
@@ -52,8 +52,8 @@ def landing_page(request, page):
 
     collection_message = ""
     if collection_items_list is not None:
-        collection_count = len(collection_items_list)
-        collection_message = "This collection holds {0} resource(s) in total. ".format(collection_count)
+        collection_length = len(collection_items_list)
+        collection_message = "This collection holds {0} resource(s) in total. ".format(collection_length)
         hide_count = len(collection_items_inaccessible)
         if hide_count > 0:
             collection_message += "You have NO permission on {0}.".format(hide_count)
@@ -72,11 +72,13 @@ def landing_page(request, page):
 
             link_html = ""
             for res in collection_items_accessible:
+                sharing_status = get_sharing_status_string(res)
                 link_html += '<a style="color: blue" href="/resource/' + res.short_id + '" target="_blank">' + \
-                             res.resource_type + ' : ' + res.title + '</a><br/>'
+                             res.resource_type + ' : ' + res.title + ' : ' + sharing_status + ' : ' + res.short_id + '</a><br/>'
             for res in collection_items_inaccessible:
+                sharing_status = get_sharing_status_string(res)
                 link_html += '<a style="color: grey" href="/resource/' + res.short_id + '" target="_blank">' + \
-                             res.resource_type + ' : ' + res.title + '</a><br/>'
+                             res.resource_type + ' : ' + res.title + ' : ' + sharing_status + ' : ' + res.short_id + '</a><br/>'
             context['collection_items'] = link_html
 
             if hide_count > 0:
@@ -96,26 +98,68 @@ def landing_page(request, page):
                 continue # skip the res that is type of collection
             candidate_resources_list.append(res)
 
+        if authorize(request, content_model.short_id, edit=True, raises_exception=False)[1]:
+            # current user has edit permission
+            if content_model.raccess.public:
+                # current collection is public
+                # only show public resources in candidate_resources_list
+                for res in candidate_resources_list:
+                    if not res.raccess.public:
+                        candidate_resources_list.remove(res)
+            elif content_model.raccess.discoverable:
+                # current collection is discoverable
+                # only show public and discoverable resources in candidate_resources_list
+                for res in candidate_resources_list:
+                    if not res.raccess.public and not res.raccess.discoverable:
+                        candidate_resources_list.remove(res)
+            else:
+                # current collection is discoverable is private
+                # show all available resources in candidate_resources_list
+                pass
+
         html_candidate = ""
         for res in candidate_resources_list:
+            sharing_status = get_sharing_status_string(res)
             html_candidate += '<option style= "color: blue" value="' + res.short_id+'">' + \
-                              res.resource_type + ' : ' + res.title + \
+                              res.resource_type + ' : ' + res.title + ':' + sharing_status + ' : ' + res.short_id +\
                               '</option>'
 
         html_collection = ""
         if collection_itmes_meta is not None:
             for res_checked in collection_itmes_meta.collection_items.all():
+                sharing_status = get_sharing_status_string(res_checked)
                 if res_checked in user_all_accessible_resource_list:
                     html_collection += '<option style= "color: blue" value="' + res_checked.short_id+'">' + \
-                                   res_checked.resource_type + ' : ' + res_checked.title + \
+                                   res_checked.resource_type + ' : ' + res_checked.title + " : " + sharing_status + ' : ' + res_checked.short_id+\
                                    '</option>'
                 else:
                     html_collection += '<option style= "color: grey" value="' + res_checked.short_id+'">' + \
-                                   res_checked.resource_type + ' : ' + res_checked.title + \
+                                   res_checked.resource_type + ' : ' + res_checked.title + " : " + sharing_status + ' : ' + res_checked.short_id+\
                                    '</option>'
 
 
-        ext_md_layout = Layout(
+        ext_md_layout = Layout(HTML('<div class="modal fade" id="save-collection-warning" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">'
+                                    '<div class="modal-dialog">'
+                                        '<div class="modal-content">'
+                                            '<div class="modal-header">'
+                                                '<button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>'
+                                                '<h4 class="modal-title">Confirm Changes </h4>'
+                                            '</div>'
+                                            '<div class="modal-body">'
+                                                'The resources you are trying to remove from current collection include grey title resources, which means you have no permission on them. You may remove the grey, but you CAN NOT add them back.'
+                                            '</div>'
+                                            '<div class="modal-footer">'
+                                                '<button type="button" class="btn btn-default" data-dismiss="modal" onclick="move_grey_from_select1_to_2()">'
+                                                    'Keep gray'
+                                                '</button>'
+                                                '<button type="button" class="btn btn-danger" data-dismiss="modal" onclick="remove_grey_from_select1()">'
+                                                    'Remove gray anyway'
+                                                '</button>'
+                                            '</div>'
+                                       ' </div>'
+                                    '</div>'
+                                    '</div>'
+                                ),
                                 HTML(
                                     '<h4>Your Resource Pool</h4>'
                                     '<select class="form-control" multiple="multiple" id="select1">'
@@ -135,7 +179,8 @@ def landing_page(request, page):
                                 HTML(html_collection),
                                 HTML('</select>'
                                      '</form>'
-                                     '<br/><input class="btn btn-primary" type="button" id="save" value ="Save Changes" />')
+                                     '<br/><input class="btn btn-primary" type="button" id="save" value ="Save Changes" />'
+                                     )
                                 )
 
         # get the context from hs_core
@@ -151,3 +196,11 @@ def landing_page(request, page):
     context.update(hs_core_dublin_context)
 
     return context
+
+def get_sharing_status_string(res):
+    if res.raccess.public:
+        return "Public"
+    elif res.raccess.discoverable:
+        return "Discoverable"
+    else:
+        return "Private"

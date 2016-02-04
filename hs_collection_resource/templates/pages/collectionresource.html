@@ -33,7 +33,11 @@
             </div>
         </div>
     {%  endif %}
+
+
 {%  endblock %}
+
+
 
 {% block extra_js %}
     {{ block.super }}
@@ -42,7 +46,7 @@
     <script type="text/javascript">
         $(document).ready(function(){
 
-             $('#add').click(function(e) {
+            $('#add').click(function(e) {
                 var selectedOpts = $('#select1 option:selected');
                 if (selectedOpts.length == 0) {
                     e.preventDefault();
@@ -62,20 +66,49 @@
                 $('#select1').append($(selectedOpts).clone());
                 $(selectedOpts).remove();
                 e.preventDefault();
+
+                $('#select1 option').each(function () {
+                if ($(this).css('color') == "rgb(128, 128, 128)")
+                { $('#save-collection-warning').modal('show');}
+                });
             });
 
             $('#save').click(function() {
-                $('#select2 option').each(function () {
+
+                    save_collection();
+            });
+        });
+
+        function save_collection()
+        {
+            $('#select2 option').each(function () {
                 $(this).attr('selected', true);
                 });
 
-                metadata_update_ajax_submit("collector");
+            metadata_update_ajax_submit("collector");
 
-                $('#select2 option').each(function () {
-                $(this).attr('selected', false);
-                });
-                return false;
+            $('#select2 option').each(function () {
+            $(this).attr('selected', false);
             });
-        })
+        }
+
+    function remove_grey_from_select1()
+    {
+         $('#select1 option').each(function () {
+                if ($(this).css('color') == "rgb(128, 128, 128)")
+                { $(this).remove();}
+                });
+    }
+    function move_grey_from_select1_to_2()
+    {
+         $('#select1 option').each(function () {
+                if ($(this).css('color') == "rgb(128, 128, 128)")
+                {
+                    $('#select2').append($(this).clone());
+                    $(this).remove();
+                }
+                });
+    }
+
     </script>
 {% endblock %}

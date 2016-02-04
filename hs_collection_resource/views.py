@@ -25,7 +25,7 @@ def update_collection(request):
 
     try:
         collection_obj_resource_id = request.POST["collection_obj_res_id"]
-        is_authorized = authorize(request, collection_obj_resource_id, edit=True, raises_exception=False)[1]
+        is_authorized = authorize(request, collection_obj_resource_id, edit=True, raises_exception=True)[1]
         if is_authorized:
             collection_res_obj = hydroshare.get_resource_by_shortkey(collection_obj_resource_id)
             collection_content_res_id_list = []
@@ -42,19 +42,32 @@ def update_collection(request):
             else:
                 hydroshare.resource.create_metadata_element(collection_res_obj.short_id,
                 'CollectionItems',
-                collection_items=collection_content_res_id_list
+                COLLECTION_ITEMS=collection_content_res_id_list
                 )
 
             if collection_res_obj.metadata.has_all_required_elements():
-                metadata_status = "Sufficient to make public"
+                for res in collection_res_obj.metadata.collection_items.first().collection_items.all():
+                    all_public = True
+                    no_private = True
+                    if not res.raccess.public:
+                        all_public = False
+                        if not res.raccess.discoverable:
+                            no_private = False
+                            break
+                if all_public:
+                    metadata_status = "Sufficient to make public or discoverable"
+                elif no_private:
+                    metadata_status = "Sufficient to make discoverable"
+                else:
+                    metadata_status = "Insufficient to make public or discoverable"
             else:
-                metadata_status = "Insufficient to make public"
+                metadata_status = "Insufficient to make public or discoverable"
 
             ajax_response_data = {'status': 'success', 'element_name': "CollectionItems", 'metadata_status': metadata_status}
             return HttpResponse(json.dumps(ajax_response_data))
 
     except Exception as ex:
-        ajax_response_data = {'status': 'error'}
+        ajax_response_data = {'status': 'error', 'message': ex.message}
         return HttpResponse(json.dumps(ajax_response_data))
 
 
