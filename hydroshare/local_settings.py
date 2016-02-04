@@ -127,6 +127,7 @@ IRODS_BAGIT_PATH = 'bags'
 IRODS_BAGIT_POSTFIX = 'zip'
 
 # crossref login credential for resource publication
+USE_CROSSREF_TEST = True
 CROSSREF_LOGIN_ID = ''
 CROSSREF_LOGIN_PWD = ''
 

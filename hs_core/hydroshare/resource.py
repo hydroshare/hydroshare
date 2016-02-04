@@ -776,7 +776,11 @@ def publish_resource(user, pk):
                 }
     files = {'file': (xml_file_name, resource.metadata.get_crossref_deposit_xml())}
     # exceptions will be raised if POST request fails
-    response = requests.post('https://test.crossref.org/servlet/deposit', data=post_data, files=files)
+    main_url = 'https://test.crossref.org/'
+    if not settings.USE_CROSSREF_TEST:
+        main_url = 'https://doi.crossref.org/'
+    post_url = '{MAIN_URL}servlet/deposit'.format(MAIN_URL=main_url)
+    response = requests.post(post_url, data=post_data, files=files)
     if response.status_code == status.HTTP_200_OK:
         content = response.content
 

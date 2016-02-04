@@ -23,9 +23,11 @@ def check_doi_activation():
             pub_date = res.metadata.dates.all().filter(type='published')[0]
             pub_date = pub_date.start_date.strftime('%m/%d/%Y')
             act_doi = get_activated_doi(res.doi)
-
-            response = requests.get('https://test.crossref.org/servlet/submissionDownload?usr={USERNAME}&pwd={PASSWORD}&doi_batch_id={DOI_BATCH_ID}&type={TYPE}'.format(
-                                USERNAME=settings.CROSSREF_LOGIN_ID, PASSWORD=settings.CROSSREF_LOGIN_PWD, DOI_BATCH_ID=res.short_id, TYPE='result'))
+            main_url = 'https://test.crossref.org/'
+            if not settings.USE_CROSSREF_TEST:
+                main_url = 'https://doi.crossref.org/'
+            response = requests.get('{MAIN_URL}servlet/submissionDownload?usr={USERNAME}&pwd={PASSWORD}&doi_batch_id={DOI_BATCH_ID}&type={TYPE}'.format(
+                                MAIN_URL=main_url, USERNAME=settings.CROSSREF_LOGIN_ID, PASSWORD=settings.CROSSREF_LOGIN_PWD, DOI_BATCH_ID=res.short_id, TYPE='result'))
             root = ElementTree.fromstring(response.content)
             rec_cnt_elem = root.find('.//record_count')
             success_cnt_elem = root.find('.//success_count')
