@@ -120,7 +120,7 @@ class ResourcePermissionsMixin(Ownable):
     def can_view(self, request):
         user = get_user(request)
 
-        if self.raccess.public or self.raccess.discoverable or self.raccess.immutable:
+        if self.raccess.public or self.raccess.discoverable:
             return True
         if user.is_authenticated():
             if user.is_superuser:
@@ -1326,6 +1326,53 @@ class BaseResource(Page, AbstractResource):
     def can_view(self, request):
         return AbstractResource.can_view(self, request)
 
+    # create crossref deposit xml for resource publication
+    def get_crossref_deposit_xml(self, pretty_print=True):
+        # importing here to avoid circular import problem
+        from hydroshare.resource import get_activated_doi
+
+        xsi = "http://www.w3.org/2001/XMLSchema-instance"
+        schemaLocation = 'http://www.crossref.org/schema/4.3.6 http://www.crossref.org/schemas/crossref4.3.6.xsd'
+        ns = "http://www.crossref.org/schema/4.3.6"
+        ROOT = etree.Element('{%s}doi_batch' % ns, version="4.3.6", nsmap={None:ns},
+                             attrib={"{%s}schemaLocation" % xsi : schemaLocation})
+
+        # get the resource object associated with this metadata container object - needed to get the verbose_name
+
+        # create the head sub element
+        head = etree.SubElement(ROOT, 'head')
+        etree.SubElement(head, 'doi_batch_id').text = self.short_id
+        etree.SubElement(head, 'timestamp').text = arrow.get(self.updated).format("YYYYMMDDHHmmss")
+        depositor = etree.SubElement(head, 'depositor')
+        etree.SubElement(depositor, 'depositor_name').text = 'HydroShare'
+        etree.SubElement(depositor, 'email_address').text = settings.DEFAULT_SUPPORT_EMAIL
+        # The organization that owns the information being registered.
+        etree.SubElement(head, 'registrant').text = 'Consortium of Universities for the Advancement of Hydrologic Science, Inc. (CUAHSI)'
+
+        # create the body sub element
+        body = etree.SubElement(ROOT, 'body')
+        # create the database sub element
+        db = etree.SubElement(body, 'database')
+        # create the database_metadata sub element
+        db_md = etree.SubElement(db, 'database_metadata', language="en")
+        # titles is required element for database_metadata
+        titles = etree.SubElement(db_md, 'titles')
+        etree.SubElement(titles, 'title').text = "HydroShare Resources"
+        # create the dataset sub element, dataset_type can be record or collection, set it to collection for HydroShare resources
+        dataset = etree.SubElement(db, 'dataset', dataset_type="collection")
+        ds_titles = etree.SubElement(dataset, 'titles')
+        etree.SubElement(ds_titles, 'title').text = self.metadata.title.value
+        # doi_data is required element for dataset
+        doi_data = etree.SubElement(dataset, 'doi_data')
+        res_doi =  get_activated_doi(self.doi)
+        idx = res_doi.find('10.4211')
+        if idx >= 0:
+            res_doi = res_doi[idx:]
+        etree.SubElement(doi_data, 'doi').text = res_doi
+        etree.SubElement(doi_data, 'resource').text = self.metadata.identifiers.all().filter(name='hydroShareIdentifier')[0].url
+
+        return '<?xml version="1.0" encoding="UTF-8"?>\n' + etree.tostring(ROOT, pretty_print=pretty_print)
+
     @classmethod
     def get_supported_upload_file_types(cls):
         # all file types are supported
@@ -1338,6 +1385,7 @@ class BaseResource(Page, AbstractResource):
     @classmethod
     def can_have_files(cls):
         return True
+
 
 
 class GenericResource(BaseResource):
@@ -1533,59 +1581,6 @@ class CoreMetaData(models.Model):
                         if id_item[element_name]['name'].lower() != 'hydroshareidentifier':
                             self.identifiers.filter(name=id_item[element_name]['name']).delete()
                             self.create_element(element_model_name=element_name, **id_item[element_name])
-
-
-    # create crossref deposit xml for resource publication
-    def get_crossref_deposit_xml(self, pretty_print=True):
-        # importing here to avoid circular import problem
-        from hydroshare.utils import get_resource_types
-        from hydroshare.resource import get_activated_doi
-
-        xsi = "http://www.w3.org/2001/XMLSchema-instance"
-        schemaLocation = 'http://www.crossref.org/schema/4.3.6 http://www.crossref.org/schemas/crossref4.3.6.xsd'
-        ns = "http://www.crossref.org/schema/4.3.6"
-        ROOT = etree.Element('{%s}doi_batch' % ns, version="4.3.6", nsmap={None:ns},
-                             attrib={"{%s}schemaLocation" % xsi : schemaLocation})
-
-        # get the resource object associated with this metadata container object - needed to get the verbose_name
-        resource = BaseResource.objects.filter(object_id=self.id).first()
-        rt = [rt for rt in get_resource_types() if rt._meta.object_name == resource.resource_type][0]
-        resource = rt.objects.get(id=resource.id)
-
-        # create the head sub element
-        head = etree.SubElement(ROOT, 'head')
-        etree.SubElement(head, 'doi_batch_id').text = resource.short_id
-        etree.SubElement(head, 'timestamp').text = arrow.get(resource.updated).format("YYYYMMDDHHmmss")
-        depositor = etree.SubElement(head, 'depositor')
-        etree.SubElement(depositor, 'depositor_name').text = 'HydroShare'
-        etree.SubElement(depositor, 'email_address').text = settings.DEFAULT_SUPPORT_EMAIL
-        # The organization that owns the information being registered.
-        etree.SubElement(head, 'registrant').text = 'Consortium of Universities for the Advancement of Hydrologic Science, Inc. (CUAHSI)'
-
-        # create the body sub element
-        body = etree.SubElement(ROOT, 'body')
-        # create the database sub element
-        db = etree.SubElement(body, 'database')
-        # create the database_metadata sub element
-        db_md = etree.SubElement(db, 'database_metadata', language="en")
-        # titles is required element for database_metadata
-        titles = etree.SubElement(db_md, 'titles')
-        etree.SubElement(titles, 'title').text = "HydroShare Resources"
-        # create the dataset sub element, dataset_type can be record or collection, set it to collection for HydroShare resources
-        dataset = etree.SubElement(db, 'dataset', dataset_type="collection")
-        ds_titles = etree.SubElement(dataset, 'titles')
-        etree.SubElement(ds_titles, 'title').text = self.title.value
-        # doi_data is required element for dataset
-        doi_data = etree.SubElement(dataset, 'doi_data')
-        res_doi =  get_activated_doi(resource.doi)
-        idx = res_doi.find('10.4211')
-        if idx >= 0:
-            res_doi = res_doi[idx:]
-        etree.SubElement(doi_data, 'doi').text = res_doi
-        etree.SubElement(doi_data, 'resource').text = self.identifiers.all().filter(name='hydroShareIdentifier')[0].url
-
-        return '<?xml version="1.0" encoding="UTF-8"?>\n' + etree.tostring(ROOT, pretty_print=pretty_print)
-
 
     def get_xml(self, pretty_print=True):
         # importing here to avoid circular import problem

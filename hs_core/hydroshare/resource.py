@@ -775,7 +775,7 @@ def publish_resource(user, pk):
                  'login_id': settings.CROSSREF_LOGIN_ID,
                  'login_passwd': settings.CROSSREF_LOGIN_PWD
                 }
-    files = {'file': (xml_file_name, resource.metadata.get_crossref_deposit_xml())}
+    files = {'file': (xml_file_name, resource.get_crossref_deposit_xml())}
     # exceptions will be raised if POST request fails
     main_url = 'https://test.crossref.org/'
     if not settings.USE_CROSSREF_TEST:
@@ -792,7 +792,7 @@ def publish_resource(user, pk):
 
         # change "Publisher" element of science metadata to CUAHSI
         md_args = {'name': 'Consortium of Universities for the Advancement of Hydrologic Science, Inc. (CUAHSI)',
-                   'url': 'https://www.cuahsi.org/'}
+                   'url': 'https://www.cuahsi.org'}
         resource.metadata.create_element('Publisher', **md_args)
 
         # create published date

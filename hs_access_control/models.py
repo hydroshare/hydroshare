@@ -1298,7 +1298,7 @@ class UserAccess(models.Model):
 
         access_resource = this_resource.raccess
 
-        if access_resource.public or access_resource.published:
+        if access_resource.public:
             return True
 
         if self.user.is_superuser:
