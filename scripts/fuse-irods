@@ -1,14 +1,14 @@
 #!/usr/bin/env bash
 
-# fuse-init
+# fuse-irods
 # Author: Michael Stealey <michael.j.stealey@gmail.com>
 
 display_usage() {
-	echo "Usage: $0 local/PATH [iRODS/PATH] ..."
-	echo "FUSE mount local directory to an iRODS resource/collection"
-	echo " local/PATH - PATH in local file system"
-	echo "Optional"
-	echo " iRODS/PATH - PATH in iRODS space that will be mounted as local/PATH"
+    echo "fuse-irods script"
+	echo "Usage: $0 init                                # Initialize iRODS environment from local_settings.py configuration"
+	echo "  # NOTE: Once initialized iCommnands are available from the command line"
+	echo "Usage: $0 mount local/path [iRODS/path]       # FUSE mount local/path with contents of iRODS/path"
+	echo "Usage: $0 unmount local/path                  # FUSE unmount local/path"
 }
 
 # get iRODS credentials from local_settings.py
@@ -45,30 +45,48 @@ check_previous_credentials() {
     irodsFs ${1}
 }
 
+fi_init() {
+    get_irods_settings
+    check_previous_credentials
+    iinit < IRODS_CONFIG
+}
+
+fi_mount() {
+    if [[ $# -eq 2 ]]; then
+        echo "*** INFO: FUSE mount default iRODS:$(ipwd) to ${2} ***"
+        fuse_mount_resource $2;
+    else
+        echo "*** INFO: Attempting to icd to ${3} ***"
+        TRY_ICD=$(icd ${3})
+        if [[ "${TRY_ICD}" == *"No such directory (collection):"* ]]; then
+            echo "*** WARNING: No such directory (collection) found ***"
+            echo "*** Exiting without attempting mount ***"
+            exit 1;
+        fi
+        fuse_mount_resource $2;
+    fi
+}
+
+fi_unmount() {
+    fusermount -u $1
+}
+
 # validate input from user
 if [[  $# -ne 1 ]] && [[ $# -ne 2 ]]; then
     display_usage
     exit 1;
-elif [[ $# -eq 1 ]]; then
-    get_irods_settings
-    check_previous_credentials
-    iinit < IRODS_CONFIG
-    echo "*** INFO: FUSE mount default iRODS:$(ipwd) to ${1} ***"
-    fuse_mount_resource $1;
-    echo "*** NOTE: *** unmount using - fusermount -u ${1}"
-else
-    get_irods_settings
-    check_previous_credentials
-    iinit < IRODS_CONFIG
-    echo "*** INFO: Attempting to icd to ${2} ***"
-    TRY_ICD=$(icd ${2})
-    if [[ "${TRY_ICD}" == *"No such directory (collection):"* ]]; then
-        echo "*** WARNING: No such directory (collection) found ***"
-        echo "*** Exiting without attempting mount ***"
-        exit 1;
-    fi
-    fuse_mount_resource $1;
-    echo "*** NOTE: *** unmount using - fusermount -u ${1}"
 fi
+
+# determine action
+case "$1" in
+    init) fi_init
+        ;;
+    mount) fi_mount "$@"
+        ;;
+    unmount) fi_unmount $2
+        ;;
+    *) display_usage
+        ;;
+esac
 
 exit 0;
