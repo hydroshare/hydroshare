@@ -1,24 +1,22 @@
-__author__ = 'pabitra'
-
-## Note: this module has been imported in the models.py in order to receive signals
-## se the end of the models.py for the import of this module
-
-from django.dispatch import receiver
-from hs_core.signals import *
-from hs_core.hydroshare.utils import *
-from hs_core.hydroshare.resource import delete_resource_file
-from hs_app_timeseries.models import TimeSeriesResource
-from forms import *
-import sqlite3
 import os
+import sqlite3
 
-# check if the uploaded files are valid"
+from django.core.exceptions import ValidationError
+from django.dispatch import receiver
+
+from hs_core.signals import *
+from hs_core.hydroshare import utils
+from hs_app_timeseries.models import TimeSeriesResource
+from forms import SiteValidationForm, VariableValidationForm, MethodValidationForm, ProcessingLevelValidationForm, \
+    TimeSeriesResultValidationForm
+
+
 @receiver(pre_create_resource, sender=TimeSeriesResource)
 def resource_pre_create_handler(sender, **kwargs):
     files = kwargs['files']
     validate_files_dict = kwargs['validate_files']
 
-    # check if more than one file uploaded - only one file is allowed
+    # check if more than one file is being uploaded - only one file is allowed
     if len(files) > 1:
         validate_files_dict['are_files_valid'] = False
         validate_files_dict['message'] = 'Only one file can be uploaded.'
@@ -29,36 +27,37 @@ def resource_pre_create_handler(sender, **kwargs):
         if file_ext not in TimeSeriesResource.get_supported_upload_file_types():
             validate_files_dict['are_files_valid'] = False
             validate_files_dict['message'] = 'Invalid file type.'
-        # if it is a sqlite file validate that it is a valid odm2 db file
-        # if file_ext == '.sqlite':
-        #     err_message = _validate_odm2_db_file(uploaded_file)
-        #     if err_message:
-        #         validate_files_dict['are_files_valid'] = False
-        #         validate_files_dict['message'] = err_message
 
-# check the file to be added is valid
+
 @receiver(pre_add_files_to_resource, sender=TimeSeriesResource)
 def pre_add_files_to_resource_handler(sender, **kwargs):
-    # TODO: implement
+    resource = kwargs['resource']
+    if resource.files.all().count() > 0:
+        raise ValidationError("Resource is not allowed to have more than 1 content file.")
+
+    files = kwargs['files']
+    validate_files_dict = kwargs['validate_files']
+    if files:
+        infile = files[0]
+        fl_ext = os.path.splitext(infile.file.name)[1]
+        if fl_ext != '.sqlite':
+            validate_files_dict['are_files_valid'] = False
+            validate_files_dict['message'] = "{sql_file} is not a sqlite file".format(sql_file=infile.file.name)
+
+
+@receiver(pre_delete_file_from_resource, sender=TimeSeriesResource)
+def pre_delete_file_from_resource_handler(sender, **kwargs):
     pass
 
 
-# listen to resource file delete signal to remove relevant metadata elements
-@receiver(pre_delete_file_from_resource, sender=TimeSeriesResource)
-def pre_delete_file_from_resource_handler(sender, **kwargs):
-    resource = kwargs['resource']
-    # delete relevant metadata elements
-    # _delete_extracted_metadata(resource)
-
-
-# listen to resource file add signal to extract relevant metadata elements
 @receiver(post_add_files_to_resource, sender=TimeSeriesResource)
 def post_add_files_to_resource_handler(sender, **kwargs):
     resource = kwargs['resource']
     validate_files_dict = kwargs['validate_files']
     extract_metadata = kwargs['extract_metadata']
     user = kwargs['user']
-    # then extract metadata from the just uploaded file
+
+    # extract metadata from the just uploaded file
     res_file = resource.files.all()[0] if resource.files.all() else None
     if res_file:
         # check if it a sqlite file
@@ -70,7 +69,7 @@ def post_add_files_to_resource_handler(sender, **kwargs):
                     # first delete relevant metadata elements
                     _delete_extracted_metadata(resource)
                     extract_err_message = _extract_metadata(resource, res_file.resource_file.file)
-                    resource_modified(resource, user)
+                    utils.resource_modified(resource, user)
                     if extract_err_message:
                         validate_files_dict['are_files_valid'] = False
                         validate_files_dict['message'] = extract_err_message + " (Failed to extract all metadata)"
@@ -83,7 +82,7 @@ def post_add_files_to_resource_handler(sender, **kwargs):
                     validate_err_message += " (Metadata was not extracted)"
                 validate_files_dict['message'] = validate_err_message
 
-# listen to resource post create signal to extract metadata
+
 @receiver(post_create_resource, sender=TimeSeriesResource)
 def post_create_resource_handler(sender, **kwargs):
     resource = kwargs['resource']
@@ -98,13 +97,14 @@ def post_create_resource_handler(sender, **kwargs):
             validate_err_message = _validate_odm2_db_file(res_file.resource_file.file)
             if not validate_err_message:
                 extract_err_message = _extract_metadata(resource, res_file.resource_file.file)
-                resource_modified(resource, user)
+                utils.resource_modified(resource, user)
                 if extract_err_message:
                     validate_files_dict['are_files_valid'] = False
                     validate_files_dict['message'] = extract_err_message + " (Failed to extract all metadata)"
             else:
                 validate_files_dict['are_files_valid'] = False
                 validate_files_dict['message'] = validate_err_message + " (Metadata was not extracted)"
+
 
 @receiver(pre_metadata_element_create, sender=TimeSeriesResource)
 def metadata_element_pre_create_handler(sender, **kwargs):
@@ -127,10 +127,10 @@ def metadata_element_pre_create_handler(sender, **kwargs):
     else:
         return {'is_valid': False, 'element_data_dict': None}
 
+
 @receiver(pre_metadata_element_update, sender=TimeSeriesResource)
 def metadata_element_pre_update_handler(sender, **kwargs):
     element_name = kwargs['element_name'].lower()
-    element_id = kwargs['element_id']
     request = kwargs['request']
 
     if element_name == "site":
@@ -154,6 +154,7 @@ def metadata_element_pre_update_handler(sender, **kwargs):
  The timeseries landing page should not have delete UI functionality for the resource specific metadata elements
 """
 
+
 def _extract_metadata(resource, sqlite_file):
     err_message = "Not a valid ODM2 SQLite file"
     try:
@@ -174,14 +175,15 @@ def _extract_metadata(resource, sqlite_file):
             if qry_result[0] > 0:
                 authorlists_table_exists = True
 
-            ## extract core metadata ##
+            # extract core metadata
 
             # extract abstract and title
             cur.execute("SELECT DataSetTitle, DataSetAbstract FROM DataSets")
             dataset = cur.fetchone()
             # update title element
             if dataset["DataSetTitle"]:
-                resource.metadata.update_element('title', element_id=resource.metadata.title.id, value=dataset["DataSetTitle"])
+                resource.metadata.update_element('title', element_id=resource.metadata.title.id,
+                                                 value=dataset["DataSetTitle"])
 
             # create abstract/description element
             if dataset["DataSetAbstract"]:
@@ -191,7 +193,6 @@ def _extract_metadata(resource, sqlite_file):
             # these are the comma separated values in the VariableNameCV column of the Variables table
             cur.execute("SELECT VariableNameCV FROM Variables")
             variable = cur.fetchone()
-            keywords = variable["VariableNameCV"]
             keywords = variable["VariableNameCV"].split(",")
             for kw in keywords:
                 resource.metadata.create_element("subject", value=kw)
@@ -215,7 +216,8 @@ def _extract_metadata(resource, sqlite_file):
 
                         for actionby in actionby_rows:
                             # get the matching Affiliations records
-                            cur.execute("SELECT * FROM Affiliations WHERE AffiliationID=?", (actionby["AffiliationID"],))
+                            cur.execute("SELECT * FROM Affiliations WHERE AffiliationID=?",
+                                        (actionby["AffiliationID"],))
                             affiliation_rows = cur.fetchall()
                             for affiliation in affiliation_rows:
                                 # get records from the People table
@@ -277,7 +279,8 @@ def _extract_metadata(resource, sqlite_file):
                     value_dict = {'east': site["Longitude"], 'north': site["Latitude"], 'units': "Decimal degrees"}
                     # get spatial reference
                     if site["SpatialReferenceID"]:
-                        cur.execute("SELECT * FROM SpatialReferences WHERE SpatialReferenceID=?", (site["SpatialReferenceID"],))
+                        cur.execute("SELECT * FROM SpatialReferences WHERE SpatialReferenceID=?",
+                                    (site["SpatialReferenceID"],))
                         spatialref = cur.fetchone()
                         if spatialref:
                             if spatialref["SRSName"]:
@@ -290,20 +293,22 @@ def _extract_metadata(resource, sqlite_file):
             result = cur.fetchone()
             cur.execute("SELECT ActionID FROM FeatureActions WHERE FeatureActionID=?", (result["FeatureActionID"],))
             feature_action = cur.fetchone()
-            cur.execute("SELECT BeginDateTime, EndDateTime FROM Actions WHERE ActionID=?", (feature_action["ActionID"],))
+            cur.execute("SELECT BeginDateTime, EndDateTime FROM Actions WHERE ActionID=?",
+                        (feature_action["ActionID"],))
             action = cur.fetchone()
 
             # create coverage element
             value_dict = {"start": action["BeginDateTime"], "end": action["EndDateTime"]}
             resource.metadata.create_element('coverage', type='period', value=value_dict)
 
-            ## extract extended metadata ##
+            # extract extended metadata
 
             # extract site element data
             # Start with Results table to -> FeatureActions table -> SamplingFeatures table
             cur.execute("SELECT * FROM FeatureActions WHERE FeatureActionID=?", (result["FeatureActionID"],))
             feature_action = cur.fetchone()
-            cur.execute("SELECT * FROM SamplingFeatures WHERE SamplingFeatureID=?", (feature_action["SamplingFeatureID"],))
+            cur.execute("SELECT * FROM SamplingFeatures WHERE SamplingFeatureID=?",
+                        (feature_action["SamplingFeatureID"],))
             sampling_feature = cur.fetchone()
             data_dict = {}
             data_dict['site_code'] = sampling_feature["SamplingFeatureCode"]
@@ -447,20 +452,19 @@ def _delete_extracted_metadata(resource):
 
     resource.metadata.create_element('creator', name=first_creator_name, email=first_creator_email, order=1)
 
+
 def _validate_odm2_db_file(uploaded_file_sqlite_file):
     err_message = "Not a valid ODM2 SQLite file"
     try:
         con = sqlite3.connect(uploaded_file_sqlite_file.name)
-
         with con:
-
             # TODO: check that each of the core tables has the necessary columns
 
             # check that the uploaded file has all the tables from ODM2Core
             cur = con.cursor()
             odm2_core_table_names = ['People', 'Affiliations', 'SamplingFeatures', 'ActionBy', 'Organizations',
                                      'Methods', 'FeatureActions', 'Actions', 'RelatedActions', 'Results', 'Variables',
-                                     'Units', 'Datasets', 'DatasetsResults', 'ProcessingLevels', 'TaxonomicClassifiers' ]
+                                     'Units', 'Datasets', 'DatasetsResults', 'ProcessingLevels', 'TaxonomicClassifiers']
             # check the tables exist
             for table_name in odm2_core_table_names:
                 cur.execute("SELECT COUNT(*) FROM sqlite_master WHERE type=? AND name=?", ("table", table_name))
@@ -476,8 +480,7 @@ def _validate_odm2_db_file(uploaded_file_sqlite_file):
                 result = cur.fetchone()
                 if result[0] <= 0:
                     return err_message
-
         return None
-
     except sqlite3.Error, e:
-        return err_message
+        sqlite_err_msg = str(e.args[0])
+        return err_message + '. ' + sqlite_err_msg
