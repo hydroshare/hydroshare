@@ -1,3 +1,4 @@
+import os
 from unittest import TestCase
 from dateutil import parser
 
@@ -33,6 +34,18 @@ class TestTimeSeriesMetaData(MockIRODSTestCaseMixin, TestCase):
             owner=self.user,
             title='Test Time Series Resource'
         )
+        self.odm2_sqlite_file_name = 'ODM2_valid.sqlite'
+        self.odm2_sqlite_file = 'hs_app_timeseries/tests/{}'.format(self.odm2_sqlite_file_name)
+        self.odm2_sqlite_file_obj = open(self.odm2_sqlite_file, 'r')
+        self.odm2_sqlite_bad_file_name = 'ODM2_invalid.sqlite'
+        self.odm2_sqlite_bad_file = 'hs_app_timeseries/tests/{}'.format(self.odm2_sqlite_bad_file_name)
+        self.odm2_sqlite_bad_file_obj = open(self.odm2_sqlite_bad_file, 'r')
+
+        text_file_name = 'ODM2.txt'
+        text_file = open(text_file_name, 'w')
+        text_file.write("ODM2 records")
+        text_file.close()
+        self.text_file_obj = open(text_file_name, 'r')
 
     def tearDown(self):
         super(TestTimeSeriesMetaData, self).tearDown()
@@ -60,6 +73,10 @@ class TestTimeSeriesMetaData(MockIRODSTestCaseMixin, TestCase):
         Method.objects.all().delete()
         ProcessingLevel.objects.all().delete()
         TimeSeriesResult.objects.all().delete()
+        self.odm2_sqlite_file_obj.close()
+        self.odm2_sqlite_bad_file_obj.close()
+        self.text_file_obj.close()
+        os.remove(self.text_file_obj.name)
 
     def test_allowed_file_types(self):
         # test allowed file type is '.sqlite'
@@ -69,28 +86,18 @@ class TestTimeSeriesMetaData(MockIRODSTestCaseMixin, TestCase):
         # there should not be any content file
         self.assertEquals(self.resTimeSeries.files.all().count(), 0)
 
-        files = []
-        original_file_name = 'original.txt'
-        original_file = open(original_file_name, 'w')
-        original_file.write("original text")
-        original_file.close()
-        files.append(UploadedFile(file=open(original_file_name, 'r'), name=original_file_name))
-
+        files = [UploadedFile(file=self.text_file_obj, name=self.text_file_obj.name)]
         # trying to add a test file to this resource should raise exception
         with self.assertRaises(Exception):
             utils.resource_file_add_pre_process(resource=self.resTimeSeries, files=files, user=self.user,
                                                 extract_metadata=False)
 
         # trying to add sqlite file should pass the file add pre process check
-        original_file_name = 'ODM2.sqlite'
-        original_file = open(original_file_name, 'w')
-        original_file.close()
-        files = []
-        files.append(UploadedFile(file=open(original_file_name, 'r'), name=original_file_name))
+        files = [UploadedFile(file=self.odm2_sqlite_bad_file_obj, name=self.odm2_sqlite_bad_file_name)]
         utils.resource_file_add_pre_process(resource=self.resTimeSeries, files=files, user=self.user,
                                             extract_metadata=False)
 
-        # should raise file validation error even thought the file gets added to the resource
+        # should raise file validation error even though the file gets added to the resource
         with self.assertRaises(utils.ResourceFileValidationException):
             utils.resource_file_add_process(resource=self.resTimeSeries, files=files, user=self.user,
                                             extract_metadata=False)
@@ -105,15 +112,14 @@ class TestTimeSeriesMetaData(MockIRODSTestCaseMixin, TestCase):
                                                 extract_metadata=False)
 
         # delete the content file
-        hydroshare.delete_resource_file(self.resTimeSeries.short_id, original_file_name, self.user)
+        hydroshare.delete_resource_file(self.resTimeSeries.short_id, self.odm2_sqlite_bad_file_name, self.user)
 
         # there should no content file
         self.assertEquals(self.resTimeSeries.files.all().count(), 0)
 
-        # use a valid ODM2 sqlite which should pass the file pre add check post add check
-        odm2_sqlite_file = 'hs_app_timeseries/tests/ODM2_8_19_2015.sqlite'
-        files = []
-        files.append(UploadedFile(file=open(odm2_sqlite_file, 'r'), name='ODM2_8_19_2015.sqlite'))
+        # use a valid ODM2 sqlite which should pass both the file pre add check post add check
+        self.odm2_sqlite_file_obj = open(self.odm2_sqlite_file, 'r')
+        files = [UploadedFile(file=self.odm2_sqlite_file_obj, name=self.odm2_sqlite_file_name)]
         utils.resource_file_add_pre_process(resource=self.resTimeSeries, files=files, user=self.user,
                                             extract_metadata=False)
 
@@ -123,7 +129,104 @@ class TestTimeSeriesMetaData(MockIRODSTestCaseMixin, TestCase):
         # there should one content file
         self.assertEquals(self.resTimeSeries.files.all().count(), 1)
 
-    def test_extracted_metadata(self):
+    def test_metadata_extraction_on_resource_creation(self):
+        self.resTimeSeries = hydroshare.create_resource(
+            'TimeSeriesResource',
+            self.user,
+            'My Test TimeSeries Resource',
+            files=(self.odm2_sqlite_file_obj,)
+            )
+
+        utils.resource_post_create_actions(resource=self.resTimeSeries, user=self.user, metadata=[], **{})
+        # there should one content file
+        self.assertEquals(self.resTimeSeries.files.all().count(), 1)
+
+        # there should be one contributor element
+        self.assertEquals(self.resTimeSeries.metadata.contributors.all().count(), 1)
+
+        # test core metadata after metadata extraction
+        extracted_title = "Water temperature in the Little Bear River at Mendon Road near Mendon, UT"
+        self.assertEquals(self.resTimeSeries.metadata.title.value, extracted_title)
+
+        # there should be an abstract element
+        self.assertNotEquals(self.resTimeSeries.metadata.description, None)
+        extracted_abstract = "This dataset contains observations of water temperature in the Little Bear River at " \
+                             "Mendon Road near Mendon, UT. Data were recorded every 30 minutes. The values were " \
+                             "recorded using a HydroLab MS5 multi-parameter water quality sonde connected to a " \
+                             "Campbell Scientific datalogger. Values represent quality controlled data that have " \
+                             "undergone quality control to remove obviously bad data."
+        self.assertEquals(self.resTimeSeries.metadata.description.abstract, extracted_abstract)
+
+        # there should be 2 coverage element -  point type and period type
+        self.assertEquals(self.resTimeSeries.metadata.coverages.all().count(), 2)
+        self.assertEquals(self.resTimeSeries.metadata.coverages.all().filter(type='point').count(), 1)
+        self.assertEquals(self.resTimeSeries.metadata.coverages.all().filter(type='period').count(), 1)
+
+        point_coverage = self.resTimeSeries.metadata.coverages.all().filter(type='point').first()
+        self.assertEquals(point_coverage.value['projection'], 'Unknown')
+        self.assertEquals(point_coverage.value['units'], 'Decimal degrees')
+        self.assertEquals(point_coverage.value['east'], -111.946402)
+        self.assertEquals(point_coverage.value['north'], 41.718473)
+
+        temporal_coverage = self.resTimeSeries.metadata.coverages.all().filter(type='period').first()
+        self.assertEquals(parser.parse(temporal_coverage.value['start']).date(), parser.parse('01/01/2008').date())
+        self.assertEquals(parser.parse(temporal_coverage.value['end']).date(), parser.parse('01/31/2008').date())
+
+        # there should be one format element
+        self.assertEquals(self.resTimeSeries.metadata.formats.all().count(), 1)
+        format_element = self.resTimeSeries.metadata.formats.all().first()
+        self.assertEquals(format_element.value, 'application/sqlite')
+
+        # there should be one subject element
+        self.assertEquals(self.resTimeSeries.metadata.subjects.all().count(), 1)
+        subj_element = self.resTimeSeries.metadata.subjects.all().first()
+        self.assertEquals(subj_element.value, 'Temperature')
+
+        # testing extended metadata elements
+        self.assertNotEquals(self.resTimeSeries.metadata.site, None)
+        self.assertEquals(self.resTimeSeries.metadata.site.site_code, 'USU-LBR-Mendon')
+        site_name = 'Little Bear River at Mendon Road near Mendon, Utah'
+        self.assertEquals(self.resTimeSeries.metadata.site.site_name, site_name)
+        self.assertEquals(self.resTimeSeries.metadata.site.elevation_m, 1345)
+        self.assertEquals(self.resTimeSeries.metadata.site.elevation_datum, 'NGVD29')
+        self.assertEquals(self.resTimeSeries.metadata.site.site_type, 'Stream')
+
+        self.assertNotEquals(self.resTimeSeries.metadata.variable, None)
+        self.assertEquals(self.resTimeSeries.metadata.variable.variable_code, 'USU36')
+        self.assertEquals(self.resTimeSeries.metadata.variable.variable_name, 'Temperature')
+        self.assertEquals(self.resTimeSeries.metadata.variable.variable_type, 'Water Quality')
+        self.assertEquals(self.resTimeSeries.metadata.variable.no_data_value, -9999)
+        self.assertEquals(self.resTimeSeries.metadata.variable.variable_definition, None)
+        self.assertEquals(self.resTimeSeries.metadata.variable.speciation, 'Not Applicable')
+
+        self.assertNotEquals(self.resTimeSeries.metadata.method, None)
+        self.assertEquals(self.resTimeSeries.metadata.method.method_code, 28)
+        method_name = 'Quality Control Level 1 Data Series created from raw QC Level 0 data using ODM Tools.'
+        self.assertEquals(self.resTimeSeries.metadata.method.method_name, method_name)
+        self.assertEquals(self.resTimeSeries.metadata.method.method_type, 'Instrument deployment')
+        method_des = 'Quality Control Level 1 Data Series created from raw QC Level 0 data using ODM Tools.'
+        self.assertEquals(self.resTimeSeries.metadata.method.method_description, method_des)
+        self.assertEquals(self.resTimeSeries.metadata.method.method_link, None)
+
+        self.assertNotEquals(self.resTimeSeries.metadata.processing_level, None)
+        self.assertEquals(self.resTimeSeries.metadata.processing_level.processing_level_code, 1)
+        self.assertEquals(self.resTimeSeries.metadata.processing_level.definition, 'Quality controlled data')
+        explanation = 'Quality controlled data that have passed quality assurance procedures such as ' \
+                      'routine estimation of timing and sensor calibration or visual inspection and removal ' \
+                      'of obvious errors. An example is USGS published streamflow records following parsing ' \
+                      'through USGS quality control procedures.'
+        self.assertEquals(self.resTimeSeries.metadata.processing_level.explanation, explanation)
+
+        self.assertNotEquals(self.resTimeSeries.metadata.time_series_result, None)
+        self.assertEquals(self.resTimeSeries.metadata.time_series_result.units_type, 'Temperature')
+        self.assertEquals(self.resTimeSeries.metadata.time_series_result.units_name, 'degree celsius')
+        self.assertEquals(self.resTimeSeries.metadata.time_series_result.units_abbreviation, 'degC')
+        self.assertEquals(self.resTimeSeries.metadata.time_series_result.status, 'Unknown')
+        self.assertEquals(self.resTimeSeries.metadata.time_series_result.sample_medium, 'Surface Water')
+        self.assertEquals(self.resTimeSeries.metadata.time_series_result.value_count, 1441)
+        self.assertEquals(self.resTimeSeries.metadata.time_series_result.aggregation_statistics, 'Average')
+
+    def test_metadata_extraction_on_content_file_add(self):
         # test the core metadata at this point
         self.assertEquals(self.resTimeSeries.metadata.title.value, 'Test Time Series Resource')
 
@@ -150,9 +253,7 @@ class TestTimeSeriesMetaData(MockIRODSTestCaseMixin, TestCase):
         self.assertEquals(self.resTimeSeries.metadata.time_series_result, None)
 
         # adding a valid ODM2 sqlite file should generate some core metadata and all extended metadata
-        files = []
-        odm2_sqlite_file = 'hs_app_timeseries/tests/ODM2_8_19_2015.sqlite'
-        files.append(UploadedFile(file=open(odm2_sqlite_file, 'r'), name='ODM2_8_19_2015.sqlite'))
+        files = [UploadedFile(file=self.odm2_sqlite_file_obj, name=self.odm2_sqlite_file_name)]
         utils.resource_file_add_pre_process(resource=self.resTimeSeries, files=files, user=self.user,
                                             extract_metadata=False)
 
@@ -247,11 +348,58 @@ class TestTimeSeriesMetaData(MockIRODSTestCaseMixin, TestCase):
         self.assertEquals(self.resTimeSeries.metadata.time_series_result.value_count, 1441)
         self.assertEquals(self.resTimeSeries.metadata.time_series_result.aggregation_statistics, 'Average')
 
+    def test_metadata_on_content_file_delete(self):
+        # test that metadata is not deleted (except format element) on content file deletion
+        # adding a valid ODM2 sqlite file should generate some core metadata and all extended metadata
+        files = [UploadedFile(file=self.odm2_sqlite_file_obj, name=self.odm2_sqlite_file_name)]
+        utils.resource_file_add_pre_process(resource=self.resTimeSeries, files=files, user=self.user,
+                                            extract_metadata=False)
+
+        utils.resource_file_add_process(resource=self.resTimeSeries, files=files, user=self.user,
+                                        extract_metadata=True)
+
+        # there should one content file
+        self.assertEquals(self.resTimeSeries.files.all().count(), 1)
+
+        # there should be one format element
+        self.assertEquals(self.resTimeSeries.metadata.formats.all().count(), 1)
+
+        # delete content file that we added above
+        hydroshare.delete_resource_file(self.resTimeSeries.short_id, self.odm2_sqlite_file_name, self.user)
+        # there should no content file
+        self.assertEquals(self.resTimeSeries.files.all().count(), 0)
+
+        # test the core metadata at this point
+        self.assertNotEquals(self.resTimeSeries.metadata.title, None)
+
+        # there should be an abstract element
+        self.assertNotEquals(self.resTimeSeries.metadata.description, None)
+
+        # there should be one creator element
+        self.assertEquals(self.resTimeSeries.metadata.creators.all().count(), 1)
+
+        # there should be one contributor element
+        self.assertEquals(self.resTimeSeries.metadata.contributors.all().count(), 1)
+
+        # there should be 2 coverage element -  point type and period type
+        self.assertEquals(self.resTimeSeries.metadata.coverages.all().count(), 2)
+        self.assertEquals(self.resTimeSeries.metadata.coverages.all().filter(type='point').count(), 1)
+        self.assertEquals(self.resTimeSeries.metadata.coverages.all().filter(type='period').count(), 1)
+        # there should be no format element
+        self.assertEquals(self.resTimeSeries.metadata.formats.all().count(), 0)
+        # there should be one subject element
+        self.assertEquals(self.resTimeSeries.metadata.subjects.all().count(), 1)
+
+        # testing extended metadata elements
+        self.assertNotEquals(self.resTimeSeries.metadata.site, None)
+        self.assertNotEquals(self.resTimeSeries.metadata.variable, None)
+        self.assertNotEquals(self.resTimeSeries.metadata.method, None)
+        self.assertNotEquals(self.resTimeSeries.metadata.processing_level, None)
+        self.assertNotEquals(self.resTimeSeries.metadata.time_series_result, None)
+
     def test_metadata_delete_on_resource_delete(self):
         # generate metadata by adding a valid odm2 sqlite file
-        files = []
-        odm2_sqlite_file = 'hs_app_timeseries/tests/ODM2_8_19_2015.sqlite'
-        files.append(UploadedFile(file=open(odm2_sqlite_file, 'r'), name='ODM2_8_19_2015.sqlite'))
+        files = [UploadedFile(file=self.odm2_sqlite_file_obj, name=self.odm2_sqlite_file_name)]
         utils.resource_file_add_pre_process(resource=self.resTimeSeries, files=files, user=self.user,
                                             extract_metadata=False)
 
@@ -550,9 +698,7 @@ class TestTimeSeriesMetaData(MockIRODSTestCaseMixin, TestCase):
 
     def test_get_xml(self):
         # add a valid odm2 sqlite file to generate metadata
-        files = []
-        odm2_sqlite_file = 'hs_app_timeseries/tests/ODM2_8_19_2015.sqlite'
-        files.append(UploadedFile(file=open(odm2_sqlite_file, 'r'), name='ODM2_8_19_2015.sqlite'))
+        files = [UploadedFile(file=self.odm2_sqlite_file_obj, name=self.odm2_sqlite_file_name)]
         utils.resource_file_add_pre_process(resource=self.resTimeSeries, files=files, user=self.user,
                                             extract_metadata=False)
 
