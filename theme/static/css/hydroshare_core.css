@@ -1215,6 +1215,10 @@ a[data-toggle='tab']{
     clear: both;
 }
 
+.height-fix {
+    overflow: hidden;
+}
+
 #id_user-wrapper{
 	width: 60%;
 	padding: 1px;
@@ -2223,6 +2227,7 @@ button.loading {
     width: 150px;
     height: 150px;
     margin: auto;
+    margin-top: 20px;
 }
 
 .profile-pic:before {
@@ -2253,6 +2258,11 @@ button.loading {
 
 #btn-delete-profile {
 
+}
+
+#exposeMask {
+    width: auto !important;
+    height: auto !important;
 }
 
 .round-image {
@@ -3125,11 +3135,19 @@ div.description.active {
 
 /* Profile edit page */
 .profile-picture-controls {
-    text-align: center;
-    padding: 20px;
+    margin-top: 20px;
+}
+
+.profile-picture-controls a {
+    cursor: pointer;
 }
 
 .profile-picture-controls .btn {
     margin-bottom: 20px;
     width: 100%;
+}
+
+#icon-warning {
+    font-size: 40px;
+    color: #D9534F;
 }

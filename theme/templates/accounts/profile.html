@@ -5,16 +5,16 @@
 
 {% block main %}
     {% with profile_user.userprofile as profile %}
-
-        <form class="account-form" method="post"{% if form.is_multipart %} enctype="multipart/form-data"{% endif %}>
+        <form id="profile-form" class="account-form" method="post"{% if form.is_multipart %} enctype="multipart/form-data"{% endif %}>
         {% csrf_token %}
         <div class="row">
+            <div data-page-mode="edit" class="alert alert-warning" role="alert"><strong>Warning!</strong> Information provided below will be public for all HydroShare users to see.</div>
 
             <div class="col-sm-12">
                 {#        Profile picture       #}
                 <div class="row">
                     {% if profile_user.id == user.id %}
-                        <div class="col-xs-12 col-sm-12">
+                        <div class="col-xs-12 col-sm-12 height-fix">
                             <span data-page-mode="view" id="btn-edit-profile" class="glyphicon glyphicon-pencil pull-right icon-button btn-edit" title="Edit profile"></span>
 
                             <span data-page-mode="edit" id="btn-save-profile" class="btn btn-primary"
@@ -44,11 +44,41 @@
                                 <button class="btn btn-default">Remove</button>
                             {% else %}
                                 <fieldset>
-                                    <span class="btn btn-default btn-file">Add a photo<input type="file"></span>
+                                    <span class="btn btn-default btn-file">Add a photo<input type="file" name="picture"></span>
                                 </fieldset>
                             {% endif %}
+
+                                {% if form.initial.cv and form.initial.cv.url %}
+                                    <div>
+                                        Current CV on Profile:
+                                        <a href="{{ form.initial.cv.url }}">{{ form.initial.cv.name }}</a>
+                                    </div>
+                                    {% else %}
+                                    <fieldset>
+                                        <span class="btn btn-default btn-file">Add a CV<input type="file" name="cv"></span>
+                                    </fieldset>
+                                {% endif %}
+
+                                <div><a data-toggle="collapse" data-target="#change_password">Change password</a></div>
+
+                                <div id="change_password" class="collapse">
+                                    <fieldset>
+                                        <label>Password</label>
+                                        <input class="form-control" autocomplete="off" id="id_password1" name="password1"
+                                               placeholder="Password"
+                                               type="password">
+
+                                        <small class="text-muted">Leave blank unless you want to change your password</small>
+                                    </fieldset>
+                                    <fieldset>
+                                        <label>Password (again)</label>
+                                        <input class="form-control" autocomplete="off" id="id_password2" name="password2"
+                                               placeholder="Password (again)" type="password">
+                                    </fieldset>
+                                </div>
+
                                 <!-- Button trigger modal -->
-                                <a data-toggle="modal" data-target="#deactivate-account-dialog">Deactivate account</a>
+                                <div><a data-toggle="modal" data-target="#deactivate-account-dialog">Deactivate account</a></div>
                             </div>
                         </div>
                     </div>
@@ -94,19 +124,19 @@
                                 {# First name #}
                                 <fieldset class="col-sm-4">
                                     <label>First name</label>
-                                    <input class="form-control" value="{{ profile_user.first_name }}">
+                                    <input class="form-control" value="{{ profile_user.first_name }}" name="first_name">
                                 </fieldset>
 
                                 {# Middle name #}
                                 <fieldset class="col-sm-4">
                                     <label>Middle name</label>
-                                    <input class="form-control" value="">
+                                    <input class="form-control" value="" name="middle_name">
                                 </fieldset>
 
                                 {# Last name #}
                                 <fieldset class="col-sm-4">
                                     <label>Last name</label>
-                                    <input class="form-control" value="{{ profile_user.last_name }}">
+                                    <input class="form-control" value="{{ profile_user.last_name }}" name="last_name">
                                 </fieldset>
                             </div>
 
@@ -114,7 +144,7 @@
                                 {# Username #}
                                 <fieldset class="col-sm-4">
                                     <label>Username</label>
-                                    <input class="form-control" value="{{ profile_user.username }}">
+                                    <input class="form-control" value="{{ profile_user.username }}" name="username">
                                     <small class="text-muted">Only letters, numbers, dashes or
                                         underscores.
                                     </small>
@@ -127,10 +157,11 @@
                                     <label>Organization</label>
                                     <input class="form-control" {% if profile.organization %}value="{{ profile.organization }}"{% endif %}>
                                 </fieldset>
+
                                 {# Title #}
                                 <fieldset class="col-sm-6">
                                     <label>Title</label>
-                                    <input class="form-control" {% if profile.title %}value="{{ profile.title }}"{% endif %}>
+                                    <input class="form-control" {% if profile.title %}value="{{ profile.title }}"{% endif %} name="title">
                                     <small class="text-muted">e.g. Assistant Professor, Program Director, Adjunct
                                         Professor, Software Developer.
                                     </small>
@@ -141,7 +172,7 @@
                                 {# Subject areas #}
                                 <fieldset class="col-sm-12">
                                     <label>Subject areas</label>
-                                    <input class="form-control" {% if profile.subject_areas %}value="{{ profile.subject_areas }}"{% endif %}>
+                                    <input class="form-control" {% if profile.subject_areas %}value="{{ profile.subject_areas }}"{% endif %} name="">
                                     <small class="text-muted">A comma-separated list of subject areas you are interested
                                         in researching. e.g. "Computer Science, Hydrology, Water Management"
                                     </small>
@@ -226,17 +257,17 @@
 
                         <div class="col-md-5">
                             {#        DESCRIPTION       #}
-                            {% if profile.details and not user.is_anonymous %}
+                            {% if not user.is_anonymous %}
                             <div class="panel panel-default">
                                 <div class="panel-heading">
-                                    <h3 class="panel-title"><span
-                                            class="glyphicon glyphicon-user">&nbsp;</span>About {{ profile_user.first_name }}
+                                    <h3 class="panel-title">
+                                        <span class="glyphicon glyphicon-user">&nbsp;</span>About {{ profile_user.first_name }}
                                     </h3>
                                 </div>
                                 <div class="panel-body">
                                     <div data-page-mode="view">
-                                        <div>{{ profile.details }}</div>
-                                        <table class="overview" data-page-mode="view" style="margin-top:20px;">
+                                        {% if profile.details %}<div>{{ profile.details }}</div>{% endif %}
+                                        <table class="overview" data-page-mode="view">
                                             <tbody>
                                             <tr>
                                                 <td><span class="text-muted">User type</span></td>
@@ -258,17 +289,17 @@
                                         </table>
                                     </div>
 
-
                                     <div data-page-mode="edit">
                                         <fieldset>
                                             <label>Description</label>
-                                            <textarea class="form-control" id="exampleTextarea" rows="3"
-                                                      placeholder="About {{ profile_user.first_name }}">{{ profile.details }}</textarea>
+                                            <textarea class="form-control" id="exampleTextarea" name="details" rows="4" >
+                                                {% if profile.details %}{{ profile.details }}{% endif %}
+                                            </textarea>
                                         </fieldset>
 
                                         <fieldset>
                                             <label for="exampleSelect1">User type</label>
-                                            <select class="form-control" id="selectUserType">
+                                            <select name="user_type" class="form-control" id="selectUserType">
                                                 <option>University Faculty</option>
                                                 <option>University Professional or Research Staff</option>
                                                 <option>Post-Doctoral Fellow</option>
@@ -285,17 +316,17 @@
 
                                         <fieldset>
                                             <label>Country</label>
-                                            <input class="form-control" value="United States">
+                                            <input name="country" class="form-control" value="United States">
                                         </fieldset>
 
                                         <fieldset>
                                             <label>State/Province</label>
-                                            <input class="form-control" value="Utah">
+                                            <input name="state" class="form-control" value="Utah">
                                         </fieldset>
 
                                         <fieldset>
                                             <label>User since</label>
-                                            <input readonly class="form-control" value="01/28/2016">
+                                            <input name="date_joined" readonly class="form-control" value="01/28/2016">
                                         </fieldset>
                                     </div>
                                 </div>
@@ -356,7 +387,7 @@
                                                 <div class="col-sm-12"><label>Phone 1</label></div>
 
                                                 <div class="col-sm-6">
-                                                    <select class="form-control">
+                                                    <select name="phone_1_type" class="form-control">
                                                         <option {% if profile.phone_1_type == "Mobile" %}selected{% endif %}
                                                                 value="Mobile">Mobile
                                                         </option>
@@ -369,7 +400,7 @@
                                                     </select>
                                                 </div>
                                                 <div class="col-sm-6">
-                                                    <input id="phone1" class="form-control phone" {% if profile.phone_1 %}value="{{ profile.phone_1 }}"{% endif %}>
+                                                    <input id="phone1" name="phone_1" class="form-control phone" {% if profile.phone_1 %}value="{{ profile.phone_1 }}"{% endif %}>
                                                 </div>
                                             </fieldset>
 
@@ -377,7 +408,7 @@
                                                 <div class="col-sm-12"><label>Phone 2</label></div>
 
                                                 <div class="col-sm-6">
-                                                    <select class="form-control">
+                                                    <select name="phone_2_type" class="form-control">
                                                         <option {% if profile.phone_2_type == "Mobile" %}selected{% endif %}
                                                                 value="Mobile">Mobile
                                                         </option>
@@ -390,7 +421,7 @@
                                                     </select>
                                                 </div>
                                                 <div class="col-sm-6">
-                                                    <input id="phone2" class="form-control phone" {% if profile.phone_2 %}value="{{ profile.phone_2 }}"{% endif %}>
+                                                    <input id="phone2" name="phone_2" class="form-control phone" {% if profile.phone_2 %}value="{{ profile.phone_2 }}"{% endif %}>
                                                 </div>
                                             </fieldset>
                                             <fieldset class="col-sm-12">
@@ -552,8 +583,16 @@
                         <h4 class="modal-title" id="myModalLabel">Deactivate Account</h4>
                     </div>
                     <div class="modal-body">
-                        <h5><span class="glyphicon glyphicon-warning-sign"></span> WARNING: THIS IS A PERMANENT ACTION</h5>
-                        <span>Are you sure you want to deactivate your account?</span>
+                        <div class="row">
+                            <div class="col-sm-2 col-xs-12 text-center">
+                                <span id="icon-warning" class="glyphicon glyphicon-warning-sign"></span>
+                            </div>
+                            <div class="col-sm-10 col-xs-12">
+                                <div>WARNING: THIS IS A PERMANENT ACTION</div>
+                                <span>Are you sure you want to deactivate your account?</span>
+                            </div>
+                        </div>
+
                     </div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
@@ -568,24 +607,33 @@
 {% block extra_js %}
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.mask/1.13.4/jquery.mask.min.js" type="text/javascript"></script>
     <script type="text/javascript">
+        function update_profile_ajax_submit() {
+            var form = $("#profile-form");
+            var datastring = form.serialize();
+            var url = form.attr('action');
+
+            $.ajax({
+                type: "POST",
+                url: url,
+                dataType: 'html',
+                data: datastring,
+                success: function (result) {
+{#                    var json_response = JSON.parse(result);#}
+{#                    if (json_response.status == "success") {#}
+{##}
+{#                    }#}
+                    console.log(result);
+                },
+                error: function (XMLHttpRequest, textStatus, errorThrown) {
+                    console.log(errorThrown);
+                }
+            });
+            //don't submit the form
+            return false;
+        }
+
     $(document).ready(function () {
-
-        $(".phone").mask("(999) 999-9999");
-
-        $(".phone").on("blur", function () {
-            var last = $(this).val().substr($(this).val().indexOf("-") + 1);
-
-            if (last.length == 5) {
-                var move = $(this).val().substr($(this).val().indexOf("-") + 1, 1);
-
-                var lastfour = last.substr(1, 4);
-
-                var first = $(this).val().substr(0, 9);
-
-                $(this).val(first + move + '-' + lastfour);
-            }
-        });
-
+        $('.phone').mask('(000) 000-0000');
 
         $("[data-page-mode='edit']").hide();
         $("#btn-edit-profile").click(function(){
@@ -596,6 +644,8 @@
             });
 
         });
+
+        $("#btn-save-profile").click(update_profile_ajax_submit);
 
         $("#btn-cancel-profile-edit").click(function(){
             $("[data-page-mode='edit']").hide();
