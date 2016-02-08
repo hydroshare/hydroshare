@@ -339,7 +339,7 @@ def create_resource(
         resource_type, owner, title,
         edit_users=None, view_users=None, edit_groups=None, view_groups=None,
         keywords=(), metadata=None, content=None,
-        files=(), res_type_cls=None, resource=None, unpack_file=True, **kwargs):
+        files=(), res_type_cls=None, resource=None, unpack_file=False, **kwargs):
     """
     Called by a client to add a new resource to HydroShare. The caller must have authorization to write content to
     HydroShare. The pid for the resource is assigned by HydroShare upon inserting the resource.  The create method
