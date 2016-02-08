@@ -1,4 +1,6 @@
 #web-app-item {
+    width: 225px;
+    height: 150px;
     display:inline-block;
     box-sizing: border-box;
     padding-left: 1vw;
