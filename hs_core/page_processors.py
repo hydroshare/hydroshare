@@ -84,12 +84,17 @@ def get_page_context(page, user, resource_edit=False, extended_metadata_layout=N
                         relevant_tools.append(tl)
 
     just_created = False
+    just_published = False
     if request:
         validation_error = check_for_validation(request)
 
         just_created = request.session.get('just_created', False)
         if 'just_created' in request.session:
             del request.session['just_created']
+
+        just_published = request.session.get('just_published', False)
+        if 'just_published' in request.session:
+            del request.session['just_published']
 
     bag_url = AbstractResource.bag_url(content_model.short_id)
 
@@ -163,6 +168,7 @@ def get_page_context(page, user, resource_edit=False, extended_metadata_layout=N
                    'relevant_tools': relevant_tools,
                    'file_type_error': file_type_error,
                    'just_created': just_created,
+                   'just_published': just_published,
                    'bag_url': bag_url,
                    'show_content_files': show_content_files,
                    'discoverable': discoverable,

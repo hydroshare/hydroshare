@@ -23,6 +23,18 @@
             {%  endif %}
         {% endblock %}
 
+        {# ======= Resource Publication just published notification =======#}
+        {% if cm.raccess.published and just_published %}
+            <div class="col-sm-12">
+                <div class="alert {% if just_created %}alert-success{% else %}alert-warning{% endif %} alert-dismissible" role="alert">
+                    <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                    <strong>Congratulations! </strong>
+                    <span>Your resource has been published. You will see the DOI in the citation for your resource below,
+                        but it may take approximately one day for your DOI to become active.</span>
+                </div>
+            </div>
+        {% endif %}
+
         {# ======= Missing fields notification =======#}
         {% if not metadata_form and page.perms.change %}
             {% if missing_metadata_elements or title|stringformat:"s" == "Untitled resource" or not cm.has_required_content_files %}
@@ -55,8 +67,8 @@
                         <small> Click on the edit button ( <span class="glyphicon glyphicon-pencil"></span> ) below to edit this resource.</small>
                      </div>
                 </div>
-                {% endif %}
             {% endif %}
+        {% endif %}
 
         {# ======= Title ======= #}
         <div class="col-sm-12">

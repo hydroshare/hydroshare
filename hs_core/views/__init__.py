@@ -256,7 +256,8 @@ def publish(request, shortkey, *args, **kwargs):
         hydroshare.publish_resource(request.user, shortkey)
     except ValidationError as exp:
         request.session['validation_error'] = exp.message
-
+    else:
+        request.session['just_published'] = True
     return HttpResponseRedirect(request.META['HTTP_REFERER'])
 
 # TOD0: this view function needs refactoring once the new access control UI works

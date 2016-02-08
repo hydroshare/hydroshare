@@ -765,6 +765,10 @@ def publish_resource(user, pk):
     Note:  This is different than just giving public access to a resource via access control rule
     """
     resource = utils.get_resource_by_shortkey(pk)
+
+    if not resource.can_be_public_or_discoverable:
+        raise ValidationError("This resource cannot be published since it does not have required metadata or content files.")
+
     # append pending to the doi field to indicate DOI is not activated yet. Upon successful activation, "pending" will be removed from DOI field
     resource.doi = get_resource_doi(pk, True)
     resource.save()
