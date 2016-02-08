@@ -222,6 +222,8 @@ def create_bag(resource):
 
     istorage.setAVU(resource.short_id, "resourceType", resource._meta.object_name)
 
+    # delete if there exists any bags for the resource
+    resource.bags.all().delete()
     # link the zipped bag file in IRODS via bag_url for bag downloading
     b = Bags.objects.create(
         content_object=resource.baseresource,

@@ -1,8 +1,8 @@
 ### Nightly Build Status (develop branch)
 
-| a: Workflow | b: Clean | c: Build | d: Unit Tests | e: REST API Tests |
-| :----- | :--- | :--- | :-------- | :------------ |
-| [![Build Status](http://ci.hydroshare.org:8080/job/develop-workflow/badge/icon?style=plastic)](http://ci.hydroshare.org:8080/job/develop-workflow/) | [![Build Status](http://ci.hydroshare.org:8080/job/develop-clean/badge/icon?style=plastic)](http://ci.hydroshare.org:8080/job/develop-clean/) | [![Build Status](http://ci.hydroshare.org:8080/job/develop-branch/badge/icon?style=plastic)](http://ci.hydroshare.org:8080/job/develop-branch/) | [![Build Status](http://ci.hydroshare.org:8080/job/develop-test/badge/icon?style=plastic)](http://ci.hydroshare.org:8080/job/develop-test/) | [![Build Status](http://ci.hydroshare.org:8080/job/develop-rest-test/badge/icon?style=plastic)](http://ci.hydroshare.org:8080/job/develop-rest-test/)|
+| a: Workflow | b: Clean | c: Build | d: Unit Tests | e: REST API Tests | f: Pylint
+| :----- | :--- | :--- | :-------- | :------------ | :----------- |
+| [![Build Status](http://ci.hydroshare.org:8080/job/develop-workflow/badge/icon?style=plastic)](http://ci.hydroshare.org:8080/job/develop-workflow/) | [![Build Status](http://ci.hydroshare.org:8080/job/develop-clean/badge/icon?style=plastic)](http://ci.hydroshare.org:8080/job/develop-clean/) | [![Build Status](http://ci.hydroshare.org:8080/job/develop-branch/badge/icon?style=plastic)](http://ci.hydroshare.org:8080/job/develop-branch/) | [![Build Status](http://ci.hydroshare.org:8080/job/develop-test/badge/icon?style=plastic)](http://ci.hydroshare.org:8080/job/develop-test/) | [![Build Status](http://ci.hydroshare.org:8080/job/develop-rest-test/badge/icon?style=plastic)](http://ci.hydroshare.org:8080/job/develop-rest-test/)| [![Build Status](http://ci.hydroshare.org:8080/job/develop-pylint/badge/icon?style=plastic)](http://ci.hydroshare.org:8080/job/develop-pylint/) |
 
 Build generate by [Jenkins CI](http://ci.hydroshare.org:8080)
 

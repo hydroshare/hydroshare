@@ -1,4 +1,7 @@
-from django.contrib import admin
-from .models import *
+from django.contrib.gis import admin
 
-admin.site.register(RefTimeSeries)
+from mezzanine.pages.admin import PageAdmin
+
+from .models import RefTimeSeriesResource
+
+admin.site.register(RefTimeSeriesResource, PageAdmin)
