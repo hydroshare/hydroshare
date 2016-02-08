@@ -47,8 +47,7 @@
                                     <span class="btn btn-default btn-file">Add a photo<input type="file" name="picture"></span>
                                 </fieldset>
                             {% endif %}
-
-                                {% if form.initial.cv and form.initial.cv.url %}
+                                {% if profile.cv and profile.cv.url %}
                                     <div>
                                         Current CV on Profile:
                                         <a href="{{ form.initial.cv.url }}">{{ form.initial.cv.name }}</a>
