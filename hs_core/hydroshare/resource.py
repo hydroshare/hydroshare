@@ -417,9 +417,16 @@ def create_resource(
             metadata = []
 
         if len(files) == 1 and unpack_file and zipfile.is_zipfile(files[0]):
+            # Add contents of zipfile as resource files asynchronously
+            # Note: this is done asynchronously as unzipping may take
+            # a long time (~15 seconds to many minutes)
             add_zip_file_contents_to_resource_async(resource, files[0])
         else:
             # Add resource file(s) now
+            # Note: this is done synchronously as it should only take a
+            # few seconds.  We may want to add the option to do this
+            # asynchronously if the file size is large and would take
+            # more than ~15 seconds to complete.
             add_resource_files(resource.short_id, *files)
 
         # by default resource is private
