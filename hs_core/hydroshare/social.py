@@ -178,7 +178,7 @@ def get_endorsements(for_object):
 
     """
 
-    if isinstance(for_object, GenericResource):
+    if isinstance(for_object, BaseResource):
         resource_type = ContentType.objects.get_for_model(BaseResource)
         endorsements = Rating.objects.filter(content_type=resource_type, object_pk=for_object.id)
 

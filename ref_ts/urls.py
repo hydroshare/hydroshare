@@ -8,5 +8,6 @@ urlpatterns = patterns('',
     url(r'^_internal/search-variables/$', views.search_variables),
     url(r'^_internal/verify-rest-url/$', views.verify_rest_url),
     url(r'^_internal/time-series-from-service/$', views.time_series_from_service),
-    url(r'^_internal/(?P<shortkey>[A-z0-9]+)/update-files/$', views.update_files)
+    url(r'^_internal/refts/preview-figure/(?P<preview_code>[A-z0-9]+)/$', views.preview_figure),
+    url(r'^_internal/(?P<shortkey>[A-z0-9]+)/download-refts-bag/$', views.download_refts_resource_files),
     )

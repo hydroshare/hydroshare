@@ -1,5 +1,8 @@
 __author__ = 'lisa_stillwell'
 
+# TODO: This test for set_access_rules() api can be included in test run only after we fix the api.
+# This api is currently not being used in the system. Cleanup this test at the time of hs_core api cleanup.
+
 import unittest
 
 from unittest import TestCase
