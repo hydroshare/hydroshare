@@ -3,6 +3,7 @@ import zipfile
 import shutil
 import logging
 
+from django.conf import settings
 from django.core.exceptions import ObjectDoesNotExist
 from django.core.files import File
 from django.core.files.uploadedfile import UploadedFile
@@ -311,6 +312,7 @@ def check_resource_type(resource_type):
         raise NotImplementedError("Type {resource_type} does not exist".format(resource_type=resource_type))
     return res_cls
 
+
 def add_zip_file_contents_to_resource_async(resource, f):
     """
     Launch asynchronous celery task to add zip file contents to a resource.
@@ -324,7 +326,7 @@ def add_zip_file_contents_to_resource_async(resource, f):
     # has finished.
     logger = logging.getLogger('django')
     uploaded_filepath = f.temporary_file_path()
-    tmp_dir = '/shared_temp'
+    tmp_dir = getattr(settings, 'HYDROSHARE_SHARED_TEMP', '/shared_temp')
     logger.debug("Copying uploaded file from {0} to {1}".format(uploaded_filepath,
                                                                 tmp_dir))
     shutil.copy(uploaded_filepath, tmp_dir)
@@ -334,6 +336,7 @@ def add_zip_file_contents_to_resource_async(resource, f):
                                                   countdown=30)
     resource.file_unpack_status = 'Pending'
     resource.save()
+
 
 def create_resource(
         resource_type, owner, title,

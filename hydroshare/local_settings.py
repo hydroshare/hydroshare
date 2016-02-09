@@ -134,3 +134,5 @@ EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 #EMAIL_PORT = ''
 #EMAIL_USE_TLS = True
 #DEFAULT_FROM_EMAIL = ''
+
+HYDROSHARE_SHARED_TEMP = '/shared_temp'
