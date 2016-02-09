@@ -5,7 +5,6 @@ import sys
 import traceback
 import zipfile
 import logging
-import time
 
 from celery import shared_task
 
@@ -13,11 +12,17 @@ from hs_core.hydroshare import utils
 from hs_core.models import BaseResource
 
 
+# Pass 'django' into getLogger instead of __name__
+# for celery tasks (as this seems to be the
+# only way to successfully log in code executed
+# by celery, despite our catch-all handler).
+logger = logging.getLogger('django')
+
+
 @shared_task
 def add_zip_file_contents_to_resource(pk, zip_file_path):
     zfile = None
     try:
-        logger = logging.getLogger('django')
         resource = utils.get_resource_by_shortkey(pk, or_404=False)
         zfile = zipfile.ZipFile(zip_file_path)
         num_files = len(zfile.infolist())

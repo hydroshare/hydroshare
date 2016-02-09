@@ -24,6 +24,10 @@ from hs_core.models import AbstractResource, ResourceManager, BaseResource, Reso
 from hs_core.hydroshare.hs_bagit import create_bag_files
 from django_irods.storage import IrodsStorage
 
+
+logger = logging.getLogger(__name__)
+
+
 class ResourceFileSizeException(Exception):
     pass
 
@@ -403,7 +407,6 @@ class ZipContents(object):
         return file_name == '.DS_Store'
 
     def get_files(self):
-        logger = logging.getLogger('django')
         temp_dir = tempfile.mkdtemp()
         try:
             file_path = None

@@ -24,6 +24,8 @@ from hs_core.tasks import add_zip_file_contents_to_resource
 file_size_limit = 10*(1024 ** 3)
 file_size_limit_for_display = '10G'
 
+logger = logging.getLogger(__name__)
+
 
 def get_resource(pk):
     """
@@ -324,7 +326,6 @@ def add_zip_file_contents_to_resource_async(resource, f):
     """
     # Add contents of zipfile asynchronously; wait 30 seconds to be "sure" that resource creation
     # has finished.
-    logger = logging.getLogger('django')
     uploaded_filepath = f.temporary_file_path()
     tmp_dir = getattr(settings, 'HYDROSHARE_SHARED_TEMP', '/shared_temp')
     logger.debug("Copying uploaded file from {0} to {1}".format(uploaded_filepath,
