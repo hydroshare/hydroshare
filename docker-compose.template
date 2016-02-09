@@ -13,6 +13,8 @@ solr:
     - "8983"
 hydroshare:
   build: .
+  stdin_open: true
+  tty: true
   environment:
     POSTGIS_HOST: postgis
     POSTGIS_PORT: 5432

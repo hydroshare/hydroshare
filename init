@@ -7,4 +7,6 @@ sleep 3s
 echo "make sure postgis is enabled on PostgreSQL"
 psql -U postgres -h postgis -w -c 'create extension postgis;'
 /usr/sbin/sshd
+#pip freeze > pip.freeze
 python manage.py runserver 0.0.0.0:8000
+#/bin/bash

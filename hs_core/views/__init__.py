@@ -17,8 +17,7 @@ from rest_framework.decorators import api_view
 
 from mezzanine.conf import settings
 from mezzanine.pages.page_processors import processor_for
-#import autocomplete_light
-from dal import autocomplete as autocomplete_light
+import autocomplete_light
 from inplaceeditform.commons import get_dict_from_obj, apply_filters
 from inplaceeditform.views import _get_http_response, _get_adaptor
 from django_irods.storage import IrodsStorage
@@ -376,7 +375,7 @@ def unshare_resource_with_user(request, shortkey, user_id, *args, **kwargs):
             user.uaccess.unshare_resource_with_user(res, user_to_unshare_with)
         else:
             # requesting user is the original grantor of privilege to user_to_unshare_with
-            # COUCH: This can raise a PermissionDenied exception without a guard such as 
+            # COUCH: This can raise a PermissionDenied exception without a guard such as
             # user.uaccess.can_undo_share_resource_with_user(res, user_to_unshare_with)
             user.uaccess.undo_share_resource_with_user(res, user_to_unshare_with)
 
@@ -650,7 +649,7 @@ def _unshare_resource_with_users(request, requesting_user, users_to_unshare_with
                     requesting_user.uaccess.unshare_resource_with_user(resource, user)
                 else:
                     # requesting user is the original grantor of privilege to user
-                    # TODO from @alvacouch: This can raise a PermissionDenied exception without a guard such as 
+                    # TODO from @alvacouch: This can raise a PermissionDenied exception without a guard such as
                     # user.uaccess.can_undo_share_resource_with_user(res, user_to_unshare_with)
                     requesting_user.uaccess.undo_share_resource_with_user(resource, user)
 

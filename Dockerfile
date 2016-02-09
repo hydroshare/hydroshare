@@ -13,7 +13,7 @@ RUN pip install -U celery==3.1.20
 ### ^^^ from existing
 RUN apt-get install -y fuse
 RUN pip install --no-deps -U django-appconf
-RUN pip install --no-deps -U django-autocomplete-light
+RUN pip install --no-deps -U django-autocomplete-light==2.3.3
 RUN pip install --no-deps -U django-braces
 RUN pip install --no-deps -U django-cors-headers
 RUN pip install --no-deps -U django-crispy-forms

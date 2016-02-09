@@ -1,14 +1,14 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 
-from django.db import models, migrations
+from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('hs_core', '0006_auto_20150917_1515'),
-        ('contenttypes', '0001_initial'),
+        ('contenttypes', '0002_remove_content_type_name'),
+        ('hs_core', '0001_initial'),
     ]
 
     operations = [
@@ -27,15 +27,12 @@ class Migration(migrations.Migration):
             options={
                 'abstract': False,
             },
-            bases=(models.Model,),
         ),
         migrations.CreateModel(
             name='GeographicFeatureMetaData',
             fields=[
                 ('coremetadata_ptr', models.OneToOneField(parent_link=True, auto_created=True, primary_key=True, serialize=False, to='hs_core.CoreMetaData')),
             ],
-            options={
-            },
             bases=('hs_core.coremetadata',),
         ),
         migrations.CreateModel(
@@ -47,9 +44,6 @@ class Migration(migrations.Migration):
                 ('geometryType', models.CharField(max_length=128)),
                 ('content_type', models.ForeignKey(related_name='hs_geographic_feature_resource_geometryinformation_related', to='contenttypes.ContentType')),
             ],
-            options={
-            },
-            bases=(models.Model,),
         ),
         migrations.CreateModel(
             name='OriginalCoverage',
@@ -66,9 +60,6 @@ class Migration(migrations.Migration):
                 ('unit', models.TextField(max_length=256, null=True, blank=True)),
                 ('content_type', models.ForeignKey(related_name='hs_geographic_feature_resource_originalcoverage_related', to='contenttypes.ContentType')),
             ],
-            options={
-            },
-            bases=(models.Model,),
         ),
         migrations.CreateModel(
             name='OriginalFileInfo',
@@ -81,9 +72,17 @@ class Migration(migrations.Migration):
                 ('filenameString', models.TextField(null=True, blank=True)),
                 ('content_type', models.ForeignKey(related_name='hs_geographic_feature_resource_originalfileinfo_related', to='contenttypes.ContentType')),
             ],
+        ),
+        migrations.CreateModel(
+            name='GeographicFeatureResource',
+            fields=[
+            ],
             options={
+                'ordering': ('_order',),
+                'verbose_name': 'Geographic Feature (ESRI Shapefiles)',
+                'proxy': True,
             },
-            bases=(models.Model,),
+            bases=('hs_core.baseresource',),
         ),
         migrations.AlterUniqueTogether(
             name='originalfileinfo',
@@ -96,16 +95,5 @@ class Migration(migrations.Migration):
         migrations.AlterUniqueTogether(
             name='geometryinformation',
             unique_together=set([('content_type', 'object_id')]),
-        ),
-        migrations.CreateModel(
-            name='GeographicFeatureResource',
-            fields=[
-            ],
-            options={
-                'ordering': ('_order',),
-                'verbose_name': 'Geographic Feature (ESRI Shapefiles)',
-                'proxy': True,
-            },
-            bases=('hs_core.baseresource',),
         ),
     ]

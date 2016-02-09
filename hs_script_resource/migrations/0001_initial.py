@@ -1,14 +1,14 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 
-from django.db import models, migrations
+from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('hs_core', '0014_auto_20151123_1451'),
-        ('contenttypes', '0001_initial'),
+        ('contenttypes', '0002_remove_content_type_name'),
+        ('hs_core', '0001_initial'),
     ]
 
     operations = [
@@ -17,8 +17,6 @@ class Migration(migrations.Migration):
             fields=[
                 ('coremetadata_ptr', models.OneToOneField(parent_link=True, auto_created=True, primary_key=True, serialize=False, to='hs_core.CoreMetaData')),
             ],
-            options={
-            },
             bases=('hs_core.coremetadata',),
         ),
         migrations.CreateModel(
@@ -34,13 +32,6 @@ class Migration(migrations.Migration):
                 ('scriptCodeRepository', models.CharField(help_text=b'A URL to the source code repository (e.g. git, mercurial, svn)', max_length=255, verbose_name=b'Script Repository', blank=True)),
                 ('content_type', models.ForeignKey(related_name='hs_script_resource_scriptspecificmetadata_related', to='contenttypes.ContentType')),
             ],
-            options={
-            },
-            bases=(models.Model,),
-        ),
-        migrations.AlterUniqueTogether(
-            name='scriptspecificmetadata',
-            unique_together=set([('content_type', 'object_id')]),
         ),
         migrations.CreateModel(
             name='ScriptResource',
@@ -52,5 +43,9 @@ class Migration(migrations.Migration):
                 'proxy': True,
             },
             bases=('hs_core.baseresource',),
+        ),
+        migrations.AlterUniqueTogether(
+            name='scriptspecificmetadata',
+            unique_together=set([('content_type', 'object_id')]),
         ),
     ]
