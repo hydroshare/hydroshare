@@ -29,16 +29,9 @@ def landing_page(request, page):
         viewable_resources = list(viewable_resources)
         discovered_resources = list(user.ulabels.my_resources)
 
-        for res in owned_resources:
-            res.owned = True
-        for res in editable_resources:
-            res.editable = True
-        for res in viewable_resources:
-            res.viewable = True
-
         user_all_accessible_resource_list = (owned_resources + editable_resources + \
                                              viewable_resources + discovered_resources)
-    else:
+    else: # anonymous user
         user_all_accessible_resource_list = list(BaseResource.objects.\
                                                  filter(Q(raccess__public=True) | Q(raccess__discoverable=True)).distinct())
 
@@ -53,16 +46,6 @@ def landing_page(request, page):
             else:
                 collection_items_inaccessible.append(res)
 
-    collection_message = ""
-    if collection_items_list is not None:
-        collection_length = len(collection_items_list)
-        collection_message = "This collection holds {0} resource(s) in total. ".format(collection_length)
-        hide_count = len(collection_items_inaccessible)
-        if hide_count > 0:
-            collection_message += "You have NO permission to view the {} grey resource(s). \
-            You could try to request for permission by leaving a comment below.".format(hide_count)
-
-
     if not edit_resource:
         # get the context from hs_core
         context = page_processors.get_page_context(page, request.user,
@@ -70,6 +53,15 @@ def landing_page(request, page):
                                                    extended_metadata_layout=None,
                                                    request=request)
         extended_metadata_exists = False
+
+        collection_message = ""
+        if collection_items_list is not None:
+            collection_length = len(collection_items_list)
+            collection_message = "This collection holds {0} resource(s) in total. ".format(collection_length)
+            hide_count = len(collection_items_inaccessible)
+            if hide_count > 0:
+                collection_message += "You have NO permission to view the {} grey resource(s). \
+                You could try to request for permission by leaving a comment below.".format(hide_count)
 
         if collection_items_list is not None:
             extended_metadata_exists = True
@@ -147,11 +139,10 @@ def landing_page(request, page):
                                 HTML(
                                     '</select>'
                                     '<input class="btn btn-success" type="button" id="add" value ="v Add v"/>'
+                                    '&nbsp;&nbsp;&nbsp;&nbsp;'
                                     '<input class="btn btn-danger" type="button" id="remove" value ="^ Remove ^" />'
                                     '<form id="collector" name="collector" action="/hsapi/_internal/' + content_model.short_id + \
                                     '/update-collection/" method="POST">'
-                                    # '<input type="text" name="collection_obj_res_id" id="name="collection_obj_res_id" value="' + \
-                                    # content_model.short_id + '" class="hidden" />'
                                     '<h4>My Collection</h4>'
                                     '<select class="form-control" multiple="multiple" id="select2" name="collection_items">'
                                 ),

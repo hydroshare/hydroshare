@@ -1,4 +1,5 @@
 import json
+import logging
 
 from django.http import HttpResponseRedirect, HttpResponseNotFound, HttpResponse
 
@@ -7,6 +8,13 @@ from hs_core.views import _set_resource_sharing_status
 from hs_core.views.utils import authorize
 from hs_core.hydroshare.utils import user_from_id, resource_modified
 
+logger = logging.getLogger("django")
+
+# update collection content (member resources)
+# downgrade collection sharing status to PRIVATE if the followings are all met:
+# 1) current user is collection owner or admin;
+# 2) current collection is public or discoverable
+# 3) private resources are being added into this collection
 def update_collection(request, shortkey, *args, **kwargs):
     try:
         collection_res_obj, is_authorized, user = authorize(request, shortkey, edit=True, full=True, superuser=True, raises_exception=True)
@@ -55,10 +63,12 @@ def update_collection(request, shortkey, *args, **kwargs):
             return HttpResponse(json.dumps(ajax_response_data))
 
     except Exception as ex:
+        logger.exception("update_collection: %s" % (ex.message))
         ajax_response_data = {'status': 'error', 'message': ex.message}
         return HttpResponse(json.dumps(ajax_response_data))
 
-
+# loop through member resources in collection ("shortkey") to check if the target user ("user_id") has
+# at least View permission over them.
 def collection_member_permission(request, shortkey, user_id, *args, **kwargs):
     try:
         collection_res_obj, is_authorized, user = authorize(request, shortkey, view=True, edit=True, \
@@ -77,5 +87,6 @@ def collection_member_permission(request, shortkey, user_id, *args, **kwargs):
             else:
                 raise Exception("Collection member metadata is not yet initialized.")
     except Exception as ex:
+        logger.exception("collection_member_permission: %s" % (ex.message))
         ajax_response_data = {'status': "error", 'message': ex.message}
         return HttpResponse(json.dumps(ajax_response_data))

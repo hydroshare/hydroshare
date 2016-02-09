@@ -27,10 +27,6 @@
     </div>
 {% endblock %}
 
-
-{#{% block extra_content %}#}
-{#{% endblock %}#}
-
 {% block extended_metadata %}
     {% if extended_metadata_exists %}
         <div class="row">
@@ -43,7 +39,6 @@
                         {% autoescape off %}
                             <div class="col-sm-8">{{ collection_items }}</div>
                         {% endautoescape %}
-
                         </div>
                     {% endif %}
                       <br/>
@@ -55,8 +50,6 @@
         </div>
     {%  endif %}
 {%  endblock %}
-
-
 
 {% block extra_js %}
     {{ block.super }}
@@ -129,11 +122,11 @@
                 {
                     save_collection();
                 }
-            }
+            } // if ($('#btn-public').hasClass("active")||$('#btn-discoverable').hasClass("active"))
             else
             {
                 save_collection();
-            }
+            } // if ($('#btn-public').hasClass("active")||$('#btn-discoverable').hasClass("active"))
         }
         function save_collection ()
         {
@@ -141,7 +134,6 @@
                 $(this).attr('selected', true);
                 });
 
-{#            metadata_update_ajax_submit("collector");#}
             collection_update_ajax_submit("collector");
 
             $('#select2 option').each(function () {
@@ -295,7 +287,6 @@
                         }
 
                         $('#save-collection-warning-title').text("Warning");
-{#                      $('#save-collection-warning-body').text("The user has no permission to view the following resources in the collection:" + json_response.no_permission_list.length);#}
                         $('#save-collection-btn-cancel').hide();
                         $('#save-collection-btn-ok').text("OK").off("click");
                         $('#save-collection-warning').modal('show');
@@ -313,7 +304,6 @@
             });
             return false;
         }
-
 
     </script>
 {% endblock %}
