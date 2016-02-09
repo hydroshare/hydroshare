@@ -280,9 +280,8 @@ INSTALLED_APPS = (
     "haystack",
     "jquery_ui",
     "rest_framework",
-    # "ga_ows",
-    # "ga_resources",
-    #"dublincore",
+    "ga_ows",
+    "ga_resources",
     "hs_core",
     "hs_access_control",
     "hs_labels",
@@ -291,7 +290,6 @@ INSTALLED_APPS = (
     #"hs_rhessys_inst_resource",
     "django_docker_processes",
     "hs_geo_raster_resource",
-    # "djcelery",
     "ref_ts",
     "hs_app_timeseries",
     "widget_tweaks",
@@ -302,8 +300,6 @@ INSTALLED_APPS = (
     "hs_swat_modelinstance",
     "hs_geographic_feature_resource",
     "hs_script_resource",
-    # 'dal',
-    # 'dal_select2',
 )
 
 # These apps are excluded by hs_core.tests.runner.CustomTestSuiteRunner
