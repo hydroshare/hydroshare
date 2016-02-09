@@ -33,7 +33,7 @@ def resource_pre_create_handler(sender, **kwargs):
 def pre_add_files_to_resource_handler(sender, **kwargs):
     resource = kwargs['resource']
     if resource.files.all().count() > 0:
-        raise ValidationError("Resource is not allowed to have more than 1 content file.")
+        raise ValidationError("Resource already has content files.")
 
     files = kwargs['files']
     validate_files_dict = kwargs['validate_files']
