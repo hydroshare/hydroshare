@@ -22,6 +22,7 @@ logger = logging.getLogger('django')
 @shared_task
 def add_zip_file_contents_to_resource(pk, zip_file_path):
     zfile = None
+    resource = None
     try:
         resource = utils.get_resource_by_shortkey(pk, or_404=False)
         zfile = zipfile.ZipFile(zip_file_path)
@@ -44,18 +45,20 @@ def add_zip_file_contents_to_resource(pk, zip_file_path):
         resource.save()
 
     except BaseResource.DoesNotExist:
-        raise
-    except Exception as e:
-
-        resource.file_unpack_status = 'Error'
+        msg = "Unable to add zip file contents to non-existent resource {pk}."
+        msg = msg.format(pk=pk)
+        logger.error(msg)
+    except:
         exc_info = "".join(traceback.format_exception(*sys.exc_info()))
-        resource.file_unpack_message = exc_info[:1024]
-        resource.save()
+        if resource:
+            resource.file_unpack_status = 'Error'
+            resource.file_unpack_message = exc_info[:1024]
+            resource.save()
 
         if zfile:
             zfile.close()
 
-        raise e
+        logger.error(exc_info)
     finally:
         # Delete upload file
         os.unlink(zip_file_path)
