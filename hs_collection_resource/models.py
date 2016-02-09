@@ -1,3 +1,5 @@
+from lxml import etree
+
 from django.db import models
 from django.contrib.contenttypes import generic
 from django.core.exceptions import ObjectDoesNotExist, ValidationError
@@ -6,9 +8,7 @@ from mezzanine.pages.page_processors import processor_for
 
 from hs_core.models import BaseResource, ResourceManager, resource_processor, \
     CoreMetaData, AbstractMetaDataElement
-
-from lxml import etree
-
+from hs_core.hydroshare.utils import current_site_url
 
 class CollectionResource(BaseResource):
     objects = ResourceManager('CollectionResource')
@@ -115,14 +115,21 @@ class CollectionMetaData(CoreMetaData):
 
         # get root 'Description' element that contains all other elements
         container = RDF_ROOT.find('rdf:Description', namespaces=self.NAMESPACES)
-
-
-        for res_type in self.collection_items.all():
-            hsterms_method = etree.SubElement(container, '{%s}CollectionItems' % self.NAMESPACES['hsterms'])
-            hsterms_method_rdf_Description = etree.SubElement(hsterms_method, '{%s}Description' % self.NAMESPACES['rdf'])
-            hsterms_name = etree.SubElement(hsterms_method_rdf_Description, '{%s}types' % self.NAMESPACES['hsterms'])
-            hsterms_name.text = res_type.get_collection_items_str()
+        CollectionItems_container = etree.SubElement(container, '{%s}CollectionItems' % self.NAMESPACES['hsterms'])
+        collection_items = self.collection_items.first()
+        if collection_items:
+            for res in collection_items.collection_items.all():
+                hsterms_method = etree.SubElement(CollectionItems_container, '{%s}CollectionItem' % self.NAMESPACES['hsterms'])
+                hsterms_method_rdf_Description = etree.SubElement(hsterms_method, '{%s}Description' % self.NAMESPACES['rdf'])
+                hsterms_name = etree.SubElement(hsterms_method_rdf_Description, '{%s}ResourceID' % self.NAMESPACES['hsterms'])
+                hsterms_name.text = res.short_id
+                hsterms_name = etree.SubElement(hsterms_method_rdf_Description, '{%s}PageURL' % self.NAMESPACES['hsterms'])
+                hsterms_name.text = current_site_url() + "/resource/" + res.short_id + "/"
 
         return etree.tostring(RDF_ROOT, pretty_print=True)
 
-import receivers # never delete this otherwise non of the receiver function will work
+    def delete_all_elements(self):
+        super(CollectionMetaData, self).delete_all_elements()
+        self.collection_items.all().delete()
+
+# import receivers # never delete this otherwise non of the receiver function will work

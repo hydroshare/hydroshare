@@ -1,51 +1,28 @@
-from __future__ import absolute_import
-from django.contrib.auth.decorators import login_required
-from django.contrib.auth.models import User, Group
-from django.utils.timezone import now
-from django import forms
-from django.http import HttpResponseRedirect, HttpResponseNotFound, HttpResponse
-from mezzanine.pages.page_processors import processor_for
-from ga_resources.utils import json_or_jsonp
-from hs_core import hydroshare, page_processors
-from hs_core.hydroshare.hs_bagit import create_bag
-from hs_core.models import ResourceFile
-from .models import CollectionResource
-import requests
-from lxml import etree
-import datetime
-from django.utils.timezone import now
-import os
 import json
-from hs_core.signals import post_create_resource
-import ast
-from hs_core.views.utils import authorize
-from hs_core.hydroshare.utils import user_from_id
+
+from django.http import HttpResponseRedirect, HttpResponseNotFound, HttpResponse
+
+from hs_core import hydroshare
 from hs_core.views import _set_resource_sharing_status
+from hs_core.views.utils import authorize
+from hs_core.hydroshare.utils import user_from_id, resource_modified
 
-
-def update_collection(request):
-
+def update_collection(request, shortkey, *args, **kwargs):
     try:
-        collection_obj_resource_id = request.POST["collection_obj_res_id"]
-        collection_res_obj, is_authorized, user = authorize(request, collection_obj_resource_id, edit=True, raises_exception=True)
+        collection_res_obj, is_authorized, user = authorize(request, shortkey, edit=True, full=True, superuser=True, raises_exception=True)
         if is_authorized:
-            # collection_res_obj = hydroshare.get_resource_by_shortkey(collection_obj_resource_id)
+
             collection_content_res_id_list = []
             for res_id in request.POST.getlist("collection_items"):
                 collection_content_res_id_list.append(res_id)
 
             if collection_res_obj.metadata.collection_items.first() is not None:
                 element_id = collection_res_obj.metadata.collection_items.first().id
-                hydroshare.resource.update_metadata_element(collection_res_obj.short_id,
-                'CollectionItems',
-                collection_items=collection_content_res_id_list,
-                element_id = element_id
-                )
+                hydroshare.resource.update_metadata_element(collection_res_obj.short_id, 'CollectionItems',
+                collection_items=collection_content_res_id_list, element_id=element_id)
             else:
                 hydroshare.resource.create_metadata_element(collection_res_obj.short_id,
-                'CollectionItems',
-                collection_items=collection_content_res_id_list
-                )
+                'CollectionItems', collection_items=collection_content_res_id_list)
 
             current_sharing_status = "Private"
             if collection_res_obj.raccess.discoverable:
@@ -62,7 +39,7 @@ def update_collection(request):
                         new_sharing_status = "Private"
 
             user_permission = "Edit"
-            _, is_owner, _ = authorize(request, collection_obj_resource_id, full=True, raises_exception=False)
+            _, is_owner, _ = authorize(request, shortkey, full=True, superuser=True, raises_exception=False)
             if is_owner:
                 user_permission = "Own"
 
@@ -71,7 +48,10 @@ def update_collection(request):
             else:
                 metadata_status = "Insufficient to make public"
 
-            ajax_response_data = {'status': 'success', 'user_permission': user_permission, 'current_sharing_status': current_sharing_status, 'new_sharing_status': new_sharing_status, 'metadata_status': metadata_status}
+            resource_modified(collection_res_obj, user)
+            ajax_response_data = {'status': 'success', 'user_permission': user_permission, \
+                                  'current_sharing_status': current_sharing_status, \
+                                  'new_sharing_status': new_sharing_status, 'metadata_status': metadata_status}
             return HttpResponse(json.dumps(ajax_response_data))
 
     except Exception as ex:
@@ -88,7 +68,8 @@ def collection_member_permission(request, shortkey, user_id, *args, **kwargs):
             user_to_share_with = user_from_id(user_id)
             if collection_res_obj.metadata.collection_items.first() is not None:
                 for res_in_collection in collection_res_obj.metadata.collection_items.first().collection_items.all():
-                    if not user_to_share_with.uaccess.can_view_resource(res_in_collection):
+                    if not user_to_share_with.uaccess.can_view_resource(res_in_collection) \
+                       and not res_in_collection.raccess.public and not res_in_collection.raccess.discoverable:
                         no_permission_list.append(res_in_collection.short_id)
                 status = "success"
                 ajax_response_data = {'status': status, 'no_permission_list': no_permission_list}

@@ -59,7 +59,8 @@ def landing_page(request, page):
         collection_message = "This collection holds {0} resource(s) in total. ".format(collection_length)
         hide_count = len(collection_items_inaccessible)
         if hide_count > 0:
-            collection_message += "You have NO permission on {0}.".format(hide_count)
+            collection_message += "You have NO permission to view the {} grey resource(s). \
+            You could try to request for permission by leaving a comment below.".format(hide_count)
 
 
     if not edit_resource:
@@ -137,7 +138,7 @@ def landing_page(request, page):
                     res_checked.title, sharing_status, res_checked.short_id)
 
         ext_md_layout = Layout(HTML(
-                                    '<h4>Your Resource Pool</h4>'
+                                    '<h4>My Resource Pool</h4>'
                                     '<select class="form-control" multiple="multiple" id="select1">'
                                 ),
                                 HTML(
@@ -145,20 +146,21 @@ def landing_page(request, page):
                                 ),
                                 HTML(
                                     '</select>'
-                                    '<input class="btn btn-success" type="button" id="add" value ="v Add v" />'
+                                    '<input class="btn btn-success" type="button" id="add" value ="v Add v"/>'
                                     '<input class="btn btn-danger" type="button" id="remove" value ="^ Remove ^" />'
-                                    '<form id="collector" name="collector" action="/hsapi/_internal/update-collection/" method="POST" >'
-                                    '<input type="text" name="collection_obj_res_id" id="name="collection_obj_res_id" value="' + \
-                                    content_model.short_id + '" class="hidden" />'
-                                    '<h4>Your Collection</h4>'
+                                    '<form id="collector" name="collector" action="/hsapi/_internal/' + content_model.short_id + \
+                                    '/update-collection/" method="POST">'
+                                    # '<input type="text" name="collection_obj_res_id" id="name="collection_obj_res_id" value="' + \
+                                    # content_model.short_id + '" class="hidden" />'
+                                    '<h4>My Collection</h4>'
                                     '<select class="form-control" multiple="multiple" id="select2" name="collection_items">'
                                 ),
                                 HTML(html_collection),
                                 HTML('</select>'
                                      '</form>'
-                                     '<br/><input class="btn btn-primary" type="button" id="save" value ="Save Changes" />'
-                                     )
+                                     '<br/><input class="btn btn-primary" type="button" id="save" value="Save Changes"/>'
                                 )
+                               )
 
         # get the context from hs_core
         context = page_processors.get_page_context(page, request.user,
