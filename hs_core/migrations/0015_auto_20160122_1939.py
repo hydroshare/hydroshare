@@ -14,7 +14,7 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='baseresource',
             name='file_unpack_message',
-            field=models.CharField(max_length=1024, null=True, blank=True),
+            field=models.TextField(null=True, blank=True),
             preserve_default=True,
         ),
         migrations.AddField(

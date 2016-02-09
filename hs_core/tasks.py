@@ -52,7 +52,7 @@ def add_zip_file_contents_to_resource(pk, zip_file_path):
         exc_info = "".join(traceback.format_exception(*sys.exc_info()))
         if resource:
             resource.file_unpack_status = 'Error'
-            resource.file_unpack_message = exc_info[:1024]
+            resource.file_unpack_message = exc_info
             resource.save()
 
         if zfile:
