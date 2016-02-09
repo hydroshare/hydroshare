@@ -1,4 +1,6 @@
 import os
+import tempfile
+import shutil
 from unittest import TestCase
 from dateutil import parser
 
@@ -34,19 +36,27 @@ class TestTimeSeriesMetaData(MockIRODSTestCaseMixin, TestCase):
             owner=self.user,
             title='Test Time Series Resource'
         )
+
+        temp_dir = tempfile.mkdtemp()
         self.odm2_sqlite_file_name = 'ODM2_valid.sqlite'
         self.odm2_sqlite_file = 'hs_app_timeseries/tests/{}'.format(self.odm2_sqlite_file_name)
-        self.odm2_sqlite_file_obj = open(self.odm2_sqlite_file, 'r')
+        target_temp_sqlite_file = os.path.join(temp_dir, self.odm2_sqlite_file_name)
+        shutil.copy(self.odm2_sqlite_file, target_temp_sqlite_file)
+        self.odm2_sqlite_file_obj = open(target_temp_sqlite_file, 'r')
+
         self.odm2_sqlite_bad_file_name = 'ODM2_invalid.sqlite'
         self.odm2_sqlite_bad_file = 'hs_app_timeseries/tests/{}'.format(self.odm2_sqlite_bad_file_name)
-        self.odm2_sqlite_bad_file_obj = open(self.odm2_sqlite_bad_file, 'r')
+        target_temp_bad_sqlite_file = os.path.join(temp_dir, self.odm2_sqlite_bad_file_name)
+        shutil.copy(self.odm2_sqlite_bad_file, target_temp_bad_sqlite_file)
+        self.odm2_sqlite_bad_file_obj = open(target_temp_bad_sqlite_file, 'r')
 
-        text_file_name = 'ODM2.txt'
-        text_file = open(text_file_name, 'w')
+        temp_text_file = os.path.join(temp_dir, 'ODM2.txt')
+        text_file = open(temp_text_file, 'w')
         text_file.write("ODM2 records")
-        text_file.close()
-        self.text_file_obj = open(text_file_name, 'r')
+        self.text_file_obj = open(temp_text_file, 'r')
 
+    # without this tearDown() getting transaction error even if we make this class inherit from django TestCase and
+    # and not uninttest TestCase
     def tearDown(self):
         super(TestTimeSeriesMetaData, self).tearDown()
         User.objects.all().delete()
@@ -73,10 +83,6 @@ class TestTimeSeriesMetaData(MockIRODSTestCaseMixin, TestCase):
         Method.objects.all().delete()
         ProcessingLevel.objects.all().delete()
         TimeSeriesResult.objects.all().delete()
-        self.odm2_sqlite_file_obj.close()
-        self.odm2_sqlite_bad_file_obj.close()
-        self.text_file_obj.close()
-        os.remove(self.text_file_obj.name)
 
     def test_allowed_file_types(self):
         # test allowed file type is '.sqlite'
@@ -118,7 +124,7 @@ class TestTimeSeriesMetaData(MockIRODSTestCaseMixin, TestCase):
         self.assertEquals(self.resTimeSeries.files.all().count(), 0)
 
         # use a valid ODM2 sqlite which should pass both the file pre add check post add check
-        self.odm2_sqlite_file_obj = open(self.odm2_sqlite_file, 'r')
+        #self.odm2_sqlite_file_obj = open(self.odm2_sqlite_file, 'r')
         files = [UploadedFile(file=self.odm2_sqlite_file_obj, name=self.odm2_sqlite_file_name)]
         utils.resource_file_add_pre_process(resource=self.resTimeSeries, files=files, user=self.user,
                                             extract_metadata=False)
@@ -130,6 +136,10 @@ class TestTimeSeriesMetaData(MockIRODSTestCaseMixin, TestCase):
         self.assertEquals(self.resTimeSeries.files.all().count(), 1)
 
     def test_metadata_extraction_on_resource_creation(self):
+        # passing the file object that points to the temp dir doesn't work - create_resource throws error
+        # open the file from the fixed file location
+        self.odm2_sqlite_file_obj = open(self.odm2_sqlite_file, 'r')
+
         self.resTimeSeries = hydroshare.create_resource(
             'TimeSeriesResource',
             self.user,
