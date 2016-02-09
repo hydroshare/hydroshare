@@ -40,9 +40,10 @@ def pre_add_files_to_resource_handler(sender, **kwargs):
     if files:
         infile = files[0]
         fl_ext = os.path.splitext(infile.file.name)[1]
-        if fl_ext != '.sqlite':
+        if fl_ext not in TimeSeriesResource.get_supported_upload_file_types():
             validate_files_dict['are_files_valid'] = False
-            validate_files_dict['message'] = "{sql_file} is not a sqlite file".format(sql_file=infile.file.name)
+            validate_files_dict['message'] = "{file_to_add} is not a supported file type".format(
+                file_to_add=infile.file.name)
 
 
 @receiver(pre_delete_file_from_resource, sender=TimeSeriesResource)
