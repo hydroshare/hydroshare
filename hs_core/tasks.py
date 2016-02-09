@@ -27,9 +27,7 @@ def add_zip_file_contents_to_resource(pk, zip_file_path):
         resource.file_unpack_status = 'Running'
         resource.save()
 
-        i = 0
-        for f in files:
-            i += 1
+        for i, f in enumerate(files):
             logger.debug("Adding file {0} to resource {1}".format(f.name, pk))
             utils.add_file_to_resource(resource, f)
             resource.file_unpack_message = "Imported {0} of about {1} file(s) ...".format(i, num_files)
