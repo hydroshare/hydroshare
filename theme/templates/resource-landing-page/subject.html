@@ -1,0 +1,47 @@
+{#        ======= Subject =======#}
+{% if not metadata_form %}
+    {% if keywords %}
+    <div class="col-sm-12 content-block">
+        <h3>Subject</h3>
+
+        <p id="keywords">{{ keywords }}</p>
+
+        <div class="tags">
+            <ul id="list-keywords" class="tag-list custom-well">
+            </ul>
+        </div>
+    </div>
+    {% endif %}
+{% else %}
+    <div class="col-sm-12 content-block">
+        <h3>Subject</h3>
+        <form action="/hsapi/_internal/{{ cm.short_id }}/subject/add-metadata/" id="id-subject"
+              method="post">
+            {% csrf_token %}
+            <div class="tags">
+                <div id="add-keyword-wrapper" class="input-group">
+                    <input id="txt-keyword" type="text" class="form-control" placeholder="Keyword">
+                <span class="input-group-btn">
+                    <a id="btn-add-keyword" class="btn btn-success" type="button">Add</a>
+                </span>
+                </div>
+                <ul id="lst-tags" class="custom-well tag-list">
+                </ul>
+            </div>
+
+            <fieldset>
+                <div id="div_id_value" class="control-group">
+                    <div class="controls"><input class="form-control input-sm textInput" id="id_value"
+                                                 maxlength="500" name="value" type="text"
+                                                 style="display: none;">{{ cm.keywords_string }}</div>
+                </div>
+                <div style="margin-top:10px">
+                    <button type="button" class="btn btn-primary pull-right"
+                            onclick="metadata_update_ajax_submit('id-subject'); return false;"
+                            style="display: none;">Save changes
+                    </button>
+                </div>
+            </fieldset>
+        </form>
+    </div>
+{% endif %}
