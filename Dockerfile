@@ -1,12 +1,13 @@
-FROM new_hs_base
+FROM mjstealey/hs_docker_base:1.6.5
 MAINTAINER Michael J. Stealey <stealey@renci.org>
 
 ### Begin - HydroShare Development Image Additions ###
+RUN pip install -U pylint==1.5.0
+RUN pip install -U OWSLib==0.10.3
+### ^^^ from existing
+RUN apt-get install -y fuse
 RUN pip install -U pip
-#RUN pip install -U pylint==1.5.0
-#RUN pip install -U OWSLib==0.10.3
-#RUN pip install -U django-nose==1.4.3
-#RUN pip install -U django-debug-toolbar==1.4.0
+RUN pip install Mezzanine==4.1.0
 RUN pip install -U django-appconf
 RUN pip install -U django-autocomplete-light
 RUN pip install -U django-braces
@@ -22,12 +23,11 @@ RUN pip install -U django-jsonfield
 RUN pip install -U django-nose
 RUN pip install -U django-oauth-toolkit
 RUN pip install -U django-picklefield
-#django-tastypie
-#django-tastypie-swagger
 RUN pip install -U django-timedeltafield
 RUN pip install -U django-widget-tweaks
 RUN pip install -U djangorestframework
 RUN pip install -U django-contrib-comments
+RUN pip install -U Django==1.8.9
 
 ### End - HydroShare Development Image Additions ###
 
