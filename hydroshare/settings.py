@@ -238,7 +238,7 @@ ROOT_URLCONF = "%s.urls" % PROJECT_DIRNAME
 # or "C:/www/django/templates".
 # Always use forward slashes, even on Windows.
 # Don't forget to use absolute paths, not relative paths.
-TEMPLATE_DIRS = (os.path.join(PROJECT_ROOT, "templates"),)
+# TEMPLATE_DIRS = (os.path.join(PROJECT_ROOT, "templates"),)
 
 ADAPTOR_INPLACEEDIT_EDIT = 'hs_core.models.HSAdaptorEditInline'
 INPLACE_SAVE_URL = '/hsapi/save_inline/'
@@ -248,6 +248,7 @@ INPLACE_SAVE_URL = '/hsapi/save_inline/'
 ################
 
 INSTALLED_APPS = (
+    "autocomplete_light",
     "django.contrib.admin",
     "django.contrib.auth",
     "oauth2_provider",
@@ -262,6 +263,7 @@ INSTALLED_APPS = (
     "inplaceeditform",
     "django_nose",
     "django_irods",
+    "django_comments",
     "theme",
     "theme.blog_mods",
     "mezzanine.boot",
@@ -275,13 +277,11 @@ INSTALLED_APPS = (
     "crispy_forms",
     "mezzanine.accounts",
     "mezzanine.mobile",
-    "autocomplete_light",
     "haystack",
     "jquery_ui",
     "rest_framework",
     "ga_ows",
     "ga_resources",
-    #"dublincore",
     "hs_core",
     "hs_access_control",
     "hs_labels",
@@ -290,7 +290,6 @@ INSTALLED_APPS = (
     #"hs_rhessys_inst_resource",
     "django_docker_processes",
     "hs_geo_raster_resource",
-    "djcelery",
     "ref_ts",
     "hs_app_timeseries",
     "widget_tweaks",
@@ -300,7 +299,7 @@ INSTALLED_APPS = (
     "hs_tools_resource",
     "hs_swat_modelinstance",
     "hs_geographic_feature_resource",
-    "hs_script_resource"
+    "hs_script_resource",
 )
 
 # These apps are excluded by hs_core.tests.runner.CustomTestSuiteRunner
@@ -309,7 +308,7 @@ APPS_TO_NOT_RUN = (
     'ga_ows',
     'ga_resources',
     'jquery_ui',
-    'djcelery',
+    # 'djcelery',
     'rest_framework',
     'django_docker_processes',
     'dublincore',

@@ -213,8 +213,8 @@ loaddb_hs() {
     docker exec $CID psql -U postgres -h postgis -f ${HS_DATABASE}
     echo "*** manage.py collectstatic ***"
     docker exec $CID python manage.py collectstatic -v0 --noinput
-    #echo "*** manage.py makemigrations ***"
-    #docker exec $CID python manage.py makemigrations
+#    echo "*** manage.py makemigrations ***"
+#    docker exec $CID python manage.py makemigrations
     echo "*** manage.py migrate ***"
     docker exec $CID python manage.py migrate
     echo "*** manage.py fix_permissions ***"
