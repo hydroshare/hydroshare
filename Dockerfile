@@ -1,4 +1,4 @@
-FROM hs_docker_base:django-1.8
+FROM mjstealey/hs_docker_base:django-1.8
 MAINTAINER Michael J. Stealey <stealey@renci.org>
 
 ### Begin - HydroShare Development Image Additions ###
