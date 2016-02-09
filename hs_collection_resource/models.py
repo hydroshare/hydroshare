@@ -89,6 +89,14 @@ class CollectionMetaData(CoreMetaData):
     def has_all_required_elements(self):
         if self.get_required_missing_elements():
             return False
+        else:
+            # check if no member resource exits
+            if self.collection_items.first().collection_items.all().count() == 0:
+                return False
+            # check if all member resources are either public or private
+            for res in self.collection_items.first().collection_items.all():
+                if not res.raccess.public and not res.raccess.discoverable:
+                    return False
         return True
 
     def get_required_missing_elements(self):  # show missing required meta

@@ -1,11 +1,32 @@
 {% extends "pages/genericresource.html" %}
 {% load geoanalytics_tags pages_tags mezzanine_tags crispy_forms_tags %}
 
-{#{% block tools %}#}
-{#{% endblock %}#}
+{% block main %}
 
-{% block content %}
+{{ block.super }}
+     <div class="modal fade" id="save-collection-warning" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                    <h4 class="modal-title" id="save-collection-warning-title">Confirm Changes</h4>
+                </div>
+                <div class="modal-body" id="save-collection-warning-body">
+                    The resources you are about to remove from current collection include grey title resources, which means you have no permission to access them. You may remove the grey, but you CAN NOT add them back.
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default" data-dismiss="modal" id="save-collection-btn-cancel">
+                       Keep gray
+                    </button>
+                    <button type="button" class="btn btn-danger" data-dismiss="modal" id="save-collection-btn-ok">
+                        Remove gray anyway
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
 {% endblock %}
+
 
 {#{% block extra_content %}#}
 {#{% endblock %}#}
@@ -33,8 +54,6 @@
             </div>
         </div>
     {%  endif %}
-
-
 {%  endblock %}
 
 
@@ -69,46 +88,232 @@
 
                 $('#select1 option').each(function () {
                 if ($(this).css('color') == "rgb(128, 128, 128)")
-                { $('#save-collection-warning').modal('show');}
+                {
+                    $('#save-collection-btn-cancel').off("click").on( "click", move_grey_from_select1_to_2);
+                    $('#save-collection-btn-ok').off("click").on( "click", remove_grey_from_select1);
+                    $('#save-collection-warning').modal('show');}
                 });
             });
 
             $('#save').click(function() {
 
-                    save_collection();
+                    save_btn_callback();
             });
+
+            // unhook btn-invite original onclick event and redirect to function share_collection_ajax_submit
+            $('#btn-invite').off("click");
+            $('#btn-invite').on( "click", share_collection_ajax_submit);
         });
 
-        function save_collection()
+        function save_btn_callback()
+        {
+            if ($('#btn-public').hasClass("active")||$('#btn-discoverable').hasClass("active"))
+            {
+                warning_flag = false;
+                $('#select2 option').each(function () {
+                if ($(this).text().toLowerCase().indexOf(": private") > 0)
+                {
+                    warning_flag = true;
+                }
+                });
+
+                if (warning_flag)
+                {
+                    $('#save-collection-warning-title').text("Downgrade to Private");
+                    $('#save-collection-warning-body').text("You are about to add private resources into this collection. Sharing status will downgrade to PRIVATE.");
+                    $('#save-collection-btn-cancel').text("Cancel").off("click");
+                    $('#save-collection-btn-ok').text("Confirm").off("click").on( "click", save_collection);
+                    $('#save-collection-warning').modal('show');
+                }
+                else
+                {
+                    save_collection();
+                }
+            }
+            else
+            {
+                save_collection();
+            }
+        }
+        function save_collection ()
         {
             $('#select2 option').each(function () {
                 $(this).attr('selected', true);
                 });
 
-            metadata_update_ajax_submit("collector");
+{#            metadata_update_ajax_submit("collector");#}
+            collection_update_ajax_submit("collector");
 
             $('#select2 option').each(function () {
             $(this).attr('selected', false);
             });
         }
 
-    function remove_grey_from_select1()
-    {
-         $('#select1 option').each(function () {
-                if ($(this).css('color') == "rgb(128, 128, 128)")
-                { $(this).remove();}
+        function remove_grey_from_select1()
+        {
+             $('#select1 option').each(function () {
+                    if ($(this).css('color') == "rgb(128, 128, 128)")
+                    { $(this).remove();}
+                    });
+        }
+        function move_grey_from_select1_to_2()
+        {
+             $('#select1 option').each(function () {
+                    if ($(this).css('color') == "rgb(128, 128, 128)")
+                    {
+                        $('#select2').append($(this).clone());
+                        $(this).remove();
+                    }
+                    });
+        }
+
+        // revised metadata_update_ajax_submit
+        function collection_update_ajax_submit(form_id){
+                $alert_success = '<div class="alert alert-success" id="success-alert"> \
+                    <button type="button" class="close" data-dismiss="alert">x</button> \
+                    <strong>Success! </strong> \
+                    Metadata updated.\
+                </div>'
+                $alert_error = '<div class="alert alert-danger" id="error-alert"> \
+                    <button type="button" class="close" data-dismiss="alert">x</button> \
+                    <strong>Error! </strong> \
+                    Metadata failed to update.\
+                </div>'
+                $form=$('#' + form_id);
+                var datastring = $form.serialize();
+                $.ajax({
+                    type: "POST",
+                    url: $form.attr('action'),
+                    dataType: 'html',
+                    data: datastring,
+                    success: function(result)
+                    {
+                        /* The div contains now the updated form */
+                        json_response = JSON.parse(result);
+                        if (json_response.status === 'success')
+                        {
+                            $(document).trigger("submit-success");
+                            if (json_response.user_permission.toLowerCase() == "own")
+                            {
+                                if (json_response.new_sharing_status)
+                                {
+                                    if (json_response.new_sharing_status.toLowerCase() == "private"
+                                            && json_response.current_sharing_status.toLowerCase() != "private")
+                                    {
+                                        $("#btn-public").prop("disabled", true).removeClass("active");
+                                        $("#btn-discoverable").prop("disabled", true).removeClass("active");
+                                        $("#btn-private").prop("disabled", false).addClass("active");
+
+                                        customAlert("<i class='glyphicon glyphicon-flag custom-alert-icon'></i><strong>Metadata Status:</strong> " +
+                                                "Sharing status downgraded to private", 3000);
+                                    }
+                                } //if (json_response.new_sharing_status)
+                                else
+                                {
+                                    if (json_response.hasOwnProperty('metadata_status'))
+                                    {
+                                        if (json_response.metadata_status !== $('#metadata-status').text()
+                                                && json_response.current_sharing_status.toLowerCase() != "public")
+                                        {
+                                            $('#metadata-status').text(json_response.metadata_status);
+                                            if (json_response.metadata_status == "Sufficient to make public") {
+                                                customAlert("<i class='glyphicon glyphicon-flag custom-alert-icon'></i><strong>Metadata Status:</strong> sufficient to make public", 3000);
+                                                $("#btn-public").prop("disabled", false);
+                                                $("#btn-discoverable").prop("disabled", false);
+                                            }
+                                        }
+                                    }
+                                } // if (json_response.new_sharing_status)
+                            } // if (json_response.user_permission.toLowerCase() == "own")
+
+                            $('body > .container').append($alert_success);
+                            $('#error-alert').each(function(){
+                                this.remove();
+                            });
+                            $(".alert-success").fadeTo(2000, 500).fadeOut(1000, function(){
+                                $(document).trigger("submit-success");
+                                $(".alert-success").alert('close');
+                            });
+                        } // if (json_response.status === 'success')
+                        else{
+                            $('body > .container').append($alert_error);
+                            $(".alert-danger").fadeTo(3000, 500).fadeOut(1000, function(){
+                                $(document).trigger("submit-error");
+                                $(".alert-danger").alert('close');
+                            });
+                        }
+                    },
+                    error: function(XMLHttpRequest, textStatus, errorThrown)
+                    {
+                        $('#' + form_id).before($alert_error);
+                        $(".alert-error").fadeTo(2000, 500).slideUp(1000, function(){
+                            $(".alert-error").alert('close');
+                        });
+                    }
                 });
-    }
-    function move_grey_from_select1_to_2()
-    {
-         $('#select1 option').each(function () {
-                if ($(this).css('color') == "rgb(128, 128, 128)")
+                //don't submit the form
+                return false;
+            }
+
+        // wrap hs_core function share_resource_ajax_submit() for collection
+        function share_collection_ajax_submit()        {
+
+            if (!$("#id_user-deck > .hilight").length) {
+                return false; // If no user selected, ignore the request
+            }
+            var target_user_id = $("#id_user-deck > .hilight")[0].getAttribute("data-value");
+            $form = $('#add-access-form');
+            var url = $form.attr('action');
+            var collection_obj_res_id = (url.split("/"))[3];
+
+            var url_collection_member_permission = "/hsapi/_internal/" + collection_obj_res_id
+                    + "/collection-member-permission/" + target_user_id + "/";
+            $.ajax({
+                type: "POST",
+                url: url_collection_member_permission,
+                dataType: 'html',
+                data: "",
+                success: function(result)
                 {
-                    $('#select2').append($(this).clone());
-                    $(this).remove();
+                    json_response = JSON.parse(result);
+                    if(json_response.no_permission_list.length > 0)
+                    {
+                        $('#save-collection-warning-body').text("");
+                        var h_tag = $("<h5 />", {
+                                    text : "The target user has no permission to view the following member resources in this collection: "
+                                });
+                        $('#save-collection-warning-body').append(h_tag);
+                        for (i=0; i<json_response.no_permission_list.length; i++)
+                        {
+                            res_id =json_response.no_permission_list[i];
+                            var newLink = $("<a />", {
+                                    href : "/resource/" + res_id + "/",
+                                    text : res_id,
+                                    target: "_blank"
+                                }).after("<br />");
+                             $('#save-collection-warning-body').append(newLink);
+                        }
+
+                        $('#save-collection-warning-title').text("Warning");
+{#                      $('#save-collection-warning-body').text("The user has no permission to view the following resources in the collection:" + json_response.no_permission_list.length);#}
+                        $('#save-collection-btn-cancel').hide();
+                        $('#save-collection-btn-ok').text("OK").off("click");
+                        $('#save-collection-warning').modal('show');
+                    }
+                    else
+                    {
+                        share_resource_ajax_submit('add-access-form');
+                    }
+
+                },
+                error: function(XMLHttpRequest, textStatus, errorThrown)
+                {
+
                 }
-                });
-    }
+            });
+            return false;
+        }
+
 
     </script>
 {% endblock %}
