@@ -408,13 +408,6 @@ class ZipContents(object):
         try:
             file_path = None
             for name_path in self.zip_file.namelist():
-                if file_path:
-                    # Delete previously unzipped file as it is no longer
-                    # needed.  This will keep the space required to unzip
-                    # at most the size of the largest single file in the
-                    # archive.
-                    os.unlink(file_path)
-
                 if not self.black_list_path(name_path):
                     name = os.path.basename(name_path)
                     if name != '':
