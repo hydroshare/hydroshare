@@ -17,7 +17,8 @@ from rest_framework.decorators import api_view
 
 from mezzanine.conf import settings
 from mezzanine.pages.page_processors import processor_for
-import autocomplete_light
+#import autocomplete_light
+from dal import autocomplete as autocomplete_light
 from inplaceeditform.commons import get_dict_from_obj, apply_filters
 from inplaceeditform.views import _get_http_response, _get_adaptor
 from django_irods.storage import IrodsStorage

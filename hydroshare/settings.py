@@ -238,7 +238,7 @@ ROOT_URLCONF = "%s.urls" % PROJECT_DIRNAME
 # or "C:/www/django/templates".
 # Always use forward slashes, even on Windows.
 # Don't forget to use absolute paths, not relative paths.
-TEMPLATE_DIRS = (os.path.join(PROJECT_ROOT, "templates"),)
+# TEMPLATE_DIRS = (os.path.join(PROJECT_ROOT, "templates"),)
 
 ADAPTOR_INPLACEEDIT_EDIT = 'hs_core.models.HSAdaptorEditInline'
 INPLACE_SAVE_URL = '/hsapi/save_inline/'
@@ -262,6 +262,7 @@ INSTALLED_APPS = (
     "inplaceeditform",
     "django_nose",
     "django_irods",
+    "django_comments",
     "theme",
     "theme.blog_mods",
     "mezzanine.boot",
@@ -275,7 +276,7 @@ INSTALLED_APPS = (
     "crispy_forms",
     "mezzanine.accounts",
     "mezzanine.mobile",
-    "autocomplete_light",
+    # "autocomplete_light",
     "haystack",
     "jquery_ui",
     "rest_framework",
@@ -290,7 +291,7 @@ INSTALLED_APPS = (
     #"hs_rhessys_inst_resource",
     "django_docker_processes",
     "hs_geo_raster_resource",
-    "djcelery",
+    # "djcelery",
     "ref_ts",
     "hs_app_timeseries",
     "widget_tweaks",
@@ -300,7 +301,9 @@ INSTALLED_APPS = (
     "hs_tools_resource",
     "hs_swat_modelinstance",
     "hs_geographic_feature_resource",
-    "hs_script_resource"
+    "hs_script_resource",
+    'dal',
+    'dal_select2',
 )
 
 # These apps are excluded by hs_core.tests.runner.CustomTestSuiteRunner
@@ -324,21 +327,36 @@ APPS_TO_NOT_RUN = (
     # etc...
 )
 
+TEMPLATES = [{u'APP_DIRS': True,
+              u'BACKEND': u'django.template.backends.django.DjangoTemplates',
+              u'DIRS': (u'/home/docker/hydroshare/hydroshare/templates',),
+              u'OPTIONS': {u'builtins': [u'mezzanine.template.loader_tags'],
+                           u'context_processors': (u'django.contrib.auth.context_processors.auth',
+                                                   u'django.contrib.messages.context_processors.messages',
+                                                   u'django.core.context_processors.debug',
+                                                   u'django.core.context_processors.i18n',
+                                                   u'django.core.context_processors.static',
+                                                   u'django.core.context_processors.media',
+                                                   u'django.core.context_processors.request',
+                                                   u'django.core.context_processors.tz',
+                                                   u'mezzanine.conf.context_processors.settings',
+                                                   u'mezzanine.pages.context_processors.page')}}]
+
 # List of processors used by RequestContext to populate the context.
 # Each one should be a callable that takes the request object as its
 # only parameter and returns a dictionary to add to the context.
-TEMPLATE_CONTEXT_PROCESSORS = (
-    "django.contrib.auth.context_processors.auth",
-    "django.contrib.messages.context_processors.messages",
-    "django.core.context_processors.debug",
-    "django.core.context_processors.i18n",
-    "django.core.context_processors.static",
-    "django.core.context_processors.media",
-    "django.core.context_processors.request",
-    "django.core.context_processors.tz",
-    "mezzanine.conf.context_processors.settings",
-    "mezzanine.pages.context_processors.page",
-)
+# TEMPLATE_CONTEXT_PROCESSORS = (
+#     "django.contrib.auth.context_processors.auth",
+#     "django.contrib.messages.context_processors.messages",
+#     "django.core.context_processors.debug",
+#     "django.core.context_processors.i18n",
+#     "django.core.context_processors.static",
+#     "django.core.context_processors.media",
+#     "django.core.context_processors.request",
+#     "django.core.context_processors.tz",
+#     "mezzanine.conf.context_processors.settings",
+#     "mezzanine.pages.context_processors.page",
+# )
 
 # List of middleware classes to use. Order is important; in the request phase,
 # these middleware classes will be applied in the order given, and in the
