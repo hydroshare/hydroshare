@@ -226,7 +226,7 @@
                                          alt="{{ res|resource_type }}" title="{{ res|resource_type }}" class="table-res-type-icon"/>
                                 {% endif %}
                             </td>
-                            <td><a href="{{ res.get_absolute_url }}">{{ res.metadata.title }}</a></td>
+                            <td><strong><a href="{{ res.get_absolute_url }}">{{ res.metadata.title }}</a></strong></td>
                             <td>{% for owner in res.raccess.owners.all %}
                                   {% if forloop.counter0 > 0 %} · {% endif %}
                                 <span>{{ owner|contact|safe }}</span>
@@ -399,20 +399,6 @@
     <script type="text/javascript">
         var resourceTable;
 
-        function getTableMaxScrollSize() {
-            /* Large Devices, Wide Screens
-             @media only screen and (min-width : 1200px)*/
-            var largeDeviceScreenSize = 1200;
-            if ($(window).width() >= largeDeviceScreenSize) {
-                scrollY = $("body > .container").height();
-            }
-            else {
-                scrollY = Math.max(500, ($("body > .container").height() - $("#facets").height()));
-            }
-
-            return scrollY;
-        }
-
         $(document).ready(function () {
 
         /*==================================================
@@ -434,8 +420,6 @@
                 "order": [[4, "asc"]],
                 "paging": false,
                 "info": false,
-                "scrollY": getTableMaxScrollSize(),
-                "scrollCollapse": true,
                 "columnDefs": [
                     {
                         "targets": [1],     // Resource type
@@ -482,10 +466,6 @@
                         "searchable": true
                     }
                 ]
-            });
-
-            $(window).resize(function () {
-                $('.dataTables_scrollBody').css('max-height', getTableMaxScrollSize());
             });
 
             // Trigger label creation when pressing Enter
