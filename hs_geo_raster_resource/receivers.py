@@ -25,10 +25,19 @@ import xml.etree.ElementTree as ET
 
 
 def create_vrt_file(tif_file):
+    # create vrt file
     temp_dir = tempfile.mkdtemp()
     tif_base_name = os.path.basename(tif_file.name)
     vrt_file_path = os.path.join(temp_dir, os.path.splitext(tif_base_name)[0]+'.vrt')
     subprocess.Popen(['gdalbuildvrt', vrt_file_path, tif_file.file.name], stdout=subprocess.PIPE)
+
+    # modify vrt file SourceFileName
+    if os.path.isfile(vrt_file_path):
+        tree = ET.parse(vrt_file_path)
+        root = tree.getroot()
+        for element in root.iter('SourceFilename'):
+            element.text = tif_base_name
+        tree.write(vrt_file_path)
 
     return vrt_file_path
 
@@ -46,6 +55,9 @@ def explode_zip_file(zip_file):
 
     return extract_file_paths
 
+
+def test_files(files):
+    del files[:]
 
 @receiver(pre_create_resource, sender=RasterResource)
 def raster_pre_create_resource_trigger(sender, **kwargs):
