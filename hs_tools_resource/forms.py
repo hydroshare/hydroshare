@@ -3,7 +3,7 @@ from django import forms
 
 from crispy_forms.layout import Layout, Field
 
-from models import RequestUrlBase, ToolVersion, SupportedResTypes
+from models import RequestUrlBase, ToolVersion, SupportedResTypes, ToolIcon
 from hs_core.forms import BaseFormHelper
 
 
@@ -43,7 +43,7 @@ class VersionFormHelper(BaseFormHelper):
         # the order in which the model fields are listed for the FieldSet is the order these fields will be displayed
         field_width = 'form-control input-sm'
         layout = Layout(
-            Field('value', css_class=field_width),
+                Field('value', css_class=field_width),
         )
         kwargs['element_name_label'] = 'Version'
         super(VersionFormHelper, self).__init__(allow_edit, res_short_id, element_id, element_name, layout,  *args, **kwargs)
@@ -63,6 +63,33 @@ class VersionForm(ModelForm):
 class VersionValidationForm(forms.Form):
     value = forms.CharField(max_length=128)
 
+
+class ToolIconFormHelper(BaseFormHelper):
+    def __init__(self, allow_edit=True, res_short_id=None, element_id=None, element_name=None, *args, **kwargs):
+        # the order in which the model fields are listed for the FieldSet is the order these fields will be displayed
+        field_width = 'form-control input-sm'
+        layout = Layout(
+                Field('url', css_class=field_width)
+        )
+        kwargs['element_name_label'] = 'Tool Icon'
+        super(ToolIconFormHelper, self).__init__(allow_edit, res_short_id, element_id, element_name, layout,  *args, **kwargs)
+
+
+class ToolIconForm(ModelForm):
+    def __init__(self, allow_edit=True, res_short_id=None, element_id=None, *args, **kwargs):
+        super(ToolIconForm, self).__init__(*args, **kwargs)
+        self.helper = ToolIconFormHelper(allow_edit, res_short_id, element_id, element_name='ToolIcon')
+        self.fields['url'].label = "URL"
+
+    class Meta:
+        model = ToolIcon
+        fields = ['url']
+        exclude = ['content_object']
+
+
+class ToolIconValidationForm(forms.Form):
+    url = forms.CharField(max_length=1024)
+
 parameters_choices = (
     ('GenericResource', 'Generic Resource'),
     ('RasterResource', 'Raster Resource'),
@@ -72,7 +99,8 @@ parameters_choices = (
     ('ModelProgramResource', 'Model Program Resource'),
     ('ModelInstanceResource', 'Model Instance Resource'),
     ('SWATModelInstanceResource', 'SWAT Model Instance Resource'),
-    ('GeographicFeatureResource', 'Geographic Feature Resource')
+    ('GeographicFeatureResource', 'Geographic Feature Resource'),
+    ('ScriptResource', 'Script Resource')
 )
 
 
@@ -95,10 +123,11 @@ class SupportedResTypeFormHelper(BaseFormHelper):
 class SupportedResTypesForm(ModelForm):
     supported_res_types = forms.MultipleChoiceField(choices=parameters_choices,
                                                     widget=forms.CheckboxSelectMultiple(
-                                                        attrs={'style': 'width:auto;margin-top:-5px'}))
+                                                            attrs={'style': 'width:auto;margin-top:-5px'}))
 
     def __init__(self, allow_edit=True, res_short_id=None, element_id=None, *args, **kwargs):
         super(SupportedResTypesForm, self).__init__(*args, **kwargs)
+        self.fields['supported_res_types'].label = "Choices: "
         self.helper = SupportedResTypeFormHelper(allow_edit, res_short_id, element_id, element_name='SupportedResTypes')
         if self.instance:
             try:

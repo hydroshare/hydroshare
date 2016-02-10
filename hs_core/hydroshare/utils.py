@@ -111,6 +111,7 @@ def group_from_id(grp):
     return tgt
 
 
+# TODO: Tastypie left over. This needs to be deleted
 def serialize_science_metadata(res):
     js = get_serializer('json')()
     resd = json.loads(js.serialize([res]))[0]['fields']
@@ -125,7 +126,7 @@ def serialize_science_metadata(res):
     resd['files'] = [dc['fields'] for dc in json.loads(js.serialize(res.files.all()))]
     return json.dumps(resd)
 
-
+# TODO: Tastypie left over. This needs to be deleted
 def serialize_system_metadata(res):
     js = get_serializer('json')()
     resd = json.loads(js.serialize([res]))[0]['fields']
@@ -168,14 +169,6 @@ def resource_modified(resource, by_user=None, overwrite_bag=True):
     # set bag_modified-true AVU pair for the modified resource in iRODS to indicate
     # the resource is modified for on-demand bagging.
     istorage.setAVU(resource.short_id, "bag_modified", "true")
-
-# def _get_user_info(user):
-#     from hs_core.api import UserResource
-#
-#     ur = UserResource()
-#     ur_bundle = ur.build_bundle(obj=user)
-#     return json.loads(ur.serialize(None, ur.full_dehydrate(ur_bundle), 'application/json'))
-
 
 def _validate_email( email ):
     from django.core.validators import validate_email
@@ -220,16 +213,19 @@ def check_file_dict_for_error(file_validation_dict):
             error_message = file_validation_dict.get('message', "Uploaded file(s) failed validation.")
             raise ResourceFileValidationException(error_message)
 
+
 def raise_file_size_exception():
     from .resource import file_size_limit_for_display
     error_msg = 'The resource file is larger than the supported size limit: %s.' % file_size_limit_for_display
     raise ResourceFileSizeException(error_msg)
+
 
 def validate_resource_file_size(resource_files):
     from .resource import check_resource_files
     valid = check_resource_files(resource_files)
     if not valid:
         raise_file_size_exception()
+
 
 def resource_pre_create_actions(resource_type, resource_title, page_redirect_url_key, files=(), metadata=None,  **kwargs):
     from.resource import check_resource_type
@@ -317,8 +313,20 @@ def prepare_resource_default_metadata(resource, metadata, res_title):
                              }
                         })
 
-    metadata.append({'identifier': {'name':'hydroShareIdentifier',
-                                    'url':'{0}/resource{1}{2}'.format(current_site_url(), '/', resource.short_id)}})
+    metadata.append({'identifier': {'name': 'hydroShareIdentifier',
+                                    'url': '{0}/resource{1}{2}'.format(current_site_url(), '/', resource.short_id)}})
+
+    # remove if there exists the 'type' element as system generates this element
+    # remove if there exists 'format' elements - since format elements are system generated based
+    # on resource content files
+    # remove any 'date' element which is not of type 'valid'. All other date elements are system generated
+    for element in list(metadata):
+        if 'type' in element or 'format' in element:
+            metadata.remove(element)
+        if 'date' in element:
+            if 'type' in element['date']:
+                if element['date']['type'] != 'valid':
+                    metadata.remove(element)
 
     metadata.append({'type': {'url': '{0}/terms/{1}'.format(current_site_url(), resource.__class__.__name__)}})
 

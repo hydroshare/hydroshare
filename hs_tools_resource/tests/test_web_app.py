@@ -7,7 +7,7 @@ from django.http import HttpRequest, QueryDict
 from hs_core.hydroshare import resource
 from hs_core import hydroshare
 
-from hs_tools_resource.models import RequestUrlBase, ToolVersion, SupportedResTypes, ToolResource
+from hs_tools_resource.models import RequestUrlBase, ToolVersion, SupportedResTypes, ToolResource, ToolIcon
 from hs_tools_resource.receivers import metadata_element_pre_create_handler, metadata_element_pre_update_handler
 
 
@@ -16,20 +16,20 @@ class TestWebAppFeature(TransactionTestCase):
     def setUp(self):
         self.group, _ = Group.objects.get_or_create(name='Hydroshare Author')
         self.user = hydroshare.create_account(
-            'scrawley@byu.edu',
-            username='scrawley',
-            first_name='Shawn',
-            last_name='Crawley',
-            superuser=False,
-            groups=[self.group]
+                'scrawley@byu.edu',
+                username='scrawley',
+                first_name='Shawn',
+                last_name='Crawley',
+                superuser=False,
+                groups=[self.group]
         )
         self.allowance = 0.00001
 
         self.resWebApp = hydroshare.create_resource(
-            resource_type='ToolResource',
-            owner=self.user,
-            title='Test Web App Resource',
-            keywords=['kw1', 'kw2']
+                resource_type='ToolResource',
+                owner=self.user,
+                title='Test Web App Resource',
+                keywords=['kw1', 'kw2']
         )
 
     def test_web_app_res_specific_metadata(self):
@@ -117,6 +117,35 @@ class TestWebAppFeature(TransactionTestCase):
                                              element_id=SupportedResTypes.objects.first().id)
         self.assertEqual(SupportedResTypes.objects.all().count(), 2)
 
+        ####################
+        # Class: ToolIcon
+        ####################
+        # verify no ToolIcon obj
+        self.assertEqual(ToolIcon.objects.all().count(), 0)
+
+        # no ToolIcon obj
+        self.assertEqual(ToolIcon.objects.all().count(), 0)
+
+        # create 1 ToolIcon obj with required params
+        resource.create_metadata_element(self.resWebApp.short_id, 'ToolIcon', url='https://test_icon_url.png')
+        self.assertEqual(ToolIcon.objects.all().count(), 1)
+
+        # may not create additional instance of ToolIcon
+        with self.assertRaises(Exception):
+            resource.create_metadata_element(self.resWebApp.short_id, 'ToolIcon', url='https://test_icon_url_2.png')
+        self.assertEqual(ToolIcon.objects.all().count(), 1)
+
+        # update existing meta
+        resource.update_metadata_element(self.resWebApp.short_id, 'ToolIcon',
+                                         element_id=ToolIcon.objects.first().id,
+                                         url='https://test_icon_url_3.png')
+        self.assertEqual(ToolIcon.objects.first().url, 'https://test_icon_url_3.png')
+
+        # delete ToolIcon obj
+        resource.delete_metadata_element(self.resWebApp.short_id, 'ToolIcon',
+                                         element_id=ToolIcon.objects.first().id)
+        self.assertEqual(ToolIcon.objects.all().count(), 0)
+
     def test_metadata_element_pre_create_and_update(self):
         request = HttpRequest()
 
@@ -152,5 +181,13 @@ class TestWebAppFeature(TransactionTestCase):
         self.assertTrue(data["is_valid"])
         data = metadata_element_pre_update_handler(sender=ToolResource,
                                                    element_name="SupportedResTypes",
+                                                   request=request)
+        self.assertTrue(data["is_valid"])
+
+        # ToolIcon
+        request.POST = {'icon': 'https://test_icon_url_3.png'}
+
+        data = metadata_element_pre_create_handler(sender=ToolResource,
+                                                   element_name="ToolIcon",
                                                    request=request)
         self.assertTrue(data["is_valid"])

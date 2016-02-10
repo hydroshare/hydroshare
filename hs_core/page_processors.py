@@ -66,11 +66,18 @@ def get_page_context(page, user, resource_edit=False, extended_metadata_layout=N
                 if tool_res_obj:
                     is_authorized = authorize(request, tool_res_obj.short_id, view=True, raises_exception=False)[1]
                     if is_authorized:
-                        tool_url = tool_res_obj.metadata.url_bases.first().value
+                        tool_url = tool_res_obj.metadata.url_bases.first().value \
+                            if tool_res_obj.metadata.url_bases.first() else None
                         u = user.username if user.is_authenticated() else "anonymous"
-                        if tool_url.endswith('/'):
-                            tool_url = tool_url[:-1]
-                        tl = {'title': str(res_type.content_object.title),
+                        if tool_url:
+                            if tool_url.endswith('/'):
+                                tool_url = tool_url[:-1]
+                        else:
+                            tool_url = ""
+                        tool_icon_url = tool_res_obj.metadata.tool_icon.first().url \
+                            if tool_res_obj.metadata.tool_icon.first() else "raise-img-error"
+                        tl = {'title': str(tool_res_obj.metadata.title.value),
+                              'icon_url': tool_icon_url,
                               'url': "{0}{1}{2}{3}{4}{5}".format(tool_url, "/?res_id=", content_model.short_id,
                                                                  "&usr=", u, "&src=hs")}
                         relevant_tools.append(tl)

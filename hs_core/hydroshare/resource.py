@@ -1,9 +1,9 @@
-### resource API
 import os
 
 from django.core.exceptions import ObjectDoesNotExist
 from django.core.files import File
 from django.core.files.uploadedfile import UploadedFile
+from django.utils.timezone import now
 from django.db import transaction
 
 from mezzanine.generic.models import Keyword, AssignedKeyword
@@ -81,6 +81,7 @@ def get_science_metadata(pk):
     return res.metadata.get_xml()
 
 
+# TODO: Incorrect implementation. Needs fixing if we ever need this api
 def get_system_metadata(pk):
     """
     Describes the resource identified by the pid by returning the associated system metadata object. If the resource
@@ -102,6 +103,7 @@ def get_system_metadata(pk):
     return utils.get_resource_by_shortkey(pk)
 
 
+# TODO: Incorrect implementation. Needs fixing if we ever need this api
 def get_resource_map(pk):
     """
     Describes the resource identified by the pid by returning the associated resource map document. If the resource does
@@ -200,6 +202,8 @@ def update_resource_file(pk, filename, f):
     else:
         raise ObjectDoesNotExist(filename)
 
+
+# TODO: incorrect implementation. Needs fixing if we ever need this api
 def get_revisions(pk):
     """
     Returns a list of pids for resources that are revisions of the resource identified by the specified pid.
@@ -263,7 +267,8 @@ def get_checksum(pk):
     Exceptions.NotFound - The resource specified by pid does not exist
     Exception.ServiceFailure - The service is unable to process the request
     """
-    raise NotImplemented()
+    raise NotImplementedError()
+
 
 def check_resource_files(files=()):
     """
@@ -285,6 +290,7 @@ def check_resource_files(files=()):
                 return False
     return True
 
+
 def check_resource_type(resource_type):
     """
     internally used method to check the resource type
@@ -300,6 +306,7 @@ def check_resource_type(resource_type):
     else:
         raise NotImplementedError("Type {resource_type} does not exist".format(resource_type=resource_type))
     return res_cls
+
 
 def create_resource(
         resource_type, owner, title,
@@ -379,7 +386,7 @@ def create_resource(
         # by default resource is private
         resource_access = ResourceAccess(resource=resource)
         resource_access.save()
-        UserResourcePrivilege(resource=resource_access, grantor=owner.uaccess, user=owner.uaccess,
+        UserResourcePrivilege(resource=resource, grantor=owner, user=owner,
                               privilege=PrivilegeCodes.OWNER).save()
 
         resource_labels = ResourceLabels(resource=resource)
@@ -422,6 +429,7 @@ def create_resource(
             hs_bagit.create_bag(resource)
 
     return resource
+
 
 # TODO: This is not used anywhere except in a skipped unit test - if need to be used then new access rules need to apply
 def update_resource(
@@ -512,9 +520,10 @@ def update_resource(
 
     # for creating metadata elements based on the new metadata implementation
     if metadata:
-        _update_science_metadata(resource, metadata, keywords=keywords)
+        resource.metadata.update(metadata)
 
     return resource
+
 
 def add_resource_files(pk, *files):
     """
@@ -563,6 +572,8 @@ def add_resource_files(pk, *files):
 
     return ret
 
+
+# TODO: Incorrect implementation. Needs fixing if we ever need this api
 def update_system_metadata(pk, **kwargs):
     """
 
@@ -570,51 +581,42 @@ def update_system_metadata(pk, **kwargs):
     return update_science_metadata(pk, **kwargs)
 
 
-def update_science_metadata(pk, metadata=None, keywords=(), **kwargs):
+def update_science_metadata(pk, metadata):
     """
-    Called by clients to update the science metadata for a resource in HydroShare.
+    Updates science metadata for a resource
 
-    REST URL:  PUT /scimeta/{pid}
+    Args:
+        pk: Unique HydroShare identifier for the resource for which science metadata needs to be updated.
+        metadata: a list of dictionary items containing data for each metadata element that needs to be updated
+        example metadata format:
+        [
+            {'title': {'value': 'Updated Resource Title'}},
+            {'description': {'abstract': 'Updated Resource Abstract'}},
+            {'date': {'type': 'valid', 'start_date': '1/26/2016', 'end_date': '12/31/2016'}},
+            {'creator': {'name': 'John Smith', 'email': 'jsmith@gmail.com'}},
+            {'creator': {'name': 'Lisa Molley', 'email': 'lmolley@gmail.com'}},
+            {'contributor': {'name': 'Kelvin Marshal', 'email': 'kmarshal@yahoo.com',
+                             'organization': 'Utah State University',
+                             'profile_links': [{'type': 'yahooProfile', 'url': 'http://yahoo.com/LH001'}]}},
+            {'coverage': {'type': 'period', 'value': {'name': 'Name for period coverage', 'start': '1/1/2000',
+                                                      'end': '12/12/2012'}}},
+            {'coverage': {'type': 'point', 'value': {'name': 'Name for point coverage', 'east': '56.45678',
+                                                     'north': '12.6789', 'units': 'decimal deg'}}},
+            {'identifier': {'name': 'someIdentifier', 'url': "http://some.org/001"}},
+            {'language': {'code': 'fre'}},
+            {'relation': {'type': 'isPartOf', 'value': 'http://hydroshare.org/resource/001'}},
+            {'rights': {'statement': 'This is the rights statement for this resource', 'url': 'http://rights.ord/001'}},
+            {'source': {'derived_from': 'http://hydroshare.org/resource/0001'}},
+            {'subject': {'value': 'sub-1'}},
+            {'subject': {'value': 'sub-2'}},
+        ]
 
-    Parameters:
-
-    pid - Unique HydroShare identifier for the resource that is to be updated.
-
-    ScienceMetadata - The data bytes of the ScienceMetadata that will update the existing Science Metadata for the resource
-    identified by pid
-
-    Returns:    The pid assigned to the resource whose Science Metadata was updated
-
-    Return Type:    pid
-
-    Raises:
-    Exceptions.NotAuthorized - The user is not authorized
-    Exceptions.InvalidContent - The content of the resource is incomplete
-    Exception.ServiceFailure - The service is unable to process the request
-
-    Notes:
-    For mutable resources (resources that have not been formally published), the update overwrites existing Science
-    Metadata using the ScienceMetadata that is passed to this method. For immutable resources (formally published
-    resources), this method creates a new resource that is a new version of the formally published resource. HydroShare
-    will record the update by storing the SystemMetadata.obsoletes and SystemMetadata.obsoletedBy fields for the
-    respective resources in their system metadata. HydroShare MUST check or set the values of SystemMetadata.obsoletes
-    and SystemMetadata.obsoletedBy so that they accurately represent the relationship between the new and old objects.
-    hydroShare MUST also set SystemMetadata.dateSysMetadataModified. The modified system metadata entries must then be
-    available in HydroShare.listObjects() to ensure that any cataloging systems pick up the changes when filtering on
-    SystmeMetadata.dateSysMetadataModified. A formally published resource can only be obsoleted by one newer version.
-    Once a resource is obsoleted, no other resources can obsolete it.
-
+    Returns:
     """
+
     resource = utils.get_resource_by_shortkey(pk)
+    resource.metadata.update(metadata)
 
-    # for creating metadata elements based on the new metadata implementation
-    if metadata:
-        _update_science_metadata(resource, metadata, keywords=keywords)
-
-    if kwargs:
-        for field, value in kwargs.items():
-            setattr(resource, field, value)
-        resource.save()
 
 def delete_resource(pk):
     """
@@ -747,6 +749,7 @@ def publish_resource(pk):
     resource.raccess.immutable = True
     resource.raccess.save()
     resource.doi = "to be assigned"
+    resource.metadata.create_element('date', type='published', start_date=now().isoformat())
     resource.save()
 
 
@@ -774,6 +777,7 @@ def resolve_doi(doi):
     """
     return utils.get_resource_by_doi(doi).short_id
 
+
 def create_metadata_element(resource_short_id, element_model_name, **kwargs):
     """
     Creates a specific type of metadata element for a given resource
@@ -785,6 +789,7 @@ def create_metadata_element(resource_short_id, element_model_name, **kwargs):
     """
     res = utils.get_resource_by_shortkey(resource_short_id)
     res.metadata.create_element(element_model_name, **kwargs)
+
 
 def update_metadata_element(resource_short_id, element_model_name, element_id, **kwargs):
     """
@@ -799,6 +804,7 @@ def update_metadata_element(resource_short_id, element_model_name, element_id, *
     res = utils.get_resource_by_shortkey(resource_short_id)
     res.metadata.update_element(element_model_name, element_id, **kwargs)
 
+
 def delete_metadata_element(resource_short_id, element_model_name, element_id):
     """
     Deletes a specific type of metadata element for a specified resource
@@ -811,6 +817,7 @@ def delete_metadata_element(resource_short_id, element_model_name, element_id):
     res = utils.get_resource_by_shortkey(resource_short_id)
     res.metadata.delete_element(element_model_name, element_id)
 
+
 def get_science_metadata_xml(resource_short_id):
     """
     Gets science metadata as an xml string for a specified resource
@@ -820,37 +827,3 @@ def get_science_metadata_xml(resource_short_id):
     """
     res = utils.get_resource_by_shortkey(resource_short_id)
     return res.metadata.get_xml()
-
-def _update_science_metadata(resource, metadata):
-    # delete all existing elements in the metadata container object
-    # note: we can't delete the metadata container object as it would delete the associated
-    # resource object (cascade delete)
-    resource.metadata.delete_all_elements()
-
-    # add the few of the metadata elements that need to be
-    # created from the resource properties (like title, abstract, created date etc)
-    # TODO: create the title metadata element
-
-    if resource.content:
-        resource.metadata.create_element('description', abstract=resource.content)
-    else:
-        resource.metadata.create_element('description', abstract=resource.description)
-
-    resource.metadata.create_element('creator', name=resource.creator.get_full_name(), email=resource.creator.email)
-
-    resource.metadata.create_element('date', type='created', start_date=resource.created)
-    resource.metadata.create_element('date', type='modified', start_date=resource.updated)
-    resource.metadata.create_element('identifier', name='hydroShareIdentifier',
-                                     url='http://hydroshare.org/resource{0}{1}'.format('/', resource.short_id))
-
-    # TODO: add the type element (once we have an url for the resource type
-
-    for keyword in keywords:
-        resource.metadata.create_element('subject', value=keyword)
-
-    # then create the rest of the elements form the user provided data
-    for element in metadata:
-        # here k is the name of the element
-        # v is a dict of all element attributes/field names and corresponding values
-        k, v = element.items()[0]
-        resource.metadata.create_element(k, **v)
