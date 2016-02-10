@@ -61,7 +61,26 @@
         {# ======= Title ======= #}
         <div class="col-sm-12">
             {% if not metadata_form %}
-                <h2>{{ title }}</h2>
+                <h2 id="resource-title">{{ title }}</h2>
+                {% if relevant_tools %}
+                    <span id="apps-dropdown">
+                    <button class="btn btn-primary dropdown-toggle" type="button" data-toggle="dropdown">Open with...
+                        <span class="caret"></span></button>
+                    <ul class="dropdown-menu">
+                        {% for tool in relevant_tools %}
+                            <li title="{{ tool.title }}">
+                                <a href="{{ tool.url }}" target="_blank">
+                                    <img class="dropdown-user-webapp-icon" src="{{ tool.icon_url }}">
+                                    {% if tool.title|length > 20 %}
+                                        <span>{{ tool.title|slice:":21"|add:"..." }}</span>
+                                    {% else %}
+                                        <span>{{ tool.title }}</span>
+                                    {% endif %}
+                                </a>
+                            </li>
+                        {% endfor %}
+                    </ul>
+                {% endif %}
             {% else %}
                 <form action="/hsapi/_internal/{{ cm.short_id }}/title/{{ cm.metadata.title.id }}/update-metadata/"
                       id="id-title"
@@ -959,6 +978,7 @@
 
                 </div>
                 <!-- Buttons -->
+                {% block download_bag %}
                 <div>
                     {% for b in cm.bags.all %}
                         <a id="btn-download-all" type="button" class="btn btn-default row-selector" href="{{ bag_url }}">
@@ -969,6 +989,7 @@
                         </a>
                     {% endfor %}
                 </div>
+                {% endblock %}
 
             {% else %}
                 <i class="glyphicon glyphicon-eye-close text-danger no-access-icon"></i>&nbsp;
@@ -1583,8 +1604,19 @@
 
                                             </tbody>
                                         </table>
+
                                         <a id="add-relation" class="btn btn-success" data-toggle="modal"
                                            data-target="#add-relation-dialog"><i class="fa fa-plus"></i> Add relation</a>
+
+                                        <div>
+                                            <small class="text-muted">Click the button above to add a relationship to
+                                                another resource, external website, or document. You can express the
+                                                type of
+                                                relationship and then enter a URL to the resource or website. If the
+                                                related
+                                                resource does not have a URL, you can paste in a full text citation.
+                                            </small>
+                                        </div>
                                     </div>
                                 {% endif %}
                             </div>
@@ -1613,18 +1645,22 @@
                             <!-- ========= RELEVANT TOOLS TAB ========= -->
                         {% if relevant_tools %}
                             <div class="tab-pane" id="relevantTools">
-                            {% if not metadata_form %}
-                                {% for tool in relevant_tools %}
-                                    <a href="{{ tool.url }}" target="_blank">
-                                    <div id="web-app-item">
-                                        <h4>{{ tool.title }}</h4>
-                                        <img class="user-webapp-icon" src="{{ tool.icon_url }}">
-                                    </div>
-                                    </a>
-                                {% endfor %}
-                            {% else %}
-                                ------- Relevant tools form here -------
-                            {%  endif %}
+                                {% if not metadata_form %}
+                                    {% for tool in relevant_tools %}
+                                        <div title="{{ tool.title }}" id="web-app-item">
+                                            <a href="{{ tool.url }}" target="_blank">
+                                                {% if tool.title|length > 20 %}
+                                                    <h4>{{ tool.title|slice:":21"|add:"..." }}</h4>
+                                                {% else %}
+                                                    <h4>{{ tool.title }}</h4>
+                                                {% endif %}
+                                                <img class="user-webapp-icon" src="{{ tool.icon_url }}">
+                                            </a>
+                                        </div>
+                                    {% endfor %}
+                                {% else %}
+                                    ------- Relevant tools form here -------
+                                {%  endif %}
                             </div>
                         {% endif %}
                     </div>
@@ -3508,29 +3544,18 @@
                         $(this).closest("form").find("button").show();
                     });
                 });
-                var setDefaultIcon = function($this) {
-                    $this
-                            .attr('src', '{{ STATIC_URL }}img/web-app-default-icon.png')
-                            .removeClass('user-webapp-icon')
-                            .addClass('default-webapp-icon');
-                };
-                $('.user-webapp-icon').each(function() {
-                    if ($(this).attr('src') == '') {
-                        setDefaultIcon($(this));
-                    }
-                }).on('error', function() {
-                    setDefaultIcon($(this));
-                });
-
             });
         </script>
         <script async defer src="https://maps.googleapis.com/maps/api/js?libraries=drawing&callback=initMap"></script>
+        {% if relevant_tools %}
+            <script type="text/javascript" src="{{ STATIC_URL }}js/toolresource.js"></script>
+        {% endif %}
     {% endblock %}
 
 
     {% block extra_css %}
         {{ block.super }}
-        <link href="{{ STATIC_URL }}css/toolresource.css" rel="stylesheet"/>
+        {% if relevant_tools %}
+            <link href="{{ STATIC_URL }}css/toolresource.css" rel="stylesheet"/>
+        {% endif %}
     {%  endblock %}
-
-

@@ -1,25 +1,17 @@
-__author__ = 'Pabitra'
-
-import unittest
-
-from django.contrib.auth.models import User, Group
+from django.contrib.auth.models import Group
 from django.http import Http404
+from django.test import TestCase
 
 from hs_core import hydroshare
-from hs_core.models import GenericResource
+from hs_core.testing import MockIRODSTestCaseMixin
 
 
-class TestResolveDOIAPI(unittest.TestCase):
+class TestResolveDOIAPI(MockIRODSTestCaseMixin, TestCase):
     def setUp(self):
+        super(TestResolveDOIAPI, self).setUp()
         self.hydroshare_author_group, _ = Group.objects.get_or_create(name='Hydroshare Author')
 
-    def tearDown(self):
-        self.user_creator.uaccess.delete()
-        User.objects.all().delete()
-        GenericResource.objects.all().delete()
-
     def test_resolve_doi(self):
-        # create a user to be used for creating the resource
         self.user_creator = hydroshare.create_account(
             'creator@usu.edu',
             username='creator',
@@ -29,7 +21,6 @@ class TestResolveDOIAPI(unittest.TestCase):
             groups=[]
         )
 
-        # create a resource
         new_resource = hydroshare.create_resource(
             'GenericResource',
             self.user_creator,

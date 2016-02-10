@@ -1,5 +1,3 @@
-__author__ = 'Pabitra'
-
 import unittest
 
 from unittest import TestCase
@@ -10,9 +8,11 @@ from hs_core.models import GenericResource
 from django.contrib.auth.models import User, Group
 import datetime as dt
 
+# TODO: These unit tests can't be part of test run until the api being tested (hydroshare.update_resource()) is
+# fixed first
+
 
 class TestUpdateResource(TestCase):
-
     def setUp(self):
         self.group, _ = Group.objects.get_or_create(name='Hydroshare Author')
         # create a user
@@ -46,7 +46,9 @@ class TestUpdateResource(TestCase):
 
     @unittest.skip
     def test_update_resource_with_metadata(self):
-        # add these new metadata elements
+        # Note: for detailed test for updating metadata - see 'test_update_metadata.py'
+        # here we may just update one or 2 metadata elements. Focus should be updating the resource
+        # with other data
         metadata_dict = [
             {'creator': {'name':'John Smith', 'email':'jsmith@gmail.com'}},
             {'creator': {'name':'Lisa Molley', 'email':'lmolley@gmail.com'}},
@@ -118,4 +120,3 @@ class TestUpdateResource(TestCase):
                       msg="Subject element with value of %s does not exist." % 'sub-1')
         self.assertIn('sub-2', [sub.value for sub in self.res.metadata.subjects.all()],
                       msg="Subject element with value of %s does not exist." % 'sub-1')
-        #print(bad)

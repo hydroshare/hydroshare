@@ -2,14 +2,8 @@
 {% load geoanalytics_tags pages_tags mezzanine_tags crispy_forms_tags %}
 {% load staticfiles  %}
 
-{#{% block tools %}#}
-{#{% endblock %}#}
-
 {% block content %}
 {% endblock %}
-
-{#{% block extra_content %}#}
-{#{% endblock %}#}
 
 {% block extended_metadata %}
     {% if extended_metadata_exists %}
@@ -62,4 +56,9 @@
 {% block extra_js %}
     {{ block.super }}
     <script src="{% static "js/toolresource.js"%}"></script>
+{% endblock %}
+
+{% block extra_css %}
+    {{ block.super }}
+    <link rel="stylesheet" href="{% static "css/toolresource.css"%}"/>
 {% endblock %}

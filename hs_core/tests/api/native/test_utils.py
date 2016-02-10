@@ -1,61 +1,51 @@
-import unittest
+from django.contrib.auth.models import Group
+from django.contrib.sites.models import Site
+from django.test import TestCase
 
-from django.contrib.auth.models import Group, User
+from mezzanine.conf import settings
 
 from hs_core.hydroshare import utils
 from hs_core.models import GenericResource, BaseResource
 from hs_core import hydroshare
+from hs_core.testing import MockIRODSTestCaseMixin
 
 
-class TestUtils(unittest.TestCase):
+class TestUtils(MockIRODSTestCaseMixin, TestCase):
     def setUp(self):
-        # try:
+        super(TestUtils, self).setUp()
         self.group, _ = Group.objects.get_or_create(name='Hydroshare Author')
-        try:
-            self.user = User.objects.get(username='user1')
-        except User.DoesNotExist:
-            self.user = hydroshare.create_account(
-                'user1@nowhere.com',
-                username='user1',
-                first_name='Creator_FirstName',
-                last_name='Creator_LastName',
-                superuser=False,
-                groups=[self.group]
-            )
+        self.user = hydroshare.create_account(
+            'user1@nowhere.com',
+            username='user1',
+            first_name='Creator_FirstName',
+            last_name='Creator_LastName',
+            superuser=False,
+            groups=[]
+        )
 
-        # except:
-        #     self.tearDown()
-        #     self.user = User.objects.create_user('user1', email='user1@nowhere.com')
+        self.user2 = hydroshare.create_account(
+            'user2@nowhere.com',
+            username='user2',
+            first_name='user2_FirstName',
+            last_name='user2_LastName',
+            superuser=False,
+            groups=[]
+        )
 
         self.res = hydroshare.create_resource(
             'GenericResource',
             self.user,
-            'resource',
+            'test resource',
         )
         self.res.doi = 'doi1000100010001'
         self.res.save()
 
-    def tearDown(self):
-        self.user.uaccess.delete()
-        User.objects.all().delete()
-        Group.objects.all().delete()
-        self.res.raccess.delete()
-        GenericResource.objects.all().delete()
-        #QualifiedDublinCoreElement.objects.all().delete()
-
-    @unittest.skip
     def test_get_resource_types(self):
-        # first time gets them anew
-        self.assertListEqual(
-            [GenericResource],
-            utils.get_resource_types(),
-            msg="Resource types was more than just [GenericResource]")
+        res_types = utils.get_resource_types()
+        self.assertIn(GenericResource, res_types)
 
-        # second time gets cached instances
-        self.assertListEqual(
-            [GenericResource],
-            utils.get_resource_types(),
-            msg="Resource types was more than just [GenericResource] using cached resource types")
+        for res_type in res_types:
+            self.assertTrue(issubclass(res_type, BaseResource))
 
     def test_get_resource_instance(self):
         self.assertEqual(
@@ -94,7 +84,6 @@ class TestUtils(unittest.TestCase):
             msg='lookup by username failed'
         )
 
-    @unittest.skip
     def test_group_from_id(self):
         self.assertEqual(
             utils.group_from_id(self.group),
@@ -103,194 +92,32 @@ class TestUtils(unittest.TestCase):
         )
 
         self.assertEqual(
-            utils.group_from_id('group1'),
+            utils.group_from_id('Hydroshare Author'),
             self.group,
             msg='lookup by group name failed'
         )
 
+    def test_get_user_profile(self):
+        self.assertEquals(self.user.userprofile, utils.get_profile(self.user))
 
-    # not really a unit test. primarily this function
-    # allows us to see the generated science metadata xml
-    @unittest.skip
-    def test_serialize_science_metadata_xml(self):
-        # TODO: This test needs to be rewritten using the new metadata models
+    def test_get_mime_type(self):
+        test_file = 'my_file.txt'
+        self.assertEquals(utils.get_file_mime_type(test_file), 'text/plain')
+        test_file = 'my_file.tif'
+        self.assertEquals(utils.get_file_mime_type(test_file), 'image/tiff')
+        test_file = 'my_file.abc'
+        self.assertEquals(utils.get_file_mime_type(test_file), 'application/abc')
 
-        # QualifiedDublinCoreElement.objects.create(
-        #     term='AB',
-        #     qualifier=None,
-        #     content='This a sample abstract.',
-        #     content_object=self.res
-        # )
-        #
-        # QualifiedDublinCoreElement.objects.create(
-        #     term='CN',
-        #     qualifier=None,
-        #     content='Contributor_1',
-        #     content_object=self.res
-        # )
-        #
-        # QualifiedDublinCoreElement.objects.create(
-        #     term='CN',
-        #     qualifier=None,
-        #     content='Contributor_2',
-        #     content_object=self.res
-        # )
-        #
-        # contributor_3 = hydroshare.create_account(
-        #     'contributor_3@usu.edu',
-        #     username='contributor_3',
-        #     first_name='Contributor',
-        #     last_name='_3',
-        #     superuser=False,
-        #     groups=[self.group]
-        # )
-        # QualifiedDublinCoreElement.objects.create(
-        #     term='CN',
-        #     qualifier=None,
-        #     content='contributor_3@usu.edu',
-        #     content_object=self.res
-        # )
-        #
-        # QualifiedDublinCoreElement.objects.create(
-        #     term='DSC',
-        #     qualifier=None,
-        #     content='This a sample description of the resource.',
-        #     content_object=self.res
-        # )
-        #
-        # QualifiedDublinCoreElement.objects.create(
-        #     term='CR',
-        #     qualifier=None,
-        #     content='Tian Gan.',
-        #     content_object=self.res
-        # )
-        #
-        # creator_2 = hydroshare.create_account(
-        #     'creator_2@usu.edu',
-        #     username='creator_2',
-        #     first_name='Creator',
-        #     last_name='_2',
-        #     superuser=False,
-        #     groups=[self.group]
-        # )
-        #
-        # creator_3 = hydroshare.create_account(
-        #     'creator_3@usu.edu',
-        #     username='creator_3',
-        #     first_name='Creator',
-        #     last_name='_3',
-        #     superuser=False,
-        #     groups=[self.group]
-        # )
-        #
-        # QualifiedDublinCoreElement.objects.create(
-        #     term='CR',
-        #     qualifier=None,
-        #     content='creator_2@usu.edu',
-        #     content_object=self.res
-        # )
-        #
-        # QualifiedDublinCoreElement.objects.create(
-        #     term='CR',
-        #     qualifier=None,
-        #     content='creator_3@usu.edu',
-        #     content_object=self.res
-        # )
-        #
-        # QualifiedDublinCoreElement.objects.create(
-        #     term='DTS',
-        #     qualifier=None,
-        #     content="2014-07-14T16:31:08.429890+00:00",
-        #     content_object=self.res
-        # )
-        #
-        # QualifiedDublinCoreElement.objects.create(
-        #     term='FMT',
-        #     qualifier=None,
-        #     content="text/csv",
-        #     content_object=self.res
-        # )
-        #
-        # QualifiedDublinCoreElement.objects.create(
-        #     term='FMT',
-        #     qualifier=None,
-        #     content="application/netCDF",
-        #     content_object=self.res
-        # )
-        #
-        # QualifiedDublinCoreElement.objects.create(
-        #     term='LG',
-        #     qualifier=None,
-        #     content="eng",
-        #     content_object=self.res
-        # )
-        #
-        # QualifiedDublinCoreElement.objects.create(
-        #     term='PBL',
-        #     qualifier=None,
-        #     content="http://hydroshare.org/",
-        #     content_object=self.res
-        # )
-        #
-        # QualifiedDublinCoreElement.objects.create(
-        #     term='REL',
-        #     qualifier=None,
-        #     content="Mahat, V., and D. G. Tarboton (2012), Canopy radiation transmission for an energy balance snowmelt model, Water Resour. Res., 48, W01534.",
-        #     content_object=self.res
-        # )
-        #
-        # QualifiedDublinCoreElement.objects.create(
-        #     term='RT',
-        #     qualifier=None,
-        #     content="http://creativecommons.org/licenses/by/3.0/",
-        #     content_object=self.res
-        # )
-        #
-        # QualifiedDublinCoreElement.objects.create(
-        #     term='BX',
-        #     qualifier=None,
-        #     content="northlimit=4635150.0; southlimit=4634790.0; eastlimit=458010.0; westlimit=457560.0; units= meter; projection = UTM zone 12N",
-        #     content_object=self.res
-        # )
-        #
-        # QualifiedDublinCoreElement.objects.create(
-        #     term='SRC',
-        #     qualifier=None,
-        #     content="Tarboton, D. G. and C. H. Luce, (1996), \'Utah Energy Balance Snow Accumulation and Melt Model (UEB),\' Computer model technical description and users guide, Utah Water Research Laboratory and USDA Forest Service Intermountain Research Station. http://www.engineering.usu.edu/dtarb/",
-        #     content_object=self.res
-        # )
-        #
-        # QualifiedDublinCoreElement.objects.create(
-        #     term='SUB',
-        #     qualifier=None,
-        #     content="Snow water equivalent, Utah Energy Balance Model",
-        #     content_object=self.res
-        # )
-        #
-        # QualifiedDublinCoreElement.objects.create(
-        #     term='T',
-        #     qualifier=None,
-        #     content="UEB MODEL SIMULATION OF SNOW WATER EQUIVALENT AT TWDEF SITE FROM OCT 2009 TO JUNE 2010",
-        #     content_object=self.res
-        # )
-        #
-        # QualifiedDublinCoreElement.objects.create(
-        #     term='PD',
-        #     qualifier=None,
-        #     content="start= 2009-10-01; end= 2010-06-31; scheme=W3C-DTF;",
-        #     content_object=self.res
-        # )
-        #
-        # QualifiedDublinCoreElement.objects.create(
-        #     term='TYP',
-        #     qualifier=None,
-        #     content="NetCDf Resource",
-        #     content_object=self.res
-        # )
+    def test_get_current_site_url(self):
+        current_site = Site.objects.get_current()
+        protocol = getattr(settings, 'MY_SITE_PROTOCOL', 'http')
+        url = '%s://%s' % (protocol, current_site.domain)
+        self.assertEquals(utils.current_site_url(), url)
 
-        # xml = utils.serialize_science_metadata_xml(self.res)
-        # print(xml)
-
-        # knowingly have this buggy statement so that I (Pabitra) can see the output of the above print statement
-        #print(xml1)
-        pass
+    def test_resource_modified(self):
+        modified_date1 = self.res.metadata.dates.filter(type='modified').first()
+        self.assertEquals(self.res.last_changed_by, self.user)
+        utils.resource_modified(self.res, self.user2)
+        modified_date2 = self.res.metadata.dates.filter(type='modified').first()
+        self.assertTrue((modified_date2.start_date - modified_date1.start_date).total_seconds() > 0)
+        self.assertEquals(self.res.last_changed_by, self.user2)
