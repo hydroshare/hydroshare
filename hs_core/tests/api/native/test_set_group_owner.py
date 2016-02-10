@@ -1,4 +1,7 @@
-__author__ = 'Pabitra'
+
+# TODO: the api being tested  here (hydroshare.set_group_owner()) is not based on new access_control app. Since
+# similar api is available in the access_control app, do we need a wrapper api in hs_core? If not then we should delete
+# this test since access_control app has this test
 
 import unittest
 

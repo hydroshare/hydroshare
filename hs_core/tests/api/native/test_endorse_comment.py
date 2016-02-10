@@ -1,25 +1,17 @@
-__author__ = 'Pabitra'
-
-import unittest
-
+from django.contrib.auth.models import Group
 from django.test import TestCase
-from django.contrib.auth.models import User
-from mezzanine.generic.models import Rating, ThreadedComment
+
+from mezzanine.generic.models import Rating
+
 from hs_core import hydroshare
-from hs_core.models import GenericResource
+from hs_core.testing import MockIRODSTestCaseMixin
 
-class TestEndorseCommentAPI(TestCase):
+
+class TestEndorseCommentAPI(MockIRODSTestCaseMixin, TestCase):
     def setUp(self):
-        pass
+        super(TestEndorseCommentAPI, self).setUp()
+        self.group, _ = Group.objects.get_or_create(name='Hydroshare Author')
 
-    def tearDown(self):
-        User.objects.all().delete()
-        GenericResource.objects.all().delete()
-        ThreadedComment.objects.all().delete()
-        Rating.objects.all().delete()
-        pass
-
-    @unittest.skip
     def test_endorse_comment(self):
         # create a user to be used for creating the resource
         user_creator = hydroshare.create_account(
@@ -130,4 +122,5 @@ class TestEndorseCommentAPI(TestCase):
         self.assertEqual(len(ratings), 0)
 
         # test that ValueError exception raised if the comment does not exist for the specified resource
-        self.assertRaises(ValueError, lambda :  hydroshare.endorse_comment(comment.id, resource_2.short_id, user_rater_2))
+        with self.assertRaises(ValueError):
+            hydroshare.endorse_comment(comment.id, resource_2.short_id, user_rater_2)

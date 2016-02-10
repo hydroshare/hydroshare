@@ -2,3 +2,5 @@
 
 coverage run manage.py test --with-xunit $1
 coverage xml
+
+exit 0;

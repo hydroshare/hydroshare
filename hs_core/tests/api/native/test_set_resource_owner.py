@@ -1,11 +1,14 @@
-__author__ = 'Pabitra'
-
 import unittest
 
 from django.test import TestCase
 from django.contrib.auth.models import User
 from hs_core import hydroshare
 from hs_core.models import GenericResource
+
+# TODO: the api being tested  here (hydroshare.set_resource_owner()) is not based on new access_control app. Since
+# similar api is available in the access_control app, do we need a wrapper api in hs_core? If not then we should delete
+# this test since access_control app has this test
+
 
 class TestSetResourceOwnerAPI(TestCase):
     def setUp(self):

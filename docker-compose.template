@@ -13,6 +13,11 @@ solr:
     - "8983"
 hydroshare:
   build: .
+  cap_add:
+    - SYS_ADMIN
+  devices:
+    - "/dev/fuse"
+  privileged: true
   environment:
     POSTGIS_HOST: postgis
     POSTGIS_PORT: 5432
@@ -30,6 +35,8 @@ hydroshare:
     # - "/home/hydro/pycharm-debug:/home/docker/pycharm-debug"
     # log files
     - "HS_LOG_FILES:/var/log/hydroshare"
+    # shared location for uwsgi.sock between containers
+    - "/var/run"
   ports:
     - "1338:22"
     - "8000:8000"

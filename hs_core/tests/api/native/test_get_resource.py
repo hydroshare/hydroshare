@@ -1,17 +1,17 @@
 __author__ = 'tonycastronova'
 
-from unittest import TestCase
+from django.contrib.auth.models import Group
+from django.test import TestCase
+
 from hs_core.hydroshare import resource
 from hs_core.hydroshare import users
-from hs_core.models import GenericResource, Bags
-from django.contrib.auth.models import User, Group
-import datetime as dt
+
+# iRODS mocking has not been used here as we want to test bag creation which needs
+# interaction with iRODS
 
 
 class TestGetResource(TestCase):
-
     def setUp(self):
-
         self.hydroshare_author_group, _ = Group.objects.get_or_create(name='Hydroshare Author')
         # create a user
         self.user = users.create_account(
@@ -22,38 +22,17 @@ class TestGetResource(TestCase):
             superuser=False,
             groups=[])
 
-        # get the user's id
-        self.userid = User.objects.get(username=self.user).pk
-
-        self.group = users.create_group(
-            'MytestGroup',
-            members=[self.user],
-            owners=[self.user]
-            )
-
-        new_res = resource.create_resource(
+        self.res = resource.create_resource(
             'GenericResource',
             self.user,
             'My Test Resource'
             )
-        self.pid = new_res.short_id
-
-    def tearDown(self):
-        self.user.delete()
-        self.group.delete()
-        self.hydroshare_author_group.delete()
-        #self.res.delete()
 
     def test_get_resource(self):
-
-        # get the resource by pid
-        res = resource.get_resource(self.pid).get_content_model()
-
-        self.assertTrue(res is not None)
-        self.assertEqual(res.resource_type, 'GenericResource')
-        self.assertTrue(isinstance(res, GenericResource), type(res))
-        self.assertTrue(res.metadata.title.value == 'My Test Resource')
-        self.assertTrue(res.created.strftime('%m/%d/%Y %H:%M') == res.updated.strftime('%m/%d/%Y %H:%M') )
-        self.assertTrue(res.created.strftime('%m/%d/%Y') == dt.datetime.today().strftime('%m/%d/%Y'))
-        self.assertTrue(res.user == self.user)
-        self.assertTrue(res.short_id is not None, 'Short ID has not been created!')
+        # function to test: hydroshare.get_resource() which returns a Bags object (not the actual bag file)
+        # TODO: Don't see any useful way of using the hydroshare.get_resource() function
+        # One can't do much with a Bags object. For downloading a bag we are using resource.bag_url.
+        # So it is better that we delete the get_resource() function and remove this test
+        
+        res_bag = resource.get_resource(self.res.short_id)
+        self.assertTrue(res_bag is not None)

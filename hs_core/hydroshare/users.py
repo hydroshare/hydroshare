@@ -2,6 +2,8 @@ import json
 
 from django.core.exceptions import MultipleObjectsReturned
 from django.contrib.auth.models import User, Group
+from django.core.files import File
+from django.core.files.uploadedfile import UploadedFile
 from django.contrib.contenttypes.models import ContentType
 from django.core import exceptions
 from django.core import signing
@@ -249,7 +251,12 @@ def update_account(user, **kwargs):
         for key in update_keys:
             profile_update[key] = kwargs[key]
         for k, v in profile_update.items():
-            setattr(profile, k, v)
+            if k == 'picture':
+                profile.picture = File(v) if not isinstance(v, UploadedFile) else v
+            elif k == 'cv':
+                profile.cv = File(v) if not isinstance(v, UploadedFile) else v
+            else:
+                setattr(profile, k, v)
         profile.save()
     except AttributeError as e:
         raise exceptions.ValidationError(e.message)  # ignore deprecated user profile module when we upgrade to 1.7
@@ -338,6 +345,7 @@ def list_groups(query=None, start=None, count=None):
     return qs
 
 
+# TODO: This should utilize group access control.
 def create_group(name, members=None, owners=None):
     """
     Create a group within HydroShare. Groups are lists of users that allow all members of the group to be referenced by
@@ -382,7 +390,7 @@ def create_group(name, members=None, owners=None):
 
     return g
 
-
+# TODO: This should utilize group access control.
 def update_group(group, members=None, owners=None):
     """
     Modify details of group identified by groupID or add or remove members to/from the group. Group members can be
@@ -430,6 +438,7 @@ def update_group(group, members=None, owners=None):
                 pass
 
 
+# TODO: This should utilize group access control.
 def list_group_members(name):
     """
     Get the information about a group identified by groupID. For a group this would be its description and membership
@@ -448,9 +457,11 @@ def list_group_members(name):
     Exceptions.NotFound - The group identified by groupID does not exist
     Exception.ServiceFailure - The service is unable to process the request
     """
+
     return User.objects.filter(groups=group_from_id(name))
 
 
+# TODO: This should utilize group access control.
 def set_group_owner(group, user):
     """
     Adds ownership of the group identified by groupID to the user specified by userID. This can only be done by a group
@@ -476,6 +487,7 @@ def set_group_owner(group, user):
         GroupOwnership.objects.create(group=group, owner=user)
 
 
+# TODO: This should utilize group access control.
 def delete_group_owner(group, user):
     """
     Removes a group owner identified by a userID from a group specified by groupID. This can only be done by a group
@@ -500,6 +512,7 @@ def delete_group_owner(group, user):
 
     Note:  A group must have at least one owner.
     """
+    # TODO: this does not check whether this act removes the last owner! 
     GroupOwnership.objects.filter(group=group, owner=user).delete()
 
 
@@ -515,7 +528,7 @@ def get_discoverable_groups():
             # fetch information about each discoverable or public group
             groups = GroupAccess.get_discoverable_groups()
             for g in groups:
-                owners = g.get_owners()
+                owners = g.owners
                 # abstract = g.abstract
                 if g.public:
                     # expose group list
@@ -538,7 +551,7 @@ def get_public_groups():
             # fetch information about each public group
             groups = GroupAccess.get_public_groups()
             for g in groups:
-                owners = g.get_owners()
+                owners = g.owners
                 # abstract = g.abstract
                 members = g.members.all()
                 # now display member information
@@ -644,7 +657,7 @@ def get_resource_list(creator=None,
     if edit_permission:
         if group:
             group = group_from_id(group)
-            q.append(Q(gaccess__resource__in=group.gaccess.get_editable_resources()))
+            q.append(Q(gaccess__resource__in=group.gaccess.edit_resources))
 
         q = _filter_resources_for_user_and_owner(user=user, owner=owner, is_editable=True, query=q)
 
@@ -655,7 +668,7 @@ def get_resource_list(creator=None,
 
         if group:
             group = group_from_id(group)
-            q.append(Q(gaccess__resource__in=group.gaccess.get_held_resources()))
+            q.append(Q(gaccess__resource__in=group.gaccess.view_resources))
 
         q = _filter_resources_for_user_and_owner(user=user, owner=owner, is_editable=False, query=q)
 
@@ -717,7 +730,7 @@ def _filter_resources_for_user_and_owner(user, owner, is_editable, query):
             except User.DoesNotExist:
                 pass
             else:
-                query.append(Q(pk__in=owner.uaccess.get_owned_resources()))
+                query.append(Q(pk__in=owner.uaccess.owned_resources))
 
                 if user != owner:
                     if user.is_superuser:
@@ -727,16 +740,16 @@ def _filter_resources_for_user_and_owner(user, owner, is_editable, query):
                         # if some non-admin authenticated user is asking for resources owned by another user then
                         # get other user's owned resources that are public or discoverable, or if requesting user
                         # has access to those private resources
-                        query.append(Q(pk__in=user.uaccess.get_held_resources()) | Q(raccess__public=True) |
+                        query.append(Q(pk__in=user.uaccess.view_resources) | Q(raccess__public=True) |
                                      Q(raccess__discoverable=True))
         else:
             if user.is_superuser:
                 # admin sees all resources
                 pass
             elif is_editable:
-                query.append(Q(pk__in=user.uaccess.get_editable_resources()))
+                query.append(Q(pk__in=user.uaccess.edit_resources))
             else:
-                query.append(Q(pk__in=user.uaccess.get_held_resources()) | Q(raccess__public=True) |
+                query.append(Q(pk__in=user.uaccess.view_resources) | Q(raccess__public=True) |
                              Q(raccess__discoverable=True))
     else:
         query.append(Q(raccess__public=True) | Q(raccess__discoverable=True))
