@@ -61,7 +61,10 @@ restart_hs() {
     stop_nginx
     preflight_hs
     docker-compose stop hydroshare
+    docker-compose stop defaultworker
+    delete_celerybeat_scheduler
     docker-compose start hydroshare
+    docker-compose start defaultworker
     if [ "${USE_NGINX,,}" = true ]; then
         start_nginx
     fi
@@ -126,6 +129,7 @@ stop_hs() {
             docker stop $f;
         fi
     done
+    delete_celerybeat_scheduler
 }
 
 preflight_hs() {

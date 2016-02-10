@@ -1203,7 +1203,7 @@ class AbstractResource(ResourcePermissionsMixin):
         isPendingActivation = False
         if self.metadata.identifiers.all().filter(name="doi"):
             hs_identifier = self.metadata.identifiers.all().filter(name="doi")[0]
-            if self.doi.find('pending') >= 0:
+            if self.doi.find('pending') >= 0 or self.doi.find('failure') >= 0:
                 isPendingActivation = True
         elif self.metadata.identifiers.all().filter(name="hydroShareIdentifier"):
             hs_identifier = self.metadata.identifiers.all().filter(name="hydroShareIdentifier")[0]

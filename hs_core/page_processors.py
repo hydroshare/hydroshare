@@ -4,7 +4,6 @@ from hs_core.models import BaseResource, AbstractResource, GenericResource
 from hs_core import languages_iso
 from forms import *
 from hs_tools_resource.models import SupportedResTypes, ToolResource
-from django_irods.storage import IrodsStorage
 from hs_core import hydroshare
 from hs_core.views.utils import authorize
 from hs_core.hydroshare.resource import metadata_status_sufficient, metadata_status_insufficient

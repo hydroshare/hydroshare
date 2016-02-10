@@ -725,28 +725,74 @@ def delete_resource_file(pk, filename_or_id, user):
 
     return filename_or_id
 
-def get_resource_doi(res_id, pending):
+def get_resource_doi(res_id, flag=''):
     doi_str = "http://dx.doi.org/10.4211/hs.{shortkey}".format(shortkey=res_id)
-    if pending:
-        return "{doi}pending".format(doi=doi_str)
+    if flag:
+        return "{doi}{append_flag}".format(doi=doi_str, append_flag=flag)
     else:
         return doi_str
 
 
 def get_activated_doi(doi):
-    idx = doi.find('pending')
-    if idx >= 0:
-        return doi[:idx]
+    """
+    Get activated DOI with flags removed. The following two flags are appended
+    to the DOI string to indicate publication status for internal use:
+    'pending' flag indicates the metadata deposition with CrossRef succeeds, but
+     pending activation with CrossRef for DOI to take effect.
+    'failure' flag indicates the metadata deposition failed with CrossRef due to
+    network or system issues with CrossRef
+
+    Args:
+        doi: the DOI string with possible status flags appended
+
+    Returns:
+        the activated DOI with all flags removed if any
+    """
+    idx1 = doi.find('pending')
+    idx2 = doi.find('failure')
+    if idx1 >= 0:
+        return doi[:idx1]
+    elif idx2 >= 0:
+        return doi[:idx2]
     else:
         return doi
+
+
+def get_crossref_url():
+    main_url = 'https://test.crossref.org/'
+    if not settings.USE_CROSSREF_TEST:
+        main_url = 'https://doi.crossref.org/'
+    return main_url
+
+
+def deposit_res_metadata_with_crossref(res):
+    """
+    Deposit resource metadata with CrossRef DOI registration agency.
+    Args:
+        res: the resource object with its metadata to be deposited for publication
+
+    Returns:
+        response returned for the metadata deposition request from CrossRef
+
+    """
+    xml_file_name = '{uuid}_deposit_metadata.xml'.format(uuid=res.short_id)
+    # using HTTP to POST deposit xml file to crossref
+    post_data = {'operation': 'doMDUpload',
+                 'login_id': settings.CROSSREF_LOGIN_ID,
+                 'login_passwd': settings.CROSSREF_LOGIN_PWD
+                }
+    files = {'file': (xml_file_name, res.get_crossref_deposit_xml())}
+    # exceptions will be raised if POST request fails
+    main_url = get_crossref_url()
+    post_url = '{MAIN_URL}servlet/deposit'.format(MAIN_URL=main_url)
+    response = requests.post(post_url, data=post_data, files=files)
+    return response
 
 def publish_resource(user, pk):
     """
     Formally publishes a resource in HydroShare. Triggers the creation of a DOI for the resource, and triggers the
     exposure of the resource to the HydroShare DataONE Member Node. The user must be an owner of a resource or an
     adminstrator to perform this action.
-
-    REST URL:  PUT /resource/{pid}
 
     Parameters:
         user - requesting user to publish the resource who must be one of the owners of the resource
@@ -770,48 +816,37 @@ def publish_resource(user, pk):
         raise ValidationError("This resource cannot be published since it does not have required metadata or content files.")
 
     # append pending to the doi field to indicate DOI is not activated yet. Upon successful activation, "pending" will be removed from DOI field
-    resource.doi = get_resource_doi(pk, True)
+    resource.doi = get_resource_doi(pk, 'pending')
     resource.save()
 
-    xml_file_name = '{uuid}_deposit_metadata.xml'.format(uuid=pk)
-    # using HTTP to POST deposit xml file to crossref
-    post_data = {'operation': 'doMDUpload',
-                 'login_id': settings.CROSSREF_LOGIN_ID,
-                 'login_passwd': settings.CROSSREF_LOGIN_PWD
-                }
-    files = {'file': (xml_file_name, resource.get_crossref_deposit_xml())}
-    # exceptions will be raised if POST request fails
-    main_url = 'https://test.crossref.org/'
-    if not settings.USE_CROSSREF_TEST:
-        main_url = 'https://doi.crossref.org/'
-    post_url = '{MAIN_URL}servlet/deposit'.format(MAIN_URL=main_url)
-    response = requests.post(post_url, data=post_data, files=files)
-    if response.status_code == status.HTTP_200_OK:
-        content = response.content
+    response = deposit_res_metadata_with_crossref(resource)
+    if not response.status_code == status.HTTP_200_OK:
+        # resource metadata deposition failed from CrossRef - set failure flag to be retried in a crontab celery task
+        resource.doi = get_resource_doi(pk, 'failure')
+        resource.save()
 
-        resource.raccess.public = True
-        resource.raccess.immutable = True
-        resource.raccess.published = True
-        resource.raccess.save()
+    resource.raccess.public = True
+    resource.raccess.immutable = True
+    resource.raccess.published = True
+    resource.raccess.save()
 
-        # change "Publisher" element of science metadata to CUAHSI
-        md_args = {'name': 'Consortium of Universities for the Advancement of Hydrologic Science, Inc. (CUAHSI)',
-                   'url': 'https://www.cuahsi.org'}
-        resource.metadata.create_element('Publisher', **md_args)
+    # change "Publisher" element of science metadata to CUAHSI
+    md_args = {'name': 'Consortium of Universities for the Advancement of Hydrologic Science, Inc. (CUAHSI)',
+               'url': 'https://www.cuahsi.org'}
+    resource.metadata.create_element('Publisher', **md_args)
 
-        # create published date
-        resource.metadata.create_element('date', type='published', start_date=resource.updated)
+    # create published date
+    resource.metadata.create_element('date', type='published', start_date=resource.updated)
 
-        # add doi to "Identifier" element of science metadata
-        md_args = {'name': 'doi',
-                   'url': get_activated_doi(resource.doi)}
-        resource.metadata.create_element('Identifier', **md_args)
+    # add doi to "Identifier" element of science metadata
+    md_args = {'name': 'doi',
+               'url': get_activated_doi(resource.doi)}
+    resource.metadata.create_element('Identifier', **md_args)
 
-        utils.resource_modified(resource, user)
+    utils.resource_modified(resource, user)
 
-        return pk
-    else:
-        raise ValidationError("{msg} - raised from Crossref".format(msg=response.content))
+    return pk
+
 
 def resolve_doi(doi):
     """
