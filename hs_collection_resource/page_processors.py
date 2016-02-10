@@ -32,7 +32,7 @@ def landing_page(request, page):
         user_all_accessible_resource_list = (owned_resources + editable_resources + \
                                              viewable_resources + discovered_resources)
     else: # anonymous user
-        user_all_accessible_resource_list = list(BaseResource.objects.\
+        user_all_accessible_resource_list = list(BaseResource.objects. \
                                                  filter(Q(raccess__public=True) | Q(raccess__discoverable=True)).distinct())
 
     collection_items_list = None
@@ -61,7 +61,7 @@ def landing_page(request, page):
             hide_count = len(collection_items_inaccessible)
             if hide_count > 0:
                 collection_message += "You have NO permission to view the {} grey resource(s). \
-                You could try to request for permission by leaving a comment below.".format(hide_count)
+                You may request for permission by leaving a comment.".format(hide_count)
 
         if collection_items_list is not None:
             extended_metadata_exists = True
