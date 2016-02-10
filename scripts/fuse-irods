@@ -1,0 +1,92 @@
+#!/usr/bin/env bash
+
+# fuse-irods
+# Author: Michael Stealey <michael.j.stealey@gmail.com>
+
+display_usage() {
+    echo "fuse-irods script"
+	echo "Usage: $0 init                                # Initialize iRODS environment from local_settings.py configuration"
+	echo "  # NOTE: Once initialized iCommnands are available from the command line"
+	echo "Usage: $0 mount local/path [iRODS/path]       # FUSE mount local/path with contents of iRODS/path"
+	echo "Usage: $0 unmount local/path                  # FUSE unmount local/path"
+}
+
+# get iRODS credentials from local_settings.py
+get_irods_settings() {
+    cat hydroshare/local_settings.py | grep IRODS_HOST | rev | cut -d ' ' -f -1 | rev | tr -d "'" > IRODS_CONFIG
+    cat hydroshare/local_settings.py | grep IRODS_PORT | rev | cut -d ' ' -f -1 | rev | tr -d "'" >> IRODS_CONFIG
+    cat hydroshare/local_settings.py | grep IRODS_USERNAME | rev | cut -d ' ' -f -1 | rev | tr -d "'" >> IRODS_CONFIG
+    cat hydroshare/local_settings.py | grep IRODS_ZONE | rev | cut -d ' ' -f -1 | rev | tr -d "'" >> IRODS_CONFIG
+    cat hydroshare/local_settings.py | grep IRODS_AUTH | rev | cut -d ' ' -f -1 | rev | tr -d "'" >> IRODS_CONFIG
+}
+
+# clear previous credential files
+check_previous_credentials() {
+    if [[ -f ~/.irods/irods_environment.json ]]; then
+        echo "*** INFO: Removing file - ~/.irods/irods_environment.json ***"
+        rm ~/.irods/irods_environment.json;
+    fi
+    if [[ -f ~/.irods/.irodsA ]]; then
+        echo "*** INFO: Removing file - ~/.irods/.irodsA ***"
+        rm ~/.irods/.irodsA;
+    fi
+}
+
+# FUSE mount the specified directory with the iRODS credentials
+    fuse_mount_resource() {
+    if [[ ! -d "${1}" ]]; then
+        echo "*** INFO: Creating directory ${1} for FUSE mount ***"
+        mkdir -p ${1};
+    else
+        echo "*** INFO: Attempting to remove previous FUSE mount if it exists ***"
+        fusermount -u ${1};
+    fi
+    echo "*** INFO: FUSE mounting iRODS: $(ipwd) files to local: ${1} ***"
+    irodsFs ${1}
+}
+
+fi_init() {
+    get_irods_settings
+    check_previous_credentials
+    iinit < IRODS_CONFIG
+}
+
+fi_mount() {
+    if [[ $# -eq 2 ]]; then
+        echo "*** INFO: FUSE mount default iRODS:$(ipwd) to ${2} ***"
+        fuse_mount_resource $2;
+    else
+        echo "*** INFO: Attempting to icd to ${3} ***"
+        TRY_ICD=$(icd ${3})
+        if [[ "${TRY_ICD}" == *"No such directory (collection):"* ]]; then
+            echo "*** WARNING: No such directory (collection) found ***"
+            echo "*** Exiting without attempting mount ***"
+            exit 1;
+        fi
+        fuse_mount_resource $2;
+    fi
+}
+
+fi_unmount() {
+    fusermount -u $1
+}
+
+# validate input from user
+if [[  $# -ne 1 ]] && [[ $# -ne 2 ]]; then
+    display_usage
+    exit 1;
+fi
+
+# determine action
+case "$1" in
+    init) fi_init
+        ;;
+    mount) fi_mount "$@"
+        ;;
+    unmount) fi_unmount $2
+        ;;
+    *) display_usage
+        ;;
+esac
+
+exit 0;

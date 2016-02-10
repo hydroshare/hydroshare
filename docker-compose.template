@@ -13,6 +13,11 @@ solr:
     - "8983"
 hydroshare:
   build: .
+  cap_add:
+    - SYS_ADMIN
+  devices:
+    - "/dev/fuse"
+  privileged: true
   environment:
     POSTGIS_HOST: postgis
     POSTGIS_PORT: 5432
