@@ -1,25 +1,25 @@
 import os
 import tempfile
 import shutil
-from unittest import TestCase
 from dateutil import parser
 
 from xml.etree import ElementTree as ET
 
+from django.test import TransactionTestCase
 from django.core.exceptions import ValidationError
 from django.core.files.uploadedfile import UploadedFile
-from django.contrib.auth.models import Group, User
+from django.contrib.auth.models import Group
 from django.db import IntegrityError
 
 from hs_core import hydroshare
-from hs_core.hydroshare import utils, resource
-from hs_core.models import BaseResource, CoreMetaData, Creator, Contributor, Coverage, Rights, Title, Language, \
+from hs_core.hydroshare import utils
+from hs_core.models import CoreMetaData, Creator, Contributor, Coverage, Rights, Title, Language, \
     Publisher, Identifier, Type, Subject, Description, Date, Format, Relation, Source
 from hs_core.testing import MockIRODSTestCaseMixin
 from hs_app_timeseries.models import TimeSeriesResource, Site, Variable, Method, ProcessingLevel, TimeSeriesResult
 
 
-class TestTimeSeriesMetaData(MockIRODSTestCaseMixin, TestCase):
+class TestTimeSeriesMetaData(MockIRODSTestCaseMixin, TransactionTestCase):
     def setUp(self):
         super(TestTimeSeriesMetaData, self).setUp()
         self.group, _ = Group.objects.get_or_create(name='Hydroshare Author')
@@ -38,52 +38,28 @@ class TestTimeSeriesMetaData(MockIRODSTestCaseMixin, TestCase):
             title='Test Time Series Resource'
         )
 
-        temp_dir = tempfile.mkdtemp()
+        self.temp_dir = tempfile.mkdtemp()
         self.odm2_sqlite_file_name = 'ODM2_valid.sqlite'
         self.odm2_sqlite_file = 'hs_app_timeseries/tests/{}'.format(self.odm2_sqlite_file_name)
-        target_temp_sqlite_file = os.path.join(temp_dir, self.odm2_sqlite_file_name)
+        target_temp_sqlite_file = os.path.join(self.temp_dir, self.odm2_sqlite_file_name)
         shutil.copy(self.odm2_sqlite_file, target_temp_sqlite_file)
         self.odm2_sqlite_file_obj = open(target_temp_sqlite_file, 'r')
 
         self.odm2_sqlite_bad_file_name = 'ODM2_invalid.sqlite'
         self.odm2_sqlite_bad_file = 'hs_app_timeseries/tests/{}'.format(self.odm2_sqlite_bad_file_name)
-        target_temp_bad_sqlite_file = os.path.join(temp_dir, self.odm2_sqlite_bad_file_name)
+        target_temp_bad_sqlite_file = os.path.join(self.temp_dir, self.odm2_sqlite_bad_file_name)
         shutil.copy(self.odm2_sqlite_bad_file, target_temp_bad_sqlite_file)
         self.odm2_sqlite_bad_file_obj = open(target_temp_bad_sqlite_file, 'r')
 
-        temp_text_file = os.path.join(temp_dir, 'ODM2.txt')
+        temp_text_file = os.path.join(self.temp_dir, 'ODM2.txt')
         text_file = open(temp_text_file, 'w')
         text_file.write("ODM2 records")
         self.text_file_obj = open(temp_text_file, 'r')
 
-    # without this tearDown() getting transaction error even if we make this class inherit from django TestCase and
-    # and not uninttest TestCase
     def tearDown(self):
         super(TestTimeSeriesMetaData, self).tearDown()
-        User.objects.all().delete()
-        Group.objects.all().delete()
-        BaseResource.objects.all().delete()
-        Creator.objects.all().delete()
-        Contributor.objects.all().delete()
-        CoreMetaData.objects.all().delete()
-        Coverage.objects.all().delete()
-        Rights.objects.all().delete()
-        Title.objects.all().delete()
-        Publisher.objects.all().delete()
-        Description.objects.all().delete()
-        Relation.objects.all().delete()
-        Subject.objects.all().delete()
-        Source.objects.all().delete()
-        Identifier.objects.all().delete()
-        Type.objects.all().delete()
-        Format.objects.all().delete()
-        Date.objects.all().delete()
-        Language.objects.all().delete()
-        Variable.objects.all().delete()
-        Site.objects.all().delete()
-        Method.objects.all().delete()
-        ProcessingLevel.objects.all().delete()
-        TimeSeriesResult.objects.all().delete()
+        if os.path.exists(self.temp_dir):
+            shutil.rmtree(self.temp_dir)
 
     def test_allowed_file_types(self):
         # test allowed file type is '.sqlite'
@@ -114,7 +90,7 @@ class TestTimeSeriesMetaData(MockIRODSTestCaseMixin, TestCase):
 
         # file pre add process should raise validation error if we try to add a 2nd file when the resource has
         # already one content file
-        with self.assertRaises(ValidationError):
+        with self.assertRaises(utils.ResourceFileValidationException):
             utils.resource_file_add_pre_process(resource=self.resTimeSeries, files=files, user=self.user,
                                                 extract_metadata=False)
 
