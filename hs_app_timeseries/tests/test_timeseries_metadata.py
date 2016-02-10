@@ -147,7 +147,7 @@ class TestTimeSeriesMetaData(MockIRODSTestCaseMixin, TestCase):
             files=(self.odm2_sqlite_file_obj,)
             )
 
-        utils.resource_post_create_actions(resource=self.resTimeSeries, user=self.user, metadata=[], **{})
+        utils.resource_post_create_actions(resource=self.resTimeSeries, user=self.user, metadata=[])
         # there should one content file
         self.assertEquals(self.resTimeSeries.files.all().count(), 1)
 
