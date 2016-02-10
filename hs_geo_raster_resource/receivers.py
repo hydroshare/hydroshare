@@ -1,24 +1,26 @@
 __author__ = 'Hong Yi'
 ## Note: this module has been imported in the models.py in order to receive signals
 ## at the end of the models.py for the import of this module
-from django.dispatch import receiver
-from hs_core.signals import pre_create_resource, pre_add_files_to_resource, pre_delete_file_from_resource, \
-    pre_metadata_element_create, pre_metadata_element_update
-from forms import *
-import raster_meta_extract
-
-
 import tempfile
 import os
 import subprocess
-from django.core.files.uploadedfile import UploadedFile
 import shutil
-import gdal
-from gdalconst import GA_ReadOnly
 import zipfile
 from collections import OrderedDict
-from hs_core.hydroshare.resource import ResourceFile
 import xml.etree.ElementTree as ET
+
+import gdal
+from gdalconst import GA_ReadOnly
+
+from django.core.files.uploadedfile import UploadedFile
+from django.dispatch import receiver
+
+from hs_core.hydroshare.resource import ResourceFile
+from hs_core.signals import pre_create_resource, pre_add_files_to_resource, pre_delete_file_from_resource, \
+    pre_metadata_element_create, pre_metadata_element_update
+from forms import CellInfoValidationForm, BandInfoValidationForm, OriginalCoverageSpatialForm
+from models import RasterResource
+import raster_meta_extract
 
 # signal handler to extract metadata from uploaded geotiff file and return template contexts
 # to populate create-resource.html template page
@@ -32,12 +34,12 @@ def raster_file_validation(files):
     if len(files) == 1:
         ext = os.path.splitext(files[0].name)[1]
         if ext == '.tif':
-            temp_vrt_file_path = create_vrt_file(files[0])
+            temp_vrt_file_path, temp_dir = create_vrt_file(files[0])
             if os.path.isfile(temp_vrt_file_path):
                 files.append(UploadedFile(file=open(temp_vrt_file_path, 'r'), name=os.path.basename(temp_vrt_file_path)))
 
         elif ext == '.zip':
-            extract_file_paths = explode_zip_file(files[0])
+            extract_file_paths, temp_dir = explode_zip_file(files[0])
             if extract_file_paths:
                 del files[0]
                 for file_path in extract_file_paths:
@@ -71,7 +73,7 @@ def raster_file_validation(files):
     else:
         is_valid = False
 
-    return is_valid, vrt_file_path
+    return is_valid, vrt_file_path, temp_dir
 
 
 def create_vrt_file(tif_file):
@@ -89,7 +91,7 @@ def create_vrt_file(tif_file):
             element.text = tif_base_name
         tree.write(vrt_file_path)
 
-    return vrt_file_path
+    return vrt_file_path, temp_dir
 
 
 def explode_zip_file(zip_file):
@@ -98,12 +100,12 @@ def explode_zip_file(zip_file):
         zf = zipfile.ZipFile(zip_file.file.name, 'r')
         zf.extractall(temp_dir)
         zf.close()
-        extract_file_paths = [os.path.join(temp_dir, file_name) for file_name in os.listdir(temp_dir)]
+        extract_file_paths = [os.path.join(temp_dir, file_name) for file_name in os.listdir(temp_dir) if os.path.splitext(file_name)[1] in ['.vrt', '.tif']]
     except Exception:
         extract_file_paths = []
         shutil.rmtree(temp_dir)
 
-    return extract_file_paths
+    return extract_file_paths, temp_dir
 
 
 @receiver(pre_create_resource, sender=RasterResource)
@@ -115,7 +117,7 @@ def raster_pre_create_resource_trigger(sender, **kwargs):
 
     if(files):
         # raster file validation
-        is_valid, vrt_file_path = raster_file_validation(files)
+        is_valid, vrt_file_path, temp_dir = raster_file_validation(files)
 
         # metadata extraction
         if is_valid:
@@ -147,6 +149,11 @@ def raster_pre_create_resource_trigger(sender, **kwargs):
             validate_files_dict['are_files_valid'] = False
             validate_files_dict['message'] = 'Please check if the uploaded file is as one .tif file ' \
                                              'or as one .zip file including one .vrt file and multiple/single .tif files .'
+
+        # remove temp vrt file
+        if os.path.isdir(temp_dir):
+            shutil.rmtree(temp_dir)
+
     else:
         # initialize required raster metadata to be place holders to be edited later by users
         cell_info = OrderedDict([
@@ -191,7 +198,7 @@ def raster_pre_add_files_to_resource_trigger(sender, **kwargs):
 
     if files:
         # raster file validation
-        is_valid, vrt_file_path = raster_file_validation(files)
+        is_valid, vrt_file_path, temp_dir = raster_file_validation(files)
 
         # metadata extraction
         if is_valid:
@@ -222,11 +229,15 @@ def raster_pre_add_files_to_resource_trigger(sender, **kwargs):
                 band.delete()
             for i in range(bcount):
                 res.metadata.create_element('BandInformation', name='Band_' + str(i+1), variableName='Unnamed', variableUnit='Unnamed', method='', comment='')
+
         else:
             validate_files_dict['are_files_valid'] = False
             validate_files_dict['message'] = 'Please check if the uploaded file is as one .tif file ' \
                                              'or as one .zip file including one .vrt file and multiple/single .tif files .'
 
+        # remove temp dir
+        if os.path.isdir(temp_dir):
+            shutil.rmtree(temp_dir)
 
 
 @receiver(pre_delete_file_from_resource, sender=RasterResource)
