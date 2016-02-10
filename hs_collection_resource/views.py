@@ -40,11 +40,21 @@ def update_collection(request, shortkey, *args, **kwargs):
 
             new_sharing_status = ""
             if collection_res_obj.raccess.public or collection_res_obj.raccess.discoverable:
-                for checked_res_id in collection_content_res_id_list:
-                    res_checked = hydroshare.get_resource_by_shortkey(checked_res_id)
-                    if not res_checked.raccess.public and not res_checked.raccess.discoverable:
-                        _set_resource_sharing_status(request, user, collection_res_obj, flag_to_set='public', flag_value=False)
-                        new_sharing_status = "Private"
+                downgrade = False
+
+                if len(collection_content_res_id_list) == 0:
+                    downgrade = True
+                else:
+                    for checked_res_id in collection_content_res_id_list:
+                        res_checked = hydroshare.get_resource_by_shortkey(checked_res_id)
+                        if not res_checked.raccess.public and not res_checked.raccess.discoverable:
+                            downgrade = True
+                            break
+
+                if downgrade:
+                    _set_resource_sharing_status(request, user, collection_res_obj, flag_to_set='public', flag_value=False)
+                    _set_resource_sharing_status(request, user, collection_res_obj, flag_to_set='discoverable', flag_value=False)
+                    new_sharing_status = "Private"
 
             user_permission = "Edit"
             _, is_owner, _ = authorize(request, shortkey, full=True, superuser=True, raises_exception=False)

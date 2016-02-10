@@ -102,20 +102,35 @@
         {
             if ($('#btn-public').hasClass("active")||$('#btn-discoverable').hasClass("active"))
             {
-                warning_flag = false;
-                $('#select2 option').each(function () {
-                if ($(this).text().toLowerCase().indexOf(": private") > 0)
-                {
-                    warning_flag = true;
-                }
-                });
+                no_member_resource_warning_flag = false;
+                found_private_warning_flag = false;
 
-                if (warning_flag)
+                if ($('#select2 option').length==0)
+                {
+                    no_member_resource_warning_flag = true;
+                }
+                else
+                {
+                    $('#select2 option').each(function () {
+                    if ($(this).text().toLowerCase().indexOf(": private") > 0)
+                    {
+                        found_private_warning_flag = true;
+                    }});
+                }
+
+                if (no_member_resource_warning_flag || found_private_warning_flag)
                 {
                     $('#save-collection-warning-title').text("Downgrade to Private");
-                    $('#save-collection-warning-body').text("You are about to add private resources into this collection. Sharing status will downgrade to PRIVATE.");
                     $('#save-collection-btn-cancel').text("Cancel").off("click");
                     $('#save-collection-btn-ok').text("Confirm").off("click").on( "click", save_collection);
+
+                    waning_message = "The collection has no member resource. Sharing status will downgrade to PRIVATE.";
+                    if (found_private_warning_flag)
+                    {
+                        waning_message = "You are about to add private resources into this collection. Sharing status will downgrade to PRIVATE.";
+                    }
+                    $('#save-collection-warning-body').text(waning_message);
+
                     $('#save-collection-warning').modal('show');
                 }
                 else
