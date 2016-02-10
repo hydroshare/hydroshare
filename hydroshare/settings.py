@@ -248,6 +248,7 @@ INPLACE_SAVE_URL = '/hsapi/save_inline/'
 ################
 
 INSTALLED_APPS = (
+    "autocomplete_light",
     "django.contrib.admin",
     "django.contrib.auth",
     "oauth2_provider",
@@ -275,13 +276,11 @@ INSTALLED_APPS = (
     "crispy_forms",
     "mezzanine.accounts",
     "mezzanine.mobile",
-    "autocomplete_light",
     "haystack",
     "jquery_ui",
     "rest_framework",
     "ga_ows",
     "ga_resources",
-    #"dublincore",
     "hs_core",
     "hs_access_control",
     "hs_labels",
@@ -310,7 +309,6 @@ APPS_TO_NOT_RUN = (
     'jquery_ui',
     'rest_framework',
     'django_docker_processes',
-    'dublincore',
     'django_nose',
     'inplaceeditform',
     'grappelli_safe',

@@ -553,6 +553,7 @@ class Relation(AbstractMetaDataElement):
         ('isVersionOf', 'Version Of'),
         ('isDataFor', 'Data For'),
         ('cites', 'Cites'),
+        ('isDescribedBy', 'Described By'),
     )
 
     # HS_RELATION_TERMS contains hydroshare custom terms that are not Dublin Core terms
