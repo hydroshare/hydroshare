@@ -226,7 +226,7 @@
                                          alt="{{ res|resource_type }}" title="{{ res|resource_type }}" class="table-res-type-icon"/>
                                 {% endif %}
                             </td>
-                            <td><a href="{{ res.get_absolute_url }}">{{ res.metadata.title }}</a></td>
+                            <td><strong><a href="{{ res.get_absolute_url }}">{{ res.metadata.title }}</a></strong></td>
                             <td>{% for owner in res.raccess.owners.all %}
                                   {% if forloop.counter0 > 0 %} · {% endif %}
                                 <span>{{ owner|contact|safe }}</span>
