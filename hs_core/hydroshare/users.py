@@ -2,6 +2,8 @@ import json
 
 from django.core.exceptions import MultipleObjectsReturned
 from django.contrib.auth.models import User, Group
+from django.core.files import File
+from django.core.files.uploadedfile import UploadedFile
 from django.contrib.contenttypes.models import ContentType
 from django.core import exceptions
 from django.core import signing
@@ -249,7 +251,12 @@ def update_account(user, **kwargs):
         for key in update_keys:
             profile_update[key] = kwargs[key]
         for k, v in profile_update.items():
-            setattr(profile, k, v)
+            if k == 'picture':
+                profile.picture = File(v) if not isinstance(v, UploadedFile) else v
+            elif k == 'cv':
+                profile.cv = File(v) if not isinstance(v, UploadedFile) else v
+            else:
+                setattr(profile, k, v)
         profile.save()
     except AttributeError as e:
         raise exceptions.ValidationError(e.message)  # ignore deprecated user profile module when we upgrade to 1.7
@@ -450,6 +457,7 @@ def list_group_members(name):
     Exceptions.NotFound - The group identified by groupID does not exist
     Exception.ServiceFailure - The service is unable to process the request
     """
+
     return User.objects.filter(groups=group_from_id(name))
 
 
