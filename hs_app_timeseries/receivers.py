@@ -13,41 +13,18 @@ from forms import SiteValidationForm, VariableValidationForm, MethodValidationFo
 
 @receiver(pre_create_resource, sender=TimeSeriesResource)
 def resource_pre_create_handler(sender, **kwargs):
-    files = kwargs['files']
-    validate_files_dict = kwargs['validate_files']
-
-    # check if more than one file is being uploaded - only one file is allowed
-    if len(files) > 1:
-        validate_files_dict['are_files_valid'] = False
-        validate_files_dict['message'] = 'Only one file can be uploaded.'
-    elif len(files) == 1:
-        # check file extension matches with the supported file types
-        uploaded_file = files[0]
-        file_ext = os.path.splitext(uploaded_file.name)[1]
-        if file_ext not in TimeSeriesResource.get_supported_upload_file_types():
-            validate_files_dict['are_files_valid'] = False
-            validate_files_dict['message'] = 'Invalid file type.'
+    # if needed more actions can be taken here before the TimeSeries resource is created
+    pass
 
 
 @receiver(pre_add_files_to_resource, sender=TimeSeriesResource)
 def pre_add_files_to_resource_handler(sender, **kwargs):
-    resource = kwargs['resource']
-    if resource.files.all().count() > 0:
-        raise ValidationError("Resource already has content files.")
-
-    files = kwargs['files']
-    validate_files_dict = kwargs['validate_files']
-    if files:
-        infile = files[0]
-        fl_ext = os.path.splitext(infile.file.name)[1]
-        if fl_ext not in TimeSeriesResource.get_supported_upload_file_types():
-            validate_files_dict['are_files_valid'] = False
-            validate_files_dict['message'] = "{file_to_add} is not a supported file type".format(
-                file_to_add=infile.file.name)
-
+    # if needed more actions can be taken here before content file is added to a TimeSeries resource
+    pass
 
 @receiver(pre_delete_file_from_resource, sender=TimeSeriesResource)
 def pre_delete_file_from_resource_handler(sender, **kwargs):
+    # if needed more actions can be taken here before content file is deleted from a TimeSeries resource
     pass
 
 
