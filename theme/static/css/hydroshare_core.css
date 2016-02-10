@@ -2524,6 +2524,35 @@ h4.title {
     background-color: rgb(242, 67, 55);
 }
 
+#btn-clear-all {
+    margin-bottom: 10px;
+}
+
+#folders .panel-group {
+    margin-bottom: 20px;
+}
+
+#folders .list-group {
+    margin-bottom: 0;
+}
+
+#folders .list-group .list-group-item:last-child, #folders .list-group .list-group-item:first-child {
+    border-radius: 0;
+}
+
+#folders .list-group .list-group-item:last-child {
+    border-bottom: 0;
+}
+
+#folders li.list-group-item {
+    border-left: 0;
+    border-right: 0;
+}
+
+#items-discovered {
+    border: 1px solid #ddd;
+}
+
 #color-scheme {
     float: right;
     padding: 5px 0 0 0;
