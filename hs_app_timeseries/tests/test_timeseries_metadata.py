@@ -9,6 +9,7 @@ from xml.etree import ElementTree as ET
 from django.core.exceptions import ValidationError
 from django.core.files.uploadedfile import UploadedFile
 from django.contrib.auth.models import Group, User
+from django.db import IntegrityError
 
 from hs_core import hydroshare
 from hs_core.hydroshare import utils, resource
@@ -93,8 +94,8 @@ class TestTimeSeriesMetaData(MockIRODSTestCaseMixin, TestCase):
         self.assertEquals(self.resTimeSeries.files.all().count(), 0)
 
         files = [UploadedFile(file=self.text_file_obj, name=self.text_file_obj.name)]
-        # trying to add a test file to this resource should raise exception
-        with self.assertRaises(Exception):
+        # trying to add a text file to this resource should raise exception
+        with self.assertRaises(utils.ResourceFileValidationException):
             utils.resource_file_add_pre_process(resource=self.resTimeSeries, files=files, user=self.user,
                                                 extract_metadata=False)
 
@@ -124,7 +125,6 @@ class TestTimeSeriesMetaData(MockIRODSTestCaseMixin, TestCase):
         self.assertEquals(self.resTimeSeries.files.all().count(), 0)
 
         # use a valid ODM2 sqlite which should pass both the file pre add check post add check
-        #self.odm2_sqlite_file_obj = open(self.odm2_sqlite_file, 'r')
         files = [UploadedFile(file=self.odm2_sqlite_file_obj, name=self.odm2_sqlite_file_name)]
         utils.resource_file_add_pre_process(resource=self.resTimeSeries, files=files, user=self.user,
                                             extract_metadata=False)
@@ -525,7 +525,7 @@ class TestTimeSeriesMetaData(MockIRODSTestCaseMixin, TestCase):
         self.assertEquals(site_element.site_type, 'Stream')
 
         # multiple site elements are not allowed - should raise exception
-        with self.assertRaises(Exception):
+        with self.assertRaises(IntegrityError):
             self.resTimeSeries.metadata.create_element('site', site_code='LR_WaterLab_BB',
                                                        site_name='Logan River at the Utah Water Research Laboratory '
                                                                  'west bridge', elevation_m=1515,
@@ -546,7 +546,7 @@ class TestTimeSeriesMetaData(MockIRODSTestCaseMixin, TestCase):
         self.assertEquals(variable_element.speciation, 'Not Applicable')
 
         # multiple variable elements are not allowed - should raise exception
-        with self.assertRaises(Exception):
+        with self.assertRaises(IntegrityError):
             self.resTimeSeries.metadata.create_element('variable', variable_code='ODO-2', variable_name='Oxygen',
                                                        variable_type='Concentration', no_data_value=-9999,
                                                        variable_definition='Concentration of oxygen gas dissolved in '
@@ -570,7 +570,7 @@ class TestTimeSeriesMetaData(MockIRODSTestCaseMixin, TestCase):
         self.assertEquals(method_element.method_link, 'http://www.exowater.com')
 
         # multiple method elements are not allowed - should raise exception
-        with self.assertRaises(Exception):
+        with self.assertRaises(IntegrityError):
             self.resTimeSeries.metadata.create_element('method', method_code=591, method_name='Optical DO1',
                                                        method_type='Instrument deployment',
                                                        method_description='Dissolved oxygen concentration measured '
@@ -592,7 +592,7 @@ class TestTimeSeriesMetaData(MockIRODSTestCaseMixin, TestCase):
         self.assertEquals(proc_level_element.explanation, exp_text)
 
         # multiple processing level elements are not allowed - should raise exception
-        with self.assertRaises(Exception):
+        with self.assertRaises(IntegrityError):
             self.resTimeSeries.metadata.create_element('processinglevel', processing_level_code=10, definition='data',
                                                        explanation=exp_text + ' Updated.')
 
@@ -612,7 +612,7 @@ class TestTimeSeriesMetaData(MockIRODSTestCaseMixin, TestCase):
         self.assertEquals(ts_result_element.aggregation_statistics, 'Average')
 
         # multiple timeseries result elements are not allowed - should raise exception
-        with self.assertRaises(Exception):
+        with self.assertRaises(IntegrityError):
             self.resTimeSeries.metadata.create_element('timeseriesresult', units_type='Concentration-1',
                                                        units_name='milligrams per gallon', units_abbreviation='mg/GL',
                                                        status='Incomplete', sample_medium='Fresh water',
