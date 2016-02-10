@@ -523,6 +523,26 @@ class TestTimeSeriesMetaData(MockIRODSTestCaseMixin, TransactionTestCase):
         # test if xml from get_xml() is well formed
         ET.fromstring(self.resTimeSeries.metadata.get_xml())
 
+    def test_multiple_content_files(self):
+        self.assertFalse(TimeSeriesResource.can_have_multiple_files())
+
+    def test_public_or_discoverable(self):
+        self.assertFalse(self.resTimeSeries.has_required_content_files())
+        self.assertFalse(self.resTimeSeries.metadata.has_all_required_elements())
+        self.assertFalse(self.resTimeSeries.can_be_public_or_discoverable)
+
+        # adding a valid ODM2 sqlite file should generate required core metadata and all extended metadata
+        files = [UploadedFile(file=self.odm2_sqlite_file_obj, name=self.odm2_sqlite_file_name)]
+        utils.resource_file_add_pre_process(resource=self.resTimeSeries, files=files, user=self.user,
+                                            extract_metadata=False)
+
+        utils.resource_file_add_process(resource=self.resTimeSeries, files=files, user=self.user,
+                                        extract_metadata=True)
+
+        self.assertTrue(self.resTimeSeries.has_required_content_files())
+        self.assertTrue(self.resTimeSeries.metadata.has_all_required_elements())
+        self.assertTrue(self.resTimeSeries.can_be_public_or_discoverable)
+
     def _test_metadata_extraction(self):
         # there should one content file
         self.assertEquals(self.resTimeSeries.files.all().count(), 1)
