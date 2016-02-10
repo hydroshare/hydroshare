@@ -2636,6 +2636,10 @@ h4.title {
     border-bottom: 1px solid #DDD;
 }
 
+#item-selectors thead th:first-child {
+	padding-left: 10px;
+}
+
 #item-selectors tbody {
     border-top: 1px solid #DDD;
 }
@@ -2645,6 +2649,7 @@ h4.title {
 	min-width: 100px;
 	padding-right: 0;
 }
+
 
 .dataTables_wrapper {
     overflow-x: auto;
