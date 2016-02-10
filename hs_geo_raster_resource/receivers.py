@@ -24,6 +24,56 @@ import xml.etree.ElementTree as ET
 # to populate create-resource.html template page
 
 
+def raster_file_validation(files):
+    is_valid = True
+    vrt_file_path = ''
+
+    # process uploaded .tif or .zip file
+    if len(files) == 1:
+        ext = os.path.splitext(files[0].name)[1]
+        if ext == '.tif':
+            temp_vrt_file_path = create_vrt_file(files[0])
+            if os.path.isfile(temp_vrt_file_path):
+                files.append(UploadedFile(file=open(temp_vrt_file_path, 'r'), name=os.path.basename(temp_vrt_file_path)))
+
+        elif ext == '.zip':
+            extract_file_paths = explode_zip_file(files[0])
+            if extract_file_paths:
+                del files[0]
+                for file_path in extract_file_paths:
+                    files.append(UploadedFile(file=open(file_path, 'r'), name=os.path.basename(file_path)))
+
+    # check if raster is valid in format and data
+    files_names = [f.name for f in files]
+    files_ext = [os.path.splitext(path)[1] for path in files_names]
+    files_path = [f.file.name for f in files]
+
+    if set(files_ext) == {'.vrt', '.tif'} and files_ext.count('.vrt') == 1:
+        vrt_file_path = files_path[files_ext.index('.vrt')]
+        raster_dataset = gdal.Open(vrt_file_path, GA_ReadOnly)
+
+        # check if the data is valid
+        try:
+            raster_dataset.RasterXSize
+            raster_dataset.RasterYSize
+            raster_dataset.RasterCount
+        except AttributeError:
+            is_valid = False
+
+        # check if the raster file numbers and names are valid in vrt file
+        with open(vrt_file_path) as vrt_file:
+            vrt_string = vrt_file.read()
+            root = ET.fromstring(vrt_string)
+            raster_file_names = {file_name.text for file_name in root.iter('SourceFilename')}
+        files_names.pop(files_ext.index('.vrt'))
+        if raster_file_names != set(files_names):
+            is_valid = False
+    else:
+        is_valid = False
+
+    return is_valid, vrt_file_path
+
+
 def create_vrt_file(tif_file):
     # create vrt file
     temp_dir = tempfile.mkdtemp()
@@ -56,61 +106,16 @@ def explode_zip_file(zip_file):
     return extract_file_paths
 
 
-def test_files(files):
-    del files[:]
-
 @receiver(pre_create_resource, sender=RasterResource)
 def raster_pre_create_resource_trigger(sender, **kwargs):
     files = kwargs['files']
     title = kwargs['title']
     validate_files_dict = kwargs['validate_files']
-
     metadata = kwargs['metadata']
 
     if(files):
-        # process uploaded .tif or .zip file
-        if len(files) == 1:
-            ext = os.path.splitext(files[0].name)[1]
-            if ext == '.tif':
-                temp_vrt_file_path = create_vrt_file(files[0])
-                if os.path.isfile(temp_vrt_file_path):
-                    files.append(UploadedFile(file=open(temp_vrt_file_path, 'r'), name=os.path.basename(temp_vrt_file_path)))
-
-            elif ext == '.zip':
-                extract_file_paths = explode_zip_file(files[0])
-                if extract_file_paths:
-                    del files[0]
-                    for file_path in extract_file_paths:
-                        files.append(UploadedFile(file=open(file_path, 'r'), name=os.path.basename(file_path)))
-
-        # check if raster is valid in format and data
-        files_names = [file.name for file in files]
-        files_ext = [os.path.splitext(path)[1] for path in files_names]
-        files_path = [file.file.name for file in files]
-        is_valid = True
-
-        if set(files_ext) == {'.vrt', '.tif'} and files_ext.count('.vrt') == 1:
-            vrt_file_path = files_path[files_ext.index('.vrt')]
-            raster_dataset = gdal.Open(vrt_file_path, GA_ReadOnly)
-
-            # check if the data is valid
-            try:
-                raster_dataset.RasterXSize
-                raster_dataset.RasterYSize
-                raster_dataset.RasterCount
-            except AttributeError:
-                is_valid = False
-
-            # check if the raster file numbers and names are valide in vrt file
-            with open(vrt_file_path) as vrt_file:
-                vrt_string = vrt_file.read()
-                root = ET.fromstring(vrt_string)
-                raster_file_names = {file_name.text for file_name in root.iter('SourceFilename')}
-            files_names.pop(files_ext.index('.vrt'))
-            if raster_file_names != set(files_names):
-                is_valid = False
-        else:
-            is_valid = False
+        # raster file validation
+        is_valid, vrt_file_path = raster_file_validation(files)
 
         # metadata extraction
         if is_valid:
@@ -182,37 +187,46 @@ def raster_pre_create_resource_trigger(sender, **kwargs):
 def raster_pre_add_files_to_resource_trigger(sender, **kwargs):
     files = kwargs['files']
     res = kwargs['resource']
+    validate_files_dict = kwargs['validate_files']
+
     if files:
-        infile = files[0]
-        import raster_meta_extract
-        res_md_dict = raster_meta_extract.get_raster_meta_dict(infile.file.name)
+        # raster file validation
+        is_valid, vrt_file_path = raster_file_validation(files)
 
-        # update core metadata coverage - box
-        wgs_cov_info = res_md_dict['spatial_coverage_info']['wgs84_coverage_info']
-        if wgs_cov_info:
-            res.metadata.create_element('Coverage', type='box', value=res_md_dict['spatial_coverage_info']['wgs84_coverage_info'])
+        # metadata extraction
+        if is_valid:
+            res_md_dict = raster_meta_extract.get_raster_meta_dict(vrt_file_path)
 
-        # update extended original box coverage
-        if res.metadata.originalCoverage is None:
-            v = {'value': res_md_dict['spatial_coverage_info']['original_coverage_info'] }
-            res.metadata.create_element('OriginalCoverage', **v)
+            # update core metadata coverage - box
+            wgs_cov_info = res_md_dict['spatial_coverage_info']['wgs84_coverage_info']
+            if wgs_cov_info:
+                res.metadata.create_element('Coverage', type='box', value=res_md_dict['spatial_coverage_info']['wgs84_coverage_info'])
 
-        # update extended metadata CellInformation
-        res.metadata.cellInformation.delete()
-        res.metadata.create_element('CellInformation', name=infile.name, rows=res_md_dict['cell_and_band_info']['rows'],
-                                    columns = res_md_dict['cell_and_band_info']['columns'],
-                                    cellSizeXValue = res_md_dict['cell_and_band_info']['cellSizeXValue'],
-                                    cellSizeYValue = res_md_dict['cell_and_band_info']['cellSizeYValue'],
-                                    cellDataType = res_md_dict['cell_and_band_info']['cellDataType'],
-                                    noDataValue = res_md_dict['cell_and_band_info']['noDataValue'])
+            # update extended original box coverage
+            if res.metadata.originalCoverage is None:
+                v = {'value': res_md_dict['spatial_coverage_info']['original_coverage_info'] }
+                res.metadata.create_element('OriginalCoverage', **v)
 
-        bcount = res_md_dict['cell_and_band_info']['bandCount']
+            # update extended metadata CellInformation
+            res.metadata.cellInformation.delete()
+            res.metadata.create_element('CellInformation', name=os.path.basename(vrt_file_path), rows=res_md_dict['cell_and_band_info']['rows'],
+                                        columns = res_md_dict['cell_and_band_info']['columns'],
+                                        cellSizeXValue = res_md_dict['cell_and_band_info']['cellSizeXValue'],
+                                        cellSizeYValue = res_md_dict['cell_and_band_info']['cellSizeYValue'],
+                                        cellDataType = res_md_dict['cell_and_band_info']['cellDataType'],
+                                        noDataValue = res_md_dict['cell_and_band_info']['noDataValue'])
 
-        # update extended metadata BandInformation
-        for band in res.metadata.bandInformation:
-            band.delete()
-        for i in range(bcount):
-            res.metadata.create_element('BandInformation', name='Band_' + str(i+1), variableName='Unnamed', variableUnit='Unnamed', method='', comment='')
+            bcount = res_md_dict['cell_and_band_info']['bandCount']
+            # update extended metadata BandInformation
+            for band in res.metadata.bandInformation:
+                band.delete()
+            for i in range(bcount):
+                res.metadata.create_element('BandInformation', name='Band_' + str(i+1), variableName='Unnamed', variableUnit='Unnamed', method='', comment='')
+        else:
+            validate_files_dict['are_files_valid'] = False
+            validate_files_dict['message'] = 'Please check if the uploaded file is as one .tif file ' \
+                                             'or as one .zip file including one .vrt file and multiple/single .tif files .'
+
 
 
 @receiver(pre_delete_file_from_resource, sender=RasterResource)
