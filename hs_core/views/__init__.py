@@ -244,6 +244,23 @@ def delete_file(request, shortkey, f, *args, **kwargs):
 def delete_resource(request, shortkey, *args, **kwargs):
     res, _, _ = authorize(request, shortkey, edit=True, full=True, superuser=True)
 
+    # downgrade collection to private if the res being deleted here is the only member resource in the collection
+    # reverse lookup: find all associated collection resources
+    associated_collectionitems_metadata_obj_list = list(res.collectionitems_set.all())
+    for collectionitems_metadata_obj in associated_collectionitems_metadata_obj_list:
+        # if this collection has only one member resource (that is the one being deleted now)
+        if collectionitems_metadata_obj.collection_items.all().count() == 1:
+            # reverse lookup: metadata obj --> resource obj
+            res_collection = CollectionResource.objects.get(object_id=collectionitems_metadata_obj.object_id)
+            if res_collection.raccess.public or res_collection.raccess.discoverable:
+                # downgrade these collections to private
+                res_collection.raccess.public = False
+                res_collection.raccess.discoverable = False
+                res_collection.raccess.save()
+                # set isPublic metadata AVU accordingly
+                istorage = IrodsStorage()
+                istorage.setAVU(res_collection.short_id, "isPublic", str(res_collection.raccess.public))
+
     res.delete()
     return HttpResponseRedirect('/my-resources/')
 
@@ -304,7 +321,7 @@ def change_permissions(request, shortkey, *args, **kwargs):
         # reverse lookup: find all associated collection resources
         associated_collectionitems_metadata_obj_list = list(res.collectionitems_set.all())
         for collectionitems_metadata_obj in associated_collectionitems_metadata_obj_list:
-            # reverse lookup: metadara obj --> resource obj
+            # reverse lookup: metadata obj --> resource obj
             res_collection = CollectionResource.objects.get(object_id=collectionitems_metadata_obj.object_id)
             if res_collection.raccess.public or res_collection.raccess.discoverable:
                 # downgrade these collections to private
