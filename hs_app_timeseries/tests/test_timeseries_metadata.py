@@ -148,93 +148,8 @@ class TestTimeSeriesMetaData(MockIRODSTestCaseMixin, TestCase):
             )
 
         utils.resource_post_create_actions(resource=self.resTimeSeries, user=self.user, metadata=[])
-        # there should one content file
-        self.assertEquals(self.resTimeSeries.files.all().count(), 1)
 
-        # there should be one contributor element
-        self.assertEquals(self.resTimeSeries.metadata.contributors.all().count(), 1)
-
-        # test core metadata after metadata extraction
-        extracted_title = "Water temperature in the Little Bear River at Mendon Road near Mendon, UT"
-        self.assertEquals(self.resTimeSeries.metadata.title.value, extracted_title)
-
-        # there should be an abstract element
-        self.assertNotEquals(self.resTimeSeries.metadata.description, None)
-        extracted_abstract = "This dataset contains observations of water temperature in the Little Bear River at " \
-                             "Mendon Road near Mendon, UT. Data were recorded every 30 minutes. The values were " \
-                             "recorded using a HydroLab MS5 multi-parameter water quality sonde connected to a " \
-                             "Campbell Scientific datalogger. Values represent quality controlled data that have " \
-                             "undergone quality control to remove obviously bad data."
-        self.assertEquals(self.resTimeSeries.metadata.description.abstract, extracted_abstract)
-
-        # there should be 2 coverage element -  point type and period type
-        self.assertEquals(self.resTimeSeries.metadata.coverages.all().count(), 2)
-        self.assertEquals(self.resTimeSeries.metadata.coverages.all().filter(type='point').count(), 1)
-        self.assertEquals(self.resTimeSeries.metadata.coverages.all().filter(type='period').count(), 1)
-
-        point_coverage = self.resTimeSeries.metadata.coverages.all().filter(type='point').first()
-        self.assertEquals(point_coverage.value['projection'], 'Unknown')
-        self.assertEquals(point_coverage.value['units'], 'Decimal degrees')
-        self.assertEquals(point_coverage.value['east'], -111.946402)
-        self.assertEquals(point_coverage.value['north'], 41.718473)
-
-        temporal_coverage = self.resTimeSeries.metadata.coverages.all().filter(type='period').first()
-        self.assertEquals(parser.parse(temporal_coverage.value['start']).date(), parser.parse('01/01/2008').date())
-        self.assertEquals(parser.parse(temporal_coverage.value['end']).date(), parser.parse('01/31/2008').date())
-
-        # there should be one format element
-        self.assertEquals(self.resTimeSeries.metadata.formats.all().count(), 1)
-        format_element = self.resTimeSeries.metadata.formats.all().first()
-        self.assertEquals(format_element.value, 'application/sqlite')
-
-        # there should be one subject element
-        self.assertEquals(self.resTimeSeries.metadata.subjects.all().count(), 1)
-        subj_element = self.resTimeSeries.metadata.subjects.all().first()
-        self.assertEquals(subj_element.value, 'Temperature')
-
-        # testing extended metadata elements
-        self.assertNotEquals(self.resTimeSeries.metadata.site, None)
-        self.assertEquals(self.resTimeSeries.metadata.site.site_code, 'USU-LBR-Mendon')
-        site_name = 'Little Bear River at Mendon Road near Mendon, Utah'
-        self.assertEquals(self.resTimeSeries.metadata.site.site_name, site_name)
-        self.assertEquals(self.resTimeSeries.metadata.site.elevation_m, 1345)
-        self.assertEquals(self.resTimeSeries.metadata.site.elevation_datum, 'NGVD29')
-        self.assertEquals(self.resTimeSeries.metadata.site.site_type, 'Stream')
-
-        self.assertNotEquals(self.resTimeSeries.metadata.variable, None)
-        self.assertEquals(self.resTimeSeries.metadata.variable.variable_code, 'USU36')
-        self.assertEquals(self.resTimeSeries.metadata.variable.variable_name, 'Temperature')
-        self.assertEquals(self.resTimeSeries.metadata.variable.variable_type, 'Water Quality')
-        self.assertEquals(self.resTimeSeries.metadata.variable.no_data_value, -9999)
-        self.assertEquals(self.resTimeSeries.metadata.variable.variable_definition, None)
-        self.assertEquals(self.resTimeSeries.metadata.variable.speciation, 'Not Applicable')
-
-        self.assertNotEquals(self.resTimeSeries.metadata.method, None)
-        self.assertEquals(self.resTimeSeries.metadata.method.method_code, 28)
-        method_name = 'Quality Control Level 1 Data Series created from raw QC Level 0 data using ODM Tools.'
-        self.assertEquals(self.resTimeSeries.metadata.method.method_name, method_name)
-        self.assertEquals(self.resTimeSeries.metadata.method.method_type, 'Instrument deployment')
-        method_des = 'Quality Control Level 1 Data Series created from raw QC Level 0 data using ODM Tools.'
-        self.assertEquals(self.resTimeSeries.metadata.method.method_description, method_des)
-        self.assertEquals(self.resTimeSeries.metadata.method.method_link, None)
-
-        self.assertNotEquals(self.resTimeSeries.metadata.processing_level, None)
-        self.assertEquals(self.resTimeSeries.metadata.processing_level.processing_level_code, 1)
-        self.assertEquals(self.resTimeSeries.metadata.processing_level.definition, 'Quality controlled data')
-        explanation = 'Quality controlled data that have passed quality assurance procedures such as ' \
-                      'routine estimation of timing and sensor calibration or visual inspection and removal ' \
-                      'of obvious errors. An example is USGS published streamflow records following parsing ' \
-                      'through USGS quality control procedures.'
-        self.assertEquals(self.resTimeSeries.metadata.processing_level.explanation, explanation)
-
-        self.assertNotEquals(self.resTimeSeries.metadata.time_series_result, None)
-        self.assertEquals(self.resTimeSeries.metadata.time_series_result.units_type, 'Temperature')
-        self.assertEquals(self.resTimeSeries.metadata.time_series_result.units_name, 'degree celsius')
-        self.assertEquals(self.resTimeSeries.metadata.time_series_result.units_abbreviation, 'degC')
-        self.assertEquals(self.resTimeSeries.metadata.time_series_result.status, 'Unknown')
-        self.assertEquals(self.resTimeSeries.metadata.time_series_result.sample_medium, 'Surface Water')
-        self.assertEquals(self.resTimeSeries.metadata.time_series_result.value_count, 1441)
-        self.assertEquals(self.resTimeSeries.metadata.time_series_result.aggregation_statistics, 'Average')
+        self._test_metadata_extraction()
 
     def test_metadata_extraction_on_content_file_add(self):
         # test the core metadata at this point
@@ -270,93 +185,7 @@ class TestTimeSeriesMetaData(MockIRODSTestCaseMixin, TestCase):
         utils.resource_file_add_process(resource=self.resTimeSeries, files=files, user=self.user,
                                         extract_metadata=True)
 
-        # there should one content file
-        self.assertEquals(self.resTimeSeries.files.all().count(), 1)
-
-        # there should be one contributor element
-        self.assertEquals(self.resTimeSeries.metadata.contributors.all().count(), 1)
-
-        # test core metadata after metadata extraction
-        extracted_title = "Water temperature in the Little Bear River at Mendon Road near Mendon, UT"
-        self.assertEquals(self.resTimeSeries.metadata.title.value, extracted_title)
-
-        # there should be an abstract element
-        self.assertNotEquals(self.resTimeSeries.metadata.description, None)
-        extracted_abstract = "This dataset contains observations of water temperature in the Little Bear River at " \
-                             "Mendon Road near Mendon, UT. Data were recorded every 30 minutes. The values were " \
-                             "recorded using a HydroLab MS5 multi-parameter water quality sonde connected to a " \
-                             "Campbell Scientific datalogger. Values represent quality controlled data that have " \
-                             "undergone quality control to remove obviously bad data."
-        self.assertEquals(self.resTimeSeries.metadata.description.abstract, extracted_abstract)
-
-        # there should be 2 coverage element -  point type and period type
-        self.assertEquals(self.resTimeSeries.metadata.coverages.all().count(), 2)
-        self.assertEquals(self.resTimeSeries.metadata.coverages.all().filter(type='point').count(), 1)
-        self.assertEquals(self.resTimeSeries.metadata.coverages.all().filter(type='period').count(), 1)
-
-        point_coverage = self.resTimeSeries.metadata.coverages.all().filter(type='point').first()
-        self.assertEquals(point_coverage.value['projection'], 'Unknown')
-        self.assertEquals(point_coverage.value['units'], 'Decimal degrees')
-        self.assertEquals(point_coverage.value['east'], -111.946402)
-        self.assertEquals(point_coverage.value['north'], 41.718473)
-
-        temporal_coverage = self.resTimeSeries.metadata.coverages.all().filter(type='period').first()
-        self.assertEquals(parser.parse(temporal_coverage.value['start']).date(), parser.parse('01/01/2008').date())
-        self.assertEquals(parser.parse(temporal_coverage.value['end']).date(), parser.parse('01/31/2008').date())
-
-        # there should be one format element
-        self.assertEquals(self.resTimeSeries.metadata.formats.all().count(), 1)
-        format_element = self.resTimeSeries.metadata.formats.all().first()
-        self.assertEquals(format_element.value, 'application/sqlite')
-
-        # there should be one subject element
-        self.assertEquals(self.resTimeSeries.metadata.subjects.all().count(), 1)
-        subj_element = self.resTimeSeries.metadata.subjects.all().first()
-        self.assertEquals(subj_element.value, 'Temperature')
-
-        # testing extended metadata elements
-        self.assertNotEquals(self.resTimeSeries.metadata.site, None)
-        self.assertEquals(self.resTimeSeries.metadata.site.site_code, 'USU-LBR-Mendon')
-        site_name = 'Little Bear River at Mendon Road near Mendon, Utah'
-        self.assertEquals(self.resTimeSeries.metadata.site.site_name, site_name)
-        self.assertEquals(self.resTimeSeries.metadata.site.elevation_m, 1345)
-        self.assertEquals(self.resTimeSeries.metadata.site.elevation_datum, 'NGVD29')
-        self.assertEquals(self.resTimeSeries.metadata.site.site_type, 'Stream')
-
-        self.assertNotEquals(self.resTimeSeries.metadata.variable, None)
-        self.assertEquals(self.resTimeSeries.metadata.variable.variable_code, 'USU36')
-        self.assertEquals(self.resTimeSeries.metadata.variable.variable_name, 'Temperature')
-        self.assertEquals(self.resTimeSeries.metadata.variable.variable_type, 'Water Quality')
-        self.assertEquals(self.resTimeSeries.metadata.variable.no_data_value, -9999)
-        self.assertEquals(self.resTimeSeries.metadata.variable.variable_definition, None)
-        self.assertEquals(self.resTimeSeries.metadata.variable.speciation, 'Not Applicable')
-
-        self.assertNotEquals(self.resTimeSeries.metadata.method, None)
-        self.assertEquals(self.resTimeSeries.metadata.method.method_code, 28)
-        method_name = 'Quality Control Level 1 Data Series created from raw QC Level 0 data using ODM Tools.'
-        self.assertEquals(self.resTimeSeries.metadata.method.method_name, method_name)
-        self.assertEquals(self.resTimeSeries.metadata.method.method_type, 'Instrument deployment')
-        method_des = 'Quality Control Level 1 Data Series created from raw QC Level 0 data using ODM Tools.'
-        self.assertEquals(self.resTimeSeries.metadata.method.method_description, method_des)
-        self.assertEquals(self.resTimeSeries.metadata.method.method_link, None)
-
-        self.assertNotEquals(self.resTimeSeries.metadata.processing_level, None)
-        self.assertEquals(self.resTimeSeries.metadata.processing_level.processing_level_code, 1)
-        self.assertEquals(self.resTimeSeries.metadata.processing_level.definition, 'Quality controlled data')
-        explanation = 'Quality controlled data that have passed quality assurance procedures such as ' \
-                      'routine estimation of timing and sensor calibration or visual inspection and removal ' \
-                      'of obvious errors. An example is USGS published streamflow records following parsing ' \
-                      'through USGS quality control procedures.'
-        self.assertEquals(self.resTimeSeries.metadata.processing_level.explanation, explanation)
-
-        self.assertNotEquals(self.resTimeSeries.metadata.time_series_result, None)
-        self.assertEquals(self.resTimeSeries.metadata.time_series_result.units_type, 'Temperature')
-        self.assertEquals(self.resTimeSeries.metadata.time_series_result.units_name, 'degree celsius')
-        self.assertEquals(self.resTimeSeries.metadata.time_series_result.units_abbreviation, 'degC')
-        self.assertEquals(self.resTimeSeries.metadata.time_series_result.status, 'Unknown')
-        self.assertEquals(self.resTimeSeries.metadata.time_series_result.sample_medium, 'Surface Water')
-        self.assertEquals(self.resTimeSeries.metadata.time_series_result.value_count, 1441)
-        self.assertEquals(self.resTimeSeries.metadata.time_series_result.aggregation_statistics, 'Average')
+        self._test_metadata_extraction()
 
     def test_metadata_on_content_file_delete(self):
         # test that metadata is not deleted (except format element) on content file deletion
@@ -718,3 +547,91 @@ class TestTimeSeriesMetaData(MockIRODSTestCaseMixin, TestCase):
         # test if xml from get_xml() is well formed
         ET.fromstring(self.resTimeSeries.metadata.get_xml())
 
+    def _test_metadata_extraction(self):
+        # there should one content file
+        self.assertEquals(self.resTimeSeries.files.all().count(), 1)
+
+        # there should be one contributor element
+        self.assertEquals(self.resTimeSeries.metadata.contributors.all().count(), 1)
+
+        # test core metadata after metadata extraction
+        extracted_title = "Water temperature in the Little Bear River at Mendon Road near Mendon, UT"
+        self.assertEquals(self.resTimeSeries.metadata.title.value, extracted_title)
+
+        # there should be an abstract element
+        self.assertNotEquals(self.resTimeSeries.metadata.description, None)
+        extracted_abstract = "This dataset contains observations of water temperature in the Little Bear River at " \
+                             "Mendon Road near Mendon, UT. Data were recorded every 30 minutes. The values were " \
+                             "recorded using a HydroLab MS5 multi-parameter water quality sonde connected to a " \
+                             "Campbell Scientific datalogger. Values represent quality controlled data that have " \
+                             "undergone quality control to remove obviously bad data."
+        self.assertEquals(self.resTimeSeries.metadata.description.abstract, extracted_abstract)
+
+        # there should be 2 coverage element -  point type and period type
+        self.assertEquals(self.resTimeSeries.metadata.coverages.all().count(), 2)
+        self.assertEquals(self.resTimeSeries.metadata.coverages.all().filter(type='point').count(), 1)
+        self.assertEquals(self.resTimeSeries.metadata.coverages.all().filter(type='period').count(), 1)
+
+        point_coverage = self.resTimeSeries.metadata.coverages.all().filter(type='point').first()
+        self.assertEquals(point_coverage.value['projection'], 'Unknown')
+        self.assertEquals(point_coverage.value['units'], 'Decimal degrees')
+        self.assertEquals(point_coverage.value['east'], -111.946402)
+        self.assertEquals(point_coverage.value['north'], 41.718473)
+
+        temporal_coverage = self.resTimeSeries.metadata.coverages.all().filter(type='period').first()
+        self.assertEquals(parser.parse(temporal_coverage.value['start']).date(), parser.parse('01/01/2008').date())
+        self.assertEquals(parser.parse(temporal_coverage.value['end']).date(), parser.parse('01/31/2008').date())
+
+        # there should be one format element
+        self.assertEquals(self.resTimeSeries.metadata.formats.all().count(), 1)
+        format_element = self.resTimeSeries.metadata.formats.all().first()
+        self.assertEquals(format_element.value, 'application/sqlite')
+
+        # there should be one subject element
+        self.assertEquals(self.resTimeSeries.metadata.subjects.all().count(), 1)
+        subj_element = self.resTimeSeries.metadata.subjects.all().first()
+        self.assertEquals(subj_element.value, 'Temperature')
+
+        # testing extended metadata elements
+        self.assertNotEquals(self.resTimeSeries.metadata.site, None)
+        self.assertEquals(self.resTimeSeries.metadata.site.site_code, 'USU-LBR-Mendon')
+        site_name = 'Little Bear River at Mendon Road near Mendon, Utah'
+        self.assertEquals(self.resTimeSeries.metadata.site.site_name, site_name)
+        self.assertEquals(self.resTimeSeries.metadata.site.elevation_m, 1345)
+        self.assertEquals(self.resTimeSeries.metadata.site.elevation_datum, 'NGVD29')
+        self.assertEquals(self.resTimeSeries.metadata.site.site_type, 'Stream')
+
+        self.assertNotEquals(self.resTimeSeries.metadata.variable, None)
+        self.assertEquals(self.resTimeSeries.metadata.variable.variable_code, 'USU36')
+        self.assertEquals(self.resTimeSeries.metadata.variable.variable_name, 'Temperature')
+        self.assertEquals(self.resTimeSeries.metadata.variable.variable_type, 'Water Quality')
+        self.assertEquals(self.resTimeSeries.metadata.variable.no_data_value, -9999)
+        self.assertEquals(self.resTimeSeries.metadata.variable.variable_definition, None)
+        self.assertEquals(self.resTimeSeries.metadata.variable.speciation, 'Not Applicable')
+
+        self.assertNotEquals(self.resTimeSeries.metadata.method, None)
+        self.assertEquals(self.resTimeSeries.metadata.method.method_code, 28)
+        method_name = 'Quality Control Level 1 Data Series created from raw QC Level 0 data using ODM Tools.'
+        self.assertEquals(self.resTimeSeries.metadata.method.method_name, method_name)
+        self.assertEquals(self.resTimeSeries.metadata.method.method_type, 'Instrument deployment')
+        method_des = 'Quality Control Level 1 Data Series created from raw QC Level 0 data using ODM Tools.'
+        self.assertEquals(self.resTimeSeries.metadata.method.method_description, method_des)
+        self.assertEquals(self.resTimeSeries.metadata.method.method_link, None)
+
+        self.assertNotEquals(self.resTimeSeries.metadata.processing_level, None)
+        self.assertEquals(self.resTimeSeries.metadata.processing_level.processing_level_code, 1)
+        self.assertEquals(self.resTimeSeries.metadata.processing_level.definition, 'Quality controlled data')
+        explanation = 'Quality controlled data that have passed quality assurance procedures such as ' \
+                      'routine estimation of timing and sensor calibration or visual inspection and removal ' \
+                      'of obvious errors. An example is USGS published streamflow records following parsing ' \
+                      'through USGS quality control procedures.'
+        self.assertEquals(self.resTimeSeries.metadata.processing_level.explanation, explanation)
+
+        self.assertNotEquals(self.resTimeSeries.metadata.time_series_result, None)
+        self.assertEquals(self.resTimeSeries.metadata.time_series_result.units_type, 'Temperature')
+        self.assertEquals(self.resTimeSeries.metadata.time_series_result.units_name, 'degree celsius')
+        self.assertEquals(self.resTimeSeries.metadata.time_series_result.units_abbreviation, 'degC')
+        self.assertEquals(self.resTimeSeries.metadata.time_series_result.status, 'Unknown')
+        self.assertEquals(self.resTimeSeries.metadata.time_series_result.sample_medium, 'Surface Water')
+        self.assertEquals(self.resTimeSeries.metadata.time_series_result.value_count, 1441)
+        self.assertEquals(self.resTimeSeries.metadata.time_series_result.aggregation_statistics, 'Average')
