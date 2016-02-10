@@ -36,7 +36,7 @@ from . import user_rest_api
 from hs_core.hydroshare import utils
 from . import utils as view_utils
 from hs_core.signals import *
-
+from hs_collection_resource.models import CollectionResource
 
 def short_url(request, *args, **kwargs):
     try:
@@ -300,6 +300,21 @@ def change_permissions(request, shortkey, *args, **kwargs):
         _set_resource_sharing_status(request, user, res, flag_to_set='public', flag_value=True)
     elif t == 'make_private' or t == 'make_not_discoverable':
         _set_resource_sharing_status(request, user, res, flag_to_set='public', flag_value=False)
+
+        # reverse lookup: find all associated collection resources
+        associated_collectionitems_metadata_obj_list = list(res.collectionitems_set.all())
+        for collectionitems_metadata_obj in associated_collectionitems_metadata_obj_list:
+            # reverse lookup: metadara obj --> resource obj
+            res_collection = CollectionResource.objects.get(object_id=collectionitems_metadata_obj.object_id)
+            if res_collection.raccess.public or res_collection.raccess.discoverable:
+                # downgrade these collections to private
+                res_collection.raccess.public = False
+                res_collection.raccess.discoverable = False
+                res_collection.raccess.save()
+                # set isPublic metadata AVU accordingly
+                istorage = IrodsStorage()
+                istorage.setAVU(res_collection.short_id, "isPublic", str(res_collection.raccess.public))
+
     elif t == 'make_discoverable':
         _set_resource_sharing_status(request, user, res, flag_to_set='discoverable', flag_value=True)
     elif t == 'make_not_shareable':
