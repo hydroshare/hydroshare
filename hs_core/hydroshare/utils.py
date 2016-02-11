@@ -4,7 +4,11 @@ import mimetypes
 import os
 import json
 
-from django.db.models import get_model, get_models
+#from django.db.models import get_model, get_models
+from django.apps import apps
+get_model = apps.get_model
+from django.apps import apps
+get_models = apps.get_models
 from django.http import Http404
 from django.shortcuts import get_object_or_404
 from django.utils.timezone import now
