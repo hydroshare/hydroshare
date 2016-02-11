@@ -67,7 +67,7 @@ defaultworker:
     - postgis:postgis
     - redis:redis
     - rabbitmq:rabbitmq
-  command: celery worker -A hydroshare -E -Q default
+  command: ./run_celery.sh
 dockerworker:
   build: .
   environment:
