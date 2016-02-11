@@ -1267,14 +1267,15 @@ class UserAccess(models.Model):
 
         This is not enforced. It is up to the programmer to obey this restriction.
 
-        This is not subject to immutability. Ar present, owns_resource -> can_change_resource_flags. If we made it subject to immutability, no resources could be made not immutable again. 
+        This is not subject to immutability. Ar present, owns_resource -> can_change_resource_flags. If we made it subject to immutability, no resources could be made not immutable again.
+        However, it should account for whether a resource is published, and return false if a resource is published
         """
         if __debug__:  # during testing only, check argument types and preconditions
             assert isinstance(this_resource, BaseResource)
 
         if not self.user.is_active: raise PermissionDenied("Requesting user is not active")
 
-        return self.user.is_superuser or self.owns_resource(this_resource)
+        return self.user.is_superuser or (not this_resource.raccess.published and self.owns_resource(this_resource))
 
     def can_view_resource(self, this_resource):
         """

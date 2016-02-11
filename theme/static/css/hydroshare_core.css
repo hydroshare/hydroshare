@@ -2902,6 +2902,10 @@ h4.title {
 	display: none;
 }
 
+.checkbox-label {
+	padding: 0.5em;
+}
+
 .label-public {
     color: #5cb85c;
 }
@@ -2912,6 +2916,19 @@ h4.title {
 
 .label-private {
     color: #d9534f;
+}
+
+.iframe-border {
+	border: 2px solid #DDD;
+	overflow: scroll;
+    overflow-x: hidden;
+}
+#pub-agreement-frame {
+	border: 0px none;
+	height: 1500px;
+	margin-top: -90px;
+	margin-bottom: -950px;
+	width: 520px;
 }
 
 /*  Home page revamp */
@@ -3140,4 +3157,3 @@ div.description.active {
 .availability-description {
     height:100px;
 }
-
