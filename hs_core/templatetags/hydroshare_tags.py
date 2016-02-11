@@ -23,7 +23,7 @@ from django.core.urlresolvers import reverse, resolve, NoReverseMatch
 from django.db.models import Model
 from django.apps import apps
 get_model = apps.get_model
-from django.template import (Context, Node, TextNode, Template,
+from django.template.base import (Context, Node, TextNode, Template,
     TemplateSyntaxError, TOKEN_TEXT, TOKEN_VAR, TOKEN_COMMENT, TOKEN_BLOCK)
 from django.template.defaultfilters import escape
 from django.template.loader import get_template
