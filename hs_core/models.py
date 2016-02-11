@@ -85,60 +85,19 @@ class ResourcePermissionsMixin(Ownable):
         return self.can_change(request)
 
     def can_delete(self, request):
-        user = get_user(request)
-        if user.is_authenticated():
-            if user.is_superuser:
-                return True
-            elif self.raccess.immutable:
-                return False
-            elif self.raccess.owners.filter(pk=user.pk).exists():
-                return True
-            else:
-                return False
-        else:
-            return False
+        # have to do import locally to avoid circular import
+        from hs_core.views.utils import authorize
+        return authorize(request, self.short_id, res=self, full=True, superuser=True, raises_exception=False)[1]
 
     def can_change(self, request):
-        user = get_user(request)
-
-        if user.is_authenticated():
-            if user.is_superuser:
-                return True
-            elif self.raccess.immutable:
-                return False
-            elif self.raccess.owners.filter(pk=user.pk).exists():
-                return True
-            elif self.raccess.edit_users.filter(pk=user.pk).exists():
-                return True
-            elif self.raccess.edit_groups.filter(pk__in=set(g.pk for g in user.groups.all())):
-                return True
-            else:
-                return False
-        else:
-            return False
+        # have to do import locally to avoid circular import
+        from hs_core.views.utils import authorize
+        return authorize(request, self.short_id, res=self, edit=True, superuser=True, raises_exception=False)[1]
 
     def can_view(self, request):
-        user = get_user(request)
-
-        if self.raccess.public or self.raccess.discoverable:
-            return True
-        if user.is_authenticated():
-            if user.is_superuser:
-                return True
-            elif self.raccess.owners.filter(pk=user.pk).exists():
-                return True
-            elif self.raccess.edit_users.filter(pk=user.pk).exists():
-                return True
-            elif self.raccess.view_users.filter(pk=user.pk).exists():
-                return True
-            elif self.raccess.edit_groups.filter(pk__in=set(g.pk for g in user.groups.all())):
-                return True
-            elif self.raccess.view_groups.filter(pk__in=set(g.pk for g in user.groups.all())):
-                return True
-            else:
-                return False
-        else:
-            return False
+        # have to do import locally to avoid circular import
+        from hs_core.views.utils import authorize
+        return authorize(request, self.short_id, res=self, view=True, superuser=True, raises_exception=False)[1]
 
 # this should be used as the page processor for anything with pagepermissionsmixin
 # page_processor_for(MyPage)(ga_resources.views.page_permissions_page_processor)

@@ -18,10 +18,10 @@ from hs_core.hydroshare import utils
 from hs_access_control.models import ResourceAccess, UserResourcePrivilege, PrivilegeCodes
 from hs_labels.models import ResourceLabels
 
-file_size_limit = 10*(1024 ** 3)
-file_size_limit_for_display = '10G'
-metadata_status_sufficient = 'Sufficient to publish or make public'
-metadata_status_insufficient = 'Insufficient to publish or make public'
+FILE_SIZE_LIMIT = 10*(1024 ** 3)
+FILE_SIZE_LIMIT_FOR_DISPLAY = '10G'
+METADATA_STATUS_SUFFICIENT = 'Sufficient to publish or make public'
+METADATA_STATUS_INSUFFICIENT = 'Insufficient to publish or make public'
 
 def get_resource(pk):
     """
@@ -284,12 +284,12 @@ def check_resource_files(files=()):
     """
     for file in files:
         if hasattr(file, '_size'):
-            if file._size > file_size_limit:
-                # file is greater than file_size_limit, which is not allowed
+            if file._size > FILE_SIZE_LIMIT:
+                # file is greater than FILE_SIZE_LIMIT, which is not allowed
                 return False
         else:
-            if os.stat(file).st_size > file_size_limit:
-                # file is greater than file_size_limit, which is not allowed
+            if os.stat(file).st_size > FILE_SIZE_LIMIT:
+                # file is greater than FILE_SIZE_LIMIT, which is not allowed
                 return False
     return True
 

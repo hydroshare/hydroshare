@@ -6,7 +6,7 @@ from forms import *
 from hs_tools_resource.models import SupportedResTypes, ToolResource
 from hs_core import hydroshare
 from hs_core.views.utils import authorize
-from hs_core.hydroshare.resource import metadata_status_sufficient, metadata_status_insufficient
+from hs_core.hydroshare.resource import METADATA_STATUS_SUFFICIENT, METADATA_STATUS_INSUFFICIENT
 
 @processor_for(GenericResource)
 def landing_page(request, page):
@@ -64,7 +64,7 @@ def get_page_context(page, user, resource_edit=False, extended_metadata_layout=N
             if content_model_str in str(res_type.get_supported_res_types_str()).lower():
                 tool_res_obj = ToolResource.objects.get(object_id=res_type.object_id)
                 if tool_res_obj:
-                    is_authorized = authorize(request, tool_res_obj.short_id, view=True, raises_exception=False)[1]
+                    is_authorized = authorize(request, tool_res_obj.short_id, res=tool_res_obj, view=True, raises_exception=False)[1]
                     if is_authorized:
                         tool_url = tool_res_obj.metadata.url_bases.first().value \
                             if tool_res_obj.metadata.url_bases.first() else None
@@ -407,8 +407,8 @@ def check_for_validation(request):
 
 def _get_metadata_status(resource):
     if resource.metadata.has_all_required_elements():
-        metadata_status = metadata_status_sufficient
+        metadata_status = METADATA_STATUS_SUFFICIENT
     else:
-        metadata_status = metadata_status_insufficient
+        metadata_status = METADATA_STATUS_INSUFFICIENT
 
     return metadata_status
