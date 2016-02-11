@@ -22,7 +22,6 @@ from hs_core import signals
 from hs_core.hydroshare import utils
 from hs_access_control.models import ResourceAccess, UserResourcePrivilege, PrivilegeCodes
 from hs_labels.models import ResourceLabels
-from hs_core.tasks import add_zip_file_contents_to_resource
 
 
 FILE_SIZE_LIMIT = 10*(1024 ** 3)
@@ -424,7 +423,9 @@ def create_resource(
         if len(files) == 1 and unpack_file and zipfile.is_zipfile(files[0]):
             # Add contents of zipfile as resource files asynchronously
             # Note: this is done asynchronously as unzipping may take
-            # a long time (~15 seconds to many minutes)
+            # a long time (~15 seconds to many minutes).
+            # Import task here to avoid circular reference.
+            from hs_core.tasks import add_zip_file_contents_to_resource
             add_zip_file_contents_to_resource_async(resource, files[0])
         else:
             # Add resource file(s) now
