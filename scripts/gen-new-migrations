@@ -1,0 +1,46 @@
+#!/usr/bin/env bash
+
+# gen-new-migrations
+# Author: Michael Stealey <michael.j.stealey@gmail.com>
+
+# applications to generate new migrations for
+APP_LIST=(theme hs_geo_raster_resource hs_geographic_feature_resource hs_labels \
+    hs_model_program hs_tools_resource hs_app_netCDF hs_modelinstance ref_ts \
+    hs_swat_modelinstance hs_script_resource django_docker_processes hs_app_timeseries \
+    hs_core django_irods ga_resources ga_ows hs_access_control)
+
+# find the location of docker-compose.template and start from that directory
+START_DIR=$(pwd)
+cd ~
+DC_DIR=$(dirname $(find . -name 'docker-compose.template'))
+cd $DC_DIR
+
+# stop running hydroshare container
+docker-compose stop hydroshare
+
+# remove all existing migrations
+docker-compose run hydroshare find . -name migrations -type d -exec rm -rf {} \;
+
+# drop existing database and create a new one
+docker-compose run hydroshare dropdb -U postgres -h postgis postgres
+docker-compose run hydroshare createdb -U postgres -h postgis postgres --encoding UNICODE --template=template0
+docker-compose run hydroshare psql -U postgres -h postgis -w -c 'create extension postgis;'
+
+# generate new migraitons for each app
+for app in "${APP_LIST[@]}"; do
+    docker-compose run hydroshare python manage.py makemigrations ${app};
+done
+
+# generate remaining migrations
+docker-compose run hydroshare python manage.py makemigrations
+
+# migrate
+docker-compose run hydroshare python manage.py migrate
+
+# start hydroshare container again
+docker-compose start hydroshare
+
+# return to START_DIR
+cd $START_DIR
+
+exit 0;
