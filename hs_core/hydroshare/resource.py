@@ -337,6 +337,8 @@ def add_zip_file_contents_to_resource_async(resource, f):
     shutil.copy(uploaded_filepath, tmp_dir)
     zfile_name = os.path.join(tmp_dir, os.path.basename(uploaded_filepath))
     logger.debug("Retained upload as {0}".format(zfile_name))
+    # Import here to avoid circular reference
+    from hs_core.tasks import add_zip_file_contents_to_resource
     add_zip_file_contents_to_resource.apply_async((resource.short_id, zfile_name),
                                                   countdown=30)
     resource.file_unpack_status = 'Pending'
@@ -424,8 +426,6 @@ def create_resource(
             # Add contents of zipfile as resource files asynchronously
             # Note: this is done asynchronously as unzipping may take
             # a long time (~15 seconds to many minutes).
-            # Import task here to avoid circular reference.
-            from hs_core.tasks import add_zip_file_contents_to_resource
             add_zip_file_contents_to_resource_async(resource, files[0])
         else:
             # Add resource file(s) now
