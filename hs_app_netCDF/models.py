@@ -191,6 +191,19 @@ class NetcdfMetaData(CoreMetaData):
 
         return missing_required_elements
 
+    def copy_all_elements_to(self, tgt_res):
+        super(NetcdfMetaData, self).copy_all_elements_to(tgt_res)
+        new_md = tgt_res.metadata
+        for var in self.variables.all():
+            new_md.create_element('Variable', name=var.name, unit=var.unit, type=var.type,
+                                  shape=var.shape, descriptive_name=var.descriptive_name,
+                                  method=var.method, missing_value=var.missing_value)
+
+        for cov in self.ori_coverage.all():
+            new_md.create_element('OriginalCoverage', value=cov.value,
+                                  projection_string_type=cov.projection_string_type,
+                                  projection_string_text=cov.projection_string_text)
+
     def get_xml(self):
         from lxml import etree
         # get the xml string representation of the core metadata elements

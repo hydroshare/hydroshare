@@ -296,6 +296,48 @@ class SWATModelInstanceMetaData(ModelInstanceMetaData):
             missing_required_elements.append('ModelObjective')
         return missing_required_elements
 
+    def copy_all_elements_to(self, tgt_res):
+        super(SWATModelInstanceMetaData, self).copy_all_elements_to(tgt_res)
+        new_md = tgt_res.metadata
+        if self.model_objective:
+            new_md.create_element('ModelObjective',
+                                  swat_model_objectives=self.model_objective.swat_model_objectives,
+                                  other_objectives=self.model_objective.other_objectives)
+
+        if self.simulation_type:
+            new_md.create_element('SimulationType', simulation_type_name=self.simulation_type.simulation_type_name)
+
+        if self.model_method:
+            new_md.create_element('ModelMethod',
+                                  runoffCalculationMethod=self.model_method.runoffCalculationMethod,
+                                  flowRoutingMethod=self.model_method.flowRoutingMethod,
+                                  petEstimationMethod=self.model_method.petEstimationMethod)
+
+        if self.model_parameter:
+            new_md.create_element('ModelParameter',
+                                  model_parameters=self.model_parameter.runoffCalculationMethod,
+                                  other_parameters=self.model_parameter.flowRoutingMethod)
+
+        if self.model_input:
+            new_md.create_element('ModelInput',
+                                  warmupPeriodValue=self.model_input.warmupPeriodValue,
+                                  rainfallTimeStepType=self.model_input.rainfallTimeStepType,
+                                  rainfallTimeStepValue=self.model_input.rainfallTimeStepValue,
+                                  routingTimeStepType=self.model_input.routingTimeStepType,
+                                  routingTimeStepValue=self.model_input.routingTimeStepValue,
+                                  simulationTimeStepType=self.model_input.simulationTimeStepType,
+                                  simulationTimeStepValue=self.model_input.simulationTimeStepValue,
+                                  watershedArea=self.model_input.watershedArea,
+                                  numberOfSubbasins=self.model_input.numberOfSubbasins,
+                                  numberOfHRUs=self.model_input.numberOfHRUs,
+                                  demResolution=self.model_input.demResolution,
+                                  demSourceName=self.model_input.demSourceName,
+                                  demSourceURL=self.model_input.demSourceURL,
+                                  landUseDataSourceName=self.model_input.landUseDataSourceName,
+                                  landUseDataSourceURL=self.model_input.landUseDataSourceURL,
+                                  soilDataSourceName=self.model_input.soilDataSourceName,
+                                  soilDataSourceURL=self.model_input.soilDataSourceURL)
+
     def get_xml(self, pretty_print=True):
 
         # get the xml string representation of the core metadata elements

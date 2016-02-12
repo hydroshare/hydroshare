@@ -114,6 +114,15 @@ class ModelInstanceMetaData(CoreMetaData):
         elements.append('ExecutedBy')
         return elements
 
+    def copy_all_elements_to(self, tgt_res):
+        super(ModelInstanceMetaData, self).copy_all_elements_to(tgt_res)
+        new_md = tgt_res.metadata
+        if self.model_output:
+            new_md.create_element('ModelOutput', includes_output=self.model_output.includes_output)
+
+        if self.executed_by:
+            new_md.create_element('ExecutedBy', model_name=self.executed_by.model_name, model_program_fk=self.executed_by.model_program_fk)
+
     def get_xml(self, pretty_print=True):
         # get the xml string representation of the core metadata elements
         xml_string = super(ModelInstanceMetaData, self).get_xml(pretty_print=False)

@@ -112,6 +112,22 @@ class ModelProgramMetaData(CoreMetaData):
         elements.append('MpMetadata')
         return elements
 
+    def copy_all_elements_to(self, tgt_res):
+        super(ModelProgramMetaData, self).copy_all_elements_to(tgt_res)
+        new_md = tgt_res.metadata
+        if self.program:
+            new_md.create_element('MpMetadata',
+                                  modelVersion=self.program.modelVersion,
+                                  modelProgramLanguage=self.program.modelProgramLanguage,
+                                  modelOperatingSystem=self.program.modelOperatingSystem,
+                                  modelReleaseDate=self.program.modelReleaseDate,
+                                  modelWebsite=self.program.modelWebsite,
+                                  modelCodeRepository=self.program.modelCodeRepository,
+                                  modelReleaseNotes=self.program.modelReleaseNotes,
+                                  modelDocumentation=self.program.modelDocumentation,
+                                  modelSoftware=self.program.modelSoftware,
+                                  modelEngine=self.program.modelEngine)
+
     def get_xml(self):
 
 

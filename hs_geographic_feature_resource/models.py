@@ -131,6 +131,35 @@ class GeographicFeatureMetaData(CoreMetaData):
 
         return missing_required_elements
 
+    def copy_all_elements_to(self, tgt_res):
+        super(GeographicFeatureMetaData, self).copy_all_elements_to(tgt_res)
+        new_md = tgt_res.metadata
+        for ginfo in self.geometryinformation.all():
+            new_md.create_element('GeometryInformation', featureCount=ginfo.featureCount,
+                                  geometryType=ginfo.geometryType)
+
+        for finfo in self.fieldinformation.all():
+            new_md.create_element('FieldInformation', fieldName=finfo.fieldName,
+                                  fieldType=finfo.fieldType,
+                                  fieldTypeCode=finfo.fieldTypeCode,
+                                  fieldWidth=finfo.fieldWidth,
+                                  fieldPrecision=finfo.fieldPrecision)
+
+        for cov in self.originalcoverage.all():
+            new_md.create_element('OriginalCoverage', northlimit=cov.northlimit,
+                                  southlimit=cov.southlimit,
+                                  westlimit=cov.westlimit,
+                                  eastlimit=cov.eastlimit,
+                                  projection_string=cov.projection_string,
+                                  projection_name=cov.projection_name,
+                                  datum=cov.datum,
+                                  unit=cov.unit)
+
+        for ofinfo in self.originalfileinfo.all():
+            new_md.create_element('OriginalFileInfo', fileType=ofinfo.fileType,
+                                  baseFilename=ofinfo.baseFilename, fileCount=ofinfo.fileCount,
+                                  filenameString=ofinfo.filenameString)
+
     def get_xml(self):
         # get the xml string representation of the core metadata elements
         xml_string = super(GeographicFeatureMetaData, self).get_xml(pretty_print=False)

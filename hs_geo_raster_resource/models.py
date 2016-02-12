@@ -215,6 +215,23 @@ class RasterMetaData(CoreMetaData):
 
         return missing_required_elements
 
+    def copy_all_elements_to(self, tgt_res):
+        super(RasterMetaData, self).copy_all_elements_to(tgt_res)
+        new_md = tgt_res.metadata
+        if self.cellInformation:
+            new_md.create_element('CellInformation', name=self.cellInformation.name, rows=self.cellInformation.rows,
+                                  columns=self.cellInformation.columns, cellSizeXValue=self.cellInformation.cellSizeXValue,
+                                  cellSizeYValue=self.cellInformation.cellSizeYValue,
+                                  cellDataType=self.cellInformation.cellDataType, noDataValue=self.cellInformation.noDataValue)
+
+        for band_info in self.bandInformation:
+            new_md.create_element('BandInformation', name=band_info.name, variableName=band_info.variableName,
+                                  variableUnit=band_info.variableUnit, method=band_info.method, comment=band_info.comment)
+
+        if self.originalCoverage:
+            new_md.create_element('OriginalCoverage', value=self.originalCoverage.value)
+
+
     def get_xml(self):
         from lxml import etree
         # get the xml string representation of the core metadata elements
