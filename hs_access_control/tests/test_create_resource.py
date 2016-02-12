@@ -370,7 +370,7 @@ class T03CreateResource(MockIRODSTestCaseMixin, TestCase):
         self.assertTrue(cat.uaccess.can_view_resource(holes))
 
         # composite django state
-        self.assertTrue(cat.uaccess.can_change_resource_flags(holes))
+        self.assertFalse(cat.uaccess.can_change_resource_flags(holes))
         self.assertFalse(cat.uaccess.can_delete_resource(holes))
         self.assertTrue(cat.uaccess.can_share_resource(holes, PrivilegeCodes.OWNER))
         self.assertTrue(cat.uaccess.can_share_resource(holes, PrivilegeCodes.CHANGE))
