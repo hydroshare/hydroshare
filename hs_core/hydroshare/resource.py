@@ -1,24 +1,27 @@
 import os
+import requests
 
 from django.core.exceptions import ObjectDoesNotExist
 from django.core.files import File
 from django.core.files.uploadedfile import UploadedFile
-from django.utils.timezone import now
+from django.core.exceptions import ValidationError
 from django.db import transaction
+from django.conf import settings
+from rest_framework import status
 
 from mezzanine.generic.models import Keyword, AssignedKeyword
 
 from hs_core.hydroshare import hs_bagit
-from hs_core.hydroshare.utils import get_resource_types
-from hs_core.models import ResourceFile, BaseResource
+from hs_core.models import ResourceFile
 from hs_core import signals
 from hs_core.hydroshare import utils
 from hs_access_control.models import ResourceAccess, UserResourcePrivilege, PrivilegeCodes
 from hs_labels.models import ResourceLabels
 
-file_size_limit = 10*(1024 ** 3)
-file_size_limit_for_display = '10G'
-
+FILE_SIZE_LIMIT = 10*(1024 ** 3)
+FILE_SIZE_LIMIT_FOR_DISPLAY = '10G'
+METADATA_STATUS_SUFFICIENT = 'Sufficient to publish or make public'
+METADATA_STATUS_INSUFFICIENT = 'Insufficient to publish or make public'
 
 def get_resource(pk):
     """
@@ -281,12 +284,12 @@ def check_resource_files(files=()):
     """
     for file in files:
         if hasattr(file, '_size'):
-            if file._size > file_size_limit:
-                # file is greater than file_size_limit, which is not allowed
+            if file._size > FILE_SIZE_LIMIT:
+                # file is greater than FILE_SIZE_LIMIT, which is not allowed
                 return False
         else:
-            if os.stat(file).st_size > file_size_limit:
-                # file is greater than file_size_limit, which is not allowed
+            if os.stat(file).st_size > FILE_SIZE_LIMIT:
+                # file is greater than FILE_SIZE_LIMIT, which is not allowed
                 return False
     return True
 
@@ -299,7 +302,7 @@ def check_resource_type(resource_type):
     resource_type: the resource type string to check
     Returns:  the resource type class matching the resource type string; if no match is found, returns None
     """
-    for tp in get_resource_types():
+    for tp in utils.get_resource_types():
         if resource_type == tp.__name__:
             res_cls = tp
             break
@@ -722,16 +725,78 @@ def delete_resource_file(pk, filename_or_id, user):
 
     return filename_or_id
 
+def get_resource_doi(res_id, flag=''):
+    doi_str = "http://dx.doi.org/10.4211/hs.{shortkey}".format(shortkey=res_id)
+    if flag:
+        return "{doi}{append_flag}".format(doi=doi_str, append_flag=flag)
+    else:
+        return doi_str
 
-def publish_resource(pk):
+
+def get_activated_doi(doi):
+    """
+    Get activated DOI with flags removed. The following two flags are appended
+    to the DOI string to indicate publication status for internal use:
+    'pending' flag indicates the metadata deposition with CrossRef succeeds, but
+     pending activation with CrossRef for DOI to take effect.
+    'failure' flag indicates the metadata deposition failed with CrossRef due to
+    network or system issues with CrossRef
+
+    Args:
+        doi: the DOI string with possible status flags appended
+
+    Returns:
+        the activated DOI with all flags removed if any
+    """
+    idx1 = doi.find('pending')
+    idx2 = doi.find('failure')
+    if idx1 >= 0:
+        return doi[:idx1]
+    elif idx2 >= 0:
+        return doi[:idx2]
+    else:
+        return doi
+
+
+def get_crossref_url():
+    main_url = 'https://test.crossref.org/'
+    if not settings.USE_CROSSREF_TEST:
+        main_url = 'https://doi.crossref.org/'
+    return main_url
+
+
+def deposit_res_metadata_with_crossref(res):
+    """
+    Deposit resource metadata with CrossRef DOI registration agency.
+    Args:
+        res: the resource object with its metadata to be deposited for publication
+
+    Returns:
+        response returned for the metadata deposition request from CrossRef
+
+    """
+    xml_file_name = '{uuid}_deposit_metadata.xml'.format(uuid=res.short_id)
+    # using HTTP to POST deposit xml file to crossref
+    post_data = {'operation': 'doMDUpload',
+                 'login_id': settings.CROSSREF_LOGIN_ID,
+                 'login_passwd': settings.CROSSREF_LOGIN_PWD
+                }
+    files = {'file': (xml_file_name, res.get_crossref_deposit_xml())}
+    # exceptions will be raised if POST request fails
+    main_url = get_crossref_url()
+    post_url = '{MAIN_URL}servlet/deposit'.format(MAIN_URL=main_url)
+    response = requests.post(post_url, data=post_data, files=files)
+    return response
+
+def publish_resource(user, pk):
     """
     Formally publishes a resource in HydroShare. Triggers the creation of a DOI for the resource, and triggers the
     exposure of the resource to the HydroShare DataONE Member Node. The user must be an owner of a resource or an
     adminstrator to perform this action.
 
-    REST URL:  PUT /publishResource/{pid}
-
-    Parameters:    pid - Unique HydroShare identifier for the resource to be formally published.
+    Parameters:
+        user - requesting user to publish the resource who must be one of the owners of the resource
+        pid - Unique HydroShare identifier for the resource to be formally published.
 
     Returns:    The pid of the resource that was published
 
@@ -741,16 +806,46 @@ def publish_resource(pk):
     Exceptions.NotAuthorized - The user is not authorized
     Exceptions.NotFound - The resource identified by pid does not exist
     Exception.ServiceFailure - The service is unable to process the request
+    and other general exceptions
 
-    Note:  This is different than just giving public access to a resource via access control rul
+    Note:  This is different than just giving public access to a resource via access control rule
     """
     resource = utils.get_resource_by_shortkey(pk)
-    resource.raccess.published = True
-    resource.raccess.immutable = True
-    resource.raccess.save()
-    resource.doi = "to be assigned"
-    resource.metadata.create_element('date', type='published', start_date=now().isoformat())
+
+    if not resource.can_be_public_or_discoverable:
+        raise ValidationError("This resource cannot be published since it does not have required metadata or content files.")
+
+    # append pending to the doi field to indicate DOI is not activated yet. Upon successful activation, "pending" will be removed from DOI field
+    resource.doi = get_resource_doi(pk, 'pending')
     resource.save()
+
+    response = deposit_res_metadata_with_crossref(resource)
+    if not response.status_code == status.HTTP_200_OK:
+        # resource metadata deposition failed from CrossRef - set failure flag to be retried in a crontab celery task
+        resource.doi = get_resource_doi(pk, 'failure')
+        resource.save()
+
+    resource.raccess.public = True
+    resource.raccess.immutable = True
+    resource.raccess.published = True
+    resource.raccess.save()
+
+    # change "Publisher" element of science metadata to CUAHSI
+    md_args = {'name': 'Consortium of Universities for the Advancement of Hydrologic Science, Inc. (CUAHSI)',
+               'url': 'https://www.cuahsi.org'}
+    resource.metadata.create_element('Publisher', **md_args)
+
+    # create published date
+    resource.metadata.create_element('date', type='published', start_date=resource.updated)
+
+    # add doi to "Identifier" element of science metadata
+    md_args = {'name': 'doi',
+               'url': get_activated_doi(resource.doi)}
+    resource.metadata.create_element('Identifier', **md_args)
+
+    utils.resource_modified(resource, user)
+
+    return pk
 
 
 def resolve_doi(doi):

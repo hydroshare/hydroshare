@@ -14,7 +14,7 @@ from hs_core import hydroshare
 from hs_core.hydroshare import check_resource_type
 from hs_core.models import AbstractMetaDataElement, GenericResource
 from hs_core.signals import pre_metadata_element_create
-from hs_core.hydroshare import file_size_limit
+from hs_core.hydroshare import FILE_SIZE_LIMIT
 from hs_core.hydroshare.utils import raise_file_size_exception
 from django_irods.storage import IrodsStorage
 
@@ -40,30 +40,31 @@ def upload_from_irods(username, password, host, port, zone, irods_fnames, res_fi
     ifnames = string.split(irods_fnames, ',')
     for ifname in ifnames:
         size = irods_storage.size(ifname)
-        if size > file_size_limit:
+        if size > FILE_SIZE_LIMIT:
             raise_file_size_exception()
         tmpFile = irods_storage.download(ifname)
         fname = os.path.basename(ifname.rstrip(os.sep))
         res_files.append(UploadedFile(file=tmpFile, name=fname, size=size))
 
-def authorize(request, res_id, discoverable=False, edit=False, view=False,
+def authorize(request, res_id, res=None, discoverable=False, edit=False, view=False,
               full=False, superuser=False, raises_exception=True):
     """
     Authorizes the user making this request for the OR of the parameters.  If the user has ANY permission set to True in
     the parameter list, then this returns True else False.
     """
     user = get_user(request)
-    try:
-        res = hydroshare.utils.get_resource_by_shortkey(res_id, or_404=False)
-    except ObjectDoesNotExist:
-        raise NotFound(detail="No resource was found for resource id:%s" % res_id)
+    if res is None:
+        try:
+            res = hydroshare.utils.get_resource_by_shortkey(res_id, or_404=False)
+        except ObjectDoesNotExist:
+            raise NotFound(detail="No resource was found for resource id:%s" % res_id)
 
     if discoverable and (edit is False and view is False and full is False and superuser is False):
         authorized = res.raccess.discoverable
     elif user.is_authenticated():
         authorized = (view and user.uaccess.can_view_resource(res)) or \
                      (edit and user.uaccess.can_change_resource(res)) or \
-                     (full and user.uaccess.owns_resource(res)) or \
+                     (full and user.uaccess.can_delete_resource(res)) or \
                      (discoverable and res.raccess.discoverable) or \
                      (superuser and user.is_superuser)
     else:

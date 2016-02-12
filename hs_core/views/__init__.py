@@ -29,7 +29,7 @@ from hs_core import hydroshare
 from hs_core.hydroshare.utils import get_resource_by_shortkey, resource_modified, copy_resource_files_and_AVUs
 from .utils import authorize, upload_from_irods
 from hs_core.models import GenericResource, resource_processor, CoreMetaData, ResourceFile
-from hs_core.hydroshare import hs_bagit
+from hs_core.hydroshare.resource import METADATA_STATUS_SUFFICIENT, METADATA_STATUS_INSUFFICIENT, hs_bagit
 
 from . import resource_rest_api
 from . import user_rest_api
@@ -154,9 +154,9 @@ def add_metadata_element(request, shortkey, element_name, *args, **kwargs):
     if request.is_ajax():
         if is_add_success:
             if res.metadata.has_all_required_elements():
-                metadata_status = "Sufficient to make public"
+                metadata_status = METADATA_STATUS_SUFFICIENT
             else:
-                metadata_status = "Insufficient to make public"
+                metadata_status = METADATA_STATUS_INSUFFICIENT
 
             if element_name == 'subject':
                 ajax_response_data = {'status': 'success', 'element_name': element_name, 'metadata_status': metadata_status}
@@ -202,9 +202,9 @@ def update_metadata_element(request, shortkey, element_name, element_id, *args, 
     if request.is_ajax():
         if is_update_success:
             if res.metadata.has_all_required_elements():
-                metadata_status = "Sufficient to make public"
+                metadata_status = METADATA_STATUS_SUFFICIENT
             else:
-                metadata_status = "Insufficient to make public"
+                metadata_status = METADATA_STATUS_INSUFFICIENT
 
             ajax_response_data = {'status': 'success', 'element_name': element_name, 'metadata_status': metadata_status}
             return HttpResponse(json.dumps(ajax_response_data))
@@ -294,10 +294,13 @@ def create_new_version_resource(request, shortkey, *args, **kwargs):
 def publish(request, shortkey, *args, **kwargs):
     res, _, _ = authorize(request, shortkey, edit=True, full=True, superuser=True)
 
-    hydroshare.publish_resource(shortkey)
-    resource_modified(res, request.user)
+    try:
+        hydroshare.publish_resource(request.user, shortkey)
+    except ValidationError as exp:
+        request.session['validation_error'] = exp.message
+    else:
+        request.session['just_published'] = True
     return HttpResponseRedirect(request.META['HTTP_REFERER'])
-
 
 # TOD0: this view function needs refactoring once the new access control UI works
 def change_permissions(request, shortkey, *args, **kwargs):
@@ -509,10 +512,6 @@ class FilterForm(forms.Form):
 @processor_for('my-resources')
 @login_required
 def my_resources(request, page):
-    # import sys
-    # sys.path.append("/home/docker/pycharm-debug")
-    # import pydevd
-    # pydevd.settrace('172.17.42.1', port=21000, suspend=False)
     user = request.user
     # get a list of resources with effective OWNER privilege
     owned_resources = user.uaccess.get_resources_with_explicit_access(PrivilegeCodes.OWNER)
@@ -527,7 +526,7 @@ def my_resources(request, page):
     favorite_resources = list(user.ulabels.favorited_resources)
     labeled_resources = list(user.ulabels.labeled_resources)
     discovered_resources = list(user.ulabels.my_resources)
-
+    
     for res in owned_resources:
         res.owned = True
 
