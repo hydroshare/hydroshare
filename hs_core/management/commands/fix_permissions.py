@@ -18,7 +18,6 @@ from django.contrib.auth.management import _get_all_permissions
 from django.contrib.auth.models import Permission
 from django.contrib.contenttypes.models import ContentType
 from django.core.management.base import BaseCommand
-#from django.db.models import get_models
 from django.apps import apps
 get_models = apps.get_models
 from django.utils.encoding import smart_unicode

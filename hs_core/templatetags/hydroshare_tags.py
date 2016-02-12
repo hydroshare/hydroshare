@@ -19,7 +19,6 @@ from django.contrib.sites.models import Site
 from django.core.files import File
 from django.core.files.storage import default_storage
 from django.core.urlresolvers import reverse, resolve, NoReverseMatch
-#from django.db.models import Model, get_model
 from django.db.models import Model
 from django.apps import apps
 get_model = apps.get_model
