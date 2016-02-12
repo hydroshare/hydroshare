@@ -262,6 +262,16 @@ def delete_resource(request, shortkey, *args, **kwargs):
                 istorage.setAVU(res_collection.short_id, "isPublic", str(res_collection.raccess.public))
 
     res.delete()
+    # the ManyToMany Relationships between this resource and all associated collections have been removed
+    # that means the metadata of these collection also changed, so we need to update their bags
+    for collectionitems_metadata_obj in associated_collectionitems_metadata_obj_list:
+        # tricky issue: the user who deleted this resource may not have permission to access this collection
+        # but here we are updating metadata of the collection
+        # who is the "last_changed_by" user ???
+        # reverse lookup: metadata obj --> resource obj
+        res_collection = CollectionResource.objects.get(object_id=collectionitems_metadata_obj.object_id)
+        resource_modified(res_collection, request.user, True)
+
     return HttpResponseRedirect('/my-resources/')
 
 
