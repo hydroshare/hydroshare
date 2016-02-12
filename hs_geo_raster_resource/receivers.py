@@ -63,7 +63,7 @@ def raster_file_validation(files):
             is_valid = False
 
         # check if the raster file numbers and names are valid in vrt file
-        with open(vrt_file_path) as vrt_file:
+        with open(vrt_file_path, 'r') as vrt_file:
             vrt_string = vrt_file.read()
             root = ET.fromstring(vrt_string)
             raster_file_names = {file_name.text for file_name in root.iter('SourceFilename')}
@@ -81,15 +81,17 @@ def create_vrt_file(tif_file):
     temp_dir = tempfile.mkdtemp()
     tif_base_name = os.path.basename(tif_file.name)
     vrt_file_path = os.path.join(temp_dir, os.path.splitext(tif_base_name)[0]+'.vrt')
-    subprocess.Popen(['gdalbuildvrt', vrt_file_path, tif_file.file.name], stdout=subprocess.PIPE)
+    subprocess.Popen(['gdalbuildvrt', vrt_file_path, tif_file.file.name]).wait()  # remember to add .wait()
 
     # modify vrt file SourceFileName
-    if os.path.isfile(vrt_file_path):
+    try:
         tree = ET.parse(vrt_file_path)
         root = tree.getroot()
         for element in root.iter('SourceFilename'):
             element.text = tif_base_name
         tree.write(vrt_file_path)
+    except Exception:
+        shutil.remtree(temp_dir)
 
     return vrt_file_path, temp_dir
 
