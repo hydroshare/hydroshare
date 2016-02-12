@@ -91,7 +91,7 @@ def create_vrt_file(tif_file):
             element.text = tif_base_name
         tree.write(vrt_file_path)
     except Exception:
-        shutil.remtree(temp_dir)
+        shutil.rmtree(temp_dir)
 
     return vrt_file_path, temp_dir
 
