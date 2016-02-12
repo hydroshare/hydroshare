@@ -1,26 +1,29 @@
 from json import dumps
 
+from django.contrib.auth.decorators import login_required
 from django.core.exceptions import ValidationError
 from django.contrib.auth.models import User
 from django.views.generic import TemplateView
 from django.http import HttpResponse
-from django.shortcuts import get_object_or_404, redirect
-from django.contrib.messages import info, error
+from django.shortcuts import redirect
+from django.contrib.messages import info
 from django.utils.translation import ugettext_lazy as _
 from django.db.models import Q
+from django.db import transaction
+
+from rest_framework import serializers
 
 from mezzanine.conf import settings
 from mezzanine.generic.views import initial_validation
-from mezzanine.utils.views import render, set_cookie, is_spam
+from mezzanine.utils.views import set_cookie, is_spam
 from mezzanine.utils.cache import add_cache_bypass
 from mezzanine.utils.email import send_verification_mail, send_approve_mail
 from mezzanine.utils.urls import login_redirect, next_url
 from mezzanine.utils.views import render
 
-from hs_core.hydroshare import get_resource_types
-from hs_core.models import BaseResource
 from theme.forms import ThreadedCommentForm
-from theme.forms import RatingForm
+from theme.forms import RatingForm, UserProfileForm, UserForm
+from theme.models import UserProfile
 
 from .forms import SignupForm
 
@@ -64,6 +67,7 @@ class UserProfileView(TemplateView):
             'resources': resources,
         }
 
+
 # added by Hong Yi to address issue #186 to customize Mezzanine-based commenting form and view
 def comment(request, template="generic/comments.html"):
     """
@@ -93,6 +97,7 @@ def comment(request, template="generic/comments.html"):
     context = {"obj": obj, "posted_comment_form": form}
     response = render(request, template, context)
     return response
+
 
 # added by Hong Yi to address issue #186 to customize Mezzanine-based rating form and view
 def rating(request):
@@ -156,3 +161,50 @@ def signup(request, template="accounts/account_signup.html"):
         "title": _("Sign up"),
     }
     return render(request, template, context)
+
+
+class UserProfileSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = UserProfile
+        exclude = ('picture', 'cv', 'public', 'user')
+
+
+class UserSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ('first_name', 'last_name', 'username')
+
+
+@login_required
+def update_user_profile(request):
+    status = 'success'
+    ajax_response_data = {'status': status}
+    user_form = UserForm(request.POST, instance=request.user)
+    profile_form = UserProfileForm(request.POST, instance=request.user.userprofile)
+    try:
+        with transaction.atomic():
+            if user_form.is_valid() and profile_form.is_valid():
+                user_form.save()
+                profile = profile_form.save(commit=False)
+                profile.user = request.user
+                profile.save()
+
+                user = User.objects.get(pk=request.user.id)
+                ajax_response_data['user'] = UserSerializer(user).data
+                ajax_response_data['profile'] = UserProfileSerializer(profile).data
+            else:
+                errors = {}
+                if not user_form.is_valid():
+                    errors.update(user_form.errors)
+
+                if not profile_form.is_valid():
+                    errors.update(profile_form.errors)
+
+                ajax_response_data['status'] = 'error'
+                ajax_response_data['errors'] = errors
+
+    except Exception as ex:
+        ajax_response_data['status'] = 'error'
+        ajax_response_data['errors'] = ex.message
+
+    return HttpResponse(dumps(ajax_response_data))

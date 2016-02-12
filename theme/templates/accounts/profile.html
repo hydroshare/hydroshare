@@ -5,7 +5,7 @@
 
 {% block main %}
     {% with profile_user.userprofile as profile %}
-        <form id="profile-form" class="account-form" method="post"{% if form.is_multipart %} enctype="multipart/form-data"{% endif %}>
+        <form id="profile-form" action="{% url 'update_profile' %}" class="account-form" method="post"{% if form.is_multipart %} enctype="multipart/form-data"{% endif %}>
         {% csrf_token %}
         <div class="row">
             <div data-page-mode="edit" class="alert alert-warning" role="alert"><strong>Warning!</strong> Information provided below will be public for all HydroShare users to see.</div>
@@ -129,7 +129,7 @@
                                 {# Middle name #}
                                 <fieldset class="col-sm-4">
                                     <label>Middle name</label>
-                                    <input class="form-control" value="" name="middle_name">
+                                    <input class="form-control" value="{{ profile.middle_name }}" name="middle_name">
                                 </fieldset>
 
                                 {# Last name #}
@@ -154,7 +154,7 @@
                                 {# Organization #}
                                 <fieldset class="col-sm-6">
                                     <label>Organization</label>
-                                    <input class="form-control" {% if profile.organization %}value="{{ profile.organization }}"{% endif %}>
+                                    <input class="form-control" {% if profile.organization %}value="{{ profile.organization }}"{% endif %} name="organization">
                                 </fieldset>
 
                                 {# Title #}
@@ -171,7 +171,7 @@
                                 {# Subject areas #}
                                 <fieldset class="col-sm-12">
                                     <label>Subject areas</label>
-                                    <input class="form-control" {% if profile.subject_areas %}value="{{ profile.subject_areas }}"{% endif %} name="">
+                                    <input class="form-control" {% if profile.subject_areas %}value="{{ profile.subject_areas }}"{% endif %} name="subject_areas">
                                     <small class="text-muted">A comma-separated list of subject areas you are interested
                                         in researching. e.g. "Computer Science, Hydrology, Water Management"
                                     </small>
@@ -298,7 +298,7 @@
 
                                         <fieldset>
                                             <label for="exampleSelect1">User type</label>
-                                            <select name="user_type" class="form-control" id="selectUserType">
+                                            <select name="profession" class="form-control" id="selectUserType">
                                                 <option>University Faculty</option>
                                                 <option>University Professional or Research Staff</option>
                                                 <option>Post-Doctoral Fellow</option>
@@ -315,12 +315,12 @@
 
                                         <fieldset>
                                             <label>Country</label>
-                                            <input name="country" class="form-control" value="United States">
+                                            <input name="country" class="form-control" value="{{ profile.country }}">
                                         </fieldset>
 
                                         <fieldset>
                                             <label>State/Province</label>
-                                            <input name="state" class="form-control" value="Utah">
+                                            <input name="state" class="form-control" value="{{ profile.state }}">
                                         </fieldset>
 
                                         <fieldset>

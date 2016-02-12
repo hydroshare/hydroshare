@@ -308,3 +308,35 @@ class SignupForm(forms.ModelForm):
             password=data['password'],
             active=False,
         )
+
+
+class UserForm(forms.ModelForm):
+    class Meta:
+        model = User
+        fields = ['username', 'first_name', 'last_name']
+
+
+class UserProfileForm(forms.ModelForm):
+    class Meta:
+        model = UserProfile
+        exclude = ['user', 'public']
+
+    def clean(self):
+        cleaned_data = super(UserProfileForm, self).clean()
+        profession = cleaned_data.get('profession')
+        allowed_profession = ('University Faculty',
+                              'University Professional or Research Staff',
+                              'Post-Doctoral Fellow',
+                              'University Graduate Student',
+                              'University Undergraduate Student',
+                              'Commercial/Professional',
+                              'Government Official',
+                              'School Student Kindergarten to 12th Grade',
+                              'School Teacher Kindergarten to 12th Grade',
+                              'Other',
+                              'Unspecified'
+                              )
+        if profession not in allowed_profession:
+            self._errors["profession"] = ["Not a valid profession"]
+            del cleaned_data["profession"]
+        return cleaned_data
