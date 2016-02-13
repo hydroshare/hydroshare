@@ -61,7 +61,10 @@ restart_hs() {
     stop_nginx
     preflight_hs
     docker-compose stop hydroshare
+    docker-compose stop defaultworker
+    delete_celerybeat_scheduler
     docker-compose start hydroshare
+    docker-compose start defaultworker
     if [ "${USE_NGINX,,}" = true ]; then
         start_nginx
     fi
@@ -126,6 +129,7 @@ stop_hs() {
             docker stop $f;
         fi
     done
+    delete_celerybeat_scheduler
 }
 
 preflight_hs() {
@@ -163,6 +167,15 @@ preflight_hs() {
     fi
 }
 
+delete_celerybeat_scheduler() {
+    file1="celerybeat.pid"
+    file2="celery/*"
+    if [ -f $file1 ] ; then
+        rm -f $file1
+        rm -rf $file2
+    fi
+}
+
 rebuild_nodb_hs() {
     echo "*** ${1^^} *** "
     stop_hs STOP
@@ -176,6 +189,9 @@ rebuild_nodb_hs() {
     for f in "${HS_DOCKER_IMAGES[@]}"; do
         docker rmi -f $f;
     done
+
+    delete_celerybeat_scheduler
+
     sleep 1s
     # bring up all docker containers
     echo "*** bring up all docker containers as defined in docker-compose.yml ***"
@@ -255,6 +271,9 @@ rebuild_db_hs() {
             docker rmi -f $f;
         fi
     done
+
+    delete_celerybeat_scheduler
+
     sleep 1s
     # get submodules
     echo "*** get git submodules ***"

@@ -1,13 +1,14 @@
 import os.path
 import json
+import arrow
 from uuid import uuid4
 from languages_iso import languages as iso_languages
 from dateutil import parser
+from lxml import etree
 
 from django.contrib.contenttypes.fields import GenericForeignKey
 from django.contrib.contenttypes.fields import GenericRelation
 from django.contrib.auth.models import User, Group
-from django.contrib.auth import settings
 from django.contrib.contenttypes.models import ContentType
 from django.db import models
 from django.db.models import Q
@@ -85,54 +86,19 @@ class ResourcePermissionsMixin(Ownable):
         return self.can_change(request)
 
     def can_delete(self, request):
-        user = get_user(request)
-        if user.is_authenticated():
-            if user.is_superuser or self.raccess.owners.filter(pk=user.pk).exists():
-                return True
-            else:
-                return False
-        else:
-            return False
+        # have to do import locally to avoid circular import
+        from hs_core.views.utils import authorize
+        return authorize(request, self.short_id, res=self, full=True, superuser=True, raises_exception=False)[1]
 
     def can_change(self, request):
-        user = get_user(request)
-
-        if user.is_authenticated():
-            if user.is_superuser:
-                return True
-            elif self.raccess.owners.filter(pk=user.pk).exists():
-                return True
-            elif self.raccess.edit_users.filter(pk=user.pk).exists():
-                return True
-            elif self.raccess.edit_groups.filter(pk__in=set(g.pk for g in user.groups.all())):
-                return True
-            else:
-                return False
-        else:
-            return False
+        # have to do import locally to avoid circular import
+        from hs_core.views.utils import authorize
+        return authorize(request, self.short_id, res=self, edit=True, superuser=True, raises_exception=False)[1]
 
     def can_view(self, request):
-        user = get_user(request)
-
-        if self.raccess.public or self.raccess.discoverable:
-            return True
-        if user.is_authenticated():
-            if user.is_superuser:
-                return True
-            elif self.raccess.owners.filter(pk=user.pk).exists():
-                return True
-            elif self.raccess.edit_users.filter(pk=user.pk).exists():
-                return True
-            elif self.raccess.view_users.filter(pk=user.pk).exists():
-                return True
-            elif self.raccess.edit_groups.filter(pk__in=set(g.pk for g in user.groups.all())):
-                return True
-            elif self.raccess.view_groups.filter(pk__in=set(g.pk for g in user.groups.all())):
-                return True
-            else:
-                return False
-        else:
-            return False
+        # have to do import locally to avoid circular import
+        from hs_core.views.utils import authorize
+        return authorize(request, self.short_id, res=self, view=True, superuser=True, raises_exception=False)[1]
 
 # this should be used as the page processor for anything with pagepermissionsmixin
 # page_processor_for(MyPage)(ga_resources.views.page_permissions_page_processor)
@@ -1098,8 +1064,6 @@ class AbstractResource(ResourcePermissionsMixin):
 
     def delete(self, using=None):
         from hydroshare import hs_bagit
-        from hs_access_control.models import UserResourcePrivilege, GroupResourcePrivilege
-        from hs_labels.models import UserResourceLabels
         for fl in self.files.all():
             fl.resource_file.delete()
 
@@ -1107,12 +1071,6 @@ class AbstractResource(ResourcePermissionsMixin):
 
         self.metadata.delete_all_elements()
         self.metadata.delete()
-
-        # delete related access controls records
-        access_resource = self.raccess
-        UserResourcePrivilege.objects.filter(resource=access_resource).delete()
-        GroupResourcePrivilege.objects.filter(resource=access_resource).delete()
-        access_resource.delete()
 
         super(AbstractResource, self).delete()
 
@@ -1195,8 +1153,11 @@ class AbstractResource(ResourcePermissionsMixin):
         citation_str_lst.append(" ({year}). ".format(year=citation_date.start_date.year))
         citation_str_lst.append(self.metadata.title.value)
 
+        isPendingActivation = False
         if self.metadata.identifiers.all().filter(name="doi"):
             hs_identifier = self.metadata.identifiers.all().filter(name="doi")[0]
+            if self.doi.find('pending') >= 0 or self.doi.find('failure') >= 0:
+                isPendingActivation = True
         elif self.metadata.identifiers.all().filter(name="hydroShareIdentifier"):
             hs_identifier = self.metadata.identifiers.all().filter(name="hydroShareIdentifier")[0]
         else:
@@ -1213,6 +1174,9 @@ class AbstractResource(ResourcePermissionsMixin):
                                     repl_rel_value=repl_rel.value, creation_date=date_str, url=hs_identifier.url))
         else:
             citation_str_lst.append(", HydroShare, {url}".format(url=hs_identifier.url))
+
+        if isPendingActivation:
+            citation_str_lst.append(", DOI for this published resource is pending activation.")
 
         return ''.join(citation_str_lst)
 
@@ -1315,6 +1279,53 @@ class BaseResource(Page, AbstractResource):
     def can_view(self, request):
         return AbstractResource.can_view(self, request)
 
+    # create crossref deposit xml for resource publication
+    def get_crossref_deposit_xml(self, pretty_print=True):
+        # importing here to avoid circular import problem
+        from hydroshare.resource import get_activated_doi
+
+        xsi = "http://www.w3.org/2001/XMLSchema-instance"
+        schemaLocation = 'http://www.crossref.org/schema/4.3.6 http://www.crossref.org/schemas/crossref4.3.6.xsd'
+        ns = "http://www.crossref.org/schema/4.3.6"
+        ROOT = etree.Element('{%s}doi_batch' % ns, version="4.3.6", nsmap={None:ns},
+                             attrib={"{%s}schemaLocation" % xsi : schemaLocation})
+
+        # get the resource object associated with this metadata container object - needed to get the verbose_name
+
+        # create the head sub element
+        head = etree.SubElement(ROOT, 'head')
+        etree.SubElement(head, 'doi_batch_id').text = self.short_id
+        etree.SubElement(head, 'timestamp').text = arrow.get(self.updated).format("YYYYMMDDHHmmss")
+        depositor = etree.SubElement(head, 'depositor')
+        etree.SubElement(depositor, 'depositor_name').text = 'HydroShare'
+        etree.SubElement(depositor, 'email_address').text = settings.DEFAULT_SUPPORT_EMAIL
+        # The organization that owns the information being registered.
+        etree.SubElement(head, 'registrant').text = 'Consortium of Universities for the Advancement of Hydrologic Science, Inc. (CUAHSI)'
+
+        # create the body sub element
+        body = etree.SubElement(ROOT, 'body')
+        # create the database sub element
+        db = etree.SubElement(body, 'database')
+        # create the database_metadata sub element
+        db_md = etree.SubElement(db, 'database_metadata', language="en")
+        # titles is required element for database_metadata
+        titles = etree.SubElement(db_md, 'titles')
+        etree.SubElement(titles, 'title').text = "HydroShare Resources"
+        # create the dataset sub element, dataset_type can be record or collection, set it to collection for HydroShare resources
+        dataset = etree.SubElement(db, 'dataset', dataset_type="collection")
+        ds_titles = etree.SubElement(dataset, 'titles')
+        etree.SubElement(ds_titles, 'title').text = self.metadata.title.value
+        # doi_data is required element for dataset
+        doi_data = etree.SubElement(dataset, 'doi_data')
+        res_doi =  get_activated_doi(self.doi)
+        idx = res_doi.find('10.4211')
+        if idx >= 0:
+            res_doi = res_doi[idx:]
+        etree.SubElement(doi_data, 'doi').text = res_doi
+        etree.SubElement(doi_data, 'resource').text = self.metadata.identifiers.all().filter(name='hydroShareIdentifier')[0].url
+
+        return '<?xml version="1.0" encoding="UTF-8"?>\n' + etree.tostring(ROOT, pretty_print=pretty_print)
+
     @classmethod
     def get_supported_upload_file_types(cls):
         # all file types are supported
@@ -1327,6 +1338,7 @@ class BaseResource(Page, AbstractResource):
     @classmethod
     def can_have_files(cls):
         return True
+
 
 
 class GenericResource(BaseResource):
@@ -1524,7 +1536,6 @@ class CoreMetaData(models.Model):
                             self.create_element(element_model_name=element_name, **id_item[element_name])
 
     def get_xml(self, pretty_print=True):
-        from lxml import etree
         # importing here to avoid circular import problem
         from hydroshare.utils import current_site_url, get_resource_types
 

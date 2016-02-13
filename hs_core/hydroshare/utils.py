@@ -207,8 +207,8 @@ def check_file_dict_for_error(file_validation_dict):
 
 
 def raise_file_size_exception():
-    from .resource import file_size_limit_for_display
-    error_msg = 'The resource file is larger than the supported size limit: %s.' % file_size_limit_for_display
+    from .resource import FILE_SIZE_LIMIT_FOR_DISPLAY
+    error_msg = 'The resource file is larger than the supported size limit: %s.' % FILE_SIZE_LIMIT_FOR_DISPLAY
     raise ResourceFileSizeException(error_msg)
 
 

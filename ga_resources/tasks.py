@@ -7,7 +7,7 @@ from .models import DataResource
 from django.utils.timezone import utc
 
 
-@task(ignore_result=True)
+#@task(ignore_result=True)
 def refresh_resource(pk):
     """
     This is an asynchronous task that wraps the refresh method on a resource so it can be done asynchonously
@@ -30,7 +30,7 @@ def refresh_resource(pk):
     r.save()
 
 
-@periodic_task(ignore_result=True, run_every=crontab(minute='*/15'))
+#@periodic_task(ignore_result=True, run_every=crontab(minute='*/15'))
 def refresh_resources():
     """
     This is an asynchronous task that refreshes all the resources in the database who need refreshing.
@@ -44,7 +44,7 @@ def refresh_resources():
        task_grp = group(task_grp)
        task_grp.apply_async().get()
 
-@task(ignore_result=True)
+#@task(ignore_result=True)
 def data_resource_compute_fields(pk):
     ds = DataResource.objects.get(pk=pk)
     ds.driver_instance.compute_fields()

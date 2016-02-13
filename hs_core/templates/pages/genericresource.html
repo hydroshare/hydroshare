@@ -23,6 +23,18 @@
             {%  endif %}
         {% endblock %}
 
+        {# ======= Resource Publication just published notification =======#}
+        {% if cm.raccess.published and just_published %}
+            <div class="col-sm-12">
+                <div class="alert {% if just_created %}alert-success{% else %}alert-warning{% endif %} alert-dismissible" role="alert">
+                    <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                    <strong>Congratulations! </strong>
+                    <span>Your resource has been published. You will see the DOI in the citation for your resource below,
+                        but it may take approximately one day for your DOI to become active.</span>
+                </div>
+            </div>
+        {% endif %}
+
         {# ======= Missing fields notification =======#}
         {% if not metadata_form and page.perms.change %}
             {% if missing_metadata_elements or title|stringformat:"s" == "Untitled resource" or not cm.has_required_content_files %}
@@ -33,9 +45,9 @@
                         {% if missing_metadata_elements  %}
                             {% if just_created %}
                                 <strong>Congratulations! </strong>
-                                <span>Now that your resource has been created the following metadata are still required to make it public or discoverable:</span>
+                                <span>Now that your resource has been created the following metadata are still required to publish it or make it public or discoverable:</span>
                             {% else %}
-                                <span>The following metadata are still required to make the resource public or discoverable:</span>
+                                <span>The following metadata are still required to publish the resource or make the resource public or discoverable:</span>
                             {% endif %}
                             <ul>
                                 {% for element in missing_metadata_elements %}
@@ -48,15 +60,15 @@
                         {%  endif %}
                         {%  if not cm.has_required_content_files %}
                                 <br>
-                                <span>Content files are required to make the resource public or discoverable.</span>
+                                <span>Content files are required to publish the resource or make the resource public or discoverable.</span>
                         {% endif %}
                         <hr>
                         <span class="glyphicon glyphicon-question-sign"></span>
                         <small> Click on the edit button ( <span class="glyphicon glyphicon-pencil"></span> ) below to edit this resource.</small>
                      </div>
                 </div>
-                {% endif %}
             {% endif %}
+        {% endif %}
 
         {# ======= Title ======= #}
         <div class="col-sm-12">
@@ -138,6 +150,12 @@
                             <form class="inline pull-right" action="{{ cm.get_absolute_url }}" method="post">
                                 {% csrf_token %}
                                 {% if page.perms.delete %}
+                                    {% if cm.can_be_public_or_discoverable %}
+                                         <a id="publish" data-toggle="modal" data-target="#submit-for-publication-dialog">
+                                            <span data-toggle="tooltip" data-placement="auto" title="Publish this resource"
+                                                  class="glyphicon glyphicon-book icon-button btn-edit"></span>
+                                        </a>
+                                    {% endif %}
                                     <a id="delete" data-toggle="modal" data-target="#delete-resource-dialog">
                                         <span data-toggle="tooltip" data-placement="auto" title="Delete this resource"
                                               class="glyphicon glyphicon-trash icon-button btn-remove"></span>
@@ -498,14 +516,20 @@
                         </div>
                     {% endif %}
                 {% else %}
-                    {% if cm.raccess.public %}
-                        <strong class="label-public">&nbspPublic</strong>
+                    {% if cm.raccess.published %}
+                        <strong class="label-public">&nbsp;Published</strong>
+                    {% elif cm.raccess.public %}
+                        <strong class="label-public">&nbsp;Public</strong>
                     {% elif cm.raccess.discoverable %}
-                        <strong class="label-discoverable">&nbspDiscoverable</strong>
+                        <strong class="label-discoverable">&nbsp;Discoverable</strong>
                     {% else %}
-                        <strong class="label-private">&nbspPrivate</strong>
+                        <strong class="label-private">&nbsp;Private</strong>
                     {% endif %}
-                    &{% if cm.raccess.shareable %}<strong style="color:#5cb85c">&nbspShareable</strong>{% else %}<strong style="color:#d9534f">&nbspNot Shareable</strong>{% endif %}
+                    {% if cm.raccess.published %}
+                        {% if "pending" in cm.doi or "failure" in cm.doi %}&#8210; Note that the DOI will not be available until it has been registered and activated.{% endif %}
+                    {% else %}
+                        &{% if cm.raccess.shareable %}<strong style="color:#5cb85c">&nbsp;Shareable</strong>{% else %}<strong style="color:#d9534f">&nbsp;Not Shareable</strong>{% endif %}
+                    {% endif %}
                 {% endif %}
             </div>
 
@@ -2064,16 +2088,21 @@
                         </div>
                         <div class="modal-body">
                             <p>
-                                Once you submit the resource for publication it cannot be changed again. This will assign a
-                                DOI to the
-                                resource as it stands now and mark it as permanent. To make any changes after this, you
-                                <strong>must</strong>
-                                create a brand new resource. Click "Publish" if you really intend to do this.
+                                Upon submitting the resource for publication it will be permanently published and assigned a
+                                digital object identifier (DOI). This is <strong>final</strong> and changes can only be made
+                                on a new version (copy) of the resource.
                             </p>
+                            <p>
+                                 Please confirm that you accept the HydroShare Publication Agreement shown below.
+                            </p>
+                            <div class="iframe-border">
+                                <iframe id="pub-agreement-frame" scrolling="no" src="https://www.hydroshare.org/publication-agreement/"></iframe>
+                            </div>
+                            <input type="checkbox" id="agree-chk"><label for="agree-chk" class="checkbox-label">I accept the HydroShare Publication Agreement.</label>
                         </div>
                         <div class="modal-footer">
                             <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
-                            <a type="button" class="btn btn-danger" href="/hsapi/_internal/{{ cm.short_id }}/publish/">Publish</a>
+                            <a type="button" id="publish-btn" class="btn btn-danger" href="/hsapi/_internal/{{ cm.short_id }}/publish/" disabled>Publish</a>
                         </div>
                     </div>
                 </div>
@@ -2875,8 +2904,8 @@
                             if (json_response.hasOwnProperty('metadata_status')) {
                                 if (json_response.metadata_status !== $('#metadata-status').text()) {
                                     $('#metadata-status').text(json_response.metadata_status);
-                                    if (json_response.metadata_status == "Sufficient to make public") {
-                                        customAlert("<i class='glyphicon glyphicon-flag custom-alert-icon'></i><strong>Metadata Status:</strong> sufficient to make public", 3000);
+                                    if (json_response.metadata_status.toLowerCase().indexOf("insufficient") == -1) {
+                                        customAlert("<i class='glyphicon glyphicon-flag custom-alert-icon'></i><strong>Metadata Status:</strong> sufficient to publish or make public", 3000);
                                         $("#btn-public").prop("disabled", false);
                                         $("#btn-discoverable").prop("disabled", false);
                                     }
@@ -3197,6 +3226,13 @@
             }
 
             $(document).ready(function () {
+                $("#agree-chk").on('click', function(e) {
+                    e.stopImmediatePropagation();
+                    if (e.currentTarget.checked)
+                        $('#publish-btn').removeAttr('disabled');
+                    else
+                        $('#publish-btn').attr('disabled', 'disabled');
+                });
                 $("#citation-text").on("click", function (e) {
                     // document.selection logic is added in for IE 8 and lower
                     if (document.selection) {
