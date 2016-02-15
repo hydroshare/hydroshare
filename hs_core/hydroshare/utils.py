@@ -159,11 +159,12 @@ def resource_modified(resource, by_user=None, overwrite_bag=True):
     # the resource is modified for on-demand bagging.
     istorage.setAVU(resource.short_id, "bag_modified", "true")
 
-def _validate_email( email ):
+
+def _validate_email(email):
     from django.core.validators import validate_email
     from django.core.exceptions import ValidationError
     try:
-        validate_email( email )
+        validate_email(email)
         return True
     except ValidationError:
         return False
@@ -216,7 +217,40 @@ def validate_resource_file_size(resource_files):
         raise_file_size_exception()
 
 
-def resource_pre_create_actions(resource_type, resource_title, page_redirect_url_key, files=(), metadata=None,  **kwargs):
+def validate_resource_file_type(resource_cls, files):
+    supported_file_types = resource_cls.get_supported_upload_file_types()
+    # see if file type checking is needed
+    if '.*' in supported_file_types:
+        # all file types are supported
+        return
+
+    for f in files:
+        file_ext = os.path.splitext(f.name)[1]
+        if file_ext not in supported_file_types:
+            err_msg = "{file_name} is not a supported file type for {res_type} resource"
+            err_msg = err_msg.format(file_name=f.name, res_type=resource_cls)
+            raise ResourceFileValidationException(err_msg)
+
+
+def validate_resource_file_count(resource_cls, files, resource=None):
+    if len(files) > 0:
+        if len(resource_cls.get_supported_upload_file_types()) == 0:
+            err_msg = "Content files are not allowed in {res_type} resource".format(res_type=resource_cls)
+            raise ResourceFileValidationException(err_msg)
+
+        err_msg = "Multiple content files are not supported in {res_type} resource"
+        err_msg = err_msg.format(res_type=resource_cls)
+        if len(files) > 1:
+            if not resource_cls.can_have_multiple_files():
+                raise ResourceFileValidationException(err_msg)
+
+        if resource is not None and resource.files.all().count() > 0:
+            if not resource_cls.can_have_multiple_files():
+                raise ResourceFileValidationException(err_msg)
+
+
+def resource_pre_create_actions(resource_type, resource_title, page_redirect_url_key, files=(), metadata=None,
+                                **kwargs):
     from.resource import check_resource_type
     if not resource_title:
         resource_title = 'Untitled resource'
@@ -228,6 +262,8 @@ def resource_pre_create_actions(resource_type, resource_title, page_redirect_url
     resource_cls = check_resource_type(resource_type)
     if len(files) > 0:
         validate_resource_file_size(files)
+        validate_resource_file_count(resource_cls, files)
+        validate_resource_file_type(resource_cls, files)
 
     if not metadata:
         metadata = []
@@ -250,7 +286,7 @@ def resource_pre_create_actions(resource_type, resource_title, page_redirect_url
 
 
 def resource_post_create_actions(resource, user, metadata,  **kwargs):
-     # receivers need to change the values of this dict if file validation fails
+    # receivers need to change the values of this dict if file validation fails
     file_validation_dict = {'are_files_valid': True, 'message': 'Files are valid'}
     # Send post-create resource signal
     post_create_resource.send(sender=type(resource), resource=resource, user=user,  metadata=metadata,
@@ -344,9 +380,13 @@ def get_party_data_from_user(user):
 
 
 def resource_file_add_pre_process(resource, files, user, extract_metadata=False, **kwargs):
+    resource_cls = resource.__class__
     validate_resource_file_size(files)
+    validate_resource_file_type(resource_cls, files)
+    validate_resource_file_count(resource_cls, files, resource)
+
     file_validation_dict = {'are_files_valid': True, 'message': 'Files are valid'}
-    pre_add_files_to_resource.send(sender=resource.__class__, files=files, resource=resource, user=user,
+    pre_add_files_to_resource.send(sender=resource_cls, files=files, resource=resource, user=user,
                                    validate_files=file_validation_dict, extract_metadata=extract_metadata, **kwargs)
 
     check_file_dict_for_error(file_validation_dict)
