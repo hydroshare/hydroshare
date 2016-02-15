@@ -8,7 +8,7 @@ import os
 from kombu import Queue, Exchange
 from kombu.common import Broadcast
 
-DEBUG=True
+DEBUG = True
 
 # DEVELOPMENT EXAMPLE ONLY
 # Make these unique, and don't share it with anybody
@@ -108,18 +108,18 @@ DATABASES = {
 POSTGIS_VERSION=(2,1,1)
 
 # iRODS proxy user configuration
-USE_IRODS=True
-IRODS_ROOT='/tmp'
-IRODS_ICOMMANDS_PATH='/usr/bin'
-IRODS_HOST='hydrotest41.renci.org'
-IRODS_PORT='1247'
-IRODS_DEFAULT_RESOURCE='hydrotest41Resc'
-IRODS_HOME_COLLECTION='/hydrotest41Zone/home/betaHydroProxy'
-IRODS_CWD='/hydrotest41Zone/home/betaHydroProxy'
-IRODS_ZONE='hydrotest41Zone'
-IRODS_USERNAME='betaHydroProxy'
-IRODS_AUTH='hvLswcoictX9pWnHzwht4cgbxdebyjW3'
-IRODS_GLOBAL_SESSION=True
+USE_IRODS = True
+IRODS_ROOT = '/tmp'
+IRODS_ICOMMANDS_PATH = '/usr/bin'
+IRODS_HOST = 'hydrotest41.renci.org'
+IRODS_PORT = '1247'
+IRODS_DEFAULT_RESOURCE = 'hydrotest41Resc'
+IRODS_HOME_COLLECTION = '/hydrotest41Zone/home/hsproxy'
+IRODS_CWD = '/hydrotest41Zone/home/hsproxy'
+IRODS_ZONE = 'hydrotest41Zone'
+IRODS_USERNAME = 'hsproxy'
+IRODS_AUTH = 'proxywater1'
+IRODS_GLOBAL_SESSION = True
 
 # iRODS customized bagit rule path
 IRODS_BAGIT_RULE='hydroshare/irods/ruleGenerateBagIt_HS.r'
@@ -128,15 +128,17 @@ IRODS_BAGIT_POSTFIX = 'zip'
 
 # crossref login credential for resource publication
 USE_CROSSREF_TEST = True
-CROSSREF_LOGIN_ID = 'cuapi'
-CROSSREF_LOGIN_PWD = 'fsd.38_C'
+CROSSREF_LOGIN_ID = ''
+CROSSREF_LOGIN_PWD = ''
 
 # Email configuration
-EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-EMAIL_HOST_USER = 'hydroshare@hydroshare.org'
-EMAIL_HOST_PASSWORD = '1Rycb8@2'
-EMAIL_HOST = 'mail.hydroshare.org'
-EMAIL_PORT = '25'
-EMAIL_USE_TLS = True
-DEFAULT_FROM_EMAIL = 'support@hydroshare.org'
-DEFAULT_SUPPORT_EMAIL='hongyi@renci.org'
+EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+#EMAIL_HOST_USER = ''
+#EMAIL_HOST_PASSWORD = ''
+#EMAIL_HOST = ''
+#EMAIL_PORT = ''
+#EMAIL_USE_TLS = True
+#DEFAULT_FROM_EMAIL = ''
+#DEFAULT_SUPPORT_EMAIL=''
+
+HYDROSHARE_SHARED_TEMP = '/shared_temp'
