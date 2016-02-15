@@ -8,7 +8,7 @@
         <form id="profile-form" action="{% url 'update_profile' %}" class="account-form" method="post"{% if form.is_multipart %} enctype="multipart/form-data"{% endif %}>
         {% csrf_token %}
         <div class="row">
-            <div data-page-mode="edit" class="alert alert-warning" role="alert"><strong>Warning!</strong> Information provided below will be public for all HydroShare users to see.</div>
+            <div data-page-mode="edit" class="alert alert-warning" role="alert">Information provided below will be public for all HydroShare users to see.</div>
 
             <div class="col-sm-12">
                 {#        Profile picture       #}
@@ -39,7 +39,7 @@
                             {% if profile.picture and profile.picture.url %}
                                 <label>Profile picture</label>
                                 <fieldset>
-                                    <span class="btn btn-default btn-file">Change<input type="file"></span>
+                                    <span class="btn btn-default btn-file">Change<input type="file" name="picture"></span>
                                 </fieldset>
                                 <button class="btn btn-default">Remove</button>
                             {% else %}
@@ -85,7 +85,7 @@
                     <div class="col-xs-12 col-sm-6">
                         <div data-page-mode="view">
                             {% if profile_user.first_name or profile_user.last_name %}
-                                <h2>{{ profile_user.first_name }} {{ profile_user.last_name }}</h2>
+                                <h2>{{ profile_user.first_name }} {{ profile.middle_name }} {{ profile_user.last_name }}</h2>
                             {% else %}
                                 <h2>{{ profile_user.username }}</h2>
                             {% endif %}
@@ -129,7 +129,7 @@
                                 {# Middle name #}
                                 <fieldset class="col-sm-4">
                                     <label>Middle name</label>
-                                    <input class="form-control" value="{{ profile.middle_name }}" name="middle_name">
+                                    <input class="form-control" {% if profile.middle_name %}value="{{ profile.middle_name }}"{% endif %} name="middle_name">
                                 </fieldset>
 
                                 {# Last name #}
@@ -222,8 +222,8 @@
 
                                             <div class="metadata-wrapper">
                                                 <div class="shared-resource-info">
-                                                    {% if profile_user.first_name or profile_user.last_name %}
-                                                        <strong>{{ profile_user.first_name }} {{ profile_user.last_name }}</strong>
+                                                    {% if profile_user.first_name or profile.middle_name or profile_user.last_name %}
+                                                        <strong>{{ profile_user.first_name }} {{ profile.middle_name }} {{ profile_user.last_name }}</strong>
                                                     {% else %}
                                                         <strong>{{ profile_user.username }}</strong>
                                                     {% endif %}
@@ -274,15 +274,15 @@
                                             </tr>
                                             <tr>
                                                 <td><span class="text-muted">Country</span></td>
-                                                <td>United States</td>
+                                                <td>{% if profile.country %}{{ profile.country }}{% endif %}</td>
                                             </tr>
                                             <tr>
                                                 <td><span class="text-muted">State/Province</span></td>
-                                                <td>Utah</td>
+                                                <td>{{ profile.state }}</td>
                                             </tr>
                                             <tr>
                                                 <td><span class="text-muted">User since</span></td>
-                                                <td>01/28/2016</td>
+                                                <td>{{ profile_user.date_joined }}</td>
                                             </tr>
                                             </tbody>
                                         </table>
@@ -291,9 +291,8 @@
                                     <div data-page-mode="edit">
                                         <fieldset>
                                             <label>Description</label>
-                                            <textarea class="form-control" id="exampleTextarea" name="details" rows="4" >
-                                                {% if profile.details %}{{ profile.details }}{% endif %}
-                                            </textarea>
+                                            <textarea class="form-control" id="exampleTextarea"
+                                                      name="details" rows="4" >{% if profile.details %}{{ profile.details }}{% endif %}</textarea>
                                         </fieldset>
 
                                         <fieldset>
@@ -320,7 +319,7 @@
 
                                         <fieldset>
                                             <label>State/Province</label>
-                                            <input name="state" class="form-control" value="{{ profile.state }}">
+                                            <input name="state" class="form-control" {% if  profile.state %}value="{{ profile.state }}"{% endif %}>
                                         </fieldset>
 
                                         <fieldset>
@@ -378,6 +377,13 @@
                                                     </tr>
                                                 {% endif %}
                                             {% endif %}
+
+                                            {% if profile.website %}
+                                                    <tr>
+                                                        <td><span class="text-muted">Website</span></td>
+                                                        <td><a href="{{ profile.website }}" target="_blank">{{ profile.website }}</a></td>
+                                                    </tr>
+                                            {% endif %}
                                             </tbody>
                                         </table>
 
@@ -425,8 +431,14 @@
                                             </fieldset>
                                             <fieldset class="col-sm-12">
                                                 <label>Email address</label>
-                                                <input readonly class="form-control" placeholder="Email address"
+                                                <input readonly class="form-control"
                                                        value="{{ profile_user.email }}">
+                                            </fieldset>
+
+                                            <fieldset class="col-sm-12">
+                                                <label>Website</label>
+                                                <input class="form-control"
+                                                       value="{{ profile_user.website }}">
                                             </fieldset>
                                         </div>
                                 </div>
@@ -619,7 +631,7 @@
                 success: function (result) {
 {#                    var json_response = JSON.parse(result);#}
 {#                    if (json_response.status == "success") {#}
-{##}
+                    setViewMode();
 {#                    }#}
                     console.log(result);
                 },
@@ -631,28 +643,35 @@
             return false;
         }
 
-    $(document).ready(function () {
-        $('.phone').mask('(000) 000-0000');
-
-        $("[data-page-mode='edit']").hide();
-        $("#btn-edit-profile").click(function(){
+        function setEditMode() {
             $("[data-page-mode='view']").hide();
             $("[data-page-mode='edit']").fadeIn();
             $("[data-page-mode='on-edit-blur']").fadeTo("fast", 0.5, function () {
                 // Animation complete.
             });
+        }
 
-        });
-
-        $("#btn-save-profile").click(update_profile_ajax_submit);
-
-        $("#btn-cancel-profile-edit").click(function(){
+        function setViewMode() {
             $("[data-page-mode='edit']").hide();
             $("[data-page-mode='view']").fadeIn();
             $("[data-page-mode='on-edit-blur']").fadeTo("fast", 1, function () {
                 // Animation complete.
             });
+        }
+
+    $(document).ready(function () {
+        $('.phone').mask('(000) 000-0000');
+
+        $("[data-page-mode='edit']").hide();
+        $("#btn-edit-profile").click(function(){
+            setEditMode();
         });
+
+        $("#btn-cancel-profile-edit").click(function(){
+            setViewMode();
+        });
+
+        $("#btn-save-profile").click(update_profile_ajax_submit);
 
         // Abstract collapse toggle
         $(".show-more-btn").click(function () {
