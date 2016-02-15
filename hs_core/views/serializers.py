@@ -95,6 +95,12 @@ class ResourceListItemSerializer(serializers.Serializer):
     science_metadata_url = serializers.URLField()
 
 
+class ResourceFileSerializer(serializers.Serializer):
+    url = serializers.URLField()
+    size = serializers.IntegerField()
+    content_type = serializers.CharField(max_length=255)
+
+
 class ResourceType(object):
     def __init__(self, resource_type):
         self.resource_type = resource_type
@@ -114,6 +120,11 @@ ResourceListItem = namedtuple('ResourceListItem',
                                'date_last_updated',
                                'bag_url',
                                'science_metadata_url'])
+
+ResourceFileItem = namedtuple('ResourceFileItem',
+                              ['url',
+                               'size',
+                               'content_type'])
 
 
 class UserAuthenticateRequestValidator(serializers.Serializer):
