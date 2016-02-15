@@ -1,15 +1,15 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 
-from django.db import models, migrations
+from django.db import migrations, models
 from django.conf import settings
 
 
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('hs_core', '0014_auto_20151123_1451'),
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
+        ('hs_core', '__first__'),
     ]
 
     operations = [
@@ -19,9 +19,6 @@ class Migration(migrations.Migration):
                 ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
                 ('resource', models.OneToOneField(related_query_name=b'rlabels', related_name='rlabels', null=True, editable=False, to='hs_core.BaseResource')),
             ],
-            options={
-            },
-            bases=(models.Model,),
         ),
         migrations.CreateModel(
             name='UserLabels',
@@ -29,9 +26,6 @@ class Migration(migrations.Migration):
                 ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
                 ('user', models.OneToOneField(related_query_name=b'ulabels', related_name='ulabels', null=True, editable=False, to=settings.AUTH_USER_MODEL)),
             ],
-            options={
-            },
-            bases=(models.Model,),
         ),
         migrations.CreateModel(
             name='UserResourceFlags',
@@ -42,9 +36,6 @@ class Migration(migrations.Migration):
                 ('resource', models.ForeignKey(related_name='r2urf', editable=False, to='hs_core.BaseResource', help_text=b'resource to which a flag applies')),
                 ('user', models.ForeignKey(related_name='u2urf', editable=False, to=settings.AUTH_USER_MODEL, help_text=b'user assigning a flag')),
             ],
-            options={
-            },
-            bases=(models.Model,),
         ),
         migrations.CreateModel(
             name='UserResourceLabels',
@@ -55,19 +46,25 @@ class Migration(migrations.Migration):
                 ('resource', models.ForeignKey(related_name='r2url', editable=False, to='hs_core.BaseResource', help_text=b'resource to which a label applies')),
                 ('user', models.ForeignKey(related_name='u2url', editable=False, to=settings.AUTH_USER_MODEL, help_text=b'user assigning a label')),
             ],
-            options={
-            },
-            bases=(models.Model,),
         ),
         migrations.CreateModel(
             name='UserStoredLabels',
             fields=[
                 ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
                 ('label', models.TextField(help_text=b'label to be stored by user')),
-                ('user', models.ForeignKey(related_name='ul2usl', to=settings.AUTH_USER_MODEL, help_text=b'user who stored the label', null=True)),
+                ('user', models.ForeignKey(related_name='ul2usl', to=settings.AUTH_USER_MODEL, help_text=b'user who stored the label')),
             ],
-            options={
-            },
-            bases=(models.Model,),
+        ),
+        migrations.AlterUniqueTogether(
+            name='userstoredlabels',
+            unique_together=set([('user', 'label')]),
+        ),
+        migrations.AlterUniqueTogether(
+            name='userresourcelabels',
+            unique_together=set([('user', 'resource', 'label')]),
+        ),
+        migrations.AlterUniqueTogether(
+            name='userresourceflags',
+            unique_together=set([('user', 'resource', 'kind')]),
         ),
     ]

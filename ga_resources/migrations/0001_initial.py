@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 
-from django.db import models, migrations
+from django.db import migrations, models
 import django.contrib.gis.db.models.fields
 import mezzanine.core.fields
 from django.conf import settings
@@ -12,7 +12,7 @@ import ga_resources.models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('pages', '__first__'),
+        ('pages', '0003_auto_20150527_1555'),
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
     ]
 
@@ -65,9 +65,6 @@ class Migration(migrations.Migration):
                 ('ordering', models.IntegerField(default=0)),
                 ('data_resource', models.ForeignKey(to='ga_resources.DataResource')),
             ],
-            options={
-            },
-            bases=(models.Model,),
         ),
         migrations.CreateModel(
             name='RelatedResource',
@@ -137,24 +134,20 @@ class Migration(migrations.Migration):
             model_name='renderedlayer',
             name='default_style',
             field=models.ForeignKey(related_name='default_for_layer', to='ga_resources.Style'),
-            preserve_default=True,
         ),
         migrations.AddField(
             model_name='renderedlayer',
             name='owner',
             field=models.ForeignKey(to=settings.AUTH_USER_MODEL, null=True),
-            preserve_default=True,
         ),
         migrations.AddField(
             model_name='renderedlayer',
             name='styles',
             field=models.ManyToManyField(to='ga_resources.Style'),
-            preserve_default=True,
         ),
         migrations.AddField(
             model_name='orderedresource',
             name='resource_group',
             field=models.ForeignKey(to='ga_resources.ResourceGroup'),
-            preserve_default=True,
         ),
     ]
