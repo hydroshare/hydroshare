@@ -323,7 +323,7 @@ rebuild_solr_index() {
 
 reset_all_hs() {
     echo "*** WARNING: All data, containers, and hydroshare related images will be removed ***"
-    if [[ "$(docker ps | grep hydroshare)" ]]; then
+    if [[ "$(docker-compose ps | grep hydroshare)" ]]; then
         echo "*** INFO: HydroShare found previously running, proceeding with clean up ***"
         # Remove root items
         scripts/pre-remove-hs;
