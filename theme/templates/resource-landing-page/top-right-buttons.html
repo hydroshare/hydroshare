@@ -29,19 +29,25 @@
                 {% endif %}
             {% endif %}
             {% if page.perms.change %}
-                    <form class="inline pull-right" action="{{ cm.get_absolute_url }}" method="post">
-                        {% csrf_token %}
-                        {% if page.perms.delete %}
-                            <a id="delete" data-toggle="modal" data-target="#delete-resource-dialog">
-                                <span data-toggle="tooltip" data-placement="auto" title="Delete this resource"
-                                      class="glyphicon glyphicon-trash icon-button btn-remove"></span>
+                <form class="inline pull-right" action="{{ cm.get_absolute_url }}" method="post">
+                    {% csrf_token %}
+                    {% if page.perms.delete %}
+                        {% if cm.can_be_public_or_discoverable %}
+                            <a id="publish" data-toggle="modal" data-target="#submit-for-publication-dialog">
+                                <span data-toggle="tooltip" data-placement="auto" title="Publish this resource"
+                                      class="glyphicon glyphicon-book icon-button btn-edit"></span>
                             </a>
                         {% endif %}
-                        <input name="resource-mode" type="hidden" value="edit"/>
-                        <button id="edit-metadata" type="submit" data-toggle="tooltip" data-placement="auto"
-                                title="Edit this resource"
-                                class="glyphicon glyphicon-pencil icon-button btn-edit"></button>
-                    </form>
+                        <a id="delete" data-toggle="modal" data-target="#delete-resource-dialog">
+                            <span data-toggle="tooltip" data-placement="auto" title="Delete this resource"
+                                  class="glyphicon glyphicon-trash icon-button btn-remove"></span>
+                        </a>
+                    {% endif %}
+                    <input name="resource-mode" type="hidden" value="edit"/>
+                    <button id="edit-metadata" type="submit" data-toggle="tooltip" data-placement="auto"
+                            title="Edit this resource"
+                            class="glyphicon glyphicon-pencil icon-button btn-edit"></button>
+                </form>
             {% endif %}
         </div>
     {% else %}
