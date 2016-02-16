@@ -623,7 +623,8 @@ def create_resource(request, *args, **kwargs):
             owner=request.user,
             title=res_title,
             metadata=metadata,
-            files=resource_files
+            files=resource_files,
+            content=res_title
     )
     # except Exception as ex:
     #     context = {'resource_creation_error': ex.message }
