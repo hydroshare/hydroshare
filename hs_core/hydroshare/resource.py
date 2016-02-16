@@ -1,6 +1,11 @@
 import os
+import zipfile
+import shutil
+import logging
+
 import requests
 
+from django.conf import settings
 from django.core.exceptions import ObjectDoesNotExist
 from django.core.files import File
 from django.core.files.uploadedfile import UploadedFile
@@ -18,10 +23,13 @@ from hs_core.hydroshare import utils
 from hs_access_control.models import ResourceAccess, UserResourcePrivilege, PrivilegeCodes
 from hs_labels.models import ResourceLabels
 
+
 FILE_SIZE_LIMIT = 10*(1024 ** 3)
 FILE_SIZE_LIMIT_FOR_DISPLAY = '10G'
 METADATA_STATUS_SUFFICIENT = 'Sufficient to publish or make public'
 METADATA_STATUS_INSUFFICIENT = 'Insufficient to publish or make public'
+
+logger = logging.getLogger(__name__)
 
 def get_resource(pk):
     """
@@ -311,10 +319,40 @@ def check_resource_type(resource_type):
     return res_cls
 
 
+def add_zip_file_contents_to_resource_async(resource, f):
+    """
+    Launch asynchronous celery task to add zip file contents to a resource.
+    Note: will copy the zip file into a temporary space accessible to both
+    the Django server and the Celery worker.
+    :param resource: Resource to which file should be added
+    :param f: TemporaryUploadedFile object (or object that implements temporary_file_path())
+     representing a zip file whose contents are to be added to a resource.
+    """
+    # Add contents of zipfile asynchronously; wait 30 seconds to be "sure" that resource creation
+    # has finished.
+    uploaded_filepath = f.temporary_file_path()
+    tmp_dir = getattr(settings, 'HYDROSHARE_SHARED_TEMP', '/shared_temp')
+    logger.debug("Copying uploaded file from {0} to {1}".format(uploaded_filepath,
+                                                                tmp_dir))
+    shutil.copy(uploaded_filepath, tmp_dir)
+    zfile_name = os.path.join(tmp_dir, os.path.basename(uploaded_filepath))
+    logger.debug("Retained upload as {0}".format(zfile_name))
+    # Import here to avoid circular reference
+    from hs_core.tasks import add_zip_file_contents_to_resource
+    add_zip_file_contents_to_resource.apply_async((resource.short_id, zfile_name),
+                                                  countdown=30)
+    resource.file_unpack_status = 'Pending'
+    resource.save()
+
+
 def create_resource(
         resource_type, owner, title,
         edit_users=None, view_users=None, edit_groups=None, view_groups=None,
-        keywords=(), metadata=None, files=(), create_metadata=True, create_bag=True, **kwargs):
+        keywords=(), metadata=None, content=None,
+        files=(), create_metadata=True,
+        create_bag=True, unpack_file=False, **kwargs):
+
+
     """
     Called by a client to add a new resource to HydroShare. The caller must have authorization to write content to
     HydroShare. The pid for the resource is assigned by HydroShare upon inserting the resource.  The create method
@@ -356,6 +394,8 @@ def create_resource(
     :param metadata: list of dicts containing keys (element names) and corresponding values as dicts { 'creator': {'name':'John Smith'}}.
     :param files: list of Django File or UploadedFile objects to be attached to the resource
     :param create_bag: whether to create a bag for the newly created resource or not. By default, the bag is created.
+    :param unpack_file: boolean.  If files contains a single zip file, and unpack_file is True,
+                        the unpacked contents of the zip file will be added to the resource instead of the zip file.
     :param kwargs: extra arguments to fill in required values in AbstractResource subclasses
 
     :return: a new resource which is an instance of BaseResource with specificed resource_type.
@@ -384,7 +424,18 @@ def create_resource(
         if not metadata:
             metadata = []
 
-        add_resource_files(resource.short_id, *files)
+        if len(files) == 1 and unpack_file and zipfile.is_zipfile(files[0]):
+            # Add contents of zipfile as resource files asynchronously
+            # Note: this is done asynchronously as unzipping may take
+            # a long time (~15 seconds to many minutes).
+            add_zip_file_contents_to_resource_async(resource, files[0])
+        else:
+            # Add resource file(s) now
+            # Note: this is done synchronously as it should only take a
+            # few seconds.  We may want to add the option to do this
+            # asynchronously if the file size is large and would take
+            # more than ~15 seconds to complete.
+            add_resource_files(resource.short_id, *files)
 
         # by default resource is private
         resource_access = ResourceAccess(resource=resource)
@@ -536,7 +587,8 @@ def add_resource_files(pk, *files):
 
     Parameters:
     pid - Unique HydroShare identifier for the resource that is to be updated.
-    file - The data bytes of the file that will be added to the existing resource identified by pid
+    files - A list of file-like objects representing files that will be added
+    to the existing resource identified by pid
 
     Returns:    The pid assigned to the updated resource
 
@@ -562,17 +614,8 @@ def add_resource_files(pk, *files):
     """
     resource = utils.get_resource_by_shortkey(pk)
     ret = []
-    for file in files:
-        ret.append(ResourceFile.objects.create(
-            content_object=resource,
-            resource_file=File(file) if not isinstance(file, UploadedFile) else file
-        ))
-
-        # add format metadata element if necessary
-        file_format_type = utils.get_file_mime_type(file.name)
-        if file_format_type not in [mime.value for mime in resource.metadata.formats.all()]:
-            resource.metadata.create_element('format', value=file_format_type)
-
+    for f in files:
+        ret.append(utils.add_file_to_resource(resource, f))
     return ret
 
 
