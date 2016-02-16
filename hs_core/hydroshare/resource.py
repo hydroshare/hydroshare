@@ -870,6 +870,7 @@ def publish_resource(user, pk):
 
     resource.raccess.public = True
     resource.raccess.immutable = True
+    resource.raccess.shareable = False
     resource.raccess.published = True
     resource.raccess.save()
 

@@ -213,6 +213,13 @@
             }
 
             $(document).ready(function () {
+                $("#agree-chk").on('click', function(e) {
+                    e.stopImmediatePropagation();
+                    if (e.currentTarget.checked)
+                        $('#publish-btn').removeAttr('disabled');
+                    else
+                        $('#publish-btn').attr('disabled', 'disabled');
+                });
                 // On manage access interface, prevent form submission when pressing the enter key on the search box.
                 $('#id_user-autocomplete').keypress(function (e) {
                     e = e || event;

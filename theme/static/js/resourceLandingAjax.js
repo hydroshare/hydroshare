@@ -285,8 +285,8 @@ function metadata_update_ajax_submit(form_id){
                 if (json_response.hasOwnProperty('metadata_status')) {
                     if (json_response.metadata_status !== $('#metadata-status').text()) {
                         $('#metadata-status').text(json_response.metadata_status);
-                        if (json_response.metadata_status == "Sufficient to make public") {
-                            customAlert("<i class='glyphicon glyphicon-flag custom-alert-icon'></i><strong>Metadata Status:</strong> sufficient to make public", 3000);
+                        if (json_response.metadata_status.toLowerCase().indexOf("insufficient") == -1) {
+                            customAlert("<i class='glyphicon glyphicon-flag custom-alert-icon'></i><strong>Metadata Status:</strong> sufficient to publish or make public", 3000);
                             $("#btn-public").prop("disabled", false);
                             $("#btn-discoverable").prop("disabled", false);
                         }
