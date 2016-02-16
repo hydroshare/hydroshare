@@ -102,7 +102,14 @@ def explode_zip_file(zip_file):
         zf = zipfile.ZipFile(zip_file.file.name, 'r')
         zf.extractall(temp_dir)
         zf.close()
-        extract_file_paths = [os.path.join(temp_dir, file_name) for file_name in os.listdir(temp_dir) if os.path.splitext(file_name)[1] in ['.vrt', '.tif']]
+        # get all the file abs names in temp_dir
+        raw_file_paths = []
+        for dirpath,_,filenames in os.walk(temp_dir):
+            for name in filenames:
+                raw_file_paths.append(os.path.abspath(os.path.join(dirpath, name)))
+        # get all the valid files with .tif and .vrt extension
+        extract_file_paths = [os.path.join(temp_dir, file_name) for file_name in raw_file_paths if os.path.splitext(file_name)[1] in ['.vrt', '.tif']]
+
     except Exception:
         extract_file_paths = []
         shutil.rmtree(temp_dir)
@@ -149,8 +156,12 @@ def raster_pre_create_resource_trigger(sender, **kwargs):
         else:
             bcount = 0
             validate_files_dict['are_files_valid'] = False
-            validate_files_dict['message'] = 'Please check if the uploaded file is as one .tif file ' \
-                                             'or as one .zip file including one .vrt file and multiple/single .tif files .'
+            validate_files_dict['message'] = 'Raster validation error.  Rasters may be loaded as a valid single .tif file or' \
+                                             ' a zip file containing one .vrt file and .tif files referenced by the .vrt file. ' \
+                                             ' This validation error results if the file is not in one of these formats' \
+                                             ' or if the .tif files provided are inconsistent (e.g. missing or extra)' \
+                                             ' with the references in the .vrt file.  ' \
+                                             'See http://www.gdal.org/gdal_vrttut.html for information on the .vrt format.'
 
         # remove temp vrt file
         if os.path.isdir(temp_dir):
@@ -234,8 +245,12 @@ def raster_pre_add_files_to_resource_trigger(sender, **kwargs):
 
         else:
             validate_files_dict['are_files_valid'] = False
-            validate_files_dict['message'] = 'Please check if the uploaded file is as one .tif file ' \
-                                             'or as one .zip file including one .vrt file and multiple/single .tif files .'
+            validate_files_dict['message'] = 'Raster validation error.  Rasters may be loaded as a single valid .tif file or' \
+                                             ' a zip file containing one .vrt file and .tif files referenced by the .vrt file. ' \
+                                             ' This validation error results if the file is not in one of these formats' \
+                                             ' or if the .tif files provided are inconsistent (e.g. missing or extra)' \
+                                             ' with the references in the .vrt file.  ' \
+                                             'See http://www.gdal.org/gdal_vrttut.html for information on the .vrt format.'
 
         # remove temp dir
         if os.path.isdir(temp_dir):
