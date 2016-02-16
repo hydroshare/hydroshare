@@ -7,8 +7,8 @@ echo "*** RUN SCRIPT run-nginx.sh ***"
 
 ### Load Configuration Variables ###
 NGINX_CONFIG_DIRECTORY='./config-files'
-NGINX_DOCKER_IMG='hs-nginx'
-NGINX_DOCKER_CNTR='web-nginx'
+NGINX_DOCKER_IMG='hydroshare_nginx'
+NGINX_DOCKER_CNTR='nginx'
 
 display_usage() {
 	echo "*** run-nginx control script ***"
@@ -49,7 +49,7 @@ stop_nginx() {
 start_nginx() {
     echo "*** ${1^^} ***"
     preflight_nginx
-    # build hs-nginx if it doesn't exist
+    # build hydroshare_nginx if it doesn't exist
     CHECK_NGINX_IMAGE=`docker images | tr -s ' ' | cut -d ' ' -f 1 | grep ${NGINX_DOCKER_IMG}`
     if [[ -z "${CHECK_NGINX_IMAGE}" ]]; then
         echo "*** docker build -t ${NGINX_DOCKER_IMG} . ***"
@@ -57,8 +57,8 @@ start_nginx() {
     else
         echo "*** IMG: ${NGINX_DOCKER_IMG} already exists ***";
     fi
-    # Launch nginx as docker container web-nginx
-    HYDROSHARE_CID=`docker ps | grep hydroshare_hydroshare_1 | tr -s ' ' | cut -d ' ' -f 1`
+    # Launch nginx as docker container nginx
+    HYDROSHARE_CID=`docker-compose ps | grep hydroshare | tr -s ' ' | cut -d ' ' -f 1`
     CHECK_NGINX_CID=`docker ps -a | tr -s ' ' | grep ${NGINX_DOCKER_CNTR} | cut -d ' ' -f 1`
     if [[ -z "${CHECK_NGINX_CID}" ]]; then
         echo "*** docker run ${NGINX_DOCKER_IMG} as ${NGINX_DOCKER_CNTR} ***"

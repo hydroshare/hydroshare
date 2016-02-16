@@ -1,0 +1,93 @@
+{# ======= Resource Publication just published notification =======#}
+{% if cm.raccess.published and just_published %}
+    <div class="col-sm-12">
+        <div class="alert {% if just_created %}alert-success{% else %}alert-warning{% endif %} alert-dismissible" role="alert">
+            <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+            <strong>Congratulations! </strong>
+            <span>Your resource has been published. You will see the DOI in the citation for your resource below,
+                but it may take approximately one day for your DOI to become active.</span>
+        </div>
+    </div>
+{% endif %}
+
+{# ======= Missing fields notification =======#}
+{% if not metadata_form and page.perms.change %}
+    {% if missing_metadata_elements or title|stringformat:"s" == "Untitled resource" or not cm.has_required_content_files %}
+        <div class="col-sm-12">
+            <div class="alert {% if just_created %}alert-success{% else %}alert-warning{% endif %} alert-dismissible" role="alert">
+                <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span
+                        aria-hidden="true">&times;</span></button>
+                {% if missing_metadata_elements  %}
+                    {% if just_created %}
+                        <strong>Congratulations! </strong>
+                        <span>Now that your resource has been created the following metadata are still required to publish it or make it public or discoverable:</span>
+                    {% else %}
+                        <span>The following metadata are still required to publish the resource or make the resource public or discoverable:</span>
+                    {% endif %}
+                    <ul>
+                        {% for element in missing_metadata_elements %}
+                            <li>{{ element }}</li>
+                        {% endfor %}
+                        {% if title|stringformat:"s" == "Untitled resource" %}
+                           <li>Title: needs to be changed</li>
+                        {% endif %}
+                    </ul>
+                {%  endif %}
+                {%  if not cm.has_required_content_files %}
+                        <br>
+                        <span>Content files are required to publish the resource or make the resource public or discoverable.</span>
+                {% endif %}
+                <hr>
+                <span class="glyphicon glyphicon-question-sign"></span>
+                <small> Click on the edit button ( <span class="glyphicon glyphicon-pencil"></span> ) below to edit this resource.</small>
+            </div>
+        </div>
+    {% endif %}
+{% endif %}
+
+{# ======= Title ======= #}
+<div class="col-sm-12">
+    {% if not metadata_form %}
+        <h2 id="resource-title">{{ title }}</h2>
+        {% if relevant_tools %}
+            <span id="apps-dropdown">
+            <button class="btn btn-primary dropdown-toggle" type="button" data-toggle="dropdown">Open with...
+                <span class="caret"></span></button>
+            <ul class="dropdown-menu">
+                {% for tool in relevant_tools %}
+                    <li title="{{ tool.title }}">
+                        <a href="{{ tool.url }}" target="_blank">
+                            <img class="dropdown-user-webapp-icon" src="{{ tool.icon_url }}">
+                            {% if tool.title|length > 20 %}
+                                <span>{{ tool.title|slice:":21"|add:"..." }}</span>
+                            {% else %}
+                                <span>{{ tool.title }}</span>
+                            {% endif %}
+                        </a>
+                    </li>
+                {% endfor %}
+            </ul>
+        {% endif %}
+    {% else %}
+        <form action="/hsapi/_internal/{{ cm.short_id }}/title/{{ cm.metadata.title.id }}/update-metadata/"
+              id="id-title"
+              method="post">
+            {% csrf_token %}
+            <fieldset>
+                <div id="div_id_value" class="control-group">
+                    <div class="controls"><input class="form-control input-sm textinput textInput"
+                                                 id="txt-title"
+                                                 maxlength="300" name="value" type="text"
+                                                 value="{{ cm.metadata.title }}"></div>
+                </div>
+                <div>
+                    <button type="button" class="btn btn-primary pull-right"
+                            onclick="metadata_update_ajax_submit('id-title'); return false;"
+                            style="display: none;">
+                        Save changes
+                    </button>
+                </div>
+            </fieldset>
+        </form>
+    {% endif %}
+</div>

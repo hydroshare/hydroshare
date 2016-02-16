@@ -31,6 +31,9 @@ urlpatterns = patterns('',
     url(r'^resource/(?P<pk>[A-z0-9]+)/files/(?P<filename>[^/]+)/$',
         views.resource_rest_api.ResourceFileCRUD.as_view(), name='get_update_delete_resource_file'),
 
+    url(r'^resource/(?P<pk>[A-z0-9]+)/file_list/$', views.resource_rest_api.ResourceFileList.as_view(),
+        name='get_resource_file_list'),
+
     url(r'^userInfo/$',
         views.user_rest_api.UserInfo.as_view(), name='get_logged_in_user_info'),
 

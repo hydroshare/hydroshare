@@ -1,0 +1,670 @@
+{% load hydroshare_tags crispy_forms_tags %}
+
+<div class="col-sm-12">
+    <!-- === Tabs begin === -->
+    <div class="tab-elements">
+        <div class="panel-tabs">
+            <ul class="nav nav-tabs">
+                <li class="active col-xs-2 col-md-2">
+                    <a href="#contactTab" data-toggle="tab" title="Contact">
+                        <span class="glyphicon glyphicon-user"> </span>
+                        &nbspContact
+                    </a>
+                </li>
+                {% if spatial_coverage.north or spatial_coverage.northlimit or temporal_coverage or metadata_form %}
+                    <li class="col-xs-2 col-md-2">
+                        <a id="coverageTabBtn" href="#coverageTab" data-toggle="tab" title="Coverage">
+                            <span class="glyphicon glyphicon-globe"></span>
+                            &nbspCoverage
+                        </a>
+                    </li>
+                {% endif %}
+                {% if sources or relations or metadata_form %}
+                    <li class="col-xs-2 col-md-2">
+                        <a href="#relatedResourcesTab" data-toggle="tab" title="Related resources">
+                            <span class="glyphicon glyphicon-book"></span>
+                            &nbspRelated Resources
+                        </a>
+                    </li>
+                {% endif %}
+                {% if extended_metadata_exists or metadata_form %}
+                    {#  Resource specific metadata can't be edited for HIS Referenced Time Series #}
+                    {% if cm|resource_type != "HIS Referenced Time Series" or not metadata_form %}
+                        {% if  cm|resource_type != "Generic" %}
+                            <li class="col-xs-2 col-md-2">
+                                <a href="#resourceSpecificTab" data-toggle="tab" title="Resource specific">
+                                    <span class="glyphicon glyphicon-folder-close"></span>
+                                    &nbspResource Specific
+                                </a>
+                            </li>
+                        {% endif %}
+                    {% endif %}
+                {% endif %}
+                {% if relevant_tools  %}
+                    <li class="col-xs-2 col-md-2">
+                        <a href="#relevantTools" data-toggle="tab" title="Relevant tools">
+                            <span class="glyphicon glyphicon-wrench"></span>
+                            &nbsp; Web Apps
+                        </a>
+                    </li>
+                {% endif %}
+            </ul>
+        </div>
+        <div class="tabs-body">
+            <!-- Tab panes -->
+            <div class="tab-content">
+                <!-- ========= CONTACT TAB ========= -->
+                <div class="tab-pane active" id="contactTab">
+                    {% if not metadata_form %}
+                        <table class="table table-striped">
+                            <tbody>
+                            <tr>
+                                <th class="division-title">Authors</th>
+                            </tr>
+                            <tr class="header-row">
+                                <th>Name</th>
+                                <th>Organization</th>
+                                <th>Address</th>
+                                <th>Phone</th>
+                            </tr>
+                            {% for cr in creators %}
+                                <tr>
+                                    <td>{% if cr.description %}
+                                        <a href="{{ cr.description }}">{{ cr.name }}</a>{% else %}
+                                        {{ cr.name }}{% endif %}</td>
+                                    <td>{% if cr.organization %} {{ cr.organization }}{% endif %}</td>
+                                    <td>{% if cr.address %} {{ cr.address }}{% endif %}</td>
+                                    <td>{% if cr.phone %} {{ cr.phone }}{% endif %}</td>
+                                </tr>
+                            {% endfor %}
+                            {% if contributors %}
+                                <tr>
+                                    <th class="division-title">Contributors</th>
+                                </tr>
+                                <tr class="header-row">
+                                    <th>Name</th>
+                                    <th>Organization</th>
+                                    <th>Address</th>
+                                    <th>Phone</th>
+                                </tr>
+
+                                {% for cont in contributors %}
+                                    <tr>
+                                        <td>{% if cont.description %}
+                                            <a href="{{ cont.description }}">{{ cont.name }}</a>{% else %}
+                                            {{ cont.name }}{% endif %}</td>
+                                        <td>{% if cont.organization %} {{ cont.organization }}{% endif %}</td>
+                                        <td>{% if cont.address %} {{ cont.address }}{% endif %}</td>
+                                        <td>{% if cont.phone %} {{ cont.phone }}{% endif %}</td>
+                                    </tr>
+                                {% endfor %}
+                            {% endif %}
+                            </tbody>
+                        </table>
+                    {% else %}
+                        <div class="tab-pane active" id="contactTab">
+                            <table id="contact-table" class="table table-striped">
+                                <tbody>
+                                <tr>
+                                    <th class="division-title">Authors</th>
+                                </tr>
+                                <tr class="header-row">
+                                    <th>Name</th>
+                                    <th>Organization</th>
+                                    <th>Address</th>
+                                    <th>Phone</th>
+                                    <th>Actions</th>
+                                </tr>
+                                {% for author in creator_formset.initial %}
+                                    <tr>
+                                        <td>{% if author.description %}
+                                            <a href="{{ author.description }}">{{ author.name }}</a>{% else %}
+                                            {{ author.name }}{% endif %}</td>
+                                        <td>{% if  author.organization %}{{ author.organization }}{% endif %}</td>
+                                        <td>{% if  author.address %}{{ author.address }}{% endif %}</td>
+                                        <td>{% if  author.phone %}{{ author.phone }}{% endif %}</td>
+                                        <td>
+                                            <a data-toggle="modal" data-placement="auto" title="Edit"
+                                               class="glyphicon glyphicon-pencil icon-button btn-edit"
+                                               data-target="#edit-creator-dialog{{ author.id }}"
+                                                    ></a>
+
+                                            {# Prevent deletion of last creator#}
+                                            {% if creator_formset.initial|length > 1 %}
+                                                <a data-toggle="modal" data-placement="auto" title="Remove"
+                                                   class="glyphicon glyphicon-trash icon-button btn-remove"
+                                                   data-target="#delete-creator-dialog{{ author.id }}"></a>
+                                            {% endif %}
+                                        </td>
+                                    </tr>
+
+                                {% endfor %}
+                                <tr>
+                                    <th class="division-title">
+                                        <a type="button" class="btn btn-success" data-toggle="modal"
+                                           data-target="#add-creator-dialog" multiple="multiple">
+                                                <span class="glyphicon glyphicon-plus"><span
+                                                        class="button-label"> Add author...</span></span>
+                                        </a>
+                                    </th>
+                                </tr>
+                                <tr>
+                                    <th class="division-title">Contributors</th>
+                                </tr>
+                                <tr class="header-row">
+                                    <th>Name</th>
+                                    <th>Organization</th>
+                                    <th>Address</th>
+                                    <th>Phone</th>
+                                    <th>Actions</th>
+                                </tr>
+                                {% for contributor in contributor_formset.initial %}
+                                    <tr>
+                                        <td>{% if contributor.description %}
+                                            <a href="{{ contributor.description }}">{{ contributor.name }}</a>{% else %}
+                                            {{ contributor.name }}{% endif %}</td>
+                                        <td>{% if  contributor.organization %}
+                                            {{ contributor.organization }}{% endif %}</td>
+                                        <td>{% if  contributor.address %}{{ contributor.address }}{% endif %}</td>
+                                        <td>{% if  contributor.phone %}{{ contributor.phone }}{% endif %}</td>
+                                        <td>
+                                            <a data-toggle="modal" data-placement="auto" title="Edit"
+                                               class="glyphicon glyphicon-pencil icon-button btn-edit"
+                                               data-target="#edit-contributor-dialog{{ contributor.id }}"
+                                                    ></a>
+                                            <a data-toggle="modal" data-placement="auto" title="Remove"
+                                               class="glyphicon glyphicon-trash icon-button btn-remove"
+                                               data-target="#delete-contributor-dialog{{ contributor.id }}"
+                                                    ></a>
+                                        </td>
+                                    </tr>
+                                {% endfor %}
+
+                                <tr>
+                                    <th class="division-title">
+                                        <a type="button" class="btn btn-success" data-toggle="modal"
+                                           data-target="#add-contributor-dialog" multiple="multiple">
+                                            <span class="glyphicon glyphicon-plus"><span class="button-label"> Add contributor...</span></span>
+                                        </a>
+                                    </th>
+                                </tr>
+
+                                </tbody>
+                            </table>
+                        </div>
+                    {% endif %}
+                </div>
+                <!-- ========= COVERAGE TAB ========= -->
+                {% if spatial_coverage.north or spatial_coverage.northlimit or temporal_coverage or metadata_form %}
+                    <div class="tab-pane" id="coverageTab">
+                        <div class="row">
+                            {% if not metadata_form %}
+                            <div class="{% if temporal_coverage %}col-md-8{% endif %} col-sm-12 col-xs-12" id="coverage-spatial">
+                                <div class="row">
+                                <div class="col-sm-12">
+                                    <legend>Spatial</legend>
+                                    <div class="info-group" style="margin-top: -20px; margin-bottom:20px;">
+                                        <table>
+                                            <tbody>
+                                                {% if spatial_coverage.name %}
+                                                <tr>
+                                                    <th class="text-muted">Place/Area Name</th>
+                                                    <td>{{ spatial_coverage.name }}</td>
+                                                </tr>
+                                                {% endif %}
+                                                {% if spatial_coverage.projection %}
+                                                <tr>
+                                                    <th class="text-muted">Coordinate System/Geographic Projection
+                                                    </th>
+                                                    <td>WGS 84 EPSG:4326</td>
+                                                </tr>
+                                                {% endif %}
+                                                {% if spatial_coverage.units %}
+                                                <tr>
+                                                    <th class="text-muted">Coordinate Units</th>
+                                                    <td>Decimal degrees</td>
+                                                </tr>
+                                                {% endif %}
+
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+
+                                <div class="col-sm-8">
+                                    <div id="coverageMap" data-shape-type="{{ spatial_coverage.type }}"></div>
+                                    <i id="resetZoomBtn" class="glyphicon glyphicon-record" data-toggle="tooltip"
+                                       data-placement="left" title="Recenter on selected area/point"></i>
+                                </div>
+
+                                <div class="col-sm-4">
+                                    {% if spatial_coverage.north or spatial_coverage.northlimit %}
+                                        <ul class="list-group">
+                                            {% if spatial_coverage.type == 'point' %}
+                                                {% if spatial_coverage.east %}
+                                                    <li class="list-group-item"><strong>Longitude</strong>
+                                                        <div id="cov_east">{{ spatial_coverage.east }}°</div>
+                                                    </li>
+                                                {% endif %}
+                                                {% if spatial_coverage.north %}
+                                                    <li class="list-group-item"><strong>Latitude</strong>
+                                                        <div id="cov_north">{{ spatial_coverage.north }}°</div>
+                                                    </li>
+                                                {% endif %}
+                                            {% else %}
+                                                {% if spatial_coverage.northlimit %}
+                                                    <li class="list-group-item"><strong>North Latitude</strong>
+                                                        <div id="cov_northlimit">{{ spatial_coverage.northlimit }}°</div>
+                                                    </li>
+                                                {% endif %}
+                                                {% if spatial_coverage.eastlimit %}
+                                                    <li class="list-group-item"><strong>East Longitude</strong>
+                                                        <div id="cov_eastlimit">{{ spatial_coverage.eastlimit }}°</div>
+                                                    </li>
+                                                {% endif %}
+                                                {% if spatial_coverage.southlimit %}
+                                                    <li class="list-group-item"><strong>South Latitude</strong>
+                                                        <div id="cov_southlimit">{{ spatial_coverage.southlimit }}°</div>
+                                                    </li>
+                                                {% endif %}
+                                                {% if spatial_coverage.westlimit %}
+                                                    <li class="list-group-item"><strong>West Longitude</strong>
+                                                        <div id="cov_westlimit">{{ spatial_coverage.westlimit }}°</div>
+                                                    </li>
+                                                {% endif %}
+                                            {% endif %}
+                                        </ul>
+                                        <div class="text-muted" style="margin-top:20px;">WGS 84 decimal degrees</div>
+                                    {% endif %}
+                                </div>
+
+                            </div>
+                            </div>
+                            {% if temporal_coverage %}
+                                <div class="col-sm-4">
+                                    <legend>Temporal</legend>
+                                    <div class="row">
+                                        <div class="col-sm-4"><strong class="text-muted">Start Date</strong></div>
+                                        <div class="col-sm-8">{{ temporal_coverage.start_date }}</div>
+                                    </div>
+                                    <div class="row">
+                                        <div class="col-sm-4"><strong class="text-muted">End Date</strong></div>
+                                        <div class="col-sm-8">{{ temporal_coverage.end_date }}</div>
+                                    </div>
+                                </div>
+                                {% endif %}
+
+                            {% else %}
+                                <div class="form-group">
+                                    <div class="col-md-8 col-sm-12 col-xs-12" id="coverage-spatial">
+                                        <div class="row">
+                                            <form action="/hsapi/_internal/{{ cm.short_id }}/coverage/{% if not coverage_spatial_form.initial.north and not coverage_spatial_form.initial.northlimit %}add-metadata/{% else %}{{ coverage_spatial_form.initial.id }}/update-metadata/{% endif %}"
+                                                  id="id-coverage-spatial" method="post">
+                                                {% csrf_token %}
+                                                 <div class="col-sm-12">
+                                                    <legend>Spatial</legend>
+                                                    <div class="info-group" style="margin-top: -20px; margin-bottom:20px;">
+                                                         <table>
+                                                             <tbody>
+                                                                 <tr>
+                                                                     <th class="text-muted">Coordinate System/Geographic Projection</th>
+                                                                     <td>WGS 84 EPSG:4326</td>
+                                                                 </tr>
+                                                                 <tr>
+                                                                     <th class="text-muted">Coordinate Units</th>
+                                                                     <td>Decimal degrees</td>
+                                                                 </tr>
+                                                             </tbody>
+                                                         </table>
+                                                     </div>
+
+                                                    <div id="div_id_name" class="control-group">
+                                                        <label for="id_name" class="control-label">Place/Area Name</label>
+
+                                                        <div class="controls">
+                                                            <input class="form-control input-sm textinput textInput"
+                                                                   id="id_name" maxlength="200" name="name" type="text"
+                                                                   value="{% if coverage_spatial_form.initial.name %}{{ coverage_spatial_form.initial.name }}{% endif %}">
+                                                        </div>
+                                                    </div>
+
+                                                     <input id="id_projection" maxlength="100" name="projection"
+                                                            type="text" style="display:none"
+                                                            value="{% if coverage_spatial_form.initial.projection %}{{ coverage_spatial_form.initial.projection }}{% else %}WGS 84 EPSG:4326{% endif %}">
+                                                     <input id="id_units" maxlength="50" name="units"
+                                                            style="display:none"
+                                                            type="text" value="{% if coverage_spatial_form.initial.units %}{{ coverage_spatial_form.initial.units }}{% endif %}">
+
+                                                     <div id="div_id_type">
+                                                         <label class="radio-inline">
+                                                             <input type="radio"
+                                                                    {% if coverage_spatial_form.initial.type == "box" %}checked="checked"{% endif %}
+                                                                    name="type" id="id_type_1"
+                                                                    value="box">Box</label>
+
+                                                         <label class="radio-inline">
+                                                             <input type="radio"
+                                                                    {% if coverage_spatial_form.initial.type == "point" %}checked="checked"{% endif %}
+                                                                    name="type" id="id_type_2"
+                                                                    value="point">Point</label>
+                                                     </div>
+                                                 </div>
+
+                                                <fieldset>
+                                                    <div class="col-sm-8">
+                                                        <div id="coverageMap"></div>
+                                                        <i id="resetZoomBtn" class="glyphicon glyphicon-record" data-toggle="tooltip"
+                                                            data-placement="left" title="Recenter on selected area/point"></i>
+                                                    </div>
+
+                                                    <div class="col-sm-4">
+                                                        <div id="div_id_north" class="control-group" style="margin-bottom: 10px;">
+                                                            <label for="id_north" class="control-label requiredField">
+                                                                Latitude<span class="asteriskField">*</span>
+                                                            </label>
+
+                                                            <div class="input-group">
+                                                                <input type="text" class="form-control" placeholder="-90 to 90"
+                                                                     id="id_north" name="north"
+                                                                     value="{% if coverage_spatial_form.initial.north %}{{ coverage_spatial_form.initial.north }}{% endif %}">
+                                                                <span data-toggle="tooltip" data-placement="auto" title="WGS 84 decimal degrees"
+                                                                      class="input-group-addon">°</span>
+                                                            </div>
+                                                        </div>
+                                                        <div id="div_id_east" class="control-group" style="margin-bottom: 10px;">
+                                                            <label for="id_east" class="control-label requiredField">
+                                                                Longitude<span class="asteriskField">*</span>
+                                                            </label>
+
+                                                            <div class="input-group">
+                                                                <input type="text" class="form-control" placeholder="-180 to 180"
+                                                                     id="id_east" name="east"
+                                                                     value="{% if coverage_spatial_form.initial.east %}{{ coverage_spatial_form.initial.east }}{% endif %}">
+                                                                <span data-toggle="tooltip" data-placement="auto" title="WGS 84 decimal degrees"
+                                                                      class="input-group-addon">°</span>
+                                                            </div>
+                                                        </div>
+                                                        <div id="div_id_northlimit" class="control-group" style="margin-bottom: 10px;">
+                                                            <label for="id_northlimit" class="control-label requiredField">
+                                                                North Latitude<span class="asteriskField">*</span>
+                                                            </label>
+
+                                                            <div class="input-group">
+                                                                <input type="text" class="form-control" placeholder="-90 to 90"
+                                                                     id="id_northlimit" name="northlimit"
+                                                                     value="{% if coverage_spatial_form.initial.northlimit %}{{ coverage_spatial_form.initial.northlimit }}{% endif %}">
+                                                                <span data-toggle="tooltip" data-placement="auto" title="WGS 84 decimal degrees"
+                                                                      class="input-group-addon">°</span>
+                                                            </div>
+                                                        </div>
+                                                        <div id="div_id_eastlimit" class="control-group" style="margin-bottom: 10px;">
+                                                            <label for="id_eastlimit" class="control-label requiredField">
+                                                                East Longitude<span class="asteriskField">*</span>
+                                                            </label>
+
+                                                            <div class="input-group">
+                                                                <input type="text" class="form-control" placeholder="-180 to 180"
+                                                                     id="id_eastlimit" name="eastlimit"
+                                                                     value="{% if coverage_spatial_form.initial.eastlimit %}{{ coverage_spatial_form.initial.eastlimit }}{% endif %}">
+                                                                <span data-toggle="tooltip" data-placement="auto" title="WGS 84 decimal degrees"
+                                                                      class="input-group-addon">°</span>
+                                                            </div>
+                                                        </div>
+                                                        <div id="div_id_southlimit" class="control-group" style="margin-bottom: 10px;">
+                                                            <label for="id_southlimit" class="control-label requiredField">
+                                                                South Latitude<span class="asteriskField">*</span>
+                                                            </label>
+
+                                                            <div class="input-group">
+                                                                <input type="text" class="form-control" placeholder="-90 to 90"
+                                                                     id="id_southlimit" name="southlimit"
+                                                                     value="{% if coverage_spatial_form.initial.southlimit %}{{ coverage_spatial_form.initial.southlimit }}{% endif %}">
+                                                                <span data-toggle="tooltip" data-placement="auto" title="WGS 84 decimal degrees"
+                                                                      class="input-group-addon">°</span>
+                                                            </div>
+                                                        </div>
+                                                        <div id="div_id_westlimit" class="control-group" style="margin-bottom: 10px;">
+                                                            <label for="id_westlimit" class="control-label requiredField">
+                                                                West Longitude<span class="asteriskField">*</span>
+                                                            </label>
+
+                                                            <div class="input-group">
+                                                                <input type="text" class="form-control" placeholder="-180 to 180"
+                                                                     id="id_westlimit" name="westlimit"
+                                                                     value="{% if coverage_spatial_form.initial.westlimit %}{{ coverage_spatial_form.initial.westlimit }}{% endif %}">
+                                                                <span data-toggle="tooltip" data-placement="auto" title="WGS 84 decimal degrees"
+                                                                      class="input-group-addon">°</span>
+                                                            </div>
+                                                        </div>
+
+                                                    <button type="button" class="btn btn-primary pull-right"
+                                                                onclick="metadata_update_ajax_submit('id-coverage-spatial'); return false;"
+                                                                style="display: none;">Save changes
+                                                        </button>
+
+                                                    </div>
+                                                </fieldset>
+                                            </form>
+
+                                        </div>
+                                    </div>
+
+                                    <div class="form-group col-md-4 col-sm-12 col-xs-12" id="coverage-temporal">
+                                        {% if not coverage_temporal_form.initial.start %}
+                                        <form action="/hsapi/_internal/{{ cm.short_id }}/coverage/add-metadata/"
+                                              id="id-coverage-temporal" method="post">
+                                            {% csrf_token %}
+                                            <fieldset>
+                                                <legend>Temporal</legend>
+                                                <div id="div_id_start" class="control-group">
+                                                    <label for="id_start" class="control-label requiredField">
+                                                        Start Date<span class="asteriskField">*</span></label>
+
+                                                    <div class="controls">
+                                                        <input class="form-control input-sm dateinput" id="id_start"
+                                                               name="start" type="text">
+                                                    </div>
+                                                </div>
+                                                <div id="div_id_end" class="control-group">
+                                                    <label for="id_end" class="control-label requiredField">End
+                                                        Date<span class="asteriskField">*</span></label>
+
+                                                    <div class="controls">
+                                                        <input class="form-control input-sm dateinput" id="id_end"
+                                                               name="end" type="text">
+                                                    </div>
+                                                </div>
+                                                <div style="margin-top:10px">
+                                                    <button type="button" class="btn btn-primary pull-right"
+                                                            onclick="metadata_update_ajax_submit('id-coverage-temporal'); return false;">
+                                                        Save changes
+                                                    </button>
+                                                </div>
+                                            </fieldset>
+                                        </form>
+                                    {% else %}
+                                        <form action="/hsapi/_internal/{{ cm.short_id }}/coverage/{{ coverage_temporal_form.initial.id }}/update-metadata/"
+                                              id="id-coverage-temporal" method="post">
+                                            {% csrf_token %}
+                                            <fieldset>
+                                                <legend>Temporal</legend>
+                                                <div id="div_id_start" class="control-group">
+                                                    <label for="id_start" class="control-label requiredField">
+                                                        Start Date<span class="asteriskField">*</span></label>
+
+                                                    <div class="controls">
+                                                        <input class="form-control input-sm dateinput" id="id_start"
+                                                               name="start" type="text"
+                                                               value="{{ coverage_temporal_form.initial.start }}">
+                                                    </div>
+                                                </div>
+                                                <div id="div_id_end" class="control-group">
+                                                    <label for="id_end" class="control-label requiredField">End
+                                                        Date<span class="asteriskField">*</span></label>
+
+                                                    <div class="controls">
+                                                        <input class="form-control input-sm dateinput" id="id_end"
+                                                               name="end" type="text"
+                                                               value="{{ coverage_temporal_form.initial.end }}">
+                                                    </div>
+                                                </div>
+                                                <div style="margin-top:10px">
+                                                    <button type="button" class="btn btn-primary pull-right"
+                                                            onclick="metadata_update_ajax_submit('id-coverage-temporal'); return false;"
+                                                            style="display: none;">Save changes
+                                                    </button>
+                                                </div>
+                                            </fieldset>
+                                        </form>
+                                    {% endif %}
+                                    </div>
+                                </div>
+
+                            {% endif %}
+                        </div>
+                    </div>
+                {% endif %}
+                <!-- ========= RELATED RESOURCES TAB ========= -->
+                {% if sources or relations or metadata_form %}
+                    <div class="tab-pane" id="relatedResourcesTab">
+                        {% if not metadata_form %}
+                            {% if sources %}
+                                <h4><strong>Sources</strong></h4>
+                                <hr style="margin-top: 0px;margin-bottom: 2px">
+                                {% for source in sources %}
+                                    <div class="row">
+                                        <div class="col-sm-4"><strong>Derived From:</strong></div>
+                                        <div class="col-sm-8">{{ source.derived_from }}</div>
+                                    </div>
+                                {% endfor %}
+                            {% endif %}
+                            {% if relations %}
+                                <hr style="border: 0;">
+                                <h4><strong>Relations</strong></h4>
+                                <hr style="margin-top: 0;margin-bottom: 2px">
+                                {% for relation in relations %}
+                                    <div class="row">
+                                        <div class="col-sm-4"><strong>{{ relation.type }}:</strong></div>
+                                        <div class="col-sm-8">{{ relation.value }}</div>
+                                    </div>
+                                {% endfor %}
+                            {% endif %}
+                        {% else %}
+                            <div>
+                                <table class="table" style="margin-bottom: 0;">
+                                    <tbody>
+                                    <legend>Sources</legend>
+                                    {% for source in source_formset.initial %}
+                                        <tr>
+                                            <th scope="row" class="dataset-label">Derived From:</th>
+                                            <td class="dataset-details">{{ source.derived_from }}</td>
+                                            <td>
+                                                <a data-toggle="modal" data-placement="auto" title="Edit"
+                                                   class="glyphicon glyphicon-pencil icon-button btn-edit"
+                                                   data-target="#edit-source-dialog{{ source.id }}"
+                                                   style="top: -5px; "></a>
+                                            </td>
+                                            <td>
+                                                <a data-toggle="modal" data-placement="auto"
+                                                   title="Remove"
+                                                   class="glyphicon glyphicon-trash icon-button btn-remove"
+                                                   data-target="#delete-source-element-dialog{{ source.id }}"
+                                                   style="top: -5px; right:20px;"></a>
+                                            </td>
+                                        </tr>
+                                    {% endfor %}
+                                    </tbody>
+                                </table>
+                                <a id="add-source" class="btn btn-success" data-toggle="modal"
+                                   data-target="#add-source-dialog"><i
+                                        class="fa fa-plus"></i> Add source</a>
+                            </div>
+                            <hr style="border: 0;">
+                            <div>
+                                <table class="table" style="margin-bottom: 0;">
+                                    <tbody>
+                                    <legend>Relations</legend>
+                                    {% for relation in relation_formset.initial %}
+                                        <tr>
+                                            <th scope="row" class="dataset-label">{{ relation.type }}:</th>
+                                            <td class="dataset-details">{{ relation.value }}</td>
+                                            <td>
+                                                <a data-toggle="modal" data-placement="auto" title="Edit"
+                                                   class="glyphicon glyphicon-pencil icon-button btn-edit"
+                                                   data-target="#edit-relation-dialog_{{ relation.id }}"
+                                                   style="top: -5px; "></a>
+                                            </td>
+                                            <td>
+                                                <a data-toggle="modal" data-placement="auto"
+                                                   title="Remove"
+                                                   class="glyphicon glyphicon-trash icon-button btn-remove"
+                                                   data-target="#delete-relation-element-dialog{{ relation.id }}"
+                                                   style="top: -5px; right:20px;"></a>
+                                            </td>
+                                        </tr>
+                                    {% endfor %}
+
+                                    </tbody>
+                                </table>
+                                <a id="add-relation" class="btn btn-success" data-toggle="modal"
+                                   data-target="#add-relation-dialog"><i class="fa fa-plus"></i> Add relation</a>
+                                <div>
+                                    <small class="text-muted">Click the button above to add a relationship to
+                                        another resource, external website, or document. You can express the
+                                        type of
+                                        relationship and then enter a URL to the resource or website. If the
+                                        related
+                                        resource does not have a URL, you can paste in a full text citation.
+                                    </small>
+                                </div>
+                            </div>
+                        {% endif %}
+                    </div>
+                {% endif %}
+                <!-- ========= RESOURCE SPECIFIC TAB ========= -->
+                {% if site or extended_metadata_exists or res_add_metadata or metadata_form %}
+                    {#  Resource specific metadata can't be edited for HIS Referenced Time Series #}
+                    {% if cm|resource_type != "HIS Referenced Time Series" or not metadata_form %}
+                        {% if  cm|resource_type != "Generic" %}
+                            <div class="tab-pane" id="resourceSpecificTab">
+                                {% if not metadata_form %}
+
+                                    {% block extended_metadata %}
+
+                                    {% endblock %}
+
+                                {% else %}
+                                    {% crispy metadata_form %}
+                                {% endif %}
+                                {% block extra_section %} {# add extra section for resource landing page #}
+                                {% endblock %}
+                            </div>
+                        {% endif %}
+                    {% endif %}
+                {% endif %}
+                    <!-- ========= RELEVANT TOOLS TAB ========= -->
+                {% if relevant_tools %}
+                    <div class="tab-pane" id="relevantTools">
+                        {% if not metadata_form %}
+                            {% for tool in relevant_tools %}
+                                <div title="{{ tool.title }}" id="web-app-item">
+                                    <a href="{{ tool.url }}" target="_blank">
+                                        {% if tool.title|length > 20 %}
+                                            <h4>{{ tool.title|slice:":21"|add:"..." }}</h4>
+                                        {% else %}
+                                            <h4>{{ tool.title }}</h4>
+                                        {% endif %}
+                                        <img class="user-webapp-icon" src="{{ tool.icon_url }}">
+                                    </a>
+                                </div>
+                            {% endfor %}
+                        {% else %}
+                            ------- Relevant tools form here -------
+                        {%  endif %}
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    <!-- ==== Tabs end ==== -->
+</div>

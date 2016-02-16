@@ -28,6 +28,7 @@ from mezzanine.generic.fields import CommentsField, RatingField
 from mezzanine.generic.fields import KeywordsField
 from mezzanine.conf import settings as s
 
+
 class GroupOwnership(models.Model):
     group = models.ForeignKey(Group)
     owner = models.ForeignKey(User)
@@ -121,6 +122,11 @@ def page_permissions_page_processor(request, page):
     editors = cm.raccess.edit_users.exclude(pk__in=owners)
     viewers = cm.raccess.view_users.exclude(pk__in=editors).exclude(pk__in=owners)
 
+    show_manage_access = False
+    if not cm.raccess.published and \
+        (is_owner_user or (cm.raccess.shareable and (is_view_user or is_edit_user))):
+        show_manage_access = True
+
     return {
         'resource_type': cm._meta.verbose_name,
         'bag': cm.bags.first(),
@@ -130,7 +136,8 @@ def page_permissions_page_processor(request, page):
         "is_owner_user": is_owner_user,
         "is_edit_user": is_edit_user,
         "is_view_user": is_view_user,
-        "can_change_resource_flags": can_change_resource_flags
+        "can_change_resource_flags": can_change_resource_flags,
+        "show_manage_access": show_manage_access
     }
 
 
@@ -1033,6 +1040,14 @@ class AbstractResource(ResourcePermissionsMixin):
     # )
 
     files = generic.GenericRelation('hs_core.ResourceFile', help_text='The files associated with this resource', for_concrete_model=True)
+
+    file_unpack_status = models.CharField(max_length=7,
+                                          blank=True, null=True,
+                                          choices=(('Pending', 'Pending'), ('Running', 'Running'),
+                                                   ('Done', 'Done'), ('Error', 'Error'))
+                                          )
+    file_unpack_message = models.TextField(blank=True, null=True)
+
     bags = generic.GenericRelation('hs_core.Bags', help_text='The bagits created from versions of this resource', for_concrete_model=True)
     short_id = models.CharField(max_length=32, default=short_id, db_index=True)
     doi = models.CharField(max_length=1024, blank=True, null=True, db_index=True,
@@ -1063,8 +1078,6 @@ class AbstractResource(ResourcePermissionsMixin):
 
     def delete(self, using=None):
         from hydroshare import hs_bagit
-        from hs_access_control.models import UserResourcePrivilege, GroupResourcePrivilege
-        from hs_labels.models import UserResourceLabels
         for fl in self.files.all():
             fl.resource_file.delete()
 
@@ -1072,12 +1085,6 @@ class AbstractResource(ResourcePermissionsMixin):
 
         self.metadata.delete_all_elements()
         self.metadata.delete()
-
-        # delete related access controls records
-        access_resource = self.raccess
-        UserResourcePrivilege.objects.filter(resource=access_resource).delete()
-        GroupResourcePrivilege.objects.filter(resource=access_resource).delete()
-        access_resource.delete()
 
         super(AbstractResource, self).delete()
 
