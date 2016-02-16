@@ -210,7 +210,7 @@
                  <div class="clear-fix"><i>You have been given specific permission to view this resource.</i></div>
             {% endif %}
         </div>
-        {% if not cm.raccess.published and is_owner_user or cm.raccess.shareable and is_view_user or cm.raccess.shareable and is_edit_user %}
+        {% if show_manage_access %}
             <a type="button" class="btn btn-default" data-toggle="modal" data-target="#manage-access">
                     <span class="glyphicon glyphicon-lock"><span
                             class="button-label"> Manage access</span></span>

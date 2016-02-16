@@ -122,6 +122,11 @@ def page_permissions_page_processor(request, page):
     editors = cm.raccess.edit_users.exclude(pk__in=owners)
     viewers = cm.raccess.view_users.exclude(pk__in=editors).exclude(pk__in=owners)
 
+    show_manage_access = False
+    if not cm.raccess.published and \
+        (is_owner_user or (cm.raccess.shareable and (is_view_user or is_edit_user))):
+        show_manage_access = True
+
     return {
         'resource_type': cm._meta.verbose_name,
         'bag': cm.bags.first(),
@@ -131,7 +136,8 @@ def page_permissions_page_processor(request, page):
         "is_owner_user": is_owner_user,
         "is_edit_user": is_edit_user,
         "is_view_user": is_view_user,
-        "can_change_resource_flags": can_change_resource_flags
+        "can_change_resource_flags": can_change_resource_flags,
+        "show_manage_access": show_manage_access
     }
 
 
