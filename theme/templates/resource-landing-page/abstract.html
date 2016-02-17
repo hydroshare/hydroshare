@@ -1,0 +1,48 @@
+{% if not metadata_form %}
+    {% if abstract %}
+        <div class="col-sm-12 content-block">
+            <h3>Abstract</h3>
+            <span class="abstract">{{ abstract|linebreaks }}</span>
+        </div>
+    {% endif %}
+{% else %}
+    <div class="col-sm-12 content-block">
+        <h3>Abstract</h3>
+        {% if cm.metadata.description %}
+        <form action="/hsapi/_internal/{{ cm.short_id }}/description/{{ cm.metadata.description.id }}/update-metadata/"
+              id="id-description" method="post">
+            {% csrf_token %}
+            <fieldset>
+                <div id="div_id_abstract" class="control-group">
+                    <div class="controls"><textarea class="form-control input-sm textarea" cols="40"
+                                                    id="id_abstract" name="abstract"
+                                                    rows="10">{{ cm.metadata.description }}</textarea></div>
+                </div>
+                <div style="margin-top:10px">
+                    <button type="button" class="btn btn-primary pull-right"
+                            onclick="metadata_update_ajax_submit('id-description'); return false;"
+                            style="display: none;">Save changes
+                    </button>
+                </div>
+            </fieldset>
+        </form>
+        {% else %}
+        <form action="/hsapi/_internal/{{ cm.short_id }}/description/add-metadata/"
+              id="id-description" method="post">
+            {% csrf_token %}
+            <fieldset>
+                <div id="div_id_abstract" class="control-group">
+                    <div class="controls"><textarea class="form-control input-sm textarea" cols="40"
+                                                    id="id_abstract" name="abstract" rows="10"></textarea></div>
+                </div>
+                <div style="margin-top:10px">
+                    <button type="button" class="btn btn-primary pull-right"
+                            onclick="metadata_update_ajax_submit('id-description'); return false;"
+                            style="display: none;">Save changes
+                    </button>
+                </div>
+            </fieldset>
+        </form>
+        {% endif %}
+    </div>
+{% endif %}

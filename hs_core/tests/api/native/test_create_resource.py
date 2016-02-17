@@ -1,6 +1,9 @@
 __author__ = 'tonycastronova'
 
 import os
+import tempfile
+import zipfile
+import shutil
 from dateutil import parser
 from unittest import TestCase
 import datetime as dtime
@@ -8,8 +11,8 @@ import datetime as dtime
 from django.contrib.auth.models import Group, User
 from django.utils import timezone
 
-from hs_core.hydroshare import resource
-
+from hs_core.hydroshare import resource, get_resource_by_shortkey
+from hs_core.tests.api.utils import MyTemporaryUploadedFile
 from hs_core.models import GenericResource
 from hs_core.testing import MockIRODSTestCaseMixin
 from hs_core import hydroshare
@@ -18,6 +21,8 @@ from hs_core import hydroshare
 class TestCreateResource(MockIRODSTestCaseMixin, TestCase):
     def setUp(self):
         super(TestCreateResource, self).setUp()
+
+        self.tmp_dir = tempfile.mkdtemp()
         self.hs_group, _ = Group.objects.get_or_create(name='Hydroshare Author')
         # create a user
         self.user = hydroshare.create_account(
@@ -39,8 +44,23 @@ class TestCreateResource(MockIRODSTestCaseMixin, TestCase):
         self.file_one = open(file_one, "r")
         self.file_two = open(file_two, "r")
 
+        # Make a text file
+        self.txt_file_path = os.path.join(self.tmp_dir, 'text.txt')
+        txt = open(self.txt_file_path, 'w')
+        txt.write("Hello World\n")
+        txt.close()
+
+        self.raster_file_path = 'hs_core/tests/data/cea.tif'
+
     def tearDown(self):
         super(TestCreateResource, self).tearDown()
+
+        shutil.rmtree(self.tmp_dir)
+
+        self.user.uaccess.delete()
+        self.user.delete()
+        self.hs_group.delete()
+
         User.objects.all().delete()
         Group.objects.all().delete()
         GenericResource.objects.all().delete()
@@ -290,4 +310,74 @@ class TestCreateResource(MockIRODSTestCaseMixin, TestCase):
 
         self.assertIn(valid_end_date, [dt.end_date for dt in res.metadata.dates.all()],
                       msg="Matching date value was not found")
+
+    def test_create_resource_with_file(self):
+        raster = open(self.raster_file_path)
+        res = resource.create_resource('GenericResource',
+                                       self.user,
+                                       'My Test resource',
+                                       files=(raster,))
+        pid = res.short_id
+
+        # get the resource by pid
+        res = get_resource_by_shortkey(pid)
+        self.assertEqual(res.resource_type, 'GenericResource')
+        self.assertTrue(isinstance(res, GenericResource), type(res))
+        self.assertEqual(res.metadata.title.value, 'My Test resource')
+        self.assertEquals(res.files.all().count(), 1)
+
+    def test_create_resource_with_two_files(self):
+        raster = MyTemporaryUploadedFile(open(self.raster_file_path, 'rb'), name=self.raster_file_path,
+                                         content_type='image/tiff',
+                                         size=os.stat(self.raster_file_path).st_size)
+        text = MyTemporaryUploadedFile(open(self.txt_file_path, 'r'), name=self.txt_file_path,
+                                       content_type='text/plain',
+                                       size=os.stat(self.txt_file_path).st_size)
+        res = resource.create_resource('GenericResource',
+                                       self.user,
+                                       'My Test resource',
+                                       files=(raster, text))
+        pid = res.short_id
+
+        # get the resource by pid
+        res = get_resource_by_shortkey(pid)
+        self.assertEqual(res.resource_type, 'GenericResource')
+        self.assertTrue(isinstance(res, GenericResource), type(res))
+        self.assertEqual(res.metadata.title.value, 'My Test resource')
+        self.assertEquals(res.files.all().count(), 2)
+
+    def test_create_resource_with_zipfile(self):
+
+        # Make a zip file
+        zip_path = os.path.join(self.tmp_dir, 'test.zip')
+        with zipfile.ZipFile(zip_path, 'w') as zfile:
+            zfile.write(self.raster_file_path)
+            zfile.write(self.txt_file_path)
+
+        # Create a resource with zipfile, do not un-pack
+        payload = MyTemporaryUploadedFile(open(zip_path, 'rb'), name=zip_path,
+                                        content_type='application/zip',
+                                        size=os.stat(zip_path).st_size)
+        res = resource.create_resource('GenericResource',
+                                       self.user,
+                                       'My Test resource',
+                                       files=(payload,))
+        pid = res.short_id
+
+        # get the resource by pid
+        res = get_resource_by_shortkey(pid)
+        self.assertEquals(res.files.all().count(), 1)
+
+        # Create a resource with zipfile, un-pack
+        payload2 = MyTemporaryUploadedFile(open(zip_path, 'rb'), name=zip_path,
+                                        content_type='application/zip',
+                                        size=os.stat(zip_path).st_size)
+        res = resource.create_resource('GenericResource',
+                                       self.user,
+                                       'My Test resource',
+                                       files=(payload2,),
+                                       unpack_file=True)
+        pid = res.short_id
+        res = get_resource_by_shortkey(pid)
+        self.assertEquals(res.files.all().count(), 2)
 

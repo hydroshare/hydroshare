@@ -1,0 +1,61 @@
+{#        ======= Top right buttons =======#}
+<div class="col-sm-12">
+    <div class="lined-wrapper"></div>
+    {% if not metadata_form %}
+        <div class="custom-btn-toolbar">
+            {% if not is_owner_user and not is_edit_user and not is_view_user %}
+                {% if is_mine %}
+                    <form class="pull-right" data-id="form-add-to-my-resources"
+                          action="/hsapi/_internal/{{ cm.short_id }}/label-resource-action/"
+                          method="post">
+                        {% csrf_token %}
+                        <input type="hidden" name="label_type" value="MINE">
+                        <input type="hidden" name="action" value="DELETE">
+                        <button id="btnMyResources" data-toggle="tooltip" data-placement="auto"
+                                title="Remove from my resources" data-form-id="form-add-to-my-resources"
+                                class="glyphicon glyphicon-inbox icon-button btn-resource-remove"></button>
+                    </form>
+                {% else %}
+                    <form class="pull-right" data-id="form-add-to-my-resources"
+                          action="/hsapi/_internal/{{ cm.short_id }}/label-resource-action/"
+                          method="post">
+                        {% csrf_token %}
+                        <input type="hidden" name="label_type" value="MINE">
+                        <input type="hidden" name="action" value="CREATE">
+                        <button id="btnMyResources" data-toggle="tooltip" data-placement="auto"
+                                title="Add to my resources" data-form-id="form-add-to-my-resources"
+                                class="glyphicon glyphicon-inbox icon-button btn-resource-add"></button>
+                    </form>
+                {% endif %}
+            {% endif %}
+            {% if page.perms.change %}
+                <form class="inline pull-right" action="{{ cm.get_absolute_url }}" method="post">
+                    {% csrf_token %}
+                    {% if page.perms.delete %}
+                        {% if cm.can_be_public_or_discoverable %}
+                            <a id="publish" data-toggle="modal" data-target="#submit-for-publication-dialog">
+                                <span data-toggle="tooltip" data-placement="auto" title="Publish this resource"
+                                      class="glyphicon glyphicon-book icon-button btn-edit"></span>
+                            </a>
+                        {% endif %}
+                        <a id="delete" data-toggle="modal" data-target="#delete-resource-dialog">
+                            <span data-toggle="tooltip" data-placement="auto" title="Delete this resource"
+                                  class="glyphicon glyphicon-trash icon-button btn-remove"></span>
+                        </a>
+                    {% endif %}
+                    <input name="resource-mode" type="hidden" value="edit"/>
+                    <button id="edit-metadata" type="submit" data-toggle="tooltip" data-placement="auto"
+                            title="Edit this resource"
+                            class="glyphicon glyphicon-pencil icon-button btn-edit"></button>
+                </form>
+            {% endif %}
+        </div>
+    {% else %}
+        <div class="custom-btn-toolbar">
+            <a href="{{ cm.get_absolute_url }}">
+                    <span data-toggle="tooltip" data-placement="auto" title="View resource"
+                          class="glyphicon glyphicon-circle-arrow-left icon-button btn-edit"></span>
+            </a>
+        </div>
+    {% endif %}
+</div>

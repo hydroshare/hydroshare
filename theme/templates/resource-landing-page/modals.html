@@ -1,0 +1,754 @@
+{% load crispy_forms_tags %}
+
+{% for source in source_formset.initial %}
+<div class="modal fade in" id="delete-source-element-dialog{{ source.id }}" tabindex="-1" role="dialog"
+     aria-labelledby="delete-source" aria-hidden="false">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+                <h4 class="modal-title" id="delete-source">Delete metadata element</h4></div>
+            <div class="modal-body"><strong>Are you sure you want to delete this metadata element?</strong>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+                <a type="button" class="btn btn-danger"
+                   href="/hsapi/_internal/{{ cm.short_id }}/source/{{ source.id }}/delete-metadata/">Delete</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade in" id="edit-source-dialog{{ source.id }}" tabindex="-1" role="dialog" aria-labelledby="edit-source"
+     aria-hidden="false">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form id="id_source_{{ source.id }}" action="/hsapi/_internal/{{ cm.short_id }}/source/{{ source.id }}/update-metadata/"
+                  method="POST" enctype="multipart/form-data">
+                {% csrf_token %}
+                <input name="resource-mode" type="hidden" value="edit">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+                    <h4 class="modal-title" id="edit-source"> Edit Source </h4></div>
+                <div class="modal-body">
+                    {% csrf_token %}
+                    <div class="form-group">
+                        {% csrf_token %}
+                        <fieldset>
+                            <legend>Source</legend>
+                            <div id="div_id_derived_from" class="control-group">
+                                <label for="id_derived_from" class="control-label requiredField">
+                                Derived from<span class="asteriskField">*</span></label>
+
+                                <div class="controls"><input
+                                        class="form-control input-sm textinput textInput"
+                                        id="id_source-{{ forloop.counter0 }}-derived_from" maxlength="300" name="source-{{ forloop.counter0 }}-derived_from"
+                                        type="text" value="{{ source.derived_from }}"></div>
+                            </div>
+                        </fieldset>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                    <button type="submit" class="btn btn-primary">Save changes</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endfor %}
+
+{% for relation in relation_formset.initial %}
+<div class="modal fade in" id="delete-relation-element-dialog{{ relation.id }}" tabindex="-1" role="dialog"
+     aria-labelledby="delete-relation" aria-hidden="false">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+                <h4 class="modal-title" id="delete-relation">Delete metadata element</h4></div>
+            <div class="modal-body"><strong>Are you sure you want to delete this metadata element?</strong>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+                <a type="button" class="btn btn-danger"
+                   href="/hsapi/_internal/{{ cm.short_id }}/relation/{{ relation.id }}/delete-metadata/">Delete</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade in" id="edit-relation-dialog_{{ relation.id }}" tabindex="-1" role="dialog"
+     aria-labelledby="edit-relation" aria-hidden="false">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form action="/hsapi/_internal/{{ cm.short_id }}/relation/{{ relation.id }}/update-metadata/"
+                  method="POST" enctype="multipart/form-data">
+                {% csrf_token %}
+                <input name="resource-mode" type="hidden" value="edit">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+                    <h4 class="modal-title" id="edit-relation"> Edit Relation </h4></div>
+                <div class="modal-body">
+                    {% csrf_token %}
+
+                    <div class="form-group">
+                        {% csrf_token %}
+                        <fieldset>
+                            <legend>Relation</legend>
+                            <div id="div_id_type" class="control-group">
+                                <label for="id_type" class="control-label requiredField">
+                                Relation type<span class="asteriskField">*</span></label>
+
+                                <div class="controls">
+                                    <select class="form-control input-sm select" id="id_relation-{{ forloop.counter0 }}-type" name="relation-{{ forloop.counter0 }}-type">
+                                        <option value="">---------</option>
+                                        {% for type_value, type_display in relation_source_types %}
+                                            <option value={{ type_value }} {% if relation.type == type_value %}selected="selected"{% endif %}>{{ type_display }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                            </div>
+                            <div id="div_id_value" class="control-group">
+                                <label for="id_value" class="control-label requiredField">
+                                Related to<span class="asteriskField">*</span></label>
+
+                                <div class="controls"><input
+                                        class="form-control input-sm textinput textInput" id="id_relation-{{ forloop.counter0 }}-value"
+                                        maxlength="500" name="relation-{{ forloop.counter0 }}-value" type="text"
+                                        value="{{ relation.value }}"></div>
+                            </div>
+                        </fieldset>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                    <button type="submit" class="btn btn-primary">Save changes</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endfor %}
+
+{% for contributor in contributor_formset.initial %}
+<div class="modal fade" id="edit-contributor-dialog{{ contributor.id }}" tabindex="-1" role="dialog"
+     aria-labelledby="edit-contributor" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form id="id_contributor_{{ contributor.id }}" action="/hsapi/_internal/{{ cm.short_id }}/contributor/{{ contributor.id }}/update-metadata/"
+                  method="POST"
+                  enctype="multipart/form-data">
+                {% csrf_token %}
+                <input name="resource-mode" type="hidden" value="edit">
+
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal"
+                            aria-hidden="true">×
+                    </button>
+                    <h4 class="modal-title" id="edit-contributor"> Edit contributor </h4></div>
+                <div class="modal-body">
+                    {% csrf_token %}
+                    <div class="form-group">
+                        {% csrf_token %}
+                        <fieldset>
+                            <div id="div_id_name" class="control-group">
+                                <label class="control-label requiredField">Name<span
+                                        class="asteriskField">*</span></label>
+
+                                <div class="controls"><input
+                                        class="form-control input-sm textinput textInput"
+                                        id="id_contributor-{{ contributor.order|add:"- 1" }}-name" maxlength="100" name="contributor-{{ contributor.order|add:"- 1" }}-name"
+                                        required="required" type="text" value="{% if contributor.name %}{{ contributor.name }}{% endif %}"></div>
+                            </div>
+                            <div id="div_id_description" class="control-group">
+                                <label class="control-label">HydroShare User Identifier (URL)</label>
+
+                                <div class="controls"><input
+                                        class="form-control input-sm urlinput"
+                                        id="id_contributor-{{ contributor.order|add:"- 1" }}-description" maxlength="200"
+                                        name="contributor-{{ contributor.order|add:"- 1" }}-description" type="url"
+                                        value="{% if contributor.description %}{{ contributor.description }}{% endif %}"
+                                        {% if contributor.description %} readonly {% endif %}></div>
+                            </div>
+                            <div id="div_id_organization" class="control-group">
+                                <label class="control-label">Organization</label>
+
+                                <div class="controls"><input
+                                        class="form-control input-sm textinput textInput"
+                                        id="id_contributor-{{ contributor.order|add:"- 1" }}-organization" maxlength="200"
+                                        name="contributor-{{ contributor.order|add:"- 1" }}-organization" type="text" value="{% if contributor.organization %}{{ contributor.organization }}{% endif %}"></div>
+                            </div>
+                            <div id="div_id_email" class="control-group">
+                                <label class="control-label">Email</label>
+
+                                <div class="controls">
+                                    <input class="form-control input-sm emailinput"
+                                           id="id_contributor-{{ contributor.order|add:"- 1" }}-email" maxlength="75" name="contributor-{{ contributor.order|add:"- 1" }}-email"
+                                           type="email" value="{% if contributor.email %}{{ contributor.email }}{% endif %}">
+                                </div>
+                            </div>
+                            <div id="div_id_address" class="control-group">
+                                <label class="control-label">Address</label>
+
+                                <div class="controls">
+                                    <input class="form-control input-sm textinput textInput"
+                                           id="id_contributor-{{ contributor.order|add:"- 1" }}-address" maxlength="250"
+                                           name="contributor-{{ contributor.order|add:"- 1" }}-address"
+                                           type="text" value="{% if contributor.address %}{{ contributor.address }}{% endif %}">
+                                </div>
+                            </div>
+                            <div id="div_id_phone" class="control-group">
+                                <label class="control-label">Phone</label>
+
+                                <div class="controls">
+                                    <input class="form-control input-sm textinput textInput"
+                                           id="id_contributor-{{ contributor.order|add:"- 1" }}-phone" maxlength="25" name="contributor-{{ contributor.order|add:"- 1" }}-phone"
+                                           type="text" value="{% if contributor.phone %}{{ contributor.phone }}{% endif %}">
+                                </div>
+                            </div>
+                            <div id="div_id_homepage" class="control-group">
+                                <label class="control-label">Homepage</label>
+
+                                <div class="controls"><input
+                                        class="form-control input-sm urlinput"
+                                        id="id_contributor-{{ contributor.order|add:"- 1" }}-homepage" maxlength="200" name="contributor-{{ contributor.order|add:"- 1" }}-homepage"
+                                        type="url" value="{% if contributor.homepage %}{{ contributor.homepage }}{% endif %}"></div>
+                            </div>
+
+                        </fieldset>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Save changes</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="delete-contributor-dialog{{ contributor.id }}" tabindex="-1" role="dialog"
+     aria-labelledby="delete-contributor" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+                <h4 class="modal-title" id="delete-contributor">Delete metadata element</h4></div>
+            <div class="modal-body"><strong>Are you sure you want to delete this metadata element?</strong>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+                <a type="button" class="btn btn-danger"
+                   href="/hsapi/_internal/{{ cm.short_id }}/contributor/{{ contributor.id }}/delete-metadata/">Delete</a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endfor %}
+
+{% for author in creator_formset.initial %}
+<div class="modal fade" id="edit-creator-dialog{{ author.id }}" tabindex="-1" role="dialog"
+     aria-labelledby="edit-creator" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form id="id_creator_{{ author.id }}" action="/hsapi/_internal/{{ cm.short_id }}/creator/{{ author.id }}/update-metadata/"
+                  method="POST"
+                  enctype="multipart/form-data">
+                {% csrf_token %}
+                <input name="resource-mode" type="hidden" value="edit">
+
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal"
+                            aria-hidden="true">×
+                    </button>
+                    <h4 class="modal-title" id="edit-creator"> Edit author </h4></div>
+                <div class="modal-body">
+                    {% csrf_token %}
+                    <div class="form-group">
+                        {% csrf_token %}
+                        <fieldset>
+                            <div id="div_id_name" class="control-group">
+                                <label class="control-label requiredField">Name<span
+                                        class="asteriskField">*</span></label>
+
+                                <div class="controls"><input
+                                        class="form-control input-sm textinput textInput"
+                                        id="id_creator-{{ author.order|add:"- 1" }}-name" maxlength="100" name="creator-{{ author.order|add:"- 1" }}-name"
+                                        required="required" type="text" value="{% if author.name %}{{ author.name }}{% endif %}"></div>
+                            </div>
+                            <div id="div_id_description" class="control-group">
+                                <label class="control-label">HydroShare User Identifier (URL)</label>
+
+                                <div class="controls"><input
+                                        class="form-control input-sm urlinput"
+                                        id="id_creator-{{ author.order|add:"- 1" }}-description" maxlength="200"
+                                        name="creator-{{ author.order|add:"- 1" }}-description" type="url"
+                                        value="{% if author.description %}{{ author.description }}{% endif %}"
+                                        {% if author.description %} readonly {% endif %}></div>
+                            </div>
+                            <div id="div_id_organization" class="control-group">
+                                <label class="control-label">Organization</label>
+
+                                <div class="controls"><input
+                                        class="form-control input-sm textinput textInput"
+                                        id="id_creator-{{ author.order|add:"- 1" }}-organization" maxlength="200"
+                                        name="creator-{{ author.order|add:"- 1" }}-organization" type="text" value="{% if author.organization %}{{ author.organization }}{% endif %}"></div>
+                            </div>
+                            <div id="div_id_email" class="control-group">
+                                <label class="control-label">Email</label>
+
+                                <div class="controls">
+                                    <input class="form-control input-sm emailinput"
+                                           id="id_creator-{{ author.order|add:"- 1" }}-email" maxlength="75" name="creator-{{ author.order|add:"- 1" }}-email"
+                                           type="email" value="{% if author.email %}{{ author.email }}{% endif %}">
+                                </div>
+                            </div>
+                            <div id="div_id_address" class="control-group">
+                                <label class="control-label">Address</label>
+
+                                <div class="controls">
+                                    <input class="form-control input-sm textinput textInput"
+                                           id="id_creator-{{ author.order|add:"- 1" }}-address" maxlength="250"
+                                           name="creator-{{ author.order|add:"- 1" }}-address"
+                                           type="text" value="{% if author.address %}{{ author.address }}{% endif %}">
+                                </div>
+                            </div>
+                            <div id="div_id_phone" class="control-group">
+                                <label class="control-label">Phone</label>
+
+                                <div class="controls">
+                                    <input class="form-control input-sm textinput textInput"
+                                           id="id_creator-{{ author.order|add:"- 1" }}-phone" maxlength="25" name="creator-{{ author.order|add:"- 1" }}-phone"
+                                           type="text" value="{% if author.phone %}{{ author.phone }}{% endif %}">
+                                </div>
+                            </div>
+                            <div id="div_id_homepage" class="control-group">
+                                <label class="control-label">Homepage</label>
+
+                                <div class="controls"><input
+                                        class="form-control input-sm urlinput"
+                                        id="id_creator-{{ author.order|add:"- 1" }}-homepage" maxlength="200" name="creator-{{ author.order|add:"- 1" }}-homepage"
+                                        type="url" value="{% if author.homepage %}{{ author.homepage }}{% endif %}"></div>
+                            </div>
+                            <div id="div_id_order" class="control-group">
+                                <label class="control-label">Order<span class="asteriskField">*</span></label>
+
+                                <div class="controls"><input
+                                        class="form-control input-sm urlinput"
+                                        id="id_creator-{{ author.order|add:"- 1" }}-order" name="creator-{{ author.order|add:"- 1" }}-order" required="required"
+                                        type="number" value="{% if author.order %}{{ author.order }}{% endif %}"></div>
+                            </div>
+                        </fieldset>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Save changes</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="delete-creator-dialog{{ author.id }}" tabindex="-1" role="dialog"
+     aria-labelledby="delete-creator" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+                <h4 class="modal-title" id="delete-creator">Delete metadata element</h4></div>
+            <div class="modal-body"><strong>Are you sure you want to delete this metadata element?</strong>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+                <a type="button" class="btn btn-danger"
+                   href="/hsapi/_internal/{{ cm.short_id }}/creator/{{ author.id }}/delete-metadata/">Delete</a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endfor %}
+
+    {% include "irods_signin.html" %}
+    {% include "irods_upload_add.html" %}
+{%  block modal_publish_resource %}
+    <div class="modal fade" id="submit-for-publication-dialog" tabindex="-1" role="dialog"
+         aria-labelledby="myModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                    <h4 class="modal-title" id="submit-for-publication-title">Submit resource for publication</h4>
+                </div>
+                <div class="modal-body">
+                    <p>
+                        Upon submitting the resource for publication it will be permanently published and assigned a
+                        digital object identifier (DOI). This is <strong>final</strong> and changes can only be made
+                        on a new version (copy) of the resource.
+                    </p>
+                    <p>
+                         Please confirm that you accept the HydroShare Publication Agreement shown below.
+                    </p>
+                    <div class="iframe-border">
+                        <iframe id="pub-agreement-frame" scrolling="no" src="https://www.hydroshare.org/publication-agreement/"></iframe>
+                    </div>
+                    <input type="checkbox" id="agree-chk"><label for="agree-chk" class="checkbox-label">I accept the HydroShare Publication Agreement.</label>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+                    <a type="button" id="publish-btn" class="btn btn-danger" href="/hsapi/_internal/{{ cm.short_id }}/publish/" disabled>Publish</a>
+                </div>
+            </div>
+        </div>
+    </div>
+{%  endblock %}
+
+<div class="modal fade" id="add-source-dialog" tabindex="-1" role="dialog" aria-labelledby="add-source"
+     aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form action="/hsapi/_internal/{{ cm.short_id }}/source/add-metadata/" method="POST"
+                  enctype="multipart/form-data">
+                {% csrf_token %}
+                <input name="resource-mode" type="hidden" value="edit">
+
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+                    <h4 class="modal-title" id="add-source">Add Source</h4></div>
+                <div class="modal-body">
+                    {% csrf_token %}
+
+                    <div class="form-group">
+                        {% csrf_token %}
+                        <fieldset>
+                            <legend>Source</legend>
+                            <div id="div_id_derived_from" class="control-group">
+                                <label for="id_derived_from" class="control-label requiredField">Derived from<span class="asteriskField">*</span></label>
+
+                                <div class="controls">
+                                    <input class="form-control input-sm textinput textInput"
+                                                             id="id_derived_from" maxlength="300"
+                                                             name="derived_from" type="text">
+                                </div>
+                            </div>
+                        </fieldset>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                    <button type="submit" class="btn btn-primary">Save changes</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="add-relation-dialog" tabindex="-1" role="dialog" aria-labelledby="add-relation"
+     aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form action="/hsapi/_internal/{{ cm.short_id }}/relation/add-metadata/"
+                  method="POST" enctype="multipart/form-data">
+                {% csrf_token %}
+                <input name="resource-mode" type="hidden" value="edit">
+
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+                    <h4 class="modal-title" id="add-relation"> Add Relation </h4></div>
+                <div class="modal-body">
+                    {% csrf_token %}
+
+                    <div class="form-group">
+                        {% csrf_token %}
+                        <fieldset>
+                            <legend>Relation</legend>
+                            <div id="div_id_type" class="control-group"><label for="id_type"
+                                                                               class="control-label requiredField">
+                                Relation type<span class="asteriskField">*</span></label>
+
+                                <div class="controls"><select class="form-control input-sm select" id="id_type" name="type">
+                                    <option value="" selected="selected">---------</option>
+                                    {% for type_value, type_display in relation_source_types %}
+                                        <option value={{ type_value }}>{{ type_display }}</option>
+                                    {% endfor %}
+                                </select></div>
+                            </div>
+                            <div id="div_id_value" class="control-group"><label for="id_value"
+                                                                                class="control-label requiredField">
+                                Related to<span class="asteriskField">*</span></label>
+
+                                <div class="controls"><input class="form-control input-sm textinput textInput"
+                                                             id="id_value" maxlength="500" name="value"
+                                                             type="text"></div>
+                            </div>
+                        </fieldset>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                    <button type="submit" class="btn btn-primary">Save changes</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+{% block modal_delete_resource %}
+    <div class="modal fade" id="delete-resource-dialog" tabindex="-1" role="dialog" aria-labelledby="delete-resource-title"
+         aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                    <h4 class="modal-title" id="delete-resource-title">Delete Resource</h4>
+                </div>
+                <div class="modal-body">
+                    <strong>THIS IS A PERMANENT ACTION. </strong>
+                    <ul>
+                        <li>This will delete the resource file.</li>
+                        <li>A copy of your resource file will not be retained by Hydroshare.</li>
+                        <li>We highly recommend that you download the latest copy of your resource file before
+                            confirming this action.
+                        </li>
+                    </ul>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+                    <a type="button" class="btn btn-danger"
+                       href="/hsapi/_internal/{{ cm.short_id }}/delete-resource/">Delete</a>
+                </div>
+            </div>
+        </div>
+    </div>
+{%  endblock %}
+
+
+<div class="modal fade" id="add-reference-dialog" tabindex="-1" role="dialog" aria-labelledby="add-reference"
+     aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form action="/hsapi/_internal/{{ cm.short_id }}/add-citation/">
+
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                    <h4 class="modal-title" id="add-reference">Add reference</h4>
+                </div>
+                <div class="modal-body">
+                    {% csrf_token %}
+                    <div class="form-group">
+                        <label for="add-citation-input">Citation text:</label>
+                        <textarea class="form-control" name="content" id="add-citation-input" cols="30"
+                                  rows="10"></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                    <button type="submit" class="btn btn-primary">Save changes</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="add-creator-dialog" tabindex="-1" role="dialog" aria-labelledby="add-creator" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form action="/hsapi/_internal/{{ cm.short_id }}/creator/add-metadata/" method="POST"
+                  enctype="multipart/form-data">
+                {% csrf_token %}
+                <input name="resource-mode" type="hidden" value="edit">
+
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+                    <h4 class="modal-title" id="add-creator"> Add author </h4></div>
+                <div class="modal-body">
+                    {% csrf_token %}
+                    <div class="form-group">
+                        {% csrf_token %}
+                        <fieldset>
+                            <div id="div_id_name" class="control-group">
+                                <label for="id_name" class="control-label requiredField">Name<span class="asteriskField">*</span></label>
+
+                                <div class="controls"><input class="form-control input-sm textinput textInput"
+                                                             id="id_name" maxlength="100" name="name"
+                                                             required="required" type="text"></div>
+                            </div>
+                            <div id="div_id_description" class="control-group">
+                                <label for="id_description" class="control-label">HydroShare User Identifier (URL)</label>
+                                <div class="controls"><input class="form-control input-sm urlinput"
+                                                             id="id_description" maxlength="200"
+                                                             name="description" type="url"></div>
+                            </div>
+                            <div id="div_id_organization" class="control-group">
+                                <label for="id_organization" class="control-label">Organization</label>
+                                <div class="controls"><input class="form-control input-sm textinput textInput"
+                                                             id="id_organization" maxlength="200"
+                                                             name="organization" type="text"></div>
+                            </div>
+                            <div id="div_id_email" class="control-group">
+                                <label for="id_email" class="control-label">Email</label>
+
+                                <div class="controls">
+                                    <input class="form-control input-sm emailinput"
+                                                             id="id_email" maxlength="75" name="email"
+                                                             type="email">
+                                </div>
+                            </div>
+                            <div id="div_id_address" class="control-group">
+                                <label for="id_address" class="control-label">Address</label>
+                                <div class="controls">
+                                    <input class="form-control input-sm textinput textInput"
+                                                             id="id_address" maxlength="250" name="address"
+                                                             type="text">
+                                </div>
+                            </div>
+                            <div id="div_id_phone" class="control-group">
+                                <label for="id_phone"class="control-label">Phone</label>
+                                <div class="controls">
+                                    <input class="form-control input-sm textinput textInput"
+                                                             id="id_phone" maxlength="25" name="phone"
+                                                             type="text">
+                                </div>
+                            </div>
+                            <div id="div_id_homepage" class="control-group">
+                                <label for="id_homepage" class="control-label">Homepage</label>
+                                <div class="controls"><input class="form-control input-sm urlinput"
+                                                             id="id_homepage" maxlength="200" name="homepage"
+                                                             type="url"></div>
+                            </div>
+                        </fieldset>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                    <button type="submit" class="btn btn-primary">Save changes</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade in" id="add-contributor-dialog" tabindex="-1" role="dialog"
+     aria-labelledby="add-contributor" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form action="/hsapi/_internal/{{ cm.short_id }}/contributor/add-metadata/"
+                  method="POST" enctype="multipart/form-data">
+                {% csrf_token %}
+                <input name="resource-mode" type="hidden" value="edit">
+
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+                    <h4 class="modal-title" id="add-contributor"> Add Contributor </h4></div>
+                <div class="modal-body">
+                    {% csrf_token %}
+                    <div class="form-group">
+                        {% csrf_token %}
+                        <fieldset>
+                            <div id="div_id_name" class="control-group">
+                                <label for="id_name" class="control-label requiredField">Name<span class="asteriskField">*</span></label>
+
+                                <div class="controls">
+                                    <input class="form-control input-sm textinput textInput"
+                                                             id="id_name" maxlength="100" name="name"
+                                                             type="text">
+                                </div>
+                            </div>
+                            <div id="div_id_description" class="control-group">
+                                <label for="id_description" class="control-label">HydroShare User Identifier (URL)</label>
+
+                                <div class="controls">
+                                    <input class="form-control input-sm urlinput"
+                                                             id="id_description" maxlength="200"
+                                                             name="description" type="url">
+                                </div>
+                            </div>
+                            <div id="div_id_organization" class="control-group">
+                                <label for="id_organization" class="control-label">Organization</label>
+
+                                <div class="controls"><input class="form-control input-sm textinput textInput"
+                                                             id="id_organization" maxlength="200"
+                                                             name="organization" type="text">
+                                </div>
+                            </div>
+                            <div id="div_id_email" class="control-group">
+                                <label for="id_email" class="control-label">Email</label>
+
+                                <div class="controls">
+                                    <input class="form-control input-sm emailinput"
+                                                             id="id_email" maxlength="75" name="email"
+                                                             type="email">
+                                </div>
+                            </div>
+                            <div id="div_id_address" class="control-group">
+                                <label for="id_address" class="control-label">Address</label>
+
+                                <div class="controls">
+                                    <input class="form-control input-sm textinput textInput"
+                                                             id="id_address" maxlength="250" name="address"
+                                                             type="text">
+                                </div>
+                            </div>
+                            <div id="div_id_phone" class="control-group">
+                                <label for="id_phone" class="control-label">Phone</label>
+
+                                <div class="controls">
+                                    <input class="form-control input-sm textinput textInput"
+                                                             id="id_phone" maxlength="25" name="phone"
+                                                             type="text">
+                                </div>
+                            </div>
+                            <div id="div_id_homepage" class="control-group">
+                                <label for="id_homepage" class="control-label">Homepage</label>
+
+                                <div class="controls">
+                                    <input class="form-control input-sm urlinput"
+                                                             id="id_homepage" maxlength="200" name="homepage"
+                                                             type="url">
+                                </div>
+                            </div>
+                        </fieldset>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                    <button type="submit" class="btn btn-primary">Save changes</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Modal -->
+{%  block modal_add_file %}
+<div class="modal fade" id="add-file-dialog" tabindex="-1" role="dialog" aria-labelledby="add-file"
+     aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form action="/hsapi/_internal/{{ cm.short_id }}/add-file-to-resource/" method="POST"
+                  enctype="multipart/form-data">
+
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                    <h4 class="modal-title" id="add-file">Add file to resource</h4>
+                </div>
+                <div class="modal-body">
+                    {% csrf_token %}
+                    <div class="form-group">
+                        <label for="add-file-input">Select files:</label>
+                        <input type="file" name="files" id="add-file-input" multiple/>
+                    </div>
+                    <div id="file-types">Any file type can be uploaded.</div>
+                    <div id="file-multiple">Multiple file upload is allowed.</div>
+                    <br>
+                    <h3 style="color: red" id="file-type-error"></h3>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                    <button type="submit" class="btn btn-primary">Save changes</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{%  endblock %}

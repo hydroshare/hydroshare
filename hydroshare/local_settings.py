@@ -62,14 +62,14 @@ DOCKER_EXCHANGE=Exchange('docker', type='direct')
 DEFAULT_EXCHANGE=Exchange('default', type='topic')
 
 CELERY_QUEUES = (
-    Queue('default', routing_key='task.#'),
+    Queue('default', DEFAULT_EXCHANGE, routing_key='task.default'),
     Queue('docker_container_tasks', DOCKER_EXCHANGE, routing_key='docker.container'),
     Broadcast('docker_broadcast_tasks', DOCKER_EXCHANGE, routing_key='docker.broadcast'),
 )
 CELERY_DEFAULT_EXCHANGE = 'tasks'
 CELERY_DEFAULT_EXCHANGE_TYPE = 'topic'
 CELERY_DEFAULT_ROUTING_KEY = 'task.default'
-CELERY_ROUTES = ('django_docker_processes.router.DockerRouter',)
+CELERY_ROUTES = ('hs_core.router.HSTaskRouter', 'django_docker_processes.router.DockerRouter',)
 
 DOCKER_URL = 'unix://docker.sock/'
 DOCKER_API_VERSION = '1.12'
@@ -126,6 +126,11 @@ IRODS_BAGIT_RULE='hydroshare/irods/ruleGenerateBagIt_HS.r'
 IRODS_BAGIT_PATH = 'bags'
 IRODS_BAGIT_POSTFIX = 'zip'
 
+# crossref login credential for resource publication
+USE_CROSSREF_TEST = True
+CROSSREF_LOGIN_ID = ''
+CROSSREF_LOGIN_PWD = ''
+
 # Email configuration
 EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 #EMAIL_HOST_USER = ''
@@ -134,3 +139,6 @@ EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 #EMAIL_PORT = ''
 #EMAIL_USE_TLS = True
 #DEFAULT_FROM_EMAIL = ''
+#DEFAULT_SUPPORT_EMAIL=''
+
+HYDROSHARE_SHARED_TEMP = '/shared_temp'

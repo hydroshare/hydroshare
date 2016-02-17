@@ -20,6 +20,7 @@ ALTER TABLE ONLY public.core_sitepermission_sites DROP CONSTRAINT sitepermission
 ALTER TABLE ONLY public.ref_ts_referenceurl DROP CONSTRAINT ref_ts__content_type_id_9883d7b40a491_fk_django_content_type_id;
 ALTER TABLE ONLY public.ref_ts_method DROP CONSTRAINT ref_t_content_type_id_df404ee3c93c31e_fk_django_content_type_id;
 ALTER TABLE ONLY public.ref_ts_qualitycontrollevel DROP CONSTRAINT ref__content_type_id_630cce4d99ae4b3a_fk_django_content_type_id;
+ALTER TABLE ONLY public.ref_ts_datasource DROP CONSTRAINT ref__content_type_id_5012cd72a5c50d2a_fk_django_content_type_id;
 ALTER TABLE ONLY public.ref_ts_variable DROP CONSTRAINT ref__content_type_id_402960584e79c89b_fk_django_content_type_id;
 ALTER TABLE ONLY public.ref_ts_site DROP CONSTRAINT ref__content_type_id_1596bb7967529f8a_fk_django_content_type_id;
 ALTER TABLE ONLY public.pages_richtextpage DROP CONSTRAINT pages_richtextpage_page_ptr_id_fkey;
@@ -80,21 +81,21 @@ ALTER TABLE ONLY public.hs_core_contributor DROP CONSTRAINT hs_c_content_type_id
 ALTER TABLE ONLY public.hs_core_title DROP CONSTRAINT hs_c_content_type_id_1958c85a8a2ac493_fk_django_content_type_id;
 ALTER TABLE ONLY public.hs_core_description DROP CONSTRAINT hs_c_content_type_id_15a9d2f60f693357_fk_django_content_type_id;
 ALTER TABLE ONLY public."hs_app_netCDF_variable" DROP CONSTRAINT hs_ap_content_type_id_321744f4b1f2b5d_fk_django_content_type_id;
+ALTER TABLE ONLY public.hs_access_control_usergroupprivilege DROP CONSTRAINT hs_access_control_userg_user_id_d8086f326b13647_fk_auth_user_id;
+ALTER TABLE ONLY public.hs_access_control_userresourceprivilege DROP CONSTRAINT hs_access_control_user_user_id_5009f3b148778457_fk_auth_user_id;
 ALTER TABLE ONLY public.hs_access_control_useraccess DROP CONSTRAINT hs_access_control_user_user_id_243e1d62fa0c4421_fk_auth_user_id;
+ALTER TABLE ONLY public.hs_access_control_usergroupprivilege DROP CONSTRAINT hs_access_control_us_group_id_7a23b411f5887d80_fk_auth_group_id;
+ALTER TABLE ONLY public.hs_access_control_usergroupprivilege DROP CONSTRAINT hs_access_control_u_grantor_id_742a65bf460606de_fk_auth_user_id;
+ALTER TABLE ONLY public.hs_access_control_userresourceprivilege DROP CONSTRAINT hs_access_control_u_grantor_id_4701883fe2eecd92_fk_auth_user_id;
+ALTER TABLE ONLY public.hs_access_control_groupresourceprivilege DROP CONSTRAINT hs_access_control_gr_group_id_3d9dbfade29a5ab5_fk_auth_group_id;
 ALTER TABLE ONLY public.hs_access_control_groupaccess DROP CONSTRAINT hs_access_control_gr_group_id_1bd0754af26faaf7_fk_auth_group_id;
-ALTER TABLE ONLY public.hs_access_control_usergroupprivilege DROP CONSTRAINT hs_a_user_id_d8086f326b13647_fk_hs_access_control_useraccess_id;
+ALTER TABLE ONLY public.hs_access_control_groupresourceprivilege DROP CONSTRAINT hs_access_control_g_grantor_id_1e68e0395847f2b3_fk_auth_user_id;
 ALTER TABLE ONLY public.hs_app_timeseries_site DROP CONSTRAINT hs_a_content_type_id_6c3a0d31ca8f2ee2_fk_django_content_type_id;
 ALTER TABLE ONLY public.hs_app_timeseries_variable DROP CONSTRAINT hs_a_content_type_id_6bea7582e11ffdc9_fk_django_content_type_id;
 ALTER TABLE ONLY public.hs_app_timeseries_timeseriesresult DROP CONSTRAINT hs_a_content_type_id_5883e361b4531c3c_fk_django_content_type_id;
 ALTER TABLE ONLY public.hs_app_timeseries_processinglevel DROP CONSTRAINT hs_a_content_type_id_451721750e25a0b3_fk_django_content_type_id;
 ALTER TABLE ONLY public.hs_app_timeseries_method DROP CONSTRAINT hs_a_content_type_id_20e32c2b2e7f28d2_fk_django_content_type_id;
 ALTER TABLE ONLY public."hs_app_netCDF_originalcoverage" DROP CONSTRAINT hs_a_content_type_id_1c8d1eac05f91712_fk_django_content_type_id;
-ALTER TABLE ONLY public.hs_access_control_userresourceprivilege DROP CONSTRAINT hs__user_id_5009f3b148778457_fk_hs_access_control_useraccess_id;
-ALTER TABLE ONLY public.hs_access_control_usergroupprivilege DROP CONSTRAINT h_group_id_7a23b411f5887d80_fk_hs_access_control_groupaccess_id;
-ALTER TABLE ONLY public.hs_access_control_groupresourceprivilege DROP CONSTRAINT h_group_id_3d9dbfade29a5ab5_fk_hs_access_control_groupaccess_id;
-ALTER TABLE ONLY public.hs_access_control_usergroupprivilege DROP CONSTRAINT grantor_id_742a65bf460606de_fk_hs_access_control_useraccess_id;
-ALTER TABLE ONLY public.hs_access_control_userresourceprivilege DROP CONSTRAINT grantor_id_4701883fe2eecd92_fk_hs_access_control_useraccess_id;
-ALTER TABLE ONLY public.hs_access_control_groupresourceprivilege DROP CONSTRAINT grantor_id_1e68e0395847f2b3_fk_hs_access_control_useraccess_id;
 ALTER TABLE ONLY public.generic_threadedcomment DROP CONSTRAINT generic_threadedcomment_replied_to_id_fkey;
 ALTER TABLE ONLY public.generic_assignedkeyword DROP CONSTRAINT generic_assignedkeyword_keyword_id_fkey;
 ALTER TABLE ONLY public.galleries_galleryimage DROP CONSTRAINT galleries_galleryimage_gallery_id_fkey;
@@ -117,7 +118,6 @@ ALTER TABLE ONLY public.forms_fieldentry DROP CONSTRAINT forms_fieldentry_entry_
 ALTER TABLE ONLY public.forms_field DROP CONSTRAINT forms_field_form_id_fkey;
 ALTER TABLE ONLY public.django_docker_processes_overridevolume DROP CONSTRAINT fffc21cda66b01603a10a01bdad6da7a;
 ALTER TABLE ONLY public.hs_geo_raster_resource_rastermetadata DROP CONSTRAINT fa281325d2f3328932b8c7c7f4606aee;
-ALTER TABLE ONLY public.hs_access_control_userresourceprivilege DROP CONSTRAINT f044e0280cf04a0a65fed914082c4369;
 ALTER TABLE ONLY public.oauth2_provider_grant DROP CONSTRAINT ed9fd5eb4f62c9b049823c4a9799fadb;
 ALTER TABLE ONLY public.django_docker_processes_overrideport DROP CONSTRAINT ed07907c5bbff48aa33f866d15220f0a;
 ALTER TABLE ONLY public.django_docker_processes_overrideenvvar DROP CONSTRAINT e5fed3f499b0200346f7d75572f21043;
@@ -149,10 +149,9 @@ ALTER TABLE ONLY public.auth_group_permissions DROP CONSTRAINT auth_group_permis
 ALTER TABLE ONLY public.auth_permission DROP CONSTRAINT auth_content_type_id_508cf46651277a81_fk_django_content_type_id;
 ALTER TABLE ONLY public.hs_modelinstance_modelinstancemetadata DROP CONSTRAINT ad492224ba8c27b74282fb2c6035021e;
 ALTER TABLE ONLY public.hs_swat_modelinstance_modelparameter_model_parameters DROP CONSTRAINT ad127dae388d348e8d57f9ed18647c59;
-ALTER TABLE ONLY public.hs_access_control_groupresourceprivilege DROP CONSTRAINT a3e4f6918ca63681b55a6ef19f2b7860;
+ALTER TABLE ONLY public.hs_access_control_groupresourceprivilege DROP CONSTRAINT a7a04a83e3272ec48b241a40cc3fe88d;
 ALTER TABLE ONLY public.oauth2_provider_accesstoken DROP CONSTRAINT a17250f96ea449de36002be9c6c6acfb;
 ALTER TABLE ONLY public.oauth2_provider_refreshtoken DROP CONSTRAINT "D9aead397b25d8154e554023da34d33b";
-ALTER TABLE ONLY public.ref_ts_reftimeseries DROP CONSTRAINT "D90ce1b78bee1ce52cbd3c2e51980f13";
 ALTER TABLE ONLY public.ga_resources_renderedlayer DROP CONSTRAINT "D7e7cede746315ab9e08ce902995fd0e";
 ALTER TABLE ONLY public.hs_tools_resource_supportedrestypes_supported_res_types DROP CONSTRAINT "D792bbec64dddad2dfcdc3c0be032f83";
 ALTER TABLE ONLY public.django_docker_processes_dockerenvvar DROP CONSTRAINT "D6f5f0817512c0e51eb157b953080433";
@@ -172,6 +171,7 @@ ALTER TABLE ONLY public.django_docker_processes_dockerlink DROP CONSTRAINT "D31c
 ALTER TABLE ONLY public.hs_swat_modelinstance_modelparameter_model_parameters DROP CONSTRAINT "D298685713846fce4c3b8f825f6971fc";
 ALTER TABLE ONLY public.hs_model_program_modelprogrammetadata DROP CONSTRAINT "D28d4ec87c18a4f707acafb3b265fe0b";
 ALTER TABLE ONLY public.hs_labels_userresourcelabels DROP CONSTRAINT "D2339626414192982538d20c2f5e41c1";
+ALTER TABLE ONLY public.hs_access_control_userresourceprivilege DROP CONSTRAINT "D22dcb573d00d765370a2f5986bb9bec";
 ALTER TABLE ONLY public.django_docker_processes_dockervolume DROP CONSTRAINT "D1cd11468aed7088c8176baf1733f0a9";
 ALTER TABLE ONLY public.django_docker_processes_dockerprocess DROP CONSTRAINT "D1c0b5309109a103589fe605907962d9";
 ALTER TABLE ONLY public.hs_swat_modelinstance_modelobjective_swat_model_objectives DROP CONSTRAINT "D1aa88a4e8e7c50866281523397c0b8e";
@@ -188,6 +188,7 @@ DROP INDEX public.ref_ts_site_417f1b1c;
 DROP INDEX public.ref_ts_referenceurl_417f1b1c;
 DROP INDEX public.ref_ts_qualitycontrollevel_417f1b1c;
 DROP INDEX public.ref_ts_method_417f1b1c;
+DROP INDEX public.ref_ts_datasource_417f1b1c;
 DROP INDEX public.pages_page_site_id;
 DROP INDEX public.pages_page_parent_id;
 DROP INDEX public.oauth2_provider_refreshtoken_token_1e4e9388e6a22527_like;
@@ -275,15 +276,15 @@ DROP INDEX public.hs_app_timeseries_processinglevel_417f1b1c;
 DROP INDEX public.hs_app_timeseries_method_417f1b1c;
 DROP INDEX public."hs_app_netCDF_variable_417f1b1c";
 DROP INDEX public."hs_app_netCDF_originalcoverage_417f1b1c";
-DROP INDEX public.hs_access_control_userresourceprivilege_e8701ad4;
-DROP INDEX public.hs_access_control_userresourceprivilege_e2f3ef5b;
-DROP INDEX public.hs_access_control_userresourceprivilege_7e847bf8;
-DROP INDEX public.hs_access_control_usergroupprivilege_e8701ad4;
-DROP INDEX public.hs_access_control_usergroupprivilege_7e847bf8;
-DROP INDEX public.hs_access_control_usergroupprivilege_0e939a4f;
-DROP INDEX public.hs_access_control_groupresourceprivilege_e2f3ef5b;
-DROP INDEX public.hs_access_control_groupresourceprivilege_7e847bf8;
-DROP INDEX public.hs_access_control_groupresourceprivilege_0e939a4f;
+DROP INDEX public.hs_access_control_userresourceprivilege_9e767b7c;
+DROP INDEX public.hs_access_control_userresourceprivilege_82c60f9f;
+DROP INDEX public.hs_access_control_userresourceprivilege_80b9f3ef;
+DROP INDEX public.hs_access_control_usergroupprivilege_dc2a4728;
+DROP INDEX public.hs_access_control_usergroupprivilege_9e767b7c;
+DROP INDEX public.hs_access_control_usergroupprivilege_80b9f3ef;
+DROP INDEX public.hs_access_control_groupresourceprivilege_dc2a4728;
+DROP INDEX public.hs_access_control_groupresourceprivilege_9e767b7c;
+DROP INDEX public.hs_access_control_groupresourceprivilege_82c60f9f;
 DROP INDEX public.generic_threadedcomment_replied_to_id;
 DROP INDEX public.generic_rating_user_id;
 DROP INDEX public.generic_rating_content_type_id;
@@ -395,10 +396,10 @@ ALTER TABLE ONLY public.theme_homepage DROP CONSTRAINT theme_homepage_pkey;
 ALTER TABLE ONLY public.ref_ts_variable DROP CONSTRAINT ref_ts_variable_pkey;
 ALTER TABLE ONLY public.ref_ts_site DROP CONSTRAINT ref_ts_site_pkey;
 ALTER TABLE ONLY public.ref_ts_reftsmetadata DROP CONSTRAINT ref_ts_reftsmetadata_pkey;
-ALTER TABLE ONLY public.ref_ts_reftimeseries DROP CONSTRAINT ref_ts_reftimeseries_pkey;
 ALTER TABLE ONLY public.ref_ts_referenceurl DROP CONSTRAINT ref_ts_referenceurl_pkey;
 ALTER TABLE ONLY public.ref_ts_qualitycontrollevel DROP CONSTRAINT ref_ts_qualitycontrollevel_pkey;
 ALTER TABLE ONLY public.ref_ts_method DROP CONSTRAINT ref_ts_method_pkey;
+ALTER TABLE ONLY public.ref_ts_datasource DROP CONSTRAINT ref_ts_datasource_pkey;
 ALTER TABLE ONLY public.pages_richtextpage DROP CONSTRAINT pages_richtextpage_pkey;
 ALTER TABLE ONLY public.pages_page DROP CONSTRAINT pages_page_pkey;
 ALTER TABLE ONLY public.pages_link DROP CONSTRAINT pages_link_pkey;
@@ -624,6 +625,7 @@ ALTER TABLE public.ref_ts_site ALTER COLUMN id DROP DEFAULT;
 ALTER TABLE public.ref_ts_referenceurl ALTER COLUMN id DROP DEFAULT;
 ALTER TABLE public.ref_ts_qualitycontrollevel ALTER COLUMN id DROP DEFAULT;
 ALTER TABLE public.ref_ts_method ALTER COLUMN id DROP DEFAULT;
+ALTER TABLE public.ref_ts_datasource ALTER COLUMN id DROP DEFAULT;
 ALTER TABLE public.pages_page ALTER COLUMN id DROP DEFAULT;
 ALTER TABLE public.oauth2_provider_refreshtoken ALTER COLUMN id DROP DEFAULT;
 ALTER TABLE public.oauth2_provider_grant ALTER COLUMN id DROP DEFAULT;
@@ -757,13 +759,14 @@ DROP TABLE public.ref_ts_variable;
 DROP SEQUENCE public.ref_ts_site_id_seq;
 DROP TABLE public.ref_ts_site;
 DROP TABLE public.ref_ts_reftsmetadata;
-DROP TABLE public.ref_ts_reftimeseries;
 DROP SEQUENCE public.ref_ts_referenceurl_id_seq;
 DROP TABLE public.ref_ts_referenceurl;
 DROP SEQUENCE public.ref_ts_qualitycontrollevel_id_seq;
 DROP TABLE public.ref_ts_qualitycontrollevel;
 DROP SEQUENCE public.ref_ts_method_id_seq;
 DROP TABLE public.ref_ts_method;
+DROP SEQUENCE public.ref_ts_datasource_id_seq;
+DROP TABLE public.ref_ts_datasource;
 DROP TABLE public.pages_richtextpage;
 DROP SEQUENCE public.pages_page_id_seq;
 DROP TABLE public.pages_page;
@@ -3190,7 +3193,7 @@ CREATE TABLE hs_access_control_groupaccess (
     discoverable boolean NOT NULL,
     public boolean NOT NULL,
     shareable boolean NOT NULL,
-    group_id integer
+    group_id integer NOT NULL
 );
 
 
@@ -3266,7 +3269,7 @@ CREATE TABLE hs_access_control_resourceaccess (
     shareable boolean NOT NULL,
     published boolean NOT NULL,
     immutable boolean NOT NULL,
-    resource_id integer
+    resource_id integer NOT NULL
 );
 
 
@@ -3299,7 +3302,7 @@ ALTER SEQUENCE hs_access_control_resourceaccess_id_seq OWNED BY hs_access_contro
 
 CREATE TABLE hs_access_control_useraccess (
     id integer NOT NULL,
-    user_id integer
+    user_id integer NOT NULL
 );
 
 
@@ -5615,8 +5618,8 @@ ALTER SEQUENCE hs_tools_resource_supportedrestypes_supported_res_types_id_seq OW
 CREATE TABLE hs_tools_resource_toolicon (
     id integer NOT NULL,
     object_id integer NOT NULL,
-    icon character varying(1024),
     content_type_id integer NOT NULL,
+    url character varying(1024),
     CONSTRAINT hs_tools_resource_toolicon_object_id_check CHECK ((object_id >= 0))
 );
 
@@ -5918,14 +5921,51 @@ CREATE TABLE pages_richtextpage (
 ALTER TABLE public.pages_richtextpage OWNER TO postgres;
 
 --
+-- Name: ref_ts_datasource; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
+--
+
+CREATE TABLE ref_ts_datasource (
+    id integer NOT NULL,
+    object_id integer NOT NULL,
+    code character varying(500) NOT NULL,
+    content_type_id integer NOT NULL,
+    CONSTRAINT ref_ts_datasource_object_id_check CHECK ((object_id >= 0))
+);
+
+
+ALTER TABLE public.ref_ts_datasource OWNER TO postgres;
+
+--
+-- Name: ref_ts_datasource_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+--
+
+CREATE SEQUENCE ref_ts_datasource_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER TABLE public.ref_ts_datasource_id_seq OWNER TO postgres;
+
+--
+-- Name: ref_ts_datasource_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
+--
+
+ALTER SEQUENCE ref_ts_datasource_id_seq OWNED BY ref_ts_datasource.id;
+
+
+--
 -- Name: ref_ts_method; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
 --
 
 CREATE TABLE ref_ts_method (
     id integer NOT NULL,
     object_id integer NOT NULL,
-    value character varying(200) NOT NULL,
     content_type_id integer NOT NULL,
+    code character varying(500) NOT NULL,
+    description text NOT NULL,
     CONSTRAINT ref_ts_method_object_id_check CHECK ((object_id >= 0))
 );
 
@@ -5960,8 +6000,9 @@ ALTER SEQUENCE ref_ts_method_id_seq OWNED BY ref_ts_method.id;
 CREATE TABLE ref_ts_qualitycontrollevel (
     id integer NOT NULL,
     object_id integer NOT NULL,
-    value character varying(200) NOT NULL,
     content_type_id integer NOT NULL,
+    code character varying(500) NOT NULL,
+    definition character varying(500) NOT NULL,
     CONSTRAINT ref_ts_qualitycontrollevel_object_id_check CHECK ((object_id >= 0))
 );
 
@@ -6027,19 +6068,6 @@ ALTER SEQUENCE ref_ts_referenceurl_id_seq OWNED BY ref_ts_referenceurl.id;
 
 
 --
--- Name: ref_ts_reftimeseries; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
---
-
-CREATE TABLE ref_ts_reftimeseries (
-    baseresource_ptr_id integer NOT NULL,
-    reference_type character varying(4) NOT NULL,
-    url character varying(200) NOT NULL
-);
-
-
-ALTER TABLE public.ref_ts_reftimeseries OWNER TO postgres;
-
---
 -- Name: ref_ts_reftsmetadata; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
 --
 
@@ -6057,11 +6085,12 @@ ALTER TABLE public.ref_ts_reftsmetadata OWNER TO postgres;
 CREATE TABLE ref_ts_site (
     id integer NOT NULL,
     object_id integer NOT NULL,
-    name character varying(100) NOT NULL,
-    code character varying(50) NOT NULL,
+    name character varying(500) NOT NULL,
+    code character varying(500) NOT NULL,
     latitude numeric(9,6),
     longitude numeric(9,6),
     content_type_id integer NOT NULL,
+    net_work character varying(500) NOT NULL,
     CONSTRAINT ref_ts_site_object_id_check CHECK ((object_id >= 0))
 );
 
@@ -6096,10 +6125,10 @@ ALTER SEQUENCE ref_ts_site_id_seq OWNED BY ref_ts_site.id;
 CREATE TABLE ref_ts_variable (
     id integer NOT NULL,
     object_id integer NOT NULL,
-    name character varying(100) NOT NULL,
-    code character varying(50) NOT NULL,
-    data_type character varying(50),
-    sample_medium character varying(50),
+    name character varying(500) NOT NULL,
+    code character varying(500) NOT NULL,
+    data_type character varying(500) NOT NULL,
+    sample_medium character varying(500) NOT NULL,
     content_type_id integer NOT NULL,
     CONSTRAINT ref_ts_variable_object_id_check CHECK ((object_id >= 0))
 );
@@ -7137,6 +7166,13 @@ ALTER TABLE ONLY pages_page ALTER COLUMN id SET DEFAULT nextval('pages_page_id_s
 -- Name: id; Type: DEFAULT; Schema: public; Owner: postgres
 --
 
+ALTER TABLE ONLY ref_ts_datasource ALTER COLUMN id SET DEFAULT nextval('ref_ts_datasource_id_seq'::regclass);
+
+
+--
+-- Name: id; Type: DEFAULT; Schema: public; Owner: postgres
+--
+
 ALTER TABLE ONLY ref_ts_method ALTER COLUMN id SET DEFAULT nextval('ref_ts_method_id_seq'::regclass);
 
 
@@ -7291,9 +7327,6 @@ COPY auth_group_permissions (id, group_id, permission_id) FROM stdin;
 436	1	283
 437	1	284
 438	1	285
-439	1	310
-440	1	311
-441	1	312
 442	1	313
 443	1	314
 444	1	315
@@ -7771,9 +7804,6 @@ COPY auth_permission (id, name, content_type_id, codename) FROM stdin;
 307	Can add task	103	add_taskstate
 308	Can change task	103	change_taskstate
 309	Can delete task	103	delete_taskstate
-310	Can add HIS Referenced Time Series	104	add_reftimeseries
-311	Can change HIS Referenced Time Series	104	change_reftimeseries
-312	Can delete HIS Referenced Time Series	104	delete_reftimeseries
 313	Can add reference url	105	add_referenceurl
 314	Can change reference url	105	change_referenceurl
 315	Can delete reference url	105	delete_referenceurl
@@ -7937,6 +7967,42 @@ COPY auth_permission (id, name, content_type_id, codename) FROM stdin;
 473	Can add comment flag	158	add_commentflag
 474	Can change comment flag	158	change_commentflag
 475	Can delete comment flag	158	delete_commentflag
+476	Can add Generic	66	add_genericresource
+477	Can change Generic	66	change_genericresource
+478	Can delete Generic	66	delete_genericresource
+479	Can add Geographic Raster	66	add_rasterresource
+480	Can change Geographic Raster	66	change_rasterresource
+481	Can delete Geographic Raster	66	delete_rasterresource
+482	Can add HIS Referenced Time Series	66	add_reftimeseriesresource
+483	Can change HIS Referenced Time Series	66	change_reftimeseriesresource
+484	Can delete HIS Referenced Time Series	66	delete_reftimeseriesresource
+485	Can add data source	159	add_datasource
+486	Can change data source	159	change_datasource
+487	Can delete data source	159	delete_datasource
+488	Can add Time Series	66	add_timeseriesresource
+489	Can change Time Series	66	change_timeseriesresource
+490	Can delete Time Series	66	delete_timeseriesresource
+491	Can add Multidimensional (NetCDF)	66	add_netcdfresource
+492	Can change Multidimensional (NetCDF)	66	change_netcdfresource
+493	Can delete Multidimensional (NetCDF)	66	delete_netcdfresource
+494	Can add Model Program Resource	66	add_modelprogramresource
+495	Can change Model Program Resource	66	change_modelprogramresource
+496	Can delete Model Program Resource	66	delete_modelprogramresource
+497	Can add Model Instance Resource	66	add_modelinstanceresource
+498	Can change Model Instance Resource	66	change_modelinstanceresource
+499	Can delete Model Instance Resource	66	delete_modelinstanceresource
+500	Can add Web App Resource	66	add_toolresource
+501	Can change Web App Resource	66	change_toolresource
+502	Can delete Web App Resource	66	delete_toolresource
+503	Can add SWAT Model Instance Resource	66	add_swatmodelinstanceresource
+504	Can change SWAT Model Instance Resource	66	change_swatmodelinstanceresource
+505	Can delete SWAT Model Instance Resource	66	delete_swatmodelinstanceresource
+506	Can add Geographic Feature (ESRI Shapefiles)	66	add_geographicfeatureresource
+507	Can change Geographic Feature (ESRI Shapefiles)	66	change_geographicfeatureresource
+508	Can delete Geographic Feature (ESRI Shapefiles)	66	delete_geographicfeatureresource
+509	Can add Script Resource	66	add_scriptresource
+510	Can change Script Resource	66	change_scriptresource
+511	Can delete Script Resource	66	delete_scriptresource
 \.
 
 
@@ -7944,7 +8010,7 @@ COPY auth_permission (id, name, content_type_id, codename) FROM stdin;
 -- Name: auth_permission_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('auth_permission_id_seq', 475, true);
+SELECT pg_catalog.setval('auth_permission_id_seq', 511, true);
 
 
 --
@@ -8301,7 +8367,6 @@ COPY django_content_type (id, name, app_label, model) FROM stdin;
 101	periodic task	djcelery	periodictask
 102	worker	djcelery	workerstate
 103	task	djcelery	taskstate
-104	HIS Referenced Time Series	ref_ts	reftimeseries
 105	reference url	ref_ts	referenceurl
 106	method	ref_ts	method
 107	quality control level	ref_ts	qualitycontrollevel
@@ -8356,6 +8421,8 @@ COPY django_content_type (id, name, app_label, model) FROM stdin;
 156	log entry	admin	logentry
 157	comment	comments	comment
 158	comment flag	comments	commentflag
+159	data source	ref_ts	datasource
+160	HIS Referenced Time Series	ref_ts	reftimeseriesresource
 \.
 
 
@@ -8363,7 +8430,7 @@ COPY django_content_type (id, name, app_label, model) FROM stdin;
 -- Name: django_content_type_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('django_content_type_id_seq', 158, true);
+SELECT pg_catalog.setval('django_content_type_id_seq', 160, true);
 
 
 --
@@ -8627,6 +8694,17 @@ COPY django_migrations (id, app, name, applied) FROM stdin;
 74	ref_ts	0003_reftimeseries	2016-01-25 19:13:12.394768+00
 75	sessions	0001_initial	2016-01-25 19:13:12.483043+00
 76	theme	0001_initial	2016-01-25 19:13:12.791757+00
+77	hs_access_control	0006_auto_add_new_fields	2016-02-10 17:25:26.82944+00
+78	hs_access_control	0007_manual_populate_new_fields	2016-02-10 17:25:27.760025+00
+79	hs_access_control	0008_auto_remove_many2many_relationships	2016-02-10 17:25:29.190215+00
+80	hs_access_control	0009_auto_remove_original_fields	2016-02-10 17:25:31.50817+00
+81	hs_access_control	0010_auto_rename_related_names	2016-02-10 17:25:33.418051+00
+82	hs_access_control	0011_auto_rename_new_fields_to_original_names	2016-02-10 17:25:35.520652+00
+83	hs_access_control	0012_auto_disallow_nulls	2016-02-10 17:25:37.776682+00
+84	hs_access_control	0013_auto_add_uniqueness_constraints	2016-02-10 17:25:39.232351+00
+85	hs_core	0015_auto_20160210_1725	2016-02-10 17:25:39.984521+00
+86	hs_tools_resource	0007_auto_20160122_2240	2016-02-10 17:25:40.949761+00
+87	ref_ts	0004_auto_20160114_0252	2016-02-10 17:25:44.189374+00
 \.
 
 
@@ -8634,7 +8712,7 @@ COPY django_migrations (id, app, name, applied) FROM stdin;
 -- Name: django_migrations_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('django_migrations_id_seq', 76, true);
+SELECT pg_catalog.setval('django_migrations_id_seq', 87, true);
 
 
 --
@@ -10022,7 +10100,7 @@ SELECT pg_catalog.setval('hs_tools_resource_supportedrestypes_supported_res_type
 -- Data for Name: hs_tools_resource_toolicon; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
-COPY hs_tools_resource_toolicon (id, object_id, icon, content_type_id) FROM stdin;
+COPY hs_tools_resource_toolicon (id, object_id, content_type_id, url) FROM stdin;
 \.
 
 
@@ -10168,10 +10246,25 @@ COPY pages_richtextpage (page_ptr_id, content) FROM stdin;
 
 
 --
+-- Data for Name: ref_ts_datasource; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+
+COPY ref_ts_datasource (id, object_id, code, content_type_id) FROM stdin;
+\.
+
+
+--
+-- Name: ref_ts_datasource_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('ref_ts_datasource_id_seq', 1, false);
+
+
+--
 -- Data for Name: ref_ts_method; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
-COPY ref_ts_method (id, object_id, value, content_type_id) FROM stdin;
+COPY ref_ts_method (id, object_id, content_type_id, code, description) FROM stdin;
 \.
 
 
@@ -10186,7 +10279,7 @@ SELECT pg_catalog.setval('ref_ts_method_id_seq', 1, false);
 -- Data for Name: ref_ts_qualitycontrollevel; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
-COPY ref_ts_qualitycontrollevel (id, object_id, value, content_type_id) FROM stdin;
+COPY ref_ts_qualitycontrollevel (id, object_id, content_type_id, code, definition) FROM stdin;
 \.
 
 
@@ -10213,14 +10306,6 @@ SELECT pg_catalog.setval('ref_ts_referenceurl_id_seq', 1, false);
 
 
 --
--- Data for Name: ref_ts_reftimeseries; Type: TABLE DATA; Schema: public; Owner: postgres
---
-
-COPY ref_ts_reftimeseries (baseresource_ptr_id, reference_type, url) FROM stdin;
-\.
-
-
---
 -- Data for Name: ref_ts_reftsmetadata; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
@@ -10232,7 +10317,7 @@ COPY ref_ts_reftsmetadata (coremetadata_ptr_id) FROM stdin;
 -- Data for Name: ref_ts_site; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
-COPY ref_ts_site (id, object_id, name, code, latitude, longitude, content_type_id) FROM stdin;
+COPY ref_ts_site (id, object_id, name, code, latitude, longitude, content_type_id, net_work) FROM stdin;
 \.
 
 
@@ -12059,6 +12144,14 @@ ALTER TABLE ONLY pages_richtextpage
 
 
 --
+-- Name: ref_ts_datasource_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+--
+
+ALTER TABLE ONLY ref_ts_datasource
+    ADD CONSTRAINT ref_ts_datasource_pkey PRIMARY KEY (id);
+
+
+--
 -- Name: ref_ts_method_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
 --
 
@@ -12080,14 +12173,6 @@ ALTER TABLE ONLY ref_ts_qualitycontrollevel
 
 ALTER TABLE ONLY ref_ts_referenceurl
     ADD CONSTRAINT ref_ts_referenceurl_pkey PRIMARY KEY (id);
-
-
---
--- Name: ref_ts_reftimeseries_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
---
-
-ALTER TABLE ONLY ref_ts_reftimeseries
-    ADD CONSTRAINT ref_ts_reftimeseries_pkey PRIMARY KEY (baseresource_ptr_id);
 
 
 --
@@ -12876,66 +12961,66 @@ CREATE INDEX generic_threadedcomment_replied_to_id ON generic_threadedcomment US
 
 
 --
--- Name: hs_access_control_groupresourceprivilege_0e939a4f; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_access_control_groupresourceprivilege_82c60f9f; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
 --
 
-CREATE INDEX hs_access_control_groupresourceprivilege_0e939a4f ON hs_access_control_groupresourceprivilege USING btree (group_id);
-
-
---
--- Name: hs_access_control_groupresourceprivilege_7e847bf8; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
---
-
-CREATE INDEX hs_access_control_groupresourceprivilege_7e847bf8 ON hs_access_control_groupresourceprivilege USING btree (grantor_id);
+CREATE INDEX hs_access_control_groupresourceprivilege_82c60f9f ON hs_access_control_groupresourceprivilege USING btree (resource_id);
 
 
 --
--- Name: hs_access_control_groupresourceprivilege_e2f3ef5b; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_access_control_groupresourceprivilege_9e767b7c; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
 --
 
-CREATE INDEX hs_access_control_groupresourceprivilege_e2f3ef5b ON hs_access_control_groupresourceprivilege USING btree (resource_id);
-
-
---
--- Name: hs_access_control_usergroupprivilege_0e939a4f; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
---
-
-CREATE INDEX hs_access_control_usergroupprivilege_0e939a4f ON hs_access_control_usergroupprivilege USING btree (group_id);
+CREATE INDEX hs_access_control_groupresourceprivilege_9e767b7c ON hs_access_control_groupresourceprivilege USING btree (grantor_id);
 
 
 --
--- Name: hs_access_control_usergroupprivilege_7e847bf8; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_access_control_groupresourceprivilege_dc2a4728; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
 --
 
-CREATE INDEX hs_access_control_usergroupprivilege_7e847bf8 ON hs_access_control_usergroupprivilege USING btree (grantor_id);
-
-
---
--- Name: hs_access_control_usergroupprivilege_e8701ad4; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
---
-
-CREATE INDEX hs_access_control_usergroupprivilege_e8701ad4 ON hs_access_control_usergroupprivilege USING btree (user_id);
+CREATE INDEX hs_access_control_groupresourceprivilege_dc2a4728 ON hs_access_control_groupresourceprivilege USING btree (group_id);
 
 
 --
--- Name: hs_access_control_userresourceprivilege_7e847bf8; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_access_control_usergroupprivilege_80b9f3ef; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
 --
 
-CREATE INDEX hs_access_control_userresourceprivilege_7e847bf8 ON hs_access_control_userresourceprivilege USING btree (grantor_id);
-
-
---
--- Name: hs_access_control_userresourceprivilege_e2f3ef5b; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
---
-
-CREATE INDEX hs_access_control_userresourceprivilege_e2f3ef5b ON hs_access_control_userresourceprivilege USING btree (resource_id);
+CREATE INDEX hs_access_control_usergroupprivilege_80b9f3ef ON hs_access_control_usergroupprivilege USING btree (user_id);
 
 
 --
--- Name: hs_access_control_userresourceprivilege_e8701ad4; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+-- Name: hs_access_control_usergroupprivilege_9e767b7c; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
 --
 
-CREATE INDEX hs_access_control_userresourceprivilege_e8701ad4 ON hs_access_control_userresourceprivilege USING btree (user_id);
+CREATE INDEX hs_access_control_usergroupprivilege_9e767b7c ON hs_access_control_usergroupprivilege USING btree (grantor_id);
+
+
+--
+-- Name: hs_access_control_usergroupprivilege_dc2a4728; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+--
+
+CREATE INDEX hs_access_control_usergroupprivilege_dc2a4728 ON hs_access_control_usergroupprivilege USING btree (group_id);
+
+
+--
+-- Name: hs_access_control_userresourceprivilege_80b9f3ef; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+--
+
+CREATE INDEX hs_access_control_userresourceprivilege_80b9f3ef ON hs_access_control_userresourceprivilege USING btree (user_id);
+
+
+--
+-- Name: hs_access_control_userresourceprivilege_82c60f9f; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+--
+
+CREATE INDEX hs_access_control_userresourceprivilege_82c60f9f ON hs_access_control_userresourceprivilege USING btree (resource_id);
+
+
+--
+-- Name: hs_access_control_userresourceprivilege_9e767b7c; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+--
+
+CREATE INDEX hs_access_control_userresourceprivilege_9e767b7c ON hs_access_control_userresourceprivilege USING btree (grantor_id);
 
 
 --
@@ -13548,6 +13633,13 @@ CREATE INDEX pages_page_site_id ON pages_page USING btree (site_id);
 
 
 --
+-- Name: ref_ts_datasource_417f1b1c; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+--
+
+CREATE INDEX ref_ts_datasource_417f1b1c ON ref_ts_datasource USING btree (content_type_id);
+
+
+--
 -- Name: ref_ts_method_417f1b1c; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
 --
 
@@ -13666,6 +13758,14 @@ ALTER TABLE ONLY django_docker_processes_dockerprocess
 
 ALTER TABLE ONLY django_docker_processes_dockervolume
     ADD CONSTRAINT "D1cd11468aed7088c8176baf1733f0a9" FOREIGN KEY (docker_profile_id) REFERENCES django_docker_processes_dockerprofile(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
+-- Name: D22dcb573d00d765370a2f5986bb9bec; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY hs_access_control_userresourceprivilege
+    ADD CONSTRAINT "D22dcb573d00d765370a2f5986bb9bec" FOREIGN KEY (resource_id) REFERENCES hs_core_genericresource(page_ptr_id) DEFERRABLE INITIALLY DEFERRED;
 
 
 --
@@ -13821,14 +13921,6 @@ ALTER TABLE ONLY ga_resources_renderedlayer
 
 
 --
--- Name: D90ce1b78bee1ce52cbd3c2e51980f13; Type: FK CONSTRAINT; Schema: public; Owner: postgres
---
-
-ALTER TABLE ONLY ref_ts_reftimeseries
-    ADD CONSTRAINT "D90ce1b78bee1ce52cbd3c2e51980f13" FOREIGN KEY (baseresource_ptr_id) REFERENCES hs_core_genericresource(page_ptr_id) DEFERRABLE INITIALLY DEFERRED;
-
-
---
 -- Name: D9aead397b25d8154e554023da34d33b; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -13845,11 +13937,11 @@ ALTER TABLE ONLY oauth2_provider_accesstoken
 
 
 --
--- Name: a3e4f6918ca63681b55a6ef19f2b7860; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+-- Name: a7a04a83e3272ec48b241a40cc3fe88d; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY hs_access_control_groupresourceprivilege
-    ADD CONSTRAINT a3e4f6918ca63681b55a6ef19f2b7860 FOREIGN KEY (resource_id) REFERENCES hs_access_control_resourceaccess(id) DEFERRABLE INITIALLY DEFERRED;
+    ADD CONSTRAINT a7a04a83e3272ec48b241a40cc3fe88d FOREIGN KEY (resource_id) REFERENCES hs_core_genericresource(page_ptr_id) DEFERRABLE INITIALLY DEFERRED;
 
 
 --
@@ -14101,14 +14193,6 @@ ALTER TABLE ONLY oauth2_provider_grant
 
 
 --
--- Name: f044e0280cf04a0a65fed914082c4369; Type: FK CONSTRAINT; Schema: public; Owner: postgres
---
-
-ALTER TABLE ONLY hs_access_control_userresourceprivilege
-    ADD CONSTRAINT f044e0280cf04a0a65fed914082c4369 FOREIGN KEY (resource_id) REFERENCES hs_access_control_resourceaccess(id) DEFERRABLE INITIALLY DEFERRED;
-
-
---
 -- Name: fa281325d2f3328932b8c7c7f4606aee; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -14285,54 +14369,6 @@ ALTER TABLE ONLY generic_threadedcomment
 
 
 --
--- Name: grantor_id_1e68e0395847f2b3_fk_hs_access_control_useraccess_id; Type: FK CONSTRAINT; Schema: public; Owner: postgres
---
-
-ALTER TABLE ONLY hs_access_control_groupresourceprivilege
-    ADD CONSTRAINT grantor_id_1e68e0395847f2b3_fk_hs_access_control_useraccess_id FOREIGN KEY (grantor_id) REFERENCES hs_access_control_useraccess(id) DEFERRABLE INITIALLY DEFERRED;
-
-
---
--- Name: grantor_id_4701883fe2eecd92_fk_hs_access_control_useraccess_id; Type: FK CONSTRAINT; Schema: public; Owner: postgres
---
-
-ALTER TABLE ONLY hs_access_control_userresourceprivilege
-    ADD CONSTRAINT grantor_id_4701883fe2eecd92_fk_hs_access_control_useraccess_id FOREIGN KEY (grantor_id) REFERENCES hs_access_control_useraccess(id) DEFERRABLE INITIALLY DEFERRED;
-
-
---
--- Name: grantor_id_742a65bf460606de_fk_hs_access_control_useraccess_id; Type: FK CONSTRAINT; Schema: public; Owner: postgres
---
-
-ALTER TABLE ONLY hs_access_control_usergroupprivilege
-    ADD CONSTRAINT grantor_id_742a65bf460606de_fk_hs_access_control_useraccess_id FOREIGN KEY (grantor_id) REFERENCES hs_access_control_useraccess(id) DEFERRABLE INITIALLY DEFERRED;
-
-
---
--- Name: h_group_id_3d9dbfade29a5ab5_fk_hs_access_control_groupaccess_id; Type: FK CONSTRAINT; Schema: public; Owner: postgres
---
-
-ALTER TABLE ONLY hs_access_control_groupresourceprivilege
-    ADD CONSTRAINT h_group_id_3d9dbfade29a5ab5_fk_hs_access_control_groupaccess_id FOREIGN KEY (group_id) REFERENCES hs_access_control_groupaccess(id) DEFERRABLE INITIALLY DEFERRED;
-
-
---
--- Name: h_group_id_7a23b411f5887d80_fk_hs_access_control_groupaccess_id; Type: FK CONSTRAINT; Schema: public; Owner: postgres
---
-
-ALTER TABLE ONLY hs_access_control_usergroupprivilege
-    ADD CONSTRAINT h_group_id_7a23b411f5887d80_fk_hs_access_control_groupaccess_id FOREIGN KEY (group_id) REFERENCES hs_access_control_groupaccess(id) DEFERRABLE INITIALLY DEFERRED;
-
-
---
--- Name: hs__user_id_5009f3b148778457_fk_hs_access_control_useraccess_id; Type: FK CONSTRAINT; Schema: public; Owner: postgres
---
-
-ALTER TABLE ONLY hs_access_control_userresourceprivilege
-    ADD CONSTRAINT hs__user_id_5009f3b148778457_fk_hs_access_control_useraccess_id FOREIGN KEY (user_id) REFERENCES hs_access_control_useraccess(id) DEFERRABLE INITIALLY DEFERRED;
-
-
---
 -- Name: hs_a_content_type_id_1c8d1eac05f91712_fk_django_content_type_id; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -14381,11 +14417,11 @@ ALTER TABLE ONLY hs_app_timeseries_site
 
 
 --
--- Name: hs_a_user_id_d8086f326b13647_fk_hs_access_control_useraccess_id; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+-- Name: hs_access_control_g_grantor_id_1e68e0395847f2b3_fk_auth_user_id; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
-ALTER TABLE ONLY hs_access_control_usergroupprivilege
-    ADD CONSTRAINT hs_a_user_id_d8086f326b13647_fk_hs_access_control_useraccess_id FOREIGN KEY (user_id) REFERENCES hs_access_control_useraccess(id) DEFERRABLE INITIALLY DEFERRED;
+ALTER TABLE ONLY hs_access_control_groupresourceprivilege
+    ADD CONSTRAINT hs_access_control_g_grantor_id_1e68e0395847f2b3_fk_auth_user_id FOREIGN KEY (grantor_id) REFERENCES auth_user(id) DEFERRABLE INITIALLY DEFERRED;
 
 
 --
@@ -14397,11 +14433,59 @@ ALTER TABLE ONLY hs_access_control_groupaccess
 
 
 --
+-- Name: hs_access_control_gr_group_id_3d9dbfade29a5ab5_fk_auth_group_id; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY hs_access_control_groupresourceprivilege
+    ADD CONSTRAINT hs_access_control_gr_group_id_3d9dbfade29a5ab5_fk_auth_group_id FOREIGN KEY (group_id) REFERENCES auth_group(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
+-- Name: hs_access_control_u_grantor_id_4701883fe2eecd92_fk_auth_user_id; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY hs_access_control_userresourceprivilege
+    ADD CONSTRAINT hs_access_control_u_grantor_id_4701883fe2eecd92_fk_auth_user_id FOREIGN KEY (grantor_id) REFERENCES auth_user(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
+-- Name: hs_access_control_u_grantor_id_742a65bf460606de_fk_auth_user_id; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY hs_access_control_usergroupprivilege
+    ADD CONSTRAINT hs_access_control_u_grantor_id_742a65bf460606de_fk_auth_user_id FOREIGN KEY (grantor_id) REFERENCES auth_user(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
+-- Name: hs_access_control_us_group_id_7a23b411f5887d80_fk_auth_group_id; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY hs_access_control_usergroupprivilege
+    ADD CONSTRAINT hs_access_control_us_group_id_7a23b411f5887d80_fk_auth_group_id FOREIGN KEY (group_id) REFERENCES auth_group(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
 -- Name: hs_access_control_user_user_id_243e1d62fa0c4421_fk_auth_user_id; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY hs_access_control_useraccess
     ADD CONSTRAINT hs_access_control_user_user_id_243e1d62fa0c4421_fk_auth_user_id FOREIGN KEY (user_id) REFERENCES auth_user(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
+-- Name: hs_access_control_user_user_id_5009f3b148778457_fk_auth_user_id; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY hs_access_control_userresourceprivilege
+    ADD CONSTRAINT hs_access_control_user_user_id_5009f3b148778457_fk_auth_user_id FOREIGN KEY (user_id) REFERENCES auth_user(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
+-- Name: hs_access_control_userg_user_id_d8086f326b13647_fk_auth_user_id; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY hs_access_control_usergroupprivilege
+    ADD CONSTRAINT hs_access_control_userg_user_id_d8086f326b13647_fk_auth_user_id FOREIGN KEY (user_id) REFERENCES auth_user(id) DEFERRABLE INITIALLY DEFERRED;
 
 
 --
@@ -14882,6 +14966,14 @@ ALTER TABLE ONLY ref_ts_site
 
 ALTER TABLE ONLY ref_ts_variable
     ADD CONSTRAINT ref__content_type_id_402960584e79c89b_fk_django_content_type_id FOREIGN KEY (content_type_id) REFERENCES django_content_type(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
+-- Name: ref__content_type_id_5012cd72a5c50d2a_fk_django_content_type_id; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY ref_ts_datasource
+    ADD CONSTRAINT ref__content_type_id_5012cd72a5c50d2a_fk_django_content_type_id FOREIGN KEY (content_type_id) REFERENCES django_content_type(id) DEFERRABLE INITIALLY DEFERRED;
 
 
 --

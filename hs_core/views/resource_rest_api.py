@@ -1,6 +1,7 @@
 __author__ = 'Pabitra'
 
 import os
+import mimetypes
 
 from django.core.urlresolvers import reverse
 from django.core.exceptions import ObjectDoesNotExist
@@ -39,6 +40,19 @@ class ResourceToListItemMixin(object):
                                                           science_metadata_url=science_metadata_url)
         return resource_list_item
 
+class ResourceFileToListItemMixin(object):
+    def resourceFileToListItem(self, f):
+        url = hydroshare.utils.current_site_url() + f.resource_file.url
+        fsize = f.resource_file.size
+        mimetype = mimetypes.guess_type(url)
+        if mimetype[0]:
+            ftype = mimetype[0]
+        else:
+            ftype = repr(None)
+        resource_file_info_item = serializers.ResourceFileItem(url=url,
+                                                               size=fsize,
+                                                               content_type=ftype)
+        return resource_file_info_item
 
 
 class ResourceTypes(generics.ListAPIView):
@@ -500,6 +514,12 @@ class ResourceFileCRUD(APIView):
         return HttpResponseRedirect(f.url)
 
     def post(self, request, pk):
+        """
+        Add a file to a resource.
+        :param request:
+        :param pk: Primary key of the resource (i.e. resource short ID)
+        :return:
+        """
         resource, _, _ = view_utils.authorize(request, pk, edit=True, full=True)
         resource_files = request.FILES.values()
         if len(resource_files) == 0:
@@ -549,3 +569,60 @@ class ResourceFileCRUD(APIView):
         # TODO: Currently we do not have this action for the front end. Will implement in the next iteration
         # Implement only after we have a decision when to validate a file
         raise NotImplementedError()
+
+
+class ResourceFileList(ResourceFileToListItemMixin, generics.ListAPIView):
+    """
+    Retrieve a list of resource files for a resource
+
+    REST URL: hsapi/resource/{pk}/file_list/
+    HTTP method: GET
+
+    :type pk: str
+    :type filename: str
+    :param pk: resource id
+    :param filename: name of the file to retrieve/download
+    :return: JSON representation of list of files of the form:
+
+    {
+        "count": 2,
+        "next": null,
+        "previous": null,
+        "results": [
+            {
+                "url": "http://mill24.cep.unc.edu/django_irods/download/bd88d2a152894134928c587d38cf0272/data/contents/mytest_resource/text_file.txt",
+                "size": 21,
+                "content_type": "text/plain"
+            },
+            {
+                "url": "http://mill24.cep.unc.edu/django_irods/download/bd88d2a152894134928c587d38cf0272/data/contents/mytest_resource/a_directory/cea.tif",
+                "size": 270993,
+                "content_type": "image/tiff"
+            }
+        ]
+    }
+
+    :raises:
+    NotFound: return json format: {'detail': 'No resource was found for resource id':pk}
+    PermissionDenied: return json format: {'detail': 'You do not have permission to perform this action.'}
+    """
+    allowed_methods = ('GET',)
+
+    def get(self, request, pk):
+        """
+        Get a listing of files within a resource.
+        :param request:
+        :param pk: Primary key of the resource (i.e. resource short ID)
+        :return:
+        """
+        return self.list(request)
+
+    def get_queryset(self):
+        resource, _, _ = view_utils.authorize(self.request, self.kwargs['pk'], view=True)
+        resource_file_info_list = []
+        for f in resource.files.all():
+            resource_file_info_list.append(self.resourceFileToListItem(f))
+        return resource_file_info_list
+
+    def get_serializer_class(self):
+        return serializers.ResourceFileSerializer

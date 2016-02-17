@@ -1,0 +1,53 @@
+{% load hydroshare_tags %}
+
+{% if not metadata_form %}
+<div class="info-group col-sm-12">
+    <table>
+        <tr><th>Authors:</th><td id="authors">
+            {% for cr in creators %}
+                {% if forloop.counter0 != 0 %} <span>·</span> {% endif %}
+                {% if cr.description %}<a href="{{ cr.description }}">{{ cr.name }}</a>
+                {% else %}<span>{{ cr.name }}</span>{% endif %}
+            {% endfor %}
+        </td></tr>
+        <tr><th>Owners:</th><td>
+            {% for u in owners %}
+                {% if forloop.counter0 != 0 %} <span class="list-separator">·</span> {% endif %}
+                <span>{{ u|contact|safe }}</span>
+            {% endfor %}
+        </td></tr>
+        <tr><th>Resource type:</th><td>{{ cm|resource_type }}</td></tr>
+        <tr><th>Created:</th><td>{{ cm.created }}</td></tr>
+        <tr><th>Last updated:</th><td> {{ cm.updated }} by {% if cm.last_changed_by %}{{ cm.last_changed_by|contact|safe }}{% endif %}</td></tr>
+    </table>
+</div>
+{% else %}
+    <div class="info-group col-sm-12">
+        <table>
+            <tr>
+                <th>Authors:</th>
+                <td><span id="authors">
+
+                        {% for author in creator_formset.initial %}
+                            {% if forloop.counter0 != 0 %} <span class="list-separator">·</span> {% endif %}
+                            {% if author.description %}
+                                <a href="{{ author.description }}">{{ author.name }}</a>
+                            {% else %}
+                                <span>{{ author.name }}</span>
+                            {% endif %}
+                        {% endfor %}
+                    </span>
+                </td>
+            </tr>
+            <tr><th>Owners:</th><td>
+                {% for u in owners %}
+                    {% if forloop.counter0 != 0 %} <span class="list-separator">·</span> {% endif %}
+                    <span>{{ u|contact|safe }}</span>
+                {% endfor %}
+            </td></tr>
+            <tr><th>Resource type:</th><td>{{ cm|resource_type }}</td></tr>
+            <tr><th>Created:</th><td>{{ cm.created }}</td></tr>
+            <tr><th>Last updated:</th><td> {{ cm.updated }} by {% if cm.last_changed_by %}{{ cm.last_changed_by|contact|safe }}{% endif %}</td></tr>
+        </table>
+    </div>
+{% endif %}
