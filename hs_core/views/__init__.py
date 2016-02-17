@@ -244,6 +244,24 @@ def delete_file(request, shortkey, f, *args, **kwargs):
 def delete_resource(request, shortkey, *args, **kwargs):
     res, _, _ = authorize(request, shortkey, edit=True, full=True, superuser=True)
 
+    if res.metadata.relations.all().filter(type='isReplacedBy').exists():
+        request.session['validation_error'] = 'An obsoleted resource in the middle of the obsolescence chain cannot be deleted.'
+        return HttpResponseRedirect(request.META['HTTP_REFERER'])
+
+    # when the most recent version of a resource in an obsolescence chain is deleted, the previous
+    # version in the chain needs to be set as the "active" version by deleting "isReplacedBy" relation element
+    if res.metadata.relations.all().filter(type='isVersionOf').exists():
+        is_version_of_res_link = res.metadata.relations.all().filter(type='isVersionOf').first().value
+        idx = is_version_of_res_link.rindex('/')
+        if idx == -1:
+            obsolete_res_id = is_version_of_res_link
+        else:
+            obsolete_res_id = is_version_of_res_link[idx+1:]
+        obsolete_res = get_resource_by_shortkey(obsolete_res_id)
+        if obsolete_res.metadata.relations.all().filter(type='isReplacedBy').exists():
+            eid = obsolete_res.metadata.relations.all().filter(type='isReplacedBy').first().id
+            obsolete_res.metadata.delete_element('relation', eid)
+
     res.delete()
     return HttpResponseRedirect('/my-resources/')
 
@@ -277,6 +295,19 @@ def create_new_version_resource(request, shortkey, *args, **kwargs):
 
         # copy metadata from source resource to target new-versioned resource
         res.metadata.copy_all_elements_to(new_resource)
+
+        # add Relation element to link source and target resources
+        if new_resource.metadata.identifiers.all().filter(name="hydroShareIdentifier"):
+            hs_identifier = new_resource.metadata.identifiers.all().filter(name="hydroShareIdentifier")[0]
+            res.metadata.create_element('relation', type='isReplacedBy', value=hs_identifier.url)
+        else:
+            res.metadata.create_element('relation', type='isReplacedBy', value=new_resource.short_id)
+
+        if res.metadata.identifiers.all().filter(name="hydroShareIdentifier"):
+            hs_identifier = res.metadata.identifiers.all().filter(name="hydroShareIdentifier")[0]
+            new_resource.metadata.create_element('relation', type='isVersionOf', value=hs_identifier.url)
+        else:
+            new_resource.metadata.create_element('relation', type='isVersionOf', value=res.short_id)
 
         # create bag for the new resource
         hs_bagit.create_bag(new_resource)

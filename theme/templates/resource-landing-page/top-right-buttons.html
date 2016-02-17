@@ -28,7 +28,7 @@
                     </form>
                 {% endif %}
             {% endif %}
-            {% if page.perms.change %}
+            {% if page.perms.change and not is_replaced_by %}
                 <form class="inline pull-right" action="{{ cm.get_absolute_url }}" method="post">
                     {% csrf_token %}
                     {% if page.perms.delete %}

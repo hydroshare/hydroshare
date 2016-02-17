@@ -122,6 +122,16 @@ def page_permissions_page_processor(request, page):
     editors = cm.raccess.edit_users.exclude(pk__in=owners)
     viewers = cm.raccess.view_users.exclude(pk__in=editors).exclude(pk__in=owners)
 
+    if cm.metadata.relations.all().filter(type='isReplacedBy').exists():
+        is_replaced_by = cm.metadata.relations.all().filter(type='isReplacedBy').first().value
+    else:
+        is_replaced_by = ''
+
+    if cm.metadata.relations.all().filter(type='isVersionOf').exists():
+        is_version_of = cm.metadata.relations.all().filter(type='isVersionOf').first().value
+    else:
+        is_version_of = ''
+
     show_manage_access = False
     if not cm.raccess.published and \
         (is_owner_user or (cm.raccess.shareable and (is_view_user or is_edit_user))):
@@ -137,6 +147,8 @@ def page_permissions_page_processor(request, page):
         "is_edit_user": is_edit_user,
         "is_view_user": is_view_user,
         "can_change_resource_flags": can_change_resource_flags,
+        "is_replaced_by": is_replaced_by,
+        "is_version_of": is_version_of,
         "show_manage_access": show_manage_access
     }
 
@@ -523,6 +535,7 @@ class Relation(AbstractMetaDataElement):
         ('isExecutedBy', 'Executed By'),
         ('isCreatedBy', 'Created By'),
         ('isVersionOf', 'Version Of'),
+        ('isReplacedBy', 'Replaced By'),
         ('isDataFor', 'Data For'),
         ('cites', 'Cites'),
         ('isDescribedBy', 'Described By'),
@@ -1511,6 +1524,7 @@ class CoreMetaData(models.Model):
         self.relations.all().delete()
 
     def copy_all_elements_to(self, tgt_res):
+        from hydroshare.utils import current_site_url
         new_md = tgt_res.metadata
         if self.title:
             new_md.create_element('title', value=self.title.value)
@@ -1538,7 +1552,7 @@ class CoreMetaData(models.Model):
 
         for id in self.identifiers.all():
             if id.name == 'hydroShareIdentifier':
-                new_md.create_element('identifier', name=id.name, url='http://hydroshare.org/resource{0}{1}'.format('/', tgt_res.short_id))
+                new_md.create_element('identifier', name=id.name, url='{0}/resource/{1}'.format(current_site_url(), tgt_res.short_id))
             else:
                 new_md.create_element('identifier', name=id.name, url=id.url)
 

@@ -11,13 +11,13 @@
 {% endif %}
 
 {# ======= Missing fields notification =======#}
-{% if not metadata_form and page.perms.change %}
+{% if not metadata_form and page.perms.change and not is_replaced_by %}
     {% if missing_metadata_elements or title|stringformat:"s" == "Untitled resource" or not cm.has_required_content_files %}
         <div class="col-sm-12">
             <div class="alert {% if just_created %}alert-success{% else %}alert-warning{% endif %} alert-dismissible" role="alert">
                 <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span
                         aria-hidden="true">&times;</span></button>
-                {% if missing_metadata_elements  %}
+                {% if missing_metadata_elements %}
                     {% if just_created %}
                         <strong>Congratulations! </strong>
                         <span>Now that your resource has been created the following metadata are still required to publish it or make it public or discoverable:</span>
@@ -67,6 +67,12 @@
                     </li>
                 {% endfor %}
             </ul>
+        {% endif %}
+        {% if is_replaced_by %}
+             <div class="clear-fix"><i>This resource is obsoleted by <a href="{{ is_replaced_by }}">{{ is_replaced_by }}</a>.</i></div>
+        {% endif %}
+        {% if is_version_of %}
+            <div class="clear-fix"><i>This resource obsoletes <a href="{{ is_version_of }}">{{ is_version_of }}</a>.</i></div>
         {% endif %}
     {% else %}
         <form action="/hsapi/_internal/{{ cm.short_id }}/title/{{ cm.metadata.title.id }}/update-metadata/"
