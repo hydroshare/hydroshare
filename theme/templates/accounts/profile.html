@@ -3,10 +3,26 @@
 
 {% block meta_title %}User profile for {{ profile_user|best_name }}{% endblock %}
 
+
+
+
 {% block main %}
-    {% with profile_user.userprofile as profile %}
-        <form id="profile-form" action="{% url 'update_profile' %}" class="account-form" method="post"{% if form.is_multipart %} enctype="multipart/form-data"{% endif %}>
+
+    <form id="test-form" action="{% url 'update_profile' %}" class="account-form" method="post"
+          enctype="multipart/form-data">
         {% csrf_token %}
+
+
+        Upload a file
+        <input type="file" name="test-file">
+        <button type="submit">Submit</button>
+
+
+    </form>
+    {% with profile_user.userprofile as profile %}
+        <form id="profile-form" action="{% url 'update_profile' %}" class="account-form" method="post" >
+        {% csrf_token %}
+
         <div class="row">
             <div data-page-mode="edit" class="alert alert-warning" role="alert">Information provided below will be public for all HydroShare users to see.</div>
 
@@ -122,7 +138,7 @@
                             <div class="row">
                                 {# First name #}
                                 <fieldset class="col-sm-4">
-                                    <label>First name</label>
+                                    <label>First name *</label>
                                     <input class="form-control" value="{{ profile_user.first_name }}" name="first_name">
                                 </fieldset>
 
@@ -134,7 +150,7 @@
 
                                 {# Last name #}
                                 <fieldset class="col-sm-4">
-                                    <label>Last name</label>
+                                    <label>Last name *</label>
                                     <input class="form-control" value="{{ profile_user.last_name }}" name="last_name">
                                 </fieldset>
                             </div>
@@ -142,7 +158,7 @@
                             <div class="row">
                                 {# Username #}
                                 <fieldset class="col-sm-4">
-                                    <label>Username</label>
+                                    <label>Username *</label>
                                     <input class="form-control" value="{{ profile_user.username }}" name="username">
                                     <small class="text-muted">Only letters, numbers, dashes or
                                         underscores.
@@ -270,7 +286,7 @@
                                             <tbody>
                                             <tr>
                                                 <td><span class="text-muted">User type</span></td>
-                                                <td>University Faculty</td>
+                                                <td>{{ profile.user_type }}</td>
                                             </tr>
                                             <tr>
                                                 <td><span class="text-muted">Country</span></td>
@@ -297,18 +313,18 @@
 
                                         <fieldset>
                                             <label for="exampleSelect1">User type</label>
-                                            <select name="profession" class="form-control" id="selectUserType">
-                                                <option>University Faculty</option>
-                                                <option>University Professional or Research Staff</option>
-                                                <option>Post-Doctoral Fellow</option>
-                                                <option>University Graduate Student</option>
-                                                <option>University Undergraduate Student</option>
-                                                <option>Commercial/Professional</option>
-                                                <option>Government Official</option>
-                                                <option>School Student Kindergarten to 12th Grade</option>
-                                                <option>School Teacher Kindergarten to 12th Grade</option>
-                                                <option>Other</option>
-                                                <option>Unspecified</option>
+                                            <select name="user_type" class="form-control" id="selectUserType">
+                                                <option value="University Faculty">University Faculty</option>
+                                                <option value="University Professional or Research Staff">University Professional or Research Staff</option>
+                                                <option value="Post-Doctoral Fellow">Post-Doctoral Fellow</option>
+                                                <option value="University Graduate Student">University Graduate Student</option>
+                                                <option value="University Undergraduate Student">University Undergraduate Student</option>
+                                                <option value="Commercial/Professional">Commercial/Professional</option>
+                                                <option value="Government Official">Government Official</option>
+                                                <option value="School Student Kindergarten to 12th Grade">School Student Kindergarten to 12th Grade</option>
+                                                <option value="School Teacher Kindergarten to 12th Grade">School Teacher Kindergarten to 12th Grade</option>
+                                                <option value="Other">Other</option>
+                                                <option value="Unspecified">Unspecified</option>
                                             </select>
                                         </fieldset>
 
@@ -438,7 +454,7 @@
                                             <fieldset class="col-sm-12">
                                                 <label>Website</label>
                                                 <input class="form-control"
-                                                       value="{{ profile_user.website }}">
+                                                       value="{{ profile_user.website }}" name="website">
                                             </fieldset>
                                         </div>
                                 </div>

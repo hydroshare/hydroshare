@@ -114,17 +114,28 @@ class UserProfile(models.Model):
     user = models.OneToOneField(User)
     picture = models.ImageField(upload_to='profile', null=True, blank=True)
     middle_name = models.CharField(max_length=1024, null=True, blank=True)
-
+    website = models.URLField(null=True, blank=True)
     title = models.CharField(
         max_length=1024, null=True, blank=True,
         help_text='e.g. Assistant Professor, Program Director, Adjunct Professor, Software Developer.')
-    profession = models.CharField(
+    user_type = models.CharField(
         max_length=1024,
         null=True,
         blank=True,
-        default='Student',
-        help_text='e.g. Student, Researcher, Research Faculty, Research Staff, Project Manager, Teacher, '
-                  'Research Assistant.'
+        default='Unspecified',
+        choices=(
+            ('University Faculty', 'University Faculty'),
+            ('University Professional or Research Staff', 'University Professional or Research Staff'),
+            ('Post-Doctoral Fellow', 'Post-Doctoral Fellow'),
+            ('University Graduate Student', 'University Graduate Student'),
+            ('University Undergraduate Student', 'University Undergraduate Student'),
+            ('Commercial/Professional', 'Commercial/Professional'),
+            ('Government Official', 'Government Official'),
+            ('School Student Kindergarten to 12th Grade', 'School Student Kindergarten to 12th Grade'),
+            ('School Teacher Kindergarten to 12th Grade', 'School Teacher Kindergarten to 12th Grade'),
+            ('Other', 'Other'),
+            ('Unspecified', 'Unspecified')
+        )
     )
     subject_areas = models.CharField(
         max_length=1024, null=True, blank=True,

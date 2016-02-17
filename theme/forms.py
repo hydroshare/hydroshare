@@ -323,20 +323,19 @@ class UserProfileForm(forms.ModelForm):
 
     def clean(self):
         cleaned_data = super(UserProfileForm, self).clean()
-        profession = cleaned_data.get('profession')
-        allowed_profession = ('University Faculty',
-                              'University Professional or Research Staff',
-                              'Post-Doctoral Fellow',
-                              'University Graduate Student',
-                              'University Undergraduate Student',
-                              'Commercial/Professional',
-                              'Government Official',
-                              'School Student Kindergarten to 12th Grade',
-                              'School Teacher Kindergarten to 12th Grade',
-                              'Other',
-                              'Unspecified'
-                              )
-        if profession not in allowed_profession:
-            self._errors["profession"] = ["Not a valid profession"]
-            del cleaned_data["profession"]
+        user_type = cleaned_data.get('user_type')
+        allowed_types = ('University Faculty',
+                         'University Professional or Research Staff',
+                         'Post-Doctoral Fellow',
+                         'University Graduate Student',
+                         'University Undergraduate Student',
+                         'Commercial/Professional',
+                         'Government Official',
+                         'School Student Kindergarten to 12th Grade',
+                         'School Teacher Kindergarten to 12th Grade',
+                         'Other',
+                         'Unspecified')
+        if user_type not in allowed_types:
+            self._errors["user_type"] = ["Not a valid user type"]
+            del cleaned_data["user_type"]
         return cleaned_data
