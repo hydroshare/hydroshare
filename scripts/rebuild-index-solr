@@ -1,8 +1,0 @@
-#!/usr/bin/expect -f
-
-# Initiate rebuild_index call from manage.py
-spawn docker exec -ti hydroshare_hydroshare_1 python manage.py rebuild_index
-# Send a yes response when prompted to rebuild index
-expect "Are you sure you wish to continue.*"
-send "y\r"
-interact
