@@ -1,18 +1,24 @@
 postgis:
   image: mjstealey/postgresql
+  container_name: postgis
 redis:
   image: redis:2.8
+  container_name: redis
 rabbitmq:
   image: rabbitmq:3.5
+  container_name: rabbitmq
 solr:
   image: makuk66/docker-solr:4.10.4
+  container_name: solr
   volumes:
     # hydroshare repository
     - "HS_PATH:/hydroshare"
   ports:
     - "8983"
+  command: [sh, -c, /bin/bash /opt/solr/bin/solr -f]
 hydroshare:
   build: .
+  container_name: hydroshare
   cap_add:
     - SYS_ADMIN
   devices:
@@ -50,6 +56,7 @@ hydroshare:
   command: /bin/bash init
 defaultworker:
   build: .
+  container_name: defaultworker
   environment:
     POSTGIS_HOST: postgis
     POSTGIS_PORT: 5432
@@ -70,6 +77,7 @@ defaultworker:
   command: ./run_celery.sh
 dockerworker:
   build: .
+  container_name: dockerworker
   environment:
     POSTGIS_HOST: postgis
     POSTGIS_PORT: 5432
