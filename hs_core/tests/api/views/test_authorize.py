@@ -27,51 +27,114 @@ class TestAuthorize(MockIRODSTestCaseMixin, TestCase):
             'My Test Resource'
             )
 
-        self.request_factory = RequestFactory()
-        self.request = self.request_factory.get()
+        self.request = RequestFactory().get('/')
 
     def test_authorize_owner(self):
-        parameters = [{'res_id': self.res.short_id, 'discoverable': False, 'edit': True, 'view':False, 'full': False,
-                       'superuser': False, 'success': True, 'exception': None},
+        common_parameters = [
                       {'res_id': self.res.short_id, 'discoverable': False, 'edit': False, 'view':True, 'full': False,
+                       'superuser': False, 'success': True, 'exception': None},
+                      {'res_id': self.res.short_id, 'discoverable': True, 'edit': True, 'view':True, 'full': True,
+                       'superuser': True, 'success': True, 'exception': None},
+                      {'res_id': self.res.short_id, 'discoverable': False, 'edit': False, 'view':False, 'full': False,
+                       'superuser': False, 'success': False, 'exception': PermissionDenied},
+                      {'res_id': self.res.short_id, 'discoverable': True, 'edit': False, 'view':False, 'full': False,
+                       'superuser': False, 'success': False, 'exception': PermissionDenied},
+                      {'res_id': self.res.short_id, 'discoverable': True, 'edit': False, 'view':False, 'full': False,
+                       'superuser': True, 'success': False, 'exception': PermissionDenied},
+                      {'res_id': self.res.short_id, 'discoverable': False, 'edit': False, 'view':False, 'full': False,
+                       'superuser': True, 'success': False, 'exception': PermissionDenied}
+                      ]
+
+        parameters = [{'res_id': self.res.short_id, 'discoverable': False, 'edit': True, 'view':False, 'full': False,
                        'superuser': False, 'success': True, 'exception': None},
                       {'res_id': self.res.short_id, 'discoverable': False, 'edit': False, 'view':False, 'full': True,
                        'superuser': False, 'success': True, 'exception': None}
-                      ]
-
+                      ] + common_parameters
         self.request.user = self.user
         self._run_tests(self.request, parameters)
 
-    def test_authorize_editor(self):
+        # test for immutable/published resource
+        self.assertFalse(self.res.raccess.immutable)
+        self.res.raccess.immutable = True
+        self.res.raccess.public = True
+        self.res.raccess.published = True
+        self.res.raccess.save()
+
         parameters = [{'res_id': self.res.short_id, 'discoverable': False, 'edit': True, 'view':False, 'full': False,
-                       'superuser': False, 'success': True, 'exception': None },
+                       'superuser': False, 'success': False, 'exception': PermissionDenied},
+                      {'res_id': self.res.short_id, 'discoverable': False, 'edit': False, 'view':False, 'full': True,
+                       'superuser': False, 'success': False, 'exception': PermissionDenied}
+                      ] + common_parameters
+
+        self._run_tests(self.request, parameters)
+
+    def test_authorize_editor(self):
+        common_parameters = [
                       {'res_id': self.res.short_id, 'discoverable': False, 'edit': False, 'view':True, 'full': False,
                        'superuser': False, 'success': True, 'exception': None },
                       {'res_id': self.res.short_id, 'discoverable': False, 'edit': False, 'view':False, 'full': True,
-                       'superuser': False, 'success': False, 'exception': PermissionDenied }
+                       'superuser': False, 'success': False, 'exception': PermissionDenied },
+                      {'res_id': self.res.short_id, 'discoverable': True, 'edit': True, 'view':True, 'full': True,
+                       'superuser': True, 'success': True, 'exception': None},
+                      {'res_id': self.res.short_id, 'discoverable': False, 'edit': False, 'view':False, 'full': False,
+                       'superuser': False, 'success': False, 'exception': PermissionDenied},
+                      {'res_id': self.res.short_id, 'discoverable': True, 'edit': False, 'view':False, 'full': False,
+                       'superuser': False, 'success': False, 'exception': PermissionDenied},
+                      {'res_id': self.res.short_id, 'discoverable': True, 'edit': False, 'view':False, 'full': False,
+                       'superuser': True, 'success': False, 'exception': PermissionDenied},
+                      {'res_id': self.res.short_id, 'discoverable': False, 'edit': False, 'view':False, 'full': False,
+                       'superuser': True, 'success': False, 'exception': PermissionDenied}
                       ]
+
+        parameters = [{'res_id': self.res.short_id, 'discoverable': False, 'edit': True, 'view':False, 'full': False,
+                       'superuser': False, 'success': True, 'exception': None }
+                      ] + common_parameters
 
         # create edit_user
         edit_user = users.create_account(
-            'edit_user@email.com',
-            username='edituser',
-            first_name='edit_first_name',
-            last_name='edit_last_name',
-            superuser=False,
-            groups=[])
+                'edit_user@email.com',
+                username='edituser',
+                first_name='edit_first_name',
+                last_name='edit_last_name',
+                superuser=False,
+                groups=[])
 
         # grant edit_user edit permission
         self.user.uaccess.share_resource_with_user(self.res, edit_user, PrivilegeCodes.CHANGE)
         self.request.user = edit_user
         self._run_tests(self.request, parameters)
 
-    def test_authorize_viewer(self):
+        # test for immutable/published resource
+        self.assertFalse(self.res.raccess.immutable)
+        self.res.raccess.immutable = True
+        self.res.raccess.public = True
+        self.res.raccess.published = True
+        self.res.raccess.save()
+
         parameters = [{'res_id': self.res.short_id, 'discoverable': False, 'edit': True, 'view':False, 'full': False,
+                       'superuser': False, 'success': False, 'exception': PermissionDenied }
+                      ] + common_parameters
+
+        self._run_tests(self.request, parameters)
+
+    def test_authorize_viewer(self):
+        parameters = [
+                      {'res_id': self.res.short_id, 'discoverable': False, 'edit': True, 'view':False, 'full': False,
                        'superuser': False, 'success': False, 'exception': PermissionDenied },
                       {'res_id': self.res.short_id, 'discoverable': False, 'edit': False, 'view':True, 'full': False,
                        'superuser': False, 'success': True, 'exception': None },
                       {'res_id': self.res.short_id, 'discoverable': False, 'edit': False, 'view':False, 'full': True,
-                       'superuser': False, 'success': False, 'exception': PermissionDenied }
+                       'superuser': False, 'success': False, 'exception': PermissionDenied },
+                      {'res_id': self.res.short_id, 'discoverable': True, 'edit': True, 'view':True, 'full': True,
+                       'superuser': True, 'success': True, 'exception': None},
+                      {'res_id': self.res.short_id, 'discoverable': False, 'edit': False, 'view':False, 'full': False,
+                       'superuser': False, 'success': False, 'exception': PermissionDenied},
+                      {'res_id': self.res.short_id, 'discoverable': True, 'edit': False, 'view':False, 'full': False,
+                       'superuser': False, 'success': False, 'exception': PermissionDenied},
+                      {'res_id': self.res.short_id, 'discoverable': True, 'edit': False, 'view':False, 'full': False,
+                       'superuser': True, 'success': False, 'exception': PermissionDenied},
+                      {'res_id': self.res.short_id, 'discoverable': False, 'edit': False, 'view':False, 'full': False,
+                       'superuser': True, 'success': False, 'exception': PermissionDenied}
                       ]
 
         # create view_user
@@ -90,17 +153,26 @@ class TestAuthorize(MockIRODSTestCaseMixin, TestCase):
         self._run_tests(self.request, parameters)
 
     def test_authorize_superuser(self):
-        parameters = [{'res_id': self.res.short_id, 'discoverable': False, 'edit': True, 'view':False, 'full': False,
+        common_parameters = [
+                      {'res_id': self.res.short_id, 'discoverable': False, 'edit': True, 'view':False, 'full': False,
                        'superuser': False, 'success': True, 'exception': None },
                       {'res_id': self.res.short_id, 'discoverable': False, 'edit': False, 'view':True, 'full': False,
                        'superuser': False, 'success': True, 'exception': None },
-                      {'res_id': self.res.short_id, 'discoverable': False, 'edit': False, 'view':False, 'full': True,
-                       'superuser': False, 'success': True, 'exception': None },
                       {'res_id': self.res.short_id, 'discoverable': False, 'edit': False, 'view':False, 'full': False,
                        'superuser': True, 'success': True, 'exception': None },
+                      {'res_id': self.res.short_id, 'discoverable': True, 'edit': False, 'view':False, 'full': False,
+                       'superuser': True, 'success': True, 'exception': None },
+                      {'res_id': self.res.short_id, 'discoverable': True, 'edit': True, 'view':True, 'full': True,
+                       'superuser': True, 'success': True, 'exception': None},
                       {'res_id': self.res.short_id, 'discoverable': False, 'edit': False, 'view':False, 'full': False,
-                       'superuser': False, 'success': False, 'exception': PermissionDenied }
+                       'superuser': False, 'success': False, 'exception': PermissionDenied },
+                      {'res_id': self.res.short_id, 'discoverable': True, 'edit': False, 'view':False, 'full': False,
+                       'superuser': False, 'success': False, 'exception': PermissionDenied},
                       ]
+
+        parameters = [{'res_id': self.res.short_id, 'discoverable': False, 'edit': False, 'view':False, 'full': True,
+                       'superuser': False, 'success': True, 'exception': None }
+                      ] + common_parameters
 
         # create view_user
         super_user = users.create_account(
@@ -114,32 +186,85 @@ class TestAuthorize(MockIRODSTestCaseMixin, TestCase):
         self.request.user = super_user
         self._run_tests(self.request, parameters)
 
+        # test for immutable/published resource
+        self.assertFalse(self.res.raccess.immutable)
+        self.res.raccess.immutable = True
+        self.res.raccess.public = True
+        self.res.raccess.published = True
+        self.res.raccess.save()
+
+        parameters = [{'res_id': self.res.short_id, 'discoverable': False, 'edit': False, 'view':False, 'full': True,
+                       'superuser': False, 'success': False, 'exception': PermissionDenied }
+                      ] + common_parameters
+
+        self._run_tests(self.request, parameters)
+
     def test_authorize_anonymous_user(self):
+        self.request.user = AnonymousUser()
         common_parameters = [
                       {'res_id': self.res.short_id, 'discoverable': False, 'edit': True, 'view':False, 'full': False,
-                       'superuser': False, 'success': False, 'exception': PermissionDenied },
-                      {'res_id': self.res.short_id, 'discoverable': False, 'edit': False, 'view':True, 'full': False,
                        'superuser': False, 'success': False, 'exception': PermissionDenied },
                       {'res_id': self.res.short_id, 'discoverable': False, 'edit': False, 'view':False, 'full': True,
                        'superuser': False, 'success': False, 'exception': PermissionDenied },
                       {'res_id': self.res.short_id, 'discoverable': False, 'edit': False, 'view':False, 'full': False,
+                       'superuser': False, 'success': False, 'exception': PermissionDenied }
+                      ]
+        parameters = [{'res_id': self.res.short_id, 'discoverable': True, 'edit': False, 'view':False, 'full': False,
+                       'superuser': False, 'success': True, 'exception': None },
+                      {'res_id': self.res.short_id, 'discoverable': True, 'edit': True, 'view':True, 'full': True,
+                       'superuser': True, 'success': True, 'exception': None },
+                      {'res_id': self.res.short_id, 'discoverable': False, 'edit': False, 'view':True, 'full': False,
                        'superuser': False, 'success': False, 'exception': PermissionDenied },
                       {'res_id': self.res.short_id, 'discoverable': False, 'edit': True, 'view':True, 'full': True,
                        'superuser': True, 'success': False, 'exception': PermissionDenied }
-                      ]
-        parameters = [{'res_id': self.res.short_id, 'discoverable': True, 'edit': False, 'view':False, 'full': False,
-                       'superuser': False, 'success': True, 'exception': None }] + common_parameters
+                      ] + common_parameters
 
         self.res.raccess.discoverable = True
+        self.res.raccess.public = False
         self.res.raccess.save()
 
-        self.request.user = AnonymousUser()
         self._run_tests(self.request, parameters)
 
         parameters = [{'res_id': self.res.short_id, 'discoverable': True, 'edit': False, 'view':False, 'full': False,
-                       'superuser': False, 'success': False, 'exception': PermissionDenied }] + common_parameters
+                       'superuser': False, 'success': False, 'exception': PermissionDenied},
+                      {'res_id': self.res.short_id, 'discoverable': True, 'edit': True, 'view':True, 'full': True,
+                       'superuser': True, 'success': False, 'exception': PermissionDenied },
+                      {'res_id': self.res.short_id, 'discoverable': False, 'edit': False, 'view':True, 'full': False,
+                       'superuser': False, 'success': False, 'exception': PermissionDenied },
+                      {'res_id': self.res.short_id, 'discoverable': False, 'edit': True, 'view':True, 'full': True,
+                       'superuser': True, 'success': False, 'exception': PermissionDenied }
+                      ] + common_parameters
 
         self.res.raccess.discoverable = False
+        self.res.raccess.public = False
+        self.res.raccess.save()
+        self._run_tests(self.request, parameters)
+
+        parameters = [{'res_id': self.res.short_id, 'discoverable': True, 'edit': False, 'view':False, 'full': False,
+                       'superuser': False, 'success': False, 'exception': PermissionDenied},
+                      {'res_id': self.res.short_id, 'discoverable': True, 'edit': True, 'view':True, 'full': True,
+                       'superuser': True, 'success': True, 'exception': None },
+                       {'res_id': self.res.short_id, 'discoverable': False, 'edit': False, 'view':True, 'full': False,
+                       'superuser': False, 'success': True, 'exception': None },
+                      ] + common_parameters
+
+        self.res.raccess.discoverable = False
+        self.res.raccess.public = True
+        self.res.raccess.save()
+        self._run_tests(self.request, parameters)
+
+        parameters = [{'res_id': self.res.short_id, 'discoverable': True, 'edit': False, 'view':False, 'full': False,
+                       'superuser': False, 'success': True, 'exception': None },
+                      {'res_id': self.res.short_id, 'discoverable': True, 'edit': True, 'view':True, 'full': True,
+                       'superuser': True, 'success': True, 'exception': None },
+                      {'res_id': self.res.short_id, 'discoverable': False, 'edit': False, 'view':True, 'full': False,
+                       'superuser': False, 'success': True, 'exception': None },
+                      {'res_id': self.res.short_id, 'discoverable': False, 'edit': True, 'view':True, 'full': True,
+                       'superuser': True, 'success': True, 'exception': None }
+                      ] + common_parameters
+
+        self.res.raccess.discoverable = True
+        self.res.raccess.public = True
         self.res.raccess.save()
         self._run_tests(self.request, parameters)
 
