@@ -364,7 +364,9 @@ def get_page_context(page, user, resource_edit=False, extended_metadata_layout=N
                'show_content_files': show_content_files,
                'validation_error': validation_error if validation_error else None,
                'discoverable': discoverable,
-               'relation_source_types': Relation.SOURCE_TYPES
+               'relation_source_types': tuple((type_value, type_display)
+                                              for type_value, type_display in Relation.SOURCE_TYPES
+                                              if type_value != 'isReplacedBy' and type_value != 'isVersionOf')
     }
 
     return context
