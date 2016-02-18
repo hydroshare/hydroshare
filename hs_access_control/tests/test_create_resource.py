@@ -193,7 +193,7 @@ class T03CreateResource(MockIRODSTestCaseMixin, TestCase):
         self.assertFalse(self.admin.uaccess.owns_resource(holes))
 
         # can still change the immutable/published
-        self.assertFalse(self.admin.uaccess.can_change_resource(holes))
+        self.assertTrue(self.admin.uaccess.can_change_resource(holes))
         self.assertTrue(self.admin.uaccess.can_view_resource(holes))
         self.assertTrue(self.admin.uaccess.can_change_resource_flags(holes))
         self.assertTrue(self.admin.uaccess.can_delete_resource(holes))
