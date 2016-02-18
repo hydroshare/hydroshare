@@ -27,7 +27,7 @@ class TestAuthorize(MockIRODSTestCaseMixin, TestCase):
             'My Test Resource'
             )
 
-        self.request = RequestFactory().get('/')
+        self.request = RequestFactory().request()
 
     def test_authorize_owner(self):
         common_parameters = [
@@ -50,6 +50,7 @@ class TestAuthorize(MockIRODSTestCaseMixin, TestCase):
                       {'res_id': self.res.short_id, 'discoverable': False, 'edit': False, 'view':False, 'full': True,
                        'superuser': False, 'success': True, 'exception': None}
                       ] + common_parameters
+
         self.request.user = self.user
         self._run_tests(self.request, parameters)
 
@@ -69,6 +70,17 @@ class TestAuthorize(MockIRODSTestCaseMixin, TestCase):
         self._run_tests(self.request, parameters)
 
     def test_authorize_editor(self):
+        # create edit_user
+        edit_user = users.create_account(
+                'edit_user@email.com',
+                username='edituser',
+                first_name='edit_first_name',
+                last_name='edit_last_name',
+                superuser=False,
+                groups=[])
+
+        self.request.user = edit_user
+
         common_parameters = [
                       {'res_id': self.res.short_id, 'discoverable': False, 'edit': False, 'view':True, 'full': False,
                        'superuser': False, 'success': True, 'exception': None },
@@ -90,18 +102,9 @@ class TestAuthorize(MockIRODSTestCaseMixin, TestCase):
                        'superuser': False, 'success': True, 'exception': None }
                       ] + common_parameters
 
-        # create edit_user
-        edit_user = users.create_account(
-                'edit_user@email.com',
-                username='edituser',
-                first_name='edit_first_name',
-                last_name='edit_last_name',
-                superuser=False,
-                groups=[])
-
         # grant edit_user edit permission
         self.user.uaccess.share_resource_with_user(self.res, edit_user, PrivilegeCodes.CHANGE)
-        self.request.user = edit_user
+
         self._run_tests(self.request, parameters)
 
         # test for immutable/published resource
@@ -118,6 +121,17 @@ class TestAuthorize(MockIRODSTestCaseMixin, TestCase):
         self._run_tests(self.request, parameters)
 
     def test_authorize_viewer(self):
+        # create view_user
+        view_user = users.create_account(
+            'view_user@email.com',
+            username='viewuser',
+            first_name='view_first_name',
+            last_name='view_last_name',
+            superuser=False,
+            groups=[])
+
+        self.request.user = view_user
+
         parameters = [
                       {'res_id': self.res.short_id, 'discoverable': False, 'edit': True, 'view':False, 'full': False,
                        'superuser': False, 'success': False, 'exception': PermissionDenied },
@@ -137,22 +151,23 @@ class TestAuthorize(MockIRODSTestCaseMixin, TestCase):
                        'superuser': True, 'success': False, 'exception': PermissionDenied}
                       ]
 
-        # create view_user
-        view_user = users.create_account(
+        # grant view_user view permission
+        self.user.uaccess.share_resource_with_user(self.res, view_user, PrivilegeCodes.VIEW)
+
+        self._run_tests(self.request, parameters)
+
+    def test_authorize_superuser(self):
+        # create super user
+        super_user = users.create_account(
             'view_user@email.com',
             username='viewuser',
             first_name='view_first_name',
             last_name='view_last_name',
-            superuser=False,
+            superuser=True,
             groups=[])
 
-        # grant edit_user edit permission
-        self.user.uaccess.share_resource_with_user(self.res, view_user, PrivilegeCodes.VIEW)
+        self.request.user = super_user
 
-        self.request.user = view_user
-        self._run_tests(self.request, parameters)
-
-    def test_authorize_superuser(self):
         common_parameters = [
                       {'res_id': self.res.short_id, 'discoverable': False, 'edit': True, 'view':False, 'full': False,
                        'superuser': False, 'success': True, 'exception': None },
@@ -174,16 +189,6 @@ class TestAuthorize(MockIRODSTestCaseMixin, TestCase):
                        'superuser': False, 'success': True, 'exception': None }
                       ] + common_parameters
 
-        # create view_user
-        super_user = users.create_account(
-            'view_user@email.com',
-            username='viewuser',
-            first_name='view_first_name',
-            last_name='view_last_name',
-            superuser=True,
-            groups=[])
-
-        self.request.user = super_user
         self._run_tests(self.request, parameters)
 
         # test for immutable/published resource
@@ -269,6 +274,17 @@ class TestAuthorize(MockIRODSTestCaseMixin, TestCase):
         self._run_tests(self.request, parameters)
 
     def test_authorize_user(self):
+        # create user - has no assigned resource access privilege
+        authenticated_user = users.create_account(
+            'user@email.com',
+            username='user',
+            first_name='user_first_name',
+            last_name='user_last_name',
+            superuser=False,
+            groups=[])
+
+        self.request.user = authenticated_user
+
         common_parameters = [
                       {'res_id': self.res.short_id, 'discoverable': False, 'edit': True, 'view':False, 'full': False,
                        'superuser': False, 'success': False, 'exception': PermissionDenied},
@@ -291,16 +307,6 @@ class TestAuthorize(MockIRODSTestCaseMixin, TestCase):
         self.res.raccess.public = False
         self.res.raccess.save()
 
-        # create user - has no assigned resource access privilege
-        authenticated_user = users.create_account(
-            'user@email.com',
-            username='user',
-            first_name='user_first_name',
-            last_name='user_last_name',
-            superuser=False,
-            groups=[])
-
-        self.request.user = authenticated_user
         self._run_tests(self.request, parameters)
 
         self.res.raccess.discoverable = False
