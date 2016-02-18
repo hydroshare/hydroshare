@@ -3,25 +3,13 @@
 
 {% block meta_title %}User profile for {{ profile_user|best_name }}{% endblock %}
 
-
-
-
 {% block main %}
 
-    <form id="test-form" action="{% url 'update_profile' %}" class="account-form" method="post"
-          enctype="multipart/form-data">
-        {% csrf_token %}
-
-
-        Upload a file
-        <input type="file" name="test-file">
-        <button type="submit">Submit</button>
-
-
-    </form>
     {% with profile_user.userprofile as profile %}
-        <form id="profile-form" action="{% url 'update_profile' %}" class="account-form" method="post" >
+        <form id="profile-form" action="{% url 'update_profile' %}" class="account-form" method="post" enctype="multipart/form-data">
         {% csrf_token %}
+
+        <button type="submit">submit</button>
 
         <div class="row">
             <div data-page-mode="edit" class="alert alert-warning" role="alert">Information provided below will be public for all HydroShare users to see.</div>
@@ -169,8 +157,9 @@
                             <div class="row">
                                 {# Organization #}
                                 <fieldset class="col-sm-6">
-                                    <label>Organization</label>
+                                    <label>Organization *</label>
                                     <input class="form-control" {% if profile.organization %}value="{{ profile.organization }}"{% endif %} name="organization">
+                                    <small class="text-muted">The name of the organization you work for.</small>
                                 </fieldset>
 
                                 {# Title #}
@@ -286,7 +275,7 @@
                                             <tbody>
                                             <tr>
                                                 <td><span class="text-muted">User type</span></td>
-                                                <td>{{ profile.user_type }}</td>
+                                                <td id="db-user-type">{{ profile.user_type }}</td>
                                             </tr>
                                             <tr>
                                                 <td><span class="text-muted">Country</span></td>
@@ -314,6 +303,7 @@
                                         <fieldset>
                                             <label for="exampleSelect1">User type</label>
                                             <select name="user_type" class="form-control" id="selectUserType">
+                                                <option value="Unspecified">Unspecified</option>
                                                 <option value="University Faculty">University Faculty</option>
                                                 <option value="University Professional or Research Staff">University Professional or Research Staff</option>
                                                 <option value="Post-Doctoral Fellow">Post-Doctoral Fellow</option>
@@ -324,17 +314,16 @@
                                                 <option value="School Student Kindergarten to 12th Grade">School Student Kindergarten to 12th Grade</option>
                                                 <option value="School Teacher Kindergarten to 12th Grade">School Teacher Kindergarten to 12th Grade</option>
                                                 <option value="Other">Other</option>
-                                                <option value="Unspecified">Unspecified</option>
                                             </select>
                                         </fieldset>
 
                                         <fieldset>
-                                            <label>Country</label>
+                                            <label>Country *</label>
                                             <input name="country" class="form-control" value="{{ profile.country }}">
                                         </fieldset>
 
                                         <fieldset>
-                                            <label>State/Province</label>
+                                            <label>State/Province *</label>
                                             <input name="state" class="form-control" {% if  profile.state %}value="{{ profile.state }}"{% endif %}>
                                         </fieldset>
 
@@ -638,17 +627,19 @@
             var form = $("#profile-form");
             var datastring = form.serialize();
             var url = form.attr('action');
+            var enctype = "multipart/form-data"
 
             $.ajax({
                 type: "POST",
                 url: url,
                 dataType: 'html',
                 data: datastring,
+                enctype: enctype,
                 success: function (result) {
-{#                    var json_response = JSON.parse(result);#}
-{#                    if (json_response.status == "success") {#}
-                    setViewMode();
-{#                    }#}
+                    if (result.status == "success") {
+                        setViewMode();
+                    }
+
                     console.log(result);
                 },
                 error: function (XMLHttpRequest, textStatus, errorThrown) {
@@ -665,6 +656,7 @@
             $("[data-page-mode='on-edit-blur']").fadeTo("fast", 0.5, function () {
                 // Animation complete.
             });
+            $('#selectUserType option[value="' + $("#db-user-type").text() + '"]').attr('selected', 'selected');
         }
 
         function setViewMode() {
