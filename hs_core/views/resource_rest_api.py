@@ -6,6 +6,7 @@ import mimetypes
 from django.core.urlresolvers import reverse
 from django.core.exceptions import ObjectDoesNotExist
 from django.http import HttpResponseRedirect
+from django.shortcuts import redirect
 
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.views import APIView
@@ -416,7 +417,7 @@ class ScienceMetadataRetrieveUpdate(APIView):
 
     :type pk: str
     :param pk: id of the resource
-    :return: science metadata as xml string
+    :return: science metadata as XML document
     :rtype: str
     :raises:
     NotFound: return json format: {'detail': 'No resource was found for resource id:pk'}
@@ -441,8 +442,9 @@ class ScienceMetadataRetrieveUpdate(APIView):
     def get(self, request, pk):
         view_utils.authorize(request, pk, discoverable=True, view=True)
 
-        # TODO: once the science metadata xml file is available as a separate file on iRODS, that file needs to be returned
-        return Response(data=hydroshare.get_science_metadata(pk), status=status.HTTP_200_OK)
+        scimeta_url = hydroshare.utils.current_site_url() + AbstractResource.scimeta_url(pk)
+        return redirect(scimeta_url)
+
 
     def put(self, request, pk):
         # TODO: update science metadata using the metadata json data provided - will do in the next iteration

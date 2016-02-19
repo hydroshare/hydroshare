@@ -1076,6 +1076,14 @@ class AbstractResource(ResourcePermissionsMixin):
 
         return bag_url
 
+    @classmethod
+    def scimeta_url(cls, resource_id):
+        scimeta_path = "{resource_id}/data/resourcemetadata.xml".format(resource_id=resource_id)
+        istorage = IrodsStorage()
+        scimeta_url = istorage.url(scimeta_path)
+
+        return scimeta_url
+
     def delete(self, using=None):
         from hydroshare import hs_bagit
         for fl in self.files.all():
