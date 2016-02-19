@@ -1,5 +1,6 @@
 from django.db import models
-from django.contrib.contenttypes import generic
+# from django.contrib.contenttypes import generic
+from django.contrib.contenttypes.fields import GenericRelation
 
 from mezzanine.pages.page_processors import processor_for
 
@@ -97,10 +98,10 @@ processor_for(GeographicFeatureResource)(resource_processor)
 
 # define the GeographicFeatureMetaData metadata
 class GeographicFeatureMetaData(CoreMetaData):
-    geometryinformation = generic.GenericRelation(GeometryInformation)
-    fieldinformation = generic.GenericRelation(FieldInformation)
-    originalcoverage = generic.GenericRelation(OriginalCoverage)
-    originalfileinfo = generic.GenericRelation(OriginalFileInfo)
+    geometryinformation = GenericRelation(GeometryInformation)
+    fieldinformation = GenericRelation(FieldInformation)
+    originalcoverage = GenericRelation(OriginalCoverage)
+    originalfileinfo = GenericRelation(OriginalFileInfo)
 
     @classmethod
     def get_supported_element_names(cls):

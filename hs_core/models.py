@@ -6,7 +6,9 @@ from languages_iso import languages as iso_languages
 from dateutil import parser
 from lxml import etree
 
-from django.contrib.contenttypes import generic
+# from django.contrib.contenttypes import generic
+from django.contrib.contenttypes.fields import GenericForeignKey
+from django.contrib.contenttypes.fields import GenericRelation
 from django.contrib.auth.models import User, Group
 from django.contrib.contenttypes.models import ContentType
 from django.db import models
@@ -148,7 +150,7 @@ class AbstractMetaDataElement(models.Model):
     # see the following link the reason for having the related_name setting for the content_type attribute
     # https://docs.djangoproject.com/en/1.6/topics/db/models/#abstract-related-name
     content_type = models.ForeignKey(ContentType, related_name="%(app_label)s_%(class)s_related")
-    content_object = generic.GenericForeignKey('content_type', 'object_id')
+    content_object = GenericForeignKey('content_type', 'object_id')
 
     @property
     def metadata(self):
@@ -190,7 +192,7 @@ class ExternalProfileLink(models.Model):
 
     object_id = models.PositiveIntegerField()
     content_type = models.ForeignKey(ContentType)
-    content_object = generic.GenericForeignKey('content_type', 'object_id')
+    content_object = GenericForeignKey('content_type', 'object_id')
 
     class Meta:
         unique_together = ("type", "url", "object_id")
@@ -204,7 +206,7 @@ class Party(AbstractMetaDataElement):
     address = models.CharField(max_length=250, null=True, blank=True)
     phone = models.CharField(max_length=25, null=True, blank=True)
     homepage = models.URLField(null=True, blank=True)
-    external_links = generic.GenericRelation(ExternalProfileLink)
+    external_links = GenericRelation(ExternalProfileLink)
 
     def __unicode__(self):
         return self.name
@@ -1034,12 +1036,12 @@ class AbstractResource(ResourcePermissionsMixin):
                                         null=True
     )
 
-    # dublin_metadata = generic.GenericRelation(
+    # dublin_metadata = GenericRelation(
     #     'dublincore.QualifiedDublinCoreElement',
     #     help_text='The dublin core metadata of the resource'
     # )
 
-    files = generic.GenericRelation('hs_core.ResourceFile', help_text='The files associated with this resource', for_concrete_model=True)
+    files = GenericRelation('hs_core.ResourceFile', help_text='The files associated with this resource', for_concrete_model=True)
 
     file_unpack_status = models.CharField(max_length=7,
                                           blank=True, null=True,
@@ -1048,7 +1050,7 @@ class AbstractResource(ResourcePermissionsMixin):
                                           )
     file_unpack_message = models.TextField(blank=True, null=True)
 
-    bags = generic.GenericRelation('hs_core.Bags', help_text='The bagits created from versions of this resource', for_concrete_model=True)
+    bags = GenericRelation('hs_core.Bags', help_text='The bagits created from versions of this resource', for_concrete_model=True)
     short_id = models.CharField(max_length=32, default=short_id, db_index=True)
     doi = models.CharField(max_length=1024, blank=True, null=True, db_index=True,
                            help_text='Permanent identifier. Never changes once it\'s been set.')
@@ -1059,7 +1061,7 @@ class AbstractResource(ResourcePermissionsMixin):
     # any metadata container object (e.g., CoreMetaData object)
     object_id = models.PositiveIntegerField(null=True, blank=True)
     content_type = models.ForeignKey(ContentType, null=True, blank=True)
-    content_object = generic.GenericForeignKey('content_type', 'object_id')
+    content_object = GenericForeignKey('content_type', 'object_id')
 
     #keywords = KeywordsField(verbose_name="Keywords", for_concrete_model=False)
 
@@ -1240,14 +1242,14 @@ class ResourceFile(models.Model):
     object_id = models.PositiveIntegerField()
     content_type = models.ForeignKey(ContentType)
 
-    content_object = generic.GenericForeignKey('content_type', 'object_id')
+    content_object = GenericForeignKey('content_type', 'object_id')
     resource_file = models.FileField(upload_to=get_path, max_length=500, storage=IrodsStorage() if getattr(settings,'USE_IRODS', False) else DefaultStorage())
 
 class Bags(models.Model):
     object_id = models.PositiveIntegerField()
     content_type = models.ForeignKey(ContentType)
 
-    content_object = generic.GenericForeignKey('content_type', 'object_id', for_concrete_model=False)
+    content_object = GenericForeignKey('content_type', 'object_id', for_concrete_model=False)
     timestamp = models.DateTimeField(default=now, db_index=True)
 
     class Meta:
@@ -1388,21 +1390,21 @@ class CoreMetaData(models.Model):
 
     id = models.AutoField(primary_key=True)
 
-    _description = generic.GenericRelation(Description)    # resource abstract
-    _title = generic.GenericRelation(Title)
-    creators = generic.GenericRelation(Creator)
-    contributors = generic.GenericRelation(Contributor)
-    dates = generic.GenericRelation(Date)
-    coverages = generic.GenericRelation(Coverage)
-    formats = generic.GenericRelation(Format)
-    identifiers = generic.GenericRelation(Identifier)
-    _language = generic.GenericRelation(Language)
-    subjects = generic.GenericRelation(Subject)
-    sources = generic.GenericRelation(Source)
-    relations = generic.GenericRelation(Relation)
-    _rights = generic.GenericRelation(Rights)
-    _type = generic.GenericRelation(Type)
-    _publisher = generic.GenericRelation(Publisher)
+    _description = GenericRelation(Description)    # resource abstract
+    _title = GenericRelation(Title)
+    creators = GenericRelation(Creator)
+    contributors = GenericRelation(Contributor)
+    dates = GenericRelation(Date)
+    coverages = GenericRelation(Coverage)
+    formats = GenericRelation(Format)
+    identifiers = GenericRelation(Identifier)
+    _language = GenericRelation(Language)
+    subjects = GenericRelation(Subject)
+    sources = GenericRelation(Source)
+    relations = GenericRelation(Relation)
+    _rights = GenericRelation(Rights)
+    _type = GenericRelation(Type)
+    _publisher = GenericRelation(Publisher)
 
     @property
     def title(self):
