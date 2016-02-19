@@ -7,7 +7,7 @@ from rest_framework.test import APITestCase
 from hs_core.hydroshare.utils import get_resource_types
 
 
-class TestResourceList(APITestCase):
+class TestResourceTypes(APITestCase):
 
     def setUp(self):
         self.client = APIClient()
