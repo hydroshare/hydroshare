@@ -30,6 +30,7 @@ from hs_core.hydroshare.utils import get_resource_by_shortkey, resource_modified
 from .utils import authorize, upload_from_irods
 from hs_core.models import GenericResource, resource_processor, CoreMetaData, ResourceFile
 from hs_core.hydroshare.resource import METADATA_STATUS_SUFFICIENT, METADATA_STATUS_INSUFFICIENT, hs_bagit
+from hs_core.tasks import clear_lock
 
 from . import resource_rest_api
 from . import user_rest_api
@@ -269,6 +270,12 @@ def create_new_version_resource(request, shortkey, *args, **kwargs):
     res, authorized, user = authorize(request, shortkey, edit=True, full=True, superuser=True)
 
     try:
+        # lock the resource to prevent concurrent new version creation since only one new version for an obsoleted resource is allowed
+        res.locked = True
+        res.save()
+        # run clear_lock task asynchronously in 2 minutes to ensure lock is cleared when something unexpected happened
+        clear_lock_task = clear_lock.apply_async(args=[shortkey],countdown=120)
+
         # create the resource without files and without creating bags first
         new_resource = hydroshare.create_resource(
             resource_type=res.resource_type,
@@ -314,8 +321,19 @@ def create_new_version_resource(request, shortkey, *args, **kwargs):
     except Exception as ex:
         if new_resource:
             new_resource.delete()
+        # release the lock if new version of the resource failed to create
+        res.locked = False
+        res.save()
+        # cancel clear lock task execution since lock is already cleared
+        clear_lock_task.revoke()
         request.session['new_version_resource_creation_error'] = ex.message
         return HttpResponseRedirect(res.get_absolute_url())
+
+    # release the lock if new version of the resource is created successfully
+    res.locked = False
+    res.save()
+    # cancel clear lock task execution since lock is already cleared
+    # clear_lock_task.revoke()
 
     # go to resource landing page
     request.session['just_created'] = True

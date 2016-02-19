@@ -1285,6 +1285,7 @@ class DiscoverableResourceManager(models.Manager):
 class BaseResource(Page, AbstractResource):
 
     resource_type = models.CharField(max_length=50, default="GenericResource")
+    locked = models.BooleanField(default=False)
 
     objects = models.Manager()
     public_resources = PublicResourceManager()
