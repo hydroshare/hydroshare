@@ -106,7 +106,7 @@ class ResourceTypes(generics.ListAPIView):
         return serializers.ResourceTypesSerializer
 
 
-class ResourceList(generics.ListAPIView, ResourceToListItemMixin):
+class ResourceList(ResourceToListItemMixin, generics.ListAPIView):
     """
     Get a list of resources based on the following filter query parameters
 
@@ -187,7 +187,7 @@ class ResourceList(generics.ListAPIView, ResourceToListItemMixin):
         return serializers.ResourceListItemSerializer
 
 
-class ResourceReadUpdateDelete(generics.RetrieveUpdateDestroyAPIView, ResourceToListItemMixin):
+class ResourceReadUpdateDelete(ResourceToListItemMixin, generics.RetrieveUpdateDestroyAPIView):
     """
     Create, read, or delete a resource
 
@@ -329,7 +329,7 @@ class ResourceCreate(generics.CreateAPIView):
         return Response(data=response_data,  status=status.HTTP_201_CREATED)
 
 
-class SystemMetadataRetrieve(APIView, ResourceToListItemMixin):
+class SystemMetadataRetrieve(ResourceToListItemMixin, APIView):
     """
     Retrieve resource science metadata
 
