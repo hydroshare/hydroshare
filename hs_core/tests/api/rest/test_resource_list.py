@@ -27,7 +27,12 @@ class TestResourceList(APITestCase):
 
         self.client.force_authenticate(user=self.user)
 
+        self.resources_to_delete = []
+
     def tearDown(self):
+        for r in self.resources_to_delete:
+            resource.delete_resource(r)
+
         self.user.delete()
 
     def test_resource_list(self):
@@ -36,6 +41,7 @@ class TestResourceList(APITestCase):
                                            self.user,
                                            'My Test Resource')
         pid = new_res.short_id
+        self.resources_to_delete.append(pid)
 
         response = self.client.get('/hsapi/resourceList/', format='json')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -49,6 +55,7 @@ class TestResourceList(APITestCase):
                                            self.user,
                                            'My Test Resource')
         gen_pid = gen_res.short_id
+        self.resources_to_delete.append(gen_pid)
 
         raster = open('hs_core/tests/data/cea.tif')
         geo_res = resource.create_resource('RasterResource',
@@ -56,11 +63,13 @@ class TestResourceList(APITestCase):
                                            'My raster resource',
                                            files=(raster,))
         geo_pid = geo_res.short_id
+        self.resources_to_delete.append(geo_pid)
 
         app_res = resource.create_resource('ToolResource',
                                            self.user,
                                            'My Test App Resource')
         app_pid = app_res.short_id
+        self.resources_to_delete.append(app_pid)
 
         response = self.client.get('/hsapi/resourceList/', format='json')
         self.assertEqual(response.status_code, status.HTTP_200_OK)

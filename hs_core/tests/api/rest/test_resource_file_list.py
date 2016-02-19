@@ -34,6 +34,8 @@ class TestResourceList(APITestCase):
 
         self.client.force_authenticate(user=self.user)
 
+        self.resources_to_delete = []
+
         # Make a text file
         self.txt_file_name = 'text.txt'
         self.txt_file_path = os.path.join(self.tmp_dir, self.txt_file_name)
@@ -45,6 +47,9 @@ class TestResourceList(APITestCase):
         self.raster_file_path = 'hs_core/tests/data/cea.tif'
 
     def tearDown(self):
+        for r in self.resources_to_delete:
+            resource.delete_resource(r)
+
         shutil.rmtree(self.tmp_dir)
         self.user.uaccess.delete()
         self.user.delete()
@@ -68,6 +73,7 @@ class TestResourceList(APITestCase):
                                        files=(payload,),
                                        unpack_file=True)
         pid = res.short_id
+        self.resources_to_delete.append(pid)
 
         response = self.client.get("/hsapi/resource/{pid}/file_list/".format(pid=pid),
                                    format='json')
