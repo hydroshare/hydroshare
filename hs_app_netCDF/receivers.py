@@ -189,14 +189,19 @@ def netcdf_pre_delete_file_from_resource(sender, **kwargs):
     # resource_modified(resource, user)
 
     # delete the netcdf header file or .nc file
-    file_ext = ['.nc', '.txt']
+    file_ext = {'.nc': 'application/x-netcdf',
+                '.txt': 'text/plain'}
+
     if del_file_ext in file_ext:
-        file_ext.remove(del_file_ext)
+        del file_ext[del_file_ext]
         for f in ResourceFile.objects.filter(object_id=nc_res.id):
             ext = os.path.splitext(f.resource_file.name)[-1]
             if ext in file_ext:
                 f.resource_file.delete()
                 f.delete()
+                format_element = nc_res.metadata.formats.filter(value=file_ext[ext]).first()
+                if format_element:
+                    nc_res.metadata.delete_element(format_element.term, format_element.id)
                 break
 
     # delete all the coverage info
@@ -213,7 +218,7 @@ def netcdf_pre_add_files_to_resource(sender, **kwargs):
     files = kwargs['files']
     validate_files_dict = kwargs['validate_files']
 
-    if len(files) >1:
+    if len(files) > 1:
         # file number validation
         validate_files_dict['are_files_valid'] = False
         validate_files_dict['message'] = 'Only one file can be uploaded.'
