@@ -1,39 +1,17 @@
 import json
 
-from django.contrib.auth.models import Group
-
-from rest_framework.test import APIClient
 from rest_framework import status
-from rest_framework.test import APITestCase
 
-from hs_core.hydroshare import users
-from hs_core.hydroshare import resource
+from .base import HSRESTTestCase
 
 
-class TestCreateResource(APITestCase):
+class TestCreateResource(HSRESTTestCase):
 
     def setUp(self):
-        self.maxDiff = None
-        self.client = APIClient()
-
-        self.group, _ = Group.objects.get_or_create(name='Hydroshare Author')
-        # create a user
-        self.user = users.create_account(
-            'test_user@email.com',
-            username='testuser',
-            first_name='some_first_name',
-            last_name='some_last_name',
-            superuser=False)
-
-        self.client.force_authenticate(user=self.user)
-
-        self.resources_to_delete = []
+        super(TestCreateResource, self).setUp()
 
     def tearDown(self):
-        for r in self.resources_to_delete:
-            resource.delete_resource(r)
-
-        self.user.delete()
+        super(TestCreateResource, self).tearDown()
 
     def test_post_resource_get_sysmeta(self):
         rtype = 'GenericResource'
@@ -58,4 +36,9 @@ class TestCreateResource(APITestCase):
         content = json.loads(response.content)
         self.assertEqual(content['resource_type'], rtype)
         self.assertEqual(content['resource_title'], title)
+
+        # Get resource bag
+        response = self.getResourceBag(res_id)
+        self.assertEqual(response['Content-Type'], 'application/zip')
+        self.assertTrue(int(response['Content-Length']) > 0)
 
