@@ -61,6 +61,12 @@ class HSRESTTestCase(APITestCase):
         return bag_response
 
     def getResourceFile(self, res_id, file_name):
+        """
+        Get resource file from iRODS, following redirects
+        :param res_id: ID of resource whose resource file should be fetched
+        :param file_name: Name of the file to fetch (just the filename, not the full path)
+        :return: Django test client response object
+        """
         bag_url = "/hsapi/resource/{res_id}/files/{file_name}".format(res_id=res_id,
                                                                       file_name=file_name)
         response = self.client.get(bag_url)
@@ -79,4 +85,20 @@ class HSRESTTestCase(APITestCase):
         self.assertEqual(file_response.status_code, status.HTTP_200_OK)
 
         return file_response
-    
+
+    def getScienceMetadata(self, res_id):
+        """
+        Get sciencematadata.xml from iRODS, following redirects
+        :param res_id: ID of resource whose science metadata should be fetched
+        :return: Django test client response object
+        """
+        bag_url = "/hsapi/scimeta/{res_id}/".format(res_id=res_id)
+        response = self.client.get(bag_url)
+
+        self.assertEqual(response.status_code, status.HTTP_302_FOUND)
+        self.assertTrue('Location' in response)
+        xml_irods_url = response['Location'].replace('example.com', self.hostname)
+        xml_response = self.client.get(xml_irods_url)
+        self.assertEqual(xml_response.status_code, status.HTTP_200_OK)
+        self.assertEqual(xml_response['Content-Type'], 'application/xml')
+        self.assertTrue(int(xml_response['Content-Length']) > 0)
