@@ -4,9 +4,9 @@ from hs_core.models import BaseResource, AbstractResource, GenericResource
 from hs_core import languages_iso
 from forms import *
 from hs_tools_resource.models import SupportedResTypes, ToolResource
-from django_irods.storage import IrodsStorage
 from hs_core import hydroshare
 from hs_core.views.utils import authorize
+from hs_core.hydroshare.resource import METADATA_STATUS_SUFFICIENT, METADATA_STATUS_INSUFFICIENT
 
 @processor_for(GenericResource)
 def landing_page(request, page):
@@ -64,7 +64,7 @@ def get_page_context(page, user, resource_edit=False, extended_metadata_layout=N
             if content_model_str in str(res_type.get_supported_res_types_str()).lower():
                 tool_res_obj = ToolResource.objects.get(object_id=res_type.object_id)
                 if tool_res_obj:
-                    is_authorized = authorize(request, tool_res_obj.short_id, view=True, raises_exception=False)[1]
+                    is_authorized = authorize(request, tool_res_obj.short_id, res=tool_res_obj, view=True, raises_exception=False)[1]
                     if is_authorized:
                         tool_url = tool_res_obj.metadata.url_bases.first().value \
                             if tool_res_obj.metadata.url_bases.first() else None
@@ -83,12 +83,17 @@ def get_page_context(page, user, resource_edit=False, extended_metadata_layout=N
                         relevant_tools.append(tl)
 
     just_created = False
+    just_published = False
     if request:
         validation_error = check_for_validation(request)
 
         just_created = request.session.get('just_created', False)
         if 'just_created' in request.session:
             del request.session['just_created']
+
+        just_published = request.session.get('just_published', False)
+        if 'just_published' in request.session:
+            del request.session['just_published']
 
     bag_url = AbstractResource.bag_url(content_model.short_id)
 
@@ -162,6 +167,7 @@ def get_page_context(page, user, resource_edit=False, extended_metadata_layout=N
                    'relevant_tools': relevant_tools,
                    'file_type_error': file_type_error,
                    'just_created': just_created,
+                   'just_published': just_published,
                    'bag_url': bag_url,
                    'show_content_files': show_content_files,
                    'discoverable': discoverable,
@@ -401,8 +407,8 @@ def check_for_validation(request):
 
 def _get_metadata_status(resource):
     if resource.metadata.has_all_required_elements():
-        metadata_status = "Sufficient to make public"
+        metadata_status = METADATA_STATUS_SUFFICIENT
     else:
-        metadata_status = "Insufficient to make public"
+        metadata_status = METADATA_STATUS_INSUFFICIENT
 
     return metadata_status

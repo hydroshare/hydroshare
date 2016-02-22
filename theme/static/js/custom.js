@@ -82,11 +82,9 @@ $(document).ready(function() {
            var li = $("<li><a class='tag'></a></li>");
             li.find('a').text(keywords[i]);
             list.append(li);
-
         }
-//            var li = $("<li><a class='tag'></a></li>");
-
     }
+
     $("#keywords").remove();
 
     if ($("#citation-text").length > 0){
@@ -112,4 +110,7 @@ $(document).ready(function() {
         }
         $("#citation-text").html(newCitationText);
     }
+
+    // Make apps link open in new tab
+    $('a[href^="https://appsdev.hydroshare.org/apps"]').attr('target', '_blank');
 });

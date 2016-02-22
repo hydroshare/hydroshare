@@ -248,6 +248,7 @@ INPLACE_SAVE_URL = '/hsapi/save_inline/'
 ################
 
 INSTALLED_APPS = (
+    "autocomplete_light",
     "django.contrib.admin",
     "django.contrib.auth",
     "oauth2_provider",
@@ -275,13 +276,11 @@ INSTALLED_APPS = (
     "crispy_forms",
     "mezzanine.accounts",
     "mezzanine.mobile",
-    "autocomplete_light",
     "haystack",
     "jquery_ui",
     "rest_framework",
     "ga_ows",
     "ga_resources",
-    #"dublincore",
     "hs_core",
     "hs_access_control",
     "hs_labels",
@@ -290,7 +289,6 @@ INSTALLED_APPS = (
     #"hs_rhessys_inst_resource",
     "django_docker_processes",
     "hs_geo_raster_resource",
-    "djcelery",
     "ref_ts",
     "hs_app_timeseries",
     "widget_tweaks",
@@ -310,10 +308,8 @@ APPS_TO_NOT_RUN = (
     'ga_ows',
     'ga_resources',
     'jquery_ui',
-    'djcelery',
     'rest_framework',
     'django_docker_processes',
-    'dublincore',
     'django_nose',
     'inplaceeditform',
     'grappelli_safe',
@@ -504,8 +500,8 @@ LOGGING = {
     },
     'handlers': {
         'syslog': {
-            'level': 'DEBUG',
-            'class':'logging.handlers.RotatingFileHandler',
+            'level': 'WARNING',
+            'class': 'logging.handlers.RotatingFileHandler',
             'filename': '/var/log/hydroshare/system.log',
             'formatter': 'simple',
             'maxBytes': 1024*1024*15, # 15MB
@@ -513,8 +509,16 @@ LOGGING = {
         },
         'djangolog': {
             'level': 'DEBUG',
-            'class':'logging.handlers.RotatingFileHandler',
+            'class': 'logging.handlers.RotatingFileHandler',
             'filename': '/var/log/hydroshare/django.log',
+            'formatter': 'verbose',
+            'maxBytes': 1024*1024*15, # 15MB
+            'backupCount': 10,
+        },
+        'hydrosharelog': {
+            'level': 'DEBUG',
+            'class': 'logging.handlers.RotatingFileHandler',
+            'filename': '/var/log/hydroshare/hydroshare.log',
             'formatter': 'verbose',
             'maxBytes': 1024*1024*15, # 15MB
             'backupCount': 10,
@@ -522,14 +526,20 @@ LOGGING = {
     },
     'loggers': {
         'django': {
-            'handlers':['syslog', 'djangolog'],
+            'handlers': ['syslog', 'djangolog'],
             'propagate': True,
-            'level':'DEBUG',
+            'level': 'DEBUG',
         },
         'django.db.backends': {
             'handlers': ['syslog'],
-            'level': 'DEBUG',
+            'level': 'WARNING',
             'propagate': False,
+        },
+        # Catch-all logger for HydroShare apps
+        '': {
+            'handlers': ['hydrosharelog'],
+            'propagate': False,
+            'level': 'DEBUG'
         },
     }
 }

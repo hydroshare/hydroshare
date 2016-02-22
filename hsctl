@@ -16,15 +16,13 @@ sed -i '/^\s*$/d' $CONFIG_DIRECTORY/hydroshare-config.sh
 while read line; do export $line; done < <(cat $CONFIG_DIRECTORY/hydroshare-config.sh)
 
 ### Docker Variables ###
-HS_DOCKER_CONTAINERS=(hydroshare_hydroshare_1 hydroshare_dockerworker_1 hydroshare_defaultworker_1)
+HS_DOCKER_CONTAINERS=(hydroshare dockerworker defaultworker)
 HS_DOCKER_IMAGES=(hydroshare_hydroshare hydroshare_dockerworker hydroshare_defaultworker)
-OTHER_DOCKER_CONTAINERS=(hydroshare_postgis_1 hydroshare_rabbitmq_1 hydroshare_redis_1 hydroshare_solr_1)
+OTHER_DOCKER_CONTAINERS=(postgis rabbitmq redis solr)
 
 ### Pre-flight Variables ###
-HTTP_RECAPTCHA='http://www.google.com/recaptcha/api/js/recaptcha_ajax.js'
-HTTPS_RECAPTCHA='https://www.google.com/recaptcha/api/js/recaptcha_ajax.js'
 DEV_SERVER='python manage.py runserver 0.0.0.0:8000'
-PROD_SERVER='uwsgi --ini uwsgi.ini'
+PROD_SERVER='uwsgi --ini emperor.ini'
 
 display_usage() {
 	echo "*** HydroShare Control script ***"
@@ -61,7 +59,10 @@ restart_hs() {
     stop_nginx
     preflight_hs
     docker-compose stop hydroshare
-    docker-compose up -d hydroshare
+    docker-compose stop defaultworker
+    delete_celerybeat_scheduler
+    docker-compose start hydroshare
+    docker-compose start defaultworker
     if [ "${USE_NGINX,,}" = true ]; then
         start_nginx
     fi
@@ -91,20 +92,20 @@ solr_schema_hs() {
     echo
     echo "*** Setting up solr schema ***"
     echo "*** From hydroshare: build_solr_schema ***"
-    docker exec hydroshare_hydroshare_1 python manage.py build_solr_schema -f schema.xml
+    docker exec hydroshare python manage.py build_solr_schema -f schema.xml
     sleep 1s
     echo "*** From solr: mv schema.xml to /opt/solr/example/solr/collection1/conf/ ***"
-    docker exec hydroshare_solr_1 cp /hydroshare/schema.xml /opt/solr/example/solr/collection1/conf/schema.xml
+    docker exec solr cp /hydroshare/schema.xml /opt/solr/example/solr/collection1/conf/schema.xml
 }
 
 start_hs() {
     echo "*** ${1^^}: all docker containers ***"
     preflight_hs
     for f in "${OTHER_DOCKER_CONTAINERS[@]}"; do
-        docker start $f;
+        docker-compose start $f;
     done
     for f in "${HS_DOCKER_CONTAINERS[@]}"; do
-        docker start $f;
+        docker-compose start $f;
     done
     if [ "${USE_NGINX,,}" = true ]; then
         start_nginx
@@ -113,19 +114,22 @@ start_hs() {
 
 stop_hs() {
     echo "*** ${1^^}: all running docker containers ***"
-    stop_nginx
+    if [ "${USE_NGINX,,}" = true ]; then
+        stop_nginx;
+    fi
     for f in "${HS_DOCKER_CONTAINERS[@]}"; do
-        CHECK_HS_DOCKER_CID=`docker ps -a | tr -s ' ' | grep ${f} | cut -d ' ' -f 1`
+        CHECK_HS_DOCKER_CID=`docker-compose ps | tr -s ' ' | grep ${f} | cut -d ' ' -f 1`
         if [[ -n "${CHECK_HS_DOCKER_CID}" ]]; then
-            docker stop $f;
+            docker-compose stop $f;
         fi
     done
     for f in "${OTHER_DOCKER_CONTAINERS[@]}"; do
-        CHECK_HS_OTHER_CID=`docker ps -a | tr -s ' ' | grep ${f} | cut -d ' ' -f 1`
+        CHECK_HS_OTHER_CID=`docker-compose ps | tr -s ' ' | grep ${f} | cut -d ' ' -f 1`
         if [[ -n "${CHECK_HS_OTHER_CID}" ]]; then
-            docker stop $f;
+            docker-compose stop $f;
         fi
     done
+    delete_celerybeat_scheduler
 }
 
 preflight_hs() {
@@ -163,19 +167,34 @@ preflight_hs() {
     fi
 }
 
+delete_celerybeat_scheduler() {
+    file1="celerybeat.pid"
+    file2="celery/*"
+    if [ -f $file1 ] ; then
+        rm -f $file1
+        rm -rf $file2
+    fi
+}
+
 rebuild_nodb_hs() {
     echo "*** ${1^^} *** "
     stop_hs STOP
     preflight_hs
     echo "*** REMOVE: all hydroshare docker containers (preserves exiting database contents)  ***"
     for f in "${HS_DOCKER_CONTAINERS[@]}"; do
-        docker rm -fv $f;
+        CHECK_HS_DOCKER_CID=`docker-compose ps | tr -s ' ' | grep ${f} | cut -d ' ' -f 1`
+        if [[ -n "${CHECK_HS_DOCKER_CID}" ]]; then
+            docker-compose rm -f $f;
+        fi
     done
     sleep 1s
     echo "*** REMOVE: all hydroshare docker images  ***"
     for f in "${HS_DOCKER_IMAGES[@]}"; do
         docker rmi -f $f;
     done
+
+    delete_celerybeat_scheduler
+
     sleep 1s
     # bring up all docker containers
     echo "*** bring up all docker containers as defined in docker-compose.yml ***"
@@ -202,7 +221,7 @@ rebuild_nodb_hs() {
 loaddb_hs() {
     echo "*** ${1^^} ***"
     echo "*** load clean pg.development.sql database from the running hydroshare container ***"
-    CID=$(docker ps -a | grep hydroshare_hydroshare_1 | cut -d ' ' -f 1)
+    CID=$(docker-compose ps | grep hydroshare | cut -d ' ' -f 1)
     echo "*** drop existing database ***"
     docker exec $CID dropdb -U postgres -h postgis postgres
     echo "*** create new database ***"
@@ -235,16 +254,16 @@ rebuild_db_hs() {
     preflight_hs
     echo "*** REMOVE: all docker containers (deletes existing database)  ***"
     for f in "${HS_DOCKER_CONTAINERS[@]}"; do
-        CHECK_HS_DOCKER_CID=`docker ps -a | tr -s ' ' | grep ${f} | cut -d ' ' -f 1`
+        CHECK_HS_DOCKER_CID=`docker-compose ps | tr -s ' ' | grep ${f} | cut -d ' ' -f 1`
         if [[ -n "${CHECK_HS_DOCKER_CID}" ]]; then
-            docker rm -fv $f;
+            docker-compose rm -f $f;
         fi
     done
     sleep 1s
     for f in "${OTHER_DOCKER_CONTAINERS[@]}"; do
-        CHECK_HS_OTHER_CID=`docker ps -a | tr -s ' ' | grep ${f} | cut -d ' ' -f 1`
+        CHECK_HS_OTHER_CID=`docker-compose ps | tr -s ' ' | grep ${f} | cut -d ' ' -f 1`
         if [[ -n "${CHECK_HS_OTHER_CID}" ]]; then
-            docker rm -fv $f;
+            docker-compose rm -f $f;
         fi
     done
     sleep 1s
@@ -255,6 +274,9 @@ rebuild_db_hs() {
             docker rmi -f $f;
         fi
     done
+
+    delete_celerybeat_scheduler
+
     sleep 1s
     # get submodules
     echo "*** get git submodules ***"
@@ -288,20 +310,20 @@ rebuild_hs() {
 }
 
 manage_py_hs() {
-    docker exec -ti hydroshare_hydroshare_1 python manage.py "${@:2}"
+    docker exec -ti hydroshare python manage.py "${@:2}"
 }
 
 update_solr_index() {
-    docker exec hydroshare_hydroshare_1 python manage.py update_index
+    docker exec hydroshare python manage.py update_index
 }
 
 rebuild_solr_index() {
-    docker exec hydroshare_hydroshare_1 python manage.py rebuild_index --noinput
+    docker exec hydroshare python manage.py rebuild_index --noinput
 }
 
 reset_all_hs() {
     echo "*** WARNING: All data, containers, and hydroshare related images will be removed ***"
-    if [[ "$(docker ps | grep hydroshare_hydroshare_1)" ]]; then
+    if [[ "$(docker-compose ps | grep hydroshare)" ]]; then
         echo "*** INFO: HydroShare found previously running, proceeding with clean up ***"
         # Remove root items
         scripts/pre-remove-hs;
@@ -309,10 +331,10 @@ reset_all_hs() {
         echo "*** WARNING: Could not find a running instance of HydroShare ***"
         echo "*** WARNING: Attempting cleanup anyway ***";
     fi
-    echo "*** INFO: Stopping all running docker containers ***"
-    docker stop $(docker ps -a -q)
+    # Stopping all running docker containers
+    stop_hs STOP
     echo "*** INFO: Removing all docker containers ***"
-    docker rm -fv $(docker ps -a -q)
+    docker-compose rm -f
     echo "*** INFO: Removing hydroshare related images ***"
     while read line; do docker rmi -f $line; done < <(docker images | grep "^hydroshare_" | tr -s ' ' | cut -d ' ' -f 3)
     echo "*** INFO: Removing static directory ***"

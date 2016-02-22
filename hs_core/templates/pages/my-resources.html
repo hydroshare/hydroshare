@@ -34,9 +34,9 @@
                                         <input type="checkbox" data-facet="editable" value="Editable">Editable by me</label>
                                 </li>
                                 <li class="list-group-item">
-                                    <span data-facet="shared with me" class="badge">0</span>
+                                    <span data-facet="viewable by me" class="badge">0</span>
                                     <label class="checkbox noselect">
-                                        <input type="checkbox" data-facet="shared with me" value="View">Shared with me</label>
+                                        <input type="checkbox" data-facet="viewable by me" value="View">Viewable by me</label>
                                 </li>
                                 <li class="list-group-item">
                                     <span data-facet="favorites" class="badge">0</span>
@@ -226,7 +226,7 @@
                                          alt="{{ res|resource_type }}" title="{{ res|resource_type }}" class="table-res-type-icon"/>
                                 {% endif %}
                             </td>
-                            <td><a href="{{ res.get_absolute_url }}">{{ res.metadata.title }}</a></td>
+                            <td><strong><a href="{{ res.get_absolute_url }}">{{ res.metadata.title }}</a></strong></td>
                             <td>{% for owner in res.raccess.owners.all %}
                                   {% if forloop.counter0 > 0 %} · {% endif %}
                                 <span>{{ owner|contact|safe }}</span>
@@ -266,9 +266,11 @@
                                     Favorite
                                 {% endif %}
                             </td>
-                            <td>{{ res.updated|date:"Y/m/d" }}</td>
+                            <td>{{ res.updated|date:"Y/m/d H:i:s" }}</td>
                             <td>
-                                {% if res.raccess.public %}
+                                {% if res.raccess.published %}
+                                    <strong class="label-public">&nbspPublished</strong>
+                                {% elif res.raccess.public %}
                                     <strong class="label-public">&nbspPublic</strong>
                                 {% elif res.raccess.discoverable %}
                                     <strong class="label-discoverable">&nbspDiscoverable</strong>
@@ -399,20 +401,6 @@
     <script type="text/javascript">
         var resourceTable;
 
-        function getTableMaxScrollSize() {
-            /* Large Devices, Wide Screens
-             @media only screen and (min-width : 1200px)*/
-            var largeDeviceScreenSize = 1200;
-            if ($(window).width() >= largeDeviceScreenSize) {
-                scrollY = $("body > .container").height();
-            }
-            else {
-                scrollY = Math.max(500, ($("body > .container").height() - $("#facets").height()));
-            }
-
-            return scrollY;
-        }
-
         $(document).ready(function () {
 
         /*==================================================
@@ -434,8 +422,6 @@
                 "order": [[4, "asc"]],
                 "paging": false,
                 "info": false,
-                "scrollY": getTableMaxScrollSize(),
-                "scrollCollapse": true,
                 "columnDefs": [
                     {
                         "targets": [1],     // Resource type
@@ -482,10 +468,6 @@
                         "searchable": true
                     }
                 ]
-            });
-
-            $(window).resize(function () {
-                $('.dataTables_scrollBody').css('max-height', getTableMaxScrollSize());
             });
 
             // Trigger label creation when pressing Enter
@@ -900,6 +882,7 @@
             var collection = [];
             var favorites = 0;
             var ownedCount = 0;
+            var ownedEditableCount = 0;
             var editableCount = 0;
             var viewableCount = 0;
 
@@ -907,9 +890,12 @@
                 var dataColLabels = this.data()[8].replace(/\s+/g, ' ').split(","); // List of labels already applied to the resource;
                 var dataColFavorite = this.data()[9].trim();
                 var dataColPermissionLevel = this.data()[7].trim();
+                var sharingStatus = this.data()[11].trim();
 
                 if (dataColPermissionLevel == "Owned") {
                     ownedCount++;
+                    if (sharingStatus.indexOf('Published') == -1)
+                        ownedEditableCount++;
                 }
                 else if (dataColPermissionLevel == "Editable") {
                     editableCount++;
@@ -921,8 +907,8 @@
 
                 // Update filter badges count
                 $("#filter .badge[data-facet='owned']").text(ownedCount);
-                $("#filter .badge[data-facet='editable']").text(ownedCount + editableCount);
-                $("#filter .badge[data-facet='shared with me']").text(viewableCount + editableCount);
+                $("#filter .badge[data-facet='editable']").text(ownedEditableCount+editableCount);
+                $("#filter .badge[data-facet='viewable by me']").text(viewableCount+editableCount+ownedCount);
 
                 if (dataColFavorite == "Favorite") {
                     favorites++;
@@ -1101,14 +1087,24 @@
 
                     // Editable by me
                     if ($('#filter input[type="checkbox"][value="Editable"]').prop("checked") == true) {
+                        // published resources are not editable
+                        var sharingStatus = data[11].trim();
+                        if (sharingStatus.indexOf('Published') != -1)
+                            return false
+
                         if (data[7] != "Owned" && data[7] != "Editable") {
                             return false;
                         }
                     }
 
-                    // Shared with me
+                    // Viewable by me
                     if ($('#filter input[type="checkbox"][value="View"]').prop("checked") == true) {
-                        if (data[7] == "Owned" || (data[7] != "Viewable" && data[7] != "Editable")) {
+                        // published resources are viewable
+                        var sharingStatus = data[11].trim();
+                        if (sharingStatus.indexOf('Published') != -1)
+                            return true
+
+                        if (data[7] != "Owned" && data[7] != "Viewable" && data[7] != "Editable") {
                             return false;
                         }
                     }
