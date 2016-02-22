@@ -1,39 +1,18 @@
 import json
 
-from django.contrib.auth.models import Group
-
-from rest_framework.test import APIClient
 from rest_framework import status
-from rest_framework.test import APITestCase
 
-from hs_core.hydroshare import users
 from hs_core.hydroshare import resource
+from .base import HSRESTTestCase
 
 
-class TestSetAccessRules(APITestCase):
+class TestSetAccessRules(HSRESTTestCase):
 
     def setUp(self):
-        self.maxDiff = None
-        self.client = APIClient()
-
-        self.group, _ = Group.objects.get_or_create(name='Hydroshare Author')
-        # create a user
-        self.user = users.create_account(
-            'test_user@email.com',
-            username='testuser',
-            first_name='some_first_name',
-            last_name='some_last_name',
-            superuser=False)
-
-        self.client.force_authenticate(user=self.user)
-
-        self.resources_to_delete = []
+        super(TestSetAccessRules, self).setUp()
 
     def tearDown(self):
-        for r in self.resources_to_delete:
-            resource.delete_resource(r)
-
-        self.user.delete()
+        super(TestSetAccessRules, self).tearDown()
 
     def test_set_access_rules(self):
         rtype = 'GenericResource'
@@ -46,6 +25,7 @@ class TestSetAccessRules(APITestCase):
                                            keywords=keywords)
         new_res.metadata.create_element('description', abstract=abstract)
         res_id = new_res.short_id
+        self.resources_to_delete.append(res_id)
 
         sysmeta_url = "/hsapi/sysmeta/{res_id}/".format(res_id=res_id)
         response = self.client.get(sysmeta_url)
