@@ -51,18 +51,24 @@ class OriginalCoverage(AbstractMetaDataElement):
 
         :param kwargs: the 'value' in kwargs should be a dictionary
         """
-
+        value_arg_dict = None
         if 'value' in kwargs:
+            value_arg_dict = kwargs['value']
+        elif '_value' in kwargs:
+            value_arg_dict = json.loads(kwargs['_value'])
+
+        if value_arg_dict:
             # check that all the required sub-elements exist and create new original coverage meta
             for value_item in ['units', 'northlimit', 'eastlimit', 'southlimit', 'westlimit']:
-                if not value_item in kwargs['value']:
+                if not value_item in value_arg_dict:
                     raise ValidationError("For original coverage meta, one or more bounding box limits or 'units' is missing.")
 
-            value_dict = {k: v for k, v in kwargs['value'].iteritems()
+            value_dict = {k: v for k, v in value_arg_dict.iteritems()
                           if k in ('units', 'northlimit', 'eastlimit', 'southlimit', 'westlimit', 'projection')}
 
             value_json = json.dumps(value_dict)
-            del kwargs['value']
+            if 'value' in kwargs:
+                del kwargs['value']
             kwargs['_value'] = value_json
             return super(OriginalCoverage, cls).create(**kwargs)
         else:
@@ -190,19 +196,6 @@ class NetcdfMetaData(CoreMetaData):
             missing_required_elements.append('Variable')
 
         return missing_required_elements
-
-    def copy_all_elements_to(self, tgt_res):
-        super(NetcdfMetaData, self).copy_all_elements_to(tgt_res)
-        new_md = tgt_res.metadata
-        for var in self.variables.all():
-            new_md.create_element('Variable', name=var.name, unit=var.unit, type=var.type,
-                                  shape=var.shape, descriptive_name=var.descriptive_name,
-                                  method=var.method, missing_value=var.missing_value)
-
-        for cov in self.ori_coverage.all():
-            new_md.create_element('OriginalCoverage', value=cov.value,
-                                  projection_string_type=cov.projection_string_type,
-                                  projection_string_text=cov.projection_string_text)
 
     def get_xml(self):
         from lxml import etree

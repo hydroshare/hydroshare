@@ -839,21 +839,28 @@ class Coverage(AbstractMetaDataElement):
                     raise ValidationError("Coverage type 'Point' can't be created when there is a coverage of "
                                           "type 'Box'")
 
+            value_arg_dict = None
             if 'value' in kwargs:
-                cls._validate_coverage_type_value_attributes(kwargs['type'], kwargs['value'])
+                value_arg_dict = kwargs['value']
+            elif '_value' in kwargs:
+                value_arg_dict = json.loads(kwargs['_value'])
+
+            if value_arg_dict:
+                cls._validate_coverage_type_value_attributes(kwargs['type'], value_arg_dict)
 
                 if kwargs['type'] == 'period':
-                    value_dict = {k: v for k, v in kwargs['value'].iteritems() if k in ('name', 'start', 'end')}
+                    value_dict = {k: v for k, v in value_arg_dict.iteritems() if k in ('name', 'start', 'end')}
                 elif kwargs['type'] == 'point':
-                    value_dict = {k: v for k, v in kwargs['value'].iteritems()
+                    value_dict = {k: v for k, v in value_arg_dict.iteritems()
                                   if k in ('name', 'east', 'north', 'units', 'elevation', 'zunits', 'projection')}
                 elif kwargs['type'] == 'box':
-                    value_dict = {k: v for k, v in kwargs['value'].iteritems()
+                    value_dict = {k: v for k, v in value_arg_dict.iteritems()
                                   if k in ('units', 'northlimit', 'eastlimit', 'southlimit', 'westlimit', 'name',
                                            'uplimit', 'downlimit', 'zunits', 'projection')}
 
                 value_json = json.dumps(value_dict)
-                del kwargs['value']
+                if 'value' in kwargs:
+                    del kwargs['value']
                 kwargs['_value'] = value_json
                 return super(Coverage, cls).create(**kwargs)
 
@@ -1526,51 +1533,27 @@ class CoreMetaData(models.Model):
 
     def copy_all_elements_to(self, tgt_res):
         from hydroshare.utils import current_site_url
+        from django.forms.models import model_to_dict
+
         new_md = tgt_res.metadata
-        if self.title:
-            new_md.create_element('title', value=self.title.value)
-        if self.description:
-            new_md.create_element('description', abstract=self.description.abstract)
-        if self.language:
-            new_md.create_element('language', code=self.language.code)
-        if self.rights:
-            new_md.create_element('rights', url=self.rights.url, statement=self.rights.statement)
-        if self.publisher:
-            new_md.create_element('publisher', name=self.publisher.name, url=self.publisher.url)
-        if self.type:
-            new_md.create_element('type', url=self.type.url)
-
-        for cr in self.creators.all():
-            new_md.create_element('creator', name=cr.name, email=cr.email, description=cr.description, phone=cr.phone,
-                                  address=cr.address, organization=cr.organization, homepage=cr.homepage)
-
-        for ct in self.contributors.all():
-            new_md.create_element('contributor', name=ct.name, email=ct.email, description=ct.description, phone=ct.phone,
-                                  address=ct.address, organization=ct.organization, homepage=ct.homepage)
-
-        for dt in self.dates.all():
-            new_md.create_element('date', type=dt.type, start_date=dt.start_date, end_date=dt.end_date)
-
-        for id in self.identifiers.all():
-            if id.name == 'hydroShareIdentifier':
-                new_md.create_element('identifier', name=id.name, url='{0}/resource/{1}'.format(current_site_url(), tgt_res.short_id))
-            else:
-                new_md.create_element('identifier', name=id.name, url=id.url)
-
-        for co in self.coverages.all():
-            new_md.create_element('coverage', type=co.type, value=co.value)
-
-        for fm in self.formats.all():
-            new_md.create_element('format', value=fm.value)
-
-        for sub in self.subjects.all():
-            new_md.create_element('subject', value=sub.value)
-
-        for sc in self.sources.all():
-            new_md.create_element('source', derived_from=sc.derived_from)
-
-        for rel in self.relations.all():
-            new_md.create_element('relation', type=rel.type, value=rel.value)
+        md_type = ContentType.objects.get_for_model(self)
+        supported_element_names = self.get_supported_element_names()
+        for element_name in supported_element_names:
+            element_model_type = self._get_metadata_element_model_type(element_name)
+            elements_to_copy = element_model_type.model_class().objects.filter(object_id=self.id, content_type=md_type).all()
+            for element in elements_to_copy:
+                element_args = model_to_dict(element)
+                element_args.pop('content_type')
+                element_args.pop('id')
+                element_args.pop('object_id')
+                if element_name.lower() == 'identifier':
+                    for id in self.identifiers.all():
+                        if id.name == 'hydroShareIdentifier':
+                            new_md.create_element('identifier', name=id.name, url='{0}/resource/{1}'.format(current_site_url(), tgt_res.short_id))
+                        else:
+                            new_md.create_element('identifier', name=id.name, url=id.url)
+                else:
+                    new_md.create_element(element_name, **element_args)
 
     # this method needs to be overriden by any subclass of this class
     # to allow updating of extended (resource specific) metadata

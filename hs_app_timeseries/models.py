@@ -217,46 +217,6 @@ class TimeSeriesMetaData(CoreMetaData):
             missing_required_elements.append('Time Series Result')
         return missing_required_elements
 
-    def copy_all_elements_to(self, tgt_res):
-        super(TimeSeriesMetaData, self).copy_all_elements_to(tgt_res)
-        new_md = tgt_res.metadata
-        if self.site:
-            new_md.create_element('Site', site_code=self.site.site_code,
-                                  site_name=self.site.site_name,
-                                  elevation_m=self.site.elevation_m,
-                                  elevation_datum=self.site.elevation_datum,
-                                  site_type=self.site.site_type)
-        if self.variable:
-            new_md.create_element('Variable', variable_code=self.variable.variable_code,
-                                  variable_name=self.variable.variable_name,
-                                  variable_type=self.variable.variable_type,
-                                  no_data_value=self.variable.no_data_value,
-                                  variable_definition=self.variable.variable_definition,
-                                  speciation=self.variable.speciation)
-
-        if self.method:
-            new_md.create_element('Method', method_code=self.method.method_code,
-                                  method_name=self.method.method_name,
-                                  method_type=self.method.method_type,
-                                  method_description=self.method.method_description,
-                                  method_link=self.method.method_link)
-
-        if self.processing_level:
-            new_md.create_element('ProcessingLevel',
-                                  processing_level_code=self.processing_level.processing_level_code,
-                                  definition=self.processing_level.definition,
-                                  explanation=self.processing_level.explanation)
-
-        if self.time_series_result:
-            new_md.create_element('TimeSeriesResult',
-                                  units_type=self.time_series_result.units_type,
-                                  units_name=self.time_series_result.units_name,
-                                  units_abbreviation=self.time_series_result.units_abbreviation,
-                                  status=self.time_series_result.status,
-                                  sample_medium=self.time_series_result.sample_medium,
-                                  value_count=self.time_series_result.value_count,
-                                  aggregation_statistics=self.time_series_result.aggregation_statistics)
-
     def get_xml(self, pretty_print=True):
         from lxml import etree
         # get the xml string representation of the core metadata elements

@@ -95,18 +95,6 @@ class ScriptMetaData(CoreMetaData):
 
         return missing_required_elements
 
-    def copy_all_elements_to(self, tgt_res):
-        super(ScriptMetaData, self).copy_all_elements_to(tgt_res)
-        new_md = tgt_res.metadata
-        if self.program:
-            new_md.create_element('ScriptSpecificMetadata',
-                                  scriptLanguage=self.program.scriptLanguage,
-                                  languageVersion=self.program.languageVersion,
-                                  scriptVersion=self.program.scriptVersion,
-                                  scriptDependencies=self.program.scriptDependencies,
-                                  scriptReleaseDate=self.program.scriptReleaseDate,
-                                  scriptCodeRepository=self.program.scriptCodeRepository)
-
     def get_xml(self):
 
         # get the xml string for R Script
