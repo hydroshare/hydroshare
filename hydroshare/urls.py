@@ -40,6 +40,7 @@ urlpatterns = i18n_patterns("",
     url(r'^django_docker_processes/', include('django_docker_processes.urls')),
     url(r'^autocomplete/', include('autocomplete_light.urls')),
     url(r'^search/$', FacetedSearchView(form_class=MyForm), name='haystack_search'),
+    url(r'^sitemap/$', 'hs_sitemap.views.sitemap', name='sitemap'),
 )
 
 # Filebrowser admin media library.

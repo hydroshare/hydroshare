@@ -299,6 +299,7 @@ INSTALLED_APPS = (
     "hs_swat_modelinstance",
     "hs_geographic_feature_resource",
     "hs_script_resource",
+    "hs_sitemap",
     "hs_collection_resource"
 )
 
