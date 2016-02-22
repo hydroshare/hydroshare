@@ -27,7 +27,7 @@ import raster_meta_extract
 
 
 def raster_file_validation(files):
-    is_valid = True
+    error_info = []
     vrt_file_path = ''
 
     # process uploaded .tif or .zip file
@@ -54,13 +54,13 @@ def raster_file_validation(files):
         vrt_file_path = files_path[files_ext.index('.vrt')]
         raster_dataset = gdal.Open(vrt_file_path, GA_ReadOnly)
 
-        # check if the data is valid
+        # check if the vrt file is valid
         try:
             raster_dataset.RasterXSize
             raster_dataset.RasterYSize
             raster_dataset.RasterCount
         except AttributeError:
-            is_valid = False
+            error_info.append('Please define the raster with raster size and band information.')
 
         # check if the raster file numbers and names are valid in vrt file
         with open(vrt_file_path, 'r') as vrt_file:
@@ -69,11 +69,14 @@ def raster_file_validation(files):
             raster_file_names = {file_name.text for file_name in root.iter('SourceFilename')}
         files_names.pop(files_ext.index('.vrt'))
         if raster_file_names != set(files_names):
-            is_valid = False
+            error_info.append('The .tif files provided are inconsistent (e.g. missing or extra)'\
+                             ' with the references in the .vrt file.')
+    elif files_ext.count('.tif') == 1 and files_ext.count('.vrt') == 0:
+        error_info.append('Please define the .tif file with raster size, band, and georeference information.')
     else:
-        is_valid = False
+        error_info.append('The uploaded files should contain only one .vrt file and .tif files referenced by the .vrt file.')
 
-    return is_valid, vrt_file_path, temp_dir
+    return error_info, vrt_file_path, temp_dir
 
 
 def create_vrt_file(tif_file):
@@ -126,10 +129,10 @@ def raster_pre_create_resource_trigger(sender, **kwargs):
 
     if(files):
         # raster file validation
-        is_valid, vrt_file_path, temp_dir = raster_file_validation(files)
+        error_info, vrt_file_path, temp_dir = raster_file_validation(files)
 
         # metadata extraction
-        if is_valid:
+        if not error_info:
             res_md_dict = raster_meta_extract.get_raster_meta_dict(vrt_file_path)
             wgs_cov_info = res_md_dict['spatial_coverage_info']['wgs84_coverage_info']
             # add core metadata coverage - box
@@ -156,12 +159,7 @@ def raster_pre_create_resource_trigger(sender, **kwargs):
         else:
             bcount = 0
             validate_files_dict['are_files_valid'] = False
-            validate_files_dict['message'] = 'Raster validation error.  Rasters may be loaded as a valid single .tif file or' \
-                                             ' a zip file containing one .vrt file and .tif files referenced by the .vrt file. ' \
-                                             ' This validation error results if the file is not in one of these formats' \
-                                             ' or if the .tif files provided are inconsistent (e.g. missing or extra)' \
-                                             ' with the references in the .vrt file.  ' \
-                                             'See http://www.gdal.org/gdal_vrttut.html for information on the .vrt format.'
+            validate_files_dict['message'] = 'Raster validation error. {0}'.format(' '.join(error_info))
 
         # remove temp vrt file
         if os.path.isdir(temp_dir):
@@ -211,10 +209,10 @@ def raster_pre_add_files_to_resource_trigger(sender, **kwargs):
 
     if files:
         # raster file validation
-        is_valid, vrt_file_path, temp_dir = raster_file_validation(files)
+        error_info, vrt_file_path, temp_dir = raster_file_validation(files)
 
         # metadata extraction
-        if is_valid:
+        if not error_info:
             res_md_dict = raster_meta_extract.get_raster_meta_dict(vrt_file_path)
 
             # update core metadata coverage - box
@@ -245,12 +243,9 @@ def raster_pre_add_files_to_resource_trigger(sender, **kwargs):
 
         else:
             validate_files_dict['are_files_valid'] = False
-            validate_files_dict['message'] = 'Raster validation error.  Rasters may be loaded as a single valid .tif file or' \
-                                             ' a zip file containing one .vrt file and .tif files referenced by the .vrt file. ' \
-                                             ' This validation error results if the file is not in one of these formats' \
-                                             ' or if the .tif files provided are inconsistent (e.g. missing or extra)' \
-                                             ' with the references in the .vrt file.  ' \
-                                             'See http://www.gdal.org/gdal_vrttut.html for information on the .vrt format.'
+            validate_files_dict['message'] = 'Raster validation error. {0}' \
+                                             'See http://www.gdal.org/gdal_vrttut.html ' \
+                                             'for information on the .vrt format.'.format(' '.join(error_info))
 
         # remove temp dir
         if os.path.isdir(temp_dir):
