@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+
+{% block all_content %}
+    <style>
+    h1,h2,h3,h4 {
+        margin: 20px;
+    }
+    h3 {
+        padding-left: 20px;
+    }
+    h4 {
+        padding-left: 40px;
+    }
+    </style>
+
+    <h1>HydroShare</h1>
+    <h2>Site Map</h2>
+
+    {% for name, rt in resource_types %}
+        {% if rt.resources|length > 0 %}
+            <h3>{{ name }}</h3>
+
+            {% for res in rt.resources %}
+                <h4><a href="{{ res.get_absolute_url }}">{{ res.title }}</a></h4>
+            {% endfor %}
+        {% endif %}
+    {% endfor %}
+{% endblock %}
