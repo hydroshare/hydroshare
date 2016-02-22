@@ -60,3 +60,23 @@ class HSRESTTestCase(APITestCase):
 
         return bag_response
 
+    def getResourceFile(self, res_id, file_name):
+        bag_url = "/hsapi/resource/{res_id}/files/{file_name}".format(res_id=res_id,
+                                                                      file_name=file_name)
+        response = self.client.get(bag_url)
+
+        self.assertEqual(response.status_code, status.HTTP_301_MOVED_PERMANENTLY)
+        self.assertTrue('Location' in response)
+        redir_url1 = response['Location'].replace('testserver', self.hostname)
+
+        redir_response = self.client.get(redir_url1)
+        self.assertEqual(redir_response.status_code, status.HTTP_302_FOUND)
+        redir_url2 = response['Location'].replace('testserver', self.hostname)
+        redir_response2 = self.client.get(redir_url2)
+
+        file_irods_url = redir_response2['Location'].replace('example.com', self.hostname)
+        file_response = self.client.get(file_irods_url)
+        self.assertEqual(file_response.status_code, status.HTTP_200_OK)
+
+        return file_response
+    
