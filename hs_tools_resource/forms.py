@@ -33,7 +33,8 @@ class UrlBaseForm(ModelForm):
 
 
 class UrlBaseValidationForm(forms.Form):
-    value = forms.CharField(max_length=1024)
+    # value = forms.CharField(max_length=1024)
+    value = forms.URLField(max_length=1024)
 
 # The following 3 classes need to have the "field" same as the fields defined in "ToolResourceType" table in models.py
 
