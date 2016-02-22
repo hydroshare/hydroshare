@@ -4,37 +4,19 @@ import zipfile
 import tempfile
 import shutil
 
-from django.contrib.auth.models import Group
-
-from rest_framework.test import APIClient
 from rest_framework import status
-from rest_framework.test import APITestCase
 
-from hs_core.hydroshare import users
 from hs_core.hydroshare import resource
-
 from hs_core.tests.api.utils import MyTemporaryUploadedFile
+from .base import HSRESTTestCase
 
 
-class TestResourceList(APITestCase):
+class TestResourceFileList(HSRESTTestCase):
 
     def setUp(self):
+        super(TestResourceFileList, self).setUp()
+
         self.tmp_dir = tempfile.mkdtemp()
-        self.maxDiff = None
-        self.client = APIClient()
-
-        self.group, _ = Group.objects.get_or_create(name='Hydroshare Author')
-        # create a user
-        self.user = users.create_account(
-            'test_user@email.com',
-            username='testuser',
-            first_name='some_first_name',
-            last_name='some_last_name',
-            superuser=False)
-
-        self.client.force_authenticate(user=self.user)
-
-        self.resources_to_delete = []
 
         # Make a text file
         self.txt_file_name = 'text.txt'
@@ -47,13 +29,9 @@ class TestResourceList(APITestCase):
         self.raster_file_path = 'hs_core/tests/data/cea.tif'
 
     def tearDown(self):
-        for r in self.resources_to_delete:
-            resource.delete_resource(r)
-
         shutil.rmtree(self.tmp_dir)
-        self.user.uaccess.delete()
-        self.user.delete()
-        self.group.delete()
+
+        super(TestResourceFileList, self).tearDown()
 
     def test_resource_file_list(self):
 
