@@ -30,6 +30,7 @@ class TestResourceMetadata(HSRESTTestCase):
         content = json.loads(response.content)
         self.assertEqual(content['resource_type'], self.rtype)
         self.assertEqual(content['resource_title'], self.title)
+        self.assertEqual(content['resource_url'], self.resource_url.format(res_id=self.pid))
 
     def test_get_scimeta(self):
         # Get science metadata XML

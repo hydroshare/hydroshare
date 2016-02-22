@@ -55,8 +55,11 @@ class TestResourceList(HSRESTTestCase):
         content = json.loads(response.content)
         self.assertEqual(content['count'], 3)
         self.assertEqual(content['results'][0]['resource_id'], gen_pid)
+        self.assertEqual(content['results'][0]['resource_url'], self.resource_url.format(res_id=gen_pid))
         self.assertEqual(content['results'][1]['resource_id'], geo_pid)
+        self.assertEqual(content['results'][1]['resource_url'], self.resource_url.format(res_id=geo_pid))
         self.assertEqual(content['results'][2]['resource_id'], app_pid)
+        self.assertEqual(content['results'][2]['resource_url'], self.resource_url.format(res_id=app_pid))
 
         # Filter by type (single)
         response = self.client.get('/hsapi/resourceList/', {'type': 'RasterResource'}, format='json')
@@ -64,6 +67,7 @@ class TestResourceList(HSRESTTestCase):
         content = json.loads(response.content)
         self.assertEqual(content['count'], 1)
         self.assertEqual(content['results'][0]['resource_id'], geo_pid)
+        self.assertEqual(content['results'][0]['resource_url'], self.resource_url.format(res_id=geo_pid))
 
         # Filter by type (multiple)
         response = self.client.get('/hsapi/resourceList/', {'type': ['RasterResource', 'ToolResource']},
@@ -72,4 +76,6 @@ class TestResourceList(HSRESTTestCase):
         content = json.loads(response.content)
         self.assertEqual(content['count'], 2)
         self.assertEqual(content['results'][0]['resource_id'], geo_pid)
+        self.assertEqual(content['results'][0]['resource_url'], self.resource_url.format(res_id=geo_pid))
         self.assertEqual(content['results'][1]['resource_id'], app_pid)
+        self.assertEqual(content['results'][1]['resource_url'], self.resource_url.format(res_id=app_pid))

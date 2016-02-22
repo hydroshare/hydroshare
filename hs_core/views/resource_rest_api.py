@@ -24,8 +24,10 @@ from hs_core.views import pagination
 # Mixins
 class ResourceToListItemMixin(object):
     def resourceToResourceListItem(self, r):
-        bag_url = hydroshare.utils.current_site_url() + AbstractResource.bag_url(r.short_id)
-        science_metadata_url = hydroshare.utils.current_site_url() + reverse('get_update_science_metadata', args=[r.short_id])
+        site_url = hydroshare.utils.current_site_url()
+        bag_url = site_url + AbstractResource.bag_url(r.short_id)
+        science_metadata_url = site_url + reverse('get_update_science_metadata', args=[r.short_id])
+        resource_url = site_url + r.get_absolute_url()
         resource_list_item = serializers.ResourceListItem(resource_type=r.resource_type,
                                                           resource_id=r.short_id,
                                                           resource_title=r.metadata.title.value,
@@ -38,7 +40,8 @@ class ResourceToListItemMixin(object):
                                                           date_created=r.created,
                                                           date_last_updated=r.updated,
                                                           bag_url=bag_url,
-                                                          science_metadata_url=science_metadata_url)
+                                                          science_metadata_url=science_metadata_url,
+                                                          resource_url=resource_url)
         return resource_list_item
 
 class ResourceFileToListItemMixin(object):
@@ -145,13 +148,15 @@ class ResourceList(ResourceToListItemMixin, generics.ListAPIView):
                     "date_last_updated": date resource last updated, "public": true or false,
                     "discoverable": true or false, "shareable": true or false, "immutable": true or false,
                     "published": true or false, "bag_url": link to bag file,
-                    "science_metadata_url": link to science metadata},
+                    "science_metadata_url": link to science metadata,
+                    "resource_url": link to resource landing HTML page},
                     {"resource_type": resource type, "resource_title": resource title, "resource_id": resource id,
                     "creator": creator name, "date_created": date resource created,
                     "date_last_updated": date resource last updated, "public": true or false,
                     "discoverable": true or false, "shareable": true or false, "immutable": true or false,
                     "published": true or false, "bag_url": link to bag file,
-                    "science_metadata_url": link to science metadata},
+                    "science_metadata_url": link to science metadata,
+                    "resource_url": link to resource landing HTML page},
             ]
         }
 

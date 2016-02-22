@@ -14,6 +14,7 @@ class HSRESTTestCase(APITestCase):
 
     def setUp(self):
         self.hostname = socket.gethostname()
+        self.resource_url = "http://example.com/resource/{res_id}/"
         self.maxDiff = None
         self.client = APIClient()
 
