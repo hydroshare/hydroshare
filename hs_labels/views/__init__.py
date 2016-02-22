@@ -4,7 +4,7 @@ import json
 from django.http import HttpResponse
 
 from hs_core.views import authorize
-
+from hs_access_control.models import PrivilegeCodes
 
 def resource_labeling_action(request, shortkey=None, *args, **kwargs):
     """
@@ -24,7 +24,7 @@ def resource_labeling_action(request, shortkey=None, *args, **kwargs):
     # TODO: clear all labels, clear all saved labels
     res = None
     if shortkey:
-        res, _, user = authorize(request, shortkey, view=True, full=True, superuser=True)
+        res, _, user = authorize(request, shortkey, needed_permission=PrivilegeCodes.VIEW)
     else:
         user = request.user
 

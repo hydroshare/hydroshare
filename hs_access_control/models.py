@@ -1240,11 +1240,11 @@ class UserAccess(models.Model):
 
         access_resource = this_resource.raccess
 
-        if access_resource.immutable:
-            return False
-
         if self.user.is_superuser:
             return True
+
+        if access_resource.immutable:
+            return False
 
         if UserResourcePrivilege.objects.filter(resource=this_resource,
                                                 privilege__lte=PrivilegeCodes.CHANGE,

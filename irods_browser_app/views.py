@@ -8,6 +8,7 @@ from django_irods.icommands import SessionException
 from hs_core import hydroshare
 from hs_core.views.utils import authorize, upload_from_irods
 from hs_core.hydroshare import utils
+from hs_access_control.models import PrivilegeCodes
 
 def search_ds(coll):
     store = {}
@@ -140,7 +141,7 @@ def upload(request):
 def upload_add(request):
     # add irods file into an existing resource
     res_id = request.POST['res_id']
-    resource, _, _ = authorize(request, res_id, edit=True, full=True, superuser=True)
+    resource, _, _ = authorize(request, res_id, needed_permission=PrivilegeCodes.CHANGE)
     res_files = request.FILES.getlist('files')
     extract_metadata = request.REQUEST.get('extract-metadata', 'No')
     extract_metadata = True if extract_metadata.lower() == 'yes' else False

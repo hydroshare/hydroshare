@@ -17,6 +17,7 @@ from hs_core.signals import pre_metadata_element_create
 from hs_core.hydroshare import FILE_SIZE_LIMIT
 from hs_core.hydroshare.utils import raise_file_size_exception
 from django_irods.storage import IrodsStorage
+from hs_access_control.models import PrivilegeCodes
 
 # Since an SessionException will be raised for all irods-related operations from django_irods module,
 # there is no need to raise iRODS SessionException from within this function
@@ -46,12 +47,30 @@ def upload_from_irods(username, password, host, port, zone, irods_fnames, res_fi
         fname = os.path.basename(ifname.rstrip(os.sep))
         res_files.append(UploadedFile(file=tmpFile, name=fname, size=size))
 
-def authorize(request, res_id, res=None, discoverable=False, edit=False, view=False,
-              full=False, superuser=False, raises_exception=True):
+def authorize(request, res_id, res=None, discoverable=False, needed_permission=PrivilegeCodes.VIEW,
+              raises_exception=True):
     """
-    Authorizes the user making this request for the OR of the parameters.  If the user has ANY permission set to True in
-    the parameter list, then this returns True else False.
+    This function checks if a user has authorization for resource view, edit or delete/setting resource flags. This
+    function doesn't check authorization for user sharing resource with another user
+
+    How this function should be called for different actions on a resource by a specific user?
+    1. User wants to view a resource (both metadata and content files):
+       authorize(request, res_id=id_of_resource, needed_permission=PrivilegeCodes.VIEW)
+    2. User wants to view resource metadata only:
+       authorize(request, res_id=id_of_resource, discoverable=True)
+    3. User wants to edit a resource but not delete it:
+       a. edit metadata
+       b. add file to resource
+       c. delete a file from the resource
+       authorize(request, res_id=id_of_resource, needed_permission=PrivilegeCodes.CHANGE)
+    4. User wants to set resource flag (public, published, shareable etc):
+       authorize(request, res_id=id_of_resource, needed_permission=PrivilegeCodes.OWNER)
+    5. User wants to delete a resource:
+       authorize(request, res_id=id_of_resource, needed_permission=PrivilegeCodes.OWNER)
+
+    Note: resource 'shareable' status has no effect on authorization
     """
+    authorized = False
     user = get_user(request)
     if res is None:
         try:
@@ -59,18 +78,24 @@ def authorize(request, res_id, res=None, discoverable=False, edit=False, view=Fa
         except ObjectDoesNotExist:
             raise NotFound(detail="No resource was found for resource id:%s" % res_id)
 
-    if discoverable and (edit is False and view is False and full is False and superuser is False):
-        authorized = res.raccess.discoverable
-    elif user.is_authenticated():
-        authorized = (view and user.uaccess.can_view_resource(res)) or \
-                     (edit and user.uaccess.can_change_resource(res)) or \
-                     (full and user.uaccess.can_delete_resource(res)) or \
-                     (discoverable and res.raccess.discoverable) or \
-                     (superuser and user.is_superuser)
+    if discoverable and needed_permission == PrivilegeCodes.VIEW:
+        if res.raccess.discoverable or res.raccess.public:
+            authorized = True
+        else:
+            if user.is_authenticated() and user.is_active:
+                authorized = user.uaccess.can_view_resource(res)
     else:
-        authorized = (view and res.raccess.public) or \
-                     (discoverable and res.raccess.discoverable)
-                     
+        if user.is_authenticated() and user.is_active:
+            if needed_permission == PrivilegeCodes.VIEW:
+                authorized = user.uaccess.can_view_resource(res)
+            elif needed_permission == PrivilegeCodes.CHANGE:
+                authorized = user.uaccess.can_change_resource(res)
+            elif needed_permission == PrivilegeCodes.OWNER:
+                authorized = user.uaccess.can_delete_resource(res)
+        else:
+            if needed_permission == PrivilegeCodes.VIEW:
+                authorized = res.raccess.public
+
     if raises_exception and not authorized:
         raise PermissionDenied()
     else:

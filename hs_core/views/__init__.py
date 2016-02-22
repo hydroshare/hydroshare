@@ -37,7 +37,7 @@ from . import user_rest_api
 from hs_core.hydroshare import utils
 from . import utils as view_utils
 from hs_core.signals import *
-
+from hs_access_control.models import PrivilegeCodes
 
 def short_url(request, *args, **kwargs):
     try:
@@ -69,7 +69,7 @@ def verify(request, *args, **kwargs):
 
 
 def add_file_to_resource(request, shortkey, *args, **kwargs):
-    resource, _, _ = authorize(request, shortkey, edit=True, full=True, superuser=True)
+    resource, _, _ = authorize(request, shortkey, needed_permission=PrivilegeCodes.CHANGE)
     res_files = request.FILES.getlist('files')
     extract_metadata = request.REQUEST.get('extract-metadata', 'No')
     extract_metadata = True if extract_metadata.lower() == 'yes' else False
@@ -128,7 +128,7 @@ def is_multiple_file_allowed_for_resource_type(request, resource_type, *args, **
 
 
 def add_metadata_element(request, shortkey, element_name, *args, **kwargs):
-    res, _, _ = authorize(request, shortkey, edit=True, full=True, superuser=True)
+    res, _, _ = authorize(request, shortkey, needed_permission=PrivilegeCodes.CHANGE)
 
     sender_resource = _get_resource_sender(element_name, res)
     handler_response = pre_metadata_element_create.send(sender=sender_resource, element_name=element_name,
@@ -177,7 +177,7 @@ def add_metadata_element(request, shortkey, element_name, *args, **kwargs):
 
 
 def update_metadata_element(request, shortkey, element_name, element_id, *args, **kwargs):
-    res, _, _ = authorize(request, shortkey, edit=True, full=True, superuser=True)
+    res, _, _ = authorize(request, shortkey, needed_permission=PrivilegeCodes.CHANGE)
     sender_resource = _get_resource_sender(element_name, res)
     handler_response = pre_metadata_element_update.send(sender=sender_resource, element_name=element_name,
                                                         element_id=element_id, request=request)
@@ -220,7 +220,7 @@ def update_metadata_element(request, shortkey, element_name, element_id, *args, 
 def file_download_url_mapper(request, shortkey, filename):
     """ maps the file URIs in resourcemap document to django_irods download view function"""
 
-    authorize(request, shortkey, view=True, edit=True, full=True, superuser=True)
+    authorize(request, shortkey, needed_permission=PrivilegeCodes.VIEW)
     irods_file_path = '/'.join(request.path.split('/')[2:-1])
     istorage = IrodsStorage()
     file_download_url = istorage.url(irods_file_path)
@@ -228,7 +228,7 @@ def file_download_url_mapper(request, shortkey, filename):
 
 
 def delete_metadata_element(request, shortkey, element_name, element_id, *args, **kwargs):
-    res, _, _ = authorize(request, shortkey, edit=True, full=True, superuser=True)
+    res, _, _ = authorize(request, shortkey, needed_permission=PrivilegeCodes.CHANGE)
     res.metadata.delete_element(element_name, element_id)
     resource_modified(res, request.user)
     request.session['resource-mode'] = 'edit'
@@ -236,21 +236,22 @@ def delete_metadata_element(request, shortkey, element_name, element_id, *args, 
 
 
 def delete_file(request, shortkey, f, *args, **kwargs):
-    res, _, user = authorize(request, shortkey, edit=True, full=True, superuser=True)
+    res, _, user = authorize(request, shortkey, needed_permission=PrivilegeCodes.CHANGE)
     hydroshare.delete_resource_file(shortkey, f, user)
 
     return HttpResponseRedirect(request.META['HTTP_REFERER'])
 
 
 def delete_resource(request, shortkey, *args, **kwargs):
-    res, _, _ = authorize(request, shortkey, edit=True, full=True, superuser=True)
+    res, _, _ = authorize(request, shortkey, needed_permission=PrivilegeCodes.OWNER)
 
     res.delete()
     return HttpResponseRedirect('/my-resources/')
 
 
 def publish(request, shortkey, *args, **kwargs):
-    res, _, _ = authorize(request, shortkey, edit=True, full=True, superuser=True)
+    # only resource owners are allowed to change resource flags (e.g published)
+    res, _, _ = authorize(request, shortkey, needed_permission=PrivilegeCodes.OWNER)
 
     try:
         hydroshare.publish_resource(request.user, shortkey)
@@ -269,7 +270,7 @@ def change_permissions(request, shortkey, *args, **kwargs):
     class AddGroupForm(forms.Form):
         group = forms.ModelChoiceField(Group.objects.all(), widget=autocomplete_light.ChoiceWidget("GroupAutocomplete"))
 
-    res, _, user = authorize(request, shortkey, edit=True, full=True, superuser=True)
+    res, _, user = authorize(request, shortkey, needed_permission=PrivilegeCodes.CHANGE)
     t = request.POST['t']
     values = [int(k) for k in request.POST.getlist('designees', [])]
     go_to_resource_listing_page = False
@@ -321,7 +322,7 @@ def change_permissions(request, shortkey, *args, **kwargs):
 
 # Needed for new access control UI functionality being developed by Mauriel
 def share_resource_with_user(request, shortkey, privilege, user_id, *args, **kwargs):
-    res, _, user = authorize(request, shortkey, view=True, edit=True, full=True, superuser=True)
+    res, _, user = authorize(request, shortkey, needed_permission=PrivilegeCodes.VIEW)
     user_to_share_with = utils.user_from_id(user_id)
     status = 'success'
     err_message = ''
@@ -370,7 +371,7 @@ def share_resource_with_user(request, shortkey, privilege, user_id, *args, **kwa
 
 # Needed for new access control UI functionality being developed by Mauriel
 def unshare_resource_with_user(request, shortkey, user_id, *args, **kwargs):
-    res, _, user = authorize(request, shortkey, view=True, edit=True, full=True, superuser=True)
+    res, _, user = authorize(request, shortkey, needed_permission=PrivilegeCodes.VIEW)
     user_to_unshare_with = utils.user_from_id(user_id)
 
     try:
