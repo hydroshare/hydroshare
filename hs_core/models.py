@@ -20,6 +20,7 @@ from django_irods.storage import IrodsStorage
 from django.conf import settings
 from django.core.files.storage import DefaultStorage
 from django.core.exceptions import ObjectDoesNotExist, ValidationError
+from django.forms.models import model_to_dict
 
 from mezzanine.pages.models import Page, RichText
 from mezzanine.pages.page_processors import processor_for
@@ -1533,7 +1534,6 @@ class CoreMetaData(models.Model):
 
     def copy_all_elements_to(self, tgt_res):
         from hydroshare.utils import current_site_url
-        from django.forms.models import model_to_dict
 
         new_md = tgt_res.metadata
         md_type = ContentType.objects.get_for_model(self)
@@ -1552,7 +1552,7 @@ class CoreMetaData(models.Model):
                             new_md.create_element('identifier', name=id.name, url='{0}/resource/{1}'.format(current_site_url(), tgt_res.short_id))
                         else:
                             new_md.create_element('identifier', name=id.name, url=id.url)
-                else:
+                elif element_name.lower() != 'date':
                     new_md.create_element(element_name, **element_args)
 
     # this method needs to be overriden by any subclass of this class

@@ -267,8 +267,12 @@ def delete_resource(request, shortkey, *args, **kwargs):
     return HttpResponseRedirect('/my-resources/')
 
 def create_new_version_resource(request, shortkey, *args, **kwargs):
-    res, authorized, user = authorize(request, shortkey, edit=True, full=True, superuser=True)
-
+    res, authorized, user = authorize(request, shortkey, edit=True, full=True, superuser=True, raises_exception=False)
+    if res.raccess.published and not authorized:
+        if user.uaccess.owns_resource(res):
+            authorized = True
+    if not authorized:
+        raise PermissionDenied()
     try:
         # lock the resource to prevent concurrent new version creation since only one new version for an obsoleted resource is allowed
         res.locked = True
@@ -302,6 +306,10 @@ def create_new_version_resource(request, shortkey, *args, **kwargs):
 
         # copy metadata from source resource to target new-versioned resource
         res.metadata.copy_all_elements_to(new_resource)
+
+        # create date element for the new resource
+        new_resource.metadata.create_element('date', type='created', start_date=new_resource.created)
+        new_resource.metadata.create_element('date', type='modified', start_date=new_resource.updated)
 
         # add Relation element to link source and target resources
         if new_resource.metadata.identifiers.all().filter(name="hydroShareIdentifier"):
