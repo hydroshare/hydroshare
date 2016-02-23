@@ -314,12 +314,12 @@
 
                                         <fieldset id="user-type-other">
                                             <label>Specify: *</label>
-                                            <input name="user_type" class="form-control">
+                                            <input name="user_type" class="form-control" value="{{ profile.user_type }}">
                                         </fieldset>
 
                                         <fieldset>
                                             <label>Country *</label>
-                                            <input name="country" class="form-control" value="{{ profile.country }}">
+                                            <input name="country" class="form-control">
                                         </fieldset>
 
                                         <fieldset>
@@ -640,10 +640,9 @@
                 $('#selectUserType option[value="' + 'Other' + '"]').attr('selected', 'selected');
                 $("#user-type-other").show();
                 $("#selectUserType").removeAttr("name");
-                $("#user-type-other input").attr("name", "user-type");
+                $("#user-type-other input").attr("name", "user_type");
                  $("#user-type-other input").value(userTypeValue);
             }
-
         }
 
         function setViewMode() {
@@ -655,17 +654,16 @@
         }
 
         $(document).ready(function () {
-
             $("#selectUserType").change(function () {
                 if ($(this).val() == "Other") {
                     $("#user-type-other").show();
                     $("#selectUserType").removeAttr("name");
-                    $("#user-type-other input").attr("name", "user-type")
+                    $("#user-type-other input").attr("name", "user_type")
                 }
                 else {
                     $("#user-type-other").hide();
                     $("#user-type-other input").removeAttr("name");
-                    $("#selectUserType").attr("name", "user-type");
+                    $("#selectUserType").attr("name", "user_type");
                 }
             });
 
