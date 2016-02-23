@@ -26,7 +26,7 @@ from hs_access_control.models import PrivilegeCodes
 
 from django_irods.icommands import SessionException
 from hs_core import hydroshare
-from hs_core.hydroshare.utils import get_resource_by_shortkey, resource_modified, copy_resource_files_and_AVUs
+from hs_core.hydroshare.utils import current_site_url, get_resource_by_shortkey, resource_modified, copy_resource_files_and_AVUs
 from .utils import authorize, upload_from_irods
 from hs_core.models import GenericResource, resource_processor, CoreMetaData, ResourceFile
 from hs_core.hydroshare.resource import METADATA_STATUS_SUFFICIENT, METADATA_STATUS_INSUFFICIENT, hs_bagit
@@ -305,9 +305,12 @@ def create_new_version_resource(request, shortkey, *args, **kwargs):
                                 file_name=os.path.basename(f.resource_file.name))))
 
         # copy metadata from source resource to target new-versioned resource
-        res.metadata.copy_all_elements_to(new_resource)
+        new_resource.metadata.copy_all_elements_from(res.metadata)
 
-        # create date element for the new resource
+        # create Identifier element that is specific to the new versioned resource
+        new_resource.metadata.create_element('identifier', name='hydroShareIdentifier', url='{0}/resource/{1}'.format(current_site_url(), new_resource.short_id))
+
+        # create date element that is specific to the new versioned resource
         new_resource.metadata.create_element('date', type='created', start_date=new_resource.created)
         new_resource.metadata.create_element('date', type='modified', start_date=new_resource.updated)
 

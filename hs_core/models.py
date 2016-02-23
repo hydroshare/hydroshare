@@ -1532,28 +1532,20 @@ class CoreMetaData(models.Model):
         self.sources.all().delete()
         self.relations.all().delete()
 
-    def copy_all_elements_to(self, tgt_res):
-        from hydroshare.utils import current_site_url
-
-        new_md = tgt_res.metadata
-        md_type = ContentType.objects.get_for_model(self)
-        supported_element_names = self.get_supported_element_names()
+    def copy_all_elements_from(self, src_md):
+        md_type = ContentType.objects.get_for_model(src_md)
+        supported_element_names = src_md.get_supported_element_names()
         for element_name in supported_element_names:
-            element_model_type = self._get_metadata_element_model_type(element_name)
-            elements_to_copy = element_model_type.model_class().objects.filter(object_id=self.id, content_type=md_type).all()
+            element_model_type = src_md._get_metadata_element_model_type(element_name)
+            elements_to_copy = element_model_type.model_class().objects.filter(object_id=src_md.id, content_type=md_type).all()
             for element in elements_to_copy:
                 element_args = model_to_dict(element)
                 element_args.pop('content_type')
                 element_args.pop('id')
                 element_args.pop('object_id')
-                if element_name.lower() == 'identifier':
-                    for id in self.identifiers.all():
-                        if id.name == 'hydroShareIdentifier':
-                            new_md.create_element('identifier', name=id.name, url='{0}/resource/{1}'.format(current_site_url(), tgt_res.short_id))
-                        else:
-                            new_md.create_element('identifier', name=id.name, url=id.url)
-                elif element_name.lower() != 'date':
-                    new_md.create_element(element_name, **element_args)
+
+                if element_name.lower() != 'identifier' and element_name.lower() != 'date':
+                    self.create_element(element_name, **element_args)
 
     # this method needs to be overriden by any subclass of this class
     # to allow updating of extended (resource specific) metadata
