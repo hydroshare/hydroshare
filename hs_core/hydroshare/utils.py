@@ -442,6 +442,8 @@ def add_file_to_resource(resource, f):
     if file_format_type not in [mime.value for mime in resource.metadata.formats.all()]:
         resource.metadata.create_element('format', value=file_format_type)
 
+    return ret
+
 
 class ZipContents(object):
     """
