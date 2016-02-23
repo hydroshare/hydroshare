@@ -135,6 +135,7 @@ def add_zip_file_contents_to_resource(pk, zip_file_path):
 @shared_task(ignore_result=True)
 def clear_lock(res_id):
     resource = utils.get_resource_by_shortkey(res_id)
-    resource.locked = False
-    resource.save()
-    logger.debug("clear lock task is executed successfully")
+    if resource.locked:
+        resource.locked = False
+        resource.save()
+        logger.debug("clear lock task is executed successfully")
