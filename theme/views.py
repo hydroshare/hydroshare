@@ -187,7 +187,7 @@ def update_user_profile(request):
                 user_form.save()
                 profile = profile_form.save(commit=False)
                 profile.user = request.user
-                if request.FILES['picture']:
+                if request.FILES and request.FILES['picture']:
                     profile.picture = request.FILES['picture']
                 profile.save()
 

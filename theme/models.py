@@ -134,14 +134,6 @@ class UserProfile(models.Model):
         blank=True,
         help_text="The name of the organization you work for."
     )
-    organization_type = models.CharField(max_length=1024, null=True, blank=True, choices=(
-        ('Higher Education', 'Higher Education'),
-        ('Research', 'Research'),
-        ('Government', 'Government'),
-        ('Commercial', 'Commercial'),
-        ('Primary Education', 'Primary Education'),
-        ('Secondary Education', 'Secondary Education'),
-    ))
     phone_1 = models.CharField(max_length=1024, null=True, blank=True)
     phone_1_type = models.CharField(max_length=1024, null=True, blank=True, choices=(
         ('Home', 'Home'),
