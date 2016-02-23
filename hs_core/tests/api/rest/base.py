@@ -38,8 +38,8 @@ class HSRESTTestCase(APITestCase):
         self.user.delete()
 
     def getResourceBag(self, res_id):
-        """
-        Get resource bag from iRODS, following redirects
+        """Get resource bag from iRODS, following redirects
+
         :param res_id: ID of resource whose bag should be fetched
         :return: Django test client response object
         """
@@ -62,8 +62,8 @@ class HSRESTTestCase(APITestCase):
         return bag_response
 
     def getResourceFile(self, res_id, file_name):
-        """
-        Get resource file from iRODS, following redirects
+        """Get resource file from iRODS, following redirects
+
         :param res_id: ID of resource whose resource file should be fetched
         :param file_name: Name of the file to fetch (just the filename, not the full path)
         :return: Django test client response object
@@ -88,8 +88,8 @@ class HSRESTTestCase(APITestCase):
         return file_response
 
     def getScienceMetadata(self, res_id):
-        """
-        Get sciencematadata.xml from iRODS, following redirects
+        """Get sciencematadata.xml from iRODS, following redirects
+
         :param res_id: ID of resource whose science metadata should be fetched
         :return: Django test client response object
         """
