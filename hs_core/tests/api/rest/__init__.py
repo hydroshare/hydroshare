@@ -1,7 +1,2 @@
-from test_create_resource import *
-from test_resource_file import *
-from test_resource_list import *
-from test_resource_meta import *
-from test_resource_types import *
-from test_set_access_rules import *
-from test_user_info import *
+# Do not import tests here as this will cause
+# some tests to be discovered and run twice
