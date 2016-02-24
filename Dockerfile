@@ -9,7 +9,8 @@ RUN pip install -U nose
 RUN pip install --no-deps django-nose==1.4.3
 RUN pip install --no-deps django-contrib-comments==1.6.2
 RUN pip install --no-deps django-debug-toolbar==1.4.0
-RUN pip install --no-deps djangorestframework==3.3.2
+RUN pip install --no-deps djangorestframework==3.2.5
+RUN pip install --no-deps django-filter==0.11.0
 ### End - HydroShare Development Image Additions ###
 
 USER root
