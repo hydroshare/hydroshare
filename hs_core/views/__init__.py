@@ -336,8 +336,7 @@ def create_new_version_resource(request, shortkey, *args, **kwargs):
         # release the lock if new version of the resource failed to create
         res.locked = False
         res.save()
-        # cancel clear lock task execution since lock is already cleared
-        clear_lock_task.revoke()
+
         request.session['new_version_resource_creation_error'] = ex.message
         return HttpResponseRedirect(res.get_absolute_url())
 
