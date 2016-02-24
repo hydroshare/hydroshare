@@ -156,10 +156,11 @@ def copy_resource_files_and_AVUs(src_res_id, dest_res_id, set_to_private=False):
     istorage.copyFiles(src_res_id, dest_res_id)
     for avu_name in avu_list:
         value = istorage.getAVU(src_res_id, avu_name)
-        if avu_name == 'isPublic' and set_to_private:
-            istorage.setAVU(dest_res_id, avu_name, 'False')
-        else:
-            istorage.setAVU(dest_res_id, avu_name, value)
+        if value:
+            if avu_name == 'isPublic' and set_to_private:
+                istorage.setAVU(dest_res_id, avu_name, 'False')
+            else:
+                istorage.setAVU(dest_res_id, avu_name, value)
 
 
 def resource_modified(resource, by_user=None, overwrite_bag=True):
