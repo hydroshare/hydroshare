@@ -13,7 +13,7 @@ class MyForm(FacetedSearchForm):
     def search(self):
         sqs = super(MyForm, self).search().filter(discoverable=True)
 
-        if not self.is_valid():
+        if not self.is_valid() or not self.cleaned_data.get('q'):
             sqs = self.searchqueryset.all()
 
         for field in self.faceted_fields:
