@@ -1540,7 +1540,7 @@ class CoreMetaData(models.Model):
         self.sources.all().delete()
         self.relations.all().delete()
 
-    def copy_all_elements_from(self, src_md):
+    def copy_all_elements_from(self, src_md, exclude_elements=None):
         md_type = ContentType.objects.get_for_model(src_md)
         supported_element_names = src_md.get_supported_element_names()
         for element_name in supported_element_names:
@@ -1551,8 +1551,10 @@ class CoreMetaData(models.Model):
                 element_args.pop('content_type')
                 element_args.pop('id')
                 element_args.pop('object_id')
-
-                if element_name.lower() != 'identifier' and element_name.lower() != 'date':
+                if exclude_elements:
+                    if not element_name.lower() in exclude_elements:
+                        self.create_element(element_name, **element_args)
+                else:
                     self.create_element(element_name, **element_args)
 
     # this method needs to be overriden by any subclass of this class

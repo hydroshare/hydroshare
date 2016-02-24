@@ -304,8 +304,9 @@ def create_new_version_resource(request, shortkey, *args, **kwargs):
                                 res_id=new_resource.short_id,
                                 file_name=os.path.basename(f.resource_file.name))))
 
-        # copy metadata from source resource to target new-versioned resource
-        new_resource.metadata.copy_all_elements_from(res.metadata)
+        # copy metadata from source resource to target new-versioned resource except three elements
+        exclude_elements = ['identifier', 'date', 'publisher']
+        new_resource.metadata.copy_all_elements_from(res.metadata, exclude_elements)
 
         # create Identifier element that is specific to the new versioned resource
         new_resource.metadata.create_element('identifier', name='hydroShareIdentifier', url='{0}/resource/{1}'.format(current_site_url(), new_resource.short_id))
