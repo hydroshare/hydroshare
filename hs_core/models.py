@@ -87,23 +87,20 @@ class ResourcePermissionsMixin(Ownable):
 
     def can_delete(self, request):
         # have to do import locally to avoid circular import
-        from hs_core.views.utils import authorize
-        from hs_access_control.models import PrivilegeCodes
-        return authorize(request, self.short_id, res=self, needed_permission=PrivilegeCodes.OWNER,
+        from hs_core.views.utils import authorize, Action_To_Authorize
+        return authorize(request, self.short_id, res=self, needed_permission=Action_To_Authorize.DELETE_RESOURCE,
                          raises_exception=False)[1]
 
     def can_change(self, request):
         # have to do import locally to avoid circular import
-        from hs_core.views.utils import authorize
-        from hs_access_control.models import PrivilegeCodes
-        return authorize(request, self.short_id, res=self, needed_permission=PrivilegeCodes.CHANGE,
+        from hs_core.views.utils import authorize, Action_To_Authorize
+        return authorize(request, self.short_id, res=self, needed_permission=Action_To_Authorize.EDIT_RESOURCE,
                          raises_exception=False)[1]
 
     def can_view(self, request):
         # have to do import locally to avoid circular import
-        from hs_core.views.utils import authorize
-        from hs_access_control.models import PrivilegeCodes
-        return authorize(request, self.short_id, res=self, needed_permission=PrivilegeCodes.VIEW,
+        from hs_core.views.utils import authorize, Action_To_Authorize
+        return authorize(request, self.short_id, res=self, needed_permission=Action_To_Authorize.VIEW_RESOURCE,
                          raises_exception=False)[1]
 
 # this should be used as the page processor for anything with pagepermissionsmixin
