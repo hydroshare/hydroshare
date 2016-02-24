@@ -41,6 +41,7 @@
         {# ======= Subject ======= #}
         {% include "resource-landing-page/subject.html" %}
 
+        {% block content_block %}
         {# ======= Content (code moved here because django does not render blocks inside included templates) ======= #}
         {% if cm.resource_type != "ToolResource" %}
             <div class="col-sm-12 content-block">
@@ -169,6 +170,7 @@
                 {% endif %}
             </div>
         {% endif %}
+        {% endblock %}
 
         {# ======= Content tabs (code moved here because django does not render blocks inside included templates) ======= #}
         <div class="col-sm-12">

@@ -79,6 +79,7 @@ def landing_page(request, page):
                              res.short_id + '</a><br/>'
             context['collection_items'] = link_html
 
+
             if hide_count > 0:
                 context['collection_message'] = collection_message
 
@@ -161,6 +162,11 @@ def landing_page(request, page):
 
         context['html_candidate'] = html_candidate
         context['html_collection'] = html_collection
+
+    context['collection'] = collection_items_list
+    if edit_resource:
+         context['collection_candidate'] = candidate_resources_list
+    context['edit_mode'] = edit_resource
 
     hs_core_dublin_context = add_generic_context(request, page)
     context.update(hs_core_dublin_context)

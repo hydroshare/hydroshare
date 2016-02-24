@@ -1,10 +1,85 @@
 {% extends "pages/genericresource.html" %}
-{% load geoanalytics_tags pages_tags mezzanine_tags crispy_forms_tags %}
-
+{% load geoanalytics_tags pages_tags staticfiles mezzanine_tags crispy_forms_tags keyword_tags comment_tags hydroshare_tags%}
 {% block main %}
 
 {{ block.super }}
-     <div class="modal fade" id="save-collection-warning" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+
+    {% block content_block %}
+<div>
+<h1>My Collection</h1>
+    {% if collection %}
+        <table id="collection-table" class="table-hover table-striped" width="100%">
+            <thead>
+            <tr>
+                <th>Add</th>
+                <th>Title</th>
+                <th>Type</th>
+                <th>Owners</th>
+                <th>Sharing status</th>
+                <th>My Permission</th>
+                <th>Remove</th>
+
+            </tr>
+            </thead>
+            <tbody>
+                {% for res in collection %}
+                    <tr id="{{ res.short_id }}">
+                        <td>
+                        <input class="row-selector" type="checkbox" id="{{ res.short_id }}">
+                        </td>
+                        <td><strong><a href="{{ res.get_absolute_url }}" target="_blank">{{ res.metadata.title }}</a></strong></td>
+                        <td>
+                            {{ res.resource_type }}
+                        </td>
+                        <td>
+                            {% for owner in res.raccess.owners.all %}
+                              {% if forloop.counter0 > 0 %} · {% endif %}
+
+                            {% if owner.first_name %}
+                                <strong><a href='/user/{{ owner.pk }}/' target="_blank">{{owner.first_name}} {{owner.last_name }}</a></strong>
+                            {% else %}
+                                 <strong><a href='/user/{{ owner.pk }}/' target="_blank">{{ owner.username }}</a></strong>
+                            {% endif %}
+                            {% endfor %}
+                        </td>
+                        <td>
+                            {% if res.raccess.published %}
+                                <strong class="label-public">&nbspPublished</strong>
+                            {% elif res.raccess.public %}
+                                <strong class="label-public">&nbspPublic</strong>
+                            {% elif res.raccess.discoverable %}
+                                <strong class="label-discoverable">&nbspDiscoverable</strong>
+                            {% else %}
+                                <strong class="label-private">&nbspPrivate</strong>
+                            {% endif %}
+                        </td>
+                         <td>
+
+                        {{ res|user_permission:request.user.pk }}
+
+
+                        </td>
+
+                    <th>
+                        <span onclick="remove_collection_item('{{ res.short_id }}')" data-form-id="form-favorite-{{ res.short_id }}" data-form-type="toggle-favorite"
+                                          class="glyphicon glyphicon-remove btn-inline-favorite"></span>
+                    </th>
+
+                    </tr>
+                {% endfor %}
+
+            </tbody>
+        </table>
+    {% endif %}
+{% if edit_mode %}
+    <input type="button" onclick=" $('#collection-candidate').modal('show');">Add new resources</input>
+{% endif %}
+
+<h1>dddddddddddddddddddf</h1>
+</div>
+    {% endblock %}
+
+    <div class="modal fade" id="save-collection-warning" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
         <div class="modal-dialog">
             <div class="modal-content">
                 <div class="modal-header">
@@ -25,6 +100,97 @@
             </div>
         </div>
     </div>
+
+    <div class="modal fade" id="collection-candidate" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                    <h4 class="modal-title" id="save-collection-warning-title">My Resources Pool</h4>
+                </div>
+                <div class="modal-body" id="save-collection-warning-body">
+
+
+                    {% if collection_candidate %}
+                         <table id="collection-table-candidate" class="table-hover table-striped" width="100%">
+            <thead>
+            <tr>
+                <th>Add</th>
+                <th>Title</th>
+                <th>Type</th>
+                <th>Owners</th>
+                <th>Sharing status</th>
+                <th>My Permission</th>
+                <th>Remove</th>
+
+            </tr>
+            </thead>
+            <tbody>
+                {% for res in collection_candidate %}
+                    <tr id="{{ res.short_id }}">
+                        <td>
+                        <input class="row-selector" type="checkbox" id="{{ res.short_id }}">
+                        </td>
+                        <td><strong><a href="{{ res.get_absolute_url }}" target="_blank">{{ res.metadata.title }}</a></strong></td>
+                        <td>
+                            {{ res.resource_type }}
+                        </td>
+                        <td>
+                            {% for owner in res.raccess.owners.all %}
+                              {% if forloop.counter0 > 0 %} · {% endif %}
+
+                            {% if owner.first_name %}
+                                <strong><a href='/user/{{ owner.pk }}/' target="_blank">{{owner.first_name}} {{owner.last_name }}</a></strong>
+                            {% else %}
+                                 <strong><a href='/user/{{ owner.pk }}/' target="_blank">{{ owner.username }}</a></strong>
+                            {% endif %}
+                            {% endfor %}
+                        </td>
+                        <td>
+                            {% if res.raccess.published %}
+                                <strong class="label-public">&nbspPublished</strong>
+                            {% elif res.raccess.public %}
+                                <strong class="label-public">&nbspPublic</strong>
+                            {% elif res.raccess.discoverable %}
+                                <strong class="label-discoverable">&nbspDiscoverable</strong>
+                            {% else %}
+                                <strong class="label-private">&nbspPrivate</strong>
+                            {% endif %}
+                        </td>
+                         <td>
+
+                        {{ res|user_permission:request.user.pk }}
+
+
+                        </td>
+
+                    <th>
+                        <span onclick="remove_collection_item('{{ res.short_id }}')" data-form-id="form-favorite-{{ res.short_id }}" data-form-type="toggle-favorite"
+                                          class="glyphicon glyphicon-remove btn-inline-favorite"></span>
+                    </th>
+
+                    </tr>
+                {% endfor %}
+
+            </tbody>
+        </table>
+                    {% endif %}
+
+
+
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default" data-dismiss="modal" id="save-collection-btn-cancel">
+                       Keep gray
+                    </button>
+                    <button type="button" class="btn btn-danger" data-dismiss="modal" id="save-collection-btn-ok">
+                        Remove gray anyway
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
 {% endblock %}
 
 {% block extended_metadata %}
@@ -53,6 +219,12 @@
 
 {% block extra_js %}
     {{ block.super }}
+
+    <script type="text/javascript" charset="utf8" src='{% static "js/jquery.dataTables.js" %}'></script>
+
+{#    <link rel="stylesheet" type="text/css" href="//cdn.datatables.net/1.10.10/css/jquery.dataTables.min.css">#}
+{#    <script type="text/javascript" charset="utf8" src="//cdn.datatables.net/1.10.10/js/jquery.dataTables.js"></script>#}
+
     <div id="checked_res_div" hidden="true">{{ checked_res }}</div>
     {# put resource specific js below #}
     <script type="text/javascript">
@@ -96,7 +268,46 @@
             // unhook btn-invite original onclick event and redirect to function share_collection_ajax_submit
             $('#btn-invite').off("click");
             $('#btn-invite').on( "click", share_collection_ajax_submit);
-        });
+
+
+            //-------------------
+
+{#            <th>Add</th>     0 #}
+{#                <th>Title</th>   1  #}
+{#                <th>Type</th>   2   #}
+{#                <th>Owners</th> 3  #}
+{#                <th>Sharing status</th> 4 #}
+{#                <th>My Permission</th>                5#}
+{#                <th>Remove</th>   6  #}
+
+
+
+            resourceTable = $("#collection-table").DataTable({
+                "order": [[2, "asc"]],
+                "paging": false,
+                "info": false,
+                "columnDefs": [
+                    {
+                        "targets": [0],     // <th>Add</th>
+                        "visible": false,
+                    },
+                ]
+            });
+            $("#collection-table").show();
+
+            resourceTable = $("#collection-table-candidate").DataTable({
+                "order": [[2, "asc"]],
+                "paging": false,
+                "info": false,
+                "columnDefs": [
+                    {
+                        "targets": [6],     // <th>Remove</th>
+                        "visible": false,
+                    },
+                ]
+            });
+
+        }); // $(document).ready(function()
 
         function save_btn_callback()
         {
@@ -319,6 +530,16 @@
             });
             return false;
         }
+    function remove_collection_item(res_id)
+    {
+        alert(res_id );
+        $('table#collection-table tr#' + res_id).remove();
+    }
 
     </script>
+{% endblock %}
+
+{% block extra_css %}
+    {{ block.super }}
+    <link rel="stylesheet" href='{% static "css/jquery.dataTables.min.css" %}'/>
 {% endblock %}
