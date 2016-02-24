@@ -3176,10 +3176,6 @@ div.description.active {
     border-bottom-left-radius: 4px;
 }
 
-#group-cv {
-    margin-top: 10px;
-}
-
 #btn-save-profile {
     margin-left: 10px;
 }
@@ -3217,5 +3213,9 @@ div.btn-update-picture:hover {
 
 #profile-description {
     font-style: italic;
+}
+
+#user-profile-tabs {
+    margin-top: 20px;
 }
 

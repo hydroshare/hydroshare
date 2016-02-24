@@ -25,7 +25,7 @@
                             <span data-page-mode="edit" id="btn-cancel-profile-edit" class="btn btn-default pull-right">Cancel</span>
                         </div>
                     {% endif %}
-                    <div class="col-sm-3" style="margin-bottom:20px;">
+                    <div class="col-sm-3 height-fix">
                         {% if profile.picture and profile.picture.url %}
                             <div style="background-image: url('{{ profile.picture.url }}')"
                                  class="profile-pic round-image">
@@ -39,7 +39,7 @@
                             {% if profile.picture and profile.picture.url %}
                                 <div class="btn-file btn-update-picture"><span class="glyphicon glyphicon-camera"></span>&nbsp;&nbsp;Update profile picture<input
                                         type="file" name="picture"></div>
-                                <button class="btn btn-default" id="picture-clear_id" name="picture-clear" title="Remove picture"
+                                <button class="btn btn-default" id="picture-clear_id" name="picture-clear" title="Remove profile picture"
                                         value="clear"><span class="glyphicon glyphicon-trash"></span>
                                 </button>
                             {% else %}
@@ -49,45 +49,6 @@
                                     </button>
                                 </fieldset>
                             {% endif %}
-                            </div>
-                        {% endif %}
-
-                        {% if profile_user.id == user.id %}
-                            <div data-page-mode="edit" class="text-center">
-                                <div>
-                                {% if profile.cv and profile.cv.url %}
-                                    <hr>
-                                    <div><a href="{{ profile.cv.url }}" class="btn btn-default" target="_blank"><span
-                                            class="glyphicon glyphicon-file"></span>View CV</a></div>
-                                    <div id="group-cv" class="btn-group text-center" role="group" aria-label="Profile picture">
-                                        <span class="btn btn-default btn-file" title="Update CV">
-                                            <span class="glyphicon glyphicon-retweet"></span>
-                                            <input type="file" name="cv">
-                                        </span>
-                                        <button class="btn btn-default" id="cv-clear_id" name="cv-clear"
-                                                title="Remove CV"
-                                                value="clear"><span
-                                                class="glyphicon glyphicon-trash"></span>
-                                        </button>
-                                    </div>
-                                {% else %}
-                                    <hr>
-                                    <fieldset>
-                                        <span class="btn btn-default btn-file"><span
-                                        class="glyphicon glyphicon-paperclip"></span>&nbsp;&nbsp;Add a CV<input
-                                        type="file" name="cv"></span>
-                                    </fieldset>
-                                {% endif %}
-                                </div>
-                            </div>
-                        {% endif %}
-
-                        {% if profile.cv and profile.cv.url %}
-                            <div data-page-mode="view">
-                                <hr>
-                                <div class="text-center"><a href="{{ profile.cv.url }}" class="btn btn-default"
-                                                            target="_blank"><span
-                                        class="glyphicon glyphicon-file"></span>View CV</a></div>
                             </div>
                         {% endif %}
 
@@ -220,13 +181,56 @@
                             </div>
                         </div>
                         {% endif %}
+
+                        {% if profile_user.id == user.id %}
+                            <div data-page-mode="edit">
+                                <div>
+                                    {% if profile.cv and profile.cv.url %}
+                                        <hr>
+                                        <span><a href="{{ profile.cv.url }}" class="btn btn-default"
+                                                target="_blank"><span
+                                                class="glyphicon glyphicon-file"></span>View CV</a></span>
+
+                                        <div id="group-cv" class="btn-group text-center" role="group"
+                                             aria-label="CV">
+
+                                        <span class="btn btn-default btn-file" title="Update CV">
+                                            <span class="glyphicon glyphicon-retweet"></span>
+                                            <input type="file" name="cv">
+                                        </span>
+                                            <button class="btn btn-default" id="cv-clear_id" name="cv-clear"
+                                                    title="Remove CV"
+                                                    value="clear"><span
+                                                    class="glyphicon glyphicon-trash"></span>
+                                            </button>
+                                        </div>
+                                    {% else %}
+                                        <hr>
+                                        <fieldset>
+                                        <span class="btn btn-default btn-file"><span
+                                                class="glyphicon glyphicon-paperclip"></span>&nbsp;&nbsp;Add a CV<input
+                                                type="file" name="cv"></span>
+                                        </fieldset>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        {% endif %}
+
+                        {% if profile.cv and profile.cv.url %}
+                            <div data-page-mode="view">
+                                <hr>
+                                <div><a href="{{ profile.cv.url }}" class="btn btn-default"
+                                                            target="_blank"><span
+                                        class="glyphicon glyphicon-file"></span>View CV</a></div>
+                            </div>
+                        {% endif %}
                     </div>
                 </div>
             </div>
 
         </div>
 
-        <div class="full-width-tabs-container">
+        <div class="full-width-tabs-container" id="user-profile-tabs">
             <!-- Nav tabs -->
             <ul class="nav nav-tabs full-width-tabs" role="tablist">
                 <li role="presentation" class="active">
@@ -245,7 +249,7 @@
                         <div class="col-md-7">
                             <div data-page-mode="on-edit-blur" class="panel panel-default">
                                 <div class="panel-heading">
-                                    <h3 class="panel-title"><span class="glyphicon glyphicon-bell">&nbsp;</span>Recent activity</h3>
+                                    <h3 class="panel-title"><span class="glyphicon glyphicon-time">&nbsp;</span>Recent activity</h3>
                                 </div>
                                 <div class="panel-body">
                                     {% if resources %}
