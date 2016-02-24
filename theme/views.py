@@ -168,7 +168,7 @@ def signup(request, template="accounts/account_signup.html"):
 class UserProfileSerializer(serializers.ModelSerializer):
     class Meta:
         model = UserProfile
-        exclude = ('picture', 'cv', 'public', 'user')
+        exclude = ('picture', 'cv', 'user')
 
 
 class UserSerializer(serializers.ModelSerializer):
