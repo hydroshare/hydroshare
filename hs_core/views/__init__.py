@@ -261,47 +261,11 @@ def publish(request, shortkey, *args, **kwargs):
         request.session['just_published'] = True
     return HttpResponseRedirect(request.META['HTTP_REFERER'])
 
-# TOD0: this view function needs refactoring once the new access control UI works
-def change_permissions(request, shortkey, *args, **kwargs):
-
-    class AddUserForm(forms.Form):
-        user = forms.ModelChoiceField(User.objects.all(), widget=autocomplete_light.ChoiceWidget("UserAutocomplete"))
-
-    class AddGroupForm(forms.Form):
-        group = forms.ModelChoiceField(Group.objects.all(), widget=autocomplete_light.ChoiceWidget("GroupAutocomplete"))
-
-    res, _, user = authorize(request, shortkey, needed_permission=Action_To_Authorize.EDIT_RESOURCE)
+def set_resource_flag(request, shortkey, *args, **kwargs):
+    # only resource owners are allowed to change resource flags
+    res, _, user = authorize(request, shortkey, needed_permission=Action_To_Authorize.SET_RESOURCE_FLAG)
     t = request.POST['t']
-    values = [int(k) for k in request.POST.getlist('designees', [])]
-    go_to_resource_listing_page = False
-    if t == 'owners':
-        go_to_resource_listing_page = _unshare_resource_with_users(request, user, values, res, 'owner')
-    elif t == 'edit_users':
-        go_to_resource_listing_page = _unshare_resource_with_users(request, user, values, res, 'edit')
-    # elif t == 'edit_groups':
-    #     res.edit_groups = Group.objects.in_bulk(values)
-    elif t == 'view_users':
-        go_to_resource_listing_page = _unshare_resource_with_users(request, user, values, res, 'view')
-    # elif t == 'view_groups':
-    #     res.view_groups = Group.objects.in_bulk(values)
-    elif t == 'add_view_user':
-        frm = AddUserForm(data=request.POST)
-        _share_resource_with_user(request, frm, res, user, PrivilegeCodes.VIEW)
-    elif t == 'add_edit_user':
-        frm = AddUserForm(data=request.POST)
-        _share_resource_with_user(request, frm, res, user, PrivilegeCodes.CHANGE)
-    # elif t == 'add_view_group':
-    #     frm = AddGroupForm(data=request.POST)
-    #     if frm.is_valid():
-    #         res.view_groups.add(frm.cleaned_data['group'])
-    # elif t == 'add_view_group':
-    #     frm = AddGroupForm(data=request.POST)
-    #     if frm.is_valid():
-    #         res.edit_groups.add(frm.cleaned_data['group'])
-    elif t == 'add_owner':
-        frm = AddUserForm(data=request.POST)
-        _share_resource_with_user(request, frm, res, user, PrivilegeCodes.OWNER)
-    elif t == 'make_public':
+    if t == 'make_public':
         _set_resource_sharing_status(request, user, res, flag_to_set='public', flag_value=True)
     elif t == 'make_private' or t == 'make_not_discoverable':
         _set_resource_sharing_status(request, user, res, flag_to_set='public', flag_value=False)
@@ -312,15 +276,8 @@ def change_permissions(request, shortkey, *args, **kwargs):
     elif t == 'make_shareable':
        _set_resource_sharing_status(request, user, res, flag_to_set='shareable', flag_value=True)
 
-    # due to self unsharing of a private resource the user will have no access to that resource
-    # so need to redirect to the resource listing page
-    if go_to_resource_listing_page:
-        return HttpResponseRedirect('/my-resources/')
-    else:
-        return HttpResponseRedirect(request.META['HTTP_REFERER'])
+    return HttpResponseRedirect(request.META['HTTP_REFERER'])
 
-
-# Needed for new access control UI functionality being developed by Mauriel
 def share_resource_with_user(request, shortkey, privilege, user_id, *args, **kwargs):
     res, _, user = authorize(request, shortkey, needed_permission=Action_To_Authorize.VIEW_RESOURCE)
     user_to_share_with = utils.user_from_id(user_id)
@@ -368,8 +325,6 @@ def share_resource_with_user(request, shortkey, privilege, user_id, *args, **kwa
                           'error_msg': err_message}
     return HttpResponse(json.dumps(ajax_response_data))
 
-
-# Needed for new access control UI functionality being developed by Mauriel
 def unshare_resource_with_user(request, shortkey, user_id, *args, **kwargs):
     res, _, user = authorize(request, shortkey, needed_permission=Action_To_Authorize.VIEW_RESOURCE)
     user_to_unshare_with = utils.user_from_id(user_id)

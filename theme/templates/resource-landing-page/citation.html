@@ -112,7 +112,7 @@
                         </button>
                     {% else %}
                         <form class="pull-left"
-                              action="/hsapi/_internal/{{ cm.short_id }}/change-permissions/"
+                              action="/hsapi/_internal/{{ cm.short_id }}/set-resource-flag/"
                               method="POST">
                             {% csrf_token %}
                             <input name="t" type="hidden" value="make_public"/>
@@ -132,7 +132,7 @@
                         </button>
                     {% else %}
                         <form class="pull-left"
-                              action="/hsapi/_internal/{{ cm.short_id }}/change-permissions/"
+                              action="/hsapi/_internal/{{ cm.short_id }}/set-resource-flag/"
                               method="POST">
                             <input name="t" type="hidden" value="make_discoverable"/>
                             {% csrf_token %}
@@ -152,7 +152,7 @@
                         </button>
                     {% else %}
                         <form class="pull-left"
-                              action="/hsapi/_internal/{{ cm.short_id }}/change-permissions/"
+                              action="/hsapi/_internal/{{ cm.short_id }}/set-resource-flag/"
                               method="POST">
                             <input name="t" type="hidden" value="make_private"/>
                             {% csrf_token %}
@@ -167,7 +167,7 @@
                 {% if is_owner_user %}
                     <div class="clear-fix" id="shareable-container">
                         {#   Shareable flag    #}
-                        <form class="pull-left" action="/hsapi/_internal/{{ cm.short_id }}/change-permissions/"
+                        <form class="pull-left" action="/hsapi/_internal/{{ cm.short_id }}/set-resource-flag/"
                               method="POST">
                             {% csrf_token %}
 
