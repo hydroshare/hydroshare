@@ -343,8 +343,6 @@ def create_new_version_resource(request, shortkey, *args, **kwargs):
     # release the lock if new version of the resource is created successfully
     res.locked = False
     res.save()
-    # cancel clear lock task execution since lock is already cleared
-    clear_lock_task.revoke()
 
     # go to resource landing page
     request.session['just_created'] = True
