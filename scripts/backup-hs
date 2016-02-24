@@ -9,7 +9,7 @@ HS_PATH=/home/${USER}/hydroshare
 BACKUP_PATH=/home/${USER}/backup
 
 # set variables for use in script
-CID=$(docker ps -a | grep hydroshare_hydroshare_1 | cut -d ' ' -f 1)
+CID=$(docker-compose ps | grep hydroshare | cut -d ' ' -f 1)
 MEDIA_FILES=${HS_PATH}/media_files
 
 # backup database

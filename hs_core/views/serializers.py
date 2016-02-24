@@ -93,6 +93,13 @@ class ResourceListItemSerializer(serializers.Serializer):
     published = serializers.BooleanField()
     bag_url = serializers.URLField()
     science_metadata_url = serializers.URLField()
+    resource_url = serializers.URLField()
+
+
+class ResourceFileSerializer(serializers.Serializer):
+    url = serializers.URLField()
+    size = serializers.IntegerField()
+    content_type = serializers.CharField(max_length=255)
 
 
 class ResourceType(object):
@@ -113,7 +120,13 @@ ResourceListItem = namedtuple('ResourceListItem',
                                'date_created',
                                'date_last_updated',
                                'bag_url',
-                               'science_metadata_url'])
+                               'science_metadata_url',
+                               'resource_url'])
+
+ResourceFileItem = namedtuple('ResourceFileItem',
+                              ['url',
+                               'size',
+                               'content_type'])
 
 
 class UserAuthenticateRequestValidator(serializers.Serializer):

@@ -298,7 +298,8 @@ INSTALLED_APPS = (
     "hs_tools_resource",
     "hs_swat_modelinstance",
     "hs_geographic_feature_resource",
-    "hs_script_resource"
+    "hs_script_resource",
+    "hs_sitemap",
 )
 
 # These apps are excluded by hs_core.tests.runner.CustomTestSuiteRunner
@@ -499,8 +500,8 @@ LOGGING = {
     },
     'handlers': {
         'syslog': {
-            'level': 'DEBUG',
-            'class':'logging.handlers.RotatingFileHandler',
+            'level': 'WARNING',
+            'class': 'logging.handlers.RotatingFileHandler',
             'filename': '/var/log/hydroshare/system.log',
             'formatter': 'simple',
             'maxBytes': 1024*1024*15, # 15MB
@@ -508,8 +509,16 @@ LOGGING = {
         },
         'djangolog': {
             'level': 'DEBUG',
-            'class':'logging.handlers.RotatingFileHandler',
+            'class': 'logging.handlers.RotatingFileHandler',
             'filename': '/var/log/hydroshare/django.log',
+            'formatter': 'verbose',
+            'maxBytes': 1024*1024*15, # 15MB
+            'backupCount': 10,
+        },
+        'hydrosharelog': {
+            'level': 'DEBUG',
+            'class': 'logging.handlers.RotatingFileHandler',
+            'filename': '/var/log/hydroshare/hydroshare.log',
             'formatter': 'verbose',
             'maxBytes': 1024*1024*15, # 15MB
             'backupCount': 10,
@@ -517,14 +526,20 @@ LOGGING = {
     },
     'loggers': {
         'django': {
-            'handlers':['syslog', 'djangolog'],
+            'handlers': ['syslog', 'djangolog'],
             'propagate': True,
-            'level':'DEBUG',
+            'level': 'DEBUG',
         },
         'django.db.backends': {
             'handlers': ['syslog'],
-            'level': 'DEBUG',
+            'level': 'WARNING',
             'propagate': False,
+        },
+        # Catch-all logger for HydroShare apps
+        '': {
+            'handlers': ['hydrosharelog'],
+            'propagate': False,
+            'level': 'DEBUG'
         },
     }
 }

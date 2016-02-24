@@ -3,6 +3,9 @@ from __future__ import absolute_import
 import mimetypes
 import os
 import json
+import tempfile
+import logging
+import shutil
 
 from django.db.models import get_model, get_models
 from django.http import Http404
@@ -11,13 +14,19 @@ from django.utils.timezone import now
 from django.core.exceptions import ObjectDoesNotExist
 from django.contrib.auth.models import User, Group
 from django.core.serializers import get_serializer
+from django.core.files import File
+from django.core.files.uploadedfile import UploadedFile
 
 from mezzanine.conf import settings
 
 from hs_core.signals import *
-from hs_core.models import AbstractResource, ResourceManager, BaseResource
+from hs_core.models import AbstractResource, ResourceManager, BaseResource, ResourceFile
 from hs_core.hydroshare.hs_bagit import create_bag_files
 from django_irods.storage import IrodsStorage
+
+
+logger = logging.getLogger(__name__)
+
 
 class ResourceFileSizeException(Exception):
     pass
@@ -159,11 +168,12 @@ def resource_modified(resource, by_user=None, overwrite_bag=True):
     # the resource is modified for on-demand bagging.
     istorage.setAVU(resource.short_id, "bag_modified", "true")
 
-def _validate_email( email ):
+
+def _validate_email(email):
     from django.core.validators import validate_email
     from django.core.exceptions import ValidationError
     try:
-        validate_email( email )
+        validate_email(email)
         return True
     except ValidationError:
         return False
@@ -204,8 +214,8 @@ def check_file_dict_for_error(file_validation_dict):
 
 
 def raise_file_size_exception():
-    from .resource import file_size_limit_for_display
-    error_msg = 'The resource file is larger than the supported size limit: %s.' % file_size_limit_for_display
+    from .resource import FILE_SIZE_LIMIT_FOR_DISPLAY
+    error_msg = 'The resource file is larger than the supported size limit: %s.' % FILE_SIZE_LIMIT_FOR_DISPLAY
     raise ResourceFileSizeException(error_msg)
 
 
@@ -216,7 +226,40 @@ def validate_resource_file_size(resource_files):
         raise_file_size_exception()
 
 
-def resource_pre_create_actions(resource_type, resource_title, page_redirect_url_key, files=(), metadata=None,  **kwargs):
+def validate_resource_file_type(resource_cls, files):
+    supported_file_types = resource_cls.get_supported_upload_file_types()
+    # see if file type checking is needed
+    if '.*' in supported_file_types:
+        # all file types are supported
+        return
+
+    for f in files:
+        file_ext = os.path.splitext(f.name)[1]
+        if file_ext not in supported_file_types:
+            err_msg = "{file_name} is not a supported file type for {res_type} resource"
+            err_msg = err_msg.format(file_name=f.name, res_type=resource_cls)
+            raise ResourceFileValidationException(err_msg)
+
+
+def validate_resource_file_count(resource_cls, files, resource=None):
+    if len(files) > 0:
+        if len(resource_cls.get_supported_upload_file_types()) == 0:
+            err_msg = "Content files are not allowed in {res_type} resource".format(res_type=resource_cls)
+            raise ResourceFileValidationException(err_msg)
+
+        err_msg = "Multiple content files are not supported in {res_type} resource"
+        err_msg = err_msg.format(res_type=resource_cls)
+        if len(files) > 1:
+            if not resource_cls.can_have_multiple_files():
+                raise ResourceFileValidationException(err_msg)
+
+        if resource is not None and resource.files.all().count() > 0:
+            if not resource_cls.can_have_multiple_files():
+                raise ResourceFileValidationException(err_msg)
+
+
+def resource_pre_create_actions(resource_type, resource_title, page_redirect_url_key, files=(), metadata=None,
+                                **kwargs):
     from.resource import check_resource_type
     if not resource_title:
         resource_title = 'Untitled resource'
@@ -228,6 +271,8 @@ def resource_pre_create_actions(resource_type, resource_title, page_redirect_url
     resource_cls = check_resource_type(resource_type)
     if len(files) > 0:
         validate_resource_file_size(files)
+        validate_resource_file_count(resource_cls, files)
+        validate_resource_file_type(resource_cls, files)
 
     if not metadata:
         metadata = []
@@ -250,7 +295,7 @@ def resource_pre_create_actions(resource_type, resource_title, page_redirect_url
 
 
 def resource_post_create_actions(resource, user, metadata,  **kwargs):
-     # receivers need to change the values of this dict if file validation fails
+    # receivers need to change the values of this dict if file validation fails
     file_validation_dict = {'are_files_valid': True, 'message': 'Files are valid'}
     # Send post-create resource signal
     post_create_resource.send(sender=type(resource), resource=resource, user=user,  metadata=metadata,
@@ -344,9 +389,13 @@ def get_party_data_from_user(user):
 
 
 def resource_file_add_pre_process(resource, files, user, extract_metadata=False, **kwargs):
+    resource_cls = resource.__class__
     validate_resource_file_size(files)
+    validate_resource_file_type(resource_cls, files)
+    validate_resource_file_count(resource_cls, files, resource)
+
     file_validation_dict = {'are_files_valid': True, 'message': 'Files are valid'}
-    pre_add_files_to_resource.send(sender=resource.__class__, files=files, resource=resource, user=user,
+    pre_add_files_to_resource.send(sender=resource_cls, files=files, resource=resource, user=user,
                                    validate_files=file_validation_dict, extract_metadata=extract_metadata, **kwargs)
 
     check_file_dict_for_error(file_validation_dict)
@@ -367,3 +416,53 @@ def resource_file_add_process(resource, files, user, extract_metadata=False, **k
     resource_modified(resource, user)
     return resource_file_objects
 
+
+def add_file_to_resource(resource, f):
+    """
+    Add a ResourceFile to a Resource.  Adds the 'format' metadata element to the resource.
+    :param resource: Resource to which file should be added
+    :param f: File-like object to add to a resource
+    :return: The identifier of the ResourceFile added.
+    """
+    ret = ResourceFile.objects.create(content_object=resource,
+                                      resource_file=File(f) if not isinstance(f, UploadedFile) else f)
+    # add format metadata element if necessary
+    file_format_type = get_file_mime_type(f.name)
+    if file_format_type not in [mime.value for mime in resource.metadata.formats.all()]:
+        resource.metadata.create_element('format', value=file_format_type)
+
+    return ret
+
+
+class ZipContents(object):
+    """
+    Extract the contents of a zip file one file at a time
+    using a generator.
+    """
+    def __init__(self, zip_file):
+        self.zip_file = zip_file
+
+    def black_list_path(self, file_path):
+        return file_path.startswith('__MACOSX/')
+
+    def black_list_name(self, file_name):
+        return file_name == '.DS_Store'
+
+    def get_files(self):
+        temp_dir = tempfile.mkdtemp()
+        try:
+            file_path = None
+            for name_path in self.zip_file.namelist():
+                if not self.black_list_path(name_path):
+                    name = os.path.basename(name_path)
+                    if name != '':
+                        if not self.black_list_name(name):
+                            self.zip_file.extract(name_path, temp_dir)
+                            file_path = os.path.join(temp_dir, name_path)
+                            logger.debug("Opening {0} as File with name {1}".format(file_path, name_path))
+                            f = File(file=open(file_path, 'rb'),
+                                     name=name_path)
+                            f.size = os.stat(file_path).st_size
+                            yield f
+        finally:
+            shutil.rmtree(temp_dir)

@@ -1,10 +1,12 @@
 __author__ = 'Pabitra'
 
 import os
+import mimetypes
 
 from django.core.urlresolvers import reverse
 from django.core.exceptions import ObjectDoesNotExist
 from django.http import HttpResponseRedirect
+from django.shortcuts import redirect
 
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.views import APIView
@@ -22,8 +24,10 @@ from hs_core.views import pagination
 # Mixins
 class ResourceToListItemMixin(object):
     def resourceToResourceListItem(self, r):
-        bag_url = hydroshare.utils.current_site_url() + AbstractResource.bag_url(r.short_id)
-        science_metadata_url = hydroshare.utils.current_site_url() + reverse('get_update_science_metadata', args=[r.short_id])
+        site_url = hydroshare.utils.current_site_url()
+        bag_url = site_url + AbstractResource.bag_url(r.short_id)
+        science_metadata_url = site_url + reverse('get_update_science_metadata', args=[r.short_id])
+        resource_url = site_url + r.get_absolute_url()
         resource_list_item = serializers.ResourceListItem(resource_type=r.resource_type,
                                                           resource_id=r.short_id,
                                                           resource_title=r.metadata.title.value,
@@ -36,9 +40,23 @@ class ResourceToListItemMixin(object):
                                                           date_created=r.created,
                                                           date_last_updated=r.updated,
                                                           bag_url=bag_url,
-                                                          science_metadata_url=science_metadata_url)
+                                                          science_metadata_url=science_metadata_url,
+                                                          resource_url=resource_url)
         return resource_list_item
 
+class ResourceFileToListItemMixin(object):
+    def resourceFileToListItem(self, f):
+        url = hydroshare.utils.current_site_url() + f.resource_file.url
+        fsize = f.resource_file.size
+        mimetype = mimetypes.guess_type(url)
+        if mimetype[0]:
+            ftype = mimetype[0]
+        else:
+            ftype = repr(None)
+        resource_file_info_item = serializers.ResourceFileItem(url=url,
+                                                               size=fsize,
+                                                               content_type=ftype)
+        return resource_file_info_item
 
 
 class ResourceTypes(generics.ListAPIView):
@@ -92,7 +110,7 @@ class ResourceTypes(generics.ListAPIView):
         return serializers.ResourceTypesSerializer
 
 
-class ResourceList(generics.ListAPIView, ResourceToListItemMixin):
+class ResourceList(ResourceToListItemMixin, generics.ListAPIView):
     """
     Get a list of resources based on the following filter query parameters
 
@@ -130,13 +148,15 @@ class ResourceList(generics.ListAPIView, ResourceToListItemMixin):
                     "date_last_updated": date resource last updated, "public": true or false,
                     "discoverable": true or false, "shareable": true or false, "immutable": true or false,
                     "published": true or false, "bag_url": link to bag file,
-                    "science_metadata_url": link to science metadata},
+                    "science_metadata_url": link to science metadata,
+                    "resource_url": link to resource landing HTML page},
                     {"resource_type": resource type, "resource_title": resource title, "resource_id": resource id,
                     "creator": creator name, "date_created": date resource created,
                     "date_last_updated": date resource last updated, "public": true or false,
                     "discoverable": true or false, "shareable": true or false, "immutable": true or false,
                     "published": true or false, "bag_url": link to bag file,
-                    "science_metadata_url": link to science metadata},
+                    "science_metadata_url": link to science metadata,
+                    "resource_url": link to resource landing HTML page},
             ]
         }
 
@@ -173,7 +193,7 @@ class ResourceList(generics.ListAPIView, ResourceToListItemMixin):
         return serializers.ResourceListItemSerializer
 
 
-class ResourceReadUpdateDelete(generics.RetrieveUpdateDestroyAPIView, ResourceToListItemMixin):
+class ResourceReadUpdateDelete(ResourceToListItemMixin, generics.RetrieveUpdateDestroyAPIView):
     """
     Create, read, or delete a resource
 
@@ -315,7 +335,7 @@ class ResourceCreate(generics.CreateAPIView):
         return Response(data=response_data,  status=status.HTTP_201_CREATED)
 
 
-class SystemMetadataRetrieve(APIView, ResourceToListItemMixin):
+class SystemMetadataRetrieve(ResourceToListItemMixin, APIView):
     """
     Retrieve resource science metadata
 
@@ -402,7 +422,7 @@ class ScienceMetadataRetrieveUpdate(APIView):
 
     :type pk: str
     :param pk: id of the resource
-    :return: science metadata as xml string
+    :return: science metadata as XML document
     :rtype: str
     :raises:
     NotFound: return json format: {'detail': 'No resource was found for resource id:pk'}
@@ -427,8 +447,9 @@ class ScienceMetadataRetrieveUpdate(APIView):
     def get(self, request, pk):
         view_utils.authorize(request, pk, discoverable=True, view=True)
 
-        # TODO: once the science metadata xml file is available as a separate file on iRODS, that file needs to be returned
-        return Response(data=hydroshare.get_science_metadata(pk), status=status.HTTP_200_OK)
+        scimeta_url = hydroshare.utils.current_site_url() + AbstractResource.scimeta_url(pk)
+        return redirect(scimeta_url)
+
 
     def put(self, request, pk):
         # TODO: update science metadata using the metadata json data provided - will do in the next iteration
@@ -500,6 +521,12 @@ class ResourceFileCRUD(APIView):
         return HttpResponseRedirect(f.url)
 
     def post(self, request, pk):
+        """
+        Add a file to a resource.
+        :param request:
+        :param pk: Primary key of the resource (i.e. resource short ID)
+        :return:
+        """
         resource, _, _ = view_utils.authorize(request, pk, edit=True, full=True)
         resource_files = request.FILES.values()
         if len(resource_files) == 0:
@@ -549,3 +576,60 @@ class ResourceFileCRUD(APIView):
         # TODO: Currently we do not have this action for the front end. Will implement in the next iteration
         # Implement only after we have a decision when to validate a file
         raise NotImplementedError()
+
+
+class ResourceFileList(ResourceFileToListItemMixin, generics.ListAPIView):
+    """
+    Retrieve a list of resource files for a resource
+
+    REST URL: hsapi/resource/{pk}/file_list/
+    HTTP method: GET
+
+    :type pk: str
+    :type filename: str
+    :param pk: resource id
+    :param filename: name of the file to retrieve/download
+    :return: JSON representation of list of files of the form:
+
+    {
+        "count": 2,
+        "next": null,
+        "previous": null,
+        "results": [
+            {
+                "url": "http://mill24.cep.unc.edu/django_irods/download/bd88d2a152894134928c587d38cf0272/data/contents/mytest_resource/text_file.txt",
+                "size": 21,
+                "content_type": "text/plain"
+            },
+            {
+                "url": "http://mill24.cep.unc.edu/django_irods/download/bd88d2a152894134928c587d38cf0272/data/contents/mytest_resource/a_directory/cea.tif",
+                "size": 270993,
+                "content_type": "image/tiff"
+            }
+        ]
+    }
+
+    :raises:
+    NotFound: return json format: {'detail': 'No resource was found for resource id':pk}
+    PermissionDenied: return json format: {'detail': 'You do not have permission to perform this action.'}
+    """
+    allowed_methods = ('GET',)
+
+    def get(self, request, pk):
+        """
+        Get a listing of files within a resource.
+        :param request:
+        :param pk: Primary key of the resource (i.e. resource short ID)
+        :return:
+        """
+        return self.list(request)
+
+    def get_queryset(self):
+        resource, _, _ = view_utils.authorize(self.request, self.kwargs['pk'], view=True)
+        resource_file_info_list = []
+        for f in resource.files.all():
+            resource_file_info_list.append(self.resourceFileToListItem(f))
+        return resource_file_info_list
+
+    def get_serializer_class(self):
+        return serializers.ResourceFileSerializer

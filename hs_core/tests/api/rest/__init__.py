@@ -1,2 +1,2 @@
-from test_resource_list import *
-from test_user_info import *
+# Do not import tests here as this will cause
+# some tests to be discovered and run twice
