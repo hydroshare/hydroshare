@@ -116,8 +116,7 @@ class UserProfile(models.Model):
     middle_name = models.CharField(max_length=1024, null=True, blank=True)
     website = models.URLField(null=True, blank=True)
     title = models.CharField(
-        max_length=1024, null=True, blank=True,
-        help_text='e.g. Assistant Professor, Program Director, Adjunct Professor, Software Developer.')
+        max_length=1024, null=True, blank=True)
     user_type = models.CharField(
         max_length=1024,
         null=True,
@@ -125,14 +124,11 @@ class UserProfile(models.Model):
         default='Unspecified'
     )
     subject_areas = models.CharField(
-        max_length=1024, null=True, blank=True,
-        help_text='A comma-separated list of subject areas you are interested in researching. e.g. "Computer Science, '
-                  'Hydrology, Water Management"')
+        max_length=1024, null=True, blank=True)
     organization = models.CharField(
         max_length=1024,
         null=True,
-        blank=True,
-        help_text="The name of the organization you work for."
+        blank=True
     )
     phone_1 = models.CharField(max_length=1024, null=True, blank=True)
     phone_1_type = models.CharField(max_length=1024, null=True, blank=True, choices=(
@@ -146,15 +142,12 @@ class UserProfile(models.Model):
         ('Work', 'Work'),
         ('Mobile', 'Mobile'),
     ))
-    public = models.BooleanField(default=True, help_text='Uncheck to make your profile contact information and '
-                                                         'details private.')
-    cv = models.FileField(upload_to='profile', help_text='Upload your Curriculum Vitae if you wish people to be able '
-                                                         'to download it.', null=True, blank=True)
-    details = models.TextField("Description", help_text='Tell the HydroShare community a little about yourself.',
-                               null=True, blank=True)
 
-    state = models.CharField(max_length=1024, null=True, blank=True, help_text="State/Province where you live.")
-    country = models.CharField(max_length=1024, null=True, blank=True, help_text="Country where you live.")
+    cv = models.FileField(upload_to='profile', null=True, blank=True)
+    details = models.TextField("Description", null=True, blank=True)
+
+    state = models.CharField(max_length=1024, null=True, blank=True)
+    country = models.CharField(max_length=1024, null=True, blank=True)
 
 
 def force_unique_emails(sender, instance, **kwargs):
