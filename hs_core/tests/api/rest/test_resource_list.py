@@ -1,34 +1,12 @@
 import json
 
-from django.contrib.auth.models import Group
-
-from rest_framework.test import APIClient
 from rest_framework import status
-from rest_framework.test import APITestCase
 
-from hs_core.hydroshare import users
 from hs_core.hydroshare import resource
+from .base import HSRESTTestCase
 
 
-class TestResourceList(APITestCase):
-
-    def setUp(self):
-        self.maxDiff = None
-        self.client = APIClient()
-
-        self.group, _ = Group.objects.get_or_create(name='Hydroshare Author')
-        # create a user
-        self.user = users.create_account(
-            'test_user@email.com',
-            username='testuser',
-            first_name='some_first_name',
-            last_name='some_last_name',
-            superuser=False)
-
-        self.client.force_authenticate(user=self.user)
-
-    def tearDown(self):
-        self.user.delete()
+class TestResourceList(HSRESTTestCase):
 
     def test_resource_list(self):
 
@@ -36,6 +14,7 @@ class TestResourceList(APITestCase):
                                            self.user,
                                            'My Test Resource')
         pid = new_res.short_id
+        self.resources_to_delete.append(pid)
 
         response = self.client.get('/hsapi/resourceList/', format='json')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -49,6 +28,7 @@ class TestResourceList(APITestCase):
                                            self.user,
                                            'My Test Resource')
         gen_pid = gen_res.short_id
+        self.resources_to_delete.append(gen_pid)
 
         raster = open('hs_core/tests/data/cea.tif')
         geo_res = resource.create_resource('RasterResource',
@@ -56,19 +36,24 @@ class TestResourceList(APITestCase):
                                            'My raster resource',
                                            files=(raster,))
         geo_pid = geo_res.short_id
+        self.resources_to_delete.append(geo_pid)
 
         app_res = resource.create_resource('ToolResource',
                                            self.user,
                                            'My Test App Resource')
         app_pid = app_res.short_id
+        self.resources_to_delete.append(app_pid)
 
         response = self.client.get('/hsapi/resourceList/', format='json')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         content = json.loads(response.content)
         self.assertEqual(content['count'], 3)
         self.assertEqual(content['results'][0]['resource_id'], gen_pid)
+        self.assertEqual(content['results'][0]['resource_url'], self.resource_url.format(res_id=gen_pid))
         self.assertEqual(content['results'][1]['resource_id'], geo_pid)
+        self.assertEqual(content['results'][1]['resource_url'], self.resource_url.format(res_id=geo_pid))
         self.assertEqual(content['results'][2]['resource_id'], app_pid)
+        self.assertEqual(content['results'][2]['resource_url'], self.resource_url.format(res_id=app_pid))
 
         # Filter by type (single)
         response = self.client.get('/hsapi/resourceList/', {'type': 'RasterResource'}, format='json')
@@ -76,6 +61,7 @@ class TestResourceList(APITestCase):
         content = json.loads(response.content)
         self.assertEqual(content['count'], 1)
         self.assertEqual(content['results'][0]['resource_id'], geo_pid)
+        self.assertEqual(content['results'][0]['resource_url'], self.resource_url.format(res_id=geo_pid))
 
         # Filter by type (multiple)
         response = self.client.get('/hsapi/resourceList/', {'type': ['RasterResource', 'ToolResource']},
@@ -84,4 +70,6 @@ class TestResourceList(APITestCase):
         content = json.loads(response.content)
         self.assertEqual(content['count'], 2)
         self.assertEqual(content['results'][0]['resource_id'], geo_pid)
+        self.assertEqual(content['results'][0]['resource_url'], self.resource_url.format(res_id=geo_pid))
         self.assertEqual(content['results'][1]['resource_id'], app_pid)
+        self.assertEqual(content['results'][1]['resource_url'], self.resource_url.format(res_id=app_pid))
