@@ -4063,6 +4063,8 @@ CREATE TABLE hs_core_genericresource (
     last_changed_by_id integer,
     user_id integer NOT NULL,
     resource_type character varying(50) NOT NULL,
+    file_unpack_message text,
+    file_unpack_status character varying(7),
     CONSTRAINT hs_core_genericresource_object_id_check CHECK ((object_id >= 0))
 );
 
@@ -8003,6 +8005,9 @@ COPY auth_permission (id, name, content_type_id, codename) FROM stdin;
 509	Can add Script Resource	66	add_scriptresource
 510	Can change Script Resource	66	change_scriptresource
 511	Can delete Script Resource	66	delete_scriptresource
+512	Can add HIS Referenced Time Series	160	add_reftimeseriesresource
+513	Can change HIS Referenced Time Series	160	change_reftimeseriesresource
+514	Can delete HIS Referenced Time Series	160	delete_reftimeseriesresource
 \.
 
 
@@ -8010,7 +8015,7 @@ COPY auth_permission (id, name, content_type_id, codename) FROM stdin;
 -- Name: auth_permission_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('auth_permission_id_seq', 511, true);
+SELECT pg_catalog.setval('auth_permission_id_seq', 514, true);
 
 
 --
@@ -8705,6 +8710,8 @@ COPY django_migrations (id, app, name, applied) FROM stdin;
 85	hs_core	0015_auto_20160210_1725	2016-02-10 17:25:39.984521+00
 86	hs_tools_resource	0007_auto_20160122_2240	2016-02-10 17:25:40.949761+00
 87	ref_ts	0004_auto_20160114_0252	2016-02-10 17:25:44.189374+00
+88	hs_core	0015_auto_20160122_1939	2016-02-24 16:49:13.981508+00
+89	hs_core	0016_merge	2016-02-24 16:49:14.629004+00
 \.
 
 
@@ -8712,7 +8719,7 @@ COPY django_migrations (id, app, name, applied) FROM stdin;
 -- Name: django_migrations_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('django_migrations_id_seq', 87, true);
+SELECT pg_catalog.setval('django_migrations_id_seq', 89, true);
 
 
 --
@@ -9443,7 +9450,7 @@ SELECT pg_catalog.setval('hs_core_format_id_seq', 1, false);
 -- Data for Name: hs_core_genericresource; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
-COPY hs_core_genericresource (page_ptr_id, comments_count, rating_count, rating_sum, rating_average, content, short_id, doi, object_id, content_type_id, creator_id, last_changed_by_id, user_id, resource_type) FROM stdin;
+COPY hs_core_genericresource (page_ptr_id, comments_count, rating_count, rating_sum, rating_average, content, short_id, doi, object_id, content_type_id, creator_id, last_changed_by_id, user_id, resource_type, file_unpack_message, file_unpack_status) FROM stdin;
 \.
 
 
@@ -10347,7 +10354,7 @@ SELECT pg_catalog.setval('ref_ts_variable_id_seq', 1, false);
 -- Data for Name: spatial_ref_sys; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
-COPY spatial_ref_sys (srid, auth_name, auth_srid, srtext, proj4text) FROM stdin;
+COPY spatial_ref_sys  FROM stdin;
 \.
 
 
