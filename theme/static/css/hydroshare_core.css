@@ -3211,8 +3211,11 @@ div.btn-update-picture:hover {
 }
 
 #picture-clear_id {
-        margin-top: -150px;
+    margin-top: -150px;
     float: right;
 }
 
+#profile-description {
+    font-style: italic;
+}
 

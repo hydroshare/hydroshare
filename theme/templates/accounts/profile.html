@@ -52,11 +52,11 @@
                             </div>
                         {% endif %}
 
-                        <hr>
                         {% if profile_user.id == user.id %}
                             <div data-page-mode="edit" class="text-center">
                                 <div>
                                 {% if profile.cv and profile.cv.url %}
+                                    <hr>
                                     <div><a href="{{ profile.cv.url }}" class="btn btn-default" target="_blank"><span
                                             class="glyphicon glyphicon-file"></span>View CV</a></div>
                                     <div id="group-cv" class="btn-group text-center" role="group" aria-label="Profile picture">
@@ -71,6 +71,7 @@
                                         </button>
                                     </div>
                                 {% else %}
+                                    <hr>
                                     <fieldset>
                                         <span class="btn btn-default btn-file"><span
                                         class="glyphicon glyphicon-paperclip"></span>&nbsp;&nbsp;Add a CV<input
@@ -81,17 +82,22 @@
                             </div>
                         {% endif %}
 
-                        <div data-page-mode="view">
-                            <div class="text-center"><a href="{{ profile.cv.url }}" class="btn btn-default" target="_blank"><span
-                                    class="glyphicon glyphicon-file"></span>View CV</a></div>
-                        </div>
+                        {% if profile.cv and profile.cv.url %}
+                            <div data-page-mode="view">
+                                <hr>
+                                <div class="text-center"><a href="{{ profile.cv.url }}" class="btn btn-default"
+                                                            target="_blank"><span
+                                        class="glyphicon glyphicon-file"></span>View CV</a></div>
+                            </div>
+                        {% endif %}
 
                         {% if profile_user.id == user.id %}
                         <div data-page-mode="edit">
-                            <div class="profile-picture-controls">
+                            <hr>
+                            <div class="profile-picture-controls text-center">
                                 <div><a data-toggle="collapse" data-target="#change_password">Change password</a></div>
 
-                                <div id="change_password" class="collapse">
+                                <div id="change_password" class="collapse text-left">
                                     <fieldset>
                                         <label>Password</label>
                                         <input class="form-control" autocomplete="off" id="id_password1" name="password1"
@@ -105,6 +111,7 @@
                                         <input class="form-control" autocomplete="off" id="id_password2" name="password2"
                                                placeholder="Password (again)" type="password">
                                     </fieldset>
+                                    <hr>
                                 </div>
 
                                 <!-- Button trigger modal -->
@@ -300,7 +307,8 @@
                                 </div>
                                 <div class="panel-body">
                                     <div data-page-mode="view">
-                                        {% if profile.details %}<div>{{ profile.details }}</div>{% endif %}
+                                        {% if profile.details %}<div id="profile-description">{{ profile.details }}</div>{% endif %}
+                                        <hr>
                                         <table class="overview" data-page-mode="view">
                                             <tbody>
                                             <tr>
@@ -331,6 +339,8 @@
                                                       name="details" rows="4" >{% if profile.details %}{{ profile.details }}{% endif %}</textarea>
                                         </fieldset>
 
+                                        <hr>
+
                                         <fieldset>
                                             <label for="selectUserType">User type *</label>
                                             <select name="user_type" class="form-control" id="selectUserType">
@@ -355,7 +365,7 @@
 
                                         <fieldset>
                                             <label>Country *</label>
-                                            <input name="country" class="form-control">
+                                            <input name="country" class="form-control" {% if profile.country %}value="{{ profile.country }}"{% endif %}>
                                         </fieldset>
 
                                         <fieldset>
@@ -432,7 +442,7 @@
                                         {% if profile_user.id == user.id %}
                                         <div class="row" data-page-mode="edit">
                                             <fieldset>
-                                                <div class="col-sm-12"><label>Phone 1</label></div>
+                                                <div class="col-sm-12"><label>US Phone 1</label></div>
 
                                                 <div class="col-sm-6">
                                                     <select name="phone_1_type" class="form-control">
@@ -453,7 +463,7 @@
                                             </fieldset>
 
                                             <fieldset>
-                                                <div class="col-sm-12"><label>Phone 2</label></div>
+                                                <div class="col-sm-12"><label>US Phone 2</label></div>
 
                                                 <div class="col-sm-6">
                                                     <select name="phone_2_type" class="form-control">
@@ -481,7 +491,7 @@
                                             <fieldset class="col-sm-12">
                                                 <label>Website</label>
                                                 <input class="form-control"
-                                                       value="{{ profile_user.website }}" name="website">
+                                                       {% if profile.website %}value="{{ profile.website }}"{% endif %} name="website">
                                             </fieldset>
                                         </div>
                                         {% endif %}
@@ -493,7 +503,7 @@
                 </div>
 
                 <div role="tabpanel" class="tab-pane fade" id="contributions">
-                    <div class="row">
+                    <div class="row" data-page-mode='on-edit-blur'>
                         <div class="col-sm-12"><legend>Resources</legend></div>
                         <div class="col-sm-12 col-md-3">
                             <table class="table-user-contributions table table-hover">
@@ -706,7 +716,7 @@
                 }
             });
 
-            $('.phone').mask('(000) 000-0000');
+            $('.phone').mask('+1 (000) 000-0000');
 
             $("[data-page-mode='edit']").hide();
             $("#btn-edit-profile").click(function () {
