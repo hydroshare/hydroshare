@@ -3170,17 +3170,14 @@ div.description.active {
     font-size: 40px;
     color: #D9534F;
 }
-#group-profile-picture {
-    width: 100%;
-}
 
-#group-profile-picture .btn {
-    width: 50%;
-}
-
-#group-profile-picture .btn:first-child {
+#group-cv .btn:first-child{
     border-top-left-radius: 4px;
     border-bottom-left-radius: 4px;
+}
+
+#group-cv {
+    margin-top: 10px;
 }
 
 #btn-save-profile {
@@ -3189,6 +3186,33 @@ div.description.active {
 
 #user-type-other {
     display: none;
+}
+
+div.btn-update-picture {
+    background: rgba(0, 0, 0, 0.7);
+    text-align: center;
+    color: #FFF;
+    border-radius: 50%;
+    height: 150px;
+    width: 150px;
+    margin: auto;
+    top: -150px;
+    margin-bottom: -150px;
+    opacity: 0;
+    padding-top: 60px;
+    cursor: pointer;
+}
+
+div.btn-update-picture:hover {
+    opacity: 1;
+    transition: opacity 0.3s;
+    -webkit-transition: all 0.3s;
+    -moz-transition: all 0.3s;
+}
+
+#picture-clear_id {
+        margin-top: -150px;
+    float: right;
 }
 
 

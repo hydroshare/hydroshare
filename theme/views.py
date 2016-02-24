@@ -187,8 +187,10 @@ def update_user_profile(request):
                 user_form.save()
                 profile = profile_form.save(commit=False)
                 profile.user = request.user
-                if request.FILES and request.FILES['picture']:
+                if request.FILES and "picture" in request.FILES:
                     profile.picture = request.FILES['picture']
+                if request.FILES and "cv" in request.FILES:
+                    profile.cv = request.FILES['cv']
                 profile.save()
 
                 user = User.objects.get(pk=request.user.id)
