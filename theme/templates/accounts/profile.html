@@ -85,7 +85,7 @@
                     <div class="col-xs-12 col-sm-6">
                         <div data-page-mode="view">
                             {% if profile_user.first_name or profile_user.last_name %}
-                                <h2>{{ profile_user.first_name }} {{ profile.middle_name }} {{ profile_user.last_name }}</h2>
+                                <h2>{{ profile_user.first_name }} {% if profile.middle_name %}{{ profile.middle_name }}{% endif %} {{ profile_user.last_name }}</h2>
                             {% else %}
                                 <h2>{{ profile_user.username }}</h2>
                             {% endif %}
@@ -311,8 +311,8 @@
                                 </div>
                                 <div class="panel-body">
                                     <div data-page-mode="view">
-                                        {% if profile.details %}<div id="profile-description">{{ profile.details }}</div>{% endif %}
-                                        <hr>
+                                        {% if profile.details %}<div id="profile-description">{{ profile.details }}</div><hr>{% endif %}
+
                                         <table class="overview" data-page-mode="view">
                                             <tbody>
                                             <tr>

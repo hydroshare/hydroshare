@@ -10,6 +10,7 @@ from django.contrib.messages import info
 from django.utils.translation import ugettext_lazy as _
 from django.db.models import Q
 from django.db import transaction
+from django.http import HttpResponseRedirect
 
 from rest_framework import serializers
 
@@ -26,6 +27,7 @@ from theme.forms import RatingForm, UserProfileForm, UserForm
 from theme.models import UserProfile
 
 from .forms import SignupForm
+
 
 
 class UserProfileView(TemplateView):
@@ -211,4 +213,4 @@ def update_user_profile(request):
         ajax_response_data['status'] = 'error'
         ajax_response_data['errors'] = ex.message
 
-    return HttpResponse(dumps(ajax_response_data))
+    return HttpResponseRedirect(request.META['HTTP_REFERER'])
