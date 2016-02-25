@@ -13,7 +13,7 @@
         {% endif %}
         <div class="row">
             {% if profile_user.id == user.id %}
-            <div data-page-mode="edit" class="alert alert-warning" role="alert">Information entered here may be publicly visible. Do not enter information that you want to keep private.</div>
+            <div data-page-mode="edit" class="alert alert-info" role="alert">Information entered here may be publicly visible. Do not enter information that you want to keep private.</div>
             {% endif %}
 
             <div class="col-sm-12">
@@ -331,13 +331,13 @@
                                                     <td id="db-user-type">{{ profile.user_type }}</td>
                                                 </tr>
                                             {% endif %}
-                                            {% if profile.country %}
+                                            {% if profile.country and profile.country != "Unspecified" %}
                                                 <tr>
                                                     <td><span class="text-muted">Country</span></td>
                                                     <td>{{ profile.country }}</td>
                                                 </tr>
                                             {% endif %}
-                                            {% if profile.state %}
+                                            {% if profile.state and profile.state != "Unspecified"%}
                                                 <tr>
                                                     <td><span class="text-muted">State/Province</span></td>
                                                     <td>{{ profile.state }}</td>
@@ -380,7 +380,7 @@
 
                                         <fieldset id="user-type-other">
                                             <label>Specify: *</label>
-                                            <input name="user_type" class="form-control form-required" value="{{ profile.user_type }}">
+                                            <input name="user_type" class="form-control">
                                         </fieldset>
 
                                         <fieldset>
@@ -395,7 +395,7 @@
 
                                         <fieldset>
                                             <label>User since</label>
-                                            <input name="date_joined" readonly class="form-control" value="01/28/2016">
+                                            <input name="date_joined" readonly class="form-control" value={{ profile_user.date_joined }}>
                                         </fieldset>
                                     </div>
                                     {% endif %}
@@ -840,6 +840,7 @@
             $("select[name='country'] option:first-child").val("Unspecified");
             $("select[name='country'] option:first-child").text("Unspecified");
 
+            // File name preview for Add CV
             $('.btn-primary.btn-file :file').on('fileselect', function (event, numFiles, label) {
                 var input = $(this).parents('.input-group').find(':text');
                 input.val(label);
@@ -854,10 +855,12 @@
                     $("#user-type-other").show();
                     $("#selectUserType").removeAttr("name");
                     $("#user-type-other input").attr("name", "user_type")
+                    $("#user-type-other input").addClass("form-required");
                 }
                 else {
                     $("#user-type-other").hide();
                     $("#user-type-other input").removeAttr("name");
+                    $("#user-type-other input").removeClass("form-required");
                     $("#selectUserType").attr("name", "user_type");
                 }
             });
@@ -871,7 +874,6 @@
                     $(this).addClass("form-invalid");
                     $(this).parent().find(".flag-required").remove();
                     $(this).parent().append(flagRequired);
-
                 }
             });
 
