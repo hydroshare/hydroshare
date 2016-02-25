@@ -200,7 +200,7 @@
                                              aria-label="CV">
 
                                         <span class="btn-file icon-button btn-edit" title="Update CV">
-                                            <span class="glyphicon glyphicon-retweet"></span>
+                                            <span class="glyphicon glyphicon-refresh"></span>
                                             <input type="file" name="cv">
                                         </span>
                                             <button id="btn-delete-cv" class="no-style icon-button btn-remove" data-toggle="modal"
@@ -395,7 +395,7 @@
 
                                         <fieldset>
                                             <label>User since</label>
-                                            <input name="date_joined" readonly class="form-control" value={{ profile_user.date_joined }}>
+                                            <input readonly class="form-control" value='{{ profile_user.date_joined }}'>
                                         </fieldset>
                                     </div>
                                     {% endif %}
