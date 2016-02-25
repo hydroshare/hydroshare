@@ -59,8 +59,7 @@ def upload_from_irods(username, password, host, port, zone, irods_fnames, res_fi
         fname = os.path.basename(ifname.rstrip(os.sep))
         res_files.append(UploadedFile(file=tmpFile, name=fname, size=size))
 
-def authorize(request, res_id, res=None, needed_permission=Action_To_Authorize.VIEW_RESOURCE,
-              raises_exception=True):
+def authorize(request, res_id, needed_permission=Action_To_Authorize.VIEW_RESOURCE, raises_exception=True):
     """
     This function checks if a user has authorization for resource related actions as outlined below. This
     function doesn't check authorization for user sharing resource with another user.
@@ -87,11 +86,11 @@ def authorize(request, res_id, res=None, needed_permission=Action_To_Authorize.V
     """
     authorized = False
     user = get_user(request)
-    if res is None:
-        try:
-            res = hydroshare.utils.get_resource_by_shortkey(res_id, or_404=False)
-        except ObjectDoesNotExist:
-            raise NotFound(detail="No resource was found for resource id:%s" % res_id)
+
+    try:
+        res = hydroshare.utils.get_resource_by_shortkey(res_id, or_404=False)
+    except ObjectDoesNotExist:
+        raise NotFound(detail="No resource was found for resource id:%s" % res_id)
 
     if needed_permission == Action_To_Authorize.VIEW_METADATA:
         if res.raccess.discoverable or res.raccess.public:
