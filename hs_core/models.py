@@ -814,6 +814,9 @@ class Coverage(AbstractMetaDataElement):
     def create(cls, **kwargs):
         """
         data for the coverage value attribute must be provided as a dictionary
+        Note that kwargs['_value'] is a JSON-serialized unicode string dictionary
+        generated from django.forms.models.model_to_dict() which converts model values
+        to dictionaries.
         """
 
         # TODO: validate coordinate values

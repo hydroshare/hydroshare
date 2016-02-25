@@ -10,6 +10,7 @@ from django.core.files.uploadedfile import UploadedFile
 from hs_core import hydroshare
 from hs_core.models import GenericResource
 from hs_core.hydroshare import utils
+from hs_access_control.models import PrivilegeCodes
 from hs_geo_raster_resource.models import RasterResource, OriginalCoverage, CellInformation, BandInformation
 
 class TestNewVersionResource(TestCase):
@@ -69,6 +70,14 @@ class TestNewVersionResource(TestCase):
         with self.assertRaises(ValidationError):
             hydroshare.create_new_version_resource(self.res_generic.short_id, self.nonowner)
 
+        self.owner.uaccess.share_resource_with_user(self.res_generic, self.nonowner, PrivilegeCodes.CHANGE)
+        with self.assertRaises(ValidationError):
+            hydroshare.create_new_version_resource(self.res_generic.short_id, self.nonowner)
+
+        self.owner.uaccess.share_resource_with_user(self.res_generic, self.nonowner, PrivilegeCodes.VIEW)
+        with self.assertRaises(ValidationError):
+            hydroshare.create_new_version_resource(self.res_generic.short_id, self.nonowner)
+
         new_res_generic = hydroshare.create_new_version_resource(self.res_generic.short_id, self.owner)
 
         # test the new versioned resource has the same resource type as the original resource
@@ -115,6 +124,14 @@ class TestNewVersionResource(TestCase):
         # test to make sure only owners can version a resource
         with self.assertRaises(ValidationError):
             hydroshare.create_new_version_resource(self.res_generic.short_id, self.nonowner)
+
+        self.owner.uaccess.share_resource_with_user(self.res_raster, self.nonowner, PrivilegeCodes.CHANGE)
+        with self.assertRaises(ValidationError):
+            hydroshare.create_new_version_resource(self.res_raster.short_id, self.nonowner)
+
+        self.owner.uaccess.share_resource_with_user(self.res_raster, self.nonowner, PrivilegeCodes.VIEW)
+        with self.assertRaises(ValidationError):
+            hydroshare.create_new_version_resource(self.res_raster.short_id, self.nonowner)
 
         new_res_raster = hydroshare.create_new_version_resource(self.res_raster.short_id, self.owner)
 
