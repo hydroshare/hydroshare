@@ -386,7 +386,6 @@
                                         <fieldset>
                                             <label>Country *</label>
                                             <select name="country" class="form-control form-required input-medium bfh-countries" data-country="{{ profile.country }}"></select>
-{#                                            <input name="country" class="form-control form-required" {% if profile.country %}value="{{ profile.country }}"{% endif %}>#}
                                         </fieldset>
 
                                         <fieldset>
@@ -837,6 +836,10 @@
         });
 
         $(document).ready(function () {
+            // Change country first empty option to 'Unspecified'
+            $("select[name='country'] option:first-child").val("Unspecified");
+            $("select[name='country'] option:first-child").text("Unspecified");
+
             $('.btn-primary.btn-file :file').on('fileselect', function (event, numFiles, label) {
                 var input = $(this).parents('.input-group').find(':text');
                 input.val(label);
