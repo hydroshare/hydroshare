@@ -385,7 +385,8 @@
 
                                         <fieldset>
                                             <label>Country *</label>
-                                            <input name="country" class="form-control form-required" {% if profile.country %}value="{{ profile.country }}"{% endif %}>
+                                            <select name="country" class="form-control form-required input-medium bfh-countries" data-country="{{ profile.country }}"></select>
+{#                                            <input name="country" class="form-control form-required" {% if profile.country %}value="{{ profile.country }}"{% endif %}>#}
                                         </fieldset>
 
                                         <fieldset>
@@ -672,8 +673,13 @@
                             <span id="icon-warning" class="glyphicon glyphicon-warning-sign"></span>
                         </div>
                         <div class="col-sm-10 col-xs-12">
-                            <div>WARNING: THIS IS A PERMANENT ACTION</div>
-                            <span>Are you sure you want to deactivate your account?</span>
+                            <div><strong>WARNING</strong>: This will <strong><u>permanently</u></strong> disable your account. You cannot undo
+                                this action. Please note that if you do choose to disable your account, your Resources
+                                will remain in HydroShare and will be accessible to anyone who currently has access. If
+                                you wish to remove your resources from HydroShare, you should do so <u>before</u> disabling
+                                your account.
+                            </div>
+
                         </div>
                     </div>
 
@@ -740,12 +746,12 @@
     </div>
     </form>
 
-
     {% endwith %}
 {% endblock %}
 
 {% block extra_js %}
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.mask/1.13.4/jquery.mask.min.js" type="text/javascript"></script>
+    <script type="text/javascript" src="{{ STATIC_URL }}js/bootstrap-formhelpers.js"></script>
     <script type="text/javascript">
 
         function readURL(input) {
@@ -773,6 +779,13 @@
                     $(requiredElements[i]).addClass("form-invalid");
                     flag = false;
                 }
+            }
+
+            // Password
+            if ($("#id_password1").val() != $("#id_password2").val()) {
+                $("#id_password1").addClass("form-invalid");
+                $("#id_password2").addClass("form-invalid");
+                flag = false;
             }
             return flag;
         }
