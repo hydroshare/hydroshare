@@ -485,6 +485,74 @@ def create_resource(
     return resource
 
 
+def create_new_version_resource(pk, user):
+    """
+    Create a new version for a resource
+    Args:
+        pk: the unique HydroShare identifier for the resource that is to be versioned.
+        user: the requesting user who requests to create a new version for the resource
+    Returns:
+        the new resource that is created as a new version for the original resource and thus obsolete the original resource
+
+    """
+    res = utils.get_resource_by_shortkey(pk)
+    if not user.uaccess.owns_resource(res):
+        raise ValidationError('Only resource owners can create new versions')
+    # create the resource without files and without creating bags first
+    new_resource = create_resource(
+        resource_type=res.resource_type,
+        owner=user,
+        title=res.metadata.title.value,
+        create_metadata=False,
+        create_bag=False
+    )
+    # newly created new resource version is private initially
+    set_to_private = False
+    if res.raccess.public:
+        set_to_private = True
+
+    # add files directly via irods backend file operation
+    utils.copy_resource_files_and_AVUs(pk, new_resource.short_id, set_to_private)
+
+    # link copied resource files to Django resource model
+    files = ResourceFile.objects.filter(object_id=res.id)
+    for n, f in enumerate(files):
+        ResourceFile.objects.create(content_object=new_resource,
+            resource_file = os.path.join('{res_id}/data/contents/{file_name}'.format(
+                            res_id=new_resource.short_id,
+                            file_name=os.path.basename(f.resource_file.name))))
+
+    # copy metadata from source resource to target new-versioned resource except three elements
+    exclude_elements = ['identifier', 'date', 'publisher']
+    new_resource.metadata.copy_all_elements_from(res.metadata, exclude_elements)
+
+    # create Identifier element that is specific to the new versioned resource
+    new_resource.metadata.create_element('identifier', name='hydroShareIdentifier',
+                                         url='{0}/resource/{1}'.format(utils.current_site_url(), new_resource.short_id))
+
+    # create date element that is specific to the new versioned resource
+    new_resource.metadata.create_element('date', type='created', start_date=new_resource.created)
+    new_resource.metadata.create_element('date', type='modified', start_date=new_resource.updated)
+
+    # add Relation element to link source and target resources
+    if new_resource.metadata.identifiers.all().filter(name="hydroShareIdentifier"):
+        hs_identifier = new_resource.metadata.identifiers.all().filter(name="hydroShareIdentifier")[0]
+        res.metadata.create_element('relation', type='isReplacedBy', value=hs_identifier.url)
+    else:
+        res.metadata.create_element('relation', type='isReplacedBy', value=new_resource.short_id)
+
+    if res.metadata.identifiers.all().filter(name="hydroShareIdentifier"):
+        hs_identifier = res.metadata.identifiers.all().filter(name="hydroShareIdentifier")[0]
+        new_resource.metadata.create_element('relation', type='isVersionOf', value=hs_identifier.url)
+    else:
+        new_resource.metadata.create_element('relation', type='isVersionOf', value=res.short_id)
+
+    # create bag for the new resource
+    hs_bagit.create_bag(new_resource)
+
+    return new_resource
+
+
 # TODO: This is not used anywhere except in a skipped unit test - if need to be used then new access rules need to apply
 def update_resource(
         pk,
@@ -691,6 +759,24 @@ def delete_resource(pk):
     """
     #utils.get_resource_by_shortkey(pk).delete()
     res = utils.get_resource_by_shortkey(pk)
+
+    if res.metadata.relations.all().filter(type='isReplacedBy').exists():
+        raise ValidationError('An obsoleted resource in the middle of the obsolescence chain cannot be deleted.')
+
+    # when the most recent version of a resource in an obsolescence chain is deleted, the previous
+    # version in the chain needs to be set as the "active" version by deleting "isReplacedBy" relation element
+    if res.metadata.relations.all().filter(type='isVersionOf').exists():
+        is_version_of_res_link = res.metadata.relations.all().filter(type='isVersionOf').first().value
+        idx = is_version_of_res_link.rindex('/')
+        if idx == -1:
+            obsolete_res_id = is_version_of_res_link
+        else:
+            obsolete_res_id = is_version_of_res_link[idx+1:]
+        obsolete_res = utils.get_resource_by_shortkey(obsolete_res_id)
+        if obsolete_res.metadata.relations.all().filter(type='isReplacedBy').exists():
+            eid = obsolete_res.metadata.relations.all().filter(type='isReplacedBy').first().id
+            obsolete_res.metadata.delete_element('relation', eid)
+
     res.delete()
     return pk
 

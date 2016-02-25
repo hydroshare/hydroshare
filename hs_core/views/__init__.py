@@ -26,7 +26,7 @@ from hs_access_control.models import PrivilegeCodes
 
 from django_irods.icommands import SessionException
 from hs_core import hydroshare
-from hs_core.hydroshare.utils import current_site_url, get_resource_by_shortkey, resource_modified, copy_resource_files_and_AVUs
+from hs_core.hydroshare.utils import get_resource_by_shortkey, resource_modified
 from .utils import authorize, upload_from_irods
 from hs_core.models import GenericResource, resource_processor, CoreMetaData, ResourceFile
 from hs_core.hydroshare.resource import METADATA_STATUS_SUFFICIENT, METADATA_STATUS_INSUFFICIENT, hs_bagit
@@ -245,25 +245,12 @@ def delete_file(request, shortkey, f, *args, **kwargs):
 def delete_resource(request, shortkey, *args, **kwargs):
     res, _, _ = authorize(request, shortkey, edit=True, full=True, superuser=True)
 
-    if res.metadata.relations.all().filter(type='isReplacedBy').exists():
-        request.session['validation_error'] = 'An obsoleted resource in the middle of the obsolescence chain cannot be deleted.'
+    try:
+        hydroshare.delete_resource(shortkey)
+    except ValidationError as ex:
+        request.session['validation_error'] = ex.message
         return HttpResponseRedirect(request.META['HTTP_REFERER'])
 
-    # when the most recent version of a resource in an obsolescence chain is deleted, the previous
-    # version in the chain needs to be set as the "active" version by deleting "isReplacedBy" relation element
-    if res.metadata.relations.all().filter(type='isVersionOf').exists():
-        is_version_of_res_link = res.metadata.relations.all().filter(type='isVersionOf').first().value
-        idx = is_version_of_res_link.rindex('/')
-        if idx == -1:
-            obsolete_res_id = is_version_of_res_link
-        else:
-            obsolete_res_id = is_version_of_res_link[idx+1:]
-        obsolete_res = get_resource_by_shortkey(obsolete_res_id)
-        if obsolete_res.metadata.relations.all().filter(type='isReplacedBy').exists():
-            eid = obsolete_res.metadata.relations.all().filter(type='isReplacedBy').first().id
-            obsolete_res.metadata.delete_element('relation', eid)
-
-    res.delete()
     return HttpResponseRedirect('/my-resources/')
 
 def create_new_version_resource(request, shortkey, *args, **kwargs):
@@ -273,70 +260,20 @@ def create_new_version_resource(request, shortkey, *args, **kwargs):
             authorized = True
     if not authorized:
         raise PermissionDenied()
+    new_resource = None
     try:
         # lock the resource to prevent concurrent new version creation since only one new version for an obsoleted resource is allowed
         res.locked = True
         res.save()
         # run clear_lock task asynchronously in 2 minutes to ensure lock is cleared when something unexpected happened
-        clear_lock_task = clear_lock.apply_async(args=[shortkey],countdown=120)
-
-        # create the resource without files and without creating bags first
-        new_resource = hydroshare.create_resource(
-            resource_type=res.resource_type,
-            owner=request.user,
-            title=res.metadata.title.value,
-            create_metadata=False,
-            create_bag=False
-        )
-        # newly created new resource version is private initially
-        set_to_private = False
-        if res.raccess.public:
-            set_to_private = True
-
-        # add files directly via irods backend file operation
-        copy_resource_files_and_AVUs(res.short_id, new_resource.short_id, set_to_private)
-
-        # link copied resource files to Django resource model
-        files = ResourceFile.objects.filter(object_id=res.id)
-        for n, f in enumerate(files):
-            ResourceFile.objects.create(content_object=new_resource,
-                resource_file = os.path.join('{res_id}/data/contents/{file_name}'.format(
-                                res_id=new_resource.short_id,
-                                file_name=os.path.basename(f.resource_file.name))))
-
-        # copy metadata from source resource to target new-versioned resource except three elements
-        exclude_elements = ['identifier', 'date', 'publisher']
-        new_resource.metadata.copy_all_elements_from(res.metadata, exclude_elements)
-
-        # create Identifier element that is specific to the new versioned resource
-        new_resource.metadata.create_element('identifier', name='hydroShareIdentifier', url='{0}/resource/{1}'.format(current_site_url(), new_resource.short_id))
-
-        # create date element that is specific to the new versioned resource
-        new_resource.metadata.create_element('date', type='created', start_date=new_resource.created)
-        new_resource.metadata.create_element('date', type='modified', start_date=new_resource.updated)
-
-        # add Relation element to link source and target resources
-        if new_resource.metadata.identifiers.all().filter(name="hydroShareIdentifier"):
-            hs_identifier = new_resource.metadata.identifiers.all().filter(name="hydroShareIdentifier")[0]
-            res.metadata.create_element('relation', type='isReplacedBy', value=hs_identifier.url)
-        else:
-            res.metadata.create_element('relation', type='isReplacedBy', value=new_resource.short_id)
-
-        if res.metadata.identifiers.all().filter(name="hydroShareIdentifier"):
-            hs_identifier = res.metadata.identifiers.all().filter(name="hydroShareIdentifier")[0]
-            new_resource.metadata.create_element('relation', type='isVersionOf', value=hs_identifier.url)
-        else:
-            new_resource.metadata.create_element('relation', type='isVersionOf', value=res.short_id)
-
-        # create bag for the new resource
-        hs_bagit.create_bag(new_resource)
+        clear_lock.apply_async(args=[shortkey],countdown=120)
+        new_resource = hydroshare.create_new_version_resource(shortkey, user)
     except Exception as ex:
         if new_resource:
             new_resource.delete()
         # release the lock if new version of the resource failed to create
         res.locked = False
         res.save()
-
         request.session['new_version_resource_creation_error'] = ex.message
         return HttpResponseRedirect(res.get_absolute_url())
 
@@ -346,8 +283,8 @@ def create_new_version_resource(request, shortkey, *args, **kwargs):
 
     # go to resource landing page
     request.session['just_created'] = True
-
     return HttpResponseRedirect(new_resource.get_absolute_url())
+
 
 def publish(request, shortkey, *args, **kwargs):
     res, _, _ = authorize(request, shortkey, edit=True, full=True, superuser=True)
