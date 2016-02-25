@@ -3206,7 +3206,7 @@ div.btn-update-picture:hover {
     -moz-transition: all 0.3s;
 }
 
-#picture-clear_id {
+#btn-delete-profile-pic {
     margin-top: -150px;
     float: right;
 }
@@ -3224,4 +3224,14 @@ div.btn-update-picture:hover {
     outline: 0;
     -webkit-box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075), 0 0 8px rgba(233, 102, 102, 0.6);
     box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075), 0 0 8px rgba(233, 102, 102, 0.6);
+}
+
+button.no-style {
+    background: none;
+    border: none;
+}
+
+button.no-style:focus {
+    border: none;
+    outline: none;
 }

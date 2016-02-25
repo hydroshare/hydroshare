@@ -315,11 +315,47 @@ class UserForm(forms.ModelForm):
         model = User
         fields = ['username', 'first_name', 'last_name']
 
+    def clean_first_name(self):
+        data = self.cleaned_data['first_name']
+        if len(data) == 0:
+            raise forms.ValidationError("First name is a required field.")
+        return data
+
+    def clean_last_name(self):
+        data = self.cleaned_data['last_name']
+        if len(data) == 0:
+            raise forms.ValidationError("Last name is a required field.")
+        return data
+
+    def clean_username(self):
+        data = self.cleaned_data['username']
+        if len(data) == 0:
+            raise forms.ValidationError("Username is a required field.")
+        return data
+
 
 class UserProfileForm(forms.ModelForm):
     class Meta:
         model = UserProfile
         exclude = ['user', 'public']
+
+    def clean_organization(self):
+        data = self.cleaned_data['organization']
+        if len(data) == 0:
+            raise forms.ValidationError("Organization is a required field.")
+        return data
+
+    def clean_country(self):
+        data = self.cleaned_data['country']
+        if len(data) == 0:
+            raise forms.ValidationError("Country is a required field.")
+        return data
+
+    def clean_state(self):
+        data = self.cleaned_data['state']
+        if len(data) == 0:
+            raise forms.ValidationError("State is a required field.")
+        return data
 
     def clean(self):
         cleaned_data = super(UserProfileForm, self).clean()

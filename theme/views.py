@@ -11,6 +11,7 @@ from django.utils.translation import ugettext_lazy as _
 from django.db.models import Q
 from django.db import transaction
 from django.http import HttpResponseRedirect
+from django.contrib import messages
 
 from rest_framework import serializers
 
@@ -168,7 +169,7 @@ def signup(request, template="accounts/account_signup.html"):
 class UserProfileSerializer(serializers.ModelSerializer):
     class Meta:
         model = UserProfile
-        exclude = ('picture', 'cv', 'user')
+        exclude = ('user',)
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -179,25 +180,29 @@ class UserSerializer(serializers.ModelSerializer):
 
 @login_required
 def update_user_profile(request):
-    status = 'success'
-    ajax_response_data = {'status': status}
     user_form = UserForm(request.POST, instance=request.user)
-    profile_form = UserProfileForm(request.POST, instance=request.user.userprofile)
+    user_profile = UserProfile.objects.filter(user=request.user).first()
+    profile_form = UserProfileForm(request.POST, request.FILES, instance=user_profile)
     try:
         with transaction.atomic():
             if user_form.is_valid() and profile_form.is_valid():
                 user_form.save()
+
+                password1 = request.POST['password1']
+                password2 = request.POST['password2']
+
+                if len(password1) > 0:
+                    if password1 == password2:
+                        user = request.user
+                        user.set_password(password1)
+                        user.save()
+                        messages.success(request, "Password successfully changed.")
+                    else:
+                        messages.error(request, "Passwords do not match.")
+
                 profile = profile_form.save(commit=False)
                 profile.user = request.user
-                if request.FILES and "picture" in request.FILES:
-                    profile.picture = request.FILES['picture']
-                if request.FILES and "cv" in request.FILES:
-                    profile.cv = request.FILES['cv']
                 profile.save()
-
-                user = User.objects.get(pk=request.user.id)
-                ajax_response_data['user'] = UserSerializer(user).data
-                ajax_response_data['profile'] = UserProfileSerializer(profile).data
             else:
                 errors = {}
                 if not user_form.is_valid():
@@ -206,11 +211,21 @@ def update_user_profile(request):
                 if not profile_form.is_valid():
                     errors.update(profile_form.errors)
 
-                ajax_response_data['status'] = 'error'
-                ajax_response_data['errors'] = errors
+                msg = ''
+                for err in errors.values():
+                    msg = msg + '\n' + err[0]
+                messages.error(request, msg)
 
     except Exception as ex:
-        ajax_response_data['status'] = 'error'
-        ajax_response_data['errors'] = ex.message
+        messages.error(request, ex.message)
 
     return HttpResponseRedirect(request.META['HTTP_REFERER'])
+
+
+@login_required
+def deactivate_user(request):
+    user = request.user
+    user.is_active = False
+    user.save()
+    messages.success(request, "Your account has been successfully deactivated.")
+    return HttpResponseRedirect('/accounts/logout/')
