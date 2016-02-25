@@ -37,7 +37,7 @@ class TestNetcdfMetaData(MockIRODSTestCaseMixin, TransactionTestCase):
         self.resNetcdf= hydroshare.create_resource(
             resource_type='NetcdfResource',
             owner=self.user,
-            title='Test Netcdf Resource'
+            title='Snow water equivalent estimation at TWDEF site from Oct 2009 to June 2010'
         )
 
         self.temp_dir = tempfile.mkdtemp()
@@ -100,24 +100,67 @@ class TestNetcdfMetaData(MockIRODSTestCaseMixin, TransactionTestCase):
                                                 extract_metadata=False)
 
     def test_metadata_extraction_on_resource_creation(self):
-            # passing the file object that points to the temp dir doesn't work - create_resource throws error
-            # open the file from the fixed file location
-            files = [UploadedFile(file=self.netcdf_file_obj, name=self.netcdf_file_name)]
-            _, _, metadata = utils.resource_pre_create_actions(resource_type='NetcdfResource',
-                                                                              resource_title='My Test Netcdf Resource',
-                                                                              page_redirect_url_key=None,
-                                                                              files=files,
-                                                                              metadata=None,)
-            print metadata
-            self.resNetcdf = hydroshare.create_resource(
-                'NetcdfResource',
-                self.user,
-                'My Test Netcdf Resource',
-                files=files,
-                metadata=metadata
-                )
+        # passing the file object that points to the temp dir doesn't work - create_resource throws error
+        # open the file from the fixed file location
+        files = [UploadedFile(file=self.netcdf_file_obj, name=self.netcdf_file_name)]
+        _, _, metadata = utils.resource_pre_create_actions(resource_type='NetcdfResource',
+                                                                          resource_title='Snow water equivalent '
+                                                                                         'estimation at TWDEF site '
+                                                                                         'from Oct 2009 to June 2010',
+                                                                          page_redirect_url_key=None,
+                                                                          files=files,
+                                                                          metadata=None,)
+        print metadata
+        self.resNetcdf = hydroshare.create_resource(
+            'NetcdfResource',
+            self.user,
+            'Snow water equivalent estimation at TWDEF site from Oct 2009 to June 2010',
+            files=files,
+            metadata=metadata
+            )
 
-            self._test_metadata_extraction()
+        self._test_metadata_extraction()
+
+    def test_metadata_extraction_on_content_file_add(self):
+        # test the core metadata at this point
+        self.assertEquals(self.resNetcdf.metadata.title.value, 'Snow water equivalent estimation at TWDEF site from Oct 2009 to June 2010')
+
+        # there shouldn't any abstract element
+        self.assertEquals(self.resNetcdf.metadata.description, None)
+
+        # there shouldn't any coverage element
+        self.assertEquals(self.resNetcdf.metadata.coverages.all().count(), 0)
+
+        # there shouldn't any format element
+        self.assertEquals(self.resNetcdf.metadata.formats.all().count(), 0)
+
+        # there shouldn't any subject element
+        self.assertEquals(self.resNetcdf.metadata.subjects.all().count(), 0)
+
+        # there shouldn't any contributor element
+        self.assertEquals(self.resNetcdf.metadata.contributors.all().count(), 0)
+
+        # there shouldn't any source element
+        self.assertEquals(self.resNetcdf.metadata.sources.all().count(), 0)
+
+        # there shouldn't any relation element
+        self.assertEquals(self.resNetcdf.metadata.relations.all().filter(type='cites').count(), 0)
+
+        # there should be 1 creator
+        self.assertEquals(self.resNetcdf.metadata.creators.all().count(), 1)
+
+        # there shouldn't any extended metadata
+        self.assertEquals(self.resNetcdf.metadata.ori_coverage.all().count(), 0)
+        self.assertEquals(self.resNetcdf.metadata.variables.all().count(), 0)
+
+        # adding a valid netcdf file should generate some core metadata and all extended metadata
+        files = [UploadedFile(file=self.netcdf_file_obj, name=self.netcdf_file_name)]
+        utils.resource_file_add_pre_process(resource=self.resNetcdf, files=files, user=self.user,
+                                            extract_metadata=False)
+        utils.resource_file_add_process(resource=self.resNetcdf, files=files, user=self.user,
+                                        extract_metadata=False)
+
+        self._test_metadata_extraction()
 
     def test_metadata_on_content_file_delete(self):
         # test that some of the metadata is not deleted on content file deletion
@@ -144,14 +187,14 @@ class TestNetcdfMetaData(MockIRODSTestCaseMixin, TransactionTestCase):
         # there should be a title element
         self.assertNotEquals(self.resNetcdf.metadata.title, None)
 
-        # there should be no abstract element
-        self.assertEquals(self.resNetcdf.metadata.description, None)
+        # there should be abstract element
+        self.assertNotEquals(self.resNetcdf.metadata.description, None)
 
-        # there should be 1 creator element
-        self.assertEquals(self.resNetcdf.metadata.creators.all().count(), 1)
+        # there should be 2 creator element
+        self.assertEquals(self.resNetcdf.metadata.creators.all().count(), 2)
 
-        # there should be no contributor element
-        self.assertEquals(self.resNetcdf.metadata.contributors.all().count(), 0)
+        # there should be 1 contributor element
+        self.assertEquals(self.resNetcdf.metadata.contributors.all().count(), 1)
 
         # there should be no coverage element
         self.assertEquals(self.resNetcdf.metadata.coverages.all().count(), 0)
@@ -159,8 +202,8 @@ class TestNetcdfMetaData(MockIRODSTestCaseMixin, TransactionTestCase):
         # there should be no format element
         self.assertEquals(self.resNetcdf.metadata.formats.all().count(), 0)
 
-        # there should be no subject element
-        self.assertEquals(self.resNetcdf.metadata.subjects.all().count(), 0)
+        # there should be subject element
+        self.assertNotEquals(self.resNetcdf.metadata.subjects.all().count(), 0)
 
         # testing extended metadata elements
         self.assertEquals(self.resNetcdf.metadata.ori_coverage.all().count(), 0)
@@ -181,26 +224,26 @@ class TestNetcdfMetaData(MockIRODSTestCaseMixin, TransactionTestCase):
         self.assertEquals(CoreMetaData.objects.all().count(), 1)
         # there should be Creator metadata objects
         self.assertTrue(Creator.objects.filter(object_id=core_metadata_obj.id).exists())
-        # there should be no Contributor metadata objects
-        self.assertFalse(Contributor.objects.filter(object_id=core_metadata_obj.id).exists())
+        # there should be Contributor metadata objects
+        self.assertTrue(Contributor.objects.filter(object_id=core_metadata_obj.id).exists())
         # there should be Identifier metadata objects
         self.assertTrue(Identifier.objects.filter(object_id=core_metadata_obj.id).exists())
         # there should be Type metadata objects
         self.assertTrue(Type.objects.filter(object_id=core_metadata_obj.id).exists())
-        # there should be no Source metadata objects
-        self.assertFalse(Source.objects.filter(object_id=core_metadata_obj.id).exists())
-        # there should be no Relation metadata objects
-        self.assertFalse(Relation.objects.filter(object_id=core_metadata_obj.id).exists())
+        # there should be Source metadata objects
+        self.assertTrue(Source.objects.filter(object_id=core_metadata_obj.id).exists())
+        # there should be Relation metadata objects
+        self.assertTrue(Relation.objects.filter(object_id=core_metadata_obj.id).exists())
         # there should be no Publisher metadata objects
         self.assertFalse(Publisher.objects.filter(object_id=core_metadata_obj.id).exists())
         # there should be Title metadata objects
         self.assertTrue(Title.objects.filter(object_id=core_metadata_obj.id).exists())
-        # there should be no Description (Abstract) metadata objects
-        self.assertFalse(Description.objects.filter(object_id=core_metadata_obj.id).exists())
+        # there should be Description (Abstract) metadata objects
+        self.assertTrue(Description.objects.filter(object_id=core_metadata_obj.id).exists())
         # there should be Date metadata objects
         self.assertTrue(Date.objects.filter(object_id=core_metadata_obj.id).exists())
-        # there should be no Subject metadata objects
-        self.assertFalse(Subject.objects.filter(object_id=core_metadata_obj.id).exists())
+        # there should be Subject metadata objects
+        self.assertTrue(Subject.objects.filter(object_id=core_metadata_obj.id).exists())
         # there should be Coverage metadata objects
         self.assertTrue(Coverage.objects.filter(object_id=core_metadata_obj.id).exists())
         # there should be Format metadata objects
@@ -368,20 +411,17 @@ class TestNetcdfMetaData(MockIRODSTestCaseMixin, TransactionTestCase):
 
         utils.resource_file_add_process(resource=self.resNetcdf, files=files, user=self.user,
                                         extract_metadata=True)
-        # adding required metadata
-        self.resNetcdf.metadata.create_element('description', abstract='example abstract')
-        self.resNetcdf.metadata.create_element('subject',value='SWE')
 
         self.assertTrue(self.resNetcdf.has_required_content_files())
         self.assertTrue(self.resNetcdf.metadata.has_all_required_elements())
         self.assertTrue(self.resNetcdf.can_be_public_or_discoverable)
 
-    def _test_metadata_extraction(self):
-         # there should 2 content file
+    def _test_metadata_extraction(self, create_res_mode=True):
+        # there should 2 content file
         self.assertEquals(self.resNetcdf.files.all().count(), 2)
 
         # test core metadata after metadata extraction
-        extracted_title = "My Test Netcdf Resource"
+        extracted_title = "Snow water equivalent estimation at TWDEF site from Oct 2009 to June 2010"
         self.assertEquals(self.resNetcdf.metadata.title.value, extracted_title)
 
         # there should be an abstract element
@@ -395,7 +435,7 @@ class TestNetcdfMetaData(MockIRODSTestCaseMixin, TransactionTestCase):
         self.assertEquals(self.resNetcdf.metadata.sources.all().count(), 1)
 
         # there should be one license element:
-        self.assertNotEquals(self.resNetcdf.metadata.rights.statement, None)
+        self.assertNotEquals(self.resNetcdf.metadata.rights.statement, 1)
 
         # there should be one relation element
         self.assertEquals(self.resNetcdf.metadata.relations.all().filter(type='cites').count(), 1)
