@@ -41,18 +41,19 @@
                         {% if profile_user.id == user.id %}
                             <div data-page-mode="edit" class="text-center">
                             {% if profile.picture and profile.picture.url %}
-                                <div class="btn-file btn-update-picture"><span
-                                        class="glyphicon glyphicon-camera"></span>&nbsp;&nbsp;Update profile
-                                    picture<input
-                                            type="file" name="picture"></div>
+                                <div class="btn-file btn-update-picture">
+                                    <span class="glyphicon glyphicon-camera"></span>
+                                    <span>&nbsp;&nbsp;Update profile picture</span>
+                                    <input class="upload-picture" type="file" name="picture"></div>
                                 <button id="btn-delete-profile-pic" class="no-style icon-button btn-remove" data-toggle="modal"
                                         data-target="#delete-picture" title="Remove profile picture"><span
                                         class="glyphicon glyphicon-trash"></span>
                                 </button>
                             {% else %}
                                 <fieldset>
-                                    <div class="btn-file btn-update-picture"><span class="glyphicon glyphicon-camera"></span>&nbsp;&nbsp;Add a photo<input
-                                            type="file" name="picture" id="id_picture"></div>
+                                    <div class="btn-file btn-update-picture upload-picture"><span class="glyphicon glyphicon-camera"></span>
+                                        <span>&nbsp;&nbsp;Add a photo</span>
+                                        <input class="upload-picture" type="file" name="picture"></div>
                                 </fieldset>
                             {% endif %}
                             </div>
@@ -210,9 +211,15 @@
                                     {% else %}
                                         <hr>
                                         <fieldset>
-                                        <span class="btn btn-default btn-file"><span
-                                                class="glyphicon glyphicon-paperclip"></span>&nbsp;&nbsp;Add a CV<input
-                                                type="file" name="cv"></span>
+                                        <label>Add a CV</label>
+                                        <div class="input-group">
+                                            <span class="input-group-btn">
+                                                <span class="btn btn-primary btn-file">
+                                                    Browse&hellip; <input type="file" name="cv">
+                                                </span>
+                                            </span>
+                                            <input type="text" class="form-control" readonly>
+                                        </div>
                                         </fieldset>
                                     {% endif %}
                                 </div>
@@ -800,10 +807,23 @@
             });
         }
 
-        $(document).ready(function () {
+        $(document).on('change', '.btn-file :file', function () {
+            var input = $(this);
+            var numFiles = input.get(0).files ? input.get(0).files.length : 1;
+            var label = input.val().replace(/\\/g, '/').replace(/.*\//, '');
+            input.trigger('fileselect', [numFiles, label]);
+        });
 
-            $("#id_picture").change(function () {
-                readURL(this);
+        $(document).ready(function () {
+            $('.btn-file :file').on('fileselect', function (event, numFiles, label) {
+                var input = $(this).parents('.input-group').find(':text'),
+                        log = numFiles > 1 ? numFiles + ' files selected' : label;
+
+                if (input.length) {
+                    input.val(log);
+                } else {
+                    if (log) alert(log);
+                }
             });
 
             $("#selectUserType").change(function () {
