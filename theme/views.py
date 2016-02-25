@@ -193,6 +193,7 @@ def update_user_profile(request):
                 profile = profile_form.save(commit=False)
                 profile.user = request.user
                 profile.save()
+                messages.success(request, "Your profile has been successfully updated.")
             else:
                 errors = {}
                 if not user_form.is_valid():

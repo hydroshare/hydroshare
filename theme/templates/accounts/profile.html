@@ -756,6 +756,7 @@
     <script type="text/javascript">
 
         var flagRequired = "<div class='label label-danger flag-required'>This field is required.</div>";
+        var flagPasswordMatch = "<div class='label label-danger flag-password-match'>Passwords do not match.</div>";
 
         // Preview profile picture
         function readURL(input) {
@@ -791,6 +792,8 @@
             if ($("#id_password1").val() != $("#id_password2").val()) {
                 $("#id_password1").addClass("form-invalid");
                 $("#id_password2").addClass("form-invalid");
+                $("#id_password2").parent().find(".flag-password-match").remove();
+                $("#id_password2").parent().append(flagPasswordMatch);
                 flag = false;
             }
             return flag;
@@ -814,7 +817,7 @@
                 $("#user-type-other").show();
                 $("#selectUserType").removeAttr("name");
                 $("#user-type-other input").attr("name", "user_type");
-                 $("#user-type-other input").val(userTypeValue);
+                $("#user-type-other input").val(userTypeValue);
             }
         }
 
