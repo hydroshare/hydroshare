@@ -163,8 +163,11 @@ def force_unique_emails(sender, instance, **kwargs):
         username = instance.username
 
         if not email:
-            raise ValidationError("email required")
-        if sender.objects.filter(email=email).exclude(username=username).count():
-            raise ValidationError("email needs to be unique")
+            raise ValidationError("Email required.")
+        else:
+            if sender.objects.filter(username=username).exclude(pk=instance.id).exists():
+                raise ValidationError("Username already exists.")
+        if sender.objects.filter(email=email).exclude(pk=instance.id).count():
+            raise ValidationError("Email needs to be unique.")
 
 pre_save.connect(force_unique_emails, sender=User)

@@ -166,18 +166,6 @@ def signup(request, template="accounts/account_signup.html"):
     return render(request, template, context)
 
 
-class UserProfileSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = UserProfile
-        exclude = ('user',)
-
-
-class UserSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = User
-        fields = ('first_name', 'last_name', 'username')
-
-
 @login_required
 def update_user_profile(request):
     user_form = UserForm(request.POST, instance=request.user)
@@ -198,7 +186,7 @@ def update_user_profile(request):
                         user.save()
                         messages.success(request, "Password successfully changed.")
                     else:
-                        messages.error(request, "Passwords do not match.")
+                        raise ValidationError("Passwords do not match.")
 
                 profile = profile_form.save(commit=False)
                 profile.user = request.user
