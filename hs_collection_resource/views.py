@@ -38,7 +38,6 @@ def update_collection(request, shortkey, *args, **kwargs):
             elif collection_res_obj.raccess.discoverable:
                 current_sharing_status = "Discoverable"
 
-
             new_sharing_status = ""
             if collection_res_obj.raccess.public or collection_res_obj.raccess.discoverable:
                 downgrade = False

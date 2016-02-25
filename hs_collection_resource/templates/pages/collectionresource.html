@@ -1,89 +1,86 @@
 {% extends "pages/genericresource.html" %}
-{% load geoanalytics_tags pages_tags staticfiles mezzanine_tags crispy_forms_tags keyword_tags comment_tags hydroshare_tags%}
-{% block main %}
+{% load geoanalytics_tags pages_tags staticfiles mezzanine_tags crispy_forms_tags hydroshare_tags%}
 
-{{ block.super }}
+{# override content_block in generice.html#}
+{% block content_block %}
 
-    {% block content_block %}
-        {# collection content table #}
-        <div id="collection_content_div">
-            <div id="title_and_add_btn_div">
-               <h3 style="display: inline">Collection Content </h3>
-               {% if edit_mode %}
-               <span onclick="$('#collection-candidate').modal('show');"  data-form-type="toggle-favorite" class="glyphicon glyphicon-plus-sign btn-inline-favorite" style="display: inline">Add...</span>
-               {% endif %}
-            </div>
-            <div id="collection-table-div">
-                {% if edit_mode %}
-                    <form id="collector-new" name="collector-new" action="/hsapi/_internal/{{ collection_res_id}}/update-collection/" method="POST">
-                {% endif %}
+    {# collection content table #}
+    <div id="collection_content_div">
+        <div id="title_and_add_btn_div">
+           <h3 style="display: inline">Collection Contents </h3>
+           {% if edit_mode %}
+           <span onclick="$('#collection-candidate').modal('show');" data-form-type="toggle-favorite" class="glyphicon glyphicon-plus-sign btn-inline-favorite" style="display: inline"> Add...</span>
+           {% endif %}
+        </div>
+        <div id="collection-table-div">
+            {% if edit_mode %}
+                <form id="collector-new" name="collector-new" action="/hsapi/_internal/{{collection_res_id}}/update-collection/" method="POST">
+            {% endif %}
 
-                <table id="collection-table" class="table-hover table-striped" width="100%">
-                    <thead>
-                    <tr>
-                        <th>Add</th>
-                        <th>Title</th>
-                        <th>Type</th>
-                        <th>Owners</th>
-                        <th>Sharing status</th>
-                        <th>My Permission</th>
-                        <th>Remove</th>
-                    </tr>
-                    </thead>
-                    <tbody>
-                     {% if collection %}
-                        {% for res in collection %}
-                            <tr id="{{ res.short_id }}">
-                                <td>
+            <table id="collection-table" class="table-hover table-striped" width="100%">
+                <thead>
+                <tr>
+                    <th>Add</th>
+                    <th>Title</th>
+                    <th>Type</th>
+                    <th>Owners</th>
+                    <th>Sharing status</th>
+                    <th>My Permission</th>
+                    <th>Remove</th>
+                </tr>
+                </thead>
+                <tbody>
+                 {% if collection %}
+                    {% for res in collection %}
+                        <tr id="{{ res.short_id }}">
+                            <td>
                                 <input class="row-selector" type="checkbox" id="{{ res.short_id }}">
-                                </td>
-                                <td><strong><a href="{{ res.get_absolute_url }}" target="_blank">{{ res.metadata.title }}</a></strong></td>
-                                <td>
-                                    {{ res.resource_type }}
-                                </td>
-                                <td>
-                                    {% for owner in res.raccess.owners.all %}
-                                      {% if forloop.counter0 > 0 %} · {% endif %}
-
+                            </td>
+                            <td>
+                                <strong><a href="{{ res.get_absolute_url }}" target="_blank">{{ res.metadata.title }}</a></strong></td>
+                            <td>
+                                {{ res.resource_type }}
+                            </td>
+                            <td>
+                                {% for owner in res.raccess.owners.all %}
+                                    {% if forloop.counter0 > 0 %} · {% endif %}
                                     {% if owner.first_name %}
                                         <strong><a href='/user/{{ owner.pk }}/' target="_blank">{{owner.first_name}} {{owner.last_name }}</a></strong>
                                     {% else %}
-                                         <strong><a href='/user/{{ owner.pk }}/' target="_blank">{{ owner.username }}</a></strong>
+                                        <strong><a href='/user/{{ owner.pk }}/' target="_blank">{{ owner.username }}</a></strong>
                                     {% endif %}
-                                    {% endfor %}
-                                </td>
-                                <td>
-                                    {% if res.raccess.published %}
-                                        <strong class="label-public">&nbspPublished</strong>
-                                    {% elif res.raccess.public %}
-                                        <strong class="label-public">&nbspPublic</strong>
-                                    {% elif res.raccess.discoverable %}
-                                        <strong class="label-discoverable">&nbspDiscoverable</strong>
-                                    {% else %}
-                                        <strong class="label-private">&nbspPrivate</strong>
-                                    {% endif %}
-                                </td>
-                                 <td>
+                                {% endfor %}
+                            </td>
+                            <td>
+                                {% if res.raccess.published %}
+                                    <strong class="label-public">&nbsp;Published</strong>
+                                {% elif res.raccess.public %}
+                                    <strong class="label-public">&nbsp;Public</strong>
+                                {% elif res.raccess.discoverable %}
+                                    <strong class="label-discoverable">&nbsp;Discoverable</strong>
+                                {% else %}
+                                    <strong class="label-private">&nbsp;Private</strong>
+                                {% endif %}
+                            </td>
+                            <td>
                                 {{ res|user_permission:request.user.pk }}
-                                </td>
-                            <th>
+                            </td>
+                            <td>
                                 <span onclick="remove_collection_item('{{ res.short_id }}')" data-form-id="form-favorite-{{ res.short_id }}" data-form-type="toggle-favorite"
                                                   class="glyphicon glyphicon-remove btn-inline-favorite"></span>
-                            </th>
-                            </tr>
-                        {% endfor %}
-                    {% endif %}
-                    </tbody>
-                </table>
-
-                {% if edit_mode %}
-                    </form>
-                {#    <input class="btn btn-primary" type="button" value="Add new resources" onclick="$('#collection-candidate').modal('show');"/>#}
-                    <input class="btn btn-primary" type="button" id="save-new" onclick="save_btn_callback_new();" value="Save Changes" style="display: none"/>
+                            </td>
+                        </tr>
+                    {% endfor %}
                 {% endif %}
-            </div>
+                </tbody>
+            </table>
+
+            {% if edit_mode %}
+                </form>
+                <input class="btn btn-primary" type="button" id="save-new" onclick="save_btn_callback_new();" value="Save Changes" style="display: none"/>
+            {% endif %}
         </div>
-    {% endblock %}
+    </div>
 
     {#    modal div: warning message  #}
     <div class="modal fade" id="save-collection-warning" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
@@ -145,40 +142,40 @@
                                         {% endwith %}
 
                                     </td>
-                                    <td><strong><a href="{{ res.get_absolute_url }}" target="_blank">{{ res.metadata.title }}</a></strong></td>
+                                    <td>
+                                        <strong><a href="{{ res.get_absolute_url }}" target="_blank">{{ res.metadata.title }}</a></strong></td>
                                     <td>
                                         {{ res.resource_type }}
                                     </td>
                                     <td>
                                         {% for owner in res.raccess.owners.all %}
-                                          {% if forloop.counter0 > 0 %} · {% endif %}
+                                            {% if forloop.counter0 > 0 %} · {% endif %}
 
-                                        {% if owner.first_name %}
-                                            <strong><a href='/user/{{ owner.pk }}/' target="_blank">{{owner.first_name}} {{owner.last_name }}</a></strong>
-                                        {% else %}
-                                             <strong><a href='/user/{{ owner.pk }}/' target="_blank">{{ owner.username }}</a></strong>
-                                        {% endif %}
+                                            {% if owner.first_name %}
+                                                <strong><a href='/user/{{ owner.pk }}/' target="_blank">{{owner.first_name}} {{owner.last_name }}</a></strong>
+                                            {% else %}
+                                                <strong><a href='/user/{{ owner.pk }}/' target="_blank">{{ owner.username }}</a></strong>
+                                            {% endif %}
                                         {% endfor %}
                                     </td>
                                     <td>
                                         {% if res.raccess.published %}
-                                            <strong class="label-public">&nbspPublished</strong>
+                                            <strong class="label-public">&nbsp;Published</strong>
                                         {% elif res.raccess.public %}
-                                            <strong class="label-public">&nbspPublic</strong>
+                                            <strong class="label-public">&nbsp;Public</strong>
                                         {% elif res.raccess.discoverable %}
-                                            <strong class="label-discoverable">&nbspDiscoverable</strong>
+                                            <strong class="label-discoverable">&nbsp;Discoverable</strong>
                                         {% else %}
                                             <strong class="label-private">&nbspPrivate</strong>
                                         {% endif %}
                                     </td>
                                      <td>
-                                    {{ res|user_permission:request.user.pk }}
+                                        {{ res|user_permission:request.user.pk }}
                                     </td>
-                                <th>
-                                    <span onclick="remove_collection_item('{{ res.short_id }}')" data-form-id="form-favorite-{{ res.short_id }}" data-form-type="toggle-favorite"
-                                                      class="glyphicon glyphicon-remove btn-inline-favorite"></span>
-                                </th>
-
+                                    <td>
+                                        <span onclick="remove_collection_item('{{ res.short_id }}')" data-form-id="form-favorite-{{ res.short_id }}" data-form-type="toggle-favorite"
+                                                          class="glyphicon glyphicon-remove btn-inline-favorite"></span>
+                                    </td>
                                 </tr>
                             {% endfor %}
                          {% endif %}
@@ -202,18 +199,18 @@
 
 {% block extra_js %}
     {{ block.super }}
-    <script type="text/javascript" charset="utf8" src='{% static "js/jquery.dataTables.js" %}'></script>
+    <script type="text/javascript" src='{% static "js/jquery.dataTables.js" %}'></script>
 
     {# put resource specific js below #}
     <script type="text/javascript">
 
         $(document).ready(function()
         {
-             // unhook btn-invite original onclick event and redirect to function share_collection_ajax_submit
+            // unhook btn-invite original onclick event and re-wire it with function share_collection_ajax_submit
             $('#btn-invite').off("click");
             $('#btn-invite').on( "click", share_collection_ajax_submit);
 
-            //-------------------
+            //------------------ table headers ------------
             {#                <th>Add</th>             0  #}
             {#                <th>Title</th>           1  #}
             {#                <th>Type</th>            2  #}
@@ -225,7 +222,7 @@
             var edit_mode = "{{edit_mode}}";
             if (edit_mode.toLowerCase() == "false")
             {
-                     resourceTable = $("#collection-table").DataTable({
+                    resourceTable = $("#collection-table").DataTable({
                     "order": [[2, "asc"]],
                     "paging": false,
                     "info": false,
@@ -355,8 +352,8 @@
             {
                 // edit user cannot remove the last one member res in a public or discoverable collection
                 $('#save-collection-warning-title').text("Warning");
-                $('#save-collection-btn-cancel').off("click");
-                $('#save-collection-btn-ok').off("click");
+                $('#save-collection-btn-cancel').hide();
+                $('#save-collection-btn-ok').text("OK").off("click");
                 waning_message = "Removing the last one member resource will downgrade sharing status to Private, but you have no permission to change it.";
                 $('#save-collection-warning-body').text(waning_message);
                 $('#save-collection-warning').modal('show');
@@ -368,7 +365,6 @@
                 // remove row obj
                 removed_row_from_colletion.remove().draw(false);
             }
-
             $('#save-new').show();
         }
 
@@ -503,8 +499,7 @@
                     $('#collection-table').DataTable().rows().every(function()
                         {
                             if(this.data()[4].toLowerCase().indexOf("private") >= 0)
-                            { found_private_warning_flag = true;
-                            }
+                            { found_private_warning_flag = true;}
                         });
                 }
 
