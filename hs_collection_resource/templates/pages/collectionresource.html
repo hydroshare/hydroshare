@@ -1,6 +1,11 @@
 {% extends "pages/genericresource.html" %}
 {% load geoanalytics_tags pages_tags staticfiles mezzanine_tags crispy_forms_tags hydroshare_tags%}
 
+{% block extra_css %}
+    {{ block.super }}
+    <link rel="stylesheet" href='{% static "css/jquery.dataTables.min.css" %}'/>
+{% endblock %}
+
 {# override content_block in generice.html#}
 {% block content_block %}
 
@@ -53,17 +58,23 @@
                             </td>
                             <td>
                                 {% if res.raccess.published %}
-                                    <strong class="label-public">&nbsp;Published</strong>
+                                    Published
                                 {% elif res.raccess.public %}
-                                    <strong class="label-public">&nbsp;Public</strong>
+                                    Public
                                 {% elif res.raccess.discoverable %}
-                                    <strong class="label-discoverable">&nbsp;Discoverable</strong>
+                                    Discoverable
                                 {% else %}
-                                    <strong class="label-private">&nbsp;Private</strong>
+                                    Private
                                 {% endif %}
                             </td>
-                            <td>
-                                {{ res|user_permission:request.user.pk }}
+                             <td>
+                                {% if res|user_permission:request.user.pk|lower == "none" %}
+                                    <strong class="label-private">{{ res|user_permission:request.user.pk }}</strong>
+                                {% elif res|user_permission:request.user.pk|lower == "open access" %}
+                                    <strong class="label-public">{{ res|user_permission:request.user.pk }}</strong>
+                                {% else %}
+                                    {{ res|user_permission:request.user.pk }}
+                                {% endif %}
                             </td>
                             <td>
                                 <span onclick="remove_collection_item('{{ res.short_id }}')" data-form-id="form-favorite-{{ res.short_id }}" data-form-type="toggle-favorite"
@@ -160,17 +171,23 @@
                                     </td>
                                     <td>
                                         {% if res.raccess.published %}
-                                            <strong class="label-public">&nbsp;Published</strong>
+                                            Published
                                         {% elif res.raccess.public %}
-                                            <strong class="label-public">&nbsp;Public</strong>
+                                            Public
                                         {% elif res.raccess.discoverable %}
-                                            <strong class="label-discoverable">&nbsp;Discoverable</strong>
+                                            Discoverable
                                         {% else %}
-                                            <strong class="label-private">&nbspPrivate</strong>
+                                            Private
                                         {% endif %}
                                     </td>
                                      <td>
-                                        {{ res|user_permission:request.user.pk }}
+                                        {% if res|user_permission:request.user.pk|lower == "none" %}
+                                            <strong class="label-private">{{ res|user_permission:request.user.pk }}</strong>
+                                        {% elif res|user_permission:request.user.pk|lower == "open access" %}
+                                            <strong class="label-public">{{ res|user_permission:request.user.pk }}</strong>
+                                        {% else %}
+                                            {{ res|user_permission:request.user.pk }}
+                                        {% endif %}
                                     </td>
                                     <td>
                                         <span onclick="remove_collection_item('{{ res.short_id }}')" data-form-id="form-favorite-{{ res.short_id }}" data-form-type="toggle-favorite"
@@ -195,7 +212,6 @@
     </div>
 
 {% endblock %}
-
 
 {% block extra_js %}
     {{ block.super }}
@@ -535,9 +551,4 @@
         }
 
     </script>
-{% endblock %}
-
-{% block extra_css %}
-    {{ block.super }}
-    <link rel="stylesheet" href='{% static "css/jquery.dataTables.min.css" %}'/>
 {% endblock %}
