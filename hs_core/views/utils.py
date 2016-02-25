@@ -107,7 +107,7 @@ def authorize(request, res_id, needed_permission=Action_To_Authorize.VIEW_RESOUR
         elif needed_permission == Action_To_Authorize.SET_RESOURCE_FLAG:
             authorized = user.uaccess.can_change_resource_flags(res)
         elif needed_permission == Action_To_Authorize.CREATE_RESOURCE_VERSION:
-            authorized = user.uaccess.owns_resource(res) or user.is_superuser
+            authorized = user.uaccess.can_create_resource_version(res)
     elif needed_permission == Action_To_Authorize.VIEW_RESOURCE:
         authorized = res.raccess.public
 
