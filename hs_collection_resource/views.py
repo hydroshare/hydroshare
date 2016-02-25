@@ -1,7 +1,7 @@
 import json
 import logging
 
-from django.http import HttpResponseRedirect, HttpResponseNotFound, HttpResponse
+from django.http import HttpResponseRedirect, HttpResponseNotFound, HttpResponse, JsonResponse
 
 from hs_core import hydroshare
 from hs_core.views import _set_resource_sharing_status
@@ -33,10 +33,11 @@ def update_collection(request, shortkey, *args, **kwargs):
                 'CollectionItems', collection_items=collection_content_res_id_list)
 
             current_sharing_status = "Private"
-            if collection_res_obj.raccess.discoverable:
-                current_sharing_status = "Discoverable"
-            elif collection_res_obj.raccess.public:
+            if collection_res_obj.raccess.public:
                 current_sharing_status = "Public"
+            elif collection_res_obj.raccess.discoverable:
+                current_sharing_status = "Discoverable"
+
 
             new_sharing_status = ""
             if collection_res_obj.raccess.public or collection_res_obj.raccess.discoverable:
@@ -70,7 +71,7 @@ def update_collection(request, shortkey, *args, **kwargs):
             ajax_response_data = {'status': 'success', 'user_permission': user_permission, \
                                   'current_sharing_status': current_sharing_status, \
                                   'new_sharing_status': new_sharing_status, 'metadata_status': metadata_status}
-            return HttpResponse(json.dumps(ajax_response_data))
+            return JsonResponse(ajax_response_data)
 
     except Exception as ex:
         logger.exception("update_collection: %s" % (ex.message))

@@ -166,6 +166,7 @@ def landing_page(request, page):
     context['collection'] = collection_items_list
     if edit_resource:
          context['collection_candidate'] = candidate_resources_list
+         context['collection_res_id'] = content_model.short_id
     context['edit_mode'] = edit_resource
 
     hs_core_dublin_context = add_generic_context(request, page)
