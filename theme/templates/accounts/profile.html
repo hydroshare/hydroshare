@@ -390,7 +390,7 @@
 
                                         <fieldset>
                                             <label>State/Province *</label>
-                                            <input name="state" class="form-control form-required" {% if  profile.state %}value="{{ profile.state }}"{% endif %}>
+                                            <input name="state" class="form-control form-required" {% if  profile.state %}value="{{ profile.state }}"{% else %}value="Unspecified"{% endif %}>
                                         </fieldset>
 
                                         <fieldset>
@@ -817,7 +817,10 @@
                 $("#selectUserType").removeAttr("name");
                 $("#user-type-other input").attr("name", "user_type");
                 $("#user-type-other input").val(userTypeValue);
+                $("#user-type-other input").addClass("form-required");
             }
+
+            $(".form-required").change(formRequired);
         }
 
         function setViewMode() {
@@ -834,6 +837,18 @@
             var label = input.val().replace(/\\/g, '/').replace(/.*\//, '');
             input.trigger('fileselect', [numFiles, label]);
         });
+
+        function formRequired() {
+            if ($(this).val()) {
+                $(this).removeClass("form-invalid");
+                $(this).parent().find(".flag-required").remove();
+            }
+            else {
+                $(this).addClass("form-invalid");
+                $(this).parent().find(".flag-required").remove();
+                $(this).parent().append(flagRequired);
+            }
+        }
 
         $(document).ready(function () {
             // Change country first empty option to 'Unspecified'
@@ -854,7 +869,7 @@
                 if ($(this).val() == "Other") {
                     $("#user-type-other").show();
                     $("#selectUserType").removeAttr("name");
-                    $("#user-type-other input").attr("name", "user_type")
+                    $("#user-type-other input").attr("name", "user_type");
                     $("#user-type-other input").addClass("form-required");
                 }
                 else {
@@ -862,18 +877,6 @@
                     $("#user-type-other input").removeAttr("name");
                     $("#user-type-other input").removeClass("form-required");
                     $("#selectUserType").attr("name", "user_type");
-                }
-            });
-
-            $(".form-required").change(function(){
-                if ($(this).val()) {
-                    $(this).removeClass("form-invalid");
-                    $(this).parent().find(".flag-required").remove();
-                }
-                else {
-                    $(this).addClass("form-invalid");
-                    $(this).parent().find(".flag-required").remove();
-                    $(this).parent().append(flagRequired);
                 }
             });
 
