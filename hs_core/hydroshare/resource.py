@@ -734,7 +734,7 @@ def delete_resource_file(pk, filename_or_id, user):
     for f in ResourceFile.objects.filter(object_id=resource.id):
         if filter_condition(f):
             # send signal
-            signals.pre_delete_file_from_resource.send(sender=res_cls, file=f, resource=resource)
+            signals.pre_delete_file_from_resource.send(sender=res_cls, file=f, resource=resource, user=user)
 
             file_name = f.resource_file.name
             f.resource_file.delete()
