@@ -191,7 +191,9 @@ class T03CreateResource(MockIRODSTestCaseMixin, TestCase):
 
         # django admin access
         self.assertFalse(self.admin.uaccess.owns_resource(holes))
-        self.assertFalse(self.admin.uaccess.can_change_resource(holes))
+
+        # can still change the immutable/published
+        self.assertTrue(self.admin.uaccess.can_change_resource(holes))
         self.assertTrue(self.admin.uaccess.can_view_resource(holes))
         self.assertTrue(self.admin.uaccess.can_change_resource_flags(holes))
         self.assertTrue(self.admin.uaccess.can_delete_resource(holes))
