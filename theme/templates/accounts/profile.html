@@ -754,6 +754,7 @@
     <script type="text/javascript" src="{{ STATIC_URL }}js/bootstrap-formhelpers.js"></script>
     <script type="text/javascript">
 
+        // Preview profile picture
         function readURL(input) {
             if (input.files && input.files[0]) {
                 var reader = new FileReader();
@@ -820,7 +821,7 @@
             });
         }
 
-        $(document).on('change', '.btn-file :file', function () {
+        $(document).on('change', '.btn-primary.btn-file :file', function () {
             var input = $(this);
             var numFiles = input.get(0).files ? input.get(0).files.length : 1;
             var label = input.val().replace(/\\/g, '/').replace(/.*\//, '');
@@ -828,15 +829,13 @@
         });
 
         $(document).ready(function () {
-            $('.btn-file :file').on('fileselect', function (event, numFiles, label) {
-                var input = $(this).parents('.input-group').find(':text'),
-                        log = numFiles > 1 ? numFiles + ' files selected' : label;
+            $('.btn-primary.btn-file :file').on('fileselect', function (event, numFiles, label) {
+                var input = $(this).parents('.input-group').find(':text');
+                input.val(label);
+            });
 
-                if (input.length) {
-                    input.val(log);
-                } else {
-                    if (log) alert(log);
-                }
+            $(".upload-picture").change(function(){
+                readURL(this);
             });
 
             $("#selectUserType").change(function () {
