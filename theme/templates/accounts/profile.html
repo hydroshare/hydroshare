@@ -325,7 +325,7 @@
 
                                         <table class="overview" data-page-mode="view">
                                             <tbody>
-                                            {% if profile.user_type %}
+                                            {% if profile.user_type and profile.user_type != "Unspecified"%}
                                                 <tr>
                                                     <td><span class="text-muted">User type</span></td>
                                                     <td id="db-user-type">{{ profile.user_type }}</td>
