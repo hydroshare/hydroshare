@@ -17,7 +17,6 @@
             {% endif %}
 
             <div class="col-sm-12">
-                {#        Profile picture       #}
                 <div class="row">
                     {% if profile_user.id == user.id %}
                         <div class="col-xs-12 col-sm-3 height-fix pull-right">
@@ -26,7 +25,10 @@
                             <span data-page-mode="edit" id="btn-cancel-profile-edit" class="btn btn-default pull-right">Cancel</span>
                         </div>
                     {% endif %}
+
+                    {#        Profile picture       #}
                     <div class="col-sm-3 height-fix">
+                        <div id="profile-pic-container">
                         {% if profile.picture and profile.picture.url %}
                             <div style="background-image: url('{{ profile.picture.url }}')"
                                  class="profile-pic round-image">
@@ -34,6 +36,7 @@
                         {% else %}
                             <div class="profile-pic round-image user-icon"></div>
                         {% endif %}
+                        </div>
 
                         {% if profile_user.id == user.id %}
                             <div data-page-mode="edit" class="text-center">
@@ -49,8 +52,7 @@
                             {% else %}
                                 <fieldset>
                                     <div class="btn-file btn-update-picture"><span class="glyphicon glyphicon-camera"></span>&nbsp;&nbsp;Add a photo<input
-                                            type="file" name="picture"></div>
-                                    </button>
+                                            type="file" name="picture" id="id_picture"></div>
                                 </fieldset>
                             {% endif %}
                             </div>
@@ -200,9 +202,8 @@
                                             <span class="glyphicon glyphicon-retweet"></span>
                                             <input type="file" name="cv">
                                         </span>
-                                            <button class="no-style icon-button btn-remove" id="cv-clear_id" name="cv-clear"
-                                                    title="Remove CV"
-                                                    value="clear"><span
+                                            <button id="btn-delete-cv" class="no-style icon-button btn-remove" data-toggle="modal"
+                                                    data-target="#delete-cv" title="Remove CV"><span
                                                     class="glyphicon glyphicon-trash"></span>
                                             </button>
                                         </div>
@@ -677,39 +678,84 @@
             </div>
         </div>
     </div>
-    </form>
-
-        <!-- Delete picture modal -->
-        <div class="modal fade" id="delete-picture" tabindex="-1" role="dialog"
-             aria-labelledby="myModalLabel">
-            <div class="modal-dialog" role="document">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <button type="button" class="close" data-dismiss="modal"
-                                aria-label="Close"><span aria-hidden="true">&times;</span>
-                        </button>
-                        <h4 class="modal-title" id="myModalLabel">Modal title</h4>
-                    </div>
-                    <div class="modal-body">
-                        Are you sure?
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-default" data-dismiss="modal">
-                            Close
-                        </button>
-                        <button class="btn btn-primary" id="picture-clear_id" name="picture-clear"
-                                value="clear">Confirm
-                        </button>
-                    </div>
+    <!-- Delete picture modal -->
+    <div class="modal fade" id="delete-picture" tabindex="-1" role="dialog"
+         aria-labelledby="deleteProfilePicture">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal"
+                            aria-label="Close"><span aria-hidden="true">&times;</span>
+                    </button>
+                    <h4 class="modal-title" id="deleteProfilePicture">Delete profile picture</h4>
+                </div>
+                <div class="modal-body">
+                    Are you sure you want to delete your profile picture?
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default" data-dismiss="modal">
+                        Close
+                    </button>
+                    <button class="btn btn-primary" id="picture-clear_id" name="picture-clear"
+                            title="Remove profile picture"
+                            value="clear">Confirm
+                    </button>
                 </div>
             </div>
         </div>
+    </div>
+
+    <!-- Delete CV modal -->
+    <div class="modal fade" id="delete-cv" tabindex="-1" role="dialog"
+         aria-labelledby="deleteCV">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal"
+                            aria-label="Close"><span aria-hidden="true">&times;</span>
+                    </button>
+                    <h4 class="modal-title" id="deleteProfilePicture">Delete CV</h4>
+                </div>
+                <div class="modal-body">
+                    Are you sure you want to delete your CV?
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default" data-dismiss="modal">
+                        Close
+                    </button>
+                    <button class="btn btn-primary" id="cv-clear_id" name="cv-clear"
+                            title="Remove profile picture"
+                            value="clear">Confirm
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    </form>
+
+
     {% endwith %}
 {% endblock %}
 
 {% block extra_js %}
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.mask/1.13.4/jquery.mask.min.js" type="text/javascript"></script>
     <script type="text/javascript">
+
+        function readURL(input) {
+            if (input.files && input.files[0]) {
+                var reader = new FileReader();
+                reader.onload = function (e) {
+                    $("#profile-pic-container").empty();
+                    $("#profile-pic-container").append(
+                        '<div style="background-image: url(\'' + e.target.result +  '\')"' +
+                             'class="profile-pic round-image">' +
+                        '</div>'
+                    );
+                };
+
+                reader.readAsDataURL(input.files[0]);
+            }
+        }
 
         function validateForm() {
             // Required elements
@@ -755,6 +801,11 @@
         }
 
         $(document).ready(function () {
+
+            $("#id_picture").change(function () {
+                readURL(this);
+            });
+
             $("#selectUserType").change(function () {
                 if ($(this).val() == "Other") {
                     $("#user-type-other").show();
