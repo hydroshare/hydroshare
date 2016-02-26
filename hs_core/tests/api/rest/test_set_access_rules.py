@@ -8,12 +8,6 @@ from .base import HSRESTTestCase
 
 class TestSetAccessRules(HSRESTTestCase):
 
-    def setUp(self):
-        super(TestSetAccessRules, self).setUp()
-
-    def tearDown(self):
-        super(TestSetAccessRules, self).tearDown()
-
     def test_set_access_rules(self):
         rtype = 'GenericResource'
         title = 'My Test resource'

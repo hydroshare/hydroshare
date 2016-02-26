@@ -8,12 +8,6 @@ from .base import HSRESTTestCase
 
 class TestResourceList(HSRESTTestCase):
 
-    def setUp(self):
-        super(TestResourceList, self).setUp()
-
-    def tearDown(self):
-        super(TestResourceList, self).tearDown()
-
     def test_resource_list(self):
 
         new_res = resource.create_resource('GenericResource',

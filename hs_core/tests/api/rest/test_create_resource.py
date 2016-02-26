@@ -7,12 +7,6 @@ from .base import HSRESTTestCase
 
 class TestCreateResource(HSRESTTestCase):
 
-    def setUp(self):
-        super(TestCreateResource, self).setUp()
-
-    def tearDown(self):
-        super(TestCreateResource, self).tearDown()
-
     def test_post_resource_get_sysmeta(self):
         rtype = 'GenericResource'
         title = 'My Test resource'

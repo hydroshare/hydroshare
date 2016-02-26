@@ -4063,6 +4063,8 @@ CREATE TABLE hs_core_genericresource (
     last_changed_by_id integer,
     user_id integer NOT NULL,
     resource_type character varying(50) NOT NULL,
+    file_unpack_message text,
+    file_unpack_status character varying(7),
     CONSTRAINT hs_core_genericresource_object_id_check CHECK ((object_id >= 0))
 );
 
@@ -7246,240 +7248,279 @@ SELECT pg_catalog.setval('auth_group_id_seq', 1, true);
 --
 
 COPY auth_group_permissions (id, group_id, permission_id) FROM stdin;
-358	1	139
-359	1	140
-360	1	141
-361	1	142
-362	1	143
-363	1	144
-364	1	145
-365	1	146
-366	1	147
-367	1	148
-368	1	149
-369	1	150
-370	1	151
-371	1	152
-372	1	153
-373	1	154
-374	1	155
-375	1	156
-376	1	157
-377	1	158
-378	1	159
-379	1	160
-380	1	161
-381	1	162
-382	1	163
-383	1	164
-384	1	165
-385	1	166
-386	1	167
-387	1	168
-388	1	169
-389	1	170
-390	1	171
-391	1	172
-392	1	173
-393	1	174
-394	1	175
-395	1	176
-396	1	177
-397	1	178
-398	1	179
-399	1	180
-400	1	181
-401	1	182
-402	1	183
-403	1	184
-404	1	185
-405	1	186
-406	1	187
-407	1	188
-408	1	189
-409	1	190
-410	1	191
-411	1	192
-412	1	193
-413	1	194
-414	1	195
-415	1	196
-416	1	197
-417	1	198
-418	1	199
-419	1	200
-420	1	201
-421	1	202
-422	1	203
-423	1	204
-424	1	271
-425	1	272
-426	1	273
-427	1	274
-428	1	275
-429	1	276
-430	1	277
-431	1	278
-432	1	279
-433	1	280
-434	1	281
-435	1	282
-436	1	283
-437	1	284
-438	1	285
-442	1	313
-443	1	314
-444	1	315
-445	1	316
-446	1	317
-447	1	318
-448	1	319
-449	1	320
-450	1	321
-451	1	322
-452	1	323
-453	1	324
-454	1	325
-455	1	326
-456	1	327
-457	1	328
-458	1	329
-459	1	330
-460	1	331
-461	1	332
-462	1	333
-463	1	334
-464	1	335
-465	1	336
-466	1	337
-467	1	338
-468	1	339
-469	1	340
-470	1	341
-471	1	342
-472	1	343
-473	1	344
-474	1	345
-475	1	346
-476	1	347
-477	1	348
-478	1	349
-479	1	350
-480	1	351
-481	1	352
-482	1	353
-483	1	354
-484	1	355
-485	1	356
-486	1	357
-487	1	358
-488	1	359
-489	1	360
-490	1	361
-491	1	362
-492	1	363
-493	1	364
-494	1	365
-495	1	366
-496	1	367
-497	1	368
-498	1	369
-499	1	370
-500	1	371
-501	1	372
-502	1	373
-503	1	374
-504	1	375
-505	1	376
-506	1	377
-507	1	378
-508	1	379
-509	1	380
-510	1	381
-511	1	382
-512	1	383
-513	1	384
-514	1	385
-515	1	386
-516	1	387
-517	1	388
-518	1	389
-519	1	390
-520	1	391
-521	1	392
-522	1	393
-523	1	394
-524	1	395
-525	1	396
-526	1	397
-527	1	398
-528	1	399
-529	1	400
-530	1	401
-531	1	402
-532	1	403
-533	1	404
-534	1	405
-535	1	406
-536	1	407
-537	1	408
-538	1	409
-539	1	410
-540	1	411
-541	1	412
-542	1	413
-543	1	414
-544	1	415
-545	1	416
-546	1	417
-547	1	418
-548	1	419
-549	1	420
-550	1	421
-551	1	422
-552	1	423
-553	1	424
-554	1	425
-555	1	426
-556	1	427
-557	1	428
-558	1	429
-559	1	430
-560	1	431
-561	1	432
-562	1	433
-563	1	434
-564	1	435
-565	1	436
-566	1	437
-567	1	438
-568	1	439
-569	1	440
-570	1	441
-571	1	442
-572	1	443
-573	1	444
-574	1	445
-575	1	446
-576	1	447
-577	1	448
-578	1	449
-579	1	450
-580	1	451
-581	1	452
-582	1	453
-583	1	454
-584	1	455
-585	1	456
-586	1	457
-587	1	458
-588	1	459
-589	1	460
-590	1	461
-591	1	462
-592	1	463
-593	1	464
-594	1	465
+595	1	512
+596	1	513
+597	1	514
+598	1	139
+599	1	140
+600	1	141
+601	1	142
+602	1	143
+603	1	144
+604	1	145
+605	1	146
+606	1	147
+607	1	148
+608	1	149
+609	1	150
+610	1	151
+611	1	152
+612	1	153
+613	1	154
+614	1	155
+615	1	156
+616	1	157
+617	1	158
+618	1	159
+619	1	160
+620	1	161
+621	1	162
+622	1	163
+623	1	164
+624	1	165
+625	1	166
+626	1	167
+627	1	168
+628	1	169
+629	1	170
+630	1	171
+631	1	172
+632	1	173
+633	1	174
+634	1	175
+635	1	176
+636	1	177
+637	1	178
+638	1	179
+639	1	180
+640	1	181
+641	1	182
+642	1	183
+643	1	184
+644	1	185
+645	1	186
+646	1	187
+647	1	188
+648	1	189
+649	1	190
+650	1	191
+651	1	192
+652	1	193
+653	1	194
+654	1	195
+655	1	196
+656	1	197
+657	1	198
+658	1	199
+659	1	200
+660	1	201
+661	1	202
+662	1	203
+663	1	204
+664	1	271
+665	1	272
+666	1	273
+667	1	274
+668	1	275
+669	1	276
+670	1	277
+671	1	278
+672	1	279
+673	1	280
+674	1	281
+675	1	282
+676	1	283
+677	1	284
+678	1	285
+679	1	313
+680	1	314
+681	1	315
+682	1	316
+683	1	317
+684	1	318
+685	1	319
+686	1	320
+687	1	321
+688	1	322
+689	1	323
+690	1	324
+691	1	325
+692	1	326
+693	1	327
+694	1	328
+695	1	329
+696	1	330
+697	1	331
+698	1	332
+699	1	333
+700	1	334
+701	1	335
+702	1	336
+703	1	337
+704	1	338
+705	1	339
+706	1	340
+707	1	341
+708	1	342
+709	1	343
+710	1	344
+711	1	345
+712	1	346
+713	1	347
+714	1	348
+715	1	349
+716	1	350
+717	1	351
+718	1	352
+719	1	353
+720	1	354
+721	1	355
+722	1	356
+723	1	357
+724	1	358
+725	1	359
+726	1	360
+727	1	361
+728	1	362
+729	1	363
+730	1	364
+731	1	365
+732	1	366
+733	1	367
+734	1	368
+735	1	369
+736	1	370
+737	1	371
+738	1	372
+739	1	373
+740	1	374
+741	1	375
+742	1	376
+743	1	377
+744	1	378
+745	1	379
+746	1	380
+747	1	381
+748	1	382
+749	1	383
+750	1	384
+751	1	385
+752	1	386
+753	1	387
+754	1	388
+755	1	389
+756	1	390
+757	1	391
+758	1	392
+759	1	393
+760	1	394
+761	1	395
+762	1	396
+763	1	397
+764	1	398
+765	1	399
+766	1	400
+767	1	401
+768	1	402
+769	1	403
+770	1	404
+771	1	405
+772	1	406
+773	1	407
+774	1	408
+775	1	409
+776	1	410
+777	1	411
+778	1	412
+779	1	413
+780	1	414
+781	1	415
+782	1	416
+783	1	417
+784	1	418
+785	1	419
+786	1	420
+787	1	421
+788	1	422
+789	1	423
+790	1	424
+791	1	425
+792	1	426
+793	1	427
+794	1	428
+795	1	429
+796	1	430
+797	1	431
+798	1	432
+799	1	433
+800	1	434
+801	1	435
+802	1	436
+803	1	437
+804	1	438
+805	1	439
+806	1	440
+807	1	441
+808	1	442
+809	1	443
+810	1	444
+811	1	445
+812	1	446
+813	1	447
+814	1	448
+815	1	449
+816	1	450
+817	1	451
+818	1	452
+819	1	453
+820	1	454
+821	1	455
+822	1	456
+823	1	457
+824	1	458
+825	1	459
+826	1	460
+827	1	461
+828	1	462
+829	1	463
+830	1	464
+831	1	465
+832	1	476
+833	1	477
+834	1	478
+835	1	479
+836	1	480
+837	1	481
+838	1	482
+839	1	483
+840	1	484
+841	1	485
+842	1	486
+843	1	487
+844	1	488
+845	1	489
+846	1	490
+847	1	491
+848	1	492
+849	1	493
+850	1	494
+851	1	495
+852	1	496
+853	1	497
+854	1	498
+855	1	499
+856	1	500
+857	1	501
+858	1	502
+859	1	503
+860	1	504
+861	1	505
+862	1	506
+863	1	507
+864	1	508
+865	1	509
+866	1	510
+867	1	511
 \.
 
 
@@ -7487,7 +7528,7 @@ COPY auth_group_permissions (id, group_id, permission_id) FROM stdin;
 -- Name: auth_group_permissions_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('auth_group_permissions_id_seq', 594, true);
+SELECT pg_catalog.setval('auth_group_permissions_id_seq', 867, true);
 
 
 --
@@ -8003,6 +8044,9 @@ COPY auth_permission (id, name, content_type_id, codename) FROM stdin;
 509	Can add Script Resource	66	add_scriptresource
 510	Can change Script Resource	66	change_scriptresource
 511	Can delete Script Resource	66	delete_scriptresource
+512	Can add HIS Referenced Time Series	160	add_reftimeseriesresource
+513	Can change HIS Referenced Time Series	160	change_reftimeseriesresource
+514	Can delete HIS Referenced Time Series	160	delete_reftimeseriesresource
 \.
 
 
@@ -8010,7 +8054,7 @@ COPY auth_permission (id, name, content_type_id, codename) FROM stdin;
 -- Name: auth_permission_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('auth_permission_id_seq', 511, true);
+SELECT pg_catalog.setval('auth_permission_id_seq', 514, true);
 
 
 --
@@ -8018,7 +8062,7 @@ SELECT pg_catalog.setval('auth_permission_id_seq', 511, true);
 --
 
 COPY auth_user (id, password, last_login, is_superuser, username, first_name, last_name, email, is_staff, is_active, date_joined) FROM stdin;
-4	pbkdf2_sha256$15000$TspKDYXwKiVD$W/kxbibVrpsVzxVl9A2ZhtK5MDmgjaih2KAUBfdtBgY=	2016-01-25 19:53:55.584812+00	t	admin	HydroShare	Administrator	admin@example.com	t	t	2016-01-25 19:47:54+00
+4	pbkdf2_sha256$15000$TspKDYXwKiVD$W/kxbibVrpsVzxVl9A2ZhtK5MDmgjaih2KAUBfdtBgY=	2016-02-24 17:40:31.565918+00	t	admin	HydroShare	Administrator	admin@example.com	t	t	2016-01-25 19:47:54+00
 \.
 
 
@@ -8219,6 +8263,7 @@ COPY django_admin_log (id, action_time, object_id, object_repr, action_flag, cha
 32	2016-01-25 19:52:16.941687+00	4	Discover	2	Changed slug and keywords.	33	4
 33	2016-01-25 19:52:37.395438+00	4	Discover	2	Changed _meta_title and keywords.	33	4
 34	2016-01-25 19:54:21.104577+00	2	root	3		3	4
+35	2016-02-24 17:41:41.504891+00	1	Hydroshare Author	2	Changed permissions.	2	4
 \.
 
 
@@ -8226,7 +8271,7 @@ COPY django_admin_log (id, action_time, object_id, object_repr, action_flag, cha
 -- Name: django_admin_log_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('django_admin_log_id_seq', 34, true);
+SELECT pg_catalog.setval('django_admin_log_id_seq', 35, true);
 
 
 --
@@ -8705,6 +8750,8 @@ COPY django_migrations (id, app, name, applied) FROM stdin;
 85	hs_core	0015_auto_20160210_1725	2016-02-10 17:25:39.984521+00
 86	hs_tools_resource	0007_auto_20160122_2240	2016-02-10 17:25:40.949761+00
 87	ref_ts	0004_auto_20160114_0252	2016-02-10 17:25:44.189374+00
+88	hs_core	0015_auto_20160122_1939	2016-02-24 16:49:13.981508+00
+89	hs_core	0016_merge	2016-02-24 16:49:14.629004+00
 \.
 
 
@@ -8712,7 +8759,7 @@ COPY django_migrations (id, app, name, applied) FROM stdin;
 -- Name: django_migrations_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('django_migrations_id_seq', 87, true);
+SELECT pg_catalog.setval('django_migrations_id_seq', 89, true);
 
 
 --
@@ -8737,6 +8784,7 @@ SELECT pg_catalog.setval('django_redirect_id_seq', 1, false);
 COPY django_session (session_key, session_data, expire_date) FROM stdin;
 iuq13wh2xtsrestc3ixty7cy7pcutc3b	ZTIwZWRiZTQzZjI5ODhkYTE0NDQxYzFmZmQzMTRjZDc3MWUxNGUzYTp7Il9hdXRoX3VzZXJfaGFzaCI6IjBkNTY4M2MyYWVkNjA4OWNhMDc5YTE4ZmFlZTNjNjdlMjExNTRmZDciLCJfYXV0aF91c2VyX2JhY2tlbmQiOiJtZXp6YW5pbmUuY29yZS5hdXRoX2JhY2tlbmRzLk1lenphbmluZUJhY2tlbmQiLCJfYXV0aF91c2VyX2lkIjo0fQ==	2016-02-08 19:50:52.911919+00
 r95gvslruo55bqar11kco2o9ynh41mrq	NmM0MTZkOGYzNTBkNDEwMTBiZTc3NTFmODg5ZDU4N2VkNmVkZDJlZTp7fQ==	2016-02-08 19:55:45.734662+00
+yq96gavkvlu0skywfwgvdock65xnq3tc	ZTIwZWRiZTQzZjI5ODhkYTE0NDQxYzFmZmQzMTRjZDc3MWUxNGUzYTp7Il9hdXRoX3VzZXJfaGFzaCI6IjBkNTY4M2MyYWVkNjA4OWNhMDc5YTE4ZmFlZTNjNjdlMjExNTRmZDciLCJfYXV0aF91c2VyX2JhY2tlbmQiOiJtZXp6YW5pbmUuY29yZS5hdXRoX2JhY2tlbmRzLk1lenphbmluZUJhY2tlbmQiLCJfYXV0aF91c2VyX2lkIjo0fQ==	2016-03-09 17:40:31.568514+00
 \.
 
 
@@ -9443,7 +9491,7 @@ SELECT pg_catalog.setval('hs_core_format_id_seq', 1, false);
 -- Data for Name: hs_core_genericresource; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
-COPY hs_core_genericresource (page_ptr_id, comments_count, rating_count, rating_sum, rating_average, content, short_id, doi, object_id, content_type_id, creator_id, last_changed_by_id, user_id, resource_type) FROM stdin;
+COPY hs_core_genericresource (page_ptr_id, comments_count, rating_count, rating_sum, rating_average, content, short_id, doi, object_id, content_type_id, creator_id, last_changed_by_id, user_id, resource_type, file_unpack_message, file_unpack_status) FROM stdin;
 \.
 
 
@@ -10347,7 +10395,7 @@ SELECT pg_catalog.setval('ref_ts_variable_id_seq', 1, false);
 -- Data for Name: spatial_ref_sys; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
-COPY spatial_ref_sys (srid, auth_name, auth_srid, srtext, proj4text) FROM stdin;
+COPY spatial_ref_sys  FROM stdin;
 \.
 
 

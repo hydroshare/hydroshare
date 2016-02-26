@@ -19,9 +19,6 @@ class TestResourceMetadata(HSRESTTestCase):
         self.pid = res.short_id
         self.resources_to_delete.append(self.pid)
 
-    def tearDown(self):
-        super(TestResourceMetadata, self).tearDown()
-
     def test_get_sysmeta(self):
         # Get the resource system metadata
         sysmeta_url = "/hsapi/sysmeta/{res_id}/".format(res_id=self.pid)
