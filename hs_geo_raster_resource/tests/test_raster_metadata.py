@@ -116,7 +116,8 @@ class TestRasterMetaData(MockIRODSTestCaseMixin, TransactionTestCase):
 
         # there should be 2 content file: with .vrt file created by system
         self.assertEquals(self.resRaster.files.all().count(), 2)
-        self.assertEquals(self.resRaster.files.all().filter(name='raster_tif_valid.vrt'), 1)
+        file_names = [os.path.basename(f.resource_file.name) for f in self.resRaster.files.all()]
+        self.assertIn('raster_tif_valid.vrt', file_names)
 
         # delete content file that we added above
         hydroshare.delete_resource_file(self.resRaster.short_id, self.raster_tif_file_name, self.user)
@@ -137,7 +138,7 @@ class TestRasterMetaData(MockIRODSTestCaseMixin, TransactionTestCase):
             utils.resource_file_add_pre_process(resource=self.resRaster, files=files, user=self.user,
                                                 extract_metadata=False)
 
-    def test_metadata_initialization_for_emepy_resource(self):
+    def test_metadata_initialization_for_empty_resource(self):
         # there should be default cell information:
         cell_info = self.resRaster.metadata.cellInformation
         self.assertNotEqual(cell_info, None)
@@ -229,8 +230,8 @@ class TestRasterMetaData(MockIRODSTestCaseMixin, TransactionTestCase):
 
         # there should be 2 format elements
         self.assertEquals(self.resRaster.metadata.formats.all().count(), 2)
-        self.assertEquals(self.resRaster.metadata.formats.all().filter(value='application/vrt'), 1)
-        self.assertEquals(self.resRaster.metadata.formats.all().filter(value='image/tiff'), 1)
+        self.assertEquals(self.resRaster.metadata.formats.all().filter(value='application/vrt').count(), 1)
+        self.assertEquals(self.resRaster.metadata.formats.all().filter(value='image/tiff').count(), 1)
 
         # delete content file that we added above
         hydroshare.delete_resource_file(self.resRaster.short_id, self.raster_tif_file_name, self.user)
