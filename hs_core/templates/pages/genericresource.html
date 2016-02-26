@@ -854,6 +854,9 @@
     {% endblock %}
 
     {% block extra_js %}
+        <script type="text/javascript" src="{{ STATIC_URL }}js/coverageMap.js"></script>
+        <script async defer src="https://maps.googleapis.com/maps/api/js?libraries=drawing"></script>
+        <script type="text/javascript" src="{{ STATIC_URL }}js/resourceLandingAjax.js"></script>
         <script type="text/javascript" src="{{ STATIC_URL }}js/irods.js"></script>
         <script type="text/javascript">
             function onRoleSelect(event) {
@@ -1000,6 +1003,8 @@
             }
 
             $(document).ready(function () {
+                google.maps.event.addDomListener(window, "load", initMap);
+
                 $("#agree-chk").on('click', function(e) {
                     e.stopImmediatePropagation();
                     if (e.currentTarget.checked)
@@ -1368,9 +1373,7 @@
                 });
             });
         </script>
-        <script async defer src="https://maps.googleapis.com/maps/api/js?libraries=drawing&callback=initMap"></script>
-        <script type="text/javascript" src="{{ STATIC_URL }}js/coverageMap.js"></script>
-        <script type="text/javascript" src="{{ STATIC_URL }}js/resourceLandingAjax.js"></script>
+
         {% if relevant_tools %}
             <script type="text/javascript" src="{{ STATIC_URL }}js/toolresource.js"></script>
         {% endif %}
