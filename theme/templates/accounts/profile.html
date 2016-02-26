@@ -789,6 +789,8 @@
                     return false;
                 }
             }
+
+            return true;
         }
 
         function validatePasswords() {
@@ -803,6 +805,7 @@
                 return false;
             }
 
+            return true;
         }
 
         function validateEmail() {
@@ -818,6 +821,8 @@
                 email.parent().append(errorLabel("Not a valid email address."));
                 return false;
             }
+
+            return true;
         }
 
         function errorLabel(message) {
@@ -847,6 +852,8 @@
             }
 
             $(".form-required").change(onFormRequiredChange);
+            $("#id_email").change(validateEmail);
+
         }
 
         function setViewMode() {
@@ -905,8 +912,6 @@
                     $("#selectUserType").attr("name", "user_type");
                 }
             });
-
-            $("#id_email").change(validateEmail);
 
             $("[data-page-mode='edit']").hide();
             $("#btn-edit-profile").click(function () {
