@@ -128,7 +128,7 @@ def raster_pre_create_resource_trigger(sender, **kwargs):
     validate_files_dict = kwargs['validate_files']
     metadata = kwargs['metadata']
 
-    if(files):
+    if files:
         # raster file validation
         error_info, vrt_file_path, temp_dir = raster_file_validation(files)
 
