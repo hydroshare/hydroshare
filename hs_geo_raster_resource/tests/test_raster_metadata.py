@@ -116,6 +116,7 @@ class TestRasterMetaData(MockIRODSTestCaseMixin, TransactionTestCase):
 
         # there should be 2 content file: with .vrt file created by system
         self.assertEquals(self.resRaster.files.all().count(), 2)
+        self.assertEquals(self.resRaster.files.all().filter(name='raster_tif_valid.vrt'), 1)
 
         # delete content file that we added above
         hydroshare.delete_resource_file(self.resRaster.short_id, self.raster_tif_file_name, self.user)
@@ -127,11 +128,41 @@ class TestRasterMetaData(MockIRODSTestCaseMixin, TransactionTestCase):
         utils.resource_file_add_process(resource=self.resRaster, files=files, user=self.user,
                                         extract_metadata=False)
 
+        # there should be 10 content file:
+        self.assertEqual(self.resRaster.files.all().count(), 10)
+
         # file pre add process should raise validation error if we try to add a 2nd file when the resource has
         # already content files
         with self.assertRaises(utils.ResourceFileValidationException):
             utils.resource_file_add_pre_process(resource=self.resRaster, files=files, user=self.user,
                                                 extract_metadata=False)
+
+    def test_metadata_initialization_for_emepy_resource(self):
+        # there should be default cell information:
+        cell_info = self.resRaster.metadata.cellInformation
+        self.assertNotEqual(cell_info, None)
+        self.assertEquals(cell_info.rows, 0)
+        self.assertEquals(cell_info.columns, 0)
+        self.assertEquals(cell_info.cellSizeXValue, 0)
+        self.assertEquals(cell_info.cellSizeYValue, 0)
+        self.assertEquals(cell_info.cellDataType, 'NA')
+        self.assertEquals(cell_info.noDataValue, 0)
+
+        # there should be default spatial reference info
+        ori_coverage = self.resRaster.metadata.originalCoverage
+        self.assertNotEquals(ori_coverage, None)
+        self.assertEquals(ori_coverage.value['northlimit'], 'NA')
+        self.assertEquals(ori_coverage.value['eastlimit'], 'NA')
+        self.assertEquals(ori_coverage.value['southlimit'], 'NA')
+        self.assertEquals(ori_coverage.value['westlimit'], 'NA')
+        self.assertEquals(ori_coverage.value['units'], 'NA')
+        self.assertEquals(ori_coverage.value['projection'], 'NA')
+
+        # there should be default band information:
+        band_info = self.resRaster.metadata.bandInformation.first()
+        self.assertNotEqual(band_info, 0)
+        self.assertEquals(band_info.variableName, 'Unnamed')
+        self.assertEquals(band_info.variableUnit, 'Unnamed')
 
     def test_metadata_extraction_on_resource_creation(self):
         # passing the file object that points to the temp dir doesn't work - create_resource throws error
@@ -198,6 +229,8 @@ class TestRasterMetaData(MockIRODSTestCaseMixin, TransactionTestCase):
 
         # there should be 2 format elements
         self.assertEquals(self.resRaster.metadata.formats.all().count(), 2)
+        self.assertEquals(self.resRaster.metadata.formats.all().filter(value='application/vrt'), 1)
+        self.assertEquals(self.resRaster.metadata.formats.all().filter(value='image/tiff'), 1)
 
         # delete content file that we added above
         hydroshare.delete_resource_file(self.resRaster.short_id, self.raster_tif_file_name, self.user)
@@ -242,89 +275,89 @@ class TestRasterMetaData(MockIRODSTestCaseMixin, TransactionTestCase):
 
         # before resource delete
         # resource core metadata
-        core_metadata_obj = self.resRaster.metadata
+        raster_metadata_obj = self.resRaster.metadata
         self.assertEquals(CoreMetaData.objects.all().count(), 1)
         # there should be Creator metadata objects
-        self.assertTrue(Creator.objects.filter(object_id=core_metadata_obj.id).exists())
+        self.assertTrue(Creator.objects.filter(object_id=raster_metadata_obj.id).exists())
         # there should be no Contributor metadata objects
-        self.assertFalse(Contributor.objects.filter(object_id=core_metadata_obj.id).exists())
+        self.assertFalse(Contributor.objects.filter(object_id=raster_metadata_obj.id).exists())
         # there should be Identifier metadata objects
-        self.assertTrue(Identifier.objects.filter(object_id=core_metadata_obj.id).exists())
+        self.assertTrue(Identifier.objects.filter(object_id=raster_metadata_obj.id).exists())
         # there should be Type metadata objects
-        self.assertTrue(Type.objects.filter(object_id=core_metadata_obj.id).exists())
+        self.assertTrue(Type.objects.filter(object_id=raster_metadata_obj.id).exists())
         # there should be no Source metadata objects
-        self.assertFalse(Source.objects.filter(object_id=core_metadata_obj.id).exists())
+        self.assertFalse(Source.objects.filter(object_id=raster_metadata_obj.id).exists())
         # there should be no Relation metadata objects
-        self.assertFalse(Relation.objects.filter(object_id=core_metadata_obj.id).exists())
+        self.assertFalse(Relation.objects.filter(object_id=raster_metadata_obj.id).exists())
         # there should be no Publisher metadata objects
-        self.assertFalse(Publisher.objects.filter(object_id=core_metadata_obj.id).exists())
+        self.assertFalse(Publisher.objects.filter(object_id=raster_metadata_obj.id).exists())
         # there should be Title metadata objects
-        self.assertTrue(Title.objects.filter(object_id=core_metadata_obj.id).exists())
+        self.assertTrue(Title.objects.filter(object_id=raster_metadata_obj.id).exists())
         # there should be no Description (Abstract) metadata objects
-        self.assertFalse(Description.objects.filter(object_id=core_metadata_obj.id).exists())
+        self.assertFalse(Description.objects.filter(object_id=raster_metadata_obj.id).exists())
         # there should be Date metadata objects
-        self.assertTrue(Date.objects.filter(object_id=core_metadata_obj.id).exists())
+        self.assertTrue(Date.objects.filter(object_id=raster_metadata_obj.id).exists())
         # there should be no Subject metadata objects
-        self.assertFalse(Subject.objects.filter(object_id=core_metadata_obj.id).exists())
+        self.assertFalse(Subject.objects.filter(object_id=raster_metadata_obj.id).exists())
         # there should be Coverage metadata objects
-        self.assertTrue(Coverage.objects.filter(object_id=core_metadata_obj.id).exists())
+        self.assertTrue(Coverage.objects.filter(object_id=raster_metadata_obj.id).exists())
         # there should be Format metadata objects
-        self.assertTrue(Format.objects.filter(object_id=core_metadata_obj.id).exists())
+        self.assertTrue(Format.objects.filter(object_id=raster_metadata_obj.id).exists())
         # there should be Language metadata objects
-        self.assertTrue(Language.objects.filter(object_id=core_metadata_obj.id).exists())
+        self.assertTrue(Language.objects.filter(object_id=raster_metadata_obj.id).exists())
         # there should be Rights metadata objects
-        self.assertTrue(Rights.objects.filter(object_id=core_metadata_obj.id).exists())
+        self.assertTrue(Rights.objects.filter(object_id=raster_metadata_obj.id).exists())
 
         # resource specific metadata
         # there should be original coverage metadata objects
-        self.assertTrue(OriginalCoverage.objects.filter(object_id=core_metadata_obj.id).exists())
+        self.assertTrue(OriginalCoverage.objects.filter(object_id=raster_metadata_obj.id).exists())
         # there should be CellInformation metadata objects
-        self.assertTrue(CellInformation.objects.filter(object_id=core_metadata_obj.id).exists())
+        self.assertTrue(CellInformation.objects.filter(object_id=raster_metadata_obj.id).exists())
         # there should be BandInformation metadata objects
-        self.assertTrue(BandInformation.objects.filter(object_id=core_metadata_obj.id).exists())
+        self.assertTrue(BandInformation.objects.filter(object_id=raster_metadata_obj.id).exists())
 
         # delete resource
         hydroshare.delete_resource(self.resRaster.short_id)
         self.assertEquals(CoreMetaData.objects.all().count(), 0)
 
         # there should be no Creator metadata objects
-        self.assertFalse(Creator.objects.filter(object_id=core_metadata_obj.id).exists())
+        self.assertFalse(Creator.objects.filter(object_id=raster_metadata_obj.id).exists())
         # there should be no Contributor metadata objects
-        self.assertFalse(Contributor.objects.filter(object_id=core_metadata_obj.id).exists())
+        self.assertFalse(Contributor.objects.filter(object_id=raster_metadata_obj.id).exists())
         # there should be no Identifier metadata objects
-        self.assertFalse(Identifier.objects.filter(object_id=core_metadata_obj.id).exists())
+        self.assertFalse(Identifier.objects.filter(object_id=raster_metadata_obj.id).exists())
         # there should be no Type metadata objects
-        self.assertFalse(Type.objects.filter(object_id=core_metadata_obj.id).exists())
+        self.assertFalse(Type.objects.filter(object_id=raster_metadata_obj.id).exists())
         # there should be no Source metadata objects
-        self.assertFalse(Source.objects.filter(object_id=core_metadata_obj.id).exists())
+        self.assertFalse(Source.objects.filter(object_id=raster_metadata_obj.id).exists())
         # there should be no Relation metadata objects
-        self.assertFalse(Relation.objects.filter(object_id=core_metadata_obj.id).exists())
+        self.assertFalse(Relation.objects.filter(object_id=raster_metadata_obj.id).exists())
         # there should be no Publisher metadata objects
-        self.assertFalse(Publisher.objects.filter(object_id=core_metadata_obj.id).exists())
+        self.assertFalse(Publisher.objects.filter(object_id=raster_metadata_obj.id).exists())
         # there should be no Title metadata objects
-        self.assertFalse(Title.objects.filter(object_id=core_metadata_obj.id).exists())
+        self.assertFalse(Title.objects.filter(object_id=raster_metadata_obj.id).exists())
         # there should be no Description (Abstract) metadata objects
-        self.assertFalse(Description.objects.filter(object_id=core_metadata_obj.id).exists())
+        self.assertFalse(Description.objects.filter(object_id=raster_metadata_obj.id).exists())
         # there should be no Date metadata objects
-        self.assertFalse(Date.objects.filter(object_id=core_metadata_obj.id).exists())
+        self.assertFalse(Date.objects.filter(object_id=raster_metadata_obj.id).exists())
         # there should be no Subject metadata objects
-        self.assertFalse(Subject.objects.filter(object_id=core_metadata_obj.id).exists())
+        self.assertFalse(Subject.objects.filter(object_id=raster_metadata_obj.id).exists())
         # there should be no Coverage metadata objects
-        self.assertFalse(Coverage.objects.filter(object_id=core_metadata_obj.id).exists())
+        self.assertFalse(Coverage.objects.filter(object_id=raster_metadata_obj.id).exists())
         # there should be no Format metadata objects
-        self.assertFalse(Format.objects.filter(object_id=core_metadata_obj.id).exists())
+        self.assertFalse(Format.objects.filter(object_id=raster_metadata_obj.id).exists())
         # there should be no Language metadata objects
-        self.assertFalse(Language.objects.filter(object_id=core_metadata_obj.id).exists())
+        self.assertFalse(Language.objects.filter(object_id=raster_metadata_obj.id).exists())
         # there should be no Rights metadata objects
-        self.assertFalse(Rights.objects.filter(object_id=core_metadata_obj.id).exists())
+        self.assertFalse(Rights.objects.filter(object_id=raster_metadata_obj.id).exists())
 
         # resource specific metadata
         # there should be no original coverage metadata objects
-        self.assertFalse(OriginalCoverage.objects.filter(object_id=core_metadata_obj.id).exists())
+        self.assertFalse(OriginalCoverage.objects.filter(object_id=raster_metadata_obj.id).exists())
         # there should be CellInformation metadata objects
-        self.assertFalse(CellInformation.objects.filter(object_id=core_metadata_obj.id).exists())
+        self.assertFalse(CellInformation.objects.filter(object_id=raster_metadata_obj.id).exists())
         # there should be bandInformation metadata objects
-        self.assertFalse(BandInformation.objects.filter(object_id=core_metadata_obj.id).exists())
+        self.assertFalse(BandInformation.objects.filter(object_id=raster_metadata_obj.id).exists())
 
     def test_extended_metadata_CRUD(self):
         # delete default original coverage metadata
