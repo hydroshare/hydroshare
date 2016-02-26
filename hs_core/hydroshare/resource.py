@@ -523,16 +523,26 @@ def create_new_version_resource(pk, user):
                             file_name=os.path.basename(f.resource_file.name))))
 
     # copy metadata from source resource to target new-versioned resource except three elements
-    exclude_elements = ['identifier', 'date', 'publisher']
+    exclude_elements = ['identifier', 'publisher']
     new_resource.metadata.copy_all_elements_from(res.metadata, exclude_elements)
 
     # create Identifier element that is specific to the new versioned resource
     new_resource.metadata.create_element('identifier', name='hydroShareIdentifier',
                                          url='{0}/resource/{1}'.format(utils.current_site_url(), new_resource.short_id))
 
-    # create date element that is specific to the new versioned resource
-    new_resource.metadata.create_element('date', type='created', start_date=new_resource.created)
-    new_resource.metadata.create_element('date', type='modified', start_date=new_resource.updated)
+    # create or update date element that is specific to the new versioned resource
+    if new_resource.metadata.dates.all().filter(type='modified'):
+        res_modified_date = new_resource.metadata.dates.all().filter(type='modified')[0]
+        new_resource.metadata.update_element('date', res_modified_date.id)
+    else:
+        new_resource.metadata.create_element('date', type='modified', start_date=new_resource.updated)
+
+    if new_resource.metadata.dates.all().filter(type='created'):
+        res_created_date = new_resource.metadata.dates.all().filter(type='created')[0]
+        new_resource.metadata.update_element('date', res_created_date.id)
+    else:
+        new_resource.metadata.create_element('date', type='created', start_date=new_resource.created)
+
 
     # add Relation element to link source and target resources
     if new_resource.metadata.identifiers.all().filter(name="hydroShareIdentifier"):
