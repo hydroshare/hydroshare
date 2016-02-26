@@ -5,7 +5,6 @@ from django.contrib.admin import ModelAdmin
 from django.contrib.auth.models import Group
 import importlib
 from django.contrib.gis.geos import Polygon, GEOSGeometry
-# from django.db.models import get_model
 from django.apps import apps
 get_model = apps.get_model
 from django.http import HttpResponseRedirect, HttpResponse, HttpResponseNotFound

@@ -6,7 +6,6 @@ from languages_iso import languages as iso_languages
 from dateutil import parser
 from lxml import etree
 
-# from django.contrib.contenttypes import generic
 from django.contrib.contenttypes.fields import GenericForeignKey
 from django.contrib.contenttypes.fields import GenericRelation
 from django.contrib.auth.models import User, Group

@@ -7,7 +7,6 @@ import tempfile
 import logging
 import shutil
 
-# from django.db.models import get_model, get_models
 from django.apps import apps
 get_model = apps.get_model
 from django.apps import apps

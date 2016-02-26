@@ -1,6 +1,5 @@
 from lxml import etree
 
-# from django.contrib.contenttypes import generic
 from django.contrib.contenttypes.fields import GenericRelation
 from django.db import models
 

@@ -1,5 +1,4 @@
 from django.db import models
-# from django.contrib.contenttypes import generic
 from django.contrib.contenttypes.fields import GenericRelation
 
 from mezzanine.pages.page_processors import processor_for
