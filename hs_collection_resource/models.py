@@ -90,7 +90,7 @@ class CollectionMetaData(CoreMetaData):
         if self.get_required_missing_elements():
             return False
         else:
-            # check if no member resource exits
+            # check if no member resource exists
             if self.collection_items.first().collection_items.all().count() == 0:
                 return False
             # check if all member resources are either public or private

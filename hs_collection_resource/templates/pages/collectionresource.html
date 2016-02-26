@@ -222,6 +222,9 @@
 
         $(document).ready(function()
         {
+            // disable "Publish" btn
+            $("#publish").hide();
+
             // unhook btn-invite original onclick event and re-wire it with function share_collection_ajax_submit
             $('#btn-invite').off("click");
             $('#btn-invite').on( "click", share_collection_ajax_submit);
