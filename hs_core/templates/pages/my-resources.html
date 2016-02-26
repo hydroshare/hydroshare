@@ -402,7 +402,6 @@
         var resourceTable;
 
         $(document).ready(function () {
-
         /*==================================================
             Table columns
             0 - actions
@@ -469,6 +468,11 @@
                     }
                 ]
             });
+
+            // Fix for horizontal scroll bar appearing unnecessarily on firefox.
+            if ($.browser.mozilla){
+                $("#item-selectors").width($("#item-selectors").width() - 2);
+            }
 
             // Trigger label creation when pressing Enter
             $("#txtLabelName").keyup(function (event) {
