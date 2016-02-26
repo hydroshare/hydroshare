@@ -504,8 +504,8 @@
                                             </fieldset>
                                             <fieldset class="col-sm-12">
                                                 <label>Email address</label>
-                                                <input readonly class="form-control"
-                                                       value="{{ profile_user.email }}">
+                                                <input class="form-control form-required" id="id_email"
+                                                       value="{{ profile_user.email }}" name="email">
                                             </fieldset>
 
                                             <fieldset class="col-sm-12">
@@ -754,9 +754,6 @@
     <script type="text/javascript" src="{{ STATIC_URL }}js/bootstrap-formhelpers.js"></script>
     <script type="text/javascript">
 
-        var flagRequired = "<div class='label label-danger flag-required'>This field is required.</div>";
-        var flagPasswordMatch = "<div class='label label-danger flag-password-match'>Passwords do not match.</div>";
-
         // Preview profile picture
         function readURL(input) {
             if (input.files && input.files[0]) {
@@ -775,27 +772,56 @@
         }
 
         function validateForm() {
-            // Required elements
-            var flag = true;
+            var flagRequiredElements = validateRequiredElements();
+            var flagPasswords = validatePasswords();
+            var flagEmail = validateEmail();
+
+            return  flagRequiredElements && flagPasswords && flagEmail;
+        }
+
+        function validateRequiredElements() {
             var requiredElements = $(".form-required");
             for (var i = 0; i < requiredElements.length; i++) {
                 if (!$(requiredElements[i]).val()) {
                     $(requiredElements[i]).addClass("form-invalid");
-                    $(requiredElements[i]).parent().find(".flag-required").remove();
-                    $(requiredElements[i]).parent().append(flagRequired);
-                    flag = false;
+                    $(requiredElements[i]).parent().find(".error-label").remove();
+                    $(requiredElements[i]).parent().append(errorLabel("This field is required."));
+                    return false;
                 }
             }
+        }
 
+        function validatePasswords() {
             // Password
-            if ($("#id_password1").val() != $("#id_password2").val()) {
-                $("#id_password1").addClass("form-invalid");
-                $("#id_password2").addClass("form-invalid");
-                $("#id_password2").parent().find(".flag-password-match").remove();
-                $("#id_password2").parent().append(flagPasswordMatch);
-                flag = false;
+            var password1 = $("#id_password1");
+            var password2 = $("#id_password2");
+            if (password1.val() != password2.val()) {
+                password1.addClass("form-invalid");
+                password2.addClass("form-invalid");
+                password2.parent().find(".error-label").remove();
+                password2.parent().append(errorLabel("Passwords do not match."));
+                return false;
             }
-            return flag;
+
+        }
+
+        function validateEmail() {
+            var regex = /^([a-zA-Z0-9_.+-])+\@(([a-zA-Z0-9-])+\.)+([a-zA-Z0-9]{2,4})+$/;
+            var email = $("#id_email");
+
+            if (!email.val()) {
+                return false;
+            }
+
+            if (!regex.test(email.val())) {
+                email.parent().find(".error-label").remove();
+                email.parent().append(errorLabel("Not a valid email address."));
+                return false;
+            }
+        }
+
+        function errorLabel(message) {
+            return "<div class='label label-danger error-label'>" + message + "</div>";
         }
 
         function setEditMode() {
@@ -820,7 +846,7 @@
                 $("#user-type-other input").addClass("form-required");
             }
 
-            $(".form-required").change(formRequired);
+            $(".form-required").change(onFormRequiredChange);
         }
 
         function setViewMode() {
@@ -838,15 +864,15 @@
             input.trigger('fileselect', [numFiles, label]);
         });
 
-        function formRequired() {
+        function onFormRequiredChange() {
             if ($(this).val()) {
                 $(this).removeClass("form-invalid");
-                $(this).parent().find(".flag-required").remove();
+                $(this).parent().find(".error-label").remove();
             }
             else {
                 $(this).addClass("form-invalid");
-                $(this).parent().find(".flag-required").remove();
-                $(this).parent().append(flagRequired);
+                $(this).parent().find(".error-label").remove();
+                $(this).parent().append(errorLabel("This field is required."));
             }
         }
 
@@ -879,6 +905,8 @@
                     $("#selectUserType").attr("name", "user_type");
                 }
             });
+
+            $("#id_email").change(validateEmail);
 
             $("[data-page-mode='edit']").hide();
             $("#btn-edit-profile").click(function () {
