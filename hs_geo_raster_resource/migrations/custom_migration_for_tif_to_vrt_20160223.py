@@ -17,15 +17,17 @@ def migrate_tif_file(apps, schema_editor):
     # create a vrt file from tif file for each of the Raster Resources
     log = logging.getLogger()
     for res in RasterResource.objects.all():
-        files = []
+
         res_file = res.files.all().first()
         vrt_file_path, temp_dir = create_vrt_file(res_file.resource_file)
         if os.path.isfile(vrt_file_path):
-            files.append(UploadedFile(file=open(vrt_file_path, 'r'), name=os.path.basename(vrt_file_path)))
+            files = (UploadedFile(file=open(vrt_file_path, 'r'), name=os.path.basename(vrt_file_path)))
             hydroshare.add_resource_files(res.short_id, files)
+            print 'Tif file conversion to VRT successful for resource:ID:{} Title:{}'.format(res.short_id, res.metadata.title.value)
             log.info('Tif file conversion to VRT successful for resource:ID:{} '
                      'Title:{}'.format(res.short_id, res.metadata.title.value))
         else:
+            print 'Tif file conversion to VRT unsuccessful for resource:ID:{} Title:{}'.format(res.short_id, res.metadata.title.value)
             log.error('Tif file conversion to VRT unsuccessful for resource:ID:{} '
                       'Title:{}'.format(res.short_id, res.metadata.title.value))
         if os.path.isdir(temp_dir):
