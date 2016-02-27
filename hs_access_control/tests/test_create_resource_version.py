@@ -6,6 +6,7 @@ from hs_core import hydroshare
 from hs_core.testing import MockIRODSTestCaseMixin
 from hs_access_control.models import PrivilegeCodes
 
+
 class TestCreateResourceVersion(MockIRODSTestCaseMixin, TestCase):
     def setUp(self):
         super(TestCreateResourceVersion, self).setUp()
@@ -59,10 +60,10 @@ class TestCreateResourceVersion(MockIRODSTestCaseMixin, TestCase):
                                                   )
 
     def test_create_version(self):
-        # superuser/admin should be able to create a resource version
-        self.assertTrue(self.admin.uaccess.can_create_resource_version(self.resource))
+        # superuser/admin should not be able to create a resource version
+        self.assertFalse(self.admin.uaccess.can_create_resource_version(self.resource))
 
-        # owner should be able to create a resource version
+        # ONLY owner should be able to create a resource version
         self.assertTrue(self.owner.uaccess.can_create_resource_version(self.resource))
 
         # grant editor edit permission

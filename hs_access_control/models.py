@@ -1292,7 +1292,7 @@ class UserAccess(models.Model):
 
         if not self.user.is_active: raise PermissionDenied("Requesting user is not active")
 
-        return self.user.is_superuser or self.owns_resource(this_resource)
+        return self.owns_resource(this_resource)
 
     def can_view_resource(self, this_resource):
         """
