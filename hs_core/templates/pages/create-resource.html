@@ -49,16 +49,26 @@
         <div class="col-sm-10">
             <select class="form-control" name="resource-type" id="resource-type">
                 <option value="GenericResource">Generic</option>
-                <option value="GeographicFeatureResource">Geographic Feature (ESRI Shapefiles)</option>
-                <option value="RasterResource">Geographic Raster</option>
-                <option value="RefTimeSeriesResource">HIS Referenced Time Series</option>
-                <option value="ModelInstanceResource">Model Instance</option>
                 <option value="ModelProgramResource">Model Program</option>
                 <option value="NetcdfResource">Multidimensional (NetCDF)</option>
                 <option value="ScriptResource">Script</option>
-                <option value="SWATModelInstanceResource">SWAT Model Instance</option>
-                <option value="TimeSeriesResource">Time Series</option>
                 <option value="ToolResource">Web App</option>
+
+                <optgroup label="Geographic Resources">
+                    <option value="GeographicFeatureResource">Geographic Feature (ESRI Shapefiles)</option>
+                    <option value="RasterResource">Geographic Raster</option>
+                </optgroup>
+
+                <optgroup label="Time Series Resources">
+                    <option value="RefTimeSeriesResource">HIS Referenced Time Series</option>
+                    <option value="TimeSeriesResource">Time Series</option>
+                </optgroup>
+
+                <optgroup label="Model resources">
+                    <option value="ModelInstanceResource">Model Instance</option>
+                    <option value="SWATModelInstanceResource">SWAT Model Instance</option>
+                </optgroup>
+
                 {#                <option value="InstResource">RHESSys Instance Resource</option> #}
             </select>
         </div>
