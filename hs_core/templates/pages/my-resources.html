@@ -148,13 +148,13 @@
                     <th>Title</th>
                     <th>Owners</th>
                     <th>Last modified</th>
-                    <th>Subject</th>
-                    <th>Authors</th>
-                    <th>Permission Level</th>
-                    <th>Labels</th>
-                    <th>Favorite</th>
-                    <th>Last modified (for sorting)</th>
-                    <th>Sharing Status</th>
+                    <th>Subject</th>{# Used in table processing #}
+                    <th>Authors</th>{# Used in table processing #}
+                    <th>Permission Level</th>{# Used in table processing #}
+                    <th>Labels</th>{# Used in table processing #}
+                    <th>Favorite</th>{# Used in table processing #}
+                    <th>Last modified</th>{# Used in table processing #}
+                    <th>Sharing Status</th>{# Used in table processing #}
                 </tr>
                 </thead>
                 <tbody>
@@ -226,6 +226,7 @@
                                          alt="{{ res|resource_type }}" title="{{ res|resource_type }}" class="table-res-type-icon"/>
                                 {% endif %}
 
+                                {#  Sharing Status icons #}
                                 {% if res.raccess.published %}
                                     <img src="{{ STATIC_URL }}img/published.png"
                                          alt="Published Resource" title="Published"/>
