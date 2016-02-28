@@ -154,7 +154,7 @@
                     <th>Labels</th>
                     <th>Favorite</th>
                     <th>Last modified (for sorting)</th>
-                    <th>Sharing status</th>
+                    <th>Sharing Status</th>
                 </tr>
                 </thead>
                 <tbody>
@@ -225,8 +225,39 @@
                                     <img src="{{ STATIC_URL }}img/resource-icons/webapp48x48.png"
                                          alt="{{ res|resource_type }}" title="{{ res|resource_type }}" class="table-res-type-icon"/>
                                 {% endif %}
+
+                                {% if res.raccess.published %}
+                                    <img src="{{ STATIC_URL }}img/published.png"
+                                         alt="Published Resource" title="Published"/>
+                                {% elif res.raccess.public %}
+                                    <img src="{{ STATIC_URL }}img/public.png"
+                                         alt="Public Resource" title="Public"/>
+                                {% elif res.raccess.discoverable %}
+                                    <img src="{{ STATIC_URL }}img/discoverable.png"
+                                         alt="Discoverable Resource" title="Discoverable"/>
+                                {% else %}
+                                    <img src="{{ STATIC_URL }}img/private.png"
+                                         alt="Private Resource" title="Private"/>
+                                {% endif %}
+
+                                {% if res.raccess.published %}
+                                    {% if "pending" in cm.doi or "failure" in cm.doi %}
+                                        <img src="{{ STATIC_URL }}img/pending.png" alt="Pending Publication"
+                                             title="Pending Publication. Note that the DOI will not be available until it has been registered and activated."/>
+                                    {% endif %}
+                                {% else %}
+                                    {% if res.raccess.shareable %}
+                                        <img src="{{ STATIC_URL }}img/shareable.png" alt="Sharable Resource"
+                                             title="Shareable"/>
+                                    {% else %}
+                                        <img src="{{ STATIC_URL }}img/non-shareable.png" alt="Non Sharable Resource"
+                                             title="Not Shareable"/>
+                                    {% endif %}
+                                {% endif %}
                             </td>
-                            <td><strong><a href="{{ res.get_absolute_url }}">{{ res.metadata.title }}</a></strong></td>
+                            <td>
+                                <strong><a href="{{ res.get_absolute_url }}">{{ res.metadata.title }}</a></strong>
+                            </td>
                             <td>{% for owner in res.raccess.owners.all %}
                                   {% if forloop.counter0 > 0 %} · {% endif %}
                                 <span>{{ owner|contact|safe }}</span>
@@ -269,18 +300,17 @@
                             <td>{{ res.updated|date:"Y/m/d H:i:s" }}</td>
                             <td>
                                 {% if res.raccess.published %}
-                                    <strong class="label-public">&nbspPublished</strong>
+                                    Published
                                 {% elif res.raccess.public %}
-                                    <strong class="label-public">&nbspPublic</strong>
+                                    Public
                                 {% elif res.raccess.discoverable %}
-                                    <strong class="label-discoverable">&nbspDiscoverable</strong>
+                                    Discoverable
                                 {% else %}
-                                    <strong class="label-private">&nbspPrivate</strong>
+                                    Private
                                 {% endif %}
                             </td>
                         </tr>
                     {% endfor %}
-
                 </tbody>
             </table>
         </div>
@@ -425,13 +455,13 @@
                 "columnDefs": [
                     {
                         "targets": [1],     // Resource type
-                        "width": "40px"
+                        "width": "100px"
                     },
                     {
                         "targets": [0],     // Actions
                         "orderable": false,
                         "searchable": false,
-                        "width": "90px"
+                        "width": "70px"
                     },
                     {
                         "targets": [4],     // Last modified
@@ -466,7 +496,13 @@
                         "targets": [10],     // Last modified (for sorting)
                         "visible": false,
                         "searchable": true
+                    },
+                    {
+                        "targets": [11],     // Sharing status
+                        "visible": false,
+                        "searchable": false
                     }
+
                 ]
             });
 
@@ -1090,7 +1126,7 @@
                         // published resources are not editable
                         var sharingStatus = data[11].trim();
                         if (sharingStatus.indexOf('Published') != -1)
-                            return false
+                            return false;
 
                         if (data[7] != "Owned" && data[7] != "Editable") {
                             return false;
@@ -1102,7 +1138,7 @@
                         // published resources are viewable
                         var sharingStatus = data[11].trim();
                         if (sharingStatus.indexOf('Published') != -1)
-                            return true
+                            return true;
 
                         if (data[7] != "Owned" && data[7] != "Viewable" && data[7] != "Editable") {
                             return false;

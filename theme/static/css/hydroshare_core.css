@@ -2645,11 +2645,8 @@ h4.title {
 }
 
 #item-selectors tr > td:first-child {
-	max-width: 100px;
-	min-width: 100px;
 	padding-right: 0;
 }
-
 
 .dataTables_wrapper {
     overflow-x: auto;
@@ -2743,8 +2740,8 @@ h4.title {
 
 .btn-inline-favorite, .btn-inline-label {
 	padding-top: 3px;
-	margin-left: 8px;
-	margin-right: 8px;
+	margin-left: 4px;
+	margin-right: 4px;
 	font-size: 16px;
 	cursor: pointer;
 	color: #AAA;
@@ -2895,7 +2892,7 @@ h4.title {
 }
 
 .row-selector {
-	margin-right: 8px !important;
+	margin-right: 4px !important;
 }
 
 .hidden-form {
