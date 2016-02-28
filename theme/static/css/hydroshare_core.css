@@ -2646,6 +2646,8 @@ h4.title {
 
 #item-selectors tr > td:first-child {
 	padding-right: 0;
+    max-width: 80px;
+	min-width: 80px;
 }
 
 .dataTables_wrapper {
