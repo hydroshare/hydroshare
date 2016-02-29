@@ -38,6 +38,7 @@
                         {% endif %}
                         </div>
 
+                        {#        Profile picture upload controls       #}
                         {% if profile_user.id == user.id %}
                             <div data-page-mode="edit" class="text-center">
                             {% if profile.picture and profile.picture.url %}
@@ -59,6 +60,7 @@
                             </div>
                         {% endif %}
 
+                        {#        Password      #}
                         {% if profile_user.id == user.id %}
                         <div data-page-mode="edit">
                             <hr>
@@ -82,7 +84,7 @@
                                     <hr>
                                 </div>
 
-                                <!-- Button trigger modal -->
+                                {#        Account deactivation       #}
                                 <div><a data-toggle="modal" data-target="#deactivate-account-dialog">Deactivate account</a></div>
                             </div>
                         </div>
@@ -91,12 +93,14 @@
 
                     <div class="col-xs-12 col-sm-6">
                         <div data-page-mode="view">
+                            {#        Name       #}
                             {% if profile_user.first_name or profile_user.last_name %}
                                 <h2>{{ profile_user.first_name }} {% if profile.middle_name %}{{ profile.middle_name }}{% endif %} {{ profile_user.last_name }}</h2>
                             {% else %}
                                 <h2>{{ profile_user.username }}</h2>
                             {% endif %}
 
+                            {#        Organization and Title       #}
                             {% if profile.organization or profile.title %}
                                 <h4 class="text-muted">
                                     {% if profile.organization %}{{ profile.organization }}{% endif %}
@@ -105,6 +109,7 @@
                                 </h4>
                             {% endif %}
 
+                            {#        Subject areas       #}
                             {% if profile.subject_areas or profile.profession %}
                                 <table class="overview">
                                     <tbody>
@@ -112,13 +117,6 @@
                                         <tr>
                                             <td><span class="text-muted">Subject Areas: </span></td>
                                             <td>{{ profile.subject_areas }}</td>
-                                        </tr>
-                                    {% endif %}
-
-                                    {% if profile.profession %}
-                                        <tr>
-                                            <td><span class="text-muted">Profession</span></td>
-                                            <td>{{ profile.profession }}</td>
                                         </tr>
                                     {% endif %}
                                     </tbody>
@@ -187,6 +185,7 @@
                         </div>
                         {% endif %}
 
+                        {#        CV       #}
                         {% if profile_user.id == user.id %}
                             <div data-page-mode="edit">
                                 <div>
@@ -353,6 +352,7 @@
 
                                     {% if profile_user.id == user.id %}
                                     <div data-page-mode="edit">
+                                        {#        Description       #}
                                         <fieldset>
                                             <label>Description</label>
                                             <textarea class="form-control"
@@ -361,6 +361,7 @@
 
                                         <hr>
 
+                                        {#        User Type       #}
                                         <fieldset>
                                             <label for="selectUserType">User type *</label>
                                             <select name="user_type" class="form-control form-required" id="selectUserType">
@@ -378,21 +379,25 @@
                                             </select>
                                         </fieldset>
 
+                                        {#        User Type - Other       #}
                                         <fieldset id="user-type-other">
                                             <label>Specify: *</label>
                                             <input name="user_type" class="form-control">
                                         </fieldset>
 
+                                        {#        Country       #}
                                         <fieldset>
                                             <label>Country *</label>
                                             <select name="country" class="form-control form-required input-medium bfh-countries" data-country="{{ profile.country }}"></select>
                                         </fieldset>
 
+                                        {#        State       #}
                                         <fieldset>
                                             <label>State/Province *</label>
                                             <input name="state" class="form-control form-required" {% if  profile.state %}value="{{ profile.state }}"{% else %}value="Unspecified"{% endif %}>
                                         </fieldset>
 
+                                        {#        Date Joined       #}
                                         <fieldset>
                                             <label>User since</label>
                                             <input readonly class="form-control" value='{{ profile_user.date_joined }}'>
@@ -414,6 +419,7 @@
                                     <div class="panel-body">
                                         <table class="overview" data-page-mode="view">
                                             <tbody>
+                                            {#        Phone 1       #}
                                             {% if profile.phone_1 %}
                                                 <tr>
                                                     <td><span class="text-muted">{% if profile.phone_1_type %}
@@ -421,12 +427,16 @@
                                                     <td>{{ profile.phone_1 }}</td>
                                                 </tr>
                                             {% endif %}
+
+                                            {#        Phone 2       #}
                                             {% if profile.phone_2 %}
                                                 <tr>
                                                     <td><span class="text-muted">{{ profile.phone_2_type }}</span></td>
                                                     <td>{{ profile.phone_2 }}</td>
                                                 </tr>
                                             {% endif %}
+
+                                            {#        Email       #}
                                             {% if profile_user.email %}
                                                 {% if not user.is_anonymous %}
                                                     <tr>
@@ -450,6 +460,7 @@
                                                 {% endif %}
                                             {% endif %}
 
+                                            {#        Website       #}
                                             {% if profile.website %}
                                                     <tr>
                                                         <td><span class="text-muted">Website</span></td>
@@ -544,6 +555,10 @@
                                         <td><span>Geographic Raster</span></td>
                                         <td><span class="badge">0</span></td>
                                     </tr>
+                                    <tr id="badge-his" data-type="type-HIS Referenced Time Series">
+                                        <td><span>HIS Referenced Time Series</span></td>
+                                        <td><span class="badge">0</span></td>
+                                    </tr>
                                     <tr id="badge-model-instance" data-type="type-Model Instance Resource">
                                         <td><span>Model Instance</span></td>
                                         <td><span class="badge">0</span></td>
@@ -554,6 +569,10 @@
                                     </tr>
                                     <tr id="badge-multidimensional" data-type="type-Multidimensional (NetCDF)">
                                         <td><span>Multidimensional (NetCDF)</span></td>
+                                        <td><span class="badge">0</span></td>
+                                    </tr>
+                                    <tr id="badge-script" data-type="type-Script Resource">
+                                        <td><span>Script Resource</span></td>
                                         <td><span class="badge">0</span></td>
                                     </tr>
                                     <tr id="badge-swat" data-type="type-SWAT Model Instance Resource">
@@ -584,6 +603,14 @@
                                                  title="{{ res|resource_type }}"/>
                                         {% elif res|resource_type == "Geographic Raster" %}
                                             <img src="{{ STATIC_URL }}img/resource-icons/geographicraster48x48.png"
+                                                 alt="{{ res|resource_type }}"
+                                                 title="{{ res|resource_type }}"/>
+                                        {% elif res|resource_type == "HIS Referenced Time Series" %}
+                                            <img src="{{ STATIC_URL }}img/resource-icons/his48x48.png"
+                                                 alt="{{ res|resource_type }}"
+                                                 title="{{ res|resource_type }}"/>
+                                        {% elif res|resource_type == "Script Resource" %}
+                                            <img src="{{ STATIC_URL }}img/resource-icons/script48x48.png"
                                                  alt="{{ res|resource_type }}"
                                                  title="{{ res|resource_type }}"/>
                                         {% elif res|resource_type == "Model Program Resource" %}
@@ -691,6 +718,7 @@
                 </div>
             </div>
         </div>
+
         <!-- Delete picture modal -->
         <div class="modal fade" id="delete-picture" tabindex="-1" role="dialog"
              aria-labelledby="deleteProfilePicture">
@@ -710,7 +738,7 @@
                             Close
                         </button>
                         <button class="btn btn-primary" id="picture-clear_id" name="picture-clear"
-                                title="Remove profile picture"
+                                title="Delete profile picture"
                                 value="clear">Confirm
                         </button>
                     </div>
@@ -727,7 +755,7 @@
                         <button type="button" class="close" data-dismiss="modal"
                                 aria-label="Close"><span aria-hidden="true">&times;</span>
                         </button>
-                        <h4 class="modal-title" id="deleteProfilePicture">Delete CV</h4>
+                        <h4 class="modal-title" id="deleteCV">Delete CV</h4>
                     </div>
                     <div class="modal-body">
                         Are you sure you want to delete your CV?
@@ -737,7 +765,7 @@
                             Close
                         </button>
                         <button class="btn btn-primary" id="cv-clear_id" name="cv-clear"
-                                title="Remove profile picture"
+                                title="Delete CV"
                                 value="clear">Confirm
                         </button>
                     </div>
@@ -759,8 +787,9 @@
             if (input.files && input.files[0]) {
                 var reader = new FileReader();
                 reader.onload = function (e) {
-                    $("#profile-pic-container").empty();
-                    $("#profile-pic-container").append(
+                    var profilePicContainer = $("#profile-pic-container");
+                    profilePicContainer.empty();
+                    profilePicContainer.append(
                         '<div style="background-image: url(\'' + e.target.result +  '\')"' +
                              'class="profile-pic round-image">' +
                         '</div>'
@@ -864,9 +893,10 @@
                 $('#selectUserType option[value="' + 'Other' + '"]').attr('selected', 'selected');
                 $("#user-type-other").show();
                 $("#selectUserType").removeAttr("name");
-                $("#user-type-other input").attr("name", "user_type");
-                $("#user-type-other input").val(userTypeValue);
-                $("#user-type-other input").addClass("form-required");
+                var userTypeOther =  $("#user-type-other input");
+                userTypeOther.attr("name", "user_type");
+                userTypeOther.val(userTypeValue);
+                userTypeOther.addClass("form-required");
             }
 
             $(".form-required").change(onFormRequiredChange);
