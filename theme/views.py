@@ -2,7 +2,9 @@ from json import dumps
 
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import ValidationError
+from django.core.urlresolvers import reverse
 from django.contrib.auth.models import User
+from django.contrib.auth import authenticate, login as auth_login
 from django.views.generic import TemplateView
 from django.http import HttpResponse
 from django.shortcuts import redirect
@@ -12,14 +14,15 @@ from django.db.models import Q
 from django.db import transaction
 from django.http import HttpResponseRedirect
 from django.contrib import messages
-
-from rest_framework import serializers
+from django.core.mail import send_mail
+from django.utils.http import int_to_base36
 
 from mezzanine.conf import settings
 from mezzanine.generic.views import initial_validation
 from mezzanine.utils.views import set_cookie, is_spam
 from mezzanine.utils.cache import add_cache_bypass
-from mezzanine.utils.email import send_verification_mail, send_approve_mail
+from mezzanine.utils.email import send_verification_mail, send_approve_mail, subject_template, \
+    default_token_generator, send_mail_template
 from mezzanine.utils.urls import login_redirect, next_url
 from mezzanine.utils.views import render
 
@@ -28,7 +31,6 @@ from theme.forms import RatingForm, UserProfileForm, UserForm
 from theme.models import UserProfile
 
 from .forms import SignupForm
-
 
 
 class UserProfileView(TemplateView):
@@ -170,8 +172,10 @@ def signup(request, template="accounts/account_signup.html"):
 
 @login_required
 def update_user_profile(request):
-    user_form = UserForm(request.POST, instance=request.user)
-    user_profile = UserProfile.objects.filter(user=request.user).first()
+    user = request.user
+    old_email = user.email
+    user_form = UserForm(request.POST, instance=user)
+    user_profile = UserProfile.objects.filter(user=user).first()
     profile_form = UserProfileForm(request.POST, request.FILES, instance=user_profile)
     try:
         with transaction.atomic():
@@ -180,13 +184,10 @@ def update_user_profile(request):
 
                 password1 = request.POST['password1']
                 password2 = request.POST['password2']
-
                 if len(password1) > 0:
                     if password1 == password2:
-                        user = request.user
                         user.set_password(password1)
                         user.save()
-                        messages.success(request, "Password successfully changed.")
                     else:
                         raise ValidationError("Passwords do not match.")
 
@@ -194,6 +195,25 @@ def update_user_profile(request):
                 profile.user = request.user
                 profile.save()
                 messages.success(request, "Your profile has been successfully updated.")
+                # if email was updated, reset to old email and send confirmation
+                # email to the user's new email - email will be updated upon confirmation
+                if old_email != request.POST['email']:
+                    user.email = old_email
+                    user.save()
+                    new_email = request.POST['email']
+                    # send a confirmation email to the new email address
+                    send_verification_mail_for_email_update(request, user, new_email, "email_verify")
+                    info(request, _("A verification email has been sent to your new email with "
+                                    "a link for updating your email. If you "
+                                    "do not receive this email please check your "
+                                    "spam folder as sometimes the confirmation email "
+                                    "gets flagged as spam. If you entered an incorrect "
+                                    "email address, please request email update again. "
+                                    ))
+                    # send an email to the old address notifying the email change
+                    send_mail(subject="Your HydroShare email.",
+                              message="You have changed your HydroShare account email",
+                              from_email= settings.DEFAULT_FROM_EMAIL, recipient_list=[old_email], fail_silently=False)
             else:
                 errors = {}
                 if not user_form.is_valid():
@@ -202,15 +222,61 @@ def update_user_profile(request):
                 if not profile_form.is_valid():
                     errors.update(profile_form.errors)
 
-                msg = ''
-                for err in errors.values():
-                    msg = msg + '\n' + err[0]
+                msg = ' '.join([err[0] for err in errors.values()])
                 messages.error(request, msg)
 
     except Exception as ex:
         messages.error(request, ex.message)
 
     return HttpResponseRedirect(request.META['HTTP_REFERER'])
+
+
+def send_verification_mail_for_email_update(request, user, new_email, verification_type):
+    """
+    Sends an email with a verification link to users when
+    they update their email. The actual update of the email happens only after
+    the verification link is clicked.
+    The ``verification_type`` arg is both the name of the urlpattern for
+    the verification link, as well as the names of the email templates
+    to use.
+    """
+    verify_url = reverse(verification_type, kwargs={
+        "uidb36": int_to_base36(user.id),
+        "token": default_token_generator.make_token(user),
+        "new_email": new_email
+    }) + "?next=" + (next_url(request) or "/")
+    context = {
+        "request": request,
+        "user": user,
+        "new_email": new_email,
+        "verify_url": verify_url,
+    }
+    subject_template_name = "email/%s_subject.txt" % verification_type
+    subject = subject_template(subject_template_name, context)
+    send_mail_template(subject, "email/%s" % verification_type,
+                       settings.DEFAULT_FROM_EMAIL, user.email,
+                       context=context)
+
+
+def email_verify(request, new_email, uidb36=None, token=None):
+    """
+    View for the link in the verification email sent to a user
+    when they update their email as part of profile update.
+    User email is set to new_email and logs them in,
+    redirecting to the URL they tried to access when profile.
+    """
+
+    user = authenticate(uidb36=uidb36, token=token, is_active=True)
+    if user is not None:
+        user.email = new_email
+        user.save()
+        auth_login(request, user)
+        messages.info(request, _("Successfully updated email"))
+        # redirect to user profile page
+        return HttpResponseRedirect('/user/{}/'.format(user.id))
+    else:
+        messages.error(request, _("The link you clicked is no longer valid."))
+        return redirect("/")
 
 
 @login_required
