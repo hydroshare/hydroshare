@@ -68,17 +68,18 @@ class TestNewVersionResource(TestCase):
     def test_new_version_generic_resource(self):
         # test to make sure only owners can version a resource
         with self.assertRaises(ValidationError):
-            hydroshare.create_new_version_resource(self.res_generic.short_id, self.nonowner)
+            hydroshare.create_new_version_empty_resource(self.res_generic.short_id, self.nonowner)
 
         self.owner.uaccess.share_resource_with_user(self.res_generic, self.nonowner, PrivilegeCodes.CHANGE)
         with self.assertRaises(ValidationError):
-            hydroshare.create_new_version_resource(self.res_generic.short_id, self.nonowner)
+            hydroshare.create_new_version_empty_resource(self.res_generic.short_id, self.nonowner)
 
         self.owner.uaccess.share_resource_with_user(self.res_generic, self.nonowner, PrivilegeCodes.VIEW)
         with self.assertRaises(ValidationError):
-            hydroshare.create_new_version_resource(self.res_generic.short_id, self.nonowner)
+            hydroshare.create_new_version_empty_resource(self.res_generic.short_id, self.nonowner)
 
-        new_res_generic = hydroshare.create_new_version_resource(self.res_generic.short_id, self.owner)
+        new_res_generic = hydroshare.create_new_version_empty_resource(self.res_generic.short_id, self.owner)
+        new_res_generic = hydroshare.create_new_version_resource(self.res_generic, new_res_generic)
 
         # test the new versioned resource has the same resource type as the original resource
         self.assertTrue(isinstance(new_res_generic, GenericResource))
@@ -123,17 +124,18 @@ class TestNewVersionResource(TestCase):
     def test_new_version_raster_resource(self):
         # test to make sure only owners can version a resource
         with self.assertRaises(ValidationError):
-            hydroshare.create_new_version_resource(self.res_generic.short_id, self.nonowner)
+            hydroshare.create_new_version_empty_resource(self.res_generic.short_id, self.nonowner)
 
         self.owner.uaccess.share_resource_with_user(self.res_raster, self.nonowner, PrivilegeCodes.CHANGE)
         with self.assertRaises(ValidationError):
-            hydroshare.create_new_version_resource(self.res_raster.short_id, self.nonowner)
+            hydroshare.create_new_version_empty_resource(self.res_raster.short_id, self.nonowner)
 
         self.owner.uaccess.share_resource_with_user(self.res_raster, self.nonowner, PrivilegeCodes.VIEW)
         with self.assertRaises(ValidationError):
-            hydroshare.create_new_version_resource(self.res_raster.short_id, self.nonowner)
+            hydroshare.create_new_version_empty_resource(self.res_raster.short_id, self.nonowner)
 
-        new_res_raster = hydroshare.create_new_version_resource(self.res_raster.short_id, self.owner)
+        new_res_raster = hydroshare.create_new_version_empty_resource(self.res_raster.short_id, self.owner)
+        new_res_raster = hydroshare.create_new_version_resource(self.res_raster, new_res_raster)
 
         # test the new versioned resource has the same resource type as the original resource
         self.assertTrue(isinstance(new_res_raster, RasterResource))

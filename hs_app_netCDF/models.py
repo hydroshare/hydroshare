@@ -1,4 +1,5 @@
 import json
+import ast
 
 from django.db import models
 from django.contrib.contenttypes.models import ContentType
@@ -57,7 +58,7 @@ class OriginalCoverage(AbstractMetaDataElement):
         if 'value' in kwargs:
             value_arg_dict = kwargs['value']
         elif '_value' in kwargs:
-            value_arg_dict = json.loads(kwargs['_value'])
+            value_arg_dict = ast.literal_eval(kwargs['_value'])
 
         if value_arg_dict:
             # check that all the required sub-elements exist and create new original coverage meta

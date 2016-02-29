@@ -267,7 +267,8 @@ def create_new_version_resource(request, shortkey, *args, **kwargs):
         res.save()
         # run clear_lock task asynchronously in 2 minutes to ensure lock is cleared when something unexpected happened
         clear_lock.apply_async(args=[shortkey],countdown=120)
-        new_resource = hydroshare.create_new_version_resource(shortkey, user)
+        new_resource = hydroshare.create_new_version_empty_resource(shortkey, user)
+        new_resource = hydroshare.create_new_version_resource(res, new_resource)
     except Exception as ex:
         if new_resource:
             new_resource.delete()
