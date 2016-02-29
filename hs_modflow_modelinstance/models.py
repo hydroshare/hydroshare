@@ -335,3 +335,76 @@ class MODFLOWModelInstanceMetaData(ModelInstanceMetaData):
         if not super(MODFLOWModelInstanceMetaData, self).has_all_required_elements():
             return False
         return True
+
+    def get_xml(self, pretty_print=True):
+        # get the xml string representation of the core metadata elements
+        xml_string = super(MODFLOWModelInstanceMetaData, self).get_xml(pretty_print=False)
+
+        # create an etree xml object
+        RDF_ROOT = etree.fromstring(xml_string)
+
+        # get root 'Description' element that contains all other elements
+        container = RDF_ROOT.find('rdf:Description', namespaces=self.NAMESPACES)
+
+        if self.study_area:
+            studyAreaFields = ['totalLength', 'totalWidth', 'maximumElevation', 'minimumElevation']
+            self.add_metadata_element_to_xml(container, self.study_area, studyAreaFields)
+
+        if self.grid_dimensions:
+            gridDimensionsFields = ['numberOfLayers', 'typeOfRows', 'numberOfRows', 'typeOfColumns', 'numberOfColumns']
+            self.add_metadata_element_to_xml(container, self.grid_dimensions, gridDimensionsFields)
+
+        if self.stress_period:
+            stressPeriodFields = ['stressPeriodType', 'steadyStateValue',
+                                  'transientStateValueType', 'transientStateValue']
+            self.add_metadata_element_to_xml(container, self.stress_period, stressPeriodFields)
+
+        if self.ground_water_flow:
+            groundWaterFlowFields = ['flowPackage', 'flowParameter']
+            self.add_metadata_element_to_xml(container, self.ground_water_flow, groundWaterFlowFields)
+
+        if self.boundary_condition:
+            boundaryConditionFields = ['boundaryConditionType', 'boundaryConditionPackage']
+            self.add_metadata_element_to_xml(container, self.boundary_condition, boundaryConditionFields)
+
+        if self.model_calibration:
+            modelCalibrationFields = ['calibratedParameter', 'observationType',
+                                      'observationProcessPackage', 'calibrationMethod']
+            self.add_metadata_element_to_xml(container, self.model_calibration, modelCalibrationFields)
+
+        if self.model_input:
+            modelInputFields = ['inputType', 'inputSourceName', 'inputSourceURL']
+            self.add_metadata_element_to_xml(container, self.model_input, modelInputFields)
+
+        if self.general_elements:
+
+            if self.general_elements.modelParameter:
+                model_parameter = etree.SubElement(container, '{%s}modelParameter' % self.NAMESPACES['hsterms'])
+                model_parameter.text = self.general_elements.modelParameter
+
+            if self.general_elements.modelSolver:
+                model_solver = etree.SubElement(container, '{%s}modelSolver' % self.NAMESPACES['hsterms'])
+                model_solver.text = self.general_elements.modelSolver
+
+            if self.general_elements.outputControlPackage:
+                output_package = etree.SubElement(container, '{%s}outputControlPackage' % self.NAMESPACES['hsterms'])
+                output_package.text = self.general_elements.outputControlPackage
+
+            if self.general_elements.subsidencePackage:
+                subsidence_package = etree.SubElement(container, '{%s}subsidencePackage' % self.NAMESPACES['hsterms'])
+                subsidence_package.text = self.general_elements.subsidencePackage
+
+        return etree.tostring(RDF_ROOT, pretty_print=True)
+
+    def delete_all_elements(self):
+        super(MODFLOWModelInstanceMetaData, self).delete_all_elements()
+        self._study_area.all().delete()
+        self._grid_dimensions.all().delete()
+        self._stress_period.all().delete()
+        self._ground_water_flow.all().delete()
+        self._boundary_condition.all().delete()
+        self._model_calibration.all().delete()
+        self._model_input.all().delete()
+        self._general_elements.all().delete()
+
+import receivers
