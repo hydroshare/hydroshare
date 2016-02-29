@@ -3236,3 +3236,7 @@ button.no-style:focus {
     border: none;
     outline: none;
 }
+
+.blured-out {
+    pointer-events: none;
+}

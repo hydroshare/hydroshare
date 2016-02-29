@@ -833,7 +833,7 @@
             $("[data-page-mode='view']").hide();
             $("[data-page-mode='edit']").fadeIn();
             $("[data-page-mode='on-edit-blur']").fadeTo("fast", 0.5, function () {
-                // Animation complete.
+                $(this).addClass("blured-out");
             });
 
             var userTypeValue = $("#db-user-type").text();
@@ -860,7 +860,7 @@
             $("[data-page-mode='edit']").hide();
             $("[data-page-mode='view']").fadeIn();
             $("[data-page-mode='on-edit-blur']").fadeTo("fast", 1, function () {
-                // Animation complete.
+                $(this).removeClass("blured-out");
             });
         }
 
