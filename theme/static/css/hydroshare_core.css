@@ -2518,6 +2518,10 @@ h4.title {
     background-color: rgb(242, 67, 55);
 }
 
+#badge-script .badge {
+    background-color: rgb(221, 15, 176);
+}
+
 #color-scheme {
     float: right;
     padding: 5px 0 0 0;
