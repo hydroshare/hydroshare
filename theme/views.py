@@ -197,10 +197,10 @@ def update_user_profile(request):
                 messages.success(request, "Your profile has been successfully updated.")
                 # if email was updated, reset to old email and send confirmation
                 # email to the user's new email - email will be updated upon confirmation
-                if old_email != request.POST['email']:
+                if old_email != user.email:
+                    new_email = user.email
                     user.email = old_email
                     user.save()
-                    new_email = request.POST['email']
                     # send a confirmation email to the new email address
                     send_verification_mail_for_email_update(request, user, new_email, "email_verify")
                     info(request, _("A verification email has been sent to your new email with "
