@@ -454,6 +454,7 @@
             8 - Labels
             9 - Favorite
             10 - Last modified (sortable format)
+            11 - Sharing Status
         ==================================================*/
 
             resourceTable = $("#item-selectors").DataTable({
@@ -953,7 +954,6 @@
                     viewableCount++;
                 }
 
-
                 // Update filter badges count
                 $("#filter .badge[data-facet='owned']").text(ownedCount);
                 $("#filter .badge[data-facet='editable']").text(ownedEditableCount+editableCount);
@@ -1076,6 +1076,7 @@
             8 - Labels
             9 - Favorite
             10 - Last modified (sortable format)
+            11 - Sharing Status
         ==================================================*/
 
         /* Custom filtering function which will search data for the values in the custom filter dropdown or query strings */
