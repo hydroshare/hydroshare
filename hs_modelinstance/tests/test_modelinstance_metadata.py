@@ -16,6 +16,7 @@ from hs_core.models import CoreMetaData, Creator, Contributor, Coverage, Rights,
 from hs_core.testing import MockIRODSTestCaseMixin
 from hs_modelinstance.models import ModelInstanceResource, ModelOutput, ExecutedBy
 
+
 class TestModelInstanceMetaData(MockIRODSTestCaseMixin, TransactionTestCase):
     def setUp(self):
         super(TestModelInstanceMetaData, self).setUp()
@@ -98,41 +99,41 @@ class TestModelInstanceMetaData(MockIRODSTestCaseMixin, TransactionTestCase):
         self.assertEquals(self.resModelInstance.metadata.contributors.all().count(), 0)
 
         # check that there are no extended metadata elements at this point
-        self.assertEquals(self.resModelInstance.metadata.model_output,None)
+        self.assertEquals(self.resModelInstance.metadata.model_output, None)
         self.assertEquals(self.resModelInstance.metadata.executed_by, None)
 
         # create
         self.resModelInstance.metadata.create_element('ModelOutput')
 
-        ModelOutput_element = self.resModelInstance.metadata.model_output
-        self.assertEquals(ModelOutput_element.includes_output, False)
+        modeloutput_element = self.resModelInstance.metadata.model_output
+        self.assertEquals(modeloutput_element.includes_output, False)
 
         # multiple ModelOutput elements are not allowed - should raise exception
         with self.assertRaises(IntegrityError):
-            self.resModelInstance.metadata.create_element('ModelOutput', includes_output= True)
+            self.resModelInstance.metadata.create_element('ModelOutput', includes_output=True)
 
-        self.resModelInstance.metadata.create_element('ExecutedBy', model_name= self.resModelProgram.short_id)
+        self.resModelInstance.metadata.create_element('ExecutedBy', model_name=self.resModelProgram.short_id)
 
-        ExecutedBy_element = self.resModelInstance.metadata.executed_by
-        self.assertEquals(ExecutedBy_element.model_name, self.resModelProgram.metadata.title.value)
-        self.assertEquals(ExecutedBy_element.model_program_fk, self.resModelProgram)
+        executedby_element = self.resModelInstance.metadata.executed_by
+        self.assertEquals(executedby_element.model_name, self.resModelProgram.metadata.title.value)
+        self.assertEquals(executedby_element.model_program_fk, self.resModelProgram)
 
         # multiple ExecutedBy elements are not allowed - should raise exception
         with self.assertRaises(IntegrityError):
-            self.resModelInstance.metadata.create_element('ExecutedBy', model_name= self.resModelProgram2.short_id)
+            self.resModelInstance.metadata.create_element('ExecutedBy', model_name=self.resModelProgram2.short_id)
 
         # update
         self.resModelInstance.metadata.update_element('ModelOutput', self.resModelInstance.metadata.model_output.id,
-                                                      includes_output= True)
+                                                      includes_output=True)
 
         self.assertEquals(self.resModelInstance.metadata.model_output.includes_output, True)
 
         self.resModelInstance.metadata.update_element('ExecutedBy', self.resModelInstance.metadata.executed_by.id,
-                                                      model_name= self.resModelProgram2.short_id)
+                                                      model_name=self.resModelProgram2.short_id)
 
-        ExecutedBy_element = self.resModelInstance.metadata.executed_by
-        self.assertEquals(ExecutedBy_element.model_name, self.resModelProgram2.metadata.title.value)
-        self.assertEquals(ExecutedBy_element.model_program_fk, self.resModelProgram2)
+        executedby_element = self.resModelInstance.metadata.executed_by
+        self.assertEquals(executedby_element.model_name, self.resModelProgram2.metadata.title.value)
+        self.assertEquals(executedby_element.model_program_fk, self.resModelProgram2)
 
         # delete
         self.assertNotEqual(self.resModelInstance.metadata.model_output, None)
@@ -158,7 +159,7 @@ class TestModelInstanceMetaData(MockIRODSTestCaseMixin, TransactionTestCase):
 
         self.assertFalse(self.resModelInstance.can_be_public_or_discoverable)
 
-        self.resModelInstance.metadata.create_element('Description', abstract= "test abstract")
+        self.resModelInstance.metadata.create_element('Description', abstract="test abstract")
         self.assertFalse(self.resModelInstance.can_be_public_or_discoverable)
 
         self.resModelInstance.metadata.create_element('Subject', value="test subject")
@@ -171,10 +172,10 @@ class TestModelInstanceMetaData(MockIRODSTestCaseMixin, TransactionTestCase):
         self.assertTrue(ModelInstanceResource.can_have_multiple_files())
 
     def test_get_xml(self):
-        self.resModelInstance.metadata.create_element('Description', abstract= "test abstract")
+        self.resModelInstance.metadata.create_element('Description', abstract="test abstract")
         self.resModelInstance.metadata.create_element('Subject', value="test subject")
-        self.resModelInstance.metadata.create_element('ModelOutput', includes_output= True)
-        self.resModelInstance.metadata.create_element('ExecutedBy', model_name= self.resModelProgram.short_id)
+        self.resModelInstance.metadata.create_element('ModelOutput', includes_output=True)
+        self.resModelInstance.metadata.create_element('ExecutedBy', model_name=self.resModelProgram.short_id)
 
         # test if xml from get_xml() is well formed
         ET.fromstring(self.resModelInstance.metadata.get_xml())
@@ -187,10 +188,10 @@ class TestModelInstanceMetaData(MockIRODSTestCaseMixin, TransactionTestCase):
         utils.resource_file_add_process(resource=self.resModelInstance, files=files, user=self.user,
                                         extract_metadata=False)
 
-        self.resModelInstance.metadata.create_element('Description', abstract= "test abstract")
+        self.resModelInstance.metadata.create_element('Description', abstract="test abstract")
         self.resModelInstance.metadata.create_element('Subject', value="test subject")
-        self.resModelInstance.metadata.create_element('ModelOutput', includes_output= True)
-        self.resModelInstance.metadata.create_element('ExecutedBy', model_name= self.resModelProgram.short_id)
+        self.resModelInstance.metadata.create_element('ModelOutput', includes_output=True)
+        self.resModelInstance.metadata.create_element('ExecutedBy', model_name=self.resModelProgram.short_id)
 
         # there should one content file
         self.assertEquals(self.resModelInstance.files.all().count(), 1)
@@ -216,7 +217,6 @@ class TestModelInstanceMetaData(MockIRODSTestCaseMixin, TransactionTestCase):
         self.assertNotEqual(self.resModelInstance.metadata.model_output, None)
         self.assertNotEqual(self.resModelInstance.metadata.executed_by, None)
 
-
     def test_metadata_delete_on_resource_delete(self):
         files = [UploadedFile(file=self.text_file_obj, name=self.text_file_obj.name)]
         utils.resource_file_add_pre_process(resource=self.resModelInstance, files=files, user=self.user,
@@ -225,10 +225,10 @@ class TestModelInstanceMetaData(MockIRODSTestCaseMixin, TransactionTestCase):
         utils.resource_file_add_process(resource=self.resModelInstance, files=files, user=self.user,
                                         extract_metadata=False)
 
-        self.resModelInstance.metadata.create_element('Description', abstract= "test abstract")
+        self.resModelInstance.metadata.create_element('Description', abstract="test abstract")
         self.resModelInstance.metadata.create_element('Subject', value="test subject")
-        self.resModelInstance.metadata.create_element('ModelOutput', includes_output= True)
-        self.resModelInstance.metadata.create_element('ExecutedBy', model_name= self.resModelProgram.short_id)
+        self.resModelInstance.metadata.create_element('ModelOutput', includes_output=True)
+        self.resModelInstance.metadata.create_element('ExecutedBy', model_name=self.resModelProgram.short_id)
 
         # before resource delete
         core_metadata_obj = self.resModelInstance.metadata
@@ -259,7 +259,7 @@ class TestModelInstanceMetaData(MockIRODSTestCaseMixin, TransactionTestCase):
         self.assertFalse(Coverage.objects.filter(object_id=core_metadata_obj.id).exists())
         # there should be Format metadata objects
         self.assertTrue(Format.objects.filter(object_id=core_metadata_obj.id).exists())
-         # there should be Language metadata objects
+        # there should be Language metadata objects
         self.assertTrue(Language.objects.filter(object_id=core_metadata_obj.id).exists())
         # there should be Rights metadata objects
         self.assertTrue(Rights.objects.filter(object_id=core_metadata_obj.id).exists())
