@@ -142,6 +142,46 @@ class BoundaryCondition(AbstractMetaDataElement):
                 boundary_packages.boundaryConditionPackage.create(description=package)
 
     # need to define create and update methods
+    @classmethod
+    def create(cls, **kwargs):
+        if 'boundaryConditionType' in kwargs:
+            cls._validate_boundary_condition_types(kwargs['boundaryConditionType'])
+        else:
+            raise ValidationError("boundaryConditionType is missing.")
+        if 'boundaryConditionPackage' in kwargs:
+            cls._validate_boundary_condition_packages(kwargs['boundaryConditionPackage'])
+        else:
+            raise ValidationError("boundaryConditionPackage is missing.")
+        model_boundary_condition = super(BoundaryCondition, cls).create(content_object=kwargs['content_object'])
+        cls._add_boundary_types(model_boundary_condition, kwargs['boundaryConditionType'])
+        cls._add_boundary_packages(model_boundary_condition, kwargs['boundaryConditionPackage'])
+
+        return model_boundary_condition
+
+    @classmethod
+    def update(cls, element_id, **kwargs):
+        model_boundary_condition = BoundaryCondition.objects.get(id=element_id)
+        if model_boundary_condition:
+            if 'boundaryConditionType' in kwargs:
+                cls._validate_boundary_condition_types(kwargs['boundaryConditionType'])
+                # delete ManyToMany associated records
+                model_boundary_condition.boundaryConditionType.clear()
+                cls._add_boundary_types(model_boundary_condition, kwargs['boundaryConditionType'])
+
+            if 'boundaryConditionPackage' in kwargs:
+                cls._validate_boundary_condition_packages(kwargs['boundaryConditionPackage'])
+                # delete ManyToMany associated records
+                model_boundary_condition.boundaryConditionPackage.clear()
+                cls._add_boundary_packages(model_boundary_condition, kwargs['boundaryConditionPackage'])
+
+            model_boundary_condition.save()
+
+            # delete boundaryConditionType and boundaryConditionPackage elements if it has no data
+            if len(model_boundary_condition.boundaryConditionType.all()) == 0 and\
+               len(model_boundary_condition.boundaryConditionPackage.all()) == 0:
+                model_boundary_condition.delete()
+            else:
+                raise ObjectDoesNotExist("No BoundaryCondition element was found for the provided id:%s" % kwargs['id'])
 
     @classmethod
     def _validate_boundary_condition_types(cls, types):
@@ -167,7 +207,7 @@ class ModelCalibration(AbstractMetaDataElement):
     calibratedParameter = models.CharField(max_length=200, null=True, blank=True)
     observationType = models.CharField(max_length=200, null=True, blank=True)
     observationProcessPackage = models.CharField(max_length=100, choices=observationProcessPackageChoices, null=True,
-                                               blank=True)
+                                                 blank=True)
     calibrationMethod = models.CharField(max_length=200, null=True, blank=True)
 
     def __unicode__(self):
@@ -206,3 +246,92 @@ class GeneralElements(AbstractMetaDataElement):
     class Meta:
         # GeneralElements element is not repeatable
         unique_together = ("content_type", "object_id")
+
+
+# MODFLOW Model Instance Resource type
+class MODFLOWModelInstanceResource(BaseResource):
+    objects = ResourceManager("MODFLOWModelInstanceResource")
+
+    class Meta:
+        verbose_name = 'MODFLOW Model Instance Resource'
+        proxy = True
+
+    @property
+    def metadata(self):
+        md = MODFLOWModelInstanceMetaData()
+        return self._get_metadata(md)
+
+    @classmethod
+    def get_supported_upload_file_types(cls):
+        # all file types are supported
+        return ('.*')
+
+    @classmethod
+    def can_have_multiple_files(cls):
+        return True
+
+processor_for(MODFLOWModelInstanceResource)(resource_processor)
+
+
+# metadata container class
+class MODFLOWModelInstanceMetaData(ModelInstanceMetaData):
+    _study_area = generic.GenericRelation(StudyArea)
+    _grid_dimensions = generic.GenericRelation(GridDimensions)
+    _stress_period = generic.GenericRelation(StressPeriod)
+    _ground_water_flow = generic.GenericRelation(GroundWaterFlow)
+    _boundary_condition = generic.GenericRelation(BoundaryCondition)
+    _model_calibration = generic.GenericRelation(ModelCalibration)
+    _model_input = generic.GenericRelation(ModelInput)
+    _general_elements = generic.GenericRelation(GeneralElements)
+
+    @property
+    def study_area(self):
+        return self._study_area.all().first()
+
+    @property
+    def grid_dimensions(self):
+        return self._grid_dimensions.all().first()
+
+    @property
+    def stress_period(self):
+        return self._stress_period.all().first()
+
+    @property
+    def ground_water_flow(self):
+        return self._ground_water_flow.all().first()
+
+    @property
+    def boundary_condition(self):
+        return self._boundary_condition.all().first()
+
+    @property
+    def model_calibration(self):
+        return self._model_calibration.all().first()
+
+    @property
+    def model_input(self):
+        return self._model_input.all().first()
+
+    @property
+    def general_elements(self):
+        return self._general_elements.all().first()
+
+    @classmethod
+    def get_supported_element_names(cls):
+        # get the names of all core metadata elements
+        elements = super(MODFLOWModelInstanceMetaData, cls).get_supported_element_names()
+        # add the name of any additional element to the list
+        elements.append('StudyArea')
+        elements.append('GridDimensions')
+        elements.append('StressPeriod')
+        elements.append('GroundWaterFlow')
+        elements.append('BoundaryCondition')
+        elements.append('ModelCalibration')
+        elements.append('ModelInput')
+        elements.append('GeneralElements')
+        return elements
+
+    def has_all_required_elements(self):
+        if not super(MODFLOWModelInstanceMetaData, self).has_all_required_elements():
+            return False
+        return True
