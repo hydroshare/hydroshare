@@ -234,7 +234,8 @@ def update_user_profile(request):
 def send_verification_mail_for_email_update(request, user, new_email, verification_type):
     """
     Sends an email with a verification link to users when
-    they update their email. The actual update of the email happens only after
+    they update their email. The email is sent to the new email.
+    The actual update of the email happens only after
     the verification link is clicked.
     The ``verification_type`` arg is both the name of the urlpattern for
     the verification link, as well as the names of the email templates
@@ -254,7 +255,7 @@ def send_verification_mail_for_email_update(request, user, new_email, verificati
     subject_template_name = "email/%s_subject.txt" % verification_type
     subject = subject_template(subject_template_name, context)
     send_mail_template(subject, "email/%s" % verification_type,
-                       settings.DEFAULT_FROM_EMAIL, user.email,
+                       settings.DEFAULT_FROM_EMAIL, new_email,
                        context=context)
 
 
