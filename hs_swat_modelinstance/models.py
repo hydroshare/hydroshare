@@ -1,7 +1,7 @@
 __author__ = 'Mohamed Morsy'
 from lxml import etree
 
-from django.contrib.contenttypes import generic
+from django.contrib.contenttypes.fields import GenericRelation
 from django.db import models
 from django.core.exceptions import ValidationError, ObjectDoesNotExist
 
@@ -245,11 +245,11 @@ processor_for(SWATModelInstanceResource)(resource_processor)
 
 # metadata container class
 class SWATModelInstanceMetaData(ModelInstanceMetaData):
-    _model_objective = generic.GenericRelation(ModelObjective)
-    _simulation_type = generic.GenericRelation(SimulationType)
-    _model_method = generic.GenericRelation(ModelMethod)
-    _model_parameter = generic.GenericRelation(ModelParameter)
-    _model_input = generic.GenericRelation(ModelInput)
+    _model_objective = GenericRelation(ModelObjective)
+    _simulation_type = GenericRelation(SimulationType)
+    _model_method = GenericRelation(ModelMethod)
+    _model_parameter = GenericRelation(ModelParameter)
+    _model_input = GenericRelation(ModelInput)
 
     @property
     def model_objective(self):

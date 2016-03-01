@@ -91,9 +91,11 @@
                                                     <option value="generic">Generic</option>
                                                     <option value="geographic feature">Geographic Feature (ESRI Shapefiles)</option>
                                                     <option value="geographic raster">Geographic Raster</option>
+                                                    <option value="his referenced time series">HIS Referenced Time Series</option>
                                                     <option value="model instance resource">Model Instance</option>
                                                     <option value="model program">Model Program</option>
                                                     <option value="multidimensional">Multidimensional (NetCDF)</option>
+                                                    <option value="script resource">Script Resource</option>
                                                     <option value="swat model instance resource">Swat Model Instance</option>
                                                     <option value="time series">Time Series</option>
                                                     <option value="web app resource">Web App</option>
@@ -223,6 +225,12 @@
                                          alt="{{ res|resource_type }}" title="{{ res|resource_type }}" class="table-res-type-icon"/>
                                 {% elif res|resource_type == "Web App Resource" %}
                                     <img src="{{ STATIC_URL }}img/resource-icons/webapp48x48.png"
+                                         alt="{{ res|resource_type }}" title="{{ res|resource_type }}" class="table-res-type-icon"/>
+                                {% elif res|resource_type == "HIS Referenced Time Series" %}
+                                    <img src="{{ STATIC_URL }}img/resource-icons/his48x48.png"
+                                         alt="{{ res|resource_type }}" title="{{ res|resource_type }}" class="table-res-type-icon"/>
+                                {% elif res|resource_type == "Script Resource" %}
+                                    <img src="{{ STATIC_URL }}img/resource-icons/script48x48.png"
                                          alt="{{ res|resource_type }}" title="{{ res|resource_type }}" class="table-res-type-icon"/>
                                 {% endif %}
                             </td>
@@ -402,7 +410,6 @@
         var resourceTable;
 
         $(document).ready(function () {
-
         /*==================================================
             Table columns
             0 - actions
@@ -469,6 +476,11 @@
                     }
                 ]
             });
+
+            // Fix for horizontal scroll bar appearing unnecessarily on firefox.
+            if ($.browser.mozilla){
+                $("#item-selectors").width($("#item-selectors").width() - 2);
+            }
 
             // Trigger label creation when pressing Enter
             $("#txtLabelName").keyup(function (event) {
