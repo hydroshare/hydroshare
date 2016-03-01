@@ -272,10 +272,10 @@
                                         <td><span>Geographic Raster</span></td>
                                         <td><span class="badge">0</span></td>
                                     </tr>
-{#                                    <tr id="badge-his" data-type="type-HIS Referenced Time Series">#}
-{#                                        <td><span>HIS Referenced Time Series</span></td>#}
-{#                                        <td><span class="badge">0</span></td>#}
-{#                                    </tr>#}
+                                    <tr id="badge-his" data-type="type-HIS Referenced Time Series">
+                                        <td><span>HIS Referenced Time Series</span></td>
+                                        <td><span class="badge">0</span></td>
+                                    </tr>
                                     <tr id="badge-model-instance" data-type="type-Model Instance Resource">
                                         <td><span>Model Instance</span></td>
                                         <td><span class="badge">0</span></td>
@@ -286,6 +286,10 @@
                                     </tr>
                                     <tr id="badge-multidimensional" data-type="type-Multidimensional (NetCDF)">
                                         <td><span>Multidimensional (NetCDF)</span></td>
+                                        <td><span class="badge">0</span></td>
+                                    </tr>
+                                    <tr id="badge-script" data-type="type-Script Resource">
+                                        <td><span>Script Resource</span></td>
                                         <td><span class="badge">0</span></td>
                                     </tr>
                                     <tr id="badge-swat" data-type="type-SWAT Model Instance Resource">
@@ -317,6 +321,14 @@
                                                  title="{{ res|resource_type }}"/>
                                         {% elif res|resource_type == "Geographic Raster" %}
                                             <img src="{{ STATIC_URL }}img/resource-icons/geographicraster48x48.png"
+                                                 alt="{{ res|resource_type }}"
+                                                 title="{{ res|resource_type }}"/>
+                                        {% elif res|resource_type == "HIS Referenced Time Series" %}
+                                            <img src="{{ STATIC_URL }}img/resource-icons/his48x48.png"
+                                                 alt="{{ res|resource_type }}"
+                                                 title="{{ res|resource_type }}"/>
+                                        {% elif res|resource_type == "Script Resource" %}
+                                            <img src="{{ STATIC_URL }}img/resource-icons/script48x48.png"
                                                  alt="{{ res|resource_type }}"
                                                  title="{{ res|resource_type }}"/>
                                         {% elif res|resource_type == "Model Program Resource" %}
