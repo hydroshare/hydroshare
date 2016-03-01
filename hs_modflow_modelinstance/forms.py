@@ -40,7 +40,415 @@ subsidencePackageChoices = (('IBS', 'IBS'), ('SUB', 'SUB'), ('SWT', 'SWT'),)
 
 
 class MetadataField(layout.Field):
-          def __init__(self, *args, **kwargs):
-              kwargs['css_class'] = 'form-control input-sm'
-              super(MetadataField, self).__init__(*args, **kwargs)
+    def __init__(self, *args, **kwargs):
+        kwargs['css_class'] = 'form-control input-sm'
+        super(MetadataField, self).__init__(*args, **kwargs)
 
+
+# ModelOutput element forms
+class ModelOutputFormHelper(BaseFormHelper):
+    def __init__(self, allow_edit=True, res_short_id=None, element_id=None, element_name=None,  *args, **kwargs):
+
+        # the order in which the model fields are listed for the FieldSet is the order these fields will be displayed
+        layout = Layout(
+                        MetadataField('includes_output'),
+                 )
+        kwargs['element_name_label'] = 'Includes output files?'
+        super(ModelOutputFormHelper, self).__init__(allow_edit, res_short_id, element_id, element_name, layout,  *args,
+                                                    **kwargs)
+
+
+class ModelOutputForm(ModelForm):
+    includes_output = forms.TypedChoiceField(choices=((True, 'Yes'), (False, 'No')),
+                                             widget=forms.RadioSelect(attrs={'style': 'width:auto;margin-top:-5px'}))
+
+    def __init__(self, allow_edit=True, res_short_id=None, element_id=None, *args, **kwargs):
+        super(ModelOutputForm, self).__init__(*args, **kwargs)
+        self.helper = ModelOutputFormHelper(allow_edit, res_short_id, element_id, element_name='ModelOutput')
+
+    class Meta:
+        model = ModelOutput
+        fields = ('includes_output',)
+
+
+class ModelOutputValidationForm(forms.Form):
+    includes_output = forms.TypedChoiceField(choices=((True, 'Yes'), (False, 'No')), required=False)
+
+    def clean_includes_output(self):
+        data = self.cleaned_data['includes_output']
+        if data == u'False':
+            return False
+        else:
+            return True
+
+
+# ExecutedBy element forms
+class ExecutedByFormHelper(BaseFormHelper):
+    def __init__(self, allow_edit=True, res_short_id=None, element_id=None, element_name=None, *args, **kwargs):
+
+        # pop the model program shortid out of the kwargs dictionary
+        mp_id = kwargs.pop('mpshortid')
+
+        # get all model program resources and build option HTML elements for each one.
+        # ModelProgram shortid is concatenated to the selectbox id so that it is accessible in the template.
+        mp_resource = users.get_resource_list(type=['ModelProgramResource'])
+        options = '\n'.join(['<option value=%s>%s</option>' % (r.short_id, r.title) for r in mp_resource])
+        options = '<option value=Unspecified>Unspecified</option>' + options
+        selectbox = HTML('<div class="div-selectbox">'
+                         ' <select class="selectbox" id="selectbox_'+mp_id+'">'
+                         + options +
+                         '</select>'
+                         '</div><br>')
+
+        # the order in which the model fields are listed for the FieldSet is the order these fields will be displayed
+        layout = Layout(
+            MetadataField('model_name', style="display:none"),
+            selectbox,
+            HTML("""
+            <div id=program_details_div style="display:none">
+                <table id="program_details_table" class="modelprogram">
+                <tr><td>Description: </td><td></td></tr>
+                <tr><td>Release Date: </td><td></td></tr>
+                <tr><td>Version: </td><td></td></tr>
+                <tr><td>Language: </td><td></td></tr>
+                <tr><td>Operating System: </td><td></td></tr>
+                <tr><td>Url: </td><td></td></tr>
+            </table>
+            </div>
+            """),
+        )
+
+        kwargs['element_name_label'] = 'Model Program used for execution'
+        super(ExecutedByFormHelper, self).__init__(allow_edit, res_short_id, element_id, element_name, layout, *args,
+                                                   **kwargs)
+
+
+class ExecutedByForm(ModelForm):
+    def __init__(self, allow_edit=True, res_short_id=None, element_id=None, *args, **kwargs):
+        super(ExecutedByForm, self).__init__(*args, **kwargs)
+
+        # set mpshort id to '' if a foreign key has not been established yet, otherwise use mp short id
+        mpshortid = 'Unspecified'
+        if self.instance.model_program_fk is not None:
+            mpshortid = self.instance.model_program_fk.short_id
+        kwargs = dict(mpshortid=mpshortid)
+        self.helper = ExecutedByFormHelper(allow_edit, res_short_id, element_id, element_name='ExecutedBy', **kwargs)
+
+    class Meta:
+        model = ExecutedBy
+        exclude = ('content_object', 'model_program_fk',)
+
+
+class ExecutedByValidationForm(forms.Form):
+    model_name = forms.CharField(max_length=200)
+    model_program_fk = forms
+
+
+# StudyArea element forms
+class StudyAreaFormHelper(BaseFormHelper):
+    def __init__(self, allow_edit=True, res_short_id=None, element_id=None, element_name=None,  *args, **kwargs):
+        # the order in which the model fields are listed for the FieldSet is the order these fields will be displayed
+        layout = Layout(
+                        MetadataField('totalLength'),
+                        MetadataField('totalWidth'),
+                        MetadataField('maximumElevation'),
+                        MetadataField('minimumElevation'),
+        )
+        kwargs['element_name_label'] = 'Study Area'
+        super(StudyAreaFormHelper, self).__init__(allow_edit, res_short_id, element_id, element_name, layout,  *args,
+                                                  **kwargs)
+
+
+class StudyAreaForm(ModelForm):
+    def __init__(self, allow_edit=True, res_short_id=None, element_id=None, *args, **kwargs):
+        super(StudyAreaForm, self).__init__(*args, **kwargs)
+        self.helper = StudyAreaFormHelper(allow_edit, res_short_id, element_id, element_name='StudyArea')
+
+    class Meta:
+        model = StudyArea
+        fields = ('totalLength',
+                  'totalWidth',
+                  'maximumElevation',
+                  'minimumElevation',
+                  )
+
+
+class StudyAreaValidationForm(forms.Form):
+    totalLength = forms.CharField(max_length=100, required=False)
+    totalWidth = forms.CharField(max_length=100, required=False)
+    maximumElevation = forms.CharField(max_length=100, required=False)
+    minimumElevation = forms.CharField(max_length=100, required=False)
+
+
+# GridDimensions element forms
+class GridDimensionsFormHelper(BaseFormHelper):
+    def __init__(self, allow_edit=True, res_short_id=None, element_id=None, element_name=None,  *args, **kwargs):
+        # the order in which the model fields are listed for the FieldSet is the order these fields will be displayed
+        layout = Layout(
+                        MetadataField('numberOfLayers'),
+                        MetadataField('typeOfRows'),
+                        MetadataField('numberOfRows'),
+                        MetadataField('typeOfColumns'),
+                        MetadataField('numberOfColumns'),
+        )
+        kwargs['element_name_label'] = 'Grid Dimensions'
+        super(GridDimensionsFormHelper, self).__init__(allow_edit, res_short_id, element_id, element_name, layout,
+                                                       *args, **kwargs)
+
+
+class GridDimensionsForm(ModelForm):
+    def __init__(self, allow_edit=True, res_short_id=None, element_id=None, *args, **kwargs):
+        super(GridDimensionsForm, self).__init__(*args, **kwargs)
+        self.helper = GridDimensionsFormHelper(allow_edit, res_short_id, element_id, element_name='GridDimensions')
+        self.fields['typeOfRows'].choices = gridTypeChoices
+        self.fields['typeOfColumns'].choices = gridTypeChoices
+
+    class Meta:
+        model = GridDimensions
+        fields = ('numberOfLayers',
+                  'typeOfRows',
+                  'numberOfRows',
+                  'typeOfColumns',
+                  'numberOfColumns',
+                  )
+
+
+class GridDimensionsValidationForm(forms.Form):
+    numberOfLayers = forms.CharField(max_length=100, required=False)
+    typeOfRows = forms.CharField(max_length=100, required=False)
+    numberOfRows = forms.CharField(max_length=100, required=False)
+    typeOfColumns = forms.CharField(max_length=100, required=False)
+    numberOfColumns = forms.CharField(max_length=100, required=False)
+
+
+# StressPeriod element forms
+class StressPeriodFormHelper(BaseFormHelper):
+    def __init__(self, allow_edit=True, res_short_id=None, element_id=None, element_name=None,  *args, **kwargs):
+        # the order in which the model fields are listed for the FieldSet is the order these fields will be displayed
+        layout = Layout(
+                        MetadataField('stressPeriodType'),
+                        MetadataField('steadyStateValue'),
+                        MetadataField('transientStateValueType'),
+                        MetadataField('transientStateValue'),
+        )
+        kwargs['element_name_label'] = 'Stress Period'
+        super(StressPeriodFormHelper, self).__init__(allow_edit, res_short_id, element_id, element_name, layout,
+                                                     *args, **kwargs)
+
+
+class StressPeriodForm(ModelForm):
+    def __init__(self, allow_edit=True, res_short_id=None, element_id=None, *args, **kwargs):
+        super(StressPeriodForm, self).__init__(*args, **kwargs)
+        self.helper = StressPeriodFormHelper(allow_edit, res_short_id, element_id, element_name='StressPeriod')
+        self.fields['stressPeriodType'].choices = stressPeriodTypeChoices
+        self.fields['transientStateValueType'].choices = transientStateValueTypeChoices
+
+    class Meta:
+        model = StressPeriod
+        fields = ('stressPeriodType',
+                  'steadyStateValue',
+                  'transientStateValueType',
+                  'transientStateValue',
+                  )
+
+
+class StressPeriodValidationForm(forms.Form):
+    stressPeriodType = forms.CharField(max_length=100, required=False)
+    steadyStateValue = forms.CharField(max_length=100, required=False)
+    transientStateValueType = forms.CharField(max_length=100, required=False)
+    transientStateValue = forms.CharField(max_length=100, required=False)
+
+
+# GroundWaterFlow element forms
+class GroundWaterFlowFormHelper(BaseFormHelper):
+    def __init__(self, allow_edit=True, res_short_id=None, element_id=None, element_name=None,  *args, **kwargs):
+        # the order in which the model fields are listed for the FieldSet is the order these fields will be displayed
+        layout = Layout(
+                        MetadataField('flowPackage'),
+                        MetadataField('flowParameter'),
+        )
+        kwargs['element_name_label'] = 'Groundwater Flow'
+        super(GroundWaterFlowFormHelper, self).__init__(allow_edit, res_short_id, element_id, element_name, layout,
+                                                        *args, **kwargs)
+
+
+class GroundWaterFlowForm(ModelForm):
+    def __init__(self, allow_edit=True, res_short_id=None, element_id=None, *args, **kwargs):
+        super(GroundWaterFlowForm, self).__init__(*args, **kwargs)
+        self.helper = GroundWaterFlowFormHelper(allow_edit, res_short_id, element_id, element_name='GroundWaterFlow')
+        self.fields['flowPackage'].choices = flowPackageChoices
+        self.fields['flowParameter'].choices = flowParameterChoices
+
+    class Meta:
+        model = GroundWaterFlow
+        fields = ('flowPackage',
+                  'flowParameter',
+                  )
+
+
+class GroundWaterFlowValidationForm(forms.Form):
+    flowPackage = forms.CharField(max_length=100, required=False)
+    flowParameter = forms.CharField(max_length=100, required=False)
+
+
+# BoundaryCondition element forms
+class BoundaryConditionFormHelper(BaseFormHelper):
+    def __init__(self, allow_edit=True, res_short_id=None, element_id=None, element_name=None,  *args, **kwargs):
+
+        # the order in which the model fields are listed for the FieldSet is the order these fields will be displayed
+        layout = Layout(
+                        MetadataField('boundaryConditionType'),
+                        MetadataField('boundaryConditionPackage'),
+                 )
+        kwargs['element_name_label'] = 'Boundary Condition'
+        super(BoundaryConditionFormHelper, self).__init__(allow_edit, res_short_id, element_id, element_name, layout,
+                                                          *args, **kwargs)
+
+
+class BoundaryConditionForm(ModelForm):
+    boundaryConditionType = forms.MultipleChoiceField(choices=boundaryConditionTypeChoices,
+                                                      widget=forms.CheckboxSelectMultiple(
+                                                          attrs={'style': 'width:auto;margin-top:-5px'}))
+    boundaryConditionPackage = forms.MultipleChoiceField(choices=boundaryConditionPackageChoices,
+                                                         widget=forms.CheckboxSelectMultiple(
+                                                          attrs={'style': 'width:auto;margin-top:-5px'}))
+
+    def __init__(self, allow_edit=True, res_short_id=None, element_id=None, *args, **kwargs):
+        super(BoundaryConditionForm, self).__init__(*args, **kwargs)
+        self.helper = BoundaryConditionFormHelper(allow_edit, res_short_id, element_id, element_name='BoundaryCondition')
+        if self.instance:
+            try:
+                boundaryConditionType = self.instance.boundaryConditionType.all()
+                if len(boundaryConditionType) > 0:
+                    self.fields['boundaryConditionType'].initial = [objective.description for objective in
+                                                                    boundaryConditionType]
+                else:
+                    self.fields['boundaryConditionType'].initial = []
+            except TypeError:
+                self.fields['boundaryConditionType'].initial = []
+            try:
+                boundaryConditionPackage = self.instance.boundaryConditionPackage.all()
+                if len(boundaryConditionPackage) > 0:
+                    self.fields['boundaryConditionPackage'].initial = [objective.description for objective in
+                                                                       boundaryConditionPackage]
+                else:
+                    self.fields['boundaryConditionPackage'].initial = []
+            except TypeError:
+                self.fields['boundaryConditionPackage'].initial = []
+
+    class Meta:
+        model = BoundaryCondition
+
+
+class BoundaryConditionValidationForm(forms.Form):
+    boundaryConditionType = forms.MultipleChoiceField(choices=boundaryConditionTypeChoices, required=False)
+    boundaryConditionPackage = forms.MultipleChoiceField(choices=boundaryConditionPackageChoices, required=False)
+
+
+# ModelCalibration element forms
+class ModelCalibrationFormHelper(BaseFormHelper):
+    def __init__(self, allow_edit=True, res_short_id=None, element_id=None, element_name=None,  *args, **kwargs):
+        # the order in which the model fields are listed for the FieldSet is the order these fields will be displayed
+        layout = Layout(
+                        MetadataField('calibratedParameter'),
+                        MetadataField('observationType'),
+                        MetadataField('observationProcessPackage'),
+                        MetadataField('calibrationMethod'),
+        )
+        kwargs['element_name_label'] = 'Model Calibration'
+        super(ModelCalibrationFormHelper, self).__init__(allow_edit, res_short_id, element_id, element_name, layout,
+                                                         *args, **kwargs)
+
+
+class ModelCalibrationForm(ModelForm):
+    def __init__(self, allow_edit=True, res_short_id=None, element_id=None, *args, **kwargs):
+        super(ModelCalibrationForm, self).__init__(*args, **kwargs)
+        self.helper = ModelCalibrationFormHelper(allow_edit, res_short_id, element_id, element_name='ModelCalibration')
+        self.fields['observationProcessPackage'].choices = observationProcessPackageChoices
+
+    class Meta:
+        model = ModelCalibration
+        fields = ('calibratedParameter',
+                  'observationType',
+                  'observationProcessPackage',
+                  'calibrationMethod',
+                  )
+
+
+class ModelCalibrationValidationForm(forms.Form):
+    calibratedParameter = forms.CharField(max_length=100, required=False)
+    observationType = forms.CharField(max_length=100, required=False)
+    observationProcessPackage = forms.CharField(max_length=100, required=False)
+    calibrationMethod = forms.CharField(max_length=100, required=False)
+
+
+# ModelInput element forms
+class ModelInputFormHelper(BaseFormHelper):
+    def __init__(self, allow_edit=True, res_short_id=None, element_id=None, element_name=None,  *args, **kwargs):
+        # the order in which the model fields are listed for the FieldSet is the order these fields will be displayed
+        layout = Layout(
+                        MetadataField('inputType'),
+                        MetadataField('inputSourceName'),
+                        MetadataField('inputSourceURL'),
+        )
+        kwargs['element_name_label'] = 'Model Input'
+        super(ModelInputFormHelper, self).__init__(allow_edit, res_short_id, element_id, element_name, layout,
+                                                   *args, **kwargs)
+
+
+class ModelInputForm(ModelForm):
+    def __init__(self, allow_edit=True, res_short_id=None, element_id=None, *args, **kwargs):
+        super(ModelInputForm, self).__init__(*args, **kwargs)
+        self.helper = ModelInputFormHelper(allow_edit, res_short_id, element_id, element_name='ModelInput')
+
+    class Meta:
+        model = ModelInput
+        fields = ('inputType',
+                  'inputSourceName',
+                  'inputSourceURL',
+                  )
+
+
+class ModelInputValidationForm(forms.Form):
+    inputType = forms.CharField(max_length=100, required=False)
+    inputSourceName = forms.CharField(max_length=100, required=False)
+    inputSourceURL = forms.URLField(required=False)
+
+
+# GeneralElements element forms
+class GeneralElementsFormHelper(BaseFormHelper):
+    def __init__(self, allow_edit=True, res_short_id=None, element_id=None, element_name=None,  *args, **kwargs):
+        # the order in which the model fields are listed for the FieldSet is the order these fields will be displayed
+        layout = Layout(
+                        MetadataField('modelParameter'),
+                        MetadataField('modelSolver'),
+                        MetadataField('outputControlPackage'),
+                        MetadataField('subsidencePackage'),
+        )
+        kwargs['element_name_label'] = 'General'
+        super(GeneralElementsFormHelper, self).__init__(allow_edit, res_short_id, element_id, element_name, layout,
+                                                        *args, **kwargs)
+
+
+class GeneralElementsForm(ModelForm):
+    def __init__(self, allow_edit=True, res_short_id=None, element_id=None, *args, **kwargs):
+        super(GeneralElementsForm, self).__init__(*args, **kwargs)
+        self.helper = GeneralElementsFormHelper(allow_edit, res_short_id, element_id, element_name='GeneralElements')
+        self.fields['modelSolver'].choices = modelSolverChoices
+        self.fields['outputControlPackage'].choices = outputControlPackageChoices
+        self.fields['subsidencePackage'].choices = subsidencePackageChoices
+
+    class Meta:
+        model = GeneralElements
+        fields = ('modelParameter',
+                  'modelSolver',
+                  'outputControlPackage',
+                  'subsidencePackage',
+                  )
+
+
+class GeneralElementsValidationForm(forms.Form):
+    modelParameter = forms.CharField(max_length=100, required=False)
+    modelSolver = forms.CharField(max_length=100, required=False)
+    outputControlPackage = forms.CharField(max_length=100, required=False)
+    subsidencePackage = forms.CharField(max_length=100, required=False)
