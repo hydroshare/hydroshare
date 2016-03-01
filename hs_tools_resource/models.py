@@ -1,5 +1,5 @@
 from django.db import models
-from django.contrib.contenttypes import generic
+from django.contrib.contenttypes.fields import GenericRelation
 from django.core.exceptions import ObjectDoesNotExist, ValidationError
 
 from mezzanine.pages.page_processors import processor_for
@@ -117,10 +117,10 @@ class ToolIcon(AbstractMetaDataElement):
 
 
 class ToolMetaData(CoreMetaData):
-    url_bases = generic.GenericRelation(RequestUrlBase)
-    versions = generic.GenericRelation(ToolVersion)
-    supported_res_types = generic.GenericRelation(SupportedResTypes)
-    tool_icon = generic.GenericRelation(ToolIcon)
+    url_bases = GenericRelation(RequestUrlBase)
+    versions = GenericRelation(ToolVersion)
+    supported_res_types = GenericRelation(SupportedResTypes)
+    tool_icon = GenericRelation(ToolIcon)
 
     @classmethod
     def get_supported_element_names(cls):
