@@ -259,7 +259,7 @@ BandInfoLayoutEdit = Layout(
              '<div id="variables" class="well">'
                  '<div class="row">'
                      '{% for form in bandinfo_formset.forms %}'
-                     '<div class="col-sm-3 col-xs-12">'
+                     '<div class="col-sm-6 col-xs-12">'
                          '<form id="{{form.form_id}}" action="{{ form.action }}" method="POST" enctype="multipart/form-data">'
                              '{% crispy form %}'
                              '<div class="row" style="margin-top:10px">'
