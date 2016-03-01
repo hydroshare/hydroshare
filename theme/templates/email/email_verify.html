@@ -1,0 +1,8 @@
+{% load i18n %}
+{% block main %}
+<p>{% trans "From HydroShare. This email address was used for updating your existing email on www.hydroshare.org." %}</p>
+<p>{% trans "If you originated the request, please use the link below to verify your email address to update your account email." %}</p>
+<p><a href="{{ request.scheme }}://{{ request.get_host }}{{ verify_url }}">{{ request.scheme }}://{{ request.get_host }}{{ verify_url}}</a></p>
+<p>{% trans "If you did not originate this request you may ignore this email." %}</p>
+<p>{% trans "The HydroShare Team" %}</p>
+{% endblock %}
