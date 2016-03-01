@@ -145,6 +145,7 @@ class SupportedResTypesForm(ModelForm):
 
     class Meta:
         model = SupportedResTypes
+        fields = '__all__'
 
 
 class SupportedResTypesValidationForm(forms.Form):
