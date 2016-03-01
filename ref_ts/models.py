@@ -1,5 +1,5 @@
 from django.db import models
-from django.contrib.contenttypes import generic
+from django.contrib.contenttypes.fields import GenericRelation
 
 from mezzanine.pages.page_processors import processor_for
 
@@ -69,12 +69,12 @@ class DataSource(AbstractMetaDataElement):
     code = models.CharField(max_length=500, default="", blank=True)
 
 class RefTSMetadata(CoreMetaData):
-    referenceURLs = generic.GenericRelation(ReferenceURL)
-    sites = generic.GenericRelation(Site)
-    variables = generic.GenericRelation(Variable)
-    methods = generic.GenericRelation(Method)
-    quality_levels = generic.GenericRelation(QualityControlLevel)
-    datasources = generic.GenericRelation(DataSource)
+    referenceURLs = GenericRelation(ReferenceURL)
+    sites = GenericRelation(Site)
+    variables = GenericRelation(Variable)
+    methods = GenericRelation(Method)
+    quality_levels = GenericRelation(QualityControlLevel)
+    datasources = GenericRelation(DataSource)
 
     @classmethod
     def get_supported_element_names(cls):

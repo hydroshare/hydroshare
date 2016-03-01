@@ -2524,6 +2524,10 @@ h4.title {
     background-color: rgb(242, 67, 55);
 }
 
+#badge-script .badge {
+    background-color: rgb(221, 15, 176);
+}
+
 #color-scheme {
     float: right;
     padding: 5px 0 0 0;
@@ -2612,10 +2616,6 @@ h4.title {
 .form-horizontal .form-group {
     margin-left: 0;
     margin-right: 0;
-}
-.form-group .form-control:last-child {
-    border-top-left-radius: 4px;
-    border-bottom-left-radius: 4px;
 }
 
 #item-selectors_filter {

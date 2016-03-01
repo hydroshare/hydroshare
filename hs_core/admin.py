@@ -1,8 +1,9 @@
 from mezzanine.pages.admin import PageAdmin
 from django.contrib.gis import admin
+from django.contrib.contenttypes.admin import GenericTabularInline
 from .models import *
 
-class InlineResourceFiles(generic.GenericTabularInline):
+class InlineResourceFiles(GenericTabularInline):
     model = ResourceFile
 
 class GenericResourceAdmin(PageAdmin):

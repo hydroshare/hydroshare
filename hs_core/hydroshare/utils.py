@@ -7,7 +7,7 @@ import tempfile
 import logging
 import shutil
 
-from django.db.models import get_model, get_models
+from django.apps import apps
 from django.http import Http404
 from django.shortcuts import get_object_or_404
 from django.utils.timezone import now
@@ -38,7 +38,7 @@ class ResourceFileValidationException(Exception):
 
 def get_resource_types():
     resource_types = []
-    for model in get_models():
+    for model in apps.get_models():
         if issubclass(model, AbstractResource) and model != BaseResource:
             if not getattr(model, 'archived_model', False):
                 resource_types.append(model)
@@ -46,7 +46,7 @@ def get_resource_types():
 
 
 def get_resource_instance(app, model_name, pk, or_404=True):
-    model = get_model(app, model_name)
+    model = apps.get_model(app, model_name)
     if or_404:
         return get_object_or_404(model, pk=pk)
     else:
