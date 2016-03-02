@@ -33,10 +33,15 @@
                         {% endif %}
                     </ul>
                 {%  endif %}
-                {%  if not cm.has_required_content_files %}
+                {% if cm.resource_type == "MODFLOWModelInstanceResource" %}
+                    {% if not cm.has_required_content_files %}
                         <br>
-                        <span>Content files are required to publish the resource or make the resource public or discoverable.</span>
-                {% endif %}
+                        <span>Name file (.nam) is required to publish the resource or make the resource public or discoverable.</span>
+                    {% endif %}
+                {%  elif not cm.has_required_content_files %}
+                         <br>
+                         <span>Content files are required to publish the resource or make the resource public or discoverable.</span>
+                 {% endif %}
                 <hr>
                 <span class="glyphicon glyphicon-question-sign"></span>
                 <small> Click on the edit button ( <span class="glyphicon glyphicon-pencil"></span> ) below to edit this resource.</small>
