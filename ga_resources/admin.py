@@ -11,6 +11,7 @@ class RenderedLayerAdminForm(ModelForm):
 
    class Meta:
       model = RenderedLayer
+      fields = ['data_resource', 'default_style', 'default_class', 'styles', 'public', 'owner']
 
 class RenderedLayerAdmin(PageAdmin):
    form = RenderedLayerAdminForm
