@@ -88,12 +88,22 @@ def landing_page(request, page):
                                     '{% crispy executed_by_form %} '
                                     '</div> '),
 
-                               HTML('<div class="form-group" id="studyarea"> '
+                               HTML('<div class="form-group" id="boundarycondition"> '
+                                    '{% load crispy_forms_tags %} '
+                                    '{% crispy boundary_condition_form %} '
+                                    '</div>'),
+
+                               HTML('<div class="form-group" id="generalelements"> '
+                                    '{% load crispy_forms_tags %} '
+                                    '{% crispy general_elements_form %} '
+                                    '</div></div>'),
+
+                               HTML('<div class="col-xs-12 col-sm-6"><div class="form-group" id="studyarea"> '
                                     '{% load crispy_forms_tags %} '
                                     '{% crispy study_area_form %} '
                                     '</div> '),
 
-                               HTML('<div class="form-group" id="griddimensions"> '
+                                HTML('<div class="form-group" id="griddimensions"> '
                                     '{% load crispy_forms_tags %} '
                                     '{% crispy grid_dimensions_form %} '
                                     '</div>'),
@@ -106,27 +116,14 @@ def landing_page(request, page):
                                HTML('<div class="form-group" id="groundwaterflow"> '
                                     '{% load crispy_forms_tags %} '
                                     '{% crispy ground_water_flow_form %} '
-                                    '</div></div>'),
-
-                               HTML('<div class="form-group" id="boundarycondition"> '
-                                    '{% load crispy_forms_tags %} '
-                                    '{% crispy boundary_condition_form %} '
-                                    '</div></div>'),
-
-                               HTML('<div class="form-group" id="modelcalibration"> '
-                                    '{% load crispy_forms_tags %} '
-                                    '{% crispy model_calibration_form %} '
-                                    '</div></div>'),
+                                    '</div>'),
 
                                HTML('<div class="form-group" id="modelinput"> '
                                     '{% load crispy_forms_tags %} '
                                     '{% crispy model_input_form %} '
                                     '</div></div>'),
 
-                               HTML('<div class="col-xs-12 col-sm-6"><div class="form-group" id="generalelements"> '
-                                    '{% load crispy_forms_tags %} '
-                                    '{% crispy general_elements_form %} '
-                                    '</div></div>'),
+
 
                         )
 

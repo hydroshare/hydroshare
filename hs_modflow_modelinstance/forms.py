@@ -320,7 +320,7 @@ class BoundaryConditionForm(ModelForm):
             try:
                 boundaryConditionType = self.instance.boundaryConditionType.all()
                 if len(boundaryConditionType) > 0:
-                    self.fields['boundaryConditionType'].initial = [objective.description for objective in
+                    self.fields['boundaryConditionType'].initial = [types.description for types in
                                                                     boundaryConditionType]
                 else:
                     self.fields['boundaryConditionType'].initial = []
@@ -329,7 +329,7 @@ class BoundaryConditionForm(ModelForm):
             try:
                 boundaryConditionPackage = self.instance.boundaryConditionPackage.all()
                 if len(boundaryConditionPackage) > 0:
-                    self.fields['boundaryConditionPackage'].initial = [objective.description for objective in
+                    self.fields['boundaryConditionPackage'].initial = [packages.description for packages in
                                                                        boundaryConditionPackage]
                 else:
                     self.fields['boundaryConditionPackage'].initial = []
