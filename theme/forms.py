@@ -2,9 +2,9 @@ import requests
 
 from django import forms
 from django.utils.translation import ugettext, ugettext_lazy as _
-from django.contrib.comments.signals import comment_was_posted
-from django.contrib.comments.forms import CommentSecurityForm
-from django.contrib.comments.models import Comment
+from django_comments.signals import comment_was_posted
+from django_comments.forms import CommentSecurityForm
+from django_comments.models import Comment
 from django.contrib.contenttypes.models import ContentType
 from django.utils.encoding import force_text
 from django.utils import timezone
