@@ -260,6 +260,12 @@ def create_new_version_resource(request, shortkey, *args, **kwargs):
             authorized = True
     if not authorized:
         raise PermissionDenied()
+
+    if res.locked:
+        request.session['new_version_resource_creation_error'] = 'Failed to create a new version for this resource ' \
+                                                                 'since another user is creating a new version for this resource synchronously.'
+        return HttpResponseRedirect(res.get_absolute_url())
+
     new_resource = None
     try:
         # lock the resource to prevent concurrent new version creation since only one new version for an obsoleted resource is allowed
