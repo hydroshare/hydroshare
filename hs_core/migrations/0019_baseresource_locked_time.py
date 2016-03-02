@@ -13,7 +13,7 @@ class Migration(migrations.Migration):
     operations = [
         migrations.AddField(
             model_name='baseresource',
-            name='locked',
-            field=models.BooleanField(default=False),
+            name='locked_time',
+            field=models.DateTimeField(null=True, blank=True),
         ),
     ]

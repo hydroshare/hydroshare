@@ -1,6 +1,6 @@
 from __future__ import absolute_import
 import json
-import os
+import datetime
 
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import Group, User
@@ -9,7 +9,6 @@ from django.contrib import messages
 from django.core.exceptions import ValidationError, PermissionDenied
 from django.http import HttpResponseRedirect, HttpResponse
 from django.shortcuts import get_object_or_404, render_to_response, render
-from django.core import exceptions as ex
 from django.template import RequestContext
 from django.core import signing
 from django import forms
@@ -28,9 +27,8 @@ from django_irods.icommands import SessionException
 from hs_core import hydroshare
 from hs_core.hydroshare.utils import get_resource_by_shortkey, resource_modified
 from .utils import authorize, upload_from_irods
-from hs_core.models import GenericResource, resource_processor, CoreMetaData, ResourceFile
-from hs_core.hydroshare.resource import METADATA_STATUS_SUFFICIENT, METADATA_STATUS_INSUFFICIENT, hs_bagit
-from hs_core.tasks import clear_lock
+from hs_core.models import GenericResource, resource_processor, CoreMetaData
+from hs_core.hydroshare.resource import METADATA_STATUS_SUFFICIENT, METADATA_STATUS_INSUFFICIENT
 
 from . import resource_rest_api
 from . import user_rest_api
@@ -261,31 +259,36 @@ def create_new_version_resource(request, shortkey, *args, **kwargs):
     if not authorized:
         raise PermissionDenied()
 
-    if res.locked:
-        request.session['new_version_resource_creation_error'] = 'Failed to create a new version for this resource ' \
+    if res.locked_time:
+        elapsed_time = datetime.datetime.now() - res.locked_time
+        if elapsed_time.days >= 0 or elapsed_time.seconds > settings.RESOURCE_LOCK_TIMEOUT_SECONDS:
+            # clear the lock since the elapsed time is greater than timeout threshold
+            res.locked_time = None
+            res.save()
+        else:
+            # cannot create new version for this resource since the resource is locked by another user
+            request.session['new_version_resource_creation_error'] = 'Failed to create a new version for this resource ' \
                                                                  'since another user is creating a new version for this resource synchronously.'
-        return HttpResponseRedirect(res.get_absolute_url())
+            return HttpResponseRedirect(res.get_absolute_url())
 
     new_resource = None
     try:
         # lock the resource to prevent concurrent new version creation since only one new version for an obsoleted resource is allowed
-        res.locked = True
+        res.locked_time = datetime.datetime.now()
         res.save()
-        # run clear_lock task asynchronously in 2 minutes to ensure lock is cleared when something unexpected happened
-        clear_lock.apply_async(args=[shortkey],countdown=120)
         new_resource = hydroshare.create_new_version_empty_resource(shortkey, user)
         new_resource = hydroshare.create_new_version_resource(res, new_resource)
     except Exception as ex:
         if new_resource:
             new_resource.delete()
         # release the lock if new version of the resource failed to create
-        res.locked = False
+        res.locked_time = None
         res.save()
         request.session['new_version_resource_creation_error'] = ex.message
         return HttpResponseRedirect(res.get_absolute_url())
 
     # release the lock if new version of the resource is created successfully
-    res.locked = False
+    res.locked_time = None
     res.save()
 
     # go to resource landing page

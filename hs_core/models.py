@@ -1305,7 +1305,10 @@ class DiscoverableResourceManager(models.Manager):
 class BaseResource(Page, AbstractResource):
 
     resource_type = models.CharField(max_length=50, default="GenericResource")
-    locked = models.BooleanField(default=False)
+    # this locked_time field is added for resource versioning locking representing
+    # the time when the resource is locked for a new version action. A value of null
+    # means the resource is not locked
+    locked_time = models.DateTimeField(null=True, blank=True)
 
     objects = models.Manager()
     public_resources = PublicResourceManager()
