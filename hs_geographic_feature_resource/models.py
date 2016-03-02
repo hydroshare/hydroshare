@@ -89,6 +89,14 @@ class GeographicFeatureResource(BaseResource):
         # can have more than one files
         return True
 
+    # demo how to add resource-specific HS terms
+    def get_hs_term_dict(self):
+        # get existing hs_term_dict from base class
+        hs_term_dict = super(GeographicFeatureResource, self).get_hs_term_dict()
+        geometryinformation = self.metadata.geometryinformation.all().first()
+        hs_term_dict["HS_GFR_FEATURE_COUNT"] = geometryinformation.featureCount if geometryinformation is not None else 0
+        return hs_term_dict
+
     class Meta:
         verbose_name = 'Geographic Feature (ESRI Shapefiles)'
         proxy = True

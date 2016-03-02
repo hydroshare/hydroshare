@@ -7,7 +7,7 @@ from hs_tools_resource.models import SupportedResTypes, ToolResource
 from hs_core import hydroshare
 from hs_core.views.utils import authorize
 from hs_core.hydroshare.resource import METADATA_STATUS_SUFFICIENT, METADATA_STATUS_INSUFFICIENT
-from hs_tools_resource.utils import HS_term_dict, parse_app_url
+from hs_tools_resource.utils import parse_app_url_template
 
 @processor_for(GenericResource)
 def landing_page(request, page):
@@ -71,8 +71,9 @@ def get_page_context(page, user, resource_edit=False, extended_metadata_layout=N
                             if tool_res_obj.metadata.url_bases.first() else None
                         tool_icon_url = tool_res_obj.metadata.tool_icon.first().url \
                             if tool_res_obj.metadata.tool_icon.first() else "raise-img-error"
-                        term_dict = HS_term_dict(content_model, user)
-                        tool_url_new = parse_app_url(tool_url, term_dict)
+                        hs_term_dict_user = {}
+                        hs_term_dict_user["HS_USR_NAME"] = request.user.username if request.user.is_authenticated() else "anonymous"
+                        tool_url_new = parse_app_url_template(tool_url, [content_model.get_hs_term_dict(), hs_term_dict_user])
                         tl = {'title': str(tool_res_obj.metadata.title.value),
                               'icon_url': tool_icon_url,
                               'url': tool_url_new}

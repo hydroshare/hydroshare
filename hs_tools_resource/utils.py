@@ -1,24 +1,18 @@
-# $(HS_RES_ID)  resource id
-# $(HS_RES_TYPE) resource id
-# $(HS_USR_NAME) user name
+from string import Template
 
-def HS_term_dict(res_obj, usr_obj):
-    term_dict = {}
+def parse_app_url_template(url_template_string, term_dict_list=[]):
+    '''
+    This func replaces pre-defined HS Terms in url_template_string with real values;
+    Example: http://www.myapps.com/app1/?res_id=${HS_RES_TYPE}
+        --> http://www.myapps.com/app1/?res_id=GenericResource
+    Note: this func will keep unknown Terms unchanged
+    :param url_template_string: The url template string contains HS Terms
+    :param term_dict_list: a list of dict that stores pairs of Term Name and Term Value
+    :return: the updated url string
+    '''
 
-    if res_obj:
-        term_dict["HS_RES_ID"] = res_obj.short_id
-        term_dict["HS_RES_TYPE"] = res_obj.resource_type
-
-    if usr_obj:
-        term_dict["HS_USR_NAME"] = usr_obj.username if usr_obj.is_authenticated() else "anonymous"
-
-    return term_dict
-
-
-def parse_app_url(url_string, term_dict):
-
-    new_url_string = url_string
-    for key, value in term_dict.iteritems():
-        new_url_string = new_url_string.replace("$({0})".format(key), str(value))
+    new_url_string = url_template_string
+    for term_dict in term_dict_list:
+        new_url_string = Template(new_url_string).safe_substitute(term_dict)
 
     return new_url_string

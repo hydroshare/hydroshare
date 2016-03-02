@@ -33,7 +33,6 @@ class UrlBaseForm(ModelForm):
 
 
 class UrlBaseValidationForm(forms.Form):
-    # value = forms.CharField(max_length=1024)
     value = forms.URLField(max_length=1024)
 
 # The following 3 classes need to have the "field" same as the fields defined in "ToolResourceType" table in models.py
@@ -94,7 +93,7 @@ class ToolIconValidationForm(forms.Form):
 parameters_choices = (
     ('GenericResource', 'Generic Resource'),
     ('RasterResource', 'Raster Resource'),
-    # ('RefTimeSeries', 'HIS Referenced Time Series Resource'),
+    ('RefTimeSeriesResource', 'HIS Referenced Time Series Resource'),
     ('TimeSeriesResource', 'Time Series Resource'),
     ('NetcdfResource', 'NetCDF Resource'),
     ('ModelProgramResource', 'Model Program Resource'),
