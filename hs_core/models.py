@@ -1,7 +1,6 @@
 import os.path
 import json
 import arrow
-import ast
 from uuid import uuid4
 from languages_iso import languages as iso_languages
 from dateutil import parser
@@ -849,7 +848,7 @@ class Coverage(AbstractMetaDataElement):
             if 'value' in kwargs:
                 value_arg_dict = kwargs['value']
             elif '_value' in kwargs:
-                value_arg_dict = ast.literal_eval(kwargs['_value'])
+                value_arg_dict = json.loads(kwargs['_value'])
 
             if value_arg_dict:
                 cls._validate_coverage_type_value_attributes(kwargs['type'], value_arg_dict)
