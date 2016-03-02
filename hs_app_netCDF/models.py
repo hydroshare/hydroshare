@@ -4,7 +4,7 @@ import ast
 from django.db import models
 from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import ObjectDoesNotExist, ValidationError
-from django.contrib.contenttypes import generic
+from django.contrib.contenttypes.fields import GenericRelation
 
 from mezzanine.pages.models import Page, RichText
 from mezzanine.pages.page_processors import processor_for
@@ -170,8 +170,8 @@ processor_for(NetcdfResource)(resource_processor)
 
 # define the netcdf metadata
 class NetcdfMetaData(CoreMetaData):
-    variables = generic.GenericRelation(Variable)
-    ori_coverage = generic.GenericRelation(OriginalCoverage)
+    variables = GenericRelation(Variable)
+    ori_coverage = GenericRelation(OriginalCoverage)
 
     @classmethod
     def get_supported_element_names(cls):

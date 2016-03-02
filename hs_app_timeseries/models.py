@@ -1,4 +1,4 @@
-from django.contrib.contenttypes import generic
+from django.contrib.contenttypes.fields import GenericRelation
 from django.contrib.auth.models import User, Group
 from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import ValidationError, ObjectDoesNotExist
@@ -149,11 +149,11 @@ processor_for(TimeSeriesResource)(resource_processor)
 
 
 class TimeSeriesMetaData(CoreMetaData):
-    _site = generic.GenericRelation(Site)
-    _variable = generic.GenericRelation(Variable)
-    _method = generic.GenericRelation(Method)
-    _processing_level = generic.GenericRelation(ProcessingLevel)
-    _time_series_result = generic.GenericRelation(TimeSeriesResult)
+    _site = GenericRelation(Site)
+    _variable = GenericRelation(Variable)
+    _method = GenericRelation(Method)
+    _processing_level = GenericRelation(ProcessingLevel)
+    _time_series_result = GenericRelation(TimeSeriesResult)
 
     @property
     def site(self):

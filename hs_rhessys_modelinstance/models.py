@@ -1,6 +1,6 @@
 from lxml import etree
 
-from django.contrib.contenttypes import generic
+from django.contrib.contenttypes.fields import GenericRelation
 from django.db import models
 from django.core.exceptions import ValidationError, ObjectDoesNotExist
 
@@ -78,7 +78,7 @@ processor_for(RHESSysModelInstanceresource)(resource_processor)
 
 
 class RHESSysModelInstanceMetaData(ModelInstanceMetaData):
-    _model_input = generic.GenericRelation(ModelInput)
+    _model_input = GenericRelation(ModelInput)
 
     @property
     def model_input(self):

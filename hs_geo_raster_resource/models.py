@@ -1,7 +1,7 @@
 import json
 import ast
 
-from django.contrib.contenttypes import generic
+from django.contrib.contenttypes.fields import GenericRelation
 from django.db import models
 from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import ObjectDoesNotExist, ValidationError
@@ -175,9 +175,9 @@ processor_for(RasterResource)(resource_processor)
 
 class RasterMetaData(CoreMetaData):
     # required non-repeatable cell information metadata elements
-    _cell_information = generic.GenericRelation(CellInformation)
-    _band_information = generic.GenericRelation(BandInformation)
-    _ori_coverage = generic.GenericRelation(OriginalCoverage)
+    _cell_information = GenericRelation(CellInformation)
+    _band_information = GenericRelation(BandInformation)
+    _ori_coverage = GenericRelation(OriginalCoverage)
 
     @property
     def cellInformation(self):
