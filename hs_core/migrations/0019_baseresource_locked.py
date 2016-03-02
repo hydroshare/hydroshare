@@ -1,13 +1,13 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 
-from django.db import models, migrations
+from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('hs_core', '0017_auto_20160217_1629'),
+        ('hs_core', '0018_merge'),
     ]
 
     operations = [
@@ -15,6 +15,5 @@ class Migration(migrations.Migration):
             model_name='baseresource',
             name='locked',
             field=models.BooleanField(default=False),
-            preserve_default=True,
         ),
     ]
