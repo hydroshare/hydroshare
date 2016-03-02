@@ -98,6 +98,8 @@ def landing_page(request, page):
                                     '{% crispy general_elements_form %} '
                                     '</div></div>'),
 
+
+
                                HTML('<div class="col-xs-12 col-sm-6"><div class="form-group" id="studyarea"> '
                                     '{% load crispy_forms_tags %} '
                                     '{% crispy study_area_form %} '
@@ -121,11 +123,15 @@ def landing_page(request, page):
                                HTML('<div class="form-group" id="modelinput"> '
                                     '{% load crispy_forms_tags %} '
                                     '{% crispy model_input_form %} '
-                                    '</div></div>'),
+                                    '</div></div></div>'),
+
+                               HTML('<div class="row"><div class="col-xs-12"><div class="form-group" id="modelcalibration"> '
+                                    '{% load crispy_forms_tags %} '
+                                    '{% crispy model_calibration_form %} '
+                                    '</div></div></div>'),
 
 
-
-                        )
+                               )
 
         # get the context from hs_core
         context = page_processors.get_page_context(page, request.user, resource_edit=edit_resource, extended_metadata_layout=ext_md_layout, request=request)

@@ -7,6 +7,8 @@ from django.core.exceptions import ValidationError, ObjectDoesNotExist
 
 from mezzanine.pages.page_processors import processor_for
 
+import os
+
 from hs_core.models import BaseResource, ResourceManager, resource_processor, CoreMetaData, AbstractMetaDataElement
 from hs_core.hydroshare import utils
 
@@ -28,13 +30,13 @@ class ExecutedBy(ExecutedBy):
 class StudyArea(AbstractMetaDataElement):
     term = 'StudyArea'
     totalLength = models.CharField(max_length=100, null=True, blank=True,
-                                   verbose_name='Study area total length in meters')
+                                   verbose_name='Total length in meters')
     totalWidth = models.CharField(max_length=100, null=True, blank=True,
-                                  verbose_name='Study area total width in meters')
+                                  verbose_name='Total width in meters')
     maximumElevation = models.CharField(max_length=100, null=True, blank=True,
-                                        verbose_name='Study area maximum elevation in meters')
+                                        verbose_name='Maximum elevation in meters')
     minimumElevation = models.CharField(max_length=100, null=True, blank=True,
-                                        verbose_name='Study area minimum elevation in meters')
+                                        verbose_name='Minimum elevation in meters')
 
     def __unicode__(self):
         return self.totalLength
@@ -48,11 +50,16 @@ class GridDimensions(AbstractMetaDataElement):
     term = 'GridDimensions'
     gridTypeChoices = (('Regular', 'Regular'), ('Irregular', 'Irregular'),)
 
-    numberOfLayers = models.CharField(max_length=100, null=True, blank=True, verbose_name='Number of model grid layers')
-    typeOfRows = models.CharField(max_length=100, choices=gridTypeChoices, null=True, blank=True)
-    numberOfRows = models.CharField(max_length=100, null=True, blank=True)
-    typeOfColumns = models.CharField(max_length=100, choices=gridTypeChoices, null=True, blank=True)
-    numberOfColumns = models.CharField(max_length=100, null=True, blank=True)
+    numberOfLayers = models.CharField(max_length=100, null=True, blank=True,
+                                      verbose_name='Number of layers')
+    typeOfRows = models.CharField(max_length=100, choices=gridTypeChoices, null=True, blank=True,
+                                  verbose_name='Type of rows')
+    numberOfRows = models.CharField(max_length=100, null=True, blank=True,
+                                    verbose_name='Number of rows')
+    typeOfColumns = models.CharField(max_length=100, choices=gridTypeChoices, null=True, blank=True,
+                                     verbose_name='Type of columns')
+    numberOfColumns = models.CharField(max_length=100, null=True, blank=True,
+                                       verbose_name='Number of columns')
 
     def __unicode__(self):
         return self.numberOfLayers
@@ -69,10 +76,12 @@ class StressPeriod(AbstractMetaDataElement):
     transientStateValueTypeChoices = (('Annually', 'Annually'), ('Monthly', 'Monthly'),
                                       ('Daily', 'Daily'), ('Hourly', 'Hourly'),)
 
-    stressPeriodType = models.CharField(max_length=100, choices=stressPeriodTypeChoices, null=True, blank=True)
+    stressPeriodType = models.CharField(max_length=100, choices=stressPeriodTypeChoices, null=True, blank=True,
+                                        verbose_name='Type')
     steadyStateValue = models.CharField(max_length=100, null=True, blank=True,
                                         verbose_name='Length of steady state stress period(s)')
-    transientStateValueType = models.CharField(max_length=100, choices=transientStateValueTypeChoices, null=True)
+    transientStateValueType = models.CharField(max_length=100, choices=transientStateValueTypeChoices, null=True,
+                                               verbose_name='Type of transient state stress period(s)')
     transientStateValue = models.CharField(max_length=100, null=True, blank=True,
                                            verbose_name='Length of transient state stress period(s)')
 
@@ -91,8 +100,10 @@ class GroundWaterFlow(AbstractMetaDataElement):
     flowParameterChoices = (('Hydraulic Conductivity', 'Hydraulic Conductivity'),
                             ('Transmissivity', 'Transmissivity'),)
 
-    flowPackage = models.CharField(max_length=100, choices=flowPackageChoices, null=True, blank=True)
-    flowParameter = models.CharField(max_length=100, choices=flowParameterChoices, null=True, blank=True)
+    flowPackage = models.CharField(max_length=100, choices=flowPackageChoices, null=True, blank=True,
+                                   verbose_name='Flow package')
+    flowParameter = models.CharField(max_length=100, choices=flowParameterChoices, null=True, blank=True,
+                                     verbose_name='Flow parameter')
 
     def __unicode__(self):
         return self.flowPackage
@@ -112,8 +123,10 @@ class BoundaryConditionPackageChoices(models.Model):
 
 class BoundaryCondition(AbstractMetaDataElement):
     term = 'BoundaryCondition'
-    boundaryConditionType = models.ManyToManyField(BoundaryConditionTypeChoices, null=True, blank=True)
-    boundaryConditionPackage = models.ManyToManyField(BoundaryConditionPackageChoices, null=True, blank=True)
+    boundaryConditionType = models.ManyToManyField(BoundaryConditionTypeChoices, null=True, blank=True,
+                                                   verbose_name='Type(s)')
+    boundaryConditionPackage = models.ManyToManyField(BoundaryConditionPackageChoices, null=True, blank=True,
+                                                      verbose_name='Package(s)')
 
     # may be this could cause a problem
     def __unicode__(self):
@@ -122,6 +135,12 @@ class BoundaryCondition(AbstractMetaDataElement):
     class Meta:
         # BoundaryCondition element is not repeatable
         unique_together = ("content_type", "object_id")
+
+    def get_boundary_condition_type(self):
+        return ', '.join([types.description for types in self.boundaryConditionType.all()])
+
+    def get_boundary_condition_package(self):
+        return ', '.join([packages.description for packages in self.boundaryConditionPackage.all()])
 
     @classmethod
     def _add_boundary_types(cls, boundary_choices, choices):
@@ -204,11 +223,12 @@ class ModelCalibration(AbstractMetaDataElement):
                                         ('DTOB', 'DTOB'), ('GBOB', 'GBOB'), ('HOB', 'HOB'),
                                         ('OBS', 'OBS'), ('RVOB', 'RVOB'), ('STOB', 'STOB'),)
 
-    calibratedParameter = models.CharField(max_length=200, null=True, blank=True)
-    observationType = models.CharField(max_length=200, null=True, blank=True)
+    calibratedParameter = models.CharField(max_length=200, null=True, blank=True,
+                                           verbose_name='Calibrated parameter(s)')
+    observationType = models.CharField(max_length=200, null=True, blank=True, verbose_name='Observation type(s)')
     observationProcessPackage = models.CharField(max_length=100, choices=observationProcessPackageChoices, null=True,
-                                                 blank=True)
-    calibrationMethod = models.CharField(max_length=200, null=True, blank=True)
+                                                 blank=True, verbose_name='Observation process package')
+    calibrationMethod = models.CharField(max_length=200, null=True, blank=True, verbose_name='Calibration method(s)')
 
     def __unicode__(self):
         return self.calibratedParameter
@@ -220,9 +240,9 @@ class ModelCalibration(AbstractMetaDataElement):
 
 class ModelInput(AbstractMetaDataElement):
     term = 'ModelInput'
-    inputType = models.CharField(max_length=200, null=True, blank=True)
-    inputSourceName = models.CharField(max_length=200, null=True, blank=True)
-    inputSourceURL = models.URLField(null=True, blank=True, verbose_name='Input source URL')
+    inputType = models.CharField(max_length=200, null=True, blank=True, verbose_name='Type')
+    inputSourceName = models.CharField(max_length=200, null=True, blank=True, verbose_name='Source name')
+    inputSourceURL = models.URLField(null=True, blank=True, verbose_name='Source URL')
 
     def __unicode__(self):
         return self.inputType
@@ -235,10 +255,13 @@ class GeneralElements(AbstractMetaDataElement):
     outputControlPackageChoices = (('GAGE', 'GAGE'), ('HYD', 'HYD'), ('LMT6', 'LMT6'), ('MNWI', 'MNWI'), ('OC', 'OC'),)
     subsidencePackageChoices = (('IBS', 'IBS'), ('SUB', 'SUB'), ('SWT', 'SWT'),)
 
-    modelParameter = models.CharField(max_length=200, null=True, blank=True)
-    modelSolver = models.CharField(max_length=100, choices=modelSolverChoices, null=True, blank=True)
-    outputControlPackage = models.CharField(max_length=100, choices=outputControlPackageChoices, null=True, blank=True)
-    subsidencePackage = models.CharField(max_length=100, choices=subsidencePackageChoices, null=True, blank=True)
+    modelParameter = models.CharField(max_length=200, null=True, blank=True, verbose_name='Model parameter(s)')
+    modelSolver = models.CharField(max_length=100, choices=modelSolverChoices, null=True, blank=True,
+                                   verbose_name='Model solver')
+    outputControlPackage = models.CharField(max_length=100, choices=outputControlPackageChoices, null=True, blank=True,
+                                            verbose_name='Output control package')
+    subsidencePackage = models.CharField(max_length=100, choices=subsidencePackageChoices, null=True, blank=True,
+                                         verbose_name='Subsidence package')
 
     def __unicode__(self):
         return self.modelParameter
@@ -265,6 +288,21 @@ class MODFLOWModelInstanceResource(BaseResource):
     def get_supported_upload_file_types(cls):
         # all file types are supported
         return ('.*')
+
+    def has_required_content_files(self):
+        nam_file_exists = False
+        if len(self.get_supported_upload_file_types()) > 0:
+            if self.files.all().count() >= 1:
+                for res_file in self.files.all():
+                     ext = os.path.splitext(res_file.resource_file.name)[-1]
+                     if ext == '.nam':
+                         nam_file_exists = True
+
+                return nam_file_exists
+            else:
+                return False
+        else:
+            return True
 
     @classmethod
     def can_have_multiple_files(cls):

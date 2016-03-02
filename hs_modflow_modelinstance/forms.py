@@ -13,14 +13,15 @@ from hs_modflow_modelinstance.models import MODFLOWModelInstanceResource, StudyA
     StressPeriod, GroundWaterFlow, BoundaryCondition, ModelCalibration, ModelInput, GeneralElements
 
 
-gridTypeChoices = (('Regular', 'Regular'), ('Irregular', 'Irregular'),)
-stressPeriodTypeChoices = (('Steady', 'Steady'), ('Transient', 'Transient'),
+gridTypeChoices = (('Choose a type', 'Choose a type'), ('Regular', 'Regular'), ('Irregular', 'Irregular'),)
+stressPeriodTypeChoices = (('Choose a type', 'Choose a type'), ('Steady', 'Steady'), ('Transient', 'Transient'),
                            ('Steady and Transient', 'Steady and Transient'),)
-transientStateValueTypeChoices = (('Annually', 'Annually'), ('Monthly', 'Monthly'),
+transientStateValueTypeChoices = (('Choose a type', 'Choose a type'), ('Annually', 'Annually'), ('Monthly', 'Monthly'),
                                   ('Daily', 'Daily'), ('Hourly', 'Hourly'),)
-flowPackageChoices = (('BCF6', 'BCF6'), ('LPF', 'LPF'), ('HUF2', 'HUF2'),
+flowPackageChoices = (('Choose a package', 'Choose a package'), ('BCF6', 'BCF6'), ('LPF', 'LPF'), ('HUF2', 'HUF2'),
                       ('UPW', 'UPW'), ('HFB6', 'HFB6'), ('UZF', 'UZF'), ('SWI2', 'SWI2'),)
-flowParameterChoices = (('Hydraulic Conductivity', 'Hydraulic Conductivity'),
+flowParameterChoices = (('Choose a parameter', 'Choose a parameter'),
+                        ('Hydraulic Conductivity', 'Hydraulic Conductivity'),
                         ('Transmissivity', 'Transmissivity'),)
 boundaryConditionTypeChoices = (('Specified Head Boundaries', 'Specified Head Boundaries'),
                                 ('Specified Flux Boundaries', 'Specified Flux Boundaries'),
@@ -30,13 +31,14 @@ boundaryConditionPackageChoices = (('BFH', 'BFH'), ('CHD', 'CHD'), ('FHB', 'FHB'
                                    ('DRT', 'DRT'), ('ETS', 'ETS'), ('EVT', 'EVT'), ('GHB', 'GHB'),
                                    ('LAK', 'LAK'), ('MNW1', 'MNW1'), ('MNW2', 'MNW2'), ('RES', 'RES'),
                                    ('RIP', 'RIP'), ('RIV', 'RIV'), ('SFR', 'SFR'), ('STR', 'STR'), ('UZF', 'UZF'),)
-observationProcessPackageChoices = (('ADV2', 'ADV2'), ('CHOB', 'CHOB'), ('DROB', 'DROB'),
-                                    ('DTOB', 'DTOB'), ('GBOB', 'GBOB'), ('HOB', 'HOB'),
+observationProcessPackageChoices = (('Choose a package', 'Choose a package'), ('ADV2', 'ADV2'), ('CHOB', 'CHOB'),
+                                    ('DROB', 'DROB'), ('DTOB', 'DTOB'), ('GBOB', 'GBOB'), ('HOB', 'HOB'),
                                     ('OBS', 'OBS'), ('RVOB', 'RVOB'), ('STOB', 'STOB'),)
-modelSolverChoices = (('DE4', 'DE4'), ('GMG', 'GMG'), ('LMG', 'LMG'), ('PCG', 'PCG'),
-                      ('PCGN', 'PCGN'), ('SIP', 'SIP'), ('SOR', 'SOR'), ('NWT', 'NWT'),)
-outputControlPackageChoices = (('GAGE', 'GAGE'), ('HYD', 'HYD'), ('LMT6', 'LMT6'), ('MNWI', 'MNWI'), ('OC', 'OC'),)
-subsidencePackageChoices = (('IBS', 'IBS'), ('SUB', 'SUB'), ('SWT', 'SWT'),)
+modelSolverChoices = (('Choose a solver', 'Choose a solver'), ('DE4', 'DE4'), ('GMG', 'GMG'), ('LMG', 'LMG'),
+                      ('PCG', 'PCG'), ('PCGN', 'PCGN'), ('SIP', 'SIP'), ('SOR', 'SOR'), ('NWT', 'NWT'),)
+outputControlPackageChoices = (('Choose a package', 'Choose a package'), ('GAGE', 'GAGE'), ('HYD', 'HYD'),
+                               ('LMT6', 'LMT6'), ('MNWI', 'MNWI'), ('OC', 'OC'),)
+subsidencePackageChoices = (('Choose a package', 'Choose a package'), ('IBS', 'IBS'), ('SUB', 'SUB'), ('SWT', 'SWT'),)
 
 
 class MetadataField(layout.Field):
