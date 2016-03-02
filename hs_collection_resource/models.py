@@ -1,7 +1,8 @@
 from lxml import etree
 
 from django.db import models
-from django.contrib.contenttypes import generic
+# from django.contrib.contenttypes import generic
+from django.contrib.contenttypes.fields import GenericRelation
 from django.core.exceptions import ObjectDoesNotExist, ValidationError
 
 from mezzanine.pages.page_processors import processor_for
@@ -78,7 +79,8 @@ class CollectionItems(AbstractMetaDataElement):
 
 
 class CollectionMetaData(CoreMetaData):
-    collection_items = generic.GenericRelation(CollectionItems)
+    # collection_items = generic.GenericRelation(CollectionItems)
+    collection_items = GenericRelation(CollectionItems)
 
     @classmethod
     def get_supported_element_names(cls):
