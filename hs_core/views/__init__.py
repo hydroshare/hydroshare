@@ -28,7 +28,7 @@ from django_irods.icommands import SessionException
 from hs_core import hydroshare
 from hs_core.hydroshare.utils import get_resource_by_shortkey, resource_modified
 from .utils import authorize, upload_from_irods, ACTION_TO_AUTHORIZE
-from hs_core.models import BaseResource, GenericResource, resource_processor, CoreMetaData
+from hs_core.models import GenericResource, resource_processor, CoreMetaData
 from hs_core.hydroshare.resource import METADATA_STATUS_SUFFICIENT, METADATA_STATUS_INSUFFICIENT
 
 from . import resource_rest_api
@@ -38,6 +38,7 @@ from hs_core.hydroshare import utils
 from . import utils as view_utils
 from hs_core.signals import *
 from hs_access_control.models import PrivilegeCodes
+
 
 def short_url(request, *args, **kwargs):
     try:
@@ -253,8 +254,9 @@ def delete_resource(request, shortkey, *args, **kwargs):
 
     return HttpResponseRedirect('/my-resources/')
 
+
 def create_new_version_resource(request, shortkey, *args, **kwargs):
-    res, authorized, user = authorize(request, shortkey, edit=True, full=True, superuser=True, raises_exception=False)
+    res, authorized, user = authorize(request, shortkey, needed_permission=ACTION_TO_AUTHORIZE.CREATE_RESOURCE_VERSION)
     if res.raccess.published and not authorized:
         if user.uaccess.owns_resource(res):
             authorized = True
@@ -269,13 +271,15 @@ def create_new_version_resource(request, shortkey, *args, **kwargs):
             res.save()
         else:
             # cannot create new version for this resource since the resource is locked by another user
-            request.session['new_version_resource_creation_error'] = 'Failed to create a new version for this resource ' \
-                                                                 'since another user is creating a new version for this resource synchronously.'
+            request.session['new_version_resource_creation_error'] = 'Failed to create a new version for ' \
+                                                                     'this resource since another user is creating a ' \
+                                                                     'new version for this resource synchronously.'
             return HttpResponseRedirect(res.get_absolute_url())
 
     new_resource = None
     try:
-        # lock the resource to prevent concurrent new version creation since only one new version for an obsoleted resource is allowed
+        # lock the resource to prevent concurrent new version creation since only one new version for an
+        # obsoleted resource is allowed
         res.locked_time = datetime.datetime.now(pytz.utc)
         res.save()
         new_resource = hydroshare.create_new_version_empty_resource(shortkey, user)

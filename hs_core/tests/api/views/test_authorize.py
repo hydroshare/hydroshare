@@ -289,10 +289,10 @@ class TestAuthorize(MockIRODSTestCaseMixin, TestCase):
 
         parameters = [
                       # super user has authorization for setting resource flags (e.g., public,
-                      # published/immutable, shareable etc) for a private resource
+                      # published/immutable, shareable etc) for a private, public or discoverable resource
                       {'res_id': self.res.short_id, 'needed_permission': ACTION_TO_AUTHORIZE.SET_RESOURCE_FLAG,
                        'success': True, 'exception': None},
-                      # super user has authorization for deleting a private resource
+                      # super user has authorization for deleting a private, public or discoverable resource
                       {'res_id': self.res.short_id, 'needed_permission': ACTION_TO_AUTHORIZE.DELETE_RESOURCE,
                        'success': True, 'exception': None},
                       ] + common_parameters
@@ -330,7 +330,7 @@ class TestAuthorize(MockIRODSTestCaseMixin, TestCase):
 
         parameters = [
                       # super user has authorization for setting resource flags (e.g., public,
-                      # published/immutable, shareable etc) for a resource that has been published
+                      # published/immutable, shareable etc) for a published resource
                       {'res_id': self.res.short_id, 'needed_permission': ACTION_TO_AUTHORIZE.SET_RESOURCE_FLAG,
                        'success': True, 'exception': None},
                       # super user has no authorization for deleting a published resource
@@ -352,6 +352,9 @@ class TestAuthorize(MockIRODSTestCaseMixin, TestCase):
                        'success': False, 'exception': PermissionDenied},
                       # anonymous user has no authorization for setting resource flags for a private resource
                       {'res_id': self.res.short_id, 'needed_permission': ACTION_TO_AUTHORIZE.SET_RESOURCE_FLAG,
+                       'success': False, 'exception': PermissionDenied},
+                      # anonymous user has no authorization for creating resource version
+                      {'res_id': self.res.short_id, 'needed_permission': ACTION_TO_AUTHORIZE.CREATE_RESOURCE_VERSION,
                        'success': False, 'exception': PermissionDenied}
                       ]
 
