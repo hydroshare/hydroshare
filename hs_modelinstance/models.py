@@ -86,11 +86,6 @@ class ModelInstanceResource(BaseResource):
         md = ModelInstanceMetaData()
         return self._get_metadata(md)
 
-    @classmethod
-    def get_supported_upload_file_types(cls):
-        # all file types are supported
-        return ('.*')
-
 processor_for(ModelInstanceResource)(resource_processor)
 
 # metadata container class
