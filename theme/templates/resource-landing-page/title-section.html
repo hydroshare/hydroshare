@@ -84,12 +84,6 @@
                 {% endfor %}
             </ul>
         {% endif %}
-        {% if is_replaced_by %}
-             <div class="clear-fix"><i>A newer version of this resource <a href="{{ is_replaced_by }}">{{ is_replaced_by }}</a> is available that replaces this version.</i></div>
-        {% endif %}
-        {% if is_version_of %}
-            <div class="clear-fix"><i>An older version of this resource <a href="{{ is_version_of }}">{{ is_version_of }}</a> is available.</i></div>
-        {% endif %}
     {% else %}
         <form action="/hsapi/_internal/{{ cm.short_id }}/title/{{ cm.metadata.title.id }}/update-metadata/"
               id="id-title"
@@ -112,4 +106,13 @@
             </fieldset>
         </form>
     {% endif %}
+</div>
+
+<div class="col-sm-12">
+{% if is_replaced_by %}
+     <div class="clear-fix"><i>A newer version of this resource <a href="{{ is_replaced_by }}">{{ is_replaced_by }}</a> is available that replaces this version.</i></div>
+{% endif %}
+{% if is_version_of %}
+    <div class="clear-fix"><i>An older version of this resource <a href="{{ is_version_of }}">{{ is_version_of }}</a> is available.</i></div>
+{% endif %}
 </div>
