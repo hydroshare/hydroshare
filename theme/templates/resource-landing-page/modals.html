@@ -369,39 +369,60 @@
 </div>
 {% endfor %}
 
-    {% include "irods_signin.html" %}
-    {% include "irods_upload_add.html" %}
-{%  block modal_publish_resource %}
-    <div class="modal fade" id="submit-for-publication-dialog" tabindex="-1" role="dialog"
-         aria-labelledby="myModalLabel" aria-hidden="true">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
-                    <h4 class="modal-title" id="submit-for-publication-title">Submit resource for publication</h4>
+{% include "irods_signin.html" %}
+{% include "irods_upload_add.html" %}
+
+<div class="modal fade" id="submit-for-publication-dialog" tabindex="-1" role="dialog"
+     aria-labelledby="myModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                <h4 class="modal-title" id="submit-for-publication-title">Submit resource for publication</h4>
+            </div>
+            <div class="modal-body">
+                <p>
+                    Upon submitting the resource for publication it will be permanently published and assigned a
+                    digital object identifier (DOI). This is <strong>final</strong> and changes can only be made
+                    on a new version (copy) of the resource.
+                </p>
+                <p>
+                     Please confirm that you accept the HydroShare Publication Agreement shown below.
+                </p>
+                <div class="iframe-border">
+                    <iframe id="pub-agreement-frame" scrolling="no" src="https://www.hydroshare.org/publication-agreement/"></iframe>
                 </div>
-                <div class="modal-body">
-                    <p>
-                        Upon submitting the resource for publication it will be permanently published and assigned a
-                        digital object identifier (DOI). This is <strong>final</strong> and changes can only be made
-                        on a new version (copy) of the resource.
-                    </p>
-                    <p>
-                         Please confirm that you accept the HydroShare Publication Agreement shown below.
-                    </p>
-                    <div class="iframe-border">
-                        <iframe id="pub-agreement-frame" scrolling="no" src="https://www.hydroshare.org/publication-agreement/"></iframe>
-                    </div>
-                    <input type="checkbox" id="agree-chk"><label for="agree-chk" class="checkbox-label">I accept the HydroShare Publication Agreement.</label>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
-                    <a type="button" id="publish-btn" class="btn btn-danger" href="/hsapi/_internal/{{ cm.short_id }}/publish/" disabled>Publish</a>
-                </div>
+                <input type="checkbox" id="agree-chk"><label for="agree-chk" class="checkbox-label">I accept the HydroShare Publication Agreement.</label>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+                <a type="button" id="publish-btn" class="btn btn-danger" href="/hsapi/_internal/{{ cm.short_id }}/publish/" disabled>Publish</a>
             </div>
         </div>
     </div>
-{%  endblock %}
+</div>
+
+<div class="modal fade" id="new-version-resource-dialog" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                <h4 class="modal-title" id="new-version-resource-title">Create New Version of This Resource</h4>
+            </div>
+            <div class="modal-body">
+                Creating a new version of this resource will obsolete this resource.
+                This resource will be still available in HydroShare, but will not be
+                discoverable via HydroShare search interface. Only one newer version
+                is allowed.
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+                <a type="button" class="btn btn-danger"
+                   href="/hsapi/_internal/{{ cm.short_id }}/create-new-version-resource/">Create New Version</a>
+            </div>
+        </div>
+    </div>
+</div>
 
 <div class="modal fade" id="add-source-dialog" tabindex="-1" role="dialog" aria-labelledby="add-source"
      aria-hidden="true">
