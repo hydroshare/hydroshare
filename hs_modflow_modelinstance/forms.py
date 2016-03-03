@@ -318,25 +318,25 @@ class BoundaryConditionForm(ModelForm):
     def __init__(self, allow_edit=True, res_short_id=None, element_id=None, *args, **kwargs):
         super(BoundaryConditionForm, self).__init__(*args, **kwargs)
         self.helper = BoundaryConditionFormHelper(allow_edit, res_short_id, element_id, element_name='BoundaryCondition')
-        if self.instance:
-            try:
-                boundaryConditionType = self.instance.boundaryConditionType.all()
-                if len(boundaryConditionType) > 0:
-                    self.fields['boundaryConditionType'].initial = [types.description for types in
-                                                                    boundaryConditionType]
-                else:
-                    self.fields['boundaryConditionType'].initial = []
-            except TypeError:
-                self.fields['boundaryConditionType'].initial = []
-            try:
-                boundaryConditionPackage = self.instance.boundaryConditionPackage.all()
-                if len(boundaryConditionPackage) > 0:
-                    self.fields['boundaryConditionPackage'].initial = [packages.description for packages in
-                                                                       boundaryConditionPackage]
-                else:
-                    self.fields['boundaryConditionPackage'].initial = []
-            except TypeError:
-                self.fields['boundaryConditionPackage'].initial = []
+        # if self.instance:
+        #     try:
+        #         boundaryConditionType = self.instance.boundaryConditionType.all()
+        #         if len(boundaryConditionType) > 0:
+        #             self.fields['boundaryConditionType'].initial = [types.description for types in
+        #                                                             boundaryConditionType]
+        #         else:
+        #             self.fields['boundaryConditionType'].initial = []
+        #     except TypeError:
+        #         self.fields['boundaryConditionType'].initial = []
+        #     try:
+        #         boundaryConditionPackage = self.instance.boundaryConditionPackage.all()
+        #         if len(boundaryConditionPackage) > 0:
+        #             self.fields['boundaryConditionPackage'].initial = [packages.description for packages in
+        #                                                                boundaryConditionPackage]
+        #         else:
+        #             self.fields['boundaryConditionPackage'].initial = []
+        #     except TypeError:
+        #         self.fields['boundaryConditionPackage'].initial = []
 
     class Meta:
         model = BoundaryCondition
