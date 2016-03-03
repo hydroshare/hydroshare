@@ -120,14 +120,14 @@ def landing_page(request, page):
                                     '{% crispy ground_water_flow_form %} '
                                     '</div>'),
 
-                               HTML('<div class="form-group" id="modelinput"> '
-                                    '{% load crispy_forms_tags %} '
-                                    '{% crispy model_input_form %} '
-                                    '</div></div></div>'),
-
-                               HTML('<div class="row"><div class="col-xs-12"><div class="form-group" id="modelcalibration"> '
+                               HTML('<div class="form-group" id="modelcalibration"> '
                                     '{% load crispy_forms_tags %} '
                                     '{% crispy model_calibration_form %} '
+                                    '</div></div></div>'),
+
+                               HTML('<div class="row"><div class="col-xs-12"><div class="form-group" id="modelinput"> '
+                                    '{% load crispy_forms_tags %} '
+                                    '{% crispy model_input_form %} '
                                     '</div></div></div>'),
 
 
