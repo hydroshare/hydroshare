@@ -130,6 +130,11 @@ def landing_page(request, page):
                                     '{% crispy model_input_form %} '
                                     '</div></div></div>'),
 
+                               HTML('<div style="margin-top:10px">'
+                                 '<p><a id="model_input" class="btn btn-success" data-toggle="modal" data-target="#model_input-dialog">'
+                                 '<i class="fa fa-plus"></i>Add another Model Input</a>'
+                                 '</div>'),
+
 
                                )
 
