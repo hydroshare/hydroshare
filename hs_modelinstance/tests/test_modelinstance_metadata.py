@@ -63,7 +63,7 @@ class TestModelInstanceMetaData(MockIRODSTestCaseMixin, TransactionTestCase):
     def test_allowed_file_types(self):
         # test allowed file type is '.*'
         self.assertIn('.*', ModelInstanceResource.get_supported_upload_file_types())
-        self.assertEquals(len(ModelInstanceResource.get_supported_upload_file_types()), 2)
+        self.assertEquals(self.resModelInstance.get_supported_upload_file_types(), '.*')
 
         # there should not be any content file
         self.assertEquals(self.resModelInstance.files.all().count(), 0)
@@ -79,9 +79,47 @@ class TestModelInstanceMetaData(MockIRODSTestCaseMixin, TransactionTestCase):
         # there should one content file
         self.assertEquals(self.resModelInstance.files.all().count(), 1)
 
+        # check that there are no extended metadata elements at this point
+        self.assertEquals(self.resModelInstance.metadata.model_output, None)
+        self.assertEquals(self.resModelInstance.metadata.executed_by, None)
+
+        # Upload any other file type should pass both the file pre add check post add check
+        files = [UploadedFile(file=self.text_file_obj, name=self.text_file_obj.name)]
+        utils.resource_file_add_pre_process(resource=self.resModelInstance, files=files, user=self.user,
+                                            extract_metadata=True)
+
+        utils.resource_file_add_process(resource=self.resModelInstance, files=files, user=self.user,
+                                        extract_metadata=True)
+
+        # there should two content files
+        self.assertEquals(self.resModelInstance.files.all().count(), 2)
+
+        # check that there are no extended metadata elements at this point
+        self.assertEquals(self.resModelInstance.metadata.model_output, None)
+        self.assertEquals(self.resModelInstance.metadata.executed_by, None)
+
     def test_extended_metadata_CRUD(self):
         # test the core metadata at this point
+        # there should be a title element
         self.assertEquals(self.resModelInstance.metadata.title.value, 'Test Model Instance Resource')
+
+        # there should be a creator element
+        self.assertEquals(self.resModelInstance.creator.username, 'user1')
+
+        # # there should be a type element
+        self.assertNotEqual(self.resModelInstance.metadata.type, None)
+
+        # there should be an identifier element
+        self.assertEquals(self.resModelInstance.metadata.identifiers.count(), 1)
+
+        # there should be rights element
+        self.assertNotEqual(self.resModelInstance.metadata.rights, None)
+
+        # there shouldn't any source element
+        self.assertEquals(self.resModelInstance.metadata.sources.count(), 0)
+
+        # there shouldn't any relation element
+        self.assertEquals(self.resModelInstance.metadata.relations.count(), 0)
 
         # there shouldn't any abstract element
         self.assertEquals(self.resModelInstance.metadata.description, None)
@@ -103,7 +141,7 @@ class TestModelInstanceMetaData(MockIRODSTestCaseMixin, TransactionTestCase):
         self.assertEquals(self.resModelInstance.metadata.executed_by, None)
 
         # create
-        self.resModelInstance.metadata.create_element('ModelOutput')
+        self.resModelInstance.metadata.create_element('ModelOutput', includes_output=False)
 
         modeloutput_element = self.resModelInstance.metadata.model_output
         self.assertEquals(modeloutput_element.includes_output, False)
@@ -111,6 +149,26 @@ class TestModelInstanceMetaData(MockIRODSTestCaseMixin, TransactionTestCase):
         # multiple ModelOutput elements are not allowed - should raise exception
         with self.assertRaises(IntegrityError):
             self.resModelInstance.metadata.create_element('ModelOutput', includes_output=True)
+
+        with self.assertRaises(IntegrityError):
+            self.resModelInstance.metadata.create_element('ModelOutput', includes_output=False)
+
+        self.resModelInstance.metadata.delete_element('ModelOutput', self.resModelInstance.metadata.model_output.id)
+
+        self.assertEqual(self.resModelInstance.metadata.model_output, None)
+
+        self.resModelInstance.metadata.create_element('ModelOutput', includes_output=True)
+
+        modeloutput_element = self.resModelInstance.metadata.model_output
+        self.assertEquals(modeloutput_element.includes_output, True)
+
+        # multiple ModelOutput elements are not allowed - should raise exception
+        with self.assertRaises(IntegrityError):
+            self.resModelInstance.metadata.create_element('ModelOutput', includes_output=True)
+
+        with self.assertRaises(IntegrityError):
+            self.resModelInstance.metadata.create_element('ModelOutput', includes_output=False)
+
 
         self.resModelInstance.metadata.create_element('ExecutedBy', model_name=self.resModelProgram.short_id)
 
@@ -123,6 +181,11 @@ class TestModelInstanceMetaData(MockIRODSTestCaseMixin, TransactionTestCase):
             self.resModelInstance.metadata.create_element('ExecutedBy', model_name=self.resModelProgram2.short_id)
 
         # update
+        self.resModelInstance.metadata.update_element('ModelOutput', self.resModelInstance.metadata.model_output.id,
+                                                      includes_output=False)
+
+        self.assertEquals(self.resModelInstance.metadata.model_output.includes_output, False)
+
         self.resModelInstance.metadata.update_element('ModelOutput', self.resModelInstance.metadata.model_output.id,
                                                       includes_output=True)
 
@@ -229,6 +292,7 @@ class TestModelInstanceMetaData(MockIRODSTestCaseMixin, TransactionTestCase):
         self.resModelInstance.metadata.create_element('Subject', value="test subject")
         self.resModelInstance.metadata.create_element('ModelOutput', includes_output=True)
         self.resModelInstance.metadata.create_element('ExecutedBy', model_name=self.resModelProgram.short_id)
+        self.resModelInstance.metadata.create_element('Contributor', name="user2")
 
         # before resource delete
         core_metadata_obj = self.resModelInstance.metadata
@@ -236,7 +300,7 @@ class TestModelInstanceMetaData(MockIRODSTestCaseMixin, TransactionTestCase):
         # there should be Creator metadata objects
         self.assertTrue(Creator.objects.filter(object_id=core_metadata_obj.id).exists())
         # there should be no Contributor metadata objects
-        self.assertFalse(Contributor.objects.filter(object_id=core_metadata_obj.id).exists())
+        self.assertTrue(Contributor.objects.filter(object_id=core_metadata_obj.id).exists())
         # there should be Identifier metadata objects
         self.assertTrue(Identifier.objects.filter(object_id=core_metadata_obj.id).exists())
         # there should be Type metadata objects
