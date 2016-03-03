@@ -1,4 +1,7 @@
 from string import Template
+import logging
+
+logger = logging.getLogger(__name__)
 
 def parse_app_url_template(url_template_string, term_dict_list=[]):
     '''
@@ -10,13 +13,14 @@ def parse_app_url_template(url_template_string, term_dict_list=[]):
     :return: the updated url string, or None if template contains undefined terms
     '''
     new_url_string = url_template_string
+    merged_term_dic = {}
     try:
-        merged_term_dic = {}
         for term_dict in term_dict_list:
             merged_term_dic.update(term_dict)
 
         new_url_string = Template(new_url_string).substitute(merged_term_dic)
     except Exception as ex:
+        logger.exception("[WebApp] '{0}' cannot be parsed by term_dict {1}.".format(new_url_string, str(merged_term_dic)))
         new_url_string = None
     finally:
         return new_url_string
