@@ -83,6 +83,7 @@ def get_page_context(page, user, resource_edit=False, extended_metadata_layout=N
                         relevant_tools.append(tl)
 
     just_created = False
+    new_version_create_resource_error = None
     just_published = False
     if request:
         validation_error = check_for_validation(request)
@@ -90,6 +91,10 @@ def get_page_context(page, user, resource_edit=False, extended_metadata_layout=N
         just_created = request.session.get('just_created', False)
         if 'just_created' in request.session:
             del request.session['just_created']
+
+        new_version_create_resource_error = request.session.get('new_version_resource_creation_error', None)
+        if 'new_version_resource_creation_error' in request.session:
+            del request.session['new_version_resource_creation_error']
 
         just_published = request.session.get('just_published', False)
         if 'just_published' in request.session:
@@ -164,6 +169,7 @@ def get_page_context(page, user, resource_edit=False, extended_metadata_layout=N
                    'supported_file_types': content_model.get_supported_upload_file_types(),
                    'allow_multiple_file_upload': content_model.can_have_multiple_files(),
                    'validation_error': validation_error if validation_error else None,
+                   'new_version_resource_creation_error': new_version_create_resource_error if new_version_create_resource_error else None,
                    'relevant_tools': relevant_tools,
                    'file_type_error': file_type_error,
                    'just_created': just_created,
@@ -358,7 +364,9 @@ def get_page_context(page, user, resource_edit=False, extended_metadata_layout=N
                'show_content_files': show_content_files,
                'validation_error': validation_error if validation_error else None,
                'discoverable': discoverable,
-               'relation_source_types': Relation.SOURCE_TYPES
+               'relation_source_types': tuple((type_value, type_display)
+                                              for type_value, type_display in Relation.SOURCE_TYPES
+                                              if type_value != 'isReplacedBy' and type_value != 'isVersionOf')
     }
 
     return context
