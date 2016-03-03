@@ -25,13 +25,6 @@ def landing_page(request, page):
         context['extended_metadata_exists'] = extended_metadata_exists
         context['mpmetadata'] = content_model.metadata.program
 
-        # get the helptext for each mp field
-        attributes = content_model.metadata.modelprogrammetadata._mpmetadata.model._meta.get_fields_with_model()
-        attribute_dict = {}
-        for att in attributes:
-             attribute_dict[att[0].attname] = att[0].help_text
-        context["mphelptext" ] = attribute_dict
-
     else:
         output_form = mp_form(files=content_model.files, instance=content_model.metadata.program,
                               res_short_id=content_model.short_id,
