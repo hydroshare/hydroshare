@@ -1,4 +1,4 @@
-from django.contrib.contenttypes import generic
+from django.contrib.contenttypes.fields import GenericRelation
 from django.contrib.auth.models import User, Group
 from django.db import models
 from mezzanine.pages.models import Page, RichText
@@ -98,7 +98,7 @@ processor_for(ModelProgramResource)(resource_processor)
 
 
 class ModelProgramMetaData(CoreMetaData):
-    _mpmetadata = generic.GenericRelation(MpMetadata)
+    _mpmetadata = GenericRelation(MpMetadata)
 
     @property
     def program(self):

@@ -1,6 +1,6 @@
 from lxml import etree
 
-from django.contrib.contenttypes import generic
+from django.contrib.contenttypes.fields import GenericRelation
 from django.db import models
 
 from mezzanine.pages.page_processors import processor_for
@@ -95,8 +95,8 @@ processor_for(ModelInstanceResource)(resource_processor)
 
 # metadata container class
 class ModelInstanceMetaData(CoreMetaData):
-    _model_output = generic.GenericRelation(ModelOutput)
-    _executed_by = generic.GenericRelation(ExecutedBy)
+    _model_output = GenericRelation(ModelOutput)
+    _executed_by = GenericRelation(ExecutedBy)
 
     @property
     def model_output(self):
