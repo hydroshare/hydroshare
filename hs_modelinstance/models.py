@@ -71,7 +71,7 @@ class ExecutedBy(AbstractMetaDataElement):
         # get the MP object that matches.  Returns None if nothing is found
         obj = ModelProgramResource.objects.filter(short_id=shortid).first()
         title = obj.title
-        return super(ExecutedBy,cls).update(model_program_fk=obj, model_name= title, element_id=element_id)
+        return super(ExecutedBy,cls).update(model_program_fk=obj, model_name=title, element_id=element_id)
 
 # Model Instance Resource type
 class ModelInstanceResource(BaseResource):
