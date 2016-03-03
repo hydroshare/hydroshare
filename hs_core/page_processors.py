@@ -74,10 +74,11 @@ def get_page_context(page, user, resource_edit=False, extended_metadata_layout=N
                         hs_term_dict_user = {}
                         hs_term_dict_user["HS_USR_NAME"] = request.user.username if request.user.is_authenticated() else "anonymous"
                         tool_url_new = parse_app_url_template(tool_url, [content_model.get_hs_term_dict(), hs_term_dict_user])
-                        tl = {'title': str(tool_res_obj.metadata.title.value),
-                              'icon_url': tool_icon_url,
-                              'url': tool_url_new}
-                        relevant_tools.append(tl)
+                        if tool_url_new is not None:
+                            tl = {'title': str(tool_res_obj.metadata.title.value),
+                                  'icon_url': tool_icon_url,
+                                  'url': tool_url_new}
+                            relevant_tools.append(tl)
 
     just_created = False
     just_published = False

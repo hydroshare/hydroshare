@@ -200,7 +200,7 @@ class TestWebAppFeature(TransactionTestCase):
         self.assertTrue(data["is_valid"])
 
     def test_utils(self):
-        url_template_string = "http://www.google.com/?resid=${HS_RES_ID}&restype=${HS_RES_TYPE}&mypara=${HS_UNKNOWN_TERM}&user=${HS_USR_NAME}"
+        url_template_string = "http://www.google.com/?resid=${HS_RES_ID}&restype=${HS_RES_TYPE}&user=${HS_USR_NAME}"
 
         term_dict_user = {"HS_USR_NAME": self.user.username}
         new_url_string = parse_app_url_template(url_template_string, [self.resGeneric.get_hs_term_dict(), term_dict_user])
@@ -209,7 +209,8 @@ class TestWebAppFeature(TransactionTestCase):
 
         self.assertEqual(query["resid"][0], self.resGeneric.short_id)
         self.assertEqual(query["restype"][0], "GenericResource")
-        self.assertEqual(query["mypara"][0], "${HS_UNKNOWN_TERM}")
         self.assertEqual(query["user"][0], self.user.username)
 
-
+        url_template_string = "http://www.google.com/?resid=${HS_RES_ID}&restype=${HS_RES_TYPE}&mypara=${HS_UNDEFINED_TERM}&user=${HS_USR_NAME}"
+        new_url_string = parse_app_url_template(url_template_string, [self.resGeneric.get_hs_term_dict(), term_dict_user])
+        self.assertEqual(new_url_string, None)

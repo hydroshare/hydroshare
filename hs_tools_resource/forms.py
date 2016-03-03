@@ -37,7 +37,6 @@ class UrlBaseValidationForm(forms.Form):
 
 # The following 3 classes need to have the "field" same as the fields defined in "ToolResourceType" table in models.py
 
-
 class VersionFormHelper(BaseFormHelper):
     def __init__(self, allow_edit=True, res_short_id=None, element_id=None, element_name=None, *args, **kwargs):
         # the order in which the model fields are listed for the FieldSet is the order these fields will be displayed
