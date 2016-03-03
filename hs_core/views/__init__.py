@@ -1,6 +1,7 @@
 from __future__ import absolute_import
 import json
 import datetime
+import pytz
 
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import Group, User
@@ -260,7 +261,7 @@ def create_new_version_resource(request, shortkey, *args, **kwargs):
         raise PermissionDenied()
 
     if res.locked_time:
-        elapsed_time = datetime.datetime.now() - res.locked_time
+        elapsed_time = datetime.datetime.now(pytz.utc) - res.locked_time
         if elapsed_time.days >= 0 or elapsed_time.seconds > settings.RESOURCE_LOCK_TIMEOUT_SECONDS:
             # clear the lock since the elapsed time is greater than timeout threshold
             res.locked_time = None
@@ -274,7 +275,7 @@ def create_new_version_resource(request, shortkey, *args, **kwargs):
     new_resource = None
     try:
         # lock the resource to prevent concurrent new version creation since only one new version for an obsoleted resource is allowed
-        res.locked_time = datetime.datetime.now()
+        res.locked_time = datetime.datetime.now(pytz.utc)
         res.save()
         new_resource = hydroshare.create_new_version_empty_resource(shortkey, user)
         new_resource = hydroshare.create_new_version_resource(res, new_resource)
