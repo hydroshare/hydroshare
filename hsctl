@@ -235,7 +235,7 @@ loaddb_hs() {
     #echo "*** manage.py makemigrations ***"
     #docker exec $CID python manage.py makemigrations
     echo "*** manage.py migrate ***"
-    docker exec $CID python manage.py migrate
+    docker exec $CID python manage.py migrate --fake-initial
     echo "*** manage.py fix_permissions ***"
     docker exec $CID python manage.py fix_permissions
     sleep 3s
@@ -380,6 +380,8 @@ case "$1" in
     start) start_hs $1
         ;;
     stop) stop_hs $1
+        ;;
+    preflight) preflight_hs $1
         ;;
     *) display_usage
         ;;
