@@ -89,7 +89,15 @@ class GeographicFeatureResource(BaseResource):
         # can have more than one files
         return True
 
-    # demo how to add resource-specific HS terms
+    # demo how to add resource-specific HS term names
+    @classmethod
+    def get_supported_hs_term_names(cls):
+        # define resource-specific HS Terms here, and then implement them in method get_hs_term_dict() below
+        term_name_list = super(GeographicFeatureResource, cls).get_supported_hs_term_names()
+        term_name_list.append('HS_GFR_FEATURE_COUNT')
+        return term_name_list
+
+    # demo how to add resource-specific HS term values
     def get_hs_term_dict(self):
         # get existing hs_term_dict from base class
         hs_term_dict = super(GeographicFeatureResource, self).get_hs_term_dict()

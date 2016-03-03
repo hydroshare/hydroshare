@@ -5,6 +5,7 @@ from crispy_forms.layout import Layout, Field
 
 from models import RequestUrlBase, ToolVersion, SupportedResTypes, ToolIcon
 from hs_core.forms import BaseFormHelper
+from .utils import validate_hs_terms_in_url_template
 
 
 # TODO: reference hs_core.forms
@@ -34,6 +35,17 @@ class UrlBaseForm(ModelForm):
 
 class UrlBaseValidationForm(forms.Form):
     value = forms.URLField(max_length=1024)
+
+    def clean(self):
+        cleaned_data = super(UrlBaseValidationForm, self).clean()
+        url = cleaned_data.get('value', None)
+        if url:
+            result = validate_hs_terms_in_url_template(url)
+            if result["status"] != "success":
+                self._errors['value'] = [result["msg"]]
+        else:
+            self._errors['value'] = ["Invalid URL."]
+        return self.cleaned_data
 
 # The following 3 classes need to have the "field" same as the fields defined in "ToolResourceType" table in models.py
 
