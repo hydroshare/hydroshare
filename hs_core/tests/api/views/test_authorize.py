@@ -7,7 +7,7 @@ from rest_framework.exceptions import PermissionDenied, NotFound
 from hs_core.hydroshare import resource
 from hs_core.hydroshare import users
 from hs_core.testing import MockIRODSTestCaseMixin
-from hs_core.views.utils import authorize, Action_To_Authorize
+from hs_core.views.utils import authorize, ACTION_TO_AUTHORIZE
 from hs_access_control.models import PrivilegeCodes
 
 class TestAuthorize(MockIRODSTestCaseMixin, TestCase):
@@ -34,26 +34,26 @@ class TestAuthorize(MockIRODSTestCaseMixin, TestCase):
     def test_authorize_owner(self):
         common_parameters = [
                       # resource owner has authorization for resource metadata view
-                      {'res_id': self.res.short_id, 'needed_permission': Action_To_Authorize.VIEW_METADATA,
+                      {'res_id': self.res.short_id, 'needed_permission': ACTION_TO_AUTHORIZE.VIEW_METADATA,
                        'success': True, 'exception': None},
                       # resource owner has authorization for resource view (metadata and content files)
-                      {'res_id': self.res.short_id, 'needed_permission': Action_To_Authorize.VIEW_RESOURCE,
+                      {'res_id': self.res.short_id, 'needed_permission': ACTION_TO_AUTHORIZE.VIEW_RESOURCE,
                        'success': True, 'exception': None},
                       # resource owner has authorization for creating a new resource version
-                      {'res_id': self.res.short_id, 'needed_permission': Action_To_Authorize.CREATE_RESOURCE_VERSION,
+                      {'res_id': self.res.short_id, 'needed_permission': ACTION_TO_AUTHORIZE.CREATE_RESOURCE_VERSION,
                        'success': True, 'exception': None}
                       ]
 
         parameters = [
                       # resource owner has authorization for resource edit (metadata and content files)
-                      {'res_id': self.res.short_id, 'needed_permission': Action_To_Authorize.EDIT_RESOURCE,
+                      {'res_id': self.res.short_id, 'needed_permission': ACTION_TO_AUTHORIZE.EDIT_RESOURCE,
                        'success': True, 'exception': None},
                       # resource owner has authorization for setting resource flags
                       # (public, published/immutable, shareable etc)
-                      {'res_id': self.res.short_id, 'needed_permission': Action_To_Authorize.SET_RESOURCE_FLAG,
+                      {'res_id': self.res.short_id, 'needed_permission': ACTION_TO_AUTHORIZE.SET_RESOURCE_FLAG,
                        'success': True, 'exception': None},
                       # resource owner has authorization for resource delete
-                      {'res_id': self.res.short_id, 'needed_permission': Action_To_Authorize.DELETE_RESOURCE,
+                      {'res_id': self.res.short_id, 'needed_permission': ACTION_TO_AUTHORIZE.DELETE_RESOURCE,
                        'success': True, 'exception': None}
                       ] + common_parameters
 
@@ -93,14 +93,14 @@ class TestAuthorize(MockIRODSTestCaseMixin, TestCase):
 
         parameters = [
                       # resource owner has no authorization for editing a published resource
-                      {'res_id': self.res.short_id, 'needed_permission': Action_To_Authorize.EDIT_RESOURCE,
+                      {'res_id': self.res.short_id, 'needed_permission': ACTION_TO_AUTHORIZE.EDIT_RESOURCE,
                        'success': False, 'exception': PermissionDenied},
                       # resource owner has no authorization for setting resource
                       # flags (public, immutable/published, shareable etc)
-                      {'res_id': self.res.short_id, 'needed_permission': Action_To_Authorize.SET_RESOURCE_FLAG,
+                      {'res_id': self.res.short_id, 'needed_permission': ACTION_TO_AUTHORIZE.SET_RESOURCE_FLAG,
                        'success': False, 'exception': PermissionDenied},
                       # resource owner has no authorization for deleting a published resource
-                      {'res_id': self.res.short_id, 'needed_permission': Action_To_Authorize.DELETE_RESOURCE,
+                      {'res_id': self.res.short_id, 'needed_permission': ACTION_TO_AUTHORIZE.DELETE_RESOURCE,
                        'success': False, 'exception': PermissionDenied}
                       ] + common_parameters
 
@@ -120,26 +120,26 @@ class TestAuthorize(MockIRODSTestCaseMixin, TestCase):
 
         common_parameters = [
                       # resource editor has authorization for resource view (metadata and content files)
-                      {'res_id': self.res.short_id, 'needed_permission': Action_To_Authorize.VIEW_RESOURCE,
+                      {'res_id': self.res.short_id, 'needed_permission': ACTION_TO_AUTHORIZE.VIEW_RESOURCE,
                        'success': True, 'exception': None},
                       # resource editor has authorization for resource metadata view
-                      {'res_id': self.res.short_id, 'needed_permission': Action_To_Authorize.VIEW_METADATA,
+                      {'res_id': self.res.short_id, 'needed_permission': ACTION_TO_AUTHORIZE.VIEW_METADATA,
                        'success': True, 'exception': None},
                       # resource editor has no authorization for changing resource flags
                       # (e.g., public, published/immutable, shareable etc)
-                      {'res_id': self.res.short_id, 'needed_permission': Action_To_Authorize.SET_RESOURCE_FLAG,
+                      {'res_id': self.res.short_id, 'needed_permission': ACTION_TO_AUTHORIZE.SET_RESOURCE_FLAG,
                        'success': False, 'exception': PermissionDenied},
                       # resource editor has no authorization for deleting a resource
-                      {'res_id': self.res.short_id, 'needed_permission': Action_To_Authorize.DELETE_RESOURCE,
+                      {'res_id': self.res.short_id, 'needed_permission': ACTION_TO_AUTHORIZE.DELETE_RESOURCE,
                        'success': False, 'exception': PermissionDenied},
                       # resource editor has no authorization for creating version of a resource
-                      {'res_id': self.res.short_id, 'needed_permission': Action_To_Authorize.CREATE_RESOURCE_VERSION,
+                      {'res_id': self.res.short_id, 'needed_permission': ACTION_TO_AUTHORIZE.CREATE_RESOURCE_VERSION,
                        'success': False, 'exception': PermissionDenied}
                       ]
 
         parameters = [
                       # resource editor has authorization for resource edit (metadata and content files)
-                      {'res_id': self.res.short_id, 'needed_permission': Action_To_Authorize.EDIT_RESOURCE,
+                      {'res_id': self.res.short_id, 'needed_permission': ACTION_TO_AUTHORIZE.EDIT_RESOURCE,
                        'success': True, 'exception': None}
                       ] + common_parameters
 
@@ -180,7 +180,7 @@ class TestAuthorize(MockIRODSTestCaseMixin, TestCase):
 
         parameters = [
                       # resource editor has no authorization for editing a published resource
-                      {'res_id': self.res.short_id, 'needed_permission': Action_To_Authorize.EDIT_RESOURCE,
+                      {'res_id': self.res.short_id, 'needed_permission': ACTION_TO_AUTHORIZE.EDIT_RESOURCE,
                        'success': False, 'exception': PermissionDenied}
                       ] + common_parameters
 
@@ -200,23 +200,23 @@ class TestAuthorize(MockIRODSTestCaseMixin, TestCase):
 
         parameters = [
                       # resource viewer has authorization for resource metadata view
-                      {'res_id': self.res.short_id, 'needed_permission': Action_To_Authorize.VIEW_METADATA,
+                      {'res_id': self.res.short_id, 'needed_permission': ACTION_TO_AUTHORIZE.VIEW_METADATA,
                        'success': True, 'exception': None},
                       # resource viewer has authorization for resource view (metadata and content files)
-                      {'res_id': self.res.short_id, 'needed_permission': Action_To_Authorize.VIEW_RESOURCE,
+                      {'res_id': self.res.short_id, 'needed_permission': ACTION_TO_AUTHORIZE.VIEW_RESOURCE,
                        'success': True, 'exception': None},
                       # resource viewer has no authorization for editing a resource
-                      {'res_id': self.res.short_id, 'needed_permission': Action_To_Authorize.EDIT_RESOURCE,
+                      {'res_id': self.res.short_id, 'needed_permission': ACTION_TO_AUTHORIZE.EDIT_RESOURCE,
                        'success': False, 'exception': PermissionDenied},
                       # resource viewer has no authorization for changing resource flags
                       # (e.g., public, published/immutable, shareable etc)
-                      {'res_id': self.res.short_id, 'needed_permission': Action_To_Authorize.SET_RESOURCE_FLAG,
+                      {'res_id': self.res.short_id, 'needed_permission': ACTION_TO_AUTHORIZE.SET_RESOURCE_FLAG,
                        'success': False, 'exception': PermissionDenied},
                       # resource viewer has no authorization for deleting a resource
-                      {'res_id': self.res.short_id, 'needed_permission': Action_To_Authorize.DELETE_RESOURCE,
+                      {'res_id': self.res.short_id, 'needed_permission': ACTION_TO_AUTHORIZE.DELETE_RESOURCE,
                        'success': False, 'exception': PermissionDenied},
                       # resource viewer has no authorization for creating a resource version
-                      {'res_id': self.res.short_id, 'needed_permission': Action_To_Authorize.CREATE_RESOURCE_VERSION,
+                      {'res_id': self.res.short_id, 'needed_permission': ACTION_TO_AUTHORIZE.CREATE_RESOURCE_VERSION,
                        'success': False, 'exception': PermissionDenied}
                       ]
 
@@ -272,28 +272,28 @@ class TestAuthorize(MockIRODSTestCaseMixin, TestCase):
         common_parameters = [
                       # super user has authorization for resource metadata view for a resource
                       # that is private or discoverable or public or published
-                      {'res_id': self.res.short_id, 'needed_permission': Action_To_Authorize.VIEW_METADATA,
+                      {'res_id': self.res.short_id, 'needed_permission': ACTION_TO_AUTHORIZE.VIEW_METADATA,
                        'success': True, 'exception': None},
                       # super user has authorization for resource view (both metadata and content files)for a resource
                       # that is private or discoverable or public or published
-                      {'res_id': self.res.short_id, 'needed_permission': Action_To_Authorize.VIEW_RESOURCE,
+                      {'res_id': self.res.short_id, 'needed_permission': ACTION_TO_AUTHORIZE.VIEW_RESOURCE,
                        'success': True, 'exception': None},
                       # super user has authorization for editing a resource that is private or discoverable or public
                       # or published
-                      {'res_id': self.res.short_id, 'needed_permission': Action_To_Authorize.EDIT_RESOURCE,
+                      {'res_id': self.res.short_id, 'needed_permission': ACTION_TO_AUTHORIZE.EDIT_RESOURCE,
                        'success': True, 'exception': None},
                       # super user has no authorization for creating a resource version
-                      {'res_id': self.res.short_id, 'needed_permission': Action_To_Authorize.CREATE_RESOURCE_VERSION,
+                      {'res_id': self.res.short_id, 'needed_permission': ACTION_TO_AUTHORIZE.CREATE_RESOURCE_VERSION,
                        'success': False, 'exception': PermissionDenied}
                       ]
 
         parameters = [
                       # super user has authorization for setting resource flags (e.g., public,
                       # published/immutable, shareable etc) for a private resource
-                      {'res_id': self.res.short_id, 'needed_permission': Action_To_Authorize.SET_RESOURCE_FLAG,
+                      {'res_id': self.res.short_id, 'needed_permission': ACTION_TO_AUTHORIZE.SET_RESOURCE_FLAG,
                        'success': True, 'exception': None},
                       # super user has authorization for deleting a private resource
-                      {'res_id': self.res.short_id, 'needed_permission': Action_To_Authorize.DELETE_RESOURCE,
+                      {'res_id': self.res.short_id, 'needed_permission': ACTION_TO_AUTHORIZE.DELETE_RESOURCE,
                        'success': True, 'exception': None},
                       ] + common_parameters
 
@@ -331,10 +331,10 @@ class TestAuthorize(MockIRODSTestCaseMixin, TestCase):
         parameters = [
                       # super user has authorization for setting resource flags (e.g., public,
                       # published/immutable, shareable etc) for a resource that has been published
-                      {'res_id': self.res.short_id, 'needed_permission': Action_To_Authorize.SET_RESOURCE_FLAG,
+                      {'res_id': self.res.short_id, 'needed_permission': ACTION_TO_AUTHORIZE.SET_RESOURCE_FLAG,
                        'success': True, 'exception': None},
                       # super user has no authorization for deleting a published resource
-                      {'res_id': self.res.short_id, 'needed_permission': Action_To_Authorize.DELETE_RESOURCE,
+                      {'res_id': self.res.short_id, 'needed_permission': ACTION_TO_AUTHORIZE.DELETE_RESOURCE,
                        'success': False, 'exception': PermissionDenied}
                       ] + common_parameters
 
@@ -345,13 +345,13 @@ class TestAuthorize(MockIRODSTestCaseMixin, TestCase):
         common_parameters = [
                       # anonymous user has no authorization for resource edit (metadata and content files) for a
                       # private resource
-                      {'res_id': self.res.short_id, 'needed_permission': Action_To_Authorize.EDIT_RESOURCE,
+                      {'res_id': self.res.short_id, 'needed_permission': ACTION_TO_AUTHORIZE.EDIT_RESOURCE,
                        'success': False, 'exception': PermissionDenied},
                       # anonymous user has no authorization for deleting a private resource
-                      {'res_id': self.res.short_id, 'needed_permission': Action_To_Authorize.DELETE_RESOURCE,
+                      {'res_id': self.res.short_id, 'needed_permission': ACTION_TO_AUTHORIZE.DELETE_RESOURCE,
                        'success': False, 'exception': PermissionDenied},
                       # anonymous user has no authorization for setting resource flags for a private resource
-                      {'res_id': self.res.short_id, 'needed_permission': Action_To_Authorize.SET_RESOURCE_FLAG,
+                      {'res_id': self.res.short_id, 'needed_permission': ACTION_TO_AUTHORIZE.SET_RESOURCE_FLAG,
                        'success': False, 'exception': PermissionDenied}
                       ]
 
@@ -368,11 +368,11 @@ class TestAuthorize(MockIRODSTestCaseMixin, TestCase):
 
         parameters = [
                       # anonymous user has authorization for metadata view for a resource that is discoverable
-                      {'res_id': self.res.short_id, 'needed_permission': Action_To_Authorize.VIEW_METADATA,
+                      {'res_id': self.res.short_id, 'needed_permission': ACTION_TO_AUTHORIZE.VIEW_METADATA,
                        'success': True, 'exception': None},
                       # anonymous user has no authorization for resource view (metadata and content files) for a
                       # resource that is discoverable
-                      {'res_id': self.res.short_id, 'needed_permission': Action_To_Authorize.VIEW_RESOURCE,
+                      {'res_id': self.res.short_id, 'needed_permission': ACTION_TO_AUTHORIZE.VIEW_RESOURCE,
                        'success': False, 'exception': PermissionDenied}
                       ] + common_parameters
 
@@ -388,10 +388,10 @@ class TestAuthorize(MockIRODSTestCaseMixin, TestCase):
         parameters = [
                       # anonymous user has authorization for resource view (metadata and content files) for a
                       # resource that is public
-                      {'res_id': self.res.short_id, 'needed_permission': Action_To_Authorize.VIEW_RESOURCE,
+                      {'res_id': self.res.short_id, 'needed_permission': ACTION_TO_AUTHORIZE.VIEW_RESOURCE,
                        'success': True, 'exception': None},
                       # anonymous user has authorization for metadata view for a resource that is public
-                      {'res_id': self.res.short_id, 'needed_permission': Action_To_Authorize.VIEW_METADATA,
+                      {'res_id': self.res.short_id, 'needed_permission': ACTION_TO_AUTHORIZE.VIEW_METADATA,
                        'success': True, 'exception': None}
                       ] + common_parameters
 
@@ -409,11 +409,11 @@ class TestAuthorize(MockIRODSTestCaseMixin, TestCase):
         parameters = [
                       # anonymous user has authorization for resource metadata view for a
                       # published resource
-                      {'res_id': self.res.short_id, 'needed_permission': Action_To_Authorize.VIEW_METADATA,
+                      {'res_id': self.res.short_id, 'needed_permission': ACTION_TO_AUTHORIZE.VIEW_METADATA,
                        'success': True, 'exception': None},
                       # anonymous user has authorization for resource view (metadata and content files) for a
                       # published resource
-                      {'res_id': self.res.short_id, 'needed_permission': Action_To_Authorize.VIEW_RESOURCE,
+                      {'res_id': self.res.short_id, 'needed_permission': ACTION_TO_AUTHORIZE.VIEW_RESOURCE,
                        'success': True, 'exception': None}
                       ] + common_parameters
 
@@ -434,19 +434,19 @@ class TestAuthorize(MockIRODSTestCaseMixin, TestCase):
         common_parameters = [
                       # authenticated user (with no assigned access permission) has no authorization for editing a
                       # resource (metadata and content files)
-                      {'res_id': self.res.short_id, 'needed_permission': Action_To_Authorize.EDIT_RESOURCE,
+                      {'res_id': self.res.short_id, 'needed_permission': ACTION_TO_AUTHORIZE.EDIT_RESOURCE,
                        'success': False, 'exception': PermissionDenied},
                       # authenticated user (with no assigned access permission) has no authorization for
                       # setting resource flags
-                      {'res_id': self.res.short_id, 'needed_permission': Action_To_Authorize.SET_RESOURCE_FLAG,
+                      {'res_id': self.res.short_id, 'needed_permission': ACTION_TO_AUTHORIZE.SET_RESOURCE_FLAG,
                        'success': False, 'exception': PermissionDenied},
                       # authenticated user (with no assigned access permission) has no authorization for creating a
                       # resource version
-                      {'res_id': self.res.short_id, 'needed_permission': Action_To_Authorize.CREATE_RESOURCE_VERSION,
+                      {'res_id': self.res.short_id, 'needed_permission': ACTION_TO_AUTHORIZE.CREATE_RESOURCE_VERSION,
                        'success': False, 'exception': PermissionDenied},
                       # authenticated user (with no assigned access permission) has no authorization for deleting a
                       # resource
-                      {'res_id': self.res.short_id, 'needed_permission': Action_To_Authorize.DELETE_RESOURCE,
+                      {'res_id': self.res.short_id, 'needed_permission': ACTION_TO_AUTHORIZE.DELETE_RESOURCE,
                        'success': False, 'exception': PermissionDenied}
                       ]
 
@@ -457,11 +457,11 @@ class TestAuthorize(MockIRODSTestCaseMixin, TestCase):
         parameters = [
                       # authenticated user (with no assigned access permission) has no authorization for viewing
                       # metadata of a private resource
-                      {'res_id': self.res.short_id, 'needed_permission': Action_To_Authorize.VIEW_METADATA,
+                      {'res_id': self.res.short_id, 'needed_permission': ACTION_TO_AUTHORIZE.VIEW_METADATA,
                        'success': False, 'exception': PermissionDenied},
                       # authenticated user (with no assigned access permission) has no authorization for viewing a
                       # private resource (both metadata and content files
-                      {'res_id': self.res.short_id, 'needed_permission': Action_To_Authorize.VIEW_RESOURCE,
+                      {'res_id': self.res.short_id, 'needed_permission': ACTION_TO_AUTHORIZE.VIEW_RESOURCE,
                        'success': False, 'exception': PermissionDenied}
                       ] + common_parameters
 
@@ -475,11 +475,11 @@ class TestAuthorize(MockIRODSTestCaseMixin, TestCase):
         parameters = [
                       # authenticated user (with no assigned access permission) has no authorization for resource view
                       # (metadata and content files) for a discoverable resource
-                      {'res_id': self.res.short_id, 'needed_permission': Action_To_Authorize.VIEW_RESOURCE,
+                      {'res_id': self.res.short_id, 'needed_permission': ACTION_TO_AUTHORIZE.VIEW_RESOURCE,
                        'success': False, 'exception': PermissionDenied},
                       # authenticated (with no assigned access permission) user has authorization for resource metadata
                       # only view for a discoverable resource
-                      {'res_id': self.res.short_id, 'needed_permission': Action_To_Authorize.VIEW_METADATA,
+                      {'res_id': self.res.short_id, 'needed_permission': ACTION_TO_AUTHORIZE.VIEW_METADATA,
                        'success': True, 'exception': None}
                       ] + common_parameters
 
@@ -495,11 +495,11 @@ class TestAuthorize(MockIRODSTestCaseMixin, TestCase):
         parameters = [
                       # authenticated user (with no assigned access permission) has authorization for resource view
                       # (metadata and content files) for a public or published resource
-                      {'res_id': self.res.short_id, 'needed_permission': Action_To_Authorize.VIEW_RESOURCE,
+                      {'res_id': self.res.short_id, 'needed_permission': ACTION_TO_AUTHORIZE.VIEW_RESOURCE,
                        'success': True, 'exception': None},
                       # authenticated user (with no assigned access permission)has authorization for resource metadata
                       # only view for a public or published resource
-                      {'res_id': self.res.short_id, 'needed_permission': Action_To_Authorize.VIEW_METADATA,
+                      {'res_id': self.res.short_id, 'needed_permission': ACTION_TO_AUTHORIZE.VIEW_METADATA,
                        'success': True, 'exception': None}
                       ] + common_parameters
 
@@ -522,17 +522,17 @@ class TestAuthorize(MockIRODSTestCaseMixin, TestCase):
 
         common_parameters = [
                       # resource inactive owner has no authorization for editing a resource (metadata and content files)
-                      {'res_id': self.res.short_id, 'needed_permission': Action_To_Authorize.EDIT_RESOURCE,
+                      {'res_id': self.res.short_id, 'needed_permission': ACTION_TO_AUTHORIZE.EDIT_RESOURCE,
                        'success': False, 'exception': PermissionDenied},
                       # resource inactive owner has no authorization for setting resource flags
                       # (public, published/immutable, shareable etc)
-                      {'res_id': self.res.short_id, 'needed_permission': Action_To_Authorize.SET_RESOURCE_FLAG,
+                      {'res_id': self.res.short_id, 'needed_permission': ACTION_TO_AUTHORIZE.SET_RESOURCE_FLAG,
                        'success': False, 'exception': PermissionDenied},
                       # resource inactive owner has no authorization for creating a resource version
-                      {'res_id': self.res.short_id, 'needed_permission': Action_To_Authorize.CREATE_RESOURCE_VERSION,
+                      {'res_id': self.res.short_id, 'needed_permission': ACTION_TO_AUTHORIZE.CREATE_RESOURCE_VERSION,
                        'success': False, 'exception': PermissionDenied},
                       # resource inactive owner has no authorization for deleting a resource
-                      {'res_id': self.res.short_id, 'needed_permission': Action_To_Authorize.DELETE_RESOURCE,
+                      {'res_id': self.res.short_id, 'needed_permission': ACTION_TO_AUTHORIZE.DELETE_RESOURCE,
                        'success': False, 'exception': PermissionDenied}
                       ]
 
@@ -543,11 +543,11 @@ class TestAuthorize(MockIRODSTestCaseMixin, TestCase):
         parameters = [
                       # resource inactive owner has no authorization for resource view (metadata and content files)
                       # for a resource that is not discoverable
-                      {'res_id': self.res.short_id, 'needed_permission': Action_To_Authorize.VIEW_RESOURCE,
+                      {'res_id': self.res.short_id, 'needed_permission': ACTION_TO_AUTHORIZE.VIEW_RESOURCE,
                        'success': False, 'exception': PermissionDenied},
                       # resource inactive owner has no authorization for resource metadata view for a resource
                       # that is not discoverable
-                      {'res_id': self.res.short_id, 'needed_permission': Action_To_Authorize.VIEW_METADATA,
+                      {'res_id': self.res.short_id, 'needed_permission': ACTION_TO_AUTHORIZE.VIEW_METADATA,
                        'success': False, 'exception': PermissionDenied}
                       ] + common_parameters
 
@@ -562,11 +562,11 @@ class TestAuthorize(MockIRODSTestCaseMixin, TestCase):
         parameters = [
                       # resource inactive owner has no authorization for resource view (metadata and content files)
                       # for a resource that is discoverable
-                      {'res_id': self.res.short_id, 'needed_permission': Action_To_Authorize.VIEW_RESOURCE,
+                      {'res_id': self.res.short_id, 'needed_permission': ACTION_TO_AUTHORIZE.VIEW_RESOURCE,
                        'success': False, 'exception': PermissionDenied},
                       # resource inactive owner has authorization for resource metadata view for a resource that is
                       # discoverable
-                      {'res_id': self.res.short_id, 'needed_permission': Action_To_Authorize.VIEW_METADATA,
+                      {'res_id': self.res.short_id, 'needed_permission': ACTION_TO_AUTHORIZE.VIEW_METADATA,
                        'success': True, 'exception': None}
                       ] + common_parameters
 
@@ -582,10 +582,10 @@ class TestAuthorize(MockIRODSTestCaseMixin, TestCase):
         parameters = [
                       # resource inactive owner has authorization for resource view (metadata and content files) for a
                       # public resource
-                      {'res_id': self.res.short_id, 'needed_permission': Action_To_Authorize.VIEW_RESOURCE,
+                      {'res_id': self.res.short_id, 'needed_permission': ACTION_TO_AUTHORIZE.VIEW_RESOURCE,
                        'success': True, 'exception': None},
                       # resource inactive owner has authorization for resource metadata view for a public resource
-                      {'res_id': self.res.short_id, 'needed_permission': Action_To_Authorize.VIEW_METADATA,
+                      {'res_id': self.res.short_id, 'needed_permission': ACTION_TO_AUTHORIZE.VIEW_METADATA,
                        'success': True, 'exception': None}
 
                       ] + common_parameters
@@ -606,17 +606,17 @@ class TestAuthorize(MockIRODSTestCaseMixin, TestCase):
     def test_exception_notfound(self):
         invalid_res_id = '123x'
         parameters = [
-                      {'res_id': invalid_res_id, 'needed_permission': Action_To_Authorize.VIEW_METADATA,
+                      {'res_id': invalid_res_id, 'needed_permission': ACTION_TO_AUTHORIZE.VIEW_METADATA,
                        'success': False, 'exception': NotFound},
-                      {'res_id': invalid_res_id, 'needed_permission': Action_To_Authorize.VIEW_RESOURCE,
+                      {'res_id': invalid_res_id, 'needed_permission': ACTION_TO_AUTHORIZE.VIEW_RESOURCE,
                        'success': False, 'exception': NotFound},
-                      {'res_id': invalid_res_id, 'needed_permission': Action_To_Authorize.EDIT_RESOURCE,
+                      {'res_id': invalid_res_id, 'needed_permission': ACTION_TO_AUTHORIZE.EDIT_RESOURCE,
                        'success': False, 'exception': NotFound},
-                      {'res_id': invalid_res_id, 'needed_permission': Action_To_Authorize.SET_RESOURCE_FLAG,
+                      {'res_id': invalid_res_id, 'needed_permission': ACTION_TO_AUTHORIZE.SET_RESOURCE_FLAG,
                        'success': False, 'exception': NotFound},
-                      {'res_id': invalid_res_id, 'needed_permission': Action_To_Authorize.CREATE_RESOURCE_VERSION,
+                      {'res_id': invalid_res_id, 'needed_permission': ACTION_TO_AUTHORIZE.CREATE_RESOURCE_VERSION,
                        'success': False, 'exception': NotFound},
-                      {'res_id': invalid_res_id, 'needed_permission': Action_To_Authorize.DELETE_RESOURCE,
+                      {'res_id': invalid_res_id, 'needed_permission': ACTION_TO_AUTHORIZE.DELETE_RESOURCE,
                        'success': False, 'exception': NotFound}
                       ]
 
@@ -818,7 +818,7 @@ class TestAuthorize(MockIRODSTestCaseMixin, TestCase):
         self.request.user = authenticated_user
 
         res, authorized, user = authorize(self.request, res_id=self.res.short_id,
-                                          needed_permission=Action_To_Authorize.VIEW_RESOURCE, raises_exception=False)
+                                          needed_permission=ACTION_TO_AUTHORIZE.VIEW_RESOURCE, raises_exception=False)
         self.assertEquals(authorized, False)
         self.assertEquals(res, self.res)
         self.assertEquals(user, authenticated_user)
@@ -827,7 +827,7 @@ class TestAuthorize(MockIRODSTestCaseMixin, TestCase):
         # test authorization True
         self.request.user = self.user
         res, authorized, user = authorize(self.request, res_id=self.res.short_id,
-                                          needed_permission=Action_To_Authorize.VIEW_RESOURCE)
+                                          needed_permission=ACTION_TO_AUTHORIZE.VIEW_RESOURCE)
         self.assertEquals(authorized, True)
         self.assertEquals(res, self.res)
         self.assertEquals(user, self.user)
@@ -836,7 +836,7 @@ class TestAuthorize(MockIRODSTestCaseMixin, TestCase):
         anonymous_user = AnonymousUser()
         self.request.user = anonymous_user
         res, authorized, user = authorize(self.request, res_id=self.res.short_id,
-                                          needed_permission=Action_To_Authorize.VIEW_RESOURCE,
+                                          needed_permission=ACTION_TO_AUTHORIZE.VIEW_RESOURCE,
                                           raises_exception=False)
         self.assertEquals(authorized, False)
         self.assertEquals(res, self.res)

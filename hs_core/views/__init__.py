@@ -27,7 +27,7 @@ from django_irods.icommands import SessionException
 from hs_core import hydroshare
 from hs_core.hydroshare import get_resource_list
 from hs_core.hydroshare.utils import get_resource_by_shortkey, resource_modified
-from .utils import authorize, upload_from_irods, Action_To_Authorize
+from .utils import authorize, upload_from_irods, ACTION_TO_AUTHORIZE
 from hs_core.models import BaseResource, GenericResource, resource_processor, CoreMetaData
 from hs_core.hydroshare.resource import METADATA_STATUS_SUFFICIENT, METADATA_STATUS_INSUFFICIENT
 
@@ -69,7 +69,7 @@ def verify(request, *args, **kwargs):
 
 
 def add_file_to_resource(request, shortkey, *args, **kwargs):
-    resource, _, _ = authorize(request, shortkey, needed_permission=Action_To_Authorize.EDIT_RESOURCE)
+    resource, _, _ = authorize(request, shortkey, needed_permission=ACTION_TO_AUTHORIZE.EDIT_RESOURCE)
     res_files = request.FILES.getlist('files')
     extract_metadata = request.REQUEST.get('extract-metadata', 'No')
     extract_metadata = True if extract_metadata.lower() == 'yes' else False
@@ -128,7 +128,7 @@ def is_multiple_file_allowed_for_resource_type(request, resource_type, *args, **
 
 
 def add_metadata_element(request, shortkey, element_name, *args, **kwargs):
-    res, _, _ = authorize(request, shortkey, needed_permission=Action_To_Authorize.EDIT_RESOURCE)
+    res, _, _ = authorize(request, shortkey, needed_permission=ACTION_TO_AUTHORIZE.EDIT_RESOURCE)
 
     sender_resource = _get_resource_sender(element_name, res)
     handler_response = pre_metadata_element_create.send(sender=sender_resource, element_name=element_name,
@@ -177,7 +177,7 @@ def add_metadata_element(request, shortkey, element_name, *args, **kwargs):
 
 
 def update_metadata_element(request, shortkey, element_name, element_id, *args, **kwargs):
-    res, _, _ = authorize(request, shortkey, needed_permission=Action_To_Authorize.EDIT_RESOURCE)
+    res, _, _ = authorize(request, shortkey, needed_permission=ACTION_TO_AUTHORIZE.EDIT_RESOURCE)
     sender_resource = _get_resource_sender(element_name, res)
     handler_response = pre_metadata_element_update.send(sender=sender_resource, element_name=element_name,
                                                         element_id=element_id, request=request)
@@ -220,7 +220,7 @@ def update_metadata_element(request, shortkey, element_name, element_id, *args, 
 def file_download_url_mapper(request, shortkey, filename):
     """ maps the file URIs in resourcemap document to django_irods download view function"""
 
-    authorize(request, shortkey, needed_permission=Action_To_Authorize.VIEW_RESOURCE)
+    authorize(request, shortkey, needed_permission=ACTION_TO_AUTHORIZE.VIEW_RESOURCE)
     irods_file_path = '/'.join(request.path.split('/')[2:-1])
     istorage = IrodsStorage()
     file_download_url = istorage.url(irods_file_path)
@@ -228,7 +228,7 @@ def file_download_url_mapper(request, shortkey, filename):
 
 
 def delete_metadata_element(request, shortkey, element_name, element_id, *args, **kwargs):
-    res, _, _ = authorize(request, shortkey, needed_permission=Action_To_Authorize.EDIT_RESOURCE)
+    res, _, _ = authorize(request, shortkey, needed_permission=ACTION_TO_AUTHORIZE.EDIT_RESOURCE)
     res.metadata.delete_element(element_name, element_id)
     resource_modified(res, request.user)
     request.session['resource-mode'] = 'edit'
@@ -236,14 +236,14 @@ def delete_metadata_element(request, shortkey, element_name, element_id, *args, 
 
 
 def delete_file(request, shortkey, f, *args, **kwargs):
-    res, _, user = authorize(request, shortkey, needed_permission=Action_To_Authorize.EDIT_RESOURCE)
+    res, _, user = authorize(request, shortkey, needed_permission=ACTION_TO_AUTHORIZE.EDIT_RESOURCE)
     hydroshare.delete_resource_file(shortkey, f, user)
 
     return HttpResponseRedirect(request.META['HTTP_REFERER'])
 
 
 def delete_resource(request, shortkey, *args, **kwargs):
-    res, _, _ = authorize(request, shortkey, needed_permission=Action_To_Authorize.DELETE_RESOURCE)
+    res, _, _ = authorize(request, shortkey, needed_permission=ACTION_TO_AUTHORIZE.DELETE_RESOURCE)
 
     res.delete()
     return HttpResponseRedirect('/my-resources/')
@@ -251,7 +251,7 @@ def delete_resource(request, shortkey, *args, **kwargs):
 
 def publish(request, shortkey, *args, **kwargs):
     # only resource owners are allowed to change resource flags (e.g published)
-    res, _, _ = authorize(request, shortkey, needed_permission=Action_To_Authorize.SET_RESOURCE_FLAG)
+    res, _, _ = authorize(request, shortkey, needed_permission=ACTION_TO_AUTHORIZE.SET_RESOURCE_FLAG)
 
     try:
         hydroshare.publish_resource(request.user, shortkey)
@@ -263,7 +263,7 @@ def publish(request, shortkey, *args, **kwargs):
 
 def set_resource_flag(request, shortkey, *args, **kwargs):
     # only resource owners are allowed to change resource flags
-    res, _, user = authorize(request, shortkey, needed_permission=Action_To_Authorize.SET_RESOURCE_FLAG)
+    res, _, user = authorize(request, shortkey, needed_permission=ACTION_TO_AUTHORIZE.SET_RESOURCE_FLAG)
     t = request.POST['t']
     if t == 'make_public':
         _set_resource_sharing_status(request, user, res, flag_to_set='public', flag_value=True)
@@ -279,7 +279,7 @@ def set_resource_flag(request, shortkey, *args, **kwargs):
     return HttpResponseRedirect(request.META['HTTP_REFERER'])
 
 def share_resource_with_user(request, shortkey, privilege, user_id, *args, **kwargs):
-    res, _, user = authorize(request, shortkey, needed_permission=Action_To_Authorize.VIEW_RESOURCE)
+    res, _, user = authorize(request, shortkey, needed_permission=ACTION_TO_AUTHORIZE.VIEW_RESOURCE)
     user_to_share_with = utils.user_from_id(user_id)
     status = 'success'
     err_message = ''
@@ -326,7 +326,7 @@ def share_resource_with_user(request, shortkey, privilege, user_id, *args, **kwa
     return HttpResponse(json.dumps(ajax_response_data))
 
 def unshare_resource_with_user(request, shortkey, user_id, *args, **kwargs):
-    res, _, user = authorize(request, shortkey, needed_permission=Action_To_Authorize.VIEW_RESOURCE)
+    res, _, user = authorize(request, shortkey, needed_permission=ACTION_TO_AUTHORIZE.VIEW_RESOURCE)
     user_to_unshare_with = utils.user_from_id(user_id)
 
     try:

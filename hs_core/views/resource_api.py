@@ -12,7 +12,7 @@ from mezzanine.generic.models import Keyword
 from ga_resources.utils import get_user, json_or_jsonp
 from hs_core import hydroshare
 from hs_core.views import utils
-from .utils import authorize, validate_json, Action_To_Authorize
+from .utils import authorize, validate_json, ACTION_TO_AUTHORIZE
 from django.views.generic import View
 from django.core import exceptions
 
@@ -176,13 +176,13 @@ class ResourceCRUD(View):
         return self.delete_resource(pk)
 
     def get_resource(self, pk):
-        authorize(self.request, pk, needed_permission=Action_To_Authorize.VIEW_RESOURCE)
+        authorize(self.request, pk, needed_permission=ACTION_TO_AUTHORIZE.VIEW_RESOURCE)
         
         bag_url = hydroshare.utils.current_site_url() + AbstractResource.bag_url(pk)
         return HttpResponseRedirect(bag_url)
 
     def update_resource(self, pk):
-        authorize(self.request, pk, needed_permission=Action_To_Authorize.EDIT_RESOURCE)
+        authorize(self.request, pk, needed_permission=ACTION_TO_AUTHORIZE.EDIT_RESOURCE)
 
         params = utils.create_form(ResourceCRUD.UpdateResourceForm, self.request)
         if params.is_valid():
@@ -202,7 +202,7 @@ class ResourceCRUD(View):
             raise exceptions.ValidationError(params.errors)
 
     def delete_resource(self, pk):
-        authorize(self.request, pk, needed_permission=Action_To_Authorize.DELETE_RESOURCE)
+        authorize(self.request, pk, needed_permission=ACTION_TO_AUTHORIZE.DELETE_RESOURCE)
 
         hydroshare.delete_resource(pk)
         return HttpResponse(pk, content_type=None, status=204)
@@ -247,7 +247,7 @@ class ResourceCRUD(View):
 
             for resources in resource_table:
                 for r in filter(lambda x: authorize(self.request, x.short_id,
-                                                    needed_permission=Action_To_Authorize.VIEW_RESOURCE),
+                                                    needed_permission=ACTION_TO_AUTHORIZE.VIEW_RESOURCE),
                                 resources):
                     ret.append(r.short_id)
 
@@ -290,14 +290,14 @@ class GetUpdateScienceMetadata(View):
         raise NotImplemented()
 
     def get_science_metadata(self, pk):
-        authorize(self.request, pk, needed_permission=Action_To_Authorize.VIEW_METADATA)
+        authorize(self.request, pk, needed_permission=ACTION_TO_AUTHORIZE.VIEW_METADATA)
 
         res = hydroshare.get_science_metadata(pk)
         return json_or_jsonp(
             self.request, hydroshare.utils.serialize_science_metadata(res))
 
     def update_science_metadata(self, pk):
-        authorize(self.request, pk, needed_permission=Action_To_Authorize.EDIT_RESOURCE)
+        authorize(self.request, pk, needed_permission=ACTION_TO_AUTHORIZE.EDIT_RESOURCE)
 
         params = utils.create_form(ResourceCRUD.UpdateResourceForm, self.request)
         if params.is_valid():
@@ -354,14 +354,14 @@ class GetUpdateSystemMetadata(View):
         raise NotImplemented()
 
     def get_system_metadata(self, pk):
-        authorize(self.request, pk, needed_permission=Action_To_Authorize.VIEW_METADATA)
+        authorize(self.request, pk, needed_permission=ACTION_TO_AUTHORIZE.VIEW_METADATA)
 
         res = hydroshare.get_science_metadata(pk)
         return json_or_jsonp(
             self.request, hydroshare.utils.serialize_system_metadata(res))
 
     def update_system_metadata(self, pk):
-        authorize(self.request, pk, needed_permission=Action_To_Authorize.EDIT_RESOURCE)
+        authorize(self.request, pk, needed_permission=ACTION_TO_AUTHORIZE.EDIT_RESOURCE)
 
         params = utils.create_form(ResourceCRUD.UpdateResourceForm, self.request)
         if params.is_valid():
@@ -418,7 +418,7 @@ class GetResourceMap(View):
         raise NotImplemented()
 
     def get_resource_map(self, pk):
-        authorize(self.request, pk, needed_permission=Action_To_Authorize.VIEW_RESOURCE)
+        authorize(self.request, pk, needed_permission=ACTION_TO_AUTHORIZE.VIEW_RESOURCE)
 
         res = hydroshare.get_science_metadata(pk)
         return json_or_jsonp(
@@ -458,7 +458,7 @@ class GetCapabilities(View):
         raise NotImplemented()
 
     def get_resource_map(self, pk):
-        authorize(self.request, pk, needed_permission=Action_To_Authorize.VIEW_RESOURCE)
+        authorize(self.request, pk, needed_permission=ACTION_TO_AUTHORIZE.VIEW_RESOURCE)
 
         res = hydroshare.get_capabilities(pk)
         return json_or_jsonp(self.request, res)
@@ -500,7 +500,7 @@ class ResourceFileCRUD(View):
         return self.delete_resource_file(pk, filename)
 
     def get_resource_file(self, pk, filename):
-        authorize(self.request, pk, needed_permission=Action_To_Authorize.VIEW_RESOURCE)
+        authorize(self.request, pk, needed_permission=ACTION_TO_AUTHORIZE.VIEW_RESOURCE)
         try:
             f = hydroshare.get_resource_file(pk, filename)
         except ObjectDoesNotExist:
@@ -508,13 +508,13 @@ class ResourceFileCRUD(View):
         return HttpResponseRedirect(f.url, content_type='text/plain')
 
     def update_resource_file(self, pk, filename):
-        authorize(self.request, pk, needed_permission=Action_To_Authorize.EDIT_RESOURCE)
+        authorize(self.request, pk, needed_permission=ACTION_TO_AUTHORIZE.EDIT_RESOURCE)
 
         f = hydroshare.update_resource_file(pk, filename, self.request.FILES.values()[0])
         return HttpResponse(f.url, content_type='text/plain')
 
     def add_resource_file(self, pk, filename=None):
-        authorize(self.request, pk, needed_permission=Action_To_Authorize.EDIT_RESOURCE)
+        authorize(self.request, pk, needed_permission=ACTION_TO_AUTHORIZE.EDIT_RESOURCE)
 
         if filename:
             rf = self.request.FILES.values()[0]
@@ -526,7 +526,7 @@ class ResourceFileCRUD(View):
             return json_or_jsonp(self.request, { f.name: f.url for f in fs})
 
     def delete_resource_file(self, pk, filename):
-        authorize(self.request, pk, needed_permission=Action_To_Authorize.EDIT_RESOURCE)
+        authorize(self.request, pk, needed_permission=ACTION_TO_AUTHORIZE.EDIT_RESOURCE)
         f = hydroshare.delete_resource_file(pk, filename)
         return HttpResponse(f, content_type='text/plain')
 
@@ -565,7 +565,7 @@ class GetRevisions(View):
         raise NotImplemented()
 
     def get_revisions(self, pk):
-        authorize(self.request, pk, needed_permission=Action_To_Authorize.VIEW_RESOURCE)
+        authorize(self.request, pk, needed_permission=ACTION_TO_AUTHORIZE.VIEW_RESOURCE)
 
         js = {arrow.get(bag.timestamp).isoformat(): hydroshare.utils.current_site_url() + AbstractResource.bag_url(pk) for bag in hydroshare.get_revisions(pk) }
         return json_or_jsonp(self.request, js)
@@ -625,7 +625,7 @@ class PublishResource(View):
         raise NotImplemented()
 
     def publish_resource(self, pk):
-        authorize(self.request, pk, needed_permission=Action_To_Authorize.SET_RESOURCE_FLAG)
+        authorize(self.request, pk, needed_permission=ACTION_TO_AUTHORIZE.SET_RESOURCE_FLAG)
 
         hydroshare.publish_resource(pk)
         return HttpResponse(pk, content_type='text/plain')

@@ -28,7 +28,7 @@ ActionToAuthorize = namedtuple('ActionToAuthorize',
                                'SET_RESOURCE_FLAG, '
                                'DELETE_RESOURCE, '
                                'CREATE_RESOURCE_VERSION')
-Action_To_Authorize = ActionToAuthorize(0, 1, 2, 3, 4, 5)
+ACTION_TO_AUTHORIZE = ActionToAuthorize(0, 1, 2, 3, 4, 5)
 
 
 # Since an SessionException will be raised for all irods-related operations from django_irods module,
@@ -59,7 +59,7 @@ def upload_from_irods(username, password, host, port, zone, irods_fnames, res_fi
         fname = os.path.basename(ifname.rstrip(os.sep))
         res_files.append(UploadedFile(file=tmpFile, name=fname, size=size))
 
-def authorize(request, res_id, needed_permission=Action_To_Authorize.VIEW_RESOURCE, raises_exception=True):
+def authorize(request, res_id, needed_permission=ACTION_TO_AUTHORIZE.VIEW_RESOURCE, raises_exception=True):
     """
     This function checks if a user has authorization for resource related actions as outlined below. This
     function doesn't check authorization for user sharing resource with another user.
@@ -67,20 +67,20 @@ def authorize(request, res_id, needed_permission=Action_To_Authorize.VIEW_RESOUR
     How this function should be called for different actions on a resource by a specific user?
     1. User wants to view a resource (both metadata and content files) which includes
        downloading resource bag or resource content files:
-       authorize(request, res_id=id_of_resource, needed_permission=Action_To_Authorize.VIEW_RESOURCE)
+       authorize(request, res_id=id_of_resource, needed_permission=ACTION_TO_AUTHORIZE.VIEW_RESOURCE)
     2. User wants to view resource metadata only:
-       authorize(request, res_id=id_of_resource, needed_permission=Action_To_Authorize.VIEW_METADATA)
+       authorize(request, res_id=id_of_resource, needed_permission=ACTION_TO_AUTHORIZE.VIEW_METADATA)
     3. User wants to edit a resource which includes:
        a. edit metadata
        b. add file to resource
        c. delete a file from the resource
-       authorize(request, res_id=id_of_resource, needed_permission=Action_To_Authorize.EDIT_RESOURCE)
+       authorize(request, res_id=id_of_resource, needed_permission=ACTION_TO_AUTHORIZE.EDIT_RESOURCE)
     4. User wants to set resource flag (public, published, shareable etc):
-       authorize(request, res_id=id_of_resource, needed_permission=Action_To_Authorize.SET_RESOURCE_FLAG)
+       authorize(request, res_id=id_of_resource, needed_permission=ACTION_TO_AUTHORIZE.SET_RESOURCE_FLAG)
     5. User wants to delete a resource:
-       authorize(request, res_id=id_of_resource, needed_permission=Action_To_Authorize.DELETE_RESOURCE)
+       authorize(request, res_id=id_of_resource, needed_permission=ACTION_TO_AUTHORIZE.DELETE_RESOURCE)
     6. User wants to create new version of a resource:
-       authorize(request, res_id=id_of_resource, needed_permission=Action_To_Authorize.CREATE_RESOURCE_VERSION)
+       authorize(request, res_id=id_of_resource, needed_permission=ACTION_TO_AUTHORIZE.CREATE_RESOURCE_VERSION)
 
     Note: resource 'shareable' status has no effect on authorization
     """
@@ -92,23 +92,23 @@ def authorize(request, res_id, needed_permission=Action_To_Authorize.VIEW_RESOUR
     except ObjectDoesNotExist:
         raise NotFound(detail="No resource was found for resource id:%s" % res_id)
 
-    if needed_permission == Action_To_Authorize.VIEW_METADATA:
+    if needed_permission == ACTION_TO_AUTHORIZE.VIEW_METADATA:
         if res.raccess.discoverable or res.raccess.public:
             authorized = True
         elif user.is_authenticated() and user.is_active:
             authorized = user.uaccess.can_view_resource(res)
     elif user.is_authenticated() and user.is_active:
-        if needed_permission == Action_To_Authorize.VIEW_RESOURCE:
+        if needed_permission == ACTION_TO_AUTHORIZE.VIEW_RESOURCE:
             authorized = user.uaccess.can_view_resource(res)
-        elif needed_permission == Action_To_Authorize.EDIT_RESOURCE:
+        elif needed_permission == ACTION_TO_AUTHORIZE.EDIT_RESOURCE:
             authorized = user.uaccess.can_change_resource(res)
-        elif needed_permission == Action_To_Authorize.DELETE_RESOURCE:
+        elif needed_permission == ACTION_TO_AUTHORIZE.DELETE_RESOURCE:
             authorized = user.uaccess.can_delete_resource(res)
-        elif needed_permission == Action_To_Authorize.SET_RESOURCE_FLAG:
+        elif needed_permission == ACTION_TO_AUTHORIZE.SET_RESOURCE_FLAG:
             authorized = user.uaccess.can_change_resource_flags(res)
-        elif needed_permission == Action_To_Authorize.CREATE_RESOURCE_VERSION:
+        elif needed_permission == ACTION_TO_AUTHORIZE.CREATE_RESOURCE_VERSION:
             authorized = user.uaccess.can_create_resource_version(res)
-    elif needed_permission == Action_To_Authorize.VIEW_RESOURCE:
+    elif needed_permission == ACTION_TO_AUTHORIZE.VIEW_RESOURCE:
         authorized = res.raccess.public
 
     if raises_exception and not authorized:

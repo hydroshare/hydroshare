@@ -18,7 +18,7 @@ from hs_core import hydroshare
 from hs_core.models import AbstractResource, ResourceManager
 from hs_core.hydroshare.utils import get_resource_by_shortkey, get_resource_types
 from hs_core.views import utils as view_utils
-from hs_core.views.utils import Action_To_Authorize
+from hs_core.views.utils import ACTION_TO_AUTHORIZE
 from hs_core.views import serializers
 from hs_core.views import pagination
 
@@ -230,7 +230,7 @@ class ResourceReadUpdateDelete(ResourceToListItemMixin, generics.RetrieveUpdateD
     def get(self, request, pk):
         """ Get resource in zipped BagIt format
         """
-        view_utils.authorize(request, pk, needed_permission=Action_To_Authorize.VIEW_RESOURCE)
+        view_utils.authorize(request, pk, needed_permission=ACTION_TO_AUTHORIZE.VIEW_RESOURCE)
 
         bag_url = hydroshare.utils.current_site_url() + AbstractResource.bag_url(pk)
         return HttpResponseRedirect(bag_url)
@@ -241,7 +241,7 @@ class ResourceReadUpdateDelete(ResourceToListItemMixin, generics.RetrieveUpdateD
 
     def delete(self, request, pk):
         # only resource owners are allowed to delete
-        view_utils.authorize(request, pk, needed_permission=Action_To_Authorize.DELETE_RESOURCE)
+        view_utils.authorize(request, pk, needed_permission=ACTION_TO_AUTHORIZE.DELETE_RESOURCE)
         hydroshare.delete_resource(pk)
         # spec says we need return the id of the resource that got deleted - otherwise would have used status code 204
         # and not 200
@@ -376,7 +376,7 @@ class SystemMetadataRetrieve(ResourceToListItemMixin, APIView):
     def get(self, request, pk):
         """ Get resource system metadata, as well as URLs to the bag and science metadata
         """
-        view_utils.authorize(request, pk, needed_permission=Action_To_Authorize.VIEW_METADATA)
+        view_utils.authorize(request, pk, needed_permission=ACTION_TO_AUTHORIZE.VIEW_METADATA)
         res = get_resource_by_shortkey(pk)
         ser = self.get_serializer_class()(self.resourceToResourceListItem(res))
 
@@ -403,7 +403,7 @@ class AccessRulesUpdate(APIView):
         """ Update access rules
         """
         # only resource owners are allowed to change resource flags (e.g., public)
-        view_utils.authorize(request, pk, needed_permission=Action_To_Authorize.SET_RESOURCE_FLAG)
+        view_utils.authorize(request, pk, needed_permission=ACTION_TO_AUTHORIZE.SET_RESOURCE_FLAG)
 
         access_rules_validator = serializers.AccessRulesRequestValidator(data=request.data)
         if not access_rules_validator.is_valid():
@@ -449,7 +449,7 @@ class ScienceMetadataRetrieveUpdate(APIView):
     allowed_methods = ('GET', 'PUT')
 
     def get(self, request, pk):
-        view_utils.authorize(request, pk, needed_permission=Action_To_Authorize.VIEW_METADATA)
+        view_utils.authorize(request, pk, needed_permission=ACTION_TO_AUTHORIZE.VIEW_METADATA)
 
         scimeta_url = hydroshare.utils.current_site_url() + AbstractResource.scimeta_url(pk)
         return redirect(scimeta_url)
@@ -513,7 +513,7 @@ class ResourceFileCRUD(APIView):
     allowed_methods = ('GET', 'POST', 'PUT', 'DELETE')
 
     def get(self, request, pk, filename):
-        view_utils.authorize(request, pk, needed_permission=Action_To_Authorize.VIEW_RESOURCE)
+        view_utils.authorize(request, pk, needed_permission=ACTION_TO_AUTHORIZE.VIEW_RESOURCE)
         try:
             f = hydroshare.get_resource_file(pk, filename)
         except ObjectDoesNotExist:
@@ -531,7 +531,7 @@ class ResourceFileCRUD(APIView):
         :param pk: Primary key of the resource (i.e. resource short ID)
         :return:
         """
-        resource, _, _ = view_utils.authorize(request, pk, needed_permission=Action_To_Authorize.EDIT_RESOURCE)
+        resource, _, _ = view_utils.authorize(request, pk, needed_permission=ACTION_TO_AUTHORIZE.EDIT_RESOURCE)
         resource_files = request.FILES.values()
         if len(resource_files) == 0:
             error_msg = {'file': 'No file was found to add to the resource.'}
@@ -566,7 +566,7 @@ class ResourceFileCRUD(APIView):
         return Response(data=response_data, status=status.HTTP_201_CREATED)
 
     def delete(self, request, pk, filename):
-        resource, _, user = view_utils.authorize(request, pk, needed_permission=Action_To_Authorize.EDIT_RESOURCE)
+        resource, _, user = view_utils.authorize(request, pk, needed_permission=ACTION_TO_AUTHORIZE.EDIT_RESOURCE)
         try:
             hydroshare.delete_resource_file(pk, filename, user)
         except ObjectDoesNotExist as ex:    # matching file not found
@@ -630,7 +630,7 @@ class ResourceFileList(ResourceFileToListItemMixin, generics.ListAPIView):
 
     def get_queryset(self):
         resource, _, _ = view_utils.authorize(self.request, self.kwargs['pk'],
-                                              needed_permission=Action_To_Authorize.VIEW_RESOURCE)
+                                              needed_permission=ACTION_TO_AUTHORIZE.VIEW_RESOURCE)
         resource_file_info_list = []
         for f in resource.files.all():
             resource_file_info_list.append(self.resourceFileToListItem(f))

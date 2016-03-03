@@ -14,7 +14,7 @@ from django.http import HttpResponse, HttpResponseRedirect, HttpResponseNotFound
 from django.shortcuts import render_to_response
 
 from hs_core import hydroshare
-from hs_core.views.utils import authorize, Action_To_Authorize
+from hs_core.views.utils import authorize, ACTION_TO_AUTHORIZE
 from ga_resources.utils import json_or_jsonp
 from django_irods.views import download as download_bag_from_irods
 from . import ts_utils
@@ -246,7 +246,7 @@ def create_ref_time_series(request, *args, **kwargs):
 def download_refts_resource_files(request, shortkey, *args, **kwargs):
     tempdir = None
     try:
-        _, authorized, _ = authorize(request, shortkey, needed_permission=Action_To_Authorize.VIEW_RESOURCE,
+        _, authorized, _ = authorize(request, shortkey, needed_permission=ACTION_TO_AUTHORIZE.VIEW_RESOURCE,
                                      raises_exception=False)
         if not authorized:
             response = HttpResponse(status=401)

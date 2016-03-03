@@ -5,7 +5,7 @@ from hs_core import languages_iso
 from forms import *
 from hs_tools_resource.models import SupportedResTypes, ToolResource
 from hs_core import hydroshare
-from hs_core.views.utils import authorize, Action_To_Authorize
+from hs_core.views.utils import authorize, ACTION_TO_AUTHORIZE
 from hs_core.hydroshare.resource import METADATA_STATUS_SUFFICIENT, METADATA_STATUS_INSUFFICIENT
 
 
@@ -66,7 +66,7 @@ def get_page_context(page, user, resource_edit=False, extended_metadata_layout=N
                 tool_res_obj = ToolResource.objects.get(object_id=res_type.object_id)
                 if tool_res_obj:
                     is_authorized = authorize(request, tool_res_obj.short_id,
-                                              needed_permission=Action_To_Authorize.VIEW_RESOURCE,
+                                              needed_permission=ACTION_TO_AUTHORIZE.VIEW_RESOURCE,
                                               raises_exception=False)[1]
                     if is_authorized:
                         tool_url = tool_res_obj.metadata.url_bases.first().value \
