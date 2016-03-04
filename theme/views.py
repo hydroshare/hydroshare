@@ -213,7 +213,7 @@ def update_user_profile(request):
                     # send an email to the old address notifying the email change
                     send_mail(subject="Your HydroShare email.",
                               message="You have changed your HydroShare account email",
-                              from_email= settings.DEFAULT_FROM_EMAIL, recipient_list=[old_email], fail_silently=False)
+                              from_email= settings.DEFAULT_FROM_EMAIL, recipient_list=[old_email], fail_silently=True)
             else:
                 errors = {}
                 if not user_form.is_valid():
