@@ -1390,7 +1390,21 @@ class BaseResource(Page, AbstractResource):
     def can_have_files(cls):
         return True
 
+    def get_hs_term_dict(self):
+        '''
+        this func returns a dict of HS Terms and their values, which will be used to parse webapp url templates
 
+        NOTES FOR ANY SUBCLASS OF THIS CLASS TO OVERRIDE THIS FUNCTION:
+        resource types that inherit this class should add/merge their resource-specific HS Terms
+        into this dict
+        '''
+
+        hs_term_dict = {}
+
+        hs_term_dict["HS_RES_ID"] = self.short_id
+        hs_term_dict["HS_RES_TYPE"] = self.resource_type
+
+        return hs_term_dict
 
 class GenericResource(BaseResource):
     objects = ResourceManager('GenericResource')
