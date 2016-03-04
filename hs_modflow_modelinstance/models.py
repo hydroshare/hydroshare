@@ -400,10 +400,6 @@ class MODFLOWModelInstanceMetaData(ModelInstanceMetaData):
             self.add_metadata_element_to_xml(container, self.ground_water_flow, groundWaterFlowFields)
 
         if self.boundary_condition:
-            boundaryConditionFields = ['boundaryConditionType', 'boundaryConditionPackage']
-            self.add_metadata_element_to_xml(container, self.boundary_condition, boundaryConditionFields)
-
-        if self.boundary_condition:
             hsterms_boundary = etree.SubElement(container, '{%s}BoundaryCondition' % self.NAMESPACES['hsterms'])
             hsterms_boundary_rdf_Description = etree.SubElement(hsterms_boundary, '{%s}Description' % self.NAMESPACES['rdf'])
 
