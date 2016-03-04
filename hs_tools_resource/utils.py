@@ -3,7 +3,7 @@ import logging
 
 logger = logging.getLogger(__name__)
 
-def parse_app_url_template(url_template_string, term_dict_list=[]):
+def parse_app_url_template(url_template_string, term_dict_list=()):
     '''
     This func replaces pre-defined HS Terms in url_template_string with real values;
     Example: http://www.myapps.com/app1/?res_type=${HS_RES_TYPE}
