@@ -1,7 +1,7 @@
 __author__ = 'Mohamed Morsy'
 from lxml import etree
 
-from django.contrib.contenttypes import generic
+from django.contrib.contenttypes.fields import GenericRelation
 from django.db import models
 from django.core.exceptions import ValidationError, ObjectDoesNotExist
 
@@ -116,9 +116,15 @@ class GroundWaterFlow(AbstractMetaDataElement):
 class BoundaryConditionTypeChoices(models.Model):
     description = models.CharField(max_length=300)
 
+    def __unicode__(self):
+        return self.description
+
 
 class BoundaryConditionPackageChoices(models.Model):
     description = models.CharField(max_length=300)
+
+    def __unicode__(self):
+        return self.description
 
 
 class BoundaryCondition(AbstractMetaDataElement):
@@ -284,11 +290,6 @@ class MODFLOWModelInstanceResource(BaseResource):
         md = MODFLOWModelInstanceMetaData()
         return self._get_metadata(md)
 
-    @classmethod
-    def get_supported_upload_file_types(cls):
-        # all file types are supported
-        return ('.*')
-
     def has_required_content_files(self):
         nam_file_exists = False
         if len(self.get_supported_upload_file_types()) > 0:
@@ -304,23 +305,20 @@ class MODFLOWModelInstanceResource(BaseResource):
         else:
             return True
 
-    @classmethod
-    def can_have_multiple_files(cls):
-        return True
 
 processor_for(MODFLOWModelInstanceResource)(resource_processor)
 
 
 # metadata container class
 class MODFLOWModelInstanceMetaData(ModelInstanceMetaData):
-    _study_area = generic.GenericRelation(StudyArea)
-    _grid_dimensions = generic.GenericRelation(GridDimensions)
-    _stress_period = generic.GenericRelation(StressPeriod)
-    _ground_water_flow = generic.GenericRelation(GroundWaterFlow)
-    _boundary_condition = generic.GenericRelation(BoundaryCondition)
-    _model_calibration = generic.GenericRelation(ModelCalibration)
-    _model_input = generic.GenericRelation(ModelInput)
-    _general_elements = generic.GenericRelation(GeneralElements)
+    _study_area = GenericRelation(StudyArea)
+    _grid_dimensions = GenericRelation(GridDimensions)
+    _stress_period = GenericRelation(StressPeriod)
+    _ground_water_flow = GenericRelation(GroundWaterFlow)
+    _boundary_condition = GenericRelation(BoundaryCondition)
+    _model_calibration = GenericRelation(ModelCalibration)
+    _model_input = GenericRelation(ModelInput)
+    _general_elements = GenericRelation(GeneralElements)
 
     @property
     def study_area(self):
@@ -404,6 +402,18 @@ class MODFLOWModelInstanceMetaData(ModelInstanceMetaData):
         if self.boundary_condition:
             boundaryConditionFields = ['boundaryConditionType', 'boundaryConditionPackage']
             self.add_metadata_element_to_xml(container, self.boundary_condition, boundaryConditionFields)
+
+        if self.boundary_condition:
+            hsterms_boundary = etree.SubElement(container, '{%s}BoundaryCondition' % self.NAMESPACES['hsterms'])
+            hsterms_boundary_rdf_Description = etree.SubElement(hsterms_boundary, '{%s}Description' % self.NAMESPACES['rdf'])
+
+            if self.boundary_condition.boundaryConditionType:
+                hsterms_boundary_type = etree.SubElement(hsterms_boundary_rdf_Description, '{%s}boundaryConditionType' % self.NAMESPACES['hsterms'])
+                hsterms_boundary_type.text = ', '.join([types.description for types in self.boundary_condition.boundaryConditionType.all()])
+
+            if self.boundary_condition.boundaryConditionPackage:
+                hsterms_boundary_package = etree.SubElement(hsterms_boundary_rdf_Description, '{%s}boundaryConditionType' % self.NAMESPACES['hsterms'])
+                hsterms_boundary_package.text = ', '.join([packages.description for packages in self.boundary_condition.boundaryConditionPackage.all()])
 
         if self.model_calibration:
             modelCalibrationFields = ['calibratedParameter', 'observationType',

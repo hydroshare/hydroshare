@@ -340,6 +340,9 @@ class BoundaryConditionForm(ModelForm):
 
     class Meta:
         model = BoundaryCondition
+        exclude = ('boundaryConditionType',
+                   'boundaryConditionPackage',
+                   )
 
 
 class BoundaryConditionValidationForm(forms.Form):
