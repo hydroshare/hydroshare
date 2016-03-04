@@ -349,7 +349,10 @@ def create_resource(
         resource_type, owner, title,
         edit_users=None, view_users=None, edit_groups=None, view_groups=None,
         keywords=(), metadata=None, content=None,
-        files=(), res_type_cls=None, resource=None, unpack_file=False, **kwargs):
+        files=(), create_metadata=True,
+        create_bag=True, unpack_file=False, **kwargs):
+
+
     """
     Called by a client to add a new resource to HydroShare. The caller must have authorization to write content to
     HydroShare. The pid for the resource is assigned by HydroShare upon inserting the resource.  The create method
@@ -358,11 +361,10 @@ def create_resource(
     REST URL:  POST /resource
 
     Parameters:
-    resource - The data bytes of the resource to be added to HydroShare
 
-    Returns:    The pid assigned to the newly created resource
+    Returns:    The newly created resource
 
-    Return Type:    pid
+    Return Type:    BaseResource resource object
 
     Raises:
     Exceptions.NotAuthorized - The user is not authorized to write to HydroShare
@@ -375,13 +377,13 @@ def create_resource(
 
     1. pid is called short_id.  This is because pid is a UNIX term for Process ID and could be confusing.
 
-    2. return type is an instance of a subclass of hs_core.models.AbstractResource.  This is for efficiency in the
+    2. return type is an instance of hs_core.models.BaseResource class. This is for efficiency in the
        native API.  The native API should return actual instance rather than IDs wherever possible to avoid repeated
        lookups in the database when they are unnecessary.
 
     3. resource_type is a string: see parameter list
 
-    :param resource_type: string. the classname of the resource type, such as GenericResource
+    :param resource_type: string. the type of the resource such as GenericResource
     :param owner: email address, username, or User instance. The owner of the resource
     :param title: string. the title of the resource
     :param edit_users: list of email addresses, usernames, or User instances who will be given edit permissions
@@ -391,11 +393,12 @@ def create_resource(
     :param keywords: string list. list of keywords to add to the resource
     :param metadata: list of dicts containing keys (element names) and corresponding values as dicts { 'creator': {'name':'John Smith'}}.
     :param files: list of Django File or UploadedFile objects to be attached to the resource
+    :param create_bag: whether to create a bag for the newly created resource or not. By default, the bag is created.
     :param unpack_file: boolean.  If files contains a single zip file, and unpack_file is True,
-    the unpacked contents of the zip file will be added to the resource instead of the zip file.
+                        the unpacked contents of the zip file will be added to the resource instead of the zip file.
     :param kwargs: extra arguments to fill in required values in AbstractResource subclasses
 
-    :return: a new resource which is an instance of resource_type.
+    :return: a new resource which is an instance of BaseResource with specificed resource_type.
     """
     with transaction.atomic():
         cls = check_resource_type(resource_type)
@@ -415,7 +418,6 @@ def create_resource(
         resource.resource_type = resource_type
 
         # by default make resource private
-        #resource.content_model = "baseresource"
         resource.set_slug('resource{0}{1}'.format('/', resource.short_id))
         resource.save()
 
@@ -464,21 +466,116 @@ def create_resource(
                 group = utils.group_from_id(group)
                 owner.uaccess.share_resource_with_group(resource, group, PrivilegeCodes.VIEW)
 
-        # prepare default metadata
-        utils.prepare_resource_default_metadata(resource=resource, metadata=metadata, res_title=title)
+        if create_metadata:
+            # prepare default metadata
+            utils.prepare_resource_default_metadata(resource=resource, metadata=metadata, res_title=title)
 
-        for element in metadata:
-            # here k is the name of the element
-            # v is a dict of all element attributes/field names and field values
-            k, v = element.items()[0]
-            resource.metadata.create_element(k, **v)
+            for element in metadata:
+                # here k is the name of the element
+                # v is a dict of all element attributes/field names and field values
+                k, v = element.items()[0]
+                resource.metadata.create_element(k, **v)
 
-        for keyword in keywords:
-            resource.metadata.create_element('subject', value=keyword)
+            for keyword in keywords:
+                resource.metadata.create_element('subject', value=keyword)
 
-        hs_bagit.create_bag(resource)
+        if create_bag:
+            hs_bagit.create_bag(resource)
 
     return resource
+
+def create_new_version_empty_resource(pk, user):
+    """
+    Create a new version for a resource with empty content and empty metadata. This new version
+    resource object is then used to create metadata and content from its original resource.
+    This separate routine is needed to return a new version resource object to the calling
+    view so that if an exception is raised, this empty resource object can be deleted for clean-up
+    Args:
+        pk: the unique HydroShare identifier for the resource that is to be versioned.
+        user: the requesting user who requests to create a new version for the resource
+    Returns:
+        the empyt new resource that is created as an initial new version for the original resource
+        which is then further populated with metadata and content in a subsequent step
+
+    """
+    res = utils.get_resource_by_shortkey(pk)
+    if not user.uaccess.owns_resource(res):
+        raise ValidationError('Only resource owners can create new versions')
+    # create the resource without files and without creating bags first
+    new_resource = create_resource(
+        resource_type=res.resource_type,
+        owner=user,
+        title=res.metadata.title.value,
+        create_metadata=False,
+        create_bag=False
+    )
+
+    return new_resource
+
+def create_new_version_resource(ori_res, new_res):
+    """
+    Populate metadata and contents from ori_res object to new_res object to make new_res object as a new version of the ori_res object
+    Args:
+        ori_res: the original resource that is to be versioned.
+        new_res: the new_res to be populated with metadata and content from the original resource to make it a new version
+    Returns:
+        the new versioned resource for the original resource and thus obsolete the original resource
+
+    """
+    # newly created new resource version is private initially
+    set_to_private = False
+    if ori_res.raccess.public:
+        set_to_private = True
+
+    # add files directly via irods backend file operation
+    utils.copy_resource_files_and_AVUs(ori_res.short_id, new_res.short_id, set_to_private)
+
+    # link copied resource files to Django resource model
+    files = ResourceFile.objects.filter(object_id=ori_res.id)
+    for n, f in enumerate(files):
+        ResourceFile.objects.create(content_object=new_res,
+            resource_file = os.path.join('{res_id}/data/contents/{file_name}'.format(
+                            res_id=new_res.short_id,
+                            file_name=os.path.basename(f.resource_file.name))))
+
+    # copy metadata from source resource to target new-versioned resource except three elements
+    exclude_elements = ['identifier', 'publisher', 'date']
+    new_res.metadata.copy_all_elements_from(ori_res.metadata, exclude_elements)
+
+    # create Identifier element that is specific to the new versioned resource
+    new_res.metadata.create_element('identifier', name='hydroShareIdentifier',
+                                         url='{0}/resource/{1}'.format(utils.current_site_url(), new_res.short_id))
+
+    # create date element that is specific to the new versioned resource
+    new_res.metadata.create_element('date', type='created', start_date=new_res.created)
+    new_res.metadata.create_element('date', type='modified', start_date=new_res.updated)
+
+    # copy date element to the new versioned resource if exists
+    if ori_res.metadata.dates.all().filter(type='valid'):
+        res_valid_date = new_res.metadata.dates.all().filter(type='valid')[0]
+        new_res.metadata.create_element('date', type='valid', start_date=res_valid_date.start_date, end_date=res_valid_date.end_date)
+
+    if ori_res.metadata.dates.all().filter(type='available'):
+        res_avail_date = new_res.metadata.dates.all().filter(type='available')[0]
+        new_res.metadata.create_element('date', type='available', start_date=res_avail_date.start_date, end_date=res_avail_date.end_date)
+
+    # add Relation element to link source and target resources
+    if new_res.metadata.identifiers.all().filter(name="hydroShareIdentifier"):
+        hs_identifier = new_res.metadata.identifiers.all().filter(name="hydroShareIdentifier")[0]
+        ori_res.metadata.create_element('relation', type='isReplacedBy', value=hs_identifier.url)
+    else:
+        ori_res.metadata.create_element('relation', type='isReplacedBy', value=new_res.short_id)
+
+    if ori_res.metadata.identifiers.all().filter(name="hydroShareIdentifier"):
+        hs_identifier = ori_res.metadata.identifiers.all().filter(name="hydroShareIdentifier")[0]
+        new_res.metadata.create_element('relation', type='isVersionOf', value=hs_identifier.url)
+    else:
+        new_res.metadata.create_element('relation', type='isVersionOf', value=ori_res.short_id)
+
+    # create bag for the new resource
+    hs_bagit.create_bag(new_res)
+
+    return new_res
 
 
 # TODO: This is not used anywhere except in a skipped unit test - if need to be used then new access rules need to apply
@@ -687,6 +784,24 @@ def delete_resource(pk):
     """
     #utils.get_resource_by_shortkey(pk).delete()
     res = utils.get_resource_by_shortkey(pk)
+
+    if res.metadata.relations.all().filter(type='isReplacedBy').exists():
+        raise ValidationError('An obsoleted resource in the middle of the obsolescence chain cannot be deleted.')
+
+    # when the most recent version of a resource in an obsolescence chain is deleted, the previous
+    # version in the chain needs to be set as the "active" version by deleting "isReplacedBy" relation element
+    if res.metadata.relations.all().filter(type='isVersionOf').exists():
+        is_version_of_res_link = res.metadata.relations.all().filter(type='isVersionOf').first().value
+        idx = is_version_of_res_link.rindex('/')
+        if idx == -1:
+            obsolete_res_id = is_version_of_res_link
+        else:
+            obsolete_res_id = is_version_of_res_link[idx+1:]
+        obsolete_res = utils.get_resource_by_shortkey(obsolete_res_id)
+        if obsolete_res.metadata.relations.all().filter(type='isReplacedBy').exists():
+            eid = obsolete_res.metadata.relations.all().filter(type='isReplacedBy').first().id
+            obsolete_res.metadata.delete_element('relation', eid)
+
     res.delete()
     return pk
 

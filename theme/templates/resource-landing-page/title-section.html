@@ -10,14 +10,30 @@
     </div>
 {% endif %}
 
+{# ======= Resource new version just created notification if obsoleted resource is public, discoverable or published =======#}
+{% if just_created and is_version_of %}
+    {% if cm.raccess.published or cm.raccess.public or cm.raccess.discoverable %}
+        <div class="col-sm-12">
+            <div class="alert {% if just_created %}alert-success{% else %}alert-warning{% endif %} alert-dismissible" role="alert">
+                <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <strong>Congratulations! </strong>
+                <span>Your resource has been created as a new version of
+                    <a href="{{ is_version_of }}">this {% if cm.raccess.published %} published {% elif cm.raccess.public %} public {% else %} discoverable {% endif %} resource</a>.
+                    This new version is created as a private resource by default. If you want the new version to be discoverable, you need to
+                    make it public or discoverable or publish it. </span>
+            </div>
+        </div>
+    {% endif %}
+{% endif %}
+
 {# ======= Missing fields notification =======#}
-{% if not metadata_form and page.perms.change %}
+{% if not metadata_form and page.perms.change and not is_replaced_by %}
     {% if missing_metadata_elements or title|stringformat:"s" == "Untitled resource" or not cm.has_required_content_files %}
         <div class="col-sm-12">
             <div class="alert {% if just_created %}alert-success{% else %}alert-warning{% endif %} alert-dismissible" role="alert">
                 <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span
                         aria-hidden="true">&times;</span></button>
-                {% if missing_metadata_elements  %}
+                {% if missing_metadata_elements %}
                     {% if just_created %}
                         <strong>Congratulations! </strong>
                         <span>Now that your resource has been created the following metadata are still required to publish it or make it public or discoverable:</span>
@@ -95,4 +111,13 @@
             </fieldset>
         </form>
     {% endif %}
+</div>
+
+<div class="col-sm-12">
+{% if is_replaced_by %}
+     <div class="clear-fix"><i>A newer version of this resource <a href="{{ is_replaced_by }}">{{ is_replaced_by }}</a> is available that replaces this version.</i></div>
+{% endif %}
+{% if is_version_of %}
+    <div class="clear-fix"><i>An older version of this resource <a href="{{ is_version_of }}">{{ is_version_of }}</a> is available.</i></div>
+{% endif %}
 </div>

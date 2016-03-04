@@ -1,5 +1,7 @@
 from __future__ import absolute_import
 import json
+import datetime
+import pytz
 
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import Group, User
@@ -8,7 +10,6 @@ from django.contrib import messages
 from django.core.exceptions import ValidationError, PermissionDenied
 from django.http import HttpResponseRedirect, HttpResponse
 from django.shortcuts import get_object_or_404, render_to_response, render
-from django.core import exceptions as ex
 from django.template import RequestContext
 from django.core import signing
 from django import forms
@@ -25,10 +26,9 @@ from hs_access_control.models import PrivilegeCodes
 
 from django_irods.icommands import SessionException
 from hs_core import hydroshare
-from hs_core.hydroshare import get_resource_list
 from hs_core.hydroshare.utils import get_resource_by_shortkey, resource_modified
 from .utils import authorize, upload_from_irods
-from hs_core.models import BaseResource, GenericResource, resource_processor, CoreMetaData
+from hs_core.models import GenericResource, resource_processor, CoreMetaData
 from hs_core.hydroshare.resource import METADATA_STATUS_SUFFICIENT, METADATA_STATUS_INSUFFICIENT
 
 from . import resource_rest_api
@@ -37,7 +37,6 @@ from . import user_rest_api
 from hs_core.hydroshare import utils
 from . import utils as view_utils
 from hs_core.signals import *
-
 
 def short_url(request, *args, **kwargs):
     try:
@@ -245,8 +244,57 @@ def delete_file(request, shortkey, f, *args, **kwargs):
 def delete_resource(request, shortkey, *args, **kwargs):
     res, _, _ = authorize(request, shortkey, edit=True, full=True, superuser=True)
 
-    res.delete()
+    try:
+        hydroshare.delete_resource(shortkey)
+    except ValidationError as ex:
+        request.session['validation_error'] = ex.message
+        return HttpResponseRedirect(request.META['HTTP_REFERER'])
+
     return HttpResponseRedirect('/my-resources/')
+
+def create_new_version_resource(request, shortkey, *args, **kwargs):
+    res, authorized, user = authorize(request, shortkey, edit=True, full=True, superuser=True, raises_exception=False)
+    if res.raccess.published and not authorized:
+        if user.uaccess.owns_resource(res):
+            authorized = True
+    if not authorized:
+        raise PermissionDenied()
+
+    if res.locked_time:
+        elapsed_time = datetime.datetime.now(pytz.utc) - res.locked_time
+        if elapsed_time.days >= 0 or elapsed_time.seconds > settings.RESOURCE_LOCK_TIMEOUT_SECONDS:
+            # clear the lock since the elapsed time is greater than timeout threshold
+            res.locked_time = None
+            res.save()
+        else:
+            # cannot create new version for this resource since the resource is locked by another user
+            request.session['new_version_resource_creation_error'] = 'Failed to create a new version for this resource ' \
+                                                                 'since another user is creating a new version for this resource synchronously.'
+            return HttpResponseRedirect(res.get_absolute_url())
+
+    new_resource = None
+    try:
+        # lock the resource to prevent concurrent new version creation since only one new version for an obsoleted resource is allowed
+        res.locked_time = datetime.datetime.now(pytz.utc)
+        res.save()
+        new_resource = hydroshare.create_new_version_empty_resource(shortkey, user)
+        new_resource = hydroshare.create_new_version_resource(res, new_resource)
+    except Exception as ex:
+        if new_resource:
+            new_resource.delete()
+        # release the lock if new version of the resource failed to create
+        res.locked_time = None
+        res.save()
+        request.session['new_version_resource_creation_error'] = ex.message
+        return HttpResponseRedirect(res.get_absolute_url())
+
+    # release the lock if new version of the resource is created successfully
+    res.locked_time = None
+    res.save()
+
+    # go to resource landing page
+    request.session['just_created'] = True
+    return HttpResponseRedirect(new_resource.get_absolute_url())
 
 
 def publish(request, shortkey, *args, **kwargs):

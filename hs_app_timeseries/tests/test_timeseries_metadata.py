@@ -117,12 +117,11 @@ class TestTimeSeriesMetaData(MockIRODSTestCaseMixin, TransactionTestCase):
         self.odm2_sqlite_file_obj = open(self.odm2_sqlite_file, 'r')
 
         self.resTimeSeries = hydroshare.create_resource(
-            'TimeSeriesResource',
-            self.user,
-            'My Test TimeSeries Resource',
+            resource_type='TimeSeriesResource',
+            owner=self.user,
+            title='My Test TimeSeries Resource',
             files=(self.odm2_sqlite_file_obj,)
             )
-
         utils.resource_post_create_actions(resource=self.resTimeSeries, user=self.user, metadata=[])
 
         self._test_metadata_extraction()

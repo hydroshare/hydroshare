@@ -3,7 +3,7 @@ import json
 from django.db import models
 from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import ObjectDoesNotExist, ValidationError
-from django.contrib.contenttypes import generic
+from django.contrib.contenttypes.fields import GenericRelation
 
 from mezzanine.pages.models import Page, RichText
 from mezzanine.pages.page_processors import processor_for
@@ -50,19 +50,26 @@ class OriginalCoverage(AbstractMetaDataElement):
         convert 'value' dict as Json string to be the '_value' subelement value.) The base class create() can't do it.
 
         :param kwargs: the 'value' in kwargs should be a dictionary
+                       the '_value' in kwargs is a serialized json string
         """
-
+        value_arg_dict = None
         if 'value' in kwargs:
+            value_arg_dict = kwargs['value']
+        elif '_value' in kwargs:
+            value_arg_dict = json.loads(kwargs['_value'])
+
+        if value_arg_dict:
             # check that all the required sub-elements exist and create new original coverage meta
             for value_item in ['units', 'northlimit', 'eastlimit', 'southlimit', 'westlimit']:
-                if not value_item in kwargs['value']:
+                if not value_item in value_arg_dict:
                     raise ValidationError("For original coverage meta, one or more bounding box limits or 'units' is missing.")
 
-            value_dict = {k: v for k, v in kwargs['value'].iteritems()
+            value_dict = {k: v for k, v in value_arg_dict.iteritems()
                           if k in ('units', 'northlimit', 'eastlimit', 'southlimit', 'westlimit', 'projection')}
 
             value_json = json.dumps(value_dict)
-            del kwargs['value']
+            if 'value' in kwargs:
+                del kwargs['value']
             kwargs['_value'] = value_json
             return super(OriginalCoverage, cls).create(**kwargs)
         else:
@@ -161,8 +168,8 @@ processor_for(NetcdfResource)(resource_processor)
 
 # define the netcdf metadata
 class NetcdfMetaData(CoreMetaData):
-    variables = generic.GenericRelation(Variable)
-    ori_coverage = generic.GenericRelation(OriginalCoverage)
+    variables = GenericRelation(Variable)
+    ori_coverage = GenericRelation(OriginalCoverage)
 
     @classmethod
     def get_supported_element_names(cls):
