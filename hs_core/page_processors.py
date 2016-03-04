@@ -7,6 +7,7 @@ from hs_tools_resource.models import SupportedResTypes, ToolResource
 from hs_core import hydroshare
 from hs_core.views.utils import authorize
 from hs_core.hydroshare.resource import METADATA_STATUS_SUFFICIENT, METADATA_STATUS_INSUFFICIENT
+from hs_tools_resource.utils import parse_app_url_template
 
 @processor_for(GenericResource)
 def landing_page(request, page):
@@ -68,21 +69,19 @@ def get_page_context(page, user, resource_edit=False, extended_metadata_layout=N
                     if is_authorized:
                         tool_url = tool_res_obj.metadata.url_bases.first().value \
                             if tool_res_obj.metadata.url_bases.first() else None
-                        u = user.username if user.is_authenticated() else "anonymous"
-                        if tool_url:
-                            if tool_url.endswith('/'):
-                                tool_url = tool_url[:-1]
-                        else:
-                            tool_url = ""
                         tool_icon_url = tool_res_obj.metadata.tool_icon.first().url \
                             if tool_res_obj.metadata.tool_icon.first() else "raise-img-error"
-                        tl = {'title': str(tool_res_obj.metadata.title.value),
-                              'icon_url': tool_icon_url,
-                              'url': "{0}{1}{2}{3}{4}{5}".format(tool_url, "/?res_id=", content_model.short_id,
-                                                                 "&usr=", u, "&src=hs")}
-                        relevant_tools.append(tl)
+                        hs_term_dict_user = {}
+                        hs_term_dict_user["HS_USR_NAME"] = request.user.username if request.user.is_authenticated() else "anonymous"
+                        tool_url_new = parse_app_url_template(tool_url, [content_model.get_hs_term_dict(), hs_term_dict_user])
+                        if tool_url_new is not None:
+                            tl = {'title': str(tool_res_obj.metadata.title.value),
+                                  'icon_url': tool_icon_url,
+                                  'url': tool_url_new}
+                            relevant_tools.append(tl)
 
     just_created = False
+    new_version_create_resource_error = None
     just_published = False
     if request:
         validation_error = check_for_validation(request)
@@ -90,6 +89,10 @@ def get_page_context(page, user, resource_edit=False, extended_metadata_layout=N
         just_created = request.session.get('just_created', False)
         if 'just_created' in request.session:
             del request.session['just_created']
+
+        new_version_create_resource_error = request.session.get('new_version_resource_creation_error', None)
+        if 'new_version_resource_creation_error' in request.session:
+            del request.session['new_version_resource_creation_error']
 
         just_published = request.session.get('just_published', False)
         if 'just_published' in request.session:
@@ -164,6 +167,7 @@ def get_page_context(page, user, resource_edit=False, extended_metadata_layout=N
                    'supported_file_types': content_model.get_supported_upload_file_types(),
                    'allow_multiple_file_upload': content_model.can_have_multiple_files(),
                    'validation_error': validation_error if validation_error else None,
+                   'new_version_resource_creation_error': new_version_create_resource_error if new_version_create_resource_error else None,
                    'relevant_tools': relevant_tools,
                    'file_type_error': file_type_error,
                    'just_created': just_created,
@@ -358,7 +362,9 @@ def get_page_context(page, user, resource_edit=False, extended_metadata_layout=N
                'show_content_files': show_content_files,
                'validation_error': validation_error if validation_error else None,
                'discoverable': discoverable,
-               'relation_source_types': Relation.SOURCE_TYPES
+               'relation_source_types': tuple((type_value, type_display)
+                                              for type_value, type_display in Relation.SOURCE_TYPES
+                                              if type_value != 'isReplacedBy' and type_value != 'isVersionOf')
     }
 
     return context
