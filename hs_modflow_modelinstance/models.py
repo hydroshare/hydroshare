@@ -205,8 +205,8 @@ class BoundaryCondition(AbstractMetaDataElement):
             if len(model_boundary_condition.boundaryConditionType.all()) == 0 and\
                len(model_boundary_condition.boundaryConditionPackage.all()) == 0:
                 model_boundary_condition.delete()
-            else:
-                raise ObjectDoesNotExist("No BoundaryCondition element was found for the provided id:%s" % kwargs['id'])
+        else:
+            raise ObjectDoesNotExist("No BoundaryCondition element was found for the provided id:%s" % kwargs['id'])
 
     @classmethod
     def _validate_boundary_condition_types(cls, types):
