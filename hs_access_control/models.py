@@ -1277,23 +1277,6 @@ class UserAccess(models.Model):
 
         return self.user.is_superuser or (not this_resource.raccess.published and self.owns_resource(this_resource))
 
-    def can_create_resource_version(self, this_resource):
-        """
-        Whether self can create a version of a resource.
-
-        :param this_resource: Resource to check.
-        :return: True if user can set create a version otherwise false.
-
-        This is not enforced. It is up to the programmer to obey this restriction.
-        """
-
-        if __debug__:  # during testing only, check argument types and preconditions
-            assert isinstance(this_resource, BaseResource)
-
-        if not self.user.is_active: raise PermissionDenied("Requesting user is not active")
-
-        return self.owns_resource(this_resource)
-
     def can_view_resource(self, this_resource):
         """
         Whether user can view this resource
