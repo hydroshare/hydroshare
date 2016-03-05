@@ -136,7 +136,7 @@ class BoundaryCondition(AbstractMetaDataElement):
 
     # may be this could cause a problem
     def __unicode__(self):
-        return self.boundaryConditionType
+        return None
 
     class Meta:
         # BoundaryCondition element is not repeatable
