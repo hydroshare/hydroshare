@@ -224,6 +224,7 @@ def update_user_profile(request):
                     The HydroShare Team</p>
                     """.format(user.first_name, user.username, user.email, new_email)
                     send_mail(subject="Change of HydroShare email address.",
+                              message=message,
                               html_message=message,
                               from_email= settings.DEFAULT_FROM_EMAIL, recipient_list=[old_email], fail_silently=True)
             else:
