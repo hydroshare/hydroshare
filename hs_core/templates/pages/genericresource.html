@@ -755,6 +755,9 @@
                                         <a id="add-source" class="btn btn-success" data-toggle="modal"
                                            data-target="#add-source-dialog"><i
                                                 class="fa fa-plus"></i> Add source</a>
+                                    <span data-toggle="tooltip" data-placement="auto"
+                                          title='If this resource was derived from another resource, click this button to create a link to the source resource from which this resource was derived. If the source resource is a HydroShare resource, you should paste in the URL to the source resource in HydroShare. If the source resource is something outside of HydroShare, you can paste in a URL or a full text citation to the external resource.'
+                                          class="glyphicon glyphicon-info-sign text-muted"></span>
                                     </div>
                                     <hr style="border: 0;">
                                     <div>
@@ -785,15 +788,9 @@
                                         </table>
                                         <a id="add-relation" class="btn btn-success" data-toggle="modal"
                                            data-target="#add-relation-dialog"><i class="fa fa-plus"></i> Add relation</a>
-                                        <div>
-                                            <small class="text-muted">Click the button above to add a relationship to
-                                                another resource, external website, or document. You can express the
-                                                type of
-                                                relationship and then enter a URL to the resource or website. If the
-                                                related
-                                                resource does not have a URL, you can paste in a full text citation.
-                                            </small>
-                                        </div>
+                                        <span data-toggle="tooltip" data-placement="auto"
+                                              title='Click this button to add a relationship to another resource, external website, or document. You can express the type of relationship and then enter a URL to the resource or website. If the related resource does not have a URL, you can paste in a full text citation.'
+                                              class="glyphicon glyphicon-info-sign text-muted"></span>
                                     </div>
                                 {% endif %}
                             </div>
