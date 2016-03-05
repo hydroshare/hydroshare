@@ -1333,7 +1333,10 @@ class UserAccess(models.Model):
 
         if not self.user.is_active: raise PermissionDenied("Requesting user is not active")
 
-        return (self.user.is_superuser or self.owns_resource(this_resource)) and not this_resource.raccess.published
+        if self.user.is_superuser:
+            return True
+
+        return self.owns_resource(this_resource) and not this_resource.raccess.published
 
     ##########################################
     # check sharing rights

@@ -282,6 +282,10 @@ class TestAuthorize(MockIRODSTestCaseMixin, TestCase):
                       # or published
                       {'res_id': self.res.short_id, 'needed_permission': ACTION_TO_AUTHORIZE.EDIT_RESOURCE,
                        'success': True, 'exception': None},
+                      # super user has authorization for deleting a resource that is private or discoverable or public
+                      # or published
+                      {'res_id': self.res.short_id, 'needed_permission': ACTION_TO_AUTHORIZE.DELETE_RESOURCE,
+                       'success': True, 'exception': None},
                       # super user has no authorization for creating a resource version
                       {'res_id': self.res.short_id, 'needed_permission': ACTION_TO_AUTHORIZE.CREATE_RESOURCE_VERSION,
                        'success': False, 'exception': PermissionDenied}
@@ -291,9 +295,6 @@ class TestAuthorize(MockIRODSTestCaseMixin, TestCase):
                       # super user has authorization for setting resource flags (e.g., public,
                       # published/immutable, shareable etc) for a private, public or discoverable resource
                       {'res_id': self.res.short_id, 'needed_permission': ACTION_TO_AUTHORIZE.SET_RESOURCE_FLAG,
-                       'success': True, 'exception': None},
-                      # super user has authorization for deleting a private, public or discoverable resource
-                      {'res_id': self.res.short_id, 'needed_permission': ACTION_TO_AUTHORIZE.DELETE_RESOURCE,
                        'success': True, 'exception': None},
                       ] + common_parameters
 
@@ -333,9 +334,6 @@ class TestAuthorize(MockIRODSTestCaseMixin, TestCase):
                       # published/immutable, shareable etc) for a published resource
                       {'res_id': self.res.short_id, 'needed_permission': ACTION_TO_AUTHORIZE.SET_RESOURCE_FLAG,
                        'success': True, 'exception': None},
-                      # super user has no authorization for deleting a published resource
-                      {'res_id': self.res.short_id, 'needed_permission': ACTION_TO_AUTHORIZE.DELETE_RESOURCE,
-                       'success': False, 'exception': PermissionDenied}
                       ] + common_parameters
 
         self._run_tests(self.request, parameters)
