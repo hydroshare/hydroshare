@@ -257,11 +257,6 @@ def delete_resource(request, shortkey, *args, **kwargs):
 
 def create_new_version_resource(request, shortkey, *args, **kwargs):
     res, authorized, user = authorize(request, shortkey, needed_permission=ACTION_TO_AUTHORIZE.CREATE_RESOURCE_VERSION)
-    if res.raccess.published and not authorized:
-        if user.uaccess.owns_resource(res):
-            authorized = True
-    if not authorized:
-        raise PermissionDenied()
 
     if res.locked_time:
         elapsed_time = datetime.datetime.now(pytz.utc) - res.locked_time
@@ -314,6 +309,7 @@ def publish(request, shortkey, *args, **kwargs):
         request.session['just_published'] = True
     return HttpResponseRedirect(request.META['HTTP_REFERER'])
 
+
 def set_resource_flag(request, shortkey, *args, **kwargs):
     # only resource owners are allowed to change resource flags
     res, _, user = authorize(request, shortkey, needed_permission=ACTION_TO_AUTHORIZE.SET_RESOURCE_FLAG)
@@ -330,6 +326,7 @@ def set_resource_flag(request, shortkey, *args, **kwargs):
        _set_resource_sharing_status(request, user, res, flag_to_set='shareable', flag_value=True)
 
     return HttpResponseRedirect(request.META['HTTP_REFERER'])
+
 
 def share_resource_with_user(request, shortkey, privilege, user_id, *args, **kwargs):
     res, _, user = authorize(request, shortkey, needed_permission=ACTION_TO_AUTHORIZE.VIEW_RESOURCE)
@@ -377,6 +374,7 @@ def share_resource_with_user(request, shortkey, privilege, user_id, *args, **kwa
                           'profile_pic': picture_url, 'is_current_user': is_current_user,
                           'error_msg': err_message}
     return HttpResponse(json.dumps(ajax_response_data))
+
 
 def unshare_resource_with_user(request, shortkey, user_id, *args, **kwargs):
     res, _, user = authorize(request, shortkey, needed_permission=ACTION_TO_AUTHORIZE.VIEW_RESOURCE)
