@@ -242,10 +242,11 @@
             </table>
             <hr style="border:0">
         {% endif %}
-        {% if model_input %}
+        {% if model_inputs %}
             <legend>Model Input</legend>
             <table class="custom-table">
                 <tbody>
+                {% for model_input in model_inputs %}
                 <tr>
                     {% if model_input.inputType %}
                         <th class="text-muted">Type</th>
@@ -267,6 +268,7 @@
                     {% endif %}
                 </tr>
                 </tbody>
+            {% endfor %}
             </table>
             <hr style="border:0">
         {% endif %}

@@ -1,7 +1,6 @@
 __author__ = 'Mohamed Morsy'
 from django.forms import ModelForm
 from django import forms
-
 from crispy_forms import layout
 from crispy_forms.layout import Layout, Field, HTML
 
@@ -309,34 +308,26 @@ class BoundaryConditionFormHelper(BaseFormHelper):
 
 class BoundaryConditionForm(ModelForm):
     boundaryConditionType = forms.MultipleChoiceField(choices=boundaryConditionTypeChoices,
-                                                      widget=forms.CheckboxSelectMultiple(
+                                                       widget=forms.CheckboxSelectMultiple(
                                                           attrs={'style': 'width:auto;margin-top:-5px'}))
     boundaryConditionPackage = forms.MultipleChoiceField(choices=boundaryConditionPackageChoices,
-                                                         widget=forms.CheckboxSelectMultiple(
-                                                          attrs={'style': 'width:auto;margin-top:-5px'}))
+                                                          widget=forms.CheckboxSelectMultiple(
+                                                              attrs={'style': 'width:auto;margin-top:-5px'}))
 
     def __init__(self, allow_edit=True, res_short_id=None, element_id=None, *args, **kwargs):
         super(BoundaryConditionForm, self).__init__(*args, **kwargs)
         self.helper = BoundaryConditionFormHelper(allow_edit, res_short_id, element_id, element_name='BoundaryCondition')
         if self.instance:
-            try:
-                boundaryConditionType = self.instance.boundaryConditionType.all()
-                if len(boundaryConditionType) > 0:
-                    self.fields['boundaryConditionType'].initial = [types.description for types in
-                                                                    boundaryConditionType]
-                else:
-                    self.fields['boundaryConditionType'].initial = []
-            except TypeError:
-                self.fields['boundaryConditionType'].initial = []
-            try:
-                boundaryConditionPackage = self.instance.boundaryConditionPackage.all()
-                if len(boundaryConditionPackage) > 0:
-                    self.fields['boundaryConditionPackage'].initial = [packages.description for packages in
-                                                                       boundaryConditionPackage]
-                else:
-                    self.fields['boundaryConditionPackage'].initial = []
-            except TypeError:
-                self.fields['boundaryConditionPackage'].initial = []
+            if self.instance.id:
+                self.fields['boundaryConditionType'].initial = [types.description for types in
+                                                                self.instance.boundaryConditionType.all()]
+            # else:
+            #     self.fields['boundaryConditionType'].initial = []
+
+            # if self.instance.id:
+                self.fields['boundaryConditionPackage'].initial = [packages.description for packages in
+                                                                   self.instance.boundaryConditionPackage.all()]
+                # self.fields['boundaryConditionPackage'].initial = []
 
     class Meta:
         model = BoundaryCondition
@@ -457,3 +448,32 @@ class GeneralElementsValidationForm(forms.Form):
     modelSolver = forms.CharField(max_length=100, required=False)
     outputControlPackage = forms.CharField(max_length=100, required=False)
     subsidencePackage = forms.CharField(max_length=100, required=False)
+
+from hs_core.forms import Helper
+ModalDialogLayoutAddModelInput = Helper.get_element_add_modal_form('ModelInput', 'add_modelinput_modal_form')
+ModelInputLayoutEdit = Layout(
+                            HTML('{% load crispy_forms_tags %} '
+                                 '{% for form in model_input_formset.forms %} '
+                                 '<div class="item form-group"> '
+                                         '<form id={{form.form_id}} action="{{ form.action }}" method="POST" enctype="multipart/form-data"> '
+                                         '{% crispy form %} '
+                                         '<div class="row" style="margin-top:10px">'
+                                            '<div class="col-md-10">'
+                                                '<input class="btn-danger btn btn-md" type="button" data-toggle="modal" data-target="#delete-modelinput-element-dialog_{{ form.number }}" value="Delete model input">'
+                                            '</div>'
+                                            '<div class="col-md-2">'
+                                                '<button type="button" class="btn btn-primary pull-right" onclick="metadata_update_ajax_submit({{ form.form_id_button }}); return false;">Save changes</button>'
+                                            '</div>'
+                                        '</div>'
+                                        '{% crispy form.delete_modal_form %} '
+                                        '</form> '
+                                    '</div> '
+                                 '{% endfor %}</div></div>'
+
+                            ),
+                            HTML('<div style="margin-top:10px">'
+                                 '<p><a id="add-modelinput" class="btn btn-success" data-toggle="modal" data-target="#add-modelinput-dialog">'
+                                 '<i class="fa fa-plus"></i>Add another model input</a>'
+                                 '</div>'
+                            ),
+                    )

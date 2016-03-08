@@ -1,14 +1,17 @@
 __author__ = 'Mohamed Morsy'
+from functools import partial, wraps
+from django.forms import formset_factory
 from crispy_forms.bootstrap import AccordionGroup
 from crispy_forms.layout import Layout, HTML
 
 from hs_core import page_processors
 from hs_core.views import add_generic_context
+from hs_core.forms import BaseFormSet, MetaDataElementDeleteForm
 
 from hs_modflow_modelinstance.models import MODFLOWModelInstanceResource
 from hs_modflow_modelinstance.forms import ModelOutputForm, ExecutedByForm, StudyAreaForm, GridDimensionsForm,\
     StressPeriodForm, GroundWaterFlowForm, BoundaryConditionForm, ModelCalibrationForm, ModelInputForm,\
-    GeneralElementsForm
+    GeneralElementsForm, ModelInputLayoutEdit, ModalDialogLayoutAddModelInput
 
 from mezzanine.pages.page_processors import processor_for
 
@@ -30,7 +33,7 @@ def landing_page(request, page):
                 content_model.metadata.ground_water_flow or \
                 content_model.metadata.boundary_condition or \
                 content_model.metadata.model_calibration or \
-                content_model.metadata.model_input or \
+                content_model.metadata.model_inputs or \
                 content_model.metadata.general_elements:
             extended_metadata_exists = True
 
@@ -43,7 +46,7 @@ def landing_page(request, page):
         context['ground_water_flow'] = content_model.metadata.ground_water_flow
         context['boundary_condition'] = content_model.metadata.boundary_condition
         context['model_calibration'] = content_model.metadata.model_calibration
-        context['model_input'] = content_model.metadata.model_input
+        context['model_inputs'] = content_model.metadata.model_inputs
         context['general_elements'] = content_model.metadata.general_elements
 
     # add MODFLOW Model parameters context
@@ -72,9 +75,22 @@ def landing_page(request, page):
         model_calibration_form = ModelCalibrationForm(instance=content_model.metadata.model_calibration, res_short_id=content_model.short_id,
                                                       element_id=content_model.metadata.model_calibration.id if content_model.metadata.model_calibration else None)
 
-        model_input_form = ModelInputForm(instance=content_model.metadata.model_input, res_short_id=content_model.short_id,
-                                          element_id=content_model.metadata.model_input.id if content_model.metadata.model_input else None)
+        # THIS HAS TO BE A FORMSET
+        ModelInputFormSetEdit = formset_factory(wraps(ModelInputForm)(partial(ModelInputForm, allow_edit=True)), formset=BaseFormSet, extra=0)
+        model_input_formset = ModelInputFormSetEdit(initial=content_model.metadata.model_inputs.all().values(), prefix='modelinput')
+        for model_input_form in model_input_formset.forms:
+            model_input_form.action = "/hsapi/_internal/%s/source/%s/update-metadata/" % (content_model.short_id, model_input_form.initial['id'])
+            model_input_form.delete_modal_form = MetaDataElementDeleteForm(content_model.short_id, 'modelinput', model_input_form.initial['id'])
+            model_input_form.number = model_input_form.initial['id']
 
+        add_modelinput_modal_form = ModelInputForm(allow_edit=edit_resource, res_short_id=content_model.short_id)
+
+
+        # model_input_form = ModelInputForm(instance=content_model.metadata.model_inputs.first(), res_short_id=content_model.short_id,
+        #                                   element_id=content_model.metadata.model_inputs.first().id if content_model.metadata.model_inputs.first() else None)
+
+        # model_input_form = ModelInputForm(instance=content_model.metadata.model_inputs.first(), res_short_id=content_model.short_id,
+        #                                   element_id=None)
         general_elements_form = GeneralElementsForm(instance=content_model.metadata.general_elements, res_short_id=content_model.short_id,
                                                     element_id=content_model.metadata.general_elements.id if content_model.metadata.general_elements else None)
 
@@ -96,16 +112,34 @@ def landing_page(request, page):
                                HTML('<div class="form-group" id="generalelements"> '
                                     '{% load crispy_forms_tags %} '
                                     '{% crispy general_elements_form %} '
-                                    '</div></div>'),
+                                    '</div>'),
+                               HTML("</div>"),
 
+                               # HTML("<div id='model-inputs-container'>"),
+                               #
+                               # HTML('<div class="form-group" id="model-input-template" style="display:none;"> '
+                               #      '{% load crispy_forms_tags %} '
+                               #      '{% crispy model_input_form %} '
+                               #      '</div>'),
 
+                               # HTML('<div class="form-group" id="modelinput"> '
+                               #      '{% load crispy_forms_tags %} '
+                               #      '{% crispy model_input_form %} '
+                               #      '</div></div>'),
+                               # ModelInputFormSetEdit,
+                               ModelInputLayoutEdit,
+                               ModalDialogLayoutAddModelInput,
+                               # HTML('<div style="margin-top:10px">'
+                               #   '<p><a id="btn-add-model-input" class="btn btn-success">'
+                               #   '<i class="fa fa-plus"></i>Add another Model Input</a>'
+                               #   '</div></div>'),
 
                                HTML('<div class="col-xs-12 col-sm-6"><div class="form-group" id="studyarea"> '
                                     '{% load crispy_forms_tags %} '
                                     '{% crispy study_area_form %} '
                                     '</div> '),
 
-                                HTML('<div class="form-group" id="griddimensions"> '
+                               HTML('<div class="form-group" id="griddimensions"> '
                                     '{% load crispy_forms_tags %} '
                                     '{% crispy grid_dimensions_form %} '
                                     '</div>'),
@@ -123,20 +157,9 @@ def landing_page(request, page):
                                HTML('<div class="form-group" id="modelcalibration"> '
                                     '{% load crispy_forms_tags %} '
                                     '{% crispy model_calibration_form %} '
-                                    '</div></div></div>'),
-
-                               HTML('<div class="row"><div class="col-xs-12"><div class="form-group" id="modelinput"> '
-                                    '{% load crispy_forms_tags %} '
-                                    '{% crispy model_input_form %} '
-                                    '</div></div></div>'),
-
-                               HTML('<div style="margin-top:10px">'
-                                 '<p><a id="model_input" class="btn btn-success" data-toggle="modal" data-target="#model_input-dialog">'
-                                 '<i class="fa fa-plus"></i>Add another Model Input</a>'
-                                 '</div>'),
-
-
+                                    '</div></div></div>')
                                )
+
 
         # get the context from hs_core
         context = page_processors.get_page_context(page, request.user, resource_edit=edit_resource, extended_metadata_layout=ext_md_layout, request=request)
@@ -150,7 +173,8 @@ def landing_page(request, page):
         context['ground_water_flow_form'] = ground_water_flow_form
         context['boundary_condition_form'] = boundary_condition_form
         context['model_calibration_form'] = model_calibration_form
-        context['model_input_form'] = model_input_form
+        context['model_input_formset'] = model_input_formset
+        context['add_modelinput_modal_form'] = add_modelinput_modal_form
         context['general_elements_form'] = general_elements_form
 
     hs_core_context = add_generic_context(request, page)

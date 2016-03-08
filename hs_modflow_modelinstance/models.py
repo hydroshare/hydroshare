@@ -129,14 +129,12 @@ class BoundaryConditionPackageChoices(models.Model):
 
 class BoundaryCondition(AbstractMetaDataElement):
     term = 'BoundaryCondition'
-    boundaryConditionType = models.ManyToManyField(BoundaryConditionTypeChoices, null=True, blank=True,
-                                                   verbose_name='Type(s)')
-    boundaryConditionPackage = models.ManyToManyField(BoundaryConditionPackageChoices, null=True, blank=True,
-                                                      verbose_name='Package(s)')
+    boundaryConditionType = models.ManyToManyField(BoundaryConditionTypeChoices, null=True, blank=True)
+    boundaryConditionPackage = models.ManyToManyField(BoundaryConditionPackageChoices, null=True, blank=True)
 
     # may be this could cause a problem
     def __unicode__(self):
-        return None
+        return self.term
 
     class Meta:
         # BoundaryCondition element is not repeatable
@@ -345,8 +343,8 @@ class MODFLOWModelInstanceMetaData(ModelInstanceMetaData):
         return self._model_calibration.all().first()
 
     @property
-    def model_input(self):
-        return self._model_input.all().first()
+    def model_inputs(self):
+        return self._model_input.all()
 
     @property
     def general_elements(self):
@@ -416,9 +414,9 @@ class MODFLOWModelInstanceMetaData(ModelInstanceMetaData):
                                       'observationProcessPackage', 'calibrationMethod']
             self.add_metadata_element_to_xml(container, self.model_calibration, modelCalibrationFields)
 
-        if self.model_input:
+        if self.model_inputs:
             modelInputFields = ['inputType', 'inputSourceName', 'inputSourceURL']
-            self.add_metadata_element_to_xml(container, self.model_input, modelInputFields)
+            self.add_metadata_element_to_xml(container, self.model_inputs.all().first, modelInputFields)
 
         if self.general_elements:
 
