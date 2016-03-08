@@ -1,0 +1,1 @@
+from hs_swat_modelinstance.tests import *
