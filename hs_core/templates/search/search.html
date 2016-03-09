@@ -153,9 +153,9 @@
 {% block extra_js %}
 
     <!--<script async defer src="https://maps.googleapis.com/maps/api/js?libraries=drawing"></script>-->
-    <script style="" type="text/javascript" src="http://maps.googleapis.com/maps/api/js?v=3"></script>
+    <script src="http://maps.googleapis.com/maps/api/js?v=3" type="text/javascript"></script>
     <script src="http://google-maps-utility-library-v3.googlecode.com/svn/tags/keydragzoom/2.0.8/src/keydragzoom_packed.js" type="text/javascript"></script>
-
+    <script src="https://googlemaps.github.io/js-marker-clusterer/src/markerclusterer.js" type="text/javascript"></script>
     <script type="text/javascript">
         var json_results = [];
         var markers = [];
@@ -214,35 +214,6 @@
                     var eastlimit = parseFloat(json_results[i].eastlimit);
                     var westlimit = parseFloat(json_results[i].westlimit);
                     createBoxResourceMarker (northlimit, southlimit, eastlimit, westlimit, info_content, bounds, info_window, rectangle);
-                    //var lat = (parseFloat(json_results[i].northlimit) + parseFloat(json_results[i].southlimit)) / 2;
-                    //var lng = (parseFloat(json_results[i].eastlimit) + parseFloat(json_results[i].westlimit)) / 2;
-                    //var position = new google.maps.LatLng(lat, lng);
-                    /*info_window = new google.maps.InfoWindow();
-                    rectangle = new google.maps.Rectangle({
-                        strokeColor: '#FF0000',
-                        strokeOpacity: 0.8,
-                        strokeWeight: 2,
-                        fillColor: '#FF0000',
-                        fillOpacity: 0.35,
-                        map: map,
-                        bounds: {
-                            north: parseFloat(json_results[i].northlimit),
-                            south: parseFloat(json_results[i].southlimit),
-                            east: parseFloat(json_results[i].eastlimit),
-                            west: parseFloat(json_results[i].westlimit)
-                        }
-                    });
-
-                    var link = json_results[i].get_absolute_url;
-                    var title = json_results[i].title;
-                    var info_content = '"<a href="' + json_results[i].get_absolute_url + '">' + json_results[i].title + '</a>';
-                    google.maps.event.addListener(rectangle, 'click', function() {
-                        var ne = rectangle.getBounds().getNorthEast();
-                        info_window.setContent(info_content);
-                        info_window.setPosition(ne);
-                        info_window.open(map);
-
-                    });*/
                 }else{
                     continue;
                 }
@@ -256,22 +227,20 @@
                 map.setZoom(2);
                 google.maps.event.removeListener(listener);
             });
-
-
-            /*marker.addListener('click', function() {
-                //map.setZoom(8);
-                map.setCenter(marker.getPosition());
-                infowindow.open(marker.get('map'), marker);
-            });*/
-            //google.maps.event.addListenerOnce(map, 'idle', function() {map.fitBounds(bounds);});
+            //console.log("markers length" + markers.length);
+            //var mcOptions = {gridSize: 50, maxZoom: 15};
+            //var mc = new MarkerClusterer(map, [], mcOptions);
+            var markerCluster = new MarkerClusterer(map, markers);
         }
 
         var createPointResourceMarker = function (lat, lng, info_content, bounds, info_window) {
             var latlng = new google.maps.LatLng(lat, lng);
             var marker = new google.maps.Marker({
                 map: map,
+                icon: 'http://maps.google.com/intl/en_us/mapfiles/ms/micons/red-dot.png',
                 position: latlng
             });
+            markers.push(marker);
             google.maps.event.addListener(marker, 'click', function() {
                 info_window.setContent(info_content);
                 info_window.open(map, marker);
@@ -286,10 +255,10 @@
             var latlng = new google.maps.LatLng(lat, lng);
             var marker = new google.maps.Marker({
                 map: map,
-                icon: ' http://maps.google.com/mapfiles/kml/paddle/blu-blank-lv.png',
+                icon: 'http://maps.google.com/mapfiles/dd-end.png',
                 position: latlng
             });
-
+            markers.push(marker);
             google.maps.event.addListener(marker, 'click', function() {
                 info_window.setContent(info_content);
                 info_window.open(map, marker);
@@ -298,6 +267,7 @@
                         new google.maps.LatLng(southlimit, eastlimit)
                 );
                 rectangle.set('bounds', rectBounds);
+                //map.setZoom(3);
                 /*rectangle = new google.maps.Rectangle({
 
                         bounds: rectBounds,
