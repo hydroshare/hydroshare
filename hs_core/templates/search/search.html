@@ -108,7 +108,6 @@
                                 <th>Type</th>
                                 <th>First Author</th>
                                 <th>Last Modified</th>
-                                <th>east</th>
                             </tr>
                             {% for result in page_obj.object_list %}
                                 <tr>
@@ -142,7 +141,7 @@
                         {% endif %}
                     </div>
                     <div id="map-view" class="tab-pane fade">
-                        <div id="discover-map" style="width: 1000px;height: 1000px"></div>
+                        <div id="discover-map" style="width:850px; height:600px"></div>
                     </div>
                 </div>
             {% endif %}
@@ -152,6 +151,10 @@
 {% endblock %}
 
 {% block extra_js %}
+
+    <!--<script async defer src="https://maps.googleapis.com/maps/api/js?libraries=drawing"></script>-->
+    <script style="" type="text/javascript" src="http://maps.googleapis.com/maps/api/js?v=3"></script>
+    <script src="http://google-maps-utility-library-v3.googlecode.com/svn/tags/keydragzoom/2.0.8/src/keydragzoom_packed.js" type="text/javascript"></script>
 
     <script type="text/javascript">
         var json_results = [];
@@ -168,27 +171,52 @@
             });*/
             map = new google.maps.Map(document.getElementById('discover-map'), {
                 zoom: 2,
-                mapTypeId: google.maps.MapTypeId.TERRAIN
+                mapTypeId: google.maps.MapTypeId.TERRAIN,
+                zoomControl: true,
+                scaleControl: true
                // center: myLatLng
             });
-
-
+            map.enableKeyDragZoom({
+                key: 'shift'
+            });
 
             //var info_content = [];
             var info_window = new google.maps.InfoWindow();
-            //var rectangle
+            var rectangle = new google.maps.Rectangle({
+                strokeColor: '#FF0000',
+                strokeOpacity: 0.8,
+                strokeWeight: 2,
+                fillColor: '#FF0000',
+                fillOpacity: 0.35,
+                map: map,
+                bounds: {
+                    north: 0,
+                    south: 0,
+                    east: 0,
+                    west: 0
+                }
+            });
             for(var  i = 0; i < json_results.length; i++ ) {
                 //var data = json_results[i];
+                var link = json_results[i].get_absolute_url;
+                var title = json_results[i].title;
+                var info_content = '"<a href="' + json_results[i].get_absolute_url + '">' + json_results[i].title + '</a>';
+
                 if(json_results[i].coverage_type == 'point') {
                     var lat = parseFloat(json_results[i].north);
                     var lng = parseFloat(json_results[i].east);
-                    var position = new google.maps.LatLng(lat, lng);
+                    createPointResourceMarker(lat, lng, info_content, bounds, info_window);
 
                     //var latlng = {lat: parseFloat(data.north), lng: parseFloat(data.east)};
                 }else if(json_results[i].coverage_type == 'box'){
-                    var lat = (parseFloat(json_results[i].northlimit) + parseFloat(json_results[i].southlimit)) / 2;
-                    var lng = (parseFloat(json_results[i].eastlimit) + parseFloat(json_results[i].westlimit)) / 2;
-                    var position = new google.maps.LatLng(lat, lng);
+                    var northlimit = parseFloat(json_results[i].northlimit);
+                    var southlimit = parseFloat(json_results[i].southlimit);
+                    var eastlimit = parseFloat(json_results[i].eastlimit);
+                    var westlimit = parseFloat(json_results[i].westlimit);
+                    createBoxResourceMarker (northlimit, southlimit, eastlimit, westlimit, info_content, bounds, info_window, rectangle);
+                    //var lat = (parseFloat(json_results[i].northlimit) + parseFloat(json_results[i].southlimit)) / 2;
+                    //var lng = (parseFloat(json_results[i].eastlimit) + parseFloat(json_results[i].westlimit)) / 2;
+                    //var position = new google.maps.LatLng(lat, lng);
                     /*info_window = new google.maps.InfoWindow();
                     rectangle = new google.maps.Rectangle({
                         strokeColor: '#FF0000',
@@ -218,20 +246,11 @@
                 }else{
                     continue;
                 }
-
-                    var link = json_results[i].get_absolute_url;
-                    var title = json_results[i].title;
-                    var info_content = '"<a href="' + json_results[i].get_absolute_url + '">' + json_results[i].title + '</a>';
-                    createMarker(position, info_content, bounds, info_window,json_results[i].coverage_type);
+                //createMarker(position, info_content, bounds, info_window,json_results[i].coverage_type);
 
             }
 
             map.fitBounds(bounds);
-            /*var marker = new google.maps.Marker({
-                position: myLatLng,
-                map: map,
-                title: 'Hello World!'
-            });*/
             //(optional) restore the zoom level after the map is done scaling
             var listener = google.maps.event.addListener(map, "idle", function () {
                 map.setZoom(2);
@@ -247,25 +266,48 @@
             //google.maps.event.addListenerOnce(map, 'idle', function() {map.fitBounds(bounds);});
         }
 
-        function createMarker(latlng, info_content, bounds, info_window, type) {
-            if(type == 'box') {
-                var marker = new google.maps.Marker({
-                    map: map,
-                    icon: 'http://maps.google.com/mapfiles/ms/icons/blue-dot.png',
-                    position: latlng
-                });
-            }else if(type == 'point'){
-                var marker = new google.maps.Marker({
-                    map: map,
-                    position: latlng
-                });
-            }
+        var createPointResourceMarker = function (lat, lng, info_content, bounds, info_window) {
+            var latlng = new google.maps.LatLng(lat, lng);
+            var marker = new google.maps.Marker({
+                map: map,
+                position: latlng
+            });
             google.maps.event.addListener(marker, 'click', function() {
                 info_window.setContent(info_content);
                 info_window.open(map, marker);
+
             });
             bounds.extend(latlng);
         }
+
+        var createBoxResourceMarker = function (northlimit, southlimit, eastlimit, westlimit, info_content, bounds, info_window, rectangle) {
+            var lat = (parseFloat(northlimit) + parseFloat(southlimit)) / 2;
+            var lng = (parseFloat(eastlimit) + parseFloat(westlimit)) / 2;
+            var latlng = new google.maps.LatLng(lat, lng);
+            var marker = new google.maps.Marker({
+                map: map,
+                icon: ' http://maps.google.com/mapfiles/kml/paddle/blu-blank-lv.png',
+                position: latlng
+            });
+
+            google.maps.event.addListener(marker, 'click', function() {
+                info_window.setContent(info_content);
+                info_window.open(map, marker);
+                var rectBounds = new google.maps.LatLngBounds(
+                        new google.maps.LatLng(northlimit, westlimit),
+                        new google.maps.LatLng(southlimit, eastlimit)
+                );
+                rectangle.set('bounds', rectBounds);
+                /*rectangle = new google.maps.Rectangle({
+
+                        bounds: rectBounds,
+
+                });*/
+
+            });
+            bounds.extend(latlng);
+        }
+
         var reorderDivs = function() {
             var faceted_fields = ['author', 'subjects', 'resource_type', 'public', 'owners_names', 'discoverable'];
             var div_ordering = [];
@@ -288,13 +330,14 @@
             window.location = clearURL;
         }
 
+
+
         $(document).ready(function () {
             //console.log(res);
             //google.maps.event.addDomListener(window, 'load', initMap);
             //var titles = [];
             if($("#id_q").val() == ''){
                 //initMap();
-                $("#search-results").hide();
             }
             $("ul.nav-tabs > li > a").on("shown.bs.tab", function (e) {
                 var tabId = $(e.target).attr("href").substr(1);
@@ -308,16 +351,13 @@
                             'q': $("#id_q").val(),
                         }
                         , success: function(data) {
-                            //alert("hi");
-                            $("#search-results").show();
-                            //data = $.parseJSON(data);
-                            //console.log(data);
                             console.log("success");
                             //console.log(data);
                             for(var j = 0; j < data.length; j++){
                                 var item = $.parseJSON(data[j]);
                                 json_results.push(item);
                             }
+                            console.log(json_results);
                             console.log(json_results);
                             initMap();
                             /*$.each(data, function(index, item){
