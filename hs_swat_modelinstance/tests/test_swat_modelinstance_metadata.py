@@ -7,7 +7,8 @@ from xml.etree import ElementTree as ET
 from django.test import TransactionTestCase
 from django.core.files.uploadedfile import UploadedFile
 from django.contrib.auth.models import Group
-from django.db import IntegrityError, ValidationError
+from django.core.exceptions import ValidationError
+from django.db.utils import IntegrityError
 
 from hs_core import hydroshare
 from hs_core.hydroshare import utils
@@ -145,14 +146,14 @@ class TestSWATModelInstanceMetaData(MockIRODSTestCaseMixin, TransactionTestCase)
         # check that there are no extended metadata elements at this point
         self.assertEquals(self.resSWATModelInstance.metadata.model_output, None)
         self.assertEquals(self.resSWATModelInstance.metadata.executed_by, None)
-        self.assertEquals(self.resSWATModelInstance.metadata.ModelInput, None)
-        self.assertEquals(self.resSWATModelInstance.metadata.ModelParameter, None)
-        self.assertEquals(self.resSWATModelInstance.metadata.ModelMethod, None)
-        self.assertEquals(self.resSWATModelInstance.metadata.SimulationType, None)
-        self.assertEquals(self.resSWATModelInstance.metadata.ModelObjective, None)
+        self.assertEquals(self.resSWATModelInstance.metadata.model_input, None)
+        self.assertEquals(self.resSWATModelInstance.metadata.model_parameter, None)
+        self.assertEquals(self.resSWATModelInstance.metadata.model_method, None)
+        self.assertEquals(self.resSWATModelInstance.metadata.simulation_type, None)
+        self.assertEquals(self.resSWATModelInstance.metadata.model_objective, None)
 
-        #create
-        # create model_output
+        # create ##################################################################################
+        # create model_output ####
         self.resSWATModelInstance.metadata.create_element('ModelOutput', includes_output=False)
 
         modeloutput_element = self.resSWATModelInstance.metadata.model_output
@@ -182,37 +183,161 @@ class TestSWATModelInstanceMetaData(MockIRODSTestCaseMixin, TransactionTestCase)
             self.resSWATModelInstance.metadata.create_element('ModelOutput', includes_output=False)
 
 
-        # create ExecutedBy
+        # create ExecutedBy ####
         self.resSWATModelInstance.metadata.create_element('ExecutedBy', model_name=self.resGenModelProgram.short_id)
 
-        modelobjective_element = self.resSWATModelInstance.metadata.executed_by
-        self.assertEquals(modelobjective_element.model_name, self.resGenModelProgram.metadata.title.value)
-        self.assertEquals(modelobjective_element.model_program_fk, self.resGenModelProgram)
+        modelparam_element = self.resSWATModelInstance.metadata.executed_by
+        self.assertEquals(modelparam_element.model_name, self.resGenModelProgram.metadata.title.value)
+        self.assertEquals(modelparam_element.model_program_fk, self.resGenModelProgram)
 
         # multiple ExecutedBy elements are not allowed - should raise exception
         with self.assertRaises(IntegrityError):
             self.resSWATModelInstance.metadata.create_element('ExecutedBy', model_name=self.resSwatModelProgram.short_id)
 
-
-        # create ModelObjective
-        s_objectives = ["BMPs", "Hydrology"]
-        o_obj = "elon musk"
+        # create ModelObjective ####
+        s_params = ["BMPs", "Hydrology"]
+        o_params = "elon musk"
         self.resSWATModelInstance.metadata.create_element('ModelObjective',
-                                                          swat_model_objectives={s_objectives[0]: s_objectives[0],
-                                                                                 s_objectives[1]: s_objectives[1]},
-                                                          other_objectives=o_obj)
+                                                          swat_model_objectives={s_params[0]: s_params[0],
+                                                                                 s_params[1]: s_params[1]},
+                                                          other_objectives=o_params)
 
-        modelobjective_element = self.resSWATModelInstance.metadata.model_objective
-        v = modelobjective_element.swat_model_objectives.values
+        modelparam_element = self.resSWATModelInstance.metadata.model_objective
+        self.assertNotEqual(modelparam_element, None)
+        v = modelparam_element.swat_model_objectives.values()
         val_list = [d['description'] for d in v]
-        for o in s_objectives:
+        for o in s_params:
             self.assertEquals(o in val_list, True)
-        self.assertEquals(modelobjective_element.other_objectives, o_obj)
+        self.assertEquals(modelparam_element.other_objectives, o_params)
 
         # try to create a swat_model_objective with a non cv term
         with self.assertRaises(ValidationError):
             self.resSWATModelInstance.metadata.create_element('ModelObjective',
-                                                              swat_model_objectives={"gravity waves":"gravity waves"})
+                                                              swat_model_objectives={"gravity waves": "gravity waves"})
+
+        # try to create another swat_model_objective
+        with self.assertRaises(IntegrityError):
+            self.resSWATModelInstance.metadata.create_element('ModelObjective',
+                                                              swat_model_objectives={s_params[0]: s_params[0]},
+                                                              other_objectives="bleh")
+
+        # create simulation type ####
+        # try to create a simulation type with a non cv term
+        with self.assertRaises(ValidationError):
+            self.resSWATModelInstance.metadata.create_element('SimulationType',
+                                                              simulation_type_name='bilbo baggins')
+
+        self.resSWATModelInstance.metadata.create_element('SimulationType',
+                                                          simulation_type_name='Normal Simulation')
+        self.assertNotEqual(self.resSWATModelInstance.metadata.simulation_type, None)
+        self.assertEqual(self.resSWATModelInstance.metadata.simulation_type.get_simulation_type_name_display(),
+                         'Normal Simulation')
+
+        # try to create another simulation type
+        with self.assertRaises(IntegrityError):
+                self.resSWATModelInstance.metadata.create_element('SimulationType',
+                                                                  simulation_type_name='Sensitivity Analysis')
+        # create modelmethod ####
+        self.resSWATModelInstance.metadata.create_element('ModelMethod',
+                                                          runoffCalculationMethod='aaa',
+                                                          flowRoutingMethod='bbb',
+                                                          petEstimationMethod='ccc')
+        self.assertNotEqual(self.resSWATModelInstance.metadata.model_method, None)
+        self.assertEqual(self.resSWATModelInstance.metadata.model_method.runoffCalculationMethod, 'aaa')
+        self.assertEqual(self.resSWATModelInstance.metadata.model_method.flowRoutingMethod, 'bbb')
+        self.assertEqual(self.resSWATModelInstance.metadata.model_method.petEstimationMethod, 'ccc')
+
+        # try to create another model_method
+        with self.assertRaises(IntegrityError):
+            self.resSWATModelInstance.metadata.create_element('ModelMethod',
+                                                              runoffCalculationMethod='bbb',
+                                                              flowRoutingMethod='ccc',
+                                                              petEstimationMethod='ddd')
+
+        # create ModelParameter ####
+        # try to create a modelparam with a non cv term
+        with self.assertRaises(ValidationError):
+            self.resSWATModelInstance.metadata.create_element('ModelParameter',
+                                                              model_parameters={"chucky cheese": "chucky cheese"})
+
+        # try to create a modelparam with a no model_parameter term
+        with self.assertRaises(ValidationError):
+            self.resSWATModelInstance.metadata.create_element('ModelParameter', george="clooney")
+
+        s_params = ["Crop rotation", "Tillage operation"]
+        o_params = "spongebob"
+        self.resSWATModelInstance.metadata.create_element('ModelParameter',
+                                                          model_parameters={s_params[0]: s_params[0],
+                                                                            s_params[1]: s_params[1]},
+                                                          other_parameters=o_params)
+
+        modelparam_element = self.resSWATModelInstance.metadata.model_parameter
+        self.assertNotEqual(modelparam_element, None)
+        v = modelparam_element.model_parameters.values()
+        val_list = [d['description'] for d in v]
+        for p in s_params:
+            self.assertEquals(p in val_list, True)
+        self.assertEquals(modelparam_element.other_parameters, o_params)
+
+        # try to create another swat_model_objective
+        with self.assertRaises(IntegrityError):
+            self.resSWATModelInstance.metadata.create_element('ModelParameter',
+                                                              model_parameters={s_params[0]: s_params[0]},
+                                                              other_parameters="bleh")
+
+        # create ModelInput ####
+        # try to create a simulation type with non cv terms
+        with self.assertRaises(ValidationError): #todo this raises an error when multiple are made
+            self.resSWATModelInstance.metadata.create_element('ModelInput',
+                                                              rainfallTimeStepType='frodo baggins')
+            self.resSWATModelInstance.metadata.create_element('ModelInput',
+                                                              routingTimeStepType='legolas')
+            self.resSWATModelInstance.metadata.create_element('ModelInput',
+                                                              simulationTimeStepType='gandalf')
+
+        self.resSWATModelInstance.metadata.create_element('ModelInput',
+                                                          warmupPeriodValue='a',
+                                                          rainfallTimeStepType='Daily',
+                                                          rainfallTimeStepValue='c',
+                                                          routingTimeStepType='Daily',
+                                                          routingTimeStepValue='e',
+                                                          simulationTimeStepType='Hourly',
+                                                          simulationTimeStepValue='g',
+                                                          watershedArea='h',
+                                                          numberOfSubbasins='i',
+                                                          numberOfHRUs='j',
+                                                          demResolution='k',
+                                                          demSourceName='l',
+                                                          demSourceURL='m',
+                                                          landUseDataSourceName='n',
+                                                          landUseDataSourceURL='o',
+                                                          soilDataSourceName='p',
+                                                          soilDataSourceURL='q',
+                                                          )
+        self.assertNotEqual(self.resSWATModelInstance.metadata.simulation_type, None)
+        self.assertEqual(self.resSWATModelInstance.metadata.model_input.warmupPeriodValue, 'a')
+        self.assertEqual(self.resSWATModelInstance.metadata.model_input.rainfallTimeStepType, 'Daily')
+        self.assertEqual(self.resSWATModelInstance.metadata.model_input.rainfallTimeStepValue, 'c')
+        self.assertEqual(self.resSWATModelInstance.metadata.model_input.routingTimeStepType, 'Daily')
+        self.assertEqual(self.resSWATModelInstance.metadata.model_input.routingTimeStepValue, 'e')
+        self.assertEqual(self.resSWATModelInstance.metadata.model_input.simulationTimeStepType, 'Hourly')
+        self.assertEqual(self.resSWATModelInstance.metadata.model_input.simulationTimeStepValue, 'g')
+        self.assertEqual(self.resSWATModelInstance.metadata.model_input.watershedArea, 'h')
+        self.assertEqual(self.resSWATModelInstance.metadata.model_input.numberOfSubbasins, 'i')
+        self.assertEqual(self.resSWATModelInstance.metadata.model_input.numberOfHRUs, 'j')
+        self.assertEqual(self.resSWATModelInstance.metadata.model_input.demResolution, 'k')
+        self.assertEqual(self.resSWATModelInstance.metadata.model_input.demSourceName, 'l')
+        self.assertEqual(self.resSWATModelInstance.metadata.model_input.demSourceURL, 'm')
+        self.assertEqual(self.resSWATModelInstance.metadata.model_input.landUseDataSourceName, 'n')
+        self.assertEqual(self.resSWATModelInstance.metadata.model_input.landUseDataSourceURL, 'o')
+        self.assertEqual(self.resSWATModelInstance.metadata.model_input.soilDataSourceName, 'p')
+        self.assertEqual(self.resSWATModelInstance.metadata.model_input.soilDataSourceURL, 'q')
+
+        # try to create another simulation type
+        with self.assertRaises(IntegrityError):
+                self.resSWATModelInstance.metadata.create_element('ModelInput',
+                                                                  warmupPeriodValue='patrick')
+
 
 
     #     # update

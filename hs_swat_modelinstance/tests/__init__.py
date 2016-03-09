@@ -1,1 +1,1 @@
-from hs_swat_modelinstance.tests import *
+from test_swat_modelinstance_metadata import *

@@ -23,7 +23,7 @@ class ExecutedBy(ExecutedBy):
 
 # extended metadata elements for SWAT Model Instance resource type
 class ModelObjectiveChoices(models.Model):
-    description = models.CharField(max_length=300)
+    description = models.CharField(max_length=300) #todo there should be only 1 list of these for form and validation
 
     def __unicode__(self):
         return self.description
@@ -103,9 +103,29 @@ class SimulationType(AbstractMetaDataElement):
         # SimulationType element is not repeatable
         unique_together = ("content_type", "object_id")
 
+    @classmethod
+    def create(cls, **kwargs):
+        if 'simulation_type_name' in kwargs:
+            cls._validate_simulation_type(kwargs['simulation_type_name'])
+        else:
+            raise ValidationError("simulation_type_name is missing.")
+        simulation_type = super(SimulationType, cls).create(**kwargs)
+        return simulation_type
+
+    @classmethod
+    def _validate_simulation_type(cls, swat_simulation_type):
+        types = [c[0] for c in cls.type_choices]
+        if swat_simulation_type not in types:
+            raise ValidationError('Invalid swat_model_simulation_type:{} not in {}'.format(swat_simulation_type,
+                                                                                           types))
+
+
 class ModelMethod(AbstractMetaDataElement):
     term = 'ModelMethod'
-    runoffCalculationMethod = models.CharField(max_length=200, null=True, blank=True, verbose_name='Runoff calculation method')
+    runoffCalculationMethod = models.CharField(max_length=200,
+                                               null=True,
+                                               blank=True,
+                                               verbose_name='Runoff calculation method')
     flowRoutingMethod = models.CharField(max_length=200, null=True, blank=True, verbose_name='Flow routing method')
     petEstimationMethod = models.CharField(max_length=200, null=True, blank=True, verbose_name='PET estimation method')
 
@@ -214,6 +234,16 @@ class ModelInput(AbstractMetaDataElement):
     class Meta:
         # ModelInput element is not repeatable
         unique_together = ("content_type", "object_id")
+
+    # @classmethod
+    # def create(cls, **kwargs):
+    #     if 'simulation_type_name' in kwargs:
+    #         cls._validate_simulation_type(kwargs['simulation_type_name'])
+    #     else:
+    #         raise ValidationError("simulation_type_name is missing.")
+    #     simulation_type = super(SimulationType, cls).create(**kwargs)
+    #     return simulation_type
+
 
     @property
     def warmupPeriodType(self):
