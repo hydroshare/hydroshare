@@ -4,65 +4,242 @@
 {% block meta_title %}User profile for {{ profile_user|best_name }}{% endblock %}
 
 {% block main %}
-    {% with profile_user.userprofile as profile %}
 
-        <div class="row profile-header">
+    {% with profile_user.userprofile as profile %}
+        {% if profile_user.id == user.id %}
+            <form id="profile-form" action="{% url 'update_profile' %}" class="account-form" method="post"
+                  enctype="multipart/form-data" onsubmit="return validateForm()">
+        {% csrf_token %}
+        {% endif %}
+        <div class="row">
             {% if profile_user.id == user.id %}
-                <div class="col-xs-12 col-sm-2 pull-right">
-                    <a id="btn-edit-profile" data-toggle="tooltip" data-placement="auto"
-                       title="Edit profile" href="{% url 'profile_update' %}"
-                       class="glyphicon glyphicon-pencil icon-button btn-edit"></a>
-                </div>
+            <div data-page-mode="edit" class="alert alert-info" role="alert">Information entered here may be publicly visible. Do not enter information that you want to keep private.</div>
             {% endif %}
 
-            <div {% if profile_user.id == user.id %}class="col-xs-12 col-sm-10"{% else %}class="col-sm-12"{% endif %}>
-                {#        Profile picture       #}
-                {% if profile.picture and profile.picture.url %}
-                    <div style="background-image: url('{{ profile.picture.url }}')"
-                         class="profile-pic round-image pull-left">
+            <div class="col-sm-12">
+                <div class="row">
+                    {% if profile_user.id == user.id %}
+                        <div class="col-xs-12 col-sm-3 height-fix pull-right">
+                            <span data-page-mode="view" id="btn-edit-profile" class="glyphicon glyphicon-pencil pull-right icon-button btn-edit" title="Edit profile"></span>
+                            <button type="submit" data-page-mode="edit" id="btn-save-profile" class="btn btn-primary pull-right">Save changes</button>
+                            <span data-page-mode="edit" id="btn-cancel-profile-edit" class="btn btn-default pull-right">Cancel</span>
+                        </div>
+                    {% endif %}
+
+                    {#        Profile picture       #}
+                    <div class="col-sm-3 height-fix">
+                        <div id="profile-pic-container">
+                        {% if profile.picture and profile.picture.url %}
+                            <div style="background-image: url('{{ profile.picture.url }}')"
+                                 class="profile-pic round-image">
+                            </div>
+                        {% else %}
+                            <div class="profile-pic round-image user-icon"></div>
+                        {% endif %}
+                        </div>
+
+                        {#        Profile picture upload controls       #}
+                        {% if profile_user.id == user.id %}
+                            <div data-page-mode="edit" class="text-center">
+                            {% if profile.picture and profile.picture.url %}
+                                <div class="btn-file btn-update-picture">
+                                    <span class="glyphicon glyphicon-camera"></span>
+                                    <span>&nbsp;&nbsp;Update profile picture</span>
+                                    <input class="upload-picture" type="file" name="picture"></div>
+                                <button id="btn-delete-profile-pic" class="no-style icon-button btn-remove" data-toggle="modal"
+                                        data-target="#delete-picture" title="Delete profile picture"><span
+                                        class="glyphicon glyphicon-trash"></span>
+                                </button>
+                            {% else %}
+                                <fieldset>
+                                    <div class="btn-file btn-update-picture upload-picture"><span class="glyphicon glyphicon-camera"></span>
+                                        <span>&nbsp;&nbsp;Add a photo</span>
+                                        <input class="upload-picture" type="file" name="picture"></div>
+                                </fieldset>
+                            {% endif %}
+                            </div>
+                        {% endif %}
+
+                        {#        Password      #}
+                        {% if profile_user.id == user.id %}
+                        <div data-page-mode="edit">
+                            <hr>
+                            <div class="profile-picture-controls text-center">
+                                <div><a data-toggle="collapse" data-target="#change_password">Change password</a></div>
+
+                                <div id="change_password" class="collapse text-left">
+                                    <fieldset>
+                                        <label>Password</label>
+                                        <input class="form-control" autocomplete="off" id="id_password1" name="password1"
+                                               placeholder="Password"
+                                               type="password">
+
+                                        <small class="text-muted">Leave blank unless you want to change your password</small>
+                                    </fieldset>
+                                    <fieldset>
+                                        <label>Password (again)</label>
+                                        <input class="form-control" autocomplete="off" id="id_password2" name="password2"
+                                               placeholder="Password (again)" type="password">
+                                    </fieldset>
+                                    <hr>
+                                </div>
+
+                                {#        Account deactivation       #}
+                                <div><a data-toggle="modal" data-target="#deactivate-account-dialog">Deactivate account</a></div>
+                            </div>
+                        </div>
+                        {% endif %}
                     </div>
-                {% else %}
-                    <div class="profile-pic round-image user-icon pull-left"></div>
-                {% endif %}
 
-                <div class="profile-info-wrapper">
-                    {% if profile_user.first_name or profile_user.last_name %}
-                        <h2>{{ profile_user.first_name }} {{ profile_user.last_name }}</h2>
-                    {% else %}
-                        <h2>{{ profile_user.username }}</h2>
-                    {% endif %}
+                    <div class="col-xs-12 col-sm-6">
+                        <div data-page-mode="view">
+                            {#        Name       #}
+                            {% if profile_user.first_name or profile_user.last_name %}
+                                <h2>{{ profile_user.first_name }} {% if profile.middle_name %}{{ profile.middle_name }}{% endif %} {{ profile_user.last_name }}</h2>
+                            {% else %}
+                                <h2>{{ profile_user.username }}</h2>
+                            {% endif %}
 
-                    {% if profile.organization or profile.title %}
-                    <h4 class="text-muted">
-                        {% if profile.organization %}{{ profile.organization }}{% endif %}
-                        {% if profile.organization and profile.title %} | {% endif %}
-                        {% if profile.title %}{{ profile.title }}{% endif %}
-                    </h4>
-                    {% endif %}
-                    {% if profile.subject_areas or profile.profession %}
-                    <table class="overview">
-                        <tbody>
-                        {% if profile.subject_areas %}
-                            <tr>
-                                <td><span class="text-muted">Subject Areas: </span></td>
-                                <td>{{ profile.subject_areas }}</td>
-                            </tr>
+                            {#        Organization and Title       #}
+                            {% if profile.organization or profile.title %}
+                                <h4 class="text-muted">
+                                    {% if profile.organization %}{{ profile.organization }}{% endif %}
+                                    {% if profile.organization and profile.title %} | {% endif %}
+                                    {% if profile.title %}{{ profile.title }}{% endif %}
+                                </h4>
+                            {% endif %}
+
+                            {#        Subject areas       #}
+                            {% if profile.subject_areas or profile.profession %}
+                                <table class="overview">
+                                    <tbody>
+                                    {% if profile.subject_areas %}
+                                        <tr>
+                                            <td><span class="text-muted">Subject Areas: </span></td>
+                                            <td>{{ profile.subject_areas }}</td>
+                                        </tr>
+                                    {% endif %}
+                                    </tbody>
+                                </table>
+                            {% endif %}
+                        </div>
+                        {% if profile_user.id == user.id %}
+                        <div data-page-mode="edit">
+                            <div class="row">
+                                {# First name #}
+                                <fieldset class="col-sm-4">
+                                    <label>First name *</label>
+                                    <input class="form-control form-required" value="{{ profile_user.first_name }}" name="first_name">
+                                </fieldset>
+
+                                {# Middle name #}
+                                <fieldset class="col-sm-4">
+                                    <label>Middle name</label>
+                                    <input class="form-control" {% if profile.middle_name %}value="{{ profile.middle_name }}"{% endif %} name="middle_name">
+                                </fieldset>
+
+                                {# Last name #}
+                                <fieldset class="col-sm-4">
+                                    <label>Last name *</label>
+                                    <input class="form-control form-required" value="{{ profile_user.last_name }}" name="last_name">
+                                </fieldset>
+                            </div>
+
+                            <div class="row">
+                                {# Username #}
+                                <fieldset class="col-sm-4">
+                                    <label>Username *</label>
+                                    <input id="id_username" class="form-control form-required" value="{{ profile_user.username }}" name="username">
+                                    <small class="text-muted">Only letters, numbers, dashes or underscores.</small>
+                                </fieldset>
+                            </div>
+
+                            <div class="row">
+                                {# Organization #}
+                                <fieldset class="col-sm-6">
+                                    <label>Organization *</label>
+                                    <input class="form-control form-required" {% if profile.organization %}value="{{ profile.organization }}"{% endif %} name="organization">
+                                    <small class="text-muted">The name of the organization you work for.</small>
+                                </fieldset>
+
+                                {# Title #}
+                                <fieldset class="col-sm-6">
+                                    <label>Title</label>
+                                    <input class="form-control" {% if profile.title %}value="{{ profile.title }}"{% endif %} name="title">
+                                    <small class="text-muted">e.g. Assistant Professor, Program Director, Adjunct
+                                        Professor, Software Developer.
+                                    </small>
+                                </fieldset>
+                            </div>
+
+                            <div class="row">
+                                {# Subject areas #}
+                                <fieldset class="col-sm-12">
+                                    <label>Subject areas</label>
+                                    <input class="form-control" {% if profile.subject_areas %}value="{{ profile.subject_areas }}"{% endif %} name="subject_areas">
+                                    <small class="text-muted">A comma-separated list of subject areas you are interested
+                                        in researching. e.g. "Computer Science, Hydrology, Water Management"
+                                    </small>
+                                </fieldset>
+                            </div>
+                        </div>
                         {% endif %}
 
-                        {% if profile.profession %}
-                            <tr>
-                                <td><span class="text-muted">Profession</span></td>
-                                <td>{{ profile.profession }}</td>
-                            </tr>
+                        {#        CV       #}
+                        {% if profile_user.id == user.id %}
+                            <div data-page-mode="edit">
+                                <div>
+                                    {% if profile.cv and profile.cv.url %}
+                                        <hr>
+                                        <span><a href="{{ profile.cv.url }}" class="btn btn-default"
+                                                target="_blank"><span
+                                                class="glyphicon glyphicon-file"></span>View CV</a></span>
+
+                                        <div id="group-cv" class="btn-group text-center" role="group"
+                                             aria-label="CV">
+
+                                        <span class="btn-file icon-button btn-edit" title="Update CV">
+                                            <span class="glyphicon glyphicon-refresh"></span>
+                                            <input type="file" name="cv">
+                                        </span>
+                                            <button id="btn-delete-cv" class="no-style icon-button btn-remove" data-toggle="modal"
+                                                    data-target="#delete-cv" title="Delete CV"><span
+                                                    class="glyphicon glyphicon-trash"></span>
+                                            </button>
+                                        </div>
+                                    {% else %}
+                                        <hr>
+                                        <fieldset>
+                                        <label>Add a CV</label>
+                                        <div class="input-group">
+                                            <span class="input-group-btn">
+                                                <span id="cv-custom-upload" class="btn btn-primary btn-file">
+                                                    Browse&hellip; <input type="file" name="cv">
+                                                </span>
+                                            </span>
+                                            <input type="text" class="form-control" readonly>
+                                        </div>
+                                        </fieldset>
+                                    {% endif %}
+                                </div>
+                            </div>
                         {% endif %}
-                        </tbody>
-                    </table>
-                    {% endif %}
+
+                        {% if profile.cv and profile.cv.url %}
+                            <div data-page-mode="view">
+                                <hr>
+                                <div><a href="{{ profile.cv.url }}" class="btn btn-default"
+                                                            target="_blank"><span
+                                        class="glyphicon glyphicon-file"></span>View CV</a></div>
+                            </div>
+                        {% endif %}
+                    </div>
                 </div>
             </div>
+
         </div>
 
-        <div class="full-width-tabs-container">
+        <div class="full-width-tabs-container" id="user-profile-tabs">
             <!-- Nav tabs -->
             <ul class="nav nav-tabs full-width-tabs" role="tablist">
                 <li role="presentation" class="active">
@@ -72,9 +249,6 @@
                     <a href="#contributions" aria-controls="profile" role="tab" data-toggle="tab">
                         <i class="glyphicon glyphicon-file"></i> CONTRIBUTIONS</a>
                 </li>
-{#                <li role="presentation">#}
-{#                    <a href="#social" aria-controls="messages" role="tab"#}
-{#                       data-toggle="tab"><i class="glyphicon glyphicon-user"></i> SOCIAL</a></li>#}
             </ul>
 
             <!-- Tab panes -->
@@ -82,9 +256,9 @@
                 <div role="tabpanel" class="tab-pane fade in active" id="overview">
                     <div class="row">
                         <div class="col-md-7">
-                            <div class="panel panel-default">
+                            <div data-page-mode="on-edit-blur" class="panel panel-default">
                                 <div class="panel-heading">
-                                    <h3 class="panel-title"><span class="glyphicon glyphicon-bell">&nbsp;</span>Recent activity</h3>
+                                    <h3 class="panel-title"><span class="glyphicon glyphicon-time">&nbsp;</span>Recent activity</h3>
                                 </div>
                                 <div class="panel-body">
                                     {% if resources %}
@@ -103,8 +277,8 @@
 
                                             <div class="metadata-wrapper">
                                                 <div class="shared-resource-info">
-                                                    {% if profile_user.first_name or profile_user.last_name %}
-                                                        <strong>{{ profile_user.first_name }} {{ profile_user.last_name }}</strong>
+                                                    {% if profile_user.first_name or profile.middle_name or profile_user.last_name %}
+                                                        <strong>{% if profile_user.first_name %} {{ profile_user.first_name }}{% endif %} {% if profile.middle_name %} {{ profile.middle_name }} {% endif %} {% if profile_user.last_name %} {{ profile_user.last_name }}{% endif %}</strong>
                                                     {% else %}
                                                         <strong>{{ profile_user.username }}</strong>
                                                     {% endif %}
@@ -137,14 +311,99 @@
 
                         <div class="col-md-5">
                             {#        DESCRIPTION       #}
-
-                            {% if profile.details and not user.is_anonymous %}
+                            {% if not user.is_anonymous %}
                             <div class="panel panel-default">
                                 <div class="panel-heading">
-                                    <h3 class="panel-title"><span class="glyphicon glyphicon-user">&nbsp;</span>About {{ profile_user.first_name }}</h3>
+                                    <h3 class="panel-title">
+                                        <span class="glyphicon glyphicon-user">&nbsp;</span>About {{ profile_user.first_name }}
+                                    </h3>
                                 </div>
                                 <div class="panel-body">
-                                    {{ profile.details }}
+                                    <div data-page-mode="view">
+                                        {% if profile.details %}<div id="profile-description">{{ profile.details }}</div><hr>{% endif %}
+
+                                        <table class="overview" data-page-mode="view">
+                                            <tbody>
+                                            {% if profile.user_type and profile.user_type != "Unspecified"%}
+                                                <tr>
+                                                    <td><span class="text-muted">User type</span></td>
+                                                    <td id="db-user-type">{{ profile.user_type }}</td>
+                                                </tr>
+                                            {% endif %}
+                                            {% if profile.country and profile.country != "Unspecified" %}
+                                                <tr>
+                                                    <td><span class="text-muted">Country</span></td>
+                                                    <td>{{ profile.country }}</td>
+                                                </tr>
+                                            {% endif %}
+                                            {% if profile.state and profile.state != "Unspecified"%}
+                                                <tr>
+                                                    <td><span class="text-muted">State/Province</span></td>
+                                                    <td>{{ profile.state }}</td>
+                                                </tr>
+                                            {% endif %}
+                                            <tr>
+                                                <td><span class="text-muted">User since</span></td>
+                                                <td>{{ profile_user.date_joined }}</td>
+                                            </tr>
+                                            </tbody>
+                                        </table>
+                                    </div>
+
+                                    {% if profile_user.id == user.id %}
+                                    <div data-page-mode="edit">
+                                        {#        Description       #}
+                                        <fieldset>
+                                            <label>Description</label>
+                                            <textarea class="form-control"
+                                                      name="details" rows="4" >{% if profile.details %}{{ profile.details }}{% endif %}</textarea>
+                                        </fieldset>
+
+                                        <hr>
+
+                                        {#        User Type       #}
+                                        <fieldset>
+                                            <label for="selectUserType">User type *</label>
+                                            <select name="user_type" class="form-control form-required" id="selectUserType">
+                                                <option value="Unspecified">Unspecified</option>
+                                                <option value="University Faculty">University Faculty</option>
+                                                <option value="University Professional or Research Staff">University Professional or Research Staff</option>
+                                                <option value="Post-Doctoral Fellow">Post-Doctoral Fellow</option>
+                                                <option value="University Graduate Student">University Graduate Student</option>
+                                                <option value="University Undergraduate Student">University Undergraduate Student</option>
+                                                <option value="Commercial/Professional">Commercial/Professional</option>
+                                                <option value="Government Official">Government Official</option>
+                                                <option value="School Student Kindergarten to 12th Grade">School Student Kindergarten to 12th Grade</option>
+                                                <option value="School Teacher Kindergarten to 12th Grade">School Teacher Kindergarten to 12th Grade</option>
+                                                <option value="Other">Other</option>
+                                            </select>
+                                        </fieldset>
+
+                                        {#        User Type - Other       #}
+                                        <fieldset id="user-type-other">
+                                            <label>Specify: *</label>
+                                            <input name="user_type" class="form-control">
+                                        </fieldset>
+
+                                        {#        Country       #}
+                                        <fieldset>
+                                            <label>Country *</label>
+                                            <select name="country" class="form-control form-required input-medium bfh-countries" data-country="{{ profile.country }}"></select>
+                                        </fieldset>
+
+                                        {#        State       #}
+                                        <fieldset>
+                                            <label>State/Province *</label>
+                                            <input name="state" class="form-control form-required" {% if  profile.state %}value="{{ profile.state }}"{% else %}value="Unspecified"{% endif %}>
+                                        </fieldset>
+
+                                        {#        Date Joined       #}
+                                        <fieldset>
+                                            <label>User since</label>
+                                            <input readonly class="form-control" value='{{ profile_user.date_joined }}'>
+                                        </fieldset>
+                                    </div>
+                                    {% endif %}
                                 </div>
                             </div>
                             {% endif %}
@@ -153,105 +412,129 @@
                             {% if profile.public or profile_user.id == user.id and not user.is_anonymous %} {# Show only if profile is public and user is logged in #}
                                 <div class="panel panel-default">
                                     <div class="panel-heading">
-                                    <h3 class="panel-title"><span class="glyphicon glyphicon-phone-alt">&nbsp;</span>Contact</h3>
-                                </div>
+                                        <h3 class="panel-title"><span
+                                                class="glyphicon glyphicon-phone-alt">&nbsp;</span>Contact</h3>
+                                    </div>
 
-                                <div class="panel-body">
-                                    <table class="overview">
-                                    <tbody>
-                                    {% if profile.phone_1 %}
-                                        <tr>
-                                            <td><span class="text-muted">{% if profile.phone_1_type %}
-                                                {{ profile.phone_1_type }}{% else %}Phone{% endif %}</span></td>
-                                            <td>{{ profile.phone_1 }}</td>
-                                        </tr>
-                                    {% endif %}
-                                    {% if profile.phone_2 %}
-                                        <tr>
-                                            <td><span class="text-muted">{{ profile.phone_2_type }}</span></td>
-                                            <td>{{ profile.phone_2 }}</td>
-                                        </tr>
-                                    {% endif %}
-                                    {% if profile_user.email %}
-                                        {% if not user.is_anonymous %}
-                                            <tr>
-                                                <td><span class="text-muted">Email</span></td>
-                                                <td>
-                                                    <a href="mailto:{{ profile_user.email }}">send email to
-                                                        {% if profile_user.first_name or profile_user.last_name %}
-                                                            {{ profile_user.first_name }} {{ profile_user.last_name }}
-                                                        {% else %}
-                                                            {{ profile_user.username }}
-                                                        {% endif %}
-                                                    </a>
-                                                </td>
-                                            </tr>
-                                        {% else %}
-                                            <tr>
-                                                <td><span class="text-muted">Email</span></td>
-                                                <td>(<a href="/accounts/login/">Log in to send email</a>)</td>
-                                            </tr>
+                                    <div class="panel-body">
+                                        <table class="overview" data-page-mode="view">
+                                            <tbody>
+                                            {#        Phone 1       #}
+                                            {% if profile.phone_1 %}
+                                                <tr>
+                                                    <td><span class="text-muted">{% if profile.phone_1_type %}
+                                                        {{ profile.phone_1_type }}{% else %}Phone{% endif %}</span></td>
+                                                    <td>{{ profile.phone_1 }}</td>
+                                                </tr>
+                                            {% endif %}
+
+                                            {#        Phone 2       #}
+                                            {% if profile.phone_2 %}
+                                                <tr>
+                                                    <td><span class="text-muted">{{ profile.phone_2_type }}</span></td>
+                                                    <td>{{ profile.phone_2 }}</td>
+                                                </tr>
+                                            {% endif %}
+
+                                            {#        Email       #}
+                                            {% if profile_user.email %}
+                                                {% if not user.is_anonymous %}
+                                                    <tr>
+                                                        <td><span class="text-muted">Email</span></td>
+                                                        <td>
+                                                            <a href="mailto:{{ profile_user.email }}" target="_blank">send email to
+                                                                {% if profile_user.first_name or profile_user.last_name %}
+                                                                    {{ profile_user.first_name }}
+                                                                    {{ profile_user.last_name }}
+                                                                {% else %}
+                                                                    {{ profile_user.username }}
+                                                                {% endif %}
+                                                            </a>
+                                                        </td>
+                                                    </tr>
+                                                {% else %}
+                                                    <tr>
+                                                        <td><span class="text-muted">Email</span></td>
+                                                        <td>(<a href="/accounts/login/">Log in to send email</a>)</td>
+                                                    </tr>
+                                                {% endif %}
+                                            {% endif %}
+
+                                            {#        Website       #}
+                                            {% if profile.website %}
+                                                    <tr>
+                                                        <td><span class="text-muted">Website</span></td>
+                                                        <td><a href="{{ profile.website }}" target="_blank">{{ profile.website }}</a></td>
+                                                    </tr>
+                                            {% endif %}
+                                            </tbody>
+                                        </table>
+
+                                        {% if profile_user.id == user.id %}
+                                        <div class="row" data-page-mode="edit">
+                                            <fieldset>
+                                                <div class="col-sm-12"><label>Phone 1</label></div>
+
+                                                <div class="col-sm-6">
+                                                    <select name="phone_1_type" class="form-control">
+                                                        <option {% if profile.phone_1_type == "Mobile" %}selected{% endif %}
+                                                                value="Mobile">Mobile
+                                                        </option>
+                                                        <option {% if profile.phone_1_type == "Home" %}selected{% endif %} value="Home">
+                                                            Home
+                                                        </option>
+                                                        <option {% if profile.phone_1_type == "Work" %}selected{% endif %} value="Work">
+                                                            Work
+                                                        </option>
+                                                    </select>
+                                                </div>
+                                                <div class="col-sm-6">
+                                                    <input id="phone1" name="phone_1" class="form-control phone" {% if profile.phone_1 %}value="{{ profile.phone_1 }}"{% endif %}>
+                                                </div>
+                                            </fieldset>
+
+                                            <fieldset>
+                                                <div class="col-sm-12"><label>Phone 2</label></div>
+
+                                                <div class="col-sm-6">
+                                                    <select name="phone_2_type" class="form-control">
+                                                        <option {% if profile.phone_2_type == "Mobile" %}selected{% endif %}
+                                                                value="Mobile">Mobile
+                                                        </option>
+                                                        <option {% if profile.phone_2_type == "Home" %}selected{% endif %} value="Home">
+                                                            Home
+                                                        </option>
+                                                        <option {% if profile.phone_2_type == "Work" %}selected{% endif %} value="Work">
+                                                            Work
+                                                        </option>
+                                                    </select>
+                                                </div>
+                                                <div class="col-sm-6">
+                                                    <input id="phone2" name="phone_2" class="form-control phone" {% if profile.phone_2 %}value="{{ profile.phone_2 }}"{% endif %}>
+                                                </div>
+                                            </fieldset>
+                                            <fieldset class="col-sm-12">
+                                                <label>Email address *</label>
+                                                <input class="form-control form-required" id="id_email"
+                                                       value="{{ profile_user.email }}" name="email">
+                                            </fieldset>
+
+                                            <fieldset class="col-sm-12">
+                                                <label>Website</label>
+                                                <input class="form-control"
+                                                       {% if profile.website %}value="{{ profile.website }}"{% endif %} name="website">
+                                            </fieldset>
+                                        </div>
                                         {% endif %}
-                                    {% endif %}
-                                    </tbody>
-                                </table>
                                 </div>
                             </div>
                             {% endif %}
-
-
-                            {#      AFFILIATIONS     #}
-    {#                        <div class="panel panel-default">#}
-    {#                            <div class="panel-heading">#}
-    {#                                <h3 class="panel-title">Affiliations</h3>#}
-    {#                            </div>#}
-    {#                            <div class="panel-body">#}
-    {#                                <ul class="list-affiliations list-unstyled">#}
-    {#                                    <li>#}
-    {#                                        <div class="col-sm-3" style="padding:0">#}
-    {#                                            <a href="http://www.usu.edu/" target="_blank"><img#}
-    {#                                                    class="img-responsive affiliation-logo"#}
-    {#                                                    src="http://www.usu.edu/prm/identity/logos/vertical-blue.jpg"#}
-    {#                                                    alt="USU logo"></a>#}
-    {#                                        </div>#}
-    {#                                        <div class="col-sm-9" style="padding:0 10px">#}
-    {#                                            <a href="http://www.usu.edu/" target="_blank">#}
-    {#                                                <span class="organization_name">Utah State University</span></a>#}
-    {#                                            <span class="text-muted">(2001-2015)</span>#}
-    {#                                            <h5 class="text-muted">8200 Old Main Hill, Logan, UT, 84322</h5>#}
-    {#                                            <h5 class="text-muted">Civil and Environmental Engineering | Professor</h5>#}
-    {#                                            <h5 class="text-muted">(904) 343 3074</h5>#}
-    {#                                        </div>#}
-    {#                                    </li>#}
-    {##}
-    {#                                    <li>#}
-    {#                                        <div class="col-sm-3" style="padding:0">#}
-    {#                                            <a href="http://uwrl.usu.edu/" target="_blank"><img#}
-    {#                                                    class="img-responsive affiliation-logo"#}
-    {#                                                    src="http://uwrl.usu.edu/sites/default/files/uwrllogo.gif"#}
-    {#                                                    alt="UWRL logo"></a>#}
-    {#                                        </div>#}
-    {#                                        <div class="col-sm-9" style="padding:0 10px">#}
-    {#                                            <a href="http://www.usu.edu/" target="_blank">#}
-    {#                                        <span class="organization_name">Utah Water Research#}
-    {#                                        Laboratory</span></a>#}
-    {#                                            <span class="text-muted">(2001-2015)</span>#}
-    {#                                            <h5 class="text-muted">1600 Canyon Road, Logan, UT, 84321</h5>#}
-    {#                                            <h5 class="text-muted">Software Programming and Research Support | Web#}
-    {#                                                Developer</h5>#}
-    {#                                            <h5 class="text-muted">(904) 343 3074</h5>#}
-    {#                                        </div>#}
-    {#                                    </li>#}
-    {#                                </ul>#}
-    {##}
-    {#                            </div>#}
-    {#                        </div>#}
                         </div>
                     </div>
                 </div>
 
                 <div role="tabpanel" class="tab-pane fade" id="contributions">
-                    <div class="row">
+                    <div class="row" data-page-mode='on-edit-blur'>
                         <div class="col-sm-12"><legend>Resources</legend></div>
                         <div class="col-sm-12 col-md-3">
                             <table class="table-user-contributions table table-hover">
@@ -304,7 +587,6 @@
                                         <td><span>Web App</span></td>
                                         <td><span class="badge">0</span></td>
                                     </tr>
-
                                 </tbody>
                             </table>
                         </div>
@@ -397,171 +679,356 @@
                         </div>
                     </div>
                 </div>
-
-{#                <div role="tabpanel" class="tab-pane fade" id="social">#}
-{#                    <div class="col-sm-12 col-md-6">#}
-{#                        <h4 class="title">Groups</h4>#}
-{#                        <strong><span>{% if profile_user.first_name or profile_user.last_name %}#}
-{#                            {{ profile_user.first_name }} {{ profile_user.last_name }}#}
-{#                        {% else %}#}
-{#                            {{ profile_user.username }}#}
-{#                        {% endif %}</span></strong>#}
-{#                        is a member of:#}
-{##}
-{#                        <ul class="list-group" style="list-style-type: none;">#}
-{#                            <li><span class="badge">4 members</span> <a href="#">Utah State University</a></li>#}
-{#                            <li><span class="badge">7 members</span> <a href="#">Utah Water Research Laboratory</a></li>#}
-{#                        </ul>#}
-{##}
-{##}
-{#                        <h4 class="title" style="margin-top:30px;">Following</h4>#}
-{##}
-{#                        <div>#}
-{#                            {% if profile.picture and profile.picture.url %}#}
-{#                                <div style="background-image: url('{{ profile.picture.url }}'); float:left;cursor:pointer;"#}
-{#                                     class="profile-pic-thumbnail round-image"#}
-{#                                     data-toggle="tooltip" data-placement="top" title="Mauriel Ramirez (Utah State University)">#}
-{#                                </div>#}
-{#                                <div style="background-image: url('{{ profile.picture.url }}'); float:left;cursor:pointer;"#}
-{#                                     class="profile-pic-thumbnail round-image"#}
-{#                                     data-toggle="tooltip" data-placement="top" title="Mauriel Ramirez (Utah State University)">#}
-{#                                </div>#}
-{#                                <div style="background-image: url('{{ profile.picture.url }}'); float:left;cursor:pointer;"#}
-{#                                     class="profile-pic-thumbnail round-image"#}
-{#                                     data-toggle="tooltip" data-placement="top" title="Mauriel Ramirez (Utah State University)">#}
-{#                                </div>#}
-{#                                <div style="background-image: url('{{ profile.picture.url }}'); float:left;cursor:pointer;"#}
-{#                                     class="profile-pic-thumbnail round-image"#}
-{#                                     data-toggle="tooltip" data-placement="top" title="Mauriel Ramirez (Utah State University)">#}
-{#                                </div>#}
-{#                            {% endif %}#}
-{#                        <a href="#" style="float: left;clear: both;margin-top: 10px;">View all</a>#}
-{#                        </div>#}
-{##}
-{##}
-{#                        <h4 class="title" style="margin-top: 120px;">Followers</h4>#}
-{##}
-{#                        <div>#}
-{#                            <div style="background-image: url('{{ profile.picture.url }}'); float:left;cursor:pointer;"#}
-{#                                 class="profile-pic-thumbnail round-image"#}
-{#                                 data-toggle="tooltip" data-placement="top" title="Mauriel Ramirez (Utah State University)">#}
-{#                            </div>#}
-{#                            <div style="background-image: url('{{ profile.picture.url }}'); float:left;cursor:pointer;"#}
-{#                                 class="profile-pic-thumbnail round-image"#}
-{#                                 data-toggle="tooltip" data-placement="top" title="Mauriel Ramirez (Utah State University)">#}
-{#                            </div>#}
-{#                            <div style="background-image: url('{{ profile.picture.url }}'); float:left;cursor:pointer;"#}
-{#                                 class="profile-pic-thumbnail round-image"#}
-{#                                 data-toggle="tooltip" data-placement="top" title="Mauriel Ramirez (Utah State University)">#}
-{#                            </div>#}
-{#                            <div style="background-image: url('{{ profile.picture.url }}'); float:left;cursor:pointer;"#}
-{#                                 class="profile-pic-thumbnail round-image"#}
-{#                                 data-toggle="tooltip" data-placement="top" title="Mauriel Ramirez (Utah State University)">#}
-{#                            </div>#}
-{#                            <div style="background-image: url('{{ profile.picture.url }}'); float:left;cursor:pointer;"#}
-{#                                 class="profile-pic-thumbnail round-image"#}
-{#                                 data-toggle="tooltip" data-placement="top" title="Mauriel Ramirez (Utah State University)">#}
-{#                            </div>#}
-{#                            <div style="background-image: url('{{ profile.picture.url }}'); float:left;cursor:pointer;"#}
-{#                                 class="profile-pic-thumbnail round-image"#}
-{#                                 data-toggle="tooltip" data-placement="top" title="Mauriel Ramirez (Utah State University)">#}
-{#                            </div>#}
-{#                            <a href="#" style="float: left;clear: both;margin-top: 10px;">View all</a>#}
-{#                        </div>                    #}
-{#                    </div>#}
-{##}
-{#                    <div class="col-sm-12 col-md-6">#}
-{##}
-{#                        <h4>External profile urls</h4>#}
-{##}
-{#                        <div class="content social">#}
-{#                            <ul>#}
-{#                                <li><a href="#" target="_blank"><i class="fa fa-twitter"></i></a></li>#}
-{##}
-{#                                <li><a href="#" target="_blank"><i class="fa fa-facebook"></i></a></li>#}
-{##}
-{#                                <li><a href="#" target="_blank"><i class="fa fa-pinterest"></i></a></li>#}
-{##}
-{#                                <li><a href="#" target="_blank"><i class="fa fa-youtube"></i></a></li>#}
-{##}
-{#                                <li><a hhref="#" target="_blank"><i class="fa fa-github"></i></a></li>#}
-{##}
-{#                                <li><a href="#" target="_blank"><i class="fa fa-linkedin"></i></a></li>#}
-{##}
-{#                                <li><a href="#" target="_blank"><i class="fa fa-vk"></i></a></li>#}
-{##}
-{#                                <li><a href="#" target="_blank"><i class="fa fa-google-plus"></i></a></li>#}
-{#                            </ul>#}
-{#                        </div>#}
-{##}
-{#                    </div>#}
-{#                </div>#}
-                </div>
+            </div>
         </div>
 
+        {% if profile_user.id == user.id %}
+        <!-- Deactivate Account Modal -->
+        <div class="modal fade" id="deactivate-account-dialog" tabindex="-1" role="dialog"
+             aria-labelledby="Deactivate account">
+            <div class="modal-dialog" role="document">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <button type="button" class="close" data-dismiss="modal"
+                                aria-label="Close"><span aria-hidden="true">&times;</span>
+                        </button>
+                        <h4 class="modal-title" id="myModalLabel">Deactivate Account</h4>
+                    </div>
+                    <div class="modal-body">
+                        <div class="row">
+                            <div class="col-sm-2 col-xs-12 text-center">
+                                <span id="icon-warning" class="glyphicon glyphicon-warning-sign"></span>
+                            </div>
+                            <div class="col-sm-10 col-xs-12">
+                                <div><strong>WARNING</strong>: This will <strong><u>permanently</u></strong> disable your account. You cannot undo
+                                    this action. Please note that if you do choose to disable your account, your Resources
+                                    will remain in HydroShare and will be accessible to anyone who currently has access. If
+                                    you wish to remove your resources from HydroShare, you should do so <u>before</u> disabling
+                                    your account.
+                                </div>
+
+                            </div>
+                        </div>
+
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+                        <a href="{% url 'deactivate_account' %}" class="btn btn-danger">Confirm</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Delete picture modal -->
+        <div class="modal fade" id="delete-picture" tabindex="-1" role="dialog"
+             aria-labelledby="deleteProfilePicture">
+            <div class="modal-dialog" role="document">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <button type="button" class="close" data-dismiss="modal"
+                                aria-label="Close"><span aria-hidden="true">&times;</span>
+                        </button>
+                        <h4 class="modal-title" id="deleteProfilePicture">Delete profile picture</h4>
+                    </div>
+                    <div class="modal-body">
+                        Are you sure you want to delete your profile picture?
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-default" data-dismiss="modal">
+                            Close
+                        </button>
+                        <button class="btn btn-primary" id="picture-clear_id" name="picture-clear"
+                                title="Delete profile picture"
+                                value="clear">Confirm
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Delete CV modal -->
+        <div class="modal fade" id="delete-cv" tabindex="-1" role="dialog"
+             aria-labelledby="deleteCV">
+            <div class="modal-dialog" role="document">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <button type="button" class="close" data-dismiss="modal"
+                                aria-label="Close"><span aria-hidden="true">&times;</span>
+                        </button>
+                        <h4 class="modal-title" id="deleteCV">Delete CV</h4>
+                    </div>
+                    <div class="modal-body">
+                        Are you sure you want to delete your CV?
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-default" data-dismiss="modal">
+                            Close
+                        </button>
+                        <button class="btn btn-primary" id="cv-clear_id" name="cv-clear"
+                                title="Delete CV"
+                                value="clear">Confirm
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    </form>
 
     {% endwith %}
 {% endblock %}
 
 {% block extra_js %}
+    <script type="text/javascript" src="{{ STATIC_URL }}js/bootstrap-formhelpers.js"></script>
     <script type="text/javascript">
-    $(document).ready(function () {
-        // Abstract collapse toggle
-        $(".show-more-btn").click(function () {
-            if ($(this).parent().find(".activity-description").css("max-height") == "50px") {
-                var block = $(this).parent().find(".activity-description");
 
-                block.css("max-height", "initial"); // Set max-height to initial temporarily.
-                var maxHeight = block.height();    // Save the max height
-                block.css("max-height", "50px");    // Restore
+        // Preview profile picture
+        function readURL(input) {
+            if (input.files && input.files[0]) {
+                var reader = new FileReader();
+                reader.onload = function (e) {
+                    var profilePicContainer = $("#profile-pic-container");
+                    profilePicContainer.empty();
+                    profilePicContainer.append(
+                        '<div style="background-image: url(\'' + e.target.result +  '\')"' +
+                             'class="profile-pic round-image">' +
+                        '</div>'
+                    );
+                };
 
-                block.animate({'max-height': maxHeight}, 300); // Animate to max height
-                $(this).text("▲");
-                $(this).attr("title", "Show less");
+                reader.readAsDataURL(input.files[0]);
             }
-            else {
-                $(this).parent().find(".activity-description").animate({'max-height': "50px"}, 300);
-                $(this).attr("title", "Show more");
-                $(this).text("···");
-            }
-        });
-
-        // Filter list listener
-        $(".table-user-contributions tbody > tr").click(function(){
-            $(".table-user-contributions tbody > tr").removeClass("active");
-            $(this).addClass("active");
-            var res_type = $(this).attr("data-type");
-            if (res_type == "all") {
-                $(".contribution").fadeIn();
-            }
-            else {
-                $(".contribution").hide();
-                $(".contribution[data-type='" + res_type + "']").fadeIn();
-            }
-        });
-
-        // Initialize filters
-        var collection = [];
-        collection["total"] = 0;
-
-        var rows = $(".contribution");
-        for (var i = 0; i < rows.length; i++) {
-            if (collection[$(rows[i]).attr("data-type")]) {
-                collection[$(rows[i]).attr("data-type")]++;
-            }
-            else {
-                collection[$(rows[i]).attr("data-type")] = 1;
-            }
-            collection["total"]++;
         }
 
-        for (var item in collection) {
-            $("tr[data-type='" + item + "']").find(".badge").text(collection[item]);
+        function validateForm() {
+            var flagRequiredElements = validateRequiredElements();
+            var flagPasswords = validatePasswords();
+            var flagEmail = validateEmail();
+            var flagUsername = validateUserName();
+
+            return  flagRequiredElements && flagPasswords && flagEmail && flagUsername;
         }
 
-        $("tr[data-type='all']").find(".badge").text(collection["total"]);
+        // Only letters, numbers and dashes or underscore.
+        function validateUserName() {
+            var regex = /^[a-zA-Z0-9-_]+$/;
+            var username = $("#id_username");
 
-    });
+            if (!username.val()) {
+                return false;
+            }
+
+            if (!regex.test(username.val())) {
+                username.parent().find(".error-label").remove();
+                username.parent().append(errorLabel("Not a valid username."));
+                return false;
+            }
+            return true;
+        }
+
+        function validateRequiredElements() {
+            var requiredElements = $(".form-required");
+            for (var i = 0; i < requiredElements.length; i++) {
+                if (!$(requiredElements[i]).val()) {
+                    $(requiredElements[i]).addClass("form-invalid");
+                    $(requiredElements[i]).parent().find(".error-label").remove();
+                    $(requiredElements[i]).parent().append(errorLabel("This field is required."));
+                    return false;
+                }
+            }
+
+            return true;
+        }
+
+        function validatePasswords() {
+            // Password
+            var password1 = $("#id_password1");
+            var password2 = $("#id_password2");
+            if (password1.val() != password2.val()) {
+                password1.addClass("form-invalid");
+                password2.addClass("form-invalid");
+                password2.parent().find(".error-label").remove();
+                password2.parent().append(errorLabel("Passwords do not match."));
+                return false;
+            }
+
+            return true;
+        }
+
+        function validateEmail() {
+            var regex = /^([a-zA-Z0-9_.+-])+\@(([a-zA-Z0-9-])+\.)+([a-zA-Z0-9]{2,4})+$/;
+            var email = $("#id_email");
+
+            if (!email.val()) {
+                return false;
+            }
+
+            if (!regex.test(email.val())) {
+                email.parent().find(".error-label").remove();
+                email.parent().append(errorLabel("Not a valid email address."));
+                return false;
+            }
+
+            return true;
+        }
+
+        function errorLabel(message) {
+            return "<div class='label label-danger error-label'>" + message + "</div>";
+        }
+
+        function setEditMode() {
+            $("[data-page-mode='view']").hide();
+            $("[data-page-mode='edit']").fadeIn();
+            $("[data-page-mode='on-edit-blur']").fadeTo("fast", 0.5, function () {
+                $(this).addClass("blured-out");
+            });
+
+            var userTypeValue = $("#db-user-type").text();
+            var selectedUserType = $('#selectUserType option[value="' + userTypeValue + '"]');
+
+            if (selectedUserType.length > 0) {
+                selectedUserType.attr('selected', 'selected');
+            }
+            else if (userTypeValue) {
+                $('#selectUserType option[value="' + 'Other' + '"]').attr('selected', 'selected');
+                $("#user-type-other").show();
+                $("#selectUserType").removeAttr("name");
+                var userTypeOther =  $("#user-type-other input");
+                userTypeOther.attr("name", "user_type");
+                userTypeOther.val(userTypeValue);
+                userTypeOther.addClass("form-required");
+            }
+
+            $(".form-required").change(onFormRequiredChange);
+            $("#id_email").change(validateEmail);
+            $("#id_username").change(validateUserName);
+        }
+
+        function setViewMode() {
+            $("[data-page-mode='edit']").hide();
+            $("[data-page-mode='view']").fadeIn();
+            $("[data-page-mode='on-edit-blur']").fadeTo("fast", 1, function () {
+                $(this).removeClass("blured-out");
+            });
+        }
+
+        $(document).on('change', '#cv-custom-upload :file', function () {
+            var input = $(this);
+            var numFiles = input.get(0).files ? input.get(0).files.length : 1;
+            var label = input.val().replace(/\\/g, '/').replace(/.*\//, '');
+            input.trigger('fileselect', [numFiles, label]);
+        });
+
+        function onFormRequiredChange() {
+            if ($(this).val()) {
+                $(this).removeClass("form-invalid");
+                $(this).parent().find(".error-label").remove();
+            }
+            else {
+                $(this).addClass("form-invalid");
+                $(this).parent().find(".error-label").remove();
+                $(this).parent().append(errorLabel("This field is required."));
+            }
+        }
+
+        $(document).ready(function () {
+            // Change country first empty option to 'Unspecified'
+            var option = $("select[name='country'] option:first-child");
+            option.val("Unspecified");
+            option.text("Unspecified");
+
+            // File name preview for Add CV
+            $('.btn-primary.btn-file :file').on('fileselect', function (event, numFiles, label) {
+                var input = $(this).parents('.input-group').find(':text');
+                input.val(label);
+            });
+
+            $(".upload-picture").change(function(){
+                readURL(this);
+            });
+
+            $("#selectUserType").change(function () {
+                 var inputOther = $("#user-type-other input");
+                if ($(this).val() == "Other") {
+                    $("#user-type-other").show();
+                    $("#selectUserType").removeAttr("name");
+                    inputOther.attr("name", "user_type");
+                    inputOther.addClass("form-required");
+                    inputOther.change(onFormRequiredChange);
+                }
+                else {
+                    $("#user-type-other").hide();
+                    inputOther.removeAttr("name");
+                    inputOther.removeClass("form-required");
+                    $("#selectUserType").attr("name", "user_type");
+                }
+            });
+
+            $("[data-page-mode='edit']").hide();
+            $("#btn-edit-profile").click(function () {
+                setEditMode();
+            });
+
+            $("#btn-cancel-profile-edit").click(function () {
+                setViewMode();
+            });
+
+            // Abstract collapse toggle
+            $(".show-more-btn").click(function () {
+                if ($(this).parent().find(".activity-description").css("max-height") == "50px") {
+                    var block = $(this).parent().find(".activity-description");
+
+                    block.css("max-height", "initial"); // Set max-height to initial temporarily.
+                    var maxHeight = block.height();    // Save the max height
+                    block.css("max-height", "50px");    // Restore
+
+                    block.animate({'max-height': maxHeight}, 300); // Animate to max height
+                    $(this).text("▲");
+                    $(this).attr("title", "Show less");
+                }
+                else {
+                    $(this).parent().find(".activity-description").animate({'max-height': "50px"}, 300);
+                    $(this).attr("title", "Show more");
+                    $(this).text("···");
+                }
+            });
+
+            // Filter list listener
+            $(".table-user-contributions tbody > tr").click(function () {
+                $(".table-user-contributions tbody > tr").removeClass("active");
+                $(this).addClass("active");
+                var res_type = $(this).attr("data-type");
+                if (res_type == "all") {
+                    $(".contribution").fadeIn();
+                }
+                else {
+                    $(".contribution").hide();
+                    $(".contribution[data-type='" + res_type + "']").fadeIn();
+                }
+            });
+
+            // Initialize filters
+            var collection = [];
+            collection["total"] = 0;
+
+            var rows = $(".contribution");
+            for (var i = 0; i < rows.length; i++) {
+                if (collection[$(rows[i]).attr("data-type")]) {
+                    collection[$(rows[i]).attr("data-type")]++;
+                }
+                else {
+                    collection[$(rows[i]).attr("data-type")] = 1;
+                }
+                collection["total"]++;
+            }
+
+            for (var item in collection) {
+                $("tr[data-type='" + item + "']").find(".badge").text(collection[item]);
+            }
+
+            $("tr[data-type='all']").find(".badge").text(collection["total"]);
+
+        });
     </script>
 {% endblock %}
 
