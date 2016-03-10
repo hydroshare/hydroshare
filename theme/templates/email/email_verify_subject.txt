@@ -1,2 +1,2 @@
 {% load i18n %}
-{% trans "Your email in HydroShare has changed" %}
+{% trans "Please confirm email change request" %}

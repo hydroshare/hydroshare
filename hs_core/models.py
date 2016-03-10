@@ -21,6 +21,7 @@ from django_irods.storage import IrodsStorage
 from django.conf import settings
 from django.core.files.storage import DefaultStorage
 from django.core.exceptions import ObjectDoesNotExist, ValidationError
+from django.forms.models import model_to_dict
 
 from mezzanine.pages.models import Page, RichText
 from mezzanine.pages.page_processors import processor_for
@@ -88,18 +89,21 @@ class ResourcePermissionsMixin(Ownable):
 
     def can_delete(self, request):
         # have to do import locally to avoid circular import
-        from hs_core.views.utils import authorize
-        return authorize(request, self.short_id, res=self, full=True, superuser=True, raises_exception=False)[1]
+        from hs_core.views.utils import authorize, ACTION_TO_AUTHORIZE
+        return authorize(request, self.short_id, needed_permission=ACTION_TO_AUTHORIZE.DELETE_RESOURCE,
+                         raises_exception=False)[1]
 
     def can_change(self, request):
         # have to do import locally to avoid circular import
-        from hs_core.views.utils import authorize
-        return authorize(request, self.short_id, res=self, edit=True, superuser=True, raises_exception=False)[1]
+        from hs_core.views.utils import authorize, ACTION_TO_AUTHORIZE
+        return authorize(request, self.short_id, needed_permission=ACTION_TO_AUTHORIZE.EDIT_RESOURCE,
+                         raises_exception=False)[1]
 
     def can_view(self, request):
         # have to do import locally to avoid circular import
-        from hs_core.views.utils import authorize
-        return authorize(request, self.short_id, res=self, view=True, superuser=True, raises_exception=False)[1]
+        from hs_core.views.utils import authorize, ACTION_TO_AUTHORIZE
+        return authorize(request, self.short_id, needed_permission=ACTION_TO_AUTHORIZE.VIEW_RESOURCE,
+                         raises_exception=False)[1]
 
 # this should be used as the page processor for anything with pagepermissionsmixin
 # page_processor_for(MyPage)(ga_resources.views.page_permissions_page_processor)
@@ -123,6 +127,16 @@ def page_permissions_page_processor(request, page):
     editors = cm.raccess.edit_users.exclude(pk__in=owners)
     viewers = cm.raccess.view_users.exclude(pk__in=editors).exclude(pk__in=owners)
 
+    if cm.metadata.relations.all().filter(type='isReplacedBy').exists():
+        is_replaced_by = cm.metadata.relations.all().filter(type='isReplacedBy').first().value
+    else:
+        is_replaced_by = ''
+
+    if cm.metadata.relations.all().filter(type='isVersionOf').exists():
+        is_version_of = cm.metadata.relations.all().filter(type='isVersionOf').first().value
+    else:
+        is_version_of = ''
+
     show_manage_access = False
     if not cm.raccess.published and \
         (is_owner_user or (cm.raccess.shareable and (is_view_user or is_edit_user))):
@@ -138,6 +152,8 @@ def page_permissions_page_processor(request, page):
         "is_edit_user": is_edit_user,
         "is_view_user": is_view_user,
         "can_change_resource_flags": can_change_resource_flags,
+        "is_replaced_by": is_replaced_by,
+        "is_version_of": is_version_of,
         "show_manage_access": show_manage_access
     }
 
@@ -524,6 +540,7 @@ class Relation(AbstractMetaDataElement):
         ('isExecutedBy', 'Executed By'),
         ('isCreatedBy', 'Created By'),
         ('isVersionOf', 'Version Of'),
+        ('isReplacedBy', 'Replaced By'),
         ('isDataFor', 'Data For'),
         ('cites', 'Cites'),
         ('isDescribedBy', 'Described By'),
@@ -801,6 +818,9 @@ class Coverage(AbstractMetaDataElement):
     def create(cls, **kwargs):
         """
         data for the coverage value attribute must be provided as a dictionary
+        Note that kwargs['_value'] is a JSON-serialized unicode string dictionary
+        generated from django.forms.models.model_to_dict() which converts model values
+        to dictionaries.
         """
 
         # TODO: validate coordinate values
@@ -827,21 +847,28 @@ class Coverage(AbstractMetaDataElement):
                     raise ValidationError("Coverage type 'Point' can't be created when there is a coverage of "
                                           "type 'Box'")
 
+            value_arg_dict = None
             if 'value' in kwargs:
-                cls._validate_coverage_type_value_attributes(kwargs['type'], kwargs['value'])
+                value_arg_dict = kwargs['value']
+            elif '_value' in kwargs:
+                value_arg_dict = json.loads(kwargs['_value'])
+
+            if value_arg_dict:
+                cls._validate_coverage_type_value_attributes(kwargs['type'], value_arg_dict)
 
                 if kwargs['type'] == 'period':
-                    value_dict = {k: v for k, v in kwargs['value'].iteritems() if k in ('name', 'start', 'end')}
+                    value_dict = {k: v for k, v in value_arg_dict.iteritems() if k in ('name', 'start', 'end')}
                 elif kwargs['type'] == 'point':
-                    value_dict = {k: v for k, v in kwargs['value'].iteritems()
+                    value_dict = {k: v for k, v in value_arg_dict.iteritems()
                                   if k in ('name', 'east', 'north', 'units', 'elevation', 'zunits', 'projection')}
                 elif kwargs['type'] == 'box':
-                    value_dict = {k: v for k, v in kwargs['value'].iteritems()
+                    value_dict = {k: v for k, v in value_arg_dict.iteritems()
                                   if k in ('units', 'northlimit', 'eastlimit', 'southlimit', 'westlimit', 'name',
                                            'uplimit', 'downlimit', 'zunits', 'projection')}
 
                 value_json = json.dumps(value_dict)
-                del kwargs['value']
+                if 'value' in kwargs:
+                    del kwargs['value']
                 kwargs['_value'] = value_json
                 return super(Coverage, cls).create(**kwargs)
 
@@ -1281,6 +1308,10 @@ class DiscoverableResourceManager(models.Manager):
 class BaseResource(Page, AbstractResource):
 
     resource_type = models.CharField(max_length=50, default="GenericResource")
+    # this locked_time field is added for resource versioning locking representing
+    # the time when the resource is locked for a new version action. A value of null
+    # means the resource is not locked
+    locked_time = models.DateTimeField(null=True, blank=True)
 
     objects = models.Manager()
     public_resources = PublicResourceManager()
@@ -1362,7 +1393,21 @@ class BaseResource(Page, AbstractResource):
     def can_have_files(cls):
         return True
 
+    def get_hs_term_dict(self):
+        '''
+        this func returns a dict of HS Terms and their values, which will be used to parse webapp url templates
 
+        NOTES FOR ANY SUBCLASS OF THIS CLASS TO OVERRIDE THIS FUNCTION:
+        resource types that inherit this class should add/merge their resource-specific HS Terms
+        into this dict
+        '''
+
+        hs_term_dict = {}
+
+        hs_term_dict["HS_RES_ID"] = self.short_id
+        hs_term_dict["HS_RES_TYPE"] = self.resource_type
+
+        return hs_term_dict
 
 class GenericResource(BaseResource):
     objects = ResourceManager('GenericResource')
@@ -1518,6 +1563,23 @@ class CoreMetaData(models.Model):
         self.subjects.all().delete()
         self.sources.all().delete()
         self.relations.all().delete()
+
+    def copy_all_elements_from(self, src_md, exclude_elements=None):
+        md_type = ContentType.objects.get_for_model(src_md)
+        supported_element_names = src_md.get_supported_element_names()
+        for element_name in supported_element_names:
+            element_model_type = src_md._get_metadata_element_model_type(element_name)
+            elements_to_copy = element_model_type.model_class().objects.filter(object_id=src_md.id, content_type=md_type).all()
+            for element in elements_to_copy:
+                element_args = model_to_dict(element)
+                element_args.pop('content_type')
+                element_args.pop('id')
+                element_args.pop('object_id')
+                if exclude_elements:
+                    if not element_name.lower() in exclude_elements:
+                        self.create_element(element_name, **element_args)
+                else:
+                    self.create_element(element_name, **element_args)
 
     # this method needs to be overriden by any subclass of this class
     # to allow updating of extended (resource specific) metadata

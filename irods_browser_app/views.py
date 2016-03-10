@@ -6,7 +6,7 @@ from irods.session import iRODSSession
 from irods.exception import CollectionDoesNotExist
 from django_irods.icommands import SessionException
 from hs_core import hydroshare
-from hs_core.views.utils import authorize, upload_from_irods
+from hs_core.views.utils import authorize, upload_from_irods, ACTION_TO_AUTHORIZE
 from hs_core.hydroshare import utils
 
 def search_ds(coll):
@@ -140,7 +140,7 @@ def upload(request):
 def upload_add(request):
     # add irods file into an existing resource
     res_id = request.POST['res_id']
-    resource, _, _ = authorize(request, res_id, edit=True, full=True, superuser=True)
+    resource, _, _ = authorize(request, res_id, needed_permission=ACTION_TO_AUTHORIZE.EDIT_RESOURCE)
     res_files = request.FILES.getlist('files')
     extract_metadata = request.REQUEST.get('extract-metadata', 'No')
     extract_metadata = True if extract_metadata.lower() == 'yes' else False
