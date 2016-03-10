@@ -205,19 +205,18 @@
                 if(json_results[i].coverage_type == 'point') {
                     var lat = parseFloat(json_results[i].north);
                     var lng = parseFloat(json_results[i].east);
-                    createPointResourceMarker(lat, lng, info_content, bounds, info_window);
+                    createPointResourceMarker(lat, lng, info_content, bounds, info_window, rectangle);
 
-                    //var latlng = {lat: parseFloat(data.north), lng: parseFloat(data.east)};
                 }else if(json_results[i].coverage_type == 'box'){
                     var northlimit = parseFloat(json_results[i].northlimit);
                     var southlimit = parseFloat(json_results[i].southlimit);
                     var eastlimit = parseFloat(json_results[i].eastlimit);
                     var westlimit = parseFloat(json_results[i].westlimit);
                     createBoxResourceMarker (northlimit, southlimit, eastlimit, westlimit, info_content, bounds, info_window, rectangle);
+
                 }else{
                     continue;
                 }
-                //createMarker(position, info_content, bounds, info_window,json_results[i].coverage_type);
 
             }
 
@@ -233,7 +232,7 @@
             var markerCluster = new MarkerClusterer(map, markers);
         }
 
-        var createPointResourceMarker = function (lat, lng, info_content, bounds, info_window) {
+        var createPointResourceMarker = function (lat, lng, info_content, bounds, info_window, rectangle) {
             var latlng = new google.maps.LatLng(lat, lng);
             var marker = new google.maps.Marker({
                 map: map,
@@ -244,6 +243,11 @@
             google.maps.event.addListener(marker, 'click', function() {
                 info_window.setContent(info_content);
                 info_window.open(map, marker);
+                var rectBounds = new google.maps.LatLngBounds(
+                        new google.maps.LatLng(0, 0),
+                        new google.maps.LatLng(0, 0)
+                );
+                rectangle.set('bounds', rectBounds);
 
             });
             bounds.extend(latlng);
