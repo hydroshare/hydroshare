@@ -22,12 +22,12 @@ import autocomplete_light
 from inplaceeditform.commons import get_dict_from_obj, apply_filters
 from inplaceeditform.views import _get_http_response, _get_adaptor
 from django_irods.storage import IrodsStorage
-from hs_access_control.models import PrivilegeCodes
+
 
 from django_irods.icommands import SessionException
 from hs_core import hydroshare
 from hs_core.hydroshare.utils import get_resource_by_shortkey, resource_modified
-from .utils import authorize, upload_from_irods
+from .utils import authorize, upload_from_irods, ACTION_TO_AUTHORIZE
 from hs_core.models import GenericResource, resource_processor, CoreMetaData
 from hs_core.hydroshare.resource import METADATA_STATUS_SUFFICIENT, METADATA_STATUS_INSUFFICIENT
 
@@ -37,6 +37,8 @@ from . import user_rest_api
 from hs_core.hydroshare import utils
 from . import utils as view_utils
 from hs_core.signals import *
+from hs_access_control.models import PrivilegeCodes
+
 
 def short_url(request, *args, **kwargs):
     try:
@@ -68,7 +70,7 @@ def verify(request, *args, **kwargs):
 
 
 def add_file_to_resource(request, shortkey, *args, **kwargs):
-    resource, _, _ = authorize(request, shortkey, edit=True, full=True, superuser=True)
+    resource, _, _ = authorize(request, shortkey, needed_permission=ACTION_TO_AUTHORIZE.EDIT_RESOURCE)
     res_files = request.FILES.getlist('files')
     extract_metadata = request.REQUEST.get('extract-metadata', 'No')
     extract_metadata = True if extract_metadata.lower() == 'yes' else False
@@ -127,7 +129,7 @@ def is_multiple_file_allowed_for_resource_type(request, resource_type, *args, **
 
 
 def add_metadata_element(request, shortkey, element_name, *args, **kwargs):
-    res, _, _ = authorize(request, shortkey, edit=True, full=True, superuser=True)
+    res, _, _ = authorize(request, shortkey, needed_permission=ACTION_TO_AUTHORIZE.EDIT_RESOURCE)
 
     sender_resource = _get_resource_sender(element_name, res)
     handler_response = pre_metadata_element_create.send(sender=sender_resource, element_name=element_name,
@@ -176,7 +178,7 @@ def add_metadata_element(request, shortkey, element_name, *args, **kwargs):
 
 
 def update_metadata_element(request, shortkey, element_name, element_id, *args, **kwargs):
-    res, _, _ = authorize(request, shortkey, edit=True, full=True, superuser=True)
+    res, _, _ = authorize(request, shortkey, needed_permission=ACTION_TO_AUTHORIZE.EDIT_RESOURCE)
     sender_resource = _get_resource_sender(element_name, res)
     handler_response = pre_metadata_element_update.send(sender=sender_resource, element_name=element_name,
                                                         element_id=element_id, request=request)
@@ -219,7 +221,7 @@ def update_metadata_element(request, shortkey, element_name, element_id, *args, 
 def file_download_url_mapper(request, shortkey, filename):
     """ maps the file URIs in resourcemap document to django_irods download view function"""
 
-    authorize(request, shortkey, view=True, edit=True, full=True, superuser=True)
+    authorize(request, shortkey, needed_permission=ACTION_TO_AUTHORIZE.VIEW_RESOURCE)
     irods_file_path = '/'.join(request.path.split('/')[2:-1])
     istorage = IrodsStorage()
     file_download_url = istorage.url(irods_file_path)
@@ -227,7 +229,7 @@ def file_download_url_mapper(request, shortkey, filename):
 
 
 def delete_metadata_element(request, shortkey, element_name, element_id, *args, **kwargs):
-    res, _, _ = authorize(request, shortkey, edit=True, full=True, superuser=True)
+    res, _, _ = authorize(request, shortkey, needed_permission=ACTION_TO_AUTHORIZE.EDIT_RESOURCE)
     res.metadata.delete_element(element_name, element_id)
     resource_modified(res, request.user)
     request.session['resource-mode'] = 'edit'
@@ -235,14 +237,14 @@ def delete_metadata_element(request, shortkey, element_name, element_id, *args, 
 
 
 def delete_file(request, shortkey, f, *args, **kwargs):
-    res, _, user = authorize(request, shortkey, edit=True, full=True, superuser=True)
+    res, _, user = authorize(request, shortkey, needed_permission=ACTION_TO_AUTHORIZE.EDIT_RESOURCE)
     hydroshare.delete_resource_file(shortkey, f, user)
 
     return HttpResponseRedirect(request.META['HTTP_REFERER'])
 
 
 def delete_resource(request, shortkey, *args, **kwargs):
-    res, _, _ = authorize(request, shortkey, edit=True, full=True, superuser=True)
+    res, _, _ = authorize(request, shortkey, needed_permission=ACTION_TO_AUTHORIZE.DELETE_RESOURCE)
 
     try:
         hydroshare.delete_resource(shortkey)
@@ -252,13 +254,9 @@ def delete_resource(request, shortkey, *args, **kwargs):
 
     return HttpResponseRedirect('/my-resources/')
 
+
 def create_new_version_resource(request, shortkey, *args, **kwargs):
-    res, authorized, user = authorize(request, shortkey, edit=True, full=True, superuser=True, raises_exception=False)
-    if res.raccess.published and not authorized:
-        if user.uaccess.owns_resource(res):
-            authorized = True
-    if not authorized:
-        raise PermissionDenied()
+    res, authorized, user = authorize(request, shortkey, needed_permission=ACTION_TO_AUTHORIZE.CREATE_RESOURCE_VERSION)
 
     if res.locked_time:
         elapsed_time = datetime.datetime.now(pytz.utc) - res.locked_time
@@ -268,13 +266,15 @@ def create_new_version_resource(request, shortkey, *args, **kwargs):
             res.save()
         else:
             # cannot create new version for this resource since the resource is locked by another user
-            request.session['new_version_resource_creation_error'] = 'Failed to create a new version for this resource ' \
-                                                                 'since another user is creating a new version for this resource synchronously.'
+            request.session['new_version_resource_creation_error'] = 'Failed to create a new version for ' \
+                                                                     'this resource since another user is creating a ' \
+                                                                     'new version for this resource synchronously.'
             return HttpResponseRedirect(res.get_absolute_url())
 
     new_resource = None
     try:
-        # lock the resource to prevent concurrent new version creation since only one new version for an obsoleted resource is allowed
+        # lock the resource to prevent concurrent new version creation since only one new version for an
+        # obsoleted resource is allowed
         res.locked_time = datetime.datetime.now(pytz.utc)
         res.save()
         new_resource = hydroshare.create_new_version_empty_resource(shortkey, user)
@@ -298,7 +298,8 @@ def create_new_version_resource(request, shortkey, *args, **kwargs):
 
 
 def publish(request, shortkey, *args, **kwargs):
-    res, _, _ = authorize(request, shortkey, edit=True, full=True, superuser=True)
+    # only resource owners are allowed to change resource flags (e.g published)
+    res, _, _ = authorize(request, shortkey, needed_permission=ACTION_TO_AUTHORIZE.SET_RESOURCE_FLAG)
 
     try:
         hydroshare.publish_resource(request.user, shortkey)
@@ -308,47 +309,12 @@ def publish(request, shortkey, *args, **kwargs):
         request.session['just_published'] = True
     return HttpResponseRedirect(request.META['HTTP_REFERER'])
 
-# TOD0: this view function needs refactoring once the new access control UI works
-def change_permissions(request, shortkey, *args, **kwargs):
 
-    class AddUserForm(forms.Form):
-        user = forms.ModelChoiceField(User.objects.all(), widget=autocomplete_light.ChoiceWidget("UserAutocomplete"))
-
-    class AddGroupForm(forms.Form):
-        group = forms.ModelChoiceField(Group.objects.all(), widget=autocomplete_light.ChoiceWidget("GroupAutocomplete"))
-
-    res, _, user = authorize(request, shortkey, edit=True, full=True, superuser=True)
+def set_resource_flag(request, shortkey, *args, **kwargs):
+    # only resource owners are allowed to change resource flags
+    res, _, user = authorize(request, shortkey, needed_permission=ACTION_TO_AUTHORIZE.SET_RESOURCE_FLAG)
     t = request.POST['t']
-    values = [int(k) for k in request.POST.getlist('designees', [])]
-    go_to_resource_listing_page = False
-    if t == 'owners':
-        go_to_resource_listing_page = _unshare_resource_with_users(request, user, values, res, 'owner')
-    elif t == 'edit_users':
-        go_to_resource_listing_page = _unshare_resource_with_users(request, user, values, res, 'edit')
-    # elif t == 'edit_groups':
-    #     res.edit_groups = Group.objects.in_bulk(values)
-    elif t == 'view_users':
-        go_to_resource_listing_page = _unshare_resource_with_users(request, user, values, res, 'view')
-    # elif t == 'view_groups':
-    #     res.view_groups = Group.objects.in_bulk(values)
-    elif t == 'add_view_user':
-        frm = AddUserForm(data=request.POST)
-        _share_resource_with_user(request, frm, res, user, PrivilegeCodes.VIEW)
-    elif t == 'add_edit_user':
-        frm = AddUserForm(data=request.POST)
-        _share_resource_with_user(request, frm, res, user, PrivilegeCodes.CHANGE)
-    # elif t == 'add_view_group':
-    #     frm = AddGroupForm(data=request.POST)
-    #     if frm.is_valid():
-    #         res.view_groups.add(frm.cleaned_data['group'])
-    # elif t == 'add_view_group':
-    #     frm = AddGroupForm(data=request.POST)
-    #     if frm.is_valid():
-    #         res.edit_groups.add(frm.cleaned_data['group'])
-    elif t == 'add_owner':
-        frm = AddUserForm(data=request.POST)
-        _share_resource_with_user(request, frm, res, user, PrivilegeCodes.OWNER)
-    elif t == 'make_public':
+    if t == 'make_public':
         _set_resource_sharing_status(request, user, res, flag_to_set='public', flag_value=True)
     elif t == 'make_private' or t == 'make_not_discoverable':
         _set_resource_sharing_status(request, user, res, flag_to_set='public', flag_value=False)
@@ -359,17 +325,11 @@ def change_permissions(request, shortkey, *args, **kwargs):
     elif t == 'make_shareable':
        _set_resource_sharing_status(request, user, res, flag_to_set='shareable', flag_value=True)
 
-    # due to self unsharing of a private resource the user will have no access to that resource
-    # so need to redirect to the resource listing page
-    if go_to_resource_listing_page:
-        return HttpResponseRedirect('/my-resources/')
-    else:
-        return HttpResponseRedirect(request.META['HTTP_REFERER'])
+    return HttpResponseRedirect(request.META['HTTP_REFERER'])
 
 
-# Needed for new access control UI functionality being developed by Mauriel
 def share_resource_with_user(request, shortkey, privilege, user_id, *args, **kwargs):
-    res, _, user = authorize(request, shortkey, view=True, edit=True, full=True, superuser=True)
+    res, _, user = authorize(request, shortkey, needed_permission=ACTION_TO_AUTHORIZE.VIEW_RESOURCE)
     user_to_share_with = utils.user_from_id(user_id)
     status = 'success'
     err_message = ''
@@ -416,9 +376,8 @@ def share_resource_with_user(request, shortkey, privilege, user_id, *args, **kwa
     return HttpResponse(json.dumps(ajax_response_data))
 
 
-# Needed for new access control UI functionality being developed by Mauriel
 def unshare_resource_with_user(request, shortkey, user_id, *args, **kwargs):
-    res, _, user = authorize(request, shortkey, view=True, edit=True, full=True, superuser=True)
+    res, _, user = authorize(request, shortkey, needed_permission=ACTION_TO_AUTHORIZE.VIEW_RESOURCE)
     user_to_unshare_with = utils.user_from_id(user_id)
 
     try:

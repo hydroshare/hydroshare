@@ -57,10 +57,10 @@ stop_nginx() {
 restart_hs() {
     echo "*** ${1^^} ***"
     stop_nginx
-    preflight_hs
     docker-compose stop hydroshare
     docker-compose stop defaultworker
     delete_celerybeat_scheduler
+    preflight_hs
     docker-compose start hydroshare
     docker-compose start defaultworker
     if [ "${USE_NGINX,,}" = true ]; then
@@ -136,6 +136,11 @@ preflight_hs() {
     yes | cp -rf ${HS_PATH}/docker-compose.template ${HS_PATH}/docker-compose.yml
     sed -i 's!HS_PATH!'${HS_PATH}'!g' ${HS_PATH}/docker-compose.yml
     sed -i 's!HS_LOG_FILES!'${HS_LOG_FILES}'!g' ${HS_PATH}/docker-compose.yml
+    if [[ ! -f celery/readme.txt ]]; then
+        echo "*** creating placeholder file: celery/readme.txt ***"
+        mkdir -p celery
+        echo "This directory is used for celery beat scheduler to write celerybeat-schedule file for scheduling purposes." > celery/readme.txt;
+    fi
     if [ "${USE_NGINX,,}" = true ]; then
         echo "*** Using nginx: USE_NGINX = ${USE_NGINX} ***"
         # create hs-certs directory if it doesn't exist

@@ -1,7 +1,9 @@
 from django.contrib.auth.models import User
 from django.db import models
+from django.db.models.signals import pre_save
 from django.template import RequestContext, Template, TemplateSyntaxError
 from django.utils.translation import ugettext_lazy as _
+from django.core.exceptions import ValidationError
 
 from mezzanine.core.fields import FileField, RichTextField
 from mezzanine.core.models import Orderable, SiteRelated
@@ -51,7 +53,6 @@ class SiteConfiguration(SiteRelated):
         else:
             self.has_social_network_links = False
         super(SiteConfiguration, self).save(*args, **kwargs)
-
 
     def render_copyright(self):
         '''
@@ -108,19 +109,20 @@ class IconBox(Orderable):
     link = models.CharField(max_length=2000, blank=True,
         help_text="Optional, if provided clicking the box will go here.")
 
+
 class UserProfile(models.Model):
     user = models.OneToOneField(User)
     picture = models.ImageField(upload_to='profile', null=True, blank=True)
-
+    middle_name = models.CharField(max_length=1024, null=True, blank=True)
+    website = models.URLField(null=True, blank=True)
     title = models.CharField(
         max_length=1024, null=True, blank=True,
         help_text='e.g. Assistant Professor, Program Director, Adjunct Professor, Software Developer.')
-    profession = models.CharField(
+    user_type = models.CharField(
         max_length=1024,
         null=True,
         blank=True,
-        default='Student',
-        help_text='e.g. Student, Researcher, Research Faculty, Research Staff, Project Manager, Teacher, Research Assistant.'
+        default='Unspecified'
     )
     subject_areas = models.CharField(
         max_length=1024, null=True, blank=True,
@@ -131,32 +133,29 @@ class UserProfile(models.Model):
         blank=True,
         help_text="The name of the organization you work for."
     )
-    organization_type = models.CharField(max_length=1024, null=True, blank=True, choices=(
-        ('Higher Education','Higher Education'),
-        ('Research','Research'),
-        ('Government','Government'),
-        ('Commercial','Commercial'),
-        ('Primary Education','Primary Education'),
-        ('Secondary Education', 'Secondary Education'),
-    ))
     phone_1 = models.CharField(max_length=1024, null=True, blank=True)
     phone_1_type = models.CharField(max_length=1024, null=True, blank=True, choices=(
-        ('Home','Home'),
-        ('Work','Work'),
-        ('Mobile','Mobile'),
+        ('Home', 'Home'),
+        ('Work', 'Work'),
+        ('Mobile', 'Mobile'),
     ))
     phone_2 = models.CharField(max_length=1024, null=True, blank=True)
     phone_2_type = models.CharField(max_length=1024, null=True, blank=True, choices=(
-        ('Home','Home'),
-        ('Work','Work'),
-        ('Mobile','Mobile'),
+        ('Home', 'Home'),
+        ('Work', 'Work'),
+        ('Mobile', 'Mobile'),
     ))
-    public = models.BooleanField(default=True, help_text='Uncheck to make your profile contact information and details private.')
-    cv = models.FileField(upload_to='profile', help_text='Upload your Curriculum Vitae if you wish people to be able to download it.', null=True, blank=True)
-    details = models.TextField("Description", help_text='Tell the HydroShare community a little about yourself.', null=True, blank=True)
+    public = models.BooleanField(default=True, help_text='Uncheck to make your profile contact information and '
+                                                         'details private.')
+    cv = models.FileField(upload_to='profile',
+                          help_text='Upload your Curriculum Vitae if you wish people to be able to download it.',
+                          null=True, blank=True)
+    details = models.TextField("Description", help_text='Tell the HydroShare community a little about yourself.',
+                               null=True, blank=True)
 
-from django.db.models.signals import pre_save
-from django.core.exceptions import ValidationError
+    state = models.CharField(max_length=1024, null=True, blank=True)
+    country = models.CharField(max_length=1024, null=True, blank=True)
+
 
 def force_unique_emails(sender, instance, **kwargs):
     if instance:
@@ -164,8 +163,11 @@ def force_unique_emails(sender, instance, **kwargs):
         username = instance.username
 
         if not email:
-            raise ValidationError("email required")
-        if sender.objects.filter(email=email).exclude(username=username).count():
-            raise ValidationError("email needs to be unique")
+            raise ValidationError("Email required.")
+        else:
+            if sender.objects.filter(username=username).exclude(pk=instance.id).exists():
+                raise ValidationError("Username already in use.")
+        if sender.objects.filter(email=email).exclude(pk=instance.id).count():
+            raise ValidationError("Email already in use.")
 
 pre_save.connect(force_unique_emails, sender=User)
