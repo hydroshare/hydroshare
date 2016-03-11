@@ -13,11 +13,12 @@ NUM_WORKERS=$(python -c "exec(\"import multiprocessing\nprint( multiprocessing.c
 DJANGO_SETTINGS_MODULE=hydroshare.settings          # which settings file should Django use
 DJANGO_WSGI_MODULE=hydroshare.wsgi                  # WSGI module name
 GUNICORN_LOG=/var/log/hydroshare/gunicorn.log       # path to logfile
+TIMEOUT_PERIOD=300                                  # timeout period in seconds
 
+### Do not edit below this line ###
 echo "Starting $NAME as `whoami`"
 # Activate the virtual environment
 cd $DJANGODIR
-#source ../bin/activate
 export DJANGO_SETTINGS_MODULE=$DJANGO_SETTINGS_MODULE
 export PYTHONPATH=$DJANGODIR:$PYTHONPATH
 # Create the run directory if it doesn't exist
@@ -30,4 +31,5 @@ exec gunicorn ${DJANGO_WSGI_MODULE}:application \
   --user=$USER --group=$GROUP \
   --bind=unix:$SOCKFILE \
   --log-level=debug \
-  --log-file=$GUNICORN_LOG
+  --log-file=$GUNICORN_LOG \
+  --timeout=$TIMEOUT_PERIOD
