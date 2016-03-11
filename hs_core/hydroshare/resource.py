@@ -559,12 +559,19 @@ def create_new_version_resource(ori_res, new_res):
         res_avail_date = new_res.metadata.dates.all().filter(type='available')[0]
         new_res.metadata.create_element('date', type='available', start_date=res_avail_date.start_date, end_date=res_avail_date.end_date)
 
-    # add Relation element to link source and target resources
+    # add or update Relation element to link source and target resources
     if new_res.metadata.identifiers.all().filter(name="hydroShareIdentifier"):
         hs_identifier = new_res.metadata.identifiers.all().filter(name="hydroShareIdentifier")[0]
         ori_res.metadata.create_element('relation', type='isReplacedBy', value=hs_identifier.url)
     else:
         ori_res.metadata.create_element('relation', type='isReplacedBy', value=new_res.short_id)
+
+    if new_res.metadata.relations.all().filter(type='isVersionOf').exists():
+        # the original resource is already a versioned resource, and its isVersionOf relation element
+        # is copied over to this new version resource, needs to delete this element so it can be created
+        # to link to its original resource correctly
+        eid = new_res.metadata.relations.all().filter(type='isVersionOf').first().id
+        new_res.metadata.delete_element('relation', eid)
 
     if ori_res.metadata.identifiers.all().filter(name="hydroShareIdentifier"):
         hs_identifier = ori_res.metadata.identifiers.all().filter(name="hydroShareIdentifier")[0]
