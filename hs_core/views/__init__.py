@@ -278,7 +278,7 @@ def create_new_version_resource(request, shortkey, *args, **kwargs):
         res.locked_time = datetime.datetime.now(pytz.utc)
         res.save()
         new_resource = hydroshare.create_new_version_empty_resource(shortkey, user)
-        new_resource = hydroshare.create_new_version_resource(res, new_resource)
+        new_resource = hydroshare.create_new_version_resource(res, new_resource, user)
     except Exception as ex:
         if new_resource:
             new_resource.delete()

@@ -512,7 +512,7 @@ def create_new_version_empty_resource(pk, user):
 
     return new_resource
 
-def create_new_version_resource(ori_res, new_res):
+def create_new_version_resource(ori_res, new_res, user):
     """
     Populate metadata and contents from ori_res object to new_res object to make new_res object as a new version of the ori_res object
     Args:
@@ -581,6 +581,9 @@ def create_new_version_resource(ori_res, new_res):
 
     # create bag for the new resource
     hs_bagit.create_bag(new_res)
+
+    # since an isReplaceBy relation element is added to original resource, needs to call resource_modified() for original resource
+    utils.resource_modified(ori_res, user)
 
     return new_res
 
