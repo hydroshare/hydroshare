@@ -75,7 +75,8 @@ class T10GroupFlags(MockIRODSTestCaseMixin, TestCase):
                                                      title='all about sofas as scrathing posts',
                                                      metadata=[],)
 
-        self.felines = self.dog.uaccess.create_group('felines')  # dog owns felines group
+        # dog owns felines group
+        self.felines = self.dog.uaccess.create_group(title='felines', description="Wre are the felines")
         self.dog.uaccess.share_group_with_user(self.felines, self.cat, PrivilegeCodes.VIEW)
         # poetic justice: cat can VIEW what dogs think about scratching sofas
 

@@ -50,6 +50,7 @@ class T04CreateGroup(MockIRODSTestCaseMixin, TestCase):
             groups=[]
         )
 
+
     def test_02_create(self):
         """Create a new group"""
         dog = self.dog
@@ -58,7 +59,20 @@ class T04CreateGroup(MockIRODSTestCaseMixin, TestCase):
         self.assertEqual(dog.uaccess.view_groups.count(), 0)
 
         # user 'dog' create a new group called 'arfers'
-        arfers = dog.uaccess.create_group('arfers')
+        arfers = dog.uaccess.create_group(title='arfers', description="This is arfers group",
+                                          purpose="Our purpose to collaborate on hydrology")
+
+        # TODO:
+        # test the attributes (title, description) of the group object
+        self.assertEqual(arfers.name, 'arfers')
+        self.assertEqual(arfers.gaccess.description, "This is arfers group")
+        self.assertEqual(arfers.gaccess.purpose, "Our purpose to collaborate on hydrology")
+
+        arfers.delete()
+        arfers = dog.uaccess.create_group(title='arfers', description="This is arfers group")
+        self.assertEqual(arfers.name, 'arfers')
+        self.assertEqual(arfers.gaccess.description, "This is arfers group")
+        self.assertEqual(arfers.gaccess.purpose, None)
 
         self.assertEqual(dog.uaccess.owned_groups.count(), 1)
         self.assertEqual(dog.uaccess.view_groups.count(), 1)
@@ -122,7 +136,8 @@ class T04CreateGroup(MockIRODSTestCaseMixin, TestCase):
     def test_04_retract_group(self):
         """Owner can retract a group"""
         dog = self.dog
-        arfers = dog.uaccess.create_group('arfers')
+        arfers = dog.uaccess.create_group(title='arfers', description="This is arfers group",
+                                          purpose="Our purpose to collaborate on hydrology")
 
         # check that it got created
         self.assertEqual(dog.uaccess.owned_groups.count(), 1)
@@ -179,7 +194,7 @@ class T15CreateGroup(MockIRODSTestCaseMixin, TestCase):
             groups=[]
         )
 
-        self.meowers = self.cat.uaccess.create_group('meowers')
+        self.meowers = self.cat.uaccess.create_group(title='meowers', description='We are the meowers group')
 
     def test_01_default_group_ownership(self):
         "Defaults for group ownership are correct"

@@ -56,7 +56,7 @@ class T12UserActive(MockIRODSTestCaseMixin, TestCase):
                                                      title='all about sofas as scrathing posts',
                                                      metadata=[],)
 
-        self.felines = self.cat.uaccess.create_group('felines')  # dog owns felines group
+        self.felines = self.cat.uaccess.create_group(title='felines', description="We are the feliness")
 
 
     def test_00_exceptions(self):
@@ -72,7 +72,7 @@ class T12UserActive(MockIRODSTestCaseMixin, TestCase):
 
         # all user routines should raise exceptions 
         with self.assertRaises(PermissionDenied): 
-            cat.uaccess.create_group('foo')
+            cat.uaccess.create_group(title='foo', description="We are the foo")
         with self.assertRaises(PermissionDenied): 
             cat.uaccess.delete_group(felines)
         with self.assertRaises(PermissionDenied): 

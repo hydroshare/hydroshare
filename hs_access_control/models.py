@@ -228,14 +228,21 @@ class UserAccess(models.Model):
         For sending invitation for users to join a group, user self must be one of:
 
                 * admin
-
                 * group owner
 
         For sending a request to join a group, user self must be an active hydroshare user
         """
 
-        if not self.user.is_active: raise PermissionDenied("Requesting user is not active")
-        if this_user and not this_user.is_active: raise PermissionDenied("Invited user is not active")
+        if not self.user.is_active:
+            raise PermissionDenied("Requesting user is not active")
+        if this_user and not this_user.is_active:
+            raise PermissionDenied("Invited user is not active")
+
+        if this_user is None:
+            if self.user in this_group.gaccess.members:
+                raise PermissionDenied("You are already a member of this group")
+        elif this_user in this_group.gaccess.members:
+                raise PermissionDenied("User is already a member of this group")
 
         # user (self) requesting to join a group
         if this_user is None:
@@ -243,7 +250,7 @@ class UserAccess(models.Model):
             if GroupMembershipRequest.objects.filter(request_from=self.user, group_to_join=this_group).exists():
                 raise PermissionDenied("You already have a pending request to join this group")
             else:
-                GroupMembershipRequest.objects.create(request_from=self.user, group_to_join=this_group)
+                return GroupMembershipRequest.objects.create(request_from=self.user, group_to_join=this_group)
         else:
             # group owner is inviting this_user to join this_group
             if not self.owns_group(this_group) and not self.user.is_superuser:
@@ -253,8 +260,8 @@ class UserAccess(models.Model):
                                                      invitation_to=this_user).exists():
                 raise PermissionDenied("You already have a pending invitation for this user to join this group")
             else:
-                GroupMembershipRequest.objects.create(request_from=self.user, invitation_to=this_user,
-                                                      group_to_join=this_group)
+                return GroupMembershipRequest.objects.create(request_from=self.user, invitation_to=this_user,
+                                                             group_to_join=this_group)
 
     def act_on_group_membership_request(self, this_request, accept_request=True):
         """
@@ -270,20 +277,55 @@ class UserAccess(models.Model):
                 * group owner
         """
 
-        if not self.user.is_active: raise PermissionDenied("Requesting user is not active")
+        if not self.user.is_active:
+            raise PermissionDenied("Requesting user is not active")
 
         user_to_join_group = this_request.invitation_to if this_request.invitation_to else this_request.request_from
 
-        if not user_to_join_group.is_active: raise PermissionDenied("User to be granted group membership is not active")
+        if not user_to_join_group.is_active:
+            raise PermissionDenied("User to be granted group membership is not active")
 
-        if self.owns_group(this_request.group_to_join) or self.user.is_superuser:
-            if accept_request:
-                self.share_group_with_user(this_group=this_request.group_to_join,
-                                           this_user=user_to_join_group,
-                                           this_privilege=PrivilegeCodes.VIEW)
-            this_request.delete()
+        membership_grantor = None
+        # group owner acting on membership request from a user
+        if this_request.invitation_to is None:
+            if self.owns_group(this_request.group_to_join) or self.user.is_superuser:
+                membership_grantor = self
+            else:
+                raise PermissionDenied("You don't have permission to act on the group membership request")
+        # invited user acting on membership invitation from a group owner
+        elif this_request.invitation_to == self.user:
+            membership_grantor = this_request.request_from.uaccess
         else:
             raise PermissionDenied("You don't have permission to act on the group membership request")
+
+        if accept_request:
+            membership_grantor.share_group_with_user(this_group=this_request.group_to_join,
+                                                     this_user=user_to_join_group,
+                                                     this_privilege=PrivilegeCodes.VIEW)
+        this_request.delete()
+
+        # # group owner acting on membership request from a user
+        # if this_request.invitation_to is None:
+        #     if self.owns_group(this_request.group_to_join) or self.user.is_superuser:
+        #         if accept_request:
+        #             self.share_group_with_user(this_group=this_request.group_to_join,
+        #                                        this_user=user_to_join_group,
+        #                                        this_privilege=PrivilegeCodes.VIEW)
+        #         this_request.delete()
+        #     else:
+        #         raise PermissionDenied("You don't have permission to act on the group membership request")
+        # # invited user acting on membership invitation from a group owner
+        # elif this_request.invitation_to == self.user:
+        #     if accept_request:
+        #         if this_request.request_from.uaccess.owns_group(this_request.group_to_join) or self.user.is_superuser:
+        #             this_request.request_from.uacess.share_group_with_user(this_group=this_request.group_to_join,
+        #                                                                    this_user=user_to_join_group,
+        #                                                                    this_privilege=PrivilegeCodes.VIEW)
+        #             this_request.delete()
+        #         else:
+        #             raise PermissionDenied("You don't have permission to act on the group membership request")
+        # else:
+        #     raise PermissionDenied("You don't have permission to act on the group membership request")
 
     @property
     def group_membership_requests(self):
@@ -292,15 +334,18 @@ class UserAccess(models.Model):
         :return: QuerySet
         """
 
-        if not self.user.is_active: raise PermissionDenied("Requesting user is not active")
+        if not self.user.is_active:
+            raise PermissionDenied("Requesting user is not active")
 
         return GroupMembershipRequest.objects.filter(Q(request_from=self.user) | Q(invitation_to=self.user))
 
-    def create_group(self, title):
+    def create_group(self, title, description, purpose=None):
         """
         Create a group.
 
-        :param title: Group title.
+        :param title: Group title/name.
+        :param description: a description of the group
+        :param purpose: what's the purpose of the group (optional)
         :return: Group object
 
         Anyone can create a group. The creator is also the first owner.
@@ -310,12 +355,16 @@ class UserAccess(models.Model):
         owner.
         """
         if __debug__: 
-            assert isinstance(title, basestring) 
+            assert isinstance(title, basestring)
+            assert isinstance(description, basestring)
+            if purpose:
+                assert isinstance(purpose, basestring)
 
-        if not self.user.is_active: raise PermissionDenied("Requesting user is not active")
+        if not self.user.is_active:
+            raise PermissionDenied("Requesting user is not active")
 
         raw_group = Group.objects.create(name=title)
-        GroupAccess.objects.create(group=raw_group)
+        GroupAccess.objects.create(group=raw_group, description=description, purpose=purpose)
         raw_user = self.user
 
         # Must bootstrap access control system initially
@@ -2214,10 +2263,10 @@ class GroupMembershipRequest(models.Model):
     request_from = models.ForeignKey(User, related_name='ru2gmrequest')
 
     # when user is requesting to join a group this will be blank
-    # when  a group owner sending invitation this field will have a value
+    # when a group owner sending invitation, this field will have a value
     invitation_to = models.ForeignKey(User, null=True, blank=True, related_name='iu2gmrequest')
     group_to_join = models.ForeignKey(Group, related_name='g2gmrequest')
-    date_requested = models.DateTimeField(editable=False, auto_now=True)
+    date_requested = models.DateTimeField(editable=False, auto_now_add=True)
 
 
 class GroupAccess(models.Model):
@@ -2253,6 +2302,10 @@ class GroupAccess(models.Model):
     shareable = models.BooleanField(default=True, 
                                     editable=False,
                                     help_text='whether group can be shared by non-owners')
+
+    description = models.TextField(null=False, blank=False)
+    purpose = models.TextField(null=True, blank=True)
+    date_created = models.DateTimeField(editable=False, auto_now_add=True)
 
     ####################################
     # group membership: owners, edit_users, view_users are parallel to those in resources

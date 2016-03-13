@@ -51,7 +51,7 @@ class T15CreateGroup(MockIRODSTestCaseMixin, TestCase):
             groups=[]
         )
 
-        self.meowers = self.cat.uaccess.create_group('meowers')
+        self.meowers = self.cat.uaccess.create_group(title='meowers', description='We are the meowers')
 
     def test_01_default_group_ownership(self):
         "Defaults for group ownership are correct"
