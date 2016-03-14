@@ -110,7 +110,7 @@ class TestNetcdfMetaData(MockIRODSTestCaseMixin, TransactionTestCase):
                                                                           page_redirect_url_key=None,
                                                                           files=files,
                                                                           metadata=None,)
-        print metadata
+
         self.resNetcdf = hydroshare.create_resource(
             'NetcdfResource',
             self.user,

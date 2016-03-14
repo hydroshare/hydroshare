@@ -199,9 +199,7 @@ def netcdf_pre_delete_file_from_resource(sender, **kwargs):
             if ext in file_ext:
                 f.resource_file.delete()
                 f.delete()
-                format_element = nc_res.metadata.formats.filter(value=file_ext[ext]).first()
-                if format_element:
-                    nc_res.metadata.delete_element(format_element.term, format_element.id)
+                nc_res.metadata.formats.filter(value=file_ext[ext]).delete()
                 break
 
     # delete all the coverage info
