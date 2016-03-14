@@ -329,8 +329,20 @@ def set_resource_flag(request, shortkey, *args, **kwargs):
 
 
 def share_resource_with_user(request, shortkey, privilege, user_id, *args, **kwargs):
+    return _share_resource(request, shortkey, privilege, user_id, user_or_group='user')
+
+
+def share_resource_with_group(request, shortkey, privilege, group_id, *args, **kwargs):
+    return _share_resource(request, shortkey, privilege, group_id, user_or_group='group')
+
+
+def _share_resource(request, shortkey, privilege, user_or_group_id, user_or_group):
     res, _, user = authorize(request, shortkey, needed_permission=ACTION_TO_AUTHORIZE.VIEW_RESOURCE)
-    user_to_share_with = utils.user_from_id(user_id)
+    if user_or_group == 'user':
+        user_to_share_with = utils.user_from_id(user_or_group_id)
+    else:
+        group_to_share_with = utils.group_from_id(user_or_group_id)
+
     status = 'success'
     err_message = ''
     if privilege == 'view':
@@ -345,7 +357,10 @@ def share_resource_with_user(request, shortkey, privilege, user_id, *args, **kwa
 
     if access_privilege != PrivilegeCodes.NONE:
         try:
-            user.uaccess.share_resource_with_user(res, user_to_share_with, access_privilege)
+            if user_or_group == 'user':
+                user.uaccess.share_resource_with_user(res, user_to_share_with, access_privilege)
+            else:
+                user.uaccess.share_resource_with_group(res, group_to_share_with, access_privilege)
         except PermissionDenied as exp:
             status = 'error'
             err_message = exp.message
@@ -360,19 +375,27 @@ def share_resource_with_user(request, shortkey, privilege, user_id, *args, **kwa
     elif current_user_privilege == PrivilegeCodes.OWNER:
         current_user_privilege = "owner"
 
-    is_current_user = False
-    if user == user_to_share_with:
-        is_current_user = True
+    if user_or_group == 'user':
+        is_current_user = False
+        if user == user_to_share_with:
+            is_current_user = True
 
-    picture_url = 'No picture provided'
-    if user_to_share_with.userprofile.picture:
-        picture_url = user_to_share_with.userprofile.picture.url
+        picture_url = 'No picture provided'
+        if user_to_share_with.userprofile.picture:
+            picture_url = user_to_share_with.userprofile.picture.url
 
-    ajax_response_data = {'status': status, 'name': user_to_share_with.get_full_name(),
-                          'username': user_to_share_with.username, 'privilege_granted': privilege,
-                          'current_user_privilege': current_user_privilege,
-                          'profile_pic': picture_url, 'is_current_user': is_current_user,
-                          'error_msg': err_message}
+        ajax_response_data = {'status': status, 'name': user_to_share_with.get_full_name(),
+                              'username': user_to_share_with.username, 'privilege_granted': privilege,
+                              'current_user_privilege': current_user_privilege,
+                              'profile_pic': picture_url, 'is_current_user': is_current_user,
+                              'error_msg': err_message}
+
+    else:
+        ajax_response_data = {'status': status, 'name': group_to_share_with.name,
+                              'privilege_granted': privilege,
+                              'current_user_privilege': current_user_privilege,
+                              'error_msg': err_message}
+
     return HttpResponse(json.dumps(ajax_response_data))
 
 
@@ -391,7 +414,29 @@ def unshare_resource_with_user(request, shortkey, user_id, *args, **kwargs):
             user.uaccess.undo_share_resource_with_user(res, user_to_unshare_with)
 
         messages.success(request, "Resource unsharing was successful")
-        if user == user_to_unshare_with and not res.raccess.public:
+        if not user.uaccess.can_view_resource(res):
+            # user has no access to the resource - redirect to resource listing page
+            return HttpResponseRedirect('/my-resources/')
+    except PermissionDenied as exp:
+        messages.error(request, exp.message)
+
+    return HttpResponseRedirect(request.META['HTTP_REFERER'])
+
+
+def unshare_resource_with_group(request, shortkey, group_id, *args, **kwargs):
+    res, _, user = authorize(request, shortkey, needed_permission=ACTION_TO_AUTHORIZE.VIEW_RESOURCE)
+    group_to_unshare_with = utils.group_from_id(group_id)
+
+    try:
+        if user.uaccess.can_unshare_resource_with_group(res, group_to_unshare_with):
+            # requesting user is the resource owner or admin
+            user.uaccess.unshare_resource_with_group(res, group_to_unshare_with)
+        else:
+            # requesting user is the original grantor of privilege to group_to_unshare_with
+            user.uaccess.undo_share_resource_with_group(res, group_to_unshare_with)
+
+        messages.success(request, "Resource unsharing was successful")
+        if not user.uaccess.can_view_resource(res):
             # user has no access to the resource - redirect to resource listing page
             return HttpResponseRedirect('/my-resources/')
     except PermissionDenied as exp:
@@ -472,6 +517,18 @@ class FilterForm(forms.Form):
     owner = forms.CharField(required=False)
     user = forms.ModelChoiceField(queryset=User.objects.all(), required=False)
     from_date = forms.DateTimeField(required=False)
+
+
+class GroupForm(forms.Form):
+    name = forms.CharField(required=True)
+    description = forms.CharField(required=True)
+    purpose = forms.CharField(required=False)
+
+    def clean_name(self):
+        data = self.cleaned_data['name']
+        if Group.objects.filter(name__iexact=data).exists():
+            raise forms.ValidationError("A group exits with the same name.")
+        return data
 
 
 @processor_for('my-resources')
@@ -606,6 +663,91 @@ def create_resource(request, *args, **kwargs):
     return HttpResponseRedirect(resource.get_absolute_url())
 
 
+# TODO: url needs to be added for this view function
+@login_required
+def create_user_group(request, *args, **kwargs):
+    status = 'success'
+    group_form = GroupForm(data=request.POST)
+    if group_form.is_valid():
+        request.user.uaccess.create_group(title=group_form.cleaned_data['name'],
+                                          description=group_form.cleaned_data['description'],
+                                          purpose=group_form.cleaned_data['purpose'])
+        ajax_response_data = {'status': status}
+    else:
+        status = 'error'
+        ajax_response_data = {'status': status, 'errors': group_form.errors.as_json()}
+
+    return HttpResponse(json.dumps(ajax_response_data))
+
+# TODO: url needs to be added for this view function
+@login_required
+def update_user_group(request, group_id, *args, **kwargs):
+    user = request.user
+    group_to_update = utils.group_from_id(group_id)
+    status = 'error'
+    if user.uaccess.can_change_group(group_to_update):
+        group_form = GroupForm(data=request.POST)
+        if group_form.is_valid():
+            group_to_update.name = group_form.cleaned_data['name']
+            group_to_update.save()
+            group_to_update.gaccess.description = group_form.cleaned_data['description']
+            group_to_update.gaccess.purpose = group_form.cleaned_data['purpose']
+            group_to_update.gaccess.save()
+            status = 'success'
+            ajax_response_data = {'status': status, 'updated_group': group_to_update}
+        else:
+            ajax_response_data = {'status': status, 'errors': group_form.errors.as_json()}
+    else:
+        ajax_response_data = {'status': status, 'errors': "You don't have permission to update this group"}
+    return HttpResponse(json.dumps(ajax_response_data))
+
+# TODO: url needs to be added for this view function
+@login_required
+def share_group_with_user(request, group_id, user_id, privilege, *args, **kwargs):
+    requesting_user = request.user
+    group_to_share = utils.group_from_id(group_id)
+    user_to_share_with = utils.user_from_id(user_id)
+    if privilege == 'view':
+        access_privilege = PrivilegeCodes.VIEW
+    elif privilege == 'edit':
+        access_privilege = PrivilegeCodes.CHANGE
+    elif privilege == 'owner':
+        access_privilege = PrivilegeCodes.OWNER
+    else:
+        access_privilege = PrivilegeCodes.NONE
+
+    if access_privilege != PrivilegeCodes.NONE:
+        if requesting_user.uaccess.can_share_group(group_to_share, access_privilege):
+            try:
+                requesting_user.uaccess.share_group_with_user(group_to_share, user_to_share_with, access_privilege)
+                messages.success(request, "User successfully added to the group")
+            except PermissionDenied as ex:
+                messages.error(request, ex.message)
+        else:
+            messages.error(request, "You don't have permission to add users to group")
+    else:
+        messages.error(request, "Invalid privilege for sharing group with user")
+
+    return HttpResponseRedirect(request.META['HTTP_REFERER'])
+
+# TODO: url needs to be added for this view function
+@login_required
+def unshare_group_with_user(request, group_id, user_id, *args, **kwargs):
+    requesting_user = request.user
+    group_to_unshare = utils.group_from_id(group_id)
+    user_to_unshare_with = utils.user_from_id(user_id)
+
+    if requesting_user.uaccess.can_unshare_group_with_user(group_to_unshare, user_to_unshare_with):
+        try:
+            requesting_user.uaccess.unshare_group_with_user(group_to_unshare, user_to_unshare_with)
+            messages.success(request, "User successfully removed from the group")
+        except PermissionDenied as ex:
+            messages.error(request, ex.message)
+    else:
+        messages.error(request, "You don't have permission to remove users from a group")
+
+    return HttpResponseRedirect(request.META['HTTP_REFERER'])
+
 @login_required
 def get_file(request, *args, **kwargs):
     from django_irods.icommands import RodsSession
@@ -707,6 +849,7 @@ def _set_resource_sharing_status(request, user, resource, flag_to_set, flag_valu
         # set isPublic metadata AVU accordingly
         istorage = IrodsStorage()
         istorage.setAVU(resource.short_id, "isPublic", str(resource.raccess.public))
+
 
 def _get_message_for_setting_resource_flag(has_files, has_metadata, resource_flag):
     msg = ''
