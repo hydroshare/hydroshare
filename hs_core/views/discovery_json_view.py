@@ -22,8 +22,8 @@ class DiscoveryJsonView(FacetedSearchView):
                 json_obj = {}
                 json_obj['title'] = result.object.title
                 json_obj['get_absolute_url'] = result.object.get_absolute_url()
-                print("#############")
-                print(dir(result.object.get_absolute_url))
+                #print("#############")
+                #print(dir(result.object.get_absolute_url))
                 #print(result.object.get_absolute_url)
                 # the_data.append({
                 #     'result' : result.object
@@ -46,7 +46,7 @@ class DiscoveryJsonView(FacetedSearchView):
                         json_obj['westlimit'] = coverage.value['westlimit']
                     else:
                         continue
-                    print(json_obj)
+                    #print(json_obj)
                     east_coor = json.dumps(json_obj)
                     east_values.append(east_coor)
                         #east.append(coverage.value['east'])
