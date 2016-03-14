@@ -1502,6 +1502,11 @@ body > .container{
 	outline: none;
 }
 
+.panel-title {
+    color: #696969;
+	text-shadow: 0 1px 0 #fff;
+}
+
 .access-panel-title{
     color: #FFF;
     background-color: #337ab7;
@@ -1602,6 +1607,7 @@ body > .container{
 
 div#sharing-status {
     overflow: hidden; /* Fixes height for floating elements */
+    margin-top: 20px;
 }
 
 .info-group {
@@ -2678,7 +2684,7 @@ h4.title {
 	padding-right: 25px;
 }
 
-#resource-search-input {
+.resource-search-input {
 	padding-left: 25px;
 	padding-right: 30px;
 }
@@ -2803,11 +2809,6 @@ h4.title {
 
 #facets {
 	text-align: center;
-}
-
-#facets h4.panel-title {
-	color: #696969;
-	text-shadow: 0 1px 0 #fff;
 }
 
 #facets .list-group {
@@ -3239,4 +3240,67 @@ button.no-style:focus {
 
 .blured-out {
     pointer-events: none;
+}
+
+.file-browser {
+    margin-bottom: 20px;
+}
+
+#file-browser-controls  {
+    margin-bottom:10px;
+}
+.files-container {
+    border: 1px solid #DDD;
+    height: 200px;
+    overflow-y: auto;
+    overflow-x: hidden;
+}
+
+.file-browser-breadcrumb .breadcrumb{
+    background: #FFF;
+    border-bottom: 1px solid #DDD;
+    border-radius: 0;
+}
+
+.fb-file small, .fb-folder small {
+    color: #000;
+}
+
+.fb-file:hover, .fb-folder:hover {
+    cursor: pointer;
+    text-decoration: underline;
+}
+
+.fb-file .glyphicon {
+    color: #FFF;
+    text-shadow: -1px -1px 0 #006B92,
+    1px -1px 0 #006B92,
+    -1px 1px 0 #006B92,
+    1px 1px 0 #006B92;
+}
+
+.fb-folder .glyphicon {
+    color: #E48E22;
+    text-shadow: -1px -1px 0 #C56E00,
+    1px -1px 0 #C56E00,
+    -1px 1px 0 #C56E00,
+    1px 1px 0 #C56E00;
+}
+
+.fb-file .glyphicon, .fb-folder .glyphicon {
+    font-size: 32px;
+}
+
+.files-container {
+    background-color: #F0FBFF;
+    background-image: repeating-linear-gradient(45deg, transparent, transparent 35px, rgba(255,255,255,.5) 35px, rgba(255,255,255,.5) 70px);
+}
+
+.file-browser-search {
+    width: 100%;
+}
+
+.fb-back {
+    border-bottom-left-radius: 4px !important;
+    border-top-left-radius: 4px !important;
 }
