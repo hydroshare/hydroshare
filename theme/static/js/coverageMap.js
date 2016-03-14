@@ -6,6 +6,19 @@ var coverageMap;
 var allOverlays = [];
 var allShapes = []; // Keeps track of shapes added by text change events
 var drawingManager;
+
+$(document).ready(function () {
+    // Draw marker on text change
+    $("#id_east").bind('input', drawMarkerOnTextChange);
+    $("#id_north").bind('input', drawMarkerOnTextChange);
+
+    // Draw rectangle on text change
+    $("#id_northlimit").bind('input', drawRectangleOnTextChange);
+    $("#id_eastlimit").bind('input', drawRectangleOnTextChange);
+    $("#id_southlimit").bind('input', drawRectangleOnTextChange);
+    $("#id_westlimit").bind('input', drawRectangleOnTextChange);
+});
+
 function initMap() {
     var shapeType;
     if ($("#coverageMap")[0]) {
@@ -59,9 +72,7 @@ function initMap() {
         });
     }
 }
-// Draw marker on text change
-$("#id_east").bind('input', drawMarkerOnTextChange);
-$("#id_north").bind('input', drawMarkerOnTextChange);
+
 function drawMarkerOnTextChange(){
     var myLatLng = {lat: parseFloat($("#id_north").val()), lng: parseFloat($("#id_east").val())};
     // Delete previous drawings
@@ -100,11 +111,7 @@ function drawMarkerOnTextChange(){
     });
     allShapes.push(marker);
 }
-// Draw rectangle on text change
-$("#id_northlimit").bind('input', drawRectangleOnTextChange);
-$("#id_eastlimit").bind('input', drawRectangleOnTextChange);
-$("#id_southlimit").bind('input', drawRectangleOnTextChange);
-$("#id_westlimit").bind('input', drawRectangleOnTextChange);
+
 function drawRectangleOnTextChange(){
     var bounds = {
         north: parseFloat($("#id_northlimit").val()),
@@ -169,6 +176,7 @@ function drawRectangleOnTextChange(){
     });
     allShapes.push(rectangle);
 }
+
 function processDrawing (coordinates, shape) {
     // Delete previous drawings
     if (allOverlays.length > 1){
@@ -234,18 +242,21 @@ function processDrawing (coordinates, shape) {
         });
     }
 }
+
 function deleteAllOverlays() {
     for (var i = 0; i < allOverlays.length; i++) {
         allOverlays[i].overlay.setMap(null);
     }
     allOverlays = [];
 }
+
 function deleteAllShapes(){
     for (var i = 0; i < allShapes.length; i++) {
         allShapes[i].setMap(null);
     }
     allShapes = [];
 }
+
 function zoomCoverageMap(bounds) {
     // Zoom in on the shape
     var GLOBE_WIDTH = 256; // a constant in Google maps projection

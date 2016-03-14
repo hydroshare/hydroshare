@@ -16,7 +16,7 @@ def landing_page(request, page):
 
     if not edit_resource:
         # get the context from hs_core
-        context = page_processors.get_page_context(page, request.user, resource_edit=edit_resource,
+        context = page_processors.get_page_context(page, request.user, request=request, resource_edit=edit_resource,
                                                    extended_metadata_layout=None)
         extended_metadata_exists = False
         if content_model.metadata.program:
@@ -24,13 +24,6 @@ def landing_page(request, page):
 
         context['extended_metadata_exists'] = extended_metadata_exists
         context['mpmetadata'] = content_model.metadata.program
-
-        # get the helptext for each mp field
-        attributes = content_model.metadata.modelprogrammetadata._mpmetadata.model._meta.get_fields_with_model()
-        attribute_dict = {}
-        for att in attributes:
-             attribute_dict[att[0].attname] = att[0].help_text
-        context["mphelptext" ] = attribute_dict
 
     else:
         output_form = mp_form(files=content_model.files, instance=content_model.metadata.program,
