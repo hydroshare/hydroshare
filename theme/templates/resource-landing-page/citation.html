@@ -112,7 +112,7 @@
                         </button>
                     {% else %}
                         <form class="pull-left"
-                              action="/hsapi/_internal/{{ cm.short_id }}/change-permissions/"
+                              action="/hsapi/_internal/{{ cm.short_id }}/set-resource-flag/"
                               method="POST">
                             {% csrf_token %}
                             <input name="t" type="hidden" value="make_public"/>
@@ -132,7 +132,7 @@
                         </button>
                     {% else %}
                         <form class="pull-left"
-                              action="/hsapi/_internal/{{ cm.short_id }}/change-permissions/"
+                              action="/hsapi/_internal/{{ cm.short_id }}/set-resource-flag/"
                               method="POST">
                             <input name="t" type="hidden" value="make_discoverable"/>
                             {% csrf_token %}
@@ -152,7 +152,7 @@
                         </button>
                     {% else %}
                         <form class="pull-left"
-                              action="/hsapi/_internal/{{ cm.short_id }}/change-permissions/"
+                              action="/hsapi/_internal/{{ cm.short_id }}/set-resource-flag/"
                               method="POST">
                             <input name="t" type="hidden" value="make_private"/>
                             {% csrf_token %}
@@ -167,7 +167,7 @@
                 {% if is_owner_user %}
                     <div class="clear-fix" id="shareable-container">
                         {#   Shareable flag    #}
-                        <form class="pull-left" action="/hsapi/_internal/{{ cm.short_id }}/change-permissions/"
+                        <form class="pull-left" action="/hsapi/_internal/{{ cm.short_id }}/set-resource-flag/"
                               method="POST">
                             {% csrf_token %}
 
@@ -215,6 +215,11 @@
                     <span class="glyphicon glyphicon-lock"><span
                             class="button-label"> Manage access</span></span>
             </a>
+
+            <span data-toggle="tooltip" data-placement="auto"
+                  title='Use this button to share your resource with specific HydroShare users. You can give other users the ability to view or edit this resource. You can also add additional owners who will have full permissions.'
+                  class="glyphicon glyphicon-info-sign text-muted"></span>
+
             {#======= Manage access modal window begins =======#}
             <div class="modal fade" id="manage-access">
                 <div class="modal-dialog">

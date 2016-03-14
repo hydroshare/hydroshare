@@ -191,7 +191,7 @@ class T03CreateResource(MockIRODSTestCaseMixin, TestCase):
 
         # django admin access
         self.assertFalse(self.admin.uaccess.owns_resource(holes))
-        self.assertFalse(self.admin.uaccess.can_change_resource(holes))
+        self.assertTrue(self.admin.uaccess.can_change_resource(holes))
         self.assertTrue(self.admin.uaccess.can_view_resource(holes))
         self.assertTrue(self.admin.uaccess.can_change_resource_flags(holes))
         self.assertTrue(self.admin.uaccess.can_delete_resource(holes))
@@ -382,7 +382,8 @@ class T03CreateResource(MockIRODSTestCaseMixin, TestCase):
         self.assertTrue(self.admin.uaccess.can_view_resource(holes))
 
         self.assertTrue(self.admin.uaccess.can_change_resource_flags(holes))
-        self.assertFalse(self.admin.uaccess.can_delete_resource(holes))
+        # admin even can delete a published resource
+        self.assertTrue(self.admin.uaccess.can_delete_resource(holes))
         self.assertTrue(self.admin.uaccess.can_share_resource(holes, PrivilegeCodes.OWNER))
         self.assertTrue(self.admin.uaccess.can_share_resource(holes, PrivilegeCodes.CHANGE))
         self.assertTrue(self.admin.uaccess.can_share_resource(holes, PrivilegeCodes.VIEW))

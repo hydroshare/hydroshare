@@ -3,7 +3,8 @@ from django.dispatch import receiver
 from hs_core.signals import pre_metadata_element_create, pre_metadata_element_update
 
 from hs_tools_resource.models import ToolResource
-from hs_tools_resource.forms import SupportedResTypesValidationForm, UrlBaseForm, VersionForm, ToolIconForm
+from hs_tools_resource.forms import SupportedResTypesValidationForm, UrlBaseForm, VersionForm, \
+                                    ToolIconForm, UrlBaseValidationForm
 
 
 @receiver(pre_metadata_element_create, sender=ToolResource)
@@ -22,7 +23,7 @@ def metadata_element_pre_update_handler(sender, **kwargs):
     
 def validate_form(request, element_name):
     if element_name == 'requesturlbase':
-        element_form = UrlBaseForm(data=request.POST)
+        element_form = UrlBaseValidationForm(data=request.POST)
     elif element_name == 'toolversion':
         element_form = VersionForm(data=request.POST)
     elif element_name == 'supportedrestypes':

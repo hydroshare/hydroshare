@@ -120,13 +120,12 @@
                                             {% endif %}
                                         </div>
                                         <div class="col-sm-8">
-                                            <div><strong>{{ request.user }}</strong></div>
+                                            <div><strong>{{ request.user.first_name }} {% if request.user.userprofile.middle_name %}{{ request.user.userprofile.middle_name }} {% endif %}{{ request.user.last_name }}</strong></div>
                                             {% if request.user.email %}
                                                 <div class="text-muted">{{ request.user.email }}</div>
                                             {% endif %}
                                         </div>
                                     </div>
-
 
                                     <div class="dropdown-footer">
                                         <a href="/user/{{ user.id }}/" class="btn btn-primary">Profile</a>

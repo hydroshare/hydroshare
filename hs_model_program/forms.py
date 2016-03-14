@@ -38,7 +38,7 @@ class mp_form_helper(BaseFormHelper):
         field_width = 'form-control input-sm'
         css_multichar = field_width + ' multichar'
         layout = Layout(
-            HTML('<legend>Data files</legend>'),
+            HTML('<legend>Data</legend>'),
             HTML('<div class="col-sm-6 col-xs-12">'),
             Field('modelEngine', css_class=css_multichar, style="display:none"),
             multiselect['modelEngine'],
@@ -76,11 +76,10 @@ class mp_form(ModelForm):
         super(mp_form, self).__init__(*args, **kwargs)
         self.helper = mp_form_helper(allow_edit, res_short_id, element_id, element_name='MpMetadata', files=files)
 
+        # hide the field help text
         for field in self.fields:
             help_text = self.fields[field].help_text
             self.fields[field].help_text = None
-            if help_text != '':
-                self.fields[field].widget.attrs.update({'class':'has-popover', 'data-content':help_text, 'data-placement':'right', 'data-container':'body'})
 
 
     class Meta:

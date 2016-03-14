@@ -1,5 +1,7 @@
 __author__ = 'shawn'
 
+from urlparse import urlparse, parse_qs
+
 from django.test import TestCase, TransactionTestCase
 from django.contrib.auth.models import Group, User
 from django.http import HttpRequest, QueryDict
@@ -9,7 +11,7 @@ from hs_core import hydroshare
 
 from hs_tools_resource.models import RequestUrlBase, ToolVersion, SupportedResTypes, ToolResource, ToolIcon
 from hs_tools_resource.receivers import metadata_element_pre_create_handler, metadata_element_pre_update_handler
-
+from hs_tools_resource.utils import parse_app_url_template
 
 class TestWebAppFeature(TransactionTestCase):
 
@@ -29,8 +31,13 @@ class TestWebAppFeature(TransactionTestCase):
                 resource_type='ToolResource',
                 owner=self.user,
                 title='Test Web App Resource',
-                keywords=['kw1', 'kw2']
-        )
+                keywords=['kw1', 'kw2'])
+
+        self.resGeneric = hydroshare.create_resource(
+                resource_type='GenericResource',
+                owner=self.user,
+                title='Test Generic Resource',
+                keywords=['kw1', 'kw2'])
 
     def test_web_app_res_specific_metadata(self):
 
@@ -191,3 +198,19 @@ class TestWebAppFeature(TransactionTestCase):
                                                    element_name="ToolIcon",
                                                    request=request)
         self.assertTrue(data["is_valid"])
+
+    def test_utils(self):
+        url_template_string = "http://www.google.com/?resid=${HS_RES_ID}&restype=${HS_RES_TYPE}&user=${HS_USR_NAME}"
+
+        term_dict_user = {"HS_USR_NAME": self.user.username}
+        new_url_string = parse_app_url_template(url_template_string, [self.resGeneric.get_hs_term_dict(), term_dict_user])
+        o = urlparse(new_url_string)
+        query = parse_qs(o.query)
+
+        self.assertEqual(query["resid"][0], self.resGeneric.short_id)
+        self.assertEqual(query["restype"][0], "GenericResource")
+        self.assertEqual(query["user"][0], self.user.username)
+
+        url_template_string = "http://www.google.com/?resid=${HS_RES_ID}&restype=${HS_RES_TYPE}&mypara=${HS_UNDEFINED_TERM}&user=${HS_USR_NAME}"
+        new_url_string = parse_app_url_template(url_template_string, [self.resGeneric.get_hs_term_dict(), term_dict_user])
+        self.assertEqual(new_url_string, None)
