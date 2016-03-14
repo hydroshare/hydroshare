@@ -3,6 +3,7 @@ from rest_framework.exceptions import *
 import json
 import os
 import string
+from collections import namedtuple
 
 from django.contrib.auth.models import Group, User
 from django.contrib.contenttypes.models import ContentType
@@ -10,6 +11,7 @@ from django.core.exceptions import ObjectDoesNotExist
 from django.core.files.uploadedfile import UploadedFile
 
 from ga_resources.utils import get_user
+
 from hs_core import hydroshare
 from hs_core.hydroshare import check_resource_type
 from hs_core.models import AbstractMetaDataElement, GenericResource
@@ -17,6 +19,17 @@ from hs_core.signals import pre_metadata_element_create
 from hs_core.hydroshare import FILE_SIZE_LIMIT
 from hs_core.hydroshare.utils import raise_file_size_exception
 from django_irods.storage import IrodsStorage
+from hs_access_control.models import PrivilegeCodes
+
+ActionToAuthorize = namedtuple('ActionToAuthorize',
+                               'VIEW_METADATA, '
+                               'VIEW_RESOURCE, '
+                               'EDIT_RESOURCE, '
+                               'SET_RESOURCE_FLAG, '
+                               'DELETE_RESOURCE, '
+                               'CREATE_RESOURCE_VERSION')
+ACTION_TO_AUTHORIZE = ActionToAuthorize(0, 1, 2, 3, 4, 5)
+
 
 # Since an SessionException will be raised for all irods-related operations from django_irods module,
 # there is no need to raise iRODS SessionException from within this function
@@ -46,31 +59,58 @@ def upload_from_irods(username, password, host, port, zone, irods_fnames, res_fi
         fname = os.path.basename(ifname.rstrip(os.sep))
         res_files.append(UploadedFile(file=tmpFile, name=fname, size=size))
 
-def authorize(request, res_id, res=None, discoverable=False, edit=False, view=False,
-              full=False, superuser=False, raises_exception=True):
+def authorize(request, res_id, needed_permission=ACTION_TO_AUTHORIZE.VIEW_RESOURCE, raises_exception=True):
     """
-    Authorizes the user making this request for the OR of the parameters.  If the user has ANY permission set to True in
-    the parameter list, then this returns True else False.
-    """
-    user = get_user(request)
-    if res is None:
-        try:
-            res = hydroshare.utils.get_resource_by_shortkey(res_id, or_404=False)
-        except ObjectDoesNotExist:
-            raise NotFound(detail="No resource was found for resource id:%s" % res_id)
+    This function checks if a user has authorization for resource related actions as outlined below. This
+    function doesn't check authorization for user sharing resource with another user.
 
-    if discoverable and (edit is False and view is False and full is False and superuser is False):
-        authorized = res.raccess.discoverable
-    elif user.is_authenticated():
-        authorized = (view and user.uaccess.can_view_resource(res)) or \
-                     (edit and user.uaccess.can_change_resource(res)) or \
-                     (full and user.uaccess.can_delete_resource(res)) or \
-                     (discoverable and res.raccess.discoverable) or \
-                     (superuser and user.is_superuser)
-    else:
-        authorized = (view and res.raccess.public) or \
-                     (discoverable and res.raccess.discoverable)
-                     
+    How this function should be called for different actions on a resource by a specific user?
+    1. User wants to view a resource (both metadata and content files) which includes
+       downloading resource bag or resource content files:
+       authorize(request, res_id=id_of_resource, needed_permission=ACTION_TO_AUTHORIZE.VIEW_RESOURCE)
+    2. User wants to view resource metadata only:
+       authorize(request, res_id=id_of_resource, needed_permission=ACTION_TO_AUTHORIZE.VIEW_METADATA)
+    3. User wants to edit a resource which includes:
+       a. edit metadata
+       b. add file to resource
+       c. delete a file from the resource
+       authorize(request, res_id=id_of_resource, needed_permission=ACTION_TO_AUTHORIZE.EDIT_RESOURCE)
+    4. User wants to set resource flag (public, published, shareable etc):
+       authorize(request, res_id=id_of_resource, needed_permission=ACTION_TO_AUTHORIZE.SET_RESOURCE_FLAG)
+    5. User wants to delete a resource:
+       authorize(request, res_id=id_of_resource, needed_permission=ACTION_TO_AUTHORIZE.DELETE_RESOURCE)
+    6. User wants to create new version of a resource:
+       authorize(request, res_id=id_of_resource, needed_permission=ACTION_TO_AUTHORIZE.CREATE_RESOURCE_VERSION)
+
+    Note: resource 'shareable' status has no effect on authorization
+    """
+    authorized = False
+    user = get_user(request)
+
+    try:
+        res = hydroshare.utils.get_resource_by_shortkey(res_id, or_404=False)
+    except ObjectDoesNotExist:
+        raise NotFound(detail="No resource was found for resource id:%s" % res_id)
+
+    if needed_permission == ACTION_TO_AUTHORIZE.VIEW_METADATA:
+        if res.raccess.discoverable or res.raccess.public:
+            authorized = True
+        elif user.is_authenticated() and user.is_active:
+            authorized = user.uaccess.can_view_resource(res)
+    elif user.is_authenticated() and user.is_active:
+        if needed_permission == ACTION_TO_AUTHORIZE.VIEW_RESOURCE:
+            authorized = user.uaccess.can_view_resource(res)
+        elif needed_permission == ACTION_TO_AUTHORIZE.EDIT_RESOURCE:
+            authorized = user.uaccess.can_change_resource(res)
+        elif needed_permission == ACTION_TO_AUTHORIZE.DELETE_RESOURCE:
+            authorized = user.uaccess.can_delete_resource(res)
+        elif needed_permission == ACTION_TO_AUTHORIZE.SET_RESOURCE_FLAG:
+            authorized = user.uaccess.can_change_resource_flags(res)
+        elif needed_permission == ACTION_TO_AUTHORIZE.CREATE_RESOURCE_VERSION:
+            authorized = user.uaccess.owns_resource(res)
+    elif needed_permission == ACTION_TO_AUTHORIZE.VIEW_RESOURCE:
+        authorized = res.raccess.public
+
     if raises_exception and not authorized:
         raise PermissionDenied()
     else:

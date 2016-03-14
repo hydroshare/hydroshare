@@ -4,6 +4,7 @@
 .coverage
 .DS_Store
 .idea
+/celery
 /config/hydroshare-config.sh
 /config/hydroshare-config.yaml
 /hydroshare/local_settings.py

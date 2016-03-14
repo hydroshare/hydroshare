@@ -278,7 +278,7 @@
                                             <div class="metadata-wrapper">
                                                 <div class="shared-resource-info">
                                                     {% if profile_user.first_name or profile.middle_name or profile_user.last_name %}
-                                                        <strong>{{ profile_user.first_name }} {{ profile.middle_name }} {{ profile_user.last_name }}</strong>
+                                                        <strong>{% if profile_user.first_name %} {{ profile_user.first_name }}{% endif %} {% if profile.middle_name %} {{ profile.middle_name }} {% endif %} {% if profile_user.last_name %} {{ profile_user.last_name }}{% endif %}</strong>
                                                     {% else %}
                                                         <strong>{{ profile_user.username }}</strong>
                                                     {% endif %}

@@ -211,9 +211,22 @@ def update_user_profile(request):
                                     "email address, please request email update again. "
                                     ))
                     # send an email to the old address notifying the email change
-                    send_mail(subject="Your HydroShare email.",
-                              message="You have changed your HydroShare account email",
-                              from_email= settings.DEFAULT_FROM_EMAIL, recipient_list=[old_email], fail_silently=False)
+                    message = """Dear {}
+                    <p>HydroShare received a request to change the email address associated with
+                    HydroShare account {} from {} to {}. You are receiving this email to the old
+                    email address as a precaution. If this is correct you may ignore this email
+                    and click on the link in the email sent to the new address to confirm this change.</p>
+                    <p>If you did not originate this request, there is a danger someone else has
+                    accessed your account. You should log into HydroShare, change your password,
+                    and set the email address to the correct address. If you are unable to do this
+                    contact support@hydroshare.org
+                    <p>Thank you</p>
+                    <p>The HydroShare Team</p>
+                    """.format(user.first_name, user.username, user.email, new_email)
+                    send_mail(subject="Change of HydroShare email address.",
+                              message=message,
+                              html_message=message,
+                              from_email= settings.DEFAULT_FROM_EMAIL, recipient_list=[old_email], fail_silently=True)
             else:
                 errors = {}
                 if not user_form.is_valid():
@@ -264,7 +277,7 @@ def email_verify(request, new_email, uidb36=None, token=None):
     View for the link in the verification email sent to a user
     when they update their email as part of profile update.
     User email is set to new_email and logs them in,
-    redirecting to the URL they tried to access when profile.
+    redirecting to the URL they tried to access profile.
     """
 
     user = authenticate(uidb36=uidb36, token=token, is_active=True)
