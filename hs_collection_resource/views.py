@@ -5,10 +5,11 @@ from django.http import HttpResponseRedirect, HttpResponseNotFound, HttpResponse
 
 from hs_core import hydroshare
 from hs_core.views import _set_resource_sharing_status
-from hs_core.views.utils import authorize
+from hs_core.views.utils import authorize, ACTION_TO_AUTHORIZE
 from hs_core.hydroshare.utils import user_from_id, resource_modified
+from hs_core.hydroshare.resource import METADATA_STATUS_SUFFICIENT, METADATA_STATUS_INSUFFICIENT
 
-logger = logging.getLogger("django")
+logger = logging.getLogger(__name__)
 
 # update collection content (member resources)
 # downgrade collection sharing status to PRIVATE if the followings are all met:
@@ -17,8 +18,9 @@ logger = logging.getLogger("django")
 # 3) private resources are being added into this collection, or the collection is being wiped (0 resource)
 def update_collection(request, shortkey, *args, **kwargs):
     try:
-        collection_res_obj, is_authorized, user = authorize(request, shortkey, edit=True, full=True, \
-                                                            superuser=True, raises_exception=True)
+        collection_res_obj, is_authorized, user = authorize(request, shortkey,
+                                              needed_permission=ACTION_TO_AUTHORIZE.EDIT_RESOURCE,
+                                              raises_exception=True)
         if is_authorized:
 
             collection_content_res_id_list = []
@@ -57,9 +59,9 @@ def update_collection(request, shortkey, *args, **kwargs):
                     _set_resource_sharing_status(request, user, collection_res_obj, flag_to_set='discoverable', flag_value=False)
                     new_sharing_status = "Private"
 
+            # check if current user is owner or super_user (owner and super_user can change sharing status on frontend)
             user_permission = "Edit"
-            _, is_owner, _ = authorize(request, shortkey, full=True, superuser=True, raises_exception=False)
-            if is_owner:
+            if collection_res_obj in user.uaccess.owned_resources or user.is_superuser:
                 user_permission = "Own"
 
             if collection_res_obj.metadata.has_all_required_elements():
@@ -82,8 +84,9 @@ def update_collection(request, shortkey, *args, **kwargs):
 # at least View permission over them.
 def collection_member_permission(request, shortkey, user_id, *args, **kwargs):
     try:
-        collection_res_obj, is_authorized, user = authorize(request, shortkey, view=True, edit=True, \
-                                                  full=True, superuser=True, raises_exception=True)
+        collection_res_obj, is_authorized, user = authorize(request, shortkey,
+                                              needed_permission=ACTION_TO_AUTHORIZE.VIEW_RESOURCE,
+                                              raises_exception=True)
         no_permission_list = []
         if is_authorized:
             user_to_share_with = user_from_id(user_id)

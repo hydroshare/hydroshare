@@ -4,7 +4,6 @@ from crispy_forms.layout import Layout, HTML
 
 from hs_core import page_processors
 from hs_core.views import add_generic_context
-from hs_core.views.utils import authorize
 from hs_core.models import BaseResource
 from hs_access_control.models import PrivilegeCodes
 
@@ -57,7 +56,7 @@ def landing_page(request, page):
         for res in user_all_accessible_resource_list:
             if content_model.short_id == res.short_id:
                 continue # skip current collection resource object
-            elif collection_itmes_meta is not None and res in collection_itmes_meta.collection.all():
+            elif collection_itmes_meta is not None and res in collection_itmes_meta.resources.all():
                 continue # skip resources that are already in current collection
             elif res.resource_type.lower() == "collectionresource":
                 continue # skip the res that is type of collection

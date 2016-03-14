@@ -250,7 +250,7 @@ def delete_resource(request, shortkey, *args, **kwargs):
 
     # downgrade collection to private if the res being deleted here is the only member resource in the collection
     # reverse lookup: find all associated collection resources
-    associated_collection_metadata_obj_list = list(res.resources_set.all())
+    associated_collection_metadata_obj_list = list(res.collection_set.all())
     for collection_metadata_obj in associated_collection_metadata_obj_list:
         # if this collection has only one member resource (that is the one being deleted now)
         if collection_metadata_obj.resources.all().count() == 1:
@@ -349,7 +349,7 @@ def set_resource_flag(request, shortkey, *args, **kwargs):
         _set_resource_sharing_status(request, user, res, flag_to_set='public', flag_value=False)
 
        # reverse lookup: find all associated collection resources
-        associated_collection_metadata_obj_list = list(res.resources_set.all())
+        associated_collection_metadata_obj_list = list(res.collection_set.all())
         for collection_metadata_obj in associated_collection_metadata_obj_list:
             # reverse lookup: metadata obj --> resource obj
             res_collection = CollectionResource.objects.get(object_id=collection_metadata_obj.object_id)

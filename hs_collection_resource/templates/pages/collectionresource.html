@@ -224,6 +224,7 @@
         {
             // disable "Publish" btn
             $("#publish").hide();
+            $("#new-version").hide();
 
             // unhook btn-invite original onclick event and re-wire it with function share_collection_ajax_submit
             $('#btn-invite').off("click");
@@ -439,7 +440,7 @@
                                         {
                                             $("#btn-public").prop("disabled", true).removeClass("active");
                                             $("#btn-discoverable").prop("disabled", true).removeClass("active");
-                                            $("#btn-private").prop("disabled", false).addClass("active");
+                                            $("#btn-private").prop("disabled", true).addClass("active");
 
                                             customAlert("<i class='glyphicon glyphicon-flag custom-alert-icon'></i><strong>Metadata Status:</strong> " +
                                                     "Sharing status downgraded to private", 3000);
