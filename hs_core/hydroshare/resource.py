@@ -512,7 +512,7 @@ def create_new_version_empty_resource(pk, user):
 
     return new_resource
 
-def create_new_version_resource(ori_res, new_res):
+def create_new_version_resource(ori_res, new_res, user):
     """
     Populate metadata and contents from ori_res object to new_res object to make new_res object as a new version of the ori_res object
     Args:
@@ -559,21 +559,25 @@ def create_new_version_resource(ori_res, new_res):
         res_avail_date = new_res.metadata.dates.all().filter(type='available')[0]
         new_res.metadata.create_element('date', type='available', start_date=res_avail_date.start_date, end_date=res_avail_date.end_date)
 
-    # add Relation element to link source and target resources
-    if new_res.metadata.identifiers.all().filter(name="hydroShareIdentifier"):
-        hs_identifier = new_res.metadata.identifiers.all().filter(name="hydroShareIdentifier")[0]
-        ori_res.metadata.create_element('relation', type='isReplacedBy', value=hs_identifier.url)
-    else:
-        ori_res.metadata.create_element('relation', type='isReplacedBy', value=new_res.short_id)
+    # add or update Relation element to link source and target resources
+    hs_identifier = new_res.metadata.identifiers.all().filter(name="hydroShareIdentifier")[0]
+    ori_res.metadata.create_element('relation', type='isReplacedBy', value=hs_identifier.url)
 
-    if ori_res.metadata.identifiers.all().filter(name="hydroShareIdentifier"):
-        hs_identifier = ori_res.metadata.identifiers.all().filter(name="hydroShareIdentifier")[0]
-        new_res.metadata.create_element('relation', type='isVersionOf', value=hs_identifier.url)
-    else:
-        new_res.metadata.create_element('relation', type='isVersionOf', value=ori_res.short_id)
+    if new_res.metadata.relations.all().filter(type='isVersionOf').exists():
+        # the original resource is already a versioned resource, and its isVersionOf relation element
+        # is copied over to this new version resource, needs to delete this element so it can be created
+        # to link to its original resource correctly
+        eid = new_res.metadata.relations.all().filter(type='isVersionOf').first().id
+        new_res.metadata.delete_element('relation', eid)
+
+    hs_identifier = ori_res.metadata.identifiers.all().filter(name="hydroShareIdentifier")[0]
+    new_res.metadata.create_element('relation', type='isVersionOf', value=hs_identifier.url)
 
     # create bag for the new resource
     hs_bagit.create_bag(new_res)
+
+    # since an isReplaceBy relation element is added to original resource, needs to call resource_modified() for original resource
+    utils.resource_modified(ori_res, user)
 
     return new_res
 

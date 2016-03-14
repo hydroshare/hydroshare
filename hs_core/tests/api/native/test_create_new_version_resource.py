@@ -79,7 +79,7 @@ class TestNewVersionResource(TestCase):
             hydroshare.create_new_version_empty_resource(self.res_generic.short_id, self.nonowner)
 
         new_res_generic = hydroshare.create_new_version_empty_resource(self.res_generic.short_id, self.owner)
-        new_res_generic = hydroshare.create_new_version_resource(self.res_generic, new_res_generic)
+        new_res_generic = hydroshare.create_new_version_resource(self.res_generic, new_res_generic, self.owner)
 
         # test the new versioned resource has the same resource type as the original resource
         self.assertTrue(isinstance(new_res_generic, GenericResource))
@@ -135,7 +135,7 @@ class TestNewVersionResource(TestCase):
             hydroshare.create_new_version_empty_resource(self.res_raster.short_id, self.nonowner)
 
         new_res_raster = hydroshare.create_new_version_empty_resource(self.res_raster.short_id, self.owner)
-        new_res_raster = hydroshare.create_new_version_resource(self.res_raster, new_res_raster)
+        new_res_raster = hydroshare.create_new_version_resource(self.res_raster, new_res_raster, self.owner)
 
         # test the new versioned resource has the same resource type as the original resource
         self.assertTrue(isinstance(new_res_raster, RasterResource))
