@@ -76,12 +76,12 @@ class TestCollection(TransactionTestCase):
     def test_views(self):
 
         # test update_collection()
-        self.assertEqual(self.resCollection.metadata.collection_items.all().count(), 0)
+        self.assertEqual(self.resCollection.metadata.collection.all().count(), 0)
         url_to_update_collection = self.url_to_update_collection.format(self.resCollection.short_id)
 
         # anonymous user
         # should inform frontend error
-        response = self.api_client.post(url_to_update_collection, {'collection_items': [self.resGen1.short_id, self.resGen2.short_id, self.resGen3.short_id]})
+        response = self.api_client.post(url_to_update_collection, {'resource_id_list': [self.resGen1.short_id, self.resGen2.short_id, self.resGen3.short_id]})
         resp_json = json.loads(response.content)
         self.assertEqual(resp_json["status"], "error")
 
@@ -90,14 +90,14 @@ class TestCollection(TransactionTestCase):
 
         # add 3 private member resources
         # should inform frontend "Insufficient to make public"
-        response = self.api_client.post(url_to_update_collection, {'collection_items': [self.resGen1.short_id, self.resGen2.short_id, self.resGen3.short_id]})
+        response = self.api_client.post(url_to_update_collection, {'resource_id_list': [self.resGen1.short_id, self.resGen2.short_id, self.resGen3.short_id]})
         resp_json = json.loads(response.content)
         self.assertEqual(resp_json["status"], "success")
         self.assertEqual(resp_json["user_permission"], "Own")
         self.assertEqual(resp_json["current_sharing_status"], "Private")
         self.assertEqual(resp_json["new_sharing_status"], "")
         self.assertEqual(resp_json["metadata_status"], "Insufficient to make public")
-        self.assertEqual(self.resCollection.metadata.collection_items.first().collection_items.all().count(), 3)
+        self.assertEqual(self.resCollection.metadata.collection.first().resources.all().count(), 3)
 
         # make Gen1 public
         self.resGen1.raccess.public = True
@@ -113,11 +113,11 @@ class TestCollection(TransactionTestCase):
 
         # re-add 3 public or discoverable member resources
         # should inform frontend "Sufficient to make public")
-        response = self.api_client.post(url_to_update_collection, {'collection_items': [self.resGen1.short_id, self.resGen2.short_id, self.resGen3.short_id]})
+        response = self.api_client.post(url_to_update_collection, {'resource_id_list': [self.resGen1.short_id, self.resGen2.short_id, self.resGen3.short_id]})
         resp_json = json.loads(response.content)
         self.assertEqual(resp_json["status"], "success")
         self.assertEqual(resp_json["metadata_status"], "Sufficient to make public")
-        self.assertEqual(self.resCollection.metadata.collection_items.first().collection_items.all().count(), 3)
+        self.assertEqual(self.resCollection.metadata.collection.first().resources.all().count(), 3)
 
         # make Collection public
         self.resCollection.raccess.public = True
@@ -128,13 +128,13 @@ class TestCollection(TransactionTestCase):
         self.resGen3.raccess.save()
         # re-add the 3 resources (2 public 1 private)
         # should inform frontend to downgrade to Private
-        response = self.api_client.post(url_to_update_collection, {'collection_items': [self.resGen1.short_id, self.resGen2.short_id, self.resGen3.short_id]})
+        response = self.api_client.post(url_to_update_collection, {'resource_id_list': [self.resGen1.short_id, self.resGen2.short_id, self.resGen3.short_id]})
         resp_json = json.loads(response.content)
         self.assertEqual(resp_json["status"], "success")
         self.assertEqual(resp_json["current_sharing_status"], "Public")
         self.assertEqual(resp_json["new_sharing_status"], "Private")
         self.assertEqual(resp_json["metadata_status"], "Insufficient to make public")
-        self.assertEqual(self.resCollection.metadata.collection_items.first().collection_items.all().count(), 3)
+        self.assertEqual(self.resCollection.metadata.collection.first().resources.all().count(), 3)
         self.assertEqual(self.resGen3.raccess.public, False)
         self.assertEqual(self.resGen3.raccess.discoverable, False)
 
@@ -159,30 +159,30 @@ class TestCollection(TransactionTestCase):
 
         # User 2 takes out private res 3
         # should inform frontend "Sufficient to make public"
-        response = self.api_client.post(url_to_update_collection, {'collection_items': \
-        [self.resGen1.short_id, self.resGen2.short_id]})
+        response = self.api_client.post(url_to_update_collection, {'resource_id_list': \
+                                            [self.resGen1.short_id, self.resGen2.short_id]})
         resp_json = json.loads(response.content)
         self.assertEqual(resp_json["status"], "success")
         self.assertEqual(resp_json["user_permission"], "Edit")
         self.assertEqual(resp_json["current_sharing_status"], "Private")
         self.assertEqual(resp_json["new_sharing_status"], "")
         self.assertEqual(resp_json["metadata_status"], "Sufficient to make public")
-        self.assertEqual(self.resCollection.metadata.collection_items.first().collection_items.all().count(), 2)
+        self.assertEqual(self.resCollection.metadata.collection.first().resources.all().count(), 2)
 
         # make User 2's Gen4 discoverable
         self.resGen4.raccess.discoverable = True
         self.resGen4.raccess.save()
 
         # User 2 adds his dicoverable res 4
-        response = self.api_client.post(url_to_update_collection, {'collection_items': \
-        [self.resGen1.short_id, self.resGen2.short_id, self.resGen4.short_id]})
+        response = self.api_client.post(url_to_update_collection, {'resource_id_list': \
+                        [self.resGen1.short_id, self.resGen2.short_id, self.resGen4.short_id]})
         resp_json = json.loads(response.content)
         self.assertEqual(resp_json["status"], "success")
         self.assertEqual(resp_json["user_permission"], "Edit")
         self.assertEqual(resp_json["current_sharing_status"], "Private")
         self.assertEqual(resp_json["new_sharing_status"], "")
         self.assertEqual(resp_json["metadata_status"], "Sufficient to make public")
-        self.assertEqual(self.resCollection.metadata.collection_items.first().collection_items.all().count(), 3)
+        self.assertEqual(self.resCollection.metadata.collection.first().resources.all().count(), 3)
 
 
 

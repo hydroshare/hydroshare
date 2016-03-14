@@ -1,7 +1,6 @@
 from lxml import etree
 
-from django.db import models
-# from django.contrib.contenttypes import generic
+from django.db import models, transaction
 from django.contrib.contenttypes.fields import GenericRelation
 from django.core.exceptions import ObjectDoesNotExist, ValidationError
 
@@ -35,57 +34,61 @@ class CollectionResource(BaseResource):
 
 processor_for(CollectionResource)(resource_processor)
 
-class CollectionItems(AbstractMetaDataElement):
-    term = 'CollectionItems'
-    collection_items = models.ManyToManyField(BaseResource, null=True, blank=True)
+class Collection(AbstractMetaDataElement):
+    term = 'Collection'
+    resources = models.ManyToManyField(BaseResource, null=True, blank=True)
 
-    def get_collection_items_str(self):
-        return ','.join([res.title+":" + res.resource_type for res in self.collection_items.all()])
+    def get_resource_id_list(self):
+        return [res.short_id for res in self.resources.all()]
 
     @classmethod
+    @transaction.atomic
     def create(cls, **kwargs):
-        if 'collection_items' in kwargs:
+        if 'resource_id_list' in kwargs:
             metadata_obj = kwargs['content_object']
-            new_meta_instance = CollectionItems.objects.create(content_object=metadata_obj)
-            for res_id in kwargs['collection_items']:
+            new_meta_instance = Collection.objects.create(content_object=metadata_obj)
+            for res_id in kwargs['resource_id_list']:
                 res = BaseResource.objects.filter(short_id__iexact=res_id)
                 if res.exists():
-                    new_meta_instance.collection_items.add(res[0])
+                    new_meta_instance.resources.add(res[0])
+                else:
+                    raise ObjectDoesNotExist("No resource was found with the provided id: %s" % res_id)
             return new_meta_instance
         else:
-            raise ObjectDoesNotExist("No collection_items parameter was found in the **kwargs list")
+            raise ObjectDoesNotExist("No resource_id_list parameter was found in the **kwargs list")
 
     @classmethod
+    @transaction.atomic
     def update(cls, element_id, **kwargs):
-        meta_instance = CollectionItems.objects.get(id=element_id)
-        if meta_instance:
-            if 'collection_items' in kwargs:
-                meta_instance.collection_items.clear()
-                for res_id in kwargs['collection_items']:
-                    qs = BaseResource.objects.filter(short_id__iexact=res_id)
-                    if qs.exists():
-                        meta_instance.collection_items.add(qs[0])
-                meta_instance.save()
-                if meta_instance.collection_items.all().count() == 0:
-                    meta_instance.delete()
-            else:
-                raise ObjectDoesNotExist("No collection_items parameter was found in the **kwargs list")
+        meta_instance = Collection.objects.get(id=element_id)
+
+        if 'resource_id_list' in kwargs:
+            meta_instance.resources.clear()
+            for res_id in kwargs['resource_id_list']:
+                qs = BaseResource.objects.filter(short_id__iexact=res_id)
+                if qs.exists():
+                    meta_instance.resources.add(qs[0])
+                else:
+                    raise ObjectDoesNotExist("No resource was found with the provided id: %s" % res_id)
+            meta_instance.save()
+            if meta_instance.resources.all().count() == 0:
+                meta_instance.delete()
         else:
-            raise ObjectDoesNotExist("No CollectionItems object was found with the provided id: %s" % kwargs['id'])
+            raise ObjectDoesNotExist("No resource_id_list parameter was found in the **kwargs list")
 
     @classmethod
     def remove(cls, element_id):
-        raise ValidationError("CollectionItems element can't be deleted.")
+        raise ValidationError("Collection element can't be deleted.")
 
 
 class CollectionMetaData(CoreMetaData):
-    # collection_items = generic.GenericRelation(CollectionItems)
-    collection_items = GenericRelation(CollectionItems)
+
+    collection = GenericRelation(Collection)
 
     @classmethod
     def get_supported_element_names(cls):
         elements = super(CollectionMetaData, cls).get_supported_element_names()
-        elements.append('CollectionItems')
+        elements.append('Collection')
         return elements
 
     def has_all_required_elements(self):
@@ -93,17 +96,17 @@ class CollectionMetaData(CoreMetaData):
             return False
         else:
             # check if no member resource exists
-            if self.collection_items.first().collection_items.all().count() == 0:
+            if self.collection.first().resources.all().count() == 0:
                 return False
             # check if all member resources are either public or private
-            for res in self.collection_items.first().collection_items.all():
+            for res in self.collection.first().resources.all():
                 if not res.raccess.public and not res.raccess.discoverable:
                     return False
         return True
 
     def get_required_missing_elements(self):  # show missing required meta
         missing_required_elements = super(CollectionMetaData, self).get_required_missing_elements()
-        if not self.collection_items.all().first():
+        if not self.collection.first():
             missing_required_elements.append('Collection Resources')
 
         return missing_required_elements
@@ -117,11 +120,11 @@ class CollectionMetaData(CoreMetaData):
 
         # get root 'Description' element that contains all other elements
         container = RDF_ROOT.find('rdf:Description', namespaces=self.NAMESPACES)
-        CollectionItems_container = etree.SubElement(container, '{%s}CollectionItems' % self.NAMESPACES['hsterms'])
-        collection_items = self.collection_items.first()
-        if collection_items:
-            for res in collection_items.collection_items.all():
-                hsterms_method = etree.SubElement(CollectionItems_container, '{%s}CollectionItem' % self.NAMESPACES['hsterms'])
+        Collection_container = etree.SubElement(container, '{%s}Collection' % self.NAMESPACES['hsterms'])
+        collection = self.collection.first()
+        if collection:
+            for res in collection.resources.all():
+                hsterms_method = etree.SubElement(Collection_container, '{%s}Collection' % self.NAMESPACES['hsterms'])
                 hsterms_method_rdf_Description = etree.SubElement(hsterms_method, '{%s}Description' % self.NAMESPACES['rdf'])
                 hsterms_name = etree.SubElement(hsterms_method_rdf_Description, '{%s}ResourceID' % self.NAMESPACES['hsterms'])
                 hsterms_name.text = res.short_id
@@ -132,6 +135,6 @@ class CollectionMetaData(CoreMetaData):
 
     def delete_all_elements(self):
         super(CollectionMetaData, self).delete_all_elements()
-        self.collection_items.all().delete()
+        self.collection.all().delete()
 
 # import receivers # never delete this otherwise non of the receiver function will work

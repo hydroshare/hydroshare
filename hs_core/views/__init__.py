@@ -248,12 +248,12 @@ def delete_resource(request, shortkey, *args, **kwargs):
 
     # downgrade collection to private if the res being deleted here is the only member resource in the collection
     # reverse lookup: find all associated collection resources
-    associated_collectionitems_metadata_obj_list = list(res.collectionitems_set.all())
-    for collectionitems_metadata_obj in associated_collectionitems_metadata_obj_list:
+    associated_collection_metadata_obj_list = list(res.resources_set.all())
+    for collection_metadata_obj in associated_collection_metadata_obj_list:
         # if this collection has only one member resource (that is the one being deleted now)
-        if collectionitems_metadata_obj.collection_items.all().count() == 1:
+        if collection_metadata_obj.resources.all().count() == 1:
             # reverse lookup: metadata obj --> resource obj
-            res_collection = CollectionResource.objects.get(object_id=collectionitems_metadata_obj.object_id)
+            res_collection = CollectionResource.objects.get(object_id=collection_metadata_obj.object_id)
             if res_collection.raccess.public or res_collection.raccess.discoverable:
                 # downgrade these collections to private
                 res_collection.raccess.public = False
@@ -271,12 +271,12 @@ def delete_resource(request, shortkey, *args, **kwargs):
 
     # the ManyToMany Relationships between this resource and all associated collections have been removed
     # that means the metadata of these collection also changed, so we need to update their bags
-    for collectionitems_metadata_obj in associated_collectionitems_metadata_obj_list:
+    for collection_metadata_obj in associated_collection_metadata_obj_list:
         # tricky issue: the user who deleted this resource may not have permission to access this collection
         # but here we are updating metadata of the collection
         # who is the "last_changed_by" user ???
         # reverse lookup: metadata obj --> resource obj
-        res_collection = CollectionResource.objects.get(object_id=collectionitems_metadata_obj.object_id)
+        res_collection = CollectionResource.objects.get(object_id=collection_metadata_obj.object_id)
         resource_modified(res_collection, request.user, True)
 
     return HttpResponseRedirect('/my-resources/')
@@ -382,11 +382,11 @@ def change_permissions(request, shortkey, *args, **kwargs):
     elif t == 'make_private' or t == 'make_not_discoverable':
         _set_resource_sharing_status(request, user, res, flag_to_set='public', flag_value=False)
 
-        # reverse lookup: find all associated collection resources
-        associated_collectionitems_metadata_obj_list = list(res.collectionitems_set.all())
-        for collectionitems_metadata_obj in associated_collectionitems_metadata_obj_list:
+       # reverse lookup: find all associated collection resources
+        associated_collection_metadata_obj_list = list(res.resources_set.all())
+        for collection_metadata_obj in associated_collection_metadata_obj_list:
             # reverse lookup: metadata obj --> resource obj
-            res_collection = CollectionResource.objects.get(object_id=collectionitems_metadata_obj.object_id)
+            res_collection = CollectionResource.objects.get(object_id=collection_metadata_obj.object_id)
             if res_collection.raccess.public or res_collection.raccess.discoverable:
                 # downgrade these collections to private
                 res_collection.raccess.public = False

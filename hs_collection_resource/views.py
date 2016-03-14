@@ -12,25 +12,26 @@ logger = logging.getLogger("django")
 
 # update collection content (member resources)
 # downgrade collection sharing status to PRIVATE if the followings are all met:
-# 1) current user is collection owner or admin;
+# 1) current user is collection owner or admin
 # 2) current collection is public or discoverable
-# 3) private resources are being added into this collection
+# 3) private resources are being added into this collection, or the collection is being wiped (0 resource)
 def update_collection(request, shortkey, *args, **kwargs):
     try:
-        collection_res_obj, is_authorized, user = authorize(request, shortkey, edit=True, full=True, superuser=True, raises_exception=True)
+        collection_res_obj, is_authorized, user = authorize(request, shortkey, edit=True, full=True, \
+                                                            superuser=True, raises_exception=True)
         if is_authorized:
 
             collection_content_res_id_list = []
-            for res_id in request.POST.getlist("collection_items"):
+            for res_id in request.POST.getlist("resource_id_list"):
                 collection_content_res_id_list.append(res_id)
 
-            if collection_res_obj.metadata.collection_items.first() is not None:
-                element_id = collection_res_obj.metadata.collection_items.first().id
-                hydroshare.resource.update_metadata_element(collection_res_obj.short_id, 'CollectionItems',
-                collection_items=collection_content_res_id_list, element_id=element_id)
+            if collection_res_obj.metadata.collection.first():
+                element_id = collection_res_obj.metadata.collection.first().id
+                hydroshare.resource.update_metadata_element(collection_res_obj.short_id, 'Collection',
+                resource_id_list=collection_content_res_id_list, element_id=element_id)
             else:
                 hydroshare.resource.create_metadata_element(collection_res_obj.short_id,
-                'CollectionItems', collection_items=collection_content_res_id_list)
+                'Collection', resource_id_list=collection_content_res_id_list)
 
             current_sharing_status = "Private"
             if collection_res_obj.raccess.public:
@@ -86,8 +87,8 @@ def collection_member_permission(request, shortkey, user_id, *args, **kwargs):
         no_permission_list = []
         if is_authorized:
             user_to_share_with = user_from_id(user_id)
-            if collection_res_obj.metadata.collection_items.first() is not None:
-                for res_in_collection in collection_res_obj.metadata.collection_items.first().collection_items.all():
+            if collection_res_obj.metadata.collection:
+                for res_in_collection in collection_res_obj.metadata.collection.first().resources.all():
                     if not user_to_share_with.uaccess.can_view_resource(res_in_collection) \
                        and not res_in_collection.raccess.public and not res_in_collection.raccess.discoverable:
                         no_permission_list.append(res_in_collection.short_id)
@@ -95,7 +96,7 @@ def collection_member_permission(request, shortkey, user_id, *args, **kwargs):
                 ajax_response_data = {'status': status, 'no_permission_list': no_permission_list}
                 return HttpResponse(json.dumps(ajax_response_data))
             else:
-                raise Exception("Collection member metadata is not yet initialized.")
+                raise Exception("Collection element is not yet initialized.")
     except Exception as ex:
         logger.exception("collection_member_permission: %s" % (ex.message))
         ajax_response_data = {'status': "error", 'message': ex.message}

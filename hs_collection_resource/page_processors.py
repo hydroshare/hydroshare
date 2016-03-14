@@ -38,8 +38,8 @@ def landing_page(request, page):
     collection_items_list = None
     collection_items_accessible = []
     collection_items_inaccessible = []
-    if content_model.metadata.collection_items.first():
-        collection_items_list = list(content_model.metadata.collection_items.first().collection_items.all())
+    if content_model.metadata.collection.first():
+        collection_items_list = list(content_model.metadata.collection.first().resources.all())
         for res in collection_items_list:
             if res in user_all_accessible_resource_list or res.raccess.discoverable or res.raccess.public:
                 collection_items_accessible.append(res)
@@ -51,16 +51,13 @@ def landing_page(request, page):
                                                resource_edit=edit_resource,
                                                extended_metadata_layout=None,
                                                request=request)
-    if not edit_resource:
-        pass
-    else:
-
-        collection_itmes_meta = content_model.metadata.collection_items.first()
+    if edit_resource:
+        collection_itmes_meta = content_model.metadata.collection.first()
         candidate_resources_list = []
         for res in user_all_accessible_resource_list:
             if content_model.short_id == res.short_id:
                 continue # skip current collection resource object
-            elif collection_itmes_meta is not None and res in collection_itmes_meta.collection_items.all():
+            elif collection_itmes_meta is not None and res in collection_itmes_meta.collection.all():
                 continue # skip resources that are already in current collection
             elif res.resource_type.lower() == "collectionresource":
                 continue # skip the res that is type of collection
@@ -77,11 +74,3 @@ def landing_page(request, page):
     context.update(hs_core_dublin_context)
 
     return context
-
-def get_sharing_status_string(res):
-    if res.raccess.public:
-        return "Public"
-    elif res.raccess.discoverable:
-        return "Discoverable"
-    else:
-        return "Private"
