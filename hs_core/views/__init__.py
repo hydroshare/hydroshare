@@ -663,23 +663,22 @@ def create_resource(request, *args, **kwargs):
     return HttpResponseRedirect(resource.get_absolute_url())
 
 
-# TODO: url needs to be added for this view function
 @login_required
 def create_user_group(request, *args, **kwargs):
     status = 'success'
     group_form = GroupForm(data=request.POST)
     if group_form.is_valid():
-        request.user.uaccess.create_group(title=group_form.cleaned_data['name'],
-                                          description=group_form.cleaned_data['description'],
-                                          purpose=group_form.cleaned_data['purpose'])
-        ajax_response_data = {'status': status}
+        new_group = request.user.uaccess.create_group(title=group_form.cleaned_data['name'],
+                                                      description=group_form.cleaned_data['description'],
+                                                      purpose=group_form.cleaned_data['purpose'])
+        ajax_response_data = {'status': status, 'group': new_group}
     else:
         status = 'error'
         ajax_response_data = {'status': status, 'errors': group_form.errors.as_json()}
 
     return HttpResponse(json.dumps(ajax_response_data))
 
-# TODO: url needs to be added for this view function
+
 @login_required
 def update_user_group(request, group_id, *args, **kwargs):
     user = request.user
@@ -701,7 +700,7 @@ def update_user_group(request, group_id, *args, **kwargs):
         ajax_response_data = {'status': status, 'errors': "You don't have permission to update this group"}
     return HttpResponse(json.dumps(ajax_response_data))
 
-# TODO: url needs to be added for this view function
+
 @login_required
 def share_group_with_user(request, group_id, user_id, privilege, *args, **kwargs):
     requesting_user = request.user
@@ -730,7 +729,7 @@ def share_group_with_user(request, group_id, user_id, privilege, *args, **kwargs
 
     return HttpResponseRedirect(request.META['HTTP_REFERER'])
 
-# TODO: url needs to be added for this view function
+
 @login_required
 def unshare_group_with_user(request, group_id, user_id, *args, **kwargs):
     requesting_user = request.user
@@ -747,6 +746,7 @@ def unshare_group_with_user(request, group_id, user_id, *args, **kwargs):
         messages.error(request, "You don't have permission to remove users from a group")
 
     return HttpResponseRedirect(request.META['HTTP_REFERER'])
+
 
 @login_required
 def get_file(request, *args, **kwargs):
