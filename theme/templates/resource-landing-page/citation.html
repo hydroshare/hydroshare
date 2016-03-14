@@ -105,8 +105,9 @@
             {% if page.perms.change and metadata_form and can_change_resource_flags%}
                 <div id="status-btn-group" class="btn-group" role="group" aria-label="...">
                     {# -------- PUBLIC -------- #}
+                    {# keep form all the time, so js func (ajax) is able to change sharing status without refreshing the whole page #}
                     <form class="pull-left"
-                          action="/hsapi/_internal/{{ cm.short_id }}/change-permissions/"
+                          action="/hsapi/_internal/{{ cm.short_id }}/set-resource-flag/"
                           method="POST">
                         {% csrf_token %}
                         <input name="t" type="hidden" value="make_public"/>
@@ -119,7 +120,7 @@
 
                     {# -------- DISCOVERABLE -------- #}
                     <form class="pull-left"
-                          action="/hsapi/_internal/{{ cm.short_id }}/change-permissions/"
+                          action="/hsapi/_internal/{{ cm.short_id }}/set-resource-flag/"
                           method="POST">
                         <input name="t" type="hidden" value="make_discoverable"/>
                         {% csrf_token %}
@@ -132,21 +133,22 @@
 
                     {# -------- PRIVATE -------- #}
                     <form class="pull-left"
-                          action="/hsapi/_internal/{{ cm.short_id }}/change-permissions/"
+                          action="/hsapi/_internal/{{ cm.short_id }}/set-resource-flag/"
                           method="POST">
                         <input name="t" type="hidden" value="make_private"/>
                         {% csrf_token %}
                         <button id="btn-private" data-toggle="tooltip" data-placement="auto"
                                 title='Can be viewed and downloaded only by designated users or research groups.' type="submit"
-                                class="btn btn-default {% if not cm.raccess.public and not discoverable %}active{% endif%}">Private
+                                class="btn btn-default {% if not cm.raccess.public and not discoverable %}active{% endif %}">Private
                         </button>
                     </form>
+
                 </div>
 
                 {% if is_owner_user %}
                     <div class="clear-fix" id="shareable-container">
                         {#   Shareable flag    #}
-                        <form class="pull-left" action="/hsapi/_internal/{{ cm.short_id }}/change-permissions/"
+                        <form class="pull-left" action="/hsapi/_internal/{{ cm.short_id }}/set-resource-flag/"
                               method="POST">
                             {% csrf_token %}
 
@@ -194,6 +196,11 @@
                     <span class="glyphicon glyphicon-lock"><span
                             class="button-label"> Manage access</span></span>
             </a>
+
+            <span data-toggle="tooltip" data-placement="auto"
+                  title='Use this button to share your resource with specific HydroShare users. You can give other users the ability to view or edit this resource. You can also add additional owners who will have full permissions.'
+                  class="glyphicon glyphicon-info-sign text-muted"></span>
+
             {#======= Manage access modal window begins =======#}
             <div class="modal fade" id="manage-access">
                 <div class="modal-dialog">
