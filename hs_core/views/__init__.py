@@ -708,6 +708,20 @@ def update_user_group(request, group_id, *args, **kwargs):
 
 
 @login_required
+def delete_user_group(request, group_id, *args, **kwargs):
+    user = request.user
+    group_to_delete = utils.group_from_id(group_id)
+    status = 'error'
+    if user.uaccess.can_delete_group(group_to_delete):
+        user.uaccess.delete_group(group_to_delete)
+        status = 'success'
+        ajax_response_data = {'status': status}
+    else:
+        ajax_response_data = {'status': status, 'errors': "You don't have permission to delete this group"}
+    return HttpResponse(json.dumps(ajax_response_data))
+
+
+@login_required
 def share_group_with_user(request, group_id, user_id, privilege, *args, **kwargs):
     requesting_user = request.user
     group_to_share = utils.group_from_id(group_id)
