@@ -3251,7 +3251,7 @@ button.no-style:focus {
 }
 .files-container {
     border: 1px solid #DDD;
-    height: 200px;
+    height: 220px;
     overflow-y: auto;
     overflow-x: hidden;
 }
@@ -3260,6 +3260,10 @@ button.no-style:focus {
     background: #FFF;
     border-bottom: 1px solid #DDD;
     border-radius: 0;
+}
+
+.fb-folder, .fb-file {
+    margin-bottom: 20px;
 }
 
 .fb-file small, .fb-folder small {
@@ -3271,7 +3275,7 @@ button.no-style:focus {
     text-decoration: underline;
 }
 
-.fb-file .glyphicon {
+.fb-file .glyphicon-file {
     color: #FFF;
     text-shadow: -1px -1px 0 #006B92,
     1px -1px 0 #006B92,
@@ -3279,7 +3283,7 @@ button.no-style:focus {
     1px 1px 0 #006B92;
 }
 
-.fb-folder .glyphicon {
+.fb-folder .glyphicon-folder {
     color: #E48E22;
     text-shadow: -1px -1px 0 #C56E00,
     1px -1px 0 #C56E00,
@@ -3303,4 +3307,48 @@ button.no-style:focus {
 .fb-back {
     border-bottom-left-radius: 4px !important;
     border-top-left-radius: 4px !important;
+}
+
+.fb-dropdown {
+    position: relative;
+    padding: 0;
+    margin: 0;
+    left: 100px;
+    top: -60px;
+    border: 0;
+    width: 0;
+    height: 0;
+}
+
+.fb-dropdown .glyphicon {
+    font-size: 16px;
+    margin: 0;
+    margin-right: 10px;
+    float: left;
+    padding: 0;
+}
+
+.fb-dropdown li {
+    background: #FFF;
+    border: 1px solid #DDD;
+    border-bottom: 0;
+    border-top: 0;
+}
+
+.fb-dropdown li:last-child {
+    border-bottom: 1px solid #DDD;
+}
+
+.fb-dropdown li:first-child {
+    border-top: 1px solid #DDD;
+}
+
+.fb-file-name {
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    overflow: hidden;
+}
+
+.fb-input-search {
+    padding-left: 25px;
 }
