@@ -22,7 +22,7 @@ OTHER_DOCKER_CONTAINERS=(postgis rabbitmq redis solr)
 
 ### Pre-flight Variables ###
 DEV_SERVER='python manage.py runserver 0.0.0.0:8000'
-PROD_SERVER='uwsgi --ini emperor.ini'
+PROD_SERVER='source gunicorn_start'
 
 display_usage() {
 	echo "*** HydroShare Control script ***"
@@ -169,6 +169,8 @@ preflight_hs() {
         echo "*** Not using nginx: USE_NGINX = ${USE_NGINX} ***"
         # use development server to run HydroShare
         sed -i 's/'"${PROD_SERVER}"'/'"${DEV_SERVER}"'/g' ${HS_PATH}/init;
+        # enable SSH server for debugging purposes
+        sed -i 's!'"# REMOVED SSH COMPONENT"'!'"/usr/sbin/sshd"'!g' ${HS_PATH}/init;
     fi
 }
 
