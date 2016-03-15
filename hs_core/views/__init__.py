@@ -340,24 +340,31 @@ def publish(request, shortkey, *args, **kwargs):
 
 
 def set_resource_flag(request, shortkey, *args, **kwargs):
+    f=open("abcde.txt", 'w', 0)
+    f.write("Good:res {}\n".format(shortkey))
     # only resource owners are allowed to change resource flags
     res, _, user = authorize(request, shortkey, needed_permission=ACTION_TO_AUTHORIZE.SET_RESOURCE_FLAG)
     t = request.POST['t']
+    f.write(t)
     if t == 'make_public':
         _set_resource_sharing_status(request, user, res, flag_to_set='public', flag_value=True)
     elif t == 'make_private' or t == 'make_not_discoverable':
+        f.write("before\n")
         _set_resource_sharing_status(request, user, res, flag_to_set='public', flag_value=False)
-
+        f.write("after\n")
        # reverse lookup: find all associated collection resources
         associated_collection_metadata_obj_list = list(res.collection_set.all())
+        f.write("found collection{}\n".format(len(associated_collection_metadata_obj_list)))
         for collection_metadata_obj in associated_collection_metadata_obj_list:
             # reverse lookup: metadata obj --> resource obj
             res_collection = CollectionResource.objects.get(object_id=collection_metadata_obj.object_id)
             if res_collection.raccess.public or res_collection.raccess.discoverable:
+                f.write("inside\n")
                 # downgrade these collections to private
                 res_collection.raccess.public = False
                 res_collection.raccess.discoverable = False
                 res_collection.raccess.save()
+                f.write("collection res id {}\n".format(res_collection.short_id))
                 # set isPublic metadata AVU accordingly
                 istorage = IrodsStorage()
                 istorage.setAVU(res_collection.short_id, "isPublic", str(res_collection.raccess.public))
@@ -368,7 +375,7 @@ def set_resource_flag(request, shortkey, *args, **kwargs):
         _set_resource_sharing_status(request, user, res, flag_to_set='shareable', flag_value=False)
     elif t == 'make_shareable':
        _set_resource_sharing_status(request, user, res, flag_to_set='shareable', flag_value=True)
-
+    f.close()
     return HttpResponseRedirect(request.META['HTTP_REFERER'])
 
 

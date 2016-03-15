@@ -7,7 +7,6 @@ from hs_core import hydroshare
 from hs_core.views import _set_resource_sharing_status
 from hs_core.views.utils import authorize, ACTION_TO_AUTHORIZE
 from hs_core.hydroshare.utils import user_from_id, resource_modified
-from hs_core.hydroshare.resource import METADATA_STATUS_SUFFICIENT, METADATA_STATUS_INSUFFICIENT
 
 logger = logging.getLogger(__name__)
 
@@ -27,8 +26,8 @@ def update_collection(request, shortkey, *args, **kwargs):
             for res_id in request.POST.getlist("resource_id_list"):
                 collection_content_res_id_list.append(res_id)
 
-            if collection_res_obj.metadata.collection.first():
-                element_id = collection_res_obj.metadata.collection.first().id
+            if collection_res_obj.metadata.collection:
+                element_id = collection_res_obj.metadata.collection.id
                 hydroshare.resource.update_metadata_element(collection_res_obj.short_id, 'Collection',
                 resource_id_list=collection_content_res_id_list, element_id=element_id)
             else:
@@ -91,7 +90,7 @@ def collection_member_permission(request, shortkey, user_id, *args, **kwargs):
         if is_authorized:
             user_to_share_with = user_from_id(user_id)
             if collection_res_obj.metadata.collection:
-                for res_in_collection in collection_res_obj.metadata.collection.first().resources.all():
+                for res_in_collection in collection_res_obj.metadata.collection.resources.all():
                     if not user_to_share_with.uaccess.can_view_resource(res_in_collection) \
                        and not res_in_collection.raccess.public and not res_in_collection.raccess.discoverable:
                         no_permission_list.append(res_in_collection.short_id)
