@@ -103,6 +103,8 @@ class ResourcePermissionsMixin(Ownable):
         # have to do import locally to avoid circular import
         from hs_core.views.utils import authorize, ACTION_TO_AUTHORIZE
         return authorize(request, self.short_id, needed_permission=ACTION_TO_AUTHORIZE.VIEW_RESOURCE,
+                         raises_exception=False)[1] or \
+               authorize(request, self.short_id, needed_permission=ACTION_TO_AUTHORIZE.VIEW_METADATA,
                          raises_exception=False)[1]
 
 # this should be used as the page processor for anything with pagepermissionsmixin
