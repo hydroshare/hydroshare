@@ -84,7 +84,6 @@
         </div>
         <div class="col-lg-9" id="items">
             {% if not query %}
-                <a class="btn btn-default" href="?q=water" role="button">Link</a>
                 <h4>Enter a search term to find resources on HydroShare</h4>
             {% endif %}
             <div class=resource-search>
@@ -121,14 +120,6 @@
                                         <td>{{ result.object.first_creator.name }}</td>
                                     {% endif %}
                                     <td>{{ result.object.updated|date }} {{ result.object.updated|time }}</td>
-                                <!--
-                                    {% for coverage in result.object.metadata.coverages.all %}
-                                        {% if coverage.type == 'point' %}
-                                            <td> east:{{ coverage.value.east }} </td>
-                                        {% elif coverage.type == 'box' %}
-                                            <td> limit:{{ coverage.value.eastlimit }} </td>
-                                        {% endif %}
-                                    {% endfor %}-->
                                 </tr>
                             {% empty %}
                                 <p>No results found.</p>
@@ -159,21 +150,14 @@
     <script src="http://google-maps-utility-library-v3.googlecode.com/svn/tags/keydragzoom/2.0.8/src/keydragzoom_packed.js" type="text/javascript"></script>
     <script src="https://googlemaps.github.io/js-marker-clusterer/src/markerclusterer.js" type="text/javascript"></script>
     <script type="text/javascript">
-        var formURL = function(key, value){
-            //var textSearch = $("#id_q").val();
-            //var searchURL = "?q=" + textSearch;
-            //var windowPath = window.location.pathname;
-            //var requestURL =  windowPath + searchURL;
-            var currentURL = window.location.href;
-            var requestURL = currentURL + "&selected_facets="+key+"_exact:"+value;
-            window.location = requestURL;
-        }
-        var json_results = [];
-        var markers = [];
+
+        //var json_results = [];
+
         var map = null;
         //var bounds = new google.maps.LatLngBounds();
         //var info_window = new google.maps.InfoWindow();
-        var initMap = function() {
+        var initMap = function(json_results) {
+            var markers = [];
             var bounds = new google.maps.LatLngBounds();
            // var myLatLng = {lat: 37.4419, lng: -122.1419};
            /* var infowindow = new google.maps.InfoWindow({
@@ -215,14 +199,14 @@
                 if(json_results[i].coverage_type == 'point') {
                     var lat = parseFloat(json_results[i].north);
                     var lng = parseFloat(json_results[i].east);
-                    createPointResourceMarker(lat, lng, info_content, bounds, info_window, rectangle);
+                    createPointResourceMarker(lat, lng, info_content, bounds, info_window, rectangle, markers);
 
                 }else if(json_results[i].coverage_type == 'box'){
                     var northlimit = parseFloat(json_results[i].northlimit);
                     var southlimit = parseFloat(json_results[i].southlimit);
                     var eastlimit = parseFloat(json_results[i].eastlimit);
                     var westlimit = parseFloat(json_results[i].westlimit);
-                    createBoxResourceMarker (northlimit, southlimit, eastlimit, westlimit, info_content, bounds, info_window, rectangle);
+                    createBoxResourceMarker (northlimit, southlimit, eastlimit, westlimit, info_content, bounds, info_window, rectangle, markers);
 
                 }else{
                     continue;
@@ -242,7 +226,7 @@
             var markerCluster = new MarkerClusterer(map, markers);
         }
 
-        var createPointResourceMarker = function (lat, lng, info_content, bounds, info_window, rectangle) {
+        var createPointResourceMarker = function (lat, lng, info_content, bounds, info_window, rectangle, markers) {
             var latlng = new google.maps.LatLng(lat, lng);
             var marker = new google.maps.Marker({
                 map: map,
@@ -263,7 +247,7 @@
             bounds.extend(latlng);
         }
 
-        var createBoxResourceMarker = function (northlimit, southlimit, eastlimit, westlimit, info_content, bounds, info_window, rectangle) {
+        var createBoxResourceMarker = function (northlimit, southlimit, eastlimit, westlimit, info_content, bounds, info_window, rectangle, markers) {
             var lat = (parseFloat(northlimit) + parseFloat(southlimit)) / 2;
             var lng = (parseFloat(eastlimit) + parseFloat(westlimit)) / 2;
             var latlng = new google.maps.LatLng(lat, lng);
@@ -320,28 +304,38 @@
             });
         }
 
+        var formURL = function(key, value){
+            var currentURL = window.location.href.split('#')[0];
+            var currentHash = window.location.href.split('#')[1];
+            var requestURL = currentURL + "&selected_facets="+key+"_exact:"+value + "#" + currentHash;
+            window.location = requestURL;
+        }
+
         $(document).ready(function () {
             //console.log(res);
             //google.maps.event.addDomListener(window, 'load', initMap);
             //var titles = [];
 
+            var query = window.location.search;
+            console.log("hi: " + query);
             $("ul.nav-tabs > li > a").on("shown.bs.tab", function (e) {
                 var tabId = $(e.target).attr("href").substr(1);
                 window.location.hash = tabId;
-                if(tabId == 'map-view'){
+                if(tabId == 'map-view' && map == null){
+                    var requestURL = "/searchjson/" + window.location.search;
                     $.ajax({
                         type: "GET",
-                        url: "/searchjson",
-                        dataType: 'json'
-                        , data: {
+                        url: requestURL,
+                        dataType: 'json',
+                        /*data: {
                             'q': $("#id_q").val(),
-                        }
-                        , success: function(data) {
+                        },*/
+                        success: function(data) {
                             console.log("success");
                             //console.log(data);
                             //markers = [];
                            // json_results = [];
-                            var search_results = [];
+                            var json_results = [];
                             for(var j = 0; j < data.length; j++){
                                 var item = $.parseJSON(data[j]);
                                 json_results.push(item);
@@ -350,7 +344,7 @@
                             //if (!($(search_results).not(json_results).length === 0 && $(json_results).not(search_results).length === 0)){
 
                             //   copySearchResults(search_results);
-                                initMap();
+                                initMap(json_results);
 
                             //}
                             //console.log(json_results);
@@ -383,7 +377,9 @@
                 if (event.which == 13) {
                     event.preventDefault();
                     localStorage.clear();
-                    $("#search-field").submit();
+                    if ($("#search-field").submit()) {
+
+                    }
                 }
             });
             $(".faceted-selections").click(function () {
