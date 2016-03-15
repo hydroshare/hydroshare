@@ -7,7 +7,7 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import Group, User
 from django.contrib.sites.models import Site
 from django.contrib import messages
-from django.core.exceptions import ValidationError, PermissionDenied
+from django.core.exceptions import ValidationError, PermissionDenied, ObjectDoesNotExist
 from django.http import HttpResponseRedirect, HttpResponse
 from django.shortcuts import get_object_or_404, render_to_response, render
 from django.template import RequestContext
@@ -37,7 +37,7 @@ from . import user_rest_api
 from hs_core.hydroshare import utils
 from . import utils as view_utils
 from hs_core.signals import *
-from hs_access_control.models import PrivilegeCodes
+from hs_access_control.models import PrivilegeCodes, GroupMembershipRequest
 
 
 def short_url(request, *args, **kwargs):
@@ -766,6 +766,63 @@ def unshare_group_with_user(request, group_id, user_id, *args, **kwargs):
         messages.error(request, "You don't have permission to remove users from a group")
 
     return HttpResponseRedirect(request.META['HTTP_REFERER'])
+
+
+@login_required
+def make_group_membership_request(request, group_id, user_id=None, *args, **kwargs):
+    requesting_user = request.user
+    group_to_join = utils.group_from_id(group_id)
+    user_to_join = None
+    if user_id is not None:
+        user_to_join = utils.user_from_id(user_id)
+    try:
+        requesting_user.uaccess.create_group_membership_request(group_to_join, user_to_join)
+        if user_to_join is not None:
+            message = 'Group membership invitation was successful'
+        else:
+            message = 'Group membership request was successful'
+        ajax_response_data = {'status': 'success', 'message': message}
+        # TODO: send email to all owners of the group if it is a request from a user, otherwise
+        # send email to the user who is invited by a group owner
+    except PermissionDenied as ex:
+        ajax_response_data = {'status': 'error', 'message': ex.message}
+
+    return HttpResponse(json.dumps(ajax_response_data))
+
+
+@login_required
+def act_on_group_membership_request(request, membership_request_id, action, *args, **kwargs):
+    """
+    take action (accept or decline) on group membership request
+    :param request: requesting user is either owner of the group taking action on a request from a user
+                    or a user taking action on a invitation to join a group from a group owner
+    :param membership_request_id: id of the membership request object to act on
+    :param action: need to have a value of either 'accept' or 'decline'
+    :param args:
+    :param kwargs:
+    :return:
+    """
+
+    accept_request = True if action == 'accept' else False
+    user_acting = request.user
+
+    try:
+        membership_request = GroupMembershipRequest.objects.get(pk=membership_request_id)
+    except ObjectDoesNotExist:
+        ajax_response_data = {'status': 'error', 'message': 'No matching group membership request was found'}
+    else:
+        try:
+            user_acting.uaccess.act_on_group_membership_request(membership_request, accept_request)
+            if accept_request:
+                message = 'Membership request accepted'
+                # TODO: send email to the user whose request got accepted
+            else:
+                message = 'Membership request declined'
+            ajax_response_data = {'status': 'success', 'message': message}
+        except PermissionDenied as ex:
+            ajax_response_data = {'status': 'error', 'message': ex.message}
+
+    return HttpResponse(json.dumps(ajax_response_data))
 
 
 @login_required
