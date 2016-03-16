@@ -110,7 +110,7 @@ class CollectionMetaData(CoreMetaData):
 
     def get_required_missing_elements(self):  # show missing required meta
         missing_required_elements = super(CollectionMetaData, self).get_required_missing_elements()
-        if not self.collection:
+        if not self._collection.first():
             missing_required_elements.append('Collection Resources')
 
         return missing_required_elements
