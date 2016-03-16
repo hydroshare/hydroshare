@@ -56,15 +56,9 @@
 
                     <div id="file-browser-controls" class="row">
                         <div class="col-xs-6">
-                            <div class="btn-group" role="group" aria-label="...">
-                                <button type="button" class="btn btn-default fb-back"><span
-                                        class="glyphicon glyphicon-arrow-left"></span></button>
-                                <button type="button" class="btn btn-default"><span
-                                        class="glyphicon glyphicon-arrow-right"></span></button>
-                            </div>
-
-                            <button class="btn btn-default"><span
-                                    class="glyphicon glyphicon-arrow-up"></span></button>
+                            <span class="btn btn-default fb-control-round" title="Click to go back"><span class="glyphicon glyphicon-arrow-left"></span></span>
+                            <span class="btn btn-default fb-control-round" title="Click to go forward"><span class="glyphicon glyphicon-arrow-right"></span></span>
+                            <span class="btn btn-default fb-control-round"><span class="glyphicon glyphicon-chevron-up" title="Click to go to parent directory"></span></span>
                         </div>
 
                         <div class="col-xs-6">
@@ -74,52 +68,55 @@
                                        placeholder="Search current directory">
                             </div>
                         </div>
-
                     </div>
 
-                    <div class="files-container">
+                    <div class="file-browser-container">
                         <div class="file-browser-breadcrumb">
                             <ol class="breadcrumb">
-                              <li><a href="#">Foo</a></li>
-                              <li><a href="#">Bar</a></li>
-                              <li class="active">Data</li>
+                                <li><a href="#">Foo</a></li>
+                                <li><a href="#">Bar</a></li>
+                                <li class="active">Data</li>
                             </ol>
                         </div>
 
-                        <div class="row">
-                            <div class="col-xs-2 fb-folder ">
-                                <div class="text-center" data-toggle="dropdown" aria-haspopup="true"
-                                     aria-expanded="true">
-                                    <span class="glyphicon glyphicon-folder-close glyphicon-folder"></span>
+                        <div class="files-container">
+                            <div>
+                                <div class="fb-folder">
+                                    <div class="text-center" data-toggle="dropdown" aria-haspopup="true"
+                                         aria-expanded="true">
+                                        <span class="glyphicon glyphicon-folder-close glyphicon-folder"></span>
 
-                                    <div>
-                                        <small class="fb-file-name">Some folder</small>
+                                        <div>
+                                            <small class="fb-file-name">Some folder</small>
+                                        </div>
                                     </div>
+
+                                    <ul class="dropdown-menu fb-dropdown arrow_box arrow_box_top_center" aria-labelledby="dropdownMenu1">
+                                        <li><a href="#"><span class="glyphicon glyphicon-folder-open glyphicon-folder"></span>Open</a></li>
+                                        <li><a href="#"><span class="glyphicon glyphicon-trash icon-button btn-remove"></span>Delete</a></li>
+                                    </ul>
                                 </div>
 
-                                <ul class="dropdown-menu fb-dropdown" aria-labelledby="dropdownMenu1">
-                                    <li><a href="#"><span class="glyphicon glyphicon-folder-open glyphicon-folder"></span>Open</a></li>
-                                    <li><a href="#"><span class="glyphicon glyphicon-trash icon-button btn-remove"></span>Delete</a></li>
-                                </ul>
-                            </div>
+                                <div class="fb-file">
+                                    <div class="text-center" data-toggle="dropdown" aria-haspopup="true"
+                                         aria-expanded="true">
+                                        <span class="glyphicon glyphicon-file"></span>
 
-                            <div class="col-xs-2 fb-file">
-                                <div class="text-center" data-toggle="dropdown" aria-haspopup="true"
-                                     aria-expanded="true">
-                                    <span class="glyphicon glyphicon-file"></span>
-
-                                    <div class="fb-file-name">
-                                        <small>Some fileeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee asfdsaf.txt</small>
+                                        <div class="fb-file-name">
+                                            <small>Some fileeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee asfdsaf.txt</small>
+                                        </div>
                                     </div>
+
+                                    <ul class="dropdown-menu fb-dropdown fb-dropdown arrow_box arrow_box_top_center" aria-labelledby="dropdownMenu1">
+                                        <li><a href="#"><span class="glyphicon glyphicon-download btn-edit"></span>Download</a></li>
+                                        <li><span class="glyphicon glyphicon-trash icon-button btn-remove">Delete</span></li>
+                                    </ul>
                                 </div>
 
-                                <ul class="dropdown-menu fb-dropdown" aria-labelledby="dropdownMenu1">
-                                    <li><a href="#"><span class="glyphicon glyphicon-download btn-edit"></span>Download</a></li>
-                                    <li><a href="#"><span class="glyphicon glyphicon-trash icon-button btn-remove"></span>Delete</a></li>
-                                </ul>
                             </div>
                         </div>
-                    </div>
+
+                         </div>
                 </div>
 
                 {% if show_content_files %}

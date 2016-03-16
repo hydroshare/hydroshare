@@ -3026,7 +3026,18 @@ h4.title {
 	margin-left: 6px;
 }
 
-.arrow_box:after, .arrow_box:before {
+.arrow_box_top_center:before, .arrow_box_top_center:after {
+    bottom: 100%;
+    left: 50%;
+    border: solid transparent;
+    content: " ";
+    height: 0;
+    width: 0;
+    position: absolute;
+    pointer-events: none;
+}
+
+.arrow_box_top_right:after, .arrow_box_top_right:before {
     bottom: 100%;
     left: 90%;
     border: solid transparent;
@@ -3250,7 +3261,6 @@ button.no-style:focus {
     margin-bottom:10px;
 }
 .files-container {
-    border: 1px solid #DDD;
     height: 220px;
     overflow-y: auto;
     overflow-x: hidden;
@@ -3260,10 +3270,13 @@ button.no-style:focus {
     background: #FFF;
     border-bottom: 1px solid #DDD;
     border-radius: 0;
+    margin-bottom: 0;
 }
 
 .fb-folder, .fb-file {
-    margin-bottom: 20px;
+    width: 60px;
+    float: left;
+    margin: 20px;
 }
 
 .fb-file small, .fb-folder small {
@@ -3295,7 +3308,11 @@ button.no-style:focus {
     font-size: 32px;
 }
 
+.file-browser-container {
+    border:1px solid #DDD;
+}
 .files-container {
+    padding: 5px 50px;
     background-color: #F0FBFF;
     background-image: repeating-linear-gradient(45deg, transparent, transparent 35px, rgba(255,255,255,.5) 35px, rgba(255,255,255,.5) 70px);
 }
@@ -3304,17 +3321,12 @@ button.no-style:focus {
     width: 100%;
 }
 
-.fb-back {
-    border-bottom-left-radius: 4px !important;
-    border-top-left-radius: 4px !important;
-}
-
 .fb-dropdown {
     position: relative;
     padding: 0;
     margin: 0;
-    left: 100px;
-    top: -60px;
+    left: -50px;
+    top: 10px;
     border: 0;
     width: 0;
     height: 0;
@@ -3341,6 +3353,7 @@ button.no-style:focus {
 
 .fb-dropdown li:first-child {
     border-top: 1px solid #DDD;
+    margin-top: -1px;
 }
 
 .fb-file-name {
@@ -3351,4 +3364,13 @@ button.no-style:focus {
 
 .fb-input-search {
     padding-left: 25px;
+}
+
+span.fb-control-round {
+    border-radius: 50%;
+    width: 36px;
+    height: 36px;
+    margin-right: 10px;
+    padding-left: 11px;
+    padding-top: 8px;
 }
