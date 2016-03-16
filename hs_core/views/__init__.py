@@ -248,7 +248,7 @@ def delete_file(request, shortkey, f, *args, **kwargs):
 def delete_resource(request, shortkey, *args, **kwargs):
     res, _, _ = authorize(request, shortkey, needed_permission=ACTION_TO_AUTHORIZE.DELETE_RESOURCE)
 
-    # downgrade collection to private if the res being deleted here is the only member resource in the collection
+    # downgrade all collections to private if the res being deleted here is the only member resource in these collections
     # reverse lookup: find all collections that hold this res being deleted
     associated_collection_metadata_obj_list = list(res.collection_set.all())
     for collection_metadata_obj in associated_collection_metadata_obj_list:
@@ -349,6 +349,7 @@ def set_resource_flag(request, shortkey, *args, **kwargs):
 
         _set_resource_sharing_status(request, user, res, flag_to_set='public', flag_value=False)
 
+        # downgrade all public collections that hold this res to private (because public collections can hold non-private resources only)
         # reverse lookup: find all collections that hold this res being set flag
         associated_collection_metadata_obj_list = list(res.collection_set.all())
         for collection_metadata_obj in associated_collection_metadata_obj_list:

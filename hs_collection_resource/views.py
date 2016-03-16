@@ -14,7 +14,7 @@ logger = logging.getLogger(__name__)
 # downgrade collection sharing status to PRIVATE if the followings are all met:
 # 1) current user is collection owner or admin
 # 2) current collection is public or discoverable
-# 3) private resources are being added into this collection, or the collection is being wiped (0 resource)
+# 3) private resources are being added into this collection, or the collection is being wiped (0 member resource)
 def update_collection(request, shortkey, *args, **kwargs):
     try:
         collection_res_obj, is_authorized, user = authorize(request, shortkey,
