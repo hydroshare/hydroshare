@@ -31,8 +31,9 @@ def landing_page(request, page):
         user_all_accessible_resource_list = (owned_resources + editable_resources + \
                                              viewable_resources + discovered_resources)
     else: # anonymous user
-        user_all_accessible_resource_list = list(BaseResource.objects. \
-                                                 filter(Q(raccess__public=True) | Q(raccess__discoverable=True)).distinct())
+        user_all_accessible_resource_list = list(BaseResource.discoverable_resources.all())
+        # user_all_accessible_resource_list = list(BaseResource.objects. \
+        #                                          filter(Q(raccess__public=True) | Q(raccess__discoverable=True)).distinct())
 
     collection_items_list = None
     collection_items_accessible = []
