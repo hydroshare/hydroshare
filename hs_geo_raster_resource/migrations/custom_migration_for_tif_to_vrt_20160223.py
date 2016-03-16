@@ -7,7 +7,7 @@ import logging
 from django.db import migrations
 from django.core.files.uploadedfile import UploadedFile
 
-
+from django_irods.storage import IrodsStorage
 from hs_core import hydroshare
 from hs_core.hydroshare.utils import resource_modified
 from hs_geo_raster_resource.models import RasterResource
@@ -17,6 +17,7 @@ from hs_geo_raster_resource.receivers import create_vrt_file
 def migrate_tif_file(apps, schema_editor):
     # create a vrt file from tif file for each of the Raster Resources
     log = logging.getLogger()
+    istorage = IrodsStorage()
     for res in RasterResource.objects.all():
 
         if len(res.files.all()) == 1:
@@ -25,7 +26,15 @@ def migrate_tif_file(apps, schema_editor):
             if os.path.isfile(vrt_file_path):
                 files = (UploadedFile(file=open(vrt_file_path, 'r'), name=os.path.basename(vrt_file_path)))
                 hydroshare.add_resource_files(res.short_id, files)
+
+                bag_name = 'bags/{res_id}.zip'.format(res_id=res.short_id)
+                if istorage.exists(bag_name):
+                    # delete the resource bag as the old bag is not valid
+                    istorage.delete(bag_name)
+                    print("Deleted bag for resource ID:" + str(res.short_id))
+
                 resource_modified(res, res.creator)
+
                 log.info('Tif file conversion to VRT successful for resource:ID:{} '
                          'Title:{}'.format(res.short_id, res.metadata.title.value))
             else:
