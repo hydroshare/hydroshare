@@ -304,29 +304,6 @@ class UserAccess(models.Model):
                                                      this_privilege=PrivilegeCodes.VIEW)
         this_request.delete()
 
-        # # group owner acting on membership request from a user
-        # if this_request.invitation_to is None:
-        #     if self.owns_group(this_request.group_to_join) or self.user.is_superuser:
-        #         if accept_request:
-        #             self.share_group_with_user(this_group=this_request.group_to_join,
-        #                                        this_user=user_to_join_group,
-        #                                        this_privilege=PrivilegeCodes.VIEW)
-        #         this_request.delete()
-        #     else:
-        #         raise PermissionDenied("You don't have permission to act on the group membership request")
-        # # invited user acting on membership invitation from a group owner
-        # elif this_request.invitation_to == self.user:
-        #     if accept_request:
-        #         if this_request.request_from.uaccess.owns_group(this_request.group_to_join) or self.user.is_superuser:
-        #             this_request.request_from.uacess.share_group_with_user(this_group=this_request.group_to_join,
-        #                                                                    this_user=user_to_join_group,
-        #                                                                    this_privilege=PrivilegeCodes.VIEW)
-        #             this_request.delete()
-        #         else:
-        #             raise PermissionDenied("You don't have permission to act on the group membership request")
-        # else:
-        #     raise PermissionDenied("You don't have permission to act on the group membership request")
-
     @property
     def group_membership_requests(self):
         """

@@ -3,13 +3,15 @@ import json
 import datetime
 import pytz
 
+from django.core.mail import send_mail
+from django.contrib.auth import authenticate, login as auth_login
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import Group, User
 from django.contrib.sites.models import Site
 from django.contrib import messages
 from django.core.exceptions import ValidationError, PermissionDenied, ObjectDoesNotExist
 from django.http import HttpResponseRedirect, HttpResponse
-from django.shortcuts import get_object_or_404, render_to_response, render
+from django.shortcuts import get_object_or_404, render_to_response, render, redirect
 from django.template import RequestContext
 from django.core import signing
 from django import forms
@@ -779,15 +781,40 @@ def make_group_membership_request(request, group_id, user_id=None, *args, **kwar
         requesting_user.uaccess.create_group_membership_request(group_to_join, user_to_join)
         if user_to_join is not None:
             message = 'Group membership invitation was successful'
+            # send mail to the user who was invited to join group
+            view_utils.send_action_to_take_email(request, user=user_to_join, action_type='group_membership',
+                                                 group=group_to_join)
         else:
             message = 'Group membership request was successful'
+            # send mail to all owners of the group
+            for grp_owner in group_to_join.gaccess.owners:
+                view_utils.send_action_to_take_email(request, user=requesting_user, action_type='group_membership',
+                                                     group=group_to_join, group_owner=grp_owner)
+
         ajax_response_data = {'status': 'success', 'message': message}
-        # TODO: send email to all owners of the group if it is a request from a user, otherwise
-        # send email to the user who is invited by a group owner
     except PermissionDenied as ex:
         ajax_response_data = {'status': 'error', 'message': ex.message}
 
     return HttpResponse(json.dumps(ajax_response_data))
+
+
+def group_membership(request, uidb36=None, token=None):
+    """
+    View for the link in the verification email sent to a user
+    when they request/invite to join a group.
+    User is logged in and redirecting to the user profile page so that
+    the actual action of accepting or declining request to join group can be taken by the user.
+    """
+
+    user = authenticate(uidb36=uidb36, token=token, is_active=True)
+    if user is not None:
+        auth_login(request, user)
+        messages.info(request, "There are group membership requests for you to act on")
+        # redirect to user profile page
+        return HttpResponseRedirect('/user/{}/'.format(user.id))
+    else:
+        messages.error(request, "The link you clicked is no longer valid.")
+        return redirect("/")
 
 
 @login_required
@@ -815,7 +842,18 @@ def act_on_group_membership_request(request, membership_request_id, action, *arg
             user_acting.uaccess.act_on_group_membership_request(membership_request, accept_request)
             if accept_request:
                 message = 'Membership request accepted'
-                # TODO: send email to the user whose request got accepted
+                # send email to the user whose request/invitation got accepted
+                if membership_request.invitation_to is not None:
+                    email_msg = """Your invitation to user ({}) to join the group({}) has been accepted.
+                    """.format(membership_request.invitation_to.first_name, membership_request.group_to_join.name)
+                else:
+                    email_msg = """Your request to join the group({}) has been accepted.
+                    """.format(membership_request.group_to_join.name)
+
+                send_mail(subject="HydroShare group membership",
+                          message=email_msg,
+                          from_email=settings.DEFAULT_FROM_EMAIL,
+                          recipient_list=[membership_request.request_from.email], fail_silently=True)
             else:
                 message = 'Membership request declined'
             ajax_response_data = {'status': 'success', 'message': message}

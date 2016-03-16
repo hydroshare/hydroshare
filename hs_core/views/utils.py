@@ -1,14 +1,22 @@
 from __future__ import absolute_import
-from rest_framework.exceptions import *
+
 import json
 import os
 import string
 from collections import namedtuple
 
+from django.core.urlresolvers import reverse
 from django.contrib.auth.models import Group, User
 from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import ObjectDoesNotExist
 from django.core.files.uploadedfile import UploadedFile
+from django.utils.http import int_to_base36
+
+from rest_framework.exceptions import *
+
+from mezzanine.utils.email import subject_template, default_token_generator, send_mail_template
+from mezzanine.utils.urls import next_url
+from mezzanine.conf import settings
 
 from ga_resources.utils import get_user
 
@@ -19,7 +27,6 @@ from hs_core.signals import pre_metadata_element_create
 from hs_core.hydroshare import FILE_SIZE_LIMIT
 from hs_core.hydroshare.utils import raise_file_size_exception
 from django_irods.storage import IrodsStorage
-from hs_access_control.models import PrivilegeCodes
 
 ActionToAuthorize = namedtuple('ActionToAuthorize',
                                'VIEW_METADATA, '
@@ -195,3 +202,30 @@ def create_form(formclass, request):
 
     return params
 
+
+def send_action_to_take_email(request, user, action_type, **kwargs):
+    """
+    Sends an email with an action link to a user.
+    The actual action takes place when the user clicks on the link
+
+    The ``action_type`` arg is both the name of the urlpattern for
+    the action link, as well as the names of the email templates
+    to use. Additional context variable needed in the email template can be
+    passed using the kwargs
+    """
+    action_url = reverse(action_type, kwargs={
+        "uidb36": int_to_base36(user.id),
+        "token": default_token_generator.make_token(user)
+    }) + "?next=" + (next_url(request) or "/")
+    context = {
+        "request": request,
+        "user": user,
+        "action_url": action_url,
+    }
+    context.update(kwargs)
+
+    subject_template_name = "email/%s_subject.txt" % action_type
+    subject = subject_template(subject_template_name, context)
+    send_mail_template(subject, "email/%s" % action_type,
+                       settings.DEFAULT_FROM_EMAIL, action_url,
+                       context=context)
