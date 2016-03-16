@@ -2620,6 +2620,7 @@ h4.title {
     display: none;
     font-size: 14px;
     border: 1px solid #ddd;
+    margin-bottom: 10px;
 }
 
 #item-selectors tbody td {
@@ -2639,11 +2640,10 @@ h4.title {
 }
 
 #item-selectors tr > td:first-child {
-	max-width: 100px;
-	min-width: 100px;
 	padding-right: 0;
+    max-width: 80px;
+	min-width: 80px;
 }
-
 
 .dataTables_wrapper {
     overflow-x: auto;
@@ -2737,8 +2737,8 @@ h4.title {
 
 .btn-inline-favorite, .btn-inline-label {
 	padding-top: 3px;
-	margin-left: 8px;
-	margin-right: 8px;
+	margin-left: 4px;
+	margin-right: 4px;
 	font-size: 16px;
 	cursor: pointer;
 	color: #AAA;
@@ -2805,7 +2805,7 @@ h4.title {
 	text-align: center;
 }
 
-#facets h4.panel-title {
+#facets h4.panel-title, #headingLegend h4.panel-title {
 	color: #696969;
 	text-shadow: 0 1px 0 #fff;
 }
@@ -2889,7 +2889,7 @@ h4.title {
 }
 
 .row-selector {
-	margin-right: 8px !important;
+	margin-right: 4px !important;
 }
 
 .hidden-form {
@@ -2923,6 +2923,10 @@ h4.title {
 	margin-top: -90px;
 	margin-bottom: -950px;
 	width: 520px;
+}
+
+#legend-resource-type .table-res-type-icon {
+    margin-bottom:10px;
 }
 
 /*  Home page revamp */
