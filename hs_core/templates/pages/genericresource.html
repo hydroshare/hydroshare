@@ -93,7 +93,7 @@
 
                                     <ul class="dropdown-menu fb-dropdown arrow_box arrow_box_top_center" aria-labelledby="dropdownMenu1">
                                         <li><a href="#"><span class="glyphicon glyphicon-folder-open glyphicon-folder"></span>Open</a></li>
-                                        <li><a href="#"><span class="glyphicon glyphicon-trash icon-button btn-remove"></span>Delete</a></li>
+                                        <li><a href="#" data-toggle="modal" data-target="#delete-resource-file"><span class="glyphicon glyphicon-trash icon-button btn-remove"></span>Delete</a></li>
                                     </ul>
                                 </div>
 
@@ -103,16 +103,39 @@
                                         <span class="glyphicon glyphicon-file"></span>
 
                                         <div class="fb-file-name">
-                                            <small>Some fileeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee asfdsaf.txt</small>
+                                            <small>Some file.txt</small>
                                         </div>
                                     </div>
 
                                     <ul class="dropdown-menu fb-dropdown fb-dropdown arrow_box arrow_box_top_center" aria-labelledby="dropdownMenu1">
                                         <li><a href="#"><span class="glyphicon glyphicon-download btn-edit"></span>Download</a></li>
-                                        <li><span class="glyphicon glyphicon-trash icon-button btn-remove">Delete</span></li>
+                                        <li><a href="#" data-toggle="modal" data-target="#delete-resource-file"><span class="glyphicon glyphicon-trash icon-button btn-remove"></span>Delete</a></li>
                                     </ul>
                                 </div>
 
+
+                                {#======= Modal window begins =======#}
+                                    <div class="modal fade" id="delete-resource-file" tabindex="-1" role="dialog"
+                                         aria-labelledby="myModalLabel" aria-hidden="true">
+                                        <div class="modal-dialog">
+                                            <div class="modal-content">
+                                                <div class="modal-header">
+                                                    <button type="button" class="close" data-dismiss="modal"
+                                                            aria-hidden="true">&times;</button>
+                                                    <h4 class="modal-title">Confirm file deletion</h4>
+                                                </div>
+                                                <div class="modal-body">
+                                                    <span>Consider saving a copy of the file before you delete it if it is important to you.</span>
+                                                </div>
+                                                <div class="modal-footer">
+                                                    <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+                                                    <a type="button" class="btn btn-danger"
+                                                       href="/hsapi/_internal/{{ cm.short_id }}/delete-resource-file/{{ f.pk }}/">Delete</a>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                {#======= Modal window ends =======#}
                             </div>
                         </div>
 
