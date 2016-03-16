@@ -27,7 +27,7 @@ from django_irods.storage import IrodsStorage
 from django_irods.icommands import SessionException
 from hs_core import hydroshare
 from hs_core.hydroshare.utils import get_resource_by_shortkey, resource_modified
-from .utils import authorize, upload_from_irods, ACTION_TO_AUTHORIZE
+from .utils import authorize, upload_from_irods, ACTION_TO_AUTHORIZE, run_script_to_update_hyrax_input_files
 from hs_core.models import GenericResource, resource_processor, CoreMetaData, Relation
 from hs_core.hydroshare.resource import METADATA_STATUS_SUFFICIENT, METADATA_STATUS_INSUFFICIENT
 
@@ -710,9 +710,12 @@ def _set_resource_sharing_status(request, user, resource, flag_to_set, flag_valu
             resource.raccess.discoverable = is_public
 
         resource.raccess.save()
-        # set isPublic metadata AVU accordingly
-        istorage = IrodsStorage()
-        istorage.setAVU(resource.short_id, "isPublic", str(resource.raccess.public))
+        if resource.raccess.public:
+            # set isPublic metadata AVU accordingly
+            istorage = IrodsStorage()
+            istorage.setAVU(resource.short_id, "isPublic", str(resource.raccess.public))
+            if resource.resource_type == 'NetcdfResource':
+                run_script_to_update_hyrax_input_files()
 
 def _get_message_for_setting_resource_flag(has_files, has_metadata, resource_flag):
     msg = ''

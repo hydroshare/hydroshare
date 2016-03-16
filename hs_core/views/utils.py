@@ -4,11 +4,14 @@ import json
 import os
 import string
 from collections import namedtuple
+import paramiko
+import logging
 
 from django.contrib.auth.models import Group, User
 from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import ObjectDoesNotExist
 from django.core.files.uploadedfile import UploadedFile
+from django.conf import settings
 
 from ga_resources.utils import get_user
 
@@ -19,7 +22,6 @@ from hs_core.signals import pre_metadata_element_create
 from hs_core.hydroshare import FILE_SIZE_LIMIT
 from hs_core.hydroshare.utils import raise_file_size_exception
 from django_irods.storage import IrodsStorage
-from hs_access_control.models import PrivilegeCodes
 
 ActionToAuthorize = namedtuple('ActionToAuthorize',
                                'VIEW_METADATA, '
@@ -58,6 +60,24 @@ def upload_from_irods(username, password, host, port, zone, irods_fnames, res_fi
         tmpFile = irods_storage.download(ifname)
         fname = os.path.basename(ifname.rstrip(os.sep))
         res_files.append(UploadedFile(file=tmpFile, name=fname, size=size))
+
+
+def run_script_to_update_hyrax_input_files():
+    ssh = paramiko.SSHClient()
+    ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+    ssh.connect(settings.HYRAX_SSH_HOST, username=settings.HYRAX_SSH_PROXY_USER, password=settings.HYRAX_SSH_PROXY_USER_PWD)
+    transport = ssh.get_transport()
+    session = transport.open_session()
+    session.set_combine_stderr(True)
+    session.get_pty()
+    session.exec_command(settings.HYRAX_SCRIPT_RUN_COMMAND)
+    stdin = session.makefile('wb', -1)
+    stdout = session.makefile('rb', -1)
+    stdin.write("{cmd}\n".format(cmd=settings.HYRAX_SSH_PROXY_USER_PWD))
+    stdin.flush()
+    logger = logging.getLogger('django')
+    logger.debug(stdout.readlines())
+
 
 def authorize(request, res_id, needed_permission=ACTION_TO_AUTHORIZE.VIEW_RESOURCE, raises_exception=True):
     """
