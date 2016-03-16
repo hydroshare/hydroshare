@@ -714,7 +714,7 @@ def _set_resource_sharing_status(request, user, resource, flag_to_set, flag_valu
             # set isPublic metadata AVU accordingly
             istorage = IrodsStorage()
             istorage.setAVU(resource.short_id, "isPublic", str(resource.raccess.public))
-            if resource.resource_type == 'NetcdfResource':
+            if settings.RUN_HYRAX_UPDATE and resource.resource_type == 'NetcdfResource':
                 run_script_to_update_hyrax_input_files()
 
 def _get_message_for_setting_resource_flag(has_files, has_metadata, resource_flag):
