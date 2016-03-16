@@ -6,17 +6,20 @@ theme core
     src: url(../fonts/Russo_One.ttf) format("truetype");
 }
 
+@font-face {
+    font-family: "Merriweather Sans";
+    src: url(../fonts/MerriweatherSans-Light.otf) format("truetype");
+}
+
 html, body {
-    font-family: 'Lato', sans-serif;
     position: relative;
 }
 body {
+    font-family: 'Merriweather Sans', arial, sans-serif;
     padding-top: 50px;
     overflow-x: hidden;
 }
-h1, h2, h3, h4, h5, h6 {
-    font-family: 'Lato', sans-serif;
-}
+
 h1.hl, h2.hl, h3.hl, h4.hl, h5.hl, h6.hl {
     color: #eaeaea;
     font-weight: 300;
@@ -643,7 +646,7 @@ img.media-object{
 footer {
     width: 100%;
 	margin-top: 60px;
-	background: #093E54;
+	background: #3b4452;
     color: #FFF;
     position: absolute;
     overflow: hidden;
@@ -664,6 +667,7 @@ footer .headline h3{
 }
 .legal {
 	padding: 40px 0;
+    background: #343d49;
 }
 .legal a {
 	color: #B5E655;
@@ -1358,6 +1362,7 @@ table.table-plain td{
     font-size: 20px;
     font-weight: 500;
     margin-left: 7px;
+    color: #505c70;
     background-color: #FFF !important;
 
 }
@@ -1368,7 +1373,13 @@ table.table-plain td{
     font-weight: 800;
     color: #505c70;
     margin-top: 0;
-    margin-bottom: 30px;
+}
+
+.intro {
+    margin-bottom: 60px;
+    font-weight: 300;
+    color: #65758e;
+    font-size: 20px;
 }
 
 .label-file-name{
@@ -1590,6 +1601,9 @@ body > .container{
 .content-block h3, #comments h3 {
 	padding-bottom: 9px;
 	border-bottom: 1px solid #eee;
+    color: #65758e;
+    font-size: 20px;
+    font-weight: bold;
 }
 
 .sharing-public{
