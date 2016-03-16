@@ -33,7 +33,9 @@
     }
 </style>
 {% endif %}
-{% block extra_css %}{% endblock %}
+{% block extra_css %}
+    <link href='https://fonts.googleapis.com/css?family=Open+Sans' rel='stylesheet' type='text/css'>
+{% endblock %}
 {% endcompress %}
 
 {% compress js %}
@@ -77,7 +79,9 @@
                     <span class="icon-bar"></span>
                     <span class="icon-bar"></span>
                 </button>
-                <a class="navbar-brand" href="/"><img src="{{ STATIC_URL }}img/logo-sm.png" alt="{{ settings.SITE_TITLE }}"/></a>
+                <h1 class="logo" alt="{{ settings.SITE_TITLE }}">
+                    <a href="/"><img class="logo-badge" src="{{ STATIC_URL }}img/logo-only-lg.png"/><span class="highlight">Hydro</span>Share</a>
+                </h1>
             </div>
             <div class="collapse navbar-collapse">
                 {% page_menu "pages/menus/dropdown.html" %}
