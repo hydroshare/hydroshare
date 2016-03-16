@@ -71,8 +71,8 @@ h1.logo a {
 }
 
 .navbar-toggle {
-    background: #B5B5B5;
-    border-color: #8C8C8C !important;
+    background: #343D49;
+    border-color: #FFFFFF !important;
 }
 
 .navbar-inverse {
@@ -1368,11 +1368,12 @@ table.table-plain td{
 }
 
 .page-title {
-    font-size: 28px;
+    font-size: 26px;
     font-family: 'Open Sans', arial, sans-serif;
     font-weight: 800;
     color: #505c70;
     margin-top: 0;
+    -webkit-font-smoothing: antialiased;
 }
 
 .intro {
@@ -2292,11 +2293,8 @@ button.loading {
     font-size: 130px;
     width: 150px;
     height: 150px;
-    text-align: center;
     line-height: 100px;
     border: 7px solid #DDD;
-    border-radius: 50%;
-    color: #2D9EB3;
 }
 
 .profile-pic-thumbnail {

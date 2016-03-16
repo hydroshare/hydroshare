@@ -95,9 +95,9 @@
                         <div data-page-mode="view">
                             {#        Name       #}
                             {% if profile_user.first_name or profile_user.last_name %}
-                                <h2>{{ profile_user.first_name }} {% if profile.middle_name %}{{ profile.middle_name }}{% endif %} {{ profile_user.last_name }}</h2>
+                                <h2 class="page-title">{{ profile_user.first_name }} {% if profile.middle_name %}{{ profile.middle_name }}{% endif %} {{ profile_user.last_name }}</h2>
                             {% else %}
-                                <h2>{{ profile_user.username }}</h2>
+                                <h2 class="page-title">{{ profile_user.username }}</h2>
                             {% endif %}
 
                             {#        Organization and Title       #}
