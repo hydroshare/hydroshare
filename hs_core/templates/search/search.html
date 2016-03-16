@@ -377,6 +377,13 @@
         }
 
         $(document).ready(function () {
+            if($("#id_q").val() == ""){
+                $("#id_q").val("*");
+                var searchURL = "?q=" + "*";
+                var windowPath = window.location.pathname;
+                var requestURL =  windowPath + searchURL;
+                window.location = requestURL;
+            }
             $("ul.nav-tabs > li > a").on("shown.bs.tab", function (e) {
                 var tabId = $(e.target).attr("href").substr(1);
                 window.location.hash = tabId;
