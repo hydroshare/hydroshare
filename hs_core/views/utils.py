@@ -61,7 +61,9 @@ def upload_from_irods(username, password, host, port, zone, irods_fnames, res_fi
         fname = os.path.basename(ifname.rstrip(os.sep))
         res_files.append(UploadedFile(file=tmpFile, name=fname, size=size))
 
-
+# run the update script on hyrax server via ssh session for netCDF resources on demand
+# when private netCDF resources are made public so that all links of data services
+# provided by Hyrax service are instantaneously available on demand
 def run_script_to_update_hyrax_input_files():
     ssh = paramiko.SSHClient()
     ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
