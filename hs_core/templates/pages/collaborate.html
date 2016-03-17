@@ -5,16 +5,38 @@
         <div class="container">
             <div class="row">
                 <div class="col-sm-4">
-                    <div>
-                        This is a group preview
-                        This is a group preview
+                    <div class="group-preview" style="background-image: url(/static/img/home-page/carousel/bg3.jpg)">
+                        <div class="group-preview-footer">
+                            <div style="height:20%">
+                                <div class="group-preview-name">Little Bear River Research Group</div>
+                                <div class="group-preview-keywords text-muted">One, Two, Three</div>
+                            </div>
+
+
+                            <p class="group-preview-description gp-hide" style="height:40%">This group shares resources related to hydrologic science This group shares resources related to hydrologic science This group shares resources related to hydrologic science This group shares resources related to hydrologic science This group shares resources related to hydrologic science</p>
+
+                            <div style="height:20%">
+                                <div class="users-joined height-fix gp-hide">
+                                    <div style="background-image: url('{{ request.user.userprofile.picture.url }}');"
+                                         class="round-image profile-pic-thumbnail pull-left" title="Mauriel Ramirez">
+                                    </div>
+                                    <div class="profile-pic-thumbnail-small round-image pull-left"></div>
+                                </div>
+                            </div>
+
+                            <div style="height:20%">
+                                <div class="text-center gp-hide">
+                                    <a href="#" class="btn btn-primary">Join this group</a>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
     </div>
 
-    <div class="container-fluid">
+    <div class="container">
         <div class="row">
             <div class="col-md-2">
                 <a class="btn btn-success btn-block" href="#"><i class="fa fa-plus"></i> Create a group</a>
@@ -79,6 +101,22 @@
         </div>
 
     </div>
+{% endblock %}
 
+{% block extra_js %}
+    <script>
 
+     $(document).ready(function () {
+         var groups = $(".group-preview");
+
+         groups.hover(function(){
+             $(this).addClass("expanded");
+         });
+
+         groups.mouseleave(function(){
+            $(this).removeClass("expanded");
+         });
+
+     });
+    </script>
 {% endblock %}

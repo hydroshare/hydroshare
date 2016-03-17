@@ -2996,12 +2996,12 @@ h4.title {
     margin: 20px;
 }
 
-.nav-bar-profile-pic-thumbnail {
+.profile-pic-thumbnail-small {
     width: 40px;
     height: 40px;
 }
 
-.nav-bar-profile-pic-thumbnail::before {
+.profile-pic-thumbnail-small::before {
 	content: "\e008";
 	font-family: "Glyphicons Halflings";
 	float: left;
@@ -3015,6 +3015,20 @@ h4.title {
 	text-align: center;
 	margin-top: 10px;
 	margin-left: 6px;
+}
+
+div.users-joined .profile-pic-thumbnail-small::before {
+    font-size: 37px;
+    border: 2px solid #9C9C9C;
+    height: 39px;
+    width: 39px;
+    line-height: 29px;
+    margin-top: 1px;
+    margin-left: 0;
+}
+
+div.users-joined .profile-pic-thumbnail-small {
+    margin-right: 10px;
 }
 
 .arrow_box:after, .arrow_box:before {
@@ -3236,4 +3250,69 @@ button.no-style:focus {
 /* -------------- Collaborate page styling --------------- */
 .gray-container {
     background: #F5F5F5;
+    padding: 30px 0;
+}
+
+.group-preview {
+    height: 350px;
+    background-size: cover;
+    background-position: center center;
+    overflow: hidden;
+    padding-top: 250px;
+    transition: all 0.3s;
+    -webkit-transition: all 0.3s;
+    -moz-transition: all 0.3s;
+    cursor: pointer;
+}
+
+
+.group-preview-name {
+    font-weight: bold;
+    font-size: 16px;
+}
+
+.group-preview-footer {
+    background: #FFF;
+    height: 350px;
+    padding: 10px;
+    color: #000;
+    transition: all 0.3s;
+    -webkit-transition: all 0.3s;
+    -moz-transition: all 0.3s;
+}
+
+.group-preview:hover {
+    padding-top: 0;
+}
+
+.group-preview:hover .group-preview-footer {
+    background: rgba(48, 56, 67, 0.9);
+}
+
+.group-preview:hover .group-preview-name {
+    color: #FFF;
+}
+
+.group-preview:hover .group-preview-description {
+    display: block;
+}
+
+.group-preview .hide {
+    display: none;
+}
+
+.group-preview:hover .hide {
+    display: block;
+}
+
+.group-preview-description {
+    color: #FFF;
+    margin-top: 10px;
+    overflow: hidden !important;
+    text-overflow: ellipsis;
+    white-space: pre-wrap;
+}
+
+.users-joined {
+    padding: 4px;
 }
