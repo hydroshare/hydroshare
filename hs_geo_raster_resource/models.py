@@ -160,7 +160,7 @@ class RasterResource(BaseResource):
     @classmethod
     def get_supported_upload_file_types(cls):
         # only tif file type is supported
-        return (".tif",)
+        return (".tif",".zip")
 
     @classmethod
     def can_have_multiple_files(cls):
