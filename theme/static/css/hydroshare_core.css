@@ -5,6 +5,7 @@ theme core
 html, body {
     font-family: 'Lato', sans-serif;
     position: relative;
+    height: 100%;
 }
 body {
     padding-top: 50px;
@@ -605,12 +606,8 @@ img.media-object{
 /* ===== Footer ===== */
 
 footer {
-    width: 100%;
-	margin-top: 60px;
-	background: #093E54;
+    background: #093E54;
     color: #FFF;
-    position: absolute;
-    overflow: hidden;
 }
 footer a {
 	color: #B5E655;
@@ -1133,10 +1130,7 @@ span.remove {
 
 
 /* ===== Resource UI changes ===== */
-html, body{
-    height:100%;
-    /*background:#F4F4F4;*/
-}
+
 
 a[data-toggle='tab']{
     /*display: inline-block !important;*/
@@ -1342,19 +1336,14 @@ table.table-plain td{
     margin-bottom: 0;
 }
 
-.table-plain > tbody > tr{
-    /*border-bottom: 1px solid #ddd;*/
-}
-
 .table-plain > tbody > tr:last-child{
     border:none;
 }
 
 
-body > .container{
-    /*Subtract the height of the footer*/
-    min-height: calc(100% - 307px);
-    padding-top: 20px;
+body > .main-container {
+    min-height: calc(100% - 346px);
+    padding-bottom: 20px;
 }
 
 .icon-button {
@@ -2993,9 +2982,8 @@ h4.title {
     background: url(../img/graypattern.jpg);
 	background-color: #BBB;
 	padding: 15px 0;
-	margin:25px 0;
-    margin-bottom: -60px;
 	text-align: center;
+    margin-bottom: -20px;
 }
 
 .screen-sizes h2 {
@@ -3243,4 +3231,9 @@ button.no-style:focus {
 
 .blured-out {
     pointer-events: none;
+}
+
+/* -------------- Collaborate page styling --------------- */
+.gray-container {
+    background: #F5F5F5;
 }
