@@ -1,0 +1,8 @@
+{% load i18n %}
+{% block main %}
+{% trans "Dear " %}"{{ user.first_name }}"
+{% trans "HydroShare has received a request to update your HydroShare email address to this email address. Please click on the link below to validate this email address" %}
+{{ request.scheme }}://{{ request.get_host }}{{ verify_url }}
+{% trans "If you did not originate this request and are concerned someone else may be using your account, you should ignore this request and instead log in to Hydroshare and change your password." %}
+{% trans "The HydroShare Team" %}
+{% endblock %}

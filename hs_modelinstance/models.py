@@ -70,7 +70,8 @@ class ExecutedBy(AbstractMetaDataElement):
         shortid = kwargs['model_name']
         # get the MP object that matches.  Returns None if nothing is found
         obj = ModelProgramResource.objects.filter(short_id=shortid).first()
-        return super(ExecutedBy,cls).update(model_program_fk=obj, element_id=element_id)
+        title = obj.title
+        return super(ExecutedBy,cls).update(model_program_fk=obj, model_name=title, element_id=element_id)
 
 # Model Instance Resource type
 class ModelInstanceResource(BaseResource):
@@ -84,11 +85,6 @@ class ModelInstanceResource(BaseResource):
     def metadata(self):
         md = ModelInstanceMetaData()
         return self._get_metadata(md)
-
-    @classmethod
-    def get_supported_upload_file_types(cls):
-        # all file types are supported
-        return ('.*')
 
 processor_for(ModelInstanceResource)(resource_processor)
 

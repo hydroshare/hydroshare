@@ -109,7 +109,7 @@ class RHESSysModelInstanceMetaData(ModelInstanceMetaData):
             missing_required_elements.append('ModelObjective')
         return missing_required_elements
 
-     def get_xml(self, pretty_print=True):
+    def get_xml(self, pretty_print=True):
 
         # get the xml string representation of the core metadata elements
         xml_string = super(RHESSysModelInstanceMetaData, self).get_xml(pretty_print=pretty_print)
