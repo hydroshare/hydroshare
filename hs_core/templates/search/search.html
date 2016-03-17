@@ -4,9 +4,12 @@
 {% block main %}
 <div class="container-fluid" id="main">
     <div class="row">
-        <div class="col-lg-3" id="folders">
+        <div class="col-lg-3" id="filters-panel">
             {% if query %}
-                <input class="btn btn-default" type="button" value="Clear All" style="margin-bottom: 10px" onclick="clearAllFaceted()">
+                <input class="btn btn-default inline" type="button" value="Clear All" style="margin-bottom: 10px" onclick="clearAllFaceted()">
+                <!--
+                <input class="btn btn-primary inline" type="button" value="Update" style="margin-bottom: 10px" onclick="updateFacets()">
+                -->
                 {% for key, values in facets.fields.items %}
                     {% if values %}
                         <div class="panel-group" id="faceting-{{ key }}">
@@ -47,8 +50,9 @@
                                     {% for item in values %}
                                         {% if item.1 > 0 %}
                                             <li class="list-group-item clearfix">
-                                                <a class=" pull-left" onclick="formURL('{{ key }}', '{{ item.0 }}')" role="button">{{ item.0 }}</a>
-                                                <!--<input class="faceted-selections" id="{{ key }}-{{ item.0 }}" value="{{ key }},{{ item.0 }}" type="checkbox" class="pull-left"> &nbsp;&nbsp; {{ item.0 }}-->
+
+                                                <input class="faceted-selections" id="{{ key }}-{{ item.0 }}" value="{{ key }},{{ item.0 }}" type="checkbox" class="pull-left"> &nbsp;&nbsp;
+                                                    <a onclick="formURL('{{ key }}', '{{ item.0 }}')" role="button">{{ item.0 }}</a>
                                                     {% if item.1 >= 1 and item.1 < 2 %}
                                                         <span class="label label-default label-pill pull-right badge YellowGreenBlue-colormap-band-9">
                                                     {% elif item.1 >= 2 and item.1 <= 4 %}
@@ -127,9 +131,14 @@
                         </table>
                         {% if page_obj.has_previous or page_obj.has_next %}
                             <div style="float: right">
-                                {% if page_obj.has_previous %}<a href="?q={{ query }}&amp;page={{ page_obj.previous_page_number }}">{% endif %}&laquo; Previous{% if page_obj.has_previous %}</a>{% endif %}
+                                {% if page_obj.has_previous %}
+                                    <a href="{{ request.get_full_path|clean_pagination_url }}&amp;page={{ page_obj.previous_page_number }}">
+                                {% endif %}&laquo; Previous
+                                {% if page_obj.has_previous %}</a>{% endif %}
                                 |
-                                {% if page_obj.has_next %}<a href="?q={{ query }}&amp;page={{ page_obj.next_page_number }}">{% endif %}Next &raquo;{% if page_obj.has_next %}</a>{% endif %}
+                                {% if page_obj.has_next %}
+                                    <a href="{{ request.get_full_path|clean_pagination_url }}&amp;page={{ page_obj.next_page_number }}">
+                                {% endif %}Next &raquo;{% if page_obj.has_next %}</a>{% endif %}
                             </div>
                         {% endif %}
                     </div>
@@ -187,17 +196,9 @@
             for (var  i = 0; i < json_results.length; i++ ) {
                 if (json_results[i].coverage_type == 'point') {
                     checkDuplicatePointResults(modified_points_data, json_results[i]);
-                   /* var lat = parseFloat(json_results[i].north);
-                    var lng = parseFloat(json_results[i].east);
-                    createPointResourceMarker(lat, lng, info_content, bounds, info_window, rectangle, markers);*/
 
                 } else if(json_results[i].coverage_type == 'box') {
                     checkDuplicateBoxResults(modified_boxes_data, json_results[i]);
-                    /*var northlimit = parseFloat(json_results[i].northlimit);
-                    var southlimit = parseFloat(json_results[i].southlimit);
-                    var eastlimit = parseFloat(json_results[i].eastlimit);
-                    var westlimit = parseFloat(json_results[i].westlimit);
-                    createBoxResourceMarker (northlimit, southlimit, eastlimit, westlimit, info_content, bounds, info_window, rectangle, markers);*/
 
                 } else {
                     continue;
@@ -220,26 +221,6 @@
                 var westlimit = parseFloat(box.westlimit);
                 createBoxResourceMarker (northlimit, southlimit, eastlimit, westlimit, info_content, bounds, info_window, rectangle, markers);
             });
-
-            /*for (var i = 0; i < modified_data.length; i++) {
-                var link = modified_data[i].get_absolute_url;
-                var info_content = modified_data[i].info_link;
-                if (modified_data[i].coverage_type == 'point') {
-                    var lat = parseFloat(modified_data[i].north);
-                    var lng = parseFloat(modified_data[i].east);
-                    createPointResourceMarker(lat, lng, info_content, bounds, info_window, rectangle, modified_data);
-
-                } else if(modified_data[i].coverage_type == 'box') {
-                    var northlimit = parseFloat(modified_data[i].northlimit);
-                    var southlimit = parseFloat(modified_data[i].southlimit);
-                    var eastlimit = parseFloat(modified_data[i].eastlimit);
-                    var westlimit = parseFloat(modified_data[i].westlimit);
-                    createBoxResourceMarker (northlimit, southlimit, eastlimit, westlimit, info_content, bounds, info_window, rectangle, markers);
-
-                } else {
-                    continue;
-                }
-            }*/
 
             map.fitBounds(bounds);
             var listener = google.maps.event.addListener(map, "idle", function () {
@@ -376,8 +357,13 @@
             window.location = requestURL;
         }
 
+        /*var updateFacets = function(){
+            console.log("need to do");
+        }*/
+
         $(document).ready(function () {
             if($("#id_q").val() == ""){
+                clearAllFaceted();
                 $("#id_q").val("*");
                 var searchURL = "?q=" + "*";
                 var windowPath = window.location.pathname;
