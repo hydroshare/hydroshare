@@ -101,6 +101,13 @@ h1.logo a {
     font-family: 'Lato', arial, sans-serif;
 }
 
+a {
+    -webkit-transition: all 0.4s ease-in-out;
+    -moz-transition: all 0.4s ease-in-out;
+    -ms-transition: all 0.4s ease-in-out;
+    -o-transition: all 0.4s ease-in-out;
+}
+
 .navbar-nav > li > .dropdown-menu {
 	margin-top: 18px;
 	margin-right: -12px;
