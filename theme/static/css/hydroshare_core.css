@@ -1387,7 +1387,7 @@ table.table-plain td{
     margin-bottom: 60px;
     font-weight: 300;
     color: #65758e;
-    font-size: 20px;
+    font-size: 16px;
 }
 
 .label-file-name{
@@ -3440,6 +3440,6 @@ span.fb-control-round {
     width: 36px;
     height: 36px;
     margin-right: 10px;
-    padding-left: 11px;
+    padding-left: 10px;
     padding-top: 8px;
 }
