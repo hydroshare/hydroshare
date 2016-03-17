@@ -4,7 +4,7 @@ import logging
 from django.http import HttpResponseRedirect, HttpResponseNotFound, HttpResponse, JsonResponse
 
 from hs_core import hydroshare
-from hs_core.views import set_resource_sharing_status
+from hs_core.views import set_resource_flag
 from hs_core.views.utils import authorize, ACTION_TO_AUTHORIZE
 from hs_core.hydroshare.utils import user_from_id, resource_modified
 
@@ -53,7 +53,7 @@ def update_collection(request, shortkey, *args, **kwargs):
                         break
 
             if downgrade:
-                set_resource_sharing_status(request, user, collection_res_obj, flag_to_set='public', flag_value=False)
+                set_resource_flag(request, collection_res_obj.short_id, t="make_private")
                 new_sharing_status = "Private"
 
         # check if current user is owner or super_user (owner and super_user can change sharing status on frontend)

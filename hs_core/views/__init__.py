@@ -342,12 +342,15 @@ def publish(request, shortkey, *args, **kwargs):
 def set_resource_flag(request, shortkey, *args, **kwargs):
     # only resource owners are allowed to change resource flags
     res, _, user = authorize(request, shortkey, needed_permission=ACTION_TO_AUTHORIZE.SET_RESOURCE_FLAG)
-    t = request.POST['t']
+    if 't' in kwargs:
+        t = kwargs['t']
+    else:
+        t = request.POST['t']
     if t == 'make_public':
-        set_resource_sharing_status(request, user, res, flag_to_set='public', flag_value=True)
+        _set_resource_sharing_status(request, user, res, flag_to_set='public', flag_value=True)
     elif t == 'make_private' or t == 'make_not_discoverable':
 
-        set_resource_sharing_status(request, user, res, flag_to_set='public', flag_value=False)
+        _set_resource_sharing_status(request, user, res, flag_to_set='public', flag_value=False)
 
         # downgrade all public collections that hold this res to private (because public collections can hold non-private resources only)
         # reverse lookup: find all collections that hold this res being set flag
@@ -367,11 +370,11 @@ def set_resource_flag(request, shortkey, *args, **kwargs):
                 istorage.setAVU(res_collection.short_id, "isPublic", str(res_collection.raccess.public))
 
     elif t == 'make_discoverable':
-        set_resource_sharing_status(request, user, res, flag_to_set='discoverable', flag_value=True)
+        _set_resource_sharing_status(request, user, res, flag_to_set='discoverable', flag_value=True)
     elif t == 'make_not_shareable':
-        set_resource_sharing_status(request, user, res, flag_to_set='shareable', flag_value=False)
+        _set_resource_sharing_status(request, user, res, flag_to_set='shareable', flag_value=False)
     elif t == 'make_shareable':
-       set_resource_sharing_status(request, user, res, flag_to_set='shareable', flag_value=True)
+        _set_resource_sharing_status(request, user, res, flag_to_set='shareable', flag_value=True)
 
     return HttpResponseRedirect(request.META['HTTP_REFERER'])
 
@@ -722,7 +725,7 @@ def _unshare_resource_with_users(request, requesting_user, users_to_unshare_with
     return go_to_resource_listing_page
 
 
-def set_resource_sharing_status(request, user, resource, flag_to_set, flag_value):
+def _set_resource_sharing_status(request, user, resource, flag_to_set, flag_value):
     if not user.uaccess.can_change_resource_flags(resource):
         messages.error(request, "You don't have permission to change resource sharing status")
         return
