@@ -113,7 +113,9 @@ class TestCollection(TransactionTestCase):
 
         # anonymous user
         # should inform frontend error
-        response = self.api_client.post(url_to_update_collection, {'resource_id_list': [self.resGen1.short_id, self.resGen2.short_id, self.resGen3.short_id]})
+        response = self.api_client.post(url_to_update_collection,
+                                        {'resource_id_list': [self.resGen1.short_id, self.resGen2.short_id, self.resGen3.short_id]},
+                                        HTTP_REFERER='http://foo/bar')
         resp_json = json.loads(response.content)
         self.assertEqual(resp_json["status"], "error")
 
@@ -122,7 +124,9 @@ class TestCollection(TransactionTestCase):
 
         # add 3 private member resources
         # should inform frontend "Insufficient to make public"
-        response = self.api_client.post(url_to_update_collection, {'resource_id_list': [self.resGen1.short_id, self.resGen2.short_id, self.resGen3.short_id]})
+        response = self.api_client.post(url_to_update_collection,
+                                        {'resource_id_list': [self.resGen1.short_id, self.resGen2.short_id, self.resGen3.short_id]},
+                                        HTTP_REFERER='http://foo/bar')
         resp_json = json.loads(response.content)
         self.assertEqual(resp_json["status"], "success")
         self.assertEqual(resp_json["user_permission"], "Own")
@@ -145,7 +149,9 @@ class TestCollection(TransactionTestCase):
 
         # re-add 3 public or discoverable member resources
         # should inform frontend "Sufficient to make public")
-        response = self.api_client.post(url_to_update_collection, {'resource_id_list': [self.resGen1.short_id, self.resGen2.short_id, self.resGen3.short_id]})
+        response = self.api_client.post(url_to_update_collection,
+                                        {'resource_id_list': [self.resGen1.short_id, self.resGen2.short_id, self.resGen3.short_id]},
+                                        HTTP_REFERER='http://foo/bar')
         resp_json = json.loads(response.content)
         self.assertEqual(resp_json["status"], "success")
         self.assertEqual(resp_json["metadata_status"], "Sufficient to make public")
@@ -160,7 +166,9 @@ class TestCollection(TransactionTestCase):
         self.resGen3.raccess.save()
         # re-add the 3 resources (2 public 1 private)
         # should inform frontend to downgrade to Private
-        response = self.api_client.post(url_to_update_collection, {'resource_id_list': [self.resGen1.short_id, self.resGen2.short_id, self.resGen3.short_id]})
+        response = self.api_client.post(url_to_update_collection,
+                                        {'resource_id_list': [self.resGen1.short_id, self.resGen2.short_id, self.resGen3.short_id]},
+                                        HTTP_REFERER='http://foo/bar')
         resp_json = json.loads(response.content)
         self.assertEqual(resp_json["status"], "success")
         self.assertEqual(resp_json["current_sharing_status"], "Public")
@@ -192,7 +200,7 @@ class TestCollection(TransactionTestCase):
         # User 2 takes out private res 3
         # should inform frontend "Sufficient to make public"
         response = self.api_client.post(url_to_update_collection, {'resource_id_list': \
-                                            [self.resGen1.short_id, self.resGen2.short_id]})
+                                            [self.resGen1.short_id, self.resGen2.short_id]}, HTTP_REFERER='http://foo/bar')
         resp_json = json.loads(response.content)
         self.assertEqual(resp_json["status"], "success")
         self.assertEqual(resp_json["user_permission"], "Edit")
@@ -206,8 +214,9 @@ class TestCollection(TransactionTestCase):
         self.resGen4.raccess.save()
 
         # User 2 adds his dicoverable res 4
-        response = self.api_client.post(url_to_update_collection, {'resource_id_list': \
-                        [self.resGen1.short_id, self.resGen2.short_id, self.resGen4.short_id]})
+        response = self.api_client.post(url_to_update_collection,
+                                        {'resource_id_list': [self.resGen1.short_id, self.resGen2.short_id, self.resGen4.short_id]},
+                                        HTTP_REFERER='http://foo/bar')
         resp_json = json.loads(response.content)
         self.assertEqual(resp_json["status"], "success")
         self.assertEqual(resp_json["user_permission"], "Edit")
@@ -275,7 +284,9 @@ class TestCollection(TransactionTestCase):
 
         # add one public resGen1 into resCollection
         url_to_update_resCollection = self.url_to_update_collection.format(self.resCollection.short_id)
-        response = self.api_client.post(url_to_update_resCollection, {'resource_id_list': [self.resGen1.short_id]})
+        response = self.api_client.post(url_to_update_resCollection,
+                                        {'resource_id_list': [self.resGen1.short_id]},
+                                        HTTP_REFERER='http://foo/bar')
         resp_json = json.loads(response.content)
         self.assertEqual(resp_json["status"], "success")
         self.assertEqual(resp_json["metadata_status"], "Sufficient to make public")
@@ -369,7 +380,8 @@ class TestCollection(TransactionTestCase):
 
         # add one public resGen1 into resCollection
         url_to_update_resCollection = self.url_to_update_collection.format(self.resCollection.short_id)
-        response = self.api_client.post(url_to_update_resCollection, {'resource_id_list': [self.resGen1.short_id]})
+        response = self.api_client.post(url_to_update_resCollection, {'resource_id_list': [self.resGen1.short_id]},
+                                        HTTP_REFERER='http://foo/bar')
         resp_json = json.loads(response.content)
         self.assertEqual(resp_json["status"], "success")
         self.assertEqual(resp_json["metadata_status"], "Sufficient to make public")
