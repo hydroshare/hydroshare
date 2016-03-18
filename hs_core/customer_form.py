@@ -14,7 +14,7 @@ class MyForm(FacetedSearchForm):
         sqs = super(MyForm, self).search().filter(discoverable=True)
 
         if not self.is_valid():
-            return self.no_query_found()
+            sqs = self.searchqueryset.all()
 
         for field in self.faceted_fields:
             sqs = sqs.facet(field)
