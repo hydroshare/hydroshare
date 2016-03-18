@@ -315,7 +315,7 @@ def metadata_element_pre_update_handler(sender, **kwargs):
         element_form = CellInfoValidationForm(request.POST)
     elif element_name == 'bandinformation':
         form_data = {}
-        for field_name in BandInfoValidationForm().fsields:
+        for field_name in BandInfoValidationForm().fields:
             matching_key = [key for key in request.POST if '-'+field_name in key][0]
             form_data[field_name] = request.POST[matching_key]
         element_form = BandInfoValidationForm(form_data)

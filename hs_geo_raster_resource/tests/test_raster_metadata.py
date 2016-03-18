@@ -122,6 +122,9 @@ class TestRasterMetaData(MockIRODSTestCaseMixin, TransactionTestCase):
         # delete content file that we added above
         hydroshare.delete_resource_file(self.resRaster.short_id, self.raster_tif_file_name, self.user)
 
+        # there should be no content file
+        self.assertEqual(self.resRaster.files.all().count(), 0)
+
         # trying to add good .zip file should pass the file check
         files = [UploadedFile(file=self.raster_zip_file_obj, name=self.raster_zip_file_name)]
         utils.resource_file_add_pre_process(resource=self.resRaster, files=files, user=self.user,
