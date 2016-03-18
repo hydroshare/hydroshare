@@ -296,10 +296,10 @@ class TestCollection(TransactionTestCase):
         url_to_set_resource_flag_for_resCollection = self.url_to_set_resource_flag.format(self.resCollection.short_id)
         response = self.api_client.post(url_to_set_resource_flag_for_resCollection, {'t': 'make_public'}, HTTP_REFERER='http://foo/bar')
 
-        # check resCollection current sharing status --> pubilic
+        # check resCollection current sharing status --> public
         self.assertEqual(BaseResource.objects.get(short_id=self.resCollection.short_id).raccess.public, True)
         self.assertEqual(BaseResource.objects.get(short_id=self.resCollection.short_id).raccess.discoverable, True)
-        ## again, the following two statements return wrong answers
+        # the following two statements return wrong sharing status. DONT KNOW WHY!!!
         # self.assertEqual(self.resCollection.raccess.public, True)
         # self.assertEqual(self.resCollection.raccess.discoverable, True)
 
@@ -310,14 +310,12 @@ class TestCollection(TransactionTestCase):
         # check resGen1 sharing status --> private
         self.assertEqual(BaseResource.objects.get(short_id=self.resGen1.short_id).raccess.public, False)
         self.assertEqual(BaseResource.objects.get(short_id=self.resGen1.short_id).raccess.discoverable, False)
-        # the following two statements return wrong sharing status. DONT KNOW WHY!!!
         # self.assertEqual(self.resGen1.raccess.public, False)
         # self.assertEqual(self.resGen1.raccess.discoverable, False)
 
         # check resCollection new status --> private
         self.assertEqual(BaseResource.objects.get(short_id=self.resCollection.short_id).raccess.public, False)
         self.assertEqual(BaseResource.objects.get(short_id=self.resCollection.short_id).raccess.discoverable, False)
-        # again, the following two statements return wrong answers
         # self.assertEqual(self.resCollection.raccess.public, False)
         # self.assertEqual(self.resCollection.raccess.discoverable, False)
 
@@ -337,6 +335,7 @@ class TestCollection(TransactionTestCase):
         # check resGen1 current sharing status --> private
         self.assertEqual(self.resGen1.raccess.public, False)
         self.assertEqual(self.resGen1.raccess.discoverable, False)
+        # we double check its sharing status using a different statement
         self.assertEqual(BaseResource.objects.get(short_id=self.resGen1.short_id).raccess.public, False)
         self.assertEqual(BaseResource.objects.get(short_id=self.resGen1.short_id).raccess.discoverable, False)
 
@@ -360,11 +359,11 @@ class TestCollection(TransactionTestCase):
         # check resGen1 new  sharing status --> public
         self.assertEqual(BaseResource.objects.get(short_id=self.resGen1.short_id).raccess.public, True)
         self.assertEqual(BaseResource.objects.get(short_id=self.resGen1.short_id).raccess.discoverable, True)
-        ## the following two statements return wrong sharing status. DONT KNOW WHY!!!
         # self.assertEqual(self.resGen1.raccess.public, True)
         # self.assertEqual(self.resGen1.raccess.discoverable, True)
 
         # check resCollection current sharing status --> private
+        # we use two different statments to double check sharing status
         self.assertEqual(BaseResource.objects.get(short_id=self.resCollection.short_id).raccess.public, False)
         self.assertEqual(BaseResource.objects.get(short_id=self.resCollection.short_id).raccess.discoverable, False)
         self.assertEqual(self.resCollection.raccess.public, False)
@@ -373,7 +372,7 @@ class TestCollection(TransactionTestCase):
         # check resCollection can_be_public_or_discoverable again --> False
         # collection does not need res files
         self.assertTrue(self.resCollection.has_required_content_files())
-        # collection should have at least on member resource
+        # collection should have at least on member resource --> False
         self.assertFalse(self.resCollection.metadata.has_all_required_elements())
         # False
         self.assertFalse(self.resCollection.can_be_public_or_discoverable)
@@ -394,7 +393,6 @@ class TestCollection(TransactionTestCase):
         # check resCollection current sharing status --> pubilic
         self.assertEqual(BaseResource.objects.get(short_id=self.resCollection.short_id).raccess.public, True)
         self.assertEqual(BaseResource.objects.get(short_id=self.resCollection.short_id).raccess.discoverable, True)
-        ## again, the following two statements return wrong answers
         # self.assertEqual(self.resCollection.raccess.public, True)
         # self.assertEqual(self.resCollection.raccess.discoverable, True)
 
@@ -409,6 +407,5 @@ class TestCollection(TransactionTestCase):
         # check resCollection new status --> private
         self.assertEqual(BaseResource.objects.get(short_id=self.resCollection.short_id).raccess.public, False)
         self.assertEqual(BaseResource.objects.get(short_id=self.resCollection.short_id).raccess.discoverable, False)
-        # again, the following two statements return wrong answers
         # self.assertEqual(self.resCollection.raccess.public, False)
         # self.assertEqual(self.resCollection.raccess.discoverable, False)

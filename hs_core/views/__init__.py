@@ -249,21 +249,7 @@ def delete_resource(request, shortkey, *args, **kwargs):
     res, _, _ = authorize(request, shortkey, needed_permission=ACTION_TO_AUTHORIZE.DELETE_RESOURCE)
 
     # downgrade all collections to private if the res being deleted here is the only member resource in these collections
-    # reverse lookup: find all collections that hold this res being deleted
-    associated_collection_metadata_obj_list = list(res.collection_set.all())
-    for collection_metadata_obj in associated_collection_metadata_obj_list:
-        # if this collection has only one member resource (that is the one being deleted now)
-        if collection_metadata_obj.resources.all().count() == 1:
-            # reverse lookup: metadata obj --> resource obj
-            res_collection = CollectionResource.objects.get(object_id=collection_metadata_obj.object_id)
-            if res_collection.raccess.public or res_collection.raccess.discoverable:
-                # downgrade these collections to private
-                res_collection.raccess.public = False
-                res_collection.raccess.discoverable = False
-                res_collection.raccess.save()
-                # set isPublic metadata AVU accordingly
-                istorage = IrodsStorage()
-                istorage.setAVU(res_collection.short_id, "isPublic", str(res_collection.raccess.public))
+    associated_collection_metadata_obj_list = _downgrade_all_affected_collections_to_private(res, being_deleted=True)
 
     try:
         hydroshare.delete_resource(shortkey)
@@ -283,6 +269,34 @@ def delete_resource(request, shortkey, *args, **kwargs):
 
     return HttpResponseRedirect('/my-resources/')
 
+def _downgrade_all_affected_collections_to_private(res_obj, being_deleted=True):
+    '''
+    1) downgrade all public collections to private if the res_obj being deleted (being_deleted=True)
+        is the only member resource in these collections
+    2) downgrade all public collections to private if they hold the res_obj being downgraded (being_deleted=False)
+        to private (because public collections can hold non-private resources only)
+    :param res_obj: the res is being downgraded to private or deleted
+    :param being_deleted: res_obj is being deleted
+    :return: a list of collection resources that hold this res_obj
+    '''
+    # reverse lookup: find all collections that hold this res_obj that is being deleted or downgraded
+    associated_collection_metadata_obj_list = list(res_obj.collection_set.all())
+    for collection_metadata_obj in associated_collection_metadata_obj_list:
+        # if this res_obj is being deleted and the collection holds it has more than one member resources
+        # skip this collection (no need to downgrade this collection to private)
+        if being_deleted and collection_metadata_obj.resources.all().count() != 1:
+            continue
+        # reverse lookup: metadata obj --> resource obj
+        res_collection = CollectionResource.objects.get(object_id=collection_metadata_obj.object_id)
+        if res_collection.raccess.public or res_collection.raccess.discoverable:
+            # downgrade these collections to private
+            res_collection.raccess.public = False
+            res_collection.raccess.discoverable = False
+            res_collection.raccess.save()
+            # set isPublic metadata AVU accordingly
+            istorage = IrodsStorage()
+            istorage.setAVU(res_collection.short_id, "isPublic", str(res_collection.raccess.public))
+    return associated_collection_metadata_obj_list
 
 def create_new_version_resource(request, shortkey, *args, **kwargs):
     res, authorized, user = authorize(request, shortkey, needed_permission=ACTION_TO_AUTHORIZE.CREATE_RESOURCE_VERSION)
@@ -352,22 +366,8 @@ def set_resource_flag(request, shortkey, *args, **kwargs):
 
         _set_resource_sharing_status(request, user, res, flag_to_set='public', flag_value=False)
 
-        # downgrade all public collections that hold this res to private (because public collections can hold non-private resources only)
-        # reverse lookup: find all collections that hold this res being set flag
-        associated_collection_metadata_obj_list = list(res.collection_set.all())
-        for collection_metadata_obj in associated_collection_metadata_obj_list:
-            # reverse lookup: metadata obj --> resource obj
-            res_collection = CollectionResource.objects.get(object_id=collection_metadata_obj.object_id)
-            if res_collection.raccess.public or res_collection.raccess.discoverable:
-
-                # downgrade these collections to private
-                res_collection.raccess.public = False
-                res_collection.raccess.discoverable = False
-                res_collection.raccess.save()
-
-                # set isPublic metadata AVU accordingly
-                istorage = IrodsStorage()
-                istorage.setAVU(res_collection.short_id, "isPublic", str(res_collection.raccess.public))
+        # downgrade all public collections that hold this res to private (because public collections should only can hold non-private resources)
+        _downgrade_all_affected_collections_to_private(res, being_deleted=False)
 
     elif t == 'make_discoverable':
         _set_resource_sharing_status(request, user, res, flag_to_set='discoverable', flag_value=True)

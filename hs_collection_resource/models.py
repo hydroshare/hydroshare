@@ -125,9 +125,8 @@ class CollectionMetaData(CoreMetaData):
         # get root 'Description' element that contains all other elements
         container = RDF_ROOT.find('rdf:Description', namespaces=self.NAMESPACES)
         collection_container = etree.SubElement(container, '{%s}Collection' % self.NAMESPACES['hsterms'])
-        collection = self.collection
-        if collection:
-            for res in collection.resources.all():
+        if self.collection:
+            for res in self.collection.resources.all():
                 hsterms_method = etree.SubElement(collection_container, '{%s}Collection' % self.NAMESPACES['hsterms'])
                 hsterms_method_rdf_Description = etree.SubElement(hsterms_method, '{%s}Description' % self.NAMESPACES['rdf'])
                 hsterms_name = etree.SubElement(hsterms_method_rdf_Description, '{%s}ResourceID' % self.NAMESPACES['hsterms'])

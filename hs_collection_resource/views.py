@@ -70,11 +70,11 @@ def update_collection(request, shortkey, *args, **kwargs):
         ajax_response_data = {'status': 'success', 'user_permission': user_permission, \
                               'current_sharing_status': current_sharing_status, \
                               'new_sharing_status': new_sharing_status, 'metadata_status': metadata_status}
-        return JsonResponse(ajax_response_data)
 
     except Exception as ex:
         logger.exception("update_collection: %s" % (ex.message))
         ajax_response_data = {'status': 'error', 'message': ex.message}
+    finally:
         return JsonResponse(ajax_response_data)
 
 # loop through member resources in collection ("shortkey") to check if the target user ("user_id") has
@@ -94,10 +94,10 @@ def collection_member_permission(request, shortkey, user_id, *args, **kwargs):
                     no_permission_list.append(res_in_collection.short_id)
             status = "success"
             ajax_response_data = {'status': status, 'no_permission_list': no_permission_list}
-            return JsonResponse(ajax_response_data)
         else:
             raise Exception("Collection element is not yet initialized.")
     except Exception as ex:
         logger.exception("collection_member_permission: %s" % (ex.message))
         ajax_response_data = {'status': "error", 'message': ex.message}
+    finally:
         return JsonResponse(ajax_response_data)
