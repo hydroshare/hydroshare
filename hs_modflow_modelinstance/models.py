@@ -416,7 +416,7 @@ class MODFLOWModelInstanceMetaData(ModelInstanceMetaData):
 
         if self.model_inputs:
             modelInputFields = ['inputType', 'inputSourceName', 'inputSourceURL']
-            self.add_metadata_element_to_xml(container, self.model_inputs.all().first, modelInputFields)
+            self.add_metadata_element_to_xml(container, self.model_inputs.first(), modelInputFields)
 
         if self.general_elements:
 

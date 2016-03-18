@@ -19,15 +19,15 @@ def modflowmodelinstance_pre_create_resource(sender, **kwargs):
 
 @receiver(pre_metadata_element_create, sender=MODFLOWModelInstanceResource)
 def metadata_element_pre_create_handler(sender, **kwargs):
-    return _process_metadata_update_create(**kwargs)
+    return _process_metadata_update_create(update_or_create='create', **kwargs)
 
 
 @receiver(pre_metadata_element_update, sender=MODFLOWModelInstanceResource)
 def metadata_element_pre_update_handler(sender, **kwargs):
-    return _process_metadata_update_create(**kwargs)
+    return _process_metadata_update_create(update_or_create='update',**kwargs)
 
 
-def _process_metadata_update_create(**kwargs):
+def _process_metadata_update_create(update_or_create, **kwargs):
     element_name = kwargs['element_name'].lower()
     request = kwargs['request']
 
@@ -48,7 +48,18 @@ def _process_metadata_update_create(**kwargs):
     elif element_name == 'modelcalibration':
         element_form = ModelCalibrationValidationForm(request.POST)
     elif element_name == 'modelinput':
-        element_form = ModelInputValidationForm(request.POST)
+        if update_or_create == 'update':
+            # since modelinput is a repeatable element and modelinput data is displayed on the landing page
+            # using formset, the data coming from a single modelinput form in the request for update
+            # needs to be parsed to match with modelinput field names
+            form_data = {}
+            for field_name in ModelInputValidationForm().fields:
+                matching_key = [key for key in request.POST if '-'+field_name in key][0]
+                form_data[field_name] = request.POST[matching_key]
+
+            element_form = ModelInputValidationForm(form_data)
+        else:
+            element_form = ModelInputValidationForm(request.POST)
     elif element_name == 'generalelements':
         element_form = GeneralElementsValidationForm(request.POST)
 
