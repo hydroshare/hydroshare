@@ -4,6 +4,8 @@ import json
 import os
 import string
 from collections import namedtuple
+import paramiko
+import logging
 
 from django.core.urlresolvers import reverse
 from django.contrib.auth.models import Group, User
@@ -11,6 +13,7 @@ from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import ObjectDoesNotExist
 from django.core.files.uploadedfile import UploadedFile
 from django.utils.http import int_to_base36
+from django.conf import settings
 
 from rest_framework.exceptions import *
 
@@ -65,6 +68,26 @@ def upload_from_irods(username, password, host, port, zone, irods_fnames, res_fi
         tmpFile = irods_storage.download(ifname)
         fname = os.path.basename(ifname.rstrip(os.sep))
         res_files.append(UploadedFile(file=tmpFile, name=fname, size=size))
+
+# run the update script on hyrax server via ssh session for netCDF resources on demand
+# when private netCDF resources are made public so that all links of data services
+# provided by Hyrax service are instantaneously available on demand
+def run_script_to_update_hyrax_input_files():
+    ssh = paramiko.SSHClient()
+    ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+    ssh.connect(settings.HYRAX_SSH_HOST, username=settings.HYRAX_SSH_PROXY_USER, password=settings.HYRAX_SSH_PROXY_USER_PWD)
+    transport = ssh.get_transport()
+    session = transport.open_session()
+    session.set_combine_stderr(True)
+    session.get_pty()
+    session.exec_command(settings.HYRAX_SCRIPT_RUN_COMMAND)
+    stdin = session.makefile('wb', -1)
+    stdout = session.makefile('rb', -1)
+    stdin.write("{cmd}\n".format(cmd=settings.HYRAX_SSH_PROXY_USER_PWD))
+    stdin.flush()
+    logger = logging.getLogger('django')
+    logger.debug(stdout.readlines())
+
 
 def authorize(request, res_id, needed_permission=ACTION_TO_AUTHORIZE.VIEW_RESOURCE, raises_exception=True):
     """
