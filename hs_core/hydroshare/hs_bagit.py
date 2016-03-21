@@ -138,7 +138,8 @@ def create_bag_files(resource):
     for f in resFiles:
         a.add_resource(f)
 
-    # in current implementation, collection has no resource files
+    # handle collection resource type
+    # save cotained resource urls into resourcemap.xml
     if resource.resource_type == "CollectionResource" and resource.metadata.collection:
         for contained_res in resource.metadata.collection.resources.all():
             contained_res_id = contained_res.short_id

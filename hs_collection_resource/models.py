@@ -115,26 +115,13 @@ class CollectionMetaData(CoreMetaData):
 
         return missing_required_elements
 
-    def get_xml(self):
-        # get the xml string representation of the core metadata elements
-        xml_string = super(CollectionMetaData, self).get_xml(pretty_print=False)
 
-        # create an etree xml object
-        RDF_ROOT = etree.fromstring(xml_string)
+    ## The contained resources (landing page url) are saved in resourcemap.xml, not resourcemetadata.xml
+    ## So we dont need override get_xml(self) anymore.
+    ## Refer to hs_core.hydroshare.hs_bagit.create_bag_files() for more info
+    # def get_xml(self):
+    #    pass
 
-        # get root 'Description' element that contains all other elements
-        container = RDF_ROOT.find('rdf:Description', namespaces=self.NAMESPACES)
-        collection_container = etree.SubElement(container, '{%s}Collection' % self.NAMESPACES['hsterms'])
-        if self.collection:
-            for res in self.collection.resources.all():
-                hsterms_method = etree.SubElement(collection_container, '{%s}Collection' % self.NAMESPACES['hsterms'])
-                hsterms_method_rdf_Description = etree.SubElement(hsterms_method, '{%s}Description' % self.NAMESPACES['rdf'])
-                hsterms_name = etree.SubElement(hsterms_method_rdf_Description, '{%s}ResourceID' % self.NAMESPACES['hsterms'])
-                hsterms_name.text = res.short_id
-                hsterms_name = etree.SubElement(hsterms_method_rdf_Description, '{%s}LandingPageURL' % self.NAMESPACES['hsterms'])
-                hsterms_name.text = current_site_url() + "/resource/" + res.short_id + "/"
-
-        return etree.tostring(RDF_ROOT, pretty_print=True)
 
     def delete_all_elements(self):
         super(CollectionMetaData, self).delete_all_elements()
