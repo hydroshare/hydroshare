@@ -2,6 +2,7 @@ from __future__ import absolute_import
 import json
 import datetime
 import pytz
+import logging
 
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import Group, User
@@ -41,6 +42,8 @@ from hs_access_control.models import PrivilegeCodes
 
 
 from hs_collection_resource.models import CollectionResource
+
+logger = logging.getLogger(__name__)
 
 def short_url(request, *args, **kwargs):
     try:
@@ -296,6 +299,13 @@ def _downgrade_all_affected_collections_to_private(res_obj, being_deleted=True):
             # set isPublic metadata AVU accordingly
             istorage = IrodsStorage()
             istorage.setAVU(res_collection.short_id, "isPublic", str(res_collection.raccess.public))
+
+            if being_deleted:
+                logger.warning("Collection {0} has been downgraded to private because its last Contained resource {1} has been deleted".
+                             format(res_collection.short_id, res_obj.short_id))
+            else:
+                logger.warning("Collection {0} has been downgraded to private due to sharing status change of Contained resource {1}".
+                             format(res_collection.short_id, res_obj.short_id))
     return associated_collection_metadata_obj_list
 
 def create_new_version_resource(request, shortkey, *args, **kwargs):

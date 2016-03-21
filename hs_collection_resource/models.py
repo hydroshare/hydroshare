@@ -117,10 +117,10 @@ class CollectionMetaData(CoreMetaData):
 
 
     ## The contained resources (landing page url) are saved in resourcemap.xml, not resourcemetadata.xml
-    ## So we dont need override get_xml(self) anymore.
+    ## So we dont need to override get_xml(self) anymore.
     ## Refer to hs_core.hydroshare.hs_bagit.create_bag_files() for more info
     # def get_xml(self):
-    #    pass
+    #    raise Exception("get_xml() is not implemented yet.")
 
 
     def delete_all_elements(self):

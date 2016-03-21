@@ -72,7 +72,10 @@ def update_collection(request, shortkey, *args, **kwargs):
                               'new_sharing_status': new_sharing_status, 'metadata_status': metadata_status}
 
     except Exception as ex:
-        logger.exception("update_collection: %s" % (ex.message))
+        logger.warning("update_collection: {0} ; username: {1}; collection_id: {2} ".
+                         format(ex.message,
+                                request.user.username if request.user.is_authenticated() else "anonymous",
+                                shortkey))
         ajax_response_data = {'status': 'error', 'message': ex.message}
     finally:
         return JsonResponse(ajax_response_data)
@@ -97,7 +100,7 @@ def collection_member_permission(request, shortkey, user_id, *args, **kwargs):
         else:
             raise Exception("Collection element is not yet initialized.")
     except Exception as ex:
-        logger.exception("collection_member_permission: %s" % (ex.message))
+        logger.warning("collection_member_permission: %s" % (ex.message))
         ajax_response_data = {'status': "error", 'message': ex.message}
     finally:
         return JsonResponse(ajax_response_data)
