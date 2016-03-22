@@ -143,10 +143,10 @@ def create_bag_files(resource):
     if resource.resource_type == "CollectionResource" and resource.metadata.collection:
         for contained_res in resource.metadata.collection.resources.all():
             contained_res_id = contained_res.short_id
-            landing_page = '{hs_url}/resource/{res_id}/'.format(hs_url=current_site_url, res_id=contained_res_id)
-            ar = AggregatedResource(landing_page)
+            resource_map_url = '{hs_url}/resource/{res_id}/data/resourcemap.xml'.format(hs_url=current_site_url, res_id=contained_res_id)
+            ar = AggregatedResource(resource_map_url)
             ar._ore.isAggregatedBy = ag_url
-            ar._dc.format = contained_res.resource_type
+            ar._dc.format = "application/rdf+xml"
             a.add_resource(ar)
 
     #Register a serializer with the aggregation.  The registration creates a new ResourceMap, which needs a URI
