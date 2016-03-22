@@ -384,18 +384,6 @@ class TestNetcdfMetaData(MockIRODSTestCaseMixin, TransactionTestCase):
         self.assertEquals(variable.descriptive_name, 'snow water equivalent')
         self.assertEquals(variable.method, 'model result of UEB')
 
-    def test_get_xml(self):
-        # add a valid netcdf file to generate metadata
-        files = [UploadedFile(file=self.netcdf_file_obj, name=self.netcdf_file_name)]
-        utils.resource_file_add_pre_process(resource=self.resNetcdf, files=files, user=self.user,
-                                            extract_metadata=False)
-
-        utils.resource_file_add_process(resource=self.resNetcdf, files=files, user=self.user,
-                                        extract_metadata=True)
-
-        # test if xml from get_xml() is well formed
-        ET.fromstring(self.resNetcdf.metadata.get_xml())
-
     def test_multiple_content_files(self):
         self.assertFalse(NetcdfResource.can_have_multiple_files())
 
