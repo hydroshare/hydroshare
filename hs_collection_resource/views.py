@@ -1,13 +1,10 @@
-import json
 import logging
 
 from django.http import HttpResponseRedirect, HttpResponseNotFound, HttpResponse, JsonResponse
+from django.db import transaction
 
-from hs_core import hydroshare
-from hs_core.views import set_resource_flag
 from hs_core.views.utils import authorize, ACTION_TO_AUTHORIZE
-from hs_core.hydroshare.utils import user_from_id, resource_modified
-from hs_core.models import BaseResource
+from hs_core.hydroshare.utils import user_from_id, get_resource_by_shortkey
 
 logger = logging.getLogger(__name__)
 
@@ -17,31 +14,33 @@ def update_collection(request, shortkey, *args, **kwargs):
     status = "success"
     msg = ""
     try:
-        collection_res_obj, is_authorized, user = authorize(request, shortkey,
-                                              needed_permission=ACTION_TO_AUTHORIZE.EDIT_RESOURCE,
-                                              raises_exception=False)
-        if not is_authorized:
-            raise Exception("User has no Edit permission over collection {0}.".format(shortkey))
-        if collection_res_obj.resource_type != "CollectionResource":
-            raise Exception("Resource {0} is not a collection resource.".format(shortkey))
+        with transaction.atomic():
+            collection_res_obj, is_authorized, user = authorize(request, shortkey,
+                                                  needed_permission=ACTION_TO_AUTHORIZE.EDIT_RESOURCE,
+                                                  raises_exception=False)
+            if not is_authorized:
+                raise Exception("User has no Edit permission over collection {0}.".format(shortkey))
+            if collection_res_obj.resource_type != "CollectionResource":
+                raise Exception("Resource {0} is not a collection resource.".format(shortkey))
 
-        # get res_id list from POST
-        updated_contained_res_id_list = []
-        for res_id in request.POST.getlist("resource_id_list"):
-            updated_contained_res_id_list.append(res_id)
+            # get res_id list from POST
+            updated_contained_res_id_list = []
+            for res_id in request.POST.getlist("resource_id_list"):
+                updated_contained_res_id_list.append(res_id)
 
-        for updated_contained_res_id in updated_contained_res_id_list:
-            updated_contained_res_obj, is_authorized, user = authorize(request, shortkey,
-                                              needed_permission=ACTION_TO_AUTHORIZE.View_RESOURCE,
-                                              raises_exception=False)
-            if updated_contained_res_obj in collection_res_obj.resources:
-                # skip resource that is already in collection
-                continue
-            if is_authorized or updated_contained_res_obj.raccess.discoverable:
-               # user has permission or this res is not private
-               collection_res_obj.resources.add(updated_contained_res_obj)
-            else:
-                raise Exception("User has no permission over resource {}.".format(updated_contained_res_id))
+            # check authorization for all new resources being added to the collection
+            for updated_contained_res_id in updated_contained_res_id_list:
+                if not collection_res_obj.resources.filter(short_id=updated_contained_res_id).exists():
+                    _, _, _ = authorize(request, updated_contained_res_id,
+                            needed_permission=ACTION_TO_AUTHORIZE.VIEW_METADATA, raises_exception=True)
+
+            # remove all resources from the collection
+            collection_res_obj.resources.clear()
+
+            # add resources to the collection
+            for updated_contained_res_id in updated_contained_res_id_list:
+                updated_contained_res_obj = get_resource_by_shortkey(updated_contained_res_id)
+                collection_res_obj.resources.add(updated_contained_res_obj)
 
     except Exception as ex:
         logger.error("update_collection: {0} ; username: {1}; collection_id: {2} ".
