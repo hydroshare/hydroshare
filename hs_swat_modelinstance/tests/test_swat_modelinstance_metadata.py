@@ -15,14 +15,9 @@ from hs_core.hydroshare import utils
 from hs_core.models import CoreMetaData, Creator, Contributor, Coverage, Rights, Title, Language, \
     Publisher, Identifier, Type, Subject, Description, Date, Format, Relation, Source
 from hs_core.testing import MockIRODSTestCaseMixin
-from hs_swat_modelinstance.models import SWATModelInstanceResource, \
-    SWATModelInstanceMetaData, \
-    ModelObjectiveChoices, \
-    ModelObjective,\
-    ModelMethod,\
-    ModelParameter,\
-    ModelParametersChoices,\
-    ModelInput
+from hs_swat_modelinstance.models import SWATModelInstanceResource, SWATModelInstanceMetaData, ModelObjectiveChoices, \
+    ModelObjective, ModelMethod, ModelParameter, ModelParametersChoices, ModelInput, ModelOutput, ExecutedBy,\
+    SimulationType
 
 
 class TestSWATModelInstanceMetaData(MockIRODSTestCaseMixin, TransactionTestCase):
@@ -171,7 +166,6 @@ class TestSWATModelInstanceMetaData(MockIRODSTestCaseMixin, TransactionTestCase)
         # multiple ModelOutput elements are not allowed - should raise exception
         with self.assertRaises(IntegrityError):
             self.resSWATModelInstance.metadata.create_element('ModelOutput', includes_output=True)
-        with self.assertRaises(IntegrityError):
             self.resSWATModelInstance.metadata.create_element('ModelOutput', includes_output=False)
 
         # create ExecutedBy ####
@@ -196,7 +190,6 @@ class TestSWATModelInstanceMetaData(MockIRODSTestCaseMixin, TransactionTestCase)
                                                           swat_model_objectives={s_objs[0]: s_objs[0],
                                                                                  s_objs[1]: s_objs[1]},
                                                           other_objectives=o_objs)
-
         modelparam_element = self.resSWATModelInstance.metadata.model_objective
         self.assertNotEqual(modelparam_element, None)
         v = modelparam_element.swat_model_objectives.values()
@@ -276,7 +269,7 @@ class TestSWATModelInstanceMetaData(MockIRODSTestCaseMixin, TransactionTestCase)
 
         # create ModelInput ####
         # try to create a ModelInput with non cv terms
-        with self.assertRaises(ValidationError): #todo this raises an error when multiple are made
+        with self.assertRaises(ValidationError):
             self.resSWATModelInstance.metadata.create_element('ModelInput',
                                                               rainfallTimeStepType='frodo baggins')
             self.resSWATModelInstance.metadata.create_element('ModelInput',
@@ -346,7 +339,7 @@ class TestSWATModelInstanceMetaData(MockIRODSTestCaseMixin, TransactionTestCase)
         self.assertEquals(modelparam_element.model_name, self.resSwatModelProgram.metadata.title.value)
         self.assertEquals(modelparam_element.model_program_fk, self.resSwatModelProgram)
 
-        #update ModelObjective ###
+        # update ModelObjective ###
         self.resSWATModelInstance.metadata.update_element('ModelObjective',
                                                           self.resSWATModelInstance.metadata.model_objective.id,
                                                           swat_model_objectives={s_objs[2]: s_objs[2]},
@@ -365,10 +358,9 @@ class TestSWATModelInstanceMetaData(MockIRODSTestCaseMixin, TransactionTestCase)
                                                               swat_model_objectives={"gravity waves": "gravity waves"})
         # update just other objective
         self.resSWATModelInstance.metadata.update_element('ModelObjective',
-                                                              self.resSWATModelInstance.metadata.model_objective.id,
-                                                              other_objectives="einstein")
+                                                          self.resSWATModelInstance.metadata.model_objective.id,
+                                                          other_objectives="einstein")
         modelparam_element = self.resSWATModelInstance.metadata.model_objective
-        self.assertNotEqual(modelparam_element, None)
         self.assertEquals(modelparam_element.other_objectives, 'einstein')
 
         # update SimulationType ###
@@ -393,8 +385,8 @@ class TestSWATModelInstanceMetaData(MockIRODSTestCaseMixin, TransactionTestCase)
         self.assertEqual(self.resSWATModelInstance.metadata.model_method.flowRoutingMethod, 'rotunda')
         self.assertEqual(self.resSWATModelInstance.metadata.model_method.petEstimationMethod, 'honor code')
 
-        # create ModelParameter ####
-        # try to create a modelparam with a non cv term
+        # update ModelParameter ####
+        # try to update a modelparam with a non cv term
         with self.assertRaises(ValidationError):
             self.resSWATModelInstance.metadata.update_element('ModelParameter',
                                                               self.resSWATModelInstance.metadata.model_parameter.id,
@@ -426,7 +418,7 @@ class TestSWATModelInstanceMetaData(MockIRODSTestCaseMixin, TransactionTestCase)
 
         # update ModelInput ###
         # try to update a ModelInput with non cv terms
-        with self.assertRaises(ValidationError): #todo this raises an error when multiple are made
+        with self.assertRaises(ValidationError):
             self.resSWATModelInstance.metadata.update_element('ModelInput',
                                                               self.resSWATModelInstance.metadata.model_input.id,
                                                               rainfallTimeStepType='frodo baggins')
@@ -476,182 +468,357 @@ class TestSWATModelInstanceMetaData(MockIRODSTestCaseMixin, TransactionTestCase)
         self.assertEqual(self.resSWATModelInstance.metadata.model_input.soilDataSourceName, 'q')
         self.assertEqual(self.resSWATModelInstance.metadata.model_input.soilDataSourceURL, 'r')
 
+        # delete #######################################################################################################
 
+        # check that there are all extended metadata elements at this point
+        self.assertNotEqual(self.resSWATModelInstance.metadata.model_output, None)
+        self.assertNotEqual(self.resSWATModelInstance.metadata.executed_by, None)
+        self.assertNotEqual(self.resSWATModelInstance.metadata.model_input, None)
+        self.assertNotEqual(self.resSWATModelInstance.metadata.model_parameter, None)
+        self.assertNotEqual(self.resSWATModelInstance.metadata.model_method, None)
+        self.assertNotEqual(self.resSWATModelInstance.metadata.simulation_type, None)
+        self.assertNotEqual(self.resSWATModelInstance.metadata.model_objective, None)
 
+        # delete all elements
+        self.resSWATModelInstance.metadata.delete_element('ModelOutput',
+                                                          self.resSWATModelInstance.metadata.model_output.id)
+        self.resSWATModelInstance.metadata.delete_element('ExecutedBy',
+                                                          self.resSWATModelInstance.metadata.executed_by.id)
+        self.resSWATModelInstance.metadata.delete_element('ModelInput',
+                                                          self.resSWATModelInstance.metadata.model_input.id)
+        self.resSWATModelInstance.metadata.delete_element('ModelParameter',
+                                                          self.resSWATModelInstance.metadata.model_parameter.id)
+        self.resSWATModelInstance.metadata.delete_element('ModelMethod',
+                                                          self.resSWATModelInstance.metadata.model_method.id)
+        self.resSWATModelInstance.metadata.delete_element('SimulationType',
+                                                          self.resSWATModelInstance.metadata.simulation_type.id)
+        self.resSWATModelInstance.metadata.delete_element('ModelObjective',
+                                                          self.resSWATModelInstance.metadata.model_objective.id)
 
-    #     # delete
-    #     self.assertNotEqual(self.resSWATModelInstance.metadata.model_output, None)
-    #     self.assertNotEqual(self.resSWATModelInstance.metadata.executed_by, None)
-    #
-    #     self.resSWATModelInstance.metadata.delete_element('ModelOutput', self.resSWATModelInstance.metadata.model_output.id)
-    #     self.resSWATModelInstance.metadata.delete_element('ExecutedBy', self.resSWATModelInstance.metadata.executed_by.id)
-    #
-    #     self.assertEqual(self.resSWATModelInstance.metadata.model_output, None)
-    #     self.assertEqual(self.resSWATModelInstance.metadata.executed_by, None)
-    #
-    # def test_public_or_discoverable(self):
-    #     self.assertFalse(self.resSWATModelInstance.has_required_content_files())
-    #     self.assertFalse(self.resSWATModelInstance.metadata.has_all_required_elements())
-    #     self.assertFalse(self.resSWATModelInstance.can_be_public_or_discoverable)
-    #
-    #     files = [UploadedFile(file=self.text_file_obj, name=self.text_file_obj.name)]
-    #     utils.resource_file_add_pre_process(resource=self.resSWATModelInstance, files=files, user=self.user,
-    #                                         extract_metadata=False)
-    #
-    #     utils.resource_file_add_process(resource=self.resSWATModelInstance, files=files, user=self.user,
-    #                                     extract_metadata=False)
-    #
-    #     self.assertFalse(self.resSWATModelInstance.can_be_public_or_discoverable)
-    #
-    #     self.resSWATModelInstance.metadata.create_element('Description', abstract="test abstract")
-    #     self.assertFalse(self.resSWATModelInstance.can_be_public_or_discoverable)
-    #
-    #     self.resSWATModelInstance.metadata.create_element('Subject', value="test subject")
-    #
-    #     self.assertTrue(self.resSWATModelInstance.has_required_content_files())
-    #     self.assertTrue(self.resSWATModelInstance.metadata.has_all_required_elements())
-    #     self.assertTrue(self.resSWATModelInstance.can_be_public_or_discoverable)
-    #
-    # def test_multiple_content_files(self):
-    #     self.assertTrue(ModelInstanceResource.can_have_multiple_files())
-    #
-    # def test_get_xml(self):
-    #     self.resSWATModelInstance.metadata.create_element('Description', abstract="test abstract")
-    #     self.resSWATModelInstance.metadata.create_element('Subject', value="test subject")
-    #     self.resSWATModelInstance.metadata.create_element('ModelOutput', includes_output=True)
-    #     self.resSWATModelInstance.metadata.create_element('ExecutedBy', model_name=self.resGenModelProgram.short_id)
-    #
-    #     # test if xml from get_xml() is well formed
-    #     ET.fromstring(self.resSWATModelInstance.metadata.get_xml())
-    #
-    # def test_metadata_on_content_file_delete(self):
-    #     files = [UploadedFile(file=self.text_file_obj, name=self.text_file_obj.name)]
-    #     utils.resource_file_add_pre_process(resource=self.resSWATModelInstance, files=files, user=self.user,
-    #                                         extract_metadata=False)
-    #
-    #     utils.resource_file_add_process(resource=self.resSWATModelInstance, files=files, user=self.user,
-    #                                     extract_metadata=False)
-    #
-    #     self.resSWATModelInstance.metadata.create_element('Description', abstract="test abstract")
-    #     self.resSWATModelInstance.metadata.create_element('Subject', value="test subject")
-    #     self.resSWATModelInstance.metadata.create_element('ModelOutput', includes_output=True)
-    #     self.resSWATModelInstance.metadata.create_element('ExecutedBy', model_name=self.resGenModelProgram.short_id)
-    #
-    #     # there should one content file
-    #     self.assertEquals(self.resSWATModelInstance.files.all().count(), 1)
-    #
-    #     # there should be one format element
-    #     self.assertEquals(self.resSWATModelInstance.metadata.formats.all().count(), 1)
-    #
-    #     # delete content file that we added above
-    #     hydroshare.delete_resource_file(self.resSWATModelInstance.short_id, self.file_name, self.user)
-    #     # there should no content file
-    #     self.assertEquals(self.resSWATModelInstance.files.all().count(), 0)
-    #
-    #     # test the core metadata at this point
-    #     self.assertNotEquals(self.resSWATModelInstance.metadata.title, None)
-    #
-    #     # there should be an abstract element
-    #     self.assertNotEquals(self.resSWATModelInstance.metadata.description, None)
-    #
-    #     # there should be one creator element
-    #     self.assertEquals(self.resSWATModelInstance.metadata.creators.all().count(), 1)
-    #
-    #     # testing extended metadata elements
-    #     self.assertNotEqual(self.resSWATModelInstance.metadata.model_output, None)
-    #     self.assertNotEqual(self.resSWATModelInstance.metadata.executed_by, None)
-    #
-    # def test_metadata_delete_on_resource_delete(self):
-    #     files = [UploadedFile(file=self.text_file_obj, name=self.text_file_obj.name)]
-    #     utils.resource_file_add_pre_process(resource=self.resSWATModelInstance, files=files, user=self.user,
-    #                                         extract_metadata=False)
-    #
-    #     utils.resource_file_add_process(resource=self.resSWATModelInstance, files=files, user=self.user,
-    #                                     extract_metadata=False)
-    #
-    #     self.resSWATModelInstance.metadata.create_element('Description', abstract="test abstract")
-    #     self.resSWATModelInstance.metadata.create_element('Subject', value="test subject")
-    #     self.resSWATModelInstance.metadata.create_element('ModelOutput', includes_output=True)
-    #     self.resSWATModelInstance.metadata.create_element('ExecutedBy', model_name=self.resGenModelProgram.short_id)
-    #     self.resSWATModelInstance.metadata.create_element('Contributor', name="user2")
-    #
-    #     # before resource delete
-    #     core_metadata_obj = self.resSWATModelInstance.metadata
-    #     self.assertEquals(CoreMetaData.objects.all().count(), 3)
-    #     # there should be Creator metadata objects
-    #     self.assertTrue(Creator.objects.filter(object_id=core_metadata_obj.id).exists())
-    #     # there should be no Contributor metadata objects
-    #     self.assertTrue(Contributor.objects.filter(object_id=core_metadata_obj.id).exists())
-    #     # there should be Identifier metadata objects
-    #     self.assertTrue(Identifier.objects.filter(object_id=core_metadata_obj.id).exists())
-    #     # there should be Type metadata objects
-    #     self.assertTrue(Type.objects.filter(object_id=core_metadata_obj.id).exists())
-    #     # there should be no Source metadata objects
-    #     self.assertFalse(Source.objects.filter(object_id=core_metadata_obj.id).exists())
-    #     # there should be no Relation metadata objects
-    #     self.assertFalse(Relation.objects.filter(object_id=core_metadata_obj.id).exists())
-    #     # there should be no Publisher metadata objects
-    #     self.assertFalse(Publisher.objects.filter(object_id=core_metadata_obj.id).exists())
-    #     # there should be Title metadata objects
-    #     self.assertTrue(Title.objects.filter(object_id=core_metadata_obj.id).exists())
-    #     # there should be Description (Abstract) metadata objects
-    #     self.assertTrue(Description.objects.filter(object_id=core_metadata_obj.id).exists())
-    #     # there should be Date metadata objects
-    #     self.assertTrue(Date.objects.filter(object_id=core_metadata_obj.id).exists())
-    #     # there should be Subject metadata objects
-    #     self.assertTrue(Subject.objects.filter(object_id=core_metadata_obj.id).exists())
-    #     # there should be no Coverage metadata objects
-    #     self.assertFalse(Coverage.objects.filter(object_id=core_metadata_obj.id).exists())
-    #     # there should be Format metadata objects
-    #     self.assertTrue(Format.objects.filter(object_id=core_metadata_obj.id).exists())
-    #     # there should be Language metadata objects
-    #     self.assertTrue(Language.objects.filter(object_id=core_metadata_obj.id).exists())
-    #     # there should be Rights metadata objects
-    #     self.assertTrue(Rights.objects.filter(object_id=core_metadata_obj.id).exists())
-    #
-    #     # resource specific metadata
-    #     # there should be Model Output metadata objects
-    #     self.assertTrue(ModelOutput.objects.filter(object_id=core_metadata_obj.id).exists())
-    #     # there should be ExecutedBy metadata objects
-    #     self.assertTrue(ExecutedBy.objects.filter(object_id=core_metadata_obj.id).exists())
-    #
-    #     # delete resource
-    #     hydroshare.delete_resource(self.resSWATModelInstance.short_id)
-    #     self.assertEquals(CoreMetaData.objects.all().count(), 2)
-    #
-    #     # there should be no Creator metadata objects
-    #     self.assertFalse(Creator.objects.filter(object_id=core_metadata_obj.id).exists())
-    #     # there should be no Contributor metadata objects
-    #     self.assertFalse(Contributor.objects.filter(object_id=core_metadata_obj.id).exists())
-    #     # there should be no Identifier metadata objects
-    #     self.assertFalse(Identifier.objects.filter(object_id=core_metadata_obj.id).exists())
-    #     # there should be no Type metadata objects
-    #     self.assertFalse(Type.objects.filter(object_id=core_metadata_obj.id).exists())
-    #     # there should be no Source metadata objects
-    #     self.assertFalse(Source.objects.filter(object_id=core_metadata_obj.id).exists())
-    #     # there should be no Relation metadata objects
-    #     self.assertFalse(Relation.objects.filter(object_id=core_metadata_obj.id).exists())
-    #     # there should be no Publisher metadata objects
-    #     self.assertFalse(Publisher.objects.filter(object_id=core_metadata_obj.id).exists())
-    #     # there should be no Title metadata objects
-    #     self.assertFalse(Title.objects.filter(object_id=core_metadata_obj.id).exists())
-    #     # there should be no Description (Abstract) metadata objects
-    #     self.assertFalse(Description.objects.filter(object_id=core_metadata_obj.id).exists())
-    #     # there should be no Date metadata objects
-    #     self.assertFalse(Date.objects.filter(object_id=core_metadata_obj.id).exists())
-    #     # there should be no Subject metadata objects
-    #     self.assertFalse(Subject.objects.filter(object_id=core_metadata_obj.id).exists())
-    #     # there should be no Coverage metadata objects
-    #     self.assertFalse(Coverage.objects.filter(object_id=core_metadata_obj.id).exists())
-    #     # there should be no Format metadata objects
-    #     self.assertFalse(Format.objects.filter(object_id=core_metadata_obj.id).exists())
-    #     # there should be no Language metadata objects
-    #     self.assertFalse(Language.objects.filter(object_id=core_metadata_obj.id).exists())
-    #     # there should be no Rights metadata objects
-    #     self.assertFalse(Rights.objects.filter(object_id=core_metadata_obj.id).exists())
-    #
-    #     # resource specific metadata
-    #     # there should be no Model Output metadata objects
-    #     self.assertFalse(ModelOutput.objects.filter(object_id=core_metadata_obj.id).exists())
-    #     # there should be no ExecutedBy metadata objects
-    #     self.assertFalse(ExecutedBy.objects.filter(object_id=core_metadata_obj.id).exists())
+        # make sure they are deleted
+        self.assertEquals(self.resSWATModelInstance.metadata.model_output, None)
+        self.assertEquals(self.resSWATModelInstance.metadata.executed_by, None)
+        self.assertEquals(self.resSWATModelInstance.metadata.model_input, None)
+        self.assertEquals(self.resSWATModelInstance.metadata.model_parameter, None)
+        self.assertEquals(self.resSWATModelInstance.metadata.model_method, None)
+        self.assertEquals(self.resSWATModelInstance.metadata.simulation_type, None)
+        self.assertEquals(self.resSWATModelInstance.metadata.model_objective, None)
+
+    def test_public_or_discoverable(self):
+        self.assertFalse(self.resSWATModelInstance.has_required_content_files())
+        self.assertFalse(self.resSWATModelInstance.metadata.has_all_required_elements())
+        self.assertFalse(self.resSWATModelInstance.can_be_public_or_discoverable)
+
+        # add file
+        files = [UploadedFile(file=self.text_file_obj, name=self.text_file_obj.name)]
+        utils.resource_file_add_pre_process(resource=self.resSWATModelInstance, files=files, user=self.user,
+                                            extract_metadata=False)
+
+        utils.resource_file_add_process(resource=self.resSWATModelInstance, files=files, user=self.user,
+                                        extract_metadata=False)
+        self.assertTrue(self.resSWATModelInstance.has_required_content_files())
+        self.assertFalse(self.resSWATModelInstance.can_be_public_or_discoverable)
+
+        # add generically required elements; still should not be made public
+        self.resSWATModelInstance.metadata.create_element('Description', abstract="test abstract")
+        self.assertFalse(self.resSWATModelInstance.can_be_public_or_discoverable)
+
+        self.resSWATModelInstance.metadata.create_element('Subject', value="test subject")
+        self.assertFalse(self.resSWATModelInstance.can_be_public_or_discoverable)
+
+        # add model objective; should now be ok
+        s_objs = ["BMPs", "Hydrology", "Water quality"]
+        o_objs = "elon musk"
+        self.resSWATModelInstance.metadata.create_element('ModelObjective',
+                                                          swat_model_objectives={s_objs[0]: s_objs[0],
+                                                                                 s_objs[1]: s_objs[1]},
+                                                          other_objectives=o_objs)
+
+        self.assertTrue(self.resSWATModelInstance.metadata.has_all_required_elements())
+        self.assertTrue(self.resSWATModelInstance.can_be_public_or_discoverable)
+
+    def test_multiple_content_files(self):
+        self.assertTrue(self.resSWATModelInstance.can_have_multiple_files())
+
+    def test_get_xml(self):
+        self.resSWATModelInstance.metadata.create_element('Description', abstract="test abstract")
+        self.resSWATModelInstance.metadata.create_element('Subject', value="test subject")
+        self.resSWATModelInstance.metadata.create_element('ModelOutput', includes_output=True)
+        self.resSWATModelInstance.metadata.create_element('ExecutedBy', model_name=self.resGenModelProgram.short_id)
+        s_objs = ["BMPs", "Hydrology", "Water quality"]
+        o_objs = "elon musk"
+        self.resSWATModelInstance.metadata.create_element('ModelObjective',
+                                                          swat_model_objectives={s_objs[0]: s_objs[0],
+                                                                                 s_objs[1]: s_objs[1]},
+                                                          other_objectives=o_objs)
+        self.resSWATModelInstance.metadata.create_element('SimulationType',
+                                                          simulation_type_name='Normal Simulation')
+        self.resSWATModelInstance.metadata.create_element('ModelMethod',
+                                                          runoffCalculationMethod='aaa',
+                                                          flowRoutingMethod='bbb',
+                                                          petEstimationMethod='ccc')
+        s_params = ["Crop rotation", "Tillage operation"]
+        o_params = "spongebob"
+        self.resSWATModelInstance.metadata.create_element('ModelParameter',
+                                                          model_parameters={s_params[0]: s_params[0],
+                                                                            s_params[1]: s_params[1]},
+                                                          other_parameters=o_params)
+
+        self.resSWATModelInstance.metadata.create_element('ModelInput',
+                                                          warmupPeriodValue='a',
+                                                          rainfallTimeStepType='Daily',
+                                                          rainfallTimeStepValue='c',
+                                                          routingTimeStepType='Daily',
+                                                          routingTimeStepValue='e',
+                                                          simulationTimeStepType='Hourly',
+                                                          simulationTimeStepValue='g',
+                                                          watershedArea='h',
+                                                          numberOfSubbasins='i',
+                                                          numberOfHRUs='j',
+                                                          demResolution='k',
+                                                          demSourceName='l',
+                                                          demSourceURL='m',
+                                                          landUseDataSourceName='n',
+                                                          landUseDataSourceURL='o',
+                                                          soilDataSourceName='p',
+                                                          soilDataSourceURL='q',
+                                                          )
+
+        # test if xml from get_xml() is well formed
+        ET.fromstring(self.resSWATModelInstance.metadata.get_xml())  # todo check actual xml content
+
+    def test_metadata_on_content_file_delete(self):
+        # upload files
+        files = [UploadedFile(file=self.text_file_obj, name=self.text_file_obj.name)]
+        utils.resource_file_add_pre_process(resource=self.resSWATModelInstance, files=files, user=self.user,
+                                            extract_metadata=False)
+
+        utils.resource_file_add_process(resource=self.resSWATModelInstance, files=files, user=self.user,
+                                        extract_metadata=False)
+
+        # create metadata elements
+        self.resSWATModelInstance.metadata.create_element('Description', abstract="test abstract")
+        self.resSWATModelInstance.metadata.create_element('Subject', value="test subject")
+        self.resSWATModelInstance.metadata.create_element('ModelOutput', includes_output=True)
+        self.resSWATModelInstance.metadata.create_element('ExecutedBy', model_name=self.resGenModelProgram.short_id)
+        s_objs = ["BMPs", "Hydrology", "Water quality"]
+        o_objs = "elon musk"
+        self.resSWATModelInstance.metadata.create_element('ModelObjective',
+                                                          swat_model_objectives={s_objs[0]: s_objs[0],
+                                                                                 s_objs[1]: s_objs[1]},
+                                                          other_objectives=o_objs)
+        self.resSWATModelInstance.metadata.create_element('SimulationType',
+                                                          simulation_type_name='Normal Simulation')
+        self.resSWATModelInstance.metadata.create_element('ModelMethod',
+                                                          runoffCalculationMethod='aaa',
+                                                          flowRoutingMethod='bbb',
+                                                          petEstimationMethod='ccc')
+        s_params = ["Crop rotation", "Tillage operation"]
+        o_params = "spongebob"
+        self.resSWATModelInstance.metadata.create_element('ModelParameter',
+                                                          model_parameters={s_params[0]: s_params[0],
+                                                                            s_params[1]: s_params[1]},
+                                                          other_parameters=o_params)
+
+        self.resSWATModelInstance.metadata.create_element('ModelInput',
+                                                          warmupPeriodValue='a',
+                                                          rainfallTimeStepType='Daily',
+                                                          rainfallTimeStepValue='c',
+                                                          routingTimeStepType='Daily',
+                                                          routingTimeStepValue='e',
+                                                          simulationTimeStepType='Hourly',
+                                                          simulationTimeStepValue='g',
+                                                          watershedArea='h',
+                                                          numberOfSubbasins='i',
+                                                          numberOfHRUs='j',
+                                                          demResolution='k',
+                                                          demSourceName='l',
+                                                          demSourceURL='m',
+                                                          landUseDataSourceName='n',
+                                                          landUseDataSourceURL='o',
+                                                          soilDataSourceName='p',
+                                                          soilDataSourceURL='q',
+                                                          )
+
+        # there should one content file
+        self.assertEquals(self.resSWATModelInstance.files.all().count(), 1)
+
+        # there should be one format element
+        self.assertEquals(self.resSWATModelInstance.metadata.formats.all().count(), 1)
+
+        # delete content file that we added above
+        hydroshare.delete_resource_file(self.resSWATModelInstance.short_id, self.file_name, self.user)
+        # there should no content file
+        self.assertEquals(self.resSWATModelInstance.files.all().count(), 0)
+
+        # test the core metadata at this point
+        self.assertNotEquals(self.resSWATModelInstance.metadata.title, None)
+
+        # there should be an abstract element
+        self.assertNotEquals(self.resSWATModelInstance.metadata.description, None)
+
+        # there should be one creator element
+        self.assertEquals(self.resSWATModelInstance.metadata.creators.all().count(), 1)
+
+        # testing extended metadata elements
+        self.assertNotEqual(self.resSWATModelInstance.metadata.model_output, None)
+        self.assertNotEqual(self.resSWATModelInstance.metadata.executed_by, None)
+        self.assertNotEqual(self.resSWATModelInstance.metadata.model_input, None)
+        self.assertNotEqual(self.resSWATModelInstance.metadata.model_parameter, None)
+        self.assertNotEqual(self.resSWATModelInstance.metadata.model_method, None)
+        self.assertNotEqual(self.resSWATModelInstance.metadata.simulation_type, None)
+        self.assertNotEqual(self.resSWATModelInstance.metadata.model_objective, None)
+
+    def test_metadata_delete_on_resource_delete(self):
+        files = [UploadedFile(file=self.text_file_obj, name=self.text_file_obj.name)]
+        utils.resource_file_add_pre_process(resource=self.resSWATModelInstance, files=files, user=self.user,
+                                            extract_metadata=False)
+
+        utils.resource_file_add_process(resource=self.resSWATModelInstance, files=files, user=self.user,
+                                        extract_metadata=False)
+
+        # create metadata elements
+        self.resSWATModelInstance.metadata.create_element('Description', abstract="test abstract")
+        self.resSWATModelInstance.metadata.create_element('Subject', value="test subject")
+        self.resSWATModelInstance.metadata.create_element('ModelOutput', includes_output=True)
+        self.resSWATModelInstance.metadata.create_element('ExecutedBy', model_name=self.resGenModelProgram.short_id)
+        s_objs = ["BMPs", "Hydrology", "Water quality"]
+        o_objs = "elon musk"
+        self.resSWATModelInstance.metadata.create_element('ModelObjective',
+                                                          swat_model_objectives={s_objs[0]: s_objs[0],
+                                                                                 s_objs[1]: s_objs[1]},
+                                                          other_objectives=o_objs)
+        self.resSWATModelInstance.metadata.create_element('SimulationType',
+                                                          simulation_type_name='Normal Simulation')
+        self.resSWATModelInstance.metadata.create_element('ModelMethod',
+                                                          runoffCalculationMethod='aaa',
+                                                          flowRoutingMethod='bbb',
+                                                          petEstimationMethod='ccc')
+        s_params = ["Crop rotation", "Tillage operation"]
+        o_params = "spongebob"
+        self.resSWATModelInstance.metadata.create_element('ModelParameter',
+                                                          model_parameters={s_params[0]: s_params[0],
+                                                                            s_params[1]: s_params[1]},
+                                                          other_parameters=o_params)
+
+        self.resSWATModelInstance.metadata.create_element('ModelInput',
+                                                          warmupPeriodValue='a',
+                                                          rainfallTimeStepType='Daily',
+                                                          rainfallTimeStepValue='c',
+                                                          routingTimeStepType='Daily',
+                                                          routingTimeStepValue='e',
+                                                          simulationTimeStepType='Hourly',
+                                                          simulationTimeStepValue='g',
+                                                          watershedArea='h',
+                                                          numberOfSubbasins='i',
+                                                          numberOfHRUs='j',
+                                                          demResolution='k',
+                                                          demSourceName='l',
+                                                          demSourceURL='m',
+                                                          landUseDataSourceName='n',
+                                                          landUseDataSourceURL='o',
+                                                          soilDataSourceName='p',
+                                                          soilDataSourceURL='q',
+                                                          )
+        self.resSWATModelInstance.metadata.create_element('Contributor', name="user2")
+
+        # before resource delete
+        core_metadata_obj = self.resSWATModelInstance.metadata
+        self.assertEquals(CoreMetaData.objects.all().count(), 3)
+        # there should be Creator metadata objects
+        self.assertTrue(Creator.objects.filter(object_id=core_metadata_obj.id).exists())
+        # there should be no Contributor metadata objects
+        self.assertTrue(Contributor.objects.filter(object_id=core_metadata_obj.id).exists())
+        # there should be Identifier metadata objects
+        self.assertTrue(Identifier.objects.filter(object_id=core_metadata_obj.id).exists())
+        # there should be Type metadata objects
+        self.assertTrue(Type.objects.filter(object_id=core_metadata_obj.id).exists())
+        # there should be no Source metadata objects
+        self.assertFalse(Source.objects.filter(object_id=core_metadata_obj.id).exists())
+        # there should be no Relation metadata objects
+        self.assertFalse(Relation.objects.filter(object_id=core_metadata_obj.id).exists())
+        # there should be no Publisher metadata objects
+        self.assertFalse(Publisher.objects.filter(object_id=core_metadata_obj.id).exists())
+        # there should be Title metadata objects
+        self.assertTrue(Title.objects.filter(object_id=core_metadata_obj.id).exists())
+        # there should be Description (Abstract) metadata objects
+        self.assertTrue(Description.objects.filter(object_id=core_metadata_obj.id).exists())
+        # there should be Date metadata objects
+        self.assertTrue(Date.objects.filter(object_id=core_metadata_obj.id).exists())
+        # there should be Subject metadata objects
+        self.assertTrue(Subject.objects.filter(object_id=core_metadata_obj.id).exists())
+        # there should be no Coverage metadata objects
+        self.assertFalse(Coverage.objects.filter(object_id=core_metadata_obj.id).exists())
+        # there should be Format metadata objects
+        self.assertTrue(Format.objects.filter(object_id=core_metadata_obj.id).exists())
+        # there should be Language metadata objects
+        self.assertTrue(Language.objects.filter(object_id=core_metadata_obj.id).exists())
+        # there should be Rights metadata objects
+        self.assertTrue(Rights.objects.filter(object_id=core_metadata_obj.id).exists())
+
+        # resource specific metadata
+        # there should be Model Output metadata objects
+        self.assertTrue(ModelOutput.objects.filter(object_id=core_metadata_obj.id).exists())
+        # there should be ExecutedBy metadata objects
+        self.assertTrue(ExecutedBy.objects.filter(object_id=core_metadata_obj.id).exists())
+        # there should be ModelObjective metadata objects
+        self.assertTrue(ModelObjective.objects.filter(object_id=core_metadata_obj.id).exists())
+        # there should be SimulationType metadata objects
+        self.assertTrue(SimulationType.objects.filter(object_id=core_metadata_obj.id).exists())
+        # there should be ModelMethod metadata objects
+        self.assertTrue(ModelMethod.objects.filter(object_id=core_metadata_obj.id).exists())
+        # there should be ModelParameter metadata objects
+        self.assertTrue(ModelParameter.objects.filter(object_id=core_metadata_obj.id).exists())
+        # there should be ModelInput metadata objects
+        self.assertTrue(ModelInput.objects.filter(object_id=core_metadata_obj.id).exists())
+
+        # delete resource
+        hydroshare.delete_resource(self.resSWATModelInstance.short_id)
+        self.assertEquals(CoreMetaData.objects.all().count(), 2)
+
+        # there should be no Creator metadata objects
+        self.assertFalse(Creator.objects.filter(object_id=core_metadata_obj.id).exists())
+        # there should be no Contributor metadata objects
+        self.assertFalse(Contributor.objects.filter(object_id=core_metadata_obj.id).exists())
+        # there should be no Identifier metadata objects
+        self.assertFalse(Identifier.objects.filter(object_id=core_metadata_obj.id).exists())
+        # there should be no Type metadata objects
+        self.assertFalse(Type.objects.filter(object_id=core_metadata_obj.id).exists())
+        # there should be no Source metadata objects
+        self.assertFalse(Source.objects.filter(object_id=core_metadata_obj.id).exists())
+        # there should be no Relation metadata objects
+        self.assertFalse(Relation.objects.filter(object_id=core_metadata_obj.id).exists())
+        # there should be no Publisher metadata objects
+        self.assertFalse(Publisher.objects.filter(object_id=core_metadata_obj.id).exists())
+        # there should be no Title metadata objects
+        self.assertFalse(Title.objects.filter(object_id=core_metadata_obj.id).exists())
+        # there should be no Description (Abstract) metadata objects
+        self.assertFalse(Description.objects.filter(object_id=core_metadata_obj.id).exists())
+        # there should be no Date metadata objects
+        self.assertFalse(Date.objects.filter(object_id=core_metadata_obj.id).exists())
+        # there should be no Subject metadata objects
+        self.assertFalse(Subject.objects.filter(object_id=core_metadata_obj.id).exists())
+        # there should be no Coverage metadata objects
+        self.assertFalse(Coverage.objects.filter(object_id=core_metadata_obj.id).exists())
+        # there should be no Format metadata objects
+        self.assertFalse(Format.objects.filter(object_id=core_metadata_obj.id).exists())
+        # there should be no Language metadata objects
+        self.assertFalse(Language.objects.filter(object_id=core_metadata_obj.id).exists())
+        # there should be no Rights metadata objects
+        self.assertFalse(Rights.objects.filter(object_id=core_metadata_obj.id).exists())
+
+        # resource specific metadata
+        # there should be Model Output metadata objects
+        self.assertFalse(ModelOutput.objects.filter(object_id=core_metadata_obj.id).exists())
+        # there should be ExecutedBy metadata objects
+        self.assertFalse(ExecutedBy.objects.filter(object_id=core_metadata_obj.id).exists())
+        # there should be ModelObjective metadata objects
+        self.assertFalse(ModelObjective.objects.filter(object_id=core_metadata_obj.id).exists())
+        # there should be SimulationType metadata objects
+        self.assertFalse(SimulationType.objects.filter(object_id=core_metadata_obj.id).exists())
+        # there should be ModelMethod metadata objects
+        self.assertFalse(ModelMethod.objects.filter(object_id=core_metadata_obj.id).exists())
+        # there should be ModelParameter metadata objects
+        self.assertFalse(ModelParameter.objects.filter(object_id=core_metadata_obj.id).exists())
+        # there should be ModelInput metadata objects
+        self.assertFalse(ModelInput.objects.filter(object_id=core_metadata_obj.id).exists())

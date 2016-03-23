@@ -25,7 +25,7 @@ class ExecutedBy(ExecutedBy):
 
 # extended metadata elements for SWAT Model Instance resource type
 class ModelObjectiveChoices(models.Model):
-    description = models.CharField(max_length=300) #todo there should be only 1 list of these for form and validation
+    description = models.CharField(max_length=300)  # todo there should be only 1 list of these for form and validation
 
     def __unicode__(self):
         return self.description
@@ -136,9 +136,7 @@ class SimulationType(AbstractMetaDataElement):
 
 class ModelMethod(AbstractMetaDataElement):
     term = 'ModelMethod'
-    runoffCalculationMethod = models.CharField(max_length=200,
-                                               null=True,
-                                               blank=True,
+    runoffCalculationMethod = models.CharField(max_length=200, null=True, blank=True,
                                                verbose_name='Runoff calculation method')
     flowRoutingMethod = models.CharField(max_length=200, null=True, blank=True, verbose_name='Flow routing method')
     petEstimationMethod = models.CharField(max_length=200, null=True, blank=True, verbose_name='PET estimation method')
@@ -219,13 +217,8 @@ class ModelParameter(AbstractMetaDataElement):
     @classmethod
     def _validate_swat_model_parameters(cls, parameters):
         for swat_parameters in parameters:
-            if swat_parameters not in ['Crop rotation',
-                                       'Tile drainage',
-                                       'Point source',
-                                       'Fertilizer',
-                                       'Tillage operation',
-                                       'Inlet of draining watershed',
-                                       'Irrigation operation']:
+            if swat_parameters not in ['Crop rotation', 'Tile drainage', 'Point source', 'Fertilizer',
+                                       'Tillage operation', 'Inlet of draining watershed', 'Irrigation operation']:
                 raise ValidationError('Invalid swat_model_parameters:%s' % parameters)
 
 
@@ -236,42 +229,26 @@ class ModelInput(AbstractMetaDataElement):
     simulation_type_choices = (('Annual', 'Annual'), ('Monthly', 'Monthly'), ('Daily', 'Daily'), ('Hourly', 'Hourly'),)
 
     warmupPeriodValue = models.CharField(max_length=100, null=True, blank=True, verbose_name='Warm-up period in years')
-    rainfallTimeStepType = models.CharField(max_length=100,
-                                            choices=rainfall_type_choices,
-                                            null=True, blank=True,
+    rainfallTimeStepType = models.CharField(max_length=100, choices=rainfall_type_choices, null=True, blank=True,
                                             verbose_name='Rainfall time step type')
-    rainfallTimeStepValue = models.CharField(max_length=100,
-                                             null=True,
-                                             blank=True,
+    rainfallTimeStepValue = models.CharField(max_length=100, null=True, blank=True,
                                              verbose_name='Rainfall time step value')
-    routingTimeStepType = models.CharField(max_length=100,
-                                           choices=routing_type_choices,
-                                           null=True, blank=True,
+    routingTimeStepType = models.CharField(max_length=100, choices=routing_type_choices, null=True, blank=True,
                                            verbose_name='Routing time step type')
-    routingTimeStepValue = models.CharField(max_length=100,
-                                            null=True,
-                                            blank=True,
+    routingTimeStepValue = models.CharField(max_length=100, null=True, blank=True,
                                             verbose_name='Routing time step value')
-    simulationTimeStepType = models.CharField(max_length=100,
-                                              choices=simulation_type_choices,
-                                              null=True, blank=True,
+    simulationTimeStepType = models.CharField(max_length=100, choices=simulation_type_choices, null=True, blank=True,
                                               verbose_name='Simulation time step type')
-    simulationTimeStepValue = models.CharField(max_length=100,
-                                               null=True,
-                                               blank=True,
+    simulationTimeStepValue = models.CharField(max_length=100, null=True, blank=True,
                                                verbose_name='Simulation time step value')
-    watershedArea = models.CharField(max_length=100,
-                                     null=True,
-                                     blank=True,
+    watershedArea = models.CharField(max_length=100, null=True, blank=True,
                                      verbose_name='Watershed area in square kilometers')
     numberOfSubbasins = models.CharField(max_length=100, null=True, blank=True, verbose_name='Number of subbasins')
     numberOfHRUs = models.CharField(max_length=100, null=True, blank=True, verbose_name='Number of HRUs')
     demResolution = models.CharField(max_length=100, null=True, blank=True, verbose_name='DEM resolution in meters')
     demSourceName = models.CharField(max_length=200, null=True, blank=True, verbose_name='DEM source name')
     demSourceURL = models.URLField(null=True, blank=True, verbose_name='DEM source URL')
-    landUseDataSourceName = models.CharField(max_length=200,
-                                             null=True,
-                                             blank=True,
+    landUseDataSourceName = models.CharField(max_length=200, null=True, blank=True,
                                              verbose_name='LandUse data source name')
     landUseDataSourceURL = models.URLField(null=True, blank=True, verbose_name='LandUse data source URL')
     soilDataSourceName = models.CharField(max_length=200, null=True, blank=True, verbose_name='Soil data source name')
@@ -289,9 +266,9 @@ class ModelInput(AbstractMetaDataElement):
         if 'rainfallTimeStepType' in kwargs:
             cls._validate_time_step(kwargs['rainfallTimeStepType'], 'rainfall')
         if 'routingTimeStepType' in kwargs:
-            cls._validate_time_step(kwargs['rainfallTimeStepType'], 'routing')
+            cls._validate_time_step(kwargs['routingTimeStepType'], 'routing')
         if 'simulationTimeStepType' in kwargs:
-            cls._validate_time_step(kwargs['rainfallTimeStepType'], 'simulation')
+            cls._validate_time_step(kwargs['simulationTimeStepType'], 'simulation')
 
         model_input = super(ModelInput, cls).create(**kwargs)
         return model_input
@@ -301,9 +278,9 @@ class ModelInput(AbstractMetaDataElement):
         if 'rainfallTimeStepType' in kwargs:
             cls._validate_time_step(kwargs['rainfallTimeStepType'], 'rainfall')
         if 'routingTimeStepType' in kwargs:
-            cls._validate_time_step(kwargs['rainfallTimeStepType'], 'routing')
+            cls._validate_time_step(kwargs['routingTimeStepType'], 'routing')
         if 'simulationTimeStepType' in kwargs:
-            cls._validate_time_step(kwargs['rainfallTimeStepType'], 'simulation')
+            cls._validate_time_step(kwargs['simulationTimeStepType'], 'simulation')
 
         model_input = super(ModelInput, cls).update(element_id, **kwargs)
         return model_input
@@ -323,7 +300,7 @@ class ModelInput(AbstractMetaDataElement):
             types = [c[0] for c in cls.simulation_type_choices]
 
         if time_step not in types:
-            raise ValidationError('Invalid time step choic:{} not in {}'.format(time_step, types))
+            raise ValidationError('Invalid time step choice:{} not in {}'.format(time_step, types))
 
 
 # SWAT Model Instance Resource type
@@ -451,23 +428,11 @@ class SWATModelInstanceMetaData(ModelInstanceMetaData):
                                                                 self.model_parameter.model_parameters.all()])
 
         if self.model_input:
-            modelInputFields = ['warmupPeriodType',
-                                'warmupPeriodValue',
-                                'rainfallTimeStepType',
-                                'rainfallTimeStepValue',
-                                'routingTimeStepType',
-                                'routingTimeStepValue',
-                                'simulationTimeStepType',
-                                'simulationTimeStepValue',
-                                'watershedArea',
-                                'numberOfSubbasins',
-                                'numberOfHRUs',
-                                'demResolution',
-                                'demSourceName',
-                                'demSourceURL',
-                                'landUseDataSourceName',
-                                'landUseDataSourceURL',
-                                'soilDataSourceName',
+            modelInputFields = ['warmupPeriodType', 'warmupPeriodValue', 'rainfallTimeStepType',
+                                'rainfallTimeStepValue', 'routingTimeStepType', 'routingTimeStepValue',
+                                'simulationTimeStepType', 'simulationTimeStepValue', 'watershedArea',
+                                'numberOfSubbasins', 'numberOfHRUs', 'demResolution', 'demSourceName', 'demSourceURL',
+                                'landUseDataSourceName', 'landUseDataSourceURL', 'soilDataSourceName',
                                 'soilDataSourceURL']
             self.add_metadata_element_to_xml(container,self.model_input,modelInputFields)
 
