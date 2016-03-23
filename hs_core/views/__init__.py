@@ -40,7 +40,6 @@ from . import utils as view_utils
 from hs_core.signals import *
 from hs_access_control.models import PrivilegeCodes
 
-
 from hs_collection_resource.models import CollectionResource
 
 logger = logging.getLogger(__name__)
@@ -538,6 +537,11 @@ class FilterForm(forms.Form):
 @processor_for('my-resources')
 @login_required
 def my_resources(request, page):
+    import sys
+    sys.path.append("/home/docker/pycharm-debug")
+    import pydevd
+    pydevd.settrace('172.17.0.1', port=21000, suspend=False)
+
     user = request.user
     # get a list of resources with effective OWNER privilege
     owned_resources = user.uaccess.get_resources_with_explicit_access(PrivilegeCodes.OWNER)
