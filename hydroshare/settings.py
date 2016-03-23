@@ -300,7 +300,8 @@ INSTALLED_APPS = (
     "hs_geographic_feature_resource",
     "hs_script_resource",
     "hs_sitemap",
-    "hs_collection_resource"
+    "hs_collection_resource",
+    "hs_tracking",
 )
 
 # These apps are excluded by hs_core.tests.runner.CustomTestSuiteRunner
@@ -361,6 +362,7 @@ MIDDLEWARE_CLASSES = (
     "mezzanine.pages.middleware.PageMiddleware",
     "mezzanine.core.middleware.FetchFromCacheMiddleware",
     "ga_resources.middleware.PagePermissionsViewableMiddleware",
+    "hs_tracking.middleware.Tracking",
 )
 
 # Store these package names here as they may change in the future since
