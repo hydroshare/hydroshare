@@ -185,6 +185,11 @@ class TestSWATModelInstanceMetaData(MockIRODSTestCaseMixin, TransactionTestCase)
                                                               model_name=self.resSwatModelProgram.short_id)
 
         # create ModelObjective ####
+        # try to create a modelobjective with no swat_model_objective
+        with self.assertRaises(ValidationError):
+            self.resSWATModelInstance.metadata.create_element('ModelObjective',
+                                                              other_objectives={"boaty mcboatface"})
+        # now do it legit
         s_objs = ["BMPs", "Hydrology", "Water quality"]
         o_objs = "elon musk"
         self.resSWATModelInstance.metadata.create_element('ModelObjective',
@@ -341,7 +346,7 @@ class TestSWATModelInstanceMetaData(MockIRODSTestCaseMixin, TransactionTestCase)
         self.assertEquals(modelparam_element.model_name, self.resSwatModelProgram.metadata.title.value)
         self.assertEquals(modelparam_element.model_program_fk, self.resSwatModelProgram)
 
-        #update ModelObjective
+        #update ModelObjective ###
         self.resSWATModelInstance.metadata.update_element('ModelObjective',
                                                           self.resSWATModelInstance.metadata.model_objective.id,
                                                           swat_model_objectives={s_objs[2]: s_objs[2]},
@@ -358,11 +363,119 @@ class TestSWATModelInstanceMetaData(MockIRODSTestCaseMixin, TransactionTestCase)
             self.resSWATModelInstance.metadata.update_element('ModelObjective',
                                                               self.resSWATModelInstance.metadata.model_objective.id,
                                                               swat_model_objectives={"gravity waves": "gravity waves"})
-        # try with no swat_model_objective
-        with self.assertRaises(ValidationError):
-            self.resSWATModelInstance.metadata.update_element('ModelObjective',
+        # update just other objective
+        self.resSWATModelInstance.metadata.update_element('ModelObjective',
                                                               self.resSWATModelInstance.metadata.model_objective.id,
                                                               other_objectives="einstein")
+        modelparam_element = self.resSWATModelInstance.metadata.model_objective
+        self.assertNotEqual(modelparam_element, None)
+        self.assertEquals(modelparam_element.other_objectives, 'einstein')
+
+        # update SimulationType ###
+        self.resSWATModelInstance.metadata.update_element('SimulationType',
+                                                          self.resSWATModelInstance.metadata.simulation_type.id,
+                                                          simulation_type_name='Auto-Calibration')
+        modelparam_element = self.resSWATModelInstance.metadata.simulation_type
+        self.assertEquals(modelparam_element.get_simulation_type_name_display(), 'Auto-Calibration')
+        # try with non cv term
+        with self.assertRaises(ValidationError):
+            self.resSWATModelInstance.metadata.update_element('SimulationType',
+                                                              self.resSWATModelInstance.metadata.simulation_type.id,
+                                                              simulation_type_name="Panda")
+
+        # update ModelMethod ###
+        self.resSWATModelInstance.metadata.update_element('ModelMethod',
+                                                          self.resSWATModelInstance.metadata.model_method.id,
+                                                          runoffCalculationMethod="go hoos",
+                                                          flowRoutingMethod='rotunda',
+                                                          petEstimationMethod='honor code')
+        self.assertEqual(self.resSWATModelInstance.metadata.model_method.runoffCalculationMethod, 'go hoos')
+        self.assertEqual(self.resSWATModelInstance.metadata.model_method.flowRoutingMethod, 'rotunda')
+        self.assertEqual(self.resSWATModelInstance.metadata.model_method.petEstimationMethod, 'honor code')
+
+        # create ModelParameter ####
+        # try to create a modelparam with a non cv term
+        with self.assertRaises(ValidationError):
+            self.resSWATModelInstance.metadata.update_element('ModelParameter',
+                                                              self.resSWATModelInstance.metadata.model_parameter.id,
+                                                              model_parameters={"chucky cheese": "chucky cheese"})
+        # update legit modelparam
+        s_params = ["Point source", "Fertilizer"]
+        self.resSWATModelInstance.metadata.update_element('ModelParameter',
+                                                          self.resSWATModelInstance.metadata.model_parameter.id,
+                                                          model_parameters={s_params[0]: s_params[0],
+                                                                            s_params[1]: s_params[1]})
+        modelparam_element = self.resSWATModelInstance.metadata.model_parameter
+        v = modelparam_element.model_parameters.values()
+        val_list = [d['description'] for d in v]
+        for p in s_params:
+            self.assertEquals(p in val_list, True)
+        self.assertEquals(modelparam_element.other_parameters, o_params)
+        # now update the other params
+        o_params = 'square pants'
+        self.resSWATModelInstance.metadata.update_element('ModelParameter',
+                                                          self.resSWATModelInstance.metadata.model_parameter.id,
+                                                          other_parameters=o_params)
+        # check that the other params was updated and that the model params are the same
+        modelparam_element = self.resSWATModelInstance.metadata.model_parameter
+        v = modelparam_element.model_parameters.values()
+        val_list = [d['description'] for d in v]
+        for p in s_params:
+            self.assertEquals(p in val_list, True)
+        self.assertEquals(modelparam_element.other_parameters, o_params)
+
+        # update ModelInput ###
+        # try to update a ModelInput with non cv terms
+        with self.assertRaises(ValidationError): #todo this raises an error when multiple are made
+            self.resSWATModelInstance.metadata.update_element('ModelInput',
+                                                              self.resSWATModelInstance.metadata.model_input.id,
+                                                              rainfallTimeStepType='frodo baggins')
+            self.resSWATModelInstance.metadata.update_element('ModelInput',
+                                                              self.resSWATModelInstance.metadata.model_input.id,
+                                                              routingTimeStepType='legolas')
+            self.resSWATModelInstance.metadata.update_element('ModelInput',
+                                                              self.resSWATModelInstance.metadata.model_input.id,
+                                                              simulationTimeStepType='gandalf')
+        # update normal ModelInput
+        self.resSWATModelInstance.metadata.update_element('ModelInput',
+                                                          self.resSWATModelInstance.metadata.model_input.id,
+                                                          warmupPeriodValue='b',
+                                                          rainfallTimeStepType='Sub-hourly',
+                                                          rainfallTimeStepValue='d',
+                                                          routingTimeStepType='Hourly',
+                                                          routingTimeStepValue='f',
+                                                          simulationTimeStepType='Annual',
+                                                          simulationTimeStepValue='h',
+                                                          watershedArea='i',
+                                                          numberOfSubbasins='j',
+                                                          numberOfHRUs='k',
+                                                          demResolution='l',
+                                                          demSourceName='m',
+                                                          demSourceURL='n',
+                                                          landUseDataSourceName='o',
+                                                          landUseDataSourceURL='p',
+                                                          soilDataSourceName='q',
+                                                          soilDataSourceURL='r',
+                                                          )
+        self.assertNotEqual(self.resSWATModelInstance.metadata.simulation_type, None)
+        self.assertEqual(self.resSWATModelInstance.metadata.model_input.warmupPeriodValue, 'b')
+        self.assertEqual(self.resSWATModelInstance.metadata.model_input.rainfallTimeStepType, 'Sub-hourly')
+        self.assertEqual(self.resSWATModelInstance.metadata.model_input.rainfallTimeStepValue, 'd')
+        self.assertEqual(self.resSWATModelInstance.metadata.model_input.routingTimeStepType, 'Hourly')
+        self.assertEqual(self.resSWATModelInstance.metadata.model_input.routingTimeStepValue, 'f')
+        self.assertEqual(self.resSWATModelInstance.metadata.model_input.simulationTimeStepType, 'Annual')
+        self.assertEqual(self.resSWATModelInstance.metadata.model_input.simulationTimeStepValue, 'h')
+        self.assertEqual(self.resSWATModelInstance.metadata.model_input.watershedArea, 'i')
+        self.assertEqual(self.resSWATModelInstance.metadata.model_input.numberOfSubbasins, 'j')
+        self.assertEqual(self.resSWATModelInstance.metadata.model_input.numberOfHRUs, 'k')
+        self.assertEqual(self.resSWATModelInstance.metadata.model_input.demResolution, 'l')
+        self.assertEqual(self.resSWATModelInstance.metadata.model_input.demSourceName, 'm')
+        self.assertEqual(self.resSWATModelInstance.metadata.model_input.demSourceURL, 'n')
+        self.assertEqual(self.resSWATModelInstance.metadata.model_input.landUseDataSourceName, 'o')
+        self.assertEqual(self.resSWATModelInstance.metadata.model_input.landUseDataSourceURL, 'p')
+        self.assertEqual(self.resSWATModelInstance.metadata.model_input.soilDataSourceName, 'q')
+        self.assertEqual(self.resSWATModelInstance.metadata.model_input.soilDataSourceURL, 'r')
+
 
 
 
