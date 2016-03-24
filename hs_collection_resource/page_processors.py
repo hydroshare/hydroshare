@@ -1,6 +1,4 @@
-from django.db.models import Q
 from mezzanine.pages.page_processors import processor_for
-from crispy_forms.layout import Layout, HTML
 
 from hs_core import page_processors
 from hs_core.views import add_generic_context
@@ -36,8 +34,8 @@ def landing_page(request, page):
     collection_items_list = None
     collection_items_accessible = []
     collection_items_inaccessible = []
-    if content_model.metadata.collection:
-        collection_items_list = list(content_model.metadata.collection.resources.all())
+    if content_model.resources:
+        collection_items_list = list(content_model.resources.all())
         for res in collection_items_list:
             if res in user_all_accessible_resource_list or res.raccess.discoverable or res.raccess.public:
                 collection_items_accessible.append(res)
@@ -50,12 +48,11 @@ def landing_page(request, page):
                                                extended_metadata_layout=None,
                                                request=request)
     if edit_resource:
-        collection_meta = content_model.metadata.collection
         candidate_resources_list = []
         for res in user_all_accessible_resource_list:
             if content_model.short_id == res.short_id:
                 continue # skip current collection resource object
-            elif collection_meta is not None and res in collection_meta.resources.all():
+            elif content_model.resources and res in content_model.resources.all():
                 continue # skip resources that are already in current collection
             elif res.resource_type.lower() == "collectionresource":
                 continue # skip the res that is type of collection

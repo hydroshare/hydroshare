@@ -248,11 +248,9 @@ def delete_file(request, shortkey, f, *args, **kwargs):
 
 
 def delete_resource(request, shortkey, *args, **kwargs):
-    res, _, _ = authorize(request, shortkey, needed_permission=ACTION_TO_AUTHORIZE.DELETE_RESOURCE)
+    res, _, user = authorize(request, shortkey, needed_permission=ACTION_TO_AUTHORIZE.DELETE_RESOURCE)
 
-    # downgrade all collections to private if the res being deleted here is the only member resource in these collections
-    associated_collection_metadata_obj_list = _downgrade_all_affected_collections_to_private(res, being_deleted=True)
-
+    associated_collection_res_obj_list = list(res.collections.all())
     try:
         hydroshare.delete_resource(shortkey)
     except ValidationError as ex:
@@ -260,52 +258,16 @@ def delete_resource(request, shortkey, *args, **kwargs):
         return HttpResponseRedirect(request.META['HTTP_REFERER'])
 
     # the ManyToMany Relationships between this resource and all associated collections have been removed
-    # that means the metadata of these collection also changed, so we need to update their bags
-    for collection_metadata_obj in associated_collection_metadata_obj_list:
+    # that means content of collection also changed, so we need to update collection bags
+    for collection_res_obj in associated_collection_res_obj_list:
         # tricky issue: the user who deleted this resource may not have permission to access this collection
-        # but here we are updating metadata of the collection
+        # but here we are the collection contents
         # who is the "last_changed_by" user ???
-        # reverse lookup: metadata obj --> resource obj
-        res_collection = CollectionResource.objects.get(object_id=collection_metadata_obj.object_id)
-        resource_modified(res_collection, request.user, True)
+        resource_modified(collection_res_obj, request.user, True)
+        logger.warning("Contained resource {0} of collection {1} has been deleted by user {2}" \
+                       .format(res.short_id, collection_res_obj.short_id, user.username))
 
     return HttpResponseRedirect('/my-resources/')
-
-def _downgrade_all_affected_collections_to_private(res_obj, being_deleted=True):
-    '''
-    1) downgrade all public collections to private if the res_obj being deleted (being_deleted=True)
-        is the only member resource in these collections
-    2) downgrade all public collections to private if they hold the res_obj being downgraded (being_deleted=False)
-        to private (because public collections can hold non-private resources only)
-    :param res_obj: the res is being downgraded to private or deleted
-    :param being_deleted: res_obj is being deleted
-    :return: a list of collection resources that hold this res_obj
-    '''
-    # reverse lookup: find all collections that hold this res_obj that is being deleted or downgraded
-    associated_collection_metadata_obj_list = list(res_obj.collection_set.all())
-    for collection_metadata_obj in associated_collection_metadata_obj_list:
-        # if this res_obj is being deleted and the collection holds it has more than one member resources
-        # skip this collection (no need to downgrade this collection to private)
-        if being_deleted and collection_metadata_obj.resources.all().count() != 1:
-            continue
-        # reverse lookup: metadata obj --> resource obj
-        res_collection = CollectionResource.objects.get(object_id=collection_metadata_obj.object_id)
-        if res_collection.raccess.public or res_collection.raccess.discoverable:
-            # downgrade these collections to private
-            res_collection.raccess.public = False
-            res_collection.raccess.discoverable = False
-            res_collection.raccess.save()
-            # set isPublic metadata AVU accordingly
-            istorage = IrodsStorage()
-            istorage.setAVU(res_collection.short_id, "isPublic", str(res_collection.raccess.public))
-
-            if being_deleted:
-                logger.warning("Collection {0} has been downgraded to private because its last Contained resource {1} has been deleted".
-                             format(res_collection.short_id, res_obj.short_id))
-            else:
-                logger.warning("Collection {0} has been downgraded to private due to sharing status change of Contained resource {1}".
-                             format(res_collection.short_id, res_obj.short_id))
-    return associated_collection_metadata_obj_list
 
 def create_new_version_resource(request, shortkey, *args, **kwargs):
     res, authorized, user = authorize(request, shortkey, needed_permission=ACTION_TO_AUTHORIZE.CREATE_RESOURCE_VERSION)
@@ -372,12 +334,7 @@ def set_resource_flag(request, shortkey, *args, **kwargs):
     if t == 'make_public':
         _set_resource_sharing_status(request, user, res, flag_to_set='public', flag_value=True)
     elif t == 'make_private' or t == 'make_not_discoverable':
-
         _set_resource_sharing_status(request, user, res, flag_to_set='public', flag_value=False)
-
-        # downgrade all public collections that hold this res to private (because public collections should only can hold non-private resources)
-        _downgrade_all_affected_collections_to_private(res, being_deleted=False)
-
     elif t == 'make_discoverable':
         _set_resource_sharing_status(request, user, res, flag_to_set='discoverable', flag_value=True)
     elif t == 'make_not_shareable':
@@ -537,11 +494,6 @@ class FilterForm(forms.Form):
 @processor_for('my-resources')
 @login_required
 def my_resources(request, page):
-    import sys
-    sys.path.append("/home/docker/pycharm-debug")
-    import pydevd
-    pydevd.settrace('172.17.0.1', port=21000, suspend=False)
-
     user = request.user
     # get a list of resources with effective OWNER privilege
     owned_resources = user.uaccess.get_resources_with_explicit_access(PrivilegeCodes.OWNER)
