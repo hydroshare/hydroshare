@@ -25,7 +25,7 @@ class ExecutedBy(ExecutedBy):
 
 # extended metadata elements for SWAT Model Instance resource type
 class ModelObjectiveChoices(models.Model):
-    description = models.CharField(max_length=300)  # todo there should be only 1 list of these for form and validation
+    description = models.CharField(max_length=300)
 
     def __unicode__(self):
         return self.description
