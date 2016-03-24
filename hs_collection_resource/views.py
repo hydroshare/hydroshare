@@ -17,22 +17,28 @@ def update_collection(request, shortkey, *args, **kwargs):
     try:
         with transaction.atomic():
             collection_res_obj, is_authorized, user = authorize(request, shortkey,
-                                                  needed_permission=ACTION_TO_AUTHORIZE.EDIT_RESOURCE,
-                                                  raises_exception=True)
+                                                                needed_permission=ACTION_TO_AUTHORIZE.EDIT_RESOURCE)
 
             if collection_res_obj.resource_type != "CollectionResource":
                 raise Exception("Resource {0} is not a collection resource.".format(shortkey))
 
             # get res_id list from POST
-            updated_contained_res_id_list = []
-            for res_id in request.POST.getlist("resource_id_list"):
-                updated_contained_res_id_list.append(res_id)
+            updated_contained_res_id_list = request.POST.getlist("resource_id_list")
+            # for res_id in request.POST.getlist("resource_id_list"):
+            #     updated_contained_res_id_list.append(res_id)
+
+            if len(updated_contained_res_id_list) > len(set(updated_contained_res_id_list)):
+                raise Exception("Duplicate resources were found for adding to the collection")
 
             # check authorization for all new resources being added to the collection
             for updated_contained_res_id in updated_contained_res_id_list:
                 if not collection_res_obj.resources.filter(short_id=updated_contained_res_id).exists():
-                    _, _, _ = authorize(request, updated_contained_res_id,
-                            needed_permission=ACTION_TO_AUTHORIZE.VIEW_METADATA, raises_exception=True)
+                    res_to_add, _, _ = authorize(request, updated_contained_res_id,
+                                                 needed_permission=ACTION_TO_AUTHORIZE.VIEW_METADATA)
+
+                    # for now we are not allowing a collection resource to be added to another collection resource
+                    if res_to_add.resource_type == "CollectionResource":
+                        raise Exception("Resource {0} is a collection resource which can't be added.".format(shortkey))
 
             # remove all resources from the collection
             collection_res_obj.resources.clear()
@@ -47,7 +53,6 @@ def update_collection(request, shortkey, *args, **kwargs):
 
             resource_modified(collection_res_obj, user)
 
-
     except Exception as ex:
         logger.error("update_collection: {0} ; username: {1}; collection_id: {2} ".
                          format(ex.message,
@@ -57,6 +62,28 @@ def update_collection(request, shortkey, *args, **kwargs):
         msg = ex.message
     finally:
         ajax_response_data = {'status': status, 'msg': msg, 'metadata_status': metadata_status}
+        return JsonResponse(ajax_response_data)
+
+
+def update_collection_for_deleted_resources(request, shortkey, *args, **kwargs):
+    ajax_response_data = {'status': "success"}
+    try:
+        collection_res, is_authorized, user = authorize(request, shortkey,
+                                                        needed_permission=ACTION_TO_AUTHORIZE.EDIT_RESOURCE)
+
+        if collection_res.resource_type != "CollectionResource":
+            raise Exception("Resource {0} is not a collection resource.".format(shortkey))
+
+        resource_modified(collection_res, user)
+        # remove all logged deleted resources for the collection
+        collection_res.deleted_resources.all().delete()
+
+    except Exception as ex:
+        logger.error("Failed to update collection for deleted resources.Collection resource ID: {}. "
+                     "Error:{} ".format(shortkey, ex.message))
+
+        ajax_response_data = {'status': "error", 'message': ex.message}
+    finally:
         return JsonResponse(ajax_response_data)
 
 # loop through contained resources in collection ("shortkey") to check if the target user ("user_id") has

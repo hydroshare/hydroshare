@@ -40,7 +40,7 @@ from . import utils as view_utils
 from hs_core.signals import *
 from hs_access_control.models import PrivilegeCodes
 
-from hs_collection_resource.models import CollectionResource
+from hs_collection_resource.models import CollectionResource, CollectionDeletedResource
 
 logger = logging.getLogger(__name__)
 
@@ -250,22 +250,21 @@ def delete_file(request, shortkey, f, *args, **kwargs):
 def delete_resource(request, shortkey, *args, **kwargs):
     res, _, user = authorize(request, shortkey, needed_permission=ACTION_TO_AUTHORIZE.DELETE_RESOURCE)
 
-    associated_collection_res_obj_list = list(res.collections.all())
+    res_title = res.metadata.title
+
     try:
         hydroshare.delete_resource(shortkey)
     except ValidationError as ex:
         request.session['validation_error'] = ex.message
         return HttpResponseRedirect(request.META['HTTP_REFERER'])
 
-    # the ManyToMany Relationships between this resource and all associated collections have been removed
-    # that means content of collection also changed, so we need to update collection bags
-    for collection_res_obj in associated_collection_res_obj_list:
-        # tricky issue: the user who deleted this resource may not have permission to access this collection
-        # but here we are the collection contents
-        # who is the "last_changed_by" user ???
-        resource_modified(collection_res_obj, request.user, True)
-        logger.warning("Contained resource {0} of collection {1} has been deleted by user {2}" \
-                       .format(res.short_id, collection_res_obj.short_id, user.username))
+    # if the deleted resource is part of any collection resource, then for each of those collection
+    # create a CollectionDeletedResource object which can then be used to list collection deleted
+    # resources on collection resource landing page
+    for collection_res in res.collections.all():
+        CollectionDeletedResource.objects.create(resource_title=res_title,
+                                                 deleted_by=user,
+                                                 collection=collection_res)
 
     return HttpResponseRedirect('/my-resources/')
 

@@ -37,6 +37,7 @@ def landing_page(request, page):
     if content_model.resources:
         collection_items_list = list(content_model.resources.all())
         for res in collection_items_list:
+            # From Pabitra: Drew the 'or' s are not needed in this if statement
             if res in user_all_accessible_resource_list or res.raccess.discoverable or res.raccess.public:
                 collection_items_accessible.append(res)
             else:
@@ -52,17 +53,17 @@ def landing_page(request, page):
         for res in user_all_accessible_resource_list:
             if content_model.short_id == res.short_id:
                 continue # skip current collection resource object
-            elif content_model.resources and res in content_model.resources.all():
+            elif res in content_model.resources.all():
                 continue # skip resources that are already in current collection
             elif res.resource_type.lower() == "collectionresource":
                 continue # skip the res that is type of collection
             candidate_resources_list.append(res)
 
+        context['collection_candidate'] = candidate_resources_list
+        context['collection_res_id'] = content_model.short_id
+        context['deleted_resources'] = content_model.deleted_resources
 
     context['collection'] = collection_items_list
-    if edit_resource:
-         context['collection_candidate'] = candidate_resources_list
-         context['collection_res_id'] = content_model.short_id
     context['edit_mode'] = edit_resource
 
     hs_core_dublin_context = add_generic_context(request, page)
