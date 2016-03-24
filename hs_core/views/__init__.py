@@ -327,10 +327,7 @@ def publish(request, shortkey, *args, **kwargs):
 def set_resource_flag(request, shortkey, *args, **kwargs):
     # only resource owners are allowed to change resource flags
     res, _, user = authorize(request, shortkey, needed_permission=ACTION_TO_AUTHORIZE.SET_RESOURCE_FLAG)
-    if 't' in kwargs:
-        t = kwargs['t']
-    else:
-        t = request.POST['t']
+    t = request.POST['t']
     if t == 'make_public':
         _set_resource_sharing_status(request, user, res, flag_to_set='public', flag_value=True)
     elif t == 'make_private' or t == 'make_not_discoverable':
@@ -340,7 +337,7 @@ def set_resource_flag(request, shortkey, *args, **kwargs):
     elif t == 'make_not_shareable':
         _set_resource_sharing_status(request, user, res, flag_to_set='shareable', flag_value=False)
     elif t == 'make_shareable':
-        _set_resource_sharing_status(request, user, res, flag_to_set='shareable', flag_value=True)
+       _set_resource_sharing_status(request, user, res, flag_to_set='shareable', flag_value=True)
 
     return HttpResponseRedirect(request.META['HTTP_REFERER'])
 
