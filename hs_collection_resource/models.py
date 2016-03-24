@@ -47,3 +47,4 @@ class CollectionDeletedResource(models.Model):
     collection = models.ForeignKey(BaseResource)
 
 
+import receivers
