@@ -284,16 +284,19 @@ class ResourceCreate(generics.CreateAPIView):
         Hack to work around the following issue in django-rest-framework:
 
         https://github.com/tomchristie/django-rest-framework/issues/3951
-        
+
         :param request:
         :param args:
         :param kwargs:
         :return:
         """
         if not isinstance(request, Request):
+            # Don't deep copy the file data as it may contain an open file handle
+            old_file_data = copy.copy(request.FILES)
             old_post_data = copy.deepcopy(request.POST)
             request = super(ResourceCreate, self).initialize_request(request, *args, **kwargs)
             request.POST.update(old_post_data)
+            request.FILES.update(old_file_data)
         return request
 
     def get_serializer_class(self):
@@ -529,6 +532,26 @@ class ResourceFileCRUD(APIView):
     ValidationError: return json format: {'parameter-1':['error message-1'], 'parameter-2': ['error message-2'], .. }
     """
     allowed_methods = ('GET', 'POST', 'PUT', 'DELETE')
+
+    def initialize_request(self, request, *args, **kwargs):
+        """
+        Hack to work around the following issue in django-rest-framework:
+
+        https://github.com/tomchristie/django-rest-framework/issues/3951
+
+        :param request:
+        :param args:
+        :param kwargs:
+        :return:
+        """
+        if not isinstance(request, Request):
+            # Don't deep copy the file data as it may contain an open file handle
+            old_file_data = copy.copy(request.FILES)
+            old_post_data = copy.deepcopy(request.POST)
+            request = super(ResourceFileCRUD, self).initialize_request(request, *args, **kwargs)
+            request.POST.update(old_post_data)
+            request.FILES.update(old_file_data)
+        return request
 
     def get(self, request, pk, filename):
         view_utils.authorize(request, pk, needed_permission=ACTION_TO_AUTHORIZE.VIEW_RESOURCE)
