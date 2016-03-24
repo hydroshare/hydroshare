@@ -251,6 +251,7 @@ def delete_resource(request, shortkey, *args, **kwargs):
     res, _, user = authorize(request, shortkey, needed_permission=ACTION_TO_AUTHORIZE.DELETE_RESOURCE)
 
     res_title = res.metadata.title
+    resource_related_collections = [col for col in res.collections.all]
 
     try:
         hydroshare.delete_resource(shortkey)
@@ -261,7 +262,7 @@ def delete_resource(request, shortkey, *args, **kwargs):
     # if the deleted resource is part of any collection resource, then for each of those collection
     # create a CollectionDeletedResource object which can then be used to list collection deleted
     # resources on collection resource landing page
-    for collection_res in res.collections.all():
+    for collection_res in resource_related_collections:
         CollectionDeletedResource.objects.create(resource_title=res_title,
                                                  deleted_by=user,
                                                  collection=collection_res)
