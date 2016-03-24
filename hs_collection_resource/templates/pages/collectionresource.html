@@ -8,7 +8,7 @@
 
 {# override content_block in generice.html#}
 {% block content_block %}
-
+    <hr>
     {# collection content table #}
     <div id="collection_content_div">
         <div id="title_and_add_btn_div">
@@ -96,6 +96,9 @@
                 <input class="btn btn-primary" type="button" id="save-new" onclick="save_btn_callback_new();" value="Save Changes" style="display: none"/>
             {% endif %}
         </div>
+        {% if deleted_resources|length > 0 %}
+            <input type="button" value="View deleted contents" onclick=" $('#deleted-resources-modal').modal('show');">
+        {% endif %}
         <hr>
         {% block download_bag %}
             <div>
@@ -222,6 +225,61 @@
         </div>
     </div>
 
+
+    {#    modal div: deleted-resources-modal #}
+    <div class="modal fade" id="deleted-resources-modal" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+        <div class="modal-dialog" style="width:65%">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                    <h4 class="modal-title" id="save-collection-warning-title">Deleted Resources</h4>
+                </div>
+                <div class="modal-body" id="save-collection-warning-body">
+                    <table id="deleted-resources-table" class="table-hover table-striped" width="100%">
+                        <thead>
+                        <tr>
+                            <th>Title</th>
+                            <th>Date</th>
+                            <th>Deleted by</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        {% if deleted_resources %}
+                            {% for res in deleted_resources %}
+                                <tr>
+                                    <td>
+                                        {{ res.resource_title }}
+                                    </td>
+                                    <td>
+                                        {{ res.date_deleted }}
+                                    </td>
+                                    <td>
+                                        {% if res.deleted_by.first_name %}
+                                            <strong><a href='/user/{{ res.deleted_by.pk }}/' target="_blank">{{res.deleted_by.first_name}} {{res.deleted_by.last_name }}</a></strong>
+                                        {% else %}
+                                            <strong><a href='/user/{{ res.deleted_by.pk }}/' target="_blank">{{ res.deleted_by.username }}</a></strong>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                         {% endif %}
+                        </tbody>
+                    </table>
+                </div>
+                <div class="modal-footer">
+                    {% if edit_mode|lower == "true" %}
+                    <button type="button" class="btn btn-default" id="save-collection-btn-ok" onclick="clear_deleted_resources_table('{{collection_res_id}}');">
+                        Clear
+                    </button>
+                    {% endif %}
+                    <button type="button" class="btn btn-default" data-dismiss="modal" id="save-collection-btn-cancel">
+                       OK
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
 {% endblock %}
 
 {% block extra_js %}
@@ -299,6 +357,13 @@
                     },
                 ]
             });
+
+            resourceTable = $("#deleted-resources-table").DataTable({
+                "paging": false,
+                "info": false,
+                "bFilter": false,
+                "bInfo": false,
+                });
 
         }); // $(document).ready(function()
 
@@ -472,6 +537,29 @@
         function save_btn_callback_new()
         {
             collection_update_ajax_submit_new('collector-new');
+        }
+
+        function clear_deleted_resources_table(collection_id)
+        {
+            url = "/hsapi/_internal/" + collection_id +"/update-collection-for-deleted-resources/";
+            $.ajax({
+            type: "POST",
+            url: url,
+            dataType: "json",
+            data: {},
+            success: function(result)
+            {
+                /* The div contains now the updated form */
+                json_response = result;
+                if (json_response.status === 'success')
+                {
+                    $('#deleted-resources-table').DataTable().rows().remove().draw(false);
+                }
+            },
+            error: function(XMLHttpRequest, textStatus, errorThrown)
+            {
+            }
+            });
         }
 
     </script>

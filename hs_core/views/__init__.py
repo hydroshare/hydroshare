@@ -251,7 +251,7 @@ def delete_resource(request, shortkey, *args, **kwargs):
     res, _, user = authorize(request, shortkey, needed_permission=ACTION_TO_AUTHORIZE.DELETE_RESOURCE)
 
     res_title = res.metadata.title
-    resource_related_collections = [col for col in res.collections.all]
+    resource_related_collections = [col for col in res.collections.all()]
 
     try:
         hydroshare.delete_resource(shortkey)
