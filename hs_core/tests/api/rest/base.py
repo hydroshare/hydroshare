@@ -37,18 +37,24 @@ class HSRESTTestCase(APITestCase):
 
         self.user.delete()
 
-    def getResourceBag(self, res_id):
-        """Get resource bag from iRODS, following redirects
+    def getResourceBag(self, res_id, exhaust_stream=True):
+        """Get resource bag from iRODS, following redirects.
 
         :param res_id: ID of resource whose bag should be fetched
+        :param exhaust_stream: If True, the response returned
+           will have its stream_content exhausted.  This prevents
+           an error that causes the Docker container to exit when tests
+           are run with an external web server.
         :return: Django test client response object
         """
         bag_url = "/hsapi/resource/{res_id}".format(res_id=res_id)
         response = self.client.get(bag_url, follow=True)
+        self.assertTrue(response.status_code, status.HTTP_200_OK)
 
         # Exhaust the file stream so that WSGI doesn't get upset (this causes the Docker container to exit)
-        for l in response.streaming_content:
-            pass
+        if exhaust_stream:
+            for l in response.streaming_content:
+                pass
 
         return response
 
