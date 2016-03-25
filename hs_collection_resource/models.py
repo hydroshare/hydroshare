@@ -1,16 +1,9 @@
-from lxml import etree
-
 from django.contrib.auth.models import User
 from django.db import models, transaction
-from django.contrib.contenttypes.fields import GenericRelation
-from django.core.exceptions import ObjectDoesNotExist, ValidationError
 
 from mezzanine.pages.page_processors import processor_for
 
-from hs_core.models import BaseResource, ResourceManager, resource_processor, \
-    CoreMetaData, AbstractMetaDataElement
-from hs_core.hydroshare.utils import current_site_url
-
+from hs_core.models import BaseResource, ResourceManager, resource_processor
 
 class CollectionResource(BaseResource):
     objects = ResourceManager('CollectionResource')

@@ -31,17 +31,7 @@ def landing_page(request, page):
     else: # anonymous user
         user_all_accessible_resource_list = list(BaseResource.discoverable_resources.all())
 
-    collection_items_list = None
-    collection_items_accessible = []
-    collection_items_inaccessible = []
-    # if content_model.resources:
     collection_items_list = list(content_model.resources.all())
-        # for res in collection_items_list:
-        #     # From Pabitra: Drew the 'or' s are not needed in this if statement
-        #     if res in user_all_accessible_resource_list or res.raccess.discoverable or res.raccess.public:
-        #         collection_items_accessible.append(res)
-        #     else:
-        #         collection_items_inaccessible.append(res)
 
     # get the context from hs_core
     context = page_processors.get_page_context(page, request.user,
