@@ -44,22 +44,13 @@ class HSRESTTestCase(APITestCase):
         :return: Django test client response object
         """
         bag_url = "/hsapi/resource/{res_id}".format(res_id=res_id)
-        response = self.client.get(bag_url)
+        response = self.client.get(bag_url, follow=True)
 
-        self.assertEqual(response.status_code, status.HTTP_301_MOVED_PERMANENTLY)
-        self.assertTrue('Location' in response)
-        redir_url1 = response['Location'].replace('testserver', self.hostname)
+        # Exhaust the file stream so that WSGI doesn't get upset (this causes the Docker container to exit)
+        for l in response.streaming_content:
+            pass
 
-        redir_response = self.client.get(redir_url1)
-        self.assertEqual(redir_response.status_code, status.HTTP_302_FOUND)
-        redir_url2 = response['Location'].replace('testserver', self.hostname)
-        redir_response2 = self.client.get(redir_url2)
-
-        bag_irods_url = redir_response2['Location'].replace('example.com', self.hostname)
-        bag_response = self.client.get(bag_irods_url)
-        self.assertEqual(bag_response.status_code, status.HTTP_200_OK)
-
-        return bag_response
+        return response
 
     def getResourceFile(self, res_id, file_name):
         """Get resource file from iRODS, following redirects
