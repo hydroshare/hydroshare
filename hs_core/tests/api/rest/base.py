@@ -47,16 +47,8 @@ class HSRESTTestCase(APITestCase):
            are run with an external web server.
         :return: Django test client response object
         """
-        bag_url = "/hsapi/resource/{res_id}".format(res_id=res_id)
-        response = self.client.get(bag_url, follow=True)
-        self.assertTrue(response.status_code, status.HTTP_200_OK)
-
-        # Exhaust the file stream so that WSGI doesn't get upset (this causes the Docker container to exit)
-        if exhaust_stream:
-            for l in response.streaming_content:
-                pass
-
-        return response
+        url = "/hsapi/resource/{res_id}".format(res_id=res_id)
+        return self._get_file_irods(url, exhaust_stream)
 
     def getResourceFile(self, res_id, file_name, exhaust_stream=True):
         """Get resource file from iRODS, following redirects
@@ -69,9 +61,12 @@ class HSRESTTestCase(APITestCase):
            are run with an external web server.
         :return: Django test client response object
         """
-        bag_url = "/hsapi/resource/{res_id}/files/{file_name}".format(res_id=res_id,
-                                                                      file_name=file_name)
-        response = self.client.get(bag_url, follow=True)
+        url = "/hsapi/resource/{res_id}/files/{file_name}".format(res_id=res_id,
+                                                                  file_name=file_name)
+        return self._get_file_irods(url, exhaust_stream)
+
+    def _get_file_irods(self, url, exhaust_stream=True):
+        response = self.client.get(url, follow=True)
         self.assertTrue(response.status_code, status.HTTP_200_OK)
 
         # Exhaust the file stream so that WSGI doesn't get upset (this causes the Docker container to exit)
