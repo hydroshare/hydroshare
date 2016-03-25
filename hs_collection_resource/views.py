@@ -24,8 +24,6 @@ def update_collection(request, shortkey, *args, **kwargs):
 
             # get res_id list from POST
             updated_contained_res_id_list = request.POST.getlist("resource_id_list")
-            # for res_id in request.POST.getlist("resource_id_list"):
-            #     updated_contained_res_id_list.append(res_id)
 
             if len(updated_contained_res_id_list) > len(set(updated_contained_res_id_list)):
                 raise Exception("Duplicate resources were found for adding to the collection")

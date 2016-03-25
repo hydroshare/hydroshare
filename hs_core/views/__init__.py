@@ -251,6 +251,8 @@ def delete_resource(request, shortkey, *args, **kwargs):
     res, _, user = authorize(request, shortkey, needed_permission=ACTION_TO_AUTHORIZE.DELETE_RESOURCE)
 
     res_title = res.metadata.title
+    res_id = shortkey
+    res_type = res.resource_type
     resource_related_collections = [col for col in res.collections.all()]
 
     try:
@@ -265,6 +267,8 @@ def delete_resource(request, shortkey, *args, **kwargs):
     for collection_res in resource_related_collections:
         CollectionDeletedResource.objects.create(resource_title=res_title,
                                                  deleted_by=user,
+                                                 resource_id=res_id,
+                                                 resource_type=res_type,
                                                  collection=collection_res)
 
     return HttpResponseRedirect('/my-resources/')

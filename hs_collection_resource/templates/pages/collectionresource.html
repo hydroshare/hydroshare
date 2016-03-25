@@ -4,6 +4,7 @@
 {% block extra_css %}
     {{ block.super }}
     <link rel="stylesheet" href='{% static "css/jquery.dataTables.min.css" %}'/>
+    <link rel="stylesheet" href='{% static "css/collection.css" %}'/>
 {% endblock %}
 
 {# override content_block in generice.html#}
@@ -14,7 +15,7 @@
         <div id="title_and_add_btn_div">
            <h3 style="display: inline">Collection Contents </h3>
            {% if edit_mode %}
-           <span onclick="$('#collection-candidate').modal('show');" data-form-type="toggle-favorite" class="glyphicon glyphicon-plus-sign btn-inline-favorite" style="display: inline"> Add...</span>
+           <span onclick="$('#collection-candidate').modal('show');" data-form-type="toggle-favorite" class="glyphicon glyphicon-plus-sign btn-inline-green" style="display: inline"> Add...</span>
            {% endif %}
         </div>
         <div id="collection-table-div">
@@ -97,7 +98,12 @@
             {% endif %}
         </div>
         {% if deleted_resources|length > 0 %}
-            <input type="button" value="View deleted contents" onclick=" $('#deleted-resources-modal').modal('show');">
+            <div id="view_deleted_res_div">
+                <input type="button" id="view_deleted_res_btn" style="color: red" value="View deleted contents" onclick=" $('#deleted-resources-modal').modal('show');">
+                <span data-toggle="tooltip" data-placement="auto"
+                      title='{% if edit_mode %}There may be broken resource links in the bag of this collection due to the deleted resources. You need to clear the deleted resources to fix that.{% else %}Some of the resources have been deleted from this collection.{% endif %}'
+                      class="glyphicon glyphicon-info-sign text-muted"></span>
+            </div>
         {% endif %}
         <hr>
         {% block download_bag %}
@@ -163,9 +169,7 @@
                             {% for res in collection_candidate %}
                                 <tr id="{{ res.short_id }}">
                                     <td>
-                                        {% with page.get_content_model as collection_obj %}
-                                            <input class="row-selector" type="checkbox" id="{{ res.short_id }}">
-                                        {% endwith %}
+                                        <input class="row-selector" type="checkbox" id="{{ res.short_id }}">
                                     </td>
                                     <td>
                                         <strong><a href="{{ res.get_absolute_url }}" target="_blank">{{ res.metadata.title }}</a></strong></td>
@@ -238,9 +242,11 @@
                     <table id="deleted-resources-table" class="table-hover table-striped" width="100%">
                         <thead>
                         <tr>
+                            <th>Resource ID</th>
                             <th>Title</th>
-                            <th>Date</th>
+                            <th>Type</th>
                             <th>Deleted by</th>
+                            <th>Date</th>
                         </tr>
                         </thead>
                         <tbody>
@@ -248,10 +254,13 @@
                             {% for res in deleted_resources %}
                                 <tr>
                                     <td>
+                                        {{ res.resource_id }}
+                                    </td>
+                                    <td>
                                         {{ res.resource_title }}
                                     </td>
                                     <td>
-                                        {{ res.date_deleted }}
+                                        {{ res.resource_type }}
                                     </td>
                                     <td>
                                         {% if res.deleted_by.first_name %}
@@ -259,6 +268,9 @@
                                         {% else %}
                                             <strong><a href='/user/{{ res.deleted_by.pk }}/' target="_blank">{{ res.deleted_by.username }}</a></strong>
                                         {% endif %}
+                                    </td>
+                                    <td>
+                                        {{ res.date_deleted }}
                                     </td>
                                 </tr>
                             {% endfor %}
@@ -268,8 +280,8 @@
                 </div>
                 <div class="modal-footer">
                     {% if edit_mode|lower == "true" %}
-                    <button type="button" class="btn btn-default" id="save-collection-btn-ok" onclick="clear_deleted_resources_table('{{collection_res_id}}');">
-                        Clear
+                    <button type="button" class="btn btn-success" id="save-collection-btn-ok" onclick="clear_deleted_resources_table('{{collection_res_id}}');">
+                        Clear and Update Bag
                     </button>
                     {% endif %}
                     <button type="button" class="btn btn-default" data-dismiss="modal" id="save-collection-btn-cancel">
@@ -326,7 +338,10 @@
                         "targets": [6],     // <th>Remove</th>
                         "visible": false,
                         },
-                    ]
+                    ],
+                    "language": {
+                        "emptyTable": "This collection is empty"
+                    }
                     });
             }
             else
@@ -342,7 +357,10 @@
                             "targets": [0],     // <th>Add</th>
                             "visible": false,
                         },
-                    ]
+                    ],
+                    "language": {
+                        "emptyTable": "This collection is empty"
+                    }
                     });
             }
 
@@ -355,7 +373,10 @@
                         "targets": [6],     // <th>Remove</th>
                         "visible": false,
                     },
-                ]
+                ],
+                "language": {
+                    "emptyTable": "No resource available in this table"
+                }
             });
 
             resourceTable = $("#deleted-resources-table").DataTable({
@@ -363,6 +384,9 @@
                 "info": false,
                 "bFilter": false,
                 "bInfo": false,
+                "language": {
+                    "emptyTable": "All deleted resources have been cleared"
+                }
                 });
 
         }); // $(document).ready(function()
@@ -470,12 +494,12 @@
             $alert_success = '<div class="alert alert-success" id="success-alert"> \
                 <button type="button" class="close" data-dismiss="alert">x</button> \
                 <strong>Success! </strong> \
-                Metadata updated.\
+                Collection updated.\
             </div>'
             $alert_error = '<div class="alert alert-danger" id="error-alert"> \
                 <button type="button" class="close" data-dismiss="alert">x</button> \
                 <strong>Error! </strong> \
-                Metadata failed to update.\
+                Collection failed to update.\
             </div>'
             $form=$('#' + form_id);
             var resource_id_list = [];
@@ -498,7 +522,7 @@
                             if (json_response.metadata_status !== $('#metadata-status').text()) {
                                 $('#metadata-status').text(json_response.metadata_status);
                                 if (json_response.metadata_status.toLowerCase().indexOf("insufficient") == -1) {
-                                    customAlert("<i class='glyphicon glyphicon-flag custom-alert-icon'></i><strong>Metadata Status:</strong> sufficient to publish or make public", 3000);
+                                    customAlert("<i class='glyphicon glyphicon-flag custom-alert-icon'></i><strong>Collection Status:</strong> sufficient to publish or make public", 3000);
                                     $("#btn-public").prop("disabled", false);
                                     $("#btn-discoverable").prop("disabled", false);
                                 }
@@ -541,6 +565,9 @@
 
         function clear_deleted_resources_table(collection_id)
         {
+            // hide view deleted
+            $("#view_deleted_res_div").hide()
+
             url = "/hsapi/_internal/" + collection_id +"/update-collection-for-deleted-resources/";
             $.ajax({
             type: "POST",

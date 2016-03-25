@@ -51,6 +51,12 @@
                         <br>
                         <span>Content files are required to publish the resource or make the resource public or discoverable.</span>
                 {% endif %}
+                {%  if cm.resource_type|lower == "collectionresource" %}
+                    {% if not cm.has_resources%}
+                        <br>
+                        <span>Collection should contain at least one resource to be made it published, public or discoverable.</span>
+                    {% endif %}
+                {% endif %}
                 <hr>
                 <span class="glyphicon glyphicon-question-sign"></span>
                 <small> Click on the edit button ( <span class="glyphicon glyphicon-pencil"></span> ) below to edit this resource.</small>

@@ -19,6 +19,8 @@ class Migration(migrations.Migration):
                 ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
                 ('resource_title', models.TextField()),
                 ('date_deleted', models.DateTimeField(auto_now_add=True)),
+                ('resource_id', models.CharField(max_length=32)),
+                ('resource_type', models.CharField(max_length=50)),
             ],
         ),
         migrations.CreateModel(

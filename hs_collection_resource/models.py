@@ -37,6 +37,11 @@ class CollectionResource(BaseResource):
     def deleted_resources(self):
         return CollectionDeletedResource.objects.filter(collection=self)
 
+    @property
+    def has_resources(self):
+        return self.resources.count() > 0
+
+
 processor_for(CollectionResource)(resource_processor)
 
 
@@ -45,6 +50,8 @@ class CollectionDeletedResource(models.Model):
     deleted_by = models.ForeignKey(User)
     date_deleted = models.DateTimeField(auto_now_add=True)
     collection = models.ForeignKey(BaseResource)
+    resource_id = models.CharField(max_length=32)
+    resource_type = models.CharField(max_length=50)
 
 
 import receivers
