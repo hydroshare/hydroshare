@@ -131,6 +131,16 @@ USE_CROSSREF_TEST = True
 CROSSREF_LOGIN_ID = ''
 CROSSREF_LOGIN_PWD = ''
 
+# Since Hyrax server on-demand update is only needed when private netCDF resources on www
+# are made public, in local development environments or VM deployments other than the www
+# production, this should not be run by setting RUN_HYRAX_UPDATE to False. RUN_HYRAX_UPDATE
+# should only be set to True on www.hydroshare.org
+RUN_HYRAX_UPDATE = False
+HYRAX_SSH_HOST = ''
+HYRAX_SSH_PROXY_USER = ''
+HYRAX_SSH_PROXY_USER_PWD = ''
+HYRAX_SCRIPT_RUN_COMMAND = ''
+
 # Email configuration
 EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 #EMAIL_HOST_USER = ''

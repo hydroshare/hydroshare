@@ -134,10 +134,7 @@ class Variable(AbstractMetaDataElement):
 
     @classmethod
     def remove(cls, element_id):
-        variable = Variable.objects.get(id=element_id)
-        if Variable.objects.filter(object_id=variable.object_id, content_type__pk=variable.content_type.id).count()== 1:
-            raise ValidationError("The only variable of the resource can't be deleted.")
-        variable.delete()
+        raise ValidationError("The variable of the resource can't be deleted.")
 
 
 # Define the netCDF resource
