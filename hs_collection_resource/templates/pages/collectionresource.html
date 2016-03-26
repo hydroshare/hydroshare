@@ -1,0 +1,571 @@
+{% extends "pages/genericresource.html" %}
+{% load geoanalytics_tags pages_tags staticfiles mezzanine_tags crispy_forms_tags hydroshare_tags%}
+
+{% block extra_css %}
+    {{ block.super }}
+    <link rel="stylesheet" href='{% static "css/jquery.dataTables.min.css" %}'/>
+{% endblock %}
+
+{# override content_block in generice.html#}
+{% block content_block %}
+
+    {# collection content table #}
+    <div id="collection_content_div">
+        <div id="title_and_add_btn_div">
+           <h3 style="display: inline">Collection Contents </h3>
+           {% if edit_mode %}
+           <span onclick="$('#collection-candidate').modal('show');" data-form-type="toggle-favorite" class="glyphicon glyphicon-plus-sign btn-inline-favorite" style="display: inline"> Add...</span>
+           {% endif %}
+        </div>
+        <div id="collection-table-div">
+            {% if edit_mode %}
+                <form id="collector-new" name="collector-new" action="/hsapi/_internal/{{collection_res_id}}/update-collection/" method="POST">
+            {% endif %}
+
+            <table id="collection-table" class="table-hover table-striped" width="100%">
+                <thead>
+                <tr>
+                    <th>Add</th>
+                    <th>Title</th>
+                    <th>Type</th>
+                    <th>Owners</th>
+                    <th>Sharing status</th>
+                    <th>My Permission</th>
+                    <th>Remove</th>
+                </tr>
+                </thead>
+                <tbody>
+                 {% if collection %}
+                    {% for res in collection %}
+                        <tr id="{{ res.short_id }}">
+                            <td>
+                                <input class="row-selector" type="checkbox" id="{{ res.short_id }}">
+                            </td>
+                            <td>
+                                <strong><a href="{{ res.get_absolute_url }}" target="_blank">{{ res.metadata.title }}</a></strong></td>
+                            <td>
+                                {{ res.resource_type }}
+                            </td>
+                            <td>
+                                {% for owner in res.raccess.owners.all %}
+                                    {% if forloop.counter0 > 0 %} · {% endif %}
+                                    {% if owner.first_name %}
+                                        <strong><a href='/user/{{ owner.pk }}/' target="_blank">{{owner.first_name}} {{owner.last_name }}</a></strong>
+                                    {% else %}
+                                        <strong><a href='/user/{{ owner.pk }}/' target="_blank">{{ owner.username }}</a></strong>
+                                    {% endif %}
+                                {% endfor %}
+                            </td>
+                            <td>
+                                {% if res.raccess.published %}
+                                    Published
+                                {% elif res.raccess.public %}
+                                    Public
+                                {% elif res.raccess.discoverable %}
+                                    Discoverable
+                                {% else %}
+                                    Private
+                                {% endif %}
+                            </td>
+                             <td>
+                                {% if res|user_permission:request.user.pk|lower == "none" %}
+                                    <strong class="label-private">{{ res|user_permission:request.user.pk }}</strong>
+                                {% elif res|user_permission:request.user.pk|lower == "open access" %}
+                                    <strong class="label-public">{{ res|user_permission:request.user.pk }}</strong>
+                                {% else %}
+                                    {{ res|user_permission:request.user.pk }}
+                                {% endif %}
+                            </td>
+                            <td>
+                                <span onclick="remove_collection_item('{{ res.short_id }}')" data-form-id="form-favorite-{{ res.short_id }}" data-form-type="toggle-favorite"
+                                                  class="glyphicon glyphicon-remove btn-inline-favorite"></span>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                {% endif %}
+                </tbody>
+            </table>
+
+            {% if edit_mode %}
+                </form>
+                <input class="btn btn-primary" type="button" id="save-new" onclick="save_btn_callback_new();" value="Save Changes" style="display: none"/>
+            {% endif %}
+        </div>
+        <hr>
+        {% block download_bag %}
+            <div>
+                {% for b in cm.bags.all %}
+                    <a id="btn-download-all" type="button" class="btn btn-default row-selector" href="{{ bag_url }}">
+                        <span class="glyphicon glyphicon-download-alt">
+                            <span title='Download All Content as Zipped BagIt Archive' class="button-label">Download All Content as Zipped BagIt Archive</span>
+                        </span>
+                        <a target="_blank" href="http://en.wikipedia.org/wiki/BagIt">Learn more about the Bagit archive format</a>
+                    </a>
+                {% endfor %}
+            </div>
+        {% endblock %}
+    </div>
+
+    {#    modal div: warning message  #}
+    <div class="modal fade" id="save-collection-warning" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                    <h4 class="modal-title" id="save-collection-warning-title">Confirm Changes</h4>
+                </div>
+                <div class="modal-body" id="save-collection-warning-body">
+                    You have NO PERMISSION over the resource you are about to remove from this collection. Once confirmed, you CAN NOT add it back.
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default" data-dismiss="modal" id="save-collection-btn-cancel">
+                        Cancel
+                    </button>
+                    <button type="button" class="btn btn-danger" data-dismiss="modal" id="save-collection-btn-ok">
+                        Confirm
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {#    modal div: collection candidate table #}
+    <div class="modal fade" id="collection-candidate" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+        <div class="modal-dialog" style="width:65%">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                    <h4 class="modal-title" id="save-collection-warning-title">My Resources Pool</h4>
+                </div>
+                <div class="modal-body" id="save-collection-warning-body">
+                    <table id="collection-table-candidate" class="table-hover table-striped" width="100%">
+                        <thead>
+                        <tr>
+                            <th>Add</th>
+                            <th>Title</th>
+                            <th>Type</th>
+                            <th>Owners</th>
+                            <th>Sharing status</th>
+                            <th>My Permission</th>
+                            <th>Remove</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        {% if collection_candidate %}
+                            {% for res in collection_candidate %}
+                                <tr id="{{ res.short_id }}">
+                                    <td>
+                                        {% with page.get_content_model as collection_obj %}
+                                            {# public res and discoverable res both have res.raccess.discoverable=true #}
+                                            {# if collection is pub or dis, and user is edit, so disable all private res in candidate table #}
+                                            {% if collection_obj.raccess.discoverable and is_edit_user and not res.raccess.discoverable%}
+                                                <input class="row-selector" type="checkbox" id="{{ res.short_id }}" disabled>
+                                            {% else %}
+                                                <input class="row-selector" type="checkbox" id="{{ res.short_id }}">
+                                            {% endif %}
+                                        {% endwith %}
+
+                                    </td>
+                                    <td>
+                                        <strong><a href="{{ res.get_absolute_url }}" target="_blank">{{ res.metadata.title }}</a></strong></td>
+                                    <td>
+                                        {{ res.resource_type }}
+                                    </td>
+                                    <td>
+                                        {% for owner in res.raccess.owners.all %}
+                                            {% if forloop.counter0 > 0 %} · {% endif %}
+
+                                            {% if owner.first_name %}
+                                                <strong><a href='/user/{{ owner.pk }}/' target="_blank">{{owner.first_name}} {{owner.last_name }}</a></strong>
+                                            {% else %}
+                                                <strong><a href='/user/{{ owner.pk }}/' target="_blank">{{ owner.username }}</a></strong>
+                                            {% endif %}
+                                        {% endfor %}
+                                    </td>
+                                    <td>
+                                        {% if res.raccess.published %}
+                                            Published
+                                        {% elif res.raccess.public %}
+                                            Public
+                                        {% elif res.raccess.discoverable %}
+                                            Discoverable
+                                        {% else %}
+                                            Private
+                                        {% endif %}
+                                    </td>
+                                     <td>
+                                        {% if res|user_permission:request.user.pk|lower == "none" %}
+                                            <strong class="label-private">{{ res|user_permission:request.user.pk }}</strong>
+                                        {% elif res|user_permission:request.user.pk|lower == "open access" %}
+                                            <strong class="label-public">{{ res|user_permission:request.user.pk }}</strong>
+                                        {% else %}
+                                            {{ res|user_permission:request.user.pk }}
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <span onclick="remove_collection_item('{{ res.short_id }}')" data-form-id="form-favorite-{{ res.short_id }}" data-form-type="toggle-favorite"
+                                                          class="glyphicon glyphicon-remove btn-inline-favorite"></span>
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                         {% endif %}
+                        </tbody>
+                    </table>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default" data-dismiss="modal" id="save-collection-btn-cancel">
+                       Cancel
+                    </button>
+                    <button type="button" class="btn btn-success" data-dismiss="modal" id="save-collection-btn-ok" onclick="add_collection_item();">
+                        Add to collection
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+{% endblock %}
+
+{% block extra_js %}
+    {{ block.super }}
+    <script type="text/javascript" src='{% static "js/jquery.dataTables.js" %}'></script>
+
+    {# put resource specific js below #}
+    <script type="text/javascript">
+
+        $(document).ready(function()
+        {
+            // disable "Publish" btn
+            $("#publish").hide();
+            $("#new-version").hide();
+
+            // unhook btn-invite original onclick event and re-wire it with function share_collection_ajax_submit
+            $('#btn-invite').off("click");
+            $('#btn-invite').on( "click", share_collection_ajax_submit);
+
+            //------------------ table headers ------------
+            {#                <th>Add</th>             0  #}
+            {#                <th>Title</th>           1  #}
+            {#                <th>Type</th>            2  #}
+            {#                <th>Owners</th>          3  #}
+            {#                <th>Sharing status</th>  4  #}
+            {#                <th>My Permission</th>   5  #}
+            {#                <th>Remove</th>          6  #}
+
+            var edit_mode = "{{edit_mode}}";
+            if (edit_mode.toLowerCase() == "false")
+            {
+                    resourceTable = $("#collection-table").DataTable({
+                    "order": [[2, "asc"]],
+                    "paging": false,
+                    "info": false,
+                    "bFilter": false,
+                    "bInfo": false,
+                    "columnDefs": [
+                        {
+                            "targets": [0],     // <th>Add</th>
+                            "visible": false,
+                        },
+                        {
+                        "targets": [6],     // <th>Remove</th>
+                        "visible": false,
+                        },
+                    ]
+                    });
+            }
+            else
+            {
+                 resourceTable = $("#collection-table").DataTable({
+                    "order": [[2, "asc"]],
+                    "paging": false,
+                    "info": false,
+                    "bFilter": false,
+                    "bInfo": false,
+                    "columnDefs": [
+                        {
+                            "targets": [0],     // <th>Add</th>
+                            "visible": false,
+                        },
+                    ]
+                    });
+            }
+
+            resourceTable = $("#collection-table-candidate").DataTable({
+                "order": [[2, "asc"]],
+                "paging": false,
+                "info": false,
+                "columnDefs": [
+                    {
+                        "targets": [6],     // <th>Remove</th>
+                        "visible": false,
+                    },
+                ]
+            });
+
+        }); // $(document).ready(function()
+
+        // wrap hs_core function share_resource_ajax_submit() for collection
+        function share_collection_ajax_submit(){
+
+            if (!$("#id_user-deck > .hilight").length) {
+                return false; // If no user selected, ignore the request
+            }
+            var target_user_id = $("#id_user-deck > .hilight")[0].getAttribute("data-value");
+            $form = $('#add-access-form');
+            var url = $form.attr('action');
+            var collection_obj_res_id = (url.split("/"))[3];
+
+            var url_collection_member_permission = "/hsapi/_internal/" + collection_obj_res_id
+                    + "/collection-member-permission/" + target_user_id + "/";
+            $.ajax({
+                type: "GET",
+                url: url_collection_member_permission,
+                dataType: 'html',
+                data: "",
+                success: function(result)
+                {
+                    json_response = JSON.parse(result);
+                    if(json_response.no_permission_list.length > 0)
+                    {
+                        $('#save-collection-warning-body').text("");
+                        var h_tag = $("<h5 />", {
+                                    text : "The target user has no permission to view the following member resource(s) in this collection: "
+                                });
+                        $('#save-collection-warning-body').append(h_tag);
+                        for (i=0; i<json_response.no_permission_list.length; i++)
+                        {
+                            res_id =json_response.no_permission_list[i];
+                            var newLink = $("<a />", {
+                                    href : "/resource/" + res_id + "/",
+                                    text : res_id,
+                                    target: "_blank"
+                                }).after("<br />");
+                             $('#save-collection-warning-body').append(newLink);
+                        }
+
+                        $('#save-collection-warning-title').text("Warning");
+                        $('#save-collection-btn-cancel').hide();
+                        $('#save-collection-btn-ok').text("OK").off("click");
+                        $('#save-collection-warning').modal('show');
+                    }
+                    else
+                    {
+                        share_resource_ajax_submit('add-access-form');
+                    }
+
+                },
+                error: function(XMLHttpRequest, textStatus, errorThrown)
+                {
+
+                }
+            });
+            return false;
+        }
+
+        ////--------------------------------------------------------------------
+        ////----------------------------------------------------------------------
+        function remove_collection_item(res_id)
+        {
+            // get row obj is being removed from collection
+            var removed_row_from_colletion = $('#collection-table').DataTable().row('#' + res_id);
+
+            if(removed_row_from_colletion.data()[5].toLowerCase().indexOf("none") >= 0) {
+                $('#save-collection-btn-cancel').off("click");
+                $('#save-collection-btn-ok').off("click").on("click", function(){
+                    removed_row_from_colletion.remove().draw(false);
+                });
+
+                waning_message = "You have NO PERMISSION over the resource you are about to remove from this collection. Once confirmed, you CAN NOT add it back.";
+
+                $('#save-collection-warning-body').text(waning_message);
+                $('#save-collection-warning').modal('show');
+            }
+            else if("{{ page.get_content_model.raccess.discoverable|lower }}"=="true" &&
+             "{{ is_edit_user|lower }}"=="true" && $('#collection-table').DataTable().rows().count()==1)
+            {
+                // edit user cannot remove the last one member res in a public or discoverable collection
+                $('#save-collection-warning-title').text("Warning");
+                $('#save-collection-btn-cancel').hide();
+                $('#save-collection-btn-ok').text("OK").off("click");
+                waning_message = "Removing the last one member resource will downgrade sharing status to Private, but you have no permission to change it.";
+                $('#save-collection-warning-body').text(waning_message);
+                $('#save-collection-warning').modal('show');
+            }
+            else
+            {
+                 // copy row data and add to collection-candidate table
+                $('#collection-table-candidate').DataTable().row.add(removed_row_from_colletion.data()).draw(false);
+                // remove row obj
+                removed_row_from_colletion.remove().draw(false);
+            }
+            $('#save-new').show();
+        }
+
+        function add_collection_item()
+        {
+            $.each($(".row-selector:checked"),function( index, chkbox ) {
+                    var res_id = chkbox.id;
+                    var added_row = $('#collection-table-candidate').DataTable().row('#' + res_id);
+                    $('#collection-table').DataTable().row.add(added_row.data()).draw(false);
+                    added_row.remove().draw(false);
+            });
+            $('#save-new').show();
+        }
+
+        // revised metadata_update_ajax_submit
+        function collection_update_ajax_submit_new(form_id)
+        {
+                    $alert_success = '<div class="alert alert-success" id="success-alert"> \
+                        <button type="button" class="close" data-dismiss="alert">x</button> \
+                        <strong>Success! </strong> \
+                        Metadata updated.\
+                    </div>';
+                    $alert_error = '<div class="alert alert-danger" id="error-alert"> \
+                        <button type="button" class="close" data-dismiss="alert">x</button> \
+                        <strong>Error! </strong> \
+                        Metadata failed to update.\
+                    </div>';
+                    $form=$('#' + form_id);
+
+                    var resource_id_list = [];
+
+                    $('#collection-table').DataTable().rows().every(function()
+                    {resource_id_list.push(this.id);});
+                    $.ajax({
+                        type: "POST",
+                        url: $form.attr('action'),
+                        dataType: "json",
+                        data: {"resource_id_list": resource_id_list},
+                        success: function(result)
+                        {
+                            /* The div contains now the updated form */
+                            var json_response = result;
+                            if (json_response.status === 'success')
+                            {
+                                $(document).trigger("submit-success");
+                                if (json_response.user_permission.toLowerCase() == "own")
+                                {
+                                    // forced to change to a new sharing status
+                                    if (json_response.new_sharing_status)
+                                    {
+                                        if (json_response.new_sharing_status.toLowerCase() == "private"
+                                                && json_response.current_sharing_status.toLowerCase() != "private")
+                                        {
+                                            $("#btn-public").prop("disabled", true).removeClass("active");
+                                            $("#btn-discoverable").prop("disabled", true).removeClass("active");
+                                            $("#btn-private").prop("disabled", true).addClass("active");
+
+                                            customAlert("<i class='glyphicon glyphicon-flag custom-alert-icon'></i><strong>Metadata Status:</strong> " +
+                                                    "Sharing status downgraded to private", 3000);
+                                        }
+                                    } //if (json_response.new_sharing_status)
+                                    else
+                                    {
+                                        if (json_response.metadata_status == "Sufficient to make public")
+                                        {
+                                            if(json_response.current_sharing_status.toLowerCase() == "private")
+                                            {
+                                                customAlert("<i class='glyphicon glyphicon-flag custom-alert-icon'></i><strong>Metadata Status:</strong> sufficient to make public", 3000);
+                                                $("#btn-public").prop("disabled", false);
+                                                $("#btn-discoverable").prop("disabled", false);
+                                            }
+                                            else if (json_response.current_sharing_status.toLowerCase() == "discoverable")
+                                            {
+                                                // do nothing
+                                            }
+                                            else if (json_response.current_sharing_status.toLowerCase() == "public")
+                                            {
+                                                // do nothing
+                                            }
+                                        }
+                                        else // "Insufficient to make public"
+                                        {
+                                            $("#btn-public").prop("disabled", true);
+                                            $("#btn-discoverable").prop("disabled", true);
+                                            $("#btn-private").prop("disabled", false);
+                                        }
+                                    } // if (json_response.new_sharing_status)
+                                } // if (json_response.user_permission.toLowerCase() == "own")
+
+                                $('body > .container').append($alert_success);
+                                $('#error-alert').each(function(){
+                                    this.remove();
+                                });
+                                $(".alert-success").fadeTo(2000, 500).fadeOut(1000, function(){
+                                    $(document).trigger("submit-success");
+                                    $(".alert-success").alert('close');
+                                });
+                            } // if (json_response.status === 'success')
+                            else{
+                                $('body > .container').append($alert_error);
+                                $(".alert-danger").fadeTo(3000, 500).fadeOut(1000, function(){
+                                    $(document).trigger("submit-error");
+                                    $(".alert-danger").alert('close');
+                                });
+                            }
+                        },
+                        error: function(XMLHttpRequest, textStatus, errorThrown)
+                        {
+                            $('#' + form_id).before($alert_error);
+                            $(".alert-error").fadeTo(2000, 500).slideUp(1000, function(){
+                                $(".alert-error").alert('close');
+                            });
+                        }
+                    });
+                    //don't submit the form
+                    return false;
+                }
+
+        function save_btn_callback_new()
+        {
+            if ($('#btn-public').hasClass("active")||$('#btn-discoverable').hasClass("active"))
+            {
+                no_member_resource_warning_flag = false;
+                found_private_warning_flag = false;
+
+                if ($('#collection-table').DataTable().rows().count()==0)
+                {
+                    no_member_resource_warning_flag = true;
+                }
+                else
+                {
+                    $('#collection-table').DataTable().rows().every(function()
+                        {
+                            if(this.data()[4].toLowerCase().indexOf("private") >= 0)
+                            { found_private_warning_flag = true;}
+                        });
+                }
+
+                if (no_member_resource_warning_flag || found_private_warning_flag)
+                {
+                    $('#save-collection-warning-title').text("Downgrade to Private");
+                    $('#save-collection-btn-cancel').off("click");
+                    $('#save-collection-btn-ok').off("click").on( "click", save_collection_new);
+
+                    waning_message = "The collection has no member resource. Sharing status will downgrade to PRIVATE.";
+                    if (found_private_warning_flag)
+                    {
+                        waning_message = "You are about to add private resources into this collection. Sharing status will downgrade to PRIVATE.";
+                    }
+                    $('#save-collection-warning-body').text(waning_message);
+
+                    $('#save-collection-warning').modal('show');
+                }
+                else
+                {
+                    save_collection_new();
+                }
+            } // if ($('#btn-public').hasClass("active")||$('#btn-discoverable').hasClass("active"))
+            else
+            {
+                save_collection_new();
+            } // if ($('#btn-public').hasClass("active")||$('#btn-discoverable').hasClass("active"))
+        }
+
+        function save_collection_new ()
+        {
+            collection_update_ajax_submit_new('collector-new');
+        }
+
+    </script>
+{% endblock %}
