@@ -84,27 +84,3 @@ def update_collection_for_deleted_resources(request, shortkey, *args, **kwargs):
     finally:
         return JsonResponse(ajax_response_data)
 
-# loop through contained resources in collection ("shortkey") to check if the target user ("user_id") has
-# at least View permission over them.
-def collection_member_permission(request, shortkey, user_id, *args, **kwargs):
-    try:
-        collection_res_obj, is_authorized, user = authorize(request, shortkey,
-                                              needed_permission=ACTION_TO_AUTHORIZE.VIEW_METADATA,
-                                              raises_exception=True)
-        no_permission_list = []
-
-        user_to_share_with = user_from_id(user_id)
-        if collection_res_obj.resources:
-            for res_in_collection in collection_res_obj.resources.all():
-                if not user_to_share_with.uaccess.can_view_resource(res_in_collection) \
-                    and not res_in_collection.raccess.discoverable:
-                    no_permission_list.append(res_in_collection.short_id)
-            status = "success"
-            ajax_response_data = {'status': status, 'no_permission_list': no_permission_list}
-        else:
-            raise Exception("Collection element is not yet initialized.")
-    except Exception as ex:
-        logger.warning("collection_member_permission: %s" % (ex.message))
-        ajax_response_data = {'status': "error", 'message': ex.message}
-    finally:
-        return JsonResponse(ajax_response_data)

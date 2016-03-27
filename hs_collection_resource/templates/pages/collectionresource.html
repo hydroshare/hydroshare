@@ -4,7 +4,6 @@
 {% block extra_css %}
     {{ block.super }}
     <link rel="stylesheet" href='{% static "css/jquery.dataTables.min.css" %}'/>
-    <link rel="stylesheet" href='{% static "css/collection.css" %}'/>
 {% endblock %}
 
 {# override content_block in generice.html#}
@@ -315,10 +314,6 @@
             $("#publish").hide();
             $("#new-version").hide();
 
-            // unhook btn-invite original onclick event and re-wire it with function share_collection_ajax_submit
-            $('#btn-invite').off("click");
-            $('#btn-invite').on( "click", share_collection_ajax_submit);
-
             //------------------ table headers ------------
             {#                <th>Add</th>             0  #}
             {#                <th>Title</th>           1  #}
@@ -409,65 +404,8 @@
                 }
                 });
 
-        }); // $(document).ready(function()
+        }); // $(document).ready(function())
 
-        // wrap hs_core function share_resource_ajax_submit() for collection
-        function share_collection_ajax_submit(){
-
-            if (!$("#id_user-deck > .hilight").length) {
-                return false; // If no user selected, ignore the request
-            }
-            var target_user_id = $("#id_user-deck > .hilight")[0].getAttribute("data-value");
-            $form = $('#add-access-form');
-            var url = $form.attr('action');
-            var collection_obj_res_id = (url.split("/"))[3];
-
-            var url_collection_member_permission = "/hsapi/_internal/" + collection_obj_res_id
-                    + "/collection-member-permission/" + target_user_id + "/";
-            $.ajax({
-                type: "GET",
-                url: url_collection_member_permission,
-                dataType: 'html',
-                data: "",
-                success: function(result)
-                {
-                    json_response = JSON.parse(result);
-                    if(json_response.no_permission_list.length > 0)
-                    {
-                        $('#save-collection-warning-body').text("");
-                        var h_tag = $("<h5 />", {
-                                    text : "The target user has no permission to view the following contained resource(s) in this collection: "
-                                });
-                        $('#save-collection-warning-body').append(h_tag);
-                        for (i=0; i<json_response.no_permission_list.length; i++)
-                        {
-                            res_id =json_response.no_permission_list[i];
-                            var newLink = $("<a />", {
-                                    href : "/resource/" + res_id + "/",
-                                    text : res_id,
-                                    target: "_blank"
-                                }).after("<br />");
-                             $('#save-collection-warning-body').append(newLink);
-                        }
-
-                        $('#save-collection-warning-title').text("Warning");
-                        $('#save-collection-btn-cancel').hide();
-                        $('#save-collection-btn-ok').text("OK").off("click");
-                        $('#save-collection-warning').modal('show');
-                    }
-                    else
-                    {
-                        share_resource_ajax_submit('add-access-form');
-                    }
-
-                },
-                error: function(XMLHttpRequest, textStatus, errorThrown)
-                {
-
-                }
-            });
-            return false;
-        }
 
         function remove_collection_item(res_id)
         {

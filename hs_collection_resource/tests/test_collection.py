@@ -415,27 +415,3 @@ class TestCollection(TransactionTestCase):
         self.assertEqual(self.resCollection.deleted_resources.count(), 0)
         self.assertEqual(CollectionDeletedResource.objects.count(), 0)
 
-    def test_collection_member_permission(self):
-        # user 1 login
-        self.api_client.login(username='user1', password='mypassword1')
-
-        # add 3 private member resources
-        url_to_update_collection = self.url_to_update_collection.format(self.resCollection.short_id)
-        response = self.api_client.post(url_to_update_collection,
-                                        {'resource_id_list': [self.resGen1.short_id, self.resGen2.short_id, self.resGen3.short_id]},
-                                        )
-        self.assertEqual(self.resCollection.resources.count(), 3)
-
-        # check user 1 --> has permission over all contained resources
-        url_collection_member_permission = self.url_to_collection_member_permission.format(self.resCollection.short_id, self.user1.pk)
-        response = self.api_client.post(url_collection_member_permission)
-        resp_json = json.loads(response.content)
-        self.assertEqual(resp_json["status"], "success")
-        self.assertEqual(len(resp_json["no_permission_list"]), 0)
-
-        # check user 2 --> has NO permission over any contained resource
-        url_collection_member_permission = self.url_to_collection_member_permission.format(self.resCollection.short_id, self.user2.pk)
-        response = self.api_client.post(url_collection_member_permission)
-        resp_json = json.loads(response.content)
-        self.assertEqual(resp_json["status"], "success")
-        self.assertEqual(len(resp_json["no_permission_list"]), 3)
