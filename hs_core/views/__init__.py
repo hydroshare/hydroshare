@@ -40,7 +40,7 @@ from . import utils as view_utils
 from hs_core.signals import *
 from hs_access_control.models import PrivilegeCodes
 
-from hs_collection_resource.models import CollectionResource, CollectionDeletedResource
+from hs_collection_resource.models import CollectionDeletedResource
 
 logger = logging.getLogger(__name__)
 
