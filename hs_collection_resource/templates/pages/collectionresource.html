@@ -15,7 +15,10 @@
         <div id="title_and_add_btn_div">
            <h3 style="display: inline">Collection Contents </h3>
            {% if edit_mode %}
-           <span onclick="$('#collection-candidate').modal('show');" data-form-type="toggle-favorite" class="glyphicon glyphicon-plus-sign btn-inline-green" style="display: inline"> Add...</span>
+               <a type="button" class="btn btn-success" onclick="$('#collection-candidate').modal('show');" >
+                   <span class="glyphicon glyphicon-plus"><span class="button-label"> Add resources...</span></span>
+               </a>
+
            {% endif %}
         </div>
         <div id="collection-table-div">
@@ -111,7 +114,7 @@
                 {% for b in cm.bags.all %}
                     <a id="btn-download-all" type="button" class="btn btn-default row-selector" href="{{ bag_url }}">
                         <span class="glyphicon glyphicon-download-alt">
-                            <span title='Download All Content as Zipped BagIt Archive' class="button-label">Download All Content as Zipped BagIt Archive</span>
+                            <span title='Download All Content as Zipped BagIt Archive' class="button-label">Download Collection Bag</span>
                         </span>
                         <a target="_blank" href="http://en.wikipedia.org/wiki/BagIt">Learn more about the Bagit archive format</a>
                     </a>
@@ -277,15 +280,16 @@
                          {% endif %}
                         </tbody>
                     </table>
+                    <div id="clear-deleted-res-warning" style="display: None">It may take seconds to clear deleted resources and update bag. Please keep this window open and wait...</div>
                 </div>
                 <div class="modal-footer">
                     {% if edit_mode|lower == "true" %}
-                    <button type="button" class="btn btn-success" id="save-collection-btn-ok" onclick="clear_deleted_resources_table('{{collection_res_id}}');">
+                    <button type="button" class="btn btn-success" id="clear-deleted-res-btn" onclick="clear_deleted_resources_table('{{collection_res_id}}');">
                         Clear and Update Bag
                     </button>
                     {% endif %}
                     <button type="button" class="btn btn-default" data-dismiss="modal" id="save-collection-btn-cancel">
-                       OK
+                       Close
                     </button>
                 </div>
             </div>
@@ -301,6 +305,10 @@
     {# put resource specific js below #}
     <script type="text/javascript">
 
+        var paging = false;
+        var page_length = 15;
+        var page_type = "numbers";
+        var page_length_change = false;
         $(document).ready(function()
         {
             // disable "Publish" btn
@@ -325,7 +333,10 @@
             {
                     resourceTable = $("#collection-table").DataTable({
                     "order": [[2, "asc"]],
-                    "paging": false,
+                    "paging": paging,
+                    "bLengthChange": false,
+                    "pagingType": page_type,
+                    "pageLength": page_length,
                     "info": false,
                     "bFilter": false,
                     "bInfo": false,
@@ -348,7 +359,10 @@
             {
                  resourceTable = $("#collection-table").DataTable({
                     "order": [[2, "asc"]],
-                    "paging": false,
+                    "paging": paging,
+                    "bLengthChange": false,
+                    "pagingType": page_type,
+                    "pageLength": page_length,
                     "info": false,
                     "bFilter": false,
                     "bInfo": false,
@@ -366,7 +380,10 @@
 
             resourceTable = $("#collection-table-candidate").DataTable({
                 "order": [[2, "asc"]],
-                "paging": false,
+                "paging": paging,
+                "bLengthChange": false,
+                "pagingType": page_type,
+                "pageLength": page_length,
                 "info": false,
                 "columnDefs": [
                     {
@@ -380,7 +397,10 @@
             });
 
             resourceTable = $("#deleted-resources-table").DataTable({
-                "paging": false,
+                "paging": paging,
+                "bLengthChange": false,
+                "pagingType": page_type,
+                "pageLength": page_length,
                 "info": false,
                 "bFilter": false,
                 "bInfo": false,
@@ -565,7 +585,9 @@
         function clear_deleted_resources_table(collection_id)
         {
             // hide view deleted
-            $("#view_deleted_res_div").hide()
+            $("#view_deleted_res_div").hide();
+            $("#clear-deleted-res-btn").hide();
+            $("#clear-deleted-res-warning").show();
 
             url = "/hsapi/_internal/" + collection_id +"/update-collection-for-deleted-resources/";
             $.ajax({
@@ -580,6 +602,7 @@
                 if (json_response.status === 'success')
                 {
                     $('#deleted-resources-table').DataTable().rows().remove().draw(false);
+                    $("#clear-deleted-res-warning").hide();
                 }
             },
             error: function(XMLHttpRequest, textStatus, errorThrown)
