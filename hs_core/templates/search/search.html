@@ -46,10 +46,10 @@
                                      {% else %}
                                         class="panel-collapse collapse"
                                      {% endif %}>
-                                    <ul class="list-group" style="height: 200px; overflow-y: auto;">
+                                    <ul class="list-group" id="list-group-{{ key }}" style="height: 200px; overflow-y: auto;">
                                     {% for item in values %}
                                         {% if item.1 > 0 %}
-                                            <li class="list-group-item clearfix">
+                                            <li class="list-group-item clearfix" rel="{{ key }},{{ item.0 }}">
 
                                                 <input class="faceted-selections" id="{{ key }}-{{ item.0 }}" value="{{ key }},{{ item.0 }}" type="checkbox" class="pull-left"> &nbsp;&nbsp;
                                                     <a onclick="formURL('{{ key }}', '{{ item.0 }}')" role="button">{{ item.0 }}</a>
@@ -355,6 +355,10 @@
             var requestURL = currentURL + "&selected_facets="+key+"_exact:"+value + "#" + currentHash;
             map = null;
             window.location = requestURL;
+            var checkboxId =  key + "-" + value;
+            //console.log(checkboxId);
+            localStorage[checkboxId] = true;
+            //$(checkboxId).prop('checked', true);
         }
 
         /*var updateFacets = function(){
@@ -362,6 +366,11 @@
         }*/
 
         $(document).ready(function () {
+
+            $('ul#list-group-author li').each(function(i) {
+                console.log($(this).attr("rel"));
+            });
+
             if($("#id_q").val() == ""){
                 clearAllFaceted();
                 $("#id_q").val("*");
@@ -417,12 +426,9 @@
                 if (event.which == 13) {
                     event.preventDefault();
                     localStorage.clear();
-                    if ($("#search-field").submit()) {
-
-                    }
+                    $("#search-field").submit();
                 }
             });
-
             /**
              * temporarily keep the following functions for checkboxes
              */

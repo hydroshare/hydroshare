@@ -2,19 +2,10 @@ from django import forms
 from haystack.forms import FacetedSearchForm
 from crispy_forms.layout import *
 from crispy_forms.bootstrap import *
-import datetime
-import simplejson as json
-from django.http import HttpResponse
-from django.core import serializers
 
-from haystack.query import EmptySearchQuerySet, SearchQuerySet
 
 class DiscoveryForm(FacetedSearchForm):
 
-    #faceted_choices = (('author', 'Author'), ('creators', 'Creators'),('subjects', 'Subjects'),
-                      # ('public', 'Public'),('discoverable', 'Discoverable'), ('language', 'Language'), ('resource_type', 'Resource Type'))
-    #faceted_field = forms.MultipleChoiceField(widget=forms.CheckboxSelectMultiple, choices=faceted_choices)
-    #faceted_fields = ['author', 'subjects', 'resource_type', 'public', 'owners_names', 'discoverable']
     def search(self):
         sqs = super(DiscoveryForm, self).search().filter(discoverable=True)
 
@@ -30,6 +21,4 @@ class DiscoveryForm(FacetedSearchForm):
         #sqs = sqs.date_facet('modified', start_date=datetime.date(2015, 01, 01), end_date=datetime.date(2015, 12, 01), gap_by='month')
         #sqs = sqs.stats('created')
         #sqs = sqs.stats_results()
-        #return HttpResponse(serializers.serialize("json", [q.object for q in sqs]), content_type='application/json')
         return sqs
-        #return HttpResponse(serializers.serialize("json", [q.object for q in sqs]), content_type='application/json')
