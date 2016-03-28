@@ -1,9 +1,21 @@
+import os
 import json
+import tempfile
+import shutil
+
+from lxml import etree
 
 from rest_framework import status
 
 from hs_core.hydroshare import resource
 from .base import HSRESTTestCase
+
+
+NS = {'rdf': "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
+      'rdfs1': "http://www.w3.org/2001/01/rdf-schema#",
+      'dc': "http://purl.org/dc/elements/1.1/",
+      'dcterms': "http://purl.org/dc/terms/",
+      'hsterms': "http://hydroshare.org/terms/"}
 
 
 class TestResourceMetadata(HSRESTTestCase):
@@ -32,3 +44,46 @@ class TestResourceMetadata(HSRESTTestCase):
     def test_get_scimeta(self):
         # Get science metadata XML
         self.getScienceMetadata(self.pid)
+
+    def test_put_scimeta_generic(self):
+        # Update science metadata XML
+        abstract_text = "This is an abstract"
+        tmp_dir = tempfile.mkdtemp()
+
+        try:
+            response = self.getScienceMetadata(self.pid, exhaust_stream=False)
+            sci_meta_orig = os.path.join(tmp_dir, 'resouremetadata_orig.xml')
+            sci_meta_new = os.path.join(tmp_dir, 'resouremetadata_new.xml')
+            f = open(sci_meta_orig, 'w')
+            for l in response.streaming_content:
+                f.write(l)
+            f.close()
+            # Modify science metadata
+            scimeta = etree.parse(sci_meta_orig)
+            desc = scimeta.xpath('/rdf:RDF/rdf:Description[1]', namespaces=NS)[0]
+            abs_dc_desc = etree.SubElement(desc, "{%s}description" % NS['dc'])
+            abs_rdf_desc = etree.SubElement(abs_dc_desc, "{%s}Description" % NS['rdf'])
+            abstract = etree.SubElement(abs_rdf_desc, "{%s}abstract" % NS['dcterms'])
+            abstract.text = abstract_text
+            # Write out to a file
+            out = etree.tostring(scimeta, pretty_print=True)
+            f = open(sci_meta_new, 'w')
+            f.writelines(out)
+            f.close()
+            # Send updated metadata to REST API
+            params = {'file': ('resourcemetadata.xml',
+                               open(sci_meta_new),
+                               'application/xml')}
+            url = "/hsapi/scimeta/{pid}/".format(pid=self.pid)
+            response = self.client.put(url, params)
+            self.assertEqual(response.status_code, status.HTTP_202_ACCEPTED)
+            # Get science metadata
+            response = self.getScienceMetadata(self.pid, exhaust_stream=False)
+            scimeta = etree.parse(response.streaming_content)
+            abstract = scimeta.xpath('/rdf:RDF/rdf:Description[1]/dc:description/rdf:Description/dcterms:abstract',
+                                     namespaces=NS)
+            self.assertEquals(len(abstract), 1)
+            self.assertEquals(abstract[0].text, abstract_text)
+
+        finally:
+            shutil.rmtree(tmp_dir)
