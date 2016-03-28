@@ -415,7 +415,7 @@ class TestCollection(MockIRODSTestCaseMixin, TransactionTestCase):
         self.assertIn(self.resGen2, self.resCollection.resources.all())
         self.assertTrue(self.resCollection.can_be_public_or_discoverable)
 
-        # no deleted resource
+        # at this point there should be no tracked deleted resource for the collection
         self.assertEqual(self.resCollection.deleted_resources.count(), 0)
 
         # delete resGen1
@@ -436,6 +436,7 @@ class TestCollection(MockIRODSTestCaseMixin, TransactionTestCase):
 
         # deleted_resources has info about resGen1 and resGen2
         self.assertEqual(CollectionDeletedResource.objects.count(), 2)
+        # there should be now 2 tracked deleted resources for the collection
         self.assertEqual(self.resCollection.deleted_resources.count(), 2)
         self.assertIn(CollectionDeletedResource.objects.get(resource_id=res_id_resGen1),
                       self.resCollection.deleted_resources.all())
@@ -465,6 +466,7 @@ class TestCollection(MockIRODSTestCaseMixin, TransactionTestCase):
         response = self.api_client.post(url_to_update_collection_for_deleted_resources)
         resp_json = json.loads(response.content)
         self.assertEqual(resp_json["status"], "success")
+        # there should be now no tracked deleted resources for the collection
         self.assertEqual(self.resCollection.deleted_resources.count(), 0)
         self.assertEqual(CollectionDeletedResource.objects.count(), 0)
 
