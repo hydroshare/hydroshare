@@ -76,19 +76,17 @@ class HSRESTTestCase(APITestCase):
 
         return response
 
-    def getScienceMetadata(self, res_id):
+    def getScienceMetadata(self, res_id, exhaust_stream=True):
         """Get sciencematadata.xml from iRODS, following redirects
 
         :param res_id: ID of resource whose science metadata should be fetched
+        :param exhaust_stream: If True, the response returned
+           will have its stream_content exhausted.  This prevents
+           an error that causes the Docker container to exit when tests
+           are run with an external web server.
         :return: Django test client response object
         """
-        bag_url = "/hsapi/scimeta/{res_id}/".format(res_id=res_id)
-        response = self.client.get(bag_url)
-
-        self.assertEqual(response.status_code, status.HTTP_302_FOUND)
-        self.assertTrue('Location' in response)
-        xml_irods_url = response['Location'].replace('example.com', self.hostname)
-        xml_response = self.client.get(xml_irods_url)
-        self.assertEqual(xml_response.status_code, status.HTTP_200_OK)
-        self.assertEqual(xml_response['Content-Type'], 'application/xml')
-        self.assertTrue(int(xml_response['Content-Length']) > 0)
+        url = "/hsapi/scimeta/{res_id}/".format(res_id=res_id)
+        response = self._get_file_irods(url, exhaust_stream)
+        self.assertEqual(response['Content-Type'], 'application/xml')
+        self.assertTrue(int(response['Content-Length']) > 0)
