@@ -90,3 +90,5 @@ class HSRESTTestCase(APITestCase):
         response = self._get_file_irods(url, exhaust_stream)
         self.assertEqual(response['Content-Type'], 'application/xml')
         self.assertTrue(int(response['Content-Length']) > 0)
+
+        return response
