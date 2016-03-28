@@ -2,19 +2,22 @@ import os
 import shutil
 import tempfile
 import json
-import unittest
 
-from django.test import TestCase, TransactionTestCase, Client
-from django.contrib.auth.models import Group, User
+from django.test import TransactionTestCase, Client
+from django.contrib.auth.models import Group
 
 from hs_core.hydroshare import create_resource, create_account
+from hs_core.testing import MockIRODSTestCaseMixin
+
 from hs_access_control.models import PrivilegeCodes
 
 from hs_collection_resource.models import CollectionDeletedResource
 
-class TestCollection(TransactionTestCase):
+
+class TestCollection(MockIRODSTestCaseMixin, TransactionTestCase):
 
     def setUp(self):
+        super(TestCollection, self).setUp()
         self.api_client = Client()
         self.group, _ = Group.objects.get_or_create(name='Hydroshare Author')
 
@@ -45,34 +48,28 @@ class TestCollection(TransactionTestCase):
                       ]
         )
 
+        self.resCollection_with_missing_metadata = create_resource(
+            resource_type='CollectionResource',
+            owner=self.user1,
+            title='My Collection with missing required metadata'
+        )
+
         self.resGen1 = create_resource(
             resource_type='GenericResource',
             owner=self.user1,
-            title='Gen 1',
-            keywords=['kw1', 'kw2'],
-            metadata=[{"rights": {"statement": "mystatement", "url": "http://www.google.com"}},
-                  {"description": {"abstract": "myabstract"}}
-                  ]
+            title='Gen 1'
         )
 
         self.resGen2 = create_resource(
             resource_type='GenericResource',
             owner=self.user1,
-            title='Gen 2',
-            keywords=['kw1', 'kw2'],
-            metadata=[{"rights": {"statement": "mystatement", "url": "http://www.google.com"}},
-            {"description": {"abstract": "myabstract"}}
-            ]
+            title='Gen 2'
         )
 
         self.resGen3 = create_resource(
             resource_type='GenericResource',
             owner=self.user1,
-            title='Gen 3',
-            keywords=['kw1', 'kw2'],
-            metadata=[{"rights": {"statement": "mystatement", "url": "http://www.google.com"}},
-            {"description": {"abstract": "myabstract"}}
-            ]
+            title='Gen 3'
         )
 
         self.resTimeSeries = create_resource(
@@ -84,15 +81,13 @@ class TestCollection(TransactionTestCase):
         self.resNetCDF = create_resource(
                     resource_type='NetcdfResource',
                     owner=self.user1,
-                    title='Test NetCDF Resource',
-                    keywords=['kw1', 'kw2']
+                    title='Test NetCDF Resource'
                 )
 
         self.resGeoFeature = create_resource(
                     resource_type='GeographicFeatureResource',
                     owner=self.user1,
-                    title='Test Geographic Feature (shapefiles)',
-                    keywords=['kw1', 'kw2']
+                    title='Test Geographic Feature (shapefiles)'
                 )
 
         self.resModelInstance = create_resource(
@@ -113,26 +108,22 @@ class TestCollection(TransactionTestCase):
         self.resGen4 = create_resource(
             resource_type='GenericResource',
             owner=self.user2,
-            title='Gen 4',
-            keywords=['kw1', 'kw2'],
-            metadata=[{"rights": {"statement": "mystatement", "url": "http://www.google.com"}},
-            {"description": {"abstract": "myabstract"}}
-            ]
+            title='Gen 4'
         )
 
-        self.url_to_update_collection = "/hsapi/_internal/{0}/update-collection/"
-        self.url_to_collection_member_permission = "/hsapi/_internal/{0}/collection-member-permission/{1}/"
-        self.url_to_set_resource_flag = "/hsapi/_internal/{0}/set-resource-flag/"
-        self.url_to_delete_resource = "/hsapi/_internal/{0}/delete-resource/"
-        self.url_to_update_collection_for_deleted_resources = "/hsapi/_internal/{0}/update-collection-for-deleted-resources/"
+        base_url = "/hsapi/_internal/{0}"
+        self.url_to_update_collection = base_url + "/update-collection/"
+        self.url_to_collection_member_permission = base_url + "/collection-member-permission/{1}/"
+        self.url_to_set_resource_flag = base_url + "/set-resource-flag/"
+        self.url_to_delete_resource = base_url + "/delete-resource/"
+        self.url_to_update_collection_for_deleted_resources = base_url + "/update-collection-for-deleted-resources/"
 
     def tearDown(self):
         super(TestCollection, self).tearDown()
         if os.path.exists(self.temp_dir):
             shutil.rmtree(self.temp_dir)
 
-    # @unittest.skip
-    def test_collection_class(self):
+    def test_collection_basic_functions(self):
         # test basic collection class with different res types
 
         self.assertEqual(self.resCollection.resources.count(), 0)
@@ -145,11 +136,13 @@ class TestCollection(TransactionTestCase):
 
         # test count
         self.assertEqual(self.resCollection.resources.count(), 4)
+
         # test res in collection.resources
         self.assertIn(self.resGen1, self.resCollection.resources.all())
         self.assertIn(self.resGeoFeature, self.resCollection.resources.all())
         self.assertIn(self.resModelInstance, self.resCollection.resources.all())
         self.assertIn(self.resTimeSeries, self.resCollection.resources.all())
+
         # test collection in res.collections
         self.assertIn(self.resCollection, self.resGen1.collections.all())
         self.assertIn(self.resCollection, self.resGeoFeature.collections.all())
@@ -166,8 +159,19 @@ class TestCollection(TransactionTestCase):
         self.assertNotIn(self.resCollection, self.resModelInstance.collections.all())
         self.assertNotIn(self.resCollection, self.resTimeSeries.collections.all())
 
-    # @unittest.skip
-    def test_CollectionDeletedResource(self):
+        # test adding same resources to multiple collection resources
+        self.resCollection.resources.add(self.resGen1)
+        self.resCollection.resources.add(self.resGeoFeature)
+        self.resCollection_with_missing_metadata.resources.add(self.resGen1)
+        self.resCollection_with_missing_metadata.resources.add(self.resGeoFeature)
+
+        # test resources are in both collection resource
+        self.assertIn(self.resGen1, self.resCollection.resources.all())
+        self.assertIn(self.resGeoFeature, self.resCollection.resources.all())
+        self.assertIn(self.resGen1, self.resCollection_with_missing_metadata.resources.all())
+        self.assertIn(self.resGeoFeature, self.resCollection_with_missing_metadata.resources.all())
+
+    def test_collection_deleted_resource(self):
         # test CollectionDeletedResource
 
         self.assertEqual(self.resCollection.deleted_resources.count(), 0)
@@ -182,41 +186,47 @@ class TestCollection(TransactionTestCase):
 
         self.assertEqual(CollectionDeletedResource.objects.count(), 2)
         self.assertEqual(self.resCollection.deleted_resources.count(), 2)
-        self.assertEqual(self.resCollection.deleted_resources.filter(resource_title=self.resGen1.metadata.title).count(), 1)
-        self.assertEqual(self.resCollection.deleted_resources.filter(resource_title=self.resModelInstance.metadata.title).count(), 1)
+        self.assertEqual(self.resCollection.deleted_resources.filter(resource_title=
+                                                                     self.resGen1.metadata.title).count(), 1)
+        self.assertEqual(self.resCollection.deleted_resources.filter(resource_title=
+                                                                     self.resModelInstance.metadata.title).count(), 1)
 
         # remove CollectionDeletedResource objs
         self.resCollection.deleted_resources.all().delete()
         self.assertEqual(CollectionDeletedResource.objects.count(), 0)
         self.assertEqual(self.resCollection.deleted_resources.count(), 0)
 
-    # @unittest.skip
     def test_update_collection_own_permission(self):
         # test update_collection()
 
         self.assertEqual(self.resCollection.resources.count(), 0)
+        self.assertFalse(self.resCollection.can_be_public_or_discoverable)
         url_to_update_collection = self.url_to_update_collection.format(self.resCollection.short_id)
 
         # anonymous user
         # should inform frontend error
         response = self.api_client.post(url_to_update_collection,
-                                        {'resource_id_list': [self.resGen1.short_id, self.resGen2.short_id, self.resGen3.short_id]},
+                                        {'resource_id_list': [self.resGen1.short_id, self.resGen2.short_id,
+                                                              self.resGen3.short_id]},
                                         )
         resp_json = json.loads(response.content)
         self.assertEqual(resp_json["status"], "error")
         self.assertEqual(resp_json["metadata_status"], "Insufficient to make public")
+        self.assertFalse(self.resCollection.can_be_public_or_discoverable)
 
         # user 1 login
         self.api_client.login(username='user1', password='mypassword1')
 
         # add 3 private member resources
-        # should inform frontend "Insufficient to make public"
+        # should inform frontend "sufficient to make public"
         response = self.api_client.post(url_to_update_collection,
-                                        {'resource_id_list': [self.resGen1.short_id, self.resGen2.short_id, self.resGen3.short_id]},
+                                        {'resource_id_list': [self.resGen1.short_id, self.resGen2.short_id,
+                                                              self.resGen3.short_id]},
                                         )
         resp_json = json.loads(response.content)
         self.assertEqual(resp_json["status"], "success")
         self.assertEqual(resp_json["metadata_status"], "Sufficient to make public")
+        self.assertTrue(self.resCollection.can_be_public_or_discoverable)
         self.assertEqual(self.resCollection.resources.count(), 3)
         self.assertIn(self.resGen1, self.resCollection.resources.all())
         self.assertIn(self.resGen2, self.resCollection.resources.all())
@@ -229,6 +239,7 @@ class TestCollection(TransactionTestCase):
         resp_json = json.loads(response.content)
         self.assertEqual(resp_json["status"], "success")
         self.assertEqual(resp_json["metadata_status"], "Sufficient to make public")
+        self.assertTrue(self.resCollection.can_be_public_or_discoverable)
         self.assertEqual(self.resCollection.resources.count(), 2)
         self.assertIn(self.resGen1, self.resCollection.resources.all())
         self.assertNotIn(self.resGen2, self.resCollection.resources.all())
@@ -241,11 +252,13 @@ class TestCollection(TransactionTestCase):
         resp_json = json.loads(response.content)
         self.assertEqual(resp_json["status"], "success")
         self.assertEqual(resp_json["metadata_status"], "Insufficient to make public")
+        self.assertFalse(self.resCollection.can_be_public_or_discoverable)
         self.assertEqual(self.resCollection.resources.count(), 0)
 
         # add resGen1, resGen2, and resGen4 (no permission)
         response = self.api_client.post(url_to_update_collection,
-                                        {'resource_id_list': [self.resGen1.short_id, self.resGen2.short_id,self.resGen4.short_id]},
+                                        {'resource_id_list': [self.resGen1.short_id, self.resGen2.short_id,
+                                                              self.resGen4.short_id]},
                                         )
         resp_json = json.loads(response.content)
         self.assertEqual(resp_json["status"], "error")
@@ -258,6 +271,7 @@ class TestCollection(TransactionTestCase):
         resp_json = json.loads(response.content)
         self.assertEqual(resp_json["status"], "success")
         self.assertEqual(resp_json["metadata_status"], "Sufficient to make public")
+        self.assertTrue(self.resCollection.can_be_public_or_discoverable)
         self.assertEqual(self.resCollection.resources.count(), 2)
         self.assertIn(self.resGen1, self.resCollection.resources.all())
         self.assertIn(self.resGen3, self.resCollection.resources.all())
@@ -281,15 +295,28 @@ class TestCollection(TransactionTestCase):
                                         )
         resp_json = json.loads(response.content)
         self.assertEqual(resp_json["status"], "success")
+        self.assertTrue(self.resCollection.can_be_public_or_discoverable)
         self.assertEqual(self.resCollection.resources.count(), 2)
         self.assertIn(self.resGen2, self.resCollection.resources.all())
         self.assertIn(self.resGen4, self.resCollection.resources.all())
 
-    # @unittest.skip
-    def test_update_collection_edit_permission(self):
+        # test adding resources to a collection that does not have all the required metadata
+        self.assertEqual(self.resCollection_with_missing_metadata.resources.count(), 0)
+        url_to_update_collection = self.url_to_update_collection.format(
+            self.resCollection_with_missing_metadata.short_id)
 
+        self.assertFalse(self.resCollection_with_missing_metadata.can_be_public_or_discoverable)
+        response = self.api_client.post(url_to_update_collection,
+                                        {'resource_id_list': [self.resGen1.short_id, self.resGen2.short_id]},
+                                        )
+        resp_json = json.loads(response.content)
+        self.assertEqual(resp_json["status"], "success")
+        self.assertFalse(self.resCollection_with_missing_metadata.can_be_public_or_discoverable)
+
+    def test_update_collection_edit_permission(self):
         self.assertEqual(self.resCollection.resources.count(), 0)
         url_to_update_collection = self.url_to_update_collection.format(self.resCollection.short_id)
+
         # User 2 login
         self.api_client.login(username='user2', password='mypassword2')
 
@@ -299,8 +326,8 @@ class TestCollection(TransactionTestCase):
                                         )
         resp_json = json.loads(response.content)
         self.assertEqual(resp_json["status"], "error")
+        self.assertFalse(self.resCollection.can_be_public_or_discoverable)
         self.assertEqual(self.resCollection.resources.count(), 0)
-
 
         # grants View permission to User 2 over collection
         self.user1.uaccess.share_resource_with_user(self.resCollection, self.user2, PrivilegeCodes.VIEW)
@@ -311,6 +338,7 @@ class TestCollection(TransactionTestCase):
                                         )
         resp_json = json.loads(response.content)
         self.assertEqual(resp_json["status"], "error")
+        self.assertFalse(self.resCollection.can_be_public_or_discoverable)
         self.assertEqual(self.resCollection.resources.count(), 0)
 
         # grants Change permission to User 2 over collection
@@ -322,9 +350,9 @@ class TestCollection(TransactionTestCase):
                                         )
         resp_json = json.loads(response.content)
         self.assertEqual(resp_json["status"], "success")
+        self.assertTrue(self.resCollection.can_be_public_or_discoverable)
         self.assertEqual(self.resCollection.resources.count(), 1)
         self.assertIn(self.resGen4, self.resCollection.resources.all())
-
 
         # User 2: remove resGen4 and add resGen3 (no permission)
         response = self.api_client.post(url_to_update_collection,
@@ -332,6 +360,7 @@ class TestCollection(TransactionTestCase):
                                         )
         resp_json = json.loads(response.content)
         self.assertEqual(resp_json["status"], "error")
+        self.assertTrue(self.resCollection.can_be_public_or_discoverable)
         self.assertEqual(self.resCollection.resources.count(), 1)
         self.assertIn(self.resGen4, self.resCollection.resources.all())
 
@@ -344,54 +373,78 @@ class TestCollection(TransactionTestCase):
                                         )
         resp_json = json.loads(response.content)
         self.assertEqual(resp_json["status"], "success")
+        self.assertTrue(self.resCollection.can_be_public_or_discoverable)
         self.assertEqual(self.resCollection.resources.count(), 1)
         self.assertIn(self.resGen3, self.resCollection.resources.all())
+
+    def test_adding_one_collection_to_another_collection(self):
+        # a collection resource can't be added to another collection resource
+
+        url_to_update_collection = self.url_to_update_collection.format(self.resCollection.short_id)
+        # this collection should contain no resources at this point
+        self.assertEquals(self.resCollection.resources.count(), 0)
+        # user 1 login
+        self.api_client.login(username='user1', password='mypassword1')
+
+        # add one collection resource to another collection resource
+        # json response status should be error
+        response = self.api_client.post(url_to_update_collection,
+                                        {'resource_id_list': [self.resCollection_with_missing_metadata.short_id]},
+                                        )
+        resp_json = json.loads(response.content)
+        self.assertEqual(resp_json["status"], "error")
+        # collection still should have no resources
+        self.assertEquals(self.resCollection.resources.count(), 0)
 
     def test_update_collection_for_deleted_resources(self):
         self.assertEqual(self.resCollection.resources.count(), 0)
         self.assertEqual(self.resCollection.deleted_resources.count(), 0)
+        self.assertFalse(self.resCollection.can_be_public_or_discoverable)
 
         # user 1 login
         self.api_client.login(username='user1', password='mypassword1')
 
-        # add 3 resources into collection
+        # add 2 resources into collection
         url_to_update_collection = self.url_to_update_collection.format(self.resCollection.short_id)
 
-        response = self.api_client.post(url_to_update_collection,
-                                        {'resource_id_list': [self.resGen1.short_id, self.resGen2.short_id, self.resGen3.short_id]},
-                                        )
-        self.assertEqual(self.resCollection.resources.count(), 3)
+        self.api_client.post(url_to_update_collection,
+                             {'resource_id_list': [self.resGen1.short_id, self.resGen2.short_id,
+                                                   ]})
+        self.assertEqual(self.resCollection.resources.count(), 2)
         self.assertIn(self.resGen1, self.resCollection.resources.all())
         self.assertIn(self.resGen2, self.resCollection.resources.all())
-        self.assertIn(self.resGen3, self.resCollection.resources.all())
+        self.assertTrue(self.resCollection.can_be_public_or_discoverable)
 
         # no deleted resource
         self.assertEqual(self.resCollection.deleted_resources.count(), 0)
 
         # delete resGen1
-        title_resGen1 = self.resGen1.metadata.title
+        res_id_resGen1 = self.resGen1.short_id
         url_to_delete_resource_for_resGen1 = self.url_to_delete_resource.format(self.resGen1.short_id)
-        response = self.api_client.post(url_to_delete_resource_for_resGen1, HTTP_REFERER='http://foo/bar')
+        self.api_client.post(url_to_delete_resource_for_resGen1, HTTP_REFERER='http://foo/bar')
 
         # delete resGen2
-        title_resGen2 = self.resGen2.metadata.title
+        res_id_resGen2 = self.resGen2.short_id
         url_to_delete_resource_for_resGen2 = self.url_to_delete_resource.format(self.resGen2.short_id)
-        response = self.api_client.post(url_to_delete_resource_for_resGen2, HTTP_REFERER='http://foo/bar')
+        self.api_client.post(url_to_delete_resource_for_resGen2, HTTP_REFERER='http://foo/bar')
 
         # resGen1 and resGen2 should not be in collection.resources
-        self.assertEqual(self.resCollection.resources.count(), 1)
+        self.assertEqual(self.resCollection.resources.count(), 0)
         self.assertNotIn(self.resGen1, self.resCollection.resources.all())
         self.assertNotIn(self.resGen2, self.resCollection.resources.all())
-        self.assertIn(self.resGen3, self.resCollection.resources.all())
+        self.assertFalse(self.resCollection.can_be_public_or_discoverable)
 
         # deleted_resources has info about resGen1 and resGen2
         self.assertEqual(CollectionDeletedResource.objects.count(), 2)
         self.assertEqual(self.resCollection.deleted_resources.count(), 2)
-        self.assertIn(CollectionDeletedResource.objects.get(resource_title=title_resGen1), self.resCollection.deleted_resources.all())
-        self.assertIn(CollectionDeletedResource.objects.get(resource_title=title_resGen2), self.resCollection.deleted_resources.all())
+        self.assertIn(CollectionDeletedResource.objects.get(resource_id=res_id_resGen1),
+                      self.resCollection.deleted_resources.all())
+        self.assertIn(CollectionDeletedResource.objects.get(resource_id=res_id_resGen2),
+                      self.resCollection.deleted_resources.all())
 
         # test clear deleted_resources through view
-        url_to_update_collection_for_deleted_resources = self.url_to_update_collection_for_deleted_resources.format(self.resCollection.short_id)
+        url_to_update_collection_for_deleted_resources = self.url_to_update_collection_for_deleted_resources.format(
+            self.resCollection.short_id)
 
         # log out User 1
         self.api_client.logout()
