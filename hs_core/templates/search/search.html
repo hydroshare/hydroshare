@@ -7,9 +7,7 @@
         <div class="col-lg-3" id="filters-panel">
             {% if query %}
                 <input class="btn btn-default inline" type="button" value="Clear All" style="margin-bottom: 10px" onclick="clearAllFaceted()">
-                <!--
                 <input class="btn btn-primary inline" type="button" value="Update" style="margin-bottom: 10px" onclick="updateFacets()">
-                -->
                 {% for key, values in facets.fields.items %}
                     {% if values %}
                         <div class="panel-group" id="faceting-{{ key }}">
@@ -50,7 +48,6 @@
                                     {% for item in values %}
                                         {% if item.1 > 0 %}
                                             <li class="list-group-item clearfix" rel="{{ key }},{{ item.0 }}">
-
                                                 <input class="faceted-selections" id="{{ key }}-{{ item.0 }}" value="{{ key }},{{ item.0 }}" type="checkbox" class="pull-left"> &nbsp;&nbsp;
                                                     <a onclick="formURL('{{ key }}', '{{ item.0 }}')" role="button">{{ item.0 }}</a>
                                                     {% if item.1 >= 1 and item.1 < 2 %}
@@ -336,13 +333,6 @@
             }
         }
 
-        var clearAllFaceted = function() {
-            localStorage.clear();
-            var textSearch = $("#id_q").val();
-            var clearURL = "/search/?q=" + textSearch;
-            window.location = clearURL;
-        }
-
         var copySearchResults = function(search_results){
             search_results.forEach(function(item){
                 json_results.push(item);
@@ -361,14 +351,40 @@
             //$(checkboxId).prop('checked', true);
         }
 
-        /*var updateFacets = function(){
-            console.log("need to do");
-        }*/
+        var clearAllFaceted = function() {
+            localStorage.clear();
+            var textSearch = $("#id_q").val();
+            var clearURL = "/search/?q=" + textSearch;
+            window.location = clearURL;
+        }
+
+        var updateFacets = function(){
+            var textSearch = $("#id_q").val();
+            var searchURL = "?q=" + textSearch;
+            var windowPath = window.location.pathname;
+            var requestURL = windowPath + searchURL;
+            $(".faceted-selections").each(function () {
+                var tokens = $(this).val().split(",");
+                var key = tokens[0];
+                var value = tokens[1];
+                if($(this).is(":checked")) {
+                    requestURL = requestURL + "&selected_facets=" + key + "_exact:" + value;
+                }
+            });
+            window.location = requestURL;
+        }
 
         $(document).ready(function () {
 
-            $('ul#list-group-author li').each(function(i) {
-                console.log($(this).attr("rel"));
+            //$('ul#list-group-author li').each(function(i) {
+            //    console.log($(this).attr("rel"));
+            //});
+            $(".faceted-selections").each(function () {
+                //var val = localStorage[$(this).attr("id")];
+                //var isChecked = val !== undefined ? val == "true" : false;
+                //$(this).prop("checked", isChecked);
+                var val = $(this).attr("id");
+                console.log(val);
             });
 
             if($("#id_q").val() == ""){
@@ -433,17 +449,17 @@
              * temporarily keep the following functions for checkboxes
              */
             $(".faceted-selections").click(function () {
-                var tokens = $(this).val().split(",");
+                /*var tokens = $(this).val().split(",");
                 var key = tokens[0];
                 var value = tokens[1];
                 var textSearch = $("#id_q").val();
                 var searchURL = "?q=" + textSearch;
                 var windowPath = window.location.pathname;
-                var requestURL =  windowPath + searchURL;
+                var requestURL =  windowPath + searchURL;*/
 
                 if($(this).is(":checked")) {
-                    requestURL = requestURL + "&selected_facets="+key+"_exact:"+value
-                    $(".faceted-selections").each(function () {
+                    //requestURL = requestURL + "&selected_facets="+key+"_exact:"+value
+                    /*$(".faceted-selections").each(function () {
                         var val = localStorage[$(this).attr("id")];
                         //var isChecked = val !== undefined ? val == "true" : false;
                         var isChecked = val === 'true';
@@ -454,11 +470,11 @@
                             requestURL += "&selected_facets="+key+"_exact:"+value;
                         }
                     });
-                    window.location = requestURL;
+                    window.location = requestURL;*/
                     localStorage[$(this).attr("id")] = this.checked;
                 }else{
                     localStorage.removeItem($(this).attr("id"));
-                    var textSearch = $("#id_q").val();
+                    /*var textSearch = $("#id_q").val();
                     var updateURL = "/search/?q=" + textSearch;
                     $(".faceted-selections").each(function () {
                         var val = localStorage[$(this).attr("id")];
@@ -471,7 +487,7 @@
                             updateURL += "&selected_facets="+key+"_exact:"+value;
                         }
                     });
-                    window.location = updateURL;
+                    window.location = updateURL;*/
                 }
             });
 

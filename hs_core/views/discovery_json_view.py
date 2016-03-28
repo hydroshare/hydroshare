@@ -23,12 +23,11 @@ class DiscoveryJsonView(FacetedSearchView):
                 for coverage in result.object.metadata.coverages.all():
 
                     if coverage.type == 'point':
-                        json_obj['coverage_type'] = coverage.type;
-                        #suggestions = [coverage.value['east']]
+                        json_obj['coverage_type'] = coverage.type
                         json_obj['east'] = coverage.value['east']
                         json_obj['north'] = coverage.value['north']
                     elif coverage.type == 'box':
-                        json_obj['coverage_type'] = coverage.type;
+                        json_obj['coverage_type'] = coverage.type
                         json_obj['northlimit'] = coverage.value['northlimit']
                         json_obj['eastlimit'] = coverage.value['eastlimit']
                         json_obj['southlimit'] = coverage.value['southlimit']
