@@ -1,4 +1,6 @@
 from django.test import TestCase
+from django.contrib.auth.models import User
+
 from mock import patch, Mock
 
 from .models import Variable, Session
@@ -7,7 +9,14 @@ from .models import Variable, Session
 class TrackingTests(TestCase):
 
     def setUp(self):
+        self.user = User.objects.create(username='testuser', email='testuser@example.com')
         self.session = Session.objects.create()
+
+    def createRequest(self, with_user=False):
+        request = Mock()
+        if with_user:
+            request.user = self.user
+        return request
 
     def test_record_variable(self):
         self.session.record('int', 42)
@@ -30,13 +39,13 @@ class TrackingTests(TestCase):
         self.assertEqual("X", Variable(name='var', value='"X"').get_value())
 
     def test_for_request_new(self):
-        request = Mock()
+        request = self.createRequest(with_user=True)
         request.session = {}
         session = Session.objects.for_request(request)
         self.assertTrue(request.session.has_key('hs_tracking_id'))
 
     def test_for_request_existing(self):
-        request = Mock()
+        request = self.createRequest(with_user=True)
         request.session = {}
         session1 = Session.objects.for_request(request)
         session2 = Session.objects.for_request(request)

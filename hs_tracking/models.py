@@ -2,6 +2,7 @@ from json import loads, dumps
 
 from django.db import models
 from django.core import signing
+from django.conf import settings
 
 
 SESSION_TIMEOUT = 60 * 15
@@ -13,17 +14,25 @@ class SessionManager(models.Manager):
         if signed_id:
             tracking_id = signing.loads(signed_id)
             try:
-                return Session.objects.get(id=tracking_id['id'])
+                session = Session.objects.get(id=tracking_id['id'])
             except Session.DoesNotExist:
                 pass
+            if session.user is None and request.user.is_authenticated():
+                session.user = request.user
+                session.save()
+            return session
         # No session found, create one
-        session = Session.objects.create()
+        kwargs = {}
+        if request.user.is_authenticated():
+            kwargs['user'] = request.user
+        session = Session.objects.create(**kwargs)
         request.session['hs_tracking_id'] = signing.dumps({'id': session.id})
         return session
 
 
 class Session(models.Model):
     begin = models.DateTimeField(auto_now_add=True)
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, blank=True)
 
     objects = SessionManager()
 
