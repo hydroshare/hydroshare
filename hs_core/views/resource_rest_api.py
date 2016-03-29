@@ -3,6 +3,9 @@ __author__ = 'Pabitra'
 import os
 import mimetypes
 import copy
+import tempfile
+import shutil
+import logging
 
 from django.core.urlresolvers import reverse
 from django.core.exceptions import ObjectDoesNotExist
@@ -23,7 +26,12 @@ from hs_core.views import utils as view_utils
 from hs_core.views.utils import ACTION_TO_AUTHORIZE
 from hs_core.views import serializers
 from hs_core.views import pagination
+from hs_core.hydroshare.utils import get_file_storage
+from hs_core.serialization import GenericResourceMeta, HsDeserializationDependencyException
+from hs_core.hydroshare.hs_bagit import create_bag_files
 
+
+logger = logging.getLogger(__name__)
 
 # Mixins
 class ResourceToListItemMixin(object):
@@ -467,6 +475,8 @@ class ScienceMetadataRetrieveUpdate(APIView):
     PermissionDenied: return json format: {'detail': 'You do not have permission to perform this action.'}
     ValidationError: return json format: {parameter-1': ['error message-1'], 'parameter-2': ['error message-2'], .. }
     """
+    ACCEPT_FORMATS = ('application/xml', 'application/rdf+xml')
+
     allowed_methods = ('GET', 'PUT')
 
     def get(self, request, pk):
@@ -475,12 +485,70 @@ class ScienceMetadataRetrieveUpdate(APIView):
         scimeta_url = hydroshare.utils.current_site_url() + AbstractResource.scimeta_url(pk)
         return redirect(scimeta_url)
 
-
     def put(self, request, pk):
-        # TODO: update science metadata using the metadata json data provided - will do in the next iteration
-        # Should this update any extracted metadata? It would be easier to implement if we allow update of
-        # any metadata.
-        raise NotImplementedError()
+        # Update science metadata based on resourcemetadata.xml uploaded
+        res, authorized, user = view_utils.authorize(request, pk, needed_permission=ACTION_TO_AUTHORIZE.EDIT_RESOURCE,
+                                                     raises_exception=False)
+        if not authorized:
+            raise PermissionDenied()
+
+        files = request.FILES.values()
+        if len(files) == 0:
+            error_msg = {'file': 'No resourcemetadata.xml file was found to update resource metadata.'}
+            raise ValidationError(detail=error_msg)
+        elif len(files) > 1:
+            error_msg = {'file': ('More than one file was found. Only one file, named resourcemetadata.xml, '
+                                  'can be used to update resource metadata.')}
+            raise ValidationError(detail=error_msg)
+
+        scimeta = files[0]
+        if scimeta.content_type not in self.ACCEPT_FORMATS:
+            error_msg = {'file': "Uploaded file has content type {t}, but expected {e}.".format(t=scimeta.content_type,
+                                                                                                e=expect)}
+            raise ValidationError(detail=error_msg)
+        expect = 'resourcemetadata.xml'
+        if scimeta.name != expect:
+            error_msg = {'file': "Uploaded file has name {n}, but expected {e}.".format(n=scimeta.name,
+                                                                                        e=expect)}
+            raise ValidationError(detail=error_msg)
+
+        # Temp directory to store resourcemetadata.xml
+        tmp_dir = tempfile.mkdtemp()
+        try:
+            # Fake the bag structure so that GenericResourceMeta.read_metadata_from_resource_bag
+            # can read and validate the system and science metadata for us.
+            bag_data_path = os.path.join(tmp_dir, 'data')
+            os.mkdir(bag_data_path)
+            # Copy new science metadata to bag data path
+            scimeta_path = os.path.join(bag_data_path, 'resourcemetadata.xml')
+            shutil.copy(scimeta.temporary_file_path(), scimeta_path)
+            # Copy existing resource map to bag data path
+            # (use a file-like object as the file may be in iRODS, so we can't
+            #  just copy it to a local path)
+            resmeta_path = os.path.join(bag_data_path, 'resourcemap.xml')
+            resmeta = open(resmeta_path, 'wb')
+            storage = get_file_storage()
+            resmeta_irods = storage.open(AbstractResource.sysmeta_path(pk))
+            shutil.copyfileobj(resmeta_irods, resmeta)
+            resmeta.close()
+            resmeta_irods.close()
+
+            # Read resource system and science metadata
+            rm = GenericResourceMeta.read_metadata_from_resource_bag(tmp_dir)
+            # Update resource metadata
+            try:
+                rm.write_metadata_to_resource(res)
+                create_bag_files(res)
+            except HsDeserializationDependencyException as e:
+                msg = ("HsDeserializationDependencyException encountered when updating "
+                       "science metadata for resource {pk}; depedent resource was {dep}.")
+                msg = msg.format(pk=pk, dep=e.dependency_resource_id)
+                logger.error(msg)
+                raise ValidationError(detail=msg)
+
+            return Response(data={'resource_id': pk}, status=status.HTTP_202_ACCEPTED)
+        finally:
+            shutil.rmtree(tmp_dir)
 
 
 class ResourceFileCRUD(APIView):
