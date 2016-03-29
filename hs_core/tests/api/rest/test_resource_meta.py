@@ -18,7 +18,8 @@ NS = {'rdf': "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
       'hsterms': "http://hydroshare.org/terms/"}
 
 RESOURCE_METADATA = 'resourcemetadata.xml'
-RESOURCE_METADATA_NEW = 'resourcemetadata_new.xml'
+RESOURCE_METADATA_OLD = 'resourcemetadata_old.xml'
+RESOURCE_METADATA_UPDATED = 'resourcemetadata_updated.xml'
 
 
 class TestResourceMetadata(HSRESTTestCase):
@@ -56,7 +57,7 @@ class TestResourceMetadata(HSRESTTestCase):
         try:
             # Get science metadata
             response = self.getScienceMetadata(self.pid, exhaust_stream=False)
-            sci_meta_orig = os.path.join(tmp_dir, RESOURCE_METADATA)
+            sci_meta_orig = os.path.join(tmp_dir, RESOURCE_METADATA_OLD)
             f = open(sci_meta_orig, 'w')
             for l in response.streaming_content:
                 f.write(l)
@@ -74,7 +75,7 @@ class TestResourceMetadata(HSRESTTestCase):
             abstract.text = abstract_text
             # Write out to a file
             out = etree.tostring(scimeta, pretty_print=True)
-            sci_meta_new = os.path.join(tmp_dir, RESOURCE_METADATA_NEW)
+            sci_meta_new = os.path.join(tmp_dir, RESOURCE_METADATA)
             f = open(sci_meta_new, 'w')
             f.writelines(out)
             f.close()
@@ -89,7 +90,12 @@ class TestResourceMetadata(HSRESTTestCase):
 
             # Get science metadata
             response = self.getScienceMetadata(self.pid, exhaust_stream=False)
-            scimeta = etree.parse(response.streaming_content)
+            sci_meta_updated = os.path.join(tmp_dir, RESOURCE_METADATA_UPDATED)
+            f = open(sci_meta_updated, 'w')
+            for l in response.streaming_content:
+                f.write(l)
+            f.close()
+            scimeta = etree.parse(sci_meta_updated)
             abstract = scimeta.xpath('/rdf:RDF/rdf:Description[1]/dc:description/rdf:Description/dcterms:abstract',
                                      namespaces=NS)
             self.assertEquals(len(abstract), 1)
