@@ -1,9 +1,11 @@
+from datetime import datetime, timedelta
+
 from django.test import TestCase
 from django.contrib.auth.models import User
 
 from mock import patch, Mock
 
-from .models import Variable, Session
+from .models import Variable, Session, SESSION_TIMEOUT
 
 
 class TrackingTests(TestCase):
@@ -50,3 +52,12 @@ class TrackingTests(TestCase):
         session1 = Session.objects.for_request(request)
         session2 = Session.objects.for_request(request)
         self.assertEqual(session1.id, session2.id)
+
+    def test_for_request_expired(self):
+        request = self.createRequest(with_user=True)
+        request.session = {}
+        session1 = Session.objects.for_request(request)
+        with patch('hs_tracking.models.datetime') as dt_mock:
+            dt_mock.now.return_value = datetime.now() + timedelta(seconds=SESSION_TIMEOUT)
+            session2 = Session.objects.for_request(request)
+        self.assertNotEqual(session1.id, session2.id)

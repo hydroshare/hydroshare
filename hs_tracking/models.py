@@ -1,4 +1,5 @@
 from json import loads, dumps
+from datetime import datetime, timedelta
 
 from django.db import models
 from django.core import signing
@@ -13,14 +14,17 @@ class SessionManager(models.Manager):
         signed_id = request.session.get('hs_tracking_id')
         if signed_id:
             tracking_id = signing.loads(signed_id)
+            cut_off = datetime.now() - timedelta(seconds=SESSION_TIMEOUT)
+            session = None
             try:
-                session = Session.objects.get(id=tracking_id['id'])
+                session = Session.objects.filter(begin__gte=cut_off).get(id=tracking_id['id'])
             except Session.DoesNotExist:
                 pass
-            if session.user is None and request.user.is_authenticated():
-                session.user = request.user
-                session.save()
-            return session
+            if session is not None:
+                if session.user is None and request.user.is_authenticated():
+                    session.user = request.user
+                    session.save()
+                return session
         # No session found, create one
         kwargs = {}
         if request.user.is_authenticated():
