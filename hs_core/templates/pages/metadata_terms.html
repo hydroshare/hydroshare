@@ -1075,5 +1075,52 @@
             <li><strong>Description: </strong>Web app Version</li>
         </ul>
 
+    <h3>Script Resource Type Description</h3>
+    <p>
+        A Script resource is intended to store any stand-alone programming script that has been written to perform a specific operation.
+        The languages currently supported are Python, R, and MATLAB. The specific metadata elements are as follows:
+    </p>
+    <a name="scriptLanguage"></a>
+        <ul >
+            <li><strong>Term: </strong>scriptLanguage</li>
+            <li><strong>URI: </strong><a href="#RequestUrlBase">http://www.hydroshare.org/terms/scriptLanguage</a></li>
+            <li><strong>Label: </strong>Programming Language</li>
+            <li><strong>Description: </strong>The programming language that the script is written in.</li>
+        </ul>
+    <a name="languageVersion"></a>
+        <ul >
+            <li><strong>Term: </strong>languageVersion</li>
+            <li><strong>URI: </strong><a href="#ToolResourceType">http://www.hydroshare.org/terms/languageVersion</a></li>
+            <li><strong>Label: </strong>Programming Language Version</li>
+            <li><strong>Description: </strong>The version of the language that the script is written in.</li>
+        </ul>
+    <a name="scriptVersion"></a>
+        <ul >
+            <li><strong>Term: </strong>scriptVersion</li>
+            <li><strong>URI: </strong><a href="#ToolVersion">http://www.hydroshare.org/terms/scriptVersion</a></li>
+            <li><strong>Label: </strong>Script Version</li>
+            <li><strong>Description: </strong>The version of the script.</li>
+        </ul>
+    <a name="scriptDependencies"></a>
+        <ul >
+            <li><strong>Term: </strong>scriptDependencies</li>
+            <li><strong>URI: </strong><a href="#ToolVersion">http://www.hydroshare.org/terms/scriptDependencies</a></li>
+            <li><strong>Label: </strong>Script Dependencies</li>
+            <li><strong>Description: </strong>The libaries/modules that the script depends on to execute.</li>
+        </ul>
+    <a name="scriptReleaseDate"></a>
+        <ul >
+            <li><strong>Term: </strong>scriptReleaseDate</li>
+            <li><strong>URI: </strong><a href="#ToolVersion">http://www.hydroshare.org/terms/scriptReleaseDate</a></li>
+            <li><strong>Label: </strong>Release Date</li>
+            <li><strong>Description: </strong>The date that this version of the script was released.</li>
+        </ul>
+    <a name="scriptCodeRepository"></a>
+        <ul >
+            <li><strong>Term: </strong>scriptCodeRepository</li>
+            <li><strong>URI: </strong><a href="#ToolVersion">http://www.hydroshare.org/terms/scriptCodeRepository</a></li>
+            <li><strong>Label: </strong>Script Repository</li>
+            <li><strong>Description: </strong>The URL to a respository where the script is also stored.</li>
+        </ul>
 
 {% endblock %}
