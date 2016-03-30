@@ -1,6 +1,6 @@
 from lxml import etree
 
-from django.contrib.contenttypes import generic
+from django.contrib.contenttypes.fields import GenericRelation
 from django.db import models
 
 from mezzanine.pages.page_processors import processor_for
@@ -70,7 +70,8 @@ class ExecutedBy(AbstractMetaDataElement):
         shortid = kwargs['model_name']
         # get the MP object that matches.  Returns None if nothing is found
         obj = ModelProgramResource.objects.filter(short_id=shortid).first()
-        return super(ExecutedBy,cls).update(model_program_fk=obj, element_id=element_id)
+        title = obj.title
+        return super(ExecutedBy,cls).update(model_program_fk=obj, model_name=title, element_id=element_id)
 
 # Model Instance Resource type
 class ModelInstanceResource(BaseResource):
@@ -85,17 +86,12 @@ class ModelInstanceResource(BaseResource):
         md = ModelInstanceMetaData()
         return self._get_metadata(md)
 
-    @classmethod
-    def get_supported_upload_file_types(cls):
-        # all file types are supported
-        return ('.*')
-
 processor_for(ModelInstanceResource)(resource_processor)
 
 # metadata container class
 class ModelInstanceMetaData(CoreMetaData):
-    _model_output = generic.GenericRelation(ModelOutput)
-    _executed_by = generic.GenericRelation(ExecutedBy)
+    _model_output = GenericRelation(ModelOutput)
+    _executed_by = GenericRelation(ExecutedBy)
 
     @property
     def model_output(self):

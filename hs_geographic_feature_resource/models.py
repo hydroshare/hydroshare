@@ -1,5 +1,5 @@
 from django.db import models
-from django.contrib.contenttypes import generic
+from django.contrib.contenttypes.fields import GenericRelation
 
 from mezzanine.pages.page_processors import processor_for
 
@@ -89,6 +89,17 @@ class GeographicFeatureResource(BaseResource):
         # can have more than one files
         return True
 
+    # add resource-specific HS terms
+    def get_hs_term_dict(self):
+        # get existing hs_term_dict from base class
+        hs_term_dict = super(GeographicFeatureResource, self).get_hs_term_dict()
+        geometryinformation = self.metadata.geometryinformation.all().first()
+        if geometryinformation is not None:
+            hs_term_dict["HS_GFR_FEATURE_COUNT"] = geometryinformation.featureCount
+        else:
+            hs_term_dict["HS_GFR_FEATURE_COUNT"] = 0
+        return hs_term_dict
+
     class Meta:
         verbose_name = 'Geographic Feature (ESRI Shapefiles)'
         proxy = True
@@ -97,10 +108,10 @@ processor_for(GeographicFeatureResource)(resource_processor)
 
 # define the GeographicFeatureMetaData metadata
 class GeographicFeatureMetaData(CoreMetaData):
-    geometryinformation = generic.GenericRelation(GeometryInformation)
-    fieldinformation = generic.GenericRelation(FieldInformation)
-    originalcoverage = generic.GenericRelation(OriginalCoverage)
-    originalfileinfo = generic.GenericRelation(OriginalFileInfo)
+    geometryinformation = GenericRelation(GeometryInformation)
+    fieldinformation = GenericRelation(FieldInformation)
+    originalcoverage = GenericRelation(OriginalCoverage)
+    originalfileinfo = GenericRelation(OriginalFileInfo)
 
     @classmethod
     def get_supported_element_names(cls):

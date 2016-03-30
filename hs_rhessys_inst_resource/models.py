@@ -3,7 +3,7 @@ import ConfigParser
 import cStringIO as StringIO
 import os
 
-from django.contrib.contenttypes import generic
+from django.contrib.contenttypes.fields import GenericRelation
 from django.contrib.auth.models import User, Group
 from django.db import models
 from django_docker_processes import signals

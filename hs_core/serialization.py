@@ -1138,7 +1138,7 @@ class GenericResourceMeta(object):
 
     class ResourceRelation(object):
         KNOWN_TYPES = {'isParentOf', 'isExecutedBy', 'isHostedBy', 'isCopiedFrom', 'isCreatedBy',
-                       'isPartOf', 'isVersionOf', 'isDataFor', 'cites'}
+                       'isPartOf', 'isVersionOf', 'isReplacedBy', 'isDataFor', 'cites'}
 
         def __str__(self):
             msg = "{classname} {relationship_type}: {uri}"

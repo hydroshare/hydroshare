@@ -22,7 +22,7 @@ OTHER_DOCKER_CONTAINERS=(postgis rabbitmq redis solr)
 
 ### Pre-flight Variables ###
 DEV_SERVER='python manage.py runserver 0.0.0.0:8000'
-PROD_SERVER='uwsgi --ini emperor.ini'
+PROD_SERVER='source gunicorn_start'
 
 display_usage() {
 	echo "*** HydroShare Control script ***"
@@ -57,10 +57,10 @@ stop_nginx() {
 restart_hs() {
     echo "*** ${1^^} ***"
     stop_nginx
-    preflight_hs
     docker-compose stop hydroshare
     docker-compose stop defaultworker
     delete_celerybeat_scheduler
+    preflight_hs
     docker-compose start hydroshare
     docker-compose start defaultworker
     if [ "${USE_NGINX,,}" = true ]; then
@@ -136,6 +136,11 @@ preflight_hs() {
     yes | cp -rf ${HS_PATH}/docker-compose.template ${HS_PATH}/docker-compose.yml
     sed -i 's!HS_PATH!'${HS_PATH}'!g' ${HS_PATH}/docker-compose.yml
     sed -i 's!HS_LOG_FILES!'${HS_LOG_FILES}'!g' ${HS_PATH}/docker-compose.yml
+    if [[ ! -f celery/readme.txt ]]; then
+        echo "*** creating placeholder file: celery/readme.txt ***"
+        mkdir -p celery
+        echo "This directory is used for celery beat scheduler to write celerybeat-schedule file for scheduling purposes." > celery/readme.txt;
+    fi
     if [ "${USE_NGINX,,}" = true ]; then
         echo "*** Using nginx: USE_NGINX = ${USE_NGINX} ***"
         # create hs-certs directory if it doesn't exist
@@ -164,6 +169,8 @@ preflight_hs() {
         echo "*** Not using nginx: USE_NGINX = ${USE_NGINX} ***"
         # use development server to run HydroShare
         sed -i 's/'"${PROD_SERVER}"'/'"${DEV_SERVER}"'/g' ${HS_PATH}/init;
+        # enable SSH server for debugging purposes
+        sed -i 's!'"# REMOVED SSH COMPONENT"'!'"/usr/sbin/sshd"'!g' ${HS_PATH}/init;
     fi
 }
 
@@ -235,7 +242,7 @@ loaddb_hs() {
     #echo "*** manage.py makemigrations ***"
     #docker exec $CID python manage.py makemigrations
     echo "*** manage.py migrate ***"
-    docker exec $CID python manage.py migrate
+    docker exec $CID python manage.py migrate --fake-initial
     echo "*** manage.py fix_permissions ***"
     docker exec $CID python manage.py fix_permissions
     sleep 3s
@@ -380,6 +387,8 @@ case "$1" in
     start) start_hs $1
         ;;
     stop) stop_hs $1
+        ;;
+    preflight) preflight_hs $1
         ;;
     *) display_usage
         ;;

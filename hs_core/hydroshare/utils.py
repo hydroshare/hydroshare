@@ -7,7 +7,7 @@ import tempfile
 import logging
 import shutil
 
-from django.db.models import get_model, get_models
+from django.apps import apps
 from django.http import Http404
 from django.shortcuts import get_object_or_404
 from django.utils.timezone import now
@@ -38,7 +38,7 @@ class ResourceFileValidationException(Exception):
 
 def get_resource_types():
     resource_types = []
-    for model in get_models():
+    for model in apps.get_models():
         if issubclass(model, AbstractResource) and model != BaseResource:
             if not getattr(model, 'archived_model', False):
                 resource_types.append(model)
@@ -46,7 +46,7 @@ def get_resource_types():
 
 
 def get_resource_instance(app, model_name, pk, or_404=True):
-    model = get_model(app, model_name)
+    model = apps.get_model(app, model_name)
     if or_404:
         return get_object_or_404(model, pk=pk)
     else:
@@ -149,6 +149,18 @@ def serialize_system_metadata(res):
     resd['bags'] = [dc['fields'] for dc in json.loads(js.serialize(res.bags.all()))]
     resd['files'] = [dc['fields'] for dc in json.loads(js.serialize(res.files.all()))]
     return json.dumps(resd)
+
+def copy_resource_files_and_AVUs(src_res_id, dest_res_id, set_to_private=False):
+    avu_list = ['bag_modified', 'isPublic', 'resourceType']
+    istorage = IrodsStorage()
+    istorage.copyFiles(src_res_id, dest_res_id)
+    for avu_name in avu_list:
+        value = istorage.getAVU(src_res_id, avu_name)
+        if value:
+            if avu_name == 'isPublic' and set_to_private:
+                istorage.setAVU(dest_res_id, avu_name, 'False')
+            else:
+                istorage.setAVU(dest_res_id, avu_name, value)
 
 
 def resource_modified(resource, by_user=None, overwrite_bag=True):

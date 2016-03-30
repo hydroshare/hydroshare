@@ -38,28 +38,38 @@
 
     <ul>
     <li>Files you upload here will be grouped together into a "Resource"</li>
-    <li>File size is limited to 10 GB per file</li>
+    <li>File size is limited to 1 GB per file</li>
     </ul>
 
 <form class="form-horizontal" role="form" method="POST" enctype="multipart/form-data" action="/hsapi/_internal/create-resource/do/">
     {% csrf_token %}
     <div class="form-group">
         <label for="" class="col-sm-2 control-label">Select a resource type</label>
+
         <div class="col-sm-10">
             <select class="form-control" name="resource-type" id="resource-type">
                 <option value="GenericResource">Generic</option>
-                <option value="RasterResource">Geographic Raster</option>
-                <option value="ModelProgramResource">Model Program</option>
-                <option value="ModelInstanceResource">Model Instance</option>
-                <option value="SWATModelInstanceResource">SWAT Model Instance</option>
                 <option value="NetcdfResource">Multidimensional (NetCDF)</option>
-                <option value="TimeSeriesResource">Time Series</option>
-                <option value="RefTimeSeriesResource">HIS Referenced Time Series</option>
                 <option value="ToolResource">Web App</option>
-                <option value="ScriptResource">Script</option>
-{#                <option value="InstResource">RHESSys Instance Resource</option> #}
-                <option value="GeographicFeatureResource">Geographic Feature (ESRI Shapefiles)</option>
 
+                <optgroup label="Geographic Resources">
+                    <option value="RasterResource">Geographic Raster</option>
+                    <option value="GeographicFeatureResource">Geographic Feature (ESRI Shapefiles)</option>
+                </optgroup>
+
+                <optgroup label="Time Series Resources">
+                    <option value="TimeSeriesResource">Time Series</option>
+                    <option value="RefTimeSeriesResource">HIS Referenced Time Series</option>
+                </optgroup>
+
+                <optgroup label="Modeling">
+                    <option value="ModelProgramResource">Model Program</option>
+                    <option value="ModelInstanceResource">Model Instance</option>
+                    <option value="SWATModelInstanceResource">SWAT Model Instance</option>
+                    <option value="ScriptResource">Script</option>
+                </optgroup>
+
+                {#                <option value="InstResource">RHESSys Instance Resource</option> #}
             </select>
         </div>
     </div>
@@ -142,7 +152,7 @@
             }
             $.ajax({
                 type: "GET",
-                url: "/hsapi/_internal/" + this.value + "/supported-file-types",
+                url: "/hsapi/_internal/" + this.value + "/supported-file-types/",
                 success: function(result) {
                     console.log(result);
                     json_response_file_types = JSON.parse(result);
@@ -168,7 +178,7 @@
 
             $.ajax({
                 type: "GET",
-                url: "/hsapi/_internal/" + this.value + "/allow-multiple-file",
+                url: "/hsapi/_internal/" + this.value + "/allow-multiple-file/",
                 success: function(result) {
                     console.log(result);
                     json_response_multiple_file = JSON.parse(result);

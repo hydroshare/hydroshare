@@ -35,7 +35,6 @@ logger = logging.getLogger('django')
 @periodic_task(ignore_result=True, run_every=crontab(minute=0, hour=0))
 def check_doi_activation():
     msg_lst = []
-    msg_log = logging.getLogger('django')
     # retrieve all published resources with failed metadata deposition with CrossRef if any and retry metadata deposition
     failed_resources = BaseResource.objects.filter(raccess__published=True, doi__contains='failure')
     for res in failed_resources:
@@ -52,7 +51,7 @@ def check_doi_activation():
                 # retry of metadata deposition failed again, notify admin
                 msg_lst.append("Metadata deposition with CrossRef for the published resource DOI {res_doi} "
                                "failed again after retry with first metadata deposition requested since {pub_date}.".format(res_doi=act_doi, pub_date=pub_date))
-                msg_log.debug(response.content)
+                logger.debug(response.content)
         else:
            msg_lst.append("{res_id} does not have published date in its metadata.".format(res_id=res.short_id))
 
@@ -78,7 +77,7 @@ def check_doi_activation():
                     success = True
             if not success:
                 msg_lst.append("Published resource DOI {res_doi} is not yet activated with request data deposited since {pub_date}.".format(res_doi=act_doi, pub_date=pub_date))
-                msg_log.debug(response.content)
+                logger.debug(response.content)
         else:
            msg_lst.append("{res_id} does not have published date in its metadata.".format(res_id=res.short_id))
 

@@ -6,7 +6,8 @@ from languages_iso import languages as iso_languages
 from dateutil import parser
 from lxml import etree
 
-from django.contrib.contenttypes import generic
+from django.contrib.contenttypes.fields import GenericForeignKey
+from django.contrib.contenttypes.fields import GenericRelation
 from django.contrib.auth.models import User, Group
 from django.contrib.contenttypes.models import ContentType
 from django.db import models
@@ -20,6 +21,7 @@ from django_irods.storage import IrodsStorage
 from django.conf import settings
 from django.core.files.storage import DefaultStorage
 from django.core.exceptions import ObjectDoesNotExist, ValidationError
+from django.forms.models import model_to_dict
 
 from mezzanine.pages.models import Page, RichText
 from mezzanine.pages.page_processors import processor_for
@@ -87,18 +89,21 @@ class ResourcePermissionsMixin(Ownable):
 
     def can_delete(self, request):
         # have to do import locally to avoid circular import
-        from hs_core.views.utils import authorize
-        return authorize(request, self.short_id, res=self, full=True, superuser=True, raises_exception=False)[1]
+        from hs_core.views.utils import authorize, ACTION_TO_AUTHORIZE
+        return authorize(request, self.short_id, needed_permission=ACTION_TO_AUTHORIZE.DELETE_RESOURCE,
+                         raises_exception=False)[1]
 
     def can_change(self, request):
         # have to do import locally to avoid circular import
-        from hs_core.views.utils import authorize
-        return authorize(request, self.short_id, res=self, edit=True, superuser=True, raises_exception=False)[1]
+        from hs_core.views.utils import authorize, ACTION_TO_AUTHORIZE
+        return authorize(request, self.short_id, needed_permission=ACTION_TO_AUTHORIZE.EDIT_RESOURCE,
+                         raises_exception=False)[1]
 
     def can_view(self, request):
         # have to do import locally to avoid circular import
-        from hs_core.views.utils import authorize
-        return authorize(request, self.short_id, res=self, view=True, superuser=True, raises_exception=False)[1]
+        from hs_core.views.utils import authorize, ACTION_TO_AUTHORIZE
+        return authorize(request, self.short_id, needed_permission=ACTION_TO_AUTHORIZE.VIEW_METADATA,
+                         raises_exception=False)[1]
 
 # this should be used as the page processor for anything with pagepermissionsmixin
 # page_processor_for(MyPage)(ga_resources.views.page_permissions_page_processor)
@@ -122,6 +127,16 @@ def page_permissions_page_processor(request, page):
     editors = cm.raccess.edit_users.exclude(pk__in=owners)
     viewers = cm.raccess.view_users.exclude(pk__in=editors).exclude(pk__in=owners)
 
+    if cm.metadata.relations.all().filter(type='isReplacedBy').exists():
+        is_replaced_by = cm.metadata.relations.all().filter(type='isReplacedBy').first().value
+    else:
+        is_replaced_by = ''
+
+    if cm.metadata.relations.all().filter(type='isVersionOf').exists():
+        is_version_of = cm.metadata.relations.all().filter(type='isVersionOf').first().value
+    else:
+        is_version_of = ''
+
     show_manage_access = False
     if not cm.raccess.published and \
         (is_owner_user or (cm.raccess.shareable and (is_view_user or is_edit_user))):
@@ -137,6 +152,8 @@ def page_permissions_page_processor(request, page):
         "is_edit_user": is_edit_user,
         "is_view_user": is_view_user,
         "can_change_resource_flags": can_change_resource_flags,
+        "is_replaced_by": is_replaced_by,
+        "is_version_of": is_version_of,
         "show_manage_access": show_manage_access
     }
 
@@ -148,7 +165,7 @@ class AbstractMetaDataElement(models.Model):
     # see the following link the reason for having the related_name setting for the content_type attribute
     # https://docs.djangoproject.com/en/1.6/topics/db/models/#abstract-related-name
     content_type = models.ForeignKey(ContentType, related_name="%(app_label)s_%(class)s_related")
-    content_object = generic.GenericForeignKey('content_type', 'object_id')
+    content_object = GenericForeignKey('content_type', 'object_id')
 
     @property
     def metadata(self):
@@ -190,7 +207,7 @@ class ExternalProfileLink(models.Model):
 
     object_id = models.PositiveIntegerField()
     content_type = models.ForeignKey(ContentType)
-    content_object = generic.GenericForeignKey('content_type', 'object_id')
+    content_object = GenericForeignKey('content_type', 'object_id')
 
     class Meta:
         unique_together = ("type", "url", "object_id")
@@ -204,7 +221,7 @@ class Party(AbstractMetaDataElement):
     address = models.CharField(max_length=250, null=True, blank=True)
     phone = models.CharField(max_length=25, null=True, blank=True)
     homepage = models.URLField(null=True, blank=True)
-    external_links = generic.GenericRelation(ExternalProfileLink)
+    external_links = GenericRelation(ExternalProfileLink)
 
     def __unicode__(self):
         return self.name
@@ -523,6 +540,7 @@ class Relation(AbstractMetaDataElement):
         ('isExecutedBy', 'Executed By'),
         ('isCreatedBy', 'Created By'),
         ('isVersionOf', 'Version Of'),
+        ('isReplacedBy', 'Replaced By'),
         ('isDataFor', 'Data For'),
         ('cites', 'Cites'),
         ('isDescribedBy', 'Described By'),
@@ -800,6 +818,9 @@ class Coverage(AbstractMetaDataElement):
     def create(cls, **kwargs):
         """
         data for the coverage value attribute must be provided as a dictionary
+        Note that kwargs['_value'] is a JSON-serialized unicode string dictionary
+        generated from django.forms.models.model_to_dict() which converts model values
+        to dictionaries.
         """
 
         # TODO: validate coordinate values
@@ -826,21 +847,28 @@ class Coverage(AbstractMetaDataElement):
                     raise ValidationError("Coverage type 'Point' can't be created when there is a coverage of "
                                           "type 'Box'")
 
+            value_arg_dict = None
             if 'value' in kwargs:
-                cls._validate_coverage_type_value_attributes(kwargs['type'], kwargs['value'])
+                value_arg_dict = kwargs['value']
+            elif '_value' in kwargs:
+                value_arg_dict = json.loads(kwargs['_value'])
+
+            if value_arg_dict:
+                cls._validate_coverage_type_value_attributes(kwargs['type'], value_arg_dict)
 
                 if kwargs['type'] == 'period':
-                    value_dict = {k: v for k, v in kwargs['value'].iteritems() if k in ('name', 'start', 'end')}
+                    value_dict = {k: v for k, v in value_arg_dict.iteritems() if k in ('name', 'start', 'end')}
                 elif kwargs['type'] == 'point':
-                    value_dict = {k: v for k, v in kwargs['value'].iteritems()
+                    value_dict = {k: v for k, v in value_arg_dict.iteritems()
                                   if k in ('name', 'east', 'north', 'units', 'elevation', 'zunits', 'projection')}
                 elif kwargs['type'] == 'box':
-                    value_dict = {k: v for k, v in kwargs['value'].iteritems()
+                    value_dict = {k: v for k, v in value_arg_dict.iteritems()
                                   if k in ('units', 'northlimit', 'eastlimit', 'southlimit', 'westlimit', 'name',
                                            'uplimit', 'downlimit', 'zunits', 'projection')}
 
                 value_json = json.dumps(value_dict)
-                del kwargs['value']
+                if 'value' in kwargs:
+                    del kwargs['value']
                 kwargs['_value'] = value_json
                 return super(Coverage, cls).create(**kwargs)
 
@@ -1034,12 +1062,12 @@ class AbstractResource(ResourcePermissionsMixin):
                                         null=True
     )
 
-    # dublin_metadata = generic.GenericRelation(
+    # dublin_metadata = GenericRelation(
     #     'dublincore.QualifiedDublinCoreElement',
     #     help_text='The dublin core metadata of the resource'
     # )
 
-    files = generic.GenericRelation('hs_core.ResourceFile', help_text='The files associated with this resource', for_concrete_model=True)
+    files = GenericRelation('hs_core.ResourceFile', help_text='The files associated with this resource', for_concrete_model=True)
 
     file_unpack_status = models.CharField(max_length=7,
                                           blank=True, null=True,
@@ -1048,7 +1076,7 @@ class AbstractResource(ResourcePermissionsMixin):
                                           )
     file_unpack_message = models.TextField(blank=True, null=True)
 
-    bags = generic.GenericRelation('hs_core.Bags', help_text='The bagits created from versions of this resource', for_concrete_model=True)
+    bags = GenericRelation('hs_core.Bags', help_text='The bagits created from versions of this resource', for_concrete_model=True)
     short_id = models.CharField(max_length=32, default=short_id, db_index=True)
     doi = models.CharField(max_length=1024, blank=True, null=True, db_index=True,
                            help_text='Permanent identifier. Never changes once it\'s been set.')
@@ -1059,7 +1087,7 @@ class AbstractResource(ResourcePermissionsMixin):
     # any metadata container object (e.g., CoreMetaData object)
     object_id = models.PositiveIntegerField(null=True, blank=True)
     content_type = models.ForeignKey(ContentType, null=True, blank=True)
-    content_object = generic.GenericForeignKey('content_type', 'object_id')
+    content_object = GenericForeignKey('content_type', 'object_id')
 
     #keywords = KeywordsField(verbose_name="Keywords", for_concrete_model=False)
 
@@ -1248,14 +1276,14 @@ class ResourceFile(models.Model):
     object_id = models.PositiveIntegerField()
     content_type = models.ForeignKey(ContentType)
 
-    content_object = generic.GenericForeignKey('content_type', 'object_id')
+    content_object = GenericForeignKey('content_type', 'object_id')
     resource_file = models.FileField(upload_to=get_path, max_length=500, storage=IrodsStorage() if getattr(settings,'USE_IRODS', False) else DefaultStorage())
 
 class Bags(models.Model):
     object_id = models.PositiveIntegerField()
     content_type = models.ForeignKey(ContentType)
 
-    content_object = generic.GenericForeignKey('content_type', 'object_id', for_concrete_model=False)
+    content_object = GenericForeignKey('content_type', 'object_id', for_concrete_model=False)
     timestamp = models.DateTimeField(default=now, db_index=True)
 
     class Meta:
@@ -1280,6 +1308,10 @@ class DiscoverableResourceManager(models.Manager):
 class BaseResource(Page, AbstractResource):
 
     resource_type = models.CharField(max_length=50, default="GenericResource")
+    # this locked_time field is added for resource versioning locking representing
+    # the time when the resource is locked for a new version action. A value of null
+    # means the resource is not locked
+    locked_time = models.DateTimeField(null=True, blank=True)
 
     objects = models.Manager()
     public_resources = PublicResourceManager()
@@ -1361,7 +1393,21 @@ class BaseResource(Page, AbstractResource):
     def can_have_files(cls):
         return True
 
+    def get_hs_term_dict(self):
+        '''
+        this func returns a dict of HS Terms and their values, which will be used to parse webapp url templates
 
+        NOTES FOR ANY SUBCLASS OF THIS CLASS TO OVERRIDE THIS FUNCTION:
+        resource types that inherit this class should add/merge their resource-specific HS Terms
+        into this dict
+        '''
+
+        hs_term_dict = {}
+
+        hs_term_dict["HS_RES_ID"] = self.short_id
+        hs_term_dict["HS_RES_TYPE"] = self.resource_type
+
+        return hs_term_dict
 
 class GenericResource(BaseResource):
     objects = ResourceManager('GenericResource')
@@ -1396,21 +1442,21 @@ class CoreMetaData(models.Model):
 
     id = models.AutoField(primary_key=True)
 
-    _description = generic.GenericRelation(Description)    # resource abstract
-    _title = generic.GenericRelation(Title)
-    creators = generic.GenericRelation(Creator)
-    contributors = generic.GenericRelation(Contributor)
-    dates = generic.GenericRelation(Date)
-    coverages = generic.GenericRelation(Coverage)
-    formats = generic.GenericRelation(Format)
-    identifiers = generic.GenericRelation(Identifier)
-    _language = generic.GenericRelation(Language)
-    subjects = generic.GenericRelation(Subject)
-    sources = generic.GenericRelation(Source)
-    relations = generic.GenericRelation(Relation)
-    _rights = generic.GenericRelation(Rights)
-    _type = generic.GenericRelation(Type)
-    _publisher = generic.GenericRelation(Publisher)
+    _description = GenericRelation(Description)    # resource abstract
+    _title = GenericRelation(Title)
+    creators = GenericRelation(Creator)
+    contributors = GenericRelation(Contributor)
+    dates = GenericRelation(Date)
+    coverages = GenericRelation(Coverage)
+    formats = GenericRelation(Format)
+    identifiers = GenericRelation(Identifier)
+    _language = GenericRelation(Language)
+    subjects = GenericRelation(Subject)
+    sources = GenericRelation(Source)
+    relations = GenericRelation(Relation)
+    _rights = GenericRelation(Rights)
+    _type = GenericRelation(Type)
+    _publisher = GenericRelation(Publisher)
 
     @property
     def title(self):
@@ -1517,6 +1563,23 @@ class CoreMetaData(models.Model):
         self.subjects.all().delete()
         self.sources.all().delete()
         self.relations.all().delete()
+
+    def copy_all_elements_from(self, src_md, exclude_elements=None):
+        md_type = ContentType.objects.get_for_model(src_md)
+        supported_element_names = src_md.get_supported_element_names()
+        for element_name in supported_element_names:
+            element_model_type = src_md._get_metadata_element_model_type(element_name)
+            elements_to_copy = element_model_type.model_class().objects.filter(object_id=src_md.id, content_type=md_type).all()
+            for element in elements_to_copy:
+                element_args = model_to_dict(element)
+                element_args.pop('content_type')
+                element_args.pop('id')
+                element_args.pop('object_id')
+                if exclude_elements:
+                    if not element_name.lower() in exclude_elements:
+                        self.create_element(element_name, **element_args)
+                else:
+                    self.create_element(element_name, **element_args)
 
     # this method needs to be overriden by any subclass of this class
     # to allow updating of extended (resource specific) metadata

@@ -2,9 +2,9 @@ import requests
 
 from django import forms
 from django.utils.translation import ugettext, ugettext_lazy as _
-from django.contrib.comments.signals import comment_was_posted
-from django.contrib.comments.forms import CommentSecurityForm
-from django.contrib.comments.models import Comment
+from django_comments.signals import comment_was_posted
+from django_comments.forms import CommentSecurityForm
+from django_comments.models import Comment
 from django.contrib.contenttypes.models import ContentType
 from django.utils.encoding import force_text
 from django.utils import timezone
@@ -101,22 +101,6 @@ class CommentDetailsForm(CommentSecurityForm):
 
         return new
 
-    def clean_comment(self):
-        """
-        If COMMENTS_ALLOW_PROFANITIES is False, check that the comment doesn't
-        contain anything in PROFANITIES_LIST.
-        """
-        comment = self.cleaned_data["comment"]
-        if settings.COMMENTS_ALLOW_PROFANITIES == False:
-            bad_words = [w for w in settings.PROFANITIES_LIST if w in comment.lower()]
-            if bad_words:
-                raise forms.ValidationError(ungettext(
-                    "Watch your mouth! The word %s is not allowed here.",
-                    "Watch your mouth! The words %s are not allowed here.",
-                    len(bad_words)) % get_text_list(
-                        ['"%s%s%s"' % (i[0], '-'*(len(i)-2), i[-1])
-                         for i in bad_words], ugettext('and')))
-        return comment
 
 class CommentForm(CommentDetailsForm):
     honeypot      = forms.CharField(required=False,
@@ -308,3 +292,58 @@ class SignupForm(forms.ModelForm):
             password=data['password'],
             active=False,
         )
+
+
+class UserForm(forms.ModelForm):
+    class Meta:
+        model = User
+        fields = ['username', 'first_name', 'last_name', 'email']
+
+    def clean_first_name(self):
+        data = self.cleaned_data['first_name']
+        if len(data.strip()) == 0:
+            raise forms.ValidationError("First name is a required field.")
+        return data
+
+    def clean_last_name(self):
+        data = self.cleaned_data['last_name']
+        if len(data.strip()) == 0:
+            raise forms.ValidationError("Last name is a required field.")
+        return data
+
+    def clean_email(self):
+        data = self.cleaned_data['email']
+        if len(data.strip()) == 0:
+            raise forms.ValidationError("Email is a required field.")
+        return data
+
+    def clean_username(self):
+        data = self.cleaned_data['username']
+        if len(data.strip()) == 0:
+            raise forms.ValidationError("Username is a required field.")
+        return data
+
+
+class UserProfileForm(forms.ModelForm):
+    class Meta:
+        model = UserProfile
+        exclude = ['user', 'public']
+
+    def clean_organization(self):
+        data = self.cleaned_data['organization']
+        if len(data.strip()) == 0:
+            raise forms.ValidationError("Organization is a required field.")
+        return data
+
+    def clean_country(self):
+        data = self.cleaned_data['country']
+        if len(data.strip()) == 0:
+            raise forms.ValidationError("Country is a required field.")
+        return data
+
+    def clean_state(self):
+        data = self.cleaned_data['state']
+        if len(data.strip()) == 0:
+            raise forms.ValidationError("State is a required field.")
+        return data
+
