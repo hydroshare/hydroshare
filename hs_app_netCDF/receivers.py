@@ -59,6 +59,7 @@ def netcdf_pre_create_resource(sender, **kwargs):
             # add title
             if res_dublin_core_meta.get('title'):
                 res_title = {'title': {'value': res_dublin_core_meta['title']}}
+                metadata.append(res_title)
 
             # add description
             if res_dublin_core_meta.get('description'):
