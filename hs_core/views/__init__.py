@@ -27,8 +27,8 @@ from django_irods.storage import IrodsStorage
 from django_irods.icommands import SessionException
 from hs_core import hydroshare
 from hs_core.hydroshare.utils import get_resource_by_shortkey, resource_modified
-from .utils import authorize, upload_from_irods, ACTION_TO_AUTHORIZE
-from hs_core.models import GenericResource, resource_processor, CoreMetaData
+from .utils import authorize, upload_from_irods, ACTION_TO_AUTHORIZE, run_script_to_update_hyrax_input_files
+from hs_core.models import GenericResource, resource_processor, CoreMetaData, Relation
 from hs_core.hydroshare.resource import METADATA_STATUS_SUFFICIENT, METADATA_STATUS_INSUFFICIENT
 
 from . import resource_rest_api
@@ -278,7 +278,7 @@ def create_new_version_resource(request, shortkey, *args, **kwargs):
         res.locked_time = datetime.datetime.now(pytz.utc)
         res.save()
         new_resource = hydroshare.create_new_version_empty_resource(shortkey, user)
-        new_resource = hydroshare.create_new_version_resource(res, new_resource)
+        new_resource = hydroshare.create_new_version_resource(res, new_resource, user)
     except Exception as ex:
         if new_resource:
             new_resource.delete()
@@ -480,10 +480,16 @@ def my_resources(request, page):
     user = request.user
     # get a list of resources with effective OWNER privilege
     owned_resources = user.uaccess.get_resources_with_explicit_access(PrivilegeCodes.OWNER)
+    # remove obsoleted resources from the owned_resources
+    owned_resources = owned_resources.exclude(object_id__in=Relation.objects.filter(type='isReplacedBy').values('object_id'))
     # get a list of resources with effective CHANGE privilege
     editable_resources = user.uaccess.get_resources_with_explicit_access(PrivilegeCodes.CHANGE)
+    # remove obsoleted resources from the editable_resources
+    editable_resources = editable_resources.exclude(object_id__in=Relation.objects.filter(type='isReplacedBy').values('object_id'))
     # get a list of resources with effective VIEW privilege
     viewable_resources = user.uaccess.get_resources_with_explicit_access(PrivilegeCodes.VIEW)
+    # remove obsoleted resources from the viewable_resources
+    viewable_resources = viewable_resources.exclude(object_id__in=Relation.objects.filter(type='isReplacedBy').values('object_id'))
 
     owned_resources = list(owned_resources)
     editable_resources = list(editable_resources)
@@ -707,6 +713,10 @@ def _set_resource_sharing_status(request, user, resource, flag_to_set, flag_valu
         # set isPublic metadata AVU accordingly
         istorage = IrodsStorage()
         istorage.setAVU(resource.short_id, "isPublic", str(resource.raccess.public))
+
+        # run script to update hyrax input files when a private netCDF resource is made public
+        if flag_to_set=='public' and flag_value and settings.RUN_HYRAX_UPDATE and resource.resource_type=='NetcdfResource':
+            run_script_to_update_hyrax_input_files()
 
 def _get_message_for_setting_resource_flag(has_files, has_metadata, resource_flag):
     msg = ''
