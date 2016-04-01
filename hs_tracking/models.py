@@ -21,22 +21,28 @@ class SessionManager(models.Manager):
             except Session.DoesNotExist:
                 pass
             if session is not None:
-                if session.user is None and request.user.is_authenticated():
-                    session.user = request.user
-                    session.save()
+                if session.visitor.user is None and request.user.is_authenticated():
+                    session.visitor.user = request.user
+                    session.visitor.save()
                 return session
         # No session found, create one
         kwargs = {}
         if request.user.is_authenticated():
-            kwargs['user'] = request.user
+            visitor, _ = Visitor.objects.get_or_create(user=request.user)
+            kwargs['visitor'] = visitor
         session = Session.objects.create(**kwargs)
         request.session['hs_tracking_id'] = signing.dumps({'id': session.id})
         return session
 
 
+class Visitor(models.Model):
+    first_seen = models.DateTimeField(auto_now_add=True)
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, blank=True)
+
+
 class Session(models.Model):
     begin = models.DateTimeField(auto_now_add=True)
-    user = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, blank=True)
+    visitor = models.ForeignKey(Visitor)
 
     objects = SessionManager()
 

@@ -10,6 +10,7 @@ from mezzanine.conf import settings
 from haystack.views import FacetedSearchView
 from hs_core.customer_form import MyForm
 from theme import views as theme
+from hs_tracking import views as tracking
 import autocomplete_light
 
 
@@ -31,6 +32,7 @@ urlpatterns = i18n_patterns("",
     #url('^ga_interactive/', include('ga_interactive.urls')),
     url('^r/(?P<shortkey>[A-z0-9\-_]+)', 'hs_core.views.short_url'),
     # url('^party/', include('hs_scholar_profile.urls'))
+    url(r'^tracking/$', tracking.UseTrackingView.as_view()),
     url(r'^user/$', theme.UserProfileView.as_view()),
     url(r'^user/(?P<user>.*)/', theme.UserProfileView.as_view()),
     url(r'^comment/$', theme.comment),
