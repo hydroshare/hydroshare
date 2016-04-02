@@ -479,6 +479,8 @@ def create_resource(
             for keyword in keywords:
                 resource.metadata.create_element('subject', value=keyword)
 
+            resource.title = resource.metadata.title.value
+            resource.save()
         if create_bag:
             hs_bagit.create_bag(resource)
 
