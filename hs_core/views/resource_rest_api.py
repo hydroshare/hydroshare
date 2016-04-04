@@ -16,12 +16,12 @@ from django.contrib.sites.models import Site
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.views import APIView
 from rest_framework.response import Response
-from rest_framework import status, generics
+from rest_framework import generics
 from rest_framework.request import Request
 from rest_framework.exceptions import *
 
 from hs_core import hydroshare
-from hs_core.models import AbstractResource, ResourceManager
+from hs_core.models import AbstractResource
 from hs_core.hydroshare.utils import get_resource_by_shortkey, get_resource_types
 from hs_core.views import utils as view_utils
 from hs_core.views.utils import ACTION_TO_AUTHORIZE

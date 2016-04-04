@@ -7,7 +7,6 @@ import rdflib
 from rdflib import URIRef
 from rdflib import Graph
 
-from django.contrib.auth.models import User
 from django.core.files.uploadedfile import UploadedFile
 from django.core.exceptions import ValidationError
 from django.db import transaction
