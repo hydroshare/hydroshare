@@ -16,7 +16,7 @@ class UrlBaseFormHelper(BaseFormHelper):
         layout = Layout(
             Field('value', css_class=field_width)
         )
-        kwargs['element_name_label'] = 'App URL'
+        kwargs['element_name_label'] = "App URL <a href='/terms#AppURL' target='_blank'><font size='3'>Help</font></a>"
 
         super(UrlBaseFormHelper, self).__init__(allow_edit, res_short_id, element_id, element_name, layout,  *args, **kwargs)
 
@@ -25,7 +25,7 @@ class UrlBaseForm(ModelForm):
     def __init__(self, allow_edit=True, res_short_id=None, element_id=None, *args, **kwargs):
         super(UrlBaseForm, self).__init__(*args, **kwargs)
         self.helper = UrlBaseFormHelper(allow_edit, res_short_id, element_id, element_name='RequestUrlBase')
-        self.fields['value'].label = "<a href='/terms#AppURL' target='_blank'>Learn how to pass resource parameters in app url</a>"
+        self.fields['value'].label = ''
 
     class Meta:
         model = RequestUrlBase
@@ -128,7 +128,7 @@ class SupportedResTypesForm(ModelForm):
 
     def __init__(self, allow_edit=True, res_short_id=None, element_id=None, *args, **kwargs):
         super(SupportedResTypesForm, self).__init__(*args, **kwargs)
-        self.fields['supported_res_types'].label = "Choices: "
+        self.fields['supported_res_types'].label = "Choose Resource Types:"
         self.helper = SupportedResTypeFormHelper(allow_edit, res_short_id, element_id, element_name='SupportedResTypes')
         if self.instance:
             try:
