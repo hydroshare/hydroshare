@@ -80,7 +80,7 @@ class TestResourceMetadata(HSRESTTestCase):
             f.writelines(out)
             f.close()
 
-            # Send updated metadata to REST API
+            ## Send updated metadata to REST API
             params = {'file': (RESOURCE_METADATA,
                                open(sci_meta_new),
                                'application/xml')}
@@ -88,7 +88,7 @@ class TestResourceMetadata(HSRESTTestCase):
             response = self.client.put(url, params)
             self.assertEqual(response.status_code, status.HTTP_202_ACCEPTED)
 
-            # Get science metadata
+            ## Get science metadata
             response = self.getScienceMetadata(self.pid, exhaust_stream=False)
             sci_meta_updated = os.path.join(tmp_dir, RESOURCE_METADATA_UPDATED)
             f = open(sci_meta_updated, 'w')
@@ -101,17 +101,25 @@ class TestResourceMetadata(HSRESTTestCase):
             self.assertEquals(len(abstract), 1)
             self.assertEquals(abstract[0].text, abstract_text)
 
+            # Make sure metadata update is idempotent
+            params = {'file': (RESOURCE_METADATA,
+                               open(sci_meta_new),
+                               'application/xml')}
+            url = "/hsapi/scimeta/{pid}/".format(pid=self.pid)
+            response = self.client.put(url, params)
+            self.assertEqual(response.status_code, status.HTTP_202_ACCEPTED)
+
             # Make sure changing the resource ID in the resource metadata causes an error
             desc = scimeta.xpath('/rdf:RDF/rdf:Description[1]', namespaces=NS)[0]
             desc.set('{http://www.w3.org/1999/02/22-rdf-syntax-ns#}about',
                      'http://example.com/resource/THISISNOTARESOURCEID')
-            # Write out to a file
+            ## Write out to a file
             out = etree.tostring(scimeta, pretty_print=True)
             f = open(sci_meta_new, 'w')
             f.writelines(out)
             f.close()
 
-            # Send updated metadata to REST API
+            ## Send updated metadata to REST API
             params = {'file': (RESOURCE_METADATA,
                                open(sci_meta_new),
                                'application/xml')}

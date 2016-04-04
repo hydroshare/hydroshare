@@ -757,7 +757,11 @@ class GenericResourceMeta(object):
                 msg = msg.format(c.__class__.__name__)
                 raise TypeError(msg)
         if self.abstract:
-            resource.metadata.create_element('description', abstract=self.abstract)
+            if resource.metadata.description:
+                resource.metadata.update_element('description', resource.metadata.description.id,
+                                                 abstract=self.abstract)
+            else:
+                resource.metadata.create_element('description', abstract=self.abstract)
         if self.rights:
             resource.metadata.update_element('rights', resource.metadata.rights.id,
                                              statement=self.rights.statement)
