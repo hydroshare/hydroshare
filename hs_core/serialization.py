@@ -2,6 +2,7 @@ import os
 import heapq
 import xml.sax
 import urlparse
+import logging
 
 import rdflib
 from rdflib import URIRef
@@ -20,6 +21,9 @@ from hs_core.hydroshare.utils import ResourceFileSizeException, ResourceFileVali
 from hs_core.hydroshare import create_resource
 from hs_core.models import BaseResource, validate_user_url
 from hs_core.hydroshare.hs_bagit import create_bag_files
+
+
+logger = logging.getLogger(__name__)
 
 
 class HsSerializationException(Exception):
@@ -128,15 +132,15 @@ def create_resource_from_bag(bag_content_path, preserve_uuid=True):
     try:
         # Get user
         owner = rm.get_owner()
-        print(owner.uri)
-        print(owner.id)
+        logger.debug(owner.uri)
+        logger.debug(owner.id)
 
         pk = owner.id
         if pk is not None:
             rm.owner_is_hs_user = True
         else:
             # Set owner to admin if user doesn't exist
-            print("Owner user {0} does not exist, using user 1".format(pk))
+            logger.debug("Owner user {0} does not exist, using user 1".format(pk))
             pk = 1
             rm.owner_is_hs_user = False
 
@@ -271,9 +275,9 @@ class GenericResourceMeta(object):
                 # Instantiate metadata class for resource type
                 rt_root = rt.__module__.split('.')[0]
                 rt_meta = "{0}Meta".format(rt_name)
-                print("rt_meta: {0}".format(rt_meta))
+                logger.debug("rt_meta: {0}".format(rt_meta))
                 mod_ser_name = "{root}.serialization".format(root=rt_root)
-                print("mod_ser_name: {0}".format(mod_ser_name))
+                logger.debug("mod_ser_name: {0}".format(mod_ser_name))
                 instance = None
                 try:
                     # Use __import__ to make sure mod_ser is compiled on import (else we can't import it)
@@ -335,7 +339,7 @@ class GenericResourceMeta(object):
         if res_meta['id'] is None:
             msg = "Unable to determine resource ID from resource map {0}".format(rmap_path)
             raise GenericResourceMeta.ResourceMetaException(msg)
-        print("Resource ID is {0}".format(res_meta['id']))
+        logger.debug("Resource ID is {0}".format(res_meta['id']))
 
         # Build URI reference for #aggregation section of resource map
         res_root_uri = "http://{host}/resource/{res_id}".format(host=hydroshare_host, res_id=res_meta['id'])
@@ -353,14 +357,14 @@ class GenericResourceMeta(object):
         if res_type_part[1] == '':
             raise GenericResourceMeta.ResourceMetaException("No resource type found in resource map {0}".format(rmap_path))
         res_meta['type'] = res_type_part[-1]
-        print("\tType is {0}".format(res_meta['type']))
+        logger.debug("\tType is {0}".format(res_meta['type']))
 
         # Get resource title
         title_lit = g.value(res_agg, rdflib.namespace.DC.title)
         if title_lit is None:
             raise GenericResourceMeta.ResourceMetaException("No resource title found in resource map {0}".format(rmap_path))
         res_meta['title'] = str(title_lit)
-        print("\tTitle is {0}".format(res_meta['title']))
+        logger.debug("\tTitle is {0}".format(res_meta['title']))
 
         # Get list of files in resource
         res_meta['files'] = []
@@ -382,10 +386,10 @@ class GenericResourceMeta(object):
         if res_meta_path is None:
             raise GenericResourceMeta.ResourceMetaException("No resource metadata found in resource map {0}".format(rmap_path))
 
-        print("\tResource metadata path {0}".format(res_meta_path))
+        logger.debug("\tResource metadata path {0}".format(res_meta_path))
 
         for uri in res_meta['files']:
-            print("\tContents: {0}".format(uri))
+            logger.debug("\tContents: {0}".format(uri))
 
         return (root_uri, res_meta_path, res_meta)
 
@@ -422,13 +426,13 @@ class GenericResourceMeta(object):
                 msg += "does not match title from resource map {1}, using {2}."
                 msg = msg.format(title, self.title, title)
                 self.title = title
-                print("Warning {0}".format(msg))
+                logger.debug("Warning {0}".format(msg))
 
         # Get abstract
         for s, p, o in self._rmeta_graph.triples((None, rdflib.namespace.DCTERMS.abstract, None)):
             self.abstract = o
         if self.abstract:
-            print("\t\tAbstract: {0}".format(self.abstract))
+            logger.debug("\t\tAbstract: {0}".format(self.abstract))
 
         # Get creators
         for s, p, o in self._rmeta_graph.triples((None, rdflib.namespace.DC.creator, None)):
@@ -474,7 +478,7 @@ class GenericResourceMeta(object):
             self.add_creator(creator)
 
         for c in self.get_creators():
-            print("\t\tCreator: {0}".format(str(c)))
+            logger.debug("\t\tCreator: {0}".format(str(c)))
 
         # Get contributors
         if SAX_parse_results:
@@ -519,7 +523,7 @@ class GenericResourceMeta(object):
                 self.contributors.append(contributor)
 
         for c in self.contributors:
-            print("\t\tContributor: {0}".format(str(c)))
+            logger.debug("\t\tContributor: {0}".format(str(c)))
 
         # Get creation date
         for s, p, o in self._rmeta_graph.triples((None, None, rdflib.namespace.DCTERMS.created)):
@@ -537,7 +541,7 @@ class GenericResourceMeta(object):
                                                                                  str(e))
                     raise GenericResourceMeta.ResourceMetaException(msg)
 
-        print("\t\tCreation date: {0}".format(str(self.creation_date)))
+        logger.debug("\t\tCreation date: {0}".format(str(self.creation_date)))
 
         # Get modification date
         for s, p, o in self._rmeta_graph.triples((None, None, rdflib.namespace.DCTERMS.modified)):
@@ -555,7 +559,7 @@ class GenericResourceMeta(object):
                                                                                      str(e))
                     raise GenericResourceMeta.ResourceMetaException(msg)
 
-        print("\t\tModification date: {0}".format(str(self.modification_date)))
+        logger.debug("\t\tModification date: {0}".format(str(self.modification_date)))
 
         # Get rights
         resource_rights = None
@@ -580,7 +584,7 @@ class GenericResourceMeta(object):
 
         self.rights = resource_rights
 
-        print("\t\tRights: {0}".format(self.rights))
+        logger.debug("\t\tRights: {0}".format(self.rights))
 
         # Get keywords
         if SAX_parse_results:
@@ -591,7 +595,7 @@ class GenericResourceMeta(object):
             for s, p, o in self._rmeta_graph.triples((None, rdflib.namespace.DC.subject, None)):
                 self.keywords.append(str(o))
 
-        print("\t\tKeywords: {0}".format(str(self.keywords)))
+        logger.debug("\t\tKeywords: {0}".format(str(self.keywords)))
 
         # Get language
         lang_lit = self._rmeta_graph.value(res_uri, rdflib.namespace.DC.language)
@@ -600,7 +604,7 @@ class GenericResourceMeta(object):
         else:
             self.language = str(lang_lit)
 
-        print("\t\tLanguage: {0}".format(self.language))
+        logger.debug("\t\tLanguage: {0}".format(self.language))
 
         # Get coverage (box)
         for s, p, o in self._rmeta_graph.triples((None, None, rdflib.namespace.DCTERMS.box)):
@@ -629,9 +633,9 @@ class GenericResourceMeta(object):
             coverage = GenericResourceMeta.ResourceCoveragePeriod(str(coverage_lit))
             self.coverages.append(coverage)
 
-        print("\t\tCoverages: ")
+        logger.debug("\t\tCoverages: ")
         for c in self.coverages:
-            print("\t\t\t{0}".format(str(c)))
+            logger.debug("\t\t\t{0}".format(str(c)))
 
         # Get relations
         for s, p, o in self._rmeta_graph.triples((None, rdflib.namespace.DC.relation, None)):
@@ -639,9 +643,9 @@ class GenericResourceMeta(object):
                 relation = GenericResourceMeta.ResourceRelation(obj, pred)
                 self.relations.append(relation)
 
-        print("\t\tRelations: ")
+        logger.debug("\t\tRelations: ")
         for r in self.relations:
-            print("\t\t\t{0}".format(str(r)))
+            logger.debug("\t\t\t{0}".format(str(r)))
 
         # Get sources
         for s, p, o in self._rmeta_graph.triples((None, rdflib.namespace.DC.source, None)):
@@ -649,9 +653,9 @@ class GenericResourceMeta(object):
                 source = GenericResourceMeta.ResourceSource(obj, pred)
                 self.sources.append(source)
 
-        print("\t\tSources: ")
+        logger.debug("\t\tSources: ")
         for r in self.sources:
-            print("\t\t\t{0}".format(str(r)))
+            logger.debug("\t\t\t{0}".format(str(r)))
 
     def get_owner(self):
         """
