@@ -101,5 +101,23 @@ class TestResourceMetadata(HSRESTTestCase):
             self.assertEquals(len(abstract), 1)
             self.assertEquals(abstract[0].text, abstract_text)
 
+            # Make sure changing the resource ID in the resource metadata causes an error
+            desc = scimeta.xpath('/rdf:RDF/rdf:Description[1]', namespaces=NS)[0]
+            desc.set('{http://www.w3.org/1999/02/22-rdf-syntax-ns#}about',
+                     'http://example.com/resource/THISISNOTARESOURCEID')
+            # Write out to a file
+            out = etree.tostring(scimeta, pretty_print=True)
+            f = open(sci_meta_new, 'w')
+            f.writelines(out)
+            f.close()
+
+            # Send updated metadata to REST API
+            params = {'file': (RESOURCE_METADATA,
+                               open(sci_meta_new),
+                               'application/xml')}
+            url = "/hsapi/scimeta/{pid}/".format(pid=self.pid)
+            response = self.client.put(url, params)
+            self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
         finally:
             shutil.rmtree(tmp_dir)

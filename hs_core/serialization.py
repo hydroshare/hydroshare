@@ -335,7 +335,7 @@ class GenericResourceMeta(object):
         # Get resource ID
         for s, p, o in g.triples((None, None, None)):
             if s.endswith("resourcemap.xml") and p == rdflib.namespace.DC.identifier:
-                res_meta['id'] = o
+                res_meta['id'] = str(o)
         if res_meta['id'] is None:
             msg = "Unable to determine resource ID from resource map {0}".format(rmap_path)
             raise GenericResourceMeta.ResourceMetaException(msg)
@@ -409,24 +409,50 @@ class GenericResourceMeta(object):
         self._rmeta_graph = Graph()
         self._rmeta_graph.parse(self.rmeta_path)
 
+        res_uri = URIRef(self.root_uri)
+
+        # Make sure that the resource ID in the resource metadata matches that of the resource map.
+        rmeta_id = None
+        for s, p, o in self._rmeta_graph.triples((res_uri, None, None)):
+            # Resource identifier literal is represented as
+            # 'http://example.com/resource/c9616269b5094c51b71632e8d1d02c0d', we want the part
+            # after the final '/', 'or c9616269b5094c51b71632e8d1d02c0d'
+            rmeta_id_part = str(s).rpartition('/')
+            if rmeta_id_part[1] == '':
+                # Should not be possible if a triple matched
+                msg = 'Resource metadata does not contain a resource ID.'
+                raise HsDeserializationException(msg)
+            rmeta_id = rmeta_id_part[-1]
+            if rmeta_id != self.id:
+                msg = ("Resource metadata resource ID {0} does not match "
+                       "resource map resource ID {1}.").format(rmeta_id, self.id)
+                raise HsDeserializationException(msg)
+            logger.debug("Resource ID from resource map {0}".format(rmeta_id))
+            break
+
+        if not rmeta_id:
+            msg = ("Resource metadata does not contain a resource ID "
+                   "that matches resource map resource ID {0}.").format(self.id)
+            raise HsDeserializationException(msg)
+
         # Also parse using SAX so that we can capture certain metadata elements
         # in the same order in which they appear in the RDF+XML serialization.
         SAX_parse_results = GenericResourceSAXHandler()
         xml.sax.parse(self.rmeta_path, SAX_parse_results)
 
         hsterms = rdflib.namespace.Namespace('http://hydroshare.org/terms/')
-        res_uri = URIRef(self.root_uri)
 
-        # Make sure title matches that from resource map
+        # Warn if title does not match that from resource map
         title_lit = self._rmeta_graph.value(res_uri, rdflib.namespace.DC.title)
         if title_lit is not None:
             title = str(title_lit)
             if title != self.title:
                 msg = "Title from resource metadata {0} "
-                msg += "does not match title from resource map {1}, using {2}."
+                msg += "does not match title from resource map {1}, using {2} "
+                msg += "(this may be okay if the resource metadata is being updated)."
                 msg = msg.format(title, self.title, title)
                 self.title = title
-                logger.debug("Warning {0}".format(msg))
+                logger.warn(msg)
 
         # Get abstract
         for s, p, o in self._rmeta_graph.triples((None, rdflib.namespace.DCTERMS.abstract, None)):

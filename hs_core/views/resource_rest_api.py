@@ -26,7 +26,7 @@ from hs_core.views.utils import ACTION_TO_AUTHORIZE
 from hs_core.views import serializers
 from hs_core.views import pagination
 from hs_core.hydroshare.utils import get_file_storage
-from hs_core.serialization import GenericResourceMeta, HsDeserializationDependencyException
+from hs_core.serialization import GenericResourceMeta, HsDeserializationDependencyException, HsDeserializationException
 from hs_core.hydroshare.hs_bagit import create_bag_files
 
 
@@ -534,11 +534,12 @@ class ScienceMetadataRetrieveUpdate(APIView):
             resmeta.close()
             resmeta_irods.close()
 
-            # Read resource system and science metadata
-            rm = GenericResourceMeta.read_metadata_from_resource_bag(tmp_dir,
-                                                                     hydroshare_host=Site.objects.get_current().domain)
-            # Update resource metadata
             try:
+                # Read resource system and science metadata
+                domain = Site.objects.get_current().domain
+                rm = GenericResourceMeta.read_metadata_from_resource_bag(tmp_dir,
+                                                                         hydroshare_host=domain)
+                # Update resource metadata
                 rm.write_metadata_to_resource(res)
                 create_bag_files(res)
             except HsDeserializationDependencyException as e:
@@ -547,6 +548,8 @@ class ScienceMetadataRetrieveUpdate(APIView):
                 msg = msg.format(pk=pk, dep=e.dependency_resource_id)
                 logger.error(msg)
                 raise ValidationError(detail=msg)
+            except HsDeserializationException as e:
+                raise ValidationError(detail=e.message)
 
             return Response(data={'resource_id': pk}, status=status.HTTP_202_ACCEPTED)
         finally:
