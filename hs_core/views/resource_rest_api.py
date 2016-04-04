@@ -503,8 +503,9 @@ class ScienceMetadataRetrieveUpdate(APIView):
 
         scimeta = files[0]
         if scimeta.content_type not in self.ACCEPT_FORMATS:
-            error_msg = {'file': "Uploaded file has content type {t}, but expected {e}.".format(t=scimeta.content_type,
-                                                                                                e=expect)}
+            error_msg = {'file': ("Uploaded file has content type {t}, "
+                                  "but only these types are accepted: {e}.").format(t=scimeta.content_type,
+                                                                                    e=",".join(self.ACCEPT_FORMATS))}
             raise ValidationError(detail=error_msg)
         expect = 'resourcemetadata.xml'
         if scimeta.name != expect:
