@@ -73,6 +73,10 @@ def create_resource_from_bag(bag_content_path, preserve_uuid=True):
     """
     Create resource from existing uncompressed BagIt archive.
 
+    WARNING: This should only be called from the admin console (i.e. NOT from the REST API)
+    because it allows low level manipulation of newly created resources based on metadata in the
+    resource map and metadata.
+
     Follows roughly the same pattern as hs_core.views.create_resource().
 
     :param bag_content_path:
@@ -167,7 +171,10 @@ def create_resource_from_bag(bag_content_path, preserve_uuid=True):
     assert(resource is not None)
 
     try:
-        rm.write_metadata_to_resource(resource)
+        rm.write_metadata_to_resource(resource, update_creators=True,
+                                      update_contributors=True,
+                                      update_creation_date=True,
+                                      update_modification_date=True)
         # Force bag files to be re-written
         create_bag_files(resource)
     except HsDeserializationDependencyException as e:
@@ -702,60 +709,79 @@ class GenericResourceMeta(object):
             BaseResource.objects.filter(id=resource.id).update(updated=self.modification_date)
 
     @transaction.atomic
-    def write_metadata_to_resource(self, resource):
+    def write_metadata_to_resource(self, resource,
+                                   update_creators=False,
+                                   update_contributors=False,
+                                   update_creation_date=False,
+                                   update_modification_date=False):
         """
         Write metadata to resource
 
         :param resource: HydroShare resource instance
+        :param update_creators: Update creator metadata if True.  Note, for general updates
+        through the REST API this should be false as we don't want to allow users to change
+        creator information behind the back of the authorization system.
+        :param update_contributors: Update contributor metadata if True.  Note, for general updates
+        through the REST API this should be false as we don't want to allow users to change
+        creator information behind the back of the authorization system.
+        :param update_creation_date: Update creation date metadata if True.  Note, for general updates
+        through the REST API this should be false as we don't want to allow users to change
+        creation date behind our backs.
+        :param update_modification_date: Update modification date metadata if True.  Note, for general updates
+        through the REST API this should be false as we don't want to allow users to change
+        modification date behind our backs.
+
         """
-        for c in self.get_creators():
-            if isinstance(c, GenericResourceMeta.ResourceCreator):
-                # Set creator metadata, from bag metadata, to be used in create or update as needed (see below)
-                kwargs = {'order': c.order, 'name': c.name,
-                          'organization': c.organization,
-                          'email': c.email, 'address': c.address,
-                          'phone': c.phone, 'homepage': c.homepage,
-                          'researcherID': c.researcherID,
-                          'researchGateID': c.researchGateID}
-                if c.rel_uri:
-                    # HydroShare user URIs are stored as relative not absolute URIs
-                    kwargs['description'] = c.rel_uri
-                else:
-                    kwargs['description'] = None
+        if update_creators:
+            for c in self.get_creators():
+                if isinstance(c, GenericResourceMeta.ResourceCreator):
+                    # Set creator metadata, from bag metadata, to be used in create or update as needed (see below)
+                    kwargs = {'order': c.order, 'name': c.name,
+                              'organization': c.organization,
+                              'email': c.email, 'address': c.address,
+                              'phone': c.phone, 'homepage': c.homepage,
+                              'researcherID': c.researcherID,
+                              'researchGateID': c.researchGateID}
+                    if c.rel_uri:
+                        # HydroShare user URIs are stored as relative not absolute URIs
+                        kwargs['description'] = c.rel_uri
+                    else:
+                        kwargs['description'] = None
 
-                if self.owner_is_hs_user and c.order == 1:
-                    # Use metadata from bag for owner if the owner is a HydroShare user
-                    # (because the metadata were inheritted from the user profile when we
-                    # called create_resource above)
+                    if self.owner_is_hs_user and c.order == 1:
+                        # Use metadata from bag for owner if the owner is a HydroShare user
+                        # (because the metadata were inheritted from the user profile when we
+                        # called create_resource above)
 
-                    # Find the owner in the creators metadata
-                    owner_metadata = resource.metadata.creators.filter(order=1).first()
-                    if owner_metadata is None:
-                        msg = "Unable to find owner metadata for created resource {0}".format(resource.short_id)
-                        raise GenericResourceMeta.ResourceMetaException(msg)
-                    # Update owner's creator metadata entry with what came from the bag metadata
-                    resource.metadata.update_element('Creator', owner_metadata.id, **kwargs)
+                        # Find the owner in the creators metadata
+                        owner_metadata = resource.metadata.creators.filter(order=1).first()
+                        if owner_metadata is None:
+                            msg = "Unable to find owner metadata for created resource {0}".format(resource.short_id)
+                            raise GenericResourceMeta.ResourceMetaException(msg)
+                        # Update owner's creator metadata entry with what came from the bag metadata
+                        resource.metadata.update_element('Creator', owner_metadata.id, **kwargs)
+                    else:
+                        # For the non-owner creators, just create new metadata elements for them.
+                        resource.metadata.create_element('creator', **kwargs)
                 else:
-                    # For the non-owner creators, just create new metadata elements for them.
-                    resource.metadata.create_element('creator', **kwargs)
-            else:
-                msg = "Creators with type {0} are not supported"
-                msg = msg.format(c.__class__.__name__)
-                raise TypeError(msg)
-        for c in self.contributors:
-            # Add contributors
-            if isinstance(c, GenericResourceMeta.ResourceContributor):
-                kwargs = {'name': c.name, 'organization': c.organization,
-                          'description': c.uri,
-                          'email': c.email, 'address': c.address,
-                          'phone': c.phone, 'homepage': c.homepage,
-                          'researcherID': c.researcherID,
-                          'researchGateID': c.researchGateID}
-                resource.metadata.create_element('contributor', **kwargs)
-            else:
-                msg = "Contributor with type {0} are not supported"
-                msg = msg.format(c.__class__.__name__)
-                raise TypeError(msg)
+                    msg = "Creators with type {0} are not supported"
+                    msg = msg.format(c.__class__.__name__)
+                    raise TypeError(msg)
+        if update_contributors:
+            for c in self.contributors:
+                # Add contributors
+                if isinstance(c, GenericResourceMeta.ResourceContributor):
+                    kwargs = {'name': c.name, 'organization': c.organization,
+                              'description': c.uri,
+                              'email': c.email, 'address': c.address,
+                              'phone': c.phone, 'homepage': c.homepage,
+                              'researcherID': c.researcherID,
+                              'researchGateID': c.researchGateID}
+                    resource.metadata.create_element('contributor', **kwargs)
+                else:
+                    msg = "Contributor with type {0} are not supported"
+                    msg = msg.format(c.__class__.__name__)
+                    raise TypeError(msg)
         if self.abstract:
             if resource.metadata.description:
                 resource.metadata.update_element('description', resource.metadata.description.id,
@@ -768,7 +794,7 @@ class GenericResourceMeta(object):
         if self.language:
             resource.metadata.update_element('language', resource.metadata.language.id,
                                              code=self.language)
-        if self.creation_date:
+        if update_creation_date and self.creation_date:
             res_created_date = resource.metadata.dates.all().filter(type='created')[0]
             res_created_date.start_date = self.creation_date
             res_created_date.save()
@@ -777,76 +803,77 @@ class GenericResourceMeta(object):
             resource.save()
         if len(self.coverages) > 0:
             resource.metadata.coverages.all().delete()
-            for c in self.coverages:
-                kwargs = {}
-                if isinstance(c, GenericResourceMeta.ResourceCoveragePeriod):
-                    kwargs['type'] = 'period'
-                    val = {}
-                    val['name'] = c.name
-                    # val['start'] = c.start_date.isoformat()
-                    # val['end'] = c.end_date.isoformat()
-                    # Cast temporal coverages to month/day/year format as this is how they are stored as strings
-                    #  in the metadata tables.
-                    val['start'] = c.start_date.strftime('%m/%d/%Y')
-                    val['end'] = c.end_date.strftime('%m/%d/%Y')
-                    val['scheme'] = c.scheme
-                    kwargs['value'] = val
-                    resource.metadata.create_element('coverage', **kwargs)
-                elif isinstance(c, GenericResourceMeta.ResourceCoveragePoint):
-                    kwargs['type'] = 'point'
-                    val = {}
-                    val['name'] = c.name
-                    val['east'] = c.east
-                    val['north'] = c.north
-                    val['units'] = c.units
-                    val['elevation'] = c.elevation
-                    val['zunits'] = c.zunits
-                    val['projection'] = c.projection
-                    kwargs['value'] = val
-                    resource.metadata.create_element('coverage', **kwargs)
-                elif isinstance(c, GenericResourceMeta.ResourceCoverageBox):
-                    kwargs['type'] = 'box'
-                    val = {}
-                    val['name'] = c.name
-                    val['northlimit'] = c.northlimit
-                    val['eastlimit'] = c.eastlimit
-                    val['southlimit'] = c.southlimit
-                    val['westlimit'] = c.westlimit
-                    val['units'] = c.units
-                    val['projection'] = c.projection
-                    val['uplimit'] = c.uplimit
-                    val['downlimit'] = c.downlimit
-                    val['zunits'] = c.zunits
-                    kwargs['value'] = val
-                    resource.metadata.create_element('coverage', **kwargs)
-                else:
-                    msg = "Coverages with type {0} are not supported"
-                    msg = msg.format(c.__class__.__name__)
-                    raise TypeError(msg)
+        for c in self.coverages:
+            kwargs = {}
+            if isinstance(c, GenericResourceMeta.ResourceCoveragePeriod):
+                kwargs['type'] = 'period'
+                val = {}
+                val['name'] = c.name
+                # val['start'] = c.start_date.isoformat()
+                # val['end'] = c.end_date.isoformat()
+                # Cast temporal coverages to month/day/year format as this is how they are stored as strings
+                #  in the metadata tables.
+                val['start'] = c.start_date.strftime('%m/%d/%Y')
+                val['end'] = c.end_date.strftime('%m/%d/%Y')
+                val['scheme'] = c.scheme
+                kwargs['value'] = val
+                resource.metadata.create_element('coverage', **kwargs)
+            elif isinstance(c, GenericResourceMeta.ResourceCoveragePoint):
+                kwargs['type'] = 'point'
+                val = {}
+                val['name'] = c.name
+                val['east'] = c.east
+                val['north'] = c.north
+                val['units'] = c.units
+                val['elevation'] = c.elevation
+                val['zunits'] = c.zunits
+                val['projection'] = c.projection
+                kwargs['value'] = val
+                resource.metadata.create_element('coverage', **kwargs)
+            elif isinstance(c, GenericResourceMeta.ResourceCoverageBox):
+                kwargs['type'] = 'box'
+                val = {}
+                val['name'] = c.name
+                val['northlimit'] = c.northlimit
+                val['eastlimit'] = c.eastlimit
+                val['southlimit'] = c.southlimit
+                val['westlimit'] = c.westlimit
+                val['units'] = c.units
+                val['projection'] = c.projection
+                val['uplimit'] = c.uplimit
+                val['downlimit'] = c.downlimit
+                val['zunits'] = c.zunits
+                kwargs['value'] = val
+                resource.metadata.create_element('coverage', **kwargs)
+            else:
+                msg = "Coverages with type {0} are not supported"
+                msg = msg.format(c.__class__.__name__)
+                raise TypeError(msg)
         if len(self.relations) > 0:
             resource.metadata.relations.all().delete()
-            for r in self.relations:
-                if isinstance(r, GenericResourceMeta.ResourceRelation):
-                    kwargs = {'type': r.relationship_type,
-                              'value': r.uri}
-                    resource.metadata.create_element('relation', **kwargs)
-                else:
-                    msg = "Relations with type {0} are not supported"
-                    msg = msg.format(r.__class__.__name__)
-                    raise TypeError(msg)
+        for r in self.relations:
+            if isinstance(r, GenericResourceMeta.ResourceRelation):
+                kwargs = {'type': r.relationship_type,
+                          'value': r.uri}
+                resource.metadata.create_element('relation', **kwargs)
+            else:
+                msg = "Relations with type {0} are not supported"
+                msg = msg.format(r.__class__.__name__)
+                raise TypeError(msg)
         if len(self.sources) > 0:
             resource.metadata.sources.all().delete()
-            for s in self.sources:
-                if isinstance(s, GenericResourceMeta.ResourceSource):
-                    kwargs = {'derived_from': s.uri}
-                    resource.metadata.create_element('source', **kwargs)
-                else:
-                    msg = "Sources with type {0} are not supported"
-                    msg = msg.format(s.__class__.__name__)
-                    raise TypeError(msg)
+        for s in self.sources:
+            if isinstance(s, GenericResourceMeta.ResourceSource):
+                kwargs = {'derived_from': s.uri}
+                resource.metadata.create_element('source', **kwargs)
+            else:
+                msg = "Sources with type {0} are not supported"
+                msg = msg.format(s.__class__.__name__)
+                raise TypeError(msg)
 
-        # Update modification date last
-        self.set_resource_modification_date(resource)
+        if update_modification_date:
+            # Update modification date last
+            self.set_resource_modification_date(resource)
 
     class ResourceContributor(object):
 
