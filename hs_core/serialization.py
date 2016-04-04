@@ -242,7 +242,7 @@ class GenericResourceMeta(object):
         return True
 
     @classmethod
-    def read_metadata_from_resource_bag(cls, bag_content_path):
+    def read_metadata_from_resource_bag(cls, bag_content_path, hydroshare_host='www.hydroshare.org'):
         """
         Factory method for getting resource-specific metadata from an exploded BagIt archive.
         To work with this factory, each HydroShare resource type must implement
@@ -253,6 +253,7 @@ class GenericResourceMeta(object):
 
         :param bag_content_path: String representing path of exploded bag
         content.
+        :param hydroshare_host: Host name of the HydroShare server.
 
         :return: An instance of GenericResourceMeta specific to the resource type with all
         metadata read from the exploded bag.
@@ -260,10 +261,9 @@ class GenericResourceMeta(object):
         :raises: ResourceMetaException if metadata cannot be found or do not appear
          as expected.
         """
-
         # Read resource map so that we know the resource type
-        (root_uri, res_meta_path, res_meta) = cls._read_resource_map(bag_content_path)
-
+        (root_uri, res_meta_path, res_meta) = cls._read_resource_map(bag_content_path,
+                                                                     hydroshare_host)
         # Iterate over HydroShare resource types
         res_types = get_resource_types()
         for rt in res_types:
@@ -305,12 +305,13 @@ class GenericResourceMeta(object):
         return None
 
     @classmethod
-    def _read_resource_map(cls, bag_content_path):
+    def _read_resource_map(cls, bag_content_path, hydroshare_host='www.hydroshare.org'):
         """
         Read resource metadata out of the resourcemap.xml of the exploded bag path
 
         :param bag_content_path: String representing path of exploded bag
         content.
+        :param hydroshare_host: Host name of the HydroShare server.
 
         :return: Tuple<String, String, dict> representing: root URI of the resource metadata,
          path of the resourcemetadata.xml within the bag, dictionary containing metadata from resource map.
@@ -338,7 +339,7 @@ class GenericResourceMeta(object):
         print("Resource ID is {0}".format(res_meta['id']))
 
         # Build URI reference for #aggregation section of resource map
-        res_root_uri = "http://www.hydroshare.org/resource/{res_id}".format(res_id=res_meta['id'])
+        res_root_uri = "http://{host}/resource/{res_id}".format(host=hydroshare_host, res_id=res_meta['id'])
         root_uri = res_root_uri
         res_agg_subj = "{res_root_url}/data/resourcemap.xml#aggregation".format(res_root_url=res_root_uri)
         res_agg = URIRef(res_agg_subj)
@@ -347,7 +348,12 @@ class GenericResourceMeta(object):
         type_lit = g.value(res_agg, rdflib.namespace.DCTERMS.type)
         if type_lit is None:
             raise GenericResourceMeta.ResourceMetaException("No resource type found in resource map {0}".format(rmap_path))
-        res_meta['type'] = str(type_lit)
+        # Type literal is represented as 'http://example.com/terms/GenericResource', we want the part after
+        # the final '/', or 'GenericResource'
+        res_type_part = str(type_lit).rpartition('/')
+        if res_type_part[1] == '':
+            raise GenericResourceMeta.ResourceMetaException("No resource type found in resource map {0}".format(rmap_path))
+        res_meta['type'] = res_type_part[-1]
         print("\tType is {0}".format(res_meta['type']))
 
         # Get resource title

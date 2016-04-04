@@ -11,6 +11,7 @@ from django.core.urlresolvers import reverse
 from django.core.exceptions import ObjectDoesNotExist
 from django.http import HttpResponseRedirect
 from django.shortcuts import redirect
+from django.contrib.sites.models import Site
 
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.views import APIView
@@ -32,6 +33,7 @@ from hs_core.hydroshare.hs_bagit import create_bag_files
 
 
 logger = logging.getLogger(__name__)
+
 
 # Mixins
 class ResourceToListItemMixin(object):
@@ -535,7 +537,8 @@ class ScienceMetadataRetrieveUpdate(APIView):
             resmeta_irods.close()
 
             # Read resource system and science metadata
-            rm = GenericResourceMeta.read_metadata_from_resource_bag(tmp_dir)
+            rm = GenericResourceMeta.read_metadata_from_resource_bag(tmp_dir,
+                                                                     hydroshare_host=Site.objects.get_current().domain)
             # Update resource metadata
             try:
                 rm.write_metadata_to_resource(res)
