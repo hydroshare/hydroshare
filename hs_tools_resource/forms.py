@@ -16,7 +16,7 @@ class UrlBaseFormHelper(BaseFormHelper):
         layout = Layout(
             Field('value', css_class=field_width)
         )
-        kwargs['element_name_label'] = 'App URL'
+        kwargs['element_name_label'] = "App URL <a href='/terms#AppURL' target='_blank'><font size='3'>Help</font></a>"
 
         super(UrlBaseFormHelper, self).__init__(allow_edit, res_short_id, element_id, element_name, layout,  *args, **kwargs)
 
@@ -25,6 +25,7 @@ class UrlBaseForm(ModelForm):
     def __init__(self, allow_edit=True, res_short_id=None, element_id=None, *args, **kwargs):
         super(UrlBaseForm, self).__init__(*args, **kwargs)
         self.helper = UrlBaseFormHelper(allow_edit, res_short_id, element_id, element_name='RequestUrlBase')
+        self.fields['value'].label = ''
 
     class Meta:
         model = RequestUrlBase
@@ -52,6 +53,7 @@ class VersionForm(ModelForm):
     def __init__(self, allow_edit=True, res_short_id=None, element_id=None, *args, **kwargs):
         super(VersionForm, self).__init__(*args, **kwargs)
         self.helper = VersionFormHelper(allow_edit, res_short_id, element_id, element_name='ToolVersion')
+        self.fields['value'].label = ""
 
     class Meta:
         model = ToolVersion
@@ -70,7 +72,7 @@ class ToolIconFormHelper(BaseFormHelper):
         layout = Layout(
                 Field('url', css_class=field_width)
         )
-        kwargs['element_name_label'] = 'Tool Icon'
+        kwargs['element_name_label'] = 'Icon URL'
         super(ToolIconFormHelper, self).__init__(allow_edit, res_short_id, element_id, element_name, layout,  *args, **kwargs)
 
 
@@ -78,7 +80,7 @@ class ToolIconForm(ModelForm):
     def __init__(self, allow_edit=True, res_short_id=None, element_id=None, *args, **kwargs):
         super(ToolIconForm, self).__init__(*args, **kwargs)
         self.helper = ToolIconFormHelper(allow_edit, res_short_id, element_id, element_name='ToolIcon')
-        self.fields['url'].label = "URL"
+        self.fields['url'].label = ""
 
     class Meta:
         model = ToolIcon
@@ -126,7 +128,7 @@ class SupportedResTypesForm(ModelForm):
 
     def __init__(self, allow_edit=True, res_short_id=None, element_id=None, *args, **kwargs):
         super(SupportedResTypesForm, self).__init__(*args, **kwargs)
-        self.fields['supported_res_types'].label = "Choices: "
+        self.fields['supported_res_types'].label = "Choose Resource Types:"
         self.helper = SupportedResTypeFormHelper(allow_edit, res_short_id, element_id, element_name='SupportedResTypes')
         if self.instance:
             try:
