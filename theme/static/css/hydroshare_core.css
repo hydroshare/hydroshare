@@ -3332,3 +3332,19 @@ button.no-style:focus {
     background-size: cover;
     background-position: center center;
 }
+
+.group-image-small {
+    height: 80px;
+    text-align: center;
+    width: 80px;
+    background-size: cover;
+    background-position: center center;
+}
+
+.groups-table {
+    width: 100%;
+}
+
+.groups-table tr {
+    border-bottom: 1px solid #DDD;
+}
