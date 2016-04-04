@@ -1,5 +1,3 @@
-__author__ = 'Pabitra'
-
 import os
 import mimetypes
 import copy
