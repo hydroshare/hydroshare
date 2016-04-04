@@ -3,7 +3,7 @@
 
 {% block extra_css %}
     {{ block.super }}
-    <link rel="stylesheet" href='{% static "css/jquery.dataTables.min.css" %}'/>
+    <link rel="stylesheet" href='//cdn.datatables.net/1.10.10/css/jquery.dataTables.min.css'/>
 {% endblock %}
 
 {# override content_block in generice.html#}
@@ -103,7 +103,7 @@
             <div id="view_deleted_res_div">
                 <input type="button" id="view_deleted_res_btn" style="color: red" value="View deleted contents" onclick=" $('#deleted-resources-modal').modal('show');">
                 <span data-toggle="tooltip" data-placement="auto"
-                      title='{% if edit_mode %}There may be broken resource links in the bag of this collection due to the deleted resources. You need to clear the deleted resources to fix that.{% else %}Some of the resources have been deleted from this collection.{% endif %}'
+                      title='{% if edit_mode %}Some resources in this collection have been deleted which results in broken resource links in this collection. You need to remove deleted resources from the collection to fix that.{% endif %}'
                       class="glyphicon glyphicon-info-sign text-muted"></span>
             </div>
         {% endif %}
@@ -167,7 +167,6 @@
                         </tr>
                         </thead>
                         <tbody>
-                        {% if collection_candidate %}
                             {% for res in collection_candidate %}
                                 <tr id="{{ res.short_id }}">
                                     <td>
@@ -215,7 +214,6 @@
                                     </td>
                                 </tr>
                             {% endfor %}
-                         {% endif %}
                         </tbody>
                     </table>
                 </div>
@@ -252,7 +250,6 @@
                         </tr>
                         </thead>
                         <tbody>
-                        {% if deleted_resources %}
                             {% for res in deleted_resources %}
                                 <tr>
                                     <td>
@@ -276,7 +273,6 @@
                                     </td>
                                 </tr>
                             {% endfor %}
-                         {% endif %}
                         </tbody>
                     </table>
                     <div id="clear-deleted-res-warning" style="display: None">It may take seconds to clear deleted resources and update bag. Please keep this window open and wait...</div>
@@ -299,7 +295,7 @@
 
 {% block extra_js %}
     {{ block.super }}
-    <script type="text/javascript" src='{% static "js/jquery.dataTables.js" %}'></script>
+    <script type="text/javascript" src='//cdn.datatables.net/1.10.10/js/jquery.dataTables.js'></script>
 
     {# put resource specific js below #}
     <script type="text/javascript">
@@ -436,7 +432,7 @@
 
         function add_collection_item()
         {
-            $.each($(".row-selector:checked"),function( index, chkbox ) {
+            $.each($(".row-selector:checked"), function( index, chkbox ) {
                     var res_id = chkbox.id;
                     var added_row = $('#collection-table-candidate').DataTable().row('#' + res_id);
                     $('#collection-table').DataTable().row.add(added_row.data()).draw(false);
@@ -467,21 +463,23 @@
                 url: $form.attr('action'),
                 dataType: "json",
                 data: {"resource_id_list": resource_id_list},
-                success: function(result)
-                {
+                success: function(result) {
                     /* The div contains now the updated form */
                     json_response = result;
-                    if (json_response.status === 'success')
-                    {
+                    if (json_response.status === 'success') {
                         $(document).trigger("submit-success");
                         $('#save-new').hide();
                         if (json_response.hasOwnProperty('metadata_status')) {
                             if (json_response.metadata_status !== $('#metadata-status').text()) {
                                 $('#metadata-status').text(json_response.metadata_status);
                                 if (json_response.metadata_status.toLowerCase().indexOf("insufficient") == -1) {
-                                    customAlert("<i class='glyphicon glyphicon-flag custom-alert-icon'></i><strong>Collection Status:</strong> sufficient to publish or make public", 3000);
-                                    $("#btn-public").prop("disabled", false);
-                                    $("#btn-discoverable").prop("disabled", false);
+                                    var res_is_discoverable = '{{ discoverable }}';
+                                    // published, public and discoverable all have discoverable = True
+                                    if (res_is_discoverable.toLowerCase() != "true") {
+                                        customAlert("<i class='glyphicon glyphicon-flag custom-alert-icon'></i><strong>Collection Status:</strong> sufficient to publish or make public", 3000);
+                                        $("#btn-public").prop("disabled", false);
+                                        $("#btn-discoverable").prop("disabled", false);
+                                    }
                                 }
                             }
                         }
@@ -494,7 +492,7 @@
                             $(".alert-success").alert('close');
                         });
                     }
-                    else{
+                    else {
                         $('body > .container').append($alert_error);
                         $(".alert-danger").fadeTo(3000, 500).fadeOut(1000, function(){
                             $(document).trigger("submit-error");
@@ -533,18 +531,17 @@
             url: url,
             dataType: "json",
             data: {},
-            success: function(result)
-            {
+            success: function(result) {
                 /* The div contains now the updated form */
                 json_response = result;
-                if (json_response.status === 'success')
-                {
+                if (json_response.status === 'success') {
                     $('#deleted-resources-table').DataTable().rows().remove().draw(false);
                     $("#clear-deleted-res-warning").hide();
                 }
             },
-            error: function(XMLHttpRequest, textStatus, errorThrown)
-            {
+            error: function(XMLHttpRequest, textStatus, errorThrown) {
+               $('#clear-deleted-res-warning').html("<font color='red'>Failed to clear deleted resource links.</font>");
+               $('#clear-deleted-res-warning').show();
             }
             });
         }

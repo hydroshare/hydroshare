@@ -31,13 +31,6 @@ class TestCollection(MockIRODSTestCaseMixin, TransactionTestCase):
             groups=[self.group]
         )
 
-        self.temp_dir = tempfile.mkdtemp()
-        self.res_file_name = 'my_res_file.txt'
-        self.res_file = 'hs_collection_resource/tests/{}'.format(self.res_file_name)
-        target_temp_res_file = os.path.join(self.temp_dir, self.res_file_name)
-        shutil.copy(self.res_file, target_temp_res_file)
-        self.res_file_obj = open(target_temp_res_file, 'r')
-
         self.resCollection = create_resource(
             resource_type='CollectionResource',
             owner=self.user1,
@@ -118,10 +111,6 @@ class TestCollection(MockIRODSTestCaseMixin, TransactionTestCase):
         self.url_to_delete_resource = base_url + "/delete-resource/"
         self.url_to_update_collection_for_deleted_resources = base_url + "/update-collection-for-deleted-resources/"
 
-    def tearDown(self):
-        super(TestCollection, self).tearDown()
-        if os.path.exists(self.temp_dir):
-            shutil.rmtree(self.temp_dir)
 
     def test_collection_basic_functions(self):
         # test basic collection class with different res types
