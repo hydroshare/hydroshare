@@ -1,0 +1,58 @@
+{% extends "pages/page.html" %}
+
+{% block main %}
+
+    <div class="collaborate-header">
+        <div class="container">
+            <div class="col-sm-12">
+                <div class="collaborate-nav">
+                    <a href="#" class="glyphicon glyphicon-bell collaborate-nav-item"></a>
+                    <a href="#" class="collaborate-nav-item active">My Groups</a>
+                    <a href="#" class="collaborate-nav-item">Find Groups</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="col-sm-3">
+            <h3>My Groups</h3>
+            <a class="btn btn-success" href="#"><i class="fa fa-plus"></i> Create Group</a>
+        </div>
+        <div class="col-sm-9">
+            <div class="row">
+                <div class="col-sm-12">
+                    <table class="groups-table">
+                        <tr>
+                            <td><div class="group-image-small" style="background-image: url({{ STATIC_URL }}img/home-page/carousel/bg1.jpg)" alt="Group thumbnail image"></div></td>
+                            <td>
+                                <h4><a href="#">Web Designer and HTML/CSS Developer</a></h4>
+                                <small class="text-muted">21 Members</small>
+                            </td>
+                            <td><span>Member</span></td>
+                        </tr>
+                        <tr>
+                            <td><div class="group-image-small" style="background-image: url({{ STATIC_URL }}img/home-page/carousel/bg2.jpg)" alt="Group thumbnail image"></div></td>
+                            <td>
+                                <h4><a href="#">UWRL</a></h4>
+                                <small class="text-muted">14 Members</small>
+                            </td>
+                            <td><span>Administrator</span></td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+{% endblock %}
+
+{% block extra_js %}
+    <script>
+
+        $(document).ready(function () {
+
+        });
+    </script>
+{% endblock %}

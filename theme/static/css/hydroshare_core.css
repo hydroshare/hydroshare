@@ -3285,7 +3285,7 @@ button.no-style:focus {
 }
 
 .collaborate-nav .glyphicon {
-    padding: 0;
+    padding-top: 0;
     margin: 0;
     font-size: 22px;
     top: 4px;
@@ -3339,6 +3339,7 @@ button.no-style:focus {
     width: 80px;
     background-size: cover;
     background-position: center center;
+    display: inline-block;
 }
 
 .groups-table {
@@ -3347,4 +3348,41 @@ button.no-style:focus {
 
 .groups-table tr {
     border-bottom: 1px solid #DDD;
+}
+
+.group-title {
+    display: inline-block;
+}
+
+.member-badge span {
+    font-size: 20px;
+}
+
+.member-badge {
+    border: 1px solid #DDD;
+    padding:5px;
+    text-align: center;
+}
+
+#btn-member {
+    width: 100px;
+}
+
+.group-activity-block {
+    border: 1px solid #DDD !important;
+    box-shadow: 1px 1px 5px #E8E8E8;
+    -moz-box-shadow: 1px 1px 5px #E8E8E8;
+    -webkit-box-shadow: 1px 1px 5px #E8E8E8;
+    padding: 10px !important;
+    margin-bottom: 20px;
+}
+
+.group-activity-comment {
+    float: left;
+    width: 100%;
+    margin-top: 30px;
+}
+
+.start-conversation {
+    margin-top: 20px;
 }

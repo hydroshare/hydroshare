@@ -1,0 +1,283 @@
+{% extends "pages/page.html" %}
+
+{% block main %}
+
+    <div class="collaborate-header">
+        <div class="container">
+            <div class="col-sm-12">
+                <div class="collaborate-nav">
+                    <a href="#" class="glyphicon glyphicon-bell collaborate-nav-item"></a>
+                    <a href="#" class="collaborate-nav-item active">My Groups</a>
+                    <a href="#" class="collaborate-nav-item">Find Groups</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="row">
+            <div class="col-sm-2">
+                <div class="group-image-small" style="background-image: url({{ STATIC_URL }}img/home-page/carousel/bg1.jpg)"></div>
+            </div>
+
+            <div class="col-sm-8"><h2 class="group-title">Web Designer and HTML/CSS Developer</h2></div>
+            <div class="col-sm-2">
+                <span id="btn-member" class="btn btn-default">
+                    <span class="glyphicon glyphicon-ok"></span>&nbsp;<span class="member-label">Member</span>
+                </span>
+            </div>
+        </div>
+
+        <div class="full-width-tabs-container" id="user-profile-tabs">
+            <!-- Nav tabs -->
+            <ul class="nav nav-tabs full-width-tabs" role="tablist">
+                <li role="presentation" class="active">
+                    <a href="#overview" aria-controls="overview" role="tab"
+                       data-toggle="tab"><i class="glyphicon glyphicon-list-alt"></i> OVERVIEW</a></li>
+                <li role="presentation">
+                    <a href="#members" aria-controls="members" role="tab" data-toggle="tab">
+                        <i class="glyphicon glyphicon-file"></i> MEMBERS</a>
+                </li>
+            </ul>
+
+            <!-- Tab panes -->
+            <div class="tab-content">
+                <div role="tabpanel" class="tab-pane fade in active" id="overview">
+                    <div class="row">
+                        <div class="col-sm-4">
+                            <div class="panel panel-default">
+                                <div class="panel-heading">
+                                    <h3 class="panel-title">
+                                        <span class="glyphicon glyphicon-user">&nbsp;</span>About this group
+                                    </h3>
+                                </div>
+
+                                <div class="panel-body">
+                                    <p>This group is for all web designer and web developer who are ready to share
+                                        latest
+                                        updates or
+                                        knowledge with other professional. If you are a Designer or HTML/CSS Developer
+                                        then feel
+                                        free to
+                                        join this group and take all benefits from this group.</p>
+                                </div>
+                            </div>
+
+                            <div class="panel panel-default">
+                                <div class="panel-heading">
+                                    <h3 class="panel-title">
+                                        <span class="glyphicon glyphicon-user">&nbsp;</span>Members
+                                    </h3>
+                                </div>
+
+                                <div class="panel-body">
+                                    <div class="users-joined height-fix text-center">
+                                        <div class="profile-pic-thumbnail-small round-image"
+                                             title="Mauriel Ramirez"></div>
+                                        <div style="background-image: url('{{ request.user.userprofile.picture.url }}');"
+                                             class="round-image profile-pic-thumbnail" title="Mauriel Ramirez">
+                                        </div>
+
+                                        <div class="profile-pic-thumbnail-small round-image"
+                                             title="Mauriel Ramirez"></div>
+                                        <div class="profile-pic-thumbnail-small round-image"
+                                             title="Mauriel Ramirez"></div>
+                                        <div class="profile-pic-thumbnail-small round-image"
+                                             title="Mauriel Ramirez"></div>
+                                    </div>
+
+                                    <div class="text-center text-muted"><a href="#">21 Members</a></div>
+
+                                    <div class="text-center"><a href="#" class="btn btn-primary" role="button">Invite
+                                        Users</a></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-sm-8">
+                            <div class="group-activity-block activity-block start-conversation">
+                                <div style="background-image: url('{{ request.user.userprofile.picture.url }}');"
+                                     class="profile-pic-thumbnail round-image pull-left">
+                                </div>
+                                <span>Start a conversation</span>
+
+                                <div class="group-activity-comment">
+                                    <fieldset>
+                                        <label>Comment</label>
+                                                <textarea class="form-control"
+                                                          name="details" rows="4">{% if profile.details %}
+                                                    {{ profile.details }}{% endif %}</textarea>
+                                    </fieldset>
+                                </div>
+                            </div>
+
+                            <h4>Conversations</h4>
+
+                            <div class="group-activity-block activity-block">
+                                <div style="background-image: url('{{ request.user.userprofile.picture.url }}');"
+                                     class="profile-pic-thumbnail round-image pull-left">
+                                </div>
+
+                                <div class="metadata-wrapper">
+                                    <div class="shared-resource-info">
+                                        <strong> HydroShare Administrator</strong>
+                                        <span class="text-muted"> shared </span>
+                                                <span><a href="#">Untitled Resource</a></span>
+                                    </div>
+                                    <h5><span class="text-muted">Resource type: </span>Generic</h5>
+                                    <h5><span class="text-muted">Date: </span>March 14, 2016, 5:14 p.m.</h5>
+                                </div>
+
+                                <div class="activity-description col-sm-12" style="max-height: 50px;">
+                                    <p class="description">
+                                        <strong>ABSTRACT: </strong></p>
+
+                                    <p>The Viterbi Graduate Student Association (VGSA) represents all the full
+                                        time and part time Master's and Doctoral students in the Viterbi School
+                                        of Engineering. VGSA is the largest student umbrella organization at the
+                                        University of Southern California with over 5,000 active engineering
+                                        graduate student members each year, and has an even greater Alumni
+                                        population. The VGSA promotes professional, academic, and social affairs
+                                        on campus, and is committed to creating a positive student experience at
+                                        USC.Show less</p>
+                                </div>
+                                <div class="show-more-btn btn-default" title="Show less">···</div>
+
+                                <div class="group-activity-comment">
+                                    <fieldset>
+                                        <label>Comment</label>
+                                                <textarea class="form-control"
+                                                          name="details" rows="4">{% if profile.details %}
+                                                    {{ profile.details }}{% endif %}</textarea>
+                                    </fieldset>
+                                </div>
+                            </div>
+
+                            <div class="group-activity-block activity-block">
+                                <div style="background-image: url('{{ request.user.userprofile.picture.url }}');"
+                                     class="profile-pic-thumbnail round-image pull-left">
+                                </div>
+
+                                <div class="metadata-wrapper">
+                                    <div class="shared-resource-info">
+                                        <strong> HydroShare Administrator</strong>
+                                        <span class="text-muted"> shared </span>
+                                        <span><a href="#">Untitled Resource</a></span>
+                                    </div>
+                                    <h5><span class="text-muted">Resource type: </span>Generic</h5>
+                                    <h5><span class="text-muted">Date: </span>March 14, 2016, 5:14 p.m.</h5>
+                                </div>
+
+                                <div class="activity-description col-sm-12" style="max-height: 50px;">
+                                    <p class="description">
+                                        <strong>ABSTRACT: </strong></p>
+
+                                    <p>The Viterbi Graduate Student Association (VGSA) represents all the full
+                                        time and part time Master's and Doctoral students in the Viterbi School
+                                        of Engineering. VGSA is the largest student umbrella organization at the
+                                        University of Southern California with over 5,000 active engineering
+                                        graduate student members each year, and has an even greater Alumni
+                                        population. The VGSA promotes professional, academic, and social affairs
+                                        on campus, and is committed to creating a positive student experience at
+                                        USC.Show less</p>
+                                </div>
+                                <div class="show-more-btn btn-default" title="Show less">···</div>
+
+                                <div class="group-activity-comment">
+                                    <fieldset>
+                                        <label>Comment</label>
+                                                <textarea class="form-control"
+                                                          name="details" rows="4">{% if profile.details %}
+                                                    {{ profile.details }}{% endif %}</textarea>
+                                    </fieldset>
+                                </div>
+                            </div>
+
+                            <div class="group-activity-block activity-block">
+                                <div style="background-image: url('{{ request.user.userprofile.picture.url }}');"
+                                     class="profile-pic-thumbnail round-image pull-left">
+                                </div>
+
+                                <div class="metadata-wrapper">
+                                    <div class="shared-resource-info">
+                                        <strong> HydroShare Administrator</strong>
+                                        <span class="text-muted"> shared </span>
+                                        <span><a href="#">Untitled Resource</a></span>
+                                    </div>
+                                    <h5><span class="text-muted">Resource type: </span>Generic</h5>
+                                    <h5><span class="text-muted">Date: </span>March 14, 2016, 5:14 p.m.</h5>
+                                </div>
+
+                                <div class="activity-description col-sm-12" style="max-height: 50px;">
+                                    <p class="description">
+                                        <strong>ABSTRACT: </strong></p>
+
+                                    <p>The Viterbi Graduate Student Association (VGSA) represents all the full
+                                        time and part time Master's and Doctoral students in the Viterbi School
+                                        of Engineering. VGSA is the largest student umbrella organization at the
+                                        University of Southern California with over 5,000 active engineering
+                                        graduate student members each year, and has an even greater Alumni
+                                        population. The VGSA promotes professional, academic, and social affairs
+                                        on campus, and is committed to creating a positive student experience at
+                                        USC.Show less</p>
+                                </div>
+                                <div class="show-more-btn btn-default" title="Show less">···</div>
+
+                                <div class="group-activity-comment">
+                                    <fieldset>
+                                        <label>Comment</label>
+                                                <textarea class="form-control"
+                                                          name="details" rows="4">{% if profile.details %}
+                                                    {{ profile.details }}{% endif %}</textarea>
+                                    </fieldset>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div role="tabpanel" class="tab-pane fade" id="members">
+                    Members list here
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block extra_js %}
+    <script>
+
+        $(document).ready(function () {
+            $("#btn-member").hover(function(){
+                $(this).find(".glyphicon").removeClass("glyphicon-ok").addClass("glyphicon glyphicon-remove");
+                $(this).find(".member-label").text("Leave");
+            });
+
+            $("#btn-member").mouseleave(function(){
+                $(this).find(".glyphicon").removeClass("glyphicon-remove").addClass("glyphicon glyphicon-ok");
+                $(this).find(".member-label").text("Member");
+            });
+
+
+            // Abstract collapse toggle
+            $(".show-more-btn").click(function () {
+                if ($(this).parent().find(".activity-description").css("max-height") == "50px") {
+                    var block = $(this).parent().find(".activity-description");
+
+                    block.css("max-height", "initial"); // Set max-height to initial temporarily.
+                    var maxHeight = block.height();    // Save the max height
+                    block.css("max-height", "50px");    // Restore
+
+                    block.animate({'max-height': maxHeight}, 300); // Animate to max height
+                    $(this).text("▲");
+                    $(this).attr("title", "Show less");
+                }
+                else {
+                    $(this).parent().find(".activity-description").animate({'max-height': "50px"}, 300);
+                    $(this).attr("title", "Show more");
+                    $(this).text("···");
+                }
+            });
+        });
+    </script>
+{% endblock %}
