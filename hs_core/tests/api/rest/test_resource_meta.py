@@ -177,23 +177,23 @@ class TestResourceMetadata(HSRESTTestCase):
             self.assertEquals(abstract[0].text, abstract_text_1)
 
             # Make sure metadata update is idempotent
-            # params = {'file': (RESOURCE_METADATA,
-            #                    open(sci_meta_new),
-            #                    'application/xml')}
-            # url = "/hsapi/scimeta/{pid}/".format(pid=self.pid)
-            # response = self.client.put(url, params)
-            # self.assertEqual(response.status_code, status.HTTP_202_ACCEPTED)
-            # response = self.getScienceMetadata(pid, exhaust_stream=False)
-            # sci_meta_updated = os.path.join(tmp_dir, RESOURCE_METADATA_UPDATED)
-            # f = open(sci_meta_updated, 'w')
-            # for l in response.streaming_content:
-            #     f.write(l)
-            # f.close()
-            # scimeta = etree.parse(sci_meta_updated)
-            # abstract = scimeta.xpath('/rdf:RDF/rdf:Description[1]/dc:description/rdf:Description/dcterms:abstract',
-            #                          namespaces=NS)
-            # self.assertEquals(len(abstract), 1)
-            # self.assertEquals(abstract[0].text, abstract_text_1)
+            params = {'file': (RESOURCE_METADATA,
+                               open(sci_meta_new),
+                               'application/xml')}
+            url = "/hsapi/scimeta/{pid}/".format(pid=pid)
+            response = self.client.put(url, params)
+            self.assertEqual(response.status_code, status.HTTP_202_ACCEPTED)
+            response = self.getScienceMetadata(pid, exhaust_stream=False)
+            sci_meta_updated = os.path.join(tmp_dir, RESOURCE_METADATA_UPDATED)
+            f = open(sci_meta_updated, 'w')
+            for l in response.streaming_content:
+                f.write(l)
+            f.close()
+            scimeta = etree.parse(sci_meta_updated)
+            abstract = scimeta.xpath('/rdf:RDF/rdf:Description[1]/dc:description/rdf:Description/dcterms:abstract',
+                                     namespaces=NS)
+            self.assertEquals(len(abstract), 1)
+            self.assertEquals(abstract[0].text, abstract_text_1)
 
         finally:
             shutil.rmtree(tmp_dir)
