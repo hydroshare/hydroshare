@@ -1,4 +1,5 @@
 import os
+import logging
 
 import rdflib
 
@@ -14,6 +15,9 @@ from hs_swat_modelinstance.forms import model_objective_choices, parameters_choi
 
 MODEL_OBJECTIVE_CHOICES = [c[0] for c in model_objective_choices]
 MODEL_PARAMETER_CHOICES = [p[0] for p in parameters_choices]
+
+logger = logging.getLogger(__name__)
+
 
 class SWATModelInstanceResourceMeta(GenericResourceMeta):
 
@@ -39,7 +43,7 @@ class SWATModelInstanceResourceMeta(GenericResourceMeta):
     def _read_resource_metadata(self):
         super(SWATModelInstanceResourceMeta, self)._read_resource_metadata()
 
-        print("--- SWATModelInstanceResource ---")
+        logger.debug("--- SWATModelInstanceResource ---")
 
         hsterms = rdflib.namespace.Namespace('http://hydroshare.org/terms/')
 
@@ -52,7 +56,7 @@ class SWATModelInstanceResourceMeta(GenericResourceMeta):
                 raise GenericResourceMeta.ResourceMetaException(msg)
             self.model_output = SWATModelInstanceResourceMeta.ModelOutput()
             self.model_output.includes_output = str(model_output_lit) == 'Yes'
-            print("\t\t{0}".format(self.model_output))
+            logger.debug("\t\t{0}".format(self.model_output))
         # Get ExecutedBy
         for s, p, o in self._rmeta_graph.triples((None, hsterms.ExecutedBy, None)):
             # Get modelProgramName
@@ -66,16 +70,16 @@ class SWATModelInstanceResourceMeta(GenericResourceMeta):
             if (self.executed_by_name is not None) ^ (self.executed_by_uri is not None):
                 msg = "Both modelProgramName and modelProgramIdentifier must be supplied if one is supplied."
                 raise GenericResourceMeta.ResourceMetaException(msg)
-        print("\t\t{0}".format(str(self)))
+        logger.debug("\t\t{0}".format(str(self)))
         # Get modelObjective
         for s, p, o in self._rmeta_graph.triples((None, hsterms.modelObjective, None)):
             self.model_objective = SWATModelInstanceResourceMeta.ModelObjective(str(o))
-            print("\t\t{0}".format(self.model_objective))
+            logger.debug("\t\t{0}".format(self.model_objective))
         # Get simulationType
         for s, p, o in self._rmeta_graph.triples((None, hsterms.simulationType, None)):
             self.simulation_type = SWATModelInstanceResourceMeta.SimulationType()
             self.simulation_type.simulation_type_name = str(o)
-            print("\t\t{0}".format(self.simulation_type))
+            logger.debug("\t\t{0}".format(self.simulation_type))
         # Get ModelMethod
         for s, p, o in self._rmeta_graph.triples((None, hsterms.ModelMethod, None)):
             self.model_method = SWATModelInstanceResourceMeta.ModelMethod()
@@ -91,11 +95,11 @@ class SWATModelInstanceResourceMeta(GenericResourceMeta):
             pet_method_lit = self._rmeta_graph.value(o, hsterms.petEstimationMethod)
             if pet_method_lit is not None:
                 self.model_method.PET_estimation_method = str(pet_method_lit)
-            print("\t\t{0}".format(self.model_method))
+            logger.debug("\t\t{0}".format(self.model_method))
         # Get modelParameter
         for s, p, o in self._rmeta_graph.triples((None, hsterms.modelParameter, None)):
             self.model_parameter = SWATModelInstanceResourceMeta.ModelParameter(str(o))
-            print("\t\t{0}".format(self.model_parameter))
+            logger.debug("\t\t{0}".format(self.model_parameter))
         # Get ModelInput
         for s, p, o in self._rmeta_graph.triples((None, hsterms.ModelInput, None)):
             self.model_input = SWATModelInstanceResourceMeta.ModelInput()
@@ -171,7 +175,7 @@ class SWATModelInstanceResourceMeta(GenericResourceMeta):
             soil_data_source_URL_lit = self._rmeta_graph.value(o, hsterms.soilDataSourceURL)
             if soil_data_source_URL_lit is not None:
                 self.model_input.soil_data_source_URL = str(soil_data_source_URL_lit)
-            print("\t\t{0}".format(self.model_input))
+            logger.debug("\t\t{0}".format(self.model_input))
 
     @transaction.atomic
     def write_metadata_to_resource(self, resource):
@@ -245,15 +249,15 @@ class SWATModelInstanceResourceMeta(GenericResourceMeta):
             if not model_method:
                 # Create
                 ModelMethod.create(content_object=resource.metadata,
-                                   runoff_calculation_method=self.model_method.runoff_calculation_method,
-                                   flow_routing_method=self.model_method.flow_routing_method,
-                                   PET_estimation_method=self.model_method.PET_estimation_method)
+                                   runoffCalculationMethod=self.model_method.runoff_calculation_method,
+                                   flowRoutingMethod=self.model_method.flow_routing_method,
+                                   petEstimationMethod=self.model_method.PET_estimation_method)
             else:
                 #Update
                 ModelMethod.create(model_method.element_id,
-                                   runoff_calculation_method=self.model_method.runoff_calculation_method,
-                                   flow_routing_method=self.model_method.flow_routing_method,
-                                   PET_estimation_method=self.model_method.PET_estimation_method)
+                                   runoffCalculationMethod=self.model_method.runoff_calculation_method,
+                                   flowRoutingMethod=self.model_method.flow_routing_method,
+                                   petEstimationMethod=self.model_method.PET_estimation_method)
         if self.model_parameter:
             model_parameters = []
             other_parameters = []
@@ -281,43 +285,43 @@ class SWATModelInstanceResourceMeta(GenericResourceMeta):
             if not model_input:
                 # Create
                 ModelInput.create(content_object=resource.metadata,
-                                  warm_up_period=self.model_input.warm_up_period_value,
-                                  rainfall_time_step_type=self.model_input.rainfall_time_step_type,
-                                  rainfall_time_step_value=self.model_input.rainfall_time_step_value,
-                                  routing_time_step_type=self.model_input.routing_time_step_type,
-                                  routing_time_step_value=self.model_input.routing_time_step_value,
-                                  simulation_time_step_type=self.model_input.simulation_time_step_type,
-                                  simulation_time_step_value=self.model_input.simulation_time_step_value,
-                                  watershed_area=self.model_input.watershed_area,
-                                  number_of_subbasins=self.model_input.number_of_subbasins,
-                                  number_of_HRUs=self.model_input.number_of_HRUs,
-                                  DEM_resolution=self.model_input.DEM_resolution,
-                                  DEM_source_name=self.model_input.DEM_source_name,
-                                  DEM_source_URL=self.model_input.DEM_source_URL,
-                                  landUse_data_source_name=self.model_input.landUse_data_source_name,
-                                  landUse_data_source_URL=self.model_input.landUse_data_source_URL,
-                                  soil_data_source_name=self.model_input.soil_data_source_name,
-                                  soil_data_source_URL=self.model_input.soil_data_source_URL)
+                                  warmupPeriodValue=self.model_input.warm_up_period_value,
+                                  rainfallTimeStepType=self.model_input.rainfall_time_step_type,
+                                  rainfallTimeStepValue=self.model_input.rainfall_time_step_value,
+                                  routingTimeStepType=self.model_input.routing_time_step_type,
+                                  routingTimeStepValue=self.model_input.routing_time_step_value,
+                                  simulationTimeStepType=self.model_input.simulation_time_step_type,
+                                  simulationTimeStepValue=self.model_input.simulation_time_step_value,
+                                  watershedArea=self.model_input.watershed_area,
+                                  numberOfSubbasins=self.model_input.number_of_subbasins,
+                                  numberOfHRUs=self.model_input.number_of_HRUs,
+                                  demResolution=self.model_input.DEM_resolution,
+                                  demSourceName=self.model_input.DEM_source_name,
+                                  demSourceURL=self.model_input.DEM_source_URL,
+                                  landUseDataSourceName=self.model_input.landUse_data_source_name,
+                                  landUseDataSourceURL=self.model_input.landUse_data_source_URL,
+                                  soilDataSourceName=self.model_input.soil_data_source_name,
+                                  soilDataSourceURL=self.model_input.soil_data_source_URL)
             else:
                 # Update
                 ModelInput.update(model_parameter.element_id,
-                                  warm_up_period=self.model_input.warm_up_period_value,
-                                  rainfall_time_step_type=self.model_input.rainfall_time_step_type,
-                                  rainfall_time_step_value=self.model_input.rainfall_time_step_value,
-                                  routing_time_step_type=self.model_input.routing_time_step_type,
-                                  routing_time_step_value=self.model_input.routing_time_step_value,
-                                  simulation_time_step_type=self.model_input.simulation_time_step_type,
-                                  simulation_time_step_value=self.model_input.simulation_time_step_value,
-                                  watershed_area=self.model_input.watershed_area,
-                                  number_of_subbasins=self.model_input.number_of_subbasins,
-                                  number_of_HRUs=self.model_input.number_of_HRUs,
-                                  DEM_resolution=self.model_input.DEM_resolution,
-                                  DEM_source_name=self.model_input.DEM_source_name,
-                                  DEM_source_URL=self.model_input.DEM_source_URL,
-                                  landUse_data_source_name=self.model_input.landUse_data_source_name,
-                                  landUse_data_source_URL=self.model_input.landUse_data_source_URL,
-                                  soil_data_source_name=self.model_input.soil_data_source_name,
-                                  soil_data_source_URL=self.model_input.soil_data_source_URL)
+                                  warmupPeriodValue=self.model_input.warm_up_period_value,
+                                  rainfallTimeStepType=self.model_input.rainfall_time_step_type,
+                                  rainfallTimeStepValue=self.model_input.rainfall_time_step_value,
+                                  routingTimeStepType=self.model_input.routing_time_step_type,
+                                  routingTimeStepValue=self.model_input.routing_time_step_value,
+                                  simulationTimeStepType=self.model_input.simulation_time_step_type,
+                                  simulationTimeStepValue=self.model_input.simulation_time_step_value,
+                                  watershedArea=self.model_input.watershed_area,
+                                  numberOfSubbasins=self.model_input.number_of_subbasins,
+                                  numberOfHRUs=self.model_input.number_of_HRUs,
+                                  demResolution=self.model_input.DEM_resolution,
+                                  demSourceName=self.model_input.DEM_source_name,
+                                  demSourceURL=self.model_input.DEM_source_URL,
+                                  landUseDataSourceName=self.model_input.landUse_data_source_name,
+                                  landUseDataSourceURL=self.model_input.landUse_data_source_URL,
+                                  soilDataSourceName=self.model_input.soil_data_source_name,
+                                  soilDataSourceURL=self.model_input.soil_data_source_URL)
 
     class ModelOutput(object):
 

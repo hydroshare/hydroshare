@@ -129,3 +129,71 @@ class TestResourceMetadata(HSRESTTestCase):
 
         finally:
             shutil.rmtree(tmp_dir)
+
+    def test_put_scimeta_swat_model_instance(self):
+        # Update science metadata XML
+        abstract_text_1 = "This model is created for Flat River."
+        tmp_dir = tempfile.mkdtemp()
+
+        res = resource.create_resource('SWATModelInstanceResource',
+                                       self.user,
+                                       'Test SWAT Model Instance Resource')
+        pid = res.short_id
+        self.resources_to_delete.append(pid)
+
+        try:
+            # Apply metadata from saved file
+            ## First update the resource ID
+            scimeta = etree.parse('hs_core/tests/data/swat-resourcemetadata-1.xml')
+            desc = scimeta.xpath('/rdf:RDF/rdf:Description[1]', namespaces=NS)[0]
+            desc.set('{http://www.w3.org/1999/02/22-rdf-syntax-ns#}about',
+                     "http://example.com/resource/{pid}".format(pid=pid))
+            ## Write out to a file
+            out = etree.tostring(scimeta, pretty_print=True)
+            sci_meta_new = os.path.join(tmp_dir, RESOURCE_METADATA)
+            f = open(sci_meta_new, 'w')
+            f.writelines(out)
+            f.close()
+
+            ## Send updated metadata to REST API
+            params = {'file': (RESOURCE_METADATA,
+                               open(sci_meta_new),
+                               'application/xml')}
+            url = "/hsapi/scimeta/{pid}/".format(pid=pid)
+            response = self.client.put(url, params)
+            self.assertEqual(response.status_code, status.HTTP_202_ACCEPTED)
+
+            ## Get science metadata
+            response = self.getScienceMetadata(pid, exhaust_stream=False)
+            sci_meta_updated = os.path.join(tmp_dir, RESOURCE_METADATA_UPDATED)
+            f = open(sci_meta_updated, 'w')
+            for l in response.streaming_content:
+                f.write(l)
+            f.close()
+            scimeta = etree.parse(sci_meta_updated)
+            abstract = scimeta.xpath('/rdf:RDF/rdf:Description[1]/dc:description/rdf:Description/dcterms:abstract',
+                                     namespaces=NS)
+            self.assertEquals(len(abstract), 1)
+            self.assertEquals(abstract[0].text, abstract_text_1)
+
+            # Make sure metadata update is idempotent
+            # params = {'file': (RESOURCE_METADATA,
+            #                    open(sci_meta_new),
+            #                    'application/xml')}
+            # url = "/hsapi/scimeta/{pid}/".format(pid=self.pid)
+            # response = self.client.put(url, params)
+            # self.assertEqual(response.status_code, status.HTTP_202_ACCEPTED)
+            # response = self.getScienceMetadata(pid, exhaust_stream=False)
+            # sci_meta_updated = os.path.join(tmp_dir, RESOURCE_METADATA_UPDATED)
+            # f = open(sci_meta_updated, 'w')
+            # for l in response.streaming_content:
+            #     f.write(l)
+            # f.close()
+            # scimeta = etree.parse(sci_meta_updated)
+            # abstract = scimeta.xpath('/rdf:RDF/rdf:Description[1]/dc:description/rdf:Description/dcterms:abstract',
+            #                          namespaces=NS)
+            # self.assertEquals(len(abstract), 1)
+            # self.assertEquals(abstract[0].text, abstract_text_1)
+
+        finally:
+            shutil.rmtree(tmp_dir)
