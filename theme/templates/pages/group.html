@@ -20,11 +20,23 @@
                 <div class="group-image-small" style="background-image: url({{ STATIC_URL }}img/home-page/carousel/bg1.jpg)"></div>
             </div>
 
-            <div class="col-sm-8"><h2 class="group-title">Web Designer and HTML/CSS Developer</h2></div>
+            <div class="col-sm-8">
+                <h2 class="group-title">Web Designer and HTML/CSS Developer</h2>
+                <h4 class="text-muted">Basic facts about #Infographic #Desiging.</h4>
+
+
+            </div>
             <div class="col-sm-2">
-                <span id="btn-member" class="btn btn-default">
-                    <span class="glyphicon glyphicon-ok"></span>&nbsp;<span class="member-label">Member</span>
-                </span>
+                <!-- Single button -->
+                <div class="btn-group">
+                    <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown"
+                            aria-haspopup="true" aria-expanded="false">
+                        Member <span class="caret"></span>
+                    </button>
+                    <ul class="dropdown-menu">
+                        <li><a href="#">Leave Group</a></li>
+                    </ul>
+                </div>
             </div>
         </div>
 
@@ -279,6 +291,7 @@
                                 </tr>
                             </table>
 
+
                             {#  Pending invitation requests #}
                             <table data-filter-by="pending" class="table-members-list">
                                 <tr>
@@ -291,7 +304,7 @@
                                         <h4><strong><a href="#">Maurier Ramirez</a></strong></h4>
                                         <span class="text-muted">Front End Web Developer at Utah State University</span>
                                     </td>
-                                    <td><a href="#" class="btn btn-default"><span class="glyphicon glyphicon-ok"></span>&nbsp;Accept</a></td>
+                                    <td><a href="#" class="btn btn-success"><span class="glyphicon glyphicon-ok"></span>&nbsp;Accept</a></td>
                                     <td><a href="#" class="btn btn-default"><span class="glyphicon glyphicon-remove"></span>&nbsp;Reject</a></td>
                                 </tr>
 
@@ -305,7 +318,7 @@
                                         <h4><strong><a href="#">Maurier Ramirez</a></strong></h4>
                                         <span class="text-muted">Front End Web Developer at Utah State University</span>
                                     </td>
-                                    <td><a href="#" class="btn btn-default"><span class="glyphicon glyphicon-ok"></span>&nbsp;Accept</a></td>
+                                    <td><a href="#" class="btn btn-success"><span class="glyphicon glyphicon-ok"></span>&nbsp;Accept</a></td>
                                     <td><a href="#" class="btn btn-default"><span class="glyphicon glyphicon-remove"></span>&nbsp;Reject</a></td>
                                 </tr>
                             </table>
@@ -322,16 +335,6 @@
     <script>
 
         $(document).ready(function () {
-            $("#btn-member").hover(function(){
-                $(this).find(".glyphicon").removeClass("glyphicon-ok").addClass("glyphicon glyphicon-remove");
-                $(this).find(".member-label").text("Leave");
-            });
-
-            $("#btn-member").mouseleave(function(){
-                $(this).find(".glyphicon").removeClass("glyphicon-remove").addClass("glyphicon glyphicon-ok");
-                $(this).find(".member-label").text("Member");
-            });
-
             // Abstract collapse toggle
             $(".show-more-btn").click(function () {
                 if ($(this).parent().find(".activity-description").css("max-height") == "50px") {

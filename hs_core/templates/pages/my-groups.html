@@ -21,53 +21,61 @@
 
             <br><br>
 
-            <h4>Pending Inivtations</h4>
+            <div>
 
-            <strong><a href="#">USU</a></strong>
-            <table>
-                <tr>
-                    <td><a href="#" class="btn btn-default"><span class="glyphicon glyphicon-ok"></span>&nbsp;Accept</a>
-                    </td>
-                    <td><a href="#" class="btn btn-default"><span class="glyphicon glyphicon-remove"></span>&nbsp;Decline</a>
-                    </td>
-                </tr>
-            </table>
+                <h4><span class="glyphicon glyphicon-send"></span>&nbsp;Pending Inivtations</h4>
 
-            <br>
+                <strong>USU</strong>
+                <table>
+                    <tr>
+                        <td><a href="#" class="btn btn-success"><span class="glyphicon glyphicon-ok"></span>&nbsp;Accept</a>
+                        </td>
+                        <td><a href="#" class="btn btn-default"><span class="glyphicon glyphicon-remove"></span>&nbsp;Decline</a>
+                        </td>
+                    </tr>
+                </table>
 
-            <strong><a href="#">UWRL</a></strong>
-            <table>
-                <tr>
-                    <td><a href="#" class="btn btn-default"><span class="glyphicon glyphicon-ok"></span>&nbsp;Accept</a>
-                    </td>
-                    <td><a href="#" class="btn btn-default"><span class="glyphicon glyphicon-remove"></span>&nbsp;Decline</a>
-                    </td>
-                </tr>
-            </table>
+                <br>
 
-            <br>
+                <strong>UWRL</strong>
+                <table>
+                    <tr>
+                        <td><a href="#" class="btn btn-success"><span class="glyphicon glyphicon-ok"></span>&nbsp;Accept</a>
+                        </td>
+                        <td><a href="#" class="btn btn-default"><span class="glyphicon glyphicon-remove"></span>&nbsp;Decline</a>
+                        </td>
+                    </tr>
+                </table>
 
-            <strong><a href="#">Information Model for Users and Groups</a></strong> <span class="text-muted">Request Sent</span>
-            <table>
-                <tr>
-                    <td><a href="#" class="btn btn-default"><span class="glyphicon glyphicon-remove"></span>&nbsp;Cancel
-                        Request</a>
-                    </td>
-                </tr>
-            </table>
+                <br>
 
-            <br>
+                <strong>Information Model for Users and Groups</strong>
 
-            <strong><a href="#">HydroShare</a></strong> <span class="text-muted">Request Sent</span>
-            <table>
-                <tr>
-                    <td><a href="#" class="btn btn-default"><span class="glyphicon glyphicon-remove"></span>&nbsp;Cancel
-                        Request</a>
-                    </td>
-                </tr>
-            </table>
+                <p class="text-muted">Request Sent</p>
+                <table>
+                    <tr>
+                        <td><a href="#" class="btn btn-default"><span class="glyphicon glyphicon-remove"></span>&nbsp;Cancel
+                            Request</a>
+                        </td>
+                    </tr>
+                </table>
 
-            <br>
+                <br>
+
+                <strong>HydroShare</strong>
+
+                <p class="text-muted">Request Sent</p>
+                <table>
+                    <tr>
+                        <td><a href="#" class="btn btn-default"><span class="glyphicon glyphicon-remove"></span>&nbsp;Cancel
+                            Request</a>
+                        </td>
+                    </tr>
+                </table>
+
+                <br>
+
+            </div>
         </div>
         <div class="col-sm-9">
             <div class="row">
@@ -87,7 +95,7 @@
                                 <h4><a href="/Group">UWRL</a></h4>
                                 <small class="text-muted">14 Members</small>
                             </td>
-                            <td><span>Administrator</span></td>
+                            <td><span>Owner</span></td>
                         </tr>
                     </table>
                 </div>
@@ -126,6 +134,7 @@
                             <input class="form-control" name="group-name">
                         </fieldset>
 
+                        <br>
                         {# Purpose #}
                         <fieldset class="col-sm-12">
                             <label>Privacy *</label>
@@ -133,8 +142,9 @@
                             <div class="radio">
                                 <label>
                                     <input type="radio" name="privacy" value="public" checked>Public
+                                    <p class="text-muted">Other users can find the group and see who has membership.</p>
                                 </label>
-                                <p class="text-muted">Other users can find the group and see who has membership.</p>
+
                             </div>
                             <div class="radio">
                                 <label>
