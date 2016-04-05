@@ -1,4 +1,3 @@
-from django import forms
 from haystack.forms import FacetedSearchForm
 from haystack.query import SQ, SearchQuerySet
 from crispy_forms.layout import *

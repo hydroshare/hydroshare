@@ -7,7 +7,6 @@
         <div class="col-lg-3" id="filters-panel">
             {% if query %}
                 <input class="btn btn-default inline" type="button" value="Clear All" style="margin-bottom: 10px" onclick="clearAllFaceted()">
-                <input class="btn btn-primary inline" type="button" value="Update" style="margin-bottom: 10px" onclick="updateFacets()">
                 {% for key, values in facets.fields.items %}
                     {% if values %}
                         <div class="panel-group" id="faceting-{{ key }}">
@@ -284,6 +283,7 @@
                 if (lat_diff < minFloatingNumber && lng_diff < minFloatingNumber) {
                     item.title = item.title + "<br />" + test.title;
                     item.info_link += '<br />' + '"<a href="' + test.get_absolute_url + '">' + test.title + '</a>';
+                    //console.log("point: " + item.title);
                     existed = true;
                 }
             });
@@ -307,8 +307,9 @@
                 if (lat_diff < minFloatingNumber && lng_diff < minFloatingNumber) {
                     item.title = item.title + "<br />" + test.title;
                     item.info_link += '<br />' + '"<a href="' + test.get_absolute_url + '">' + test.title + '</a>';
+                    //console.log("box: " + item.title);
                     existed = true;
-
+                    //return;
                 }
             });
             if (!existed){
@@ -344,7 +345,9 @@
             map = null;
             window.location = requestURL;
             var checkboxId =  key + "-" + value;
+            //console.log(checkboxId);
             localStorage[checkboxId] = true;
+            //$(checkboxId).prop('checked', true);
         }
 
         var clearAllFaceted = function() {
@@ -354,23 +357,18 @@
             window.location = clearURL;
         }
 
-        var updateFacets = function(){
-            var textSearch = $("#id_q").val();
-            var searchURL = "?q=" + textSearch;
-            var windowPath = window.location.pathname;
-            var requestURL = windowPath + searchURL;
-            $(".faceted-selections").each(function () {
-                var tokens = $(this).val().split(",");
-                var key = tokens[0];
-                var value = tokens[1];
-                if($(this).is(":checked")) {
-                    requestURL = requestURL + "&selected_facets=" + key + "_exact:" + value;
-                }
-            });
-            window.location = requestURL;
-        }
-
         $(document).ready(function () {
+
+            //$('ul#list-group-author li').each(function(i) {
+            //    console.log($(this).attr("rel"));
+            //});
+            $(".faceted-selections").each(function () {
+                //var val = localStorage[$(this).attr("id")];
+                //var isChecked = val !== undefined ? val == "true" : false;
+                //$(this).prop("checked", isChecked);
+                var val = $(this).attr("id");
+                console.log(val);
+            });
 
             if($("#id_q").val() == ""){
                 clearAllFaceted();
@@ -430,12 +428,49 @@
                     $("#search-field").submit();
                 }
             });
-
+            /**
+             * temporarily keep the following functions for checkboxes
+             */
             $(".faceted-selections").click(function () {
+                var tokens = $(this).val().split(",");
+                var key = tokens[0];
+                var value = tokens[1];
+                var textSearch = $("#id_q").val();
+                var searchURL = "?q=" + textSearch;
+                var windowPath = window.location.pathname;
+                var requestURL =  windowPath + searchURL;
+
                 if($(this).is(":checked")) {
+                    requestURL = requestURL + "&selected_facets="+key+"_exact:"+value
+                    $(".faceted-selections").each(function () {
+                        var val = localStorage[$(this).attr("id")];
+                        //var isChecked = val !== undefined ? val == "true" : false;
+                        var isChecked = val === 'true';
+                        if(isChecked){
+                            var arr = $(this).val().split(",");
+                            var key = arr[0];
+                            var value = arr[1];
+                            requestURL += "&selected_facets="+key+"_exact:"+value;
+                        }
+                    });
+                    window.location = requestURL;
                     localStorage[$(this).attr("id")] = this.checked;
                 }else{
                     localStorage.removeItem($(this).attr("id"));
+                    var textSearch = $("#id_q").val();
+                    var updateURL = "/search/?q=" + textSearch;
+                    $(".faceted-selections").each(function () {
+                        var val = localStorage[$(this).attr("id")];
+                        //var isChecked = val !== undefined ? val == "true" : false;
+                        var isChecked = val === 'true';
+                        if(isChecked){
+                            var arr = $(this).val().split(",");
+                            var key = arr[0];
+                            var value = arr[1];
+                            updateURL += "&selected_facets="+key+"_exact:"+value;
+                        }
+                    });
+                    window.location = updateURL;
                 }
             });
 
