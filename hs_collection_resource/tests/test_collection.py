@@ -365,6 +365,25 @@ class TestCollection(MockIRODSTestCaseMixin, TransactionTestCase):
         self.assertEqual(self.resCollection.resources.count(), 1)
         self.assertIn(self.resGen3, self.resCollection.resources.all())
 
+    def test_adding_one_collection_to_another_collection(self):
+        # a collection resource can't be added to another collection resource
+
+        url_to_update_collection = self.url_to_update_collection.format(self.resCollection.short_id)
+        # this collection should contain no resources at this point
+        self.assertEquals(self.resCollection.resources.count(), 0)
+        # user 1 login
+        self.api_client.login(username='user1', password='mypassword1')
+
+        # add one collection resource to another collection resource
+        # json response status should be error
+        response = self.api_client.post(url_to_update_collection,
+                                        {'resource_id_list': [self.resCollection_with_missing_metadata.short_id]},
+                                        )
+        resp_json = json.loads(response.content)
+        self.assertEqual(resp_json["status"], "error")
+        # collection still should have no resources
+        self.assertEquals(self.resCollection.resources.count(), 0)
+
     def test_update_collection_for_deleted_resources(self):
         self.assertEqual(self.resCollection.resources.count(), 0)
         self.assertEqual(self.resCollection.deleted_resources.count(), 0)
