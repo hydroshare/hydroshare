@@ -6,9 +6,9 @@
         <div class="container">
             <div class="col-sm-12">
                 <div class="collaborate-nav">
-                    <a href="#" class="glyphicon glyphicon-bell collaborate-nav-item"></a>
-                    <a href="#" class="collaborate-nav-item active">My Groups</a>
-                    <a href="#" class="collaborate-nav-item">Find Groups</a>
+                    <a href="/Collaborate" class="glyphicon glyphicon-bell collaborate-nav-item"></a>
+                    <a href="/my-groups" class="collaborate-nav-item active">My Groups</a>
+                    <a href="/find-groups" class="collaborate-nav-item">Find Groups</a>
                 </div>
             </div>
         </div>
@@ -17,29 +17,144 @@
     <div class="container">
         <div class="col-sm-3">
             <h3>My Groups</h3>
-            <a class="btn btn-success" href="#"><i class="fa fa-plus"></i> Create Group</a>
+            <a class="btn btn-success" data-toggle="modal" data-target="#create-group-dialog"><i class="fa fa-plus"></i> Create Group</a>
+
+            <br><br>
+
+            <h4>Pending Inivtations</h4>
+
+            <strong><a href="#">USU</a></strong>
+            <table>
+                <tr>
+                    <td><a href="#" class="btn btn-default"><span class="glyphicon glyphicon-ok"></span>&nbsp;Accept</a>
+                    </td>
+                    <td><a href="#" class="btn btn-default"><span class="glyphicon glyphicon-remove"></span>&nbsp;Decline</a>
+                    </td>
+                </tr>
+            </table>
+
+            <br>
+
+            <strong><a href="#">UWRL</a></strong>
+            <table>
+                <tr>
+                    <td><a href="#" class="btn btn-default"><span class="glyphicon glyphicon-ok"></span>&nbsp;Accept</a>
+                    </td>
+                    <td><a href="#" class="btn btn-default"><span class="glyphicon glyphicon-remove"></span>&nbsp;Decline</a>
+                    </td>
+                </tr>
+            </table>
+
+            <br>
+
+            <strong><a href="#">Information Model for Users and Groups</a></strong> <span class="text-muted">Request Sent</span>
+            <table>
+                <tr>
+                    <td><a href="#" class="btn btn-default"><span class="glyphicon glyphicon-remove"></span>&nbsp;Cancel
+                        Request</a>
+                    </td>
+                </tr>
+            </table>
+
+            <br>
+
+            <strong><a href="#">HydroShare</a></strong> <span class="text-muted">Request Sent</span>
+            <table>
+                <tr>
+                    <td><a href="#" class="btn btn-default"><span class="glyphicon glyphicon-remove"></span>&nbsp;Cancel
+                        Request</a>
+                    </td>
+                </tr>
+            </table>
+
+            <br>
         </div>
         <div class="col-sm-9">
             <div class="row">
                 <div class="col-sm-12">
                     <table class="groups-table">
                         <tr>
-                            <td><div class="group-image-small" style="background-image: url({{ STATIC_URL }}img/home-page/carousel/bg1.jpg)" alt="Group thumbnail image"></div></td>
+                            <td><div class="group-image-small" style="background-image: url({{ STATIC_URL }}img/home-page/carousel/bg1.jpg)"></div></td>
                             <td>
-                                <h4><a href="#">Web Designer and HTML/CSS Developer</a></h4>
+                                <h4><a href="/Group">Web Designer and HTML/CSS Developer</a></h4>
                                 <small class="text-muted">21 Members</small>
                             </td>
                             <td><span>Member</span></td>
                         </tr>
                         <tr>
-                            <td><div class="group-image-small" style="background-image: url({{ STATIC_URL }}img/home-page/carousel/bg2.jpg)" alt="Group thumbnail image"></div></td>
+                            <td><div class="group-image-small" style="background-image: url({{ STATIC_URL }}img/home-page/carousel/bg2.jpg)"></div></td>
                             <td>
-                                <h4><a href="#">UWRL</a></h4>
+                                <h4><a href="/Group">UWRL</a></h4>
                                 <small class="text-muted">14 Members</small>
                             </td>
                             <td><span>Administrator</span></td>
                         </tr>
                     </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Create Group Modal -->
+    <div class="modal fade" id="create-group-dialog" tabindex="-1" role="dialog"
+         aria-labelledby="Creage Group">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal"
+                            aria-label="Close"><span aria-hidden="true">&times;</span>
+                    </button>
+                    <h4 class="modal-title" id="myModalLabel">Create New Group</h4>
+                </div>
+                <div class="modal-body">
+                    <div class="row">
+                        {# Group Name #}
+                        <fieldset class="col-sm-12">
+                            <label>Group Name *</label>
+                            <input class="form-control form-required" name="group-name">
+                        </fieldset>
+
+                        {# Group Description #}
+                        <fieldset class="col-sm-12">
+                            <label>About this group *</label>
+                            <textarea class="form-control"></textarea>
+                        </fieldset>
+
+                        {# Purpose #}
+                        <fieldset class="col-sm-12">
+                            <label>Purpose</label>
+                            <input class="form-control" name="group-name">
+                        </fieldset>
+
+                        {# Purpose #}
+                        <fieldset class="col-sm-12">
+                            <label>Privacy *</label>
+
+                            <div class="radio">
+                                <label>
+                                    <input type="radio" name="privacy" value="public" checked>Public
+                                </label>
+                                <p class="text-muted">Other users can find the group and see who has membership.</p>
+                            </div>
+                            <div class="radio">
+                                <label>
+                                    <input type="radio" name="privacy" value="discoverable">Discoverable
+                                    <p class="text-muted">Other users can find this group, but membership information is hidden.</p>
+                                </label>
+                            </div>
+                            <div class="radio disabled">
+                                <label>
+                                    <input type="radio" name="privacy" value="private">Private
+                                    <p class="text-muted">Other users can not find this group.</p>
+                                </label>
+                            </div>
+                        </fieldset>
+                    </div>
+
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+                    <a href="#" class="btn btn-primary">Create</a>
                 </div>
             </div>
         </div>

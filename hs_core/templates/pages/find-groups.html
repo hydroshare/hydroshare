@@ -6,13 +6,14 @@
         <div class="container">
             <div class="col-sm-12">
                 <div class="collaborate-nav">
-                    <a href="#" class="glyphicon glyphicon-bell collaborate-nav-item"></a>
-                    <a href="#" class="collaborate-nav-item active">My Groups</a>
-                    <a href="#" class="collaborate-nav-item">Find Groups</a>
+                    <a href="/Collaborate" class="glyphicon glyphicon-bell collaborate-nav-item"></a>
+                    <a href="/my-groups" class="collaborate-nav-item">My Groups</a>
+                    <a href="/find-groups" class="collaborate-nav-item active">Find Groups</a>
                 </div>
             </div>
         </div>
     </div>
+
     <div class="container">
         <div class="row">
             <div class="col-sm-12">
@@ -24,13 +25,12 @@
                     </button>
                   </span>
                 </div>
-                <!-- /input-group -->
             </div>
         </div>
         <div class="row group-thumbnails">
             <div class="col-sm-6 col-md-4">
                 <div class="group-thumbnail contribution">
-                    <div class="group-image" style="background-image: url({{ STATIC_URL }}img/home-page/carousel/bg1.jpg)" alt="Group thumbnail image"></div>
+                    <div class="group-image" style="background-image: url({{ STATIC_URL }}img/home-page/carousel/bg1.jpg)"></div>
 
                     <div class="group-caption">
                         <h3 class="group-name">Viterbi Graduate Student Association (VGSA)</h3>
@@ -41,7 +41,7 @@
                             We STRONGLY follow US Immigration Rules and would request NOT to furnish FALSE DETAILS
                             or fake anything which is NOT legal as per US Immigration Laws.</p>
 
-                        <div class="text-center">
+                        <div class="text-center group-thumbnail-footer">
                             <div class="users-joined height-fix">
 
                                 <div class="profile-pic-thumbnail-small round-image" title="Mauriel Ramirez"></div>
@@ -64,7 +64,7 @@
 
             <div class="col-sm-6 col-md-4">
                 <div class="group-thumbnail contribution">
-                    <div class="group-image" style="background-image: url({{ STATIC_URL }}img/home-page/carousel/bg2.jpg)" alt="Group thumbnail image"></div>
+                    <div class="group-image" style="background-image: url({{ STATIC_URL }}img/home-page/carousel/bg2.jpg)"></div>
                     <div class="group-caption">
                         <h3 class="group-name">MeExcel - MS Office Help Group</h3>
                         <small class="text-muted group-keywords">Hydrology, Environmental Engineering</small>
@@ -76,21 +76,7 @@
                             greater Alumni population. The VGSA promotes professional, academic, and social affairs on
                             campus, and is committed to creating a positive student experience at USC.Show less</p>
 
-                        <div class="text-center">
-                            <div class="users-joined height-fix">
-
-                                <div class="profile-pic-thumbnail-small round-image" title="Mauriel Ramirez"></div>
-                                <div style="background-image: url('{{ request.user.userprofile.picture.url }}');"
-                                     class="round-image profile-pic-thumbnail" title="Mauriel Ramirez">
-                                </div>
-
-                                <div class="profile-pic-thumbnail-small round-image" title="Mauriel Ramirez"></div>
-                                <div class="profile-pic-thumbnail-small round-image" title="Mauriel Ramirez"></div>
-                                <div class="profile-pic-thumbnail-small round-image" title="Mauriel Ramirez"></div>
-                            </div>
-
-                            <div><small class="text-muted">and 23 others have joined</small></div>
-
+                        <div class="text-center group-thumbnail-footer">
                             <p><a href="#" class="btn btn-primary" role="button">Ask to join</a></p>
                         </div>
                     </div>
@@ -99,7 +85,7 @@
 
             <div class="col-sm-6 col-md-4">
                 <div class="group-thumbnail contribution">
-                    <div class="group-image" style="background-image: url({{ STATIC_URL }}img/home-page/carousel/bg1.jpg)" alt="Group thumbnail image"></div>
+                    <div class="group-image" style="background-image: url({{ STATIC_URL }}img/home-page/carousel/bg1.jpg)"></div>
 
                     <div class="group-caption">
                         <h3 class="group-name">Viterbi Graduate Student Association (VGSA)</h3>
@@ -110,7 +96,7 @@
                             We STRONGLY follow US Immigration Rules and would request NOT to furnish FALSE DETAILS
                             or fake anything which is NOT legal as per US Immigration Laws.</p>
 
-                        <div class="text-center">
+                        <div class="text-center group-thumbnail-footer">
                             <div class="users-joined height-fix">
                                 <div class="profile-pic-thumbnail-small round-image" title="Mauriel Ramirez"></div>
                                 <div style="background-image: url('{{ request.user.userprofile.picture.url }}');"
@@ -119,10 +105,7 @@
 
                                 <div class="profile-pic-thumbnail-small round-image" title="Mauriel Ramirez"></div>
                                 <div class="profile-pic-thumbnail-small round-image" title="Mauriel Ramirez"></div>
-                                <div class="profile-pic-thumbnail-small round-image" title="Mauriel Ramirez"></div>
                             </div>
-
-                            <div><small class="text-muted">and 23 others have joined</small></div>
 
                             <p><a href="#" class="btn btn-primary" role="button">Ask to join</a></p>
                         </div>
@@ -133,7 +116,7 @@
 
             <div class="col-sm-6 col-md-4">
                 <div class="group-thumbnail contribution">
-                    <div class="group-image" style="background-image: url({{ STATIC_URL }}img/home-page/carousel/bg2.jpg)" alt="Group thumbnail image"></div>
+                    <div class="group-image" style="background-image: url({{ STATIC_URL }}img/home-page/carousel/bg2.jpg)"></div>
                     <div class="group-caption">
                         <h3 class="group-name">MeExcel - MS Office Help Group</h3>
                         <small class="text-muted group-keywords">Hydrology, Environmental Engineering</small>
@@ -145,21 +128,7 @@
                             greater Alumni population. The VGSA promotes professional, academic, and social affairs on
                             campus, and is committed to creating a positive student experience at USC.Show less</p>
 
-                        <div class="text-center">
-                            <div class="users-joined height-fix">
-
-                                <div class="profile-pic-thumbnail-small round-image" title="Mauriel Ramirez"></div>
-                                <div style="background-image: url('{{ request.user.userprofile.picture.url }}');"
-                                     class="round-image profile-pic-thumbnail" title="Mauriel Ramirez">
-                                </div>
-
-                                <div class="profile-pic-thumbnail-small round-image" title="Mauriel Ramirez"></div>
-                                <div class="profile-pic-thumbnail-small round-image" title="Mauriel Ramirez"></div>
-                                <div class="profile-pic-thumbnail-small round-image" title="Mauriel Ramirez"></div>
-                            </div>
-
-                            <div><small class="text-muted">and 23 others have joined</small></div>
-
+                        <div class="text-center group-thumbnail-footer">
                             <p><a href="#" class="btn btn-primary" role="button">Ask to join</a></p>
                         </div>
                     </div>
@@ -168,7 +137,7 @@
 
             <div class="col-sm-6 col-md-4">
                 <div class="group-thumbnail contribution">
-                    <div class="group-image" style="background-image: url({{ STATIC_URL }}img/home-page/carousel/bg3.jpg)" alt="Group thumbnail image"></div>
+                    <div class="group-image" style="background-image: url({{ STATIC_URL }}img/home-page/carousel/bg3.jpg)"></div>
                     <div class="group-caption">
                         <h3 class="group-name">Salt Lake City Human Resource Professionals</h3>
                         <small class="text-muted group-keywords">Hydrology, Environmental Engineering</small>
@@ -178,20 +147,13 @@
                             members of SLCHRP to network with other local HR professionals, share job opportunities and
                             events, start discussions on real business situations, and expand your local HR network.</p>
 
-                        <div class="text-center">
+                        <div class="text-center group-thumbnail-footer">
                             <div class="users-joined height-fix">
-
-                                <div class="profile-pic-thumbnail-small round-image" title="Mauriel Ramirez"></div>
                                 <div style="background-image: url('{{ request.user.userprofile.picture.url }}');"
                                      class="round-image profile-pic-thumbnail" title="Mauriel Ramirez">
                                 </div>
-
-                                <div class="profile-pic-thumbnail-small round-image" title="Mauriel Ramirez"></div>
-                                <div class="profile-pic-thumbnail-small round-image" title="Mauriel Ramirez"></div>
                                 <div class="profile-pic-thumbnail-small round-image" title="Mauriel Ramirez"></div>
                             </div>
-
-                            <div><small class="text-muted">and 23 others have joined</small></div>
 
                             <p><a href="#" class="btn btn-primary" role="button">Ask to join</a></p>
                         </div>
@@ -201,7 +163,7 @@
 
             <div class="col-sm-6 col-md-4">
                 <div class="group-thumbnail contribution">
-                    <div class="group-image" style="background-image: url({{ STATIC_URL }}img/home-page/carousel/bg1.jpg)" alt="Group thumbnail image"></div>
+                    <div class="group-image" style="background-image: url({{ STATIC_URL }}img/home-page/carousel/bg1.jpg)"></div>
 
                     <div class="group-caption">
                         <h3 class="group-name">Viterbi Graduate Student Association (VGSA)</h3>
@@ -212,7 +174,7 @@
                             We STRONGLY follow US Immigration Rules and would request NOT to furnish FALSE DETAILS
                             or fake anything which is NOT legal as per US Immigration Laws.</p>
 
-                        <div class="text-center">
+                        <div class="text-center group-thumbnail-footer">
                             <div class="users-joined height-fix">
 
                                 <div class="profile-pic-thumbnail-small round-image" title="Mauriel Ramirez"></div>
@@ -235,7 +197,7 @@
 
             <div class="col-sm-6 col-md-4">
                 <div class="group-thumbnail contribution">
-                    <div class="group-image" style="background-image: url({{ STATIC_URL }}img/home-page/carousel/bg3.jpg)" alt="Group thumbnail image"></div>
+                    <div class="group-image" style="background-image: url({{ STATIC_URL }}img/home-page/carousel/bg3.jpg)"></div>
                     <div class="group-caption">
                         <h3 class="group-name">Salt Lake City Human Resource Professionals</h3>
                         <small class="text-muted group-keywords">Hydrology, Environmental Engineering</small>
@@ -245,7 +207,7 @@
                             members of SLCHRP to network with other local HR professionals, share job opportunities and
                             events, start discussions on real business situations, and expand your local HR network.</p>
 
-                        <div class="text-center">
+                        <div class="text-center group-thumbnail-footer">
                             <div class="users-joined height-fix">
 
                                 <div class="profile-pic-thumbnail-small round-image" title="Mauriel Ramirez"></div>
@@ -268,7 +230,7 @@
 
             <div class="col-sm-6 col-md-4">
                 <div class="group-thumbnail contribution">
-                    <div class="group-image" style="background-image: url({{ STATIC_URL }}img/home-page/carousel/bg3.jpg)" alt="Group thumbnail image"></div>
+                    <div class="group-image" style="background-image: url({{ STATIC_URL }}img/home-page/carousel/bg3.jpg)"></div>
                     <div class="group-caption">
                         <h3 class="group-name">Salt Lake City Human Resource Professionals</h3>
                         <small class="text-muted group-keywords">Hydrology, Environmental Engineering</small>
@@ -278,7 +240,7 @@
                             members of SLCHRP to network with other local HR professionals, share job opportunities and
                             events, start discussions on real business situations, and expand your local HR network.</p>
 
-                        <div class="text-center">
+                        <div class="text-center group-thumbnail-footer">
                             <div class="users-joined height-fix">
 
                                 <div class="profile-pic-thumbnail-small round-image" title="Mauriel Ramirez"></div>
@@ -301,7 +263,7 @@
 
             <div class="col-sm-6 col-md-4">
                 <div class="group-thumbnail contribution">
-                    <div class="group-image" style="background-image: url({{ STATIC_URL }}img/home-page/carousel/bg2.jpg)" alt="Group thumbnail image"></div>
+                    <div class="group-image" style="background-image: url({{ STATIC_URL }}img/home-page/carousel/bg2.jpg)"></div>
                     <div class="group-caption">
                         <h3 class="group-name">MeExcel - MS Office Help Group</h3>
                         <small class="text-muted group-keywords">Hydrology, Environmental Engineering</small>
@@ -313,21 +275,7 @@
                             greater Alumni population. The VGSA promotes professional, academic, and social affairs on
                             campus, and is committed to creating a positive student experience at USC.Show less</p>
 
-                        <div class="text-center">
-                            <div class="users-joined height-fix">
-
-                                <div class="profile-pic-thumbnail-small round-image" title="Mauriel Ramirez"></div>
-                                <div style="background-image: url('{{ request.user.userprofile.picture.url }}');"
-                                     class="round-image profile-pic-thumbnail" title="Mauriel Ramirez">
-                                </div>
-
-                                <div class="profile-pic-thumbnail-small round-image" title="Mauriel Ramirez"></div>
-                                <div class="profile-pic-thumbnail-small round-image" title="Mauriel Ramirez"></div>
-                                <div class="profile-pic-thumbnail-small round-image" title="Mauriel Ramirez"></div>
-                            </div>
-
-                            <div><small class="text-muted">and 23 others have joined</small></div>
-
+                        <div class="text-center group-thumbnail-footer">
                             <p><a href="#" class="btn btn-primary" role="button">Ask to join</a></p>
                         </div>
                     </div>
@@ -335,7 +283,7 @@
             </div>
         </div>
         <div class="row">
-            <div class="text-center"><a>Show More</a></div>
+            <div class="text-center btn-list-more"><a>Show More</a></div>
         </div>
     </div>
 

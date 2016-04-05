@@ -3326,7 +3326,7 @@ button.no-style:focus {
 }
 
 .group-image {
-    height: 200px;
+    height: 150px;
     text-align: center;
     width: 100%;
     background-size: cover;
@@ -3334,9 +3334,9 @@ button.no-style:focus {
 }
 
 .group-image-small {
-    height: 80px;
+    height: 120px;
     text-align: center;
-    width: 80px;
+    width: 120px;
     background-size: cover;
     background-position: center center;
     display: inline-block;
@@ -3348,6 +3348,14 @@ button.no-style:focus {
 
 .groups-table tr {
     border-bottom: 1px solid #DDD;
+}
+
+.groups-table tr:last-child {
+    border-bottom: 0;
+}
+
+.groups-table tr > td {
+    padding: 10px 0;
 }
 
 .group-title {
@@ -3417,3 +3425,14 @@ button.no-style:focus {
 .btn-list-more {
     cursor: pointer;
 }
+
+.group-thumbnail-footer {
+    padding-top: 10px;
+    border-top: 1px dashed #DDD;
+}
+
+.group-thumbnail-footer .btn-primary {
+    margin-top: 10px;
+    width: 100%;
+}
+
