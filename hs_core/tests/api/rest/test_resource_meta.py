@@ -143,19 +143,19 @@ class TestResourceMetadata(HSRESTTestCase):
 
         try:
             # Apply metadata from saved file
-            ## First update the resource ID
+            #   First update the resource ID
             scimeta = etree.parse('hs_core/tests/data/swat-resourcemetadata-1.xml')
             desc = scimeta.xpath('/rdf:RDF/rdf:Description[1]', namespaces=NS)[0]
             desc.set('{http://www.w3.org/1999/02/22-rdf-syntax-ns#}about',
                      "http://example.com/resource/{pid}".format(pid=pid))
-            ## Write out to a file
+            #   Write out to a file
             out = etree.tostring(scimeta, pretty_print=True)
             sci_meta_new = os.path.join(tmp_dir, RESOURCE_METADATA)
             f = open(sci_meta_new, 'w')
             f.writelines(out)
             f.close()
 
-            ## Send updated metadata to REST API
+            #   Send updated metadata to REST API
             params = {'file': (RESOURCE_METADATA,
                                open(sci_meta_new),
                                'application/xml')}
@@ -163,7 +163,7 @@ class TestResourceMetadata(HSRESTTestCase):
             response = self.client.put(url, params)
             self.assertEqual(response.status_code, status.HTTP_202_ACCEPTED)
 
-            ## Get science metadata
+            #   Get science metadata
             response = self.getScienceMetadata(pid, exhaust_stream=False)
             sci_meta_updated = os.path.join(tmp_dir, RESOURCE_METADATA_UPDATED)
             f = open(sci_meta_updated, 'w')
@@ -183,6 +183,8 @@ class TestResourceMetadata(HSRESTTestCase):
             url = "/hsapi/scimeta/{pid}/".format(pid=pid)
             response = self.client.put(url, params)
             self.assertEqual(response.status_code, status.HTTP_202_ACCEPTED)
+
+            #    Get science metadata
             response = self.getScienceMetadata(pid, exhaust_stream=False)
             sci_meta_updated = os.path.join(tmp_dir, RESOURCE_METADATA_UPDATED)
             f = open(sci_meta_updated, 'w')
