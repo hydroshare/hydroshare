@@ -92,3 +92,67 @@ class HSRESTTestCase(APITestCase):
         self.assertTrue(int(response['Content-Length']) > 0)
 
         return response
+
+
+class SciMetaTestCase(HSRESTTestCase):
+
+    NS = {'rdf': "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
+          'rdfs1': "http://www.w3.org/2001/01/rdf-schema#",
+          'dc': "http://purl.org/dc/elements/1.1/",
+          'dcterms': "http://purl.org/dc/terms/",
+          'hsterms': "http://hydroshare.org/terms/"}
+
+    RESOURCE_METADATA = 'resourcemetadata.xml'
+    RESOURCE_METADATA_OLD = 'resourcemetadata_old.xml'
+    RESOURCE_METADATA_UPDATED = 'resourcemetadata_updated.xml'
+
+    def getAbstract(self, scimeta, should_exist=True):
+        """ Get abstract from parsed ElementTree representation of science metadata.
+
+        :param scimeta: ElementTree representing science metadata
+        :param should_exist: If True, the abstract is expected to exist in the DOM.
+        :return: String representing abstract text, if should_exist == True, else None.
+        """
+        abstract = scimeta.xpath('/rdf:RDF/rdf:Description[1]/dc:description/rdf:Description/dcterms:abstract',
+                                 namespaces=self.NS)
+        if should_exist:
+            self.assertEquals(len(abstract), 1)
+            return abstract[0].text
+        else:
+            self.assertEquals(len(abstract), 0)
+
+        return None
+
+    def updateScimetaResourceID(self, scimeta, new_id):
+        """ Update
+
+        :param scimeta: ElementTree representing science metadata
+        :param new_id: String representing the new ID of the resource.
+        :return: ElementTree representing science metadata
+        """
+        desc = scimeta.xpath('/rdf:RDF/rdf:Description[1]', namespaces=self.NS)[0]
+        desc.set('{http://www.w3.org/1999/02/22-rdf-syntax-ns#}about',
+                 "http://example.com/resource/{0}".format(new_id))
+        return scimeta
+
+    def updateScimeta(self, pk, scimeta_path, should_succeed=True):
+        """ Use the test client to perform a PUT /scimeta
+        using scimeta_path as the resourcemetadata.xml
+
+        :param pk: The ID of the resource whose
+        :param scimeta_path: Path to a file named resourcemetadata.xml
+        :param should_succeed: If True, will check for HTTP 202 status in the
+        response, else will check for HTTP 400.
+        :return: Test client HTTP response.
+        """
+        params = {'file': (self.RESOURCE_METADATA,
+                          open(scimeta_path),
+                          'application/xml')}
+        url = "/hsapi/scimeta/{pid}/".format(pid=pk)
+        response = self.client.put(url, params)
+        if should_succeed:
+            self.assertEqual(response.status_code, status.HTTP_202_ACCEPTED)
+        else:
+            self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+        return response
