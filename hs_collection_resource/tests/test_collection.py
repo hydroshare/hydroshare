@@ -119,7 +119,6 @@ class TestCollection(MockIRODSTestCaseMixin, TransactionTestCase):
         # add res to collection.resources
         self.resCollection.resources.add(self.resGen1)
         self.resCollection.resources.add(self.resGeoFeature)
-        # add collection to res.collections
         self.resModelInstance.collections.add(self.resCollection)
         self.resTimeSeries.collections.add(self.resCollection)
 
