@@ -25,7 +25,7 @@ from hs_core.views import utils as view_utils
 from hs_core.views.utils import ACTION_TO_AUTHORIZE
 from hs_core.views import serializers
 from hs_core.views import pagination
-from hs_core.hydroshare.utils import get_file_storage
+from hs_core.hydroshare.utils import get_file_storage, resource_modified
 from hs_core.serialization import GenericResourceMeta, HsDeserializationDependencyException, HsDeserializationException
 from hs_core.hydroshare.hs_bagit import create_bag_files
 
@@ -487,7 +487,7 @@ class ScienceMetadataRetrieveUpdate(APIView):
 
     def put(self, request, pk):
         # Update science metadata based on resourcemetadata.xml uploaded
-        res, authorized, user = view_utils.authorize(request, pk, needed_permission=ACTION_TO_AUTHORIZE.EDIT_RESOURCE,
+        resource, authorized, user = view_utils.authorize(request, pk, needed_permission=ACTION_TO_AUTHORIZE.EDIT_RESOURCE,
                                                      raises_exception=False)
         if not authorized:
             raise PermissionDenied()
@@ -540,8 +540,8 @@ class ScienceMetadataRetrieveUpdate(APIView):
                 rm = GenericResourceMeta.read_metadata_from_resource_bag(tmp_dir,
                                                                          hydroshare_host=domain)
                 # Update resource metadata
-                rm.write_metadata_to_resource(res)
-                create_bag_files(res)
+                rm.write_metadata_to_resource(resource)
+                create_bag_files(resource)
             except HsDeserializationDependencyException as e:
                 msg = ("HsDeserializationDependencyException encountered when updating "
                        "science metadata for resource {pk}; depedent resource was {dep}.")
@@ -551,6 +551,7 @@ class ScienceMetadataRetrieveUpdate(APIView):
             except HsDeserializationException as e:
                 raise ValidationError(detail=e.message)
 
+            resource_modified(resource, request.user)
             return Response(data={'resource_id': pk}, status=status.HTTP_202_ACCEPTED)
         finally:
             shutil.rmtree(tmp_dir)
@@ -677,6 +678,7 @@ class ResourceFileCRUD(APIView):
         # prepare response data
         file_name = os.path.basename(res_file_objects[0].resource_file.name)
         response_data = {'resource_id': pk, 'file_name': file_name}
+        resource_modified(resource, request.user)
         return Response(data=response_data, status=status.HTTP_201_CREATED)
 
     def delete(self, request, pk, filename):
@@ -688,6 +690,7 @@ class ResourceFileCRUD(APIView):
 
         # prepare response data
         response_data = {'resource_id': pk, 'file_name': filename}
+        resource_modified(resource, request.user)
         return Response(data=response_data, status=status.HTTP_200_OK)
 
     def put(self, request, pk, filename):
