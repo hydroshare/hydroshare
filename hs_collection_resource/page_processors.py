@@ -2,6 +2,7 @@ from mezzanine.pages.page_processors import processor_for
 
 from hs_core import page_processors
 from hs_core.views import add_generic_context
+from hs_core.views.utils import get_my_resources_list
 from hs_core.models import BaseResource
 from hs_access_control.models import PrivilegeCodes
 
@@ -14,20 +15,7 @@ def landing_page(request, page):
 
     user = request.user
     if user.is_authenticated():
-        # get a list of resources with effective OWNER privilege
-        owned_resources = user.uaccess.get_resources_with_explicit_access(PrivilegeCodes.OWNER)
-        # get a list of resources with effective CHANGE privilege
-        editable_resources = user.uaccess.get_resources_with_explicit_access(PrivilegeCodes.CHANGE)
-        # get a list of resources with effective VIEW privilege
-        viewable_resources = user.uaccess.get_resources_with_explicit_access(PrivilegeCodes.VIEW)
-
-        owned_resources = list(owned_resources)
-        editable_resources = list(editable_resources)
-        viewable_resources = list(viewable_resources)
-        discovered_resources = list(user.ulabels.my_resources)
-
-        user_all_accessible_resource_list = (owned_resources + editable_resources + \
-                                             viewable_resources + discovered_resources)
+        user_all_accessible_resource_list = get_my_resources_list(request)
     else: # anonymous user
         user_all_accessible_resource_list = list(BaseResource.discoverable_resources.all())
 

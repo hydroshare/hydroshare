@@ -28,7 +28,7 @@ from django_irods.storage import IrodsStorage
 from django_irods.icommands import SessionException
 from hs_core import hydroshare
 from hs_core.hydroshare.utils import get_resource_by_shortkey, resource_modified
-from .utils import authorize, upload_from_irods, ACTION_TO_AUTHORIZE, run_script_to_update_hyrax_input_files
+from .utils import authorize, upload_from_irods, ACTION_TO_AUTHORIZE, run_script_to_update_hyrax_input_files, get_my_resources_list
 from hs_core.models import GenericResource, resource_processor, CoreMetaData, Relation
 from hs_core.hydroshare.resource import METADATA_STATUS_SUFFICIENT, METADATA_STATUS_INSUFFICIENT
 
@@ -495,44 +495,8 @@ class FilterForm(forms.Form):
 @processor_for('my-resources')
 @login_required
 def my_resources(request, page):
-    user = request.user
-    # get a list of resources with effective OWNER privilege
-    owned_resources = user.uaccess.get_resources_with_explicit_access(PrivilegeCodes.OWNER)
-    # remove obsoleted resources from the owned_resources
-    owned_resources = owned_resources.exclude(object_id__in=Relation.objects.filter(type='isReplacedBy').values('object_id'))
-    # get a list of resources with effective CHANGE privilege
-    editable_resources = user.uaccess.get_resources_with_explicit_access(PrivilegeCodes.CHANGE)
-    # remove obsoleted resources from the editable_resources
-    editable_resources = editable_resources.exclude(object_id__in=Relation.objects.filter(type='isReplacedBy').values('object_id'))
-    # get a list of resources with effective VIEW privilege
-    viewable_resources = user.uaccess.get_resources_with_explicit_access(PrivilegeCodes.VIEW)
-    # remove obsoleted resources from the viewable_resources
-    viewable_resources = viewable_resources.exclude(object_id__in=Relation.objects.filter(type='isReplacedBy').values('object_id'))
 
-    owned_resources = list(owned_resources)
-    editable_resources = list(editable_resources)
-    viewable_resources = list(viewable_resources)
-    favorite_resources = list(user.ulabels.favorited_resources)
-    labeled_resources = list(user.ulabels.labeled_resources)
-    discovered_resources = list(user.ulabels.my_resources)
-
-    for res in owned_resources:
-        res.owned = True
-
-    for res in editable_resources:
-        res.editable = True
-
-    for res in viewable_resources:
-        res.viewable = True
-
-    for res in (owned_resources + editable_resources + viewable_resources + discovered_resources):
-        res.is_favorite = False
-        if res in favorite_resources:
-            res.is_favorite = True
-        if res in labeled_resources:
-            res.labels = res.rlabels.get_labels(user)
-
-    resource_collection = (owned_resources + editable_resources + viewable_resources + discovered_resources)
+    resource_collection = get_my_resources_list(request)
 
     context = {'collection': resource_collection}
     return context

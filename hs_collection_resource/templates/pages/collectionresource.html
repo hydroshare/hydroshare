@@ -304,8 +304,7 @@
         var page_length = 15;
         var page_type = "numbers";
         var page_length_change = false;
-        $(document).ready(function()
-        {
+        $(document).ready(function() {
             // disable "Publish" btn
             $("#publish").hide();
             $("#new-version").hide();
@@ -320,8 +319,7 @@
             {#                <th>Remove</th>          6  #}
 
             var edit_mode = "{{edit_mode}}";
-            if (edit_mode.toLowerCase() == "false")
-            {
+            if (edit_mode.toLowerCase() == "false") {
                     resourceTable = $("#collection-table").DataTable({
                     "order": [[2, "asc"]],
                     "paging": paging,
@@ -346,8 +344,7 @@
                     }
                     });
             }
-            else
-            {
+            else {
                  resourceTable = $("#collection-table").DataTable({
                     "order": [[2, "asc"]],
                     "paging": paging,
@@ -403,8 +400,7 @@
         }); // $(document).ready(function())
 
 
-        function remove_collection_item(res_id)
-        {
+        function remove_collection_item(res_id) {
             // get row obj is being removed from collection
             var removed_row_from_colletion = $('#collection-table').DataTable().row('#' + res_id);
 
@@ -419,8 +415,7 @@
                 $('#save-collection-warning-body').text(waning_message);
                 $('#save-collection-warning').modal('show');
             }
-            else
-            {
+            else {
                 // copy row data and add to collection-candidate table
                 $('#collection-table-candidate').DataTable().row.add(removed_row_from_colletion.data()).draw(false);
                 // remove row obj
@@ -430,8 +425,7 @@
         }
 
 
-        function add_collection_item()
-        {
+        function add_collection_item() {
             $.each($(".row-selector:checked"), function( index, chkbox ) {
                     var res_id = chkbox.id;
                     var added_row = $('#collection-table-candidate').DataTable().row('#' + res_id);
@@ -442,8 +436,7 @@
         }
 
         // revised metadata_update_ajax_submit
-        function collection_update_ajax_submit_new(form_id)
-        {
+        function collection_update_ajax_submit_new(form_id) {
             $alert_success = '<div class="alert alert-success" id="success-alert"> \
                 <button type="button" class="close" data-dismiss="alert">x</button> \
                 <strong>Success! </strong> \
@@ -500,10 +493,9 @@
                         });
                     }
                 },
-                error: function(XMLHttpRequest, textStatus, errorThrown)
-                {
+                error: function(XMLHttpRequest, textStatus, errorThrown) {
                     $('#' + form_id).before($alert_error);
-                    $(".alert-error").fadeTo(2000, 500).slideUp(1000, function(){
+                    $(".alert-error").fadeTo(2000, 500).slideUp(1000, function() {
                         $(".alert-error").alert('close');
                     });
                 }
@@ -513,13 +505,11 @@
         }
 
 
-        function save_btn_callback_new()
-        {
+        function save_btn_callback_new() {
             collection_update_ajax_submit_new('collector-new');
         }
 
-        function clear_deleted_resources_table(collection_id)
-        {
+        function clear_deleted_resources_table(collection_id) {
             // hide view deleted
             $("#view_deleted_res_div").hide();
             $("#clear-deleted-res-btn").hide();
