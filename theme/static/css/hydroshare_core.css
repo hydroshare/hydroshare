@@ -3397,3 +3397,23 @@ button.no-style:focus {
 .conversation-description {
     border-left: 0;
 }
+
+.table-members-list .profile-pic-thumbnail{
+    margin-top: 10px;
+}
+
+.table-members-list {
+    width: 100%;
+}
+
+.table-members-list tr > td:first-child {
+    width: 40px;
+}
+
+.table-members-list tr > td {
+    padding-bottom: 20px;
+}
+
+.btn-list-more {
+    cursor: pointer;
+}
