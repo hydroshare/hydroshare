@@ -3381,8 +3381,19 @@ button.no-style:focus {
     float: left;
     width: 100%;
     margin-top: 30px;
+    padding-top: 20px;
+    border-top: 1px dashed #DDD;
 }
 
 .start-conversation {
     margin-top: 20px;
+}
+
+.start-conversation > .group-activity-comment {
+    border-top: 0;
+    margin-top: 0;
+}
+
+.conversation-description {
+    border-left: 0;
 }

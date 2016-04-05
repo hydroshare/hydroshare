@@ -99,14 +99,11 @@
                                 <div style="background-image: url('{{ request.user.userprofile.picture.url }}');"
                                      class="profile-pic-thumbnail round-image pull-left">
                                 </div>
-                                <span>Start a conversation</span>
+                                <h4>Start a conversation</h4>
 
                                 <div class="group-activity-comment">
                                     <fieldset>
-                                        <label>Comment</label>
-                                                <textarea class="form-control"
-                                                          name="details" rows="4">{% if profile.details %}
-                                                    {{ profile.details }}{% endif %}</textarea>
+                                        <textarea class="form-control"></textarea>
                                     </fieldset>
                                 </div>
                             </div>
@@ -150,6 +147,7 @@
                                                           name="details" rows="4">{% if profile.details %}
                                                     {{ profile.details }}{% endif %}</textarea>
                                     </fieldset>
+                                    <a class="btn btn-primary">Post</a>
                                 </div>
                             </div>
 
@@ -160,18 +158,13 @@
 
                                 <div class="metadata-wrapper">
                                     <div class="shared-resource-info">
-                                        <strong> HydroShare Administrator</strong>
-                                        <span class="text-muted"> shared </span>
-                                        <span><a href="#">Untitled Resource</a></span>
+                                        <strong> Maurier Ramirez</strong>
                                     </div>
-                                    <h5><span class="text-muted">Resource type: </span>Generic</h5>
                                     <h5><span class="text-muted">Date: </span>March 14, 2016, 5:14 p.m.</h5>
                                 </div>
 
-                                <div class="activity-description col-sm-12" style="max-height: 50px;">
+                                <div class="activity-description conversation-description col-sm-12" style="max-height: 50px;">
                                     <p class="description">
-                                        <strong>ABSTRACT: </strong></p>
-
                                     <p>The Viterbi Graduate Student Association (VGSA) represents all the full
                                         time and part time Master's and Doctoral students in the Viterbi School
                                         of Engineering. VGSA is the largest student umbrella organization at the
@@ -183,45 +176,6 @@
                                 </div>
                                 <div class="show-more-btn btn-default" title="Show less">···</div>
 
-                                <div class="group-activity-comment">
-                                    <fieldset>
-                                        <label>Comment</label>
-                                                <textarea class="form-control"
-                                                          name="details" rows="4">{% if profile.details %}
-                                                    {{ profile.details }}{% endif %}</textarea>
-                                    </fieldset>
-                                </div>
-                            </div>
-
-                            <div class="group-activity-block activity-block">
-                                <div style="background-image: url('{{ request.user.userprofile.picture.url }}');"
-                                     class="profile-pic-thumbnail round-image pull-left">
-                                </div>
-
-                                <div class="metadata-wrapper">
-                                    <div class="shared-resource-info">
-                                        <strong> HydroShare Administrator</strong>
-                                        <span class="text-muted"> shared </span>
-                                        <span><a href="#">Untitled Resource</a></span>
-                                    </div>
-                                    <h5><span class="text-muted">Resource type: </span>Generic</h5>
-                                    <h5><span class="text-muted">Date: </span>March 14, 2016, 5:14 p.m.</h5>
-                                </div>
-
-                                <div class="activity-description col-sm-12" style="max-height: 50px;">
-                                    <p class="description">
-                                        <strong>ABSTRACT: </strong></p>
-
-                                    <p>The Viterbi Graduate Student Association (VGSA) represents all the full
-                                        time and part time Master's and Doctoral students in the Viterbi School
-                                        of Engineering. VGSA is the largest student umbrella organization at the
-                                        University of Southern California with over 5,000 active engineering
-                                        graduate student members each year, and has an even greater Alumni
-                                        population. The VGSA promotes professional, academic, and social affairs
-                                        on campus, and is committed to creating a positive student experience at
-                                        USC.Show less</p>
-                                </div>
-                                <div class="show-more-btn btn-default" title="Show less">···</div>
 
                                 <div class="group-activity-comment">
                                     <fieldset>
@@ -230,6 +184,7 @@
                                                           name="details" rows="4">{% if profile.details %}
                                                     {{ profile.details }}{% endif %}</textarea>
                                     </fieldset>
+                                    <a class="btn btn-primary">Post</a>
                                 </div>
                             </div>
                         </div>
