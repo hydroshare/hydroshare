@@ -66,10 +66,10 @@ class UpdateAccountTest(unittest.TestCase):
         # test default profile data
         user_profile = hydroshare.utils.get_profile(self.user)
         self.assertEqual(user_profile.title, None)
-        self.assertEqual(user_profile.profession, 'Student')
+        self.assertEqual(user_profile.middle_name, None)
+        self.assertEqual(user_profile.user_type, 'Unspecified')
         self.assertEqual(user_profile.subject_areas, None)
         self.assertEqual(user_profile.organization, None)
-        self.assertEqual(user_profile.organization_type, None)
         self.assertEqual(user_profile.phone_1, None)
         self.assertEqual(user_profile.phone_1_type, None)
         self.assertEqual(user_profile.phone_2, None)
@@ -77,6 +77,8 @@ class UpdateAccountTest(unittest.TestCase):
         self.assertEqual(user_profile.details, None)
         self.assertEqual(user_profile.picture, None)
         self.assertEqual(user_profile.cv, None)
+        self.assertEqual(user_profile.state, None)
+        self.assertEqual(user_profile.country, None)
         self.assertTrue(user_profile.public)
 
         self.pic_file = open(self.pic_file.name, "w")
@@ -91,15 +93,17 @@ class UpdateAccountTest(unittest.TestCase):
 
         # add profile data
         profile_data = {'title': "Software Engineer",
-                        'profession': 'Computer Programming',
+                        'middle_name': 'Larson',
+                        'user_type': 'Computer Programming',
                         'subject_areas': 'Python, Django, SQL',
                         'organization': 'Utah State University',
-                        'organization_type': 'Higher Education',
                         'phone_1': '435-678-0987',
                         'phone_1_type': 'Work',
                         'phone_2': '435-345-9099',
                         'phone_2_type': 'Home',
                         'details': 'Some details about me',
+                        'country': 'USA',
+                        'state': 'UT',
                         'public': False,
                         'picture': pic_file_obj,
                         'cv': cv_file_obj,
@@ -110,15 +114,17 @@ class UpdateAccountTest(unittest.TestCase):
 
         # test profile data
         self.assertEqual(user_profile.title, 'Software Engineer')
-        self.assertEqual(user_profile.profession, 'Computer Programming')
+        self.assertEqual(user_profile.middle_name, 'Larson')
+        self.assertEqual(user_profile.user_type, 'Computer Programming')
         self.assertEqual(user_profile.subject_areas, 'Python, Django, SQL')
         self.assertEqual(user_profile.organization, 'Utah State University')
-        self.assertEqual(user_profile.organization_type, 'Higher Education')
         self.assertEqual(user_profile.phone_1, '435-678-0987')
         self.assertEqual(user_profile.phone_1_type, 'Work')
         self.assertEqual(user_profile.phone_2, '435-345-9099')
         self.assertEqual(user_profile.phone_2_type, 'Home')
         self.assertEqual(user_profile.details, 'Some details about me')
+        self.assertEqual(user_profile.country, 'USA')
+        self.assertEqual(user_profile.state, 'UT')
         self.assertNotEquals(user_profile.picture, None)
         self.assertNotEquals(user_profile.cv, None)
         self.assertFalse(user_profile.public)

@@ -5,8 +5,10 @@ from hs_core import languages_iso
 from forms import *
 from hs_tools_resource.models import SupportedResTypes, ToolResource
 from hs_core import hydroshare
-from hs_core.views.utils import authorize
+from hs_core.views.utils import authorize, ACTION_TO_AUTHORIZE
 from hs_core.hydroshare.resource import METADATA_STATUS_SUFFICIENT, METADATA_STATUS_INSUFFICIENT
+from hs_tools_resource.utils import parse_app_url_template
+
 
 @processor_for(GenericResource)
 def landing_page(request, page):
@@ -64,23 +66,22 @@ def get_page_context(page, user, resource_edit=False, extended_metadata_layout=N
             if content_model_str in str(res_type.get_supported_res_types_str()).lower():
                 tool_res_obj = ToolResource.objects.get(object_id=res_type.object_id)
                 if tool_res_obj:
-                    is_authorized = authorize(request, tool_res_obj.short_id, res=tool_res_obj, view=True, raises_exception=False)[1]
+                    is_authorized = authorize(request, tool_res_obj.short_id,
+                                              needed_permission=ACTION_TO_AUTHORIZE.VIEW_RESOURCE,
+                                              raises_exception=False)[1]
                     if is_authorized:
                         tool_url = tool_res_obj.metadata.url_bases.first().value \
                             if tool_res_obj.metadata.url_bases.first() else None
-                        u = user.username if user.is_authenticated() else "anonymous"
-                        if tool_url:
-                            if tool_url.endswith('/'):
-                                tool_url = tool_url[:-1]
-                        else:
-                            tool_url = ""
                         tool_icon_url = tool_res_obj.metadata.tool_icon.first().url \
                             if tool_res_obj.metadata.tool_icon.first() else "raise-img-error"
-                        tl = {'title': str(tool_res_obj.metadata.title.value),
-                              'icon_url': tool_icon_url,
-                              'url': "{0}{1}{2}{3}{4}{5}".format(tool_url, "/?res_id=", content_model.short_id,
-                                                                 "&usr=", u, "&src=hs")}
-                        relevant_tools.append(tl)
+                        hs_term_dict_user = {}
+                        hs_term_dict_user["HS_USR_NAME"] = request.user.username if request.user.is_authenticated() else "anonymous"
+                        tool_url_new = parse_app_url_template(tool_url, [content_model.get_hs_term_dict(), hs_term_dict_user])
+                        if tool_url_new is not None:
+                            tl = {'title': str(tool_res_obj.metadata.title.value),
+                                  'icon_url': tool_icon_url,
+                                  'url': tool_url_new}
+                            relevant_tools.append(tl)
 
     just_created = False
     new_version_create_resource_error = None

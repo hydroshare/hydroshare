@@ -10,20 +10,18 @@
     </div>
 {% endif %}
 
-{# ======= Resource new version just created notification if obsoleted resource is public, discoverable or published =======#}
+{# ======= Resource new version just created notification =======#}
 {% if just_created and is_version_of %}
-    {% if cm.raccess.published or cm.raccess.public or cm.raccess.discoverable %}
-        <div class="col-sm-12">
-            <div class="alert {% if just_created %}alert-success{% else %}alert-warning{% endif %} alert-dismissible" role="alert">
-                <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                <strong>Congratulations! </strong>
-                <span>Your resource has been created as a new version of
-                    <a href="{{ is_version_of }}">this {% if cm.raccess.published %} published {% elif cm.raccess.public %} public {% else %} discoverable {% endif %} resource</a>.
-                    This new version is created as a private resource by default. If you want the new version to be discoverable, you need to
-                    make it public or discoverable or publish it. </span>
-            </div>
+    <div class="col-sm-12">
+        <div class="alert {% if just_created %}alert-success{% else %}alert-warning{% endif %} alert-dismissible" role="alert">
+            <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+            <strong>Congratulations! </strong>
+            <span>Your new version has been created. A link to the older version has been added below the resource title. To modify this
+                new version or change the sharing status, click the Edit button. To share this new version with individual HydroShare users,
+                click the Manage Access button. Note that this new version is created as a private resource by default. If you want the new
+                version to be discoverable, you need to make it public or discoverable or publish it. </span>
         </div>
-    {% endif %}
+    </div>
 {% endif %}
 
 {# ======= Missing fields notification =======#}

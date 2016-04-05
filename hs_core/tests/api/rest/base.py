@@ -37,55 +37,44 @@ class HSRESTTestCase(APITestCase):
 
         self.user.delete()
 
-    def getResourceBag(self, res_id):
-        """Get resource bag from iRODS, following redirects
+    def getResourceBag(self, res_id, exhaust_stream=True):
+        """Get resource bag from iRODS, following redirects.
 
         :param res_id: ID of resource whose bag should be fetched
+        :param exhaust_stream: If True, the response returned
+           will have its stream_content exhausted.  This prevents
+           an error that causes the Docker container to exit when tests
+           are run with an external web server.
         :return: Django test client response object
         """
-        bag_url = "/hsapi/resource/{res_id}".format(res_id=res_id)
-        response = self.client.get(bag_url)
+        url = "/hsapi/resource/{res_id}".format(res_id=res_id)
+        return self._get_file_irods(url, exhaust_stream)
 
-        self.assertEqual(response.status_code, status.HTTP_301_MOVED_PERMANENTLY)
-        self.assertTrue('Location' in response)
-        redir_url1 = response['Location'].replace('testserver', self.hostname)
-
-        redir_response = self.client.get(redir_url1)
-        self.assertEqual(redir_response.status_code, status.HTTP_302_FOUND)
-        redir_url2 = response['Location'].replace('testserver', self.hostname)
-        redir_response2 = self.client.get(redir_url2)
-
-        bag_irods_url = redir_response2['Location'].replace('example.com', self.hostname)
-        bag_response = self.client.get(bag_irods_url)
-        self.assertEqual(bag_response.status_code, status.HTTP_200_OK)
-
-        return bag_response
-
-    def getResourceFile(self, res_id, file_name):
+    def getResourceFile(self, res_id, file_name, exhaust_stream=True):
         """Get resource file from iRODS, following redirects
 
         :param res_id: ID of resource whose resource file should be fetched
         :param file_name: Name of the file to fetch (just the filename, not the full path)
+        :param exhaust_stream: If True, the response returned
+           will have its stream_content exhausted.  This prevents
+           an error that causes the Docker container to exit when tests
+           are run with an external web server.
         :return: Django test client response object
         """
-        bag_url = "/hsapi/resource/{res_id}/files/{file_name}".format(res_id=res_id,
-                                                                      file_name=file_name)
-        response = self.client.get(bag_url)
+        url = "/hsapi/resource/{res_id}/files/{file_name}".format(res_id=res_id,
+                                                                  file_name=file_name)
+        return self._get_file_irods(url, exhaust_stream)
 
-        self.assertEqual(response.status_code, status.HTTP_301_MOVED_PERMANENTLY)
-        self.assertTrue('Location' in response)
-        redir_url1 = response['Location'].replace('testserver', self.hostname)
+    def _get_file_irods(self, url, exhaust_stream=True):
+        response = self.client.get(url, follow=True)
+        self.assertTrue(response.status_code, status.HTTP_200_OK)
 
-        redir_response = self.client.get(redir_url1)
-        self.assertEqual(redir_response.status_code, status.HTTP_302_FOUND)
-        redir_url2 = response['Location'].replace('testserver', self.hostname)
-        redir_response2 = self.client.get(redir_url2)
+        # Exhaust the file stream so that WSGI doesn't get upset (this causes the Docker container to exit)
+        if exhaust_stream:
+            for l in response.streaming_content:
+                pass
 
-        file_irods_url = redir_response2['Location'].replace('example.com', self.hostname)
-        file_response = self.client.get(file_irods_url)
-        self.assertEqual(file_response.status_code, status.HTTP_200_OK)
-
-        return file_response
+        return response
 
     def getScienceMetadata(self, res_id):
         """Get sciencematadata.xml from iRODS, following redirects

@@ -117,14 +117,11 @@ def landing_page(request, page):
     if content_model.raccess.public:
         for f in content_model.files.all():
             if '.nc' in f.resource_file.name[-3:]:
-                ip = 'http://thredds.hydroshare.org'
+                ip = 'http://hyrax.hydroshare.org'
                 shortkey = content_model.short_id
                 nc_file_name = f.resource_file.name.split('/')[-1]
 
-                context['opendap'] = '{}/thredds/dodsC/HFCat/{}/data/contents/{}.html'.format(ip, shortkey, nc_file_name)
-                context['ncss'] = '{}/thredds/ncss/HFCat/{}/data/contents/{}/dataset.html'.format(ip, shortkey, nc_file_name)
-                context['iso'] = '{}/thredds/iso/HFCat/{}/data/contents/{}'.format(ip, shortkey, nc_file_name)
-                context['ncml'] = '{}/thredds/ncml/HFCat/{}/data/contents/{}'.format(ip, shortkey, nc_file_name)
+                context['opendap'] = '{}/opendap/{}/data/contents/{}.html'.format(ip, shortkey, nc_file_name)
                 context['nc_file_name'] = nc_file_name
 
     # get hs_core context

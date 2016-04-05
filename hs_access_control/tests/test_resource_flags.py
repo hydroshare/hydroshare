@@ -214,8 +214,8 @@ class T08ResourceFlags(MockIRODSTestCaseMixin, TestCase):
         self.assertFalse(dog.uaccess.can_change_resource(bones))
         self.assertTrue(dog.uaccess.can_view_resource(bones))
 
-        # even django admin should not be able to change an immutable resource
-        self.assertFalse(self.admin.uaccess.can_change_resource(bones))
+        # django admin should be able to change an immutable resource
+        self.assertTrue(self.admin.uaccess.can_change_resource(bones))
         self.assertTrue(self.admin.uaccess.can_view_resource(bones))
 
         # another user shouldn't be able to read it unless it's also public
