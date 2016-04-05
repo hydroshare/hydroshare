@@ -205,12 +205,10 @@ class SWATModelInstanceResourceMeta(GenericResourceMeta):
                 raise HsDeserializationDependencyException(short_id, msg)
             executed_by = resource.metadata.executed_by
             if not executed_by:
-                # Create
                 ExecutedBy.create(content_object=resource.metadata,
                                   model_name=short_id)
             else:
-                # Update
-                ExecutedBy.update(executed_by.element_id,
+                ExecutedBy.update(executed_by.id,
                                   model_name=short_id)
         if self.model_objective:
             swat_model_objectives = []
@@ -225,36 +223,30 @@ class SWATModelInstanceResourceMeta(GenericResourceMeta):
                 other_objectives_str = ",".join(other_objectives)
             model_objective = resource.metadata.model_objective
             if not model_objective:
-                # Create
                 ModelObjective.create(content_object=resource.metadata,
                                       swat_model_objectives=swat_model_objectives,
                                       other_objectives=other_objectives_str)
             else:
-                # Update
-                ModelObjective.update(model_objective.element_id,
+                ModelObjective.update(model_objective.id,
                                       swat_model_objectives=swat_model_objectives,
                                       other_objectives=other_objectives_str)
         if self.simulation_type:
             simulation_type = resource.metadata.simulation_type
             if not simulation_type:
-                # Create
                 SimulationType.create(content_object=resource.metadata,
                                       simulation_type_name=self.simulation_type.simulation_type_name)
             else:
-                # Update
-                SimulationType.update(simulation_type.element_id,
+                SimulationType.update(simulation_type.id,
                                       simulation_type_name=self.simulation_type.simulation_type_name)
         if self.model_method:
             model_method = resource.metadata.model_method
             if not model_method:
-                # Create
                 ModelMethod.create(content_object=resource.metadata,
                                    runoffCalculationMethod=self.model_method.runoff_calculation_method,
                                    flowRoutingMethod=self.model_method.flow_routing_method,
                                    petEstimationMethod=self.model_method.PET_estimation_method)
             else:
-                #Update
-                ModelMethod.create(model_method.element_id,
+                ModelMethod.update(model_method.id,
                                    runoffCalculationMethod=self.model_method.runoff_calculation_method,
                                    flowRoutingMethod=self.model_method.flow_routing_method,
                                    petEstimationMethod=self.model_method.PET_estimation_method)
@@ -271,19 +263,16 @@ class SWATModelInstanceResourceMeta(GenericResourceMeta):
                 other_parameters_str = ",".join(other_parameters)
             model_parameter = resource.metadata.model_parameter
             if not model_parameter:
-                # Create
                 ModelParameter.create(content_object=resource.metadata,
                                       model_parameters=model_parameters,
                                       other_parameters=other_parameters_str)
             else:
-                # Update
-                ModelParameter.update(model_parameter.element_id,
+                ModelParameter.update(model_parameter.id,
                                       model_parameters=model_parameters,
                                       other_parameters=other_parameters_str)
         if self.model_input:
             model_input = resource.metadata.model_input
             if not model_input:
-                # Create
                 ModelInput.create(content_object=resource.metadata,
                                   warmupPeriodValue=self.model_input.warm_up_period_value,
                                   rainfallTimeStepType=self.model_input.rainfall_time_step_type,
@@ -303,8 +292,7 @@ class SWATModelInstanceResourceMeta(GenericResourceMeta):
                                   soilDataSourceName=self.model_input.soil_data_source_name,
                                   soilDataSourceURL=self.model_input.soil_data_source_URL)
             else:
-                # Update
-                ModelInput.update(model_parameter.element_id,
+                ModelInput.update(model_input.id,
                                   warmupPeriodValue=self.model_input.warm_up_period_value,
                                   rainfallTimeStepType=self.model_input.rainfall_time_step_type,
                                   rainfallTimeStepValue=self.model_input.rainfall_time_step_value,
