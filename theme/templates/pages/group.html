@@ -17,14 +17,12 @@
     <div class="container">
         <div class="row">
             <div class="col-sm-2">
-                <div class="group-image-small" style="background-image: url({{ STATIC_URL }}img/home-page/carousel/bg1.jpg)"></div>
+                <div class="group-image" style="background-image: url({{ STATIC_URL }}img/home-page/carousel/bg1.jpg)"></div>
             </div>
 
             <div class="col-sm-8">
                 <h2 class="group-title">Web Designer and HTML/CSS Developer</h2>
                 <h4 class="text-muted">Basic facts about #Infographic #Desiging.</h4>
-
-
             </div>
             <div class="col-sm-2">
                 <!-- Single button -->
@@ -46,6 +44,10 @@
                 <li role="presentation" class="active">
                     <a href="#overview" aria-controls="overview" role="tab"
                        data-toggle="tab"><i class="glyphicon glyphicon-list-alt"></i> OVERVIEW</a></li>
+                <li role="presentation">
+                    <a href="#resources" aria-controls="resources" role="tab" data-toggle="tab">
+                        <i class="glyphicon glyphicon-file"></i> Resources</a>
+                </li>
                 <li role="presentation">
                     <a href="#members" aria-controls="members" role="tab" data-toggle="tab">
                         <i class="glyphicon glyphicon-user"></i> MEMBERS</a>
@@ -82,10 +84,11 @@
                                     </h3>
                                 </div>
 
-                                <div class="panel-body">
-                                    <div class="users-joined height-fix text-center">
+                                <div class="panel-body text-center">
+                                    <div class="users-joined height-fix">
                                         <div class="profile-pic-thumbnail-small round-image"
                                              title="Mauriel Ramirez"></div>
+
                                         <div style="background-image: url('{{ request.user.userprofile.picture.url }}');"
                                              class="round-image profile-pic-thumbnail" title="Mauriel Ramirez">
                                         </div>
@@ -101,7 +104,9 @@
                                     <div class="text-center text-muted"><a href="#">21 Members</a></div>
 
                                     <br>
-                                    <div class="text-center"><a href="#" class="btn btn-primary" role="button">Invite Users</a></div>
+
+                                    <a href="#" class="btn btn-primary" role="button" data-toggle="modal" data-target="#invite-dialog">Invite People</a>
+
                                 </div>
                             </div>
                         </div>
@@ -111,7 +116,7 @@
                                 <div style="background-image: url('{{ request.user.userprofile.picture.url }}');"
                                      class="profile-pic-thumbnail round-image pull-left">
                                 </div>
-                                <h4>Start a conversation</h4>
+                                <h4>Start a discussion</h4>
 
                                 <div class="group-activity-comment">
                                     <fieldset>
@@ -120,7 +125,7 @@
                                 </div>
                             </div>
 
-                            <h4>Conversations</h4>
+                            <h4>Discussions</h4>
 
                             <div class="group-activity-block activity-block">
                                 <div style="background-image: url('{{ request.user.userprofile.picture.url }}');"
@@ -129,7 +134,7 @@
 
                                 <div class="metadata-wrapper">
                                     <div class="shared-resource-info">
-                                        <strong> HydroShare Administrator</strong>
+                                        <strong><a href="#">Maurier Ramirez</a></strong>
                                         <span class="text-muted"> shared </span>
                                                 <span><a href="#">Untitled Resource</a></span>
                                     </div>
@@ -155,7 +160,7 @@
                                 <div class="group-activity-comment">
                                     <fieldset>
                                         <label>Write a comment</label>
-                                                <textarea class="form-control"></textarea>
+                                        <textarea class="form-control"></textarea>
                                     </fieldset>
                                     <a class="btn btn-primary">Post</a>
                                 </div>
@@ -168,7 +173,7 @@
 
                                 <div class="metadata-wrapper">
                                     <div class="shared-resource-info">
-                                        <strong> Maurier Ramirez</strong>
+                                        <strong><a href="#">Maurier Ramirez</a></strong>
                                     </div>
                                     <h5><span class="text-muted">Date: </span>March 14, 2016, 5:14 p.m.</h5>
                                 </div>
@@ -224,6 +229,7 @@
                             </table>
                         </div>
                         <div class="col-sm-12 col-md-9">
+                            {#  All members #}
                             <table data-filter-by="members" class="table-members-list active">
                                 <tr>
                                     <td>
@@ -291,7 +297,6 @@
                                 </tr>
                             </table>
 
-
                             {#  Pending invitation requests #}
                             <table data-filter-by="pending" class="table-members-list">
                                 <tr>
@@ -325,6 +330,255 @@
 
                         </div>
                     </div>
+                </div>
+
+                 <div role="tabpanel" class="tab-pane fade" id="resources">
+                     <div class="row">
+                         <div class="col-sm-12">
+                             <legend>Resources</legend>
+                         </div>
+                         <div class="col-sm-12 col-md-3">
+                             <table class="table-user-contributions table table-hover">
+                                 <tbody>
+                                 <tr id="badge-all" class="active" data-type="all">
+                                     <td><span>All</span></td>
+                                     <td><span class="badge">0</span></td>
+                                 </tr>
+                                 <tr id="badge-generic" data-type="type-Generic">
+                                     <td><span>Generic</span></td>
+                                     <td><span class="badge">0</span></td>
+                                 </tr>
+                                 <tr id="badge-geographic-feature"
+                                     data-type="type-Geographic Feature (ESRI Shapefiles)">
+                                     <td><span>Geographic Feature</span></td>
+                                     <td><span class="badge">0</span></td>
+                                 </tr>
+                                 <tr id="badge-geographic" data-type="type-Geographic Raster">
+                                     <td><span>Geographic Raster</span></td>
+                                     <td><span class="badge">0</span></td>
+                                 </tr>
+                                 <tr id="badge-his" data-type="type-HIS Referenced Time Series">
+                                     <td><span>HIS Referenced Time Series</span></td>
+                                     <td><span class="badge">0</span></td>
+                                 </tr>
+                                 <tr id="badge-model-instance" data-type="type-Model Instance Resource">
+                                     <td><span>Model Instance</span></td>
+                                     <td><span class="badge">0</span></td>
+                                 </tr>
+                                 <tr id="badge-model-program" data-type="type-Model Program Resource">
+                                     <td><span>Model Program</span></td>
+                                     <td><span class="badge">0</span></td>
+                                 </tr>
+                                 <tr id="badge-multidimensional" data-type="type-Multidimensional (NetCDF)">
+                                     <td><span>Multidimensional (NetCDF)</span></td>
+                                     <td><span class="badge">0</span></td>
+                                 </tr>
+                                 <tr id="badge-script" data-type="type-Script Resource">
+                                     <td><span>Script Resource</span></td>
+                                     <td><span class="badge">0</span></td>
+                                 </tr>
+                                 <tr id="badge-swat" data-type="type-SWAT Model Instance Resource">
+                                     <td><span>SWAT Model Instance</span></td>
+                                     <td><span class="badge">0</span></td>
+                                 </tr>
+                                 <tr id="badge-time-series" data-type="type-Time Series">
+                                     <td><span>Time Series</span></td>
+                                     <td><span class="badge">0</span></td>
+                                 </tr>
+                                 <tr id="badge-web-app" data-type="type-Web App Resource">
+                                     <td><span>Web App</span></td>
+                                     <td><span class="badge">0</span></td>
+                                 </tr>
+                                 </tbody>
+                             </table>
+                         </div>
+                         <div class="col-sm-12 col-md-9">
+{#                             {% if resources %}#}
+{#                                 {% for res in resources %}#}
+{#                                     <div data-type="type-{{ res|resource_type }}" class="contribution">#}
+{#                                         <div class="icon-resource-type-wrapper">#}
+{#                                        <span class="icon-resource-type">#}
+{#                                            <span><strong>{{ res|resource_type }}</strong></span>#}
+{#                                            {% if res|resource_type == "Generic" %}#}
+{#                                                <img src="{{ STATIC_URL }}img/resource-icons/generic48x48.png"#}
+{#                                                     alt="{{ res|resource_type }}"#}
+{#                                                     title="{{ res|resource_type }}"/>#}
+{#                                            {% elif res|resource_type == "Geographic Raster" %}#}
+{#                                                <img src="{{ STATIC_URL }}img/resource-icons/geographicraster48x48.png"#}
+{#                                                     alt="{{ res|resource_type }}"#}
+{#                                                     title="{{ res|resource_type }}"/>#}
+{#                                            {% elif res|resource_type == "HIS Referenced Time Series" %}#}
+{#                                                <img src="{{ STATIC_URL }}img/resource-icons/his48x48.png"#}
+{#                                                     alt="{{ res|resource_type }}"#}
+{#                                                     title="{{ res|resource_type }}"/>#}
+{#                                            {% elif res|resource_type == "Script Resource" %}#}
+{#                                                <img src="{{ STATIC_URL }}img/resource-icons/script48x48.png"#}
+{#                                                     alt="{{ res|resource_type }}"#}
+{#                                                     title="{{ res|resource_type }}"/>#}
+{#                                            {% elif res|resource_type == "Model Program Resource" %}#}
+{#                                                <img src="{{ STATIC_URL }}img/resource-icons/modelprogram48x48.png"#}
+{#                                                     alt="{{ res|resource_type }}"#}
+{#                                                     title="{{ res|resource_type }}"/>#}
+{#                                            {% elif res|resource_type == "Model Instance Resource" %}#}
+{#                                                <img src="{{ STATIC_URL }}img/resource-icons/modelinstance48x48.png"#}
+{#                                                     alt="{{ res|resource_type }}"#}
+{#                                                     title="{{ res|resource_type }}"/>#}
+{#                                            {% elif res|resource_type == "SWAT Model Instance Resource" %}#}
+{#                                                <img src="{{ STATIC_URL }}img/resource-icons/swat48x48.png"#}
+{#                                                     alt="{{ res|resource_type }}"#}
+{#                                                     title="{{ res|resource_type }}"/>#}
+{#                                            {% elif res|resource_type == "Multidimensional (NetCDF)" %}#}
+{#                                                <img src="{{ STATIC_URL }}img/resource-icons/multidimensional48x48.png"#}
+{#                                                     alt="{{ res|resource_type }}"#}
+{#                                                     title="{{ res|resource_type }}"/>#}
+{#                                            {% elif res|resource_type == "Time Series" %}#}
+{#                                                <img src="{{ STATIC_URL }}img/resource-icons/timeseries48x48.png"#}
+{#                                                     alt="{{ res|resource_type }}"#}
+{#                                                     title="{{ res|resource_type }}"/>#}
+{#                                            {% elif res|resource_type == "Geographic Feature (ESRI Shapefiles)" %}#}
+{#                                                <img src="{{ STATIC_URL }}img/resource-icons/geographicfeature48x48.png"#}
+{#                                                     alt="{{ res|resource_type }}"#}
+{#                                                     title="{{ res|resource_type }}"/>#}
+{#                                            {% elif res|resource_type == "Web App Resource" %}#}
+{#                                                <img src="{{ STATIC_URL }}img/resource-icons/webapp48x48.png"#}
+{#                                                     alt="{{ res|resource_type }}"#}
+{#                                                     title="{{ res|resource_type }}"/>#}
+{#                                            {% endif %}#}
+{##}
+{#                                        </span>#}
+{#                                         </div>#}
+{#                                         <div class="activity-block row">#}
+{#                                             <div class="activity-info col-sm-12">#}
+{#                                                 <span class="title"><a#}
+{#                                                         href="{{ res.get_absolute_url }}">{{ res.metadata.title }}</a></span>#}
+{#                                                 <h5><span class="text-muted">Created: </span>{{ res.created }}</h5>#}
+{#                                                 <h5><span class="text-muted">Authors: </span>#}
+{#                                                     {% for creator in res.metadata.creators.all %}#}
+{#                                                         {% if forloop.counter0 != 0 %}<span> · </span>{% endif %}#}
+{#                                                         {% if creator.description %}#}
+{#                                                             <a href="{{ creator.description }}">{{ creator.name }}</a>#}
+{#                                                         {% else %}#}
+{#                                                             <span>{{ creator.name }}</span>#}
+{#                                                         {% endif %}#}
+{#                                                     {% endfor %}#}
+{#                                                 </h5>#}
+{#                                             </div>#}
+{##}
+{#                                             {% if res.metadata.description %}#}
+{#                                                 <div class="activity-description col-sm-12">#}
+{#                                                     <p>#}
+{#                                                         <strong>ABSTRACT: </strong>{{ res.metadata.description|linebreaks }}#}
+{#                                                     </p>#}
+{#                                                 </div>#}
+{#                                                 <div class="show-more-btn btn-default" title="Show more">···</div>#}
+{#                                             {% endif %}#}
+{##}
+{#                                         </div>#}
+{#                                     </div>#}
+{#                                 {% endfor %}#}
+{#                             {% else %}#}
+{#                                 <span class="text-muted">This user has not shared any resources.</span>#}
+{#                             {% endif %}#}
+
+                             <div data-type="type-Generic" class="contribution">
+                                 <div class="icon-resource-type-wrapper">
+                                        <span class="icon-resource-type">
+                                            <span><strong>Generic</strong></span>
+                                                <img src="/static/img/resource-icons/generic48x48.png" alt="Generic"
+                                                     title="Generic">
+                                        </span>
+                                 </div>
+                                 <div class="activity-block row">
+                                     <div class="activity-info col-sm-12">
+                                         <span class="title"><a href="#">This
+                                             is a test</a></span>
+                                         <h5><span class="text-muted">Created: </span>March 14, 2016, 5:14 p.m.</h5>
+                                         <h5><span class="text-muted">Authors: </span>
+                                             <a href="#">HydroShare Administrator</a>
+                                         </h5>
+                                     </div>
+
+                                     <div class="activity-description col-sm-12">
+                                         <p><strong>ABSTRACT: </strong></p>
+                                         <p>The Viterbi Graduate Student Association (VGSA) represents all the full time
+                                             and part time Master's and Doctoral students in the Viterbi School of
+                                             Engineering. VGSA is the largest student umbrella organization at the
+                                             University of Southern California with over 5,000 active engineering
+                                             graduate student members each year, and has an even greater Alumni
+                                             population. The VGSA promotes professional, academic, and social affairs on
+                                             campus, and is committed to creating a positive student experience at
+                                             USC.Show less</p>
+                                     </div>
+                                     <div class="show-more-btn btn-default" title="Show more">···</div>
+                                 </div>
+                             </div>
+
+                             <div data-type="type-Generic" class="contribution">
+                                 <div class="icon-resource-type-wrapper">
+                                    <span class="icon-resource-type">
+                                        <span><strong>Generic</strong></span>
+                                            <img src="/static/img/resource-icons/generic48x48.png" alt="Generic"
+                                                 title="Generic">
+                                    </span>
+                                 </div>
+                                 <div class="activity-block row">
+                                     <div class="activity-info col-sm-12">
+                                         <span class="title"><a href="#">This
+                                             is a test</a></span>
+                                         <h5><span class="text-muted">Created: </span>March 14, 2016, 5:14 p.m.</h5>
+                                         <h5><span class="text-muted">Authors: </span>
+                                             <a href="#">HydroShare Administrator</a>
+                                         </h5>
+                                     </div>
+
+                                     <div class="activity-description col-sm-12">
+                                         <p><strong>ABSTRACT: </strong></p>
+                                         <p>The Viterbi Graduate Student Association (VGSA) represents all the full time
+                                             and part time Master's and Doctoral students in the Viterbi School of
+                                             Engineering. VGSA is the largest student umbrella organization at the
+                                             University of Southern California with over 5,000 active engineering
+                                             graduate student members each year, and has an even greater Alumni
+                                             population. The VGSA promotes professional, academic, and social affairs on
+                                             campus, and is committed to creating a positive student experience at
+                                             USC.Show less</p>
+                                     </div>
+                                     <div class="show-more-btn btn-default" title="Show more">···</div>
+                                 </div>
+                             </div>
+
+                         </div>
+                     </div>
+                 </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Invite to Group Modal -->
+    <div class="modal fade" id="invite-dialog" tabindex="-1" role="dialog"
+         aria-labelledby="Invite">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal"
+                            aria-label="Close"><span aria-hidden="true">&times;</span>
+                    </button>
+                    <h4 class="modal-title" id="Invite">Invite People</h4>
+                </div>
+                <div class="modal-body">
+                    <div id="div-invite-people">
+                        <div class="input-group" style="width:100%">
+                            <form id="invite-to-group" action="" method="POST">
+                                {% csrf_token %}
+
+                                {{ add_view_user_form.user }}
+                            </form>
+                        </div>
+                    </div>
+
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+                    <a href="#" class="btn btn-primary">Invite</a>
                 </div>
             </div>
         </div>

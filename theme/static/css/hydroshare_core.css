@@ -3260,7 +3260,7 @@ button.no-style:focus {
 
 .collaborate-header {
     background: #093E54;
-    padding: 50px 0;
+    padding: 20px 0;
     margin-bottom: 20px;
 }
 
@@ -3325,7 +3325,7 @@ button.no-style:focus {
     margin-bottom: 20px;
 }
 
-.group-image {
+.group-preview-image {
     height: 150px;
     text-align: center;
     width: 100%;
@@ -3333,10 +3333,28 @@ button.no-style:focus {
     background-position: center center;
 }
 
-.group-image-small {
+.group-image {
     height: 120px;
     text-align: center;
     width: 120px;
+    background-size: cover;
+    background-position: center center;
+    display: inline-block;
+}
+
+.group-image-small {
+    height: 80px;
+    text-align: center;
+    width: 80px;
+    background-size: cover;
+    background-position: center center;
+    display: inline-block;
+}
+
+.group-image-extra-small {
+    height: 40px;
+    text-align: center;
+    width: 40px;
     background-size: cover;
     background-position: center center;
     display: inline-block;
@@ -3436,3 +3454,13 @@ button.no-style:focus {
     width: 100%;
 }
 
+hr.solid {
+    border: none;
+    border-top: 1px solid #DDD;
+    height: 1px;
+    width: 100%;
+}
+
+div.group-add-photo {
+    border: 1px solid #DDD;
+}

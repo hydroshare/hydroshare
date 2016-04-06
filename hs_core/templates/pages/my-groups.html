@@ -23,7 +23,8 @@
 
             <div>
 
-                <h4><span class="glyphicon glyphicon-send"></span>&nbsp;Pending Inivtations</h4>
+                <h4><span class="glyphicon glyphicon-envelope"></span>&nbsp;Pending Inivtations</h4>
+                <hr class="solid">
 
                 <strong>USU</strong>
                 <table>
@@ -48,6 +49,9 @@
                 </table>
 
                 <br>
+
+                <h4><span class="glyphicon glyphicon-send"></span>&nbsp;Pending Join Requests</h4>
+                <hr class="solid">
 
                 <strong>Information Model for Users and Groups</strong>
 
@@ -80,7 +84,25 @@
         <div class="col-sm-9">
             <div class="row">
                 <div class="col-sm-12">
+                    <h4>Groups that I am in</h4>
+                    <hr class="solid">
                     <table class="groups-table">
+                        <tr>
+                            <td><div class="group-image-small" style="background-image: url({{ STATIC_URL }}img/home-page/carousel/bg1.jpg)"></div></td>
+                            <td>
+                                <h4><a href="/Group">Web Designer and HTML/CSS Developer</a></h4>
+                                <small class="text-muted">21 Members</small>
+                            </td>
+                            <td><span>Member</span></td>
+                        </tr>
+                        <tr>
+                            <td><div class="group-image-small" style="background-image: url({{ STATIC_URL }}img/home-page/carousel/bg2.jpg)"></div></td>
+                            <td>
+                                <h4><a href="/Group">UWRL</a></h4>
+                                <small class="text-muted">14 Members</small>
+                            </td>
+                            <td><span>Owner</span></td>
+                        </tr>
                         <tr>
                             <td><div class="group-image-small" style="background-image: url({{ STATIC_URL }}img/home-page/carousel/bg1.jpg)"></div></td>
                             <td>
@@ -135,7 +157,26 @@
                         </fieldset>
 
                         <br>
-                        {# Purpose #}
+
+                        {# Photo #}
+                        <div class="col-sm-12">
+                            <fieldset>
+                                <label>Add a photo</label>
+
+                                <div class="input-group">
+                                    <span class="input-group-btn">
+                                        <span id="cv-custom-upload" class="btn btn-default btn-file">
+                                            Browse&hellip; <input type="file" name="group-photo">
+                                        </span>
+                                    </span>
+                                    <input type="text" class="form-control" readonly>
+                                </div>
+                            </fieldset>
+                        </div>
+
+                        <br>
+
+                        {# Privacy #}
                         <fieldset class="col-sm-12">
                             <label>Privacy *</label>
 
