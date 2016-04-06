@@ -389,13 +389,11 @@
                         url: requestURL,
                         dataType: 'json',
                         success: function(data) {
-                            console.log("success");
                             var json_results = [];
                             for(var j = 0; j < data.length; j++){
                                 var item = $.parseJSON(data[j]);
                                 json_results.push(item);
                             }
-                            console.log(json_results);
                             initMap(json_results);
 
                         }
