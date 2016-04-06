@@ -47,6 +47,7 @@
         {# ======= Subject ======= #}
         {% include "resource-landing-page/subject.html" %}
 
+        {% block content_block %}
         {# ======= Content (code moved here because django does not render blocks inside included templates) ======= #}
         {% if cm.resource_type != "ToolResource" %}
             <div class="col-sm-12 content-block">
@@ -175,6 +176,7 @@
                 {% endif %}
             </div>
         {% endif %}
+       {% endblock %} {# content_block #}
 
         {# ======= Content tabs (code moved here because django does not render blocks inside included templates) ======= #}
         <div class="col-sm-12">
@@ -208,12 +210,14 @@
                             {#  Resource specific metadata can't be edited for HIS Referenced Time Series #}
                             {% if cm|resource_type != "HIS Referenced Time Series" or not metadata_form %}
                                 {% if  cm|resource_type != "Generic" %}
-                                    <li class="col-xs-2 col-md-2">
-                                        <a href="#resourceSpecificTab" data-toggle="tab" title="Resource specific">
-                                            <span class="glyphicon glyphicon-folder-close"></span>
-                                            &nbspResource Specific
-                                        </a>
-                                    </li>
+                                    {% if  cm|resource_type|lower != "collection resource" %}
+                                        <li class="col-xs-2 col-md-2">
+                                            <a href="#resourceSpecificTab" data-toggle="tab" title="Resource specific">
+                                                <span class="glyphicon glyphicon-folder-close"></span>
+                                                &nbspResource Specific
+                                            </a>
+                                        </li>
+                                    {% endif %}
                                 {% endif %}
                             {% endif %}
                         {% endif %}
@@ -800,19 +804,21 @@
                             {#  Resource specific metadata can't be edited for HIS Referenced Time Series #}
                             {% if cm|resource_type != "HIS Referenced Time Series" or not metadata_form %}
                                 {% if  cm|resource_type != "Generic" %}
-                                    <div class="tab-pane" id="resourceSpecificTab">
-                                        {% if not metadata_form %}
+                                    {% if  cm|resource_type|lower != "collection resource" %}
+                                        <div class="tab-pane" id="resourceSpecificTab">
+                                            {% if not metadata_form %}
 
-                                            {% block extended_metadata %}
+                                                {% block extended_metadata %}
 
+                                                {% endblock %}
+
+                                            {% else %}
+                                                {% crispy metadata_form %}
+                                            {% endif %}
+                                            {% block extra_section %} {# add extra section for resource landing page #}
                                             {% endblock %}
-
-                                        {% else %}
-                                            {% crispy metadata_form %}
-                                        {% endif %}
-                                        {% block extra_section %} {# add extra section for resource landing page #}
-                                        {% endblock %}
-                                    </div>
+                                        </div>
+                                    {% endif %}
                                 {% endif %}
                             {% endif %}
                         {% endif %}
