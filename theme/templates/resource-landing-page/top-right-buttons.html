@@ -63,6 +63,13 @@
                     </form>
                 {% endif %}
             {% endif %}
+
+            {% if show_manage_access %}
+                <a data-toggle="modal" data-target="#manage-access">
+                    <span data-toggle="tooltip" data-placement="auto" title="Manage who has access"
+                          class="glyphicon glyphicon-lock icon-button btn-edit"></span>
+                </a>
+            {% endif %}
         </div>
     {% else %}
         <div class="custom-btn-toolbar">
@@ -71,5 +78,12 @@
                           class="glyphicon glyphicon-circle-arrow-left icon-button btn-edit"></span>
             </a>
         </div>
+
+        {% if show_manage_access %}
+            <a data-toggle="modal" data-target="#manage-access">
+                    <span data-toggle="tooltip" data-placement="auto" title="Manage who has access"
+                          class="glyphicon glyphicon-lock icon-button btn-edit"></span>
+            </a>
+        {% endif %}
     {% endif %}
 </div>

@@ -1020,6 +1020,10 @@ span.remove{
     margin-top: 20px;
 }
 
+.info-group {
+    float: left;
+}
+
 .info-group table td{
     padding-left:15px;
 }
@@ -1379,6 +1383,10 @@ body > .container{
 	color: #D9534F;
 }
 
+.custom-btn-toolbar {
+    float: right;
+}
+
 .custom-btn-toolbar .icon-button, .custom-btn-toolbar .icon-button:focus {
 	border: 0;
 	outline: 0;
@@ -1602,10 +1610,6 @@ body > .container{
 
 div#sharing-status {
     overflow: hidden; /* Fixes height for floating elements */
-}
-
-.info-group {
-	width: calc(100% - 220px);
 }
 
 .tag-list {
