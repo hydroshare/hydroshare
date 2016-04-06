@@ -1020,10 +1020,6 @@ span.remove{
     margin-top: 20px;
 }
 
-.info-group {
-    float: left;
-}
-
 .info-group table td{
     padding-left:15px;
 }
@@ -1381,10 +1377,6 @@ body > .container{
 
 #btnMyResources.btn-resource-remove {
 	color: #D9534F;
-}
-
-.custom-btn-toolbar {
-    float: right;
 }
 
 .custom-btn-toolbar .icon-button, .custom-btn-toolbar .icon-button:focus {
