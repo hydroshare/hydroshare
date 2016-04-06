@@ -106,6 +106,23 @@ class SciMetaTestCase(HSRESTTestCase):
     RESOURCE_METADATA_OLD = 'resourcemetadata_old.xml'
     RESOURCE_METADATA_UPDATED = 'resourcemetadata_updated.xml'
 
+    def getTitle(self, scimeta, should_exist=True):
+        """ Get title from parsed ElementTree representation of science metadata.
+
+        :param scimeta: ElementTree representing science metadata
+        :param should_exist: If True, the abstract is expected to exist in the DOM.
+        :return: String representing title text, if should_exist == True, else None.
+        """
+        title = scimeta.xpath('/rdf:RDF/rdf:Description[1]/dc:title', namespaces=self.NS)
+
+        if should_exist:
+            self.assertEquals(len(title), 1)
+            return title[0].text
+        else:
+            self.assertEquals(len(title), 0)
+
+        return None
+
     def getAbstract(self, scimeta, should_exist=True):
         """ Get abstract from parsed ElementTree representation of science metadata.
 
@@ -122,6 +139,16 @@ class SciMetaTestCase(HSRESTTestCase):
             self.assertEquals(len(abstract), 0)
 
         return None
+
+    def getKeywords(self, scimeta):
+        """ Get keywords from parsed ElementTree representation of science metadata.
+
+        :param scimeta: ElementTree representing science metadata
+        :return: Tuple of Strings representing keyword metadata elements
+        """
+        keywords = scimeta.xpath('/rdf:RDF/rdf:Description[1]/dc:subject',
+                                 namespaces=self.NS)
+        return tuple(k.text for k in keywords)
 
     def updateScimetaResourceID(self, scimeta, new_id):
         """ Update

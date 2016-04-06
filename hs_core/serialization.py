@@ -164,7 +164,7 @@ def create_resource_from_bag(bag_content_path, preserve_uuid=True):
                                    **kwargs)
     except Exception as ex:
         import traceback
-        traceback.print_exc()
+        logger.critical(traceback.print_exc())
         raise HsDeserializationException(ex.message)
 
     # Add additional metadata
@@ -713,7 +713,8 @@ class GenericResourceMeta(object):
                                    update_creators=False,
                                    update_contributors=False,
                                    update_creation_date=False,
-                                   update_modification_date=False):
+                                   update_modification_date=False,
+                                   update_title=False):
         """
         Write metadata to resource
 
@@ -730,6 +731,7 @@ class GenericResourceMeta(object):
         :param update_modification_date: Update modification date metadata if True.  Note, for general updates
         through the REST API this should be false as we don't want to allow users to change
         modification date behind our backs.
+        :param update_title: Update title if True.
 
         """
         if update_creators:
@@ -782,6 +784,9 @@ class GenericResourceMeta(object):
                     msg = "Contributor with type {0} are not supported"
                     msg = msg.format(c.__class__.__name__)
                     raise TypeError(msg)
+        if update_title and self.title:
+            resource.metadata.update_element('title', resource.metadata.title.id,
+                                             value=self.title)
         if self.abstract:
             if resource.metadata.description:
                 resource.metadata.update_element('description', resource.metadata.description.id,

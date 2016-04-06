@@ -540,7 +540,7 @@ class ScienceMetadataRetrieveUpdate(APIView):
                 rm = GenericResourceMeta.read_metadata_from_resource_bag(tmp_dir,
                                                                          hydroshare_host=domain)
                 # Update resource metadata
-                rm.write_metadata_to_resource(resource)
+                rm.write_metadata_to_resource(resource, update_title=True)
                 create_bag_files(resource)
             except HsDeserializationDependencyException as e:
                 msg = ("HsDeserializationDependencyException encountered when updating "

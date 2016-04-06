@@ -13,6 +13,9 @@ from .base import SciMetaTestCase
 
 class TestScienceMetadata(SciMetaTestCase):
 
+    MOD_OUT_PATH = ('/rdf:RDF/rdf:Description[1]/hsterms:ModelOutput/'
+                    'rdf:Description/hsterms:includesModelOutput')
+
     def setUp(self):
         super(TestScienceMetadata, self).setUp()
 
@@ -140,6 +143,19 @@ class TestScienceMetadata(SciMetaTestCase):
             abstract = self.getAbstract(scimeta)
             self.assertEquals(abstract, abstract_text_1)
 
+            title = self.getTitle(scimeta)
+            self.assertEquals(title, title_1)
+
+            # keywords = self.getKeywords(scimeta)
+            # kw_comp = zip(kwords_1, keywords)
+            # for k in kw_comp:
+            #     self.assertEquals(k[0], k[1])
+
+            # model_output = scimeta.xpath(self.MOD_OUT_PATH,
+            #                              namespaces=self.NS)
+            # self.assertEquals(len(model_output), 1)
+            # self.assertEquals(model_output_1, model_output[0].text)
+
             # Make sure metadata update is idempotent
             self.updateScimeta(pid, sci_meta_new)
 
@@ -150,9 +166,18 @@ class TestScienceMetadata(SciMetaTestCase):
             for l in response.streaming_content:
                 f.write(l)
             f.close()
+
             scimeta = etree.parse(sci_meta_updated)
             abstract = self.getAbstract(scimeta)
             self.assertEquals(abstract, abstract_text_1)
+
+            title = self.getTitle(scimeta)
+            self.assertEquals(title, title_1)
+
+            # keywords = self.getKeywords(scimeta)
+            # kw_comp = zip(kwords_1, keywords)
+            # for k in kw_comp:
+            #     self.assertEquals(k[0], k[1])
 
             # Overwrite metadata with other resource metadata
             #   First update the resource ID so that it matches the ID of the
@@ -177,8 +202,17 @@ class TestScienceMetadata(SciMetaTestCase):
                 f.write(l)
             f.close()
             scimeta = etree.parse(sci_meta_updated)
+
             abstract = self.getAbstract(scimeta)
             self.assertEquals(abstract, abstract_text_2)
+
+            title = self.getTitle(scimeta)
+            self.assertEquals(title, title_2)
+
+            # keywords = self.getKeywords(scimeta)
+            # kw_comp = zip(kwords_2, keywords)
+            # for k in kw_comp:
+            #     self.assertEquals(k[0], k[1])
 
         finally:
             shutil.rmtree(tmp_dir)

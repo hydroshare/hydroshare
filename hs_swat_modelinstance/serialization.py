@@ -178,13 +178,13 @@ class SWATModelInstanceResourceMeta(GenericResourceMeta):
             logger.debug("\t\t{0}".format(self.model_input))
 
     @transaction.atomic
-    def write_metadata_to_resource(self, resource):
+    def write_metadata_to_resource(self, resource, **kwargs):
         """
         Write metadata to resource
 
         :param resource: RasterResource instance
         """
-        super(SWATModelInstanceResourceMeta, self).write_metadata_to_resource(resource)
+        super(SWATModelInstanceResourceMeta, self).write_metadata_to_resource(resource, **kwargs)
 
         if self.model_output:
             resource.metadata._model_output.update(includes_output=self.model_output.includes_output)
