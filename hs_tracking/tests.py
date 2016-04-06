@@ -1,17 +1,29 @@
 from datetime import datetime, timedelta
+import csv
+from cStringIO import StringIO
 
 from django.test import TestCase
 from django.contrib.auth.models import User
+from django.test import Client
 
 from mock import patch, Mock
 
-from .models import Variable, Session, Visitor, SESSION_TIMEOUT
+from .models import Variable, Session, Visitor, SESSION_TIMEOUT, VISITOR_FIELDS
 
 
 class TrackingTests(TestCase):
 
     def setUp(self):
         self.user = User.objects.create(username='testuser', email='testuser@example.com')
+        self.user.set_password('password')
+        self.user.save()
+        profile = self.user.userprofile
+        profile_data = {
+            'country': 'USA',
+        }
+        for field in profile_data:
+            setattr(profile, field, profile_data[field])
+        profile.save()
         self.visitor = Visitor.objects.create()
         self.session = Session.objects.create(visitor=self.visitor)
 
@@ -46,6 +58,7 @@ class TrackingTests(TestCase):
         request.session = {}
         session = Session.objects.for_request(request)
         self.assertTrue(request.session.has_key('hs_tracking_id'))
+        self.assertEqual(session.visitor.user.id, self.user.id)
 
     def test_for_request_existing(self):
         request = self.createRequest(user=self.user)
@@ -76,3 +89,30 @@ class TrackingTests(TestCase):
 
         self.assertNotEqual(session1.id, session2.id)
         self.assertNotEqual(session1.visitor.id, session2.visitor.id)
+
+    def test_export_visitor_info(self):
+        request = self.createRequest(user=self.user)
+        request.session = {}
+        session1 = Session.objects.for_request(request)
+        info = session1.visitor.export_visitor_information()
+
+        self.assertEqual(info['country'], 'USA')
+        self.assertEqual(info['username'], 'testuser')
+
+    def test_tracking_view(self):
+        self.user.is_staff = True
+        self.user.save()
+        client = Client()
+        client.login(username=self.user.username, password='password')
+
+        self.visitor.user = self.user
+        self.visitor.save()
+
+        response = client.get('/tracking/report/')
+        reader = csv.reader(StringIO(response.content))
+        rows = list(reader)
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(rows[0], VISITOR_FIELDS)
+        i = VISITOR_FIELDS.index('username')
+        self.assertEqual(rows[1][i], self.user.username)
