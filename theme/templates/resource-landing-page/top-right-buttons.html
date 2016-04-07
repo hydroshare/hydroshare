@@ -35,7 +35,6 @@
                         {% csrf_token %}
                         {% if page.perms.delete and cm.can_be_public_or_discoverable %}
                             {% if cm.resource_type|lower == "collectionresource" and not cm.are_all_contained_resources_published %}
-
                             {% else %}
                                  <a id="publish" data-toggle="modal" data-target="#submit-for-publication-dialog">
                                     <span data-toggle="tooltip" data-placement="auto" title="Publish this resource"
