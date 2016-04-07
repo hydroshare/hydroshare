@@ -151,10 +151,10 @@ class TestScienceMetadata(SciMetaTestCase):
             for k in kw_comp:
                 self.assertEquals(k[0], k[1])
 
-            # model_output = scimeta.xpath(self.MOD_OUT_PATH,
-            #                              namespaces=self.NS)
-            # self.assertEquals(len(model_output), 1)
-            # self.assertEquals(model_output_1, model_output[0].text)
+            model_output = scimeta.xpath(self.MOD_OUT_PATH,
+                                         namespaces=self.NS)
+            self.assertEquals(len(model_output), 1)
+            self.assertEquals(model_output_1, model_output[0].text)
 
             # Make sure metadata update is idempotent
             self.updateScimeta(pid, sci_meta_new)
@@ -178,6 +178,11 @@ class TestScienceMetadata(SciMetaTestCase):
             kw_comp = zip(kwords_1, keywords)
             for k in kw_comp:
                 self.assertEquals(k[0], k[1])
+
+            model_output = scimeta.xpath(self.MOD_OUT_PATH,
+                             namespaces=self.NS)
+            self.assertEquals(len(model_output), 1)
+            self.assertEquals(model_output_1, model_output[0].text)
 
             # Overwrite metadata with other resource metadata
             #   First update the resource ID so that it matches the ID of the
@@ -213,6 +218,11 @@ class TestScienceMetadata(SciMetaTestCase):
             kw_comp = zip(kwords_2, keywords)
             for k in kw_comp:
                 self.assertEquals(k[0], k[1])
+
+            model_output = scimeta.xpath(self.MOD_OUT_PATH,
+                             namespaces=self.NS)
+            self.assertEquals(len(model_output), 1)
+            self.assertEquals(model_output_2, model_output[0].text)
 
         finally:
             shutil.rmtree(tmp_dir)

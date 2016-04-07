@@ -186,8 +186,13 @@ class SWATModelInstanceResourceMeta(GenericResourceMeta):
         """
         super(SWATModelInstanceResourceMeta, self).write_metadata_to_resource(resource, **kwargs)
 
-        if self.model_output:
-            resource.metadata._model_output.update(includes_output=self.model_output.includes_output)
+        if self.model_output is not None:
+            if resource.metadata.model_output:
+                resource.metadata.update_element('modeloutput', resource.metadata.model_output.id,
+                                                 includes_output=self.model_output.includes_output)
+            else:
+                resource.metadata.create_element('modeloutput',
+                                                 includes_output=self.model_output.includes_output)
         if self.executed_by_uri:
             uri_stripped = self.executed_by_uri.strip('/')
             short_id = os.path.basename(uri_stripped)
