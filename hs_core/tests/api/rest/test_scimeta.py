@@ -146,10 +146,10 @@ class TestScienceMetadata(SciMetaTestCase):
             title = self.getTitle(scimeta)
             self.assertEquals(title, title_1)
 
-            # keywords = self.getKeywords(scimeta)
-            # kw_comp = zip(kwords_1, keywords)
-            # for k in kw_comp:
-            #     self.assertEquals(k[0], k[1])
+            keywords = self.getKeywords(scimeta)
+            kw_comp = zip(kwords_1, keywords)
+            for k in kw_comp:
+                self.assertEquals(k[0], k[1])
 
             # model_output = scimeta.xpath(self.MOD_OUT_PATH,
             #                              namespaces=self.NS)
@@ -174,10 +174,10 @@ class TestScienceMetadata(SciMetaTestCase):
             title = self.getTitle(scimeta)
             self.assertEquals(title, title_1)
 
-            # keywords = self.getKeywords(scimeta)
-            # kw_comp = zip(kwords_1, keywords)
-            # for k in kw_comp:
-            #     self.assertEquals(k[0], k[1])
+            keywords = self.getKeywords(scimeta)
+            kw_comp = zip(kwords_1, keywords)
+            for k in kw_comp:
+                self.assertEquals(k[0], k[1])
 
             # Overwrite metadata with other resource metadata
             #   First update the resource ID so that it matches the ID of the
@@ -209,10 +209,10 @@ class TestScienceMetadata(SciMetaTestCase):
             title = self.getTitle(scimeta)
             self.assertEquals(title, title_2)
 
-            # keywords = self.getKeywords(scimeta)
-            # kw_comp = zip(kwords_2, keywords)
-            # for k in kw_comp:
-            #     self.assertEquals(k[0], k[1])
+            keywords = self.getKeywords(scimeta)
+            kw_comp = zip(kwords_2, keywords)
+            for k in kw_comp:
+                self.assertEquals(k[0], k[1])
 
         finally:
             shutil.rmtree(tmp_dir)

@@ -714,7 +714,8 @@ class GenericResourceMeta(object):
                                    update_contributors=False,
                                    update_creation_date=False,
                                    update_modification_date=False,
-                                   update_title=False):
+                                   update_title=False,
+                                   update_keywords=False):
         """
         Write metadata to resource
 
@@ -732,6 +733,7 @@ class GenericResourceMeta(object):
         through the REST API this should be false as we don't want to allow users to change
         modification date behind our backs.
         :param update_title: Update title if True.
+        :param update_keywords: Update keywords if True.
 
         """
         if update_creators:
@@ -787,6 +789,12 @@ class GenericResourceMeta(object):
         if update_title and self.title:
             resource.metadata.update_element('title', resource.metadata.title.id,
                                              value=self.title)
+        if update_keywords and self.keywords:
+            # Remove existing keywords
+            if resource.metadata.subjects:
+                resource.metadata.subjects.all().delete()
+            for keyword in self.keywords:
+                resource.metadata.create_element('subject', value=keyword)
         if self.abstract:
             if resource.metadata.description:
                 resource.metadata.update_element('description', resource.metadata.description.id,
