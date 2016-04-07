@@ -58,7 +58,8 @@ class SWATModelInstanceResourceMeta(GenericResourceMeta):
             self.model_output.includes_output = str(model_output_lit) == 'Yes'
             logger.debug("\t\t{0}".format(self.model_output))
         # Get ExecutedBy
-        for s, p, o in self._rmeta_graph.triples((None, hsterms.ExecutedBy, None)):
+        # Should be hsterms.ExecutedBy, BUT THERE IS A TYPO IN THE XML!
+        for s, p, o in self._rmeta_graph.triples((None, hsterms.ExecutedBY, None)):
             # Get modelProgramName
             executed_by_name_lit = self._rmeta_graph.value(o, hsterms.modelProgramName)
             if executed_by_name_lit is not None:
@@ -70,7 +71,8 @@ class SWATModelInstanceResourceMeta(GenericResourceMeta):
             if (self.executed_by_name is not None) ^ (self.executed_by_uri is not None):
                 msg = "Both modelProgramName and modelProgramIdentifier must be supplied if one is supplied."
                 raise GenericResourceMeta.ResourceMetaException(msg)
-        logger.debug("\t\t{0}".format(str(self)))
+        logger.debug("\t\tmodelProgramName {0}".format(str(self.executed_by_name)))
+        logger.debug("\t\tmodelProgramIdentifier {0}".format(str(self.executed_by_uri)))
         # Get modelObjective
         for s, p, o in self._rmeta_graph.triples((None, hsterms.modelObjective, None)):
             self.model_objective = SWATModelInstanceResourceMeta.ModelObjective(str(o))
@@ -193,28 +195,26 @@ class SWATModelInstanceResourceMeta(GenericResourceMeta):
             else:
                 resource.metadata.create_element('modeloutput',
                                                  includes_output=self.model_output.includes_output)
-        if self.executed_by_uri:
-            uri_stripped = self.executed_by_uri.strip('/')
-            short_id = os.path.basename(uri_stripped)
-            if short_id == '':
-                msg = "ExecutedBy URL {0} does not contain a model program resource ID, "
-                msg += "for resource {1}"
-                msg = msg.format(self.executed_by_uri, self.root_uri)
-                raise GenericResourceMeta.ResourceMetaException(msg)
-            # Make sure the resource specified by ExecutedBy exists
-            try:
-                executed_by_resource = get_resource_by_shortkey(short_id,
-                                                                or_404=False)
-            except BaseResource.DoesNotExist:
-                msg = "ExecutedBy resource {0} does not exist.".format(short_id)
-                raise HsDeserializationDependencyException(short_id, msg)
-            executed_by = resource.metadata.executed_by
-            if not executed_by:
-                ExecutedBy.create(content_object=resource.metadata,
-                                  model_name=short_id)
-            else:
-                ExecutedBy.update(executed_by.id,
-                                  model_name=short_id)
+        if self.executed_by_uri is not None:
+            if resource.metadata.executed_by:
+                # Remove existing
+                resource.metadata._executed_by.all().delete()
+            if self.executed_by_uri != 'None':
+                # Only create ExecutedBy if URI is a URL.
+                uri_stripped = self.executed_by_uri.strip('/')
+                short_id = os.path.basename(uri_stripped)
+                if short_id == '':
+                    msg = "ExecutedBy URL {0} does not contain a model program resource ID, "
+                    msg += "for resource {1}"
+                    msg = msg.format(self.executed_by_uri, self.root_uri)
+                    raise GenericResourceMeta.ResourceMetaException(msg)
+                try:
+                    resource.metadata.create_element('ExecutedBy',
+                                                     model_name=short_id)
+                except:
+                    msg = "Creation of ExecutedBy failed, resource {0} may not exist.".format(short_id)
+                    raise HsDeserializationDependencyException(short_id, msg)
+
         if self.model_objective:
             swat_model_objectives = []
             other_objectives = []
@@ -333,7 +333,7 @@ class SWATModelInstanceResourceMeta(GenericResourceMeta):
 
         def __init__(self):
             self.name = None
-            self.url = None  # Ignored for now as refactor is planned.
+            self.url = None
 
         def __str__(self):
             msg = "ExecutedBy name: {name}, url: {url}"

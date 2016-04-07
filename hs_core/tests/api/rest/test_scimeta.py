@@ -15,6 +15,10 @@ class TestScienceMetadata(SciMetaTestCase):
 
     MOD_OUT_PATH = ('/rdf:RDF/rdf:Description[1]/hsterms:ModelOutput/'
                     'rdf:Description/hsterms:includesModelOutput')
+    EXECUTED_BY_PATH = ('/rdf:RDF/rdf:Description[1]/hsterms:ExecutedBY/'
+                        'rdf:Description')
+    EXECUTED_BY_NAME_PATH = "{exec_by_path}/hsterms:modelProgramName".format(exec_by_path=EXECUTED_BY_PATH)
+    EXECUTED_BY_ID_PATH = "{exec_by_path}/hsterms:modelProgramIdentifier".format(exec_by_path=EXECUTED_BY_PATH)
 
     def setUp(self):
         super(TestScienceMetadata, self).setUp()
@@ -27,9 +31,33 @@ class TestScienceMetadata(SciMetaTestCase):
         self.pid = res.short_id
         self.resources_to_delete.append(self.pid)
 
+        self.rtype_prog = 'ModelProgramResource'
+        self.title_prog = 'Some program'
+        res = resource.create_resource(self.rtype_prog,
+                                       self.user,
+                                       self.title_prog)
+        self.pid_prog = res.short_id
+        self.resources_to_delete.append(self.pid_prog)
+
     def test_get_scimeta(self):
         # Get science metadata XML
         self.getScienceMetadata(self.pid)
+
+    def updateExecutedBy(self, scimeta, name, id):
+        """ Update ExecutedBy
+
+        :param scimeta: ElementTree representing science metadata
+        :param name: String representing the title of the program resource.
+        :param id: String representing the ID of the program resource.
+        :return: ElementTree representing science metadata
+        """
+        name_elem = scimeta.xpath(self.EXECUTED_BY_NAME_PATH, namespaces=self.NS)[0]
+        name_elem.text = name
+
+        id_elem = scimeta.xpath(self.EXECUTED_BY_ID_PATH, namespaces=self.NS)[0]
+        id_elem.text = self.RESOURCE_URL_TEMPLATE.format(id) + '/'
+
+        return scimeta
 
     def test_put_scimeta_generic(self):
         # Update science metadata XML
@@ -106,8 +134,10 @@ class TestScienceMetadata(SciMetaTestCase):
         kwords_2 = ('Cannon River', 'SWAT', 'SWATShare')
         model_output_1 = 'No'
         model_output_2 = 'Yes'
-        model_prog_name_1 = model_prog_name_2 = 'Unspecified'
-        model_prog_id_1 = model_prog_id_2 = 'None'
+        model_prog_name_1 = 'Unspecified'
+        model_prog_name_2 = self.title_prog
+        model_prog_id_1 = 'None'
+        model_prog_id_2 = self.pid_prog
         tmp_dir = tempfile.mkdtemp()
 
         res = resource.create_resource('SWATModelInstanceResource',
@@ -156,6 +186,16 @@ class TestScienceMetadata(SciMetaTestCase):
             self.assertEquals(len(model_output), 1)
             self.assertEquals(model_output_1, model_output[0].text)
 
+            prog_name = scimeta.xpath(self.EXECUTED_BY_NAME_PATH,
+                                      namespaces=self.NS)
+            self.assertEquals(len(prog_name), 1)
+            self.assertEquals(model_prog_name_1, prog_name[0].text)
+
+            prog_id = scimeta.xpath(self.EXECUTED_BY_ID_PATH,
+                                    namespaces=self.NS)
+            self.assertEquals(len(prog_id), 1)
+            self.assertEquals(model_prog_id_1, prog_id[0].text)
+
             # Make sure metadata update is idempotent
             self.updateScimeta(pid, sci_meta_new)
 
@@ -184,11 +224,22 @@ class TestScienceMetadata(SciMetaTestCase):
             self.assertEquals(len(model_output), 1)
             self.assertEquals(model_output_1, model_output[0].text)
 
+            prog_name = scimeta.xpath(self.EXECUTED_BY_NAME_PATH,
+                                      namespaces=self.NS)
+            self.assertEquals(len(prog_name), 1)
+            self.assertEquals(model_prog_name_1, prog_name[0].text)
+
+            prog_id = scimeta.xpath(self.EXECUTED_BY_ID_PATH,
+                                    namespaces=self.NS)
+            self.assertEquals(len(prog_id), 1)
+            self.assertEquals(model_prog_id_1, prog_id[0].text)
+
             # Overwrite metadata with other resource metadata
             #   First update the resource ID so that it matches the ID of the
             #   newly created resource.
             scimeta = etree.parse('hs_core/tests/data/swat-resourcemetadata-2.xml')
             self.updateScimetaResourceID(scimeta, pid)
+            self.updateExecutedBy(scimeta, model_prog_name_2, model_prog_id_2)
             #   Write out to a file
             out = etree.tostring(scimeta, pretty_print=True)
             sci_meta_new = os.path.join(tmp_dir, self.RESOURCE_METADATA)
@@ -223,6 +274,18 @@ class TestScienceMetadata(SciMetaTestCase):
                              namespaces=self.NS)
             self.assertEquals(len(model_output), 1)
             self.assertEquals(model_output_2, model_output[0].text)
+
+            prog_name = scimeta.xpath(self.EXECUTED_BY_NAME_PATH,
+                                      namespaces=self.NS)
+            self.assertEquals(len(prog_name), 1)
+            self.assertEquals(model_prog_name_2, prog_name[0].text)
+
+            prog_id = scimeta.xpath(self.EXECUTED_BY_ID_PATH,
+                                    namespaces=self.NS)
+            self.assertEquals(len(prog_id), 1)
+
+            prog_id_2 = prog_id[0].text.strip('/').rpartition('/')[-1]
+            self.assertEquals(model_prog_id_2, prog_id_2)
 
         finally:
             shutil.rmtree(tmp_dir)

@@ -1,4 +1,5 @@
 import socket
+import json
 
 from django.contrib.auth.models import Group
 
@@ -102,6 +103,8 @@ class SciMetaTestCase(HSRESTTestCase):
           'dcterms': "http://purl.org/dc/terms/",
           'hsterms': "http://hydroshare.org/terms/"}
 
+    RESOURCE_URL_TEMPLATE = "http://example.com/resource/{0}"
+
     RESOURCE_METADATA = 'resourcemetadata.xml'
     RESOURCE_METADATA_OLD = 'resourcemetadata_old.xml'
     RESOURCE_METADATA_UPDATED = 'resourcemetadata_updated.xml'
@@ -151,7 +154,7 @@ class SciMetaTestCase(HSRESTTestCase):
         return tuple(k.text for k in keywords)
 
     def updateScimetaResourceID(self, scimeta, new_id):
-        """ Update
+        """ Update resource ID of the science metadata to http://example.com/resource/$new_id
 
         :param scimeta: ElementTree representing science metadata
         :param new_id: String representing the new ID of the resource.
@@ -159,7 +162,7 @@ class SciMetaTestCase(HSRESTTestCase):
         """
         desc = scimeta.xpath('/rdf:RDF/rdf:Description[1]', namespaces=self.NS)[0]
         desc.set('{http://www.w3.org/1999/02/22-rdf-syntax-ns#}about',
-                 "http://example.com/resource/{0}".format(new_id))
+                 self.RESOURCE_URL_TEMPLATE.format(new_id))
         return scimeta
 
     def updateScimeta(self, pk, scimeta_path, should_succeed=True):
@@ -178,8 +181,10 @@ class SciMetaTestCase(HSRESTTestCase):
         url = "/hsapi/scimeta/{pid}/".format(pid=pk)
         response = self.client.put(url, params)
         if should_succeed:
-            self.assertEqual(response.status_code, status.HTTP_202_ACCEPTED)
+            self.assertEqual(response.status_code, status.HTTP_202_ACCEPTED,
+                             msg=str(json.loads(response.content)))
         else:
-            self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+            self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST,
+                             msg=str(json.loads(response.content)))
 
         return response
