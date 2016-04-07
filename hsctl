@@ -239,7 +239,7 @@ loaddb_hs() {
     echo "*** INFO: CREATE EXTENSION postgis on PostgreSQL ***"
     docker exec hydroshare psql -U postgres -h postgis -w -c 'CREATE EXTENSION postgis;'
     echo "*** INFO: CREATE EXTENSION hstore on PostgreSQL ***"
-    docker exec hydroshare psql -U postgres -h postgis -w -c 'CREATE EXTENSION hstore;'
+    docker exec hydroshare psql -U postgres -h postgis -d template1 -w -c 'CREATE EXTENSION hstore;'
     echo "*** load database with contents of ${HS_DATABASE} ***"
     docker exec hydroshare psql -U postgres -h postgis -f ${HS_DATABASE} --quiet
     echo "*** manage.py collectstatic ***"
