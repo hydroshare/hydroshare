@@ -578,17 +578,9 @@ def create_new_version_resource(ori_res, new_res, user):
 
     if ori_res.resource_type.lower() == "collectionresource":
         # clone contained_res list of original collection and add to new collection
+        # note that new version collection will not contain "deleted resources"
         for res_obj in ori_res.resources.all():
             new_res.resources.add(res_obj)
-
-        # clone all CollectionDeletedResource objs of original collection and link them to new collection
-        for deleted_res_obj in ori_res.deleted_resources.all():
-            CollectionDeletedResource.objects.create(resource_title=deleted_res_obj.resource_title,
-                                                     deleted_by=deleted_res_obj.deleted_by,
-                                                     date_deleted=deleted_res_obj.date_deleted,
-                                                     resource_id=deleted_res_obj.resource_id,
-                                                     resource_type=deleted_res_obj.resource_type,
-                                                     collection=new_res)
 
     # create bag for the new resource
     hs_bagit.create_bag(new_res)

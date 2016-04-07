@@ -33,8 +33,7 @@ def landing_page(request, page):
                 continue # skip current collection resource object
             elif res in content_model.resources.all():
                 continue # skip resources that are already in current collection
-            elif res.resource_type.lower() == "collectionresource":
-                continue # skip the res that is type of collection
+
             candidate_resources_list.append(res)
 
         context['collection_candidate'] = candidate_resources_list
