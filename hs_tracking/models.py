@@ -45,7 +45,7 @@ class SessionManager(models.Manager):
 
 class Visitor(models.Model):
     first_seen = models.DateTimeField(auto_now_add=True)
-    user = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, blank=True)
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, blank=True, unique=True)
 
     def export_visitor_information(self):
         """Exports visitor profile information."""
