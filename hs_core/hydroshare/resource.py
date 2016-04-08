@@ -582,7 +582,7 @@ def create_new_version_resource(ori_res, new_res, user):
     utils.resource_modified(ori_res, user)
     # if everything goes well up to this point, set original resource to be immutable so that obsoleted resources cannot be modified from REST API
     ori_res.raccess.immutable = True
-
+    ori_res.raccess.save()
     return new_res
 
 
@@ -811,6 +811,7 @@ def delete_resource(pk):
             obsolete_res.metadata.delete_element('relation', eid)
             # also make this obsoleted resource editable now that it becomes the latest version
             obsolete_res.raccess.immutable = False
+            obsolete_res.raccess.save()
     res.delete()
     return pk
 
