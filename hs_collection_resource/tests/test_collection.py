@@ -523,3 +523,8 @@ class TestCollection(MockIRODSTestCaseMixin, TransactionTestCase):
             self.assertIn(contained_res, self.resCollection.resources.all())
         for contained_res in self.resCollection.resources.all():
             self.assertIn(contained_res, new_collection.resources.all())
+
+        # changes to old version collection should not affect new version collection
+        self.resCollection.resources.clear()
+        self.assertEqual(self.resCollection.resources.count(), 0)
+        self.assertEqual(new_collection.resources.count(), 3)
