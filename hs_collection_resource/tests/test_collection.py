@@ -108,7 +108,7 @@ class TestCollection(MockIRODSTestCaseMixin, TransactionTestCase):
         self.url_to_delete_resource = base_url + "/delete-resource/"
         self.url_to_update_collection_for_deleted_resources = base_url + "/update-collection-for-deleted-resources/"
 
-    @unittest.skip
+
     def test_collection_basic_functions(self):
         # test basic collection class with different res types
 
@@ -155,7 +155,7 @@ class TestCollection(MockIRODSTestCaseMixin, TransactionTestCase):
         self.assertIn(self.resGeoFeature, self.resCollection.resources.all())
         self.assertIn(self.resGen1, self.resCollection_with_missing_metadata.resources.all())
         self.assertIn(self.resGeoFeature, self.resCollection_with_missing_metadata.resources.all())
-    @unittest.skip
+
     def test_collection_deleted_resource(self):
         # test CollectionDeletedResource
 
@@ -180,7 +180,7 @@ class TestCollection(MockIRODSTestCaseMixin, TransactionTestCase):
         self.resCollection.deleted_resources.all().delete()
         self.assertEqual(CollectionDeletedResource.objects.count(), 0)
         self.assertEqual(self.resCollection.deleted_resources.count(), 0)
-    @unittest.skip
+
     def test_update_collection_own_permission(self):
         # test update_collection()
 
@@ -297,7 +297,7 @@ class TestCollection(MockIRODSTestCaseMixin, TransactionTestCase):
         resp_json = json.loads(response.content)
         self.assertEqual(resp_json["status"], "success")
         self.assertFalse(self.resCollection_with_missing_metadata.can_be_public_or_discoverable)
-    @unittest.skip
+
     def test_update_collection_edit_permission(self):
         self.assertEqual(self.resCollection.resources.count(), 0)
         url_to_update_collection = self.url_to_update_collection.format(self.resCollection.short_id)
@@ -361,7 +361,7 @@ class TestCollection(MockIRODSTestCaseMixin, TransactionTestCase):
         self.assertTrue(self.resCollection.can_be_public_or_discoverable)
         self.assertEqual(self.resCollection.resources.count(), 1)
         self.assertIn(self.resGen3, self.resCollection.resources.all())
-    @unittest.skip
+
     def test_collection_holds_collection(self):
         # a collection resource can be added to another collection resource
 
@@ -391,7 +391,7 @@ class TestCollection(MockIRODSTestCaseMixin, TransactionTestCase):
         self.assertEqual(resp_json["status"], "success")
         # collection should have 1 resource
         self.assertEquals(self.resCollection.resources.count(), 1)
-    @unittest.skip
+
     def test_update_collection_for_deleted_resources(self):
         self.assertEqual(self.resCollection.resources.count(), 0)
         self.assertEqual(self.resCollection.deleted_resources.count(), 0)
@@ -465,7 +465,7 @@ class TestCollection(MockIRODSTestCaseMixin, TransactionTestCase):
         # there should be now no tracked deleted resources for the collection
         self.assertEqual(self.resCollection.deleted_resources.count(), 0)
         self.assertEqual(CollectionDeletedResource.objects.count(), 0)
-    @unittest.skip
+
     def test_are_all_contained_resources_published(self):
         # no contained resource
         self.assertEqual(self.resCollection.resources.count(), 0)
@@ -511,10 +511,15 @@ class TestCollection(MockIRODSTestCaseMixin, TransactionTestCase):
 
         # make a new version of collection
         new_collection = create_new_version_empty_resource(self.resCollection.short_id, self.user1)
+
         new_collection = create_new_version_resource(self.resCollection, new_collection, self.user1)
 
         # test the new version is a collection
         self.assertTrue(isinstance(new_collection, CollectionResource))
-        # new version collection has same contained res as its original
+
+        # new version collection should have same contained res as its original does
         self.assertEqual(new_collection.resources.count(), self.resCollection.resources.count())
-        # self.assertEqual(new_collection.resources, self.resCollection.resources)
+        for contained_res in new_collection.resources.all():
+            self.assertIn(contained_res, self.resCollection.resources.all())
+        for contained_res in self.resCollection.resources.all():
+            self.assertIn(contained_res, new_collection.resources.all())
