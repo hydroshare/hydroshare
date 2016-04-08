@@ -29,7 +29,7 @@ def update_collection(request, shortkey, *args, **kwargs):
             collection_res_obj, is_authorized, user = authorize(request, shortkey,
                                                                 needed_permission=ACTION_TO_AUTHORIZE.EDIT_RESOURCE)
 
-            if collection_res_obj.resource_type != "CollectionResource":
+            if collection_res_obj.resource_type.lower() != "collectionresource":
                 raise Exception("Resource {0} is not a collection resource.".format(shortkey))
 
             # get res_id list from POST
@@ -89,7 +89,7 @@ def update_collection_for_deleted_resources(request, shortkey, *args, **kwargs):
         collection_res, is_authorized, user = authorize(request, shortkey,
                                                         needed_permission=ACTION_TO_AUTHORIZE.EDIT_RESOURCE)
 
-        if collection_res.resource_type != "CollectionResource":
+        if collection_res.resource_type.lower() != "collectionresource":
             raise Exception("Resource {0} is not a collection resource.".format(shortkey))
 
         resource_modified(collection_res, user)
