@@ -6,6 +6,7 @@ from languages_iso import languages as iso_languages
 from dateutil import parser
 from lxml import etree
 
+from django.contrib.postgres.fields import HStoreField
 from django.contrib.contenttypes.fields import GenericForeignKey
 from django.contrib.contenttypes.fields import GenericRelation
 from django.contrib.auth.models import User, Group
@@ -1088,7 +1089,7 @@ class AbstractResource(ResourcePermissionsMixin):
     content_type = models.ForeignKey(ContentType, null=True, blank=True)
     content_object = GenericForeignKey('content_type', 'object_id')
 
-    #keywords = KeywordsField(verbose_name="Keywords", for_concrete_model=False)
+    extra_metadata = HStoreField(default={})
 
     @classmethod
     def bag_url(cls, resource_id):
