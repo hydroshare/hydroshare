@@ -391,6 +391,7 @@ class TestCollection(MockIRODSTestCaseMixin, TransactionTestCase):
         self.assertEqual(resp_json["status"], "success")
         # collection should have 1 resource
         self.assertEquals(self.resCollection.resources.count(), 1)
+        self.assertEquals(self.resCollection.resources.all()[0].resource_type.lower(), "collectionresource")
 
     def test_update_collection_for_deleted_resources(self):
         self.assertEqual(self.resCollection.resources.count(), 0)
@@ -521,8 +522,6 @@ class TestCollection(MockIRODSTestCaseMixin, TransactionTestCase):
         self.assertEqual(new_collection.resources.count(), self.resCollection.resources.count())
         for contained_res in new_collection.resources.all():
             self.assertIn(contained_res, self.resCollection.resources.all())
-        for contained_res in self.resCollection.resources.all():
-            self.assertIn(contained_res, new_collection.resources.all())
 
         # changes to old version collection should not affect new version collection
         self.resCollection.resources.clear()

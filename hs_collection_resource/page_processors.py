@@ -4,8 +4,6 @@ from hs_core import page_processors
 from hs_core.views import add_generic_context
 from hs_core.views.utils import get_my_resources_list
 from hs_core.models import BaseResource
-from hs_access_control.models import PrivilegeCodes
-
 from .models import CollectionResource
 
 @processor_for(CollectionResource)
