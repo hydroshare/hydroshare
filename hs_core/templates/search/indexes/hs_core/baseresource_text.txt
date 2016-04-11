@@ -1,6 +1,6 @@
 {{ object.short_id }}
 {{ object.doi }}
-{{ object.metadata.title }}
+{{ object.metadata.title.value }}
 {{ object.first_creator }}
 {{ object.metadata.description }}
 {{ object.public }}
