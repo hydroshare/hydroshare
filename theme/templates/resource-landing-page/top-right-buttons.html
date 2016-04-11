@@ -1,8 +1,8 @@
 {#        ======= Top right buttons =======#}
-<div class="col-sm-12">
+<div class="col-sm-12 height-fix">
     <div class="lined-wrapper"></div>
-    {% if not metadata_form %}
-        <div class="custom-btn-toolbar">
+    <div class="custom-btn-toolbar">
+        {% if not metadata_form %}
             {% if not is_owner_user and not is_edit_user and not is_view_user %}
                 {% if is_mine %}
                     <form class="pull-right" data-id="form-add-to-my-resources"
@@ -42,7 +42,8 @@
 
                         {% if page.perms.delete or cm.raccess.published %}
                             <a id="new-version" data-toggle="modal" data-target="#new-version-resource-dialog">
-                                <span data-toggle="tooltip" data-placement="auto" title="Create a new version of this resource"
+                                <span data-toggle="tooltip" data-placement="auto"
+                                      title="Create a new version of this resource"
                                       class="glyphicon glyphicon-new-window icon-button btn-edit"></span>
                             </a>
                         {% endif %}
@@ -54,8 +55,8 @@
                             </a>
                         {% endif %}
 
-                        {% if page.perms.change  %}
-                        <input name="resource-mode" type="hidden" value="edit"/>
+                        {% if page.perms.change %}
+                            <input name="resource-mode" type="hidden" value="edit"/>
                             <button id="edit-metadata" type="submit" data-toggle="tooltip" data-placement="auto"
                                     title="Edit this resource"
                                     class="glyphicon glyphicon-pencil icon-button btn-edit"></button>
@@ -63,13 +64,18 @@
                     </form>
                 {% endif %}
             {% endif %}
-        </div>
-    {% else %}
-        <div class="custom-btn-toolbar">
+        {% else %}
             <a href="{{ cm.get_absolute_url }}">
                     <span data-toggle="tooltip" data-placement="auto" title="View resource"
                           class="glyphicon glyphicon-circle-arrow-left icon-button btn-edit"></span>
             </a>
-        </div>
-    {% endif %}
+        {% endif %}
+
+        {% if show_manage_access %}
+        <a data-toggle="modal" data-target="#manage-access">
+            <span data-toggle="tooltip" data-placement="auto" title="Manage who has access. Use this button to share your resource with specific HydroShare users. You can give other users the ability to view or edit this resource. You can also add additional owners who will have full permissions."
+                  class="glyphicon glyphicon-lock icon-button btn-edit"></span>
+        </a>
+        {% endif %}
+    </div>
 </div>
