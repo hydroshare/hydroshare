@@ -8,7 +8,7 @@ from django.contrib.auth.models import Group, User
 from hs_core.hydroshare import resource
 from hs_core.models import GenericResource, Creator, Contributor, CoreMetaData, \
     Coverage, Rights, Title, Language, Publisher, Identifier, \
-    Type, Subject, Description, Date, Format, Relation, Source
+    Type, Subject, Description, Date, Format, Relation, Source, FundingAgency
 from hs_core import hydroshare
 from hs_core.testing import MockIRODSTestCaseMixin
 
@@ -1008,6 +1008,56 @@ class TestCoreMetadata(MockIRODSTestCaseMixin, TestCase):
         self.assertEqual(self.res.metadata.relations.all().count(), 0,
                          msg="Resource has relation element(s) after deleting all.")
 
+    def test_funding_agency(self):
+        # at this point there should not be any funding agency elements
+        self.assertEqual(self.res.metadata.funding_agencies.all().count(), 0)
+        # add a funding agency element with only the required name value type
+        resource.create_metadata_element(self.res.short_id,'fundingagency', agency_name='NSF')
+        # at this point there should be one funding agency element
+        self.assertEqual(self.res.metadata.funding_agencies.all().count(), 1)
+        # test the name of the funding agency is NSF
+        agency_element = self.res.metadata.funding_agencies.all().first()
+        self.assertEquals(agency_element.agency_name, 'NSF')
+        # add another funding agency element with only the required name value type
+        resource.create_metadata_element(self.res.short_id,'fundingagency', agency_name='USDA')
+        # at this point there should be 2 funding agency element
+        self.assertEqual(self.res.metadata.funding_agencies.all().count(), 2)
+        # there should be one funding agency with name USDA
+        agency_element = self.res.metadata.funding_agencies.all().filter(agency_name='USDA').first()
+        self.assertNotEquals(agency_element, None)
+
+        # test update
+        resource.update_metadata_element(self.res.short_id, 'fundingagency', agency_element.id,
+                                         award_title="Cyber Infrastructure", award_number="NSF-101-20-6789",
+                                         agency_url="http://www.nsf.gov")
+        agency_element = self.res.metadata.funding_agencies.all().filter(agency_name='USDA').first()
+        self.assertEquals(agency_element.agency_name, 'USDA')
+        self.assertEquals(agency_element.award_title, 'Cyber Infrastructure')
+        self.assertEquals(agency_element.award_number, 'NSF-101-20-6789')
+        self.assertEquals(agency_element.agency_url, 'http://www.nsf.gov')
+
+        # test that all funding agency should be unique award number for a specific resource
+        with self.assertRaises(Exception):
+            resource.create_metadata_element(self.res.short_id,'fundingagency', agency_name='EPA',
+                                             award_number='NSF-101-20-6789')
+
+        # test that agency name is required for  creating a funding agency element
+        with self.assertRaises(Exception):
+            resource.create_metadata_element(self.res.short_id,'fundingagency',
+                                             award_title="Modeling on cloud",
+                                             award_number="101-20-6789",
+                                             agency_url="http://www.usa.gov")
+
+        # at this point there should be 2 funding agency element
+        self.assertEqual(self.res.metadata.funding_agencies.all().count(), 2)
+
+        # test that it is possible to delete all relation elements
+        for agency in self.res.metadata.funding_agencies.all():
+            resource.delete_metadata_element(self.res.short_id,'fundingagency', agency.id)
+
+        # at this point there should not be any funding agency element
+        self.assertEqual(self.res.metadata.funding_agencies.all().count(), 0)
+
     def test_rights(self):
         # By default a resource should have the rights element
         self.assertNotEqual(self.res.metadata.rights, None, msg="Resource has no rights element.")
@@ -1251,6 +1301,10 @@ class TestCoreMetadata(MockIRODSTestCaseMixin, TestCase):
         # add another subject element
         self.res.metadata.create_element('subject', value='sub-2')
 
+        # add funding agency
+        self.res.metadata.create_element('fundingagency', agency_name='NSF',
+                                         award_title="Cyber Infrastructure", award_number="NSF-101-20-6789",
+                                         agency_url="http://www.nsf.gov")
         # check the content of the metadata xml string
         RDF_ROOT = etree.XML(self.res.metadata.get_xml())
 
@@ -1313,6 +1367,10 @@ class TestCoreMetadata(MockIRODSTestCaseMixin, TestCase):
         self.res.raccess.save()
         resource.create_metadata_element(self.res.short_id, 'publisher', name='USGS', url="http://usgs.gov")
 
+        # add funding agency element
+        resource.create_metadata_element(self.res.short_id, 'fundingagency', agency_name='NSF',
+                                         award_title="Cyber Infrastructure", award_number="NSF-101-20-6789",
+                                         agency_url="http://www.nsf.gov")
         # before resource delete
         self.assertEquals(CoreMetaData.objects.all().count(), 1, msg="# of CoreMetadata objects is not equal to 1.")
         # there should be Creator metadata objects
@@ -1345,6 +1403,8 @@ class TestCoreMetadata(MockIRODSTestCaseMixin, TestCase):
         self.assertTrue(Language.objects.filter(object_id=core_metadata_obj.id).exists())
         # there should be Rights metadata objects
         self.assertTrue(Rights.objects.filter(object_id=core_metadata_obj.id).exists())
+        # there should be FundingAgency metadata objects
+        self.assertTrue(FundingAgency.objects.filter(object_id=core_metadata_obj.id).exists())
 
         # delete resource
         hydroshare.delete_resource(self.res.short_id)
@@ -1380,5 +1440,6 @@ class TestCoreMetadata(MockIRODSTestCaseMixin, TestCase):
         self.assertFalse(Language.objects.filter(object_id=core_metadata_obj.id).exists())
         # there should be no Rights metadata objects
         self.assertFalse(Rights.objects.filter(object_id=core_metadata_obj.id).exists())
-
+        # there should be no FundingAgency metadata objects
+        self.assertFalse(FundingAgency.objects.filter(object_id=core_metadata_obj.id).exists())
 
