@@ -2180,6 +2180,10 @@ button.loading {
 	border:1px solid #DDD;
 }
 
+.coverage-container {
+    margin-top: -20px; margin-bottom:20px;
+}
+
 #id_name {
     max-width: 467px;
 }
