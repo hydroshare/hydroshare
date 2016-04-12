@@ -30,9 +30,8 @@ class ModelOutput(AbstractMetaDataElement):
             return "No"
 
 class ExecutedBy(AbstractMetaDataElement):
-    # model_name: the id of the model program used for execution
-    # model_program_fk: the foreign key in the model program data model for the model used for execution
     term = 'ExecutedBY'
+    # model_name: the id of the model program used for execution
     model_name = models.CharField(max_length=500, default=None)
     model_program_fk = models.ForeignKey('hs_model_program.ModelProgramResource', null=True, blank=True, default=None, related_name='modelinstance')
 
