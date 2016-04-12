@@ -7,21 +7,20 @@ class DiscoveryView(FacetedSearchView):
     facet_fields = ['author', 'subjects', 'resource_type', 'public', 'owners_names', 'discoverable']
     form_class = DiscoveryForm
 
-
     def form_valid(self, form):
         self.queryset = form.search()
         query_text = self.request.GET.get('q', '')
 
         if not self.request.session.get('current_query', None):
             self.request.session['query_changed'] = True
-	    self.request.session['current_query'] = query_text
+            self.request.session['current_query'] = query_text
 
         else:
-	    if self.request.session['current_query'] != query_text:
-	        self.request.session['query_changed'] = True
-	    	self.request.session['current_query'] = query_text
-	    else:
-            	self.request.session['query_changed'] = False
+            if self.request.session['current_query'] != query_text:
+                self.request.session['query_changed'] = True
+                self.request.session['current_query'] = query_text
+            else:
+                self.request.session['query_changed'] = False
 
         context = self.get_context_data(**{
             self.form_name: form,
