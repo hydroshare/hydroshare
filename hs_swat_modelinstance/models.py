@@ -33,7 +33,7 @@ class ModelObjectiveChoices(models.Model):
 
 class ModelObjective(AbstractMetaDataElement):
     term = 'ModelObjective'
-    swat_model_objectives = models.ManyToManyField(ModelObjectiveChoices, null=True, blank=True)
+    swat_model_objectives = models.ManyToManyField(ModelObjectiveChoices, blank=True)
     other_objectives = models.CharField(max_length=200, null=True, blank=True)
 
     def __unicode__(self):
@@ -158,7 +158,7 @@ class ModelParametersChoices(models.Model):
 
 class ModelParameter(AbstractMetaDataElement):
     term = 'ModelParameter'
-    model_parameters = models.ManyToManyField(ModelParametersChoices, null=True, blank=True)
+    model_parameters = models.ManyToManyField(ModelParametersChoices, blank=True)
     other_parameters = models.CharField(max_length=200, null=True, blank=True)
 
     def __unicode__(self):
@@ -208,8 +208,8 @@ class ModelParameter(AbstractMetaDataElement):
             swat_model_parameters.save()
 
             # delete model_parameters metadata element if it has no data
-            if len(swat_model_parameters.model_parameters.all()) == 0 and \
-                    len(swat_model_parameters.other_parameters) == 0:
+            if swat_model_parameters.model_parameters.all().count() == 0 and \
+                    swat_model_parameters.other_parameters == 0:
                 swat_model_parameters.delete()
         else:
             raise ObjectDoesNotExist("No ModelParameter element was found for the provided id:%s" % kwargs['id'])
@@ -263,25 +263,13 @@ class ModelInput(AbstractMetaDataElement):
 
     @classmethod
     def create(cls, **kwargs):
-        if 'rainfallTimeStepType' in kwargs:
-            cls._validate_time_step(kwargs['rainfallTimeStepType'], 'rainfall')
-        if 'routingTimeStepType' in kwargs:
-            cls._validate_time_step(kwargs['routingTimeStepType'], 'routing')
-        if 'simulationTimeStepType' in kwargs:
-            cls._validate_time_step(kwargs['simulationTimeStepType'], 'simulation')
-
+        cls._validate_time_step(**kwargs)
         model_input = super(ModelInput, cls).create(**kwargs)
         return model_input
 
     @classmethod
     def update(cls, element_id, **kwargs):
-        if 'rainfallTimeStepType' in kwargs:
-            cls._validate_time_step(kwargs['rainfallTimeStepType'], 'rainfall')
-        if 'routingTimeStepType' in kwargs:
-            cls._validate_time_step(kwargs['routingTimeStepType'], 'routing')
-        if 'simulationTimeStepType' in kwargs:
-            cls._validate_time_step(kwargs['simulationTimeStepType'], 'simulation')
-
+        cls._validate_time_step(**kwargs)
         model_input = super(ModelInput, cls).update(element_id, **kwargs)
         return model_input
 
@@ -291,14 +279,22 @@ class ModelInput(AbstractMetaDataElement):
         return "Year"
 
     @classmethod
-    def _validate_time_step(cls, time_step, category):
-        if category == 'rainfall':
+    def _validate_time_step(cls, **kwargs):
+        if 'rainfallTimeStepType' in kwargs:
+            time_step = kwargs['rainfallTimeStepType']
             types = [c[0] for c in cls.rainfall_type_choices]
-        elif category == 'routing':
+            cls.check_time_steps(time_step, types)
+        if 'routingTimeStepType' in kwargs:
+            time_step = kwargs['routingTimeStepType']
             types = [c[0] for c in cls.routing_type_choices]
-        elif category == 'simulation':
+            cls.check_time_steps(time_step, types)
+        if 'simulationTimeStepType' in kwargs:
+            time_step = kwargs['simulationTimeStepType']
             types = [c[0] for c in cls.simulation_type_choices]
+            cls.check_time_steps(time_step, types)
 
+    @classmethod
+    def check_time_steps(cls, time_step, types):
         if time_step not in types:
             raise ValidationError('Invalid time step choice:{} not in {}'.format(time_step, types))
 
@@ -396,14 +392,10 @@ class SWATModelInstanceMetaData(ModelInstanceMetaData):
             hsterms_model_objective = etree.SubElement(container, '{%s}modelObjective' % self.NAMESPACES['hsterms'])
 
             if self.model_objective.other_objectives:
-                hsterms_model_objective.text = ', '.join([objective.description for
-                                                          objective in
-                                                          self.model_objective.swat_model_objectives.all()]) + \
+                hsterms_model_objective.text = self.model_objective.get_swat_model_objectives() + \
                                                ', ' + self.model_objective.other_objectives
             else:
-                hsterms_model_objective.text = ', '.join([objective.description for
-                                                          objective in
-                                                          self.model_objective.swat_model_objectives.all()])
+                hsterms_model_objective.text = self.model_objective.get_swat_model_objectives()
 
         if self.simulation_type:
             hsterms_simulation_type = etree.SubElement(container, '{%s}simulationType' % self.NAMESPACES['hsterms'])
@@ -418,14 +410,10 @@ class SWATModelInstanceMetaData(ModelInstanceMetaData):
                                                              '{%s}modelParameter' % self.NAMESPACES['hsterms'])
 
             if self.model_parameter.other_parameters:
-                hsterms_swat_model_parameters.text = ', '.join([parameter.description for
-                                                                parameter in
-                                                                self.model_parameter.model_parameters.all()]) + \
+                hsterms_swat_model_parameters.text = self.model_parameter.get_swat_model_parameters() + \
                                                      ', ' + self.model_parameter.other_parameters
             else:
-                hsterms_swat_model_parameters.text = ', '.join([parameter.description for
-                                                                parameter in
-                                                                self.model_parameter.model_parameters.all()])
+                hsterms_swat_model_parameters.text = self.model_parameter.get_swat_model_parameters()
 
         if self.model_input:
             modelInputFields = ['warmupPeriodType', 'warmupPeriodValue', 'rainfallTimeStepType',
@@ -447,3 +435,4 @@ class SWATModelInstanceMetaData(ModelInstanceMetaData):
         self._model_input.all().delete()
 
 import receivers
+

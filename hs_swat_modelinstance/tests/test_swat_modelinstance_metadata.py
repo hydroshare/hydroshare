@@ -106,7 +106,7 @@ class TestSWATModelInstanceMetaData(MockIRODSTestCaseMixin, TransactionTestCase)
         self.assertEquals(self.resSWATModelInstance.metadata.title.value, 'Test SWAT Model Instance Resource')
 
         # there should be a creator element
-        self.assertEquals(self.resSWATModelInstance.creator.username, 'user1')
+        self.assertEquals(self.resSWATModelInstance.metadata.creators.count(), 1)
 
         # # there should be a type element
         self.assertNotEqual(self.resSWATModelInstance.metadata.type, None)
@@ -147,12 +147,12 @@ class TestSWATModelInstanceMetaData(MockIRODSTestCaseMixin, TransactionTestCase)
         self.assertEquals(self.resSWATModelInstance.metadata.simulation_type, None)
         self.assertEquals(self.resSWATModelInstance.metadata.model_objective, None)
 
-        # create #######################################################################################################
-        # create model_output ####
+        # create
+        # create model_output
         self.resSWATModelInstance.metadata.create_element('ModelOutput', includes_output=False)
         modeloutput_element = self.resSWATModelInstance.metadata.model_output
         self.assertEquals(modeloutput_element.includes_output, False)
-        # multiple ModelOutput elements are not allowed - should raise exception
+        # multiple ModelOutput elements are not allowed - it would raise an exception
         with self.assertRaises(IntegrityError):
             self.resSWATModelInstance.metadata.create_element('ModelOutput', includes_output=True)
         with self.assertRaises(IntegrityError):
@@ -163,52 +163,50 @@ class TestSWATModelInstanceMetaData(MockIRODSTestCaseMixin, TransactionTestCase)
         self.resSWATModelInstance.metadata.create_element('ModelOutput', includes_output=True)
         modeloutput_element = self.resSWATModelInstance.metadata.model_output
         self.assertEquals(modeloutput_element.includes_output, True)
-        # multiple ModelOutput elements are not allowed - should raise exception
+        # multiple ModelOutput elements are not allowed - it would raise an exception
         with self.assertRaises(IntegrityError):
             self.resSWATModelInstance.metadata.create_element('ModelOutput', includes_output=True)
             self.resSWATModelInstance.metadata.create_element('ModelOutput', includes_output=False)
 
-        # create ExecutedBy ####
+        # create ExecutedBy
         self.resSWATModelInstance.metadata.create_element('ExecutedBy', model_name=self.resGenModelProgram.short_id)
         modelparam_element = self.resSWATModelInstance.metadata.executed_by
         self.assertEquals(modelparam_element.model_name, self.resGenModelProgram.metadata.title.value)
         self.assertEquals(modelparam_element.model_program_fk, self.resGenModelProgram)
-        # multiple ExecutedBy elements are not allowed - should raise exception
+        # multiple ExecutedBy elements are not allowed - it would raise an exception
         with self.assertRaises(IntegrityError):
             self.resSWATModelInstance.metadata.create_element('ExecutedBy',
                                                               model_name=self.resSwatModelProgram.short_id)
 
-        # create ModelObjective ####
-        # try to create a modelobjective with no swat_model_objective
+        # create ModelObjective
+        # try to create a modelobjective with no swat_model_objective - it would raise an exception
         with self.assertRaises(ValidationError):
             self.resSWATModelInstance.metadata.create_element('ModelObjective',
-                                                              other_objectives={"boaty mcboatface"})
+                                                              other_objectives="boaty mcboatface")
         # now do it legit
         s_objs = ["BMPs", "Hydrology", "Water quality"]
         o_objs = "elon musk"
         self.resSWATModelInstance.metadata.create_element('ModelObjective',
-                                                          swat_model_objectives={s_objs[0]: s_objs[0],
-                                                                                 s_objs[1]: s_objs[1]},
+                                                          swat_model_objectives=s_objs,
                                                           other_objectives=o_objs)
         modelparam_element = self.resSWATModelInstance.metadata.model_objective
         self.assertNotEqual(modelparam_element, None)
-        v = modelparam_element.swat_model_objectives.values()
-        val_list = [d['description'] for d in v]
-        for o in s_objs[:2]:
-            self.assertEquals(o in val_list, True)
+        v = modelparam_element.get_swat_model_objectives()
+        for o in s_objs:
+            self.assertEquals(o in v, True)
         self.assertEquals(modelparam_element.other_objectives, o_objs)
         # try to create a swat_model_objective with a non cv term
         with self.assertRaises(ValidationError):
             self.resSWATModelInstance.metadata.create_element('ModelObjective',
-                                                              swat_model_objectives={"gravity waves": "gravity waves"})
-        # try to create another swat_model_objective
+                                                              swat_model_objectives=['gravity waves'])
+        # try to create another swat_model_objective - it would raise an exception
         with self.assertRaises(IntegrityError):
             self.resSWATModelInstance.metadata.create_element('ModelObjective',
-                                                              swat_model_objectives={s_objs[0]: s_objs[0]},
+                                                              swat_model_objectives=[s_objs[0]],
                                                               other_objectives="bleh")
 
-        # create simulation type ####
-        # try to create a simulation type with a non cv term
+        # create simulation type
+        # try to create a simulation type with a non cv term - it would raise an exception
         with self.assertRaises(ValidationError):
             self.resSWATModelInstance.metadata.create_element('SimulationType',
                                                               simulation_type_name='bilbo baggins')
@@ -218,12 +216,12 @@ class TestSWATModelInstanceMetaData(MockIRODSTestCaseMixin, TransactionTestCase)
         self.assertNotEqual(self.resSWATModelInstance.metadata.simulation_type, None)
         self.assertEqual(self.resSWATModelInstance.metadata.simulation_type.get_simulation_type_name_display(),
                          'Normal Simulation')
-        # try to create another simulation type
+        # try to create another simulation type - it would raise an exception
         with self.assertRaises(IntegrityError):
                 self.resSWATModelInstance.metadata.create_element('SimulationType',
                                                                   simulation_type_name='Sensitivity Analysis')
 
-        # create modelmethod ####
+        # create modelmethod
         self.resSWATModelInstance.metadata.create_element('ModelMethod',
                                                           runoffCalculationMethod='aaa',
                                                           flowRoutingMethod='bbb',
@@ -232,18 +230,18 @@ class TestSWATModelInstanceMetaData(MockIRODSTestCaseMixin, TransactionTestCase)
         self.assertEqual(self.resSWATModelInstance.metadata.model_method.runoffCalculationMethod, 'aaa')
         self.assertEqual(self.resSWATModelInstance.metadata.model_method.flowRoutingMethod, 'bbb')
         self.assertEqual(self.resSWATModelInstance.metadata.model_method.petEstimationMethod, 'ccc')
-        # try to create another model_method
+        # try to create another model_method - it would raise an exception
         with self.assertRaises(IntegrityError):
             self.resSWATModelInstance.metadata.create_element('ModelMethod',
                                                               runoffCalculationMethod='bbb',
                                                               flowRoutingMethod='ccc',
                                                               petEstimationMethod='ddd')
 
-        # create ModelParameter ####
+        # create ModelParameter
         # try to create a modelparam with a non cv term
         with self.assertRaises(ValidationError):
             self.resSWATModelInstance.metadata.create_element('ModelParameter',
-                                                              model_parameters={"chucky cheese": "chucky cheese"})
+                                                              model_parameters="chucky cheese")
         # try to create a modelparam with a no model_parameter term
         with self.assertRaises(ValidationError):
             self.resSWATModelInstance.metadata.create_element('ModelParameter', george="clooney")
@@ -251,23 +249,21 @@ class TestSWATModelInstanceMetaData(MockIRODSTestCaseMixin, TransactionTestCase)
         s_params = ["Crop rotation", "Tillage operation"]
         o_params = "spongebob"
         self.resSWATModelInstance.metadata.create_element('ModelParameter',
-                                                          model_parameters={s_params[0]: s_params[0],
-                                                                            s_params[1]: s_params[1]},
+                                                          model_parameters=s_params,
                                                           other_parameters=o_params)
         modelparam_element = self.resSWATModelInstance.metadata.model_parameter
         self.assertNotEqual(modelparam_element, None)
-        v = modelparam_element.model_parameters.values()
-        val_list = [d['description'] for d in v]
+        v = modelparam_element.get_swat_model_parameters()
         for p in s_params:
-            self.assertEquals(p in val_list, True)
+            self.assertEquals(p in v, True)
         self.assertEquals(modelparam_element.other_parameters, o_params)
         # try to create another swat_model_objective
         with self.assertRaises(IntegrityError):
             self.resSWATModelInstance.metadata.create_element('ModelParameter',
-                                                              model_parameters={s_params[0]: s_params[0]},
+                                                              model_parameters=[s_params[0]],
                                                               other_parameters="bleh")
 
-        # create ModelInput ####
+        # create ModelInput
         # try to create a ModelInput with non cv terms
         with self.assertRaises(ValidationError):
             self.resSWATModelInstance.metadata.create_element('ModelInput',
@@ -319,9 +315,9 @@ class TestSWATModelInstanceMetaData(MockIRODSTestCaseMixin, TransactionTestCase)
                 self.resSWATModelInstance.metadata.create_element('ModelInput',
                                                                   warmupPeriodValue='patrick')
 
-        # update #######################################################################################################
+        # update
 
-        # update ModelOutput ###
+        # update ModelOutput
         self.resSWATModelInstance.metadata.update_element('ModelOutput',
                                                           self.resSWATModelInstance.metadata.model_output.id,
                                                           includes_output=False)
@@ -331,7 +327,7 @@ class TestSWATModelInstanceMetaData(MockIRODSTestCaseMixin, TransactionTestCase)
                                                           includes_output=True)
         self.assertEquals(self.resSWATModelInstance.metadata.model_output.includes_output, True)
 
-        # update ExecutedBy ###
+        # update ExecutedBy
         self.resSWATModelInstance.metadata.update_element('ExecutedBy',
                                                           self.resSWATModelInstance.metadata.executed_by.id,
                                                           model_name=self.resSwatModelProgram.short_id)
@@ -339,23 +335,22 @@ class TestSWATModelInstanceMetaData(MockIRODSTestCaseMixin, TransactionTestCase)
         self.assertEquals(modelparam_element.model_name, self.resSwatModelProgram.metadata.title.value)
         self.assertEquals(modelparam_element.model_program_fk, self.resSwatModelProgram)
 
-        # update ModelObjective ###
+        # update ModelObjective
         self.resSWATModelInstance.metadata.update_element('ModelObjective',
                                                           self.resSWATModelInstance.metadata.model_objective.id,
-                                                          swat_model_objectives={s_objs[2]: s_objs[2]},
+                                                          swat_model_objectives=[s_objs[2]],
                                                           other_objectives='jelly beans')
         modelparam_element = self.resSWATModelInstance.metadata.model_objective
         self.assertNotEqual(modelparam_element, None)
-        v = modelparam_element.swat_model_objectives.values()
-        val_list = [d['description'] for d in v]
+        v = modelparam_element.get_swat_model_objectives()
         for o in [s_objs[2]]:
-            self.assertEquals(o in val_list, True)
+            self.assertEquals(o in v, True)
         self.assertEquals(modelparam_element.other_objectives, 'jelly beans')
         # try with a non cv term
         with self.assertRaises(ValidationError):
             self.resSWATModelInstance.metadata.update_element('ModelObjective',
                                                               self.resSWATModelInstance.metadata.model_objective.id,
-                                                              swat_model_objectives={"gravity waves": "gravity waves"})
+                                                              swat_model_objectives=["gravity waves"])
         # update just other objective
         self.resSWATModelInstance.metadata.update_element('ModelObjective',
                                                           self.resSWATModelInstance.metadata.model_objective.id,
@@ -363,7 +358,7 @@ class TestSWATModelInstanceMetaData(MockIRODSTestCaseMixin, TransactionTestCase)
         modelparam_element = self.resSWATModelInstance.metadata.model_objective
         self.assertEquals(modelparam_element.other_objectives, 'einstein')
 
-        # update SimulationType ###
+        # update SimulationType
         self.resSWATModelInstance.metadata.update_element('SimulationType',
                                                           self.resSWATModelInstance.metadata.simulation_type.id,
                                                           simulation_type_name='Auto-Calibration')
@@ -375,7 +370,7 @@ class TestSWATModelInstanceMetaData(MockIRODSTestCaseMixin, TransactionTestCase)
                                                               self.resSWATModelInstance.metadata.simulation_type.id,
                                                               simulation_type_name="Panda")
 
-        # update ModelMethod ###
+        # update ModelMethod
         self.resSWATModelInstance.metadata.update_element('ModelMethod',
                                                           self.resSWATModelInstance.metadata.model_method.id,
                                                           runoffCalculationMethod="go hoos",
@@ -385,23 +380,21 @@ class TestSWATModelInstanceMetaData(MockIRODSTestCaseMixin, TransactionTestCase)
         self.assertEqual(self.resSWATModelInstance.metadata.model_method.flowRoutingMethod, 'rotunda')
         self.assertEqual(self.resSWATModelInstance.metadata.model_method.petEstimationMethod, 'honor code')
 
-        # update ModelParameter ####
+        # update ModelParameter
         # try to update a modelparam with a non cv term
         with self.assertRaises(ValidationError):
             self.resSWATModelInstance.metadata.update_element('ModelParameter',
                                                               self.resSWATModelInstance.metadata.model_parameter.id,
-                                                              model_parameters={"chucky cheese": "chucky cheese"})
+                                                              model_parameters="chucky cheese")
         # update legit modelparam
         s_params = ["Point source", "Fertilizer"]
         self.resSWATModelInstance.metadata.update_element('ModelParameter',
                                                           self.resSWATModelInstance.metadata.model_parameter.id,
-                                                          model_parameters={s_params[0]: s_params[0],
-                                                                            s_params[1]: s_params[1]})
+                                                          model_parameters=s_params)
         modelparam_element = self.resSWATModelInstance.metadata.model_parameter
-        v = modelparam_element.model_parameters.values()
-        val_list = [d['description'] for d in v]
+        v = modelparam_element.get_swat_model_parameters()
         for p in s_params:
-            self.assertEquals(p in val_list, True)
+            self.assertEquals(p in v, True)
         self.assertEquals(modelparam_element.other_parameters, o_params)
         # now update the other params
         o_params = 'square pants'
@@ -410,13 +403,12 @@ class TestSWATModelInstanceMetaData(MockIRODSTestCaseMixin, TransactionTestCase)
                                                           other_parameters=o_params)
         # check that the other params was updated and that the model params are the same
         modelparam_element = self.resSWATModelInstance.metadata.model_parameter
-        v = modelparam_element.model_parameters.values()
-        val_list = [d['description'] for d in v]
+        v = modelparam_element.get_swat_model_parameters()
         for p in s_params:
-            self.assertEquals(p in val_list, True)
+            self.assertEquals(p in v, True)
         self.assertEquals(modelparam_element.other_parameters, o_params)
 
-        # update ModelInput ###
+        # update ModelInput
         # try to update a ModelInput with non cv terms
         with self.assertRaises(ValidationError):
             self.resSWATModelInstance.metadata.update_element('ModelInput',
@@ -468,7 +460,7 @@ class TestSWATModelInstanceMetaData(MockIRODSTestCaseMixin, TransactionTestCase)
         self.assertEqual(self.resSWATModelInstance.metadata.model_input.soilDataSourceName, 'q')
         self.assertEqual(self.resSWATModelInstance.metadata.model_input.soilDataSourceURL, 'r')
 
-        # delete #######################################################################################################
+        # delete
 
         # check that there are all extended metadata elements at this point
         self.assertNotEqual(self.resSWATModelInstance.metadata.model_output, None)
@@ -530,8 +522,7 @@ class TestSWATModelInstanceMetaData(MockIRODSTestCaseMixin, TransactionTestCase)
         s_objs = ["BMPs", "Hydrology", "Water quality"]
         o_objs = "elon musk"
         self.resSWATModelInstance.metadata.create_element('ModelObjective',
-                                                          swat_model_objectives={s_objs[0]: s_objs[0],
-                                                                                 s_objs[1]: s_objs[1]},
+                                                          swat_model_objectives=s_objs,
                                                           other_objectives=o_objs)
 
         self.assertTrue(self.resSWATModelInstance.metadata.has_all_required_elements())
@@ -548,8 +539,7 @@ class TestSWATModelInstanceMetaData(MockIRODSTestCaseMixin, TransactionTestCase)
         s_objs = ["BMPs", "Hydrology", "Water quality"]
         o_objs = "elon musk"
         self.resSWATModelInstance.metadata.create_element('ModelObjective',
-                                                          swat_model_objectives={s_objs[0]: s_objs[0],
-                                                                                 s_objs[1]: s_objs[1]},
+                                                          swat_model_objectives=s_objs,
                                                           other_objectives=o_objs)
         self.resSWATModelInstance.metadata.create_element('SimulationType',
                                                           simulation_type_name='Normal Simulation')
@@ -560,8 +550,7 @@ class TestSWATModelInstanceMetaData(MockIRODSTestCaseMixin, TransactionTestCase)
         s_params = ["Crop rotation", "Tillage operation"]
         o_params = "spongebob"
         self.resSWATModelInstance.metadata.create_element('ModelParameter',
-                                                          model_parameters={s_params[0]: s_params[0],
-                                                                            s_params[1]: s_params[1]},
+                                                          model_parameters=s_params,
                                                           other_parameters=o_params)
 
         self.resSWATModelInstance.metadata.create_element('ModelInput',
@@ -588,6 +577,8 @@ class TestSWATModelInstanceMetaData(MockIRODSTestCaseMixin, TransactionTestCase)
         ET.fromstring(self.resSWATModelInstance.metadata.get_xml())  # todo check actual xml content
 
     def test_metadata_on_content_file_delete(self):
+        # Metadata should remain after content file deletion
+
         # upload files
         files = [UploadedFile(file=self.text_file_obj, name=self.text_file_obj.name)]
         utils.resource_file_add_pre_process(resource=self.resSWATModelInstance, files=files, user=self.user,
@@ -604,8 +595,7 @@ class TestSWATModelInstanceMetaData(MockIRODSTestCaseMixin, TransactionTestCase)
         s_objs = ["BMPs", "Hydrology", "Water quality"]
         o_objs = "elon musk"
         self.resSWATModelInstance.metadata.create_element('ModelObjective',
-                                                          swat_model_objectives={s_objs[0]: s_objs[0],
-                                                                                 s_objs[1]: s_objs[1]},
+                                                          swat_model_objectives=s_objs,
                                                           other_objectives=o_objs)
         self.resSWATModelInstance.metadata.create_element('SimulationType',
                                                           simulation_type_name='Normal Simulation')
@@ -616,8 +606,7 @@ class TestSWATModelInstanceMetaData(MockIRODSTestCaseMixin, TransactionTestCase)
         s_params = ["Crop rotation", "Tillage operation"]
         o_params = "spongebob"
         self.resSWATModelInstance.metadata.create_element('ModelParameter',
-                                                          model_parameters={s_params[0]: s_params[0],
-                                                                            s_params[1]: s_params[1]},
+                                                          model_parameters=s_params,
                                                           other_parameters=o_params)
 
         self.resSWATModelInstance.metadata.create_element('ModelInput',
@@ -648,8 +637,12 @@ class TestSWATModelInstanceMetaData(MockIRODSTestCaseMixin, TransactionTestCase)
 
         # delete content file that we added above
         hydroshare.delete_resource_file(self.resSWATModelInstance.short_id, self.file_name, self.user)
+
         # there should no content file
         self.assertEquals(self.resSWATModelInstance.files.all().count(), 0)
+
+        # there should be no format element
+        self.assertEquals(self.resSWATModelInstance.metadata.formats.all().count(), 0)
 
         # test the core metadata at this point
         self.assertNotEquals(self.resSWATModelInstance.metadata.title, None)
@@ -685,8 +678,7 @@ class TestSWATModelInstanceMetaData(MockIRODSTestCaseMixin, TransactionTestCase)
         s_objs = ["BMPs", "Hydrology", "Water quality"]
         o_objs = "elon musk"
         self.resSWATModelInstance.metadata.create_element('ModelObjective',
-                                                          swat_model_objectives={s_objs[0]: s_objs[0],
-                                                                                 s_objs[1]: s_objs[1]},
+                                                          swat_model_objectives=s_objs,
                                                           other_objectives=o_objs)
         self.resSWATModelInstance.metadata.create_element('SimulationType',
                                                           simulation_type_name='Normal Simulation')
@@ -697,8 +689,7 @@ class TestSWATModelInstanceMetaData(MockIRODSTestCaseMixin, TransactionTestCase)
         s_params = ["Crop rotation", "Tillage operation"]
         o_params = "spongebob"
         self.resSWATModelInstance.metadata.create_element('ModelParameter',
-                                                          model_parameters={s_params[0]: s_params[0],
-                                                                            s_params[1]: s_params[1]},
+                                                          model_parameters=s_params,
                                                           other_parameters=o_params)
 
         self.resSWATModelInstance.metadata.create_element('ModelInput',
@@ -757,6 +748,7 @@ class TestSWATModelInstanceMetaData(MockIRODSTestCaseMixin, TransactionTestCase)
         self.assertTrue(Rights.objects.filter(object_id=core_metadata_obj.id).exists())
 
         # resource specific metadata
+        self.assertEquals(SWATModelInstanceMetaData.objects.all().count(), 1)
         # there should be Model Output metadata objects
         self.assertTrue(ModelOutput.objects.filter(object_id=core_metadata_obj.id).exists())
         # there should be ExecutedBy metadata objects
@@ -775,6 +767,7 @@ class TestSWATModelInstanceMetaData(MockIRODSTestCaseMixin, TransactionTestCase)
         # delete resource
         hydroshare.delete_resource(self.resSWATModelInstance.short_id)
         self.assertEquals(CoreMetaData.objects.all().count(), 2)
+        self.assertEquals(SWATModelInstanceMetaData.objects.all().count(), 0)
 
         # there should be no Creator metadata objects
         self.assertFalse(Creator.objects.filter(object_id=core_metadata_obj.id).exists())
@@ -808,17 +801,17 @@ class TestSWATModelInstanceMetaData(MockIRODSTestCaseMixin, TransactionTestCase)
         self.assertFalse(Rights.objects.filter(object_id=core_metadata_obj.id).exists())
 
         # resource specific metadata
-        # there should be Model Output metadata objects
+        # there should be no Model Output metadata objects
         self.assertFalse(ModelOutput.objects.filter(object_id=core_metadata_obj.id).exists())
-        # there should be ExecutedBy metadata objects
+        # there should be no ExecutedBy metadata objects
         self.assertFalse(ExecutedBy.objects.filter(object_id=core_metadata_obj.id).exists())
-        # there should be ModelObjective metadata objects
+        # there should be no ModelObjective metadata objects
         self.assertFalse(ModelObjective.objects.filter(object_id=core_metadata_obj.id).exists())
-        # there should be SimulationType metadata objects
+        # there should be no SimulationType metadata objects
         self.assertFalse(SimulationType.objects.filter(object_id=core_metadata_obj.id).exists())
-        # there should be ModelMethod metadata objects
+        # there should be no ModelMethod metadata objects
         self.assertFalse(ModelMethod.objects.filter(object_id=core_metadata_obj.id).exists())
-        # there should be ModelParameter metadata objects
+        # there should be no ModelParameter metadata objects
         self.assertFalse(ModelParameter.objects.filter(object_id=core_metadata_obj.id).exists())
-        # there should be ModelInput metadata objects
+        # there should be no ModelInput metadata objects
         self.assertFalse(ModelInput.objects.filter(object_id=core_metadata_obj.id).exists())
