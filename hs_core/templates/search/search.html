@@ -115,7 +115,7 @@
                             <tbody>
                                 {% for result in page_obj.object_list %}
                                     <tr>
-                                        <td><a href="{{ result.object.get_absolute_url }}">{{ result.object.title }}</a></td>
+                                        <td><a href="{{ result.object.get_absolute_url }}">{{ result.object.metadata.title.value }}</a></td>
                                         <td>{{ result.object|resource_type }}</td>
                                         {% if result.object.first_creator.description %}
                                             <td><a href="{{ result.object.first_creator.description }}">{{ result.object.first_creator.name  }}</a></td>
