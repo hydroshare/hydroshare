@@ -4,8 +4,6 @@ from hs_core import page_processors
 from hs_core.views import add_generic_context
 from hs_core.views.utils import get_my_resources_list
 from hs_core.models import BaseResource
-from hs_access_control.models import PrivilegeCodes
-
 from .models import CollectionResource
 
 @processor_for(CollectionResource)
@@ -33,8 +31,7 @@ def landing_page(request, page):
                 continue # skip current collection resource object
             elif res in content_model.resources.all():
                 continue # skip resources that are already in current collection
-            elif res.resource_type.lower() == "collectionresource":
-                continue # skip the res that is type of collection
+
             candidate_resources_list.append(res)
 
         context['collection_candidate'] = candidate_resources_list

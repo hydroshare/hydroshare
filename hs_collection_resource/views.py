@@ -29,7 +29,7 @@ def update_collection(request, shortkey, *args, **kwargs):
             collection_res_obj, is_authorized, user = authorize(request, shortkey,
                                                                 needed_permission=ACTION_TO_AUTHORIZE.EDIT_RESOURCE)
 
-            if collection_res_obj.resource_type != "CollectionResource":
+            if collection_res_obj.resource_type.lower() != "collectionresource":
                 raise Exception("Resource {0} is not a collection resource.".format(shortkey))
 
             # get res_id list from POST
@@ -38,17 +38,18 @@ def update_collection(request, shortkey, *args, **kwargs):
             if len(updated_contained_res_id_list) > len(set(updated_contained_res_id_list)):
                 raise Exception("Duplicate resources were found for adding to the collection")
 
-            # check authorization for all new resources being added to the collection
-            # the requesting user should at least have metadata view permission for each of the
-            # new resources to be added to the collection
+
             for updated_contained_res_id in updated_contained_res_id_list:
+                # avoid adding collection itself
+                if updated_contained_res_id == shortkey:
+                    raise Exception("Can not add collection itself.")
+
+                # check authorization for all new resources being added to the collection
+                # the requesting user should at least have metadata view permission for each of the
+                # new resources to be added to the collection
                 if not collection_res_obj.resources.filter(short_id=updated_contained_res_id).exists():
                     res_to_add, _, _ = authorize(request, updated_contained_res_id,
                                                  needed_permission=ACTION_TO_AUTHORIZE.VIEW_METADATA)
-
-                    # for now we are not allowing a collection resource to be added to another collection resource
-                    if res_to_add.resource_type == "CollectionResource":
-                        raise Exception("Resource {0} is a collection resource which can't be added.".format(shortkey))
 
             # remove all resources from the collection
             collection_res_obj.resources.clear()
@@ -88,7 +89,7 @@ def update_collection_for_deleted_resources(request, shortkey, *args, **kwargs):
         collection_res, is_authorized, user = authorize(request, shortkey,
                                                         needed_permission=ACTION_TO_AUTHORIZE.EDIT_RESOURCE)
 
-        if collection_res.resource_type != "CollectionResource":
+        if collection_res.resource_type.lower() != "collectionresource":
             raise Exception("Resource {0} is not a collection resource.".format(shortkey))
 
         resource_modified(collection_res, user)

@@ -34,6 +34,12 @@ class CollectionResource(BaseResource):
     def has_resources(self):
         return self.resources.count() > 0
 
+    @property
+    def are_all_contained_resources_published(self):
+        if not self.has_resources:
+            return False
+        return not self.resources.all().filter(raccess__published=False).exists()
+
 
 processor_for(CollectionResource)(resource_processor)
 
