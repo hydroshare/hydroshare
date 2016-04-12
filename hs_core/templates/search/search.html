@@ -409,16 +409,24 @@
         }
 
         var clearAllFaceted = function() {
-            localStorage.clear();
+            clearLocalStorageCheckboxes();
             var textSearch = $("#id_q").val();
             var clearURL = "/search/?q=" + textSearch;
             window.location = clearURL;
         }
 
+        var clearLocalStorageCheckboxes = function() {
+            $(".faceted-selections").each(function () {
+                delete localStorage[$(this).attr("id")];
+                $(this).prop("checked", false);
+            });
+        }
 
         $(document).ready(function () {
+
             if($("#id_q").val() == ""){
-                clearAllFaceted();
+                clearLocalStorageCheckboxes();
+                localStorage.clear();
                 $("#id_q").val("*");
                 var searchURL = "?q=" + "*";
                 var windowPath = window.location.pathname;
@@ -476,7 +484,8 @@
             $("#id_q").keypress(function(event) {
                 if (event.which == 13) {
                     event.preventDefault();
-                    localStorage.clear();
+                    //localStorage.clear();
+                    clearLocalStorageCheckboxes();
                     $("#search-field").submit();
                 }
             });
@@ -492,6 +501,7 @@
 
                 if($(this).is(":checked")) {
                     requestURL = requestURL + "&selected_facets="+key+"_exact:"+value
+
                     $(".faceted-selections").each(function () {
                         var val = localStorage[$(this).attr("id")];
                         var isChecked = val === 'true';
@@ -524,16 +534,8 @@
 
             $(".faceted-selections").each(function () {
                 var val = localStorage[$(this).attr("id")];
-                var isChecked = val !== undefined ? val == "true" : false;
+                var isChecked = val !== undefined ? val == 'true' : false;
                 $(this).prop("checked", isChecked);
-            });
-
-            $("#faceted-search").click(function(){
-                localStorage.clear();
-            });
-
-            $(".all-rows-selector").change(function(){
-                $(".row-selector").prop("checked", $(this).prop("checked"));
             });
         });
     </script>
