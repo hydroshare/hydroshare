@@ -104,7 +104,23 @@ class Variable(models.Model):
     value = models.CharField(max_length=130)
 
     def get_value(self):
-        return loads(self.value)
+        try:
+            f = float(self.value)
+        except ValueError:
+            f = None
+        try:
+            i = int(self.value)
+        except ValueError:
+            i = None
+        if i is not None and i == f:
+            return i
+        elif f is not None:
+            return f
+        elif self.value == 'true':
+            return True
+        elif self.value == 'false':
+            return False
+        return self.value
 
     @classmethod
     def record(cls, session, name, value):
@@ -115,4 +131,13 @@ class Variable(models.Model):
                     break
             except ValueError:
                 continue
-        Variable.objects.create(session=session, name=name, type=type_code, value=dumps(value))
+        return Variable.objects.create(session=session, name=name, type=type_code, value=cls.encode(value))
+
+    @classmethod
+    def encode(cls, value):
+        if isinstance(value, bool):
+            return 'true' if value else 'false'
+        elif isinstance(value, (int, float, str, unicode)):
+            return unicode(value)
+        else:
+            raise ValueError("Unknown type (%s) for tracking variable: %r" % (type(value).__name__, value))

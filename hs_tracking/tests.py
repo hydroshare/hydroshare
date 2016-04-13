@@ -44,14 +44,14 @@ class TrackingTests(TestCase):
         self.assertEqual("3.14", self.session.variable_set.get(name='float').value)
         self.assertEqual("true", self.session.variable_set.get(name='true').value)
         self.assertEqual("false", self.session.variable_set.get(name='false').value)
-        self.assertEqual('"Hello, World"', self.session.variable_set.get(name='text').value)
+        self.assertEqual('Hello, World', self.session.variable_set.get(name='text').value)
 
     def test_get(self):
         self.assertEqual(42, Variable(name='var', value='42').get_value())
         self.assertEqual(3.14, Variable(name='var', value='3.14').get_value())
         self.assertEqual(True, Variable(name='var', value='true').get_value())
         self.assertEqual(False, Variable(name='var', value='false').get_value())
-        self.assertEqual("X", Variable(name='var', value='"X"').get_value())
+        self.assertEqual("X", Variable(name='var', value='X').get_value())
 
     def test_for_request_new(self):
         request = self.createRequest(user=self.user)
@@ -108,7 +108,7 @@ class TrackingTests(TestCase):
         self.visitor.user = self.user
         self.visitor.save()
 
-        response = client.get('/tracking/report/')
+        response = client.get('/tracking/reports/profiles/')
         reader = csv.reader(StringIO(response.content))
         rows = list(reader)
 
@@ -116,3 +116,34 @@ class TrackingTests(TestCase):
         self.assertEqual(rows[0], VISITOR_FIELDS)
         i = VISITOR_FIELDS.index('username')
         self.assertEqual(rows[1][i], self.user.username)
+
+    def test_history_empty(self):
+        self.user.is_staff = True
+        self.user.save()
+        client = Client()
+        response = client.get('/tracking/reports/history/')
+        self.assertEqual(response.status_code, 200)
+        reader = csv.reader(StringIO(response.content))
+        rows = list(reader)
+
+        count = Variable.objects.all().count()
+        self.assertEqual(len(rows), count)
+
+    def test_history_variables(self):
+        self.user.is_staff = True
+        self.user.save()
+        client = Client()
+        count = Variable.objects.all().count()
+        variable = self.session.record('testvar', "abcdef")
+        self.assertEqual(variable.session.id, self.session.id)
+
+        response = client.get('/tracking/reports/history/')
+        self.assertEqual(response.status_code, 200)
+        reader = csv.DictReader(StringIO(response.content))
+        rows = list(reader)
+        data = rows[-1]
+
+        self.assertEqual(int(data['session']), self.session.id)
+        self.assertEqual(int(data['visitor']), self.visitor.id)
+        self.assertEqual(data['variable'], "testvar")
+        self.assertEqual(data['value'], "abcdef")

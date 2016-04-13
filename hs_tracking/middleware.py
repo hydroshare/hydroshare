@@ -5,6 +5,7 @@ class Tracking(object):
     raise a 403 if the logged in user would normally not be able to view the
     content"""
 
-    def process_request(self, request):
+    def process_response(self, request, response):
         session = Session.objects.for_request(request)
         session.record("visit", request.path)
+        return response

@@ -20,11 +20,11 @@ class UseTrackingView(TemplateView):
         return {}
 
 
-class UseTrackingReport(TemplateView):
+class VisitorProfileReport(TemplateView):
 
     @method_decorator(user_passes_test(lambda u: u.is_staff))
     def dispatch(self, *args, **kwargs):
-        return super(UseTrackingReport, self).dispatch(*args, **kwargs)
+        return super(VisitorProfileReport, self).dispatch(*args, **kwargs)
 
     def get(self, request, **kwargs):
         """Download a CSV report of use tracking data."""
@@ -37,6 +37,27 @@ class UseTrackingReport(TemplateView):
         for v in visitors:
             info = v.export_visitor_information()
             row = [info[field] for field in hs_tracking.VISITOR_FIELDS]
+            w.writerow(row)
+        f.seek(0)
+        return HttpResponse(f.read(), content_type="text/csv")
+
+
+class HistoryReport(TemplateView):
+
+    # @method_decorator(user_passes_test(lambda u: u.is_staff))
+    def dispatch(self, *args, **kwargs):
+        return super(HistoryReport, self).dispatch(*args, **kwargs)
+
+    def get(self, request, **kwargs):
+        """Download a CSV report of use tracking data."""
+
+        f = StringIO()
+        w = csv.writer(f)
+        w.writerow(['visitor', 'session', 'session start', 'timestamp', 'variable', 'type', 'value'])
+        variables = hs_tracking.Variable.objects.all().order_by('timestamp')
+
+        for v in variables:
+            row = [v.session.visitor.id, v.session.id, v.session.begin, v.timestamp, v.name, v.type, v.value]
             w.writerow(row)
         f.seek(0)
         return HttpResponse(f.read(), content_type="text/csv")
