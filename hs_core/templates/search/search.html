@@ -6,7 +6,8 @@
     <div class="row">
         <div class="col-lg-3" id="filters-panel">
             {% if query %}
-                <input class="btn btn-default inline" type="button" value="Clear All" style="margin-bottom: 10px" onclick="clearAllFaceted()">
+                <button class="btn btn-default"  style="margin-bottom: 10px;" onclick="clearAllFaceted()">Show All</button>
+                <button class="btn btn-info pull-right" style="margin-bottom: 10px;" data-toggle="popover" data-placement="right"><i class="glyphicon glyphicon-info-sign"></i></button>
                 {% for key, values in facets.fields.items %}
                     {% if values and key != 'public' and key != 'discoverable' %}
                         <div class="panel-group" id="faceting-{{ key }}">
@@ -409,36 +410,35 @@
         }
 
         var clearAllFaceted = function() {
-            clearLocalStorageCheckboxes();
-            var textSearch = $("#id_q").val();
-            var clearURL = "/search/?q=" + textSearch;
+            localStorage.clear();
+            var clearURL = "/search/?q=*";
             window.location = clearURL;
         }
 
         var clearLocalStorageCheckboxes = function() {
             $(".faceted-selections").each(function () {
-                delete localStorage[$(this).attr("id")];
                 $(this).prop("checked", false);
+                delete localStorage[$(this).attr("id")];
             });
         }
+
 
         $(document).ready(function () {
 
             if($("#id_q").val() == ""){
-                clearLocalStorageCheckboxes();
                 localStorage.clear();
-                $("#id_q").val("*");
                 var searchURL = "?q=" + "*";
                 var windowPath = window.location.pathname;
                 var requestURL =  windowPath + searchURL;
                 window.location = requestURL;
             }
 
-             $('#items-discovered').DataTable({
-                 "paging":   false,
-                 "searching": false,
-                 "order": [[ 0, "desc" ]]
-             });
+
+            $('#items-discovered').DataTable({
+                "paging":   false,
+                "searching": false,
+                "order": [[ 0, "desc" ]]
+            });
 
             $("ul.nav-tabs > li > a").on("shown.bs.tab", function (e) {
                 var tabId = $(e.target).attr("href").substr(1);
@@ -484,8 +484,7 @@
             $("#id_q").keypress(function(event) {
                 if (event.which == 13) {
                     event.preventDefault();
-                    //localStorage.clear();
-                    clearLocalStorageCheckboxes();
+                    localStorage.clear();
                     $("#search-field").submit();
                 }
             });
@@ -536,6 +535,14 @@
                 var val = localStorage[$(this).attr("id")];
                 var isChecked = val !== undefined ? val == 'true' : false;
                 $(this).prop("checked", isChecked);
+            });
+
+
+            $('[data-toggle="popover"]').popover({
+                html: true,
+                container: '#items',
+                content: '<p>This search box supports <a href="https://cwiki.apache.org/confluence/display/solr/Searching" target="_blank">SOLR Query syntax</a>.</p>',
+                trigger: 'click'
             });
         });
     </script>
