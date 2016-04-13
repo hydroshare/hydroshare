@@ -1,13 +1,15 @@
 {% extends "pages/page.html" %}
 
+
+
 {% block main %}
 
     <div class="collaborate-header">
         <div class="container">
             <div class="col-sm-12">
                 <div class="collaborate-nav">
-                    <a href="/find-groups" class="collaborate-nav-item active">Find Groups</a>
-                    <a href="/my-groups" class="collaborate-nav-item">My Groups</a>
+                    <a href="{% url "Collaborate" %}" class="collaborate-nav-item">Find Groups</a>
+                    <a href="{% url "MyGroups" %}" class="collaborate-nav-item active">My Groups</a>
                 </div>
             </div>
         </div>
@@ -59,38 +61,17 @@
                     <h4>Groups that I am in</h4>
                     <hr class="solid">
                     <table class="groups-table">
-                        <tr>
+                        {% for group in groups %}
+                            <tr>
                             <td><div class="group-image-small" style="background-image: url({{ STATIC_URL }}img/home-page/carousel/bg1.jpg)"></div></td>
                             <td>
-                                <h4><a href="/group">Web Designer and HTML/CSS Developer</a></h4>
+                                <h4><a href="/hsapi/_internal/group/{{ group.id }}">{{ group.name }}</a></h4>
                                 <small class="text-muted">21 Members</small>
                             </td>
                             <td><span>Member</span></td>
                         </tr>
-                        <tr>
-                            <td><div class="group-image-small" style="background-image: url({{ STATIC_URL }}img/home-page/carousel/bg2.jpg)"></div></td>
-                            <td>
-                                <h4><a href="/group">UWRL</a></h4>
-                                <small class="text-muted">14 Members</small>
-                            </td>
-                            <td><span>Owner</span></td>
-                        </tr>
-                        <tr>
-                            <td><div class="group-image-small" style="background-image: url({{ STATIC_URL }}img/home-page/carousel/bg1.jpg)"></div></td>
-                            <td>
-                                <h4><a href="/group">Web Designer and HTML/CSS Developer</a></h4>
-                                <small class="text-muted">21 Members</small>
-                            </td>
-                            <td><span>Member</span></td>
-                        </tr>
-                        <tr>
-                            <td><div class="group-image-small" style="background-image: url({{ STATIC_URL }}img/home-page/carousel/bg2.jpg)"></div></td>
-                            <td>
-                                <h4><a href="/group">UWRL</a></h4>
-                                <small class="text-muted">14 Members</small>
-                            </td>
-                            <td><span>Owner</span></td>
-                        </tr>
+
+                        {% endfor %}
                     </table>
                 </div>
             </div>
@@ -102,83 +83,86 @@
          aria-labelledby="Creage Group">
         <div class="modal-dialog" role="document">
             <div class="modal-content">
-                <div class="modal-header">
-                    <button type="button" class="close" data-dismiss="modal"
-                            aria-label="Close"><span aria-hidden="true">&times;</span>
-                    </button>
-                    <h4 class="modal-title" id="myModalLabel">Create New Group</h4>
-                </div>
-                <div class="modal-body">
-                    <div class="row">
-                        {# Group Name #}
-                        <fieldset class="col-sm-12">
-                            <label>Group Name *</label>
-                            <input class="form-control form-required" name="group-name">
-                        </fieldset>
+                <form action="/hsapi/_internal/create-user-group/" method="POST" enctype="multipart/form-data">
+                    <div class="modal-header">
+                        <button type="button" class="close" data-dismiss="modal"
+                                aria-label="Close"><span aria-hidden="true">&times;</span>
+                        </button>
+                        <h4 class="modal-title" id="myModalLabel">Create New Group</h4>
+                    </div>
+                    <div class="modal-body">
+                        {% csrf_token %}
+                        <div class="row">
+                            {# Group Name #}
+                            <fieldset class="col-sm-12">
+                                <label>Group Name *</label>
+                                <input class="form-control form-required" name="name">
+                            </fieldset>
 
-                        {# Group Description #}
-                        <fieldset class="col-sm-12">
-                            <label>About this group *</label>
-                            <textarea class="form-control"></textarea>
-                        </fieldset>
+                            {# Group Description #}
+                            <fieldset class="col-sm-12">
+                                <label>About this group *</label>
+                                <textarea class="form-control" name="description"></textarea>
+                            </fieldset>
 
-                        {# Purpose #}
-                        <fieldset class="col-sm-12">
-                            <label>Purpose</label>
-                            <input class="form-control" name="group-name">
-                        </fieldset>
+                            {# Purpose #}
+                            <fieldset class="col-sm-12">
+                                <label>Purpose</label>
+                                <input class="form-control" name="purpose">
+                            </fieldset>
 
-                        <br>
+                            <br>
 
-                        {# Photo #}
-                        <div class="col-sm-12">
-                            <fieldset>
-                                <label>Add a photo</label>
+                            {# Photo #}
+                            <div class="col-sm-12">
+                                <fieldset>
+                                    <label>Add a photo</label>
 
-                                <div class="input-group">
-                                    <span class="input-group-btn">
-                                        <span id="cv-custom-upload" class="btn btn-default btn-file">
-                                            Browse&hellip; <input type="file" name="group-photo">
+                                    <div class="input-group">
+                                        <span class="input-group-btn">
+                                            <span id="cv-custom-upload" class="btn btn-default btn-file">
+                                                Browse&hellip; <input type="file">
+                                            </span>
                                         </span>
-                                    </span>
-                                    <input type="text" class="form-control" readonly>
+                                        <input type="text" class="form-control" readonly>
+                                    </div>
+                                </fieldset>
+                            </div>
+
+                            <br>
+
+                            {# Privacy #}
+                            <fieldset class="col-sm-12">
+                                <label>Privacy *</label>
+
+                                <div class="radio">
+                                    <label>
+                                        <input type="radio" value="public" checked>Public
+                                        <div class="text-muted">Other users can find the group and see who has membership.</div>
+                                    </label>
+
+                                </div>
+                                <div class="radio">
+                                    <label>
+                                        <input type="radio" value="discoverable">Discoverable
+                                        <div class="text-muted">Other users can find this group, but membership information is hidden.</div>
+                                    </label>
+                                </div>
+                                <div class="radio disabled">
+                                    <label>
+                                        <input type="radio" value="private">Private
+                                        <div class="text-muted">Other users can not find this group.</div>
+                                    </label>
                                 </div>
                             </fieldset>
                         </div>
 
-                        <br>
-
-                        {# Privacy #}
-                        <fieldset class="col-sm-12">
-                            <label>Privacy *</label>
-
-                            <div class="radio">
-                                <label>
-                                    <input type="radio" name="privacy" value="public" checked>Public
-                                    <p class="text-muted">Other users can find the group and see who has membership.</p>
-                                </label>
-
-                            </div>
-                            <div class="radio">
-                                <label>
-                                    <input type="radio" name="privacy" value="discoverable">Discoverable
-                                    <p class="text-muted">Other users can find this group, but membership information is hidden.</p>
-                                </label>
-                            </div>
-                            <div class="radio disabled">
-                                <label>
-                                    <input type="radio" name="privacy" value="private">Private
-                                    <p class="text-muted">Other users can not find this group.</p>
-                                </label>
-                            </div>
-                        </fieldset>
                     </div>
-
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
-                    <a href="#" class="btn btn-primary">Create</a>
-                </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-primary">Create</button>
+                    </div>
+                </form>
             </div>
         </div>
     </div>
@@ -187,6 +171,7 @@
 {% endblock %}
 
 {% block extra_js %}
+    <script type="text/javascript" src="{{ STATIC_URL }}js/bootstrap-formhelpers.js"></script>
     <script>
 
         $(document).ready(function () {

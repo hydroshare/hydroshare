@@ -82,4 +82,8 @@ urlpatterns = patterns('',
     url(r'^_internal/(?P<resource_type>[A-z]+)/allow-multiple-file/$',
         views.is_multiple_file_allowed_for_resource_type),
     url(r'^_internal/search/autocomplete/', "hs_core.views.autocomplete.autocomplete"),
+    url(r'^_internal/my-groups/', views.MyGroupsView.as_view(), name='MyGroups'),
+    url(r'^_internal/group/(?P<group_id>[0-9]+)', views.GroupView.as_view(), name='Group'),
+    url(r'^_internal/collaborate', views.CollaborateView.as_view(), name='Collaborate'),
+
 )

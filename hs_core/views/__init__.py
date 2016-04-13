@@ -15,6 +15,8 @@ from django.shortcuts import get_object_or_404, render_to_response, render, redi
 from django.template import RequestContext
 from django.core import signing
 from django import forms
+from django.views.generic import TemplateView
+from django.core.urlresolvers import reverse
 
 from rest_framework.decorators import api_view
 
@@ -679,12 +681,14 @@ def create_user_group(request, *args, **kwargs):
         new_group = request.user.uaccess.create_group(title=group_form.cleaned_data['name'],
                                                       description=group_form.cleaned_data['description'],
                                                       purpose=group_form.cleaned_data['purpose'])
-        ajax_response_data = {'status': status, 'group': new_group}
+        ajax_response_data = {'status': status, 'group_id': new_group.id}
+        return HttpResponseRedirect(reverse('Group', args=[new_group.id]))
     else:
-        status = 'error'
-        ajax_response_data = {'status': status, 'errors': group_form.errors.as_json()}
+        messages.error(request, "Something went wrong while creating this group.")
+        # status = 'error'
+        # ajax_response_data = {'status': status, 'errors': group_form.errors.as_json()}
 
-    return HttpResponse(json.dumps(ajax_response_data))
+    return HttpResponseRedirect(request.META['HTTP_REFERER'])
 
 
 @login_required
@@ -981,3 +985,48 @@ def _get_message_for_setting_resource_flag(has_files, has_metadata, resource_fla
         msg = "Resource does not have required content files to be {flag}".format(flag=resource_flag)
 
     return msg
+
+
+class MyGroupsView(TemplateView):
+    template_name = 'pages/my-groups.html'
+
+    def get_context_data(self, **kwargs):
+        u = User.objects.get(pk=self.request.user.id)
+
+        groups = u.uaccess.view_groups
+
+        return {
+            'profile_user': u,
+            'groups': groups,
+        }
+
+
+class AddUserForm(forms.Form):
+        user = forms.ModelChoiceField(User.objects.all(), widget=autocomplete_light.ChoiceWidget("UserAutocomplete"))
+
+
+class GroupView(TemplateView):
+    template_name = 'pages/group.html'
+
+    def get_context_data(self, **kwargs):
+        group_id = kwargs['group_id']
+        g = Group.objects.get(pk=group_id)
+        u = User.objects.get(pk=self.request.user.id)
+
+        return {
+            'profile_user': u,
+            'group': g,
+            'add_view_user_form': AddUserForm(),
+        }
+
+
+class CollaborateView(TemplateView):
+    template_name = 'pages/collaborate.html'
+
+    def get_context_data(self, **kwargs):
+        u = User.objects.get(pk=self.request.user.id)
+        groups = Group.objects.all().exclude(name="Hydroshare Author")
+        return {
+            'profile_user': u,
+            'groups': groups,
+        }

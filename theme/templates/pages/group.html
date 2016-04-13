@@ -6,8 +6,8 @@
         <div class="container">
             <div class="col-sm-12">
                 <div class="collaborate-nav">
-                    <a href="/find-groups" class="collaborate-nav-item active">Find Groups</a>
-                    <a href="/my-groups" class="collaborate-nav-item">My Groups</a>
+                    <a href="{% url "Collaborate" %}" class="collaborate-nav-item">Find Groups</a>
+                    <a href="{% url "MyGroups" %}" class="collaborate-nav-item">My Groups</a>
                 </div>
             </div>
         </div>
@@ -20,16 +20,10 @@
             </div>
 
             <div class="col-sm-8">
-                <h2 class="group-title">Web Designer and HTML/CSS Developer</h2>
-                <h4 class="text-muted">Basic facts about #Infographic #Desiging.</h4>
+                <h2 class="group-title">{{ group.name }}</h2>
+                <h4 class="text-muted">{{ group.gaccess.purpose }}</h4>
 
-                <p>This group is for all web designer and web developer who are ready to share
-                    latest
-                    updates or
-                    knowledge with other professional. If you are a Designer or HTML/CSS Developer
-                    then feel
-                    free to
-                    join this group and take all benefits from this group.</p>
+                <p>{{ group.gaccess.description }}</p>
             </div>
             <div class="col-sm-2">
                 <!-- Single button -->
@@ -511,7 +505,8 @@
 {#                                 <span class="text-muted">This user has not shared any resources.</span>#}
 {#                             {% endif %}#}
 
-                             <div data-type="type-Generic" class="contribution">
+                             {% for res in group.gaccess.view_resources %}
+                                                                  <div data-type="type-Generic" class="contribution">
                                  <div class="icon-resource-type-wrapper">
                                         <span class="icon-resource-type">
                                             <span><strong>Generic</strong></span>
@@ -521,61 +516,25 @@
                                  </div>
                                  <div class="activity-block row">
                                      <div class="activity-info col-sm-12">
-                                         <span class="title"><a href="#">This
-                                             is a test</a></span>
+                                         <span class="title"><a href="#">{{ res.title }}</a></span>
                                          <h5><span class="text-muted">Created: </span>March 14, 2016, 5:14 p.m.</h5>
                                          <h5><span class="text-muted">Authors: </span>
                                              <a href="#">HydroShare Administrator</a>
                                          </h5>
                                      </div>
 
+                                     {% if res.metadata.description  %}
                                      <div class="activity-description col-sm-12">
                                          <p><strong>ABSTRACT: </strong></p>
-                                         <p>The Viterbi Graduate Student Association (VGSA) represents all the full time
-                                             and part time Master's and Doctoral students in the Viterbi School of
-                                             Engineering. VGSA is the largest student umbrella organization at the
-                                             University of Southern California with over 5,000 active engineering
-                                             graduate student members each year, and has an even greater Alumni
-                                             population. The VGSA promotes professional, academic, and social affairs on
-                                             campus, and is committed to creating a positive student experience at
-                                             USC.Show less</p>
+                                         <p>{{ res.metadata.description }}</p>
                                      </div>
                                      <div class="show-more-btn btn-default" title="Show more">···</div>
+                                     {% endif %}
                                  </div>
                              </div>
+                             {% endfor %}
 
-                             <div data-type="type-Generic" class="contribution">
-                                 <div class="icon-resource-type-wrapper">
-                                    <span class="icon-resource-type">
-                                        <span><strong>Generic</strong></span>
-                                            <img src="/static/img/resource-icons/generic48x48.png" alt="Generic"
-                                                 title="Generic">
-                                    </span>
-                                 </div>
-                                 <div class="activity-block row">
-                                     <div class="activity-info col-sm-12">
-                                         <span class="title"><a href="#">This
-                                             is a test</a></span>
-                                         <h5><span class="text-muted">Created: </span>March 14, 2016, 5:14 p.m.</h5>
-                                         <h5><span class="text-muted">Authors: </span>
-                                             <a href="#">HydroShare Administrator</a>
-                                         </h5>
-                                     </div>
 
-                                     <div class="activity-description col-sm-12">
-                                         <p><strong>ABSTRACT: </strong></p>
-                                         <p>The Viterbi Graduate Student Association (VGSA) represents all the full time
-                                             and part time Master's and Doctoral students in the Viterbi School of
-                                             Engineering. VGSA is the largest student umbrella organization at the
-                                             University of Southern California with over 5,000 active engineering
-                                             graduate student members each year, and has an even greater Alumni
-                                             population. The VGSA promotes professional, academic, and social affairs on
-                                             campus, and is committed to creating a positive student experience at
-                                             USC.Show less</p>
-                                     </div>
-                                     <div class="show-more-btn btn-default" title="Show more">···</div>
-                                 </div>
-                             </div>
 
                          </div>
                      </div>
@@ -598,10 +557,36 @@
                 <div class="modal-body">
                     <div id="div-invite-people">
                         <div class="input-group" style="width:100%">
-                            <form id="invite-to-group" action="" method="POST">
+                            <form id="group-add-access-form"
+                                  action="/hsapi/_internal/{{ cm.short_id }}/share-resource-with-group/"
+                                  method="POST">
                                 {% csrf_token %}
 
                                 {{ add_view_user_form.user }}
+
+{#                                <div class="dropdown">#}
+{#                                    <button class="btn btn-default dropdown-toggle" type="button"#}
+{#                                            id="roles_list" data-toggle="dropdown"#}
+{#                                            aria-haspopup="true">#}
+{#                                        <span id="selected_role" data-role="view">Can view</span>#}
+{#                                        <span class="caret"></span>#}
+{#                                    </button>#}
+{##}
+{#                                    <ul id="list-roles" class="dropdown-menu"#}
+{#                                        aria-labelledby="roles_list">#}
+{#                                        <li {% if not is_view_user and not is_edit_user and not is_owner_user %}class="disabled"{% endif %}>#}
+{#                                            <a data-role="view">Can view</a></li>#}
+{#                                        <li {% if not is_edit_user and not is_owner_user %}class="disabled"{% endif %}>#}
+{#                                            <a data-role="edit">Can edit</a></li>#}
+{#                                        <li {% if not is_owner_user %}class="disabled"{% endif %}><a#}
+{#                                                data-role="owner">Is owner</a></li>#}
+{#                                    </ul>#}
+{#                                </div>#}
+
+                                <a id="btn-invite"
+                                   onclick="share_resource_ajax_submit('group-add-access-form'); return false;"
+                                   class="btn btn-add-access btn-success pull-left glyphicon glyphicon-plus"><span
+                                        class="button-label">&nbspAdd</span></a>
                             </form>
                         </div>
                     </div>

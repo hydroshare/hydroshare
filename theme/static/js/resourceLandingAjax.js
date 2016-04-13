@@ -143,13 +143,20 @@ function change_share_permission_ajax_submit(form_id) {
 }
 
 function share_resource_ajax_submit(form_id) {
-    if (!$("#id_user-deck > .hilight").length) {
+    if (!$("#id_user-deck > .hilight").length && !$("#id_group-deck > .hilight").length) {
         return false; // If no user selected, ignore the request
     }
     $form = $('#' + form_id);
 
     var datastring = $form.serialize();
-    var share_with = $("#id_user-deck > .hilight")[0].getAttribute("data-value");
+    var share_with;
+    if ($("#id_user-deck > .hilight").length > 0) {
+        share_with = $("#id_user-deck > .hilight")[0].getAttribute("data-value");
+    }
+    else {
+        share_with = $("#id_group-deck > .hilight")[0].getAttribute("data-value");
+    }
+
     var access_type = $("#selected_role")[0].getAttribute("data-role");
     var url = $form.attr('action') + access_type + "/" + share_with + "/";
     setPointerEvents(false);
