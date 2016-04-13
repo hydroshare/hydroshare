@@ -1,0 +1,22 @@
+{% if not metadata_form %}
+    {% if fundingagencies %}
+        <div class="col-sm-12 content-block">
+            <h3>Credits</h3>
+            {% for agency in fundingagencies %}
+                {{ agency.agency_name }}
+                {{ agency.award_title }}
+                {{ agency.award_number }}
+                {{ agency.agency_url }}
+            {% endfor %}
+        </div>
+    {% endif %}
+{% else %}
+    <div class="col-sm-12 content-block">
+        <h3>Credits</h3>
+
+        <a id="btn-add-funding-agency" type="button" class="btn btn-success row-selector" data-toggle="modal"
+           data-target="#add-funding-agency">
+            <span class="glyphicon glyphicon-plus"><span class="button-label"> Add Funding Agency</span></span>
+        </a>
+    </div>
+{% endif %}
