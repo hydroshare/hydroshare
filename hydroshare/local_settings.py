@@ -141,6 +141,13 @@ HYRAX_SSH_PROXY_USER = ''
 HYRAX_SSH_PROXY_USER_PWD = ''
 HYRAX_SCRIPT_RUN_COMMAND = ''
 
+# hsuserproxy system user configuration used to create hydroshare iRODS users on-demand
+HS_USER_ZONE_HOST = ''
+HS_USER_ZONE_PROXY_USER = ''
+HS_USER_ZONE_PROXY_USER_PWD = ''
+HS_USER_ZONE_PROXY_USER_CREATE_USER_CMD = ''
+HS_USER_ZONE_PROXY_USER_DELETE_USER_CMD = ''
+
 # Email configuration
 EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 #EMAIL_HOST_USER = ''
