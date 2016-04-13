@@ -34,8 +34,8 @@ display_usage() {
 	echo "usage: $0 rebuild --db    # deletes all database and container contents and deploys from scratch"
 	echo "usage: $0 rebuild_index   # rebuild solr index in a non-interactive way"
 	echo "usage: $0 reset_all       # remove all data, containers and images that were previously deployed"
-	echo "usage: $0 restart         # restarts the hydroshare container without rebuilding"
-	echo "usage: $0 start           # attempts to start all containers"
+	echo "usage: $0 restart         # restarts the hydroshare container without rebuilding (includes preflight)"
+	echo "usage: $0 start           # attempts to start all containers (without preflight)"
 	echo "usage: $0 stop            # stops all running containers"
 	echo "usage: $0 update_index    # update solr index in a non-interactive way to be run as a cron job"
 }
@@ -185,7 +185,9 @@ delete_celerybeat_scheduler() {
 
 rebuild_nodb_hs() {
     echo "*** ${1^^} *** "
-    stop_hs STOP
+    if [[ -f docker-compose.yml ]]; then
+        stop_hs STOP
+    fi
     preflight_hs
     echo "*** REMOVE: all hydroshare docker containers (preserves exiting database contents)  ***"
     for f in "${HS_DOCKER_CONTAINERS[@]}"; do
@@ -227,37 +229,42 @@ rebuild_nodb_hs() {
 
 loaddb_hs() {
     echo "*** ${1^^} ***"
-    echo "*** load clean pg.development.sql database from the running hydroshare container ***"
-    CID=$(docker-compose ps | grep hydroshare | cut -d ' ' -f 1)
+    echo "*** load ${HS_DATABASE} database file from the running hydroshare container ***"
     echo "*** drop existing database ***"
-    docker exec $CID dropdb -U postgres -h postgis postgres
+    docker exec hydroshare dropdb -U postgres -h postgis postgres
     echo "*** create new database ***"
-    docker exec $CID createdb -U postgres -h postgis postgres --encoding UNICODE --template=template0
-    echo "*** create POSTGIS extension ***"
-    docker exec $CID psql -U postgres -h postgis -w -c 'create extension postgis;'
+    docker exec hydroshare createdb -U postgres -h postgis postgres --encoding UNICODE --template=template0
+    echo "*** INFO: SET client_min_messages = ERROR on PostgreSQL ***"
+    docker exec hydroshare psql -U postgres -h postgis -w -c 'SET client_min_messages = ERROR;'
+    echo "*** INFO: CREATE EXTENSION postgis on PostgreSQL ***"
+    docker exec hydroshare psql -U postgres -h postgis -w -c 'CREATE EXTENSION postgis;'
+    echo "*** INFO: CREATE EXTENSION hstore on PostgreSQL ***"
+    docker exec hydroshare psql -U postgres -h postgis -d template1 -w -c 'CREATE EXTENSION hstore;'
     echo "*** load database with contents of ${HS_DATABASE} ***"
-    docker exec $CID psql -U postgres -h postgis -f ${HS_DATABASE}
+    docker exec hydroshare psql -U postgres -h postgis -f ${HS_DATABASE} --quiet
     echo "*** manage.py collectstatic ***"
-    docker exec $CID python manage.py collectstatic -v0 --noinput
+    docker exec hydroshare python manage.py collectstatic -v0 --noinput
     #echo "*** manage.py makemigrations ***"
     #docker exec $CID python manage.py makemigrations
     echo "*** manage.py migrate ***"
-    docker exec $CID python manage.py migrate --fake-initial
+    docker exec hydroshare python manage.py migrate --fake-initial
     echo "*** manage.py fix_permissions ***"
-    docker exec $CID python manage.py fix_permissions
+    docker exec hydroshare python manage.py fix_permissions
     sleep 3s
     solr_schema_hs
     sleep 2s
     rebuild_solr_index
     sleep 2s
-    docker exec $CID curl "solr:8983/solr/admin/cores?action=RELOAD&core=collection1"
+    docker exec hydroshare curl "solr:8983/solr/admin/cores?action=RELOAD&core=collection1"
     sleep 2s
     rebuild_solr_index
 }
 
 rebuild_db_hs() {
     echo "*** ${1^^} ***"
-    stop_hs STOP
+    if [[ -f docker-compose.yml ]]; then
+        stop_hs STOP
+    fi
     preflight_hs
     echo "*** REMOVE: all docker containers (deletes existing database)  ***"
     for f in "${HS_DOCKER_CONTAINERS[@]}"; do
@@ -339,7 +346,9 @@ reset_all_hs() {
         echo "*** WARNING: Attempting cleanup anyway ***";
     fi
     # Stopping all running docker containers
-    stop_hs STOP
+    if [[ -f docker-compose.yml ]]; then
+        stop_hs STOP
+    fi
     echo "*** INFO: Removing all docker containers ***"
     docker-compose rm -f
     echo "*** INFO: Removing hydroshare related images ***"

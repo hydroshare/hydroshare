@@ -5,17 +5,16 @@
 
 # set local variables
 ### hydrodev VM
-HS_PATH=/home/${USER}/hydroshare
+HS_PATH=/home/hydro/hydroshare
 BACKUP_PATH=/home/${USER}/backup
 
 # set variables for use in script
-CID=$(docker-compose ps | grep hydroshare | cut -d ' ' -f 1)
 MEDIA_FILES=${HS_PATH}/media_files
 
 # backup database
 # database in postgis container
 echo "*** backing up database as ${HS_PATH}/pg.hydroshare-`date +"%m-%d-%y"`.sql ***"
-docker exec $CID /usr/bin/pg_dump -c -d postgres -U postgres -h postgis > "${HS_PATH}/pg.hydroshare-`date +"%m-%d-%y"`.sql"
+docker exec hydroshare /usr/bin/pg_dump -c -d postgres -U postgres -h postgis > "${HS_PATH}/pg.hydroshare-`date +"%m-%d-%y"`.sql"
 
 ### backup media files ###
 # hydroshare/static/media
@@ -26,11 +25,10 @@ if [ ! -d "$MEDIA_FILES" ]; then
     mkdir $MEDIA_FILES;
 fi
 # rsync hydroshare/script/media with media_files
-docker exec $CID rsync -avh --dry-run /home/docker/hydroshare/hydroshare/static/media /home/docker/hydroshare/media_files
-docker exec $CID rsync -avh /home/docker/hydroshare/hydroshare/static/media /home/docker/hydroshare/media_files
+docker exec hydroshare rsync -avh --dry-run /home/docker/hydroshare/hydroshare/static/media /home/docker/hydroshare/media_files
+docker exec hydroshare rsync -avh /home/docker/hydroshare/hydroshare/static/media /home/docker/hydroshare/media_files
 cd $HS_PATH
 tar -czvf "media-hydroshare-`date +"%m-%d-%y"`.tar.gz" media_files
-
 
 ### backup deployment files ###
 # check for existance of backup directory
@@ -42,21 +40,21 @@ fi
 
 # copy deployment files to backup directory
 echo "*** backup ${BACKUP_PATH}/settings.py ***"
-yes | cp -rf ${HS_PATH}/hydroshare/settings.py ${BACKUP_PATH}/settings.py
+cp -rf ${HS_PATH}/hydroshare/settings.py ${BACKUP_PATH}/settings.py
 echo "*** backup ${BACKUP_PATH}/local_settings.py ***"
-yes | cp -rf ${HS_PATH}/hydroshare/local_settings.py ${BACKUP_PATH}/local_settings.py
+cp -rf ${HS_PATH}/hydroshare/local_settings.py ${BACKUP_PATH}/local_settings.py
 echo "*** backup ${BACKUP_PATH}/Dockerfile ***"
-yes | cp -rf ${HS_PATH}/Dockerfile $BACKUP_PATH/Dockerfile
+cp -rf ${HS_PATH}/Dockerfile $BACKUP_PATH/Dockerfile
 echo "*** backup ${BACKUP_PATH}/pg.deploy.sql ***"
-yes | cp -rf ${HS_PATH}/pg.hydroshare-`date +"%m-%d-%y"`.sql ${BACKUP_PATH}/
-yes | cp -rf ${HS_PATH}/pg.hydroshare-`date +"%m-%d-%y"`.sql ${BACKUP_PATH}/pg.deploy.sql
+cp -rf ${HS_PATH}/pg.hydroshare-`date +"%m-%d-%y"`.sql ${BACKUP_PATH}/
+cp -rf ${HS_PATH}/pg.hydroshare-`date +"%m-%d-%y"`.sql ${BACKUP_PATH}/pg.deploy.sql
 echo "*** backup ${BACKUP_PATH}/media.deploy.tar.gz ***"
-yes | cp -rf ${HS_PATH}/media-hydroshare-`date +"%m-%d-%y"`.tar.gz ${BACKUP_PATH}/
-yes | cp -rf ${HS_PATH}/media-hydroshare-`date +"%m-%d-%y"`.tar.gz ${BACKUP_PATH}/media.deploy.tar.gz
+cp -rf ${HS_PATH}/media-hydroshare-`date +"%m-%d-%y"`.tar.gz ${BACKUP_PATH}/
+cp -rf ${HS_PATH}/media-hydroshare-`date +"%m-%d-%y"`.tar.gz ${BACKUP_PATH}/media.deploy.tar.gz
 echo "*** backup ${BACKUP_PATH}/docker-compose.yml ***"
-yes | cp -rf ${HS_PATH}/docker-compose.yml ${BACKUP_PATH}/docker-compose.yml
+cp -rf ${HS_PATH}/docker-compose.yml ${BACKUP_PATH}/docker-compose.yml
 echo "*** backup ${BACKUP_PATH}/hydroshare-config.yaml ***"
-yes | cp -rf ${HS_PATH}/config/hydroshare-config.yaml ${BACKUP_PATH}/hydroshare-config.yaml
+cp -rf ${HS_PATH}/config/hydroshare-config.yaml ${BACKUP_PATH}/hydroshare-config.yaml
 
 echo "*** FINISHED SCRIPT backup-hs ***"
 exit 0;
