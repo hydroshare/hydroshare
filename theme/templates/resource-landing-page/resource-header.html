@@ -1,8 +1,8 @@
 {% load hydroshare_tags %}
 
 {% if not metadata_form %}
-<div class="info-group col-sm-12">
-    <table>
+<div class="col-sm-12">
+    <table class="info-table">
         <tr><th>Authors:</th><td id="authors">
             {% for cr in creators %}
                 {% if forloop.counter0 != 0 %} <span>·</span> {% endif %}
@@ -22,8 +22,8 @@
     </table>
 </div>
 {% else %}
-    <div class="info-group col-sm-12">
-        <table>
+    <div class="col-sm-12">
+        <table class="info-table">
             <tr>
                 <th>Authors:</th>
                 <td><span id="authors">

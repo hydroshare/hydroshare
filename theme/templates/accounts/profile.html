@@ -903,6 +903,9 @@
             $(".form-required").change(onFormRequiredChange);
             $("#id_email").change(validateEmail);
             $("#id_username").change(validateUserName);
+
+            // Switch to overview tab
+            $('.nav-tabs a[href="#overview"]').tab('show'); // Select first tab
         }
 
         function setViewMode() {
@@ -1029,6 +1032,14 @@
 
             $("tr[data-type='all']").find(".badge").text(collection["total"]);
 
+
+            // Unspecified goes away as soon as a user clicks.
+            $("input[name='state']").click(function () {
+                    if ($(this).val() == "Unspecified") {
+                        $(this).val("");
+                    }
+                }
+            );
         });
     </script>
 {% endblock %}
