@@ -1,4 +1,6 @@
 from json import dumps
+import logging
+import paramiko
 
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import ValidationError
@@ -32,6 +34,7 @@ from theme.models import UserProfile
 
 from .forms import SignupForm
 
+logger = logging.getLogger(__name__)
 
 class UserProfileView(TemplateView):
     template_name='accounts/profile.html'
@@ -300,3 +303,41 @@ def deactivate_user(request):
     user.save()
     messages.success(request, "Your account has been successfully deactivated.")
     return HttpResponseRedirect('/accounts/logout/')
+
+@login_required
+def delete_irods_account(request):
+    ssh = paramiko.SSHClient()
+    ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+    ssh.connect(settings.HS_USER_ZONE_HOST, username=settings.HS_USER_ZONE_PROXY_USER, password=settings.HS_USER_ZONE_PROXY_USER_PWD)
+    transport = ssh.get_transport()
+    session = transport.open_session()
+    session.set_combine_stderr(True)
+    session.get_pty()
+    session.exec_command(settings.HS_USER_ZONE_PROXY_USER_DELETE_USER_CMD)
+    stdin = session.makefile('wb', -1)
+    stdout = session.makefile('rb', -1)
+    stdin.write("{cmd}\n".format(cmd=settings.HS_USER_ZONE_PROXY_USER_PWD))
+    stdin.flush()
+    logger = logging.getLogger('django')
+    logger.debug(stdout.readlines())
+
+    return HttpResponseRedirect(request.META['HTTP_REFERER'])
+
+@login_required
+def create_irods_account(request):
+    ssh = paramiko.SSHClient()
+    ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+    ssh.connect(settings.HS_USER_ZONE_HOST, username=settings.HS_USER_ZONE_PROXY_USER, password=settings.HS_USER_ZONE_PROXY_USER_PWD)
+    transport = ssh.get_transport()
+    session = transport.open_session()
+    session.set_combine_stderr(True)
+    session.get_pty()
+    session.exec_command(settings.HS_USER_ZONE_PROXY_USER_CREATE_USER_CMD)
+    stdin = session.makefile('wb', -1)
+    stdout = session.makefile('rb', -1)
+    stdin.write("{cmd}\n".format(cmd=settings.HS_USER_ZONE_PROXY_USER_PWD))
+    stdin.flush()
+    logger = logging.getLogger('django')
+    logger.debug(stdout.readlines())
+
+    return HttpResponseRedirect(request.META['HTTP_REFERER'])

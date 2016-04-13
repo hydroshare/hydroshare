@@ -60,11 +60,11 @@
                             </div>
                         {% endif %}
 
-                        {#        Password      #}
                         {% if profile_user.id == user.id %}
                         <div data-page-mode="edit">
                             <hr>
                             <div class="profile-picture-controls text-center">
+                                {#        Password      #}
                                 <div><a data-toggle="collapse" data-target="#change_password">Change password</a></div>
 
                                 <div id="change_password" class="collapse text-left">
@@ -86,6 +86,15 @@
 
                                 {#        Account deactivation       #}
                                 <div><a data-toggle="modal" data-target="#deactivate-account-dialog">Deactivate account</a></div>
+
+                                {# Account creation/deletion in iRODS user zone #}
+                                {% if profile.create_irods_user_account %}
+                                    {# an iRODS account already exists #}
+                                    <div><a data-toggle="modal" data-target="#delete-irods-account-dialog">Delete your iRODS user account</a></div>
+                                {% else %}
+                                    {# an iRODS account does not exist #}
+                                    <div><a data-toggle="modal" data-target="#create-irods-account-dialog">Create your iRODS user account</a></div>
+                                {% endif %}
                             </div>
                         </div>
                         {% endif %}
@@ -773,6 +782,74 @@
                 </div>
             </div>
         </div>
+
+        <!-- Create iRODS User Account Modal -->
+        <div class="modal fade" id="create-irods-account-dialog" tabindex="-1" role="dialog"
+             aria-labelledby="Create your iRODS user account">
+            <div class="modal-dialog" role="document">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <button type="button" class="close" data-dismiss="modal"
+                                aria-label="Close"><span aria-hidden="true">&times;</span>
+                        </button>
+                        <h4 class="modal-title" id="myModalLabel">Create your iRODS user Account</h4>
+                    </div>
+                    <div class="modal-body">
+                        <div class="row">
+                            <div class="col-sm-10 col-xs-12">
+                                <div>A corresponding iRODS user account with the same username {{ profile_user.username }} will be created
+                                    in the HydroShare user zone when you confirm this action. You will have to input a password below for your
+                                    iRODS user account, which does not have to be the same as your current HydroShare password. The password
+                                    is required to be composed of at least 8 characters. Please keep your iRODS user account password in a
+                                    secure place and use it to access your account in the HydroShare user zone using iRODS clients such as icommands or Cyberduck.
+                                </div>
+                            </div>
+                            <fieldset>
+                                <label>Password</label>
+                                <input class="form-control" autocomplete="off" id="id_irods_password" name="irods_password" placeholder="Password" type="password">
+                            </fieldset>
+                            <hr>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+                        <a id="create-irods-account-btn" href="{% url 'create_irods_account' %}" class="btn btn-danger" disabled>Confirm</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Delete iRODS User Account Modal -->
+        <div class="modal fade" id="delete-irods-account-dialog" tabindex="-1" role="dialog"
+             aria-labelledby="Create iRODS user account">
+            <div class="modal-dialog" role="document">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <button type="button" class="close" data-dismiss="modal"
+                                aria-label="Close"><span aria-hidden="true">&times;</span>
+                        </button>
+                        <h4 class="modal-title" id="myModalLabel">Delete your iRODS user Account</h4>
+                    </div>
+                    <div class="modal-body">
+                        <div class="row">
+                            <div class="col-sm-2 col-xs-12 text-center">
+                                <span id="icon-warning" class="glyphicon glyphicon-warning-sign"></span>
+                            </div>
+                            <div class="col-sm-10 col-xs-12">
+                                <div><strong>WARNING</strong>: This will <strong>delete</strong> your iRODS user account in the
+                                    HydroShare user zone as well as all data you have under that account. You cannot recover
+                                    your data after this action.
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+                        <a href="{% url 'delete_irods_account' %}" class="btn btn-danger">Confirm</a>
+                    </div>
+                </div>
+            </div>
+        </div>
         {% endif %}
     </form>
 
@@ -800,6 +877,14 @@
                 reader.readAsDataURL(input.files[0]);
             }
         }
+
+        $("#id_irods_password").keyup(function() {
+            pwdlen = $("input#id_irods_password").val().length;
+            if (pwdlen >= 8)
+                $('#create-irods-account-btn').removeAttr('disabled');
+            else
+                $('#create-irods-account-btn').attr('disabled', 'disabled');
+        });
 
         function validateForm() {
             var flagRequiredElements = validateRequiredElements();
