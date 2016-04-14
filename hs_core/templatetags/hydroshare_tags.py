@@ -91,6 +91,8 @@ def best_name(content):
 
 @register.filter
 def clean_pagination_url(content):
+    if "?q=" not in content:
+        content += "?q="
     if "&page=" not in content:
         return content
     else:
