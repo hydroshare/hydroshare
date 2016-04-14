@@ -30,8 +30,12 @@ class SessionManager(models.Manager):
                 pass
             if session is not None:
                 if session.visitor.user is None and request.user.is_authenticated():
-                    session.visitor.user = request.user
-                    session.visitor.save()
+                    try:
+                        session.visitor = Visitor.objects.get(user=request.user)
+                        session.save()
+                    except Visitor.DoesNotExist:
+                        session.visitor.user = request.user
+                        session.visitor.save()
                 return session
         # No session found, create one
         if request.user.is_authenticated():
