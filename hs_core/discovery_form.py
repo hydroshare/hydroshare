@@ -5,8 +5,12 @@ from crispy_forms.bootstrap import *
 
 
 class DiscoveryForm(FacetedSearchForm):
+
     def search(self):
-        sqs = super(FacetedSearchForm, self).search().filter(discoverable=True)
+        if not self.cleaned_data.get('q'):
+            sqs = self.searchqueryset.filter(discoverable=True)
+        else:
+            sqs = super(FacetedSearchForm, self).search().filter(discoverable=True)
         author_sq = SQ()
         subjects_sq = SQ()
         resource_sq = SQ()
