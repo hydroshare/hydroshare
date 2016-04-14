@@ -1,4 +1,5 @@
 {% extends "pages/page.html" %}
+{% load geoanalytics_tags pages_tags mezzanine_tags keyword_tags comment_tags hydroshare_tags %}
 
 {% block main %}
 
@@ -64,7 +65,7 @@
                                 <div style="background-image: url('{{ request.user.userprofile.picture.url }}');"
                                      class="profile-pic-thumbnail round-image pull-left">
                                 </div>
-                                <h4>Start a discussion</h4>
+                                <h4>Share something</h4>
 
                                 <div class="group-activity-comment">
                                     <fieldset>
@@ -73,7 +74,7 @@
                                 </div>
                             </div>
 
-                            <h4>Discussions</h4>
+                            <h4>Recent Posts</h4>
 
                             <div class="group-activity-block activity-block">
                                 <div style="background-image: url('{{ request.user.userprofile.picture.url }}');"
@@ -363,178 +364,468 @@
                              <legend>Resources</legend>
                          </div>
                          <div class="col-sm-12 col-md-3">
-                             <table class="table-user-contributions table table-hover">
-                                 <tbody>
-                                 <tr id="badge-all" class="active" data-type="all">
-                                     <td><span>All</span></td>
-                                     <td><span class="badge">0</span></td>
-                                 </tr>
-                                 <tr id="badge-generic" data-type="type-Generic">
-                                     <td><span>Generic</span></td>
-                                     <td><span class="badge">0</span></td>
-                                 </tr>
-                                 <tr id="badge-geographic-feature"
-                                     data-type="type-Geographic Feature (ESRI Shapefiles)">
-                                     <td><span>Geographic Feature</span></td>
-                                     <td><span class="badge">0</span></td>
-                                 </tr>
-                                 <tr id="badge-geographic" data-type="type-Geographic Raster">
-                                     <td><span>Geographic Raster</span></td>
-                                     <td><span class="badge">0</span></td>
-                                 </tr>
-                                 <tr id="badge-his" data-type="type-HIS Referenced Time Series">
-                                     <td><span>HIS Referenced Time Series</span></td>
-                                     <td><span class="badge">0</span></td>
-                                 </tr>
-                                 <tr id="badge-model-instance" data-type="type-Model Instance Resource">
-                                     <td><span>Model Instance</span></td>
-                                     <td><span class="badge">0</span></td>
-                                 </tr>
-                                 <tr id="badge-model-program" data-type="type-Model Program Resource">
-                                     <td><span>Model Program</span></td>
-                                     <td><span class="badge">0</span></td>
-                                 </tr>
-                                 <tr id="badge-multidimensional" data-type="type-Multidimensional (NetCDF)">
-                                     <td><span>Multidimensional (NetCDF)</span></td>
-                                     <td><span class="badge">0</span></td>
-                                 </tr>
-                                 <tr id="badge-script" data-type="type-Script Resource">
-                                     <td><span>Script Resource</span></td>
-                                     <td><span class="badge">0</span></td>
-                                 </tr>
-                                 <tr id="badge-swat" data-type="type-SWAT Model Instance Resource">
-                                     <td><span>SWAT Model Instance</span></td>
-                                     <td><span class="badge">0</span></td>
-                                 </tr>
-                                 <tr id="badge-time-series" data-type="type-Time Series">
-                                     <td><span>Time Series</span></td>
-                                     <td><span class="badge">0</span></td>
-                                 </tr>
-                                 <tr id="badge-web-app" data-type="type-Web App Resource">
-                                     <td><span>Web App</span></td>
-                                     <td><span class="badge">0</span></td>
-                                 </tr>
-                                 </tbody>
-                             </table>
-                         </div>
-                         <div class="col-sm-12 col-md-9">
-{#                             {% if resources %}#}
-{#                                 {% for res in resources %}#}
-{#                                     <div data-type="type-{{ res|resource_type }}" class="contribution">#}
-{#                                         <div class="icon-resource-type-wrapper">#}
-{#                                        <span class="icon-resource-type">#}
-{#                                            <span><strong>{{ res|resource_type }}</strong></span>#}
-{#                                            {% if res|resource_type == "Generic" %}#}
-{#                                                <img src="{{ STATIC_URL }}img/resource-icons/generic48x48.png"#}
-{#                                                     alt="{{ res|resource_type }}"#}
-{#                                                     title="{{ res|resource_type }}"/>#}
-{#                                            {% elif res|resource_type == "Geographic Raster" %}#}
-{#                                                <img src="{{ STATIC_URL }}img/resource-icons/geographicraster48x48.png"#}
-{#                                                     alt="{{ res|resource_type }}"#}
-{#                                                     title="{{ res|resource_type }}"/>#}
-{#                                            {% elif res|resource_type == "HIS Referenced Time Series" %}#}
-{#                                                <img src="{{ STATIC_URL }}img/resource-icons/his48x48.png"#}
-{#                                                     alt="{{ res|resource_type }}"#}
-{#                                                     title="{{ res|resource_type }}"/>#}
-{#                                            {% elif res|resource_type == "Script Resource" %}#}
-{#                                                <img src="{{ STATIC_URL }}img/resource-icons/script48x48.png"#}
-{#                                                     alt="{{ res|resource_type }}"#}
-{#                                                     title="{{ res|resource_type }}"/>#}
-{#                                            {% elif res|resource_type == "Model Program Resource" %}#}
-{#                                                <img src="{{ STATIC_URL }}img/resource-icons/modelprogram48x48.png"#}
-{#                                                     alt="{{ res|resource_type }}"#}
-{#                                                     title="{{ res|resource_type }}"/>#}
-{#                                            {% elif res|resource_type == "Model Instance Resource" %}#}
-{#                                                <img src="{{ STATIC_URL }}img/resource-icons/modelinstance48x48.png"#}
-{#                                                     alt="{{ res|resource_type }}"#}
-{#                                                     title="{{ res|resource_type }}"/>#}
-{#                                            {% elif res|resource_type == "SWAT Model Instance Resource" %}#}
-{#                                                <img src="{{ STATIC_URL }}img/resource-icons/swat48x48.png"#}
-{#                                                     alt="{{ res|resource_type }}"#}
-{#                                                     title="{{ res|resource_type }}"/>#}
-{#                                            {% elif res|resource_type == "Multidimensional (NetCDF)" %}#}
-{#                                                <img src="{{ STATIC_URL }}img/resource-icons/multidimensional48x48.png"#}
-{#                                                     alt="{{ res|resource_type }}"#}
-{#                                                     title="{{ res|resource_type }}"/>#}
-{#                                            {% elif res|resource_type == "Time Series" %}#}
-{#                                                <img src="{{ STATIC_URL }}img/resource-icons/timeseries48x48.png"#}
-{#                                                     alt="{{ res|resource_type }}"#}
-{#                                                     title="{{ res|resource_type }}"/>#}
-{#                                            {% elif res|resource_type == "Geographic Feature (ESRI Shapefiles)" %}#}
-{#                                                <img src="{{ STATIC_URL }}img/resource-icons/geographicfeature48x48.png"#}
-{#                                                     alt="{{ res|resource_type }}"#}
-{#                                                     title="{{ res|resource_type }}"/>#}
-{#                                            {% elif res|resource_type == "Web App Resource" %}#}
-{#                                                <img src="{{ STATIC_URL }}img/resource-icons/webapp48x48.png"#}
-{#                                                     alt="{{ res|resource_type }}"#}
-{#                                                     title="{{ res|resource_type }}"/>#}
-{#                                            {% endif %}#}
-{##}
-{#                                        </span>#}
-{#                                         </div>#}
-{#                                         <div class="activity-block row">#}
-{#                                             <div class="activity-info col-sm-12">#}
-{#                                                 <span class="title"><a#}
-{#                                                         href="{{ res.get_absolute_url }}">{{ res.metadata.title }}</a></span>#}
-{#                                                 <h5><span class="text-muted">Created: </span>{{ res.created }}</h5>#}
-{#                                                 <h5><span class="text-muted">Authors: </span>#}
-{#                                                     {% for creator in res.metadata.creators.all %}#}
-{#                                                         {% if forloop.counter0 != 0 %}<span> · </span>{% endif %}#}
-{#                                                         {% if creator.description %}#}
-{#                                                             <a href="{{ creator.description }}">{{ creator.name }}</a>#}
-{#                                                         {% else %}#}
-{#                                                             <span>{{ creator.name }}</span>#}
-{#                                                         {% endif %}#}
-{#                                                     {% endfor %}#}
-{#                                                 </h5>#}
-{#                                             </div>#}
-{##}
-{#                                             {% if res.metadata.description %}#}
-{#                                                 <div class="activity-description col-sm-12">#}
-{#                                                     <p>#}
-{#                                                         <strong>ABSTRACT: </strong>{{ res.metadata.description|linebreaks }}#}
-{#                                                     </p>#}
-{#                                                 </div>#}
-{#                                                 <div class="show-more-btn btn-default" title="Show more">···</div>#}
-{#                                             {% endif %}#}
-{##}
-{#                                         </div>#}
-{#                                     </div>#}
-{#                                 {% endfor %}#}
-{#                             {% else %}#}
-{#                                 <span class="text-muted">This user has not shared any resources.</span>#}
-{#                             {% endif %}#}
-
-                             {% for res in group.gaccess.view_resources %}
-                                                                  <div data-type="type-Generic" class="contribution">
-                                 <div class="icon-resource-type-wrapper">
-                                        <span class="icon-resource-type">
-                                            <span><strong>Generic</strong></span>
-                                                <img src="/static/img/resource-icons/generic48x48.png" alt="Generic"
-                                                     title="Generic">
-                                        </span>
+                             <div class="panel panel-default">
+                                 <div class="panel-heading">
+                                     <h4 class="panel-title">
+                                         <span class="glyphicon glyphicon glyphicon-search"></span>
+                                         <a data-toggle="collapse" class="accordion-toggle" data-parent="#accordion"
+                                            href="#filter">
+                                             &nbsp;Filter</a></h4>
                                  </div>
-                                 <div class="activity-block row">
-                                     <div class="activity-info col-sm-12">
-                                         <span class="title"><a href="#">{{ res.title }}</a></span>
-                                         <h5><span class="text-muted">Created: </span>March 14, 2016, 5:14 p.m.</h5>
-                                         <h5><span class="text-muted">Authors: </span>
-                                             <a href="#">HydroShare Administrator</a>
-                                         </h5>
+                                 <div id="filter" class="facet-list panel-collapse collapse in">
+                                     <div class="panel-body">
+                                         <div class="list-group">
+                                             <ul class="list-group inputs-group" data-owned-count="{{ owned|length }}"
+                                                 data-editable-count="{{ editable|length }}"
+                                                 data-view-count="{{ view|length }}">
+                                                 <li class="list-group-item">
+                                                     <span data-facet="owned" class="badge">0</span>
+                                                     <label class="checkbox noselect">
+                                                         <input type="checkbox" data-facet="owned" value="Owned">Owned
+                                                         by me</label>
+                                                 </li>
+                                                 <li class="list-group-item">
+                                                     <span data-facet="editable" class="badge">0</span>
+                                                     <label class="checkbox noselect">
+                                                         <input type="checkbox" data-facet="editable" value="Editable">Editable
+                                                         by me</label>
+                                                 </li>
+                                                 <li class="list-group-item">
+                                                     <span data-facet="viewable by me" class="badge">0</span>
+                                                     <label class="checkbox noselect">
+                                                         <input type="checkbox" data-facet="viewable by me"
+                                                                value="View">Viewable by me</label>
+                                                 </li>
+                                                 <li class="list-group-item">
+                                                     <span data-facet="favorites" class="badge">0</span>
+                                                     <label class="checkbox noselect">
+                                                         <input type="checkbox" data-facet="favorites"
+                                                                value="Favorites">Favorites</label>
+                                                 </li>
+                                             </ul>
+                                         </div>
                                      </div>
-
-                                     {% if res.metadata.description  %}
-                                     <div class="activity-description col-sm-12">
-                                         <p><strong>ABSTRACT: </strong></p>
-                                         <p>{{ res.metadata.description }}</p>
-                                     </div>
-                                     <div class="show-more-btn btn-default" title="Show more">···</div>
-                                     {% endif %}
                                  </div>
                              </div>
-                             {% endfor %}
+
+                             <div class="panel panel-default">
+                                 <div class="panel-heading">
+                                     <h4 class="panel-title">
+                                         <span class="glyphicon glyphicon glyphicon-search"></span>
+                                         <a data-toggle="collapse" class="accordion-toggle" data-parent="#accordion"
+                                            href="#filter">
+                                             &nbsp;Resource Type</a></h4>
+                                 </div>
+                                 <div id="filter" class="facet-list panel-collapse collapse in">
+                                     <div class="panel-body">
+                                         <div class="list-group">
+                                             <ul class="list-group inputs-group">
+                                                 <li class="list-group-item">
+                                                     <span data-facet="" class="badge">0</span>
+                                                     <label class="checkbox noselect">
+                                                         <input type="checkbox" data-facet="owned" value="">All</label>
+                                                 </li>
+
+                                                 <li class="list-group-item">
+                                                     <span data-facet="" class="badge">0</span>
+                                                     <label class="checkbox noselect">
+                                                         <input type="checkbox" data-facet="owned" value="">Generic</label>
+                                                 </li>
+
+                                                 <li class="list-group-item">
+                                                     <span data-facet="" class="badge">0</span>
+                                                     <label class="checkbox noselect">
+                                                         <input type="checkbox" data-facet="owned" value="">Geographic Feature</label>
+                                                 </li>
+
+                                                 <li class="list-group-item">
+                                                     <span data-facet="" class="badge">0</span>
+                                                     <label class="checkbox noselect">
+                                                         <input type="checkbox" data-facet="owned" value="">Geographic Raster</label>
+                                                 </li>
+
+                                                 <li class="list-group-item">
+                                                     <span data-facet="" class="badge">0</span>
+                                                     <label class="checkbox noselect">
+                                                         <input type="checkbox" data-facet="owned" value="">HIS Referenced Time Series</label>
+                                                 </li>
+
+                                                 <li class="list-group-item">
+                                                     <span data-facet="" class="badge">0</span>
+                                                     <label class="checkbox noselect">
+                                                         <input type="checkbox" data-facet="owned" value="">Model Instance</label>
+                                                 </li>
+
+                                                 <li class="list-group-item">
+                                                     <span data-facet="" class="badge">0</span>
+                                                     <label class="checkbox noselect">
+                                                         <input type="checkbox" data-facet="owned" value="">Model Program</label>
+                                                 </li>
+
+                                                 <li class="list-group-item">
+                                                     <span data-facet="" class="badge">0</span>
+                                                     <label class="checkbox noselect">
+                                                         <input type="checkbox" data-facet="owned" value="">Multidimensional (NetCDF)</label>
+                                                 </li>
+
+                                                 <li class="list-group-item">
+                                                     <span data-facet="" class="badge">0</span>
+                                                     <label class="checkbox noselect">
+                                                         <input type="checkbox" data-facet="owned" value="">Script Resource</label>
+                                                 </li>
+
+                                                 <li class="list-group-item">
+                                                     <span data-facet="" class="badge">0</span>
+                                                     <label class="checkbox noselect">
+                                                         <input type="checkbox" data-facet="owned" value="">SWAT Model Instance</label>
+                                                 </li>
+
+                                                 <li class="list-group-item">
+                                                     <span data-facet="" class="badge">0</span>
+                                                     <label class="checkbox noselect">
+                                                         <input type="checkbox" data-facet="owned" value="">Time Series</label>
+                                                 </li>
+
+                                                 <li class="list-group-item">
+                                                     <span data-facet="" class="badge">0</span>
+                                                     <label class="checkbox noselect">
+                                                         <input type="checkbox" data-facet="owned" value="">Web App</label>
+                                                 </li>
+                                             </ul>
+                                         </div>
+                                     </div>
+                                 </div>
+                             </div>
+                         </div>
+                         <div class="col-sm-12 col-md-9">
+                             <table id="item-selectors" class="table-hover table-striped group-resource-list">
+                                 <thead>
+                                 <tr>
+                                     <th><input class="all-rows-selector" type="checkbox"></th>
+                                     <th>Type</th>
+                                     <th>Title</th>
+                                     <th>Owners</th>
+                                     <th>Last modified</th>
+                                     <th>Subject</th>
+                                     {# Used in table processing #}
+                                     <th>Authors</th>
+                                     {# Used in table processing #}
+                                     <th>Permission Level</th>
+                                     {# Used in table processing #}
+                                     <th>Labels</th>
+                                     {# Used in table processing #}
+                                     <th>Favorite</th>
+                                     {# Used in table processing #}
+                                     <th>Last modified</th>
+                                     {# Used in table processing #}
+                                     <th>Sharing Status</th>
+                                     {# Used in table processing #}
+                                 </tr>
+                                 </thead>
+                                 <tbody>
+                                 {% for res in group.gaccess.view_resources %}
+                                     <tr data-tr-index="{{ forloop.counter0 }}">
+                                         <td>
+                                             <input class="row-selector" type="checkbox">
+                                         </td>
+                                         <td>
+                                             <span class="resource-type-text">{{ res|resource_type }}</span>
+                                             {% if res|resource_type == "Generic" %}
+                                                 <img src="{{ STATIC_URL }}img/resource-icons/generic48x48.png"
+                                                      alt="{{ res|resource_type }}" title="{{ res|resource_type }}"
+                                                      class="table-res-type-icon"/>
+                                             {% elif res|resource_type == "Geographic Raster" %}
+                                                 <img src="{{ STATIC_URL }}img/resource-icons/geographicraster48x48.png"
+                                                      alt="{{ res|resource_type }}" title="{{ res|resource_type }}"
+                                                      class="table-res-type-icon"/>
+                                             {% elif res|resource_type == "Model Program Resource" %}
+                                                 <img src="{{ STATIC_URL }}img/resource-icons/modelprogram48x48.png"
+                                                      alt="{{ res|resource_type }}" title="{{ res|resource_type }}"
+                                                      class="table-res-type-icon"/>
+                                             {% elif res|resource_type == "Model Instance Resource" %}
+                                                 <img src="{{ STATIC_URL }}img/resource-icons/modelinstance48x48.png"
+                                                      alt="{{ res|resource_type }}" title="{{ res|resource_type }}"
+                                                      class="table-res-type-icon"/>
+                                             {% elif res|resource_type == "SWAT Model Instance Resource" %}
+                                                 <img src="{{ STATIC_URL }}img/resource-icons/swat48x48.png"
+                                                      alt="{{ res|resource_type }}" title="{{ res|resource_type }}"
+                                                      class="table-res-type-icon"/>
+                                             {% elif res|resource_type == "Multidimensional (NetCDF)" %}
+                                                 <img src="{{ STATIC_URL }}img/resource-icons/multidimensional48x48.png"
+                                                      alt="{{ res|resource_type }}" title="{{ res|resource_type }}"
+                                                      class="table-res-type-icon"/>
+                                             {% elif res|resource_type == "Time Series" %}
+                                                 <img src="{{ STATIC_URL }}img/resource-icons/timeseries48x48.png"
+                                                      alt="{{ res|resource_type }}" title="{{ res|resource_type }}"
+                                                      class="table-res-type-icon"/>
+                                             {% elif res|resource_type == "Geographic Feature (ESRI Shapefiles)" %}
+                                                 <img src="{{ STATIC_URL }}img/resource-icons/geographicfeature48x48.png"
+                                                      alt="{{ res|resource_type }}" title="{{ res|resource_type }}"
+                                                      class="table-res-type-icon"/>
+                                             {% elif res|resource_type == "Web App Resource" %}
+                                                 <img src="{{ STATIC_URL }}img/resource-icons/webapp48x48.png"
+                                                      alt="{{ res|resource_type }}" title="{{ res|resource_type }}"
+                                                      class="table-res-type-icon"/>
+                                             {% elif res|resource_type == "HIS Referenced Time Series" %}
+                                                 <img src="{{ STATIC_URL }}img/resource-icons/his48x48.png"
+                                                      alt="{{ res|resource_type }}" title="{{ res|resource_type }}"
+                                                      class="table-res-type-icon"/>
+                                             {% elif res|resource_type == "Script Resource" %}
+                                                 <img src="{{ STATIC_URL }}img/resource-icons/script48x48.png"
+                                                      alt="{{ res|resource_type }}" title="{{ res|resource_type }}"
+                                                      class="table-res-type-icon"/>
+                                             {% endif %}
+
+                                             {#  Sharing Status icons  #}
+                                             {% if res.raccess.published %}
+                                                 <img src="{{ STATIC_URL }}img/published.png"
+                                                      alt="Published Resource" title="Published"/>
+                                             {% elif res.raccess.public %}
+                                                 <img src="{{ STATIC_URL }}img/public.png"
+                                                      alt="Public Resource" title="Public"/>
+                                             {% elif res.raccess.discoverable %}
+                                                 <img src="{{ STATIC_URL }}img/discoverable.png"
+                                                      alt="Discoverable Resource" title="Discoverable"/>
+                                             {% else %}
+                                                 <img src="{{ STATIC_URL }}img/private.png"
+                                                      alt="Private Resource" title="Private"/>
+                                             {% endif %}
+
+                                             {% if res.raccess.published %}
+                                                 {% if "pending" in cm.doi or "failure" in cm.doi %}
+                                                     <img src="{{ STATIC_URL }}img/pending.png"
+                                                          alt="Pending Publication"
+                                                          title="Pending Publication. Note that the DOI will not be available until it has been registered and activated."/>
+                                                 {% endif %}
+                                             {% else %}
+                                                 {% if res.raccess.shareable %}
+                                                     <img src="{{ STATIC_URL }}img/shareable.png"
+                                                          alt="Sharable Resource"
+                                                          title="Shareable"/>
+                                                 {% else %}
+                                                     <img src="{{ STATIC_URL }}img/non-shareable.png"
+                                                          alt="Non Sharable Resource"
+                                                          title="Not Shareable"/>
+                                                 {% endif %}
+                                             {% endif %}
+                                         </td>
+                                         <td>
+                                             <strong><a
+                                                     href="{{ res.get_absolute_url }}">{{ res.metadata.title }}</a></strong>
+                                         </td>
+                                         <td>{% for owner in res.raccess.owners.all %}
+                                             {% if forloop.counter0 > 0 %} · {% endif %}
+                                             <span>{{ owner|contact|safe }}</span>
+                                         {% endfor %}</td>
+                                         <td>{{ res.updated|date }}, {{ res.updated|time }}</td>
+                                         <td>
+                                             {% for kw in res.metadata.subjects.all %}
+                                                 {% if forloop.counter0 > 0 %},{% endif %}{{ kw.value }}
+                                             {% endfor %}
+                                         </td>
+                                         <td>
+                                             {% for creator in res.metadata.creators.all %}
+                                                 {% if forloop.counter0 != 0 %}<span> · </span>{% endif %}
+                                                 {% if creator.description %}
+                                                     <a href="{{ creator.description }}">{{ creator.name }}</a>
+                                                 {% else %}
+                                                     <span>{{ creator.name }}</span>
+                                                 {% endif %}
+                                             {% endfor %}
+                                         </td>
+                                         {% if res.owned %}
+                                             <td>Owned</td>
+                                         {% elif res.editable %}
+                                             <td>Editable</td>
+                                         {% elif res.viewable %}
+                                             <td>Viewable</td>
+                                         {% else %}
+                                             <td></td>
+                                         {% endif %}
+                                         <td class="col-labels">
+                                             {% for label in res.labels %}
+                                                 {% if forloop.counter0 > 0 %},{% endif %}{{ label }}
+                                             {% endfor %}
+                                         </td>
+                                         <td class="col-is-favorite">
+                                             {% if res.is_favorite %}
+                                                 Favorite
+                                             {% endif %}
+                                         </td>
+                                         <td>{{ res.updated|date:"Y/m/d H:i:s" }}</td>
+                                         <td>
+                                             {% if res.raccess.published %}
+                                                 Published
+                                             {% elif res.raccess.public %}
+                                                 Public
+                                             {% elif res.raccess.discoverable %}
+                                                 Discoverable
+                                             {% else %}
+                                                 Private
+                                             {% endif %}
+                                         </td>
+                                     </tr>
+                                 {% endfor %}
+                                 </tbody>
+                             </table>
+
+                             <div class="panel-group" role="tablist">
+                                 <div class="panel panel-default">
+                                     <div class="panel-heading" role="tab" id="headingLegend">
+                                         <h4 class="panel-title">
+                                             <span class="glyphicon glyphicon-info-sign"></span>&nbsp;
+                                             <a role="button" data-toggle="collapse" data-parent="#accordion"
+                                                href="#legend-collapse"
+                                                aria-expanded="true" aria-controls="legend-collapse">
+                                                 Legend
+                                             </a>
+                                         </h4>
+                                     </div>
+
+                                     <div id="legend-collapse" class="panel-collapse collapse" role="tabpanel"
+                                          aria-labelledby="headingLegend">
+                                         <div class="panel-body">
+                                             <div class="row">
+                                                 <div class="col-xs-12 col-sm-5">
+                                                     <div class="row">
+                                                         <div class="col-sm-12"><label>Sharing and Access</label></div>
+
+                                                         <div class="col-sm-6">
+                                                             <img src="{{ STATIC_URL }}img/public.png"
+                                                                  alt="Public Resource"/>
+                                                             <small>Public</small>
+                                                         </div>
+
+                                                         <div class="col-sm-6">
+                                                             <img src="{{ STATIC_URL }}img/private.png"
+                                                                  alt="Private Resource"/>
+                                                             <small>Private</small>
+                                                         </div>
+
+                                                         <div class="col-sm-6">
+                                                             <img src="{{ STATIC_URL }}img/discoverable.png"
+                                                                  alt="Discoverable Resource"/>
+                                                             <small>Discoverable</small>
+                                                         </div>
+
+                                                         <div class="col-sm-6">
+                                                             <img src="{{ STATIC_URL }}img/published.png"
+                                                                  alt="Published Resource"/>
+                                                             <small>Published</small>
+                                                         </div>
+
+                                                         <div class="col-sm-6">
+                                                             <img src="{{ STATIC_URL }}img/pending.png"
+                                                                  alt="Pending Publication"/>
+                                                             <small>Pending publication</small>
+                                                         </div>
+
+                                                         <div class="col-sm-6">
+                                                             <img src="{{ STATIC_URL }}img/shareable.png"
+                                                                  alt="Sharable Resource"/>
+                                                             <small>Shareable</small>
+                                                         </div>
+
+                                                         <div class="col-sm-8">
+                                                             <img src="{{ STATIC_URL }}img/non-shareable.png"
+                                                                  alt="Non Sharable Resource"/>
+                                                             <small>Not shareable</small>
+                                                         </div>
+
+                                                     </div>
+                                                 </div>
+
+                                                 <div class="col-xs-12 col-sm-7">
+                                                     <div class="row" id="legend-resource-type">
+                                                         <div class="col-sm-12"><label>Resource types</label></div>
+
+                                                         <div class="col-sm-6">
+                                                             <img src="{{ STATIC_URL }}img/resource-icons/generic48x48.png"
+                                                                  alt="Generic Resource Icon"
+                                                                  class="table-res-type-icon"/>
+                                                             <small>&nbsp;Generic</small>
+                                                         </div>
+
+                                                         <div class="col-sm-6">
+                                                             <img src="{{ STATIC_URL }}img/resource-icons/geographicfeature48x48.png"
+                                                                  alt="Geographic Feature Resource Icon"
+                                                                  class="table-res-type-icon"/>
+                                                             <small>&nbsp;Geographic Feature</small>
+                                                         </div>
+
+                                                         <div class="col-sm-6">
+                                                             <img src="{{ STATIC_URL }}img/resource-icons/geographicraster48x48.png"
+                                                                  alt="Geographic Raster Resource Icon"
+                                                                  class="table-res-type-icon"/>
+                                                             <small>&nbsp;Geographic Raster</small>
+                                                         </div>
+
+                                                         <div class="col-sm-6">
+                                                             <img src="{{ STATIC_URL }}img/resource-icons/modelinstance48x48.png"
+                                                                  alt="Model Instance Resource Icon"
+                                                                  class="table-res-type-icon"/>
+                                                             <small>&nbsp;Model Instance</small>
+                                                         </div>
+
+                                                         <div class="col-sm-6">
+                                                             <img src="{{ STATIC_URL }}img/resource-icons/swat48x48.png"
+                                                                  alt="SWAT Model Instance Resource Icon"
+                                                                  class="table-res-type-icon"/>
+                                                             <small>&nbsp;SWAT Model Instance</small>
+                                                         </div>
+
+                                                         <div class="col-sm-6">
+                                                             <img src="{{ STATIC_URL }}img/resource-icons/modelprogram48x48.png"
+                                                                  alt="Model Program Resource Icon"
+                                                                  class="table-res-type-icon"/>
+                                                             <small>&nbsp;Model Program</small>
+                                                         </div>
+
+                                                         <div class="col-sm-6">
+                                                             <img src="{{ STATIC_URL }}img/resource-icons/multidimensional48x48.png"
+                                                                  alt="Multidimensional Resource Icon"
+                                                                  class="table-res-type-icon"/>
+                                                             <small>&nbsp;Multidimensional</small>
+                                                         </div>
+
+                                                         <div class="col-sm-6">
+                                                             <img src="{{ STATIC_URL }}img/resource-icons/timeseries48x48.png"
+                                                                  alt="Time Series Resource Icon"
+                                                                  class="table-res-type-icon"/>
+                                                             <small>&nbsp;Time Series</small>
+                                                         </div>
+
+                                                         <div class="col-sm-6">
+                                                             <img src="{{ STATIC_URL }}img/resource-icons/his48x48.png"
+                                                                  alt="HIS Referenced Time Series Resource Icon"
+                                                                  class="table-res-type-icon"/>
+                                                             <small>&nbsp;HIS Referenced Time Series</small>
+                                                         </div>
+
+                                                         <div class="col-sm-6">
+                                                             <img src="{{ STATIC_URL }}img/resource-icons/webapp48x48.png"
+                                                                  alt="Web App Resource Icon"
+                                                                  class="table-res-type-icon"/>
+                                                             <small>&nbsp;Web App</small>
+                                                         </div>
 
 
+                                                         <div class="col-sm-6">
+                                                             <img src="{{ STATIC_URL }}img/resource-icons/script48x48.png"
+                                                                  alt="Script Resource Icon"
+                                                                  class="table-res-type-icon"/>
+                                                             <small>&nbsp;Script</small>
+                                                         </div>
+
+
+                                                     </div>
+                                                 </div>
+
+                                             </div>
+                                         </div>
+                                     </div>
+                                 </div>
+                             </div>
 
                          </div>
                      </div>
@@ -602,6 +893,7 @@
 {% endblock %}
 
 {% block extra_js %}
+    <script type="text/javascript" charset="utf8" src="//cdn.datatables.net/1.10.10/js/jquery.dataTables.js"></script>
     <script>
 
         $(document).ready(function () {
@@ -636,6 +928,81 @@
                 $(this).parent().find("tr").removeClass("active");
                 $(this).addClass("active");
             });
+
+            /*==================================================
+            Table columns
+            0 - actions
+            1 - Resource Type
+            2 - Title
+            3 - Owner
+            4 - Last Modified
+            5 - Subject
+            6 - Authors
+            7 - Permission Level
+            8 - Labels
+            9 - Favorite
+            10 - Last modified (sortable format)
+            11 - Sharing Status
+        ==================================================*/
+
+            resourceTable = $("#item-selectors").DataTable({
+                "order": [[4, "desc"]],
+                "paging": false,
+                "info": false,
+                "columnDefs": [
+                    {
+                        "targets": [1],     // Resource type
+                        "width": "100px"
+                    },
+                    {
+                        "targets": [0],     // Actions
+                        "orderable": false,
+                        "searchable": false,
+                        "width": "70px"
+                    },
+                    {
+                        "targets": [4],     // Last modified
+                        "iDataSort": 10
+                    },
+                    {
+                        "targets": [5],     // Subject
+                        "visible": false,
+                        "searchable": true
+                    },
+                    {
+                        "targets": [6],     // Authors
+                        "visible": false,
+                        "searchable": true
+                    },
+                    {
+                        "targets": [7],     // Permission level
+                        "visible": false,
+                        "searchable": true
+                    },
+                    {
+                        "targets": [8],     // Labels
+                        "visible": false,
+                        "searchable": true
+                    },
+                    {
+                        "targets": [9],     // Favorite
+                        "visible": false,
+                        "searchable": true
+                    },
+                    {
+                        "targets": [10],     // Last modified (for sorting)
+                        "visible": false,
+                        "searchable": true
+                    },
+                    {
+                        "targets": [11],     // Sharing status
+                        "visible": false,
+                        "searchable": false
+                    }
+
+                ]
+            });
+            $("#item-selectors").show();
         });
     </script>
 {% endblock %}

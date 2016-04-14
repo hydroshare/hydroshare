@@ -2612,8 +2612,13 @@ h4.title {
     margin-bottom: 10px;
 }
 
+#item-selectors.group-resource-list {
+    width: 100% !important;
+}
+
 #item-selectors tbody td {
 	border-bottom: 1px solid #EEE;
+    padding: 8px 10px;
 }
 
 #item-selectors thead th {
@@ -2632,6 +2637,13 @@ h4.title {
 	padding-right: 0;
     max-width: 80px;
 	min-width: 80px;
+}
+
+#item-selectors.group-resource-list tr > td:first-child {
+    padding-right: initial;
+    max-width: initial;
+    min-width: initial;
+    padding-left: 10px;
 }
 
 .dataTables_wrapper {
@@ -3374,6 +3386,10 @@ button.no-style:focus {
 
 .groups-table tr > td {
     padding: 10px 0;
+}
+
+.groups-table tr > td:first-child {
+    width: 100px;
 }
 
 .group-title {
