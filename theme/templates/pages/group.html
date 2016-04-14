@@ -414,6 +414,25 @@
                                          <span class="glyphicon glyphicon glyphicon-search"></span>
                                          <a data-toggle="collapse" class="accordion-toggle" data-parent="#accordion"
                                             href="#filter">
+                                             &nbsp;Labels</a></h4>
+                                 </div>
+                                 <div id="filter" class="facet-list panel-collapse collapse in">
+                                     <div class="panel-body">
+                                         <div class="list-group">
+                                             <ul class="list-group inputs-group">
+                                                 <h5 class="text-center"><i>No labels found.</i></h5>
+                                             </ul>
+                                         </div>
+                                     </div>
+                                 </div>
+                             </div>
+
+                             <div class="panel panel-default">
+                                 <div class="panel-heading">
+                                     <h4 class="panel-title">
+                                         <span class="glyphicon glyphicon glyphicon-search"></span>
+                                         <a data-toggle="collapse" class="accordion-toggle" data-parent="#accordion"
+                                            href="#filter">
                                              &nbsp;Resource Type</a></h4>
                                  </div>
                                  <div id="filter" class="facet-list panel-collapse collapse in">
@@ -527,6 +546,16 @@
                                      <tr data-tr-index="{{ forloop.counter0 }}">
                                          <td>
                                              <input class="row-selector" type="checkbox">
+                                             <span class="glyphicon glyphicon-tag btn-inline-label"
+                                                   data-toggle="dropdown" aria-expanded="false"></span>
+
+                                             <div class="dropdown-menu inline-dropdown" role="menu">
+                                                 <div class="panel-body" role="form">
+                                                     <ul data-resource-id="{{ res.short_id }}"
+                                                         class="list-group list-labels">
+                                                     </ul>
+                                                 </div>
+                                             </div>
                                          </td>
                                          <td>
                                              <span class="resource-type-text">{{ res|resource_type }}</span>
