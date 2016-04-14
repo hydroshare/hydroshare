@@ -30,8 +30,6 @@ class DiscoveryView(FacetedSearchView):
         context = self.get_context_data(**{
             self.form_name: form,
             'query': form.cleaned_data.get(self.search_field),
-            'current_query': self.request.session['current_query'],
-            'query_changed': self.request.session['query_changed'],
             'object_list': self.queryset
         })
         return self.render_to_response(context)
@@ -44,7 +42,11 @@ class DiscoveryView(FacetedSearchView):
             context.update({'facets': self.queryset.facet_counts()})
             self.request.session['facets_items'] = self.queryset.facet_counts()
         else:
-            context.update({'facets': self.request.session['facets_items']})
+            if self.request.session.get('facets_items', None):
+                context.update({'facets': self.request.session['facets_items']})
+            else:
+                context.update({'facets': self.queryset.facet_counts()})
+                self.request.session['facets_items'] = self.queryset.facet_counts()
 
         return context
 
