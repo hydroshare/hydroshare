@@ -1,0 +1,537 @@
+{% extends "pages/genericresource.html" %}
+{% load geoanalytics_tags pages_tags staticfiles mezzanine_tags crispy_forms_tags hydroshare_tags%}
+
+{% block extra_css %}
+    {{ block.super }}
+    <link rel="stylesheet" href='//cdn.datatables.net/1.10.10/css/jquery.dataTables.min.css'/>
+{% endblock %}
+
+{# override content_block in generice.html#}
+{% block content_block %}
+    <hr>
+    {# collection content table #}
+    <div id="collection_content_div">
+        <div id="title_and_add_btn_div">
+           <h3 style="display: inline">Collection Contents </h3>
+           {% if edit_mode %}
+               <a type="button" class="btn btn-success" onclick="$('#collection-candidate').modal('show');" >
+                   <span class="glyphicon glyphicon-plus"><span class="button-label"> Add resources...</span></span>
+               </a>
+
+           {% endif %}
+        </div>
+        <div id="collection-table-div">
+            {% if edit_mode %}
+                <form id="collector-new" name="collector-new" action="/hsapi/_internal/{{collection_res_id}}/update-collection/" method="POST">
+            {% endif %}
+
+            <table id="collection-table" class="table-hover table-striped" width="100%">
+                <thead>
+                <tr>
+                    <th>Add</th>
+                    <th>Title</th>
+                    <th>Type</th>
+                    <th>Owners</th>
+                    <th>Sharing status</th>
+                    <th>My Permission</th>
+                    <th>Remove</th>
+                </tr>
+                </thead>
+                <tbody>
+                 {% if collection %}
+                    {% for res in collection %}
+                        <tr id="{{ res.short_id }}">
+                            <td>
+                                <input class="row-selector" type="checkbox" id="{{ res.short_id }}">
+                            </td>
+                            <td>
+                                {% if res|user_permission:request.user.pk|lower == "none" %}
+                                    <strong>{{ res.metadata.title }}</strong>
+                                {% else %}
+                                    <strong><a href="{{ res.get_absolute_url }}" target="_blank">{{ res.metadata.title }}</a></strong>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {{ res.resource_type }}
+                            </td>
+                            <td>
+                                {% for owner in res.raccess.owners.all %}
+                                    {% if forloop.counter0 > 0 %} · {% endif %}
+                                    {% if owner.first_name %}
+                                        <strong><a href='/user/{{ owner.pk }}/' target="_blank">{{owner.first_name}} {{owner.last_name }}</a></strong>
+                                    {% else %}
+                                        <strong><a href='/user/{{ owner.pk }}/' target="_blank">{{ owner.username }}</a></strong>
+                                    {% endif %}
+                                {% endfor %}
+                            </td>
+                            <td>
+                                {% if res.raccess.published %}
+                                    Published
+                                {% elif res.raccess.public %}
+                                    Public
+                                {% elif res.raccess.discoverable %}
+                                    Discoverable
+                                {% else %}
+                                    Private
+                                {% endif %}
+                            </td>
+                             <td>
+                                {% if res|user_permission:request.user.pk|lower == "none" %}
+                                    <strong class="label-private">{{ res|user_permission:request.user.pk }}</strong>
+                                {% elif res|user_permission:request.user.pk|lower == "open access" %}
+                                    <strong class="label-public">{{ res|user_permission:request.user.pk }}</strong>
+                                {% else %}
+                                    {{ res|user_permission:request.user.pk }}
+                                {% endif %}
+                            </td>
+                            <td>
+                                <span onclick="remove_collection_item('{{ res.short_id }}')" data-form-id="form-favorite-{{ res.short_id }}" data-form-type="toggle-favorite"
+                                                  class="glyphicon glyphicon-remove btn-inline-favorite"></span>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                {% endif %}
+                </tbody>
+            </table>
+
+            {% if edit_mode %}
+                </form>
+                <input class="btn btn-primary" type="button" id="save-new" onclick="save_btn_callback_new();" value="Save Changes" style="display: none"/>
+            {% endif %}
+        </div>
+        {% if deleted_resources|length > 0 %}
+            <div id="view_deleted_res_div">
+                <input type="button" id="view_deleted_res_btn" style="color: red" value="View deleted contents" onclick=" $('#deleted-resources-modal').modal('show');">
+                <span data-toggle="tooltip" data-placement="auto"
+                      title='Some resources in this collection have been deleted which may result in broken resource links in the bag. {% if edit_mode %} You need to remove deleted resources from the collection to fix that.{% endif %}'
+                      class="glyphicon glyphicon-info-sign text-muted"></span>
+            </div>
+        {% endif %}
+        <hr>
+        {% block download_bag %}
+            <div>
+                {% for b in cm.bags.all %}
+                    <a id="btn-download-all" type="button" class="btn btn-default row-selector" href="{{ bag_url }}">
+                        <span class="glyphicon glyphicon-download-alt">
+                            <span title='Download All Content as Zipped BagIt Archive' class="button-label">Download Collection Bag</span>
+                        </span>
+                        <a target="_blank" href="http://en.wikipedia.org/wiki/BagIt">Learn more about the Bagit archive format</a>
+                    </a>
+                {% endfor %}
+            </div>
+        {% endblock %}
+    </div>
+
+    {#    modal div: warning message  #}
+    <div class="modal fade" id="save-collection-warning" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                    <h4 class="modal-title" id="save-collection-warning-title">Confirm Changes</h4>
+                </div>
+                <div class="modal-body" id="save-collection-warning-body">
+                    You have NO PERMISSION over the resource you are about to remove from this collection. Once confirmed, you CAN NOT add it back.
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default" data-dismiss="modal" id="save-collection-btn-cancel">
+                        Cancel
+                    </button>
+                    <button type="button" class="btn btn-danger" data-dismiss="modal" id="save-collection-btn-ok">
+                        Confirm
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {#    modal div: collection candidate table #}
+    <div class="modal fade" id="collection-candidate" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+        <div class="modal-dialog" style="width:65%">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                    <h4 class="modal-title" id="save-collection-warning-title">My Resources Pool</h4>
+                </div>
+                <div class="modal-body" id="save-collection-warning-body">
+                    <table id="collection-table-candidate" class="table-hover table-striped" width="100%">
+                        <thead>
+                        <tr>
+                            <th>Add</th>
+                            <th>Title</th>
+                            <th>Type</th>
+                            <th>Owners</th>
+                            <th>Sharing status</th>
+                            <th>My Permission</th>
+                            <th>Remove</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                            {% for res in collection_candidate %}
+                                <tr id="{{ res.short_id }}">
+                                    <td>
+                                        <input class="row-selector" type="checkbox" id="{{ res.short_id }}">
+                                    </td>
+                                    <td>
+                                        <strong><a href="{{ res.get_absolute_url }}" target="_blank">{{ res.metadata.title }}</a></strong></td>
+                                    <td>
+                                        {{ res.resource_type }}
+                                    </td>
+                                    <td>
+                                        {% for owner in res.raccess.owners.all %}
+                                            {% if forloop.counter0 > 0 %} · {% endif %}
+
+                                            {% if owner.first_name %}
+                                                <strong><a href='/user/{{ owner.pk }}/' target="_blank">{{owner.first_name}} {{owner.last_name }}</a></strong>
+                                            {% else %}
+                                                <strong><a href='/user/{{ owner.pk }}/' target="_blank">{{ owner.username }}</a></strong>
+                                            {% endif %}
+                                        {% endfor %}
+                                    </td>
+                                    <td>
+                                        {% if res.raccess.published %}
+                                            Published
+                                        {% elif res.raccess.public %}
+                                            Public
+                                        {% elif res.raccess.discoverable %}
+                                            Discoverable
+                                        {% else %}
+                                            Private
+                                        {% endif %}
+                                    </td>
+                                     <td>
+                                        {% if res|user_permission:request.user.pk|lower == "none" %}
+                                            <strong class="label-private">{{ res|user_permission:request.user.pk }}</strong>
+                                        {% elif res|user_permission:request.user.pk|lower == "open access" %}
+                                            <strong class="label-public">{{ res|user_permission:request.user.pk }}</strong>
+                                        {% else %}
+                                            {{ res|user_permission:request.user.pk }}
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <span onclick="remove_collection_item('{{ res.short_id }}')" data-form-id="form-favorite-{{ res.short_id }}" data-form-type="toggle-favorite"
+                                                          class="glyphicon glyphicon-remove btn-inline-favorite"></span>
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default" data-dismiss="modal" id="save-collection-btn-cancel">
+                       Cancel
+                    </button>
+                    <button type="button" class="btn btn-success" data-dismiss="modal" id="save-collection-btn-ok" onclick="add_collection_item();">
+                        Add to collection
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    {#    modal div: deleted-resources-modal #}
+    <div class="modal fade" id="deleted-resources-modal" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+        <div class="modal-dialog" style="width:65%">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                    <h4 class="modal-title" id="save-collection-warning-title">Deleted Resources</h4>
+                </div>
+                <div class="modal-body" id="save-collection-warning-body">
+                    <table id="deleted-resources-table" class="table-hover table-striped" width="100%">
+                        <thead>
+                        <tr>
+                            <th>Resource ID</th>
+                            <th>Title</th>
+                            <th>Type</th>
+                            <th>Deleted by</th>
+                            <th>Date</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                            {% for res in deleted_resources %}
+                                <tr>
+                                    <td>
+                                        {{ res.resource_id }}
+                                    </td>
+                                    <td>
+                                        {{ res.resource_title }}
+                                    </td>
+                                    <td>
+                                        {{ res.resource_type }}
+                                    </td>
+                                    <td>
+                                        {% if res.deleted_by.first_name %}
+                                            <strong><a href='/user/{{ res.deleted_by.pk }}/' target="_blank">{{res.deleted_by.first_name}} {{res.deleted_by.last_name }}</a></strong>
+                                        {% else %}
+                                            <strong><a href='/user/{{ res.deleted_by.pk }}/' target="_blank">{{ res.deleted_by.username }}</a></strong>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {{ res.date_deleted }}
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                    <div id="clear-deleted-res-warning" style="display: None">It may take seconds to clear deleted resources and update bag. Please keep this window open and wait...</div>
+                </div>
+                <div class="modal-footer">
+                    {% if edit_mode|lower == "true" %}
+                    <button type="button" class="btn btn-success" id="clear-deleted-res-btn" onclick="clear_deleted_resources_table('{{collection_res_id}}');">
+                        Clear and Update Bag
+                    </button>
+                    {% endif %}
+                    <button type="button" class="btn btn-default" data-dismiss="modal" id="save-collection-btn-cancel">
+                       Close
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+{% endblock %}
+
+{% block extra_js %}
+    {{ block.super }}
+    <script type="text/javascript" src='//cdn.datatables.net/1.10.10/js/jquery.dataTables.js'></script>
+
+    {# put resource specific js below #}
+    <script type="text/javascript">
+
+        var paging = false;
+        var page_length = 15;
+        var page_type = "numbers";
+        var page_length_change = false;
+        $(document).ready(function() {
+
+            //------------------ table headers ------------
+            {#                <th>Add</th>             0  #}
+            {#                <th>Title</th>           1  #}
+            {#                <th>Type</th>            2  #}
+            {#                <th>Owners</th>          3  #}
+            {#                <th>Sharing status</th>  4  #}
+            {#                <th>My Permission</th>   5  #}
+            {#                <th>Remove</th>          6  #}
+
+            var edit_mode = "{{edit_mode}}";
+            if (edit_mode.toLowerCase() == "false") {
+                    resourceTable = $("#collection-table").DataTable({
+                    "order": [[2, "asc"]],
+                    "paging": paging,
+                    "bLengthChange": false,
+                    "pagingType": page_type,
+                    "pageLength": page_length,
+                    "info": false,
+                    "bFilter": false,
+                    "bInfo": false,
+                    "columnDefs": [
+                        {
+                            "targets": [0],     // <th>Add</th>
+                            "visible": false,
+                        },
+                        {
+                        "targets": [6],     // <th>Remove</th>
+                        "visible": false,
+                        },
+                    ],
+                    "language": {
+                        "emptyTable": "This collection is empty"
+                    }
+                    });
+            }
+            else {
+                 resourceTable = $("#collection-table").DataTable({
+                    "order": [[2, "asc"]],
+                    "paging": paging,
+                    "bLengthChange": false,
+                    "pagingType": page_type,
+                    "pageLength": page_length,
+                    "info": false,
+                    "bFilter": false,
+                    "bInfo": false,
+                    "columnDefs": [
+                        {
+                            "targets": [0],     // <th>Add</th>
+                            "visible": false,
+                        },
+                    ],
+                    "language": {
+                        "emptyTable": "This collection is empty"
+                    }
+                    });
+            }
+
+            resourceTable = $("#collection-table-candidate").DataTable({
+                "order": [[2, "asc"]],
+                "paging": paging,
+                "bLengthChange": false,
+                "pagingType": page_type,
+                "pageLength": page_length,
+                "info": false,
+                "columnDefs": [
+                    {
+                        "targets": [6],     // <th>Remove</th>
+                        "visible": false,
+                    },
+                ],
+                "language": {
+                    "emptyTable": "No resource available in this table"
+                }
+            });
+
+            resourceTable = $("#deleted-resources-table").DataTable({
+                "paging": paging,
+                "bLengthChange": false,
+                "pagingType": page_type,
+                "pageLength": page_length,
+                "info": false,
+                "bFilter": false,
+                "bInfo": false,
+                "language": {
+                    "emptyTable": "All deleted resources have been cleared"
+                }
+                });
+
+        }); // $(document).ready(function())
+
+
+        function remove_collection_item(res_id) {
+            // get row obj is being removed from collection
+            var removed_row_from_colletion = $('#collection-table').DataTable().row('#' + res_id);
+
+            if(removed_row_from_colletion.data()[5].toLowerCase().indexOf("none") >= 0) {
+                $('#save-collection-btn-cancel').off("click");
+                $('#save-collection-btn-ok').off("click").on("click", function(){
+                    removed_row_from_colletion.remove().draw(false);
+                });
+
+                waning_message = "You have NO PERMISSION over the resource you are about to remove from this collection. Once confirmed, you CAN NOT add it back.";
+
+                $('#save-collection-warning-body').text(waning_message);
+                $('#save-collection-warning').modal('show');
+            }
+            else {
+                // copy row data and add to collection-candidate table
+                $('#collection-table-candidate').DataTable().row.add(removed_row_from_colletion.data()).draw(false);
+                // remove row obj
+                removed_row_from_colletion.remove().draw(false);
+            }
+            $('#save-new').show();
+        }
+
+
+        function add_collection_item() {
+            $.each($(".row-selector:checked"), function( index, chkbox ) {
+                    var res_id = chkbox.id;
+                    var added_row = $('#collection-table-candidate').DataTable().row('#' + res_id);
+                    $('#collection-table').DataTable().row.add(added_row.data()).draw(false);
+                    added_row.remove().draw(false);
+            });
+            $('#save-new').show();
+        }
+
+        // revised metadata_update_ajax_submit
+        function collection_update_ajax_submit_new(form_id) {
+            $alert_success = '<div class="alert alert-success" id="success-alert"> \
+                <button type="button" class="close" data-dismiss="alert">x</button> \
+                <strong>Success! </strong> \
+                Collection updated.\
+            </div>'
+            $alert_error = '<div class="alert alert-danger" id="error-alert"> \
+                <button type="button" class="close" data-dismiss="alert">x</button> \
+                <strong>Error! </strong> \
+                Collection failed to update.\
+            </div>'
+            $form=$('#' + form_id);
+            var resource_id_list = [];
+            $('#collection-table').DataTable().rows().every(function()
+            {resource_id_list.push(this.id);});
+            $.ajax({
+                type: "POST",
+                url: $form.attr('action'),
+                dataType: "json",
+                data: {"resource_id_list": resource_id_list},
+                success: function(result) {
+                    /* The div contains now the updated form */
+                    json_response = result;
+                    if (json_response.status === 'success') {
+                        $(document).trigger("submit-success");
+                        $('#save-new').hide();
+                        if (json_response.hasOwnProperty('metadata_status')) {
+                            if (json_response.metadata_status !== $('#metadata-status').text()) {
+                                $('#metadata-status').text(json_response.metadata_status);
+                                if (json_response.metadata_status.toLowerCase().indexOf("insufficient") == -1) {
+                                    var res_is_discoverable = '{{ discoverable }}';
+                                    // published, public and discoverable all have discoverable = True
+                                    if (res_is_discoverable.toLowerCase() != "true") {
+                                        customAlert("<i class='glyphicon glyphicon-flag custom-alert-icon'></i><strong>Collection Status:</strong> sufficient to publish or make public", 3000);
+                                        $("#btn-public").prop("disabled", false);
+                                        $("#btn-discoverable").prop("disabled", false);
+                                    }
+                                }
+                            }
+                        }
+                        $('body > .container').append($alert_success);
+                        $('#error-alert').each(function(){
+                            this.remove();
+                        });
+                        $(".alert-success").fadeTo(2000, 500).fadeOut(1000, function(){
+                            $(document).trigger("submit-success");
+                            $(".alert-success").alert('close');
+                        });
+                    }
+                    else {
+                        $('body > .container').append($alert_error);
+                        $(".alert-danger").fadeTo(3000, 500).fadeOut(1000, function(){
+                            $(document).trigger("submit-error");
+                            $(".alert-danger").alert('close');
+                        });
+                    }
+                },
+                error: function(XMLHttpRequest, textStatus, errorThrown) {
+                    $('#' + form_id).before($alert_error);
+                    $(".alert-error").fadeTo(2000, 500).slideUp(1000, function() {
+                        $(".alert-error").alert('close');
+                    });
+                }
+            });
+            //don't submit the form
+            return false;
+        }
+
+
+        function save_btn_callback_new() {
+            collection_update_ajax_submit_new('collector-new');
+        }
+
+        function clear_deleted_resources_table(collection_id) {
+            // hide view deleted
+            $("#view_deleted_res_div").hide();
+            $("#clear-deleted-res-btn").hide();
+            $("#clear-deleted-res-warning").show();
+
+            url = "/hsapi/_internal/" + collection_id +"/update-collection-for-deleted-resources/";
+            $.ajax({
+            type: "POST",
+            url: url,
+            dataType: "json",
+            data: {},
+            success: function(result) {
+                /* The div contains now the updated form */
+                json_response = result;
+                if (json_response.status === 'success') {
+                    $('#deleted-resources-table').DataTable().rows().remove().draw(false);
+                    $("#clear-deleted-res-warning").hide();
+                }
+            },
+            error: function(XMLHttpRequest, textStatus, errorThrown) {
+               $('#clear-deleted-res-warning').html("<font color='red'>Failed to clear deleted resource links.</font>");
+               $('#clear-deleted-res-warning').show();
+            }
+            });
+        }
+
+    </script>
+{% endblock %}

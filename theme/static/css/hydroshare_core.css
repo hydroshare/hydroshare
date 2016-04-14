@@ -1017,7 +1017,7 @@ span.remove{
     margin-top: 20px;
 }
 
-.info-group table td{
+table.info-table td{
     padding-left:15px;
 }
 
@@ -1230,7 +1230,7 @@ a[data-toggle='tab']{
 	border-bottom-left-radius: 0;
 }
 
-#permission-panel #id_user-autocomplete {
+#add-access-form #id_user-autocomplete {
     width: 100%;
     height: 100%;
     border: 0;
@@ -1591,10 +1591,6 @@ body > .main-container {
 
 div#sharing-status {
     overflow: hidden; /* Fixes height for floating elements */
-}
-
-.info-group {
-	width: calc(100% - 220px);
 }
 
 .tag-list {
@@ -2171,6 +2167,10 @@ button.loading {
 #coverageMap {
 	height:350px;
 	border:1px solid #DDD;
+}
+
+.coverage-container {
+    margin-top: -20px; margin-bottom:20px;
 }
 
 #id_name {

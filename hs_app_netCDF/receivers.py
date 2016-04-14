@@ -9,6 +9,7 @@ from django.core.files.uploadedfile import InMemoryUploadedFile
 
 from hs_core.signals import *
 from hs_core.hydroshare.resource import ResourceFile
+from hs_core.hydroshare import utils
 from hs_app_netCDF.forms import *
 import nc_functions.nc_utils as nc_utils
 import nc_functions.nc_dump as nc_dump
@@ -57,9 +58,9 @@ def netcdf_pre_create_resource(sender, **kwargs):
 
             # add title
             if res_dublin_core_meta.get('title'):
-                if res_title == 'Untitled resource':
-                    title = {'title': {'value': res_dublin_core_meta['title']}}
-                    metadata.append(title)
+                res_title = {'title': {'value': res_dublin_core_meta['title']}}
+                metadata.append(res_title)
+
             # add description
             if res_dublin_core_meta.get('description'):
                 description = {'description': {'abstract': res_dublin_core_meta['description']}}
@@ -184,19 +185,22 @@ def netcdf_pre_delete_file_from_resource(sender, **kwargs):
     del_file = kwargs['file']
     del_file_ext = os.path.splitext(del_file.resource_file.name)[-1]
 
-    # TODO: update resource modification info
-    # user = kwargs['user']
-    # resource_modified(resource, user)
+    # update resource modification info
+    user = nc_res.creator
+    utils.resource_modified(nc_res, user)
 
     # delete the netcdf header file or .nc file
-    file_ext = ['.nc', '.txt']
+    file_ext = {'.nc': 'application/x-netcdf',
+                '.txt': 'text/plain'}
+
     if del_file_ext in file_ext:
-        file_ext.remove(del_file_ext)
+        del file_ext[del_file_ext]
         for f in ResourceFile.objects.filter(object_id=nc_res.id):
             ext = os.path.splitext(f.resource_file.name)[-1]
             if ext in file_ext:
                 f.resource_file.delete()
                 f.delete()
+                nc_res.metadata.formats.filter(value=file_ext[ext]).delete()
                 break
 
     # delete all the coverage info
@@ -213,7 +217,7 @@ def netcdf_pre_add_files_to_resource(sender, **kwargs):
     files = kwargs['files']
     validate_files_dict = kwargs['validate_files']
 
-    if len(files) >1:
+    if len(files) > 1:
         # file number validation
         validate_files_dict['are_files_valid'] = False
         validate_files_dict['message'] = 'Only one file can be uploaded.'
@@ -227,20 +231,79 @@ def netcdf_pre_add_files_to_resource(sender, **kwargs):
                     f.resource_file.delete()
                     f.delete()
 
-            # TODO: update resource modification info
-            # user = kwargs['user']
-            # resource_modified(resource, user)
+            # update resource modification info
+            user = kwargs['user']
+            utils.resource_modified(nc_res, user)
 
             # extract metadata
             try:
                 res_dublin_core_meta = nc_meta.get_dublin_core_meta(nc_dataset)
-            except:
+            except Exception:
                 res_dublin_core_meta = {}
 
             try:
                 res_type_specific_meta = nc_meta.get_type_specific_meta(nc_dataset)
-            except:
+            except Exception:
                 res_type_specific_meta = {}
+
+            # update title info
+            if res_dublin_core_meta.get('title'):
+                if nc_res.metadata.title:
+                    nc_res.metadata.title.delete()
+                nc_res.metadata.create_element('title', value=res_dublin_core_meta['title'])
+
+            # update description info
+            if res_dublin_core_meta.get('description'):
+                if nc_res.metadata.description:
+                    nc_res.metadata.description.delete()
+                nc_res.metadata.create_element('description', abstract=res_dublin_core_meta.get('description'))
+
+            # update creator info
+            if res_dublin_core_meta.get('creator_name'):
+                name = res_dublin_core_meta.get('creator_name')
+                email = res_dublin_core_meta.get('creator_email', '')
+                url = res_dublin_core_meta.get('creator_url', '')
+                if nc_res.metadata.creators.all().filter(name=name).first():
+                    nc_res.metadata.creators.all().filter(name=name).first().delete()
+                nc_res.metadata.create_element('creator', name=name, email=email, homepage=url)
+
+            # update contributor info
+            if res_dublin_core_meta.get('contributor_name'):
+                name_list = res_dublin_core_meta['contributor_name'].split(',')
+                existing_contributor_names = [contributor.name for contributor in nc_res.metadata.contributors.all()]
+                for name in name_list:
+                    if name not in existing_contributor_names:
+                        nc_res.metadata.create_element('contributor', name=name)
+
+            # update subject info
+            if res_dublin_core_meta.get('subject'):
+                keywords = res_dublin_core_meta['subject'].split(',')
+                existing_keywords = [subject.value for subject in nc_res.metadata.subjects.all()]
+                for keyword in keywords:
+                    if keyword not in existing_keywords:
+                        nc_res.metadata.create_element('subject', value=keyword)
+
+            # update source
+            if res_dublin_core_meta.get('source'):
+                for source in nc_res.metadata.sources.all():
+                    source.delete()
+                nc_res.metadata.create_element('source', derived_from=res_dublin_core_meta.get('source'))
+
+            # update license element:
+            if res_dublin_core_meta.get('rights'):
+                raw_info = res_dublin_core_meta.get('rights')
+                b = re.search("(?P<url>https?://[^\s]+)", raw_info)
+                url = b.group('url') if b else ''
+                statement = raw_info.replace(url, '') if url else raw_info
+                if nc_res.metadata.rights:
+                    nc_res.metadata.rights.delete()
+                nc_res.metadata.create_element('rights', statement=statement, url=url)
+
+            # update relation
+            if res_dublin_core_meta.get('references'):
+                for cite in nc_res.metadata.relations.all().filter(type='cites'):
+                    cite.delete()
+                nc_res.metadata.create_element('relation', type='cites', value=res_dublin_core_meta['references'])
 
             # update box info
             nc_res.metadata.coverages.all().delete()

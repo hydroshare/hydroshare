@@ -15,6 +15,7 @@ from gdalconst import GA_ReadOnly
 from django.core.files.uploadedfile import UploadedFile
 from django.dispatch import receiver
 
+from hs_core.hydroshare import utils
 from hs_core.hydroshare.resource import ResourceFile
 from hs_core.signals import pre_create_resource, pre_add_files_to_resource, pre_delete_file_from_resource, \
     pre_metadata_element_create, pre_metadata_element_update
@@ -84,7 +85,9 @@ def create_vrt_file(tif_file):
     temp_dir = tempfile.mkdtemp()
     tif_base_name = os.path.basename(tif_file.name)
     vrt_file_path = os.path.join(temp_dir, os.path.splitext(tif_base_name)[0]+'.vrt')
-    subprocess.Popen(['gdalbuildvrt', vrt_file_path, tif_file.file.name]).wait()  # remember to add .wait()
+
+    with open(os.devnull, 'w') as fp:
+        subprocess.Popen(['gdalbuildvrt', vrt_file_path, tif_file.file.name], stdout=fp, stderr=fp).wait()   # remember to add .wait()
 
     # modify vrt file SourceFileName
     try:
@@ -127,7 +130,7 @@ def raster_pre_create_resource_trigger(sender, **kwargs):
     validate_files_dict = kwargs['validate_files']
     metadata = kwargs['metadata']
 
-    if(files):
+    if files:
         # raster file validation
         error_info, vrt_file_path, temp_dir = raster_file_validation(files)
 
@@ -221,9 +224,10 @@ def raster_pre_add_files_to_resource_trigger(sender, **kwargs):
                 res.metadata.create_element('Coverage', type='box', value=res_md_dict['spatial_coverage_info']['wgs84_coverage_info'])
 
             # update extended original box coverage
-            if res.metadata.originalCoverage is None:
-                v = {'value': res_md_dict['spatial_coverage_info']['original_coverage_info'] }
-                res.metadata.create_element('OriginalCoverage', **v)
+            if res.metadata.originalCoverage:
+                res.metadata.originalCoverage.delete()
+            v = {'value': res_md_dict['spatial_coverage_info']['original_coverage_info'] }
+            res.metadata.create_element('OriginalCoverage', **v)
 
             # update extended metadata CellInformation
             res.metadata.cellInformation.delete()
@@ -282,6 +286,11 @@ def raster_pre_delete_file_from_resource_trigger(sender, **kwargs):
             f.resource_file.delete()
             f.delete()
 
+    # delete the format of the files that is not the user selected delete file
+    del_file_format = utils.get_file_mime_type(del_file.resource_file.name)
+    for format_element in res.metadata.formats.all():
+        if format_element.value != del_file_format:
+            res.metadata.delete_element(format_element.term, format_element.id)
 
 @receiver(pre_metadata_element_create, sender=RasterResource)
 def metadata_element_pre_create_handler(sender, **kwargs):

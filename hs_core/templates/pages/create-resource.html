@@ -51,6 +51,7 @@
                 <option value="GenericResource">Generic</option>
                 <option value="NetcdfResource">Multidimensional (NetCDF)</option>
                 <option value="ToolResource">Web App</option>
+                <option value="CollectionResource">Collection Resource</option>
 
                 <optgroup label="Geographic Resources">
                     <option value="RasterResource">Geographic Raster</option>
@@ -152,7 +153,7 @@
             }
             $.ajax({
                 type: "GET",
-                url: "/hsapi/_internal/" + this.value + "/supported-file-types",
+                url: "/hsapi/_internal/" + this.value + "/supported-file-types/",
                 success: function(result) {
                     console.log(result);
                     json_response_file_types = JSON.parse(result);
@@ -178,7 +179,7 @@
 
             $.ajax({
                 type: "GET",
-                url: "/hsapi/_internal/" + this.value + "/allow-multiple-file",
+                url: "/hsapi/_internal/" + this.value + "/allow-multiple-file/",
                 success: function(result) {
                     console.log(result);
                     json_response_multiple_file = JSON.parse(result);
