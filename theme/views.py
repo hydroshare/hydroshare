@@ -1,6 +1,4 @@
 from json import dumps
-import logging
-import paramiko
 
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import ValidationError
@@ -28,13 +26,13 @@ from mezzanine.utils.email import send_verification_mail, send_approve_mail, sub
 from mezzanine.utils.urls import login_redirect, next_url
 from mezzanine.utils.views import render
 
+from hs_core.views.utils import run_ssh_command
 from theme.forms import ThreadedCommentForm
 from theme.forms import RatingForm, UserProfileForm, UserForm
 from theme.models import UserProfile
 
 from .forms import SignupForm
 
-logger = logging.getLogger(__name__)
 
 class UserProfileView(TemplateView):
     template_name='accounts/profile.html'
@@ -306,38 +304,51 @@ def deactivate_user(request):
 
 @login_required
 def delete_irods_account(request):
-    ssh = paramiko.SSHClient()
-    ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-    ssh.connect(settings.HS_USER_ZONE_HOST, username=settings.HS_USER_ZONE_PROXY_USER, password=settings.HS_USER_ZONE_PROXY_USER_PWD)
-    transport = ssh.get_transport()
-    session = transport.open_session()
-    session.set_combine_stderr(True)
-    session.get_pty()
-    session.exec_command(settings.HS_USER_ZONE_PROXY_USER_DELETE_USER_CMD)
-    stdin = session.makefile('wb', -1)
-    stdout = session.makefile('rb', -1)
-    stdin.write("{cmd}\n".format(cmd=settings.HS_USER_ZONE_PROXY_USER_PWD))
-    stdin.flush()
-    logger = logging.getLogger('django')
-    logger.debug(stdout.readlines())
+    if request.method == 'POST':
+        user = request.user
+        try:
+            exec_cmd = "{0} {1}".format(settings.HS_USER_ZONE_PROXY_USER_DELETE_USER_CMD, user.username)
+            run_ssh_command(host=settings.HS_USER_ZONE_HOST, uname=settings.HS_USER_ZONE_PROXY_USER, pwd=settings.HS_USER_ZONE_PROXY_USER_PWD,
+                            exec_cmd=exec_cmd)
+            user_profile = UserProfile.objects.filter(user=user).first()
+            user_profile.create_irods_user_account = False
+            user_profile.save()
+        except Exception as ex:
+            return HttpResponse(
+                    dumps({"error": ex.message}),
+                    content_type = "application/json"
+            )
+        else:
+            return HttpResponse(
+                    dumps({"success": "iRODS account {0} is deleted successfully".format(user.username)}),
+                    content_type = "application/json"
+            )
 
-    return HttpResponseRedirect(request.META['HTTP_REFERER'])
 
 @login_required
 def create_irods_account(request):
-    ssh = paramiko.SSHClient()
-    ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-    ssh.connect(settings.HS_USER_ZONE_HOST, username=settings.HS_USER_ZONE_PROXY_USER, password=settings.HS_USER_ZONE_PROXY_USER_PWD)
-    transport = ssh.get_transport()
-    session = transport.open_session()
-    session.set_combine_stderr(True)
-    session.get_pty()
-    session.exec_command(settings.HS_USER_ZONE_PROXY_USER_CREATE_USER_CMD)
-    stdin = session.makefile('wb', -1)
-    stdout = session.makefile('rb', -1)
-    stdin.write("{cmd}\n".format(cmd=settings.HS_USER_ZONE_PROXY_USER_PWD))
-    stdin.flush()
-    logger = logging.getLogger('django')
-    logger.debug(stdout.readlines())
-
-    return HttpResponseRedirect(request.META['HTTP_REFERER'])
+    if request.method == 'POST':
+        try:
+            user = request.user
+            pwd = str(request.POST.get('password'))
+            exec_cmd = "{0} {1} {2}".format(settings.HS_USER_ZONE_PROXY_USER_CREATE_USER_CMD, user.username, pwd)
+            run_ssh_command(host=settings.HS_USER_ZONE_HOST, uname=settings.HS_USER_ZONE_PROXY_USER, pwd=settings.HS_USER_ZONE_PROXY_USER_PWD,
+                            exec_cmd=exec_cmd)
+            user_profile = UserProfile.objects.filter(user=user).first()
+            user_profile.create_irods_user_account = True
+            user_profile.save()
+        except Exception as ex:
+            return HttpResponse(
+                    dumps({"error": ex.message}),
+                    content_type = "application/json"
+            )
+        else:
+            return HttpResponse(
+                    dumps({"success": "iRODS account {0} is created successfully".format(request.user.username)}),
+                    content_type = "application/json"
+            )
+    else:
+        return HttpResponse(
+            dumps({"error": "Not POST request"}),
+            content_type="application/json"
+        )

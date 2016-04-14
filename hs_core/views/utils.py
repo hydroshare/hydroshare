@@ -62,24 +62,41 @@ def upload_from_irods(username, password, host, port, zone, irods_fnames, res_fi
         fname = os.path.basename(ifname.rstrip(os.sep))
         res_files.append(UploadedFile(file=tmpFile, name=fname, size=size))
 
-# run the update script on hyrax server via ssh session for netCDF resources on demand
-# when private netCDF resources are made public so that all links of data services
-# provided by Hyrax service are instantaneously available on demand
-def run_script_to_update_hyrax_input_files():
+
+def run_ssh_command(host, uname, pwd, exec_cmd):
+    """
+    run ssh client to ssh to a remote host and run a command on the remote host
+    Args:
+        host: remote host name to ssh to
+        uname: the username on the remote host to ssh to
+        pwd: the password of the user on the remote host to ssh to
+        exec_cmd: the command to be executed on the remote host via ssh
+
+    Returns:
+        None, but raises SSHException from paramiko if there is any error during ssh
+        connection and command execution
+    """
     ssh = paramiko.SSHClient()
     ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-    ssh.connect(settings.HYRAX_SSH_HOST, username=settings.HYRAX_SSH_PROXY_USER, password=settings.HYRAX_SSH_PROXY_USER_PWD)
+    ssh.connect(host, username=uname, password=pwd)
     transport = ssh.get_transport()
     session = transport.open_session()
     session.set_combine_stderr(True)
     session.get_pty()
-    session.exec_command(settings.HYRAX_SCRIPT_RUN_COMMAND)
+    session.exec_command(exec_cmd)
     stdin = session.makefile('wb', -1)
     stdout = session.makefile('rb', -1)
-    stdin.write("{cmd}\n".format(cmd=settings.HYRAX_SSH_PROXY_USER_PWD))
+    stdin.write("{cmd}\n".format(cmd=pwd))
     stdin.flush()
     logger = logging.getLogger('django')
     logger.debug(stdout.readlines())
+
+
+# run the update script on hyrax server via ssh session for netCDF resources on demand
+# when private netCDF resources are made public so that all links of data services
+# provided by Hyrax service are instantaneously available on demand
+def run_script_to_update_hyrax_input_files():
+    run_ssh_command(host=settings.HYRAX_SSH_HOST, uname=settings.HYRAX_SSH_PROXY_USER, pwd=settings.HYRAX_SSH_PROXY_USER_PWD, exec_cmd=settings.HYRAX_SCRIPT_RUN_COMMAND)
 
 
 def authorize(request, res_id, needed_permission=ACTION_TO_AUTHORIZE.VIEW_RESOURCE, raises_exception=True):
