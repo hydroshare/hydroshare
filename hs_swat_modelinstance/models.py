@@ -209,7 +209,7 @@ class ModelParameter(AbstractMetaDataElement):
 
             # delete model_parameters metadata element if it has no data
             if swat_model_parameters.model_parameters.all().count() == 0 and \
-                    swat_model_parameters.other_parameters == 0:
+                    len(swat_model_parameters.other_parameters) == 0:
                 swat_model_parameters.delete()
         else:
             raise ObjectDoesNotExist("No ModelParameter element was found for the provided id:%s" % kwargs['id'])
