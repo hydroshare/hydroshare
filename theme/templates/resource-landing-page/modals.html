@@ -1,4 +1,5 @@
 {% load crispy_forms_tags %}
+{% load hydroshare_tags %}
 
 {% for source in source_formset.initial %}
 <div class="modal fade in" id="delete-source-element-dialog{{ source.id }}" tabindex="-1" role="dialog"
@@ -773,3 +774,359 @@
     </div>
 </div>
 {%  endblock %}
+
+ {% if show_manage_access %}
+    {#======= Manage access modal window begins =======#}
+    <div class="modal fade" id="manage-access">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal"
+                            aria-hidden="true">&times;</button>
+                    <h4 class="modal-title">Manage access</h4>
+                </div>
+
+                <div class="row">
+                    <div class="col-sm-12">
+
+                    </div>
+                </div>
+
+
+                <div class="modal-body first-modal">
+                    <div class="alert alert-info" role="alert">
+                        <span class="glyphicon glyphicon-info-sign" aria-hidden="true"></span>
+                        <span>Use this window to share your resource with specific HydroShare users. You can give other
+                            users the ability to view or edit this resource. You can also add additional owners who
+                            will have full permissions.</span>
+                    </div>
+                    <p>Who has access</p>
+                    <table class="table access-table">
+                        <tbody>
+                            {# Empty row used as template to generate subsequent rows #}
+                            <tr id="templateRow">
+                                <td>
+                                    <div class="profile-pic-thumbnail round-image user-icon"></div>
+                                    <div class="user-scope">
+                                        <span data-col="name" class="user-name"></span>
+                                        <span class="text-muted you-flag">(You)</span>
+                                        <br>
+                                        <span data-col="user-name"
+                                              class="user-username-content"></span>
+                                    </div>
+                                </td>
+
+                                <td class="user-roles">
+                                    <span class="dropdown role-dropdown">
+                                        <span class="dropdown-toggle" data-col="current-access"
+                                              id="roles-menu" data-toggle="dropdown"
+                                              aria-haspopup="true" aria-expanded="true">
+                                            <span class="caret"></span>
+                                        </span>
+                                        <ul class="dropdown-menu" aria-labelledby="roles-menu">
+                                            <li data-access-type="Can view">
+                                                <form class="share-form-view" data-access-type="Can view"
+                                                      method="POST">
+                                                    {% csrf_token %}
+                                                    <a>Can view</a>
+                                                </form>
+                                            </li>
+                                            <li data-access-type="Can edit">
+                                                <form class="share-form-edit" data-access-type="Can edit"
+                                                      method="POST">
+                                                    {% csrf_token %}
+                                                    <a>Can edit</a>
+                                                </form>
+                                            </li>
+                                            <li data-access-type="Is owner">
+                                                <form class="share-form-owner" data-access-type="Is owner"
+                                                      method="POST">
+                                                    {% csrf_token %}
+                                                    <a>Is owner</a>
+                                                </form>
+                                            </li>
+                                        </ul>
+                                    </span>
+                                </td>
+
+                                <td class="user-actions">
+                                    <form class="remove-user-form" method="POST">
+                                        {% csrf_token %}
+                                        <span class="glyphicon glyphicon-remove btn-remove-row"></span>
+                                    </form>
+                                </td>
+                            </tr>
+
+                            {# Owners with full permissions to do anything on this resource #}
+                            {% for u in owners %}
+                            <tr id="row-id-{{ u.pk }}" {% if owners|length == 1 or not is_owner_user %}class="hide-actions"{% endif %}>
+                                <td>
+                                    <div class="user-scope">
+
+                                        {% if u.userprofile.picture %}
+                                            <div style="background-image: url('{{ u.userprofile.picture.url }}');"
+                                            class="profile-pic-thumbnail round-image"></div>
+                                        {% else %}
+                                             <div class="profile-pic-thumbnail round-image user-icon"></div>
+                                        {% endif %}
+
+                                        <span data-col="name"
+                                              class="user-name">{{ u|best_name }}</span>
+                                        {% if u.pk == current_user.pk %}
+                                            <span class="text-muted you-flag">(You)</span>
+                                        {% endif %}
+                                        <br>
+                                        <span data-col="user-name"
+                                              class="user-username-content">{{ u.username }}</span>
+                                    </div>
+                                </td>
+
+                                <td class="user-roles">
+                                        <span class="dropdown role-dropdown">
+                                            <span class="dropdown-toggle" data-col="current-access"
+                                                  id="roles-menu"
+                                                  data-toggle="dropdown"
+                                                  aria-haspopup="true" aria-expanded="true">
+                                                Is owner
+                                                <span class="caret"></span>
+                                            </span>
+                                            <ul class="dropdown-menu" aria-labelledby="roles-menu">
+                                                <li data-access-type="Can view">
+                                                    <form id="share-view-{{ u.pk }}"
+                                                          class="share-form-view"
+                                                          data-access-type="Can view"
+                                                          action="/hsapi/_internal/{{ cm.short_id }}/share-resource-with-user/view/{{ u.pk }}/"
+                                                          method="POST">
+                                                        {% csrf_token %}
+                                                        <a onclick="change_share_permission_ajax_submit('share-view-{{ u.pk }}')">Can
+                                                            view</a>
+                                                    </form>
+                                                </li>
+                                                <li data-access-type="Can edit">
+                                                    <form id="share-edit-{{ u.pk }}"
+                                                          class="share-form-edit"
+                                                          data-access-type="Can edit"
+                                                          action="/hsapi/_internal/{{ cm.short_id }}/share-resource-with-user/edit/{{ u.pk }}/"
+                                                          method="POST">
+                                                        {% csrf_token %}
+                                                        <a onclick="change_share_permission_ajax_submit('share-edit-{{ u.pk }}')">Can
+                                                            edit</a>
+                                                    </form>
+                                                </li>
+                                                <li class="active {% if not can_change_resource_flags %}disabled{% endif %}" data-access-type="Is owner">
+                                                    <form id="share-owner-{{ u.pk }}"
+                                                          class="share-form-owner"
+                                                          data-access-type="Is owner"
+                                                          action="/hsapi/_internal/{{ cm.short_id }}/share-resource-with-user/owner/{{ u.pk }}/"
+                                                          method="POST">
+                                                        {% csrf_token %}
+                                                        <a onclick="change_share_permission_ajax_submit('share-owner-{{ u.pk }}')">Is
+                                                            owner</a>
+                                                    </form>
+                                                </li>
+                                            </ul>
+                                        </span>
+                                </td>
+
+                                <td class="user-actions">
+                                    <form id="form-remove-user-{{ u.pk }}"
+                                          class="remove-user-form"
+                                          action="/hsapi/_internal/{{ cm.short_id }}/unshare-resource-with-user/{{ u.pk }}/"
+                                          method="POST">
+                                        {% csrf_token %}
+                                        <span onclick="unshare_resource_ajax_submit('form-remove-user-{{ u.pk }}')"
+                                              class="glyphicon glyphicon-remove btn-remove-row"></span>
+                                    </form>
+                                </td>
+                            </tr>
+                            {% endfor %}
+
+                            {# Users who can edit the content of this resource #}
+                            {% for u in edit_users %}
+                            <tr id="row-id-{{ u.pk }}">
+                                <td>
+                                    <div class="user-scope">
+                                        <div
+                                        {% if u.userprofile.picture %}
+                                            style="background-image: url('{{ u.userprofile.picture.url }}');"
+                                            class="profile-pic-thumbnail round-image"
+                                        {% else %}
+                                             class="profile-pic-thumbnail round-image user-icon"
+                                        {% endif %}
+                                        >
+                                        </div>
+                                        <span value="{{ u.pk }}" class="user-name">{{ u|best_name }}</span>
+                                        {% if u.pk == current_user.pk %}
+                                            <span class="text-muted">(You)</span>
+                                        {% endif %}
+                                        <br>
+                                        <span class="user-username-content">{{ u.username }}</span>
+                                    </div>
+                                </td>
+
+                                <td class="user-roles">
+                                    <span class="dropdown role-dropdown">
+                                        <span class="dropdown-toggle" data-col="current-access"
+                                              id="roles-menu" data-toggle="dropdown"
+                                              aria-haspopup="true" aria-expanded="true">
+                                            Can edit
+                                            <span class="caret"></span>
+                                        </span>
+                                        <ul class="dropdown-menu" aria-labelledby="roles-menu">
+                                            <li data-access-type="Can view">
+                                                <form id="share-view-{{ u.pk }}" class="share-form-view" data-access-type="Can view"
+                                                      action="/hsapi/_internal/{{ cm.short_id }}/share-resource-with-user/view/{{ u.pk }}/"
+                                                      method="POST">
+                                                    {% csrf_token %}
+                                                    <a onclick="change_share_permission_ajax_submit('share-view-{{ u.pk }}')">Can view</a>
+                                                </form>
+                                            </li>
+                                            <li class="active" data-access-type="Can edit" {% if not is_owner_user and not is_edit_user %}class="disabled"{% endif %}>
+                                                <form id="share-edit-{{ u.pk }}" class="share-form-edit" data-access-type="Can edit"
+                                                      action="/hsapi/_internal/{{ cm.short_id }}/share-resource-with-user/edit/{{ u.pk }}/"
+                                                      method="POST">
+                                                    {% csrf_token %}
+                                                    <a onclick="change_share_permission_ajax_submit('share-edit-{{ u.pk }}')">Can edit</a>
+                                                </form>
+                                            </li>
+                                            <li data-access-type="Is owner" {% if not is_owner_user %}class="disabled"{% endif %}>
+                                                <form id="share-owner-{{ u.pk }}" class="share-form-owner" data-access-type="Is owner"
+                                                      action="/hsapi/_internal/{{ cm.short_id }}/share-resource-with-user/owner/{{ u.pk }}/"
+                                                      method="POST">
+                                                    {% csrf_token %}
+                                                    <a onclick="change_share_permission_ajax_submit('share-owner-{{ u.pk }}')">Is owner</a>
+                                                </form>
+                                            </li>
+                                        </ul>
+                                    </span>
+                                </td>
+                                <td class="user-actions">
+                                    <form id="form-remove-user-{{ u.pk }}" class="remove-user-form"
+                                          action="/hsapi/_internal/{{ cm.short_id }}/unshare-resource-with-user/{{ u.pk }}/"
+                                          method="POST">
+                                        {% csrf_token %}
+                                        <span onclick="unshare_resource_ajax_submit('form-remove-user-{{ u.pk }}')"
+                                              class="glyphicon glyphicon-remove btn-remove-row"></span>
+                                    </form>
+                                </td>
+                            </tr>
+                            {% endfor %}
+
+                            {# Users who can view the content of this resource #}
+                            {% for u in view_users %}
+                            <tr id="row-id-{{ u.pk }}">
+                                <td>
+                                    <div class="user-scope">
+                                        <div
+                                            {% if u.userprofile.picture %}
+                                                style="background-image: url('{{ u.userprofile.picture.url }}');"
+                                                class="profile-pic-thumbnail round-image"
+                                            {% else %}
+                                                class="profile-pic-thumbnail round-image user-icon"
+                                            {% endif %}
+                                            >
+                                        </div>
+                                        <span value="{{ u.pk }}" class="user-name">{{ u|best_name }}</span>
+                                        {% if u.pk == current_user.pk %}
+                                            <span class="text-muted">(You)</span>
+                                        {% endif %}
+                                        <br>
+                                        <span class="user-username-content">{{ u.username }}</span>
+                                    </div>
+                                </td>
+
+                                <td class="user-roles">
+                                    <span class="dropdown role-dropdown">
+                                        <span class="dropdown-toggle" data-col="current-access"
+                                              id="roles-menu" data-toggle="dropdown"
+                                              aria-haspopup="true" aria-expanded="true">
+                                            Can view
+                                            <span class="caret"></span>
+                                        </span>
+                                        <ul class="dropdown-menu" aria-labelledby="roles-menu">
+                                            <li class="active" data-access-type="Can view">
+                                                <form id="share-view-{{ u.pk }}" class="share-form-view" data-access-type="Can view"
+                                                      action="/hsapi/_internal/{{ cm.short_id }}/share-resource-with-user/view/{{ u.pk }}/"
+                                                      method="POST">
+                                                    {% csrf_token %}
+                                                    <a onclick="change_share_permission_ajax_submit('share-view-{{ u.pk }}')">Can view</a>
+                                                </form>
+                                            </li>
+                                            <li data-access-type="Can edit" {% if not is_owner_user and not is_edit_user %}class="disabled"{% endif %}>
+                                                <form id="share-edit-{{ u.pk }}" class="share-form-edit" data-access-type="Can edit"
+                                                      action="/hsapi/_internal/{{ cm.short_id }}/share-resource-with-user/edit/{{ u.pk }}/"
+                                                      method="POST">
+                                                    {% csrf_token %}
+                                                    <a onclick="change_share_permission_ajax_submit('share-edit-{{ u.pk }}')">Can edit</a>
+                                                </form>
+                                            </li>
+                                            <li data-access-type="Is owner" {% if not is_owner_user %}class="disabled"{% endif %}>
+                                                <form id="share-owner-{{ u.pk }}" class="share-form-owner" data-access-type="Is owner"
+                                                      action="/hsapi/_internal/{{ cm.short_id }}/share-resource-with-user/owner/{{ u.pk }}/"
+                                                      method="POST">
+                                                    {% csrf_token %}
+                                                    <a onclick="change_share_permission_ajax_submit('share-owner-{{ u.pk }}')">Is owner</a>
+                                                </form>
+                                            </li>
+                                        </ul>
+                                    </span>
+                                </td>
+
+                                <td class="user-actions">
+                                    <form id="form-remove-user-{{ u.pk }}" class="remove-user-form"
+                                          action="/hsapi/_internal/{{ cm.short_id }}/unshare-resource-with-user/{{ u.pk }}/"
+                                          method="POST">
+                                        {% csrf_token %}
+                                        <span onclick="unshare_resource_ajax_submit('form-remove-user-{{ u.pk }}')"
+                                              class="glyphicon glyphicon-remove btn-remove-row"></span>
+                                    </form>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                <div class="modal-body">
+                    <div id="div-invite-people">
+                        <p>Invite people:</p>
+
+                        <div class="input-group" style="width:100%">
+                            <form id="add-access-form"
+                                  action="/hsapi/_internal/{{ cm.short_id }}/share-resource-with-user/"
+                                  method="POST">
+                                {% csrf_token %}
+
+                                {{ add_view_user_form.user }}
+
+                                <div class="dropdown">
+                                    <button class="btn btn-default dropdown-toggle" type="button"
+                                            id="roles_list" data-toggle="dropdown"
+                                            aria-haspopup="true">
+                                        <span id="selected_role" data-role="view">Can view</span>
+                                        <span class="caret"></span>
+                                    </button>
+
+                                    <ul id="list-roles" class="dropdown-menu"
+                                        aria-labelledby="roles_list">
+                                        <li {% if not is_view_user and not is_edit_user and not is_owner_user %}class="disabled"{% endif %}><a data-role="view">Can view</a></li>
+                                        <li {% if not is_edit_user and not is_owner_user %}class="disabled"{% endif %}><a data-role="edit">Can edit</a></li>
+                                        <li {% if not is_owner_user %}class="disabled"{% endif %}><a data-role="owner">Is owner</a></li>
+                                    </ul>
+                                </div>
+
+                                <a id="btn-invite" onclick="share_resource_ajax_submit('add-access-form'); return false;"
+                                        class="btn btn-add-access btn-success pull-left glyphicon glyphicon-plus"><span
+                                        class="button-label">&nbspAdd</span></a>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="modal-footer">
+                    <a type="button" data-dismiss="modal" class="btn btn-primary">Close</a>
+                </div>
+            </div>
+        </div>
+    </div>
+{#======= Manage access modal  window ends =======#}
+{% endif %}

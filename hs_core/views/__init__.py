@@ -2,6 +2,7 @@ from __future__ import absolute_import
 import json
 import datetime
 import pytz
+import logging
 
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import Group, User
@@ -27,7 +28,7 @@ from django_irods.storage import IrodsStorage
 from django_irods.icommands import SessionException
 from hs_core import hydroshare
 from hs_core.hydroshare.utils import get_resource_by_shortkey, resource_modified
-from .utils import authorize, upload_from_irods, ACTION_TO_AUTHORIZE, run_script_to_update_hyrax_input_files
+from .utils import authorize, upload_from_irods, ACTION_TO_AUTHORIZE, run_script_to_update_hyrax_input_files, get_my_resources_list
 from hs_core.models import GenericResource, resource_processor, CoreMetaData, Relation
 from hs_core.hydroshare.resource import METADATA_STATUS_SUFFICIENT, METADATA_STATUS_INSUFFICIENT
 
@@ -39,6 +40,9 @@ from . import utils as view_utils
 from hs_core.signals import *
 from hs_access_control.models import PrivilegeCodes
 
+from hs_collection_resource.models import CollectionDeletedResource
+
+logger = logging.getLogger(__name__)
 
 def short_url(request, *args, **kwargs):
     try:
@@ -244,7 +248,12 @@ def delete_file(request, shortkey, f, *args, **kwargs):
 
 
 def delete_resource(request, shortkey, *args, **kwargs):
-    res, _, _ = authorize(request, shortkey, needed_permission=ACTION_TO_AUTHORIZE.DELETE_RESOURCE)
+    res, _, user = authorize(request, shortkey, needed_permission=ACTION_TO_AUTHORIZE.DELETE_RESOURCE)
+
+    res_title = res.metadata.title
+    res_id = shortkey
+    res_type = res.resource_type
+    resource_related_collections = [col for col in res.collections.all()]
 
     try:
         hydroshare.delete_resource(shortkey)
@@ -252,8 +261,17 @@ def delete_resource(request, shortkey, *args, **kwargs):
         request.session['validation_error'] = ex.message
         return HttpResponseRedirect(request.META['HTTP_REFERER'])
 
-    return HttpResponseRedirect('/my-resources/')
+    # if the deleted resource is part of any collection resource, then for each of those collection
+    # create a CollectionDeletedResource object which can then be used to list collection deleted
+    # resources on collection resource landing page
+    for collection_res in resource_related_collections:
+        CollectionDeletedResource.objects.create(resource_title=res_title,
+                                                 deleted_by=user,
+                                                 resource_id=res_id,
+                                                 resource_type=res_type,
+                                                 collection=collection_res)
 
+    return HttpResponseRedirect('/my-resources/')
 
 def create_new_version_resource(request, shortkey, *args, **kwargs):
     res, authorized, user = authorize(request, shortkey, needed_permission=ACTION_TO_AUTHORIZE.CREATE_RESOURCE_VERSION)
@@ -386,7 +404,7 @@ def unshare_resource_with_user(request, shortkey, user_id, *args, **kwargs):
             user.uaccess.unshare_resource_with_user(res, user_to_unshare_with)
         else:
             # requesting user is the original grantor of privilege to user_to_unshare_with
-            # COUCH: This can raise a PermissionDenied exception without a guard such as 
+            # COUCH: This can raise a PermissionDenied exception without a guard such as
             # user.uaccess.can_undo_share_resource_with_user(res, user_to_unshare_with)
             user.uaccess.undo_share_resource_with_user(res, user_to_unshare_with)
 
@@ -477,44 +495,8 @@ class FilterForm(forms.Form):
 @processor_for('my-resources')
 @login_required
 def my_resources(request, page):
-    user = request.user
-    # get a list of resources with effective OWNER privilege
-    owned_resources = user.uaccess.get_resources_with_explicit_access(PrivilegeCodes.OWNER)
-    # remove obsoleted resources from the owned_resources
-    owned_resources = owned_resources.exclude(object_id__in=Relation.objects.filter(type='isReplacedBy').values('object_id'))
-    # get a list of resources with effective CHANGE privilege
-    editable_resources = user.uaccess.get_resources_with_explicit_access(PrivilegeCodes.CHANGE)
-    # remove obsoleted resources from the editable_resources
-    editable_resources = editable_resources.exclude(object_id__in=Relation.objects.filter(type='isReplacedBy').values('object_id'))
-    # get a list of resources with effective VIEW privilege
-    viewable_resources = user.uaccess.get_resources_with_explicit_access(PrivilegeCodes.VIEW)
-    # remove obsoleted resources from the viewable_resources
-    viewable_resources = viewable_resources.exclude(object_id__in=Relation.objects.filter(type='isReplacedBy').values('object_id'))
 
-    owned_resources = list(owned_resources)
-    editable_resources = list(editable_resources)
-    viewable_resources = list(viewable_resources)
-    favorite_resources = list(user.ulabels.favorited_resources)
-    labeled_resources = list(user.ulabels.labeled_resources)
-    discovered_resources = list(user.ulabels.my_resources)
-    
-    for res in owned_resources:
-        res.owned = True
-
-    for res in editable_resources:
-        res.editable = True
-
-    for res in viewable_resources:
-        res.viewable = True
-
-    for res in (owned_resources + editable_resources + viewable_resources + discovered_resources):
-        res.is_favorite = False
-        if res in favorite_resources:
-            res.is_favorite = True
-        if res in labeled_resources:
-            res.labels = res.rlabels.get_labels(user)
-
-    resource_collection = (owned_resources + editable_resources + viewable_resources + discovered_resources)
+    resource_collection = get_my_resources_list(request)
 
     context = {'collection': resource_collection}
     return context
@@ -662,7 +644,7 @@ def _unshare_resource_with_users(request, requesting_user, users_to_unshare_with
                     requesting_user.uaccess.unshare_resource_with_user(resource, user)
                 else:
                     # requesting user is the original grantor of privilege to user
-                    # TODO from @alvacouch: This can raise a PermissionDenied exception without a guard such as 
+                    # TODO from @alvacouch: This can raise a PermissionDenied exception without a guard such as
                     # user.uaccess.can_undo_share_resource_with_user(res, user_to_unshare_with)
                     requesting_user.uaccess.undo_share_resource_with_user(resource, user)
 

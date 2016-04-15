@@ -138,6 +138,17 @@ def create_bag_files(resource):
     for f in resFiles:
         a.add_resource(f)
 
+    # handle collection resource type
+    # save cotained resource urls into resourcemap.xml
+    if resource.resource_type == "CollectionResource" and resource.resources:
+        for contained_res in resource.resources.all():
+            contained_res_id = contained_res.short_id
+            resource_map_url = '{hs_url}/resource/{res_id}/data/resourcemap.xml'.format(hs_url=current_site_url, res_id=contained_res_id)
+            ar = AggregatedResource(resource_map_url)
+            ar._ore.isAggregatedBy = ag_url
+            ar._dc.format = "application/rdf+xml"
+            a.add_resource(ar)
+
     #Register a serializer with the aggregation.  The registration creates a new ResourceMap, which needs a URI
     serializer = RdfLibSerializer('xml')
     resMap = a.register_serialization(serializer, res_map_url)

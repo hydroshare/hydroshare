@@ -1053,26 +1053,34 @@
     <p>
         A Web App resource is a shortcut (or reference) to an external web application that can work with HydroShare data resources. A Web App might be a simple webpage, a resource viewer, a data editor, or a complicated scientific model. Third-party web applications can easily access HydroShare data resources using the HydroShare REST API, and can be linked to specific HydroShare resource types and made discoverable within HydroShare by registering them as a Web App resource.
     </p>
-    <a name="RequestUrlBase"></a>
+    <a name="AppURL"></a>
         <ul >
-            <li><strong>Term: </strong>RequestUrlBase</li>
-            <li><strong>URI: </strong><a href="#RequestUrlBase">http://www.hydroshare.org/terms/RequestUrlBase</a></li>
-            <li><strong>Label: </strong>Request URL Base</li>
-            <li><strong>Description: </strong>URL of the external web app</li>
+            <li><strong>Term: </strong>AppURL</li>
+            <li><strong>URI: </strong><a href="#AppURL">http://www.hydroshare.org/terms/AppURL</a></li>
+            <li><strong>Label: </strong>App URL</li>
+            <li><strong>Description: </strong>In most cases, an app will have been programmed to expect certain parameters in its App URL which send the app important information, such as which HydroShare resource to retrieve and process. HydroShare provides predefined parameters to achieve this. These predefined parameters can be appended to your App URL. They will be dynamically replaced at run-time when a user launches your app from a resource landing page. This approach gives you greater flexibility when customizing App URL. <br>Currently, HydroShare supports the following parameters:
+            <ul>
+                <li> <strong>${HS_RES_ID}</strong>: Resource ID</li>
+                <li> <strong>${HS_RES_TYPE}</strong>: Resource Type</li>
+                <li> <strong>${HS_USR_NAME}</strong>: HydroShare username</li>
+            </ul>
+                An example:<br>
+ <strong>http://www.my-app-website.org/app_1/?res_id=${HS_RES_ID}</strong>.<br>HydroShare will replace ${HS_RES_ID} with the real resource id.
+            </li>
         </ul>
-    <a name="ToolResourceType"></a>
+    <a name="SupportedResourceType"></a>
         <ul >
-            <li><strong>Term: </strong>ToolResourceType</li>
-            <li><strong>URI: </strong><a href="#ToolResourceType">http://www.hydroshare.org/terms/ToolResourceType</a></li>
-            <li><strong>Label: </strong>Tool Resource Type</li>
+            <li><strong>Term: </strong>SupportedResourceType</li>
+            <li><strong>URI: </strong><a href="#SupportedResourceType">http://www.hydroshare.org/terms/SupportedResourceType</a></li>
+            <li><strong>Label: </strong>Supported Resource Type</li>
             <li><strong>Description: </strong>Names of applicable date resource type</li>
         </ul>
-    <a name="ToolVersion"></a>
+    <a name="WebAppVersion"></a>
         <ul >
-            <li><strong>Term: </strong>ToolVersion</li>
-            <li><strong>URI: </strong><a href="#ToolVersion">http://www.hydroshare.org/terms/ToolVersion</a></li>
-            <li><strong>Label: </strong>Tool Version</li>
-            <li><strong>Description: </strong>Web app Version</li>
+            <li><strong>Term: </strong>WebAppVersion</li>
+            <li><strong>URI: </strong><a href="#WebAppVersion">http://www.hydroshare.org/terms/WebAppVersion</a></li>
+            <li><strong>Label: </strong>Version</li>
+            <li><strong>Description: </strong>Web App Version</li>
         </ul>
 
     <h3>Script Resource Type Description</h3>
@@ -1122,5 +1130,12 @@
             <li><strong>Label: </strong>Script Repository</li>
             <li><strong>Description: </strong>The URL to a respository where the script is also stored.</li>
         </ul>
+    <h3>Collection Resource Type Description</h3>
+    <p>
+        A collection resource is a resource that holds a list of other resources in HydroShare that the creator has logically assembled into a collection.
+        Collections are intended to be a flexible way to combine resources associated with a specific purpose, such as a specific study, site, or experiment.
+        HydroShare does not impose restrictions on the purpose for which resources may be placed in a collection or on the number, types,
+        publication status or permissions settings associated with resources in a collection.
+    </p>
 
 {% endblock %}

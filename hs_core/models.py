@@ -30,7 +30,6 @@ from mezzanine.generic.fields import CommentsField, RatingField
 from mezzanine.generic.fields import KeywordsField
 from mezzanine.conf import settings as s
 
-
 class GroupOwnership(models.Model):
     group = models.ForeignKey(Group)
     owner = models.ForeignKey(User)
@@ -1316,6 +1315,8 @@ class BaseResource(Page, AbstractResource):
     objects = models.Manager()
     public_resources = PublicResourceManager()
     discoverable_resources = DiscoverableResourceManager()
+
+    collections = models.ManyToManyField('BaseResource', related_name='resources')
 
     class Meta:
         verbose_name = 'Generic'
