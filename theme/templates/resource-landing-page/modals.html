@@ -854,6 +854,7 @@
                         <h4 class="modal-title" id="add-funding-label"> Add Funding Source</h4></div>
                     <div class="modal-body">
                         <div class="form-group">
+                            {% csrf_token %}
                             <fieldset>
                                 {# Agency Name (Required) #}
                                 <div id="div_id_agency_name" class="control-group">
