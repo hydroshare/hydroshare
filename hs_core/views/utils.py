@@ -89,7 +89,12 @@ def run_ssh_command(host, uname, pwd, exec_cmd):
     stdin.write("{cmd}\n".format(cmd=pwd))
     stdin.flush()
     logger = logging.getLogger('django')
-    logger.debug(stdout.readlines())
+    output = stdout.readlines()
+    if output:
+        logger.debug(output)
+        return '.'.join(output)
+    else:
+        return ''
 
 
 # run the update script on hyrax server via ssh session for netCDF resources on demand

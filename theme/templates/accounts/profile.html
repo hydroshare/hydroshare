@@ -97,7 +97,6 @@
                                         <a data-toggle="modal" data-target="#create-irods-account-dialog">Create your iRODS user account</a>
                                     {% endif %}
                                 </div>
-                                <div id="irods_account_status_info"></div>
                             </div>
                         </div>
                         {% endif %}
@@ -1022,6 +1021,13 @@
             return "<a data-toggle='modal' data-target='" + data_target + "'>" + text + "</a>";
         }
 
+        function irods_status_info(alert_type, status, title) {
+            return "<div class=\"col-sm-12\">" +
+                    "<div class=\"alert " + alert_type + " alert-dismissible\" role=\"alert\">" +
+                    "<button type=\"button\" class=\"close\" data-dismiss=\"alert\" aria-label=\"Close\"><span aria-hidden=\"true\">&times;</span></button>" +
+                    "<strong>" + title + "</strong><div>" + status + "</div></div></div>"
+        }
+
         function create_irods_account() {
             $.ajax({
                 url: "{% url 'create_irods_account' %}",
@@ -1031,17 +1037,23 @@
                 },
                 success: function(json) {
                     if(json.success) {
-                        $("#irods_account_status_info").text(json.success);
                         $('#create-irods-account-dialog').modal('hide');
                         var irodsContainer = $("#irods-account-container");
                         irodsContainer.empty();
                         irodsContainer.append(irods_account_link("#delete-irods-account-dialog", "Delete your iRODS user account"));
+                        irodsContainer.append(irods_status_info('alert-success', json.success, 'Success'));
+                    }
+                    if(json.error) {
+                        $('#create-irods-account-dialog').modal('hide');
+                        var irodsContainer = $("#irods-account-container");
+                        irodsContainer.append(irods_status_info('alert-warning', json.error, 'Failure'));
                     }
                 },
                 error: function(xhr, errmsg, err) {
                     err_info = xhr.status + ": " + xhr.responseText + ". Error message: " + errmsg;
-                    $("#irods_account_status_info").text(err_info);
                     $('#create-irods-account-dialog').modal('hide');
+                    var irodsContainer = $("#irods-account-container");
+                    irodsContainer.append(irods_status_info('alert-warning', err_info, 'Failure'));
                 }
             });
         }
@@ -1053,17 +1065,23 @@
                 data: {},
                 success: function(json) {
                     if(json.success) {
-                        $("#irods_account_status_info").text(json.success);
                         $('#delete-irods-account-dialog').modal('hide');
                         var irodsContainer = $("#irods-account-container");
                         irodsContainer.empty();
                         irodsContainer.append(irods_account_link("#create-irods-account-dialog", "Create your iRODS user account"));
+                        irodsContainer.append(irods_status_info('alert-success', json.success, 'Success'));
+                    }
+                    if(json.error) {
+                        $('#delete-irods-account-dialog').modal('hide');
+                        var irodsContainer = $("#irods-account-container");
+                        irodsContainer.append(irods_status_info('alert-warning', json.error, 'Failure'));
                     }
                 },
                 error: function(xhr, errmsg, err) {
                     err_info = xhr.status + ": " + xhr.responseText + ". Error message: " + errmsg;
-                    $("#irods_account_status_info").text(err_info);
                     $('#delete-irods-account-dialog').modal('hide');
+                    var irodsContainer = $("#irods-account-container");
+                    irodsContainer.append(irods_status_info('alert-warning', err_info, 'Failure'));
                 }
             });
         }

@@ -308,19 +308,26 @@ def delete_irods_account(request):
         user = request.user
         try:
             exec_cmd = "{0} {1}".format(settings.HS_USER_ZONE_PROXY_USER_DELETE_USER_CMD, user.username)
-            run_ssh_command(host=settings.HS_USER_ZONE_HOST, uname=settings.HS_USER_ZONE_PROXY_USER, pwd=settings.HS_USER_ZONE_PROXY_USER_PWD,
+            output = run_ssh_command(host=settings.HS_USER_ZONE_HOST, uname=settings.HS_USER_ZONE_PROXY_USER, pwd=settings.HS_USER_ZONE_PROXY_USER_PWD,
                             exec_cmd=exec_cmd)
+            if output:
+                if 'ERROR:' in output.upper():
+                    # there is an error from icommand run, report the error
+                    return HttpResponse(
+                        dumps({"error": 'iRODS server failed to delete this iRODS account {0}. Check the server log for details.'.format(user.username)}),
+                        content_type = "application/json"
+                    )
+
             user_profile = UserProfile.objects.filter(user=user).first()
             user_profile.create_irods_user_account = False
             user_profile.save()
+            return HttpResponse(
+                    dumps({"success": "iRODS account {0} is deleted successfully".format(user.username)}),
+                    content_type = "application/json"
+            )
         except Exception as ex:
             return HttpResponse(
                     dumps({"error": ex.message}),
-                    content_type = "application/json"
-            )
-        else:
-            return HttpResponse(
-                    dumps({"success": "iRODS account {0} is deleted successfully".format(user.username)}),
                     content_type = "application/json"
             )
 
@@ -332,19 +339,26 @@ def create_irods_account(request):
             user = request.user
             pwd = str(request.POST.get('password'))
             exec_cmd = "{0} {1} {2}".format(settings.HS_USER_ZONE_PROXY_USER_CREATE_USER_CMD, user.username, pwd)
-            run_ssh_command(host=settings.HS_USER_ZONE_HOST, uname=settings.HS_USER_ZONE_PROXY_USER, pwd=settings.HS_USER_ZONE_PROXY_USER_PWD,
+            output = run_ssh_command(host=settings.HS_USER_ZONE_HOST, uname=settings.HS_USER_ZONE_PROXY_USER, pwd=settings.HS_USER_ZONE_PROXY_USER_PWD,
                             exec_cmd=exec_cmd)
+            if output:
+                if 'ERROR:' in output.upper():
+                    # there is an error from icommand run, report the error
+                    return HttpResponse(
+                        dumps({"error": 'iRODS server failed to create this iRODS account {0}. Check the server log for details.'.format(user.username)}),
+                        content_type = "application/json"
+                    )
+
             user_profile = UserProfile.objects.filter(user=user).first()
             user_profile.create_irods_user_account = True
             user_profile.save()
+            return HttpResponse(
+                    dumps({"success": "iRODS account {0} is created successfully".format(user.username)}),
+                    content_type = "application/json"
+            )
         except Exception as ex:
             return HttpResponse(
                     dumps({"error": ex.message}),
-                    content_type = "application/json"
-            )
-        else:
-            return HttpResponse(
-                    dumps({"success": "iRODS account {0} is created successfully".format(request.user.username)}),
                     content_type = "application/json"
             )
     else:
