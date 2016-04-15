@@ -85,7 +85,9 @@ def create_vrt_file(tif_file):
     temp_dir = tempfile.mkdtemp()
     tif_base_name = os.path.basename(tif_file.name)
     vrt_file_path = os.path.join(temp_dir, os.path.splitext(tif_base_name)[0]+'.vrt')
-    subprocess.Popen(['gdalbuildvrt', vrt_file_path, tif_file.file.name]).wait()  # remember to add .wait()
+
+    with open(os.devnull, 'w') as fp:
+        subprocess.Popen(['gdalbuildvrt', vrt_file_path, tif_file.file.name], stdout=fp, stderr=fp).wait()   # remember to add .wait()
 
     # modify vrt file SourceFileName
     try:
