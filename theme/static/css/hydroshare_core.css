@@ -3244,3 +3244,10 @@ button.no-style:focus {
 .blured-out {
     pointer-events: none;
 }
+#btn-add-funding-agency {
+    margin-bottom: 20px;
+}
+
+.funding-agencies-table {
+    border: 1px solid #DDD;
+}

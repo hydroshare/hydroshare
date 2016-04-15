@@ -154,6 +154,8 @@ def add_metadata_element(request, shortkey, element_name, *args, **kwargs):
                         element = res.metadata.create_element(element_name, **element_data_dict)
                     except ValidationError as exp:
                         request.session['validation_error'] = exp.message
+                    except Exception:
+                        request.session['validation_error'] = "Failed to create {}".format(element_name)
                 is_add_success = True
                 resource_modified(res, request.user)
 
@@ -196,6 +198,8 @@ def update_metadata_element(request, shortkey, element_name, element_id, *args, 
                     res.metadata.update_element(element_name, element_id, **element_data_dict)
                 except ValidationError as exp:
                     request.session['validation_error'] = exp.message
+                except Exception:
+                    request.session['validation_error'] = "Failed to update {}".format(element_name)
                 if element_name == 'title':
                     if res.raccess.public:
                         if not res.can_be_public_or_discoverable:
@@ -217,6 +221,9 @@ def update_metadata_element(request, shortkey, element_name, element_id, *args, 
         else:
             ajax_response_data = {'status': 'error'}
             return HttpResponse(json.dumps(ajax_response_data))
+
+    if 'resource-mode' in request.POST:
+        request.session['resource-mode'] = 'edit'
 
     return HttpResponseRedirect(request.META['HTTP_REFERER'])
 
@@ -495,7 +502,6 @@ class FilterForm(forms.Form):
 @processor_for('my-resources')
 @login_required
 def my_resources(request, page):
-
     resource_collection = get_my_resources_list(request)
 
     context = {'collection': resource_collection}

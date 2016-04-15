@@ -2,8 +2,8 @@
     {% if fundingagencies %}
         <div class="col-sm-12 content-block">
             <h3>Credits</h3>
-            <h5 class="text-muted">This resource was created using funding from the following sources:</h5>
-            <table class="table table-striped">
+            <h5>This resource was created using funding from the following sources:</h5>
+            <table class="table table-striped funding-agencies-table">
                 <tbody>
                 <tr class="header-row">
                     <th>Agency Name</th>
@@ -13,13 +13,13 @@
 
                 {% for agency in fundingagencies %}
                     <tr>
-                        {% if agency.agency_url %}
-                            <td>
+                        <td>
+                            {% if agency.agency_url %}
                                 <a href="{{ agency.agency_url }}" target="_blank">{{ agency.agency_name }}</a>
-                            </td>
-                        {% else %}
-                            <span>{{ agency.agency_name }}</span>
-                        {% endif %}
+                            {% else %}
+                                <span>{{ agency.agency_name }}</span>
+                            {% endif %}
+                        </td>
                         <td>{{ agency.award_title }}</td>
                         <td>{{ agency.award_number }}</td>
                     </tr>
@@ -31,13 +31,14 @@
 {% else %}
     <div class="col-sm-12 content-block">
         <h3>Credits</h3>
+        <h5>This resource was created using funding from the following sources:</h5>
 
         <a id="btn-add-funding-agency" type="button" class="btn btn-success row-selector" data-toggle="modal"
            data-target="#add-funding-agency">
             <span class="glyphicon glyphicon-plus"><span class="button-label"> Add Funding Agency</span></span>
         </a>
 
-        <table class="table table-striped">
+        <table class="table table-striped funding-agencies-table">
             <tbody>
             <tr class="header-row">
                 <th>Agency Name</th>
@@ -48,18 +49,23 @@
 
             {% for agency in fundingagnency_formset.initial %}
                 <tr>
-                    {% if agency.agency_url %}
-                        <td>
-                            <a href="{{ agency.agency_url }}" target="_blank">{{ agency.agency_name }}</a>
-                        </td>
-                    {% else %}
-                        <span>{{ agency.agency_name }}</span>
-                    {% endif %}
+                    <td>
+                        {% if agency.agency_url %}
+                            <strong><a href="{{ agency.agency_url }}" target="_blank">{{ agency.agency_name }}</a></strong>
+                        {% else %}
+                            <span>{{ agency.agency_name }}</span>
+                        {% endif %}
+                    </td>
                     <td>{{ agency.award_title }}</td>
                     <td>{{ agency.award_number }}</td>
-                    <td><a data-toggle="modal" data-placement="auto" title="Edit"
+                    <td>
+                        <a data-toggle="modal" data-placement="auto" title="Edit"
                            class="glyphicon glyphicon-pencil icon-button btn-edit"
-                           data-target="#edit-funding-agency-{{ agency.id }}"></a></td>
+                           data-target="#edit-funding-agency-{{ agency.id }}"></a>
+                        <a data-toggle="modal" data-placement="auto" title="Remove"
+                           class="glyphicon glyphicon-trash icon-button btn-remove"
+                           data-target="#delete-funding-agency-{{ agency.id }}"></a>
+                    </td>
                 </tr>
             {% endfor %}
             </tbody>
