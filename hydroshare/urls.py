@@ -10,6 +10,8 @@ from mezzanine.conf import settings
 from haystack.views import FacetedSearchView
 from hs_core.customer_form import MyForm
 from theme import views as theme
+from hs_core import views as hs_core_views
+
 import autocomplete_light
 
 
@@ -45,6 +47,9 @@ urlpatterns = i18n_patterns("",
     url(r'^autocomplete/', include('autocomplete_light.urls')),
     url(r'^search/$', FacetedSearchView(form_class=MyForm), name='haystack_search'),
     url(r'^sitemap/$', 'hs_sitemap.views.sitemap', name='sitemap'),
+    url(r'^collaborate/$', hs_core_views.CollaborateView.as_view(), name='Collaborate'),
+    url(r'^my-groups/$', hs_core_views.MyGroupsView.as_view(), name='MyGroups'),
+    url(r'^group/(?P<group_id>[0-9]+)', hs_core_views.GroupView.as_view(), name='Group'),
 )
 
 # Filebrowser admin media library.
