@@ -326,33 +326,24 @@
 
                             {#  Pending invitation requests #}
                             <table data-filter-by="pending" class="table-members-list">
-                                <tr>
-                                    <td>
-                                        <div style="background-image: url('{{ request.user.userprofile.picture.url }}');"
-                                             class="profile-pic-thumbnail round-image pull-left">
-                                        </div>
-                                    </td>
-                                    <td>
-                                        <h4><strong><a href="#">Maurier Ramirez</a></strong></h4>
-                                        <span class="text-muted">Front End Web Developer at Utah State University</span>
-                                    </td>
-                                    <td><a href="#" class="btn btn-success"><span class="glyphicon glyphicon-ok"></span>&nbsp;Accept</a></td>
-                                    <td><a href="#" class="btn btn-default"><span class="glyphicon glyphicon-remove"></span>&nbsp;Reject</a></td>
-                                </tr>
+                                {% for pendingrequest in group.gaccess.group_membership_requests %}
+                                    <tr>
+                                        <td>
+                                            <div style="background-image: url('{{ request.user.userprofile.picture.url }}');"
+                                                 class="profile-pic-thumbnail round-image pull-left">
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <h4><strong><a href="#">Maurier Ramirez</a></strong></h4>
+                                            <span class="text-muted">Front End Web Developer at Utah State University</span>
+                                        </td>
+                                        <td><a href="#" class="btn btn-success"><span
+                                                class="glyphicon glyphicon-ok"></span>&nbsp;Accept</a></td>
+                                        <td><a href="#" class="btn btn-default"><span
+                                                class="glyphicon glyphicon-remove"></span>&nbsp;Reject</a></td>
+                                    </tr>
 
-                                <tr>
-                                    <td>
-                                        <div style="background-image: url('{{ request.user.userprofile.picture.url }}');"
-                                             class="profile-pic-thumbnail round-image pull-left">
-                                        </div>
-                                    </td>
-                                    <td>
-                                        <h4><strong><a href="#">Maurier Ramirez</a></strong></h4>
-                                        <span class="text-muted">Front End Web Developer at Utah State University</span>
-                                    </td>
-                                    <td><a href="#" class="btn btn-success"><span class="glyphicon glyphicon-ok"></span>&nbsp;Accept</a></td>
-                                    <td><a href="#" class="btn btn-default"><span class="glyphicon glyphicon-remove"></span>&nbsp;Reject</a></td>
-                                </tr>
+                                {% endfor %}
                             </table>
 
                         </div>
@@ -875,48 +866,30 @@
                     </button>
                     <h4 class="modal-title" id="Invite">Invite People</h4>
                 </div>
-                <div class="modal-body">
-                    <div id="div-invite-people">
-                        <div class="input-group" style="width:100%">
-                            <form id="group-add-access-form"
-                                  action="/hsapi/_internal/{{ cm.short_id }}/share-resource-with-group/"
-                                  method="POST">
+                <form id="invite-to-group"
+                      action="/hsapi/_internal/make-group-membership-request/{{ group.id }}/5/"
+                      method="POST">
+                    <div class="modal-body">
+                        <div id="div-invite-people">
+                            <div class="input-group" style="width:100%">
+
                                 {% csrf_token %}
 
                                 {{ add_view_user_form.user }}
 
-{#                                <div class="dropdown">#}
-{#                                    <button class="btn btn-default dropdown-toggle" type="button"#}
-{#                                            id="roles_list" data-toggle="dropdown"#}
-{#                                            aria-haspopup="true">#}
-{#                                        <span id="selected_role" data-role="view">Can view</span>#}
-{#                                        <span class="caret"></span>#}
-{#                                    </button>#}
-{##}
-{#                                    <ul id="list-roles" class="dropdown-menu"#}
-{#                                        aria-labelledby="roles_list">#}
-{#                                        <li {% if not is_view_user and not is_edit_user and not is_owner_user %}class="disabled"{% endif %}>#}
-{#                                            <a data-role="view">Can view</a></li>#}
-{#                                        <li {% if not is_edit_user and not is_owner_user %}class="disabled"{% endif %}>#}
-{#                                            <a data-role="edit">Can edit</a></li>#}
-{#                                        <li {% if not is_owner_user %}class="disabled"{% endif %}><a#}
-{#                                                data-role="owner">Is owner</a></li>#}
-{#                                    </ul>#}
-{#                                </div>#}
-
                                 <a id="btn-invite"
-                                   onclick="share_resource_ajax_submit('group-add-access-form'); return false;"
                                    class="btn btn-add-access btn-success pull-left glyphicon glyphicon-plus"><span
                                         class="button-label">&nbspAdd</span></a>
-                            </form>
-                        </div>
-                    </div>
 
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
-                    <a href="#" class="btn btn-primary">Invite</a>
-                </div>
+                            </div>
+                        </div>
+
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-primary">Save Changes</button>
+                    </div>
+                </form>
             </div>
         </div>
     </div>

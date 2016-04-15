@@ -529,6 +529,34 @@
                                     </div>
                                 </div>
                                 {% endif %}
+
+                                {#  Groups #}
+                                <div class="panel panel-default">
+                                    <div class="panel-heading">
+                                        <h3 class="panel-title"><span
+                                                class="glyphicon glyphicon-phone-alt">&nbsp;</span>Group</h3>
+                                    </div>
+
+                                    <div class="panel-body">
+                                        <h4>Pending Requests</h4>
+                                        {% for request in group_memebership_requests %}
+{#                                            <div>{{ request.group_to_join.name }}, {{ request.request_from.first_name }},#}
+{#                                            {{ request.request_from.last_name }}</div>#}
+
+                                            <form></form>
+                                            <form id="act-on-request"
+                                                  action="/hsapi/_internal/act-on-group-membership-request/{{ request.id }}/accept/"
+                                                  method="POST">
+                                            {% csrf_token %}
+                                                    <button type="button" class="btn btn-default" data-dismiss="modal">
+                                                        Cancel
+                                                    </button>
+                                                    <button type="submit" class="btn btn-primary">Accept</button>
+                                            </form>
+
+                                        {% endfor %}
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>

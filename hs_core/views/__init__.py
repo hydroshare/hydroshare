@@ -556,7 +556,6 @@ class GroupForm(forms.Form):
 @processor_for('my-resources')
 @login_required
 def my_resources(request, page):
-
     resource_collection = get_my_resources_list(request)
 
     context = {'collection': resource_collection}
