@@ -1405,6 +1405,10 @@ body > .main-container {
     margin-right: 10px;
 }
 
+.alert-dismissible {
+    margin-top: 20px;
+}
+
 .custom-well {
     min-height: 20px;
     padding: 19px;
