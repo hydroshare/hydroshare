@@ -1,18 +1,15 @@
-import os
-import shutil
-import tempfile
 import json
+import unittest
 
 from django.test import TransactionTestCase, Client
 from django.contrib.auth.models import Group
 
-from hs_core.hydroshare import create_resource, create_account
+from hs_core.hydroshare import create_resource, create_account, \
+     create_new_version_empty_resource, create_new_version_resource
 from hs_core.testing import MockIRODSTestCaseMixin
-
 from hs_access_control.models import PrivilegeCodes
-
 from hs_collection_resource.models import CollectionDeletedResource
-
+from hs_collection_resource.models import CollectionResource
 
 class TestCollection(MockIRODSTestCaseMixin, TransactionTestCase):
 
@@ -365,24 +362,36 @@ class TestCollection(MockIRODSTestCaseMixin, TransactionTestCase):
         self.assertEqual(self.resCollection.resources.count(), 1)
         self.assertIn(self.resGen3, self.resCollection.resources.all())
 
-    def test_adding_one_collection_to_another_collection(self):
-        # a collection resource can't be added to another collection resource
+    def test_collection_holds_collection(self):
+        # a collection resource can be added to another collection resource
 
         url_to_update_collection = self.url_to_update_collection.format(self.resCollection.short_id)
+
         # this collection should contain no resources at this point
         self.assertEquals(self.resCollection.resources.count(), 0)
         # user 1 login
         self.api_client.login(username='user1', password='mypassword1')
 
-        # add one collection resource to another collection resource
+        # add collection to itself
         # json response status should be error
+        response = self.api_client.post(url_to_update_collection,
+                                        {'resource_id_list': [self.resCollection.short_id]},
+                                        )
+        resp_json = json.loads(response.content)
+        self.assertEqual(resp_json["status"], "error")
+        # collection still should have no resource
+        self.assertEquals(self.resCollection.resources.count(), 0)
+
+        # add one collection resource to another collection resource
+        # json response status should be success
         response = self.api_client.post(url_to_update_collection,
                                         {'resource_id_list': [self.resCollection_with_missing_metadata.short_id]},
                                         )
         resp_json = json.loads(response.content)
-        self.assertEqual(resp_json["status"], "error")
-        # collection still should have no resources
-        self.assertEquals(self.resCollection.resources.count(), 0)
+        self.assertEqual(resp_json["status"], "success")
+        # collection should have 1 resource
+        self.assertEquals(self.resCollection.resources.count(), 1)
+        self.assertEquals(self.resCollection.resources.all()[0].resource_type.lower(), "collectionresource")
 
     def test_update_collection_for_deleted_resources(self):
         self.assertEqual(self.resCollection.resources.count(), 0)
@@ -458,3 +467,63 @@ class TestCollection(MockIRODSTestCaseMixin, TransactionTestCase):
         self.assertEqual(self.resCollection.deleted_resources.count(), 0)
         self.assertEqual(CollectionDeletedResource.objects.count(), 0)
 
+    def test_are_all_contained_resources_published(self):
+        # no contained resource
+        self.assertEqual(self.resCollection.resources.count(), 0)
+        # should return False
+        self.assertEqual(self.resCollection.are_all_contained_resources_published, False)
+
+        self.assertEqual(self.resGen1.raccess.published, False)
+        self.assertEqual(self.resGeoFeature.raccess.published, False)
+
+        # add 2 unpublished resources to collection
+        self.resCollection.resources.add(self.resGen1)
+        self.resCollection.resources.add(self.resGeoFeature)
+        self.assertEqual(self.resCollection.resources.count(), 2)
+        # not all contained res are published
+        self.assertEqual(self.resCollection.are_all_contained_resources_published, False)
+
+        # manually set the first contained res (self.resGen1) to published
+        self.resGen1.raccess.published = True
+        self.resGen1.raccess.save()
+        self.assertEqual(self.resGen1.raccess.published, True)
+        self.assertEqual(self.resGeoFeature.raccess.published, False)
+        # not all contained res are published
+        self.assertEqual(self.resCollection.are_all_contained_resources_published, False)
+
+        # manually set the second contained res (self.resGeoFeature) to published as well
+        self.resGeoFeature.raccess.published = True
+        self.resGeoFeature.raccess.save()
+        self.assertEqual(self.resGen1.raccess.published, True)
+        self.assertEqual(self.resGeoFeature.raccess.published, True)
+        # all contained res are published now
+        self.assertEqual(self.resCollection.are_all_contained_resources_published, True)
+
+
+    def test_versioning(self):
+        # no contained resource
+        self.assertEqual(self.resCollection.resources.count(), 0)
+
+        # add 3 resources to collection
+        self.resCollection.resources.add(self.resGen1)
+        self.resCollection.resources.add(self.resGeoFeature)
+        self.resCollection.resources.add(self.resCollection_with_missing_metadata)
+        self.assertEqual(self.resCollection.resources.count(), 3)
+
+        # make a new version of collection
+        new_collection = create_new_version_empty_resource(self.resCollection.short_id, self.user1)
+
+        new_collection = create_new_version_resource(self.resCollection, new_collection, self.user1)
+
+        # test the new version is a collection
+        self.assertTrue(isinstance(new_collection, CollectionResource))
+
+        # new version collection should have same contained res as its original does
+        self.assertEqual(new_collection.resources.count(), self.resCollection.resources.count())
+        for contained_res in new_collection.resources.all():
+            self.assertIn(contained_res, self.resCollection.resources.all())
+
+        # changes to old version collection should not affect new version collection
+        self.resCollection.resources.clear()
+        self.assertEqual(self.resCollection.resources.count(), 0)
+        self.assertEqual(new_collection.resources.count(), 3)
