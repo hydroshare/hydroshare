@@ -412,23 +412,7 @@
             window.location = clearURL;
         }
 
-        var clearLocalStorageCheckboxes = function() {
-            $(".faceted-selections").each(function () {
-                $(this).prop("checked", false);
-                delete localStorage[$(this).attr("id")];
-            });
-        }
-
-
         $(document).ready(function () {
-
-            /*if($("#id_q").val() == ""){
-                localStorage.clear();
-                var searchURL = "?q=" + "";
-                var windowPath = window.location.pathname;
-                var requestURL =  windowPath + searchURL;
-                window.location = requestURL;
-            }*/
 
             if (window.location.search.length == 0){
                 localStorage.clear();
@@ -541,8 +525,7 @@
             $('[data-toggle="popover"]').popover({
                 html: true,
                 container: '#items',
-                content: '<p>This search box supports <a href="https://cwiki.apache.org/confluence/display/solr/Searching" target="_blank">SOLR Query syntax</a>.<br />' +
-                '"*" means show all results </p>',
+                content: '<p>This search box supports <a href="https://cwiki.apache.org/confluence/display/solr/Searching" target="_blank">SOLR Query syntax</a>.</p>',
                 trigger: 'click'
             });
         });
