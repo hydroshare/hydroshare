@@ -943,7 +943,7 @@ li.account p{
     border: 0;
 }
 
-#contact-table .icon-button{
+#contact-table .icon-button, .funding-agencies-table .icon-button {
     float:left;
     background-color: transparent;
     border: 0;

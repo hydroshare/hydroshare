@@ -12,7 +12,7 @@
                 </tr>
 
                 {% for agency in fundingagencies %}
-                    <tr>
+                    <tr data-index="{{ forloop.counter0 }}">
                         <td>
                             {% if agency.agency_url %}
                                 <a href="{{ agency.agency_url }}" target="_blank">{{ agency.agency_name }}</a>
@@ -31,24 +31,21 @@
 {% else %}
     <div class="col-sm-12 content-block">
         <h3>Credits</h3>
+        {% if fundingagnency_formset.initial %}
         <h5>This resource was created using funding from the following sources:</h5>
-
-        <a id="btn-add-funding-agency" type="button" class="btn btn-success row-selector" data-toggle="modal"
-           data-target="#add-funding-agency">
-            <span class="glyphicon glyphicon-plus"><span class="button-label"> Add Funding Agency</span></span>
-        </a>
+            {% endif %}
 
         <table class="table table-striped funding-agencies-table">
             <tbody>
             <tr class="header-row">
-                <th>Agency Name</th>
+                <th><strong>Agency Name</strong></th>
                 <th>Award Title</th>
                 <th>Award Number</th>
-                <th>Actions</th>
+                <th></th>
             </tr>
 
             {% for agency in fundingagnency_formset.initial %}
-                <tr>
+                <tr data-index="{{ forloop.counter0 }}">
                     <td>
                         {% if agency.agency_url %}
                             <strong><a href="{{ agency.agency_url }}" target="_blank">{{ agency.agency_name }}</a></strong>
@@ -70,5 +67,55 @@
             {% endfor %}
             </tbody>
         </table>
+        <a id="btn-add-funding-agency" type="button" class="btn btn-success row-selector" data-toggle="modal"
+           data-target="#add-funding-agency">
+            <span class="glyphicon glyphicon-plus"><span class="button-label"> Add Funding Agency</span></span>
+        </a>
     </div>
 {% endif %}
+
+<script type="text/javascript">
+    $(document).ready(function () {
+
+        function errorLabel(message) {
+            return "<div class='label label-danger error-label'>" + message + "</div>";
+        }
+
+        function flagAwardNumber(index, entryValue) {
+            var awardNumbers;
+
+            if (index) {
+                // Get the list of award numbers currently in use, excluding the one we are editing
+                awardNumbers = $(".funding-agencies-table").find("tr:not([data-index='" + index + "']) td:nth-child(3)");
+            }
+            else {
+                // Get the list of award numbers currently in use
+                awardNumbers = $(".funding-agencies-table").find("tr td:nth-child(3)");
+            }
+
+            for (var i = 0; i < awardNumbers.length; i++) {
+                awardNumbers[i] = $(awardNumbers[i]).text().trim();
+                if (entryValue == awardNumbers[i]) {
+                    return false;
+                }
+            }
+
+            return true;
+        }
+
+        function validateAwardNumber() {
+            var inputElement = $(this).closest("form").find("input[name='award_number']");
+            inputElement.parent().find(".error-label").remove();
+            var entryValue = inputElement.val();
+            var index = $(this).attr("data-index");
+            if (!flagAwardNumber(index, entryValue)) {
+                inputElement.parent().append(errorLabel("This award number is already in use."));
+                return false;
+            }
+        }
+
+        $(".btn-save-funding-agency").click(validateAwardNumber);
+
+    });
+
+</script>

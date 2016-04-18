@@ -1141,7 +1141,7 @@
 
                 <div class="modal-header">
                     <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
-                    <h4 class="modal-title" id="add-funding-label"> Add Funding Source</h4></div>
+                    <h4 class="modal-title" id="add-funding-label"> Add Funding Agency</h4></div>
                 <div class="modal-body">
                     <div class="form-group">
                         <fieldset>
@@ -1149,24 +1149,21 @@
                             <div id="div_id_agency_name" class="control-group">
                                 <label for="agency_name" class="control-label requiredField">Agency Name<span class="asteriskField">*</span></label>
 
-                                <div class="controls"><input class="form-control input-sm textInput"
-                                                             id="agency_name" maxlength="250" name="agency_name"
+                                <div class="controls"><input class="form-control input-sm textInput" maxlength="250" name="agency_name"
                                                              required="required" type="text"></div>
                             </div>
 
                             {# Award Title #}
                             <div id="div_id_award_title" class="control-group">
                                 <label for="award_title" class="control-label">Award Title</label>
-                                <div class="controls"><input class="form-control input-sm"
-                                                             id="award_title" maxlength="250"
+                                <div class="controls"><input class="form-control input-sm" maxlength="250"
                                                              name="award_title"></div>
                             </div>
 
                             {# Award Number #}
                             <div id="div_id_award_number" class="control-group">
                                 <label for="award_number" class="control-label">Award Number</label>
-                                <div class="controls"><input class="form-control input-sm textinput textInput"
-                                                             id="award_number" maxlength="100"
+                                <div class="controls"><input class="form-control input-sm textinput textInput" maxlength="100"
                                                              name="award_number" type="text"></div>
                             </div>
 
@@ -1175,8 +1172,7 @@
                                 <label for="agency_url" class="control-label">Agency URL</label>
 
                                 <div class="controls">
-                                    <input class="form-control input-sm urlinput"
-                                                             id="agency_url" maxlength="200"
+                                    <input class="form-control input-sm urlinput" maxlength="200"
                                                              name="agency_url" type="url">
                                 </div>
                             </div>
@@ -1184,43 +1180,41 @@
                         </fieldset>
                     </div>
                 </div>
+
                 <div class="modal-footer">
                     <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-                    <button type="submit" class="btn btn-primary">Save changes</button>
+                    <button type="submit" class="btn btn-primary btn-save-funding-agency">Save changes</button>
                 </div>
             </form>
         </div>
     </div>
 </div>
 
-
-
 {% for agency in fundingagnency_formset.initial %}
-    <!-- Add credit source Modal -->
+    <!-- Edit credit source Modal -->
     <div class="modal fade" id="edit-funding-agency-{{ agency.id }}" tabindex="-1" role="dialog"
          aria-labelledby="add-funding-label" aria-hidden="true">
         <div class="modal-dialog">
             <div class="modal-content">
-                <form action="/hsapi/_internal/{{ cm.short_id }}/fundingagency/{{ agency.id }}/update-metadata/"
-                      method="POST"
-                      enctype="multipart/form-data">
-                    <input name="resource-mode" type="hidden" value="edit">
+                <form data-index="{{ forloop.counter0 }}" action="/hsapi/_internal/{{ cm.short_id }}/fundingagency/{{ agency.id }}/update-metadata/"
+                      method="POST" enctype="multipart/form-data">
                     {% csrf_token %}
+                    <input name="resource-mode" type="hidden" value="edit">
 
                     <div class="modal-header">
                         <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
-                        <h4 class="modal-title" id="add-funding-label"> Add Funding Source</h4></div>
+                        <h4 class="modal-title" id="add-funding-label"> Edit Funding Agency</h4>
+                    </div>
+
                     <div class="modal-body">
                         <div class="form-group">
-                            {% csrf_token %}
                             <fieldset>
                                 {# Agency Name (Required) #}
                                 <div id="div_id_agency_name" class="control-group">
                                     <label for="agency_name" class="control-label requiredField">Agency Name<span
                                             class="asteriskField">*</span></label>
 
-                                    <div class="controls"><input class="form-control input-sm textInput"
-                                                                 id="agency_name" maxlength="250" name="agency_name"
+                                    <div class="controls"><input class="form-control input-sm textInput" maxlength="250" name="agency_name"
                                                                  required="required" type="text"
                                                                  value="{{ agency.agency_name }}"></div>
                                 </div>
@@ -1229,8 +1223,7 @@
                                 <div id="div_id_award_title" class="control-group">
                                     <label for="award_title" class="control-label">Award Title</label>
 
-                                    <div class="controls"><input class="form-control input-sm"
-                                                                 id="award_title" maxlength="250"
+                                    <div class="controls"><input class="form-control input-sm" maxlength="250"
                                                                  name="award_title" value="{{ agency.award_title }}">
                                     </div>
                                 </div>
@@ -1239,8 +1232,7 @@
                                 <div id="div_id_award_number" class="control-group">
                                     <label for="award_number" class="control-label">Award Number</label>
 
-                                    <div class="controls"><input class="form-control input-sm textinput textInput"
-                                                                 id="award_number" maxlength="100"
+                                    <div class="controls"><input class="form-control input-sm textinput textInput" maxlength="100"
                                                                  name="award_number" type="text"
                                                                  value="{{ agency.award_number }}"></div>
                                 </div>
@@ -1250,8 +1242,7 @@
                                     <label for="agency_url" class="control-label">Agency URL</label>
 
                                     <div class="controls">
-                                        <input class="form-control input-sm urlinput"
-                                               id="agency_url" maxlength="200"
+                                        <input class="form-control input-sm urlinput" maxlength="200"
                                                name="agency_url" type="url" value="{{ agency.agency_url }}">
                                     </div>
                                 </div>
@@ -1259,9 +1250,10 @@
                             </fieldset>
                         </div>
                     </div>
+
                     <div class="modal-footer">
                         <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-                        <button type="submit" class="btn btn-primary">Save changes</button>
+                        <button type="submit" class="btn btn-primary btn-save-funding-agency" data-index="{{ forloop.counter0 }}">Save changes</button>
                     </div>
                 </form>
             </div>
@@ -1274,9 +1266,11 @@
             <div class="modal-content">
                 <div class="modal-header">
                     <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
-                    <h4 class="modal-title" id="delete-funding-agency">Delete funding entry</h4></div>
-                <div class="modal-body"><strong>Are you sure you want to delete this funding entry?</strong>
+                    <h4 class="modal-title" id="delete-funding-agency">Delete Funding Agency</h4>
                 </div>
+
+                <div class="modal-body"><strong>Are you sure you want to delete this entry?</strong></div>
+
                 <div class="modal-footer">
                     <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
                     <a type="button" class="btn btn-danger"
