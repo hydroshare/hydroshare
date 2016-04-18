@@ -14,11 +14,13 @@
                 {% for agency in fundingagencies %}
                     <tr data-index="{{ forloop.counter0 }}">
                         <td>
+                            <strong>
                             {% if agency.agency_url %}
                                 <a href="{{ agency.agency_url }}" target="_blank">{{ agency.agency_name }}</a>
                             {% else %}
                                 <span>{{ agency.agency_name }}</span>
                             {% endif %}
+                            </strong>
                         </td>
                         <td>{{ agency.award_title }}</td>
                         <td>{{ agency.award_number }}</td>
@@ -50,7 +52,7 @@
                         {% if agency.agency_url %}
                             <strong><a href="{{ agency.agency_url }}" target="_blank">{{ agency.agency_name }}</a></strong>
                         {% else %}
-                            <span>{{ agency.agency_name }}</span>
+                            <strong><span>{{ agency.agency_name }}</span></strong>
                         {% endif %}
                     </td>
                     <td>{{ agency.award_title }}</td>
@@ -89,10 +91,11 @@
                 awardNumbers = $(".funding-agencies-table").find("tr:not([data-index='" + index + "']) td:nth-child(3)");
             }
             else {
-                // Get the list of award numbers currently in use
+                // Get the list of award numbers currently in use (when adding new funding agency)
                 awardNumbers = $(".funding-agencies-table").find("tr td:nth-child(3)");
             }
 
+            // Verify that value is unique
             for (var i = 0; i < awardNumbers.length; i++) {
                 awardNumbers[i] = $(awardNumbers[i]).text().trim();
                 if (entryValue == awardNumbers[i]) {
@@ -106,8 +109,10 @@
         function validateAwardNumber() {
             var inputElement = $(this).closest("form").find("input[name='award_number']");
             inputElement.parent().find(".error-label").remove();
+
             var entryValue = inputElement.val();
             var index = $(this).attr("data-index");
+
             if (!flagAwardNumber(index, entryValue)) {
                 inputElement.parent().append(errorLabel("This award number is already in use."));
                 return false;
