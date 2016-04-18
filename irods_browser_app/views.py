@@ -125,7 +125,7 @@ def upload(request):
         else:
             response_data['file_type_error'] = "Invalid file type: {ext}".format(ext=ext)
             response_data['irods_file_names'] = ''
-            response_data['irods_sel_file'] = 'No file selected'
+            response_data['irods_sel_file'] = 'No file selected.'
 
         return HttpResponse(
             json.dumps(response_data),

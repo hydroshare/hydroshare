@@ -37,8 +37,13 @@
     <h2>Select a resource type and upload files as needed to create a new resource</h2>
 
     <ul>
-    <li>Files you upload here will be grouped together into a "Resource"</li>
-    <li>File size is limited to 1 GB per file</li>
+    <li>Files you upload here will be grouped together into a "Resource" in HydroShare.</li>
+    <li>File size is limited to 1 GB per file for direct browser upload from your local disk.</li>
+    <li>For file size larger than 1GB, you can create an iRODS account in HydroShare user server
+        from your profile page if you have not done so already, then you can add large files
+        from your iRODS user HydroShare server directly.
+    </li>
+    <li> You can also add files directly from any iRODS server regardless of the file size. </li>
     </ul>
 
 <form class="form-horizontal" role="form" method="POST" enctype="multipart/form-data" action="/hsapi/_internal/create-resource/do/">
@@ -85,8 +90,23 @@
         <table class="table" id="file-list">
         <tbody id="files">
             <tr>
-                <td><input type="file" name="files" id="select-file" multiple/></td>
+                <td>To load files from your local disk with file size limited to 1GB per file:
+                    <input type="file" name="files" id="select-file" multiple/></td>
             </tr>
+            {% if irods_user_account_exist %}
+                <tr>
+                    <td>
+                        To load large files from your iRODS user HydroShare server:
+                        <div>
+                            <a id="select-irods-file-from-user-zone" type="button" class="btn btn-default row-selector"
+                               data-toggle="modal" data-target="#irodsContent_userZone">Browse your iRODS HydroShare User Zone...</a>
+                            <input type="hidden" id="file_names_from_irods_user_zone" name="irods_file_names_user_zone" value="">
+                            <span id="irods-sel-file-user-zone">No file selected.</span>
+                        </div>
+                    </td>
+                </tr>
+            {% endif %}
+
             <tr>
                 <td>
                     <span id="log-into-irods">
@@ -102,7 +122,7 @@
                     <input type="hidden" id="irods-zone" name="irods-zone" value="">
                     <input type="hidden" id="irods_file_names" name="irods_file_names" value="">
                     <a id="btn-select-irods-file"  type="button" class="btn btn-default row-selector hidden-form" data-toggle="modal" data-target="#irodsContent" >
-                        Browse iRODS...
+                        Browse iRODS you just logged in...
                     </a>
                     <span id="irods-sel-file"></span>
                     <a id="btn-signout-irods" type="button" class="btn-link hidden-form">log out of iRODS</a>
@@ -141,12 +161,13 @@
         if (sessionStorage.signininfo) {
             $("#sign-in-info").text(sessionStorage.signininfo);
             $("#btn-select-irods-file").show();
-            $("#irods-sel-file").text("No file selected");
+            $("#irods-sel-file").text("No file selected.");
         }
         $('#resource-type').on('change', function(){
             $('#select-file').value = '';
             $('#select-file').attr('value', '');
-            $('#irods-sel-file').text("No file selected");
+            $('#irods-sel-file').text("No file selected.");
+            $('#irods-sel-file-user-zone').text("No file selected.");
 
             if(selected_file != undefined){
                 selected_file.value = '';
