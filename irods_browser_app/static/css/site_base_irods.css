@@ -80,6 +80,7 @@
 
 #irodsContent .ajax-loader, #irodsContent .modal-backdrop.up-load {
     display: none;
+    opacity:0.5;
 }
 
 .selected {

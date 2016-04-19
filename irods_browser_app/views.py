@@ -91,6 +91,12 @@ def login(request):
         )
 
 def store(request):
+    """
+    Get file hierarchy (collection of subcollections and data objects) for the requested directory
+    in an iRODS zone the requested user has logged in.
+    It is invoked by an AJAX call, so it returns json object that holds content for files and folders
+    under the requested directory/collection/subcollection
+    """
     return_object = {}
     irods_sess = iRODSSession(user=str(request.POST['user']), password=str(request.POST['password']),
                                   zone=str(request.POST['zone']), host=str(request.POST['host']),
@@ -107,6 +113,29 @@ def store(request):
         jsondump,
         content_type = "application/json"
     )
+
+def store_uz(request):
+    """
+    Get file hierarchy (collection of subcollections and data objects) for the requested directory
+    in the iRODS HydroShare user zone for the requested user using the wwwHydroProxy account since
+    wwwHydroProxy iRODS user is set up to have own access control to all user collections in the
+    federated iRODS HydroShare user zone.
+    It is invoked by an AJAX call, so it returns json object that holds content for files and folders
+    under the requested directory/collection/subcollection
+    """
+    return_object = {}
+
+    datastore = str(request.POST['store'])
+
+    return_object['files'] = store['files']
+    return_object['folder'] = store['folder']
+    jsondump = json.dumps(return_object)
+
+    return HttpResponse(
+        jsondump,
+        content_type = "application/json"
+    )
+
 
 def upload(request):
     if request.method == 'POST':

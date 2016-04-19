@@ -482,25 +482,38 @@ go to http://{domain}/verify/{token}/ and verify your account.
     except:
         pass # FIXME should log this instead of ignoring it.
 
-
-class FilterForm(forms.Form):
-    start = forms.IntegerField(required=False)
-    published = forms.BooleanField(required=False)
-    edit_permission = forms.BooleanField(required=False)
-    owner = forms.CharField(required=False)
-    user = forms.ModelChoiceField(queryset=User.objects.all(), required=False)
-    from_date = forms.DateTimeField(required=False)
-
-
 @processor_for('my-resources')
 @login_required
 def my_resources(request, page):
-
     resource_collection = get_my_resources_list(request)
 
     context = {'collection': resource_collection}
     return context
 
+
+@processor_for('create-resource')
+@login_required
+def create_resource_page_processor(request, page):
+    user = request.user
+    show_user_zone_selection = user.userprofile.create_irods_user_account
+    if show_user_zone_selection:
+        in_production = False
+        if settings.IRODS_USERNAME == "wwwHydroProxy":
+            in_production = True
+        if not in_production:
+            if settings.HS_WWW_IRODS_PROXY_USER == "wwwHydroProxy":
+                show_user_zone_selection = True
+            else:
+                show_user_zone_selection = False
+        else:
+            show_user_zone_selection = True
+
+    if user:
+        context = {
+            'user_name': user.username,
+            'show_user_zone_selection': show_user_zone_selection
+        }
+        return context
 
 @processor_for(GenericResource)
 def add_generic_context(request, page):

@@ -93,20 +93,21 @@
                 <td>To load files from your local disk with file size limited to 1GB per file:
                     <input type="file" name="files" id="select-file" multiple/></td>
             </tr>
-            {% if irods_user_account_exist %}
+            {% if show_user_zone_selection %}
                 <tr>
                     <td>
                         To load large files from your iRODS user HydroShare server:
                         <div>
-                            <a id="select-irods-file-from-user-zone" type="button" class="btn btn-default row-selector"
-                               data-toggle="modal" data-target="#irodsContent_userZone">Browse your iRODS HydroShare User Zone...</a>
-                            <input type="hidden" id="file_names_from_irods_user_zone" name="irods_file_names_user_zone" value="">
-                            <span id="irods-sel-file-user-zone">No file selected.</span>
+                            <input type="hidden" id="irods_file_names_uz" name="irods_file_names_uz" value="">
+                            <input type="hidden" id="irods_username_uz" name="irods_username_uz" value="{{ user_name }}">
+                            <input type="hidden" id="irods_store_uz" name="irods_store_uz" value="/hydroshareuserZone/home/{{ user_name }}">
+                            <a id="btn-select-irods-file-uz" type="button" class="btn btn-default row-selector"
+                               data-toggle="modal" onclick="show_irods_browse_modal('userzone')">Browse your iRODS HydroShare User Zone...</a>
+                            <span id="irods-sel-file-uz">No file selected.</span>
                         </div>
                     </td>
                 </tr>
             {% endif %}
-
             <tr>
                 <td>
                     <span id="log-into-irods">
@@ -121,7 +122,7 @@
                     <input type="hidden" id="irods-port" name="irods-port" value="">
                     <input type="hidden" id="irods-zone" name="irods-zone" value="">
                     <input type="hidden" id="irods_file_names" name="irods_file_names" value="">
-                    <a id="btn-select-irods-file"  type="button" class="btn btn-default row-selector hidden-form" data-toggle="modal" data-target="#irodsContent" >
+                    <a id="btn-select-irods-file"  type="button" class="btn btn-default row-selector hidden-form" data-toggle="modal" onclick="show_irods_browse_modal('default')" >
                         Browse iRODS you just logged in...
                     </a>
                     <span id="irods-sel-file"></span>
@@ -152,8 +153,10 @@
 {% block extra_js %}
     <script type="text/javascript" src="{{STATIC_URL}}js/irods.js" ></script>
     <script type="text/javascript">
-    $(function() {
-    });
+    function show_irods_browse_modal(input) {
+        $('#input_trigger').val(input);
+        $('#irodsContent').modal()
+    }
     $(document).ready(function() {
         var json_response_file_types = {};
         var json_response_multiple_file = {};
@@ -163,6 +166,7 @@
             $("#btn-select-irods-file").show();
             $("#irods-sel-file").text("No file selected.");
         }
+
         $('#resource-type').on('change', function(){
             $('#select-file').value = '';
             $('#select-file').attr('value', '');
