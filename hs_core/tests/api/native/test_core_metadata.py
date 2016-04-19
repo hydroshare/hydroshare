@@ -2,6 +2,7 @@ from dateutil import parser
 from lxml import etree
 from unittest import TestCase
 
+from django.core.exceptions import ValidationError
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.auth.models import Group, User
 from django.db import Error
@@ -1042,7 +1043,7 @@ class TestCoreMetadata(MockIRODSTestCaseMixin, TestCase):
                                              award_number='NSF-101-20-6789')
 
         # test that agency name is required for  creating a funding agency element
-        with self.assertRaises(Error):
+        with self.assertRaises(ValidationError):
             resource.create_metadata_element(self.res.short_id,'fundingagency',
                                              award_title="Modeling on cloud",
                                              award_number="101-20-6789",
