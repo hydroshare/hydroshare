@@ -1,4 +1,4 @@
-import simplejson as json
+import json
 from django.http import HttpResponse
 from haystack.generic_views import FacetedSearchView
 from hs_core.discovery_form import DiscoveryForm

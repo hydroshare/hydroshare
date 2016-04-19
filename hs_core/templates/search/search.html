@@ -48,7 +48,7 @@
                                     {% if item.1 > 0 %}
                                         <li class="list-group-item clearfix" rel="{{ key }},{{ item.0 }}">
                                             <input class="faceted-selections" id="{{ key }}-{{ item.0 }}" value="{{ key }},{{ item.0 }}" type="checkbox" class="pull-left"> &nbsp;&nbsp;
-                                                <a onclick="formURL('{{ key }}', '{{ item.0 }}')" role="button">{{ item.0 }}</a>
+                                                <a onclick="formLinkButtonURL('{{ key }}', '{{ item.0 }}')" role="button">{{ item.0 }}</a>
                                                 {% if item.1 >= 1 and item.1 < 2 %}
                                                     <span class="label label-default label-pill pull-right badge YellowGreenBlue-colormap-band-5">
                                                 {% elif item.1 >= 2 and item.1 <= 4 %}
@@ -99,7 +99,7 @@
                                         {% if item.1 > 0 %}
                                             <li class="list-group-item clearfix" rel="{{ key }},{{ item.0 }}">
                                             <input class="faceted-selections" id="{{ key }}-{{ item.0 }}" value="{{ key }},{{ item.0 }}" type="checkbox" class="pull-left"> &nbsp;&nbsp;
-                                                <a onclick="formURL('{{ key }}', '{{ item.0 }}')" role="button">
+                                                <a onclick="formLinkButtonURL('{{ key }}', '{{ item.0 }}')" role="button">
                                                     {% if key == 'public' and item.0 == 'true' %}
                                                         Public
                                                     {% elif key == 'public' and item.0 == 'false' %}
@@ -396,26 +396,63 @@
             });
         }
 
-        var formURL = function(key, value){
+        var formLinkButtonURL = function(key, value){
             var currentURL = window.location.href.split('#')[0];
             var currentHash = window.location.href.split('#')[1];
             var requestURL = currentURL + "&selected_facets="+key+"_exact:"+value + "#" + currentHash;
             map = null;
             window.location = requestURL;
             var checkboxId =  key + "-" + value;
-            localStorage[checkboxId] = true;
+            var localStorageCheckboxId = 'search-' + checkboxId;
+            localStorage[localStorageCheckboxId] = 'true';
+        }
+        
+        var buildURLOnCheckboxes = function () {
+            var requestURL = '';
+            $(".faceted-selections").each(function () {
+                var checkboxId = $(this).attr("id");
+                var localStorageCheckboxId = 'search-' + checkboxId;
+                var val = localStorage[localStorageCheckboxId];
+                var isChecked = val === 'true';
+                if(isChecked){
+                    var arr = $(this).val().split(",");
+                    var key = arr[0];
+                    var value = arr[1];
+                    requestURL += "&selected_facets="+key+"_exact:"+value;
+                }
+            });
+            return requestURL;
+        }
+        var popCheckboxes = function() {
+            $(".faceted-selections").each(function () {
+                var checkboxId = $(this).attr("id");
+                var localStorageCheckboxId = 'search-' + checkboxId;
+                var val = localStorage[localStorageCheckboxId];
+                var isChecked = val !== undefined ? val == 'true' : false;
+                $(this).prop("checked", isChecked);
+            });
+        }
+
+        var clearCheckboxes = function() {
+            $(".faceted-selections").each(function () {
+                var checkboxId = $(this).attr("id");
+                var localStorageCheckboxId = 'search-' + checkboxId;
+                localStorage[localStorageCheckboxId] = 'false';
+                localStorage.removeItem(localStorageCheckboxId);
+            });
         }
 
         var clearAllFaceted = function() {
-            localStorage.clear();
+            clearCheckboxes();
             var clearURL = "/search/?q=";
             window.location = clearURL;
         }
 
+
         $(document).ready(function () {
 
             if (window.location.search.length == 0){
-                localStorage.clear();
+                clearCheckboxes();
             }
 
             $('#items-discovered').DataTable({
@@ -424,11 +461,19 @@
                 "order": [[ 0, "asc" ]]
             });
 
+            popCheckboxes();
+
             $("ul.nav-tabs > li > a").on("shown.bs.tab", function (e) {
                 var tabId = $(e.target).attr("href").substr(1);
                 window.location.hash = tabId;
                 if(tabId == 'map-view' && map == null){
-                    var requestURL = "/searchjson/" + window.location.search;
+                    var requestURL = "/searchjson/";
+                    if(window.location.search.length == 0){
+                        requestURL += "?q=";
+                    }else{
+                        requestURL += window.location.search;
+                    }
+
                     $.ajax({
                         type: "GET",
                         url: requestURL,
@@ -468,7 +513,7 @@
             $("#id_q").keypress(function(event) {
                 if (event.which == 13) {
                     event.preventDefault();
-                    localStorage.clear();
+                    clearCheckboxes();
                     $("#search-field").submit();
                 }
             });
@@ -483,44 +528,26 @@
                 var requestURL =  windowPath + searchURL;
 
                 if($(this).is(":checked")) {
-                    requestURL = requestURL + "&selected_facets="+key+"_exact:"+value
+                    requestURL = requestURL + "&selected_facets="+key+"_exact:"+value;
+                    requestURL += buildURLOnCheckboxes();
+                    var checkboxId = $(this).attr("id");
+                    var localStorageCheckboxId = 'search-' + checkboxId;
+                    localStorage[localStorageCheckboxId] = 'true';
 
-                    $(".faceted-selections").each(function () {
-                        var val = localStorage[$(this).attr("id")];
-                        var isChecked = val === 'true';
-                        if(isChecked){
-                            var arr = $(this).val().split(",");
-                            var key = arr[0];
-                            var value = arr[1];
-                            requestURL += "&selected_facets="+key+"_exact:"+value;
-                        }
-                    });
                     window.location = requestURL;
-                    localStorage[$(this).attr("id")] = this.checked;
                 }else{
-                    localStorage.removeItem($(this).attr("id"));
+
+                    var checkboxId = $(this).attr("id");
+                    var localStorageCheckboxId = 'search-' + checkboxId;
+                    localStorage.removeItem(localStorageCheckboxId);
+
                     var textSearch = $("#id_q").val();
                     var updateURL = "/search/?q=" + textSearch;
-                    $(".faceted-selections").each(function () {
-                        var val = localStorage[$(this).attr("id")];
-                        var isChecked = val === 'true';
-                        if(isChecked){
-                            var arr = $(this).val().split(",");
-                            var key = arr[0];
-                            var value = arr[1];
-                            updateURL += "&selected_facets="+key+"_exact:"+value;
-                        }
-                    });
+                    updateURL += buildURLOnCheckboxes();
                     window.location = updateURL;
                 }
             });
-
-            $(".faceted-selections").each(function () {
-                var val = localStorage[$(this).attr("id")];
-                var isChecked = val !== undefined ? val == 'true' : false;
-                $(this).prop("checked", isChecked);
-            });
-
+            
 
             $('[data-toggle="popover"]').popover({
                 html: true,
