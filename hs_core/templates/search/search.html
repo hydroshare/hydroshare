@@ -403,16 +403,16 @@
             map = null;
             window.location = requestURL;
             var checkboxId =  key + "-" + value;
-            var localStorageCheckboxId = 'search-' + checkboxId;
-            localStorage[localStorageCheckboxId] = 'true';
+            var sessionStorageCheckboxId = 'search-' + checkboxId;
+            sessionStorage[sessionStorageCheckboxId] = 'true';
         }
-        
+
         var buildURLOnCheckboxes = function () {
             var requestURL = '';
             $(".faceted-selections").each(function () {
                 var checkboxId = $(this).attr("id");
-                var localStorageCheckboxId = 'search-' + checkboxId;
-                var val = localStorage[localStorageCheckboxId];
+                var sessionStorageCheckboxId = 'search-' + checkboxId;
+                var val = sessionStorage[sessionStorageCheckboxId];
                 var isChecked = val === 'true';
                 if(isChecked){
                     var arr = $(this).val().split(",");
@@ -426,8 +426,8 @@
         var popCheckboxes = function() {
             $(".faceted-selections").each(function () {
                 var checkboxId = $(this).attr("id");
-                var localStorageCheckboxId = 'search-' + checkboxId;
-                var val = localStorage[localStorageCheckboxId];
+                var sessionStorageCheckboxId = 'search-' + checkboxId;
+                var val = sessionStorage[sessionStorageCheckboxId];
                 var isChecked = val !== undefined ? val == 'true' : false;
                 $(this).prop("checked", isChecked);
             });
@@ -436,9 +436,9 @@
         var clearCheckboxes = function() {
             $(".faceted-selections").each(function () {
                 var checkboxId = $(this).attr("id");
-                var localStorageCheckboxId = 'search-' + checkboxId;
-                localStorage[localStorageCheckboxId] = 'false';
-                localStorage.removeItem(localStorageCheckboxId);
+                var sessionStorageCheckboxId = 'search-' + checkboxId;
+                sessionStorage[sessionStorageCheckboxId] = 'false';
+                sessionStorage.removeItem(sessionStorageCheckboxId);
             });
         }
 
@@ -531,15 +531,15 @@
                     requestURL = requestURL + "&selected_facets="+key+"_exact:"+value;
                     requestURL += buildURLOnCheckboxes();
                     var checkboxId = $(this).attr("id");
-                    var localStorageCheckboxId = 'search-' + checkboxId;
-                    localStorage[localStorageCheckboxId] = 'true';
+                    var sessionStorageCheckboxId = 'search-' + checkboxId;
+                    sessionStorage[sessionStorageCheckboxId] = 'true';
 
                     window.location = requestURL;
                 }else{
 
                     var checkboxId = $(this).attr("id");
-                    var localStorageCheckboxId = 'search-' + checkboxId;
-                    localStorage.removeItem(localStorageCheckboxId);
+                    var sessionStorageCheckboxId = 'search-' + checkboxId;
+                    sessionStorage.removeItem(sessionStorageCheckboxId);
 
                     var textSearch = $("#id_q").val();
                     var updateURL = "/search/?q=" + textSearch;
@@ -547,7 +547,7 @@
                     window.location = updateURL;
                 }
             });
-            
+
 
             $('[data-toggle="popover"]').popover({
                 html: true,
