@@ -20,7 +20,7 @@ from django.core.files.uploadedfile import UploadedFile
 from mezzanine.conf import settings
 
 from hs_core.signals import *
-from hs_core.models import AbstractResource, ResourceManager, BaseResource, ResourceFile
+from hs_core.models import AbstractResource, BaseResource, ResourceFile
 from hs_core.hydroshare.hs_bagit import create_bag_files
 from django_irods.storage import IrodsStorage
 
@@ -118,6 +118,37 @@ def group_from_id(grp):
         except ObjectDoesNotExist:
             raise Http404('Group not found')
     return tgt
+
+
+def get_user_zone_status_info(user):
+    """
+    This function should be called to determine whether the site is in production and whether user zone
+    functionality should be enabled or not on the web site front end
+    Args:
+        user: the requesting user
+    Returns:
+        in_production, enable_user_zone where both are boolean indicating whether the site is
+        in production and whether user zone functionality should be enabled or not on the web site front end
+    """
+    if user is None:
+        return None, None
+    if user.userprofile is None:
+        return None, None
+
+    if settings.IRODS_USERNAME == settings.HS_WWW_IRODS_PROXY_USER \
+            or settings.IRODS_USERNAME == "wwwHydroProxy":
+        in_production = True
+    else:
+        in_production = False
+
+    enable_user_zone = user.userprofile.create_irods_user_account
+    if not in_production and enable_user_zone:
+        # if these settings are not empty, for example, in users' local
+        # development environment for testing, user_zone selection is shown
+        if (not settings.HS_WWW_IRODS_PROXY_USER_PWD or \
+            not settings.HS_WWW_IRODS_HOST or not settings.HS_WWW_IRODS_ZONE):
+            enable_user_zone = False
+    return in_production, enable_user_zone
 
 
 # TODO: Tastypie left over. This needs to be deleted

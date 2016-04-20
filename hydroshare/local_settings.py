@@ -148,6 +148,18 @@ HS_USER_ZONE_PROXY_USER_PWD = ''
 HS_USER_ZONE_PROXY_USER_CREATE_USER_CMD = ''
 HS_USER_ZONE_PROXY_USER_DELETE_USER_CMD = ''
 
+# Please keep the line below unchanged since it is used to check whether
+# the current site is in production or not
+HS_WWW_IRODS_PROXY_USER = 'wwwHydroProxy'
+# credentials for HydroShare proxy user iRODS account which is set to have own access control
+# to all collections in HydroShare user zone, which is only useful when testing HydroShare
+# user zone in local test development environment since in www production environment,
+# IRODS_USERNAME and other associated settings already represent wwwHydroProxy settings
+HS_WWW_IRODS_PROXY_USER_PWD = ''
+HS_WWW_IRODS_HOST = ''
+HS_WWW_IRODS_DEFAULT_RESOURCE = ''
+HS_WWW_IRODS_ZONE = ''
+
 # Email configuration
 EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 #EMAIL_HOST_USER = ''

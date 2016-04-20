@@ -495,25 +495,13 @@ def my_resources(request, page):
 @login_required
 def create_resource_page_processor(request, page):
     user = request.user
-    show_user_zone_selection = user.userprofile.create_irods_user_account
-    if show_user_zone_selection:
-        in_production = False
-        if settings.IRODS_USERNAME == "wwwHydroProxy":
-            in_production = True
-        if not in_production:
-            if settings.HS_WWW_IRODS_PROXY_USER == "wwwHydroProxy":
-                show_user_zone_selection = True
-            else:
-                show_user_zone_selection = False
-        else:
-            show_user_zone_selection = True
+    in_production, show_user_zone_selection = utils.get_user_zone_status_info(user)
 
-    if user:
-        context = {
-            'user_name': user.username,
-            'show_user_zone_selection': show_user_zone_selection
-        }
-        return context
+    context = {
+        'user_name': user.username,
+        'show_user_zone_selection': show_user_zone_selection
+    }
+    return context
 
 @processor_for(GenericResource)
 def add_generic_context(request, page):

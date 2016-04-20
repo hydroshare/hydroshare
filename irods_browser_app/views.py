@@ -2,9 +2,13 @@ import json
 import os
 import string
 from django.http import HttpResponse, HttpResponseRedirect
+from django.conf import settings
+
 from irods.session import iRODSSession
 from irods.exception import CollectionDoesNotExist
+
 from django_irods.icommands import SessionException
+from django_irods.storage import IrodsStorage
 from hs_core import hydroshare
 from hs_core.views.utils import authorize, upload_from_irods, ACTION_TO_AUTHORIZE
 from hs_core.hydroshare import utils
@@ -123,6 +127,15 @@ def store_uz(request):
     It is invoked by an AJAX call, so it returns json object that holds content for files and folders
     under the requested directory/collection/subcollection
     """
+    irods_storage = IrodsStorage()
+    in_production, enable_user_zone = utils.get_user_zone_status_info(request.user)
+    if enable_user_zone and not in_production:
+        # for testing, has to switch irods session to hydroshare production proxy iRODS user
+        irods_storage.set_user_session(username=settings.HS_WWW_IRODS_PROXY_USER,
+                                   password=settings.HS_WWW_IRODS_PROXY_USER_PWD,
+                                   host=settings.HS_WWW_IRODS_HOST,
+                                   port=settings.IRODS_PORT,
+                                   zone=settings.HS_WWW_IRODS_ZONE)
     return_object = {}
 
     datastore = str(request.POST['store'])
