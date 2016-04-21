@@ -57,7 +57,7 @@ class HistoryReport(TemplateView):
         variables = hs_tracking.Variable.objects.all().order_by('timestamp')
 
         for v in variables:
-            row = [v.session.visitor.id, v.session.id, v.session.begin, v.timestamp, v.name, v.type, v.value]
+            row = [v.session.visitor.id, v.session.id, v.session.begin, v.timestamp, v.name, v.get_type_display(), v.value]
             w.writerow(row)
         f.seek(0)
         return HttpResponse(f.read(), content_type="text/csv")

@@ -25,7 +25,7 @@ class SessionManager(models.Manager):
             cut_off = datetime.now() - timedelta(seconds=SESSION_TIMEOUT)
             session = None
             try:
-                session = Session.objects.filter(variable__timestamp__gte=cut_off).get(id=tracking_id['id'])
+                session = Session.objects.filter(variable__timestamp__gte=cut_off).filter(id=tracking_id['id']).first()
             except Session.DoesNotExist:
                 pass
             if session is not None:
@@ -106,7 +106,7 @@ class Variable(models.Model):
     session = models.ForeignKey(Session)
     timestamp = models.DateTimeField(auto_now_add=True)
     name = models.CharField(max_length=32)
-    type = models.IntegerField(choices=TYPES)
+    type = models.IntegerField(choices=TYPE_CHOICES)
     value = models.CharField(max_length=130)
 
     def get_value(self):
@@ -125,7 +125,7 @@ class Variable(models.Model):
 
     @classmethod
     def record(cls, session, name, value=None):
-        for i, (label, coercer) in enumerate(cls.TYPES, 1):
+        for i, (label, coercer) in enumerate(cls.TYPES, 0):
             try:
                 if value == coercer(value):
                     type_code = i

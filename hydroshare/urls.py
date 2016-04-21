@@ -33,7 +33,7 @@ urlpatterns = i18n_patterns("",
     url('^r/(?P<shortkey>[A-z0-9\-_]+)', 'hs_core.views.short_url'),
     # url('^party/', include('hs_scholar_profile.urls'))
     url(r'^tracking/reports/profiles/$', tracking.VisitorProfileReport.as_view(), name='tracking-report-profiles'),
-    url(r'^tracking/reports/history/$', tracking.HistoryReport.as_view(), name='tracking-report-hisotry'),
+    url(r'^tracking/reports/history/$', tracking.HistoryReport.as_view(), name='tracking-report-history'),
     url(r'^tracking/$', tracking.UseTrackingView.as_view(), name='tracking'),
     url(r'^user/$', theme.UserProfileView.as_view()),
     url(r'^user/(?P<user>.*)/', theme.UserProfileView.as_view()),
