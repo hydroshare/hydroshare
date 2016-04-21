@@ -1381,6 +1381,10 @@ class BaseResource(Page, AbstractResource):
 
         return '<?xml version="1.0" encoding="UTF-8"?>\n' + etree.tostring(ROOT, pretty_print=pretty_print)
 
+    @property
+    def verbose_name(self):
+        return self.get_content_model()._meta.verbose_name
+
     @classmethod
     def get_supported_upload_file_types(cls):
         # all file types are supported

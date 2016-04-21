@@ -11,6 +11,7 @@
 {{ object.metadata.publisher.name }}
 {{ object.metadata.language.code }}
 {{ object.resource_type }}
+{{ object.verbose_name }}
 {{ object.owners_count }}
 {{ object.viewers_count }}
 {{ object.editors_count }}

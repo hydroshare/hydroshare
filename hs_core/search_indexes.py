@@ -102,7 +102,7 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
         return [relation.value for relation in obj.metadata.relations.all()]
 
     def prepare_resource_type(self, obj):
-        return obj.get_content_model()._meta.verbose_name
+        return obj.verbose_name
 
     def prepare_comments(self, obj):
         return [comment.comment for comment in obj.comments.all()]
