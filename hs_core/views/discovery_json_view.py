@@ -27,7 +27,7 @@ class DiscoveryJsonView(FacetedSearchView):
                 json_obj = {}
 
                 # assign title and url values to the object
-                json_obj['title'] = result.object.title
+                json_obj['title'] = result.object.metadata.title.value
                 json_obj['get_absolute_url'] = result.object.get_absolute_url()
 
                 # iterate all the coverage values
