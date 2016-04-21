@@ -99,7 +99,7 @@
                                 {% for key, values in facets.fields.items %}
                                     {% if key == 'public' or key == 'discoverable' %}
                                         {% for item in values %}
-                                            {% if item.1 > 0 %}
+                                            {% if item.1 > 0 and item.0 != 'false' %}
                                                 <li class="list-group-item clearfix" rel="{{ key }},{{ item.0 }}">
                                                 <input class="faceted-selections" id="{{ key }}-{{ item.0 }}" value="{{ key }},{{ item.0 }}" type="checkbox" class="pull-left"> &nbsp;&nbsp;
                                                     <a onclick="formLinkButtonURL('{{ key }}', '{{ item.0 }}')" role="button">
@@ -143,6 +143,7 @@
                     </div>
                 </div>
             </div>
+
         </div>
         <div class="col-lg-9" id="items">
             <!--
