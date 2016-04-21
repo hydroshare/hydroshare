@@ -404,6 +404,9 @@
         var formLinkButtonURL = function(key, value){
             var currentURL = window.location.href.split('#')[0];
             var currentHash = window.location.href.split('#')[1];
+            if(window.location.search.length == 0){
+                currentURL += "?q=";
+            }
             var requestURL = currentURL + "&selected_facets="+key+"_exact:"+value + "#" + currentHash;
             map = null;
             window.location = requestURL;
