@@ -4,141 +4,146 @@
 {% block main %}
 <div class="container-fluid" id="main">
     <div class="row">
-        <div class="col-lg-3" id="filters-panel">
-            <button class="btn btn-default"  style="margin-bottom: 10px;" onclick="clearAllFaceted()">Show All</button>
-            <button class="btn btn-info pull-right" style="margin-bottom: 10px;" data-toggle="popover" data-placement="right"><i class="glyphicon glyphicon-info-sign"></i></button>
-            {% for key, values in facets.fields.items %}
-                {% if values and key != 'public' and key != 'discoverable' %}
-                    <div class="panel-group" id="faceting-{{ key }}">
-                        <div class="panel panel-primary">
-                            <div class="panel-heading">
-                                <h4 class="panel-title">
-                                    <a data-toggle="collapse" href="#{{ key }}">
-                                        {% if key == 'author'%}
-                                            &nbsp; Filter by Author
-                                        {% elif key ==  'subjects'%}
-                                            &nbsp; Filter by Subject
-                                        {% elif key ==  'resource_type'%}
-                                            &nbsp; Filter by Resource Type
-                                        {% elif key ==  'public'%}
-                                            &nbsp; Filter by Public
-                                        {% elif key ==  'owners_names'%}
-                                            &nbsp; Filter by Owner
-                                        {% elif key ==  'discoverable'%}
-                                            &nbsp; Filter by Discoverable
-                                        {% endif %}
-                                        <span
-                                            {% if key == 'author' or key == 'subjects' or key == 'resource_type'%}
-                                                class="glyphicon glyphicon-minus pull-left"
-                                            {% else %}
-                                                class="glyphicon glyphicon-plus pull-left"
-                                            {% endif %}>
-                                        </span>
-                                    </a>
-                                </h4>
-                            </div>
-                            <div id="{{ key }}"
-                                {% if key == 'author' or key == 'subjects' or key == 'resource_type'%}
-                                    class="panel-collapse collapse in"
-                                {% else %}
-                                    class="panel-collapse collapse"
-                                {% endif %}>
-                                <ul class="list-group" id="list-group-{{ key }}" style="height: 200px; overflow-y: auto;">
-                                {% for item in values %}
-                                    {% if item.1 > 0 %}
-                                        <li class="list-group-item clearfix" rel="{{ key }},{{ item.0 }}">
-                                            <input class="faceted-selections" id="{{ key }}-{{ item.0 }}" value="{{ key }},{{ item.0 }}" type="checkbox" class="pull-left"> &nbsp;&nbsp;
-                                                <a onclick="formLinkButtonURL('{{ key }}', '{{ item.0 }}')" role="button">{{ item.0 }}</a>
-                                                {% if item.1 >= 1 and item.1 < 2 %}
-                                                    <span class="label label-default label-pill pull-right badge YellowGreenBlue-colormap-band-5">
-                                                {% elif item.1 >= 2 and item.1 <= 4 %}
-                                                    <span class="label label-default label-pill pull-right badge YellowGreenBlue-colormap-band-5">
-                                                {% elif item.1 > 4 and item.1 <= 6 %}
-                                                    <span class="label label-default label-pill pull-right badge YellowGreenBlue-colormap-band-5">
-                                                {% elif item.1 > 6 and item.1 <= 10 %}
-                                                    <span class="label label-default label-pill pull-right badge YellowGreenBlue-colormap-band-5">
-                                                {% elif item.1 > 10 and item.1 <= 18 %}
-                                                    <span class="label label-default label-pill pull-right badge YellowGreenBlue-colormap-band-5">
-                                                {% elif item.1 > 18 and item.1 <= 32 %}
-                                                    <span class="label label-default label-pill pull-right badge YellowGreenBlue-colormap-band-5">
-                                                {% elif item.1 > 32 and item.1 <= 57 %}
-                                                    <span class="label label-default label-pill pull-right badge YellowGreenBlue-colormap-band-5">
-                                                {% elif item.1 > 57 and item.1 <= 100 %}
-                                                    <span class="label label-default label-pill pull-right badge YellowGreenBlue-colormap-band-5">
-                                                {% elif item.1 > 100 and item.1 <= 178 %}
-                                                    <span class="label label-default label-pill pull-right badge YellowGreenBlue-colormap-band-5">
-                                                {% elif item.1 > 178 %}
-                                                    <span class="label label-default label-pill pull-right badge YellowGreenBlue-colormap-band-5">
-                                                {% endif %}{{ item.1 }}
+        <div class="col-lg-3" id="filter-panel">
+            <div id="filter-buttons" style="margin-bottom: 10px;">
+                <button class="btn btn-default" onclick="clearAllFaceted()">Show All</button>
+                <button class="btn btn-info pull-right" data-toggle="popover" data-placement="right"><i class="glyphicon glyphicon-info-sign"></i></button>
+            </div>
+            <div id="filter-items">
+                {% for key, values in facets.fields.items %}
+                    {% if values and key != 'public' and key != 'discoverable' %}
+                        <div class="panel-group" id="faceting-{{ key }}">
+                            <div class="panel panel-primary">
+                                <div class="panel-heading">
+                                    <h4 class="panel-title">
+                                        <a data-toggle="collapse" href="#{{ key }}">
+                                            {% if key == 'author'%}
+                                                &nbsp; Filter by Author
+                                            {% elif key ==  'subjects'%}
+                                                &nbsp; Filter by Subject
+                                            {% elif key ==  'resource_type'%}
+                                                &nbsp; Filter by Resource Type
+                                            {% elif key ==  'public'%}
+                                                &nbsp; Filter by Public
+                                            {% elif key ==  'owners_names'%}
+                                                &nbsp; Filter by Owner
+                                            {% elif key ==  'discoverable'%}
+                                                &nbsp; Filter by Discoverable
+                                            {% endif %}
+                                            <span
+                                                {% if key == 'author' or key == 'subjects' or key == 'resource_type'%}
+                                                    class="glyphicon glyphicon-minus pull-left"
+                                                {% else %}
+                                                    class="glyphicon glyphicon-plus pull-left"
+                                                {% endif %}>
                                             </span>
-                                        </li>
-                                    {% endif %}
-                                {% endfor %}
-                                </ul>
-                            </div>
-                        </div>
-                    </div>
-                {% endif %}
-            {% endfor %}
-
-            <div class="panel-group" id="faceting-availability">
-                <div class="panel panel-primary">
-                    <div class="panel-heading">
-                        <h4 class="panel-title">
-                            <a data-toggle="collapse" href="#availability">
-                                &nbsp; Filter by Availability
-                                <span class="glyphicon glyphicon-plus pull-left"></span>
-                            </a>
-                        </h4>
-                    </div>
-                    <div id="availability" class="panel-collapse collapse">
-                        <ul class="list-group" id="list-group-availability" style="height: 200px; overflow-y: auto;">
-                            {% for key, values in facets.fields.items %}
-                                {% if key == 'public' or key == 'discoverable' %}
+                                        </a>
+                                    </h4>
+                                </div>
+                                <div id="{{ key }}"
+                                    {% if key == 'author' or key == 'subjects' or key == 'resource_type'%}
+                                        class="panel-collapse collapse in"
+                                    {% else %}
+                                        class="panel-collapse collapse"
+                                    {% endif %}>
+                                    <ul class="list-group" id="list-group-{{ key }}" style="height: 200px; overflow-y: auto;">
                                     {% for item in values %}
                                         {% if item.1 > 0 %}
                                             <li class="list-group-item clearfix" rel="{{ key }},{{ item.0 }}">
-                                            <input class="faceted-selections" id="{{ key }}-{{ item.0 }}" value="{{ key }},{{ item.0 }}" type="checkbox" class="pull-left"> &nbsp;&nbsp;
-                                                <a onclick="formLinkButtonURL('{{ key }}', '{{ item.0 }}')" role="button">
-                                                    {% if key == 'public' and item.0 == 'true' %}
-                                                        Public
-                                                    {% elif key == 'public' and item.0 == 'false' %}
-                                                        Private
-                                                    {% elif key == 'discoverable' %}
-                                                        Discoverable
-                                                    {% endif %}
-                                                </a>
-                                                {% if item.1 >= 1 and item.1 < 2 %}
-                                                    <span class="label label-default label-pill pull-right badge YellowGreenBlue-colormap-band-9">
-                                                {% elif item.1 >= 2 and item.1 <= 4 %}
-                                                    <span class="label label-default label-pill pull-right badge YellowGreenBlue-colormap-band-9">
-                                                {% elif item.1 > 4 and item.1 <= 6 %}
-                                                    <span class="label label-default label-pill pull-right badge YellowGreenBlue-colormap-band-8">
-                                                {% elif item.1 > 6 and item.1 <= 10 %}
-                                                    <span class="label label-default label-pill pull-right badge YellowGreenBlue-colormap-band-7">
-                                                {% elif item.1 > 10 and item.1 <= 18 %}
-                                                    <span class="label label-default label-pill pull-right badge YellowGreenBlue-colormap-band-6">
-                                                {% elif item.1 > 18 and item.1 <= 32 %}
-                                                    <span class="label label-default label-pill pull-right badge YellowGreenBlue-colormap-band-5">
-                                                {% elif item.1 > 32 and item.1 <= 57 %}
-                                                    <span class="label label-default label-pill pull-right badge YellowGreenBlue-colormap-band-4">
-                                                {% elif item.1 > 57 and item.1 <= 100 %}
-                                                    <span class="label label-default label-pill pull-right badge YellowGreenBlue-colormap-band-3">
-                                                {% elif item.1 > 100 and item.1 <= 178 %}
-                                                    <span class="label label-default label-pill pull-right badge YellowGreenBlue-colormap-band-2">
-                                                {% elif item.1 > 178 %}
-                                                    <span class="label label-default label-pill pull-right badge YellowGreenBlue-colormap-band-1">
-                                                {% endif %}{{ item.1 }}
-                                            </span>
-                                        </li>
+                                                <input class="faceted-selections" id="{{ key }}-{{ item.0 }}" value="{{ key }},{{ item.0 }}" type="checkbox" class="pull-left"> &nbsp;&nbsp;
+                                                    <a onclick="formLinkButtonURL('{{ key }}', '{{ item.0 }}')" role="button">{{ item.0 }}</a>
+                                                    {% if item.1 >= 1 and item.1 < 2 %}
+                                                        <span class="label label-default label-pill pull-right badge YellowGreenBlue-colormap-band-5">
+                                                    {% elif item.1 >= 2 and item.1 <= 4 %}
+                                                        <span class="label label-default label-pill pull-right badge YellowGreenBlue-colormap-band-5">
+                                                    {% elif item.1 > 4 and item.1 <= 6 %}
+                                                        <span class="label label-default label-pill pull-right badge YellowGreenBlue-colormap-band-5">
+                                                    {% elif item.1 > 6 and item.1 <= 10 %}
+                                                        <span class="label label-default label-pill pull-right badge YellowGreenBlue-colormap-band-5">
+                                                    {% elif item.1 > 10 and item.1 <= 18 %}
+                                                        <span class="label label-default label-pill pull-right badge YellowGreenBlue-colormap-band-5">
+                                                    {% elif item.1 > 18 and item.1 <= 32 %}
+                                                        <span class="label label-default label-pill pull-right badge YellowGreenBlue-colormap-band-5">
+                                                    {% elif item.1 > 32 and item.1 <= 57 %}
+                                                        <span class="label label-default label-pill pull-right badge YellowGreenBlue-colormap-band-5">
+                                                    {% elif item.1 > 57 and item.1 <= 100 %}
+                                                        <span class="label label-default label-pill pull-right badge YellowGreenBlue-colormap-band-5">
+                                                    {% elif item.1 > 100 and item.1 <= 178 %}
+                                                        <span class="label label-default label-pill pull-right badge YellowGreenBlue-colormap-band-5">
+                                                    {% elif item.1 > 178 %}
+                                                        <span class="label label-default label-pill pull-right badge YellowGreenBlue-colormap-band-5">
+                                                    {% endif %}{{ item.1 }}
+                                                </span>
+                                            </li>
                                         {% endif %}
                                     {% endfor %}
-                                {% endif %}
-                            {% endfor %}
-                        </ul>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    {% endif %}
+                {% endfor %}
+
+                <div class="panel-group" id="faceting-availability">
+                    <div class="panel panel-primary">
+                        <div class="panel-heading">
+                            <h4 class="panel-title">
+                                <a data-toggle="collapse" href="#availability">
+                                    &nbsp; Filter by Availability
+                                    <span class="glyphicon glyphicon-plus pull-left"></span>
+                                </a>
+                            </h4>
+                        </div>
+                        <div id="availability" class="panel-collapse collapse">
+                            <ul class="list-group" id="list-group-availability" style="height: 200px; overflow-y: auto;">
+                                {% for key, values in facets.fields.items %}
+                                    {% if key == 'public' or key == 'discoverable' %}
+                                        {% for item in values %}
+                                            {% if item.1 > 0 and item.0 != 'false' %}
+                                                <li class="list-group-item clearfix" rel="{{ key }},{{ item.0 }}">
+                                                <input class="faceted-selections" id="{{ key }}-{{ item.0 }}" value="{{ key }},{{ item.0 }}" type="checkbox" class="pull-left"> &nbsp;&nbsp;
+                                                    <a onclick="formLinkButtonURL('{{ key }}', '{{ item.0 }}')" role="button">
+                                                        {% if key == 'public' and item.0 == 'true' %}
+                                                            Public
+                                                        {% elif key == 'public' and item.0 == 'false' %}
+                                                            Private
+                                                        {% elif key == 'discoverable' %}
+                                                            Discoverable
+                                                        {% endif %}
+                                                    </a>
+                                                    {% if item.1 >= 1 and item.1 < 2 %}
+                                                        <span class="label label-default label-pill pull-right badge YellowGreenBlue-colormap-band-9">
+                                                    {% elif item.1 >= 2 and item.1 <= 4 %}
+                                                        <span class="label label-default label-pill pull-right badge YellowGreenBlue-colormap-band-9">
+                                                    {% elif item.1 > 4 and item.1 <= 6 %}
+                                                        <span class="label label-default label-pill pull-right badge YellowGreenBlue-colormap-band-8">
+                                                    {% elif item.1 > 6 and item.1 <= 10 %}
+                                                        <span class="label label-default label-pill pull-right badge YellowGreenBlue-colormap-band-7">
+                                                    {% elif item.1 > 10 and item.1 <= 18 %}
+                                                        <span class="label label-default label-pill pull-right badge YellowGreenBlue-colormap-band-6">
+                                                    {% elif item.1 > 18 and item.1 <= 32 %}
+                                                        <span class="label label-default label-pill pull-right badge YellowGreenBlue-colormap-band-5">
+                                                    {% elif item.1 > 32 and item.1 <= 57 %}
+                                                        <span class="label label-default label-pill pull-right badge YellowGreenBlue-colormap-band-4">
+                                                    {% elif item.1 > 57 and item.1 <= 100 %}
+                                                        <span class="label label-default label-pill pull-right badge YellowGreenBlue-colormap-band-3">
+                                                    {% elif item.1 > 100 and item.1 <= 178 %}
+                                                        <span class="label label-default label-pill pull-right badge YellowGreenBlue-colormap-band-2">
+                                                    {% elif item.1 > 178 %}
+                                                        <span class="label label-default label-pill pull-right badge YellowGreenBlue-colormap-band-1">
+                                                    {% endif %}{{ item.1 }}
+                                                </span>
+                                            </li>
+                                            {% endif %}
+                                        {% endfor %}
+                                    {% endif %}
+                                {% endfor %}
+                            </ul>
+                        </div>
                     </div>
                 </div>
             </div>
+
         </div>
         <div class="col-lg-9" id="items">
             <!--
@@ -551,7 +556,7 @@
 
             $('[data-toggle="popover"]').popover({
                 html: true,
-                container: '#items',
+                container: '#body',
                 content: '<p>This search box supports <a href="https://cwiki.apache.org/confluence/display/solr/Searching" target="_blank">SOLR Query syntax</a>.</p>',
                 trigger: 'click'
             });
