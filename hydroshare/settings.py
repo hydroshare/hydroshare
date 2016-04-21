@@ -549,3 +549,8 @@ LOGGING = {
         },
     }
 }
+
+# hs_tracking settings
+TRACKING_SESSION_TIMEOUT = 60 * 15
+TRACKING_PROFILE_FIELDS = ["title", "user_type", "subject_areas", "public", "state", "country"]
+TRACKING_USER_FIELDS = ["username", "email", "first_name", "last_name"]

@@ -46,12 +46,16 @@ class TrackingTests(TestCase):
         self.assertEqual("false", self.session.variable_set.get(name='false').value)
         self.assertEqual('Hello, World', self.session.variable_set.get(name='text').value)
 
+    def test_record_bad_value(self):
+        self.assertRaises(TypeError, self.session.record, 'bad', ['oh no i cannot handle arrays'])
+
     def test_get(self):
-        self.assertEqual(42, Variable(name='var', value='42').get_value())
-        self.assertEqual(3.14, Variable(name='var', value='3.14').get_value())
-        self.assertEqual(True, Variable(name='var', value='true').get_value())
-        self.assertEqual(False, Variable(name='var', value='false').get_value())
-        self.assertEqual("X", Variable(name='var', value='X').get_value())
+        self.assertEqual(42, Variable(name='var', value='42', type=0).get_value())
+        self.assertEqual(3.14, Variable(name='var', value='3.14', type=1).get_value())
+        self.assertEqual(True, Variable(name='var', value='true', type=3).get_value())
+        self.assertEqual(False, Variable(name='var', value='false', type=3).get_value())
+        self.assertEqual("X", Variable(name='var', value='X', type=2).get_value())
+        self.assertEqual(None, Variable(name='var', value='', type=4).get_value())
 
     def test_for_request_new(self):
         request = self.createRequest(user=self.user)
@@ -127,7 +131,7 @@ class TrackingTests(TestCase):
         rows = list(reader)
 
         count = Variable.objects.all().count()
-        self.assertEqual(len(rows), count)
+        self.assertEqual(len(rows), count - 1) # -1 to account for the session fetching report
 
     def test_history_variables(self):
         self.user.is_staff = True

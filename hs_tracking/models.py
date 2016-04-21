@@ -9,9 +9,9 @@ from django.core.exceptions import ImproperlyConfigured
 from theme.models import UserProfile
 
 
-SESSION_TIMEOUT = 60 * 15
-PROFILE_FIELDS = ["title", "user_type", "subject_areas", "public", "state", "country"]
-USER_FIELDS = ["username", "email", "first_name", "last_name"]
+SESSION_TIMEOUT = settings.TRACKING_SESSION_TIMEOUT
+PROFILE_FIELDS = settings.TRACKING_PROFILE_FIELDS
+USER_FIELDS = settings.TRACKING_USER_FIELDS
 VISITOR_FIELDS = ["id"] + USER_FIELDS + PROFILE_FIELDS
 if set(PROFILE_FIELDS) & set(USER_FIELDS):
     raise ImproperlyConfigured("hs_tracking PROFILE_FIELDS and USER_FIELDS must not contain overlapping field names")
@@ -25,7 +25,7 @@ class SessionManager(models.Manager):
             cut_off = datetime.now() - timedelta(seconds=SESSION_TIMEOUT)
             session = None
             try:
-                session = Session.objects.filter(begin__gte=cut_off).get(id=tracking_id['id'])
+                session = Session.objects.filter(variable__timestamp__gte=cut_off).get(id=tracking_id['id'])
             except Session.DoesNotExist:
                 pass
             if session is not None:
@@ -43,6 +43,7 @@ class SessionManager(models.Manager):
         else:
             visitor = Visitor.objects.create()
         session = Session.objects.create(visitor=visitor)
+        session.record('begin_session')
         request.session['hs_tracking_id'] = signing.dumps({'id': session.id})
         return session
 
@@ -94,11 +95,12 @@ class Variable(models.Model):
         ('Floating Point', float),
         ('Text', unicode),
         ('Flag', bool),
+        ('None', lambda o: None)
     )
     TYPE_CHOICES = (
         (i, label)
         for (i, label) in
-        enumerate((label for (label, coercer) in TYPES), 1)
+        enumerate((label for (label, coercer) in TYPES))
     )
 
     session = models.ForeignKey(Session)
@@ -108,38 +110,37 @@ class Variable(models.Model):
     value = models.CharField(max_length=130)
 
     def get_value(self):
-        try:
-            f = float(self.value)
-        except ValueError:
-            f = None
-        try:
-            i = int(self.value)
-        except ValueError:
-            i = None
-        if i is not None and i == f:
-            return i
-        elif f is not None:
-            return f
-        elif self.value == 'true':
-            return True
-        elif self.value == 'false':
-            return False
-        return self.value
+        v = self.value
+        t = self.TYPES[self.type][0]
+        if t == 'Integer':
+            return int(v)
+        elif t == 'Floating Point':
+            return float(v)
+        elif t == 'Text':
+            return v
+        elif t == 'Flag':
+            return v == 'true'
+        elif t == 'None':
+            return None
 
     @classmethod
-    def record(cls, session, name, value):
+    def record(cls, session, name, value=None):
         for i, (label, coercer) in enumerate(cls.TYPES, 1):
             try:
                 if value == coercer(value):
                     type_code = i
                     break
-            except ValueError:
+            except (ValueError, TypeError):
                 continue
+        else:
+            raise TypeError("Unable to record variable of unrecognized type %s" % (type(value).__name__,))
         return Variable.objects.create(session=session, name=name, type=type_code, value=cls.encode(value))
 
     @classmethod
     def encode(cls, value):
-        if isinstance(value, bool):
+        if value is None:
+            return 'none'
+        elif isinstance(value, bool):
             return 'true' if value else 'false'
         elif isinstance(value, (int, float, str, unicode)):
             return unicode(value)

@@ -1,11 +1,11 @@
-from .models import Session, Variable
+from .models import Session
 
 class Tracking(object):
-    """If a page implements "can_view(request)" we honor the permission and
-    raise a 403 if the logged in user would normally not be able to view the
-    content"""
+    """The default tracking middleware logs all successful responses as a 'visit' variable with
+    the URL path as its value."""
 
     def process_response(self, request, response):
-        session = Session.objects.for_request(request)
-        session.record("visit", request.path)
+        if response.status_code == 200:
+            session = Session.objects.for_request(request)
+            session.record("visit", request.path)
         return response
