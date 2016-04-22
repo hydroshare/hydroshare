@@ -37,38 +37,41 @@
         <h5>This resource was created using funding from the following sources:</h5>
             {% endif %}
 
-        <table class="table table-striped funding-agencies-table">
-            <tbody>
-            <tr class="header-row">
-                <th><strong>Agency Name</strong></th>
-                <th>Award Title</th>
-                <th>Award Number</th>
-                <th></th>
-            </tr>
-
-            {% for agency in fundingagnency_formset.initial %}
-                <tr data-index="{{ forloop.counter0 }}">
-                    <td>
-                        {% if agency.agency_url %}
-                            <strong><a href="{{ agency.agency_url }}" target="_blank">{{ agency.agency_name }}</a></strong>
-                        {% else %}
-                            <strong><span>{{ agency.agency_name }}</span></strong>
-                        {% endif %}
-                    </td>
-                    <td>{{ agency.award_title }}</td>
-                    <td>{{ agency.award_number }}</td>
-                    <td>
-                        <a data-toggle="modal" data-placement="auto" title="Edit"
-                           class="glyphicon glyphicon-pencil icon-button btn-edit"
-                           data-target="#edit-funding-agency-{{ agency.id }}"></a>
-                        <a data-toggle="modal" data-placement="auto" title="Remove"
-                           class="glyphicon glyphicon-trash icon-button btn-remove"
-                           data-target="#delete-funding-agency-{{ agency.id }}"></a>
-                    </td>
+        {% if fundingagnency_formset.initial|length > 0%}
+            <table class="table table-striped funding-agencies-table">
+                <tbody>
+                <tr class="header-row">
+                    <th><strong>Agency Name</strong></th>
+                    <th>Award Title</th>
+                    <th>Award Number</th>
+                    <th></th>
                 </tr>
-            {% endfor %}
-            </tbody>
-        </table>
+
+                {% for agency in fundingagnency_formset.initial %}
+                    <tr data-index="{{ forloop.counter0 }}">
+                        <td>
+                            {% if agency.agency_url %}
+                                <strong><a href="{{ agency.agency_url }}" target="_blank">{{ agency.agency_name }}</a></strong>
+                            {% else %}
+                                <strong><span>{{ agency.agency_name }}</span></strong>
+                            {% endif %}
+                        </td>
+                        <td>{{ agency.award_title }}</td>
+                        <td>{{ agency.award_number }}</td>
+                        <td>
+                            <a data-toggle="modal" data-placement="auto" title="Edit"
+                               class="glyphicon glyphicon-pencil icon-button btn-edit"
+                               data-target="#edit-funding-agency-{{ agency.id }}"></a>
+                            <a data-toggle="modal" data-placement="auto" title="Remove"
+                               class="glyphicon glyphicon-trash icon-button btn-remove"
+                               data-target="#delete-funding-agency-{{ agency.id }}"></a>
+                        </td>
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        {% endif %}
+
         <a id="btn-add-funding-agency" type="button" class="btn btn-success row-selector" data-toggle="modal"
            data-target="#add-funding-agency">
             <span class="glyphicon glyphicon-plus"><span class="button-label"> Add Funding Agency</span></span>
@@ -83,22 +86,26 @@
             return "<div class='label label-danger error-label'>" + message + "</div>";
         }
 
-        function flagAwardNumber(index, entryValue) {
+        function flagAwardNumber(index, entryValue, agencyNameValue) {
             var awardNumbers;
+            var agencyNames;
 
             if (index) {
-                // Get the list of award numbers currently in use, excluding the one we are editing
+                // Get the list of award numbers and agency names currently in use, excluding the one we are editing
                 awardNumbers = $(".funding-agencies-table").find("tr:not([data-index='" + index + "']) td:nth-child(3)");
+                agencyNames = $(".funding-agencies-table").find("tr:not([data-index='" + index + "']) td:nth-child(1)");
             }
             else {
-                // Get the list of award numbers currently in use (when adding new funding agency)
+                // Get the list of award numbers and agency names currently in use (when adding new funding agency)
                 awardNumbers = $(".funding-agencies-table").find("tr td:nth-child(3)");
+                agencyNames = $(".funding-agencies-table").find("tr td:nth-child(1)");
             }
 
             // Verify that value is unique
             for (var i = 0; i < awardNumbers.length; i++) {
                 awardNumbers[i] = $(awardNumbers[i]).text().trim();
-                if (entryValue == awardNumbers[i]) {
+                agencyNames[i] = $(agencyNames[i]).text().trim();
+                if (entryValue == awardNumbers[i] && agencyNames[i] == agencyNameValue) {
                     return false;
                 }
             }
@@ -108,12 +115,14 @@
 
         function validateAwardNumber() {
             var inputElement = $(this).closest("form").find("input[name='award_number']");
+            var agencyName = $(this).closest("form").find("input[name='agency_name']");
             inputElement.parent().find(".error-label").remove();
 
             var entryValue = inputElement.val();
+            var agencyNameValue = agencyName.val();
             var index = $(this).attr("data-index");
 
-            if (!flagAwardNumber(index, entryValue)) {
+            if (!flagAwardNumber(index, entryValue, agencyNameValue)) {
                 inputElement.parent().append(errorLabel("This award number is already in use."));
                 return false;
             }
