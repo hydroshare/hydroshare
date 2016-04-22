@@ -136,12 +136,11 @@ def store_uz(request):
                                    host=settings.HS_WWW_IRODS_HOST,
                                    port=settings.IRODS_PORT,
                                    zone=settings.HS_WWW_IRODS_ZONE)
-    return_object = {}
-
     datastore = str(request.POST['store'])
-
-    return_object['files'] = store['files']
-    return_object['folder'] = store['folder']
+    store = irods_storage.listdir(datastore)
+    return_object = {}
+    return_object['files'] = store[1]
+    return_object['folder'] = store[0]
     jsondump = json.dumps(return_object)
 
     return HttpResponse(

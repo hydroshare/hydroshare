@@ -45,7 +45,7 @@ $('#btn-select-irods-file, #btn-select-irods-file-uz').on('click',function(event
     $('#file_struct').children().remove();
     $('.ajax-loader').hide();
     var store = '';
-    if(event.target.id='btn-select-irods-file') {
+    if(event.target.id=='btn-select-irods-file') {
         if (sessionStorage.IRODS_signininfo) {
             $("#irods_content_label").text(sessionStorage.IRODS_username);
             $('#root_store').val(sessionStorage.IRODS_datastore);
@@ -62,7 +62,10 @@ $('#btn-select-irods-file, #btn-select-irods-file-uz').on('click',function(event
     $('#irods_view_store').val(store);
     // loading file structs
     var parent = $('#file_struct');
-    get_store(store, parent, 0);
+    if(event.target.id=='btn-select-irods-file')
+        get_store(store, parent, 0);
+    else
+        get_store_uz(store, parent, 0)
     $('body').on('click', '.folder', click_folder_opr);
 });
 
@@ -124,6 +127,8 @@ function set_store_display(store, parent, margin, json) {
                 lastSelected = current;
             }
         }
+        set_datastore(current.parent('div')[0], false);
+        return false;
     });
 }
 
@@ -142,9 +147,7 @@ function get_store(store, parent, margin) {
             host: sessionStorage.IRODS_host
         },
         success: function (json) {
-                set_store_display(store, parent, margin, json);
-                set_datastore(current.parent('div')[0], false);
-                return false;
+                return set_store_display(store, parent, margin, json);
         },
 
         error: function(status) {
@@ -165,9 +168,7 @@ function get_store_uz(store, parent, margin) {
             store: store
         },
         success: function (json) {
-                set_store_display(store, parent, margin, json);
-                set_datastore(current.parent('div')[0], false);
-                return false;
+                return set_store_display(store, parent, margin, json);
         },
 
         error: function(status) {
@@ -324,14 +325,23 @@ function irods_upload() {
             res_type: $('#res_type').val()
         },
         success: function(json) {
-            $("#irods-sel-file").text(json.irods_sel_file);
+            if ($('#input_trigger').val()=='default') {
+                $("#irods-sel-file").text(json.irods_sel_file);
+                $('#irods_file_names').val(json.irods_file_names);
+            }
+            else{
+                $("#irods-sel-file-uz").text(json.irods_sel_file);
+                $('#irods_file_names-uz').val(json.irods_file_names);
+            }
             $("#file-type-error").text(json.file_type_error);
             $('#irodsContent').modal('hide');
-            $('#irods_file_names').val(json.irods_file_names)
         },
         error: function(xhr, errmsg, err) {
             console.log(xhr.status + ": " + xhr.responseText + ". Error message: " + errmsg);
-            $("#irods-sel-file").text("No file selected");
+            if ($('#input_trigger').val()=='default')
+                $("#irods-sel-file").text("No file selected");
+            else
+                $("#irods-sel-file-uz").text("No file selected");
             $('#irodsContent').modal('hide');
         }
     });
