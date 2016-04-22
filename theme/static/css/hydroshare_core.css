@@ -2618,17 +2618,20 @@ h4.title {
 
 #item-selectors {
     display: none;
-    font-size: 14px;
-    border: 1px solid #ddd;
-    margin-bottom: 10px;
 }
 
-#item-selectors tbody td {
+.resource-custom-table {
+    font-size: 14px;
+    border: 1px solid #ddd !important;
+    margin-bottom: 10px !important;
+}
+
+.resource-custom-table tbody td {
 	border-bottom: 1px solid #EEE;
 }
 
-#item-selectors thead th {
-    border-bottom: 1px solid #DDD;
+.resource-custom-table thead th {
+    border-bottom: 1px solid #DDD !important;
 }
 
 #item-selectors thead th:first-child {
@@ -3250,4 +3253,8 @@ button.no-style:focus {
 
 .funding-agencies-table {
     border: 1px solid #DDD;
+}
+
+#collection-table_wrapper {
+    margin-bottom: 20px;
 }
