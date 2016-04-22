@@ -783,7 +783,7 @@ def delete_resource_from_index(obj):
     if not isinstance(backend, SolrSearchBackend):
         raise ImproperlyConfigured("'%s' isn't configured as a SolrEngine)." % backend.connection_alias)
     # delete the Django object from the solr index
-    backend.delete(obj)
+    backend.remove(obj)
 
 
 def delete_resource(pk):
