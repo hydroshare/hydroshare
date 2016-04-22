@@ -1217,6 +1217,7 @@
 
                 $("#list-roles a").click(onRoleSelect);
                 $("#id_user-autocomplete").attr("placeholder", "Search by name or username");
+                $("#id_group-autocomplete").attr("placeholder", "Search by group name");
 
                 // hide add file button if necessary
                 var file_count = $("#file-count").attr('value');
@@ -1415,6 +1416,28 @@
                     $(this).on('change', function () {
                         $(this).closest("form").find("button").show();
                     });
+                });
+
+
+                $(".add-view-group-form").hide();
+                // Toggle invite user or group form
+                $("input[name='chkInvite']").change(function () {
+                    var form = $("#add-access-form");
+                    var action = form.attr("action");
+                    if (this.checked) {
+                        if ($(this).val() == "users") {
+                            $(".add-view-user-form").show();
+                            $(".add-view-group-form").hide();
+                            action = action.replace("share-resource-with-group", "share-resource-with-user");
+                            form.attr("action", action);
+                        }
+                        else {
+                            $(".add-view-group-form").show();
+                            $(".add-view-user-form").hide();
+                            action = action.replace("share-resource-with-user", "share-resource-with-group");
+                            form.attr("action", action);
+                        }
+                    }
                 });
             });
         </script>

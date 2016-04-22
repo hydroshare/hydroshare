@@ -1213,8 +1213,14 @@ a[data-toggle='tab']{
     overflow: hidden;
 }
 
-#id_user-wrapper{
-	width: 60%;
+.add-view-user-form, .add-view-group-form {
+    width: 60%;
+    display: inline-block;
+    float: left;
+}
+
+#id_user-wrapper, #id_group-wrapper {
+	width: 100%;
 	padding: 1px;
 	border: 1px solid #CCC;
 	height: 34px;
@@ -1230,7 +1236,7 @@ a[data-toggle='tab']{
 	border-bottom-left-radius: 0;
 }
 
-#add-access-form #id_user-autocomplete {
+#id_user-autocomplete, #id_group-autocomplete {
     width: 100%;
     height: 100%;
     border: 0;
