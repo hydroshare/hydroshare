@@ -1383,7 +1383,17 @@ class BaseResource(Page, AbstractResource):
 
     @property
     def verbose_name(self):
-        return self.get_content_model()._meta.verbose_name
+        from hs_core.hydroshare.utils import get_resource_types
+        res_cls = None
+        for tp in get_resource_types():
+            if self.resource_type == tp.__name__:
+                res_cls = tp
+                break
+        if res_cls is not None:
+            res_obj = res_cls()
+            return res_obj._meta.verbose_name
+        else:
+            return self._meta.verbose_name
 
     @classmethod
     def get_supported_upload_file_types(cls):
