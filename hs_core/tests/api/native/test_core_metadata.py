@@ -1037,20 +1037,35 @@ class TestCoreMetadata(MockIRODSTestCaseMixin, TestCase):
         self.assertEquals(agency_element.award_number, 'NSF-101-20-6789')
         self.assertEquals(agency_element.agency_url, 'http://www.nsf.gov')
 
-        # test that all funding agency should be unique award number for a specific resource
+        # test that there can't be 2 funding agency elements with same name and award number
+        # for a given resource
         with self.assertRaises(Error):
-            resource.create_metadata_element(self.res.short_id,'fundingagency', agency_name='EPA',
+            resource.create_metadata_element(self.res.short_id,'fundingagency', agency_name='USDA',
                                              award_number='NSF-101-20-6789')
 
+        # test that there can be 2 funding agency elements with same name or same award number
+        # for a given resource
+
+        # test of duplicate award number
+        resource.create_metadata_element(self.res.short_id,'fundingagency', agency_name='NSF',
+                                         award_number='NSF-101-20-6789')
+
+        self.assertEquals(self.res.metadata.funding_agencies.all().filter(award_number='NSF-101-20-6789').count(), 2)
+
+        # test of duplicate agency name
+        resource.create_metadata_element(self.res.short_id,'fundingagency', agency_name='USDA',
+                                         award_number='USDA-102-10-3A678')
+
         # test that agency name is required for  creating a funding agency element
+        self.assertEquals(self.res.metadata.funding_agencies.all().count(), 4)
         with self.assertRaises(ValidationError):
             resource.create_metadata_element(self.res.short_id,'fundingagency',
                                              award_title="Modeling on cloud",
                                              award_number="101-20-6789",
                                              agency_url="http://www.usa.gov")
 
-        # at this point there should be 2 funding agency element
-        self.assertEqual(self.res.metadata.funding_agencies.all().count(), 2)
+        # at this point there should be 4 funding agency element
+        self.assertEqual(self.res.metadata.funding_agencies.all().count(), 4)
 
         # test that it is possible to delete all relation elements
         for agency in self.res.metadata.funding_agencies.all():

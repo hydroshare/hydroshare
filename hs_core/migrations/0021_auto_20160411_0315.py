@@ -26,6 +26,6 @@ class Migration(migrations.Migration):
         ),
         migrations.AlterUniqueTogether(
             name='fundingagency',
-            unique_together=set([('content_type', 'object_id', 'award_number')]),
+            unique_together=set([('content_type', 'object_id', 'award_number', 'agency_name')]),
         ),
     ]
