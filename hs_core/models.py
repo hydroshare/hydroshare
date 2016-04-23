@@ -1792,6 +1792,16 @@ class CoreMetaData(models.Model):
         rdfs1_isDefinedBy = etree.SubElement(rdf_Description_resource, '{%s}isDefinedBy' % self.NAMESPACES['rdfs1'])
         rdfs1_isDefinedBy.text = current_site_url() + "/terms"
 
+        # encode extended key/value arbitrary metadata
+        resource = BaseResource.objects.filter(object_id=self.id).first()
+        for key in resource.extra_metadata:
+            hsterms_key_value = etree.SubElement(rdf_Description, '{%s}extendedMetadata' % self.NAMESPACES['hsterms'])
+            hsterms_key_value_rdf_Description = etree.SubElement(hsterms_key_value, '{%s}Description' % self.NAMESPACES['rdf'])
+            hsterms_key = etree.SubElement(hsterms_key_value_rdf_Description, '{%s}key' % self.NAMESPACES['hsterms'])
+            hsterms_key.text = key
+            hsterms_value = etree.SubElement(hsterms_key_value_rdf_Description, '{%s}value' % self.NAMESPACES['hsterms'])
+            hsterms_value.text = resource.extra_metadata[key]
+
         return self.XML_HEADER + '\n' + etree.tostring(RDF_ROOT, pretty_print=pretty_print)
 
     def add_metadata_element_to_xml(self, root, md_element, md_fields):
