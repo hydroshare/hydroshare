@@ -33,7 +33,7 @@
         {% include "resource-landing-page/title-section.html" %}
 
         {# ======= Top-right buttons ======= #}
-        {% include "resource-landing-page/top-right-buttons.html" %}
+        {% include "resource-landing-page/top-right-buttons.html" with show_manage_access=show_manage_access %}
 
         {# ======= Title and header content ======= #}
         {% include "resource-landing-page/resource-header.html" %}
@@ -384,8 +384,8 @@
                                         <div class="row">
                                         <div class="col-sm-12">
                                             <legend>Spatial</legend>
-                                            <div class="info-group" style="margin-top: -20px; margin-bottom:20px;">
-                                                <table>
+                                            <div class="coverage-container">
+                                                <table class="info-table">
                                                     <tbody>
                                                         {% if spatial_coverage.name %}
                                                         <tr>
@@ -458,7 +458,6 @@
                                                 <div class="text-muted" style="margin-top:20px;">WGS 84 decimal degrees</div>
                                             {% endif %}
                                         </div>
-
                                     </div>
                                     </div>
                                     {% if temporal_coverage %}
@@ -474,7 +473,6 @@
                                             </div>
                                         </div>
                                         {% endif %}
-
                                     {% else %}
                                         <div class="form-group">
                                             <div class="col-md-8 col-sm-12 col-xs-12" id="coverage-spatial">
@@ -484,8 +482,8 @@
                                                         {% csrf_token %}
                                                          <div class="col-sm-12">
                                                             <legend>Spatial</legend>
-                                                            <div class="info-group" style="margin-top: -20px; margin-bottom:20px;">
-                                                                 <table>
+                                                            <div class="coverage-container">
+                                                                 <table class="info-table" >
                                                                      <tbody>
                                                                          <tr>
                                                                              <th class="text-muted">Coordinate System/Geographic Projection</th>
@@ -857,6 +855,41 @@
 
         {%  block modal %}
             {% include "resource-landing-page/modals.html" %}
+        {%  endblock %}
+
+
+        <!-- Modal -->
+        {%  block modal_add_file %}
+        <div class="modal fade" id="add-file-dialog" tabindex="-1" role="dialog" aria-labelledby="add-file"
+             aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <form action="/hsapi/_internal/{{ cm.short_id }}/add-file-to-resource/" method="POST"
+                          enctype="multipart/form-data">
+
+                        <div class="modal-header">
+                            <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                            <h4 class="modal-title" id="add-file">Add file to resource</h4>
+                        </div>
+                        <div class="modal-body">
+                            {% csrf_token %}
+                            <div class="form-group">
+                                <label for="add-file-input">Select files:</label>
+                                <input type="file" name="files" id="add-file-input" multiple/>
+                            </div>
+                            <div id="file-types">Any file type can be uploaded.</div>
+                            <div id="file-multiple">Multiple file upload is allowed.</div>
+                            <br>
+                            <h3 style="color: red" id="file-type-error"></h3>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                            <button type="submit" class="btn btn-primary">Save changes</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
         {%  endblock %}
 
     {% endwith %}

@@ -7,7 +7,7 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
     short_id = indexes.CharField(model_attr='short_id')
     doi = indexes.CharField(model_attr='doi', null=True)
     author = indexes.CharField(model_attr='first_creator', faceted=True)
-    title = indexes.CharField(model_attr='title', faceted=True)
+    title = indexes.CharField(faceted=True)
     abstract = indexes.CharField(model_attr='description')
     creators = indexes.MultiValueField(faceted=True)
     contributors = indexes.MultiValueField()
@@ -26,7 +26,7 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
     language = indexes.CharField(faceted=True)
     sources = indexes.MultiValueField()
     relations = indexes.MultiValueField()
-    resource_type = indexes.CharField(model_attr='resource_type', faceted=True)
+    resource_type = indexes.CharField(faceted=True)
     comments = indexes.MultiValueField()
     comments_count = indexes.IntegerField(faceted=True)
     owners_logins = indexes.MultiValueField(faceted=True)
@@ -45,6 +45,9 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
 
     def index_queryset(self, using=None):
         return self.get_model().objects.all()
+
+    def prepare_title(self, obj):
+        return obj.metadata.title.value
 
     def prepare_creators(self, obj):
          return [creator.name for creator in obj.metadata.creators.all()]
@@ -97,6 +100,9 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
 
     def prepare_relations(self, obj):
         return [relation.value for relation in obj.metadata.relations.all()]
+
+    def prepare_resource_type(self, obj):
+        return obj.get_content_model()._meta.verbose_name
 
     def prepare_comments(self, obj):
         return [comment.comment for comment in obj.comments.all()]

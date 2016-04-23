@@ -118,8 +118,17 @@
                              <h3 style="color: red" id="file-type-error"></h3>
                           <hr>
                           <div>
-                              <strong><input type="checkbox" name="extract-metadata" value="No" onclick="setCheckboxValue(this)"> Check to extract metadata from this uploaded file</strong>
-                              <h3 style="color:red">If metadata is extracted, existing metadata will be replaced with the extracted ones.</h3>
+                              <div class="checkbox">
+                                  <label>
+                                      <input type="checkbox" name="extract-metadata" value="No" onclick="setCheckboxValue(this)">
+                                      Check to extract metadata from this uploaded file
+                                  </label>
+                              </div>
+
+                              <div class="alert alert-warning" role="alert">
+                                  <span class="glyphicon glyphicon-info-sign" aria-hidden="true"></span>
+                                  If metadata is extracted, existing metadata will be replaced with the extracted ones.
+                              </div>
                           </div>
                   </div>
                   <div class="modal-footer">
