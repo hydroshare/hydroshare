@@ -13,6 +13,7 @@ from django.http import HttpResponseRedirect, HttpResponse
 from django.shortcuts import get_object_or_404, render_to_response, render
 from django.template import RequestContext
 from django.core import signing
+from django.db import Error
 from django import forms
 
 from rest_framework.decorators import api_view
@@ -130,6 +131,39 @@ def is_multiple_file_allowed_for_resource_type(request, resource_type, *args, **
         return HttpResponse(json.dumps(ajax_response_data))
     else:
         return HttpResponseRedirect(request.META['HTTP_REFERER'])
+
+
+def update_key_value_metadata(request, shortkey, *args, **kwargs):
+    """
+    This one view function is for CRUD operation for resource key/value arbitrary metadata
+    key/value data in request.POST will be assigned to the resource.extra_metadata field
+    """
+    res, _, _ = authorize(request, shortkey, needed_permission=ACTION_TO_AUTHORIZE.EDIT_RESOURCE)
+    res.extra_metadata = request.POST
+    is_update_success = True
+    err_message = ""
+    try:
+        res.save()
+    except Error as ex:
+        is_update_success = False
+        err_message = ex.message
+
+    if request.is_ajax():
+        if is_update_success:
+            ajax_response_data = {'status': 'success'}
+        else:
+            ajax_response_data = {'status': 'error', 'message': err_message}
+        return HttpResponse(json.dumps(ajax_response_data))
+
+    if 'resource-mode' in request.POST:
+        request.session['resource-mode'] = 'edit'
+
+    if is_update_success:
+        messages.success(request, "Metadata update successful")
+    else:
+        messages.error(request, err_message)
+
+    return HttpResponseRedirect(request.META['HTTP_REFERER'])
 
 
 def add_metadata_element(request, shortkey, element_name, *args, **kwargs):
