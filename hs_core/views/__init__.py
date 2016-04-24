@@ -545,6 +545,7 @@ class GroupForm(forms.Form):
     name = forms.CharField(required=True)
     description = forms.CharField(required=True)
     purpose = forms.CharField(required=False)
+    picture = forms.ImageField(required=False)
 
     def clean_name(self):
         data = self.cleaned_data['name']
@@ -656,18 +657,19 @@ def create_resource(request, *args, **kwargs):
 
 @login_required
 def create_user_group(request, *args, **kwargs):
-    status = 'success'
-    group_form = GroupForm(data=request.POST)
+    group_form = GroupForm(request.POST, request.FILES)
     if group_form.is_valid():
         new_group = request.user.uaccess.create_group(title=group_form.cleaned_data['name'],
                                                       description=group_form.cleaned_data['description'],
                                                       purpose=group_form.cleaned_data['purpose'])
-        ajax_response_data = {'status': status, 'group_id': new_group.id}
+        if 'picture' in request.FILES:
+            new_group.picture = request.FILES['picture']
+            new_group.save()
+
+        messages.success(request, "Group creation was successful.")
         return HttpResponseRedirect(reverse('Group', args=[new_group.id]))
     else:
         messages.error(request, "Something went wrong while creating this group.")
-        # status = 'error'
-        # ajax_response_data = {'status': status, 'errors': group_form.errors.as_json()}
 
     return HttpResponseRedirect(request.META['HTTP_REFERER'])
 
@@ -678,12 +680,14 @@ def update_user_group(request, group_id, *args, **kwargs):
     group_to_update = utils.group_from_id(group_id)
     status = 'error'
     if user.uaccess.can_change_group(group_to_update):
-        group_form = GroupForm(data=request.POST)
+        group_form = GroupForm(request.POST, request.FILES)
         if group_form.is_valid():
             group_to_update.name = group_form.cleaned_data['name']
             group_to_update.save()
             group_to_update.gaccess.description = group_form.cleaned_data['description']
             group_to_update.gaccess.purpose = group_form.cleaned_data['purpose']
+            if 'picture' in request.FILES:
+                group_to_update.gaccess.picture = request.FILES['picture']
             group_to_update.gaccess.save()
             status = 'success'
             ajax_response_data = {'status': status, 'updated_group': group_to_update}

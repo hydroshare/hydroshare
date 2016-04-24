@@ -2283,6 +2283,7 @@ class GroupAccess(models.Model):
     description = models.TextField(null=False, blank=False)
     purpose = models.TextField(null=True, blank=True)
     date_created = models.DateTimeField(editable=False, auto_now_add=True)
+    picture = models.ImageField(upload_to='group', null=True, blank=True)
 
     ####################################
     # group membership: owners, edit_users, view_users are parallel to those in resources

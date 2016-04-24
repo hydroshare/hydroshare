@@ -28,7 +28,7 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='groupaccess',
             name='date_created',
-            field=models.DateTimeField(default=datetime.datetime(2016, 3, 13, 5, 38, 42, 990769), auto_now_add=True),
+            field=models.DateTimeField(default=datetime.datetime(2016, 4, 24, 16, 28, 14, 996767), auto_now_add=True),
             preserve_default=False,
         ),
         migrations.AddField(
@@ -36,6 +36,11 @@ class Migration(migrations.Migration):
             name='description',
             field=models.TextField(default=''),
             preserve_default=False,
+        ),
+        migrations.AddField(
+            model_name='groupaccess',
+            name='picture',
+            field=models.ImageField(null=True, upload_to=b'group', blank=True),
         ),
         migrations.AddField(
             model_name='groupaccess',
