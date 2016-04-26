@@ -4,6 +4,7 @@
 
 {% block extra_head %}
       <link href="{{ STATIC_URL }}css/site_base_irods.css" rel="stylesheet"/>
+        <link rel="stylesheet" href='//cdn.datatables.net/1.10.10/css/jquery.dataTables.min.css'/>
 {% endblock %}
 
 {% block main %}
@@ -229,6 +230,12 @@
                                 </a>
                             </li>
                         {% endif %}
+                         <li class="col-xs-2 col-md-2">
+                            <a href="#extraMetaTab" data-toggle="tab" title="Extra Metadata">
+                                <span class="glyphicon glyphicon-folder-close"> </span>
+                                &nbspExtra Metadata
+                            </a>
+                         </li>
                     </ul>
                 </div>
                 <div class="tabs-body">
@@ -841,6 +848,56 @@
                                 {%  endif %}
                             </div>
                         {% endif %}
+                        <!-- ========= EXTRA METADATA TAB ========= -->
+                        <div class="tab-pane" id="extraMetaTab">
+                                {% if not metadata_form %}
+                                    view mode
+                                {% else %}
+                                    edit mode
+                                {%  endif %}
+                                {% if metadata_form %}
+                                    <a type="button" class="btn btn-success" onclick="showAddEditExtraMetaPopup(false, '')">
+                                                            <span class="glyphicon glyphicon-plus"><span class="button-label"> Add ...</span></span>
+                                    </a>
+                                {% endif %}
+                                <table id="extraMetaTable" class="table-hover table-striped" width="100%">
+                                    <thead>
+                                    <tr>
+
+                                        <th>Name</th>
+                                        <th>Value</th>
+                                        {% if metadata_form %}
+                                            <th>Edit/Remove</th>
+                                        {% endif %}
+                                    </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for extra_meta_name, extra_meta_value in extra_matadata_dict.items %}
+                                            <tr id="{{ forloop.counter0 }}">
+                                                <td>
+                                                    {{ extra_meta_name }}
+                                                </td>
+                                                <td>
+                                                    {{ extra_meta_value }}
+                                                </td>
+                                                {% if metadata_form %}
+                                                    <td>
+                                                        <span onclick="showAddEditExtraMetaPopup(true, '{{ forloop.counter0 }}')" data-form-type="toggle-favorite"
+                                                  class="glyphicon glyphicon-edit btn-inline-favorite"></span>
+                                                        <span onclick="removeExtraMetadataFromTable('{{ forloop.counter0 }}')" data-form-type="toggle-favorite"
+                                                  class="glyphicon glyphicon-remove btn-inline-favorite"></span>
+                                                    </td>
+                                                {% endif %}
+                                            </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            {% if metadata_form %}
+                                <input class="btn btn-primary" type="button" id="save-extra-meta" onclick="saveExtraMetadata();" value="Save Changes"/>
+                            {% endif %}
+
+                        </div>
+
                     </div>
                 </div>
             </div>
@@ -900,6 +957,7 @@
         <script src="https://maps.googleapis.com/maps/api/js?libraries=drawing"></script>
         <script type="text/javascript" src="{{ STATIC_URL }}js/resourceLandingAjax.js"></script>
         <script type="text/javascript" src="{{ STATIC_URL }}js/irods.js"></script>
+        <script type="text/javascript" src='//cdn.datatables.net/1.10.10/js/jquery.dataTables.js'></script>
         <script type="text/javascript">
             function onRoleSelect(event) {
                 var el = $(event.target);
@@ -1042,6 +1100,101 @@
                 }, duration);
                 document.body.appendChild(el);
                 $(el).hide().fadeIn(400);
+            }
+
+            function showAddEditExtraMetaPopup(edit, row_id_str)
+            {
+                $("#edit_extra_meta_row_id").val('');
+                $("#old_extra_meta_name").val('');
+                $("#extra_meta_name_input").val('');
+                $("#extra_meta_value_input").val('');
+                if (edit)
+                {
+                    var t = $('#extraMetaTable').DataTable();
+                    var row_to_edit = t.row("#" + row_id_str);
+                    var oldname = row_to_edit.data()[0];
+                    var oldvalue = row_to_edit.data()[1];
+                    $("#edit_extra_meta_row_id").val(row_id_str);
+                    $("#old_extra_meta_name").val(oldname);
+                    $("#extra_meta_name_input").val(oldname);
+                    $("#extra_meta_value_input").val(oldvalue);
+                    $("#extra_meta_title").text("Edit Extra Metadata");
+                }
+                else
+                {
+                    $("#extra_meta_title").text("Add Extra Metadata");
+                }
+                $('#extraMetaDialog').modal('show');
+            }
+
+            function addEditExtraMeta2Table()
+            {
+                var t = $('#extraMetaTable').DataTable();
+                if ($("#edit_extra_meta_row_id").val() == "")
+                {
+                    var extra_meta_name = $("#extra_meta_name_input").val();
+                    var extra_meta_value = $("#extra_meta_value_input").val();
+
+                    var row_id_0_base = t.rows().count();
+                    var row_ele = t.row.add( [extra_meta_name,extra_meta_value,"edit"] ).draw( false).node();
+
+                    $(row_ele).attr( 'id', row_id_0_base);
+                }
+                else
+                {
+                    var row_to_edit = t.row("#" + $("#edit_extra_meta_row_id").val());
+                    var updated_data_array = row_to_edit.data();
+                    updated_data_array[0] = $("#extra_meta_name_input").val();
+                    updated_data_array[1] = $("#extra_meta_value_input").val();
+                    row_to_edit.data(updated_data_array)
+                    t.rows().invalidate().draw();
+                }
+
+            }
+
+            function saveExtraMetadata()
+            {
+                json_obj = {};
+                $('#extraMetaTable tbody tr').each(
+                        function(i, row) {
+                            var extra_meta_name = $(row).find("td").eq(0).html();
+                            var extra_meta_value = $(row).find("td").eq(1).html();
+                            json_obj[extra_meta_name] = extra_meta_value;
+                        }
+                );
+
+                json_str = JSON.stringify(json_obj);
+                json_obj = JSON.parse(json_str)
+
+                var update_key_value_metadata_url = "/hsapi/_internal/" + '{{ res_id }}' + "/update-key-value-metadata/";
+                alert(update_key_value_metadata_url);
+                $.ajax({
+                type: "POST",
+                url: update_key_value_metadata_url,
+                dataType: "json",
+                data: json_obj,
+                success: function(result) {
+                /* The div contains now the updated form */
+                json_response = result;
+                if (json_response.status === 'success') {
+
+                    alert("success");
+                }
+                else {
+                   alert("failed");
+                }
+                },
+                error: function(XMLHttpRequest, textStatus, errorThrown) {
+                alert("error");
+                }
+                });
+
+            } // function saveExtraMetadata()
+
+            function removeExtraMetadataFromTable(row_id)
+            {
+                var removed_row = $('#extraMetaTable').DataTable().row('#' + row_id);
+                removed_row.remove().draw(false);
             }
 
             $(document).ready(function () {
