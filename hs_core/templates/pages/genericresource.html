@@ -1131,14 +1131,14 @@
 
                 if(extra_meta_name.length==0 || extra_meta_value.length==0)
                 {
-                    $("#extra_meta_msg").html("<font color='red'>Name and Value are required fields that cannot be left blank.</font>");
+                    $("#extra_meta_msg").html("<font color='red'>Both name and value are required fields that cannot be left blank.</font>");
                     $("#extra_meta_msg").show();
                     return;
                 }
 
                 if(foundDuplicatedName(t, extra_meta_name, edit_extra_meta_row_id))
                 {
-                    $("#extra_meta_msg").html("<font color='red'>Name already exists. Please input a different Name.</font>");
+                    $("#extra_meta_msg").html("<font color='red'>The name already exists. Please input a different name.</font>");
                     $("#extra_meta_msg").show();
                     return;
                 }
