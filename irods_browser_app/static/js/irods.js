@@ -331,7 +331,7 @@ function irods_upload() {
             }
             else{
                 $("#irods-sel-file-uz").text(json.irods_sel_file);
-                $('#irods_file_names-uz').val(json.irods_file_names);
+                $('#irods_file_names_uz').val(json.irods_file_names);
             }
             $("#file-type-error").text(json.file_type_error);
             $('#irodsContent').modal('hide');

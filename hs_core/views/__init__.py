@@ -29,7 +29,7 @@ from django_irods.icommands import SessionException
 from hs_core import hydroshare
 from hs_core.hydroshare.utils import get_resource_by_shortkey, resource_modified
 from .utils import authorize, upload_from_irods, ACTION_TO_AUTHORIZE, run_script_to_update_hyrax_input_files, get_my_resources_list
-from hs_core.models import GenericResource, resource_processor, CoreMetaData, Relation
+from hs_core.models import GenericResource, resource_processor, CoreMetaData
 from hs_core.hydroshare.resource import METADATA_STATUS_SUFFICIENT, METADATA_STATUS_INSUFFICIENT
 
 from . import resource_rest_api
@@ -550,11 +550,13 @@ def create_resource(request, *args, **kwargs):
             context = {'resource_creation_error': ex.stderr}
             return render_to_response('pages/create-resource.html', context, context_instance=RequestContext(request))
 
+    irods_fnames_uz = request.POST.get('irods_file_names_uz')
+
     url_key = "page_redirect_url"
 
     try:
         page_url_dict, res_title, metadata = hydroshare.utils.resource_pre_create_actions(resource_type=resource_type, files=resource_files,
-                                                                    resource_title=res_title,
+                                                                    resource_title=res_title, ref_res_file_names=irods_fnames_uz,
                                                                     page_redirect_url_key=url_key, **kwargs)
     except utils.ResourceFileSizeException as ex:
         context = {'file_size_error': ex.message}
@@ -577,7 +579,9 @@ def create_resource(request, *args, **kwargs):
             owner=request.user,
             title=res_title,
             metadata=metadata,
+            requesting_user = request.user,
             files=resource_files,
+            ref_res_file_names=irods_fnames_uz,
             content=res_title
     )
     # except Exception as ex:
@@ -594,15 +598,6 @@ def create_resource(request, *args, **kwargs):
 
     return HttpResponseRedirect(resource.get_absolute_url())
 
-
-@login_required
-def get_file(request, *args, **kwargs):
-    from django_irods.icommands import RodsSession
-    name = kwargs['name']
-    session = RodsSession("./", "/usr/bin")
-    session.runCmd("iinit");
-    session.runCmd('iget', [ name, 'tempfile.' + name ])
-    return HttpResponse(open(name), content_type='x-binary/octet-stream')
 
 processor_for(GenericResource)(resource_processor)
 

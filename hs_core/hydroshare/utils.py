@@ -151,6 +151,27 @@ def get_user_zone_status_info(user):
     return in_production, enable_user_zone
 
 
+def GetUserZoneFileSize(user, fname):
+    """
+    Get size of a data object from iRODS user zone
+    Args:
+        user: the requesting user whose user name is the same as its corresponding iRODS account
+        fname: the logical iRODS file name with full logical path
+
+    Returns:
+    the size of the file
+    """
+    irods_storage = IrodsStorage()
+    in_production, enable_user_zone = get_user_zone_status_info(user)
+    if enable_user_zone and not in_production:
+        # for testing, has to switch irods session to hydroshare production proxy iRODS user
+        irods_storage.set_user_session(username=settings.HS_WWW_IRODS_PROXY_USER,
+                                   password=settings.HS_WWW_IRODS_PROXY_USER_PWD,
+                                   host=settings.HS_WWW_IRODS_HOST,
+                                   port=settings.IRODS_PORT,
+                                   zone=settings.HS_WWW_IRODS_ZONE)
+    return irods_storage.size(fname)
+
 # TODO: Tastypie left over. This needs to be deleted
 def serialize_science_metadata(res):
     js = get_serializer('json')()
@@ -303,8 +324,8 @@ def validate_resource_file_count(resource_cls, files, resource=None):
                 raise ResourceFileValidationException(err_msg)
 
 
-def resource_pre_create_actions(resource_type, resource_title, page_redirect_url_key, files=(), metadata=None,
-                                **kwargs):
+def resource_pre_create_actions(resource_type, resource_title, page_redirect_url_key,
+                                files=(), ref_res_file_names='', metadata=None, **kwargs):
     from.resource import check_resource_type
     if not resource_title:
         resource_title = 'Untitled resource'
@@ -331,7 +352,7 @@ def resource_pre_create_actions(resource_type, resource_title, page_redirect_url
     # to redirect to their own page for resource creation rather than use core resource creation code
     pre_create_resource.send(sender=resource_cls, metadata=metadata, files=files, title=resource_title,
                              url_key=page_redirect_url_key, page_url_dict=page_url_dict,
-                             validate_files=file_validation_dict, **kwargs)
+                             validate_files=file_validation_dict, ref_res_file_names=ref_res_file_names, **kwargs)
 
     if len(files) > 0:
         check_file_dict_for_error(file_validation_dict)
@@ -433,7 +454,7 @@ def get_party_data_from_user(user):
     return party_data
 
 
-def resource_file_add_pre_process(resource, files, user, extract_metadata=False, **kwargs):
+def resource_file_add_pre_process(resource, files, user, extract_metadata=False, ref_res_file_names='', **kwargs):
     resource_cls = resource.__class__
     validate_resource_file_size(files)
     validate_resource_file_type(resource_cls, files)
@@ -441,19 +462,21 @@ def resource_file_add_pre_process(resource, files, user, extract_metadata=False,
 
     file_validation_dict = {'are_files_valid': True, 'message': 'Files are valid'}
     pre_add_files_to_resource.send(sender=resource_cls, files=files, resource=resource, user=user,
-                                   validate_files=file_validation_dict, extract_metadata=extract_metadata, **kwargs)
+                                   ref_res_file_names=ref_res_file_names, validate_files=file_validation_dict,
+                                   extract_metadata=extract_metadata, **kwargs)
 
     check_file_dict_for_error(file_validation_dict)
 
 
-def resource_file_add_process(resource, files, user, extract_metadata=False, **kwargs):
+def resource_file_add_process(resource, files, user, extract_metadata=False, ref_res_file_names='', **kwargs):
     from .resource import add_resource_files
-    resource_file_objects = add_resource_files(resource.short_id, *files)
+    resource_file_objects = add_resource_files(resource.short_id, ref_res_file_names=ref_res_file_names, user=user, *files)
 
     # receivers need to change the values of this dict if file validation fails
     # in case of file validation failure it is assumed the resource type also deleted the file
     file_validation_dict = {'are_files_valid': True, 'message': 'Files are valid'}
-    post_add_files_to_resource.send(sender=resource.__class__, files=files, resource=resource, user=user,
+    post_add_files_to_resource.send(sender=resource.__class__, files=files, ref_res_file_names=ref_res_file_names,
+                                    resource=resource, user=user,
                                     validate_files=file_validation_dict, extract_metadata=extract_metadata, **kwargs)
 
     check_file_dict_for_error(file_validation_dict)
@@ -462,17 +485,26 @@ def resource_file_add_process(resource, files, user, extract_metadata=False, **k
     return resource_file_objects
 
 
-def add_file_to_resource(resource, f):
+def add_file_to_resource(resource, f, ref_res_file_name='', user=None):
     """
     Add a ResourceFile to a Resource.  Adds the 'format' metadata element to the resource.
     :param resource: Resource to which file should be added
     :param f: File-like object to add to a resource
+    :param ref_res_file_name: the logical file name of the resource content file for reference iRODS resource;
+                              By default, it is empty. A non-empty value indicates this is a reference iRODS
+                              logical file name in which case the parameter f is ignored as no file will be uploaded
+                              but instead a reference entry is created to point to the file in iRODS user zone
     :return: The identifier of the ResourceFile added.
     """
-    ret = ResourceFile.objects.create(content_object=resource,
+    if ref_res_file_name:
+        size = GetUserZoneFileSize(user, ref_res_file_name)
+        ret = ResourceFile.objects.create(content_object=resource, resource_file_name=ref_res_file_name, resource_file_size=size)
+        file_format_type = get_file_mime_type(ref_res_file_name)
+    else:
+        ret = ResourceFile.objects.create(content_object=resource,
                                       resource_file=File(f) if not isinstance(f, UploadedFile) else f)
-    # add format metadata element if necessary
-    file_format_type = get_file_mime_type(f.name)
+        # add format metadata element if necessary
+        file_format_type = get_file_mime_type(f.name)
     if file_format_type not in [mime.value for mime in resource.metadata.formats.all()]:
         resource.metadata.create_element('format', value=file_format_type)
 

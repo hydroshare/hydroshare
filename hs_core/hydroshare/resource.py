@@ -2,7 +2,7 @@ import os
 import zipfile
 import shutil
 import logging
-
+import string
 import requests
 
 from django.conf import settings
@@ -346,10 +346,10 @@ def add_zip_file_contents_to_resource_async(resource, f):
 
 
 def create_resource(
-        resource_type, owner, title,
+        resource_type, owner, title, requesting_user=None,
         edit_users=None, view_users=None, edit_groups=None, view_groups=None,
         keywords=(), metadata=None, content=None,
-        files=(), create_metadata=True,
+        files=(), ref_res_file_names='', create_metadata=True,
         create_bag=True, unpack_file=False, **kwargs):
 
 
@@ -435,7 +435,8 @@ def create_resource(
             # few seconds.  We may want to add the option to do this
             # asynchronously if the file size is large and would take
             # more than ~15 seconds to complete.
-            add_resource_files(resource.short_id, *files)
+            add_resource_files(resource.short_id, ref_res_file_names=ref_res_file_names,
+                               user=requesting_user, *files)
 
         # by default resource is private
         resource_access = ResourceAccess(resource=resource)
@@ -685,7 +686,7 @@ def update_resource(
     return resource
 
 
-def add_resource_files(pk, *files):
+def add_resource_files(pk, ref_res_file_names='', user=None, *files):
     """
     Called by clients to update a resource in HydroShare by adding a single file.
 
@@ -722,6 +723,10 @@ def add_resource_files(pk, *files):
     ret = []
     for f in files:
         ret.append(utils.add_file_to_resource(resource, f))
+    if ref_res_file_names:
+        ifnames = string.split(ref_res_file_names, ',')
+        for ifname in ifnames:
+            ret.append(utils.add_file_to_resource(resource, None, ref_res_file_name=ifname, user=user))
     return ret
 
 

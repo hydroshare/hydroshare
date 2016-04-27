@@ -1276,7 +1276,13 @@ class ResourceFile(models.Model):
     content_type = models.ForeignKey(ContentType)
 
     content_object = GenericForeignKey('content_type', 'object_id')
-    resource_file = models.FileField(upload_to=get_path, max_length=500, storage=IrodsStorage() if getattr(settings,'USE_IRODS', False) else DefaultStorage())
+    resource_file = models.FileField(upload_to=get_path, max_length=500, null=True, blank=True,
+                                     storage=IrodsStorage() if getattr(settings,'USE_IRODS', False) else DefaultStorage())
+    # this optional field is added for use by reference iRODS resources where resource content files are not copied over from iRODS user zone to HydroShare zone,
+    # in which case resource_file is empty, but we record iRODS logical resource file name to write to AVU iRODS metadata after the reference resource is created
+    resource_file_name = models.CharField(max_length=255, null=True, blank=True)
+    resource_file_size = models.CharField(max_length=15, null=True, blank=True)
+
 
 class Bags(models.Model):
     object_id = models.PositiveIntegerField()

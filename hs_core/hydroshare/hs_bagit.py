@@ -126,9 +126,15 @@ def create_bag_files(resource):
     files = ResourceFile.objects.filter(object_id=resource.id)
     resFiles = []
     for n, f in enumerate(files):
-        filename = os.path.basename(f.resource_file.name)
-        resFiles.append(AggregatedResource(os.path.join('{hs_url}/resource/{res_id}/data/contents/{file_name}'.format(
-            hs_url=current_site_url, res_id=resource.short_id, file_name=filename))))
+        if f.resource_file_name:
+            filename = f.resource_file_name
+            resFiles.append(AggregatedResource(os.path.join('{hs_url}/resource/{res_id}/data/contents{file_name}'.format(
+                hs_url=current_site_url, res_id=resource.short_id, file_name=filename))))
+        else:
+            filename = os.path.basename(f.resource_file.name)
+            resFiles.append(AggregatedResource(os.path.join('{hs_url}/resource/{res_id}/data/contents/{file_name}'.format(
+                hs_url=current_site_url, res_id=resource.short_id, file_name=filename))))
+        
 
         resFiles[n]._ore.isAggregatedBy = ag_url
         resFiles[n]._dc.format = hs_core_utils.get_file_mime_type(filename)
