@@ -1197,15 +1197,16 @@
                 <strong>Error! </strong> \
                 Extra metadata failed to update.\
                 </div>' ;
-                json_obj = {};
-                $('#extraMetaTable tbody tr').each(
-                        function(i, row) {
-                            var extra_meta_name = $(row).find("td").eq(0).html();
-                            var extra_meta_value = $(row).find("td").eq(1).html();
-                            json_obj[extra_meta_name.trim()] = extra_meta_value.trim();
-                        }
-                );
-                json_str = JSON.stringify(json_obj);
+
+                var json_obj = {};
+                var t = $('#extraMetaTable').DataTable();
+                t.rows(). every(function ( rowIdx, tableLoop, rowLoop ) {
+                    var extra_meta_name = this.data()[0].trim();
+                    var extra_meta_value = this.data()[1].trim();
+                    json_obj[extra_meta_name] = extra_meta_value;
+                });
+
+                var json_str = JSON.stringify(json_obj);
                 json_obj = JSON.parse(json_str);
                 var update_key_value_metadata_url = "/hsapi/_internal/" + '{{ res_id }}' + "/update-key-value-metadata/";
                 $.ajax({
