@@ -850,20 +850,14 @@
                         {% endif %}
                         <!-- ========= EXTRA METADATA TAB ========= -->
                         <div class="tab-pane" id="extraMetaTab">
-                                {% if not metadata_form %}
-                                    view mode
-                                {% else %}
-                                    edit mode
-                                {%  endif %}
                                 {% if metadata_form %}
                                     <a type="button" class="btn btn-success" onclick="showAddEditExtraMetaPopup(false, '')">
-                                                            <span class="glyphicon glyphicon-plus"><span class="button-label"> Add ...</span></span>
+                                                            <span class="glyphicon glyphicon-plus"><span class="button-label"> Add new entry...</span></span>
                                     </a>
                                 {% endif %}
                                 <table id="extraMetaTable" class="table-hover table-striped" width="100%">
                                     <thead>
                                     <tr>
-
                                         <th>Name</th>
                                         <th>Value</th>
                                         {% if metadata_form %}
@@ -893,7 +887,7 @@
                                     </tbody>
                                 </table>
                             {% if metadata_form %}
-                                <input class="btn btn-primary" type="button" id="save-extra-meta" onclick="saveExtraMetadata();" value="Save Changes"/>
+                                <input class="btn btn-primary" type="button" id="save-extra-meta-btn" onclick="saveExtraMetadata();" value="Save Changes" style="display: none"/>
                             {% endif %}
 
                         </div>
@@ -1129,64 +1123,128 @@
 
             function addEditExtraMeta2Table()
             {
+                $("#extra_meta_msg").hide();
                 var t = $('#extraMetaTable').DataTable();
-                if ($("#edit_extra_meta_row_id").val() == "")
+                var extra_meta_name = $("#extra_meta_name_input").val().trim();
+                var extra_meta_value = $("#extra_meta_value_input").val().trim();
+                var edit_extra_meta_row_id = $("#edit_extra_meta_row_id").val().trim();
+
+                if(extra_meta_name.length==0 || extra_meta_value.length==0)
                 {
-                    var extra_meta_name = $("#extra_meta_name_input").val();
-                    var extra_meta_value = $("#extra_meta_value_input").val();
+                    $("#extra_meta_msg").html("<font color='red'>Name and Value are required fields that cannot be left blank.</font>");
+                    $("#extra_meta_msg").show();
+                    return;
+                }
 
+                if(foundDuplicatedName(t, extra_meta_name, edit_extra_meta_row_id))
+                {
+                    $("#extra_meta_msg").html("<font color='red'>Name already exists. Please input a different Name.</font>");
+                    $("#extra_meta_msg").show();
+                    return;
+                }
+
+                if (edit_extra_meta_row_id == "")
+                {
+                    // add new
                     var row_id_0_base = t.rows().count();
-                    var row_ele = t.row.add( [extra_meta_name,extra_meta_value,"edit"] ).draw( false).node();
-
+                    var edit_icon_str = '<span onclick="showAddEditExtraMetaPopup(true,' + "'" + row_id_0_base + "'" + ')"' + ' data-form-type="toggle-favorite" class="glyphicon glyphicon-edit btn-inline-favorite"></span>';
+                    var remove_icon_str = '<span onclick="removeExtraMetadataFromTable(' + "'" + row_id_0_base + "'" + ')"' + ' data-form-type="toggle-favorite" class="glyphicon glyphicon-remove btn-inline-favorite"></span>';
+                    var row_ele = t.row.add( [extra_meta_name,extra_meta_value, edit_icon_str+" "+remove_icon_str]).node();
                     $(row_ele).attr( 'id', row_id_0_base);
                 }
                 else
                 {
-                    var row_to_edit = t.row("#" + $("#edit_extra_meta_row_id").val());
+                    // edit existing
+                    var row_to_edit = t.row("#" + edit_extra_meta_row_id);
                     var updated_data_array = row_to_edit.data();
-                    updated_data_array[0] = $("#extra_meta_name_input").val();
-                    updated_data_array[1] = $("#extra_meta_value_input").val();
-                    row_to_edit.data(updated_data_array)
-                    t.rows().invalidate().draw();
+                    updated_data_array[0] = extra_meta_name;
+                    updated_data_array[1] = extra_meta_value;
+                    row_to_edit.data(updated_data_array);
                 }
+                t.rows().invalidate().draw();
+                $('#extraMetaDialog').modal('hide');
+                $('#save-extra-meta-btn').show();
 
+            }
+
+            function foundDuplicatedName(table, newName, except_row_id)
+            {
+                var found_first_duplicated = false;
+                var first_duplicated_row_id = -1;
+
+                table.rows(). every(function ( rowIdx, tableLoop, rowLoop ) {
+                    if(this.node().id != except_row_id)
+                    {
+                        if (this.data()[0]==newName)
+                       {
+                           found_first_duplicated = true;
+                           first_duplicated_row_id = this.node().id;
+                       }
+                    }
+                });
+                return found_first_duplicated;
             }
 
             function saveExtraMetadata()
             {
+                $alert_success_extra_meta = '<div class="alert alert-success" id="success-alert"> \
+                <button type="button" class="close" data-dismiss="alert">x</button> \
+                <strong>Success! </strong> \
+                Extra metadata updated.\
+                </div>';
+                $alert_error_extra_meta = '<div class="alert alert-danger" id="error-alert"> \
+                <button type="button" class="close" data-dismiss="alert">x</button> \
+                <strong>Error! </strong> \
+                Extra metadata failed to update.\
+                </div>' ;
                 json_obj = {};
                 $('#extraMetaTable tbody tr').each(
                         function(i, row) {
                             var extra_meta_name = $(row).find("td").eq(0).html();
                             var extra_meta_value = $(row).find("td").eq(1).html();
-                            json_obj[extra_meta_name] = extra_meta_value;
+                            json_obj[extra_meta_name.trim()] = extra_meta_value.trim();
                         }
                 );
-
                 json_str = JSON.stringify(json_obj);
-                json_obj = JSON.parse(json_str)
-
+                json_obj = JSON.parse(json_str);
                 var update_key_value_metadata_url = "/hsapi/_internal/" + '{{ res_id }}' + "/update-key-value-metadata/";
-                alert(update_key_value_metadata_url);
                 $.ajax({
-                type: "POST",
-                url: update_key_value_metadata_url,
-                dataType: "json",
-                data: json_obj,
-                success: function(result) {
-                /* The div contains now the updated form */
-                json_response = result;
-                if (json_response.status === 'success') {
+                    type: "POST",
+                    url: update_key_value_metadata_url,
+                    dataType: "json",
+                    data: json_obj,
 
-                    alert("success");
-                }
-                else {
-                   alert("failed");
-                }
-                },
-                error: function(XMLHttpRequest, textStatus, errorThrown) {
-                alert("error");
-                }
+                    success: function(result) {
+                        json_response = result;
+                        if (json_response.status === 'success') {
+
+
+                             $('#save-extra-meta-btn').hide();
+                             $('body > .container').append($alert_success_extra_meta);
+                             $('#error-alert').each(function(){
+                                this.remove();
+                                });
+                             $(".alert-success").fadeTo(2000, 500).fadeOut(1000, function(){
+                                $(document).trigger("submit-success");
+                                $(".alert-success").alert('close');
+                             });
+                        }
+                        else {
+                            $('body > .container').append($alert_error_extra_meta);
+                            $(".alert-danger").fadeTo(3000, 500).fadeOut(1000, function(){
+                            $(document).trigger("submit-error");
+                            $(".alert-danger").alert('close');
+                        });
+                        }
+                    },
+
+                    error: function(XMLHttpRequest, textStatus, errorThrown) {
+                        $('body > .container').append($alert_error_extra_meta);
+                        $(".alert-danger").fadeTo(3000, 500).fadeOut(1000, function(){
+                            $(document).trigger("submit-error");
+                            $(".alert-danger").alert('close');
+                        });
+                    }
                 });
 
             } // function saveExtraMetadata()
@@ -1195,6 +1253,7 @@
             {
                 var removed_row = $('#extraMetaTable').DataTable().row('#' + row_id);
                 removed_row.remove().draw(false);
+                $('#save-extra-meta-btn').show();
             }
 
             $(document).ready(function () {
@@ -1565,6 +1624,19 @@
                     $(this).on('change', function () {
                         $(this).closest("form").find("button").show();
                     });
+                });
+
+                // init ExtraMetadata Table
+                resourceTable = $("#extraMetaTable").DataTable({
+                    "paging": false,
+                    "bSort": false,
+                    "bLengthChange": false,
+                    "info": false,
+                    "bFilter": false,
+                    "bInfo": false,
+                    "language": {
+                    "emptyTable": "No Extra Metadata"
+                    }
                 });
             });
         </script>
