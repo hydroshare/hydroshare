@@ -62,8 +62,16 @@ def get_page_context(page, user, resource_edit=False, extended_metadata_layout=N
     if not resource_edit:  # In view mode
         relevant_tools = []
         content_model_str = str(content_model.content_model).lower()
+        # loop through all SupportedResTypes objs (one webapp resources has one SupportedResTypes obj)
         for res_type in SupportedResTypes.objects.all():
-            if content_model_str in str(res_type.get_supported_res_types_str()).lower():
+            supported_flag = False
+            for supported_type in res_type.supported_res_types.all():
+                if content_model_str == supported_type.description.lower():
+                    supported_flag = True
+                    break
+
+            if supported_flag:
+                # reverse lookup: metadata obj --> res obj
                 tool_res_obj = ToolResource.objects.get(object_id=res_type.object_id)
                 if tool_res_obj:
                     is_authorized = authorize(request, tool_res_obj.short_id,
