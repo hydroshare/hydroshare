@@ -139,8 +139,9 @@ def update_key_value_metadata(request, shortkey, *args, **kwargs):
     key/value data in request.POST is assigned to the resource.extra_metadata field
     """
     res, _, _ = authorize(request, shortkey, needed_permission=ACTION_TO_AUTHORIZE.EDIT_RESOURCE)
-    resource_mode = request.POST.pop('resource-mode', None)
-    res.extra_metadata = request.POST.dict()
+    post_data = request.POST.copy()
+    resource_mode = post_data.pop('resource-mode', None)
+    res.extra_metadata = post_data.dict()
     is_update_success = True
     err_message = ""
     try:
