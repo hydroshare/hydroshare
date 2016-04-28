@@ -111,6 +111,9 @@ class SimulationType(AbstractMetaDataElement):
     @classmethod
     def create(cls, **kwargs):
         if 'simulation_type_name' in kwargs:
+            if kwargs['simulation_type_name'] == 'Choose a type':
+                kwargs['simulation_type_name'] = ''
+                return super(SimulationType, cls).create(**kwargs)
             cls._validate_simulation_type(kwargs['simulation_type_name'])
         else:
             raise ValidationError("simulation_type_name is missing.")
@@ -120,6 +123,9 @@ class SimulationType(AbstractMetaDataElement):
     @classmethod
     def update(cls, element_id, **kwargs):
         if 'simulation_type_name' in kwargs:
+            if kwargs['simulation_type_name'] == 'Choose a type':
+                kwargs['simulation_type_name'] = ''
+                return super(SimulationType, cls).update(element_id, **kwargs)
             cls._validate_simulation_type(kwargs['simulation_type_name'])
         else:
             raise ValidationError("simulation_type_name is missing.")
@@ -263,13 +269,13 @@ class ModelInput(AbstractMetaDataElement):
 
     @classmethod
     def create(cls, **kwargs):
-        cls._validate_time_step(**kwargs)
+        kwargs = cls._validate_time_step(**kwargs)
         model_input = super(ModelInput, cls).create(**kwargs)
         return model_input
 
     @classmethod
     def update(cls, element_id, **kwargs):
-        cls._validate_time_step(**kwargs)
+        kwargs = cls._validate_time_step(**kwargs)
         model_input = super(ModelInput, cls).update(element_id, **kwargs)
         return model_input
 
@@ -280,18 +286,23 @@ class ModelInput(AbstractMetaDataElement):
 
     @classmethod
     def _validate_time_step(cls, **kwargs):
-        if 'rainfallTimeStepType' in kwargs:
-            time_step = kwargs['rainfallTimeStepType']
-            types = [c[0] for c in cls.rainfall_type_choices]
-            cls.check_time_steps(time_step, types)
-        if 'routingTimeStepType' in kwargs:
-            time_step = kwargs['routingTimeStepType']
-            types = [c[0] for c in cls.routing_type_choices]
-            cls.check_time_steps(time_step, types)
-        if 'simulationTimeStepType' in kwargs:
-            time_step = kwargs['simulationTimeStepType']
-            types = [c[0] for c in cls.simulation_type_choices]
-            cls.check_time_steps(time_step, types)
+        for key, val in kwargs.iteritems():
+            if val == 'Choose a type':
+                kwargs[key] = ''
+            else:
+                if key == 'rainfallTimeStepType':
+                    time_step = val
+                    types = [c[0] for c in cls.rainfall_type_choices]
+                    cls.check_time_steps(time_step, types)
+                elif key == 'routingTimeStepType':
+                    time_step = val
+                    types = [c[0] for c in cls.routing_type_choices]
+                    cls.check_time_steps(time_step, types)
+                elif key == 'simulationTimeStepType':
+                    time_step = val
+                    types = [c[0] for c in cls.simulation_type_choices]
+                    cls.check_time_steps(time_step, types)
+        return kwargs
 
     @classmethod
     def check_time_steps(cls, time_step, types):
@@ -396,10 +407,10 @@ class SWATModelInstanceMetaData(ModelInstanceMetaData):
                                                ', ' + self.model_objective.other_objectives
             else:
                 hsterms_model_objective.text = self.model_objective.get_swat_model_objectives()
-
         if self.simulation_type:
-            hsterms_simulation_type = etree.SubElement(container, '{%s}simulationType' % self.NAMESPACES['hsterms'])
-            hsterms_simulation_type.text = self.simulation_type.simulation_type_name
+            if self.simulation_type.simulation_type_name:
+                hsterms_simulation_type = etree.SubElement(container, '{%s}simulationType' % self.NAMESPACES['hsterms'])
+                hsterms_simulation_type.text = self.simulation_type.simulation_type_name
 
         if self.model_method:
             modelMethodFields = ['runoffCalculationMethod', 'flowRoutingMethod', 'petEstimationMethod']
