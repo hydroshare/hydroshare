@@ -126,6 +126,12 @@
                                                                                           data-placement="auto"
                                                                                           title="Download"
                                                                                           class="glyphicon glyphicon-download icon-button btn-download"></span></a>
+                                                {# only allow download from irods user zone for files smaller than 1GB #}
+                                                {% elif f.resource_file_name and f.resource_file_size|to_int < 1000000000 %}
+                                                    <a href="/django_irods/download/{{ cm.short_id }}{{ f.resource_file_name }}"><span data-toggle="tooltip"
+                                                                                          data-placement="auto"
+                                                                                          title="Download"
+                                                                                          class="glyphicon glyphicon-download icon-button btn-download"></span></a>
                                                 {% else %}
                                                     <span data-toggle="tooltip" data-placement="auto"
                                                                                           title="Referenced file cannot be downloaded directly"

@@ -151,7 +151,26 @@ def get_user_zone_status_info(user):
     return in_production, enable_user_zone
 
 
-def GetUserZoneFileSize(user, fname):
+def set_user_zone_session(user, irods_storage):
+    """
+    Set iRODS session to iRODS user zone for irods_storage input object
+    Args:
+        user: the requesting user whose user name is the same as its corresponding iRODS account
+        irods_storage: the iRODS storage object being used to interact with iRODS user zone
+
+    Returns:None
+    """
+    in_production, enable_user_zone = get_user_zone_status_info(user)
+    if enable_user_zone and not in_production:
+        # for testing, has to switch irods session to hydroshare production proxy iRODS user
+        irods_storage.set_user_session(username=settings.HS_WWW_IRODS_PROXY_USER,
+                                   password=settings.HS_WWW_IRODS_PROXY_USER_PWD,
+                                   host=settings.HS_WWW_IRODS_HOST,
+                                   port=settings.IRODS_PORT,
+                                   zone=settings.HS_WWW_IRODS_ZONE)
+
+
+def get_user_zone_file_size(user, fname):
     """
     Get size of a data object from iRODS user zone
     Args:
@@ -162,14 +181,7 @@ def GetUserZoneFileSize(user, fname):
     the size of the file
     """
     irods_storage = IrodsStorage()
-    in_production, enable_user_zone = get_user_zone_status_info(user)
-    if enable_user_zone and not in_production:
-        # for testing, has to switch irods session to hydroshare production proxy iRODS user
-        irods_storage.set_user_session(username=settings.HS_WWW_IRODS_PROXY_USER,
-                                   password=settings.HS_WWW_IRODS_PROXY_USER_PWD,
-                                   host=settings.HS_WWW_IRODS_HOST,
-                                   port=settings.IRODS_PORT,
-                                   zone=settings.HS_WWW_IRODS_ZONE)
+    set_user_zone_session(user, irods_storage)
     return irods_storage.size(fname)
 
 # TODO: Tastypie left over. This needs to be deleted
@@ -497,7 +509,7 @@ def add_file_to_resource(resource, f, ref_res_file_name='', user=None):
     :return: The identifier of the ResourceFile added.
     """
     if ref_res_file_name:
-        size = GetUserZoneFileSize(user, ref_res_file_name)
+        size = get_user_zone_file_size(user, ref_res_file_name)
         ret = ResourceFile.objects.create(content_object=resource, resource_file_name=ref_res_file_name, resource_file_size=size)
         file_format_type = get_file_mime_type(ref_res_file_name)
     else:

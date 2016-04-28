@@ -119,3 +119,7 @@ def clean_pagination_url(content):
                 clean_content += token + '&'
         clean_content = clean_content[:-1]
         return clean_content
+
+@register.filter
+def to_int(value):
+    return int(value)

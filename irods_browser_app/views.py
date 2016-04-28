@@ -2,7 +2,6 @@ import json
 import os
 import string
 from django.http import HttpResponse, HttpResponseRedirect
-from django.conf import settings
 
 from irods.session import iRODSSession
 from irods.exception import CollectionDoesNotExist
@@ -128,14 +127,7 @@ def store_uz(request):
     under the requested directory/collection/subcollection
     """
     irods_storage = IrodsStorage()
-    in_production, enable_user_zone = utils.get_user_zone_status_info(request.user)
-    if enable_user_zone and not in_production:
-        # for testing, has to switch irods session to hydroshare production proxy iRODS user
-        irods_storage.set_user_session(username=settings.HS_WWW_IRODS_PROXY_USER,
-                                   password=settings.HS_WWW_IRODS_PROXY_USER_PWD,
-                                   host=settings.HS_WWW_IRODS_HOST,
-                                   port=settings.IRODS_PORT,
-                                   zone=settings.HS_WWW_IRODS_ZONE)
+    utils.set_user_zone_session(request.user, irods_storage)
     datastore = str(request.POST['store'])
     store = irods_storage.listdir(datastore)
     return_object = {}
