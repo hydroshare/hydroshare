@@ -31,7 +31,7 @@ class HydroRealtimeSignalProcessor(RealtimeSignalProcessor):
     #
     #     if isinstance(instance, BaseResource):
     #         logger.debug("isinstance:" + str(type(instance)))
-    #         newinstance = super(BaseResource, instance)
+    #         newinstance = instance
     #         newsender = BaseResource
     #         using_backends = self.connection_router.for_write(instance=newinstance)
     #         for using in using_backends:
@@ -78,8 +78,8 @@ class HydroRealtimeSignalProcessor(RealtimeSignalProcessor):
                     index = self.connections[using].get_unified_index().get_index(newsender)
                     index.remove_object(newinstance, using=using)
                 except NotHandled:
-                    # TODO: log failures 
-                    pass
+                    # TODO: log failures
+                    logger.debug("fail to delete the resource")
 
         elif isinstance(instance, ResourceAccess):
             newinstance = instance.resource # automatically a BaseResource
@@ -92,8 +92,8 @@ class HydroRealtimeSignalProcessor(RealtimeSignalProcessor):
                     index.remove_object(newinstance, using=using)
                 except NotHandled:
                     # TODO: log failures
-                    pass
+                    logger.debug("fail to delete the resource")
 
         else: 
             # log failures 
-            pass 
+            logger.debug("fail to delete resource type: " + str(type(instance)))
