@@ -231,9 +231,9 @@
                             </li>
                         {% endif %}
                          <li class="col-xs-2 col-md-2">
-                            <a href="#extraMetaTab" data-toggle="tab" title="Extra Metadata">
+                            <a href="#extraMetaTab" data-toggle="tab" title="Extended Metadata">
                                 <span class="glyphicon glyphicon-folder-close"> </span>
-                                &nbspExtra Metadata
+                                &nbspExtended Metadata
                             </a>
                          </li>
                     </ul>
@@ -1112,11 +1112,11 @@
                     $("#old_extra_meta_name").val(oldname);
                     $("#extra_meta_name_input").val(oldname);
                     $("#extra_meta_value_input").val(oldvalue);
-                    $("#extra_meta_title").text("Edit Extra Metadata");
+                    $("#extra_meta_title").text("Edit Extended Metadata");
                 }
                 else
                 {
-                    $("#extra_meta_title").text("Add Extra Metadata");
+                    $("#extra_meta_title").text("Add Extended Metadata");
                 }
                 $('#extraMetaDialog').modal('show');
             }
@@ -1190,12 +1190,12 @@
                 $alert_success_extra_meta = '<div class="alert alert-success" id="success-alert"> \
                 <button type="button" class="close" data-dismiss="alert">x</button> \
                 <strong>Success! </strong> \
-                Extra metadata updated.\
+                Extended metadata updated.\
                 </div>';
                 $alert_error_extra_meta = '<div class="alert alert-danger" id="error-alert"> \
                 <button type="button" class="close" data-dismiss="alert">x</button> \
                 <strong>Error! </strong> \
-                Extra metadata failed to update.\
+                Extended metadata failed to update.\
                 </div>' ;
 
                 var json_obj = {};
@@ -1636,7 +1636,7 @@
                     "bFilter": false,
                     "bInfo": false,
                     "language": {
-                    "emptyTable": "No Extra Metadata"
+                    "emptyTable": "No Extended Metadata"
                     }
                 });
             });
