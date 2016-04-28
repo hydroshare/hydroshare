@@ -135,11 +135,13 @@ def is_multiple_file_allowed_for_resource_type(request, resource_type, *args, **
 
 def update_key_value_metadata(request, shortkey, *args, **kwargs):
     """
-    This one view function is for CRUD operation for resource key/value arbitrary metadata
-    key/value data in request.POST will be assigned to the resource.extra_metadata field
+    This one view function is for CRUD operation for resource key/value arbitrary metadata.
+    key/value data in request.POST is assigned to the resource.extra_metadata field
     """
     res, _, _ = authorize(request, shortkey, needed_permission=ACTION_TO_AUTHORIZE.EDIT_RESOURCE)
-    res.extra_metadata = request.POST
+    post_data = request.POST.copy()
+    resource_mode = post_data.pop('resource-mode', None)
+    res.extra_metadata = post_data.dict()
     is_update_success = True
     err_message = ""
     try:
@@ -148,6 +150,9 @@ def update_key_value_metadata(request, shortkey, *args, **kwargs):
         is_update_success = False
         err_message = ex.message
 
+    if is_update_success:
+        resource_modified(res, request.user)
+
     if request.is_ajax():
         if is_update_success:
             ajax_response_data = {'status': 'success'}
@@ -155,7 +160,7 @@ def update_key_value_metadata(request, shortkey, *args, **kwargs):
             ajax_response_data = {'status': 'error', 'message': err_message}
         return HttpResponse(json.dumps(ajax_response_data))
 
-    if 'resource-mode' in request.POST:
+    if resource_mode is not None:
         request.session['resource-mode'] = 'edit'
 
     if is_update_success:
