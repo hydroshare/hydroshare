@@ -4,7 +4,8 @@
 
 {% block extra_head %}
       <link href="{{ STATIC_URL }}css/site_base_irods.css" rel="stylesheet"/>
-        <link rel="stylesheet" href='//cdn.datatables.net/1.10.10/css/jquery.dataTables.min.css'/>
+      <link rel="stylesheet" href='//cdn.datatables.net/1.10.10/css/jquery.dataTables.min.css'/>
+      <link href="{{ STATIC_URL }}css/toolresource.css" rel="stylesheet"/>
 {% endblock %}
 
 {% block main %}
@@ -1659,11 +1660,3 @@
             <script type="text/javascript" src="{{ STATIC_URL }}js/toolresource.js"></script>
         {% endif %}
     {% endblock %}
-
-
-    {% block extra_css %}
-        {{ block.super }}
-        {% if relevant_tools %}
-            <link href="{{ STATIC_URL }}css/toolresource.css" rel="stylesheet"/>
-        {% endif %}
-    {%  endblock %}
