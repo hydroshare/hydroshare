@@ -154,14 +154,19 @@
                         {% endif %}
 
                         {% if page.perms.change and metadata_form %}
-                            <a id="btn-add-file" type="button" class="btn btn-success row-selector" data-toggle="modal"
-                               data-target="#add-file-dialog"
-                               multiple="multiple">
-                                <span class="glyphicon glyphicon-plus"><span class="button-label"> Add file...</span></span>
-                            </a>
-
-                            <a id="btn-select-irods-file" type="button" class="btn btn-success row-selector hidden-form" data-toggle="modal" data-target="#irodsContent" >
-                                <span class="glyphicon glyphicon-plus"><span class="button-label"> Add file from iRODS...</span></span>
+                            <span title="Add files smaller than 1GB in size" data-toggle="tooltip">
+                                <a id="btn-add-file" type="button" class="btn btn-success row-selector" data-toggle="modal"
+                                    data-target="#add-file-dialog" multiple="multiple">
+                                    <span class="glyphicon glyphicon-plus"><span class="button-label"> Add file...</span></span>
+                                </a>
+                            </span>
+                            {% if show_user_zone_selection %}
+                                <a id="btn-select-irods-file-uz" type="button" class="btn btn-success row-selector"
+                                   title="Add files larger than 1GB in size" data-toggle="tooltip"
+                                   onclick="show_irods_browse_modal('userzone', '{{  user_name }}')">Add files from your iRODS User Zone...</a>
+                            {% endif %}
+                            <a id="btn-select-irods-file" type="button" class="btn btn-success row-selector hidden-form" data-toggle="modal" onclick="show_irods_browse_modal('default', '')" >
+                                <span class="glyphicon glyphicon-plus"><span class="button-label"> Add files from iRODS you just logged in...</span></span>
                             </a>
 
                             <span id="log-into-irods">To add files from an iRODS server,
@@ -916,7 +921,6 @@
         {%  endblock %}
 
     {% endwith %}
-    {% endblock %}
 
     {% block extra_js %}
         <script type="text/javascript" src="{{ STATIC_URL }}js/coverageMap.js"></script>
@@ -924,6 +928,14 @@
         <script type="text/javascript" src="{{ STATIC_URL }}js/resourceLandingAjax.js"></script>
         <script type="text/javascript" src="{{ STATIC_URL }}js/irods.js"></script>
         <script type="text/javascript">
+            function show_irods_browse_modal(input, username) {
+                $('#input_trigger').val(input);
+                if (input=='userzone') {
+                    $('#irods_username_uz').val(username);
+                    $('#irods_store_uz').val('/hydroshareuserZone/home/'+username);
+                }
+                $('#irodsContent').modal();
+            }
             function onRoleSelect(event) {
                 var el = $(event.target);
                 $("#selected_role").text(el.text());
@@ -1443,3 +1455,4 @@
             <script type="text/javascript" src="{{ STATIC_URL }}js/toolresource.js"></script>
         {% endif %}
     {% endblock %}
+{% endblock %}

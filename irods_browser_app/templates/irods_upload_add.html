@@ -11,6 +11,10 @@
                 <form class="form-signin" role="form" action="/irods/upload_add/" method="post">
                     <div class="modal-body">
                         {% csrf_token %}
+                        <input type="hidden" name="input_trigger" id="input_trigger" value=""/>
+                        <input type="hidden" id="irods_file_names_uz" name="irods_file_names_uz" value="">
+                        <input type="hidden" id="irods_username_uz" name="irods_username_uz" value="">
+                        <input type="hidden" id="irods_store_uz" name="irods_store_uz" value="">
                         <input type="hidden" name="store" id="root_store" value=""/>
                         <input type="hidden" name="res_id" id="res_id" value="{{ cm.short_id }}"/>
                         <input type="hidden" id="irods-username" name="irods-username" value="">

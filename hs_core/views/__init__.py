@@ -505,6 +505,8 @@ def create_resource_page_processor(request, page):
 
 @processor_for(GenericResource)
 def add_generic_context(request, page):
+    user = request.user
+    in_production, show_user_zone_selection = utils.get_user_zone_status_info(user)
 
     class AddUserForm(forms.Form):
         user = forms.ModelChoiceField(User.objects.all(), widget=autocomplete_light.ChoiceWidget("UserAutocomplete"))
@@ -518,6 +520,8 @@ def add_generic_context(request, page):
         'add_edit_user_form': AddUserForm(),
         'add_view_group_form': AddGroupForm(),
         'add_edit_group_form': AddGroupForm(),
+        'user_name': user.username,
+        'show_user_zone_selection': show_user_zone_selection,
     }
 
 

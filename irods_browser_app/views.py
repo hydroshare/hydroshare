@@ -181,6 +181,7 @@ def upload_add(request):
     irods_fnames = request.POST.get('irods_file_names', '')
     irods_fnames_list = string.split(irods_fnames, ',')
     res_cls = resource.__class__
+    ref_res_file_names = ''
 
     valid, ext = check_upload_files(res_cls, irods_fnames_list)
 
@@ -188,21 +189,24 @@ def upload_add(request):
         request.session['file_type_error'] = "Invalid file type: {ext}".format(ext=ext)
         return HttpResponseRedirect(request.META['HTTP_REFERER'])
     else:
-        user = request.POST.get('irods-username')
-        password = request.POST.get("irods-password")
-        port = request.POST.get("irods-port")
-        host = request.POST.get("irods-host")
-        zone = request.POST.get("irods-zone")
-        try:
-            upload_from_irods(username=user, password=password, host=host, port=port,
-                              zone=zone, irods_fnames=irods_fnames, res_files=res_files)
-        except SessionException as ex:
-            request.session['validation_error'] = ex.stderr
-            return HttpResponseRedirect(request.META['HTTP_REFERER'])
-
+        input_trigger = request.POST.get("input_trigger", '')
+        if input_trigger == 'default':
+            user = request.POST.get('irods-username')
+            password = request.POST.get("irods-password")
+            port = request.POST.get("irods-port")
+            host = request.POST.get("irods-host")
+            zone = request.POST.get("irods-zone")
+            try:
+                upload_from_irods(username=user, password=password, host=host, port=port,
+                                  zone=zone, irods_fnames=irods_fnames, res_files=res_files)
+            except SessionException as ex:
+                request.session['validation_error'] = ex.stderr
+                return HttpResponseRedirect(request.META['HTTP_REFERER'])
+        else: # add files from irods user zone
+            ref_res_file_names = irods_fnames
     try:
         utils.resource_file_add_pre_process(resource=resource, files=res_files, user=request.user,
-                                            extract_metadata=extract_metadata)
+                                            extract_metadata=extract_metadata, ref_res_file_names=ref_res_file_names)
 
     except hydroshare.utils.ResourceFileSizeException as ex:
         request.session['file_size_error'] = ex.message
@@ -214,7 +218,7 @@ def upload_add(request):
 
     try:
         hydroshare.utils.resource_file_add_process(resource=resource, files=res_files, user=request.user,
-                                                   extract_metadata=extract_metadata)
+                                                   extract_metadata=extract_metadata, ref_res_file_names=ref_res_file_names)
 
     except (hydroshare.utils.ResourceFileValidationException, Exception) as ex:
         request.session['validation_error'] = ex.message
