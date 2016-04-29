@@ -86,26 +86,30 @@
             return "<div class='label label-danger error-label'>" + message + "</div>";
         }
 
-        function flagAwardNumber(index, entryValue, agencyNameValue) {
+        function flagUnique(index, awardNumber, agencyName, awardTitle) {
             var awardNumbers;
+            var awardTitles;
             var agencyNames;
 
             if (index) {
-                // Get the list of award numbers and agency names currently in use, excluding the one we are editing
+                // Get the list of field values currently in use, excluding the one we are editing
                 awardNumbers = $(".funding-agencies-table").find("tr:not([data-index='" + index + "']) td:nth-child(3)");
+                awardTitles = $(".funding-agencies-table").find("tr:not([data-index='" + index + "']) td:nth-child(2)");
                 agencyNames = $(".funding-agencies-table").find("tr:not([data-index='" + index + "']) td:nth-child(1)");
             }
             else {
-                // Get the list of award numbers and agency names currently in use (when adding new funding agency)
-                awardNumbers = $(".funding-agencies-table").find("tr td:nth-child(3)");
+                // Get the list of field values currently in use (when adding new funding agency)
                 agencyNames = $(".funding-agencies-table").find("tr td:nth-child(1)");
+                awardTitles = $(".funding-agencies-table").find("tr td:nth-child(2)");
+                awardNumbers = $(".funding-agencies-table").find("tr td:nth-child(3)");
             }
 
-            // Verify that value is unique
+            // Verify that entry is unique
             for (var i = 0; i < awardNumbers.length; i++) {
                 awardNumbers[i] = $(awardNumbers[i]).text().trim();
                 agencyNames[i] = $(agencyNames[i]).text().trim();
-                if (entryValue == awardNumbers[i] && agencyNames[i] == agencyNameValue) {
+                awardTitles[i] = $(awardTitles[i]).text().trim();
+                if (awardNumbers[i] == awardNumber  && agencyNames[i] == agencyName && awardTitles[i] == awardTitle) {
                     return false;
                 }
             }
@@ -113,22 +117,22 @@
             return true;
         }
 
-        function validateAwardNumber() {
-            var inputElement = $(this).closest("form").find("input[name='award_number']");
-            var agencyName = $(this).closest("form").find("input[name='agency_name']");
-            inputElement.parent().find(".error-label").remove();
+        function validateFundingAgency() {
+             $(this).closest("form").find(".modal-body").find(".error-label").remove();
 
-            var entryValue = inputElement.val();
-            var agencyNameValue = agencyName.val();
+            var awardNumber = $(this).closest("form").find("input[name='award_number']").val();
+            var agencyName = $(this).closest("form").find("input[name='agency_name']").val();
+            var awardTitle = $(this).closest("form").find("input[name='award_title']").val();
+
             var index = $(this).attr("data-index");
 
-            if (!flagAwardNumber(index, entryValue, agencyNameValue)) {
-                inputElement.parent().append(errorLabel("This award number is already in use."));
+            if (!flagUnique(index, awardNumber, agencyName, awardTitle)) {
+                $(this).closest("form").find(".modal-body").append(errorLabel("This entry already exists."));
                 return false;
             }
         }
 
-        $(".btn-save-funding-agency").click(validateAwardNumber);
+        $(".btn-save-funding-agency").click(validateFundingAgency);
 
     });
 
