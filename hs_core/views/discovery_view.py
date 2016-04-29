@@ -35,18 +35,32 @@ class DiscoveryView(FacetedSearchView):
         return self.render_to_response(context)
 
     def get_context_data(self, **kwargs):
-
         context = super(FacetedSearchMixin, self).get_context_data(**kwargs)
-
-        if self.request.session.get('query_changed', True):
-            context.update({'facets': self.queryset.facet_counts()})
-            self.request.session['facets_items'] = self.queryset.facet_counts()
-        else:
-            if self.request.session.get('facets_items', None):
-                context.update({'facets': self.request.session['facets_items']})
-            else:
+        
+        total_results = SearchQuerySet().all().count()
+        # check whether total number of results is set
+        if self.request.session.get('total_results', None):
+            # if total number of results is not updated
+            if total_results == self.request.session['total_results']:
+                # if query changed
+                if self.request.session.get('query_changed', True):
+                    context.update({'facets': self.queryset.facet_counts()})
+                    self.request.session['facets_items'] = self.queryset.facet_counts()
+                else: # if query not changed
+                    # if facets_items is already set
+                    if self.request.session.get('facets_items', None):
+                        context.update({'facets': self.request.session['facets_items']})
+                    else: # initial session variable
+                        context.update({'facets': self.queryset.facet_counts()})
+                        self.request.session['facets_items'] = self.queryset.facet_counts()
+            else: # if total number of results is updated
+                self.request.session['total_results'] = total_results
                 context.update({'facets': self.queryset.facet_counts()})
                 self.request.session['facets_items'] = self.queryset.facet_counts()
+        else: # if total number of results is not set yet
+            self.request.session['total_results'] = total_results
+            context.update({'facets': self.queryset.facet_counts()})
+            self.request.session['facets_items'] = self.queryset.facet_counts()
 
         return context
 
