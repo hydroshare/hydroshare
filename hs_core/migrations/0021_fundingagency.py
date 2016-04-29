@@ -23,9 +23,8 @@ class Migration(migrations.Migration):
                 ('agency_url', models.URLField(null=True, blank=True)),
                 ('content_type', models.ForeignKey(related_name='hs_core_fundingagency_related', to='contenttypes.ContentType')),
             ],
-        ),
-        migrations.AlterUniqueTogether(
-            name='fundingagency',
-            unique_together=set([('content_type', 'object_id', 'award_number', 'agency_name')]),
+            options={
+                'abstract': False,
+            },
         ),
     ]

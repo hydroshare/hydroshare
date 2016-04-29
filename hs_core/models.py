@@ -968,9 +968,6 @@ class FundingAgency(AbstractMetaDataElement):
     award_number = models.TextField(null=True, blank=True)
     agency_url = models.URLField(null=True, blank=True)
 
-    class Meta:
-        unique_together = ("content_type", "object_id", "award_number", "agency_name")
-
     def __unicode__(self):
         return self.agency_name
 
