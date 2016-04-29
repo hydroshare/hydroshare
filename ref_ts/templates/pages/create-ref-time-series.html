@@ -204,6 +204,16 @@
                             console.log("sites:" + data["sites"].length);
                             var select = document.getElementsByName('site')[0];
                             removeOptions(select);
+                            if (data["sites"].length > 1)
+                            {
+                                var opt = document.createElement('option');
+                                opt.value = "";
+                                opt.innerHTML = "Please select a Site";
+                                opt.disabled = true;
+                                opt.selected = true;
+                                select.appendChild(opt);
+                            }
+
                             for(var i=0; i < data["sites"].length; i++)
                             {
                                 var ln = data["sites"][i];
@@ -212,6 +222,7 @@
                                 opt.innerHTML = ln.substring(0, ln.indexOf(" ["));
                                 select.appendChild(opt);
                             }
+
                             show_message(false);
                             $('#site-div').show();
                             // enable url textbox
@@ -271,6 +282,16 @@
 
                             var select = document.getElementsByName('variable')[0];
                             removeOptions(select);
+                            if (data["variables"].length > 1)
+                            {
+                                var opt = document.createElement('option');
+                                opt.value = "";
+                                opt.innerHTML = "Please select a Variable";
+                                opt.disabled = true;
+                                opt.selected = true;
+                                select.appendChild(opt);
+                            }
+
                             for(var i=0; i < data["variables"].length; i++)
                             {
                                 var ln = data["variables"][i];
@@ -374,13 +395,20 @@
 
             $('#site').change(function(){
                 var site = $('#site').val();
-                get_variables(site);
+                if (site != "-1")
+                {
+                    get_variables(site);
+                }
+
             });
 
             $('#variable').change(function(){
                 var variable = $('#variable').val();
                 var site = $('#site').val();
-                getVals('soap', site, variable);
+                if  (site != "-1" && variable != "-1")
+                {
+                    getVals('soap', site, variable);
+                }
             });
 
             $('#create-form').on("keyup keypress", function(e) {
