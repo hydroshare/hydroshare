@@ -561,7 +561,7 @@ def create_resource(request, *args, **kwargs):
     try:
         page_url_dict, res_title, metadata = hydroshare.utils.resource_pre_create_actions(resource_type=resource_type, files=resource_files,
                                                                     resource_title=res_title, ref_res_file_names=irods_fnames_uz,
-                                                                    page_redirect_url_key=url_key, **kwargs)
+                                                                    page_redirect_url_key=url_key, requesting_user=request.user, **kwargs)
     except utils.ResourceFileSizeException as ex:
         context = {'file_size_error': ex.message}
         return render_to_response('pages/create-resource.html', context, context_instance=RequestContext(request))

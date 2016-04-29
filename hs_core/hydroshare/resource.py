@@ -435,8 +435,7 @@ def create_resource(
             # few seconds.  We may want to add the option to do this
             # asynchronously if the file size is large and would take
             # more than ~15 seconds to complete.
-            add_resource_files(resource.short_id, ref_res_file_names=ref_res_file_names,
-                               user=requesting_user, *files)
+            add_resource_files(resource.short_id, ref_res_file_names=ref_res_file_names, user=requesting_user, *files)
 
         # by default resource is private
         resource_access = ResourceAccess(resource=resource)
@@ -723,7 +722,7 @@ def add_resource_files(pk, ref_res_file_names='', user=None, *files):
     ret = []
     for f in files:
         ret.append(utils.add_file_to_resource(resource, f))
-    if ref_res_file_names:
+    if ref_res_file_names and user:
         ifnames = string.split(ref_res_file_names, ',')
         for ifname in ifnames:
             ret.append(utils.add_file_to_resource(resource, None, ref_res_file_name=ifname, user=user))

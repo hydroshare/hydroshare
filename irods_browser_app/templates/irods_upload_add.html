@@ -39,3 +39,17 @@
         </div>
     </div>
 {% endblock %}
+
+{% block extra_js %}
+    <script type="text/javascript" src="{{ STATIC_URL }}js/irods.js"></script>
+    <script type="text/javascript">
+        function show_irods_browse_modal(input, username) {
+                $('#input_trigger').val(input);
+                if (input=='userzone') {
+                    $('#irods_username_uz').val(username);
+                    $('#irods_store_uz').val('/hydroshareuserZone/home/'+username);
+                }
+                $('#irodsContent').modal();
+        }
+    </script>
+{% endblock %}

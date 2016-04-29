@@ -129,6 +129,10 @@ def raster_pre_create_resource_trigger(sender, **kwargs):
     title = kwargs['title']
     validate_files_dict = kwargs['validate_files']
     metadata = kwargs['metadata']
+    ref_res_fnames = kwargs['ref_res_file_names']
+    user = kwargs['user']
+    if ref_res_fnames:
+        tmpfile = utils.upload_user_zone_file(user, ref_res_fnames, files)
 
     if files:
         # raster file validation

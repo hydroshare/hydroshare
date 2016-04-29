@@ -6,6 +6,7 @@ import json
 import tempfile
 import logging
 import shutil
+import string
 
 from django.apps import apps
 from django.http import Http404
@@ -174,15 +175,37 @@ def get_user_zone_file_size(user, fname):
     """
     Get size of a data object from iRODS user zone
     Args:
-        user: the requesting user whose user name is the same as its corresponding iRODS account
+        user: the requesting user
         fname: the logical iRODS file name with full logical path
 
     Returns:
     the size of the file
     """
+
     irods_storage = IrodsStorage()
     set_user_zone_session(user, irods_storage)
     return irods_storage.size(fname)
+
+
+def upload_user_zone_file(user, irods_fnames, res_files):
+    """
+    Get the file from iRODS user zone to Django server for metadata extraction on-demand for specific resource types
+    Args:
+        user: the requesting user
+        fname: the logical iRODS file name with full logical path
+
+    Returns:
+    the named temp file being copied over to local Django server
+    """
+    irods_storage = IrodsStorage()
+    set_user_zone_session(user, irods_storage)
+    ifnames = string.split(irods_fnames, ',')
+    for ifname in ifnames:
+        size = irods_storage.size(ifname)
+        tmpFile = irods_storage.download(ifname)
+        fname = os.path.basename(ifname.rstrip(os.sep))
+        res_files.append(UploadedFile(file=tmpFile, name=fname, size=size))
+
 
 # TODO: Tastypie left over. This needs to be deleted
 def serialize_science_metadata(res):
@@ -337,7 +360,8 @@ def validate_resource_file_count(resource_cls, files, resource=None):
 
 
 def resource_pre_create_actions(resource_type, resource_title, page_redirect_url_key,
-                                files=(), ref_res_file_names='', metadata=None, **kwargs):
+                                files=(), ref_res_file_names='', metadata=None,
+                                requesting_user=None, **kwargs):
     from.resource import check_resource_type
     if not resource_title:
         resource_title = 'Untitled resource'
@@ -364,7 +388,8 @@ def resource_pre_create_actions(resource_type, resource_title, page_redirect_url
     # to redirect to their own page for resource creation rather than use core resource creation code
     pre_create_resource.send(sender=resource_cls, metadata=metadata, files=files, title=resource_title,
                              url_key=page_redirect_url_key, page_url_dict=page_url_dict,
-                             validate_files=file_validation_dict, ref_res_file_names=ref_res_file_names, **kwargs)
+                             validate_files=file_validation_dict, ref_res_file_names=ref_res_file_names,
+                             user=requesting_user, **kwargs)
 
     if len(files) > 0:
         check_file_dict_for_error(file_validation_dict)
@@ -508,7 +533,7 @@ def add_file_to_resource(resource, f, ref_res_file_name='', user=None):
                               but instead a reference entry is created to point to the file in iRODS user zone
     :return: The identifier of the ResourceFile added.
     """
-    if ref_res_file_name:
+    if ref_res_file_name and user:
         size = get_user_zone_file_size(user, ref_res_file_name)
         ret = ResourceFile.objects.create(content_object=resource, resource_file_name=ref_res_file_name, resource_file_size=size)
         file_format_type = get_file_mime_type(ref_res_file_name)

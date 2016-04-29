@@ -151,12 +151,7 @@
 {% endblock %}
 
 {% block extra_js %}
-    <script type="text/javascript" src="{{STATIC_URL}}js/irods.js" ></script>
     <script type="text/javascript">
-    function show_irods_browse_modal(input) {
-        $('#input_trigger').val(input);
-        $('#irodsContent').modal();
-    }
     $(document).ready(function() {
         var json_response_file_types = {};
         var json_response_multiple_file = {};
