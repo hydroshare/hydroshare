@@ -227,6 +227,10 @@
                             $('#site-div').show();
                             // enable url textbox
                             $('.ui-autocomplete-input').prop("disabled", false);
+
+                            if (data["sites"].length == 1){
+                                $('#site').trigger("change");
+                            }
                         }
                         else
                         {
