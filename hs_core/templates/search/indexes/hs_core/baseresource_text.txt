@@ -11,6 +11,7 @@
 {{ object.metadata.publisher.name }}
 {{ object.metadata.language.code }}
 {{ object.resource_type }}
+{{ object.verbose_name }}
 {{ object.owners_count }}
 {{ object.viewers_count }}
 {{ object.editors_count }}
@@ -45,23 +46,23 @@
 {% for relation in object.metadata.relations.all %}
     {{ relation.value }}
 {% endfor %}
-{% for owner_login in object.owners_logins.all %}
-    {{ owner_login }}
+{% for owner in object.raccess.owners.all %}
+    {{ owner.username }}
 {% endfor %}
-{% for owner_name in object.owners_names.all %}
-    {{ owner_name }}
+{% for owner in object.raccess.owners.all %}
+    {{ owner.first_name }} {{owner.last_name}}
 {% endfor %}
-{% for viewer_login in object.viewers_logins.all %}
-    {{ viewer_login }}
+{% for viewer in object.raccess.view_users.all %}
+    {{ viewer.first_name }} {{viewer.last_name}}
 {% endfor %}
-{% for viewer_name in object.viewers_names.all %}
-    {{ viewer_name }}
+{% for viewer in object.raccess.view_users.all %}
+    {{ viewr.username }}
 {% endfor %}
-{% for editor_login in object.editors_logins.all %}
-    {{ editor_login }}
+{% for editor in object.raccess.edit_users.all %}
+    {{ editor.username }}
 {% endfor %}
-{% for editor_name in object.editors_names.all %}
-    {{ editor_name }}
+{% for editor in object.raccess.edit_users.all %}
+    {{ editor.first_name }} {{editor.last_name}}
 {% endfor %}
 {% for comment in object.comments.all %}
     {{ comment }}

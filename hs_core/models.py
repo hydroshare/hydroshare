@@ -1381,6 +1381,20 @@ class BaseResource(Page, AbstractResource):
 
         return '<?xml version="1.0" encoding="UTF-8"?>\n' + etree.tostring(ROOT, pretty_print=pretty_print)
 
+    @property
+    def verbose_name(self):
+        from hs_core.hydroshare.utils import get_resource_types
+        res_cls = None
+        for tp in get_resource_types():
+            if self.resource_type == tp.__name__:
+                res_cls = tp
+                break
+        if res_cls is not None:
+            res_obj = res_cls()
+            return res_obj._meta.verbose_name
+        else:
+            return self._meta.verbose_name
+
     @classmethod
     def get_supported_upload_file_types(cls):
         # all file types are supported
