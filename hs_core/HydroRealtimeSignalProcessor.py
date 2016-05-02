@@ -38,7 +38,6 @@ class HydroRealtimeSignalProcessor(RealtimeSignalProcessor):
         """
         from hs_core.models import BaseResource
         from hs_access_control.models import ResourceAccess
-        from hs_labels.models import ResourceLabels
     
         if isinstance(instance, BaseResource):
             if hasattr(instance, 'raccess') and hasattr(instance, 'metadata'): 
@@ -62,20 +61,13 @@ class HydroRealtimeSignalProcessor(RealtimeSignalProcessor):
                             index.remove_object(newinstance, using=using)
                         except NotHandled:
                             logger.error("Failure: delete of " + str(type(instance)) + " with short_id " + newinstance.short_id+ " failed.")
-                    else: 
-                        logger.debug("Skipped unnecessary indexing of private " + str(type(instance)) + " with short_id " + newinstance.short_id)
-            else: 
-                logger.debug("Skipped unnecessary indexing of " + str(type(instance)) + " with short_id " + instance.short_id + " (without metadata)")
-    
+
         elif isinstance(instance, ResourceAccess):
             # automatically a BaseResource; just call the routine on it. 
             newinstance = instance.resource
             newsender = BaseResource
             self.handle_save(newsender, newinstance)
 
-        # for all other objects, so far, there is nothing to do 
-        else:
-            logger.debug(str(type(instance)) + " not indexed by SOLR")
 
     def handle_delete(self, sender, instance, **kwargs):
         """
@@ -102,7 +94,3 @@ class HydroRealtimeSignalProcessor(RealtimeSignalProcessor):
                         index.remove_object(newinstance, using=using)
                     except NotHandled:
                         logger.error("Failure: delete of " + str(type(instance)) + " with short_id " + newinstance.short_id+ " failed.")
-
-        else:
-            # log failures
-            logger.debug("skipped deleting resource type " + str(type(instance)) + " from SOLR index")
