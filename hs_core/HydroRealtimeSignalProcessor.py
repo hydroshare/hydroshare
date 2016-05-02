@@ -3,9 +3,10 @@ from haystack.signals import RealtimeSignalProcessor
 from haystack.exceptions import NotHandled
 import logging
 import types
+from haystack.query import SearchQuerySet
+from haystack.utils import get_identifier
 
 logger = logging.getLogger(__name__)
-logger.debug("load real time processor")
 
 
 class HydroRealtimeSignalProcessor(RealtimeSignalProcessor):
@@ -24,8 +25,6 @@ class HydroRealtimeSignalProcessor(RealtimeSignalProcessor):
         This returns True if a current resource is now present in Haystack, and False if not. 
         This -- in turn -- informs us as to whether to update and/or delete the object 
         """
-        from haystack.query import SearchQuerySet
-        from haystack.utils import get_identifier
         discoverable = SearchQuerySet().filter(id=get_identifier(instance)).count()
         if discoverable > 0:
             return True
@@ -42,7 +41,6 @@ class HydroRealtimeSignalProcessor(RealtimeSignalProcessor):
         from hs_labels.models import ResourceLabels
     
         if isinstance(instance, BaseResource):
-            logger.debug("update SOLR for " + str(type(instance)) + " with short_id " + instance.short_id)
             if hasattr(instance, 'raccess') and hasattr(instance, 'metadata'): 
                 # work around for failure of super(BaseResource, instance) to work properly.
                 # this always succeeds because this is a post-save object action. 
@@ -71,7 +69,7 @@ class HydroRealtimeSignalProcessor(RealtimeSignalProcessor):
     
         elif isinstance(instance, ResourceAccess):
             # automatically a BaseResource; just call the routine on it. 
-            newinstance = instance.resource 
+            newinstance = instance.resource
             newsender = BaseResource
             self.handle_save(newsender, newinstance)
 

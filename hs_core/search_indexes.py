@@ -10,7 +10,7 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
     text = indexes.CharField(document=True, use_template=True)
     short_id = indexes.CharField(model_attr='short_id')
     doi = indexes.CharField(model_attr='doi', null=True)
-    author = indexes.CharField(model_attr='first_creator', default='None', faceted=True)
+    author = indexes.CharField(model_attr='first_creator', default='none', faceted=True)
     title = indexes.CharField(faceted=True)
     abstract = indexes.CharField(model_attr='description')
     creators = indexes.MultiValueField(faceted=True)
