@@ -173,6 +173,7 @@ def get_page_context(page, user, resource_edit=False, extended_metadata_layout=N
                    'rights': content_model.metadata.rights,
                    'sources': content_model.metadata.sources.all(),
                    'relations': content_model.metadata.relations.all(),
+                   'fundingagencies': content_model.metadata.funding_agencies.all(),
                    'metadata_status': metadata_status,
                    'missing_metadata_elements': content_model.metadata.get_required_missing_elements(),
                    'supported_file_types': content_model.get_supported_upload_file_types(),
@@ -199,6 +200,7 @@ def get_page_context(page, user, resource_edit=False, extended_metadata_layout=N
     add_contributor_modal_form = ContributorForm(allow_edit=can_change, res_short_id=content_model.short_id)
     add_relation_modal_form = RelationForm(allow_edit=can_change, res_short_id=content_model.short_id)
     add_source_modal_form = SourceForm(allow_edit=can_change, res_short_id=content_model.short_id)
+    add_fundingagency_modal_form = FundingAgencyForm(allow_edit=can_change, res_short_id=content_model.short_id)
 
     title_form = TitleForm(instance=content_model.metadata.title, allow_edit=can_change, res_short_id=content_model.short_id,
                              element_id=content_model.metadata.title.id if content_model.metadata.title else None)
@@ -270,6 +272,21 @@ def get_page_context(page, user, resource_edit=False, extended_metadata_layout=N
         source_form.delete_modal_form = MetaDataElementDeleteForm(content_model.short_id, 'source', source_form.initial['id'])
         source_form.number = source_form.initial['id']
 
+    FundingAgencyFormSetEdit = formset_factory(wraps(FundingAgencyForm)(partial(FundingAgencyForm,
+                                                                                allow_edit=can_change)),
+                                               formset=BaseFormSet, extra=0)
+    fundingagency_formset = FundingAgencyFormSetEdit(initial=content_model.metadata.funding_agencies.all().values(),
+                                                     prefix='fundingagency')
+
+    for fundingagency_form in fundingagency_formset.forms:
+        action = "/hsapi/_internal/{}/fundingagnecy/{}/update-metadata/"
+        action = action.format(content_model.short_id, fundingagency_form.initial['id'])
+        fundingagency_form.action = action
+        fundingagency_form.delete_modal_form = MetaDataElementDeleteForm(content_model.short_id, 'fundingagency',
+                                                                         fundingagency_form.initial['id'])
+        fundingagency_form.number = fundingagency_form.initial['id']
+
+
     rights_form = RightsForm(instance=content_model.metadata.rights,
                              allow_edit=can_change,
                              res_short_id=content_model.short_id,
@@ -280,17 +297,6 @@ def get_page_context(page, user, resource_edit=False, extended_metadata_layout=N
                                  res_short_id=content_model.short_id,
                                  element_id=content_model.metadata.language.id if content_model.metadata.language
                                  else None)
-
-    # valid_dates = content_model.metadata.dates.all().filter(type='valid')
-    # if len(valid_dates) > 0:
-    #     valid_date = valid_dates[0]
-    # else:
-    #     valid_date = None
-
-    # valid_date_form = ValidDateForm(instance=valid_date,
-    #                                 allow_edit=edit_mode,
-    #                                 res_short_id=content_model.short_id,
-    #                                 element_id=valid_date.id if valid_date else None)
 
     temporal_coverages = content_model.metadata.coverages.all().filter(type='period')
     temporal_coverage_data_dict = {}
@@ -357,13 +363,12 @@ def get_page_context(page, user, resource_edit=False, extended_metadata_layout=N
                'add_relation_modal_form': add_relation_modal_form,
                'source_formset': source_formset,
                'add_source_modal_form': add_source_modal_form,
+               'fundingagnency_formset': fundingagency_formset,
+               'add_fundinagency_modal_form': add_fundingagency_modal_form,
                'rights_form': rights_form,
-               #'identifier_formset': identifier_formset,
                'language_form': language_form,
-               #'valid_date_form': valid_date_form,
                'coverage_temporal_form': coverage_temporal_form,
                'coverage_spatial_form': coverage_spatial_form,
-               #'format_formset': format_formset,
                'subjects_form': subjects_form,
                'metadata_status': metadata_status,
                'citation': content_model.get_citation(),
