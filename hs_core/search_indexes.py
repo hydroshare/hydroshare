@@ -53,28 +53,28 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
         if hasattr(obj.metadata.title, 'value'):
             return obj.metadata.title.value
         else: 
-            logger.error("resource object does not have metadata field")
+            logger.debug("resource object does not have metadata field")
             return 'none'
 
     def prepare_creators(self, obj):
         if hasattr(obj, 'metadata'): 
             return [creator.name for creator in obj.metadata.creators.all()]
         else: 
-            logger.error("resource object does not have metadata field")
+            logger.debug("resource object does not have metadata field")
             return []
 
     def prepare_contributors(self, obj):
         if hasattr(obj, 'metadata'): 
             return [contributor.name for contributor in obj.metadata.contributors.all()]
         else: 
-            logger.error("resource object does not have metadata field")
+            logger.debug("resource object does not have metadata field")
             return []
 
     def prepare_subjects(self, obj):
         if hasattr(obj, 'metadata'): 
             return [subject.value for subject in obj.metadata.subjects.all()]
         else: 
-            logger.error("resource object does not have metadata field")
+            logger.debug("resource object does not have metadata field")
             return []
 
     def prepare_organizations(self, obj):
@@ -86,7 +86,7 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
                 else:
                     organizations.append('none')
         else: 
-            logger.error("resource object does not have metadata field")
+            logger.debug("resource object does not have metadata field")
         return organizations
 
     def prepare_publisher(self, obj):
@@ -97,14 +97,14 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
             else:
                 return 'none'
         else: 
-            logger.error("resource object does not have metadata field")
+            logger.debug("resource object does not have metadata field")
             return 'none'
 
     def prepare_author_emails(self, obj):
         if hasattr(obj, 'metadata'): 
             return [creator.email for creator in obj.metadata.creators.all()]
         else: 
-            logger.error("resource object does not have raccess field")
+            logger.debug("resource object does not have raccess field")
             return []
 
     def prepare_discoverable(self, obj):
@@ -114,7 +114,7 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
             else: 
                 return False
         else:
-            logger.error("resource object does not have raccess field")
+            logger.debug("resource object does not have raccess field")
             return False
 
     def prepare_public(self, obj):
@@ -124,49 +124,49 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
             else:
                 return False
         else: 
-            logger.error("resource object does not have raccess field")
+            logger.debug("resource object does not have raccess field")
             return False
 
     def prepare_coverages(self, obj):
         if hasattr(obj, 'metadata'): 
             return [coverage._value for coverage in obj.metadata.coverages.all()]
         else: 
-            logger.error("resource object does not have metadata field")
+            logger.debug("resource object does not have metadata field")
             return []
 
     def prepare_formats(self, obj):
         if hasattr(obj, 'metadata'): 
             return [format.value for format in obj.metadata.formats.all()]
         else: 
-            logger.error("resource object does not have metadata field")
+            logger.debug("resource object does not have metadata field")
             return []
 
     def prepare_identifiers(self, obj):
         if hasattr(obj, 'metadata'): 
             return [identifier.name for identifier in obj.metadata.identifiers.all()]
         else: 
-            logger.error("resource object does not have metadata field")
+            logger.debug("resource object does not have metadata field")
             return []
 
     def prepare_language(self, obj):
         if hasattr(obj.metadata.language, 'code'):
             return obj.metadata.language.code
         else:
-            logger.error("resource object does not have metadata field")
+            logger.debug("resource object does not have metadata field")
             return 'none'
 
     def prepare_sources(self, obj):
         if hasattr(obj, 'metadata'): 
             return [source.derived_from for source in obj.metadata.sources.all()]
         else: 
-            logger.error("resource object does not have metadata field")
+            logger.debug("resource object does not have metadata field")
             return []
 
     def prepare_relations(self, obj):
         if hasattr(obj, 'metadata'): 
             return [relation.value for relation in obj.metadata.relations.all()]
         else: 
-            logger.error("resource object does not have metadata field")
+            logger.debug("resource object does not have metadata field")
             return []
 
     def prepare_resource_type(self, obj):
@@ -182,7 +182,7 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
         if hasattr(obj, 'raccess'): 
             return [owner.username for owner in obj.raccess.owners.all()]
         else: 
-            logger.error("resource object does not have raccess field")
+            logger.debug("resource object does not have raccess field")
             return []
 
     def prepare_owners_names(self, obj):
@@ -192,21 +192,21 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
                 name = owner.first_name + ' ' + owner.last_name
                 names.append(name)
         else: 
-            logger.error("resource object does not have raccess field")
+            logger.debug("resource object does not have raccess field")
         return names
 
     def prepare_owners_count(self, obj):
         if hasattr(obj, 'raccess'): 
             return obj.raccess.owners.all().count()
         else: 
-            logger.error("resource object does not have raccess field")
+            logger.debug("resource object does not have raccess field")
             return 0
 
     def prepare_viewers_logins(self, obj):
         if hasattr(obj, 'raccess'): 
             return [viewer.username for viewer in obj.raccess.view_users.all()]
         else: 
-            logger.error("resource object does not have raccess field")
+            logger.debug("resource object does not have raccess field")
             return []
 
     def prepare_viewers_names(self, obj):
@@ -216,21 +216,21 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
                 name = viewer.first_name + ' ' + viewer.last_name
                 names.append(name)
         else: 
-            logger.error("resource object does not have raccess field")
+            logger.debug("resource object does not have raccess field")
         return names
 
     def prepare_viewers_count(self, obj):
         if hasattr(obj, 'raccess'): 
             return obj.raccess.view_users.all().count()
         else: 
-            logger.error("resource object does not have raccess field")
+            logger.debug("resource object does not have raccess field")
             return 0
 
     def prepare_editors_logins(self, obj):
         if hasattr(obj, 'raccess'): 
             return [editor.username for editor in obj.raccess.edit_users.all()]
         else:
-            logger.error("resource object does not have raccess field")
+            logger.debug("resource object does not have raccess field")
             return 0
 
     def prepare_editors_names(self, obj):
@@ -240,12 +240,12 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
                 name = editor.first_name + ' ' + editor.last_name
                 names.append(name)
         else: 
-            logger.error("resource object does not have raccess field")
+            logger.debug("resource object does not have raccess field")
         return names
 
     def prepare_editors_count(self, obj):
         if hasattr(obj, 'raccess'): 
             return obj.raccess.edit_users.all().count()
         else: 
-            logger.error("resource object does not have raccess field")
+            logger.debug("resource object does not have raccess field")
             return 0
