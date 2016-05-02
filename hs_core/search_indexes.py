@@ -1,6 +1,7 @@
 from haystack import indexes
 from hs_core.models import BaseResource
 import logging
+from django.db.models import Q
 
 logger = logging.getLogger(__name__)
 
@@ -47,7 +48,7 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
         return BaseResource
 
     def index_queryset(self, using=None):
-        return self.get_model().objects.all()
+        return self.get_model().objects.filter(Q(raccess__discoverable=True) | Q(raccess__public=True))
 
     def prepare_title(self, obj):
         if hasattr(obj.metadata.title, 'value'):
