@@ -114,7 +114,7 @@
                 awardNumbers[i] = $(awardNumbers[i]).text().trim();
                 agencyNames[i] = $(agencyNames[i]).text().trim();
                 awardTitles[i] = $(awardTitles[i]).text().trim();
-                agencyURLs[i] = $(agencyURLs[i]).attr("href");
+                agencyURLs[i] = ($(agencyURLs[i]).attr("href") != null ? $(agencyURLs[i]).attr("href") :  "" );
                 if (awardNumbers[i] == awardNumber  && agencyNames[i] == agencyName && awardTitles[i] == awardTitle && agencyURLs[i] == agencyURL) {
                     return false;
                 }
