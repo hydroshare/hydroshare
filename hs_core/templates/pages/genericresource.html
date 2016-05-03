@@ -187,6 +187,13 @@
                     <!-- Buttons -->
                     {% block download_bag %}
                     <div>
+                        {% if show_user_zone_selection %}
+                            <a id="rep-res-bag" type="button" class="btn btn-default row-selector" data-toggle="modal" data-target="#rep-resource-to-irods-dialog">
+                                <span class="glyphicon">
+                                   <span title='Replicate Resource Bag to iRODS User Zone' class="button-label">Replicate Resource Bag to iRODS User Zone</span>
+                                </span>
+                            </a>
+                        {% endif %}
                         {% for b in cm.bags.all %}
                             <a id="btn-download-all" type="button" class="btn btn-default row-selector" href="{{ bag_url }}">
                                 <span class="glyphicon glyphicon-download-alt">
@@ -1270,6 +1277,7 @@
                     $("#add-file-input").removeAttr('multiple');
                     if (file_count > 0) {
                         $("#btn-add-file").hide();
+                        $("#btn-select-irods-file-uz").hide();
                         $("#log-into-irods").hide();
                         $("#sign-in-info").hide();
                         $("#btn-select-irods-file").hide();
@@ -1278,6 +1286,7 @@
                 // hide add file button if file upload is not allowed for the resource type
                 if (file_types == "()") {
                     $("#btn-add-file").hide();
+                    $("#btn-select-irods-file-uz").hide();
                     $("#log-into-irods").hide();
                     $("#sign-in-info").hide();
                     $("#btn-select-irods-file").hide();

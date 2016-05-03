@@ -1585,7 +1585,7 @@ body > .container{
     word-break: break-word;
 }
 
-#btn-download-all, #btn-add-file, #btn-select-irods-file, #btn-select-irods-file-uz {
+#btn-download-all, #btn-add-file, #btn-select-irods-file, #btn-select-irods-file-uz, #rep-res-bag {
     margin-bottom:5px;
     max-width:100%;
 }

@@ -273,6 +273,12 @@ def delete_resource(request, shortkey, *args, **kwargs):
 
     return HttpResponseRedirect('/my-resources/')
 
+
+def rep_res_bag_to_irods_user_zone(request, shortkey, *args, **kwargs):
+    res, authorized, user = authorize(request, shortkey, needed_permission=ACTION_TO_AUTHORIZE.VIEW_RESOURCE)
+
+    return HttpResponseRedirect(res.get_absolute_url())
+
 def create_new_version_resource(request, shortkey, *args, **kwargs):
     res, authorized, user = authorize(request, shortkey, needed_permission=ACTION_TO_AUTHORIZE.CREATE_RESOURCE_VERSION)
 
