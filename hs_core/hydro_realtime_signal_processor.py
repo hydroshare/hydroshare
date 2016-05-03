@@ -53,14 +53,14 @@ class HydroRealtimeSignalProcessor(RealtimeSignalProcessor):
                             index = self.connections[using].get_unified_index().get_index(newsender)
                             index.update_object(newinstance, using=using)
                         except NotHandled:
-                            logger.error("Failure: changes to " + str(type(instance)) + " with short_id " + newinstance.short_id+ " not added to SOLR index")
+                            logger.exception("Failure: changes to " + str(type(instance)) + " with short_id " + newinstance.short_id+ " not added to SOLR index")
                     # if object is private or becoming private, delete from index 
                     elif self.hydro_resource_is_present(newinstance):
                         try:
                             index = self.connections[using].get_unified_index().get_index(newsender)
                             index.remove_object(newinstance, using=using)
                         except NotHandled:
-                            logger.error("Failure: delete of " + str(type(instance)) + " with short_id " + newinstance.short_id+ " failed.")
+                            logger.exception("Failure: delete of " + str(type(instance)) + " with short_id " + newinstance.short_id+ " failed.")
 
         elif isinstance(instance, ResourceAccess):
             # automatically a BaseResource; just call the routine on it. 
@@ -93,4 +93,4 @@ class HydroRealtimeSignalProcessor(RealtimeSignalProcessor):
                         index = self.connections[using].get_unified_index().get_index(newsender)
                         index.remove_object(newinstance, using=using)
                     except NotHandled:
-                        logger.error("Failure: delete of " + str(type(instance)) + " with short_id " + newinstance.short_id+ " failed.")
+                        logger.exception("Failure: delete of " + str(type(instance)) + " with short_id " + newinstance.short_id+ " failed.")
