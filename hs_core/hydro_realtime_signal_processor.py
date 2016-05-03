@@ -49,7 +49,7 @@ class HydroRealtimeSignalProcessor(RealtimeSignalProcessor):
                             index = self.connections[using].get_unified_index().get_index(newsender)
                             index.remove_object(newinstance, using=using)
                         except NotHandled:
-                            logger.exception("Failure: delete of %s with short_id % failed.", str(type(instance)), newinstance.short_id)
+                            logger.exception("Failure: delete of %s with short_id %s failed.", str(type(instance)), newinstance.short_id)
 
         elif isinstance(instance, ResourceAccess):
             # automatically a BaseResource; just call the routine on it. 
@@ -81,4 +81,4 @@ class HydroRealtimeSignalProcessor(RealtimeSignalProcessor):
                     index = self.connections[using].get_unified_index().get_index(newsender)
                     index.remove_object(newinstance, using=using)
                 except NotHandled:
-                    logger.exception("Failure: delete of %s with short_id % failed.", str(type(instance)), newinstance.short_id)
+                    logger.exception("Failure: delete of %s with short_id %s failed.", str(type(instance)), newinstance.short_id)
