@@ -27,29 +27,40 @@ import raster_meta_extract
 # to populate create-resource.html template page
 
 
-def raster_file_validation(files):
+def raster_file_validation(files, ref_tmp_file_names=[]):
     error_info = []
     vrt_file_path = ''
 
-    # process uploaded .tif or .zip file
-    if len(files) == 1:
-        ext = os.path.splitext(files[0].name)[1]
+    # process uploaded .tif or .zip file or file retrieved from iRODS user zone
+    if len(files) >= 1:
+        in_filename = files[0].name
+    if len(ref_tmp_file_names) >= 1:
+        in_filename = ref_tmp_file_names[0]
+
+    if in_filename:
+        ext = os.path.splitext(in_filename)[1]
         if ext == '.tif':
-            temp_vrt_file_path, temp_dir = create_vrt_file(files[0])
+            temp_vrt_file_path, temp_dir = create_vrt_file(in_filename)
             if os.path.isfile(temp_vrt_file_path):
                 files.append(UploadedFile(file=open(temp_vrt_file_path, 'r'), name=os.path.basename(temp_vrt_file_path)))
 
         elif ext == '.zip':
-            extract_file_paths, temp_dir = explode_zip_file(files[0])
+            extract_file_paths, temp_dir = explode_zip_file(in_filename)
             if extract_file_paths:
-                del files[0]
+                if len(files) == 1:
+                    del files[0]
                 for file_path in extract_file_paths:
                     files.append(UploadedFile(file=open(file_path, 'r'), name=os.path.basename(file_path)))
 
     # check if raster is valid in format and data
-    files_names = [f.name for f in files]
+    if len(files) >= 1:
+        files_names = [f.name for f in files]
+        files_path = [f.file.name for f in files]
+    if len(ref_tmp_file_names) >= 1:
+        for fname in ref_tmp_file_names:
+            files_names.append(os.path.split(fname)[1])
+
     files_ext = [os.path.splitext(path)[1] for path in files_names]
-    files_path = [f.file.name for f in files]
 
     if set(files_ext) == {'.vrt', '.tif'} and files_ext.count('.vrt') == 1:
         vrt_file_path = files_path[files_ext.index('.vrt')]
@@ -80,14 +91,14 @@ def raster_file_validation(files):
     return error_info, vrt_file_path, temp_dir
 
 
-def create_vrt_file(tif_file):
+def create_vrt_file(tif_file_name):
     # create vrt file
     temp_dir = tempfile.mkdtemp()
-    tif_base_name = os.path.basename(tif_file.name)
+    tif_base_name = os.path.basename(tif_file_name)
     vrt_file_path = os.path.join(temp_dir, os.path.splitext(tif_base_name)[0]+'.vrt')
 
     with open(os.devnull, 'w') as fp:
-        subprocess.Popen(['gdalbuildvrt', vrt_file_path, tif_file.file.name], stdout=fp, stderr=fp).wait()   # remember to add .wait()
+        subprocess.Popen(['gdalbuildvrt', vrt_file_path, tif_file_name], stdout=fp, stderr=fp).wait()   # remember to add .wait()
 
     # modify vrt file SourceFileName
     try:
@@ -102,10 +113,10 @@ def create_vrt_file(tif_file):
     return vrt_file_path, temp_dir
 
 
-def explode_zip_file(zip_file):
+def explode_zip_file(zip_file_name):
     temp_dir = tempfile.mkdtemp()
     try:
-        zf = zipfile.ZipFile(zip_file.file.name, 'r')
+        zf = zipfile.ZipFile(zip_file_name, 'r')
         zf.extractall(temp_dir)
         zf.close()
         # get all the file abs names in temp_dir
@@ -131,13 +142,19 @@ def raster_pre_create_resource_trigger(sender, **kwargs):
     metadata = kwargs['metadata']
     ref_res_fnames = kwargs['ref_res_file_names']
     user = kwargs['user']
-    if ref_res_fnames:
-        tmpfile = utils.upload_user_zone_file(user, ref_res_fnames, files)
+    file_selected = False
 
     if files:
+        file_selected = True
         # raster file validation
         error_info, vrt_file_path, temp_dir = raster_file_validation(files)
+    elif ref_res_fnames:
+        ref_tmpfiles = utils.get_user_zone_file(user, ref_res_fnames)
+        # raster file validation
+        error_info, vrt_file_path, temp_dir = raster_file_validation(files, ref_tmp_file_names=ref_tmpfiles)
+        file_selected = True
 
+    if file_selected:
         # metadata extraction
         if not error_info:
             res_md_dict = raster_meta_extract.get_raster_meta_dict(vrt_file_path)
@@ -212,12 +229,22 @@ def raster_pre_create_resource_trigger(sender, **kwargs):
 def raster_pre_add_files_to_resource_trigger(sender, **kwargs):
     files = kwargs['files']
     res = kwargs['resource']
+    user = kwargs['user']
+    ref_res_fnames = kwargs['ref_res_file_names']
     validate_files_dict = kwargs['validate_files']
+    file_selected = False
 
     if files:
+        file_selected = True
         # raster file validation
         error_info, vrt_file_path, temp_dir = raster_file_validation(files)
+    elif ref_res_fnames:
+        ref_tmpfiles = utils.get_user_zone_file(user, ref_res_fnames)
+        # raster file validation
+        error_info, vrt_file_path, temp_dir = raster_file_validation(files, ref_tmp_file_names=ref_tmpfiles)
+        file_selected = True
 
+    if file_selected:
         # metadata extraction
         if not error_info:
             res_md_dict = raster_meta_extract.get_raster_meta_dict(vrt_file_path)

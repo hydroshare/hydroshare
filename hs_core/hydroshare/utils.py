@@ -187,7 +187,7 @@ def get_user_zone_file_size(user, fname):
     return irods_storage.size(fname)
 
 
-def upload_user_zone_file(user, irods_fnames, res_files):
+def get_user_zone_file(user, irods_fnames):
     """
     Get the file from iRODS user zone to Django server for metadata extraction on-demand for specific resource types
     Args:
@@ -200,11 +200,14 @@ def upload_user_zone_file(user, irods_fnames, res_files):
     irods_storage = IrodsStorage()
     set_user_zone_session(user, irods_storage)
     ifnames = string.split(irods_fnames, ',')
+    ret_file_list = []
     for ifname in ifnames:
         size = irods_storage.size(ifname)
-        tmpFile = irods_storage.download(ifname)
         fname = os.path.basename(ifname.rstrip(os.sep))
-        res_files.append(UploadedFile(file=tmpFile, name=fname, size=size))
+        tmpfile = os.path.join(settings.TEMP_FILE_DIR, fname)
+        irods_storage.getFile(ifname, tmpfile)
+        ret_file_list.append(tmpfile)
+    return ret_file_list
 
 
 # TODO: Tastypie left over. This needs to be deleted
@@ -507,7 +510,7 @@ def resource_file_add_pre_process(resource, files, user, extract_metadata=False,
 
 def resource_file_add_process(resource, files, user, extract_metadata=False, ref_res_file_names='', **kwargs):
     from .resource import add_resource_files
-    resource_file_objects = add_resource_files(resource.short_id, ref_res_file_names=ref_res_file_names, user=user, *files)
+    resource_file_objects = add_resource_files(resource.short_id, *files, ref_res_file_names=ref_res_file_names, user=user)
 
     # receivers need to change the values of this dict if file validation fails
     # in case of file validation failure it is assumed the resource type also deleted the file

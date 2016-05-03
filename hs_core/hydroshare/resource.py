@@ -435,7 +435,7 @@ def create_resource(
             # few seconds.  We may want to add the option to do this
             # asynchronously if the file size is large and would take
             # more than ~15 seconds to complete.
-            add_resource_files(resource.short_id, ref_res_file_names=ref_res_file_names, user=requesting_user, *files)
+            add_resource_files(resource.short_id, *files, ref_res_file_names=ref_res_file_names, user=requesting_user)
 
         # by default resource is private
         resource_access = ResourceAccess(resource=resource)
@@ -685,7 +685,7 @@ def update_resource(
     return resource
 
 
-def add_resource_files(pk, ref_res_file_names='', user=None, *files):
+def add_resource_files(pk, *files, **kwargs):
     """
     Called by clients to update a resource in HydroShare by adding a single file.
 
@@ -719,6 +719,8 @@ def add_resource_files(pk, ref_res_file_names='', user=None, *files):
 
     """
     resource = utils.get_resource_by_shortkey(pk)
+    ref_res_file_names=kwargs.pop('ref_res_file_names', '')
+    user=kwargs.pop('user', None)
     ret = []
     for f in files:
         ret.append(utils.add_file_to_resource(resource, f))
