@@ -31,7 +31,7 @@ def netcdf_pre_create_resource(sender, **kwargs):
 
     if files:
         file_selected = True
-        in_file_name = files[0]
+        in_file_name = files[0].file.name
     elif ref_res_fnames:
         ref_tmpfiles = utils.get_user_zone_file(user, ref_res_fnames)
         if ref_tmpfiles:
@@ -194,7 +194,11 @@ def netcdf_pre_create_resource(sender, **kwargs):
 def netcdf_pre_delete_file_from_resource(sender, **kwargs):
     nc_res = kwargs['resource']
     del_file = kwargs['file']
-    del_file_ext = os.path.splitext(del_file.resource_file.name)[-1]
+    res_fname = del_file.resource_file.name
+    if not res_fname:
+        res_fname = del_file.resource_file_name
+
+    del_file_ext = os.path.splitext(res_fname)[-1]
 
     # update resource modification info
     user = nc_res.creator
@@ -207,7 +211,7 @@ def netcdf_pre_delete_file_from_resource(sender, **kwargs):
     if del_file_ext in file_ext:
         del file_ext[del_file_ext]
         for f in ResourceFile.objects.filter(object_id=nc_res.id):
-            ext = os.path.splitext(f.resource_file.name)[-1]
+            ext = os.path.splitext(res_fname)[-1]
             if ext in file_ext:
                 f.resource_file.delete()
                 f.delete()
@@ -227,15 +231,27 @@ def netcdf_pre_add_files_to_resource(sender, **kwargs):
     nc_res = kwargs['resource']
     files = kwargs['files']
     validate_files_dict = kwargs['validate_files']
+    user = kwargs['user']
+    ref_res_fnames = kwargs['ref_res_file_names']
 
     if len(files) > 1:
         # file number validation
         validate_files_dict['are_files_valid'] = False
         validate_files_dict['message'] = 'Only one file can be uploaded.'
-    elif len(files) == 1:
+
+    file_selected = False
+    if files:
+        file_selected = True
+        in_file_name = files[0].file.name
+    elif ref_res_fnames:
+        ref_tmpfiles = utils.get_user_zone_file(user, ref_res_fnames)
+        if ref_tmpfiles:
+            in_file_name = ref_tmpfiles[0]
+            file_selected = True
+
+    if file_selected:
         # file type validation and existing metadata update and create new ncdump text file
-        infile = files[0]
-        nc_dataset = nc_utils.get_nc_dataset(infile.file.name)
+        nc_dataset = nc_utils.get_nc_dataset(in_file_name)
         if isinstance(nc_dataset, netCDF4.Dataset):
             # delete all existing resource files and metadata related
             for f in ResourceFile.objects.filter(object_id=nc_res.id):
@@ -349,14 +365,14 @@ def netcdf_pre_add_files_to_resource(sender, **kwargs):
                     nc_res.metadata.create_element('originalcoverage', value=res_dublin_core_meta['original-box'])
 
             # create the ncdump text file
-            if nc_dump.get_nc_dump_string_by_ncdump(infile.file.name):
-                dump_str = nc_dump.get_nc_dump_string_by_ncdump(infile.file.name)
+            if nc_dump.get_nc_dump_string_by_ncdump(in_file_name):
+                dump_str = nc_dump.get_nc_dump_string_by_ncdump(in_file_name)
             else:
-                dump_str = nc_dump.get_nc_dump_string(infile.file.name)
+                dump_str = nc_dump.get_nc_dump_string(in_file_name)
 
             if dump_str:
                 # refine dump_str first line
-                nc_file_name = '.'.join(os.path.basename(infile.name).split('.')[:-1])
+                nc_file_name = '.'.join(os.path.basename(in_file_name).split('.')[:-1])
                 first_line = list('netcdf {0} '.format(nc_file_name))
                 first_line_index = dump_str.index('{')
                 dump_str_list = first_line + list(dump_str)[first_line_index:]

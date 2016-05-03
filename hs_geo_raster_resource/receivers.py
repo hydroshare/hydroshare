@@ -291,6 +291,9 @@ def raster_pre_add_files_to_resource_trigger(sender, **kwargs):
 def raster_pre_delete_file_from_resource_trigger(sender, **kwargs):
     res = kwargs['resource']
     del_file = kwargs['file']
+    res_fname = del_file.resource_file.name
+    if not res_fname:
+        res_fname = del_file.resource_file_name
 
     # delete core metadata coverage now that the only file is deleted
     res.metadata.coverages.all().delete()
@@ -313,12 +316,12 @@ def raster_pre_delete_file_from_resource_trigger(sender, **kwargs):
 
     # delete all the files that is not the user selected file
     for f in ResourceFile.objects.filter(object_id=res.id):
-        if f.resource_file.name != del_file.resource_file.name:
+        if f.resource_file.name != res_fname:
             f.resource_file.delete()
             f.delete()
 
     # delete the format of the files that is not the user selected delete file
-    del_file_format = utils.get_file_mime_type(del_file.resource_file.name)
+    del_file_format = utils.get_file_mime_type(res_fname)
     for format_element in res.metadata.formats.all():
         if format_element.value != del_file_format:
             res.metadata.delete_element(format_element.term, format_element.id)
