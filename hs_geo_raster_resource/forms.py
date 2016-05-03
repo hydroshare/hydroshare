@@ -107,7 +107,6 @@ class CellInfoFormHelper(BaseFormHelper):
                         Field('cellSizeXValue', css_class=field_width),
                         Field('cellSizeYValue', css_class=field_width),
                         Field('cellDataType', css_class=field_width),
-                        Field('noDataValue', css_class=field_width)
                  )
 
         super(CellInfoFormHelper, self).__init__(allow_edit, res_short_id, element_id, element_name, layout, element_name_label='Cell Information', *args, **kwargs)
@@ -125,14 +124,14 @@ class CellInfoForm(ModelForm):
 
     class Meta:
         model = CellInformation
-        fields = ['rows', 'columns', 'cellSizeXValue', 'cellSizeYValue', 'cellDataType', 'noDataValue']
+        fields = ['rows', 'columns', 'cellSizeXValue', 'cellSizeYValue', 'cellDataType']
         exclude = ['content_object']
         widgets = { 'rows': forms.TextInput(attrs={'readonly':'readonly'}),
                     'columns': forms.TextInput(attrs={'readonly':'readonly'}),
                     'cellSizeXValue': forms.TextInput(attrs={'readonly':'readonly'}), #(attrs={'readonly':'readonly'}),
                     'cellSizeYValue': forms.TextInput(attrs={'readonly':'readonly'}), #(attrs={'readonly':'readonly'}),
                     'cellDataType': forms.TextInput(attrs={'readonly':'readonly'}),
-                    'noDataValue': forms.TextInput()}
+                    }
 
 
 class CellInfoValidationForm(forms.Form):
@@ -141,7 +140,6 @@ class CellInfoValidationForm(forms.Form):
     cellSizeXValue = forms.FloatField(required = True)
     cellSizeYValue = forms.FloatField(required = True)
     cellDataType = forms.CharField(max_length=50, required=True)
-    noDataValue = forms.FloatField(required = False)
 
 
 # repeatable element related forms

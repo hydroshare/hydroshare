@@ -155,7 +155,6 @@ def raster_pre_create_resource_trigger(sender, **kwargs):
                 ('cellSizeXValue', res_md_dict['cell_and_band_info']['cellSizeXValue']),
                 ('cellSizeYValue', res_md_dict['cell_and_band_info']['cellSizeYValue']),
                 ('cellDataType', res_md_dict['cell_and_band_info']['cellDataType']),
-                ('noDataValue', res_md_dict['cell_and_band_info']['noDataValue'])
                 ])
             metadata.append({'CellInformation': cellInfo})
             bcount = res_md_dict['cell_and_band_info']['bandCount']
@@ -177,7 +176,6 @@ def raster_pre_create_resource_trigger(sender, **kwargs):
             ('cellSizeXValue', 0),
             ('cellSizeYValue', 0),
             ('cellDataType', "NA"),
-            ('noDataValue', 0)
         ])
         metadata.append({'CellInformation': cell_info})
         bcount = 1
@@ -232,11 +230,11 @@ def raster_pre_add_files_to_resource_trigger(sender, **kwargs):
             # update extended metadata CellInformation
             res.metadata.cellInformation.delete()
             res.metadata.create_element('CellInformation', name=os.path.basename(vrt_file_path), rows=res_md_dict['cell_and_band_info']['rows'],
-                                        columns = res_md_dict['cell_and_band_info']['columns'],
-                                        cellSizeXValue = res_md_dict['cell_and_band_info']['cellSizeXValue'],
-                                        cellSizeYValue = res_md_dict['cell_and_band_info']['cellSizeYValue'],
-                                        cellDataType = res_md_dict['cell_and_band_info']['cellDataType'],
-                                        noDataValue = res_md_dict['cell_and_band_info']['noDataValue'])
+                                        columns=res_md_dict['cell_and_band_info']['columns'],
+                                        cellSizeXValue=res_md_dict['cell_and_band_info']['cellSizeXValue'],
+                                        cellSizeYValue=res_md_dict['cell_and_band_info']['cellSizeYValue'],
+                                        cellDataType=res_md_dict['cell_and_band_info']['cellDataType'],
+                                        )
 
             bcount = res_md_dict['cell_and_band_info']['bandCount']
             # update extended metadata BandInformation
@@ -272,7 +270,7 @@ def raster_pre_delete_file_from_resource_trigger(sender, **kwargs):
     res.metadata.create_element('CellInformation', name=res.metadata.title.value, rows=0, columns=0,
                                 cellSizeXValue=0, cellSizeYValue=0,
                                 cellDataType="NA",
-                                noDataValue=0)
+                                )
 
     # reset extended metadata BandInformation now that the only file is deleted
     for band in res.metadata.bandInformation:

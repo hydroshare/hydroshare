@@ -105,6 +105,7 @@ class BandInformation(AbstractMetaDataElement):
     name = models.CharField(max_length=500, null=True)
     variableName = models.TextField(max_length=100, null=True)
     variableUnit = models.CharField(max_length=50, null=True)
+
     # optional fields
     method = models.TextField(null=True, blank=True)
     comment = models.TextField(null=True, blank=True)
@@ -126,9 +127,6 @@ class CellInformation(AbstractMetaDataElement):
     cellSizeXValue = models.FloatField(null=True)
     cellSizeYValue = models.FloatField(null=True)
     cellDataType = models.CharField(max_length=50, null=True)
-
-    # optional fields
-    noDataValue = models.FloatField(null=True, blank=True)
 
     def __unicode__(self):
         return self.name
@@ -235,8 +233,7 @@ class RasterMetaData(CoreMetaData):
 
         # inject raster resource specific metadata elements to container element
         if self.cellInformation:
-            cellinfo_fields = ['name', 'rows', 'columns', 'cellSizeXValue', 'cellSizeYValue',
-                           'cellDataType', 'noDataValue']
+            cellinfo_fields = ['name', 'rows', 'columns', 'cellSizeXValue', 'cellSizeYValue', 'cellDataType']
             self.add_metadata_element_to_xml(container, self.cellInformation, cellinfo_fields)
 
         for band_info in self.bandInformation:

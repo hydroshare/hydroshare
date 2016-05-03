@@ -66,6 +66,7 @@ def get_spatial_coverage_info(raster_dataset):
     }
     return spatial_coverage_info
 
+
 def get_original_coverage_info(raster_dataset):
     """
     (object) --> dict
@@ -226,7 +227,6 @@ def get_cell_and_band_info(raster_dataset):
         # get band count, cell no data value, cell data type
         band_count = raster_dataset.RasterCount
         band = raster_dataset.GetRasterBand(1)
-        no_data_value = band.GetNoDataValue()
         cell_data_type = gdal.GetDataTypeName(band.DataType)
 
         cell_and_band_info = OrderedDict([
@@ -236,7 +236,6 @@ def get_cell_and_band_info(raster_dataset):
             ('cellSizeYValue', cell_size_y_value),
             ('cellSizeUnit', cell_size_unit),
             ('cellDataType', cell_data_type),
-            ('noDataValue', no_data_value),
             ('bandCount', band_count)
         ])
     else:
@@ -247,7 +246,6 @@ def get_cell_and_band_info(raster_dataset):
             ('cellSizeYValue', 0),
             ('cellSizeUnit', "NA"),
             ('cellDataType', "NA"),
-            ('noDataValue', 0),
             ('bandCount', 1)
         ])
 
