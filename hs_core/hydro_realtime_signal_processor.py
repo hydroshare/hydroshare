@@ -20,17 +20,6 @@ class HydroRealtimeSignalProcessor(RealtimeSignalProcessor):
     3. Thus, we want to capture cases in which it is an appropriate instance, and respond. 
     """
 
-    def hydro_resource_is_present(self, instance): 
-        """ 
-        This returns True if a current resource is now present in Haystack, and False if not. 
-        This -- in turn -- informs us as to whether to update and/or delete the object 
-        """
-        discoverable = SearchQuerySet().filter(id=get_identifier(instance)).count()
-        if discoverable > 0:
-            return True
-        else:
-            return False
-
     def handle_save(self, sender, instance, **kwargs):
         """
         Given an individual model instance, determine which backends the
@@ -53,14 +42,14 @@ class HydroRealtimeSignalProcessor(RealtimeSignalProcessor):
                             index = self.connections[using].get_unified_index().get_index(newsender)
                             index.update_object(newinstance, using=using)
                         except NotHandled:
-                            logger.exception("Failure: changes to " + str(type(instance)) + " with short_id " + newinstance.short_id+ " not added to SOLR index")
-                    # if object is private or becoming private, delete from index 
-                    elif self.hydro_resource_is_present(newinstance):
+                            logger.exception("Failure: changes to %s with short_id %s not added to Solr Index.", str(type(instance)), newinstance.short_id)
+                    # if object is private or becoming private, delete from index
+                    else:
                         try:
                             index = self.connections[using].get_unified_index().get_index(newsender)
                             index.remove_object(newinstance, using=using)
                         except NotHandled:
-                            logger.exception("Failure: delete of " + str(type(instance)) + " with short_id " + newinstance.short_id+ " failed.")
+                            logger.exception("Failure: delete of %s with short_id % failed.", str(type(instance)), newinstance.short_id)
 
         elif isinstance(instance, ResourceAccess):
             # automatically a BaseResource; just call the routine on it. 
@@ -88,9 +77,8 @@ class HydroRealtimeSignalProcessor(RealtimeSignalProcessor):
             # self.handle_delete(newsender, newinstance)
             using_backends = self.connection_router.for_write(instance=newinstance)
             for using in using_backends:
-                if self.hydro_resource_is_present(newinstance): 
-                    try:
-                        index = self.connections[using].get_unified_index().get_index(newsender)
-                        index.remove_object(newinstance, using=using)
-                    except NotHandled:
-                        logger.exception("Failure: delete of " + str(type(instance)) + " with short_id " + newinstance.short_id+ " failed.")
+                try:
+                    index = self.connections[using].get_unified_index().get_index(newsender)
+                    index.remove_object(newinstance, using=using)
+                except NotHandled:
+                    logger.exception("Failure: delete of %s with short_id % failed.", str(type(instance)), newinstance.short_id)
