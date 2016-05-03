@@ -197,8 +197,8 @@ def raster_pre_create_resource_trigger(sender, **kwargs):
     for i in range(bcount):
         band_dict = OrderedDict()
         band_dict['name'] = 'Band_' + str(i+1)
-        band_dict['variableName'] = 'Unnamed'
-        band_dict['variableUnit'] = 'Unnamed'
+        band_dict['variableName'] = 'Unknown'
+        band_dict['variableUnit'] = 'Unknown'
         band_dict['method'] = ''
         band_dict['comment'] = ''
         metadata.append({'BandInformation': band_dict})

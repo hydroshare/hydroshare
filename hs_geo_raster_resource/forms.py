@@ -27,12 +27,12 @@ class OriginalCoverageFormHelper(BaseFormHelper):
 
 
 class OriginalCoverageSpatialForm(forms.Form):
-    projection = forms.CharField(max_length=100, required=False, label='Coordinate Reference System')
-    northlimit = forms.DecimalField(label='North Extent', widget=forms.TextInput())
+    projection = forms.CharField(max_length=100, required=False, label='Coordinate Reference System',widget=forms.TextInput(attrs={'readonly': 'readonly'}))
+    northlimit = forms.DecimalField(label='North Extent', widget=forms.TextInput(attrs={'readonly': 'readonly'}))
     eastlimit = forms.DecimalField(label='East Extent', widget=forms.TextInput(attrs={'readonly': 'readonly'}))
     southlimit = forms.DecimalField(label='South Extent', widget=forms.TextInput(attrs={'readonly': 'readonly'}))
-    westlimit = forms.DecimalField(label='West Extent', widget=forms.TextInput())
-    units = forms.CharField(max_length=50, label='Coordinate Reference System Unit')
+    westlimit = forms.DecimalField(label='West Extent', widget=forms.TextInput(attrs={'readonly': 'readonly'}))
+    units = forms.CharField(max_length=50, label='Coordinate Reference System Unit', widget=forms.TextInput(attrs={'readonly': 'readonly'}))
 
     def __init__(self, allow_edit=True, res_short_id=None, element_id=None, *args, **kwargs):
         super(OriginalCoverageSpatialForm, self).__init__(*args, **kwargs)
@@ -129,8 +129,8 @@ class CellInfoForm(ModelForm):
         exclude = ['content_object']
         widgets = { 'rows': forms.TextInput(attrs={'readonly':'readonly'}),
                     'columns': forms.TextInput(attrs={'readonly':'readonly'}),
-                    'cellSizeXValue': forms.TextInput(), #(attrs={'readonly':'readonly'}),
-                    'cellSizeYValue': forms.TextInput(), #(attrs={'readonly':'readonly'}),
+                    'cellSizeXValue': forms.TextInput(attrs={'readonly':'readonly'}), #(attrs={'readonly':'readonly'}),
+                    'cellSizeYValue': forms.TextInput(attrs={'readonly':'readonly'}), #(attrs={'readonly':'readonly'}),
                     'cellDataType': forms.TextInput(attrs={'readonly':'readonly'}),
                     'noDataValue': forms.TextInput()}
 
@@ -237,7 +237,7 @@ class BandInfoValidationForm(forms.Form):
     variableName = forms.CharField(max_length=100, required=True)
     variableUnit = forms.CharField(max_length=50, required=True)
     method = forms.CharField(required=False)
-    comment = forms.CharField(required=True)
+    comment = forms.CharField(required=False)
 
 
 class BaseBandInfoFormSet(BaseFormSet):
