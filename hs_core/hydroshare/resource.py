@@ -22,10 +22,6 @@ from hs_core import signals
 from hs_core.hydroshare import utils
 from hs_access_control.models import ResourceAccess, UserResourcePrivilege, PrivilegeCodes
 from hs_labels.models import ResourceLabels
-from django.core.exceptions import ImproperlyConfigured
-from haystack import connections, connection_router, constants
-from haystack.backends.solr_backend import SolrSearchBackend
-
 
 
 FILE_SIZE_LIMIT = 10*(1024 ** 3)
@@ -772,19 +768,6 @@ def update_science_metadata(pk, metadata):
 
     resource = utils.get_resource_by_shortkey(pk)
     resource.metadata.update(metadata)
-
-
-# delete from solr index
-def delete_resource_from_index(obj):
-    short_id = obj.short_id
-    using = constants.DEFAULT_ALIAS
-    backend = connections[using].get_backend()
-
-    if not isinstance(backend, SolrSearchBackend):
-        raise ImproperlyConfigured("'%s' isn't configured as a SolrEngine)." % backend.connection_alias)
-    # delete the Django object from the solr index
-    backend.remove(obj)
-
 
 def delete_resource(pk):
     """
