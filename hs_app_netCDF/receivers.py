@@ -24,17 +24,28 @@ def netcdf_pre_create_resource(sender, **kwargs):
     metadata = kwargs['metadata']
     validate_files_dict = kwargs['validate_files']
     res_title = kwargs['title']
+    ref_res_fnames = kwargs['ref_res_file_names']
+    user = kwargs['user']
+
+    file_selected = False
 
     if files:
-        infile = files[0]
+        file_selected = True
+        in_file_name = files[0]
+    elif ref_res_fnames:
+        ref_tmpfiles = utils.get_user_zone_file(user, ref_res_fnames)
+        if ref_tmpfiles:
+            in_file_name = ref_tmpfiles[0]
+            file_selected = True
 
+    if file_selected:
         # file validation and metadata extraction
-        nc_dataset = nc_utils.get_nc_dataset(infile.file.name)
+        nc_dataset = nc_utils.get_nc_dataset(in_file_name)
 
         if isinstance(nc_dataset, netCDF4.Dataset):
             # Extract the metadata from netcdf file
             try:
-                res_md_dict = nc_meta.get_nc_meta_dict(infile.file.name)
+                res_md_dict = nc_meta.get_nc_meta_dict(in_file_name)
                 res_dublin_core_meta = res_md_dict['dublin_core_meta']
                 res_type_specific_meta = res_md_dict['type_specific_meta']
             except:
@@ -121,14 +132,14 @@ def netcdf_pre_create_resource(sender, **kwargs):
                 metadata.append(ori_cov)
 
             # create the ncdump text file
-            if nc_dump.get_nc_dump_string_by_ncdump(infile.file.name):
-                dump_str = nc_dump.get_nc_dump_string_by_ncdump(infile.file.name)
+            if nc_dump.get_nc_dump_string_by_ncdump(in_file_name):
+                dump_str = nc_dump.get_nc_dump_string_by_ncdump(in_file_name)
             else:
-                dump_str = nc_dump.get_nc_dump_string(infile.file.name)
+                dump_str = nc_dump.get_nc_dump_string(in_file_name)
 
             if dump_str:
                 # refine dump_str first line
-                nc_file_name = '.'.join(os.path.basename(infile.name).split('.')[:-1])
+                nc_file_name = '.'.join(os.path.basename(in_file_name).split('.')[:-1])
                 first_line = list('netcdf {0} '.format(nc_file_name))
                 first_line_index = dump_str.index('{')
                 dump_str_list = first_line + list(dump_str)[first_line_index:]
