@@ -142,7 +142,7 @@
             </div>
 
             <!-- /input-group -->
-            <table id="item-selectors" class="table-hover table-striped">
+            <table id="item-selectors" class="table-hover table-striped resource-custom-table">
                 <thead>
                 <tr>
                     <th><input class="all-rows-selector" type="checkbox"></th>
@@ -759,6 +759,7 @@
                 }
             });
 
+            // Mark checkbox when row is clicked
             $("#item-selectors td").click(function(e){
                 if (e.target.tagName != "TD") {
                     return;

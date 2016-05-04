@@ -83,7 +83,6 @@
                         </div>
                     {% endif %}
                 {% endfor %}
-
                 <div class="panel-group" id="faceting-availability">
                     <div class="panel panel-primary">
                         <div class="panel-heading">
@@ -143,7 +142,6 @@
                     </div>
                 </div>
             </div>
-
         </div>
         <div class="col-lg-9" id="items">
             <!--
@@ -404,6 +402,9 @@
         var formLinkButtonURL = function(key, value){
             var currentURL = window.location.href.split('#')[0];
             var currentHash = window.location.href.split('#')[1];
+            if(window.location.search.length == 0){
+                currentURL += "?q=";
+            }
             var requestURL = currentURL + "&selected_facets="+key+"_exact:"+value + "#" + currentHash;
             map = null;
             window.location = requestURL;
@@ -449,7 +450,7 @@
 
         var clearAllFaceted = function() {
             clearCheckboxes();
-            var clearURL = "/search/?q=";
+            var clearURL = "/search/";
             window.location = clearURL;
         }
 
@@ -463,6 +464,7 @@
             $('#items-discovered').DataTable({
                 "paging":   false,
                 "searching": false,
+                "info": false,
                 "order": [[ 0, "asc" ]]
             });
 

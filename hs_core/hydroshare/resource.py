@@ -775,7 +775,6 @@ def update_science_metadata(pk, metadata):
     resource = utils.get_resource_by_shortkey(pk)
     resource.metadata.update(metadata)
 
-
 def delete_resource(pk):
     """
     Deletes a resource managed by HydroShare. The caller must be an owner of the resource or an administrator to perform

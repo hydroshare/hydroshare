@@ -8,119 +8,136 @@
 
 {# override content_block in generice.html#}
 {% block content_block %}
-    <hr>
-    {# collection content table #}
-    <div id="collection_content_div">
-        <div id="title_and_add_btn_div">
-           <h3 style="display: inline">Collection Contents </h3>
-           {% if edit_mode %}
-               <a type="button" class="btn btn-success" onclick="$('#collection-candidate').modal('show');" >
-                   <span class="glyphicon glyphicon-plus"><span class="button-label"> Add resources...</span></span>
-               </a>
 
-           {% endif %}
-        </div>
-        <div id="collection-table-div">
-            {% if edit_mode %}
-                <form id="collector-new" name="collector-new" action="/hsapi/_internal/{{collection_res_id}}/update-collection/" method="POST">
-            {% endif %}
 
-            <table id="collection-table" class="table-hover table-striped" width="100%">
-                <thead>
-                <tr>
-                    <th>Add</th>
-                    <th>Title</th>
-                    <th>Type</th>
-                    <th>Owners</th>
-                    <th>Sharing status</th>
-                    <th>My Permission</th>
-                    <th>Remove</th>
-                </tr>
-                </thead>
-                <tbody>
-                 {% if collection %}
-                    {% for res in collection %}
-                        <tr id="{{ res.short_id }}">
-                            <td>
-                                <input class="row-selector" type="checkbox" id="{{ res.short_id }}">
-                            </td>
-                            <td>
-                                {% if res|user_permission:request.user.pk|lower == "none" %}
-                                    <strong>{{ res.metadata.title }}</strong>
-                                {% else %}
-                                    <strong><a href="{{ res.get_absolute_url }}" target="_blank">{{ res.metadata.title }}</a></strong>
-                                {% endif %}
-                            </td>
-                            <td>
-                                {{ res.resource_type }}
-                            </td>
-                            <td>
-                                {% for owner in res.raccess.owners.all %}
-                                    {% if forloop.counter0 > 0 %} · {% endif %}
-                                    {% if owner.first_name %}
-                                        <strong><a href='/user/{{ owner.pk }}/' target="_blank">{{owner.first_name}} {{owner.last_name }}</a></strong>
-                                    {% else %}
-                                        <strong><a href='/user/{{ owner.pk }}/' target="_blank">{{ owner.username }}</a></strong>
-                                    {% endif %}
-                                {% endfor %}
-                            </td>
-                            <td>
-                                {% if res.raccess.published %}
-                                    Published
-                                {% elif res.raccess.public %}
-                                    Public
-                                {% elif res.raccess.discoverable %}
-                                    Discoverable
-                                {% else %}
-                                    Private
-                                {% endif %}
-                            </td>
-                             <td>
-                                {% if res|user_permission:request.user.pk|lower == "none" %}
-                                    <strong class="label-private">{{ res|user_permission:request.user.pk }}</strong>
-                                {% elif res|user_permission:request.user.pk|lower == "open access" %}
-                                    <strong class="label-public">{{ res|user_permission:request.user.pk }}</strong>
-                                {% else %}
-                                    {{ res|user_permission:request.user.pk }}
-                                {% endif %}
-                            </td>
-                            <td>
-                                <span onclick="remove_collection_item('{{ res.short_id }}')" data-form-id="form-favorite-{{ res.short_id }}" data-form-type="toggle-favorite"
-                                                  class="glyphicon glyphicon-remove btn-inline-favorite"></span>
-                            </td>
-                        </tr>
-                    {% endfor %}
+    <div class="col-sm-12 content-block">
+        {# collection content table #}
+        <div id="collection_content_div">
+            <div id="title_and_add_btn_div">
+                <h3>Collection Contents </h3>
+
+            </div>
+            <div id="collection-table-div">
+                {% if edit_mode %}
+                    <form id="collector-new" name="collector-new"
+                          action="/hsapi/_internal/{{ collection_res_id }}/update-collection/" method="POST">
                 {% endif %}
-                </tbody>
-            </table>
 
-            {% if edit_mode %}
-                </form>
-                <input class="btn btn-primary" type="button" id="save-new" onclick="save_btn_callback_new();" value="Save Changes" style="display: none"/>
+                <table id="collection-table" class="table-hover table-striped resource-custom-table" width="100%">
+                    <thead>
+                    <tr>
+                        <th>Add</th>
+                        <th>Title</th>
+                        <th>Type</th>
+                        <th>Owners</th>
+                        <th>Sharing status</th>
+                        <th>My Permission</th>
+                        <th>Remove</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    {% if collection %}
+                        {% for res in collection %}
+                            <tr id="{{ res.short_id }}">
+                                <td>
+                                    <input class="row-selector" type="checkbox" id="{{ res.short_id }}">
+                                </td>
+                                <td>
+                                    {% if res|user_permission:request.user.pk|lower == "none" %}
+                                        <strong>{{ res.metadata.title }}</strong>
+                                    {% else %}
+                                        <strong><a href="{{ res.get_absolute_url }}"
+                                                   target="_blank">{{ res.metadata.title }}</a></strong>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {{ res.resource_type }}
+                                </td>
+                                <td>
+                                    {% for owner in res.raccess.owners.all %}
+                                        {% if forloop.counter0 > 0 %} · {% endif %}
+                                        {% if owner.first_name %}
+                                            <strong><a href='/user/{{ owner.pk }}/'
+                                                       target="_blank">{{ owner.first_name }} {{ owner.last_name }}</a></strong>
+                                        {% else %}
+                                            <strong><a href='/user/{{ owner.pk }}/'
+                                                       target="_blank">{{ owner.username }}</a></strong>
+                                        {% endif %}
+                                    {% endfor %}
+                                </td>
+                                <td>
+                                    {% if res.raccess.published %}
+                                        Published
+                                    {% elif res.raccess.public %}
+                                        Public
+                                    {% elif res.raccess.discoverable %}
+                                        Discoverable
+                                    {% else %}
+                                        Private
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if res|user_permission:request.user.pk|lower == "none" %}
+                                        <strong class="label-private">{{ res|user_permission:request.user.pk }}</strong>
+                                    {% elif res|user_permission:request.user.pk|lower == "open access" %}
+                                        <strong class="label-public">{{ res|user_permission:request.user.pk }}</strong>
+                                    {% else %}
+                                        {{ res|user_permission:request.user.pk }}
+                                    {% endif %}
+                                </td>
+                                <td>
+                            <span onclick="remove_collection_item('{{ res.short_id }}')"
+                                  data-form-id="form-favorite-{{ res.short_id }}" data-form-type="toggle-favorite"
+                                  class="glyphicon glyphicon-remove btn-inline-favorite"></span>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    {% endif %}
+                    </tbody>
+                </table>
+
+                {% if edit_mode %}
+                    </form>
+                    <input class="btn btn-primary pull-right" type="button" id="save-new" onclick="save_btn_callback_new();"
+                           value="Save Changes" style="display: none"/>
+
+                    <div>
+                        <a type="button" class="btn btn-success" onclick="$('#collection-candidate').modal('show');">
+                        <span class="glyphicon glyphicon-plus"><span
+                                class="button-label"> Add resources...</span></span>
+                        </a>
+                    </div>
+                {% endif %}
+            </div>
+            {% if deleted_resources|length > 0 %}
+                <div id="view_deleted_res_div">
+                    <input type="button" id="view_deleted_res_btn" style="color: red" value="View deleted contents"
+                           onclick=" $('#deleted-resources-modal').modal('show');">
+            <span data-toggle="tooltip" data-placement="auto"
+                  title='Some resources in this collection have been deleted which may result in broken resource links in the bag. {% if edit_mode %} You need to remove deleted resources from the collection to fix that.{% endif %}'
+                  class="glyphicon glyphicon-info-sign text-muted"></span>
+                </div>
             {% endif %}
+            <hr>
+            {% block download_bag %}
+                <div>
+                    {% for b in cm.bags.all %}
+                        <a id="btn-download-all" type="button" class="btn btn-default row-selector"
+                           href="{{ bag_url }}">
+                    <span class="glyphicon glyphicon-download-alt">
+                        <span title='Download All Content as Zipped BagIt Archive' class="button-label">Download Collection Bag</span>
+                    </span>
+                            <a target="_blank" href="http://en.wikipedia.org/wiki/BagIt">Learn more about the Bagit
+                                archive format</a>
+                        </a>
+                    {% endfor %}
+                </div>
+            {% endblock %}
         </div>
-        {% if deleted_resources|length > 0 %}
-            <div id="view_deleted_res_div">
-                <input type="button" id="view_deleted_res_btn" style="color: red" value="View deleted contents" onclick=" $('#deleted-resources-modal').modal('show');">
-                <span data-toggle="tooltip" data-placement="auto"
-                      title='Some resources in this collection have been deleted which may result in broken resource links in the bag. {% if edit_mode %} You need to remove deleted resources from the collection to fix that.{% endif %}'
-                      class="glyphicon glyphicon-info-sign text-muted"></span>
-            </div>
-        {% endif %}
-        <hr>
-        {% block download_bag %}
-            <div>
-                {% for b in cm.bags.all %}
-                    <a id="btn-download-all" type="button" class="btn btn-default row-selector" href="{{ bag_url }}">
-                        <span class="glyphicon glyphicon-download-alt">
-                            <span title='Download All Content as Zipped BagIt Archive' class="button-label">Download Collection Bag</span>
-                        </span>
-                        <a target="_blank" href="http://en.wikipedia.org/wiki/BagIt">Learn more about the Bagit archive format</a>
-                    </a>
-                {% endfor %}
-            </div>
-        {% endblock %}
     </div>
+
+
+
 
     {#    modal div: warning message  #}
     <div class="modal fade" id="save-collection-warning" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
@@ -154,7 +171,7 @@
                     <h4 class="modal-title" id="save-collection-warning-title">My Resources Pool</h4>
                 </div>
                 <div class="modal-body" id="save-collection-warning-body">
-                    <table id="collection-table-candidate" class="table-hover table-striped" width="100%">
+                    <table id="collection-table-candidate" class="table-hover table-striped resource-custom-table" width="100%">
                         <thead>
                         <tr>
                             <th>Add</th>
@@ -394,7 +411,23 @@
                 }
                 });
 
+
+            // Mark checkbox when row is clicked
+            $("#collection-table-candidate td").click(onCollectionTableRowClick);
+
         }); // $(document).ready(function())
+
+        function onCollectionTableRowClick(e) {
+            if (e.target.tagName != "TD") {
+                return;
+            }
+            if ($(this).parent().find("input[type='checkbox']:checked").length > 0) {
+                $(this).parent().find("input[type='checkbox']").prop("checked", false);
+            }
+            else {
+                $(this).parent().find("input[type='checkbox']").prop("checked", true);
+            }
+        }
 
 
         function remove_collection_item(res_id) {
@@ -419,6 +452,9 @@
                 removed_row_from_colletion.remove().draw(false);
             }
             $('#save-new').show();
+
+            // Rebind click event for new row
+            $("#collection-table-candidate td").click(onCollectionTableRowClick);
         }
 
 
