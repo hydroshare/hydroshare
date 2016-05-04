@@ -580,6 +580,9 @@ def create_new_version_resource(ori_res, new_res, user):
         # note that new version collection will not contain "deleted resources"
         new_res.resources = ori_res.resources.all()
 
+    # create the key/value metadata
+    new_res.extra_metadata = ori_res.extra_metadata
+
     # create bag for the new resource
     hs_bagit.create_bag(new_res)
 
