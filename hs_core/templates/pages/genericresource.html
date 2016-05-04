@@ -28,6 +28,12 @@
                     <strong>Failed to create a new version of this resource: {{ new_version_resource_creation_error }}</strong>
                 </div>
             {% endif %}
+            {% if rep_res_to_irods_user_zone_error %}
+                <div class="alert alert-danger alert-dismissible" role="alert">
+                    <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                    <strong>Failed to replicate this resource to your iRODS user zone: {{ rep_res_to_irods_user_zone_error }}</strong>
+                </div>
+            {% endif %}
         {% endblock %}
 
         {# ======= Title ======= #}

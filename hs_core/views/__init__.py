@@ -276,8 +276,17 @@ def delete_resource(request, shortkey, *args, **kwargs):
 
 def rep_res_bag_to_irods_user_zone(request, shortkey, *args, **kwargs):
     res, authorized, user = authorize(request, shortkey, needed_permission=ACTION_TO_AUTHORIZE.VIEW_RESOURCE)
+    if not authorized:
+        request.session['rep_res_to_irods_user_zone_error'] = "You are not authorized to replicate this resource."
+        return HttpResponseRedirect(res.get_absolute_url())
+
+    try:
+        utils.rep_res_bag_to_user_zone(user, shortkey)
+    except SessionException as ex:
+        request.session['rep_res_to_irods_user_zone_error'] = ex.stderr
 
     return HttpResponseRedirect(res.get_absolute_url())
+
 
 def create_new_version_resource(request, shortkey, *args, **kwargs):
     res, authorized, user = authorize(request, shortkey, needed_permission=ACTION_TO_AUTHORIZE.CREATE_RESOURCE_VERSION)

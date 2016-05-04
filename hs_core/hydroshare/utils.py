@@ -22,7 +22,8 @@ from mezzanine.conf import settings
 
 from hs_core.signals import *
 from hs_core.models import AbstractResource, BaseResource, ResourceFile
-from hs_core.hydroshare.hs_bagit import create_bag_files
+from hs_core.hydroshare.hs_bagit import create_bag_files, create_bag_by_irods
+
 from django_irods.storage import IrodsStorage
 
 
@@ -208,6 +209,35 @@ def get_user_zone_file(user, irods_fnames):
         irods_storage.getFile(ifname, tmpfile)
         ret_file_list.append(tmpfile)
     return ret_file_list
+
+
+def rep_res_bag_to_user_zone(user, res_id):
+    """
+    Replicate resource bag to iRODS user zone
+    Args:
+        user: the requesting user
+        res_id: the resource id with its bag to be replicated to iRODS user zone
+
+    Returns:
+    None, but exceptions will be raised if there is an issue with iRODS operation
+    """
+    # do on-demand bag creation
+    istorage = IrodsStorage()
+    bag_modified = "false"
+    # needs to check whether res_id collection exists before getting/setting AVU on it to accommodate the case
+    # where the very same resource gets deleted by another request when it is getting downloaded
+    if istorage.exists(res_id):
+        bag_modified = istorage.getAVU(res_id, 'bag_modified')
+    if bag_modified == "true":
+        create_bag_by_irods(res_id, istorage)
+        if istorage.exists(res_id):
+            istorage.setAVU(res_id, 'bag_modified', "false")
+
+    # do replication of the resource bag to irods user zone
+    set_user_zone_session(user, istorage)
+    src_file = 'bags/{resid}.zip'.format(resid=res_id)
+    tgt_file = '/hydroshareuserZone/home/{username}/{resid}.zip'.format(username=user.username, resid=res_id)
+    istorage.copyFiles(src_file, tgt_file)
 
 
 # TODO: Tastypie left over. This needs to be deleted
