@@ -13,6 +13,7 @@ from django.http import HttpResponseRedirect, HttpResponse
 from django.shortcuts import get_object_or_404, render_to_response, render
 from django.template import RequestContext
 from django.core import signing
+from django.db import Error
 from django import forms
 
 from rest_framework.decorators import api_view
@@ -139,6 +140,7 @@ def add_metadata_element(request, shortkey, element_name, *args, **kwargs):
     handler_response = pre_metadata_element_create.send(sender=sender_resource, element_name=element_name,
                                                         request=request)
     is_add_success = False
+    err_msg = "Failed to create metadata element '{}'. {}."
     for receiver, response in handler_response:
         if 'is_valid' in response:
             if response['is_valid']:
@@ -149,13 +151,21 @@ def add_metadata_element(request, shortkey, element_name, *args, **kwargs):
                         res.metadata.subjects.all().delete()
                     for kw in keywords:
                         res.metadata.create_element(element_name, value=kw)
+                    is_add_success = True
                 else:
                     try:
                         element = res.metadata.create_element(element_name, **element_data_dict)
+                        is_add_success = True
                     except ValidationError as exp:
-                        request.session['validation_error'] = exp.message
-                is_add_success = True
-                resource_modified(res, request.user)
+                        err_msg = err_msg.format(element_name, exp.message)
+                        request.session['validation_error'] = err_msg
+                    except Error as exp:
+                        # some database error occurred
+                        err_msg = err_msg.format(element_name, exp.message)
+                        request.session['validation_error'] = err_msg
+
+                if is_add_success:
+                    resource_modified(res, request.user)
 
     if request.is_ajax():
         if is_add_success:
@@ -172,7 +182,7 @@ def add_metadata_element(request, shortkey, element_name, *args, **kwargs):
             return HttpResponse(json.dumps(ajax_response_data))
 
         else:
-            ajax_response_data = {'status': 'error'}
+            ajax_response_data = {'status': 'error', 'message': err_msg}
             return HttpResponse (json.dumps(ajax_response_data))
 
     if 'resource-mode' in request.POST:
@@ -187,23 +197,29 @@ def update_metadata_element(request, shortkey, element_name, element_id, *args, 
     handler_response = pre_metadata_element_update.send(sender=sender_resource, element_name=element_name,
                                                         element_id=element_id, request=request)
     is_update_success = False
-
+    err_msg = "Failed to update metadata element '{}'. {}."
     for receiver, response in handler_response:
         if 'is_valid' in response:
             if response['is_valid']:
                 element_data_dict = response['element_data_dict']
                 try:
                     res.metadata.update_element(element_name, element_id, **element_data_dict)
+                    is_update_success = True
                 except ValidationError as exp:
-                    request.session['validation_error'] = exp.message
+                    err_msg = err_msg.format(element_name, exp.message)
+                    request.session['validation_error'] = err_msg
+                except Error as exp:
+                    # some database error occurred
+                    err_msg = err_msg.format(element_name, exp.message)
+                    request.session['validation_error'] = err_msg
                 if element_name == 'title':
                     if res.raccess.public:
                         if not res.can_be_public_or_discoverable:
                             res.raccess.public = False
                             res.raccess.save()
 
-                resource_modified(res, request.user)
-                is_update_success = True
+                if is_update_success:
+                    resource_modified(res, request.user)
 
     if request.is_ajax():
         if is_update_success:
@@ -215,8 +231,11 @@ def update_metadata_element(request, shortkey, element_name, element_id, *args, 
             ajax_response_data = {'status': 'success', 'element_name': element_name, 'metadata_status': metadata_status}
             return HttpResponse(json.dumps(ajax_response_data))
         else:
-            ajax_response_data = {'status': 'error'}
+            ajax_response_data = {'status': 'error', 'message': err_msg}
             return HttpResponse(json.dumps(ajax_response_data))
+
+    if 'resource-mode' in request.POST:
+        request.session['resource-mode'] = 'edit'
 
     return HttpResponseRedirect(request.META['HTTP_REFERER'])
 
@@ -495,7 +514,6 @@ class FilterForm(forms.Form):
 @processor_for('my-resources')
 @login_required
 def my_resources(request, page):
-
     resource_collection = get_my_resources_list(request)
 
     context = {'collection': resource_collection}

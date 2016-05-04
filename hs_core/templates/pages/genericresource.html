@@ -4,6 +4,7 @@
 
 {% block extra_head %}
       <link href="{{ STATIC_URL }}css/site_base_irods.css" rel="stylesheet"/>
+      <link href="{{ STATIC_URL }}css/toolresource.css" rel="stylesheet"/>
 {% endblock %}
 
 {% block main %}
@@ -294,7 +295,7 @@
                                             <th>Organization</th>
                                             <th>Address</th>
                                             <th>Phone</th>
-                                            <th>Actions</th>
+                                            <th></th>
                                         </tr>
                                         {% for author in creator_formset.initial %}
                                             <tr>
@@ -325,7 +326,7 @@
                                                 <a type="button" class="btn btn-success" data-toggle="modal"
                                                    data-target="#add-creator-dialog" multiple="multiple">
                                                         <span class="glyphicon glyphicon-plus"><span
-                                                                class="button-label"> Add author...</span></span>
+                                                                class="button-label"> Add Author</span></span>
                                                 </a>
                                             </th>
                                         </tr>
@@ -337,7 +338,7 @@
                                             <th>Organization</th>
                                             <th>Address</th>
                                             <th>Phone</th>
-                                            <th>Actions</th>
+                                            <th></th>
                                         </tr>
                                         {% for contributor in contributor_formset.initial %}
                                             <tr>
@@ -365,7 +366,7 @@
                                             <th class="division-title">
                                                 <a type="button" class="btn btn-success" data-toggle="modal"
                                                    data-target="#add-contributor-dialog" multiple="multiple">
-                                                    <span class="glyphicon glyphicon-plus"><span class="button-label"> Add contributor...</span></span>
+                                                    <span class="glyphicon glyphicon-plus"><span class="button-label"> Add Contributor</span></span>
                                                 </a>
                                             </th>
                                         </tr>
@@ -847,6 +848,9 @@
             <!-- ==== Tabs end ==== -->
         </div>
 
+        {# ======= Credits ======= #}
+        {% include "resource-landing-page/credits.html" %}
+
         {# ======= Ratings ======= #}
         {% include "resource-landing-page/ratings.html" %}
 
@@ -899,7 +903,6 @@
         <script type="text/javascript" src="{{ STATIC_URL }}js/coverageMap.js"></script>
         <script src="https://maps.googleapis.com/maps/api/js?libraries=drawing"></script>
         <script type="text/javascript" src="{{ STATIC_URL }}js/resourceLandingAjax.js"></script>
-        <script type="text/javascript" src="{{ STATIC_URL }}js/irods.js"></script>
         <script type="text/javascript">
             function onRoleSelect(event) {
                 var el = $(event.target);
@@ -1420,11 +1423,3 @@
             <script type="text/javascript" src="{{ STATIC_URL }}js/toolresource.js"></script>
         {% endif %}
     {% endblock %}
-
-
-    {% block extra_css %}
-        {{ block.super }}
-        {% if relevant_tools %}
-            <link href="{{ STATIC_URL }}css/toolresource.css" rel="stylesheet"/>
-        {% endif %}
-    {%  endblock %}

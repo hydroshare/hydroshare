@@ -961,6 +961,33 @@ class Format(AbstractMetaDataElement):
         return self.value
 
 
+class FundingAgency(AbstractMetaDataElement):
+    term = 'FundingAgency'
+    agency_name = models.TextField(null=False)
+    award_title = models.TextField(null=True, blank=True)
+    award_number = models.TextField(null=True, blank=True)
+    agency_url = models.URLField(null=True, blank=True)
+
+    def __unicode__(self):
+        return self.agency_name
+
+    @classmethod
+    def create(cls, **kwargs):
+        agency_name = kwargs.get('agency_name', None)
+        if agency_name is None or len(agency_name.strip()) == 0:
+            raise ValidationError("Agency name is missing")
+
+        return super(FundingAgency, cls).create(**kwargs)
+
+    @classmethod
+    def update(cls, element_id, **kwargs):
+        agency_name = kwargs.get('agency_name', None)
+        if agency_name and len(agency_name.strip()) == 0:
+            raise ValidationError("Agency name is missing")
+
+        super(FundingAgency, cls).update(element_id, **kwargs)
+
+
 class Subject(AbstractMetaDataElement):
     term = 'Subject'
     value = models.CharField(max_length=100)
@@ -1381,6 +1408,10 @@ class BaseResource(Page, AbstractResource):
 
         return '<?xml version="1.0" encoding="UTF-8"?>\n' + etree.tostring(ROOT, pretty_print=pretty_print)
 
+    @property
+    def verbose_name(self):
+        return self.get_content_model()._meta.verbose_name
+
     @classmethod
     def get_supported_upload_file_types(cls):
         # all file types are supported
@@ -1458,6 +1489,7 @@ class CoreMetaData(models.Model):
     _rights = GenericRelation(Rights)
     _type = GenericRelation(Type)
     _publisher = GenericRelation(Publisher)
+    funding_agencies = GenericRelation(FundingAgency)
 
     @property
     def title(self):
@@ -1499,7 +1531,8 @@ class CoreMetaData(models.Model):
                 'Subject',
                 'Source',
                 'Relation',
-                'Publisher']
+                'Publisher',
+                'FundingAgency']
 
     # this method needs to be overriden by any subclass of this class
     # if they implement additional metadata elements that are required
@@ -1521,9 +1554,6 @@ class CoreMetaData(models.Model):
             return False
         elif len(self.rights.statement.strip()) == 0:
             return False
-
-        # if self.coverages.count() == 0:
-        #     return False
 
         if self.subjects.count() == 0:
             return False
@@ -1564,6 +1594,7 @@ class CoreMetaData(models.Model):
         self.subjects.all().delete()
         self.sources.all().delete()
         self.relations.all().delete()
+        self.funding_agencies.all().delete()
 
     def copy_all_elements_from(self, src_md, exclude_elements=None):
         md_type = ContentType.objects.get_for_model(src_md)
@@ -1647,12 +1678,31 @@ class CoreMetaData(models.Model):
             dc_type = etree.SubElement(rdf_Description, '{%s}type' % self.NAMESPACES['dc'])
             dc_type.set('{%s}resource' % self.NAMESPACES['rdf'], self.type.url)
 
-        # create the Description element (we named it as Abstract to differentiate from the parent "Description" element)
+        # create the Description element (we named it as Abstract to differentiate from the parent "Description"
+        # element)
         if self.description:
             dc_description = etree.SubElement(rdf_Description, '{%s}description' % self.NAMESPACES['dc'])
             dc_des_rdf_Desciption = etree.SubElement(dc_description, '{%s}Description' % self.NAMESPACES['rdf'])
             dcterms_abstract = etree.SubElement(dc_des_rdf_Desciption, '{%s}abstract' % self.NAMESPACES['dcterms'])
             dcterms_abstract.text = self.description.abstract
+
+        for agency in self.funding_agencies.all():
+            hsterms_agency = etree.SubElement(rdf_Description, '{%s}awardInfo' % self.NAMESPACES['hsterms'])
+            hsterms_agency_rdf_Description = etree.SubElement(hsterms_agency, '{%s}Description' %
+                                                              self.NAMESPACES['rdf'])
+            hsterms_name = etree.SubElement(hsterms_agency_rdf_Description, '{%s}fundingAgencyName' %
+                                            self.NAMESPACES['hsterms'])
+            hsterms_name.text = agency.agency_name
+            if agency.agency_url:
+                hsterms_agency_rdf_Description.set('{%s}about' % self.NAMESPACES['rdf'], agency.agency_url)
+            if agency.award_title:
+                hsterms_title = etree.SubElement(hsterms_agency_rdf_Description, '{%s}awardTitle' %
+                                                 self.NAMESPACES['hsterms'])
+                hsterms_title.text = agency.award_title
+            if agency.award_number:
+                hsterms_number = etree.SubElement(hsterms_agency_rdf_Description, '{%s}awardNumber' %
+                                                  self.NAMESPACES['hsterms'])
+                hsterms_number.text = agency.award_number
 
         # use all creators associated with this metadata object to
         # generate creator xml elements
@@ -1687,7 +1737,8 @@ class CoreMetaData(models.Model):
                 if 'projection' in coverage.value:
                     cov_value = cov_value + '; projection=%s' % coverage.value['projection']
 
-            else: # this is box type
+            else:
+                # this is box type
                 cov_value = 'northlimit=%s; eastlimit=%s; southlimit=%s; westlimit=%s; units=%s' \
                             %(coverage.value['northlimit'], coverage.value['eastlimit'],
                               coverage.value['southlimit'], coverage.value['westlimit'], coverage.value['units'])
