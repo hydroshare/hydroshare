@@ -169,6 +169,7 @@ def set_user_zone_session(user, irods_storage):
                                    password=settings.HS_WWW_IRODS_PROXY_USER_PWD,
                                    host=settings.HS_WWW_IRODS_HOST,
                                    port=settings.IRODS_PORT,
+                                   def_res=settings.HS_IRODS_USER_ZONE_DEF_RES,
                                    zone=settings.HS_WWW_IRODS_ZONE)
 
 

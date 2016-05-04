@@ -157,7 +157,7 @@ HS_WWW_IRODS_PROXY_USER = 'wwwHydroProxy'
 # IRODS_USERNAME and other associated settings already represent wwwHydroProxy settings
 HS_WWW_IRODS_PROXY_USER_PWD = ''
 HS_WWW_IRODS_HOST = ''
-HS_WWW_IRODS_DEFAULT_RESOURCE = ''
+HS_IRODS_USER_ZONE_DEF_RES = 'hydroshareuserResc'
 HS_WWW_IRODS_ZONE = ''
 
 # Email configuration
