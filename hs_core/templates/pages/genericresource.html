@@ -867,7 +867,7 @@
                                     </tr>
                                     </thead>
                                     <tbody>
-                                        {% for extra_meta_name, extra_meta_value in extra_matadata_dict.items %}
+                                        {% for extra_meta_name, extra_meta_value in page.get_content_model.extra_metadata.items %}
                                             <tr id="{{ forloop.counter0 }}">
                                                 <td>
                                                     {{ extra_meta_name }}
@@ -1102,8 +1102,7 @@
                 $("#old_extra_meta_name").val('');
                 $("#extra_meta_name_input").val('');
                 $("#extra_meta_value_input").val('');
-                if (edit)
-                {
+                if (edit) {
                     var t = $('#extraMetaTable').DataTable();
                     var row_to_edit = t.row("#" + row_id_str);
                     var oldname = row_to_edit.data()[0];
@@ -1114,8 +1113,7 @@
                     $("#extra_meta_value_input").val(oldvalue);
                     $("#extra_meta_title").text("Edit Extended Metadata");
                 }
-                else
-                {
+                else {
                     $("#extra_meta_title").text("Add Extended Metadata");
                 }
                 $('#extraMetaDialog').modal('show');
@@ -1129,32 +1127,27 @@
                 var extra_meta_value = $("#extra_meta_value_input").val().trim();
                 var edit_extra_meta_row_id = $("#edit_extra_meta_row_id").val().trim();
 
-                if(extra_meta_name.length==0 || extra_meta_value.length==0)
-                {
+                if(extra_meta_name.length==0 || extra_meta_value.length==0) {
                     $("#extra_meta_msg").html("<font color='red'>Both name and value are required fields that cannot be left blank.</font>");
                     $("#extra_meta_msg").show();
                     return;
                 }
 
-                if(foundDuplicatedName(t, extra_meta_name, edit_extra_meta_row_id))
-                {
+                if(foundDuplicatedName(t, extra_meta_name, edit_extra_meta_row_id)) {
                     $("#extra_meta_msg").html("<font color='red'>The name already exists. Please input a different name.</font>");
                     $("#extra_meta_msg").show();
                     return;
                 }
 
-                if (edit_extra_meta_row_id == "")
-                {
+                if (edit_extra_meta_row_id == "") {
                     // add new
-{#                    var row_id_0_base = t.rows().count();#}
                     var new_row_id_0_base = findMaxRowID(t) + 1;
                     var edit_icon_str = '<span onclick="showAddEditExtraMetaPopup(true,' + "'" + new_row_id_0_base + "'" + ')"' + ' data-form-type="toggle-favorite" class="glyphicon glyphicon-edit btn-inline-favorite"></span>';
                     var remove_icon_str = '<span onclick="removeExtraMetadataFromTable(' + "'" + new_row_id_0_base + "'" + ')"' + ' data-form-type="toggle-favorite" class="glyphicon glyphicon-remove btn-inline-favorite"></span>';
                     var row_ele = t.row.add( [extra_meta_name,extra_meta_value, edit_icon_str+" "+remove_icon_str]).node();
                     $(row_ele).attr( 'id', new_row_id_0_base);
                 }
-                else
-                {
+                else {
                     // edit existing
                     var row_to_edit = t.row("#" + edit_extra_meta_row_id);
                     var updated_data_array = row_to_edit.data();
@@ -1165,7 +1158,6 @@
                 t.rows().invalidate().draw();
                 $('#extraMetaDialog').modal('hide');
                 $('#save-extra-meta-btn').show();
-
             }
 
             function findMaxRowID(table)
@@ -1186,13 +1178,11 @@
                 var first_duplicated_row_id = -1;
 
                 table.rows(). every(function ( rowIdx, tableLoop, rowLoop ) {
-                    if(this.node().id != except_row_id)
-                    {
-                        if (this.data()[0]==newName)
-                       {
+                    if(this.node().id != except_row_id) {
+                        if (this.data()[0]==newName) {
                            found_first_duplicated = true;
                            first_duplicated_row_id = this.node().id;
-                       }
+                        }
                     }
                 });
                 return found_first_duplicated;
@@ -1221,7 +1211,7 @@
 
                 var json_str = JSON.stringify(json_obj);
                 json_obj = JSON.parse(json_str);
-                var update_key_value_metadata_url = "/hsapi/_internal/" + '{{ res_id }}' + "/update-key-value-metadata/";
+                var update_key_value_metadata_url = "/hsapi/_internal/" + '{{ page.get_content_model.short_id }}' + "/update-key-value-metadata/";
                 $.ajax({
                     type: "POST",
                     url: update_key_value_metadata_url,
@@ -1231,36 +1221,32 @@
                     success: function(result) {
                         json_response = result;
                         if (json_response.status === 'success') {
-
-
                              $('#save-extra-meta-btn').hide();
                              $('body > .container').append($alert_success_extra_meta);
                              $('#error-alert').each(function(){
                                 this.remove();
                                 });
-                             $(".alert-success").fadeTo(2000, 500).fadeOut(1000, function(){
+                             $(".alert-success").fadeTo(2000, 500).fadeOut(1000, function() {
                                 $(document).trigger("submit-success");
                                 $(".alert-success").alert('close');
                              });
                         }
                         else {
                             $('body > .container').append($alert_error_extra_meta);
-                            $(".alert-danger").fadeTo(3000, 500).fadeOut(1000, function(){
+                            $(".alert-danger").fadeTo(3000, 500).fadeOut(1000, function() {
                             $(document).trigger("submit-error");
                             $(".alert-danger").alert('close');
                         });
                         }
                     },
-
                     error: function(XMLHttpRequest, textStatus, errorThrown) {
                         $('body > .container').append($alert_error_extra_meta);
-                        $(".alert-danger").fadeTo(3000, 500).fadeOut(1000, function(){
+                        $(".alert-danger").fadeTo(3000, 500).fadeOut(1000, function() {
                             $(document).trigger("submit-error");
                             $(".alert-danger").alert('close');
                         });
                     }
                 });
-
             } // function saveExtraMetadata()
 
             function removeExtraMetadataFromTable(row_id)
@@ -1648,9 +1634,7 @@
                     "info": false,
                     "bFilter": false,
                     "bInfo": false,
-                    "language": {
-                    "emptyTable": "No Extended Metadata"
-                    }
+                    "language": {"emptyTable": "No Extended Metadata"}
                 });
             });
         </script>
