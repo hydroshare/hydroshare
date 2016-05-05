@@ -302,7 +302,7 @@
                                             <th>Organization</th>
                                             <th>Address</th>
                                             <th>Phone</th>
-                                            <th>Actions</th>
+                                            <th></th>
                                         </tr>
                                         {% for author in creator_formset.initial %}
                                             <tr>
@@ -333,7 +333,7 @@
                                                 <a type="button" class="btn btn-success" data-toggle="modal"
                                                    data-target="#add-creator-dialog" multiple="multiple">
                                                         <span class="glyphicon glyphicon-plus"><span
-                                                                class="button-label"> Add author...</span></span>
+                                                                class="button-label"> Add Author</span></span>
                                                 </a>
                                             </th>
                                         </tr>
@@ -345,7 +345,7 @@
                                             <th>Organization</th>
                                             <th>Address</th>
                                             <th>Phone</th>
-                                            <th>Actions</th>
+                                            <th></th>
                                         </tr>
                                         {% for contributor in contributor_formset.initial %}
                                             <tr>
@@ -373,7 +373,7 @@
                                             <th class="division-title">
                                                 <a type="button" class="btn btn-success" data-toggle="modal"
                                                    data-target="#add-contributor-dialog" multiple="multiple">
-                                                    <span class="glyphicon glyphicon-plus"><span class="button-label"> Add contributor...</span></span>
+                                                    <span class="glyphicon glyphicon-plus"><span class="button-label"> Add Contributor</span></span>
                                                 </a>
                                             </th>
                                         </tr>
@@ -898,6 +898,9 @@
             </div>
             <!-- ==== Tabs end ==== -->
         </div>
+
+        {# ======= Credits ======= #}
+        {% include "resource-landing-page/credits.html" %}
 
         {# ======= Ratings ======= #}
         {% include "resource-landing-page/ratings.html" %}
