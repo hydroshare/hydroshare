@@ -28,12 +28,6 @@
                     <strong>Failed to create a new version of this resource: {{ new_version_resource_creation_error }}</strong>
                 </div>
             {% endif %}
-            {% if rep_res_to_irods_user_zone_error %}
-                <div class="alert alert-danger alert-dismissible" role="alert">
-                    <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                    <strong>Failed to replicate this resource to your iRODS user zone: {{ rep_res_to_irods_user_zone_error }}</strong>
-                </div>
-            {% endif %}
         {% endblock %}
 
         {# ======= Title ======= #}
@@ -208,6 +202,16 @@
                                 <a target="_blank" href="http://en.wikipedia.org/wiki/BagIt">Learn more about the Bagit archive format</a>
                             </a>
                         {% endfor %}
+                        {% if show_user_zone_selection %}
+                            <div id='rep-alert-success' class="alert alert-success alert-dismissible" role="alert" style="display:none">
+                                <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                                <span id="rep-status-success"></span>
+                            </div>
+                            <div id='rep-alert-error' class="alert alert-danger alert-dismissible" role="alert" style="display:none">
+                                <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                                <span id="rep-status-error"></span>
+                            </div>
+                        {% endif %}
                     </div>
                     {% endblock %}
 

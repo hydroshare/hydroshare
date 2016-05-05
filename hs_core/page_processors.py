@@ -109,10 +109,6 @@ def get_page_context(page, user, resource_edit=False, extended_metadata_layout=N
         if 'just_published' in request.session:
             del request.session['just_published']
 
-        rep_res_to_user_zone_error = request.session.get('rep_res_to_irods_user_zone_error', None)
-        if 'rep_res_to_irods_user_zone_error' in request.session:
-            del request.session['rep_res_to_irods_user_zone_error']
-
     bag_url = AbstractResource.bag_url(content_model.short_id)
 
     if user.is_authenticated():
@@ -184,7 +180,6 @@ def get_page_context(page, user, resource_edit=False, extended_metadata_layout=N
                    'allow_multiple_file_upload': content_model.can_have_multiple_files(),
                    'validation_error': validation_error if validation_error else None,
                    'new_version_resource_creation_error': new_version_create_resource_error if new_version_create_resource_error else None,
-                   'rep_res_to_irods_user_zone_error': rep_res_to_user_zone_error if rep_res_to_user_zone_error else None,
                    'relevant_tools': relevant_tools,
                    'file_type_error': file_type_error,
                    'just_created': just_created,
