@@ -20,11 +20,14 @@ $('#btn-select-irods-file, #btn-select-irods-file-uz').on('click',function(event
     $('#irods_view_store').val(store);
     // loading file structs
     var parent = $('#file_struct');
-    if(event.target.id=='btn-select-irods-file')
+    if(event.target.id=='btn-select-irods-file') {
         get_store(store, parent, 0);
-    else
-        get_store_uz(store, parent, 0)
-    $('body').on('click', '.folder', click_folder_opr);
+        $('body').on('click', '.folder', click_folder_opr(false));
+    }
+    else {
+        get_store_uz(store, parent, 0);
+        $('body').on('click', '.folder', click_folder_opr(true));
+    }
 });
 
 function set_store_display(store, parent, margin, json) {
@@ -137,7 +140,7 @@ function get_store_uz(store, parent, margin) {
     return true;
 }
 
-function click_folder_opr() {
+function click_folder_opr(is_user_zone) {
     var margin_left = parseInt($(this).css('margin-left')) + 10;
     if($(this).hasClass('isOpen')) {
         $(this).addClass('isClose');
@@ -153,7 +156,10 @@ function click_folder_opr() {
     else {
         var store = $(this).attr('name');
         var parent = $(this)
-        get_store(store, parent, margin_left);
+        if (is_user_zone)
+            get_store_uz(store, parent, margin_left);
+        else
+            get_store(store, parent, margin_left);
         $(this).addClass('isOpen');
         set_datastore($(this).attr('name'), true);
     }
@@ -180,10 +186,18 @@ $('#irods_view_store').keypress(function(e) {
 
         // loading file structs
         var parent = $('#file_struct');
-        var got_store = get_store(store, parent, 0);
+        var got_store;
+        var is_user_zone = false;
+        if (parent.indexOf('hydroshareuserZone') > -1) {
+            got_store = get_store_uz(store, parent, 0);
+            is_user_zone = true;
+        }
+        else
+            got_store = get_store(store, parent, 0);
+
         if (got_store) {
             $('#file_struct').children().remove();
-            click_folder_opr();
+            click_folder_opr(is_user_zone);
         }
         else {
             alert('Datastore does not exist');

@@ -189,7 +189,7 @@ def get_user_zone_file_size(user, fname):
     return irods_storage.size(fname)
 
 
-def get_user_zone_file(user, irods_fnames):
+def get_user_zone_files(user, irods_fnames):
     """
     Get the file from iRODS user zone to Django server for metadata extraction on-demand for specific resource types
     Args:

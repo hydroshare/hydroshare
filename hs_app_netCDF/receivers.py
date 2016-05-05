@@ -33,7 +33,7 @@ def netcdf_pre_create_resource(sender, **kwargs):
         file_selected = True
         in_file_name = files[0].file.name
     elif ref_res_fnames:
-        ref_tmpfiles = utils.get_user_zone_file(user, ref_res_fnames)
+        ref_tmpfiles = utils.get_user_zone_files(user, ref_res_fnames)
         if ref_tmpfiles:
             in_file_name = ref_tmpfiles[0]
             file_selected = True
@@ -244,7 +244,7 @@ def netcdf_pre_add_files_to_resource(sender, **kwargs):
         file_selected = True
         in_file_name = files[0].file.name
     elif ref_res_fnames:
-        ref_tmpfiles = utils.get_user_zone_file(user, ref_res_fnames)
+        ref_tmpfiles = utils.get_user_zone_files(user, ref_res_fnames)
         if ref_tmpfiles:
             in_file_name = ref_tmpfiles[0]
             file_selected = True

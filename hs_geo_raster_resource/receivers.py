@@ -149,7 +149,7 @@ def raster_pre_create_resource_trigger(sender, **kwargs):
         # raster file validation
         error_info, vrt_file_path, temp_dir = raster_file_validation(files)
     elif ref_res_fnames:
-        ref_tmpfiles = utils.get_user_zone_file(user, ref_res_fnames)
+        ref_tmpfiles = utils.get_user_zone_files(user, ref_res_fnames)
         # raster file validation
         error_info, vrt_file_path, temp_dir = raster_file_validation(files, ref_tmp_file_names=ref_tmpfiles)
         file_selected = True
@@ -239,7 +239,7 @@ def raster_pre_add_files_to_resource_trigger(sender, **kwargs):
         # raster file validation
         error_info, vrt_file_path, temp_dir = raster_file_validation(files)
     elif ref_res_fnames:
-        ref_tmpfiles = utils.get_user_zone_file(user, ref_res_fnames)
+        ref_tmpfiles = utils.get_user_zone_files(user, ref_res_fnames)
         # raster file validation
         error_info, vrt_file_path, temp_dir = raster_file_validation(files, ref_tmp_file_names=ref_tmpfiles)
         file_selected = True
