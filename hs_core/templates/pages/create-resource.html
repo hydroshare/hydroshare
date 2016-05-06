@@ -102,7 +102,7 @@
                             <input type="hidden" id="irods_username_uz" name="irods_username_uz" value="{{ user_name }}">
                             <input type="hidden" id="irods_store_uz" name="irods_store_uz" value="/hydroshareuserZone/home/{{ user_name }}">
                             <a id="btn-select-irods-file-uz" type="button" class="btn btn-default row-selector"
-                               data-toggle="modal" onclick="show_irods_browse_modal('userzone')">Browse your iRODS HydroShare User Zone...</a>
+                               data-toggle="modal" data-target="#irodsContent">Browse your iRODS HydroShare User Zone...</a>
                             <span id="irods-sel-file-uz">No file selected.</span>
                         </div>
                     </td>
@@ -122,7 +122,7 @@
                     <input type="hidden" id="irods-port" name="irods-port" value="">
                     <input type="hidden" id="irods-zone" name="irods-zone" value="">
                     <input type="hidden" id="irods_file_names" name="irods_file_names" value="">
-                    <a id="btn-select-irods-file"  type="button" class="btn btn-default row-selector hidden-form" data-toggle="modal" onclick="show_irods_browse_modal('default')" >
+                    <a id="btn-select-irods-file" type="button" class="btn btn-default row-selector hidden-form" data-toggle="modal" data-target="#irodsContent">
                         Browse iRODS you just logged in...
                     </a>
                     <span id="irods-sel-file"></span>

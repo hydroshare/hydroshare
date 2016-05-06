@@ -1,33 +1,42 @@
-$('#btn-select-irods-file, #btn-select-irods-file-uz').on('click',function(event) {
+$('#btn-select-irods-file').on('click',function(event) {
+    $('#input_trigger').val('default');
     $('#res_type').val($('#resource-type').val());
     $('#file_struct').children().remove();
     $('.ajax-loader').hide();
     var store = '';
-    if(event.target.id=='btn-select-irods-file') {
-        if (sessionStorage.IRODS_signininfo) {
-            $("#irods_content_label").text(sessionStorage.IRODS_username);
-            $('#root_store').val(sessionStorage.IRODS_datastore);
-            store = sessionStorage.IRODS_datastore;
-        }
+    if (sessionStorage.IRODS_signininfo) {
+        $("#irods_content_label").text(sessionStorage.IRODS_username);
+        $('#root_store').val(sessionStorage.IRODS_datastore);
+        store = sessionStorage.IRODS_datastore;
     }
-    else {
-        $("#irods_content_label").text($("#irods_username_uz").val())
-        $('#root_store').val($("#irods_store_uz").val());
-        store = $("#irods_store_uz").val();
-    }
+
     // Setting up the view tab
     $('#file_struct').attr('name',store);
     $('#irods_view_store').val(store);
     // loading file structs
     var parent = $('#file_struct');
-    if(event.target.id=='btn-select-irods-file') {
-        get_store(store, parent, 0);
-        $('body').on('click', '.folder', click_folder_opr(false));
-    }
-    else {
-        get_store_uz(store, parent, 0);
-        $('body').on('click', '.folder', click_folder_opr(true));
-    }
+    get_store(store, parent, 0);
+    $('body').off('click');
+    $('body').on('click', '.folder', click_folder_opr);
+});
+
+$('#btn-select-irods-file-uz').on('click',function(event) {
+    $('#input_trigger').val('userzone');
+    $('#res_type').val($('#resource-type').val());
+    $('#file_struct').children().remove();
+    $('.ajax-loader').hide();
+    $("#irods_content_label").text($("#irods_username_uz").val())
+    $('#root_store').val($("#irods_store_uz").val());
+    var store = $("#irods_store_uz").val();
+
+    // Setting up the view tab
+    $('#file_struct').attr('name',store);
+    $('#irods_view_store').val(store);
+    // loading file structs
+    var parent = $('#file_struct');
+    get_store_uz(store, parent, 0);
+    $('body').off('click');
+    $('body').on('click', '.folder', click_folder_opr_uz);
 });
 
 function set_store_display(store, parent, margin, json) {
@@ -94,88 +103,118 @@ function set_store_display(store, parent, margin, json) {
 }
 
 function get_store(store, parent, margin) {
-    $.ajax({
-        mode: "queue",
-        url: '/irods/store/',
-        async: true,
-        type: "POST",
-        data: {
-            store: store,
-            user: sessionStorage.IRODS_username,
-            password: sessionStorage.IRODS_password,
-            zone: sessionStorage.IRODS_zone,
-            port: sessionStorage.IRODS_port,
-            host: sessionStorage.IRODS_host
-        },
-        success: function (json) {
+    if (store) {
+        $.ajax({
+            mode: "queue",
+            url: '/irods/store/',
+            async: true,
+            type: "POST",
+            data: {
+                store: store,
+                user: sessionStorage.IRODS_username,
+                password: sessionStorage.IRODS_password,
+                zone: sessionStorage.IRODS_zone,
+                port: sessionStorage.IRODS_port,
+                host: sessionStorage.IRODS_host
+            },
+            success: function (json) {
                 return set_store_display(store, parent, margin, json);
-        },
+            },
 
-        error: function(status) {
-            console.error(status);
-            return false;
-        }
-    });
-    return true;
+            error: function (xhr, errmsg, err) {
+                console.log(xhr.status + ": " + xhr.responseText + ". Error message: " + errmsg);
+                return false;
+            }
+        });
+        return true;
+    }
+    else
+        return false;
 }
 
 function get_store_uz(store, parent, margin) {
-    $.ajax({
-        mode: "queue",
-        url: '/irods/store_uz/',
-        async: true,
-        type: "POST",
-        data: {
-            store: store
-        },
-        success: function (json) {
+    if(store) {
+        $.ajax({
+            mode: "queue",
+            url: '/irods/store_uz/',
+            async: true,
+            type: "POST",
+            data: {
+                store: store
+            },
+            success: function (json) {
                 return set_store_display(store, parent, margin, json);
-        },
+            },
 
-        error: function(status) {
-            console.error(status);
-            return false;
-        }
-    });
-    return true;
+            error: function (xhr, errmsg, err) {
+                console.log(xhr.status + ": " + xhr.responseText + ". Error message: " + errmsg);
+                return false;
+            }
+        });
+        return true;
+    }
+    else
+        return false;
 }
 
-function click_folder_opr(is_user_zone) {
-    var margin_left = parseInt($(this).css('margin-left')) + 10;
-    if($(this).hasClass('isOpen')) {
-        $(this).addClass('isClose');
-        $(this).removeClass('isOpen');
-        $(this).children('div').hide();
-        set_datastore($(this).attr('name'), true);
+function get_margin_left(element) {
+    var margin_left;
+    try {
+        margin_left = parseInt(element.css('margin-left')) + 10;
     }
-    else if($(this).hasClass('isClose')) {
-        $(this).addClass('isOpen');
-        $(this).removeClass('isClose');
-        $(this).children('div').show();
+    catch(err) {
+        margin_left = 0;
+    }
+    return margin_left;
+}
+
+function click_folder(parent, is_user_zone) {
+    if(parent.hasClass('isOpen')) {
+        parent.addClass('isClose');
+        parent.removeClass('isOpen');
+        parent.children('div').hide();
+        set_datastore(parent.attr('name'), true);
+    }
+    else if(parent.hasClass('isClose')) {
+        parent.addClass('isOpen');
+        parent.removeClass('isClose');
+        parent.children('div').show();
     }
     else {
-        var store = $(this).attr('name');
-        var parent = $(this)
+        var store = parent.attr('name');
+        var margin_left = get_margin_left(parent);
         if (is_user_zone)
             get_store_uz(store, parent, margin_left);
         else
             get_store(store, parent, margin_left);
-        $(this).addClass('isOpen');
-        set_datastore($(this).attr('name'), true);
+        parent.addClass('isOpen');
+        set_datastore(parent.attr('name'), true);
     }
+}
+
+function click_folder_opr() {
+    click_folder($(this), false);
+    return false;
+}
+
+function click_folder_opr_uz() {
+    click_folder($(this), true);
     return false;
 }
 
 function set_datastore(store, isFolder) {
-    if (!isFolder) {
-        store = $(store).attr('name');
+    if (store) {
+        if (!isFolder) {
+            store = $(store).attr('name');
+        }
+        $('#irods_view_store').val(store);
     }
-    $('#irods_view_store').val(store);
 }
 
 // ### IRODS FUNCTION FOR VIEWING INPUT BOX UPON PRESSING RETURN ###
 $('#irods_view_store').keypress(function(e) {
     if(e.which == 13) {
+        e.preventDefault();
         var store = $(this).val();
         if (store=='') {
             store = $('#root_store').val();
@@ -188,7 +227,7 @@ $('#irods_view_store').keypress(function(e) {
         var parent = $('#file_struct');
         var got_store;
         var is_user_zone = false;
-        if (parent.indexOf('hydroshareuserZone') > -1) {
+        if (store.indexOf('hydroshareuserZone') > -1) {
             got_store = get_store_uz(store, parent, 0);
             is_user_zone = true;
         }
@@ -197,7 +236,10 @@ $('#irods_view_store').keypress(function(e) {
 
         if (got_store) {
             $('#file_struct').children().remove();
-            click_folder_opr(is_user_zone);
+            if(is_user_zone)
+                click_folder_opr_uz();
+            else
+                click_folder_opr();
         }
         else {
             alert('Datastore does not exist');
