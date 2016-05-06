@@ -109,6 +109,9 @@ class BandInformation(AbstractMetaDataElement):
     # optional fields
     method = models.TextField(null=True, blank=True)
     comment = models.TextField(null=True, blank=True)
+    noDataValue = models.FloatField(null=True, blank=True)
+    maximumValue = models.FloatField(null=True, blank=True)
+    minimumValue = models.FloatField(null=True, blank=True)
 
     def __unicode__(self):
         return self.name
@@ -237,7 +240,8 @@ class RasterMetaData(CoreMetaData):
             self.add_metadata_element_to_xml(container, self.cellInformation, cellinfo_fields)
 
         for band_info in self.bandInformation:
-            bandinfo_fields = ['name', 'variableName', 'variableUnit', 'method', 'comment']
+            bandinfo_fields = ['name', 'variableName', 'variableUnit', 'method', 'comment',
+                               'noDataValue', 'maximumValue', 'minimumValue']
             self.add_metadata_element_to_xml(container, band_info, bandinfo_fields)
 
         if self.originalCoverage:
