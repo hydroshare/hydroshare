@@ -6,6 +6,7 @@ from languages_iso import languages as iso_languages
 from dateutil import parser
 from lxml import etree
 
+from django.contrib.postgres.fields import HStoreField
 from django.contrib.contenttypes.fields import GenericForeignKey
 from django.contrib.contenttypes.fields import GenericRelation
 from django.contrib.auth.models import User, Group
@@ -1115,7 +1116,7 @@ class AbstractResource(ResourcePermissionsMixin):
     content_type = models.ForeignKey(ContentType, null=True, blank=True)
     content_object = GenericForeignKey('content_type', 'object_id')
 
-    #keywords = KeywordsField(verbose_name="Keywords", for_concrete_model=False)
+    extra_metadata = HStoreField(default={})
 
     @classmethod
     def bag_url(cls, resource_id):
@@ -1841,6 +1842,16 @@ class CoreMetaData(models.Model):
         rdfs1_label.text = resource._meta.verbose_name
         rdfs1_isDefinedBy = etree.SubElement(rdf_Description_resource, '{%s}isDefinedBy' % self.NAMESPACES['rdfs1'])
         rdfs1_isDefinedBy.text = current_site_url() + "/terms"
+
+        # encode extended key/value arbitrary metadata
+        resource = BaseResource.objects.filter(object_id=self.id).first()
+        for key, value in resource.extra_metadata.items():
+            hsterms_key_value = etree.SubElement(rdf_Description, '{%s}extendedMetadata' % self.NAMESPACES['hsterms'])
+            hsterms_key_value_rdf_Description = etree.SubElement(hsterms_key_value, '{%s}Description' % self.NAMESPACES['rdf'])
+            hsterms_key = etree.SubElement(hsterms_key_value_rdf_Description, '{%s}key' % self.NAMESPACES['hsterms'])
+            hsterms_key.text = key
+            hsterms_value = etree.SubElement(hsterms_key_value_rdf_Description, '{%s}value' % self.NAMESPACES['hsterms'])
+            hsterms_value.text = value
 
         return self.XML_HEADER + '\n' + etree.tostring(RDF_ROOT, pretty_print=pretty_print)
 

@@ -260,6 +260,7 @@ INSTALLED_APPS = (
     "django.contrib.sitemaps",
     "django.contrib.staticfiles",
     "django.contrib.gis",
+    "django.contrib.postgres",
     "inplaceeditform",
     "django_nose",
     "django_irods",
