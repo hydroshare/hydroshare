@@ -202,7 +202,6 @@ class BandInfoForm(ModelForm):
     def __init__(self, allow_edit=False, res_short_id=None, element_id=None, *args, **kwargs):
         super(BandInfoForm, self).__init__(*args, **kwargs)
         # set the model fields as required in form if they are optional in model
-        self.fields['noDataValue'].required = True
         self.fields['maximumValue'].required = True
         self.fields['minimumValue'].required = True
 
@@ -237,8 +236,8 @@ class BandInfoForm(ModelForm):
         # set the form layout of each field here.
         widgets = {'variableName': forms.TextInput(),
                    'noDataValue': forms.TextInput(),
-                   'maximumValue': forms.TextInput(),
-                   'minimumValue': forms.TextInput(),
+                   'maximumValue': forms.TextInput(attrs={'readonly': 'readonly'}),
+                   'minimumValue': forms.TextInput(attrs={'readonly': 'readonly'}),
                    'comment': forms.Textarea,
                    'method': forms.Textarea,
                    }
@@ -249,7 +248,7 @@ class BandInfoValidationForm(forms.Form):
     name = forms.CharField(max_length=50)
     variableName = forms.CharField(max_length=100)
     variableUnit = forms.CharField(max_length=50)
-    noDataValue = forms.FloatField(required=True)
+    noDataValue = forms.FloatField(required=False)
     maximumValue = forms.FloatField(required=True)
     minimumValue = forms.FloatField(required=True)
     method = forms.CharField(required=False)

@@ -4,6 +4,9 @@ The expected metadata elements are defined in the HydroShare raster resource spe
 Reference code:
 http://gis.stackexchange.com/questions/6669/converting-projected-geotiff-to-wgs84-with-gdal-and-python
 http://gis.stackexchange.com/questions/57834/how-to-get-raster-corner-coordinates-using-python-gdal-bindings
+
+Update Notes
+This is used to process the vrt raster and to extract max, min value of each raster band.
 """
 
 __author__ = 'Tian Gan'
@@ -11,21 +14,9 @@ __author__ = 'Tian Gan'
 import gdal
 from gdalconst import *
 from osgeo import osr
-import json
 from collections import OrderedDict
 import re
 import logging
-
-def get_raster_meta_json(raster_file_name):
-    """
-    (string)-> json string
-
-    Return: the raster science metadata extracted from the raster file
-    """
-
-    raster_meta_dict = get_raster_meta_dict(raster_file_name)
-    raster_meta_json = json.dumps(raster_meta_dict)
-    return raster_meta_json
 
 
 def get_raster_meta_dict(raster_file_name):
@@ -35,29 +26,28 @@ def get_raster_meta_dict(raster_file_name):
     Return: the raster science metadata extracted from the raster file
     """
 
-    # get the raster dataset
-    raster_dataset = gdal.Open(raster_file_name, GA_ReadOnly)
-
-    # get the metadata info from raster dataset
-    spatial_coverage_info = get_spatial_coverage_info(raster_dataset)
-    cell_and_band_info = get_cell_and_band_info(raster_dataset)
+    # get the metadata info from raster files
+    spatial_coverage_info = get_spatial_coverage_info(raster_file_name)
+    cell_info = get_cell_info(raster_file_name)
+    band_info = get_band_info(raster_file_name)
 
     # write meta as dictionary
     raster_meta_dict = {
         'spatial_coverage_info': spatial_coverage_info,
-        'cell_and_band_info': cell_and_band_info,
+        'cell_info': cell_info,
+        'band_info': band_info,
     }
 
     return raster_meta_dict
 
 
-def get_spatial_coverage_info(raster_dataset):
+def get_spatial_coverage_info(raster_file_name):
     """
-    (object) --> dict
+    (string) --> dict
 
     Return: meta of spatial extent and projection of raster includes both original info and wgs84 info
     """
-
+    raster_dataset = gdal.Open(raster_file_name, GA_ReadOnly)
     original_coverage_info = get_original_coverage_info(raster_dataset)
     wgs84_coverage_info = get_wgs84_coverage_info(raster_dataset)
     spatial_coverage_info = {
@@ -148,6 +138,7 @@ def get_original_coverage_info(raster_dataset):
 
     return spatial_coverage_info
 
+
 def get_wgs84_coverage_info(raster_dataset):
     """
     (object) --> dict
@@ -198,59 +189,82 @@ def get_wgs84_coverage_info(raster_dataset):
 
     return wgs84_coverage_info
 
-def get_cell_and_band_info(raster_dataset):
+
+def get_cell_info(raster_file_name):
     """
     (object) --> dict
 
     Return: meta info of cells in raster
     """
+
+    raster_dataset = gdal.Open(raster_file_name, GA_ReadOnly)
+
     # get cell size info
     if raster_dataset:
         rows = raster_dataset.RasterYSize
         columns = raster_dataset.RasterXSize
-        cell_size_x_value = raster_dataset.GetGeoTransform()[1]
-        cell_size_y_value = abs(raster_dataset.GetGeoTransform()[5])
-
-        # get coordinate system unit info
         proj_wkt = raster_dataset.GetProjection()
-        if proj_wkt:
-            spatial_ref = osr.SpatialReference()
-            spatial_ref.ImportFromWkt(proj_wkt)
-            cell_size_unit = spatial_ref.GetAttrValue("UNIT", 0)
-            if re.match('metre', cell_size_unit, re.I):
-                cell_size_unit = 'meter'
-        else:
-            cell_size_unit = 'NA'
-            cell_size_x_value = 0  # if there is no projection info, the cell x and y size is set as 0.
-            cell_size_y_value = 0
-
-        # get band count, cell no data value, cell data type
-        band_count = raster_dataset.RasterCount
+        cell_size_x_value = raster_dataset.GetGeoTransform()[1] if proj_wkt else 0
+        cell_size_y_value = abs(raster_dataset.GetGeoTransform()[5]) if proj_wkt else 0
         band = raster_dataset.GetRasterBand(1)
         cell_data_type = gdal.GetDataTypeName(band.DataType)
 
-        cell_and_band_info = OrderedDict([
+        cell_info = OrderedDict([
             ('rows', rows),
             ('columns', columns),
             ('cellSizeXValue', cell_size_x_value),
             ('cellSizeYValue', cell_size_y_value),
-            ('cellSizeUnit', cell_size_unit),
             ('cellDataType', cell_data_type),
-            ('bandCount', band_count)
+
         ])
     else:
-        cell_and_band_info = OrderedDict([
-            ('rows', 0),
-            ('columns', 0),
-            ('cellSizeXValue', 0),
-            ('cellSizeYValue', 0),
-            ('cellSizeUnit', "NA"),
-            ('cellDataType', "NA"),
-            ('bandCount', 1)
+        cell_info = OrderedDict([
+            ('rows', None),
+            ('columns', None),
+            ('cellSizeXValue', None),
+            ('cellSizeYValue', None),
+            ('cellDataType', None),
         ])
 
-    return cell_and_band_info
+    return cell_info
 
 
+def get_band_info(raster_file_name):
+
+    raster_dataset = gdal.Open(raster_file_name, GA_ReadOnly)
+
+    import os
+    ori_dir = os.getcwd()
+    os.chdir(os.path.dirname(raster_file_name))
+
+    # get raster band count
+    if raster_dataset:
+        band_info = {}
+        band_count = raster_dataset.RasterCount
+
+        for i in range(0, band_count):
+            band = raster_dataset.GetRasterBand(i+1)
+            minimum, maximum, _, _ = band.GetStatistics(0, 1)
+
+            band_info[i+1] = {
+                'name': 'Layer_'+str(i+1),
+                'variableName': '',
+                'variableUnit': band.GetUnitType(),
+                'noDataValue': band.GetNoDataValue(),
+                'maximumValue': maximum,
+                'minimumValue': minimum,
+                }
+    else:
+        band_info = {
+                'name': 'Layer_1',
+                'variableName': '',
+                'variableUnit': '',
+                'noDataValue': None,
+                'maximumValue': None,
+                'minimumValue': None,
+        }
+
+    os.chdir(ori_dir)
+    return band_info
 
 

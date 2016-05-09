@@ -109,9 +109,9 @@ class BandInformation(AbstractMetaDataElement):
     # optional fields
     method = models.TextField(null=True, blank=True)
     comment = models.TextField(null=True, blank=True)
-    noDataValue = models.FloatField(null=True, blank=True)
-    maximumValue = models.FloatField(null=True, blank=True)
-    minimumValue = models.FloatField(null=True, blank=True)
+    noDataValue = models.TextField(null=True, blank=True)
+    maximumValue = models.TextField(null=True, blank=True)
+    minimumValue = models.TextField(null=True, blank=True)
 
     def __unicode__(self):
         return self.name
