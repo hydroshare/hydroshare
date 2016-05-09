@@ -113,7 +113,7 @@
 
                             <br>
 
-                            {# Photo #}
+                            {# Picture #}
                             <div class="col-sm-12">
                                 <fieldset>
                                     <label>Add a photo</label>
@@ -121,7 +121,7 @@
                                     <div class="input-group">
                                         <span class="input-group-btn">
                                             <span id="cv-custom-upload" class="btn btn-default btn-file">
-                                                Browse&hellip; <input type="file">
+                                                Browse&hellip; <input class="upload-picture" type="file" name="picture">
                                             </span>
                                         </span>
                                         <input type="text" class="form-control" readonly>
@@ -140,15 +140,16 @@
                                         <input type="radio" value="public" checked>Public
                                         <div class="text-muted">Other users can find the group and see who has membership.</div>
                                     </label>
-
                                 </div>
+
                                 <div class="radio">
                                     <label>
                                         <input type="radio" value="discoverable">Discoverable
                                         <div class="text-muted">Other users can find this group, but membership information is hidden.</div>
                                     </label>
                                 </div>
-                                <div class="radio disabled">
+
+                                <div class="radio">
                                     <label>
                                         <input type="radio" value="private">Private
                                         <div class="text-muted">Other users can not find this group.</div>
@@ -166,16 +167,38 @@
             </div>
         </div>
     </div>
-
-
 {% endblock %}
 
 {% block extra_js %}
     <script type="text/javascript" src="{{ STATIC_URL }}js/bootstrap-formhelpers.js"></script>
     <script>
 
-        $(document).ready(function () {
+        // Preview profile picture
+        function readURL(input) {
+            if (input.files && input.files[0]) {
+                var reader = new FileReader();
+                reader.onload = function (e) {
 
+                };
+
+                reader.readAsDataURL(input.files[0]);
+            }
+        }
+
+        // File name preview for picture field, change method
+        $(document).on('change', '.btn-file :file', function () {
+            var input = $(this);
+            var numFiles = input.get(0).files ? input.get(0).files.length : 1;
+            var label = input.val().replace(/\\/g, '/').replace(/.*\//, '');
+            input.trigger('fileselect', [numFiles, label]);
+        });
+
+        $(document).ready(function () {
+            // File name preview for picture field, file select method
+            $('.btn-file :file').on('fileselect', function (event, numFiles, label) {
+                var input = $(this).parents('.input-group').find(':text');
+                input.val(label);
+            });
         });
     </script>
 {% endblock %}

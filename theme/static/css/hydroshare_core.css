@@ -1220,7 +1220,6 @@ a[data-toggle='tab']{
 }
 
 #id_user-wrapper, #id_group-wrapper {
-	width: 100%;
 	padding: 1px;
 	border: 1px solid #CCC;
 	height: 34px;

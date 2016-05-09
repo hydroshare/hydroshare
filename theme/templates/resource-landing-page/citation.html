@@ -216,6 +216,7 @@
             {% endif %}
         </div>
 
+        {% if show_manage_access %}
             <span data-toggle="tooltip" data-placement="auto"
                   title='Use this button to share your resource with specific HydroShare users. You can give other users the ability to view or edit this resource. You can also add additional owners who will have full permissions.'
                   class="glyphicon glyphicon-info-sign text-muted"></span>
@@ -592,7 +593,7 @@
                     </div>
                 </div>
             </div>
-        {#======= Manage access modal  window ends =======#}
+            {#======= Manage access modal  window ends =======#}
         {% endif %}
     </div>
 </div>
