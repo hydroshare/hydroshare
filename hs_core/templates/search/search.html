@@ -398,19 +398,17 @@
                 json_results.push(item);
             });
         }
-
+        
         var formLinkButtonURL = function(key, value){
-            var currentURL = window.location.href.split('#')[0];
-            var currentHash = window.location.href.split('#')[1];
-            if(window.location.search.length == 0){
-                currentURL += "?q=";
-            }
-            var requestURL = currentURL + "&selected_facets="+key+"_exact:"+value + "#" + currentHash;
-            map = null;
-            window.location = requestURL;
+            var textSearch = $("#id_q").val();
+            var searchURL = "?q=" + textSearch;
+            var windowPath = window.location.pathname;
+            var requestURL =  windowPath + searchURL;
             var checkboxId =  key + "-" + value;
             var sessionStorageCheckboxId = 'search-' + checkboxId;
             sessionStorage[sessionStorageCheckboxId] = 'true';
+            requestURL += buildURLOnCheckboxes();
+            window.location = requestURL;
         }
 
         var buildURLOnCheckboxes = function () {
