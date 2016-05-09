@@ -161,11 +161,13 @@
                                 </a>
                             </span>
                             {% if show_user_zone_selection %}
+                                <input type="hidden" id="irods_username_uz" name="irods_username_uz" value="{{ user_name }}">
+                                <input type="hidden" id="irods_store_uz" name="irods_store_uz" value="/hydroshareuserZone/home/{{ user_name }}">
                                 <a id="btn-select-irods-file-uz" type="button" class="btn btn-success row-selector"
-                                   title="Add files larger than 1GB in size" data-toggle="tooltip"
-                                   onclick="show_irods_browse_modal('userzone', '{{  user_name }}')">Add files from your iRODS User Zone...</a>
+                                   title="Add files larger than 1GB in size" data-toggle="modal"
+                                   data-target="#irodsContent">Add files from your iRODS User Zone...</a>
                             {% endif %}
-                            <a id="btn-select-irods-file" type="button" class="btn btn-success row-selector hidden-form" data-toggle="modal" onclick="show_irods_browse_modal('default', '')" >
+                            <a id="btn-select-irods-file" type="button" class="btn btn-success row-selector hidden-form" data-toggle="modal" data-target="#irodsContent" >
                                 <span class="glyphicon glyphicon-plus"><span class="button-label"> Add files from iRODS you just logged in...</span></span>
                             </a>
 
