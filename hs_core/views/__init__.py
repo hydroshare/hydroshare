@@ -305,7 +305,6 @@ def rep_res_bag_to_irods_user_zone(request, shortkey, *args, **kwargs):
         try:
             utils.rep_res_bag_to_user_zone(user, shortkey)
             #utils.rep_res_bag_to_user_zone(user, '4ea093d6e622400db5477a49d4b7ef5b')
-            response_data = {}
             return HttpResponse(
                 json.dumps({"success": "This resource bag zip file has been successfully replicated to your iRODS user zone."}),
                 content_type = "application/json"
