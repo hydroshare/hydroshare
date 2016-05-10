@@ -12,6 +12,6 @@ urlpatterns = patterns('',
      url(r'^resource/(?P<shortkey>[A-z0-9]+)/data/contents/(?P<filename>[^/]+)/$', views.file_download_url_mapper,
         name='get_resource_file'),
 
-     url(r'^resource/(?P<shortkey>[A-z0-9]+)/data/contents/hydroshareuserZone/home/([A-z0-9]+)/(?P<filename>[^/]+)/$', views.file_download_url_mapper,
+     url(r'^resource/(?P<shortkey>[A-z0-9]+)/data/contents/hydroshareuserZone/home/([A-z0-9]+)/(?P<filename>[*]+)/$', views.file_download_url_mapper,
         name='get_resource_file'),
      )
