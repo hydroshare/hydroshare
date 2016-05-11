@@ -332,11 +332,12 @@
             //now fit the map to the newly inclusive bounds
             map.fitBounds(bounds);
 
-            //(optional) restore the zoom level after the map is done scaling
+            // restore the zoom level after the map is done scaling
             var listener = google.maps.event.addListener(map, "idle", function () {
                 map.setZoom(2);
                 google.maps.event.removeListener(listener);
             });
+            // make sure spiderfier work
             markerCluster.setMaxZoom(config.minZoom);
         }
 
