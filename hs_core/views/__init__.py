@@ -241,7 +241,7 @@ def update_metadata_element(request, shortkey, element_name, element_id, *args, 
 
 
 @api_view(['GET'])
-def file_download_url_mapper(request, shortkey, filename):
+def file_download_url_mapper(request, shortkey):
     """ maps the file URIs in resourcemap document to django_irods download view function"""
 
     authorize(request, shortkey, needed_permission=ACTION_TO_AUTHORIZE.VIEW_RESOURCE)
