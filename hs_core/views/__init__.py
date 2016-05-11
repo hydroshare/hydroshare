@@ -552,6 +552,9 @@ def add_generic_context(request, page):
     user = request.user
     in_production, show_user_zone_selection = utils.get_user_zone_status_info(user)
 
+    if show_user_zone_selection:
+        content_model = page.get_content_model()
+        broken_list_files = utils.ref_res_files_user_zone_exists(user, content_model.short_id)
     class AddUserForm(forms.Form):
         user = forms.ModelChoiceField(User.objects.all(), widget=autocomplete_light.ChoiceWidget("UserAutocomplete"))
 
@@ -566,6 +569,7 @@ def add_generic_context(request, page):
         'add_edit_group_form': AddGroupForm(),
         'user_name': user.username,
         'show_user_zone_selection': show_user_zone_selection,
+        'broken_file_lists': broken_list_files,
     }
 
 
