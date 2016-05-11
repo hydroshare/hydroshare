@@ -220,24 +220,32 @@
     <script src="//googlemaps.github.io/js-marker-clusterer/src/markerclusterer.js" type="text/javascript"></script>
     <script type="text/javascript">
         var minFloatingNumber = 0.0001;
+        var gm = google.maps;
         var map = null;
+        var config = {
+            el: 'discover-map',
+            zoom: 2,
+            minZoom: 15,
+            type: google.maps.MapTypeId.ROADMAP
+        };
+
+        var spiderConfig = {
+            keepSpiderfied: true,
+            event: 'mouseover'
+        };
+
         var initMap = function(json_results) {
-            var markers = [];
-            var modified_points_data = [];
-            var modified_boxes_data = [];
-            var modified_data = [];
-            var bounds = new google.maps.LatLngBounds();
-            map = new google.maps.Map(document.getElementById('discover-map'), {
-                zoom: 2,
-                mapTypeId: google.maps.MapTypeId.TERRAIN,
-                zoomControl: true,
-                scaleControl: true
+
+            map = new gm.Map(document.getElementById(config.el), {
+                zoom: config.zoom,
+                //center: new gm.LatLng(config.lat, config.lon),
+                mapTypeId: config.type
             });
             map.enableKeyDragZoom({
                 key: 'shift'
             });
+            var bounds = new google.maps.LatLngBounds();
 
-            var info_window = new google.maps.InfoWindow();
             var rectangle = new google.maps.Rectangle({
                 strokeColor: '#FF0000',
                 strokeOpacity: 0.8,
@@ -253,131 +261,84 @@
                 }
             });
 
-            for (var  i = 0; i < json_results.length; i++ ) {
-                if (json_results[i].coverage_type == 'point') {
-                    checkDuplicatePointResults(modified_points_data, json_results[i]);
+            var markerSpiderfier = new OverlappingMarkerSpiderfier(map, spiderConfig);
 
-                } else if(json_results[i].coverage_type == 'box') {
-                    checkDuplicateBoxResults(modified_boxes_data, json_results[i]);
+            var markers = [];
 
-                } else {
-                    continue;
+            for (var i = 0; i < json_results.length; i++) {
+                var northlimit = 0;
+                var southlimit = 0;
+                var eastlimit = 0;
+                var westlimit = 0;
+                var lat = 0;
+                var lng = 0;
+                var icon = "//maps.google.com/intl/en_us/mapfiles/ms/micons/red-dot.png";
+                if (json_results[i].coverage_type == 'point'){
+                    lat = parseFloat(json_results[i].north);
+                    lng = parseFloat(json_results[i].east);
+
+                }else if (json_results[i].coverage_type == 'box'){
+                    northlimit = parseFloat(json_results[i].northlimit);
+                    southlimit = parseFloat(json_results[i].southlimit);
+                    eastlimit = parseFloat(json_results[i].eastlimit);
+                    westlimit = parseFloat(json_results[i].westlimit);
+                    lat = (northlimit + southlimit) / 2;
+                    lng = (eastlimit + westlimit) / 2;
+                    icon = "//maps.google.com/mapfiles/dd-end.png";
                 }
 
+                var loc = new gm.LatLng(lat, lng);
+                var marker = new gm.Marker({
+                    position: loc,
+                    title: json_results[i].title,
+                    url: json_results[i].get_absolute_url,
+                    northlimit : northlimit,
+                    southlimit : southlimit,
+                    eastlimit : eastlimit,
+                    westlimit : westlimit,
+                    icon: icon,
+                    map: map
+                });
+
+                marker.desc = json_results[i].title;
+
+                markers.push(marker); // Saving Markers
+
+                markerSpiderfier.addMarker(marker);  // Adds the Marker to OverlappingMarkerSpiderfier
+                bounds.extend(marker.position);
             }
 
-            modified_points_data.forEach(function(point){
-               var info_content = point.info_link;
-                var lat = parseFloat(point.north);
-                var lng = parseFloat(point.east);
-                createPointResourceMarker(lat, lng, info_content, bounds, info_window, rectangle, modified_data);
+
+            var iw = new gm.InfoWindow();
+
+            markerSpiderfier.addListener('click', function(marker, e) {
+                var info_Content = '"<a href="' + marker.url + '">' + marker.title + '</a>';
+                iw.setContent(info_Content);
+                iw.open(map, marker);
+                var rectBounds = new google.maps.LatLngBounds(
+                        new google.maps.LatLng(marker.northlimit, marker.westlimit),
+                        new google.maps.LatLng(marker.southlimit, marker.eastlimit)
+                );
+                rectangle.set('bounds', rectBounds);
             });
 
-            modified_boxes_data.forEach(function(box){
-                var info_content = box.info_link;
-                var northlimit = parseFloat(box.northlimit);
-                var southlimit = parseFloat(box.southlimit);
-                var eastlimit = parseFloat(box.eastlimit);
-                var westlimit = parseFloat(box.westlimit);
-                createBoxResourceMarker (northlimit, southlimit, eastlimit, westlimit, info_content, bounds, info_window, rectangle, markers);
+            markerSpiderfier.addListener('spiderfy', function(markers) {
+                iw.close();
             });
 
+
+            var markerCluster = new MarkerClusterer(map, markers);
+            //now fit the map to the newly inclusive bounds
             map.fitBounds(bounds);
+
+            //(optional) restore the zoom level after the map is done scaling
             var listener = google.maps.event.addListener(map, "idle", function () {
                 map.setZoom(2);
                 google.maps.event.removeListener(listener);
             });
-            var markerCluster = new MarkerClusterer(map, markers);
+            markerCluster.setMaxZoom(config.minZoom);
         }
 
-        var createPointResourceMarker = function (lat, lng, info_content, bounds, info_window, rectangle, markers) {
-            var latlng = new google.maps.LatLng(lat, lng);
-            var marker = new google.maps.Marker({
-                map: map,
-                icon: '//maps.google.com/intl/en_us/mapfiles/ms/micons/red-dot.png',
-                position: latlng
-            });
-            markers.push(marker);
-            google.maps.event.addListener(marker, 'click', function() {
-                info_window.setContent(info_content);
-                info_window.open(map, marker);
-                var rectBounds = new google.maps.LatLngBounds(
-                        new google.maps.LatLng(0, 0),
-                        new google.maps.LatLng(0, 0)
-                );
-                rectangle.set('bounds', rectBounds);
-
-            });
-            bounds.extend(latlng);
-        }
-
-        var createBoxResourceMarker = function (northlimit, southlimit, eastlimit, westlimit, info_content, bounds, info_window, rectangle, markers) {
-            var lat = (parseFloat(northlimit) + parseFloat(southlimit)) / 2;
-            var lng = (parseFloat(eastlimit) + parseFloat(westlimit)) / 2;
-            var latlng = new google.maps.LatLng(lat, lng);
-            var marker = new google.maps.Marker({
-                map: map,
-                icon: '//maps.google.com/mapfiles/dd-end.png',
-                position: latlng
-            });
-            markers.push(marker);
-            google.maps.event.addListener(marker, 'click', function() {
-                info_window.setContent(info_content);
-                info_window.open(map, marker);
-                var rectBounds = new google.maps.LatLngBounds(
-                        new google.maps.LatLng(northlimit, westlimit),
-                        new google.maps.LatLng(southlimit, eastlimit)
-                );
-                rectangle.set('bounds', rectBounds);
-
-            });
-            bounds.extend(latlng);
-        }
-
-        var checkDuplicatePointResults = function (modified_points_data, test){
-            var test_lat = parseFloat(test.north);
-            var test_lng = parseFloat(test.east);
-            var existed = false;
-            modified_points_data.forEach(function(item){
-                var item_lat = parseFloat(item.north);
-                var item_lng = parseFloat(item.east);
-
-                var lat_diff = Math.abs(test_lat - item_lat);
-                var lng_diff = Math.abs(test_lng - item_lng);
-                if (lat_diff < minFloatingNumber && lng_diff < minFloatingNumber) {
-                    item.title = item.title + "<br />" + test.title;
-                    item.info_link += '<br />' + '"<a href="' + test.get_absolute_url + '">' + test.title + '</a>';
-                    existed = true;
-                }
-            });
-            if (!existed){
-                test.info_link = '"<a href="' + test.get_absolute_url + '">' + test.title + '</a>';
-                modified_points_data.push(test);
-            }
-        }
-
-        var checkDuplicateBoxResults = function (modified_boxes_data, test){
-            var test_lat = (parseFloat(test.northlimit) + parseFloat(test.southlimit)) / 2;
-            var test_lng = (parseFloat(test.eastlimit) + parseFloat(test.westlimit)) / 2;
-            var existed = false;
-            modified_boxes_data.forEach(function(item){
-                var item_lat = (parseFloat(item.northlimit) + parseFloat(item.southlimit)) / 2;
-                var item_lng = (parseFloat(item.eastlimit) + parseFloat(item.westlimit)) / 2;
-
-                var lat_diff = Math.abs(test_lat - item_lat);
-                var lng_diff = Math.abs(test_lng - item_lng);
-
-                if (lat_diff < minFloatingNumber && lng_diff < minFloatingNumber) {
-                    item.title = item.title + "<br />" + test.title;
-                    item.info_link += '<br />' + '"<a href="' + test.get_absolute_url + '">' + test.title + '</a>';
-                    existed = true;
-                }
-            });
-            if (!existed){
-                test.info_link = '"<a href="' + test.get_absolute_url + '">' + test.title + '</a>';
-                modified_boxes_data.push(test);
-            }
-        }
         var reorderDivs = function() {
             var faceted_fields = ['author', 'subjects', 'resource_type', 'owners_names', 'availability'];
             var div_ordering = [];
