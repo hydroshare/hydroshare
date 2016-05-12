@@ -32,19 +32,19 @@
 
         <div id="site-div" class="form-group cuahsi-his cuahsi-his-2">
             <label for="" class="col-sm-2 control-label">Site</label>
-            <div class="col-sm-9">
+            <div class="col-sm-10">
                 <select class="form-control" name="site" id="site"></select>
             </div>
         </div>
 
         <div id="variable-div" class="form-group cuahsi-his cuahsi-his-3">
             <label for="" class="col-sm-2 control-label">Variable</label>
-            <div class="col-sm-9">
+            <div class="col-sm-10">
                 <select class="form-control" name="variable" id="variable"></select>
             </div>
         </div>
 
-         <div class="col-sm-offset-2 col-sm-9" id="message-div">
+         <div class="col-sm-offset-2 col-sm-10" id="message-div">
             <h3 id="message">
                 {%  if resource_creation_error %}
                 {{ resource_creation_error }}
@@ -52,12 +52,12 @@
             </h3>
         </div>
 
-        <div class ="form-group" id ="preview-div" class="col-sm-offset-2 col-sm-9">
+        <div class ="form-group" id ="preview-div" class="col-sm-offset-2 col-sm-10">
             <div class="col-sm-offset-2" id="preview"></div>
         </div>
 
         <div class="form-group">
-            <div class="col-sm-offset-2 col-sm-9">
+            <div class="col-sm-offset-2 col-sm-10">
                 <button type="submit" id="submit" class="btn btn-primary btn-lg btn-block disabled">Add HIS Time Series</button>
             </div>
         </div>
