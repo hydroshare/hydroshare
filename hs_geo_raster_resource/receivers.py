@@ -84,7 +84,7 @@ def create_vrt_file(tif_file):
     # create vrt file
     temp_dir = tempfile.mkdtemp()
     tif_base_name = os.path.basename(tif_file.name)
-    shutil.copy(tif_file.temporary_file_path(), os.path.join(temp_dir,tif_base_name))
+    shutil.copy(tif_file.file.name, os.path.join(temp_dir, tif_base_name))
     vrt_file_path = os.path.join(temp_dir, os.path.splitext(tif_base_name)[0]+'.vrt')
 
     with open(os.devnull, 'w') as fp:
@@ -96,7 +96,10 @@ def create_vrt_file(tif_file):
         root = tree.getroot()
         for element in root.iter('SourceFilename'):
             element.text = tif_base_name
+            element.attrib['relativeToVRT'] = '1'
+
         tree.write(vrt_file_path)
+
     except Exception:
         shutil.rmtree(temp_dir)
 
@@ -108,14 +111,17 @@ def explode_zip_file(zip_file):
     try:
         zf = zipfile.ZipFile(zip_file.file.name, 'r')
         zf.extractall(temp_dir)
+        file_paths_list = zf.namelist()
         zf.close()
+
         # get all the file abs names in temp_dir
-        raw_file_paths = []
+        extract_file_paths = []
         for dirpath,_,filenames in os.walk(temp_dir):
             for name in filenames:
-                raw_file_paths.append(os.path.abspath(os.path.join(dirpath, name)))
-        # get all the valid files with .tif and .vrt extension
-        extract_file_paths = [os.path.join(temp_dir, file_name) for file_name in raw_file_paths if os.path.splitext(file_name)[1] in ['.vrt', '.tif']]
+                file_path = os.path.abspath(os.path.join(dirpath, name))
+                if os.path.splitext(os.path.basename(file_path))[1] in ['.vrt', '.tif']:
+                    shutil.move(file_path, temp_dir)
+                    extract_file_paths.append(os.path.join(temp_dir,os.path.basename(file_path)))
 
     except Exception:
         extract_file_paths = []
@@ -137,7 +143,7 @@ def raster_pre_create_resource_trigger(sender, **kwargs):
 
         # metadata extraction
         if not error_info:
-            temp_vrt_file_path = [os.path.join(temp_dir,f) for f in os.listdir(temp_dir) if '.vrt' == os.path.splitext(f)[1]].pop()
+            temp_vrt_file_path = [os.path.join(temp_dir, f) for f in os.listdir(temp_dir) if '.vrt' == os.path.splitext(f)[1]].pop()
             res_md_dict = raster_meta_extract.get_raster_meta_dict(temp_vrt_file_path)
             wgs_cov_info = res_md_dict['spatial_coverage_info']['wgs84_coverage_info']
             # add core metadata coverage - box

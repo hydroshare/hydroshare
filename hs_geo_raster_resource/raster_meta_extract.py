@@ -90,8 +90,8 @@ def get_original_coverage_info(raster_dataset):
             proj = spatial_ref.GetAttrValue("PROJECTION", 0) if spatial_ref.GetAttrValue("PROJECTION", 0) else ''
             projection = datum + ' '+proj
     else:
-        unit = 'NA'
-        projection = 'NA'
+        unit = None
+        projection = None
 
     # get the bounding box
     try:
@@ -122,10 +122,10 @@ def get_original_coverage_info(raster_dataset):
         westlimit = min(x_coor)  # min x
         eastlimit = max(x_coor)
     else:
-        northlimit = 'NA'
-        southlimit = 'NA'
-        westlimit = 'NA'
-        eastlimit = 'NA'
+        northlimit = None
+        southlimit = None
+        westlimit = None
+        eastlimit = None
 
     spatial_coverage_info = OrderedDict([
         ('northlimit', northlimit),
@@ -157,7 +157,7 @@ def get_wgs84_coverage_info(raster_dataset):
     wgs84_coverage_info = OrderedDict()
     original_coverage_info = get_original_coverage_info(raster_dataset)
 
-    if proj and ('NA' not in original_coverage_info.values()):
+    if proj and (None not in original_coverage_info.values()):
         original_cs = osr.SpatialReference()
         original_cs.ImportFromWkt(proj)
 
@@ -247,7 +247,7 @@ def get_band_info(raster_file_name):
             minimum, maximum, _, _ = band.GetStatistics(0, 1)
 
             band_info[i+1] = {
-                'name': 'Layer_'+str(i+1),
+                'name': 'Band_'+str(i+1),
                 'variableName': '',
                 'variableUnit': band.GetUnitType(),
                 'noDataValue': band.GetNoDataValue(),
@@ -256,7 +256,7 @@ def get_band_info(raster_file_name):
                 }
     else:
         band_info = {
-                'name': 'Layer_1',
+                'name': 'Band_1',
                 'variableName': '',
                 'variableUnit': '',
                 'noDataValue': None,
@@ -264,7 +264,9 @@ def get_band_info(raster_file_name):
                 'minimumValue': None,
         }
 
+    raster_dataset = None
     os.chdir(ori_dir)
+
     return band_info
 
 

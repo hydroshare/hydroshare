@@ -236,12 +236,12 @@ class RasterMetaData(CoreMetaData):
 
         # inject raster resource specific metadata elements to container element
         if self.cellInformation:
-            cellinfo_fields = ['name', 'rows', 'columns', 'cellSizeXValue', 'cellSizeYValue', 'cellDataType']
+            cellinfo_fields = ['rows', 'columns', 'cellSizeXValue', 'cellSizeYValue', 'cellDataType']
             self.add_metadata_element_to_xml(container, self.cellInformation, cellinfo_fields)
 
         for band_info in self.bandInformation:
-            bandinfo_fields = ['name', 'variableName', 'variableUnit', 'method', 'comment',
-                               'noDataValue', 'maximumValue', 'minimumValue']
+            bandinfo_fields = ['name', 'variableName', 'variableUnit', 'noDataValue', 'maximumValue', 'minimumValue',
+                               'method', 'comment']
             self.add_metadata_element_to_xml(container, band_info, bandinfo_fields)
 
         if self.originalCoverage:

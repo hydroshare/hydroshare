@@ -201,9 +201,6 @@ class BandInfoFormHelper(BandBaseFormHelper):
 class BandInfoForm(ModelForm):
     def __init__(self, allow_edit=False, res_short_id=None, element_id=None, *args, **kwargs):
         super(BandInfoForm, self).__init__(*args, **kwargs)
-        # set the model fields as required in form if they are optional in model
-        self.fields['maximumValue'].required = True
-        self.fields['minimumValue'].required = True
 
         self.helper = BandInfoFormHelper(res_short_id, element_id, element_name='Band Information')
         self.delete_modal_form = None
@@ -236,8 +233,8 @@ class BandInfoForm(ModelForm):
         # set the form layout of each field here.
         widgets = {'variableName': forms.TextInput(),
                    'noDataValue': forms.TextInput(),
-                   'maximumValue': forms.TextInput(attrs={'readonly': 'readonly'}),
-                   'minimumValue': forms.TextInput(attrs={'readonly': 'readonly'}),
+                   'maximumValue': forms.TextInput(),
+                   'minimumValue': forms.TextInput(),
                    'comment': forms.Textarea,
                    'method': forms.Textarea,
                    }
@@ -248,9 +245,9 @@ class BandInfoValidationForm(forms.Form):
     name = forms.CharField(max_length=50)
     variableName = forms.CharField(max_length=100)
     variableUnit = forms.CharField(max_length=50)
-    noDataValue = forms.FloatField(required=False)
-    maximumValue = forms.FloatField(required=True)
-    minimumValue = forms.FloatField(required=True)
+    noDataValue = forms.DecimalField(required=False)
+    maximumValue = forms.DecimalField(required=False)
+    minimumValue = forms.DecimalField(required=False)
     method = forms.CharField(required=False)
     comment = forms.CharField(required=False)
 
