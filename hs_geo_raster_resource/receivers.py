@@ -183,7 +183,7 @@ def raster_pre_create_resource_trigger(sender, **kwargs):
         metadata.append({'CellInformation': cell_info})
 
         band_info = {
-                'name': 'Layer_1',
+                'name': 'Band_1',
                 'variableName': None,
                 'variableUnit': None,
                 'noDataValue': None,
@@ -285,7 +285,7 @@ def raster_pre_delete_file_from_resource_trigger(sender, **kwargs):
     # reset extended metadata BandInformation now that the only file is deleted
     for band in res.metadata.bandInformation:
         band.delete()
-    res.metadata.create_element('BandInformation', name='Layer_1', variableName='', variableUnit='',
+    res.metadata.create_element('BandInformation', name='Band_1', variableName='', variableUnit='',
                                 method='', comment='', noDataValue=None, maximumValue=None, minimumValue=None)
 
     # delete all the files that is not the user selected file
