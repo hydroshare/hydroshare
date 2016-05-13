@@ -216,8 +216,8 @@
     <link rel="stylesheet" type="text/css" href="//cdn.datatables.net/1.10.11/css/jquery.dataTables.min.css">
     <script type="text/javascript" src="//cdn.datatables.net/1.10.11/js/jquery.dataTables.min.js"></script>
     <script src="//maps.googleapis.com/maps/api/js?v=3" type="text/javascript"></script>
-    <script src="//google-maps-utility-library-v3.googlecode.com/svn/tags/keydragzoom/2.0.8/src/keydragzoom_packed.js" type="text/javascript"></script>
-    <script src="//googlemaps.github.io/js-marker-clusterer/src/markerclusterer.js" type="text/javascript"></script>
+    <script src="//cdn.rawgit.com/googlemaps/v3-utility-library/master/keydragzoom/src/keydragzoom.js" type="text/javascript"></script>
+    <script src="//cdn.rawgit.com/googlemaps/js-marker-clusterer/gh-pages/src/markerclusterer.js" type="text/javascript"></script>
     <script src="//jawj.github.io/OverlappingMarkerSpiderfier/bin/oms.min.js" type="text/javascript"></script>
     <script type="text/javascript">
         var minFloatingNumber = 0.0001;
@@ -328,7 +328,9 @@
             });
 
 
-            var markerCluster = new MarkerClusterer(map, markers);
+            var markerCluster = new MarkerClusterer(map, markers, {
+                imagePath: 'https://cdn.rawgit.com/googlemaps/js-marker-clusterer/gh-pages/images/m'
+            });
             //now fit the map to the newly inclusive bounds
             map.fitBounds(bounds);
 
