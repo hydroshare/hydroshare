@@ -285,6 +285,7 @@ class UserAccess(models.Model):
         if not user_to_join_group.is_active:
             raise PermissionDenied("User to be granted group membership is not active")
 
+        # TODO: USE CASE FOR USER CANCELING OWN REQUEST
         membership_grantor = None
         # group owner acting on membership request from a user
         if this_request.invitation_to is None:
@@ -2316,6 +2317,8 @@ class GroupAccess(models.Model):
                                    u2ugp__group=self.group,
                                    u2ugp__privilege__lte=PrivilegeCodes.CHANGE)
 
+
+
     @property
     def members(self):
         """
@@ -2414,6 +2417,31 @@ class GroupAccess(models.Model):
                                  r2grp__privilege__lt=PrivilegeCodes.CHANGE))
 
             return BaseResource.objects.filter(Q(pk__in=view) | Q(pk__in=immutable)).distinct()
+
+    def get_users_with_explicit_access(self, this_privilege):
+        """
+            Get a list of users for which the group has the specified privilege
+
+            :param this_privilege: one of the PrivilegeCodes
+            :return: QuerySet of user objects (QuerySet)
+        """
+
+        if __debug__:
+            assert this_privilege >= PrivilegeCodes.OWNER and this_privilege <= PrivilegeCodes.VIEW
+
+        if this_privilege == PrivilegeCodes.OWNER:
+            return self.owners
+        elif this_privilege == PrivilegeCodes.CHANGE:
+
+            return User.objects.filter(is_active=True,
+                                       u2ugp__group=self.group,
+                                       u2ugp__privilege=PrivilegeCodes.CHANGE)
+
+        else:  # this_privilege == PrivilegeCodes.ViEW
+
+            return User.objects.filter(is_active=True,
+                                       u2ugp__group=self.group,
+                                       u2ugp__privilege=PrivilegeCodes.VIEW)
 
     def get_effective_privilege(self, this_user):
         """

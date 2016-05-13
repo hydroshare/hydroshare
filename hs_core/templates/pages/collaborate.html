@@ -1,5 +1,7 @@
 {% extends "pages/page.html" %}
 
+{% load hydroshare_tags %}
+
 {% block main %}
 
     <div class="collaborate-header">
@@ -28,12 +30,12 @@
             </div>
         </div>
         <div class="row group-thumbnails">
-
             {% for group in groups %}
             <div class="col-sm-6 col-md-4">
                 <div class="group-thumbnail contribution">
-                    <div class="group-preview-image" style="background-image: url({{ STATIC_URL }}img/home-page/carousel/bg1.jpg)"></div>
-
+                    {% if group.gaccess.picture and group.gaccess.picture.url %}
+                        <div class="group-preview-image" style="background-image: url({{ group.gaccess.picture.url }})"></div>
+                    {% endif %}
                     <div class="group-caption">
                         <h3 class="group-name">{{ group.name }}</h3>
                         <small class="text-muted group-keywords">{{ group.gaccess.purpose }}</small>
@@ -42,244 +44,59 @@
 
                         <div class="text-center group-thumbnail-footer">
                             <div class="users-joined height-fix">
-
-                                <div class="profile-pic-thumbnail-small round-image" title="Mauriel Ramirez"></div>
-                                <div style="background-image: url('{{ request.user.userprofile.picture.url }}');"
-                                     class="round-image profile-pic-thumbnail" title="Mauriel Ramirez">
-                                </div>
-
-                                <div class="profile-pic-thumbnail-small round-image" title="Mauriel Ramirez"></div>
-                                <div class="profile-pic-thumbnail-small round-image" title="Mauriel Ramirez"></div>
-                                <div class="profile-pic-thumbnail-small round-image" title="Mauriel Ramirez"></div>
+                                {% for member in group.gaccess.members %}
+                                    {% if  member.userprofile.picture and member.userprofile.picture.url %}
+                                    <div style="background-image: url('{{ member.userprofile.picture.url }}');"
+                                         class="round-image profile-pic-thumbnail" title="{{ member.username }}">
+                                    </div>
+                                    {% else %}
+                                        <div class="profile-pic-thumbnail-small round-image" title="{{ member|best_name }}"></div>
+                                    {% endif %}
+                                {% endfor %}
                             </div>
 
                             <div><small class="text-muted">and 23 others have joined</small></div>
 
-                            <p><a href="#" class="btn btn-primary" role="button">Ask to join</a></p>
+                            {% if group.is_user_member %}
+                                <div class="text-center group-thumbnail-footer">
+                                    <h4>Joined</h4>
+                                </div>
+                            {% elif group.join_request_waiting_owner_action %}
+                                <h4>Request Sent</h4>
+
+                            {% elif group.join_request_waiting_user_action %}
+                                {#  TODO: MAKE BOTH OF THIS AJAX #}
+                                <form id="act-on-request"
+                                      action="/hsapi/_internal/act-on-group-membership-request/{{ group.join_request.id }}/accept/"
+                                      method="POST">
+                                    {% csrf_token %}
+                                    <button type="submit" class="btn btn-primary">Accept</button>
+                                </form>
+
+                                <form id="act-on-request"
+                                      action="/hsapi/_internal/act-on-group-membership-request/{{ group.join_request.id }}/reject/"
+                                      method="POST">
+                                    {% csrf_token %}
+                                    <button type="submit" class="btn btn-default" data-dismiss="modal">
+                                        Decline
+                                    </button>
+                                </form>
+                            {% else %}
+                                <form id="join-{{ group.id }}" method="post"
+                                      action="/hsapi/_internal/make-group-membership-request/{{ group.id }}/">
+                                    {% csrf_token %}
+                                    <p><a href="#"
+                                          data-form-id="join-{{ group.id }}" class="btn btn-primary btn-ask-to-join"
+                                          role="button">Ask to join</a></p>
+                                </form>
+                            {% endif %}
+
                         </div>
                     </div>
+                    {{ group.gaccess.public }}, {{ group.gaccess.discoverable }}
                 </div>
             </div>
             {% endfor %}
-
-            <div class="col-sm-6 col-md-4">
-                <div class="group-thumbnail contribution">
-                    <div class="group-preview-image" style="background-image: url({{ STATIC_URL }}img/home-page/carousel/bg2.jpg)"></div>
-                    <div class="group-caption">
-                        <h3 class="group-name">MeExcel - MS Office Help Group</h3>
-                        <small class="text-muted group-keywords">Hydrology, Environmental Engineering</small>
-
-                        <p class="group-description">The Viterbi Graduate Student Association (VGSA) represents all the
-                            full time and part time Master's and Doctoral students in the Viterbi School of Engineering.
-                            VGSA is the largest student umbrella organization at the University of Southern California
-                            with over 5,000 active engineering graduate student members each year, and has an even
-                            greater Alumni population. The VGSA promotes professional, academic, and social affairs on
-                            campus, and is committed to creating a positive student experience at USC.Show less</p>
-
-                        <div class="text-center group-thumbnail-footer">
-                            <p><a href="#" class="btn btn-primary" role="button">Ask to join</a></p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="col-sm-6 col-md-4">
-                <div class="group-thumbnail contribution">
-                    <div class="group-preview-image" style="background-image: url({{ STATIC_URL }}img/home-page/carousel/bg1.jpg)"></div>
-
-                    <div class="group-caption">
-                        <h3 class="group-name">Viterbi Graduate Student Association (VGSA)</h3>
-                        <small class="text-muted group-keywords">Hydrology, Environmental Engineering</small>
-
-                        <p class="group-description">We encourage Universities across North America to register in this group with contact
-                            details making it easy for everyone to follow to follow.
-                            We STRONGLY follow US Immigration Rules and would request NOT to furnish FALSE DETAILS
-                            or fake anything which is NOT legal as per US Immigration Laws.</p>
-
-                        <div class="text-center group-thumbnail-footer">
-                            <div class="users-joined height-fix">
-                                <div class="profile-pic-thumbnail-small round-image" title="Mauriel Ramirez"></div>
-                                <div style="background-image: url('{{ request.user.userprofile.picture.url }}');"
-                                     class="round-image profile-pic-thumbnail" title="Mauriel Ramirez">
-                                </div>
-
-                                <div class="profile-pic-thumbnail-small round-image" title="Mauriel Ramirez"></div>
-                                <div class="profile-pic-thumbnail-small round-image" title="Mauriel Ramirez"></div>
-                            </div>
-
-                            <p><a href="#" class="btn btn-primary" role="button">Ask to join</a></p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="col-sm-6 col-md-4">
-                <div class="group-thumbnail contribution">
-                    <div class="group-preview-image" style="background-image: url({{ STATIC_URL }}img/home-page/carousel/bg2.jpg)"></div>
-                    <div class="group-caption">
-                        <h3 class="group-name">MeExcel - MS Office Help Group</h3>
-                        <small class="text-muted group-keywords">Hydrology, Environmental Engineering</small>
-
-                        <p class="group-description">The Viterbi Graduate Student Association (VGSA) represents all the
-                            full time and part time Master's and Doctoral students in the Viterbi School of Engineering.
-                            VGSA is the largest student umbrella organization at the University of Southern California
-                            with over 5,000 active engineering graduate student members each year, and has an even
-                            greater Alumni population. The VGSA promotes professional, academic, and social affairs on
-                            campus, and is committed to creating a positive student experience at USC.Show less</p>
-
-                        <div class="text-center group-thumbnail-footer">
-                            <h4>Request Sent</h4>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="col-sm-6 col-md-4">
-                <div class="group-thumbnail contribution">
-                    <div class="group-preview-image" style="background-image: url({{ STATIC_URL }}img/home-page/carousel/bg3.jpg)"></div>
-                    <div class="group-caption">
-                        <h3 class="group-name">Salt Lake City Human Resource Professionals</h3>
-                        <small class="text-muted group-keywords">Basic facts about #Infographic #Desiging.</small>
-
-                        <p class="group-description">We welcome all levels of human resource professionals who are local
-                            to SLC, UT to utilize SLCHRP to take advantage of all LinkedIn has to offer. We invite all
-                            members of SLCHRP to network with other local HR professionals, share job opportunities and
-                            events, start discussions on real business situations, and expand your local HR network.</p>
-
-                        <div class="text-center group-thumbnail-footer">
-                            <div class="users-joined height-fix">
-                                <div style="background-image: url('{{ request.user.userprofile.picture.url }}');"
-                                     class="round-image profile-pic-thumbnail" title="Mauriel Ramirez">
-                                </div>
-                                <div class="profile-pic-thumbnail-small round-image" title="Mauriel Ramirez"></div>
-                            </div>
-
-                            <p><a href="#" class="btn btn-primary" role="button">Ask to join</a></p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="col-sm-6 col-md-4">
-                <div class="group-thumbnail contribution">
-                    <div class="group-preview-image" style="background-image: url({{ STATIC_URL }}img/home-page/carousel/bg1.jpg)"></div>
-
-                    <div class="group-caption">
-                        <h3 class="group-name">Viterbi Graduate Student Association (VGSA)</h3>
-                        <small class="text-muted group-keywords">Hydrology, Environmental Engineering</small>
-
-                        <p class="group-description">We encourage Universities across North America to register in this group with contact
-                            details making it easy for everyone to follow to follow.
-                            We STRONGLY follow US Immigration Rules and would request NOT to furnish FALSE DETAILS
-                            or fake anything which is NOT legal as per US Immigration Laws.</p>
-
-                        <div class="text-center group-thumbnail-footer">
-                            <div class="users-joined height-fix">
-
-                                <div class="profile-pic-thumbnail-small round-image" title="Mauriel Ramirez"></div>
-                                <div style="background-image: url('{{ request.user.userprofile.picture.url }}');"
-                                     class="round-image profile-pic-thumbnail" title="Mauriel Ramirez">
-                                </div>
-
-                                <div class="profile-pic-thumbnail-small round-image" title="Mauriel Ramirez"></div>
-                                <div class="profile-pic-thumbnail-small round-image" title="Mauriel Ramirez"></div>
-                                <div class="profile-pic-thumbnail-small round-image" title="Mauriel Ramirez"></div>
-                            </div>
-
-                            <div><small class="text-muted">and 23 others have joined</small></div>
-
-                            <h4>Request Sent</h4>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="col-sm-6 col-md-4">
-                <div class="group-thumbnail contribution">
-                    <div class="group-preview-image" style="background-image: url({{ STATIC_URL }}img/home-page/carousel/bg3.jpg)"></div>
-                    <div class="group-caption">
-                        <h3 class="group-name">Salt Lake City Human Resource Professionals</h3>
-                        <small class="text-muted group-keywords">Basic facts about #Infographic #Desiging.</small>
-
-                        <p class="group-description">We welcome all levels of human resource professionals who are local
-                            to SLC, UT to utilize SLCHRP to take advantage of all LinkedIn has to offer. We invite all
-                            members of SLCHRP to network with other local HR professionals, share job opportunities and
-                            events, start discussions on real business situations, and expand your local HR network.</p>
-
-                        <div class="text-center group-thumbnail-footer">
-                            <div class="users-joined height-fix">
-
-                                <div class="profile-pic-thumbnail-small round-image" title="Mauriel Ramirez"></div>
-                                <div style="background-image: url('{{ request.user.userprofile.picture.url }}');"
-                                     class="round-image profile-pic-thumbnail" title="Mauriel Ramirez">
-                                </div>
-
-                                <div class="profile-pic-thumbnail-small round-image" title="Mauriel Ramirez"></div>
-                                <div class="profile-pic-thumbnail-small round-image" title="Mauriel Ramirez"></div>
-                                <div class="profile-pic-thumbnail-small round-image" title="Mauriel Ramirez"></div>
-                            </div>
-
-                            <div><small class="text-muted">and 23 others have joined</small></div>
-
-                            <p><a href="#" class="btn btn-primary" role="button">Ask to join</a></p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="col-sm-6 col-md-4">
-                <div class="group-thumbnail contribution">
-                    <div class="group-preview-image" style="background-image: url({{ STATIC_URL }}img/home-page/carousel/bg3.jpg)"></div>
-                    <div class="group-caption">
-                        <h3 class="group-name">Salt Lake City Human Resource Professionals</h3>
-                        <small class="text-muted group-keywords">Basic facts about #Infographic #Desiging.</small>
-
-                        <p class="group-description">We welcome all levels of human resource professionals who are local
-                            to SLC, UT to utilize SLCHRP to take advantage of all LinkedIn has to offer. We invite all
-                            members of SLCHRP to network with other local HR professionals, share job opportunities and
-                            events, start discussions on real business situations, and expand your local HR network.</p>
-
-                        <div class="text-center group-thumbnail-footer">
-                            <div class="users-joined height-fix">
-
-                                <div class="profile-pic-thumbnail-small round-image" title="Mauriel Ramirez"></div>
-                                <div style="background-image: url('{{ request.user.userprofile.picture.url }}');"
-                                     class="round-image profile-pic-thumbnail" title="Mauriel Ramirez">
-                                </div>
-
-                                <div class="profile-pic-thumbnail-small round-image" title="Mauriel Ramirez"></div>
-                                <div class="profile-pic-thumbnail-small round-image" title="Mauriel Ramirez"></div>
-                                <div class="profile-pic-thumbnail-small round-image" title="Mauriel Ramirez"></div>
-                            </div>
-
-                            <div><small class="text-muted">and 23 others have joined</small></div>
-
-                            <p><a href="#" class="btn btn-primary" role="button">Ask to join</a></p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="col-sm-6 col-md-4">
-                <div class="group-thumbnail contribution">
-                    <div class="group-preview-image" style="background-image: url({{ STATIC_URL }}img/home-page/carousel/bg2.jpg)"></div>
-                    <div class="group-caption">
-                        <h3 class="group-name">MeExcel - MS Office Help Group</h3>
-                        <small class="text-muted group-keywords">Water Research</small>
-
-                        <p class="group-description">The Viterbi Graduate Student Association (VGSA) represents all the
-                            full time and part time Master's and Doctoral students in the Viterbi School of Engineering.
-                            VGSA is the largest student umbrella organization at the University of Southern California
-                            with over 5,000 active engineering graduate student members each year, and has an even
-                            greater Alumni population. The VGSA promotes professional, academic, and social affairs on
-                            campus, and is committed to creating a positive student experience at USC.Show less</p>
-
-                        <div class="text-center group-thumbnail-footer">
-                            <p><a href="#" class="btn btn-primary" role="button">Ask to join</a></p>
-                        </div>
-                    </div>
-                </div>
-            </div>
         </div>
         <div class="row">
             <div class="text-center btn-list-more"><a>Show More</a></div>
@@ -306,7 +123,34 @@
                 }
             });
         }
+
+        function request_join_group_ajax_submit() {
+            var dataFormID = $(this).attr("data-form-id");
+            var form = $("#" + dataFormID);
+            var datastring = form.serialize();
+            var url = form.attr('action');
+            $.ajax({
+                type: "POST",
+                url: url,
+                dataType: 'html',
+                data: datastring,
+                success: function (result) {
+                    var json_response = JSON.parse(result);
+                    console.log(json_response);
+                    if (json_response.status == "success") {
+
+                    }
+                },
+                error: function (XMLHttpRequest, textStatus, errorThrown) {
+                    console.log("error");
+                }
+            });
+            //don't submit the form
+            return false;
+        }
+
         $(document).ready(function () {
+            $(".btn-ask-to-join").click(request_join_group_ajax_submit);
             fixViewPort();
         });
     </script>

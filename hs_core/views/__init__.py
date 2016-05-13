@@ -19,6 +19,7 @@ from django import forms
 from django.views.generic import TemplateView
 from django.core.urlresolvers import reverse
 
+
 from rest_framework.decorators import api_view
 
 from mezzanine.conf import settings
@@ -557,6 +558,10 @@ class GroupForm(forms.Form):
 @processor_for('my-resources')
 @login_required
 def my_resources(request, page):
+    import sys
+    sys.path.append("/home/docker/pycharm-debug")
+    import pydevd
+    pydevd.settrace('129.123.51.193', port=21000, suspend=False)
     resource_collection = get_my_resources_list(request)
 
     context = {'collection': resource_collection}
@@ -663,9 +668,20 @@ def create_user_group(request, *args, **kwargs):
                                                       description=group_form.cleaned_data['description'],
                                                       purpose=group_form.cleaned_data['purpose'])
         if 'picture' in request.FILES:
-            new_group.picture = request.FILES['picture']
-            new_group.save()
+            new_group.gaccess.picture = request.FILES['picture']
 
+
+        privacy_level = request.POST['privacy_level']
+        if privacy_level == 'public':
+            new_group.gaccess.public = True
+            new_group.gaccess.discoverable = True
+        elif privacy_level == 'private':
+            new_group.gaccess.public = False
+            new_group.gaccess.discoverable = False
+        elif privacy_level == 'discoverable':
+            new_group.gaccess.discoverable = True
+            new_group.gaccess.public = False
+        new_group.gaccess.save()
         messages.success(request, "Group creation was successful.")
         return HttpResponseRedirect(reverse('Group', args=[new_group.id]))
     else:
@@ -979,10 +995,18 @@ class MyGroupsView(TemplateView):
         u = User.objects.get(pk=self.request.user.id)
 
         groups = u.uaccess.view_groups
+        my_join_requests = []
+
+        # GroupMembershipRequest.objects.filter(request_from=u)
+        # for g in groups:
+        #     my_request = g.gaccess.group_membership_requests.filter(request_from=u).first()
+        #     if my_request is not None:
+        #         my_join_requests.append(my_request)
 
         return {
             'profile_user': u,
             'groups': groups,
+            'my_pending_requests': GroupMembershipRequest.objects.filter(request_from=u)
         }
 
 
@@ -1001,6 +1025,8 @@ class GroupView(TemplateView):
         return {
             'profile_user': u,
             'group': g,
+            'edit_users': g.gaccess.get_users_with_explicit_access(PrivilegeCodes.CHANGE),
+            'view_users': g.gaccess.get_users_with_explicit_access(PrivilegeCodes.VIEW),
             'add_view_user_form': AddUserForm(),
         }
 
@@ -1011,6 +1037,14 @@ class CollaborateView(TemplateView):
     def get_context_data(self, **kwargs):
         u = User.objects.get(pk=self.request.user.id)
         groups = Group.objects.all().exclude(name="Hydroshare Author")
+        for g in groups:
+            g.is_user_member = True if u in g.gaccess.members else False
+            g.join_request_waiting_owner_action = g.gaccess.group_membership_requests.filter(request_from=u).exists()
+            g.join_request_waiting_user_action = g.gaccess.group_membership_requests.filter(invitation_to=u).exists()
+            g.join_request = None
+            if g.join_request_waiting_owner_action or g.join_request_waiting_user_action:
+                g.join_request = g.gaccess.group_membership_requests.filter(request_from=u).first() or \
+                                 g.gaccess.group_membership_requests.filter(invitation_to=u).first()
         return {
             'profile_user': u,
             'groups': groups,

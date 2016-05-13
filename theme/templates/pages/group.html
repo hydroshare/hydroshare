@@ -17,7 +17,10 @@
     <div class="container">
         <div class="row">
             <div class="col-sm-2">
-                <div class="group-image" style="background-image: url({{ STATIC_URL }}img/home-page/carousel/bg1.jpg)"></div>
+                {#  Group Picture #}
+                {% if group.gaccess.picture and group.gaccess.picture.url %}
+                    <div class="group-image" style="background-image: url({{ group.gaccess.picture.url }})"></div>
+                {% endif %}
             </div>
 
             <div class="col-sm-8">
@@ -61,23 +64,24 @@
                 <div role="tabpanel" class="tab-pane fade in active" id="overview">
                     <div class="row">
                         <div class="col-sm-12">
-                            <div class="group-activity-block activity-block start-conversation">
-                                <div style="background-image: url('{{ request.user.userprofile.picture.url }}');"
-                                     class="profile-pic-thumbnail round-image pull-left">
-                                </div>
-                                <h4>Share something</h4>
+{#                            <div class="group-activity-block activity-block start-conversation">#}
+{#                                <div style="background-image: url('{{ request.user.userprofile.picture.url }}');"#}
+{#                                     class="profile-pic-thumbnail round-image pull-left">#}
+{#                                </div>#}
+{#                                <h4>Share something</h4>#}
+{##}
+{#                                <div class="group-activity-comment">#}
+{#                                    <fieldset>#}
+{#                                        <textarea class="form-control"></textarea>#}
+{#                                    </fieldset>#}
+{#                                </div>#}
+{#                                <a class="btn btn-primary">Post</a>#}
+{#                            </div>#}
 
-                                <div class="group-activity-comment">
-                                    <fieldset>
-                                        <textarea class="form-control"></textarea>
-                                    </fieldset>
-                                </div>
-                                <a class="btn btn-primary">Post</a>
-                            </div>
+                            <h4>Recent Activity</h4>
 
-                            <h4>Recent Posts</h4>
-
-                            <div class="group-activity-block activity-block">
+                            {% for res in group.gaccess.view_resources %}
+                                <div class="group-activity-block activity-block">
                                 <div style="background-image: url('{{ request.user.userprofile.picture.url }}');"
                                      class="profile-pic-thumbnail round-image pull-left">
                                 </div>
@@ -86,26 +90,19 @@
                                     <div class="shared-resource-info">
                                         <strong><a href="#">Maurier Ramirez</a></strong>
                                         <span class="text-muted"> shared </span>
-                                                <span><a href="#">Untitled Resource</a></span>
+                                                <span><a href="#">{{ res.metadata.title }}</a></span>
                                     </div>
-                                    <h5><span class="text-muted">Resource type: </span>Generic</h5>
-                                    <h5><span class="text-muted">Date: </span>March 14, 2016, 5:14 p.m.</h5>
+                                    <h5><span class="text-muted">Resource type: </span>{{ res|resource_type }}</h5>
+                                    <h5><span class="text-muted">Date: </span>{{ res.created }}</h5>
                                 </div>
 
-                                <div class="activity-description col-sm-12" style="max-height: 50px;">
-                                    <p class="description">
-                                        <strong>ABSTRACT: </strong></p>
-
-                                    <p>The Viterbi Graduate Student Association (VGSA) represents all the full
-                                        time and part time Master's and Doctoral students in the Viterbi School
-                                        of Engineering. VGSA is the largest student umbrella organization at the
-                                        University of Southern California with over 5,000 active engineering
-                                        graduate student members each year, and has an even greater Alumni
-                                        population. The VGSA promotes professional, academic, and social affairs
-                                        on campus, and is committed to creating a positive student experience at
-                                        USC.Show less</p>
-                                </div>
-                                <div class="show-more-btn btn-default" title="Show less">···</div>
+                                    {% if res.metadata.description %}
+                                        <div class="activity-description col-sm-12" style="max-height: 50px;">
+                                            <p class="description"><strong>ABSTRACT: </strong>
+                                            </p> {{ res.metadata.description|linebreaks }}
+                                        </div>
+                                        <div class="show-more-btn btn-default" title="Show less">···</div>
+                                    {% endif %}
 
                                 <div class="group-activity-comment">
                                     <fieldset>
@@ -115,41 +112,43 @@
                                     <a class="btn btn-primary">Post</a>
                                 </div>
                             </div>
-
-                            <div class="group-activity-block activity-block">
-                                <div style="background-image: url('{{ request.user.userprofile.picture.url }}');"
-                                     class="profile-pic-thumbnail round-image pull-left">
-                                </div>
-
-                                <div class="metadata-wrapper">
-                                    <div class="shared-resource-info">
-                                        <strong><a href="#">Maurier Ramirez</a></strong>
-                                    </div>
-                                    <h5><span class="text-muted">Date: </span>March 14, 2016, 5:14 p.m.</h5>
-                                </div>
-
-                                <div class="activity-description conversation-description col-sm-12" style="max-height: 50px;">
-                                    <p class="description">
-                                    <p>The Viterbi Graduate Student Association (VGSA) represents all the full
-                                        time and part time Master's and Doctoral students in the Viterbi School
-                                        of Engineering. VGSA is the largest student umbrella organization at the
-                                        University of Southern California with over 5,000 active engineering
-                                        graduate student members each year, and has an even greater Alumni
-                                        population. The VGSA promotes professional, academic, and social affairs
-                                        on campus, and is committed to creating a positive student experience at
-                                        USC.Show less</p>
-                                </div>
-                                <div class="show-more-btn btn-default" title="Show less">···</div>
+                            {% endfor %}
 
 
-                                <div class="group-activity-comment">
-                                    <fieldset>
-                                        <label>Write a comment</label>
-                                        <textarea class="form-control"></textarea>
-                                    </fieldset>
-                                    <a class="btn btn-primary">Post</a>
-                                </div>
-                            </div>
+{#                            <div class="group-activity-block activity-block">#}
+{#                                <div style="background-image: url('{{ request.user.userprofile.picture.url }}');"#}
+{#                                     class="profile-pic-thumbnail round-image pull-left">#}
+{#                                </div>#}
+{##}
+{#                                <div class="metadata-wrapper">#}
+{#                                    <div class="shared-resource-info">#}
+{#                                        <strong><a href="#">Maurier Ramirez</a></strong>#}
+{#                                    </div>#}
+{#                                    <h5><span class="text-muted">Date: </span>March 14, 2016, 5:14 p.m.</h5>#}
+{#                                </div>#}
+{##}
+{#                                <div class="activity-description conversation-description col-sm-12" style="max-height: 50px;">#}
+{#                                    <p class="description">#}
+{#                                    <p>The Viterbi Graduate Student Association (VGSA) represents all the full#}
+{#                                        time and part time Master's and Doctoral students in the Viterbi School#}
+{#                                        of Engineering. VGSA is the largest student umbrella organization at the#}
+{#                                        University of Southern California with over 5,000 active engineering#}
+{#                                        graduate student members each year, and has an even greater Alumni#}
+{#                                        population. The VGSA promotes professional, academic, and social affairs#}
+{#                                        on campus, and is committed to creating a positive student experience at#}
+{#                                        USC.Show less</p>#}
+{#                                </div>#}
+{#                                <div class="show-more-btn btn-default" title="Show less">···</div>#}
+{##}
+{##}
+{#                                <div class="group-activity-comment">#}
+{#                                    <fieldset>#}
+{#                                        <label>Write a comment</label>#}
+{#                                        <textarea class="form-control"></textarea>#}
+{#                                    </fieldset>#}
+{#                                    <a class="btn btn-primary">Post</a>#}
+{#                                </div>#}
+{#                            </div>#}
 
                             <div class="row">
                                 <div class="text-center btn-list-more"><a>Show More</a></div>
@@ -166,7 +165,7 @@
                             <table id="members-filter" class="table-user-contributions table table-hover">
                                 <tbody>
                                     <tr class="active" data-filter-by="members">
-                                        <td><span>Members</span></td>
+                                        <td><span>All</span></td>
                                         <td><span class="badge">3</span></td>
                                     </tr>
                                      <tr data-filter-by="owners">
@@ -181,147 +180,180 @@
                             </table>
                         </div>
                         <div class="col-sm-12 col-md-9">
+
                             {#  All members #}
                             <table data-filter-by="members" class="table-members-list active">
-                                <tr>
-                                    <td>
-                                        <div style="background-image: url('{{ request.user.userprofile.picture.url }}');"
-                                             class="profile-pic-thumbnail round-image pull-left">
-                                        </div>
-                                    </td>
-                                    <td>
-                                        <h4><strong><a href="#">Maurier Ramirez</a></strong></h4>
-                                        <span class="text-muted">Front End Web Developer at Utah State University</span>
-                                    </td>
-                                    <td>
-                                        <div class="dropdown">
-                                            <button class="btn btn-default dropdown-toggle" type="button"
-                                                    id="dropdownMenu1" data-toggle="dropdown" aria-haspopup="true"
-                                                    aria-expanded="true">
-                                                Owner
-                                                <span class="caret"></span>
-                                            </button>
-                                            <ul class="dropdown-menu" aria-labelledby="dropdownMenu1">
-                                                <li><a href="#" class="disabled">Owner</a></li>
-                                                <li><a href="#">Member</a></li>
-                                                <li role="separator" class="divider"></li>
-                                                <li><a href="#">Expell</a></li>
-                                            </ul>
-                                        </div>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td>
-                                        <div style="background-image: url('{{ request.user.userprofile.picture.url }}');"
-                                             class="profile-pic-thumbnail round-image pull-left">
-                                        </div>
-                                    </td>
-                                    <td>
-                                        <h4><strong><a href="#">Maurier Ramirez</a></strong></h4>
-                                        <span class="text-muted">Front End Web Developer at Utah State University</span>
-                                    </td>
-                                    <td>
-                                        <div class="dropdown">
-                                            <button class="btn btn-default dropdown-toggle" type="button"
-                                                    id="dropdownMenu1" data-toggle="dropdown" aria-haspopup="true"
-                                                    aria-expanded="true">
-                                                Member
-                                                <span class="caret"></span>
-                                            </button>
-                                            <ul class="dropdown-menu" aria-labelledby="dropdownMenu1">
-                                                <li><a href="#" class="disabled">Owner</a></li>
-                                                <li><a href="#">Member</a></li>
-                                                <li role="separator" class="divider"></li>
-                                                <li><a href="#">Expell</a></li>
-                                            </ul>
-                                        </div>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td>
-                                        <div style="background-image: url('{{ request.user.userprofile.picture.url }}');"
-                                             class="profile-pic-thumbnail round-image pull-left">
-                                        </div>
-                                    </td>
-                                    <td>
-                                        <h4><strong><a href="#">Maurier Ramirez</a></strong></h4>
-                                        <span class="text-muted">Front End Web Developer at Utah State University</span>
-                                    </td>
-                                    <td>
-                                        <div class="dropdown">
-                                            <button class="btn btn-default dropdown-toggle" type="button"
-                                                    id="dropdownMenu1" data-toggle="dropdown" aria-haspopup="true"
-                                                    aria-expanded="true">
-                                                Member
-                                                <span class="caret"></span>
-                                            </button>
-                                            <ul class="dropdown-menu" aria-labelledby="dropdownMenu1">
-                                                <li><a href="#" class="disabled">Owner</a></li>
-                                                <li><a href="#">Member</a></li>
-                                                <li role="separator" class="divider"></li>
-                                                <li><a href="#">Expell</a></li>
-                                            </ul>
-                                        </div>
-                                    </td>
-                                </tr>
+                                {% for owner in group.gaccess.owners %}
+                                    <tr>
+                                        <td>
+                                            <div style="background-image: url('{{ owner.userprofile.picture.url }}');"
+                                                 class="profile-pic-thumbnail round-image pull-left">
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <h4><strong><a href="#">{{ owner|best_name }}</a></strong></h4>
+                                            <span class="text-muted">{{ owner.userprofile.title }}</span>
+                                        </td>
+                                        <td>Owner</td>
+                                    </tr>
+                                {% endfor %}
+
+                                {% for owner in edit_users %}
+                                    <tr>
+                                        <td>
+                                            <div style="background-image: url('{{ owner.userprofile.picture.url }}');"
+                                                 class="profile-pic-thumbnail round-image pull-left">
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <h4><strong><a href="#">{{ owner|best_name }}</a></strong></h4>
+                                            <span class="text-muted">{{ owner.userprofile.title }}</span>
+                                        </td>
+                                        <td>
+                                            <div class="dropdown">
+                                                <button class="btn btn-default dropdown-toggle" type="button"
+                                                        id="roleDropDown-{{ member.id }}" data-toggle="dropdown"
+                                                        aria-haspopup="true"
+                                                        aria-expanded="true">
+                                                    Owner
+                                                    <span class="caret"></span>
+                                                </button>
+                                                <ul class="dropdown-menu"
+                                                    aria-labelledby="roleDropDown-{{ member.id }}">
+                                                    <li>
+                                                        <form action="/hsapi/_internal/share-group-with-user/{{ group.id }}/{{ owner.id }}/edit/">
+                                                            {% csrf_token %}
+                                                            <a href="#" class="btn-share-group" data-role="edit">Owner</a>
+                                                        </form>
+                                                    </li>
+                                                    <li>
+                                                        <form action="/hsapi/_internal/share-group-with-user/{{ group.id }}/{{ owner.id }}/view/">
+                                                            {% csrf_token %}
+                                                            <a href="#" class="btn-share-group" data-role="view">Member</a>
+                                                        </form>
+                                                    </li>
+                                                    <li role="separator" class="divider"></li>
+                                                    <li>
+                                                        <form action="/hsapi/_internal/unshare-group-with-user/{{ group.id }}/{{ owner.id }}/">
+                                                            {% csrf_token %}
+                                                            <a href="#" class="btn-unshare-group">Expel</a>
+                                                        </form>
+                                                    </li>
+                                                </ul>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                {% endfor %}
+
+                                {% for member in view_users %}
+                                    <tr>
+                                        <td>
+                                            <div style="background-image: url('{{ member.userprofile.picture.url }}');"
+                                                 class="profile-pic-thumbnail round-image pull-left">
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <h4><strong><a href="#">{{ member|best_name }}</a></strong></h4>
+                                            <span class="text-muted">{{ member.userprofile.title }}</span>
+                                        </td>
+                                        <td>
+                                            <div class="dropdown">
+                                                <button class="btn btn-default dropdown-toggle" type="button"
+                                                        id="roleDropDown-{{ member.id }}" data-toggle="dropdown"
+                                                        aria-haspopup="true"
+                                                        aria-expanded="true">
+                                                    Member
+                                                    <span class="caret"></span>
+                                                </button>
+                                                <ul class="dropdown-menu"
+                                                    aria-labelledby="roleDropDown-{{ member.id }}">
+                                                    <li>
+                                                        <form action="/hsapi/_internal/share-group-with-user/{{ group.id }}/{{ member.id }}/edit/">
+                                                            {% csrf_token %}
+                                                            <a href="#" class="btn-share-group">Owner</a>
+                                                        </form>
+                                                    </li>
+                                                    <li>
+                                                        <form action="/hsapi/_internal/share-group-with-user/{{ group.id }}/{{ member.id }}/view/">
+                                                            {% csrf_token %}
+                                                            <a href="#" class="btn-share-group">Member</a>
+                                                        </form>
+                                                    </li>
+                                                    <li role="separator" class="divider"></li>
+                                                    <li>
+                                                        <form action="/hsapi/_internal/unshare-group-with-user/{{ group.id }}/{{ member.id }}/">
+                                                            {% csrf_token %}
+                                                            <a href="#" class="btn-unshare-group">Expel</a>
+                                                        </form>
+                                                    </li>
+                                                </ul>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                {% endfor %}
                             </table>
 
                             {#  Owners and Creators #}
                             <table data-filter-by="owners" class="table-members-list">
-                                <tr>
-                                    <td>
-                                        <div style="background-image: url('{{ request.user.userprofile.picture.url }}');"
-                                             class="profile-pic-thumbnail round-image pull-left">
-                                        </div>
-                                    </td>
-                                    <td>
-                                        <h4><strong><a href="#">Maurier Ramirez</a></strong></h4>
-                                        <span class="text-muted">Front End Web Developer at Utah State University</span>
-                                    </td>
-                                    <td>
-                                        <div class="dropdown">
-                                            <button class="btn btn-default dropdown-toggle" type="button"
-                                                    id="dropdownMenu1" data-toggle="dropdown" aria-haspopup="true"
-                                                    aria-expanded="true">
-                                                Owner
-                                                <span class="caret"></span>
-                                            </button>
-                                            <ul class="dropdown-menu" aria-labelledby="dropdownMenu1">
-                                                <li><a href="#" class="disabled">Owner</a></li>
-                                                <li><a href="#">Member</a></li>
-                                                <li role="separator" class="divider"></li>
-                                                <li><a href="#">Expell</a></li>
-                                            </ul>
-                                        </div>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td>
-                                        <div style="background-image: url('{{ request.user.userprofile.picture.url }}');"
-                                             class="profile-pic-thumbnail round-image pull-left">
-                                        </div>
-                                    </td>
-                                    <td>
-                                        <h4><strong><a href="#">Maurier Ramirez</a></strong></h4>
-                                        <span class="text-muted">Front End Web Developer at Utah State University</span>
-                                    </td>
-                                    <td>
-                                        <div class="dropdown">
-                                            <button class="btn btn-default dropdown-toggle" type="button"
-                                                    id="dropdownMenu1" data-toggle="dropdown" aria-haspopup="true"
-                                                    aria-expanded="true">
-                                                Owner
-                                                <span class="caret"></span>
-                                            </button>
-                                            <ul class="dropdown-menu" aria-labelledby="dropdownMenu1">
-                                                <li><a href="#" class="disabled">Owner</a></li>
-                                                <li><a href="#">Member</a></li>
-                                                <li role="separator" class="divider"></li>
-                                                <li><a href="#">Expell</a></li>
-                                            </ul>
-                                        </div>
-                                    </td>
-                                </tr>
+                                {% for owner in group.gaccess.owners %}
+                                    <tr>
+                                        <td>
+                                            <div style="background-image: url('{{ owner.userprofile.picture.url }}');"
+                                                 class="profile-pic-thumbnail round-image pull-left">
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <h4><strong><a href="#">{{ owner|best_name }}</a></strong></h4>
+                                            <span class="text-muted">{{ owner.userprofile.title }}</span>
+                                        </td>
+                                        <td>Owner</td>
+                                    </tr>
+                                {% endfor %}
+
+                                {% for owner in edit_users %}
+                                    <tr>
+                                        <td>
+                                            <div style="background-image: url('{{ owner.userprofile.picture.url }}');"
+                                                 class="profile-pic-thumbnail round-image pull-left">
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <h4><strong><a href="#">{{ owner|best_name }}</a></strong></h4>
+                                            <span class="text-muted">{{ owner.userprofile.title }}</span>
+                                        </td>
+                                        <td>
+                                            <div class="dropdown">
+                                                <button class="btn btn-default dropdown-toggle" type="button"
+                                                        id="roleDropDown-{{ member.id }}" data-toggle="dropdown" aria-haspopup="true"
+                                                        aria-expanded="true">
+                                                    Owner
+                                                    <span class="caret"></span>
+                                                </button>
+                                                <ul class="dropdown-menu" aria-labelledby="roleDropDown-{{ member.id }}">
+                                                    <li>
+                                                        <form action="/hsapi/_internal/share-group-with-user/{{ group.id }}/{{ owner.id }}/edit/">
+                                                            {% csrf_token %}
+                                                            <a href="#" class="btn-share-group">Owner</a>
+                                                        </form>
+                                                    </li>
+                                                    <li>
+                                                        <form action="/hsapi/_internal/share-group-with-user/{{ group.id }}/{{ owner.id }}/view/">
+                                                            {% csrf_token %}
+                                                            <a href="#" class="btn-share-group">Member</a>
+                                                        </form>
+                                                    </li>
+                                                    <li role="separator" class="divider"></li>
+                                                    <li>
+                                                        <form action="/hsapi/_internal/unshare-group-with-user/{{ group.id }}/{{ owner.id }}/">
+                                                            {% csrf_token %}
+                                                            <a href="#" class="btn-unshare-group">Expel</a>
+                                                        </form>
+                                                    </li>
+                                                </ul>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                {% endfor %}
                             </table>
 
                             {#  Pending invitation requests #}
@@ -334,13 +366,22 @@
                                             </div>
                                         </td>
                                         <td>
-                                            <h4><strong><a href="#">Maurier Ramirez</a></strong></h4>
-                                            <span class="text-muted">Front End Web Developer at Utah State University</span>
+                                            <h4><strong><a href="#">{{ pendingrequest.request_from|best_name }}</a></strong></h4>
+                                            <span class="text-muted">{{ pendingrequest.request_from.userprofile.title }}</span>
                                         </td>
-                                        <td><a href="#" class="btn btn-success"><span
-                                                class="glyphicon glyphicon-ok"></span>&nbsp;Accept</a></td>
-                                        <td><a href="#" class="btn btn-default"><span
-                                                class="glyphicon glyphicon-remove"></span>&nbsp;Reject</a></td>
+                                        <td><form form-id="accept-request-{{ pendingrequest.id }}" action="/hsapi/_internal/act-on-group-membership-request/{{ pendingrequest.id }}/accept/">
+                                            {% csrf_token %}
+                                            <a href="#" class="btn btn-success btn-act-on-request"><span
+                                                class="glyphicon glyphicon-ok"></span>&nbsp;Accept</a>
+                                            </form>
+                                        </td>
+                                        <td>
+                                            <form form-id="reject-request-{{ pendingrequest.id }}" action="/hsapi/_internal/act-on-group-membership-request/{{ pendingrequest.id }}/reject/">
+                                                {% csrf_token %}
+                                                <a href="#" class="btn btn-default btn-act-on-request"><span
+                                                    class="glyphicon glyphicon-remove"></span>&nbsp;Reject</a>
+                                            </form>
+                                        </td>
                                     </tr>
 
                                 {% endfor %}
@@ -866,28 +907,42 @@
                     </button>
                     <h4 class="modal-title" id="Invite">Invite People</h4>
                 </div>
-                <form id="invite-to-group"
-                      action="/hsapi/_internal/make-group-membership-request/{{ group.id }}/5/"
-                      method="POST">
+                <form id="invite-to-group" action="/hsapi/_internal/make-group-membership-request/{{ group.id }}/">
                     <div class="modal-body">
                         <div id="div-invite-people">
-                            <div class="input-group" style="width:100%">
-
+                            <div class="input-group">
                                 {% csrf_token %}
-
                                 {{ add_view_user_form.user }}
 
-                                <a id="btn-invite"
-                                   class="btn btn-add-access btn-success pull-left glyphicon glyphicon-plus"><span
-                                        class="button-label">&nbspAdd</span></a>
+                                <div class="dropdown">
+                                    <button class="btn btn-default dropdown-toggle" type="button"
+                                            id="roles_list" data-toggle="dropdown"
+                                            aria-haspopup="true">
+                                        <span id="selected_role" data-role="view">Member</span>
+                                        <span class="caret"></span>
+                                    </button>
 
+                                    <ul id="list-roles" class="dropdown-menu"
+                                        aria-labelledby="roles_list">
+                                        <li><a data-role="view">Member</a></li>
+                                        <li><a data-role="edit">Owner</a></li>
+                                    </ul>
+                                </div>
+                                <form action="">
+                                    <a id="btn-invite"  onclick="group_invite_ajax_submit(); return false;"
+                                       class="btn btn-add-access btn-success pull-left glyphicon glyphicon-plus"><span class="button-label">&nbspAdd</span>
+                                    </a>
+                                </form>
                             </div>
                         </div>
+                    </div>
+
+                    <div id="div-users-to-invite">
 
                     </div>
+
                     <div class="modal-footer">
-                        <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
-                        <button type="submit" class="btn btn-primary">Save Changes</button>
+                        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
                     </div>
                 </form>
             </div>
@@ -898,6 +953,107 @@
 {% block extra_js %}
     <script type="text/javascript" charset="utf8" src="//cdn.datatables.net/1.10.10/js/jquery.dataTables.js"></script>
     <script>
+
+        function group_invite_ajax_submit() {
+            if (!$("#id_user-deck > .hilight").length) {
+                return false; // If no user selected, ignore the request
+            }
+            var share_with = $("#id_user-deck > .hilight")[0].getAttribute("data-value");
+            var form = $("#invite-to-group");
+            var datastring = form.serialize();
+            var access_type = $("#selected_role")[0].getAttribute("data-role");
+            var url = form.attr('action') + share_with + "/";
+
+            $.ajax({
+                type: "POST",
+                url: url,
+                dataType: 'html',
+                data: datastring,
+                success: function (result) {
+                    $(".hilight > span").click(); // Clears the search field
+                },
+                error: function (XMLHttpRequest, textStatus, errorThrown) {
+                    console.log("error");
+                }
+            });
+            //don't submit the form
+            return false;
+        }
+
+        function onRoleSelect(event) {
+            var el = $(event.target);
+            $("#selected_role").text(el.text());
+            $("#selected_role")[0].setAttribute("data-role", el[0].getAttribute("data-role"));
+        }
+
+        function act_on_request_ajax_submit() {
+            var form = $(this).closest("form");
+            var datastring = form.serialize();
+            var url = form.attr('action');
+            $.ajax({
+                type: "POST",
+                url: url,
+                dataType: 'html',
+                data: datastring,
+                success: function (result) {
+                    var json_response = JSON.parse(result);
+                    console.log(json_response);
+                    if (json_response.status == "success") {
+
+                    }
+                },
+                error: function (XMLHttpRequest, textStatus, errorThrown) {
+                    console.log("error");
+                }
+            });
+            //don't submit the form
+            return false;
+        }
+
+        function share_group_ajax_submit() {
+            var form = $(this).closest("form");
+            var role = $(this).attr("data-role");
+            var datastring = form.serialize();
+            var url = form.attr('action');
+            $.ajax({
+                type: "POST",
+                url: url,
+                dataType: 'html',
+                data: datastring,
+                success: function (result) {
+
+                },
+                error: function (XMLHttpRequest, textStatus, errorThrown) {
+                    console.log("error");
+                }
+            });
+            //don't submit the form
+            return false;
+        }
+
+        function unshare_group_ajax_submit() {
+            var form = $(this).closest("form");
+            var datastring = form.serialize();
+            var url = form.attr('action');
+            $.ajax({
+                type: "POST",
+                url: url,
+                dataType: 'html',
+                data: datastring,
+                success: function (result) {
+                    var json_response = JSON.parse(result);
+                    console.log(json_response);
+                    if (json_response.status == "success") {
+
+                    }
+                },
+                error: function (XMLHttpRequest, textStatus, errorThrown) {
+                    console.log("error");
+                }
+            });
+            //don't submit the form
+            return false;
+        }
 
         $(document).ready(function () {
             // Abstract collapse toggle
@@ -920,6 +1076,10 @@
                 }
             });
 
+            $("#list-roles a").click(onRoleSelect);
+
+            $("#id_user-autocomplete").attr("placeholder", "Search by name or username");
+
             // Filter
             $("#members").find(".table-members-list").hide();
             $("#members").find(".table-members-list.active").show();
@@ -931,6 +1091,10 @@
                 $(this).parent().find("tr").removeClass("active");
                 $(this).addClass("active");
             });
+
+            $(".btn-act-on-request").click(act_on_request_ajax_submit);
+            $(".btn-share-group").click(share_group_ajax_submit);
+            $(".btn-unshare-group").click(unshare_group_ajax_submit);
 
             /*==================================================
             Table columns
@@ -947,7 +1111,6 @@
             10 - Last modified (sortable format)
             11 - Sharing Status
         ==================================================*/
-
             resourceTable = $("#item-selectors").DataTable({
                 "order": [[4, "desc"]],
                 "paging": false,

@@ -38,7 +38,7 @@ hydroshare:
     # hydroshare repository
     - "HS_PATH:/home/docker/hydroshare"
     # pycharm debugging
-    # - "/home/hydro/pycharm-debug:/home/docker/pycharm-debug"
+    - "/home/hydro/pycharm-debug:/home/docker/pycharm-debug"
     # log files
     - "HS_LOG_FILES:/var/log/hydroshare"
     # shared location for uwsgi.sock between containers
