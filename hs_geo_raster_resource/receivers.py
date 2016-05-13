@@ -10,7 +10,7 @@ from collections import OrderedDict
 import xml.etree.ElementTree as ET
 
 import gdal
-from gdalconst import GA_ReadOnly
+from gdalconst import GA_ReadOnly, GA_Update
 
 from django.core.files.uploadedfile import UploadedFile
 from django.dispatch import receiver
@@ -90,7 +90,7 @@ def create_vrt_file(tif_file):
     with open(os.devnull, 'w') as fp:
         subprocess.Popen(['gdalbuildvrt', vrt_file_path, tif_file.file.name], stdout=fp, stderr=fp).wait()   # remember to add .wait()
 
-    # modify vrt file SourceFileName
+    # edit VRT contents
     try:
         tree = ET.parse(vrt_file_path)
         root = tree.getroot()
@@ -102,6 +102,27 @@ def create_vrt_file(tif_file):
 
     except Exception:
         shutil.rmtree(temp_dir)
+
+    try:
+        vrt_raster = gdal.Open(vrt_file_path, GA_Update)
+        ori_raster = gdal.Open(tif_file.file.name, GA_ReadOnly)
+
+        for i in range(0, ori_raster.RasterCount):
+            vrt_band = vrt_raster.GetRasterBand(i+1)
+            ori_band = ori_raster.GetRasterBand(i+1)
+
+            vrt_band.SetScale(ori_band.GetScale())
+            vrt_band.SetOffset(ori_band.GetOffset())
+            if ori_band.GetUnitType():
+                vrt_band.SetUnitType(ori_band.GetUnitType())
+            if ori_band.GetCategoryNames():
+                vrt_band.SetCategoryNames(ori_band.GetCategoryNames())
+                
+    except:
+        pass
+
+    vrt_raster = None
+    ori_raster = None
 
     return vrt_file_path, temp_dir
 
