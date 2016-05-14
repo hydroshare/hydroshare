@@ -94,7 +94,7 @@ class GroupMembershipRequest(MockIRODSTestCaseMixin, TestCase):
                                                                                            self.lisa_group_member)
 
         # test that inviting the same user more than once should raise exception
-        # let the group owner (john) send a membership invitation to user lisa
+        # let the group owner (john) send a membership invitation to user lisa again
         with self.assertRaises(PermissionDenied):
             self.john_group_owner.uaccess.create_group_membership_request(self.modeling_group,
                                                                           self.lisa_group_member)
@@ -169,6 +169,9 @@ class GroupMembershipRequest(MockIRODSTestCaseMixin, TestCase):
         # let lisa send a membership request to join modeling group
         membership_request = self.lisa_group_member.uaccess.create_group_membership_request(self.modeling_group)
 
+        # modeling group should have one pending membership requests
+        self.assertEquals(self.modeling_group.gaccess.group_membership_requests.count(), 1)
+
         # trying to send multiple request to join the same group should raise exception
         with self.assertRaises(PermissionDenied):
             self.lisa_group_member.uaccess.create_group_membership_request(self.modeling_group)
@@ -211,6 +214,20 @@ class GroupMembershipRequest(MockIRODSTestCaseMixin, TestCase):
         # user lisa should have no pending request to join group
         self.assertEquals(self.lisa_group_member.uaccess.group_membership_requests.count(), 0)
 
+        # modeling group should have no pending membership requests
+        self.assertEquals(self.modeling_group.gaccess.group_membership_requests.count(), 0)
+
+        # test user cancelling his/her own request to join a group
+        # let lisa send a membership request to join modeling group
+        membership_request = self.lisa_group_member.uaccess.create_group_membership_request(self.modeling_group)
+        # user lisa should have 1 pending request to join group
+        self.assertEquals(self.lisa_group_member.uaccess.group_membership_requests.count(), 1)
+        # modeling group should have 1 pending membership requests
+        self.assertEquals(self.modeling_group.gaccess.group_membership_requests.count(), 1)
+        # let Lisa cancel her own request to join group
+        self.lisa_group_member.uaccess.act_on_group_membership_request(membership_request, accept_request=False)
+        # user lisa should have no pending request to join group
+        self.assertEquals(self.lisa_group_member.uaccess.group_membership_requests.count(), 0)
         # modeling group should have no pending membership requests
         self.assertEquals(self.modeling_group.gaccess.group_membership_requests.count(), 0)
 

@@ -285,12 +285,14 @@ class UserAccess(models.Model):
         if not user_to_join_group.is_active:
             raise PermissionDenied("User to be granted group membership is not active")
 
-        # TODO: USE CASE FOR USER CANCELING OWN REQUEST
         membership_grantor = None
         # group owner acting on membership request from a user
         if this_request.invitation_to is None:
             if self.owns_group(this_request.group_to_join) or self.user.is_superuser:
                 membership_grantor = self
+            elif self.user == this_request.request_from and not accept_request:
+                # allow self to cancel his own request to join a group
+                pass
             else:
                 raise PermissionDenied("You don't have permission to act on the group membership request")
         # invited user acting on membership invitation from a group owner
@@ -299,7 +301,7 @@ class UserAccess(models.Model):
         else:
             raise PermissionDenied("You don't have permission to act on the group membership request")
 
-        if accept_request:
+        if accept_request and membership_grantor is not None:
             membership_grantor.share_group_with_user(this_group=this_request.group_to_join,
                                                      this_user=user_to_join_group,
                                                      this_privilege=PrivilegeCodes.VIEW)
@@ -2432,13 +2434,11 @@ class GroupAccess(models.Model):
         if this_privilege == PrivilegeCodes.OWNER:
             return self.owners
         elif this_privilege == PrivilegeCodes.CHANGE:
-
             return User.objects.filter(is_active=True,
                                        u2ugp__group=self.group,
                                        u2ugp__privilege=PrivilegeCodes.CHANGE)
 
         else:  # this_privilege == PrivilegeCodes.ViEW
-
             return User.objects.filter(is_active=True,
                                        u2ugp__group=self.group,
                                        u2ugp__privilege=PrivilegeCodes.VIEW)
