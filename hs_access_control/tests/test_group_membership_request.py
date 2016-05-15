@@ -39,7 +39,7 @@ class GroupMembershipRequest(MockIRODSTestCaseMixin, TestCase):
             superuser=False,
             groups=[]
         )
-        
+
         self.jen_group_editor = hydroshare.create_account(
             'jen@gmail.com',
             username='jlarson',
@@ -80,6 +80,11 @@ class GroupMembershipRequest(MockIRODSTestCaseMixin, TestCase):
             title='USU Modeling Group',
             description="We are the cool modeling group",
             purpose="Our purpose to collaborate on hydrologic modeling")
+
+        self.metadata_group = self.mike_group_owner.uaccess.create_group(
+            title='USU Metadata Group',
+            description="We are the cool metadata group",
+            purpose="Our purpose to collaborate on metadata")
 
         self.john_group_owner.uaccess.share_group_with_user(self.modeling_group, self.mike_group_owner,
                                                             PrivilegeCodes.OWNER)
@@ -171,7 +176,29 @@ class GroupMembershipRequest(MockIRODSTestCaseMixin, TestCase):
         # modeling group should have no pending membership requests
         self.assertEquals(self.modeling_group.gaccess.group_membership_requests.count(), 0)
 
-        # TODO: Test multiple owners inviting different users to join a specific group
+    def test_owner_inviting_same_user_different_groups(self):
+        # lisa should not be one of the members of the modeling group
+        self.assertNotIn(self.lisa_group_member, self.modeling_group.gaccess.members)
+        # lisa should not be one of the members of the metadata group
+        self.assertNotIn(self.lisa_group_member, self.metadata_group.gaccess.members)
+
+        # let the metadata group owner (mike) send a membership invitation to user lisa
+        metadata_membership_request = \
+            self.mike_group_owner.uaccess.create_group_membership_request(self.metadata_group,
+                                                                          self.lisa_group_member)
+        # let the modeling group owner (mike) send a membership invitation to user lisa
+        modeling_membership_request = \
+            self.mike_group_owner.uaccess.create_group_membership_request(self.modeling_group, self.lisa_group_member)
+
+        # let lisa accept both invitations
+        self.lisa_group_member.uaccess.act_on_group_membership_request(metadata_membership_request,
+                                                                       accept_request=True)
+        self.lisa_group_member.uaccess.act_on_group_membership_request(modeling_membership_request,
+                                                                       accept_request=True)
+        # lisa should be one of the members of the modeling group
+        self.assertIn(self.lisa_group_member, self.modeling_group.gaccess.members)
+        # lisa should be one of the members of the metadata group
+        self.assertIn(self.lisa_group_member, self.metadata_group.gaccess.members)
 
     def test_non_owner_sending_invitation(self):
         # test group non-owners can't send invitation to users to join group
@@ -264,6 +291,29 @@ class GroupMembershipRequest(MockIRODSTestCaseMixin, TestCase):
         self.assertEquals(self.lisa_group_member.uaccess.group_membership_requests.count(), 0)
         # modeling group should have no pending membership requests
         self.assertEquals(self.modeling_group.gaccess.group_membership_requests.count(), 0)
+
+    def test_user_sending_request_multiple_groups(self):
+        # test that a specific user can send request to join multiple groups
+
+        # lisa should not be one of the members of the modeling group
+        self.assertNotIn(self.lisa_group_member, self.modeling_group.gaccess.members)
+        # lisa should not be one of the members of the metadata group
+        self.assertNotIn(self.lisa_group_member, self.metadata_group.gaccess.members)
+
+        # let lisa make request to join modeling and metadata groups
+        modeling_membership_request = \
+            self.lisa_group_member.uaccess.create_group_membership_request(self.modeling_group)
+        metadata_membership_request = \
+            self.lisa_group_member.uaccess.create_group_membership_request(self.metadata_group)
+
+        # let group owner mike accept lisa's requests
+        self.mike_group_owner.uaccess.act_on_group_membership_request(modeling_membership_request, accept_request=True)
+        self.mike_group_owner.uaccess.act_on_group_membership_request(metadata_membership_request, accept_request=True)
+
+        # lisa should be one of the members of the modeling group
+        self.assertIn(self.lisa_group_member, self.modeling_group.gaccess.members)
+        # lisa should be one of the members of the metadata group
+        self.assertIn(self.lisa_group_member, self.metadata_group.gaccess.members)
 
     def test_multiple_user_sending_request(self):
         # test multiple users making requests to join the same group
