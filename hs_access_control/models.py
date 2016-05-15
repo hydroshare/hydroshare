@@ -256,8 +256,7 @@ class UserAccess(models.Model):
             if not self.owns_group(this_group) and not self.user.is_superuser:
                 raise PermissionDenied("You need to be a group owner to send invitation to join a group")
 
-            if GroupMembershipRequest.objects.filter(request_from=self.user, group_to_join=this_group,
-                                                     invitation_to=this_user).exists():
+            if GroupMembershipRequest.objects.filter(group_to_join=this_group, invitation_to=this_user).exists():
                 raise PermissionDenied("You already have a pending invitation for this user to join this group")
             else:
                 return GroupMembershipRequest.objects.create(request_from=self.user, invitation_to=this_user,
