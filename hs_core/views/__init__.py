@@ -562,10 +562,12 @@ def my_resources(request, page):
 def add_generic_context(request, page):
 
     class AddUserForm(forms.Form):
-        user = forms.ModelChoiceField(User.objects.all(), widget=autocomplete_light.ChoiceWidget("UserAutocomplete"))
+        user = forms.ModelChoiceField(User.objects.filter(is_active=True).all(),
+                                      widget=autocomplete_light.ChoiceWidget("UserAutocomplete"))
 
     class AddGroupForm(forms.Form):
-        group = forms.ModelChoiceField(Group.objects.all(), widget=autocomplete_light.ChoiceWidget("GroupAutocomplete"))
+        group = forms.ModelChoiceField(Group.objects.filter(gaccess__active=True).all(),
+                                       widget=autocomplete_light.ChoiceWidget("GroupAutocomplete"))
 
     return {
         'add_owner_user_form': AddUserForm(),

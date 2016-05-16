@@ -1,9 +1,14 @@
 import autocomplete_light
 from django.contrib.auth.models import User, Group
 
+
 class UserAutocomplete(autocomplete_light.AutocompleteModelBase):
     search_fields=['username','first_name','last_name']
     
+    def choices_for_request(self):
+        self.choices = self.choices.filter(is_active=True)
+        return super(UserAutocomplete, self).choices_for_request()
+
     def choice_label(self, choice):
         label = ""
 
@@ -27,5 +32,13 @@ class UserAutocomplete(autocomplete_light.AutocompleteModelBase):
 
 autocomplete_light.register(User, UserAutocomplete)
 
-autocomplete_light.register(Group,
-    search_fields=['name'])
+
+class GroupAutocomplete(autocomplete_light.AutocompleteModelBase):
+    search_fields=['name']
+
+    def choices_for_request(self):
+        self.choices = self.choices.filter(gaccess_active=True)
+        return super(GroupAutocomplete, self).choices_for_request()
+
+autocomplete_light.register(Group, GroupAutocomplete)
+
