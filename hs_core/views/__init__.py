@@ -547,11 +547,18 @@ class GroupForm(forms.Form):
     description = forms.CharField(required=True)
     purpose = forms.CharField(required=False)
     picture = forms.ImageField(required=False)
+    privacy_level = forms.CharField(required=True)
 
     def clean_name(self):
         data = self.cleaned_data['name']
         if Group.objects.filter(name__iexact=data).exists():
             raise forms.ValidationError("A group exits with the same name.")
+        return data
+
+    def clean_privacy_level(self):
+        data = self.cleaned_data['privacy_level']
+        if data not in ('public', 'private', 'discoverable'):
+            raise forms.ValidationError("Invalid group privacy level.")
         return data
 
 
@@ -664,14 +671,14 @@ def create_resource(request, *args, **kwargs):
 def create_user_group(request, *args, **kwargs):
     group_form = GroupForm(request.POST, request.FILES)
     if group_form.is_valid():
-        new_group = request.user.uaccess.create_group(title=group_form.cleaned_data['name'],
-                                                      description=group_form.cleaned_data['description'],
-                                                      purpose=group_form.cleaned_data['purpose'])
+        frm_data = group_form.cleaned_data
+        new_group = request.user.uaccess.create_group(title=frm_data['name'],
+                                                      description=frm_data['description'],
+                                                      purpose=frm_data['purpose'])
         if 'picture' in request.FILES:
             new_group.gaccess.picture = request.FILES['picture']
 
-
-        privacy_level = request.POST['privacy_level']
+        privacy_level = frm_data['privacy_level']
         if privacy_level == 'public':
             new_group.gaccess.public = True
             new_group.gaccess.discoverable = True
@@ -685,7 +692,7 @@ def create_user_group(request, *args, **kwargs):
         messages.success(request, "Group creation was successful.")
         return HttpResponseRedirect(reverse('Group', args=[new_group.id]))
     else:
-        messages.error(request, "Something went wrong while creating this group.")
+        messages.error(request, "Group creation errors:{}.".format(group_form.errors.as_json))
 
     return HttpResponseRedirect(request.META['HTTP_REFERER'])
 
