@@ -19,11 +19,19 @@
             <div class="col-sm-2">
                 {#  Group Picture #}
                 {% if group.gaccess.picture and group.gaccess.picture.url %}
-                    <div class="group-image" style="background-image: url({{ group.gaccess.picture.url }})"></div>
-                {% endif %}
-            </div>
+                    <div class="group-image-wrapper group-image-wrapper-medium">
+                        <div class="group-image" style="background-image: url({{ group.gaccess.picture.url }})"></div>
+                    </div>
 
-            <div class="col-sm-8">
+                {% else %}
+                    <div class="group-image-wrapper group-image-wrapper-medium">
+                        <div class="group-image group-preview-image-default"
+                             style="background-image: url({{ STATIC_URL }}img/home-page/step4.png)"></div>
+                    </div>
+                {% endif %}
+                </div>
+
+                <div class="col-sm-8">
                 <h2 class="group-title">{{ group.name }}</h2>
                 <h4 class="text-muted">{{ group.gaccess.purpose }}</h4>
 
@@ -31,7 +39,7 @@
             </div>
             <div class="col-sm-2">
                 <!-- Single button -->
-                <div class="btn-group">
+                <div class="dropdown custom-dropdown">
                     <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown"
                             aria-haspopup="true" aria-expanded="false">
                         Member <span class="caret"></span>
@@ -80,39 +88,38 @@
 
                             <h4>Recent Activity</h4>
 
-                            {% for res in group.gaccess.view_resources %}
-                                <div class="group-activity-block activity-block">
-                                <div style="background-image: url('{{ request.user.userprofile.picture.url }}');"
-                                     class="profile-pic-thumbnail round-image pull-left">
-                                </div>
-
-                                <div class="metadata-wrapper">
-                                    <div class="shared-resource-info">
-                                        <strong><a href="#">Maurier Ramirez</a></strong>
-                                        <span class="text-muted"> shared </span>
-                                                <span><a href="#">{{ res.metadata.title }}</a></span>
-                                    </div>
-                                    <h5><span class="text-muted">Resource type: </span>{{ res|resource_type }}</h5>
-                                    <h5><span class="text-muted">Date: </span>{{ res.created }}</h5>
-                                </div>
-
-                                    {% if res.metadata.description %}
-                                        <div class="activity-description col-sm-12" style="max-height: 50px;">
-                                            <p class="description"><strong>ABSTRACT: </strong>
-                                            </p> {{ res.metadata.description|linebreaks }}
+                            {% if group.gaccess.view_resources %}
+                                {% for res in group.gaccess.view_resources %}
+                                    <div class="group-activity-block activity-block">
+                                        <div>
+                                            <div class="shared-resource-info">
+                                                <span><a href="{{ res.get_absolute_url }}">{{ res.metadata.title }}</a></span>
+                                            </div>
+                                            <h5><span class="text-muted">Resource type: </span>{{ res|resource_type }}
+                                            </h5>
+                                            <h5><span class="text-muted">Date: </span>{{ res.created }}</h5>
                                         </div>
-                                        <div class="show-more-btn btn-default" title="Show less">···</div>
-                                    {% endif %}
 
-                                <div class="group-activity-comment">
-                                    <fieldset>
-                                        <label>Write a comment</label>
-                                        <textarea class="form-control"></textarea>
-                                    </fieldset>
-                                    <a class="btn btn-primary">Post</a>
-                                </div>
-                            </div>
+                                        {% if res.metadata.description %}
+                                            <div class="activity-description col-sm-12" style="max-height: 50px;">
+                                                <p class="description"><strong>ABSTRACT: </strong>
+                                                </p> {{ res.metadata.description|linebreaks }}
+                                            </div>
+                                            <div class="show-more-btn btn-default" title="Show less">···</div>
+                                        {% endif %}
+
+                                        {#                                <div class="group-activity-comment">#}
+                                        {#                                    <fieldset>#}
+                                        {#                                        <label>Write a comment</label>#}
+                                        {#                                        <textarea class="form-control"></textarea>#}
+                                        {#                                    </fieldset>#}
+                                        {#                                    <a class="btn btn-primary">Post</a>#}
+                                        {#                                </div>#}
+                                    </div>
                             {% endfor %}
+                                {% else %}
+                                <i>No recent activity.</i>
+                            {% endif %}
 
 
 {#                            <div class="group-activity-block activity-block">#}
@@ -150,9 +157,6 @@
 {#                                </div>#}
 {#                            </div>#}
 
-                            <div class="row">
-                                <div class="text-center btn-list-more"><a>Show More</a></div>
-                            </div>
                         </div>
                     </div>
                 </div>
@@ -164,11 +168,11 @@
                             <br>
                             <table id="members-filter" class="table-user-contributions table table-hover">
                                 <tbody>
-                                    <tr class="active" data-filter-by="members">
+                                    <tr class="active" data-filter-by="all">
                                         <td><span>All</span></td>
                                         <td><span class="badge">3</span></td>
                                     </tr>
-                                     <tr data-filter-by="owners">
+                                     <tr data-filter-by="edit-user">
                                         <td><span>Owners</span></td>
                                         <td><span class="badge">2</span></td>
                                     </tr>
@@ -180,37 +184,46 @@
                             </table>
                         </div>
                         <div class="col-sm-12 col-md-9">
-
                             {#  All members #}
-                            <table data-filter-by="members" class="table-members-list active">
+                            <table class="table-members-list active">
                                 {% for owner in group.gaccess.owners %}
-                                    <tr>
+                                    <tr data-filter-by="creator">
                                         <td>
-                                            <div style="background-image: url('{{ owner.userprofile.picture.url }}');"
-                                                 class="profile-pic-thumbnail round-image pull-left">
-                                            </div>
+                                            {% if  owner.userprofile.picture and owner.userprofile.picture.url %}
+                                                <div style="background-image: url('{{ owner.userprofile.picture.url }}');"
+                                                     class="profile-pic-thumbnail round-image pull-left">
+                                                </div>
+                                            {% else %}
+                                                <div class="profile-pic-thumbnail-small round-image user-icon"></div>
+                                            {% endif %}
                                         </td>
                                         <td>
-                                            <h4><strong><a href="#">{{ owner|best_name }}</a></strong></h4>
-                                            <span class="text-muted">{{ owner.userprofile.title }}</span>
+                                            <h4><strong><a href="/user/{{ owner.id }}">{{ owner|best_name }}</a></strong></h4>
+                                            {% if owner.userprofile.title %}
+                                                <span class="text-muted">{{ owner.userprofile.title }}</span>
+                                            {% endif %}
                                         </td>
                                         <td>Owner</td>
                                     </tr>
                                 {% endfor %}
 
                                 {% for owner in edit_users %}
-                                    <tr>
+                                    <tr data-filter="edit-user">
                                         <td>
-                                            <div style="background-image: url('{{ owner.userprofile.picture.url }}');"
-                                                 class="profile-pic-thumbnail round-image pull-left">
-                                            </div>
+                                            {% if  owner.userprofile.picture and owner.userprofile.picture.url %}
+                                                <div style="background-image: url('{{ owner.userprofile.picture.url }}');"
+                                                     class="profile-pic-thumbnail round-image pull-left">
+                                                </div>
+                                            {% else %}
+                                                <div class="profile-pic-thumbnail-small round-image user-icon"></div>
+                                            {% endif %}
                                         </td>
                                         <td>
                                             <h4><strong><a href="#">{{ owner|best_name }}</a></strong></h4>
                                             <span class="text-muted">{{ owner.userprofile.title }}</span>
                                         </td>
                                         <td>
-                                            <div class="dropdown">
+                                            <div class="dropdown custom-dropdown">
                                                 <button class="btn btn-default dropdown-toggle" type="button"
                                                         id="roleDropDown-{{ member.id }}" data-toggle="dropdown"
                                                         aria-haspopup="true"
@@ -223,13 +236,13 @@
                                                     <li>
                                                         <form action="/hsapi/_internal/share-group-with-user/{{ group.id }}/{{ owner.id }}/edit/">
                                                             {% csrf_token %}
-                                                            <a href="#" class="btn-share-group" data-role="edit">Owner</a>
+                                                            <a href="#" class="btn-share-group" data-role="Owner">Owner</a>
                                                         </form>
                                                     </li>
                                                     <li>
                                                         <form action="/hsapi/_internal/share-group-with-user/{{ group.id }}/{{ owner.id }}/view/">
                                                             {% csrf_token %}
-                                                            <a href="#" class="btn-share-group" data-role="view">Member</a>
+                                                            <a href="#" class="btn-share-group" data-role="Member">Member</a>
                                                         </form>
                                                     </li>
                                                     <li role="separator" class="divider"></li>
@@ -246,7 +259,7 @@
                                 {% endfor %}
 
                                 {% for member in view_users %}
-                                    <tr>
+                                    <tr data-filter="view-user">
                                         <td>
                                             <div style="background-image: url('{{ member.userprofile.picture.url }}');"
                                                  class="profile-pic-thumbnail round-image pull-left">
@@ -257,7 +270,7 @@
                                             <span class="text-muted">{{ member.userprofile.title }}</span>
                                         </td>
                                         <td>
-                                            <div class="dropdown">
+                                            <div class="dropdown custom-dropdown">
                                                 <button class="btn btn-default dropdown-toggle" type="button"
                                                         id="roleDropDown-{{ member.id }}" data-toggle="dropdown"
                                                         aria-haspopup="true"
@@ -270,13 +283,13 @@
                                                     <li>
                                                         <form action="/hsapi/_internal/share-group-with-user/{{ group.id }}/{{ member.id }}/edit/">
                                                             {% csrf_token %}
-                                                            <a href="#" class="btn-share-group">Owner</a>
+                                                            <a href="#" class="btn-share-group" data-role="Owner">Owner</a>
                                                         </form>
                                                     </li>
                                                     <li>
                                                         <form action="/hsapi/_internal/share-group-with-user/{{ group.id }}/{{ member.id }}/view/">
                                                             {% csrf_token %}
-                                                            <a href="#" class="btn-share-group">Member</a>
+                                                            <a href="#" class="btn-share-group" data-role="Member">Member</a>
                                                         </form>
                                                     </li>
                                                     <li role="separator" class="divider"></li>
@@ -293,90 +306,36 @@
                                 {% endfor %}
                             </table>
 
-                            {#  Owners and Creators #}
-                            <table data-filter-by="owners" class="table-members-list">
-                                {% for owner in group.gaccess.owners %}
-                                    <tr>
-                                        <td>
-                                            <div style="background-image: url('{{ owner.userprofile.picture.url }}');"
-                                                 class="profile-pic-thumbnail round-image pull-left">
-                                            </div>
-                                        </td>
-                                        <td>
-                                            <h4><strong><a href="#">{{ owner|best_name }}</a></strong></h4>
-                                            <span class="text-muted">{{ owner.userprofile.title }}</span>
-                                        </td>
-                                        <td>Owner</td>
-                                    </tr>
-                                {% endfor %}
-
-                                {% for owner in edit_users %}
-                                    <tr>
-                                        <td>
-                                            <div style="background-image: url('{{ owner.userprofile.picture.url }}');"
-                                                 class="profile-pic-thumbnail round-image pull-left">
-                                            </div>
-                                        </td>
-                                        <td>
-                                            <h4><strong><a href="#">{{ owner|best_name }}</a></strong></h4>
-                                            <span class="text-muted">{{ owner.userprofile.title }}</span>
-                                        </td>
-                                        <td>
-                                            <div class="dropdown">
-                                                <button class="btn btn-default dropdown-toggle" type="button"
-                                                        id="roleDropDown-{{ member.id }}" data-toggle="dropdown" aria-haspopup="true"
-                                                        aria-expanded="true">
-                                                    Owner
-                                                    <span class="caret"></span>
-                                                </button>
-                                                <ul class="dropdown-menu" aria-labelledby="roleDropDown-{{ member.id }}">
-                                                    <li>
-                                                        <form action="/hsapi/_internal/share-group-with-user/{{ group.id }}/{{ owner.id }}/edit/">
-                                                            {% csrf_token %}
-                                                            <a href="#" class="btn-share-group">Owner</a>
-                                                        </form>
-                                                    </li>
-                                                    <li>
-                                                        <form action="/hsapi/_internal/share-group-with-user/{{ group.id }}/{{ owner.id }}/view/">
-                                                            {% csrf_token %}
-                                                            <a href="#" class="btn-share-group">Member</a>
-                                                        </form>
-                                                    </li>
-                                                    <li role="separator" class="divider"></li>
-                                                    <li>
-                                                        <form action="/hsapi/_internal/unshare-group-with-user/{{ group.id }}/{{ owner.id }}/">
-                                                            {% csrf_token %}
-                                                            <a href="#" class="btn-unshare-group">Expel</a>
-                                                        </form>
-                                                    </li>
-                                                </ul>
-                                            </div>
-                                        </td>
-                                    </tr>
-                                {% endfor %}
-                            </table>
-
                             {#  Pending invitation requests #}
                             <table data-filter-by="pending" class="table-members-list">
+                            {% if group.gaccess.group_membership_requests %}
                                 {% for pendingrequest in group.gaccess.group_membership_requests %}
                                     <tr>
                                         <td>
-                                            <div style="background-image: url('{{ request.user.userprofile.picture.url }}');"
-                                                 class="profile-pic-thumbnail round-image pull-left">
-                                            </div>
+                                            {% if request.user.userprofile.picture and request.user.userprofile.picture.url %}
+                                                <div style="background-image: url('{{ request.user.userprofile.picture.url }}');"
+                                                     class="profile-pic-thumbnail round-image pull-left">
+                                                </div>
+                                            {% else %}
+                                                <div class="profile-pic-thumbnail-small round-image user-icon"></div>
+                                            {% endif %}
                                         </td>
                                         <td>
-                                            <h4><strong><a href="#">{{ pendingrequest.request_from|best_name }}</a></strong></h4>
-                                            <span class="text-muted">{{ pendingrequest.request_from.userprofile.title }}</span>
+                                            <h4><strong><a
+                                                    href="#">{{ pendingrequest.request_from|best_name }}</a></strong>
+                                            </h4>
+                                            {% if  pendingrequest.request_from.userprofile.title %}
+                                                <span class="text-muted">{{ pendingrequest.request_from.userprofile.title }}</span>
+                                            {% endif %}
                                         </td>
-                                        <td><form form-id="accept-request-{{ pendingrequest.id }}" action="/hsapi/_internal/act-on-group-membership-request/{{ pendingrequest.id }}/accept/">
+                                        <td><form action="/hsapi/_internal/act-on-group-membership-request/{{ pendingrequest.id }}/accept/">
                                             {% csrf_token %}
                                             <a href="#" class="btn btn-success btn-act-on-request"><span
                                                 class="glyphicon glyphicon-ok"></span>&nbsp;Accept</a>
                                             </form>
                                         </td>
                                         <td>
-                                            <form form-id="reject-request-{{ pendingrequest.id }}" action="/hsapi/_internal/act-on-group-membership-request/{{ pendingrequest.id }}/reject/">
+                                            <form action="/hsapi/_internal/act-on-group-membership-request/{{ pendingrequest.id }}/reject/">
                                                 {% csrf_token %}
                                                 <a href="#" class="btn btn-default btn-act-on-request"><span
                                                     class="glyphicon glyphicon-remove"></span>&nbsp;Reject</a>
@@ -385,6 +344,9 @@
                                     </tr>
 
                                 {% endfor %}
+                                {% else %}
+                                <tr><td><i>No pending requests.</i></td></tr>
+                            {% endif %}
                             </table>
 
                         </div>
@@ -393,9 +355,6 @@
 
                  <div role="tabpanel" class="tab-pane fade" id="resources">
                      <div class="row">
-                         <div class="col-sm-12">
-                             <legend>Resources</legend>
-                         </div>
                          <div class="col-sm-12 col-md-3">
                              <div class="panel panel-default">
                                  <div class="panel-heading">
@@ -441,24 +400,24 @@
                                  </div>
                              </div>
 
-                             <div class="panel panel-default">
-                                 <div class="panel-heading">
-                                     <h4 class="panel-title">
-                                         <span class="glyphicon glyphicon glyphicon-search"></span>
-                                         <a data-toggle="collapse" class="accordion-toggle" data-parent="#accordion"
-                                            href="#filter">
-                                             &nbsp;Labels</a></h4>
-                                 </div>
-                                 <div id="filter" class="facet-list panel-collapse collapse in">
-                                     <div class="panel-body">
-                                         <div class="list-group">
-                                             <ul class="list-group inputs-group">
-                                                 <h5 class="text-center"><i>No labels found.</i></h5>
-                                             </ul>
-                                         </div>
-                                     </div>
-                                 </div>
-                             </div>
+{#                             <div class="panel panel-default">#}
+{#                                 <div class="panel-heading">#}
+{#                                     <h4 class="panel-title">#}
+{#                                         <span class="glyphicon glyphicon glyphicon-search"></span>#}
+{#                                         <a data-toggle="collapse" class="accordion-toggle" data-parent="#accordion"#}
+{#                                            href="#filter">#}
+{#                                             &nbsp;Labels</a></h4>#}
+{#                                 </div>#}
+{#                                 <div id="filter" class="facet-list panel-collapse collapse in">#}
+{#                                     <div class="panel-body">#}
+{#                                         <div class="list-group">#}
+{#                                             <ul class="list-group inputs-group">#}
+{#                                                 <h5 class="text-center"><i>No labels found.</i></h5>#}
+{#                                             </ul>#}
+{#                                         </div>#}
+{#                                     </div>#}
+{#                                 </div>#}
+{#                             </div>#}
 
                              <div class="panel panel-default">
                                  <div class="panel-heading">
@@ -910,35 +869,14 @@
                 <form id="invite-to-group" action="/hsapi/_internal/make-group-membership-request/{{ group.id }}/">
                     <div class="modal-body">
                         <div id="div-invite-people">
-                            <div class="input-group">
-                                {% csrf_token %}
-                                {{ add_view_user_form.user }}
-
-                                <div class="dropdown">
-                                    <button class="btn btn-default dropdown-toggle" type="button"
-                                            id="roles_list" data-toggle="dropdown"
-                                            aria-haspopup="true">
-                                        <span id="selected_role" data-role="view">Member</span>
-                                        <span class="caret"></span>
-                                    </button>
-
-                                    <ul id="list-roles" class="dropdown-menu"
-                                        aria-labelledby="roles_list">
-                                        <li><a data-role="view">Member</a></li>
-                                        <li><a data-role="edit">Owner</a></li>
-                                    </ul>
-                                </div>
-                                <form action="">
-                                    <a id="btn-invite"  onclick="group_invite_ajax_submit(); return false;"
-                                       class="btn btn-add-access btn-success pull-left glyphicon glyphicon-plus"><span class="button-label">&nbspAdd</span>
-                                    </a>
-                                </form>
-                            </div>
+                            {% csrf_token %}
+                            {{ add_view_user_form.user }}
+                            <form action="">
+                                <a id="btn-invite"  onclick="group_invite_ajax_submit(); return false;"
+                                   class="btn btn-add-access btn-success pull-left glyphicon glyphicon-send"><span class="button-label">&nbsp;&nbsp;Send Invitation</span>
+                                </a>
+                            </form>
                         </div>
-                    </div>
-
-                    <div id="div-users-to-invite">
-
                     </div>
 
                     <div class="modal-footer">
@@ -961,7 +899,6 @@
             var share_with = $("#id_user-deck > .hilight")[0].getAttribute("data-value");
             var form = $("#invite-to-group");
             var datastring = form.serialize();
-            var access_type = $("#selected_role")[0].getAttribute("data-role");
             var url = form.attr('action') + share_with + "/";
 
             $.ajax({
@@ -971,9 +908,18 @@
                 data: datastring,
                 success: function (result) {
                     $(".hilight > span").click(); // Clears the search field
+                    $("#invite-dialog .modal-body").prepend('<div class="alert alert-success" role="alert"><span class="glyphicon glyphicon-ok glyphicon"></span> An invitation to join has been sent.</strong></div>');
+
+                    setTimeout(function () {
+                       $("#invite-dialog .modal-body .alert").fadeOut();
+                    }, 3000);
                 },
                 error: function (XMLHttpRequest, textStatus, errorThrown) {
-                    console.log("error");
+                    $("#invite-dialog .modal-body").prepend('<div class="alert alert-error" role="alert"><span class="glyphicon glyphicon-ok glyphicon"></span> This invitation could not be sent.</strong></div>');
+
+                    setTimeout(function () {
+                        $("#invite-dialog .modal-body .alert").fadeOut();
+                    }, 3000);
                 }
             });
             //don't submit the form
@@ -1011,8 +957,9 @@
         }
 
         function share_group_ajax_submit() {
-            var form = $(this).closest("form");
-            var role = $(this).attr("data-role");
+            var target = $(this);
+            var form = target.closest("form");
+            var role = target.attr("data-role");
             var datastring = form.serialize();
             var url = form.attr('action');
             $.ajax({
@@ -1021,7 +968,19 @@
                 dataType: 'html',
                 data: datastring,
                 success: function (result) {
+                    var dropdownButton = target.parent().parent().parent().parent().find(".dropdown-toggle");
+                    dropdownButton.text(role);
+                    dropdownButton.append('&nbsp;<span class="caret"></span>');
 
+                    var row = target.parent().parent().parent().parent().parent().parent();
+                    if (role == "Owner") {
+                        row.attr("data-filter-by", "edit-user");
+                    }
+                    else if (role == "Member") {
+                        row.attr("data-filter-by", "view-user");
+                    }
+
+                    dropdownButton.dropdown("toggle");
                 },
                 error: function (XMLHttpRequest, textStatus, errorThrown) {
                     console.log("error");
@@ -1032,7 +991,8 @@
         }
 
         function unshare_group_ajax_submit() {
-            var form = $(this).closest("form");
+            var target = $(this);
+            var form = target.closest("form");
             var datastring = form.serialize();
             var url = form.attr('action');
             $.ajax({
@@ -1041,11 +1001,8 @@
                 dataType: 'html',
                 data: datastring,
                 success: function (result) {
-                    var json_response = JSON.parse(result);
-                    console.log(json_response);
-                    if (json_response.status == "success") {
-
-                    }
+                    var row = target.parent().parent().parent().parent().parent().parent();
+                    row.remove();
                 },
                 error: function (XMLHttpRequest, textStatus, errorThrown) {
                     console.log("error");
@@ -1085,9 +1042,24 @@
             $("#members").find(".table-members-list.active").show();
 
             $("#members-filter tr").click(function() {
-                $("#members").find(".table-members-list").removeClass("active").hide();
+                $("#members").find(".table-members-list tr").hide();
+                $("table[data-filter-by='pending'] tr").hide();
+                $("table[data-filter-by='pending']").hide();
+
                 var dataFilter = $(this).attr("data-filter-by");
-                $("#members").find(".table-members-list[data-filter-by='" + dataFilter + "']").addClass("active").fadeIn();
+                if (dataFilter == "edit-user") {
+                    $("#members").find(".table-members-list tr[data-filter-by='" + dataFilter + "']").fadeIn();
+                    $("#members").find(".table-members-list tr[data-filter-by='" + "creator" + "']").fadeIn();
+                }
+                else if (dataFilter == "all") {
+                    $("#members").find(".table-members-list tr").addClass("active").fadeIn();
+                }
+                else if(dataFilter == "pending") {
+                    $("#members").find(".table-members-list tr").addClass("active").hide();
+                    $("table[data-filter-by='pending'] tr").fadeIn();
+                    $("table[data-filter-by='pending']").fadeIn();
+                }
+
                 $(this).parent().find("tr").removeClass("active");
                 $(this).addClass("active");
             });

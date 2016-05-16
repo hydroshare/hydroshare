@@ -1236,6 +1236,10 @@ a[data-toggle='tab']{
 	border-bottom-left-radius: 0;
 }
 
+#invite-to-group #id_user-wrapper {
+	width: calc(100% - 139px);
+}
+
 #id_user-autocomplete, #id_group-autocomplete {
     width: 100%;
     height: 100%;
@@ -1466,6 +1470,14 @@ body > .main-container {
 
 .btn-add-access {
 	height: 34px;
+	top: 0;
+	border-radius: 0;
+	margin: 0 2px;
+}
+
+#invite-to-group .btn-add-access {
+	height: 34px;
+	width: 135px;
 	top: 0;
 	border-radius: 0;
 	margin: 0 2px;
@@ -2014,12 +2026,38 @@ td.user-actions > span:hover {
 	font-weight: bold;
 }
 
-.user-roles .dropdown-menu {
+.user-roles .dropdown-menu, .custom-dropdown .dropdown-menu {
 	background-color:#FFF;
 }
 
 .user-roles .role-dropdown {
 	padding: 0;
+}
+
+.custom-dropdown .dropdown-menu > li a {
+    color: #000;
+    padding: 10px 20px;
+    font-size: 14px;
+}
+.custom-dropdown .dropdown-menu > li a {
+    display: block;
+    padding: 3px 20px;
+    clear: both;
+    font-weight: normal;
+    line-height: 1.428571429;
+    color: #333;
+    white-space: nowrap;
+}
+
+.custom-dropdown .dropdown-menu > li a:hover, .custom-dropdown .dropdown-menu > li a:focus {
+    color: #333;
+    background-color: #eaeaea;
+}
+
+.custom-dropdown .dropdown-menu>li a:hover, .custom-dropdown .dropdown-menu>li a:focus {
+    color: #262626;
+    text-decoration: none;
+    background-color: #f5f5f5;
 }
 
 .user-roles li.loading, .access-table tr.loading {
@@ -2402,6 +2440,12 @@ div.affiliation {
     border-left: 3px solid #CCC;
     padding-left: 5px;
       margin-top: 10px;
+}
+
+form.act-on-request button {
+	clear: none;
+	float: left;
+	margin: 10px;
 }
 
 table.overview tr > td:first-child {
@@ -3355,6 +3399,15 @@ button.no-style:focus {
     background-position: center center;
 }
 
+.group-preview-image-default {
+	background-size: initial;
+	background-repeat: no-repeat;
+}
+
+.group-image-wrapper > .group-image-small, .group-preview-image-default {
+	background-color: #093E54;
+}
+
 .group-image {
     height: 120px;
     text-align: center;
@@ -3362,6 +3415,21 @@ button.no-style:focus {
     background-size: cover;
     background-position: center center;
     display: inline-block;
+}
+
+.group-image-wrapper {
+	border: 1px solid #DDD;
+	padding: 4px;
+	box-shadow: 1px 1px 5px #E8E8E8;
+	-moz-box-shadow: 1px 1px 5px #E8E8E8;
+	-webkit-box-shadow: 1px 1px 5px #E8E8E8;
+	width: 90px;
+	height: 90px;
+}
+
+.group-image-wrapper-medium {
+	width: 130px;
+	height: 130px;
 }
 
 .group-image-small {
@@ -3458,6 +3526,10 @@ button.no-style:focus {
     width: 100%;
 }
 
+.table-members-list button.dropdown-toggle {
+	width: 110px;
+}
+
 .table-members-list tr > td:first-child {
     width: 40px;
 }
@@ -3477,7 +3549,6 @@ button.no-style:focus {
 
 .group-thumbnail-footer .btn-primary {
     margin-top: 10px;
-    width: 100%;
 }
 
 hr.solid {
@@ -3489,4 +3560,8 @@ hr.solid {
 
 div.group-add-photo {
     border: 1px solid #DDD;
+}
+
+.btn-ask-to-join {
+	width: 100%;
 }
