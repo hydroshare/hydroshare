@@ -149,7 +149,6 @@
                             $('#his-loading')
                                     .html('HIS Central Servers available')
                                     .css('color', 'Green');
-                            console.log("urls:" + data["url_list"].length);
                             var select = document.getElementsByName('url')[0];
                             removeOptions(select);
                             for (var i=0; i < data["url_list"].length; i++)
@@ -237,7 +236,6 @@
                         $('#check-url-btn').prop("disabled", false);
                         if(data["status"] == "success")
                         {
-                            console.log("sites:" + data["sites"].length);
                             var select = document.getElementsByName('site')[0];
                             removeOptions(select);
                             if (data["sites"].length > 1)
@@ -316,7 +314,6 @@
                         $('#check-url-btn').prop("disabled", false);
                         if(data["status"] == "success")
                         {
-                            console.log("var:" + data["variables"].length);
                             show_message(false);
                             $('.ui-autocomplete-input').prop("disabled", false);
                             $('#site-div').show();
@@ -441,8 +438,6 @@
                 $('#variable').prop("disabled", false);
             }
 
-
-
             $.widget( "custom.combobox", {
                 _create: function() {
                     this.wrapper = $( "<span>" )
@@ -561,7 +556,6 @@
                     this.element.show();
                 }
             });
-{#        });#}
 
         $(function() {
             $("#url").combobox();
