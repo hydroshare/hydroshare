@@ -23,10 +23,9 @@
                         <select class="" name="url" id="url" style="overflow-y: scroll;"></select>
                     </div>
                     <div>
-                        <input type="button" value="Check URL" onclick="check_url(document.getElementById('input_url').value)"/>
+                        <input id="check-url-btn" type="button" value="Check URL" onclick="check_url(document.getElementById('input_url').value)"/>
                     </div>
                 </div>
-
             </div>
         </div>
 
@@ -89,14 +88,41 @@
 
 {% block extra_js %}
     <script type="text/javascript">
-        $(function() {
             var globurl = "";
 
             $(document).ready(function(){
+
+                $('#site').change(function(){
+                    var site = $('#site').val();
+                    if (site != "-1")
+                    {
+                        get_variables(site);
+                    }
+                });
+
+                $('#variable').change(function(){
+                    var variable = $('#variable').val();
+                    var site = $('#site').val();
+                    if  (site != "-1" && variable != "-1")
+                    {
+                        getVals('soap', site, variable);
+                    }
+                });
+
+                // prevent from unexpectedly submitting form when users press down "Enter" key
+                $('#create-form').on("keyup keypress", function(e) {
+                var code = e.keyCode || e.which;
+                    if (code  == 13) {
+                        e.preventDefault();
+                        return false;
+                    }
+                });
+
                 $('#site-div').hide();
                 $('#variable-div').hide();
                 $('#message-div').show();
                 $('#preview-div').hide();
+                $('#check-url-btn').prop('disabled', false);
                 get_his_central_urls();
             });
 
@@ -152,6 +178,7 @@
 
              // check the url users input
             function check_url(url){
+                $('#check-url-btn').prop('disabled', true);
                 globurl = url;
 
                 show_message(false);
@@ -159,7 +186,7 @@
                 $('#variable-div').hide();
                 $('#preview-div').hide();
                 $('#submit').addClass('disabled');
-
+                show_message(true, 'Checking URL...', 'Black');
                 if (url.toLowerCase().match(/wsdl$/))
                 { // SOAP
                     get_sites(url);
@@ -170,6 +197,8 @@
                         url: '/hsapi/_internal/verify-rest-url/',
                         data: {url: url},
                         success: function (data, xhr, status) {
+                            $('#check-url-btn').prop('disabled', false);
+                            show_message(false);
                             if (data["status"] == "success")
                             {
                                 getVals('rest');
@@ -180,12 +209,12 @@
                             }
                         },
                         error: function(){
+                            $('#check-url-btn').prop('disabled', false);
                             show_message(true, '<h3>URL did not verify. There may be a problem with the URL you entered</h3>', 'Red');
                         }
                     });
                 }
             } // function check_url(url)
-
 
             function removeOptions(selectbox){
                 for(var i=selectbox.options.length-1; i>=0; i--)
@@ -205,6 +234,7 @@
                     url:'/hsapi/_internal/search-sites/',
                     data: {url: url},
                     success: function(data, xhr, status){
+                        $('#check-url-btn').prop("disabled", false);
                         if(data["status"] == "success")
                         {
                             console.log("sites:" + data["sites"].length);
@@ -244,9 +274,11 @@
                         }
                     },
                     error: function(data, stuff){
+                        $('#check-url-btn').prop("disabled", false);
                         get_sites_failed();
                     }
                 });
+
             } // get_sites(url)
 
             function get_sites_failed()
@@ -273,6 +305,7 @@
                 $('#variable-div').hide();
                 $('#preview-div').hide();
                 $('#submit').addClass('disabled');
+                $('#check-url-btn').prop("disabled", true);
 
                 $.ajax({
                     type:"GET",
@@ -280,6 +313,7 @@
                     data: {url: url,
                         site: site_code},
                     success: function(data, xhr, status){
+                        $('#check-url-btn').prop("disabled", false);
                         if(data["status"] == "success")
                         {
                             console.log("var:" + data["variables"].length);
@@ -321,6 +355,7 @@
                         }
                     },
                     error: function(data, stuff) {
+                        $('#check-url-btn').prop("disabled", false);
                         get_variables_failed();
                     }
                 })
@@ -343,6 +378,7 @@
                 show_message(true, 'Retrieving Data...', "Black");
                 $('#submit').addClass('disabled');
                 $('#preview-div').hide();
+                $('#check-url-btn').prop("disabled", true);
 
                 var service_url = "";
                 var site = "";
@@ -371,6 +407,7 @@
                         site: site,
                         variable: variable},
                     success: function(data, xhr, status){
+                        $('#check-url-btn').prop("disabled", false);
                         if (data["status"] == "success")
                         {
                             $('.ui-autocomplete-input').prop("disabled", false);
@@ -389,6 +426,7 @@
                         }
                     },
                     error: function(data, stuff){
+                        $('#check-url-btn').prop("disabled", false);
                         getVals_failed();
                     }
                 });
@@ -403,31 +441,7 @@
                 $('#variable').prop("disabled", false);
             }
 
-            $('#site').change(function(){
-                var site = $('#site').val();
-                if (site != "-1")
-                {
-                    get_variables(site);
-                }
 
-            });
-
-            $('#variable').change(function(){
-                var variable = $('#variable').val();
-                var site = $('#site').val();
-                if  (site != "-1" && variable != "-1")
-                {
-                    getVals('soap', site, variable);
-                }
-            });
-
-            $('#create-form').on("keyup keypress", function(e) {
-                var code = e.keyCode || e.which;
-                if (code  == 13) {
-                    e.preventDefault();
-                    return false;
-                }
-            });
 
             $.widget( "custom.combobox", {
                 _create: function() {
@@ -547,7 +561,7 @@
                     this.element.show();
                 }
             });
-        });
+{#        });#}
 
         $(function() {
             $("#url").combobox();
