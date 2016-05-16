@@ -561,6 +561,27 @@ class GroupForm(forms.Form):
             raise forms.ValidationError("Invalid group privacy level.")
         return data
 
+    def save(self, request):
+        frm_data = self.cleaned_data
+        new_group = request.user.uaccess.create_group(title=frm_data['name'],
+                                                      description=frm_data['description'],
+                                                      purpose=frm_data['purpose'])
+        if 'picture' in request.FILES:
+            new_group.gaccess.picture = request.FILES['picture']
+
+        privacy_level = frm_data['privacy_level']
+        if privacy_level == 'public':
+            new_group.gaccess.public = True
+            new_group.gaccess.discoverable = True
+        elif privacy_level == 'private':
+            new_group.gaccess.public = False
+            new_group.gaccess.discoverable = False
+        elif privacy_level == 'discoverable':
+            new_group.gaccess.discoverable = True
+            new_group.gaccess.public = False
+
+        new_group.gaccess.save()
+        return new_group
 
 @processor_for('my-resources')
 @login_required
@@ -671,24 +692,7 @@ def create_resource(request, *args, **kwargs):
 def create_user_group(request, *args, **kwargs):
     group_form = GroupForm(request.POST, request.FILES)
     if group_form.is_valid():
-        frm_data = group_form.cleaned_data
-        new_group = request.user.uaccess.create_group(title=frm_data['name'],
-                                                      description=frm_data['description'],
-                                                      purpose=frm_data['purpose'])
-        if 'picture' in request.FILES:
-            new_group.gaccess.picture = request.FILES['picture']
-
-        privacy_level = frm_data['privacy_level']
-        if privacy_level == 'public':
-            new_group.gaccess.public = True
-            new_group.gaccess.discoverable = True
-        elif privacy_level == 'private':
-            new_group.gaccess.public = False
-            new_group.gaccess.discoverable = False
-        elif privacy_level == 'discoverable':
-            new_group.gaccess.discoverable = True
-            new_group.gaccess.public = False
-        new_group.gaccess.save()
+        new_group = group_form.save(request)
         messages.success(request, "Group creation was successful.")
         return HttpResponseRedirect(reverse('Group', args=[new_group.id]))
     else:
