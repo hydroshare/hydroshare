@@ -88,7 +88,7 @@ def create_vrt_file(tif_file):
     vrt_file_path = os.path.join(temp_dir, os.path.splitext(tif_base_name)[0]+'.vrt')
 
     with open(os.devnull, 'w') as fp:
-        subprocess.Popen(['gdalbuildvrt', vrt_file_path, tif_file.file.name], stdout=fp, stderr=fp).wait()   # remember to add .wait()
+        subprocess.Popen(['gdal_translate', '-of', 'VRT', tif_file.file.name, vrt_file_path], stdout=fp, stderr=fp).wait()   # remember to add .wait()
 
     # edit VRT contents
     try:
@@ -103,27 +103,6 @@ def create_vrt_file(tif_file):
     except Exception:
         shutil.rmtree(temp_dir)
 
-    try:
-        vrt_raster = gdal.Open(vrt_file_path, GA_Update)
-        ori_raster = gdal.Open(tif_file.file.name, GA_ReadOnly)
-
-        for i in range(0, ori_raster.RasterCount):
-            vrt_band = vrt_raster.GetRasterBand(i+1)
-            ori_band = ori_raster.GetRasterBand(i+1)
-
-            vrt_band.SetScale(ori_band.GetScale())
-            vrt_band.SetOffset(ori_band.GetOffset())
-            if ori_band.GetUnitType():
-                vrt_band.SetUnitType(ori_band.GetUnitType())
-            if ori_band.GetCategoryNames():
-                vrt_band.SetCategoryNames(ori_band.GetCategoryNames())
-                
-    except:
-        pass
-
-    vrt_raster = None
-    ori_raster = None
-
     return vrt_file_path, temp_dir
 
 
@@ -132,7 +111,6 @@ def explode_zip_file(zip_file):
     try:
         zf = zipfile.ZipFile(zip_file.file.name, 'r')
         zf.extractall(temp_dir)
-        file_paths_list = zf.namelist()
         zf.close()
 
         # get all the file abs names in temp_dir
@@ -142,7 +120,7 @@ def explode_zip_file(zip_file):
                 file_path = os.path.abspath(os.path.join(dirpath, name))
                 if os.path.splitext(os.path.basename(file_path))[1] in ['.vrt', '.tif']:
                     shutil.move(file_path, temp_dir)
-                    extract_file_paths.append(os.path.join(temp_dir,os.path.basename(file_path)))
+                    extract_file_paths.append(os.path.join(temp_dir, os.path.basename(file_path)))
 
     except Exception:
         extract_file_paths = []
