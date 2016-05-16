@@ -583,6 +583,17 @@ class GroupForm(forms.Form):
         new_group.gaccess.save()
         return new_group
 
+    def update(self, group_to_update, request):
+        frm_data = self.cleaned_data
+        group_to_update.name = frm_data['name']
+        group_to_update.save()
+        group_to_update.gaccess.description = frm_data['description']
+        group_to_update.gaccess.purpose = frm_data['purpose']
+        if 'picture' in request.FILES:
+            group_to_update.gaccess.picture = request.FILES['picture']
+        group_to_update.gaccess.save()
+
+
 @processor_for('my-resources')
 @login_required
 def my_resources(request, page):
@@ -709,13 +720,7 @@ def update_user_group(request, group_id, *args, **kwargs):
     if user.uaccess.can_change_group(group_to_update):
         group_form = GroupForm(request.POST, request.FILES)
         if group_form.is_valid():
-            group_to_update.name = group_form.cleaned_data['name']
-            group_to_update.save()
-            group_to_update.gaccess.description = group_form.cleaned_data['description']
-            group_to_update.gaccess.purpose = group_form.cleaned_data['purpose']
-            if 'picture' in request.FILES:
-                group_to_update.gaccess.picture = request.FILES['picture']
-            group_to_update.gaccess.save()
+            group_form.update(group_to_update, request)
             status = 'success'
             ajax_response_data = {'status': status, 'updated_group': group_to_update}
         else:
