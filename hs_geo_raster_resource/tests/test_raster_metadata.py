@@ -1,4 +1,3 @@
-__author__ = 'Tian'
 
 import os
 import tempfile

@@ -1,4 +1,3 @@
-__author__ = 'Tian Gan'
 
 import unittest
 

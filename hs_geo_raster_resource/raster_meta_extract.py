@@ -9,7 +9,6 @@ Update Notes
 This is used to process the vrt raster and to extract max, min value of each raster band.
 """
 
-__author__ = 'Tian Gan'
 
 import gdal
 from gdalconst import *

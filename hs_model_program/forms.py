@@ -1,4 +1,3 @@
-__author__ = 'tonycastronova'
 
 from django.forms import ModelForm, BaseFormSet
 from django import forms

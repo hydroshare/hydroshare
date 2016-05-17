@@ -1,4 +1,3 @@
-__author__ = 'shawn'
 
 from urlparse import urlparse, parse_qs
 

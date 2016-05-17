@@ -1,4 +1,3 @@
-__author__ = 'Pabitra'
 import copy
 from models import *
 from django.forms import ModelForm, BaseFormSet, DateInput, Select, TextInput

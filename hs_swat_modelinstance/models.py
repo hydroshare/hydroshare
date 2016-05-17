@@ -1,4 +1,3 @@
-__author__ = 'Mohamed Morsy'
 from lxml import etree
 
 from django.contrib.contenttypes.fields import GenericRelation

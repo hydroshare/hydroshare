@@ -1,4 +1,3 @@
-__author__ = 'Tian Gan'
 
 # TODO: The api being tested here (hydroshare.list_group_members() is an old api
 # and does not use the new access control app code. This test can only be fixed

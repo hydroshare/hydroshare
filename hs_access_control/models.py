@@ -34,7 +34,6 @@ Notes and quandaries
 
   Thus, it is possible that sharing something immutable with CHANGE privilege will result in effective VIEW privilege.
 """
-__author__ = 'Alva'
 
 from django.contrib.auth.models import User, Group
 from django.db import models

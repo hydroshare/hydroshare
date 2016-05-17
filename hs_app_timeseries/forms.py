@@ -1,4 +1,3 @@
-__author__ = 'pabitra'
 from django.forms import ModelForm
 from django import forms
 from crispy_forms.layout import *
