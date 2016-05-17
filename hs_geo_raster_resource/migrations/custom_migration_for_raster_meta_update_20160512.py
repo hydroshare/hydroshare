@@ -35,36 +35,26 @@ def migrate_tif_file(apps, schema_editor):
 
                 # update vrt file for single tif file
                 if len(os.listdir(temp_dir)) == 2:
-                    print 'single tif file'
-                    # create new vrt file
+                    # print 'single tif file'
+                    # # create new vrt file
                     # print 'create vrt'
                     # tif_file_path = [os.path.join(temp_dir, f) for f in os.listdir(temp_dir) if '.tif' == f[-4:]].pop()
                     # vrt_file_path = [os.path.join(temp_dir, f) for f in os.listdir(temp_dir) if '.vrt' == f[-4:]].pop()
                     # print tif_file_path, vrt_file_path
                     # os.remove(vrt_file_path)
-
-                    file_names = os.listdir(temp_dir)
-                    tif_file_name = file_names[0] if len(file_names[0]) < len(file_names[1]) else file_names[1]
-                    vrt_file_name = tif_file_name[:-4]+'.vrt'
-                    bad_file_name = file_names[0] if len(file_names[0]) > len(file_names[1]) else file_names[1]
-                    for res_file in res.files.all():
-                        if bad_file_name == os.path.basename(res_file.resource_file.name):
-                            res_file.resource_file.delete()
-                    tif_file_path = os.path.join(temp_dir, tif_file_name)
-                    vrt_file_path = os.path.join(temp_dir, vrt_file_name)
-
-                    with open(os.devnull, 'w') as fp:
-                        subprocess.Popen(['gdal_translate', '-of', 'VRT', tif_file_path, vrt_file_path], stdout=fp, stderr=fp).wait()   # remember to add .wait()
-
-                    # delete vrt res file
-                    for f in res.files.all():
-                        if 'vrt' == f.resource_file.name[-3:]:
-                            f.resource_file.delete()
-                            print 'delete vrt file'
-
-                    # add new vrt file to resource
-                    new_file = UploadedFile(file=open(vrt_file_path, 'r'), name=os.path.basename(vrt_file_path))
-                    hydroshare.add_resource_files(res.short_id, new_file)
+                    #
+                    # with open(os.devnull, 'w') as fp:
+                    #     subprocess.Popen(['gdal_translate', '-of', 'VRT', tif_file_path, vrt_file_path], stdout=fp, stderr=fp).wait()   # remember to add .wait()
+                    #
+                    # # delete vrt res file
+                    # for f in res.files.all():
+                    #     if 'vrt' == f.resource_file.name[-3:]:
+                    #         f.resource_file.delete()
+                    #         print 'delete vrt file'
+                    #
+                    # # add new vrt file to resource
+                    # new_file = UploadedFile(file=open(vrt_file_path, 'r'), name=os.path.basename(vrt_file_path))
+                    # hydroshare.add_resource_files(res.short_id, new_file)
                     print 'add new vrt file'
 
                 # metadata extraction from temp dir
