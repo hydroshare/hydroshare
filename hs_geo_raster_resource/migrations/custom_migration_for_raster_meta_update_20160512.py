@@ -50,8 +50,8 @@ def migrate_tif_file(apps, schema_editor):
                     for res_file in res.files.all():
                         if bad_file_name == os.path.basename(res_file.resource_file.name):
                             res_file.resource_file.delete()
-                    tif_file_path = os.join(temp_dir, tif_file_name)
-                    vrt_file_path = os.join(temp_dir, vrt_file_name)
+                    tif_file_path = os.path.join(temp_dir, tif_file_name)
+                    vrt_file_path = os.path.join(temp_dir, vrt_file_name)
 
                     with open(os.devnull, 'w') as fp:
                         subprocess.Popen(['gdal_translate', '-of', 'VRT', tif_file_path, vrt_file_path], stdout=fp, stderr=fp).wait()   # remember to add .wait()
@@ -74,7 +74,7 @@ def migrate_tif_file(apps, schema_editor):
                 res_md_dict = raster_meta_extract.get_raster_meta_dict(vrt_file_path)
                 os.chdir(ori_dir)
                 shutil.rmtree(temp_dir)
-                print 'extract metadata'
+                print 'extract metadata done'
 
                 # update band metadata of raster resources
                 is_modified = False
@@ -93,7 +93,7 @@ def migrate_tif_file(apps, schema_editor):
 
                 # resource modify update
                 if is_modified:
-                    print 'success'
+
                     bag_name = 'bags/{res_id}.zip'.format(res_id=res.short_id)
                     if istorage.exists(bag_name):
                         # delete the resource bag as the old bag is not valid
@@ -103,6 +103,7 @@ def migrate_tif_file(apps, schema_editor):
                     resource_modified(res, res.creator)
 
                     success += 1
+                    print 'success'
                     log.info('Raster metadata is updated successfully for resource:ID:{} '
                              'Title:{}'.format(res.short_id, res.metadata.title.value))
                 else:
