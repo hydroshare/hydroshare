@@ -48,9 +48,8 @@
 
                                 <div class="text-center group-thumbnail-footer">
                                     {% if group.gaccess.public %}
-
-
                                         <div class="users-joined height-fix">
+                                            <div class="text-muted">MEMBERS</div>
                                             {% for member in group.gaccess.members|slice:":5" %}
                                                 {% if  member.userprofile.picture and member.userprofile.picture.url %}
                                                     <div style="background-image: url('{{ member.userprofile.picture.url }}');"
@@ -80,21 +79,24 @@
 
                                     {% elif group.join_request_waiting_user_action %}
                                         {#  TODO: MAKE BOTH OF THIS AJAX #}
-                                        <form class="act-on-request"
-                                              action="/hsapi/_internal/act-on-group-membership-request/{{ group.join_request.id }}/accept/"
-                                              method="POST">
-                                            {% csrf_token %}
-                                            <button type="submit" class="btn btn-primary">Accept</button>
-                                        </form>
+                                        <span class="text-muted">You have been invited to join this group!</span>
+                                        <div class="height-fix">
+                                            <form class="act-on-request height-fix"
+                                                  action="/hsapi/_internal/act-on-group-membership-request/{{ group.join_request.id }}/accept/"
+                                                  method="POST">
+                                                {% csrf_token %}
+                                                <button type="submit" class="btn btn-primary">Accept</button>
+                                            </form>
 
-                                        <form class="act-on-request"
-                                              action="/hsapi/_internal/act-on-group-membership-request/{{ group.join_request.id }}/reject/"
-                                              method="POST">
-                                            {% csrf_token %}
-                                            <button type="submit" class="btn btn-default" data-dismiss="modal">
-                                                Decline
-                                            </button>
-                                        </form>
+                                            <form class="act-on-request height-fix"
+                                                  action="/hsapi/_internal/act-on-group-membership-request/{{ group.join_request.id }}/reject/"
+                                                  method="POST">
+                                                {% csrf_token %}
+                                                <button type="submit" class="btn btn-default" data-dismiss="modal">
+                                                    Decline
+                                                </button>
+                                            </form>
+                                        </div>
                                     {% else %}
                                         <form id="join-{{ group.id }}" method="post"
                                               action="/hsapi/_internal/make-group-membership-request/{{ group.id }}/">

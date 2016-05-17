@@ -45,9 +45,18 @@
                         Member <span class="caret"></span>
                     </button>
                     <ul class="dropdown-menu">
-                        <li><a href="#">Leave Group</a></li>
+                        <li>
+                            <form action="/hsapi/_internal/unshare-group-with-user/{{ group.id }}/{{ user.id }}/">
+                                {% csrf_token %}
+                                <a href="#" id="btn-leave-group">Leave Group</a>
+                            </form>
+                        </li>
+
                     </ul>
                 </div>
+                {% if profile_user.is_group_owner or profile_user.is_group_editor %}
+                    <a href="#">Edit</a>
+                {% endif %}
             </div>
         </div>
 
@@ -261,13 +270,19 @@
                                 {% for member in view_users %}
                                     <tr data-filter="view-user">
                                         <td>
-                                            <div style="background-image: url('{{ member.userprofile.picture.url }}');"
-                                                 class="profile-pic-thumbnail round-image pull-left">
-                                            </div>
+                                            {% if member.userprofile.picture and member.userprofile.picture.url %}
+                                                <div style="background-image: url('{{ member.userprofile.picture.url }}');"
+                                                     class="profile-pic-thumbnail round-image pull-left">
+                                                </div>
+                                            {% else %}
+                                                <div class="profile-pic-thumbnail-small round-image user-icon"></div>
+                                            {% endif %}
                                         </td>
                                         <td>
                                             <h4><strong><a href="#">{{ member|best_name }}</a></strong></h4>
-                                            <span class="text-muted">{{ member.userprofile.title }}</span>
+                                            {% if  member.userprofile.title %}
+                                                <span class="text-muted">{{ member.userprofile.title }}</span>
+                                            {% endif %}
                                         </td>
                                         <td>
                                             <div class="dropdown custom-dropdown">
@@ -1067,6 +1082,9 @@
             $(".btn-act-on-request").click(act_on_request_ajax_submit);
             $(".btn-share-group").click(share_group_ajax_submit);
             $(".btn-unshare-group").click(unshare_group_ajax_submit);
+            $("#btn-leave-group").click(function(){
+                $(this).closest("form").submit();
+            });
 
             /*==================================================
             Table columns

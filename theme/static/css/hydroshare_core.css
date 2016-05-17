@@ -2444,8 +2444,14 @@ div.affiliation {
 
 form.act-on-request button {
 	clear: none;
-	float: left;
-	margin: 10px;
+	width: 80%;
+}
+
+form.act-on-request {
+    width: 40%;
+    float: left;
+    text-align: center;
+	margin-top: 20px;
 }
 
 table.overview tr > td:first-child {
@@ -3547,7 +3553,7 @@ button.no-style:focus {
     border-top: 1px dashed #DDD;
 }
 
-.group-thumbnail-footer .btn-primary {
+.group-thumbnail-footer .btn-ask-to-join {
     margin-top: 10px;
 }
 
@@ -3564,4 +3570,8 @@ div.group-add-photo {
 
 .btn-ask-to-join {
 	width: 100%;
+}
+
+.request-details {
+	margin-left: 10px;
 }
