@@ -35,7 +35,6 @@ def migrate_tif_file(apps, schema_editor):
 
                 # update vrt file for single tif file
                 if len(os.listdir(temp_dir)) == 2:
-                    print 'update single raster'
                     # create new vrt file
                     tif_file_path = [os.path.join(temp_dir, f) for f in os.listdir(temp_dir) if '.tif' == f[-4:]].pop()
                     vrt_file_path = [os.path.join(temp_dir, f) for f in os.listdir(temp_dir) if '.vrt' == f[-4:]].pop()
@@ -49,7 +48,6 @@ def migrate_tif_file(apps, schema_editor):
                             if 'vrt' == f.resource_file.name[-3:]:
                                 f.resource_file.delete()
                                 f.delete()
-                                print 'delete vrt file'
 
                         # add new vrt file to resource
                         new_file = UploadedFile(file=open(vrt_file_path, 'r'), name=os.path.basename(vrt_file_path))
@@ -60,8 +58,7 @@ def migrate_tif_file(apps, schema_editor):
                         if istorage.exists(bag_name):
                             # delete the resource bag as the old bag is not valid
                             istorage.delete(bag_name)
-                            print("Deleted bag for resource ID:" + str(res.short_id))
-                            resource_modified(res, res.creator)
+                        resource_modified(res, res.creator)
 
                     except:
                         print 'fail to update VRT'
@@ -73,7 +70,6 @@ def migrate_tif_file(apps, schema_editor):
                 res_md_dict = raster_meta_extract.get_raster_meta_dict(vrt_file_path)
                 os.chdir(ori_dir)
                 shutil.rmtree(temp_dir)
-                print 'extract metadata done'
 
                 # update band metadata of raster resources
                 is_modified = False
@@ -88,32 +84,24 @@ def migrate_tif_file(apps, schema_editor):
                                                         noDataValue=band_meta['noDataValue'],
                                                         )
                             is_modified = True
-                print 'update bag'
 
                 # resource modify update
                 if is_modified:
-
                     bag_name = 'bags/{res_id}.zip'.format(res_id=res.short_id)
                     if istorage.exists(bag_name):
                         # delete the resource bag as the old bag is not valid
                         istorage.delete(bag_name)
-                        print("Deleted bag for resource ID:" + str(res.short_id))
-
                     resource_modified(res, res.creator)
 
                     success += 1
-                    print 'success'
                     log.info('Raster metadata is updated successfully for resource:ID:{} '
                              'Title:{}'.format(res.short_id, res.metadata.title.value))
                 else:
-                    print 'not updated'
                     log.info('Raster metadata is not updated for resource:ID:{} '
                              'Title:{}'.format(res.short_id, res.metadata.title.value))
                     not_modify.append({res.short_id: res.metadata.title.value})
 
             except Exception as e:
-                print e.message
-                print 'fail'
                 fail.append({res.short_id : res.metadata.title.value})
                 log.info('Raster metadata update failed for resource:ID:{} '
                         'Title:{}'.format(res.short_id, res.metadata.title.value))
