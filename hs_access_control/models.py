@@ -280,7 +280,7 @@ class UserAccess(models.Model):
     @property
     def view_groups(self):
         """ 
-        Get number of groups accessible to self. 
+        Get a list of groups accessible to self for view.
 
         :return: QuerySet evaluating to held groups.
         """
@@ -1449,7 +1449,6 @@ class UserAccess(models.Model):
         if not self.user.is_active: raise PermissionDenied("Requesting user is not active")
 
         access_resource = this_resource.raccess
-        access_group = this_group.gaccess
 
         # handle optional grantor parameter that scopes owner-based unshare to one share.
         if this_grantor is not None:
@@ -1887,7 +1886,7 @@ class UserAccess(models.Model):
             record, created = GroupResourcePrivilege.objects.get_or_create(resource=this_resource,
                                                                            group=this_group,
                                                                            grantor=self.user,
-                                                                           defaults = { 'privilege': this_privilege })
+                                                                           defaults={'privilege': this_privilege})
 
             # record.start=timezone.now() # now automatically set
             if not created:
@@ -2107,7 +2106,7 @@ class UserAccess(models.Model):
            
     def get_resource_unshare_groups(self, this_resource):
         """
-        Get a list of groups who could be unshared from this group.
+        Get a list of groups who could be unshared from this resource.
 
         :param this_resource: resource to check.
         :return: list of groups who could be removed by self.

@@ -9,6 +9,8 @@ class Migration(migrations.Migration):
     dependencies = [
         ('hs_core', '0021_fundingagency'),
         ('hs_core', '0022_resourcefile_resource_file_size'),
+        ('hs_core', '0022_baseresource_extra_metadata'),
+        ('hs_core', '0021_fundingagency'),
     ]
 
     operations = [

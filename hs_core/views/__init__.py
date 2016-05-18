@@ -133,6 +133,44 @@ def is_multiple_file_allowed_for_resource_type(request, resource_type, *args, **
         return HttpResponseRedirect(request.META['HTTP_REFERER'])
 
 
+def update_key_value_metadata(request, shortkey, *args, **kwargs):
+    """
+    This one view function is for CRUD operation for resource key/value arbitrary metadata.
+    key/value data in request.POST is assigned to the resource.extra_metadata field
+    """
+    res, _, _ = authorize(request, shortkey, needed_permission=ACTION_TO_AUTHORIZE.EDIT_RESOURCE)
+    post_data = request.POST.copy()
+    resource_mode = post_data.pop('resource-mode', None)
+    res.extra_metadata = post_data.dict()
+    is_update_success = True
+    err_message = ""
+    try:
+        res.save()
+    except Error as ex:
+        is_update_success = False
+        err_message = ex.message
+
+    if is_update_success:
+        resource_modified(res, request.user)
+
+    if request.is_ajax():
+        if is_update_success:
+            ajax_response_data = {'status': 'success'}
+        else:
+            ajax_response_data = {'status': 'error', 'message': err_message}
+        return HttpResponse(json.dumps(ajax_response_data))
+
+    if resource_mode is not None:
+        request.session['resource-mode'] = 'edit'
+
+    if is_update_success:
+        messages.success(request, "Metadata update successful")
+    else:
+        messages.error(request, err_message)
+
+    return HttpResponseRedirect(request.META['HTTP_REFERER'])
+
+
 def add_metadata_element(request, shortkey, element_name, *args, **kwargs):
     res, _, _ = authorize(request, shortkey, needed_permission=ACTION_TO_AUTHORIZE.EDIT_RESOURCE)
 
@@ -553,10 +591,12 @@ def add_generic_context(request, page):
     in_production, show_user_zone_selection = utils.get_user_zone_status_info(user)
 
     class AddUserForm(forms.Form):
-        user = forms.ModelChoiceField(User.objects.all(), widget=autocomplete_light.ChoiceWidget("UserAutocomplete"))
+        user = forms.ModelChoiceField(User.objects.filter(is_active=True).all(),
+                                      widget=autocomplete_light.ChoiceWidget("UserAutocomplete"))
 
     class AddGroupForm(forms.Form):
-        group = forms.ModelChoiceField(Group.objects.all(), widget=autocomplete_light.ChoiceWidget("GroupAutocomplete"))
+        group = forms.ModelChoiceField(Group.objects.filter(gaccess__active=True).all(),
+                                       widget=autocomplete_light.ChoiceWidget("GroupAutocomplete"))
 
     return {
         'add_owner_user_form': AddUserForm(),

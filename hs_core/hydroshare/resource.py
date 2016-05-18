@@ -3,6 +3,8 @@ import zipfile
 import shutil
 import logging
 import string
+import copy
+
 import requests
 
 from django.conf import settings
@@ -579,6 +581,9 @@ def create_new_version_resource(ori_res, new_res, user):
         # clone contained_res list of original collection and add to new collection
         # note that new version collection will not contain "deleted resources"
         new_res.resources = ori_res.resources.all()
+
+    # create the key/value metadata
+    new_res.extra_metadata = copy.deepcopy(ori_res.extra_metadata)
 
     # create bag for the new resource
     hs_bagit.create_bag(new_res)
