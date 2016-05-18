@@ -189,27 +189,6 @@ def get_user_zone_file_size(user, fname):
     return irods_storage.size(fname)
 
 
-def ref_res_files_user_zone_exists(user, res_id):
-    """
-    Check if fname exists in irods user zone
-    Args:
-        user: the requesting user
-        res_id: the resource short ID to check against
-
-    Returns:
-    the list of referenced resource files in user zone that don't exist any more
-    """
-    res = get_resource_by_shortkey(res_id)
-    irods_storage = IrodsStorage()
-    set_user_zone_session(user, irods_storage)
-    broken_ref_link_files = []
-    for f in res.files.all():
-        if f.resource_file_name and not irods_storage.exists(f.resource_file_name):
-            broken_ref_link_files.append(f.resource_file_name)
-
-    return broken_ref_link_files
-
-
 def get_user_zone_files(user, irods_fnames):
     """
     Get the file from iRODS user zone to Django server for metadata extraction on-demand for specific resource types

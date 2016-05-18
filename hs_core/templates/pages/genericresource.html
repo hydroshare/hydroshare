@@ -107,11 +107,6 @@
                                                     {{ f.resource_file.size|filesizeformat }}
                                                 {% else %}
                                                     {{ f.resource_file_size|filesizeformat }}
-                                                    {% if broken_file_lists %}
-                                                        {% if f.resource_file_name in broken_file_lists %}
-                                                            This referenced file has been deleted outside HydroShare.
-                                                        {% endif %}
-                                                    {% endif %}
                                                 {% endif %}
                                             </p>
                                         </span>
