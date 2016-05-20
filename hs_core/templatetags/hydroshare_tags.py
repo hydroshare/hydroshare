@@ -104,3 +104,18 @@ def best_name(content):
         content = content.username
 
     return content
+
+@register.filter
+def clean_pagination_url(content):
+    if "?q=" not in content:
+        content += "?q="
+    if "&page=" not in content:
+        return content
+    else:
+        clean_content = ''
+        parsed_content = content.split("&")
+        for token in parsed_content:
+            if "page=" not in token:
+                clean_content += token + '&'
+        clean_content = clean_content[:-1]
+        return clean_content

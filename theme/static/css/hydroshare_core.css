@@ -940,7 +940,7 @@ li.account p{
     border: 0;
 }
 
-#contact-table .icon-button{
+#contact-table .icon-button, .funding-agencies-table .icon-button {
     float:left;
     background-color: transparent;
     border: 0;
@@ -2666,22 +2666,24 @@ h4.title {
 
 #item-selectors {
     display: none;
+}
+
+.resource-custom-table {
     font-size: 14px;
-    border: 1px solid #ddd;
-    margin-bottom: 10px;
+    border: 1px solid #ddd !important;
+    margin-bottom: 10px !important;
 }
 
 #item-selectors.group-resource-list {
     width: 100% !important;
 }
 
-#item-selectors tbody td {
+.resource-custom-table tbody td {
 	border-bottom: 1px solid #EEE;
-    padding: 8px 10px;
 }
 
-#item-selectors thead th {
-    border-bottom: 1px solid #DDD;
+.resource-custom-table thead th {
+    border-bottom: 1px solid #DDD !important;
 }
 
 #item-selectors thead th:first-child {
@@ -3573,4 +3575,16 @@ div.group-add-photo {
 
 .request-details {
 	margin-left: 10px;
+}
+
+#btn-add-funding-agency {
+    margin-bottom: 20px;
+}
+
+.funding-agencies-table {
+    border: 1px solid #DDD;
+}
+
+#collection-table_wrapper {
+    margin-bottom: 20px;
 }
