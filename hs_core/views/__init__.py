@@ -33,7 +33,8 @@ from django_irods.storage import IrodsStorage
 from django_irods.icommands import SessionException
 from hs_core import hydroshare
 from hs_core.hydroshare.utils import get_resource_by_shortkey, resource_modified
-from .utils import authorize, upload_from_irods, ACTION_TO_AUTHORIZE, run_script_to_update_hyrax_input_files, get_my_resources_list
+from .utils import authorize, upload_from_irods, ACTION_TO_AUTHORIZE, run_script_to_update_hyrax_input_files, \
+    get_my_resources_list, send_action_to_take_email
 from hs_core.models import GenericResource, resource_processor, CoreMetaData, Relation
 from hs_core.hydroshare.resource import METADATA_STATUS_SUFFICIENT, METADATA_STATUS_INSUFFICIENT
 
@@ -41,13 +42,14 @@ from . import resource_rest_api
 from . import user_rest_api
 
 from hs_core.hydroshare import utils
-from . import utils as view_utils
+
 from hs_core.signals import *
 from hs_access_control.models import PrivilegeCodes, GroupMembershipRequest
 
 from hs_collection_resource.models import CollectionDeletedResource
 
 logger = logging.getLogger(__name__)
+
 
 def short_url(request, *args, **kwargs):
     try:
@@ -361,6 +363,9 @@ def share_resource_with_group(request, shortkey, privilege, group_id, *args, **k
 
 def _share_resource(request, shortkey, privilege, user_or_group_id, user_or_group):
     res, _, user = authorize(request, shortkey, needed_permission=ACTION_TO_AUTHORIZE.VIEW_RESOURCE)
+    user_to_share_with = None
+    group_to_share_with = None
+    status_code = 200
     if user_or_group == 'user':
         user_to_share_with = utils.user_from_id(user_or_group_id)
     else:
@@ -373,8 +378,14 @@ def _share_resource(request, shortkey, privilege, user_or_group_id, user_or_grou
     elif privilege == 'edit':
         access_privilege = PrivilegeCodes.CHANGE
     elif privilege == 'owner':
-        access_privilege = PrivilegeCodes.OWNER
+        if user_or_group != 'user':
+            status_code = 400
+            err_message = "Group can't have owner privilege over a resource"
+            access_privilege = PrivilegeCodes.NONE
+        else:
+            access_privilege = PrivilegeCodes.OWNER
     else:
+        status_code = 400
         err_message = "Not a valid privilege"
         access_privilege = PrivilegeCodes.NONE
 
@@ -419,7 +430,7 @@ def _share_resource(request, shortkey, privilege, user_or_group_id, user_or_grou
                               'current_user_privilege': current_user_privilege,
                               'error_msg': err_message}
 
-    return HttpResponse(json.dumps(ajax_response_data))
+    return HttpResponse(json.dumps(ajax_response_data), status=status_code)
 
 
 def unshare_resource_with_user(request, shortkey, user_id, *args, **kwargs):
@@ -597,10 +608,6 @@ class GroupForm(forms.Form):
 @processor_for('my-resources')
 @login_required
 def my_resources(request, page):
-    import sys
-    sys.path.append("/home/docker/pycharm-debug")
-    import pydevd
-    pydevd.settrace('129.123.51.193', port=21000, suspend=False)
     resource_collection = get_my_resources_list(request)
 
     context = {'collection': resource_collection}
@@ -803,20 +810,22 @@ def make_group_membership_request(request, group_id, user_id=None, *args, **kwar
         if user_to_join is not None:
             message = 'Group membership invitation was successful'
             # send mail to the user who was invited to join group
-            view_utils.send_action_to_take_email(request, user=user_to_join, action_type='group_membership',
-                                                 group=group_to_join)
+            send_action_to_take_email(request, user=user_to_join, action_type='group_membership',
+                                      group=group_to_join)
         else:
             message = 'Group membership request was successful'
             # send mail to all owners of the group
             for grp_owner in group_to_join.gaccess.owners:
-                view_utils.send_action_to_take_email(request, user=requesting_user, action_type='group_membership',
-                                                     group=group_to_join, group_owner=grp_owner)
+                send_action_to_take_email(request, user=requesting_user, action_type='group_membership',
+                                          group=group_to_join, group_owner=grp_owner)
 
+        status_code = 200
         ajax_response_data = {'status': 'success', 'message': message}
     except PermissionDenied as ex:
+        status_code = 400
         ajax_response_data = {'status': 'error', 'message': ex.message}
 
-    return HttpResponse(json.dumps(ajax_response_data))
+    return HttpResponse(json.dumps(ajax_response_data), status=status_code)
 
 
 def group_membership(request, uidb36=None, token=None):
