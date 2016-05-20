@@ -1352,8 +1352,9 @@ table.table-plain td{
 
 
 body > .main-container {
-    min-height: calc(100% - 346px);
+    min-height: calc(100% - 306px);
     padding-bottom: 20px;
+	padding-top: 20px;
 }
 
 .icon-button {
@@ -2996,6 +2997,7 @@ h4.title {
 #home-page-carousel {
 	height: 400px;
     margin-bottom: 60px;
+	margin-top: -20px;
     overflow: hidden;
 	border: 0;
 }
@@ -3336,6 +3338,7 @@ button.no-style:focus {
     background: #093E54;
     padding: 20px 0;
     margin-bottom: 20px;
+	margin-top: -20px;
 }
 
 .collaborate-header a {
