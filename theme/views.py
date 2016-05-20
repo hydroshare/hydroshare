@@ -54,7 +54,7 @@ class UserProfileView(TemplateView):
         # get all resources the profile user owns
         resources = u.uaccess.owned_resources
         # get a list of groupmembershiprequests
-        group_memebership_requests = GroupMembershipRequest.objects.filter(invitation_to=u).all()
+        group_membership_requests = GroupMembershipRequest.objects.filter(invitation_to=u).all()
         # if requesting user is not the profile user, then show only resources that the requesting user has access
         if self.request.user != u:
             if self.request.user.is_authenticated():
@@ -73,7 +73,7 @@ class UserProfileView(TemplateView):
         return {
             'profile_user': u,
             'resources': resources,
-            'group_memebership_requests': group_memebership_requests,
+            'group_membership_requests': group_membership_requests,
         }
 
 

@@ -538,28 +538,47 @@
                                     </div>
 
                                     <div class="panel-body">
-                                        <h4>Pending Requests</h4>
-                                        {% if  group_memebership_requests %}
-                                            {% for request in group_memebership_requests %}
-                                                <div>{{ request.group_to_join.name }}, {{ request.request_from.first_name }},
-                                                    {{ request.request_from.last_name }}</div>
+                                        {% if group_membership_requests %}
+                                            <h4>Pending Requests</h4>
+                                            {% for request in group_membership_requests %}
+                                                 {#      TODO: MAKE BOTH OF THIS AJAX    #}
+                                                <form></form>
+                                                <div class="activity-block">
+                                                    {% if request.request_from.userprofile.picture and request.request_from.userprofile.picture.url %}
+                                                        <div style="background-image: url('{{ profile.picture.url }}');"
+                                                             class="profile-pic-thumbnail round-image pull-left">
+                                                        </div>
+                                                    {% else %}
+                                                        <div class="profile-pic-thumbnail round-image user-icon"></div>
+                                                    {% endif %}
 
-{#                                                TODO: MAKE BOTH OF THIS AJAX#}
-                                                <form id="act-on-request"
-                                                      action="/hsapi/_internal/act-on-group-membership-request/{{ request.id }}/accept/"
-                                                      method="POST">
-                                                    {% csrf_token %}
-                                                    <button type="submit" class="btn btn-primary">Accept</button>
-                                                </form>
+                                                    <div class="metadata-wrapper">
+                                                        <div class="shared-resource-info">
+                                                            <a>{{ request.request_from|contact|safe }}</a>
 
-                                                <form id="act-on-request"
-                                                      action="/hsapi/_internal/act-on-group-membership-request/{{ request.id }}/reject/"
-                                                      method="POST">
-                                                    {% csrf_token %}
-                                                    <button type="submit" class="btn btn-default" data-dismiss="modal">
-                                                        Decline
-                                                    </button>
-                                                </form>
+                                                            <span class="text-muted"> invites you to join </span>
+                                                            <strong>{{ request.group_to_join.name }}</strong>
+                                                        </div>
+                                                    </div>
+
+                                                    <form class="act-on-request"
+                                                          action="/hsapi/_internal/act-on-group-membership-request/{{ request.id }}/accept/"
+                                                          method="POST">
+                                                        {% csrf_token %}
+                                                        <button type="submit" class="btn btn-primary">Accept</button>
+                                                    </form>
+
+                                                    <form class="act-on-request"
+                                                          action="/hsapi/_internal/act-on-group-membership-request/{{ request.id }}/reject/"
+                                                          method="POST">
+                                                        {% csrf_token %}
+                                                        <button type="submit" class="btn btn-default"
+                                                                data-dismiss="modal">
+                                                            Decline
+                                                        </button>
+                                                    </form>
+
+                                            </div>
 
                                             {% endfor %}
                                         {% endif %}

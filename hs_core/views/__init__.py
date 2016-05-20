@@ -789,13 +789,20 @@ def unshare_group_with_user(request, group_id, user_id, *args, **kwargs):
     if requesting_user.uaccess.can_unshare_group_with_user(group_to_unshare, user_to_unshare_with):
         try:
             requesting_user.uaccess.unshare_group_with_user(group_to_unshare, user_to_unshare_with)
-            messages.success(request, "User successfully removed from the group")
+            if requesting_user == user_to_unshare_with:
+                success_msg = "You successfully left the group."
+            else:
+                success_msg = "User successfully removed from the group."
+            messages.success(request, success_msg)
         except PermissionDenied as ex:
             messages.error(request, ex.message)
     else:
-        messages.error(request, "You don't have permission to remove users from a group")
+        messages.error(request, "You don't have permission to remove users from a group.")
 
-    return HttpResponseRedirect(request.META['HTTP_REFERER'])
+    if requesting_user == user_to_unshare_with:
+        return HttpResponseRedirect(reverse("MyGroups"))
+    else:
+        return HttpResponseRedirect(request.META['HTTP_REFERER'])
 
 
 @login_required
@@ -1020,18 +1027,14 @@ class MyGroupsView(TemplateView):
         u = User.objects.get(pk=self.request.user.id)
 
         groups = u.uaccess.view_groups
-        my_join_requests = []
-
-        # GroupMembershipRequest.objects.filter(request_from=u)
-        # for g in groups:
-        #     my_request = g.gaccess.group_membership_requests.filter(request_from=u).first()
-        #     if my_request is not None:
-        #         my_join_requests.append(my_request)
+        # get a list of groupmembershiprequests
+        group_membership_requests = GroupMembershipRequest.objects.filter(invitation_to=u).all()
 
         return {
             'profile_user': u,
             'groups': groups,
-            'my_pending_requests': GroupMembershipRequest.objects.filter(request_from=u)
+            'my_pending_requests': GroupMembershipRequest.objects.filter(request_from=u),
+            'group_membership_requests': group_membership_requests
         }
 
 
@@ -1046,6 +1049,9 @@ class GroupView(TemplateView):
         group_id = kwargs['group_id']
         g = Group.objects.get(pk=group_id)
         u = User.objects.get(pk=self.request.user.id)
+        u.is_group_owner = u.uaccess.owns_group(g)
+        u.is_group_editor = g in u.uaccess.edit_groups
+        u.is_group_viewer = g in u.uaccess.view_groups
 
         return {
             'profile_user': u,
