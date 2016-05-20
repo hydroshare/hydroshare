@@ -2680,6 +2680,7 @@ h4.title {
 
 .resource-custom-table tbody td {
 	border-bottom: 1px solid #EEE;
+	padding: 8px 10px;
 }
 
 .resource-custom-table thead th {

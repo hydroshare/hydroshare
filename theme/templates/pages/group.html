@@ -194,15 +194,15 @@
                                 <tbody>
                                     <tr class="active" data-filter-by="all">
                                         <td><span>All</span></td>
-                                        <td><span class="badge">0</span></td>
+                                        <td><span class="badge" data-filter-by='All'>0</span></td>
                                     </tr>
                                      <tr data-filter-by="edit-user">
                                         <td><span>Owners</span></td>
-                                        <td><span class="badge">0</span></td>
+                                        <td><span class="badge" data-filter-by='Owners'>0</span></td>
                                     </tr>
                                     <tr data-filter-by="pending">
                                         <td><span>Pending</span></td>
-                                        <td><span class="badge">0</span></td>
+                                        <td><span class="badge" data-filter-by='Pending'>0</span></td>
                                     </tr>
                                 </tbody>
                             </table>
@@ -211,6 +211,8 @@
                             {#  All members #}
                             <table data-owner-count="{{ group.gaccess.owners|length }}"
                                    data-edit-count="{{ edit_users|length }}"
+                                   data-view-count="{{ view_users|length }}"
+                                   data-pending-count="{{ group.gaccess.group_membership_requests|length }}"
                                    id="all-members-table" class="table-members-list active">
                                 {% for owner in group.gaccess.owners %}
                                     <tr data-filter-by="creator">
@@ -234,7 +236,7 @@
                                 {% endfor %}
 
                                 {% for owner in edit_users %}
-                                    <tr data-filter="edit-user">
+                                    <tr data-filter-by="edit-user">
                                         <td>
                                             {% if  owner.userprofile.picture and owner.userprofile.picture.url %}
                                                 <div style="background-image: url('{{ owner.userprofile.picture.url }}');"
@@ -289,7 +291,7 @@
                                 {% endfor %}
 
                                 {#  Template to generate subsequent rows after accepting join request   #}
-                                <tr data-filter="view-user" id="templateRow">
+                                <tr data-filter-by="view-user" id="templateRow">
                                     <td>
                                         <h4><strong><a href="#" data-id="name"></a></strong></h4>
                                         <span class="text-muted" data-id="title"></span>
@@ -331,7 +333,7 @@
                                 </tr>
 
                                 {% for member in view_users %}
-                                    <tr data-filter="view-user">
+                                    <tr data-filter-by="view-user">
                                         <td>
                                             {% if member.userprofile.picture and member.userprofile.picture.url %}
                                                 <div style="background-image: url('{{ member.userprofile.picture.url }}');"
@@ -441,7 +443,7 @@
                     </div>
                 </div>
 
-                 <div role="tabpanel" class="tab-pane fade" id="resources">
+                <div role="tabpanel" class="tab-pane fade" id="resources">
                      <div class="row">
                         <div class="col-lg-2" id="facets">
                             <div class="panel panel-default">
@@ -572,7 +574,7 @@
                             </div>
 
                             <!-- /input-group -->
-                            <table id="item-selectors" class="table-hover table-striped">
+                            <table id="item-selectors" class="table-hover table-striped resource-custom-table">
                                 <thead>
                                 <tr>
                                     <th><input class="all-rows-selector" type="checkbox"></th>
@@ -1151,12 +1153,13 @@
                         }
                         rowTemplate.prepend(picture);
 
-                        $("#all-members-table tbody").append($("<tr data-filter='view-user' style='display: none;'>" + rowTemplate.html() + "</tr>"));
+                        $("#all-members-table tbody").append($("<tr data-filter-by='view-user' style='display: none;'>" + rowTemplate.html() + "</tr>"));
                         $(".btn-share-group").click(share_group_ajax_submit);
                         $(".btn-unshare-group").click(unshare_group_ajax_submit);
                     }
 
                     target.parent().parent().parent().remove();
+                    updateMembersLabelCount();
                 },
                 error: function (XMLHttpRequest, textStatus, errorThrown) {
                     console.log("error");
@@ -1191,6 +1194,7 @@
                     }
 
                     dropdownButton.dropdown("toggle");
+                    updateMembersLabelCount();
                 },
                 error: function (XMLHttpRequest, textStatus, errorThrown) {
                     console.log("error");
@@ -1220,6 +1224,17 @@
             });
             //don't submit the form
             return false;
+        }
+
+        function updateMembersLabelCount() {
+            var viewCount = $("#all-members-table tr[data-filter-by='view-user']").length - 1;  // Subtract hidden template row
+            var editCount = $("#all-members-table tr[data-filter-by='edit-user']").length;
+            var ownersCount = $("#all-members-table tr[data-filter-by='creator']").length;
+            var pendingCount = $("table[data-filter-by='pending'] tr").length;
+
+            $("#members-filter .badge[data-filter-by='All']").text(viewCount + editCount + ownersCount);
+            $("#members-filter .badge[data-filter-by='Owners']").text(editCount + ownersCount);
+            $("#members-filter .badge[data-filter-by='Pending']").text(pendingCount);
         }
 
         $(document).ready(function () {
@@ -1280,6 +1295,10 @@
             $("#btn-leave-group").click(function(){
                 $(this).closest("form").submit();
             });
+
+            // Initialize filters counters
+            updateMembersLabelCount();
+
         });
     </script>
 {% endblock %}
