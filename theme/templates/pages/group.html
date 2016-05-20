@@ -413,29 +413,33 @@
                                             {% endif %}
                                         </td>
                                         <td>
-                                            <form action="/hsapi/_internal/act-on-group-membership-request/{{ pendingrequest.id }}/accept/">
-                                                {% csrf_token %}
-                                                <a href="#" class="btn btn-success btn-act-on-request"
-                                                   data-user-action="Accept"
-                                                   data-member-id="{{ pendingrequest.request_from.id }}"
-                                                   data-name="{{ pendingrequest.request_from|best_name }}"
-                                                   data-title="{{ pendingrequest.request_from.userprofile.title }}"><span
-                                                        class="glyphicon glyphicon-ok"></span>&nbsp;Accept</a>
-                                            </form>
+                                            {% if profile_user.is_group_owner or profile_user.is_group_editor %}
+                                                <form action="/hsapi/_internal/act-on-group-membership-request/{{ pendingrequest.id }}/accept/">
+                                                    {% csrf_token %}
+                                                    <a href="#" class="btn btn-success btn-act-on-request"
+                                                       data-user-action="Accept"
+                                                       data-member-id="{{ pendingrequest.request_from.id }}"
+                                                       data-name="{{ pendingrequest.request_from|best_name }}"
+                                                       data-title="{% if pendingrequest.request_from.userprofile.title %}{{ pendingrequest.request_from.userprofile.title }}{% endif %}"><span
+                                                            class="glyphicon glyphicon-ok"></span>&nbsp;Accept</a>
+                                                </form>
+                                            {% endif %}
                                         </td>
                                         <td>
-                                            <form action="/hsapi/_internal/act-on-group-membership-request/{{ pendingrequest.id }}/reject/">
-                                                {% csrf_token %}
-                                                <a href="#" class="btn btn-default btn-act-on-request"
-                                                   data-user-action="Reject"><span
-                                                        class="glyphicon glyphicon-remove"></span>&nbsp;Reject</a>
-                                            </form>
+                                            {% if profile_user.is_group_owner or profile_user.is_group_editor %}
+                                                <form action="/hsapi/_internal/act-on-group-membership-request/{{ pendingrequest.id }}/reject/">
+                                                    {% csrf_token %}
+                                                    <a href="#" class="btn btn-default btn-act-on-request"
+                                                       data-user-action="Reject"><span
+                                                            class="glyphicon glyphicon-remove"></span>&nbsp;Reject</a>
+                                                </form>
+                                            {% endif %}
                                         </td>
                                     </tr>
 
                                 {% endfor %}
                                 {% else %}
-                                <tr><td><i>No pending requests.</i></td></tr>
+                                <tr class="no-pending-requests"><td><i>No pending requests.</i></td></tr>
                             {% endif %}
                             </table>
 
@@ -1230,7 +1234,7 @@
             var viewCount = $("#all-members-table tr[data-filter-by='view-user']").length - 1;  // Subtract hidden template row
             var editCount = $("#all-members-table tr[data-filter-by='edit-user']").length;
             var ownersCount = $("#all-members-table tr[data-filter-by='creator']").length;
-            var pendingCount = $("table[data-filter-by='pending'] tr").length;
+            var pendingCount = $("table[data-filter-by='pending'] tr:not('.no-pending-requests')").length;
 
             $("#members-filter .badge[data-filter-by='All']").text(viewCount + editCount + ownersCount);
             $("#members-filter .badge[data-filter-by='Owners']").text(editCount + ownersCount);

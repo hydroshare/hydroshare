@@ -3355,7 +3355,12 @@ button.no-style:focus {
 }
 
 .collaborate-nav-item.active {
-    border-bottom: 2px solid;
+	color: #FFF;
+	font-weight: bold;
+}
+
+.collaborate-nav-item:focus {
+	text-decoration: initial;
 }
 
 .collaborate-nav .glyphicon {
@@ -3552,7 +3557,6 @@ button.no-style:focus {
 
 .group-thumbnail-footer {
     padding-top: 10px;
-    border-top: 1px dashed #DDD;
 }
 
 .group-thumbnail-footer .btn-ask-to-join {

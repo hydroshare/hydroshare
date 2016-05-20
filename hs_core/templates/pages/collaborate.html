@@ -21,7 +21,7 @@
                 <h3>Find groups</h3>
                 <hr class="solid">
                 <div class="input-group group-search">
-                    <input type="text" class="form-control" placeholder="Search...">
+                    <input id="txt-search-groups" type="text" class="form-control" placeholder="Search by group name...">
                   <span class="input-group-btn">
                     <button class="btn btn-default" type="button"><span class="glyphicon glyphicon-search"></span>
                     </button>
@@ -33,7 +33,7 @@
             {% if groups %}
             {% for group in groups %}
                 {% if group.gaccess.public or group.gaccess.discoverable %}
-                    <div class="col-sm-6 col-md-4">
+                    <div class="col-sm-6 col-md-4 group-container">
                         <div class="group-thumbnail contribution">
                             {% if group.gaccess.picture and group.gaccess.picture.url %}
                                 <div class="group-preview-image" style="background-image: url({{ group.gaccess.picture.url }})"></div>
@@ -132,23 +132,25 @@
 
                                     {% elif group.join_request_waiting_user_action %}
                                         {#  TODO: MAKE BOTH OF THIS AJAX #}
-                                        <span class="text-muted">You have been invited to join this group!</span>
-                                        <div class="height-fix">
-                                            <form class="act-on-request height-fix"
-                                                  action="/hsapi/_internal/act-on-group-membership-request/{{ group.join_request.id }}/accept/"
-                                                  method="POST">
-                                                {% csrf_token %}
-                                                <button type="submit" class="btn btn-primary">Accept</button>
-                                            </form>
+                                        <div>
+                                            <span class="text-muted">You have been invited to join this group!</span>
+                                            <div class="height-fix">
+                                                <form class="act-on-request height-fix"
+                                                      action="/hsapi/_internal/act-on-group-membership-request/{{ group.join_request.id }}/accept/"
+                                                      method="POST">
+                                                    {% csrf_token %}
+                                                    <a class="btn btn-primary btn-act-on-request" data-user-action="Accept">Accept</a>
+                                                </form>
 
-                                            <form class="act-on-request height-fix"
-                                                  action="/hsapi/_internal/act-on-group-membership-request/{{ group.join_request.id }}/reject/"
-                                                  method="POST">
-                                                {% csrf_token %}
-                                                <button type="submit" class="btn btn-default" data-dismiss="modal">
-                                                    Decline
-                                                </button>
-                                            </form>
+                                                <form class="act-on-request height-fix"
+                                                      action="/hsapi/_internal/act-on-group-membership-request/{{ group.join_request.id }}/reject/"
+                                                      method="POST">
+                                                    {% csrf_token %}
+                                                    <a class="btn btn-default btn-act-on-request">
+                                                        Decline
+                                                    </a>
+                                                </form>
+                                            </div>
                                         </div>
                                     {% else %}
                                         <form id="join-{{ group.id }}" method="post"
@@ -218,8 +220,45 @@
             return false;
         }
 
+        function act_on_request_ajax_submit() {
+            var target = $(this);
+            var form = $(this).closest("form");
+            var datastring = form.serialize();
+            var url = form.attr('action');
+            $.ajax({
+                type: "POST",
+                url: url,
+                dataType: 'html',
+                data: datastring,
+                success: function (result) {
+                    var container = target.parent().parent().parent().parent();
+                    target.parent().parent().parent().remove();
+                    if (target.attr("data-user-action") == "Accept") {
+                        container.append('<div class="text-center"><h4 class="text-muted">You have joined this group.</h4></div>');
+                    }
+                },
+                error: function (XMLHttpRequest, textStatus, errorThrown) {
+                    console.log("error");
+                }
+            });
+            //don't submit the form
+            return false;
+        }
+
         $(document).ready(function () {
             $(".btn-ask-to-join").click(request_join_group_ajax_submit);
+            $(".btn-act-on-request").click(act_on_request_ajax_submit);
+            $("#txt-search-groups").keyup(function () {
+                var searchString = $("#txt-search-groups").val().toLowerCase();
+                $(".group-container").show();
+                var groups = $(".group-container");
+                for (var i = 0; i < groups.length; i++) {
+                    var groupName = $(groups[i]).find(".group-name").text().toLowerCase();
+                    if (groupName.indexOf(searchString) < 0) {
+                        $(groups[i]).hide();
+                    }
+                }
+            });
             fixViewPort();
         });
     </script>

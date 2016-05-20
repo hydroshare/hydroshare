@@ -69,19 +69,19 @@
                                 </div>
                             </div>
 
+                            {#  TODO: MAKE THIS URLS REFRESH THE PAGE #}
                             <form class="act-on-request height-fix"
                                   action="/hsapi/_internal/act-on-group-membership-request/{{ request.id }}/accept/"
                                   method="POST">
                                 {% csrf_token %}
-                                <button type="submit" class="btn btn-primary">Accept</button>
+                                <button type="submit" class="btn btn-primary btn-act-on-request" data-user-action="Accept">Accept</button>
                             </form>
 
                             <form class="act-on-request height-fix"
                                   action="/hsapi/_internal/act-on-group-membership-request/{{ request.id }}/reject/"
                                   method="POST">
                                 {% csrf_token %}
-                                <button type="submit" class="btn btn-default"
-                                        data-dismiss="modal">
+                                <button type="submit" class="btn btn-default btn-act-on-request">
                                     Decline
                                 </button>
                             </form>
