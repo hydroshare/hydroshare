@@ -2444,11 +2444,10 @@ div.affiliation {
 
 form.act-on-request button {
 	clear: none;
-	width: 80%;
 }
 
 form.act-on-request {
-    width: 40%;
+    width: 50%;
     float: left;
     text-align: center;
 	margin-top: 20px;

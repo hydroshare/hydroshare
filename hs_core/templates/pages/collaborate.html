@@ -49,7 +49,7 @@
                                 <div class="text-center group-thumbnail-footer">
                                     {% if group.gaccess.public %}
                                         <div class="users-joined height-fix">
-                                            <div class="text-muted">MEMBERS</div>
+                                            <div><a class="text-muted" href="#" data-toggle="modal" data-target="#modal-members-list-{{ group.id }}">MEMBERS</a></div>
                                             {% for member in group.gaccess.members|slice:":5" %}
                                                 {% if  member.userprofile.picture and member.userprofile.picture.url %}
                                                     <div style="background-image: url('{{ member.userprofile.picture.url }}');"
@@ -67,6 +67,59 @@
                                                 <small class="text-muted">and {{ group.gaccess.members|length|add:"-5" }} others have joined</small>
                                             </div>
                                         {% endif %}
+
+                                        <!-- Members List Modal -->
+                                        <div class="modal fade" id="modal-members-list-{{ group.id }}" tabindex="-1" role="dialog"
+                                             aria-labelledby="Invite">
+                                            <div class="modal-dialog" role="document">
+                                                <div class="modal-content">
+                                                    <div class="modal-header">
+                                                        <button type="button" class="close" data-dismiss="modal"
+                                                                aria-label="Close"><span aria-hidden="true">&times;</span>
+                                                        </button>
+                                                        <h4 class="modal-title">Members</h4>
+                                                    </div>
+
+                                                    <div class="modal-body">
+                                                        <table class="table access-table" style="text-align: left;">
+                                                            <tbody>
+                                                            {% for u in group.gaccess.members %}
+                                                                <tr id="row-id-{{ u.pk }}"
+                                                                    {% if owners|length == 1 or not is_owner_user %}class="hide-actions"{% endif %}>
+                                                                    <td>
+                                                                        <div class="user-scope">
+                                                                            {% if u.userprofile.picture %}
+                                                                                <div style="background-image: url('{{ u.userprofile.picture.url }}');"
+                                                                                     class="profile-pic-thumbnail round-image"></div>
+                                                                            {% else %}
+                                                                                <div class="profile-pic-thumbnail round-image user-icon"></div>
+                                                                            {% endif %}
+
+                                                                            <span data-col="name"
+                                                                                  class="user-name">{{ u|best_name }}</span>
+                                                                            {% if u.pk == current_user.pk %}
+                                                                                <span class="text-muted you-flag">(You)</span>
+                                                                            {% endif %}
+                                                                            <br>
+                                                        <span data-col="user-name"
+                                                              class="user-username-content">{{ u.username }}</span>
+                                                                        </div>
+                                                                    </td>
+                                                                </tr>
+                                                            {% endfor %}
+                                                            </tbody>
+                                                        </table>
+                                                    </div>
+
+                                                    <div class="modal-footer">
+                                                        <button type="button" class="btn btn-default"
+                                                                data-dismiss="modal">Close
+                                                        </button>
+                                                    </div>
+
+                                                </div>
+                                            </div>
+                                        </div>
 
                                     {% endif %}
 
@@ -101,9 +154,10 @@
                                         <form id="join-{{ group.id }}" method="post"
                                               action="/hsapi/_internal/make-group-membership-request/{{ group.id }}/">
                                             {% csrf_token %}
-                                            <p><a href="#"
-                                                  data-form-id="join-{{ group.id }}" class="btn btn-primary btn-ask-to-join"
-                                                  role="button">Ask to join</a></p>
+                                            <a href="#"
+                                               data-form-id="join-{{ group.id }}"
+                                               class="btn btn-primary btn-ask-to-join"
+                                               role="button">Ask to join</a>
                                         </form>
                                     {% endif %}
 
@@ -141,6 +195,7 @@
         }
 
         function request_join_group_ajax_submit() {
+            var target = $(this);
             var dataFormID = $(this).attr("data-form-id");
             var form = $("#" + dataFormID);
             var datastring = form.serialize();
@@ -151,11 +206,9 @@
                 dataType: 'html',
                 data: datastring,
                 success: function (result) {
-                    var json_response = JSON.parse(result);
-                    console.log(json_response);
-                    if (json_response.status == "success") {
-
-                    }
+                    var container = target.parent().parent();
+                    target.parent().remove();
+                    container.append('<h4 class="text-muted">Request Sent</h4>');
                 },
                 error: function (XMLHttpRequest, textStatus, errorThrown) {
                     console.log("error");

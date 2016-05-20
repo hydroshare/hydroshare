@@ -26,8 +26,10 @@
             <div>
                 <h4><span class="glyphicon glyphicon-send"></span>&nbsp;Pending Requests</h4>
                 <hr class="solid">
+                {% if not my_pending_requests and not group_membership_requests %}
+                    <i>No pending requests.</i>
+                {% endif %}
                 {% if my_pending_requests %}
-
                     {% for request in my_pending_requests %}
                         <strong>{{ request.group_to_join.name }}</strong>
                         <p class="text-muted">Request Sent</p>
@@ -43,16 +45,13 @@
                         </table>
                         <br>
                     {% endfor %}
-                {% else %}
-                    <i>No pending requests.</i>
                 {% endif %}
 
                 {% if group_membership_requests %}
-                    <h4>Pending Requests</h4>
                     {% for request in group_membership_requests %}
                         {#      TODO: MAKE BOTH OF THIS AJAX    #}
                         <form></form>
-                        <div class="activity-block">
+                        <div class="activity-block height-fix" style="margin-top:20px; padding-top:5px; border-bottom:1px dashed #DDD; padding-bottom:20px;">
                             {% if request.request_from.userprofile.picture and request.request_from.userprofile.picture.url %}
                                 <div style="background-image: url('{{ profile.picture.url }}');"
                                      class="profile-pic-thumbnail round-image pull-left">
@@ -70,14 +69,14 @@
                                 </div>
                             </div>
 
-                            <form class="act-on-request"
+                            <form class="act-on-request height-fix"
                                   action="/hsapi/_internal/act-on-group-membership-request/{{ request.id }}/accept/"
                                   method="POST">
                                 {% csrf_token %}
                                 <button type="submit" class="btn btn-primary">Accept</button>
                             </form>
 
-                            <form class="act-on-request"
+                            <form class="act-on-request height-fix"
                                   action="/hsapi/_internal/act-on-group-membership-request/{{ request.id }}/reject/"
                                   method="POST">
                                 {% csrf_token %}
@@ -87,8 +86,9 @@
                                 </button>
                             </form>
 
-                        </div>
+                        <hr>
 
+                        </div>
                     {% endfor %}
                 {% endif %}
 

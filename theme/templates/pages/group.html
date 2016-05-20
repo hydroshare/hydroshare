@@ -42,21 +42,36 @@
                 <div class="dropdown custom-dropdown">
                     <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown"
                             aria-haspopup="true" aria-expanded="false">
-                        Member <span class="caret"></span>
+                        {% if profile_user.is_group_owner or profile_user.is_group_editor %}
+                            Owner
+                            {% else %}
+                            Member
+                        {% endif %} <span class="caret"></span>
                     </button>
                     <ul class="dropdown-menu">
                         <li>
                             <form action="/hsapi/_internal/unshare-group-with-user/{{ group.id }}/{{ user.id }}/">
                                 {% csrf_token %}
-                                <a href="#" id="btn-leave-group">Leave Group</a>
+                                <a href="#" id="btn-leave-group"><span class="glyphicon glyphicon-hand-left btn-edit"></span>&nbsp;&nbsp;Leave Group</a>
                             </form>
                         </li>
-
+                        {% if profile_user.is_group_owner or profile_user.is_group_editor %}
+                            <li>
+                                <a href="#" id="btn-edit-group" data-toggle="modal"
+                                   data-target="#edit-group-dialog"><span
+                                        class="glyphicon glyphicon-pencil btn-edit"></span>&nbsp;&nbsp;Edit Group</a>
+                            </li>
+                            <li role="separator" class="divider"></li>
+                            <li>
+                                <form action="/hsapi/_internal/unshare-group-with-user/{{ group.id }}/{{ user.id }}/">
+                                    {% csrf_token %}
+                                    <a href="#" id="btn-leave-group"><span
+                                            class="glyphicon glyphicon-trash btn-remove"></span>&nbsp;&nbsp;Delete Group</a>
+                                </form>
+                            </li>
+                        {% endif %}
                     </ul>
                 </div>
-                {% if profile_user.is_group_owner or profile_user.is_group_editor %}
-                    <a href="#">Edit</a>
-                {% endif %}
             </div>
         </div>
 
@@ -179,26 +194,28 @@
                                 <tbody>
                                     <tr class="active" data-filter-by="all">
                                         <td><span>All</span></td>
-                                        <td><span class="badge">3</span></td>
+                                        <td><span class="badge">0</span></td>
                                     </tr>
                                      <tr data-filter-by="edit-user">
                                         <td><span>Owners</span></td>
-                                        <td><span class="badge">2</span></td>
+                                        <td><span class="badge">0</span></td>
                                     </tr>
                                     <tr data-filter-by="pending">
                                         <td><span>Pending</span></td>
-                                        <td><span class="badge">2</span></td>
+                                        <td><span class="badge">0</span></td>
                                     </tr>
                                 </tbody>
                             </table>
                         </div>
                         <div class="col-sm-12 col-md-9">
                             {#  All members #}
-                            <table class="table-members-list active">
+                            <table data-owner-count="{{ group.gaccess.owners|length }}"
+                                   data-edit-count="{{ edit_users|length }}"
+                                   id="all-members-table" class="table-members-list active">
                                 {% for owner in group.gaccess.owners %}
                                     <tr data-filter-by="creator">
                                         <td>
-                                            {% if  owner.userprofile.picture and owner.userprofile.picture.url %}
+                                            {% if owner.userprofile.picture and owner.userprofile.picture.url %}
                                                 <div style="background-image: url('{{ owner.userprofile.picture.url }}');"
                                                      class="profile-pic-thumbnail round-image pull-left">
                                                 </div>
@@ -232,7 +249,8 @@
                                             <span class="text-muted">{{ owner.userprofile.title }}</span>
                                         </td>
                                         <td>
-                                            <div class="dropdown custom-dropdown">
+                                            {% if profile_user.is_group_owner or profile_user.is_group_editor %}
+                                                <div class="dropdown custom-dropdown">
                                                 <button class="btn btn-default dropdown-toggle" type="button"
                                                         id="roleDropDown-{{ member.id }}" data-toggle="dropdown"
                                                         aria-haspopup="true"
@@ -263,9 +281,54 @@
                                                     </li>
                                                 </ul>
                                             </div>
+                                                {% else %}
+                                                Owner
+                                            {% endif %}
                                         </td>
                                     </tr>
                                 {% endfor %}
+
+                                {#  Template to generate subsequent rows after accepting join request   #}
+                                <tr data-filter="view-user" id="templateRow">
+                                    <td>
+                                        <h4><strong><a href="#" data-id="name"></a></strong></h4>
+                                        <span class="text-muted" data-id="title"></span>
+                                    </td>
+                                    <td>
+                                        <div class="dropdown custom-dropdown">
+                                            <button class="btn btn-default dropdown-toggle" type="button"
+                                                    data-toggle="dropdown" aria-haspopup="true"
+                                                    aria-expanded="true">
+                                                Member
+                                                <span class="caret"></span>
+                                            </button>
+                                            <ul class="dropdown-menu">
+                                                <li>
+                                                    <form action="/hsapi/_internal/share-group-with-user/{{ group.id }}/member_id/edit/">
+                                                        {% csrf_token %}
+                                                        <a href="#" class="btn-share-group"
+                                                           data-role="Owner">Owner</a>
+                                                    </form>
+                                                </li>
+                                                <li>
+                                                    <form action="/hsapi/_internal/share-group-with-user/{{ group.id }}/member_id/view/">
+                                                        {% csrf_token %}
+                                                        <a href="#" class="btn-share-group"
+                                                           data-role="Member">Member</a>
+                                                    </form>
+                                                </li>
+                                                <li role="separator" class="divider"></li>
+                                                <li>
+                                                    <form action="/hsapi/_internal/unshare-group-with-user/{{ group.id }}/member_id/">
+                                                        {% csrf_token %}
+                                                        <a href="#" class="btn-unshare-group">Expel</a>
+                                                    </form>
+                                                </li>
+                                            </ul>
+                                        </div>
+
+                                    </td>
+                                </tr>
 
                                 {% for member in view_users %}
                                     <tr data-filter="view-user">
@@ -285,6 +348,7 @@
                                             {% endif %}
                                         </td>
                                         <td>
+                                            {% if profile_user.is_group_owner or profile_user.is_group_editor %}
                                             <div class="dropdown custom-dropdown">
                                                 <button class="btn btn-default dropdown-toggle" type="button"
                                                         id="roleDropDown-{{ member.id }}" data-toggle="dropdown"
@@ -316,6 +380,9 @@
                                                     </li>
                                                 </ul>
                                             </div>
+                                            {% else %}
+                                            Member
+                                            {% endif %}
                                         </td>
                                     </tr>
                                 {% endfor %}
@@ -326,9 +393,9 @@
                             {% if group.gaccess.group_membership_requests %}
                                 {% for pendingrequest in group.gaccess.group_membership_requests %}
                                     <tr>
-                                        <td>
-                                            {% if request.user.userprofile.picture and request.user.userprofile.picture.url %}
-                                                <div style="background-image: url('{{ request.user.userprofile.picture.url }}');"
+                                        <td data-id="picture">
+                                            {% if pendingrequest.request_from.userprofile and pendingrequest.request_from.userprofile.picture.url %}
+                                                <div style="background-image: url('{{ pendingrequest.request_from.userprofile.picture.url }}');"
                                                      class="profile-pic-thumbnail round-image pull-left">
                                                 </div>
                                             {% else %}
@@ -343,17 +410,23 @@
                                                 <span class="text-muted">{{ pendingrequest.request_from.userprofile.title }}</span>
                                             {% endif %}
                                         </td>
-                                        <td><form action="/hsapi/_internal/act-on-group-membership-request/{{ pendingrequest.id }}/accept/">
-                                            {% csrf_token %}
-                                            <a href="#" class="btn btn-success btn-act-on-request"><span
-                                                class="glyphicon glyphicon-ok"></span>&nbsp;Accept</a>
+                                        <td>
+                                            <form action="/hsapi/_internal/act-on-group-membership-request/{{ pendingrequest.id }}/accept/">
+                                                {% csrf_token %}
+                                                <a href="#" class="btn btn-success btn-act-on-request"
+                                                   data-user-action="Accept"
+                                                   data-member-id="{{ pendingrequest.request_from.id }}"
+                                                   data-name="{{ pendingrequest.request_from|best_name }}"
+                                                   data-title="{{ pendingrequest.request_from.userprofile.title }}"><span
+                                                        class="glyphicon glyphicon-ok"></span>&nbsp;Accept</a>
                                             </form>
                                         </td>
                                         <td>
                                             <form action="/hsapi/_internal/act-on-group-membership-request/{{ pendingrequest.id }}/reject/">
                                                 {% csrf_token %}
-                                                <a href="#" class="btn btn-default btn-act-on-request"><span
-                                                    class="glyphicon glyphicon-remove"></span>&nbsp;Reject</a>
+                                                <a href="#" class="btn btn-default btn-act-on-request"
+                                                   data-user-action="Reject"><span
+                                                        class="glyphicon glyphicon-remove"></span>&nbsp;Reject</a>
                                             </form>
                                         </td>
                                     </tr>
@@ -370,502 +443,554 @@
 
                  <div role="tabpanel" class="tab-pane fade" id="resources">
                      <div class="row">
-                         <div class="col-sm-12 col-md-3">
-                             <div class="panel panel-default">
-                                 <div class="panel-heading">
-                                     <h4 class="panel-title">
-                                         <span class="glyphicon glyphicon glyphicon-search"></span>
-                                         <a data-toggle="collapse" class="accordion-toggle" data-parent="#accordion"
-                                            href="#filter">
-                                             &nbsp;Filter</a></h4>
+                        <div class="col-lg-2" id="facets">
+                            <div class="panel panel-default">
+                                <div class="panel-heading">
+                                    <h4 class="panel-title">
+                                        <span class="glyphicon glyphicon glyphicon-search"></span>
+                                        <a data-toggle="collapse" class="accordion-toggle" data-parent="#accordion" href="#filter">&nbsp;Filter</a></h4>
+                                </div>
+                                <div id="filter" class="facet-list panel-collapse collapse in">
+                                    <div class="panel-body">
+                                        <div class="list-group">
+                                            <ul class="list-group inputs-group">
+                                                <li class="list-group-item">
+                                                    <span data-facet="owned" class="badge">0</span>
+                                                    <label class="checkbox noselect">
+                                                        <input type="checkbox" data-facet="owned" value="Owned">Owned by me</label>
+                                                </li>
+                                                <li class="list-group-item">
+                                                    <span data-facet="editable" class="badge">0</span>
+                                                    <label class="checkbox noselect">
+                                                        <input type="checkbox" data-facet="editable" value="Editable">Editable by me</label>
+                                                </li>
+                                                <li class="list-group-item">
+                                                    <span data-facet="viewable by me" class="badge">0</span>
+                                                    <label class="checkbox noselect">
+                                                        <input type="checkbox" data-facet="viewable by me" value="View">Viewable by me</label>
+                                                </li>
+                                                <li class="list-group-item">
+                                                    <span data-facet="favorites" class="badge">0</span>
+                                                    <label class="checkbox noselect">
+                                                        <input type="checkbox" data-facet="favorites" value="Favorites">Favorites</label>
+                                                </li>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+{#                            <div class="panel panel-default">#}
+{#                                <div class="panel-heading">#}
+{#                                    <h4 class="panel-title">#}
+{#                                        <span class="glyphicon glyphicon-tags"></span>#}
+{#                                        <a data-toggle="collapse" class="accordion-toggle" data-parent="#accordion" href="#labels">&nbsp;&nbsp;Labels</a></h4>#}
+{#                                </div>#}
+{#                                <div id="labels" class="facet-list panel-collapse collapse in">#}
+{#                                    <div class="panel-body">#}
+{#                                        <div class="list-group">#}
+{#                                            <ul id="user-labels-left" class="list-group inputs-group">#}
+{##}
+{#                                            </ul>#}
+{#                                        </div>#}
+{#                                    </div>#}
+{#                                </div>#}
+{#                            </div>#}
+                        </div>
+                        <div class="col-lg-10" id="items">
+                            <div class="row">
+                                <div class="col-sm-8 col-xs-12 pull-right">
+                                    <div id="search-container" class="input-group">
+                                        <span class="glyphicon glyphicon-search search-icon"></span>
+                                        <input id="resource-search-input" type="text" class="form-control" placeholder="Search"/>
+
+                                        <div class="input-group-btn">
+                                            <div class="btn-group" role="group">
+                                                <div class="dropdown dropdown-lg">
+                                                    <span id="btn-clear-search-input" class="glyphicon glyphicon-remove-sign btn-clear-search"></span>
+
+                                                    <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown"
+                                                            aria-expanded="false"><span class="caret"></span></button>
+
+                                                    <div class="dropdown-menu dropdown-menu-left" role="menu">
+                                                        <form class="form-horizontal" role="form">
+                                                            <div class="form-group">
+                                                                <label for="filter">Resource Type</label>
+                                                                <select id="input-resource-type" class="form-control pull-left">
+                                                                    <option value="" selected>All</option>
+                                                                    <option value="generic">Generic</option>
+                                                                    <option value="geographic feature">Geographic Feature (ESRI Shapefiles)</option>
+                                                                    <option value="geographic raster">Geographic Raster</option>
+                                                                    <option value="his referenced time series">HIS Referenced Time Series</option>
+                                                                    <option value="model instance resource">Model Instance</option>
+                                                                    <option value="model program">Model Program</option>
+                                                                    <option value="multidimensional">Multidimensional (NetCDF)</option>
+                                                                    <option value="script resource">Script Resource</option>
+                                                                    <option value="swat model instance resource">Swat Model Instance</option>
+                                                                    <option value="time series">Time Series</option>
+                                                                    <option value="web app resource">Web App</option>
+                                                                </select>
+                                                            </div>
+                                                            <div class="form-group">
+                                                                <label for="contain">Author</label>
+                                                                <input id="input-author" class="form-control" type="text"/>
+                                                                <span id="btn-clear-author-input" class="glyphicon glyphicon-remove-sign btn-clear-search-inline"></span>
+                                                            </div>
+                                                            <div class="form-group">
+                                                                <label for="contain">Subject</label>
+                                                                <input id="input-subject" class="form-control" type="text"/>
+                                                                <span id="btn-clear-subject-input" class="glyphicon glyphicon-remove-sign btn-clear-search-inline"></span>
+                                                            </div>
+                                                        </form>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
                                  </div>
-                                 <div id="filter" class="facet-list panel-collapse collapse in">
-                                     <div class="panel-body">
-                                         <div class="list-group">
-                                             <ul class="list-group inputs-group" data-owned-count="{{ owned|length }}"
-                                                 data-editable-count="{{ editable|length }}"
-                                                 data-view-count="{{ view|length }}">
-                                                 <li class="list-group-item">
-                                                     <span data-facet="owned" class="badge">0</span>
-                                                     <label class="checkbox noselect">
-                                                         <input type="checkbox" data-facet="owned" value="Owned">Owned
-                                                         by me</label>
-                                                 </li>
-                                                 <li class="list-group-item">
-                                                     <span data-facet="editable" class="badge">0</span>
-                                                     <label class="checkbox noselect">
-                                                         <input type="checkbox" data-facet="editable" value="Editable">Editable
-                                                         by me</label>
-                                                 </li>
-                                                 <li class="list-group-item">
-                                                     <span data-facet="viewable by me" class="badge">0</span>
-                                                     <label class="checkbox noselect">
-                                                         <input type="checkbox" data-facet="viewable by me"
-                                                                value="View">Viewable by me</label>
-                                                 </li>
-                                                 <li class="list-group-item">
-                                                     <span data-facet="favorites" class="badge">0</span>
-                                                     <label class="checkbox noselect">
-                                                         <input type="checkbox" data-facet="favorites"
-                                                                value="Favorites">Favorites</label>
-                                                 </li>
-                                             </ul>
-                                         </div>
-                                     </div>
-                                 </div>
-                             </div>
+{#                                <div class="col-sm-4 col-xs-12 pull-left">#}
+{#                                    <div id="resource-actions-container" class="noselect">#}
+{#                                        <span id="btn-label" class="glyphicon glyphicon-tags dropdown-toggle"#}
+{#                                              data-toggle="dropdown" aria-expanded="false" title="Label"></span>#}
+{##}
+{#                                        <span id="btn-favorite" class="glyphicon  glyphicon-star" data-toggle="tooltip" data-placement="bottom" title="Favorite"></span>#}
+{##}
+{#                                        <div id="toolbar-labels-dropdown" class="dropdown-menu" role="menu">#}
+{#                                            <div class="panel-body" role="form">#}
+{#                                                <span>Label as:</span>#}
+{#                                                <ul class="list-group list-labels">#}
+{#                                                    <li class="divider persist"></li>#}
+{#                                                    <li class="list-group-item persist" data-toggle="modal" data-target="#modalCreateLabel">#}
+{#                                                        <span style="color:#5cb85c" class="glyphicon glyphicon-plus"></span>&nbsp;&nbsp;&nbsp;&nbsp;Create New Label</li>#}
+{#                                                    <li class="list-group-item persist" data-toggle="modal" data-target="#modalManageLabels">#}
+{#                                                        <span style="color:#0A91AB" class="glyphicon glyphicon-folder-open"></span>&nbsp;&nbsp;&nbsp;&nbsp;Manage Labels</li>#}
+{#                                                </ul>#}
+{#                                            </div>#}
+{#                                        </div>#}
+{#                                    </div>#}
+{#                                </div>#}
+                            </div>
 
-{#                             <div class="panel panel-default">#}
-{#                                 <div class="panel-heading">#}
-{#                                     <h4 class="panel-title">#}
-{#                                         <span class="glyphicon glyphicon glyphicon-search"></span>#}
-{#                                         <a data-toggle="collapse" class="accordion-toggle" data-parent="#accordion"#}
-{#                                            href="#filter">#}
-{#                                             &nbsp;Labels</a></h4>#}
-{#                                 </div>#}
-{#                                 <div id="filter" class="facet-list panel-collapse collapse in">#}
-{#                                     <div class="panel-body">#}
-{#                                         <div class="list-group">#}
-{#                                             <ul class="list-group inputs-group">#}
-{#                                                 <h5 class="text-center"><i>No labels found.</i></h5>#}
-{#                                             </ul>#}
-{#                                         </div>#}
-{#                                     </div>#}
-{#                                 </div>#}
-{#                             </div>#}
+                            <!-- /input-group -->
+                            <table id="item-selectors" class="table-hover table-striped">
+                                <thead>
+                                <tr>
+                                    <th><input class="all-rows-selector" type="checkbox"></th>
+                                    <th>Type</th>
+                                    <th>Title</th>
+                                    <th>Owners</th>
+                                    <th>Last modified</th>
+                                    <th>Subject</th>{# Used in table processing #}
+                                    <th>Authors</th>{# Used in table processing #}
+                                    <th>Permission Level</th>{# Used in table processing #}
+                                    <th>Labels</th>{# Used in table processing #}
+                                    <th>Favorite</th>{# Used in table processing #}
+                                    <th>Last modified</th>{# Used in table processing #}
+                                    <th>Sharing Status</th>{# Used in table processing #}
+                                </tr>
+                                </thead>
+                                <tbody>
+                                    {% for res in group.gaccess.view_resources %}
+                                        <tr data-tr-index="{{ forloop.counter0 }}">
+                                            <td>
+{#                                                <input class="row-selector" type="checkbox">#}
+{#                                                {% if res.is_favorite %}#}
+{#                                                    <span data-form-id="form-favorite-{{ res.short_id }}" data-form-type="toggle-favorite"#}
+{#                                                          class="glyphicon glyphicon-star btn-inline-favorite isfavorite"></span>#}
+{##}
+{#                                                    <form class="hidden-form" data-id="form-favorite-{{ res.short_id }}"#}
+{#                                                          action="/hsapi/_internal/{{ res.short_id }}/label-resource-action/"#}
+{#                                                          method="post">#}
+{#                                                        {% csrf_token %}#}
+{#                                                        <input type="hidden" name="action" value="DELETE">#}
+{#                                                        <input type="hidden" name="label_type" value="FAVORITE">#}
+{#                                                    </form>#}
+{#                                                {% else %}#}
+{#                                                    <span data-form-id="form-favorite-{{ res.short_id }}" data-form-type="toggle-favorite"#}
+{#                                                          class="glyphicon glyphicon-star btn-inline-favorite"></span>#}
+{##}
+{#                                                    <form class="hidden-form" data-id="form-favorite-{{ res.short_id }}"#}
+{#                                                          action="/hsapi/_internal/{{ res.short_id }}/label-resource-action/"#}
+{#                                                          method="post">#}
+{#                                                        {% csrf_token %}#}
+{#                                                        <input type="hidden" name="action" value="CREATE">#}
+{#                                                        <input type="hidden" name="label_type" value="FAVORITE">#}
+{#                                                    </form>#}
+{#                                                {% endif %}#}
+{##}
+{#                                                <span class="glyphicon glyphicon-tag btn-inline-label" data-toggle="dropdown" aria-expanded="false"></span>#}
+{##}
+{#                                                <div class="dropdown-menu inline-dropdown" role="menu">#}
+{#                                                    <div class="panel-body" role="form">#}
+{#                                                        <ul data-resource-id="{{ res.short_id }}" class="list-group list-labels">#}
+{#                                                        </ul>#}
+{#                                                    </div>#}
+{#                                                </div>#}
+                                            </td>
+                                            <td>
+                                                <span class="resource-type-text">{{ res|resource_type }}</span>
+                                                {% if res|resource_type == "Generic" %}
+                                                    <img src="{{ STATIC_URL }}img/resource-icons/generic48x48.png"
+                                                         alt="{{ res|resource_type }}" title="{{ res|resource_type }}" class="table-res-type-icon"/>
+                                                {% elif res|resource_type == "Geographic Raster" %}
+                                                    <img src="{{ STATIC_URL }}img/resource-icons/geographicraster48x48.png"
+                                                         alt="{{ res|resource_type }}" title="{{ res|resource_type }}" class="table-res-type-icon"/>
+                                                {% elif res|resource_type == "Model Program Resource" %}
+                                                    <img src="{{ STATIC_URL }}img/resource-icons/modelprogram48x48.png"
+                                                         alt="{{ res|resource_type }}" title="{{ res|resource_type }}" class="table-res-type-icon"/>
+                                                {% elif res|resource_type == "Model Instance Resource" %}
+                                                    <img src="{{ STATIC_URL }}img/resource-icons/modelinstance48x48.png"
+                                                         alt="{{ res|resource_type }}" title="{{ res|resource_type }}" class="table-res-type-icon"/>
+                                                {% elif res|resource_type == "SWAT Model Instance Resource" %}
+                                                    <img src="{{ STATIC_URL }}img/resource-icons/swat48x48.png"
+                                                         alt="{{ res|resource_type }}" title="{{ res|resource_type }}" class="table-res-type-icon"/>
+                                                {% elif res|resource_type == "Multidimensional (NetCDF)" %}
+                                                    <img src="{{ STATIC_URL }}img/resource-icons/multidimensional48x48.png"
+                                                         alt="{{ res|resource_type }}" title="{{ res|resource_type }}" class="table-res-type-icon"/>
+                                                {% elif res|resource_type == "Time Series" %}
+                                                    <img src="{{ STATIC_URL }}img/resource-icons/timeseries48x48.png"
+                                                         alt="{{ res|resource_type }}" title="{{ res|resource_type }}" class="table-res-type-icon"/>
+                                                {% elif res|resource_type == "Geographic Feature (ESRI Shapefiles)" %}
+                                                    <img src="{{ STATIC_URL }}img/resource-icons/geographicfeature48x48.png"
+                                                         alt="{{ res|resource_type }}" title="{{ res|resource_type }}" class="table-res-type-icon"/>
+                                                {% elif res|resource_type == "Web App Resource" %}
+                                                    <img src="{{ STATIC_URL }}img/resource-icons/webapp48x48.png"
+                                                         alt="{{ res|resource_type }}" title="{{ res|resource_type }}" class="table-res-type-icon"/>
+                                                {% elif res|resource_type == "HIS Referenced Time Series" %}
+                                                    <img src="{{ STATIC_URL }}img/resource-icons/his48x48.png"
+                                                         alt="{{ res|resource_type }}" title="{{ res|resource_type }}" class="table-res-type-icon"/>
+                                                {% elif res|resource_type == "Script Resource" %}
+                                                    <img src="{{ STATIC_URL }}img/resource-icons/script48x48.png"
+                                                         alt="{{ res|resource_type }}" title="{{ res|resource_type }}" class="table-res-type-icon"/>
+                                                {% endif %}
 
-                             <div class="panel panel-default">
-                                 <div class="panel-heading">
-                                     <h4 class="panel-title">
-                                         <span class="glyphicon glyphicon glyphicon-search"></span>
-                                         <a data-toggle="collapse" class="accordion-toggle" data-parent="#accordion"
-                                            href="#filter">
-                                             &nbsp;Resource Type</a></h4>
-                                 </div>
-                                 <div id="filter" class="facet-list panel-collapse collapse in">
-                                     <div class="panel-body">
-                                         <div class="list-group">
-                                             <ul class="list-group inputs-group">
-                                                 <li class="list-group-item">
-                                                     <span data-facet="" class="badge">0</span>
-                                                     <label class="checkbox noselect">
-                                                         <input type="checkbox" data-facet="owned" value="">All</label>
-                                                 </li>
+                                                {#  Sharing Status icons #}
+                                                {% if res.raccess.published %}
+                                                    <img src="{{ STATIC_URL }}img/published.png"
+                                                         alt="Published Resource" title="Published"/>
+                                                {% elif res.raccess.public %}
+                                                    <img src="{{ STATIC_URL }}img/public.png"
+                                                         alt="Public Resource" title="Public"/>
+                                                {% elif res.raccess.discoverable %}
+                                                    <img src="{{ STATIC_URL }}img/discoverable.png"
+                                                         alt="Discoverable Resource" title="Discoverable"/>
+                                                {% else %}
+                                                    <img src="{{ STATIC_URL }}img/private.png"
+                                                         alt="Private Resource" title="Private"/>
+                                                {% endif %}
 
-                                                 <li class="list-group-item">
-                                                     <span data-facet="" class="badge">0</span>
-                                                     <label class="checkbox noselect">
-                                                         <input type="checkbox" data-facet="owned" value="">Generic</label>
-                                                 </li>
+                                                {% if res.raccess.published %}
+                                                    {% if "pending" in cm.doi or "failure" in cm.doi %}
+                                                        <img src="{{ STATIC_URL }}img/pending.png" alt="Pending Publication"
+                                                             title="Pending Publication. Note that the DOI will not be available until it has been registered and activated."/>
+                                                    {% endif %}
+                                                {% else %}
+                                                    {% if res.raccess.shareable %}
+                                                        <img src="{{ STATIC_URL }}img/shareable.png" alt="Sharable Resource"
+                                                             title="Shareable"/>
+                                                    {% else %}
+                                                        <img src="{{ STATIC_URL }}img/non-shareable.png" alt="Non Sharable Resource"
+                                                             title="Not Shareable"/>
+                                                    {% endif %}
+                                                {% endif %}
+                                            </td>
+                                            <td>
+                                                <strong><a href="{{ res.get_absolute_url }}">{{ res.metadata.title }}</a></strong>
+                                            </td>
+                                            <td>{% for owner in res.raccess.owners.all %}
+                                                  {% if forloop.counter0 > 0 %} · {% endif %}
+                                                <span>{{ owner|contact|safe }}</span>
+                                            {% endfor %}</td>
+                                            <td>{{ res.updated|date }}, {{ res.updated|time }}</td>
+                                            <td>
+                                                {% for kw in res.metadata.subjects.all %}
+                                                   {% if forloop.counter0 > 0 %},{% endif %}{{ kw.value}}
+                                                {% endfor %}
+                                            </td>
+                                            <td>
+                                                {% for creator in res.metadata.creators.all %}
+                                                    {% if forloop.counter0 != 0 %}<span> · </span>{% endif %}
+                                                    {% if creator.description %}
+                                                        <a href="{{ creator.description }}">{{ creator.name }}</a>
+                                                    {% else %}
+                                                        <span>{{ creator.name }}</span>
+                                                    {% endif %}
+                                                {% endfor %}
+                                            </td>
+                                            {% if res.owned %}
+                                                <td>Owned</td>
+                                            {% elif res.editable %}
+                                                <td>Editable</td>
+                                            {% elif res.viewable %}
+                                                <td>Viewable</td>
+                                            {% else %}
+                                                <td></td>
+                                            {% endif %}
+                                            <td class="col-labels">
+                                                {% for label in res.labels %}
+                                                    {% if forloop.counter0 > 0 %},{% endif %}{{ label }}
+                                                {% endfor %}
+                                            </td>
+                                            <td class="col-is-favorite">
+                                                {% if res.is_favorite %}
+                                                    Favorite
+                                                {% endif %}
+                                            </td>
+                                            <td>{{ res.updated|date:"Y/m/d H:i:s" }}</td>
+                                            <td>
+                                                {% if res.raccess.published %}
+                                                    Published
+                                                {% elif res.raccess.public %}
+                                                    Public
+                                                {% elif res.raccess.discoverable %}
+                                                    Discoverable
+                                                {% else %}
+                                                    Private
+                                                {% endif %}
+                                            </td>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
 
-                                                 <li class="list-group-item">
-                                                     <span data-facet="" class="badge">0</span>
-                                                     <label class="checkbox noselect">
-                                                         <input type="checkbox" data-facet="owned" value="">Geographic Feature</label>
-                                                 </li>
+                            <div class="panel-group" role="tablist">
+                                <div class="panel panel-default">
+                                    <div class="panel-heading" role="tab" id="headingLegend">
+                                        <h4 class="panel-title">
+                                            <span class="glyphicon glyphicon-info-sign"></span>&nbsp;
+                                            <a role="button" data-toggle="collapse" data-parent="#accordion" href="#legend-collapse"
+                                               aria-expanded="true" aria-controls="legend-collapse">
+                                                Legend
+                                            </a>
+                                        </h4>
+                                    </div>
 
-                                                 <li class="list-group-item">
-                                                     <span data-facet="" class="badge">0</span>
-                                                     <label class="checkbox noselect">
-                                                         <input type="checkbox" data-facet="owned" value="">Geographic Raster</label>
-                                                 </li>
+                                    <div id="legend-collapse" class="panel-collapse collapse" role="tabpanel"
+                                         aria-labelledby="headingLegend">
+                                        <div class="panel-body">
+                                            <div class="row">
+                                                <div class="col-xs-12 col-sm-5">
+                                                    <div class="row">
+                                                        <div class="col-sm-12"><label>Sharing and Access</label></div>
 
-                                                 <li class="list-group-item">
-                                                     <span data-facet="" class="badge">0</span>
-                                                     <label class="checkbox noselect">
-                                                         <input type="checkbox" data-facet="owned" value="">HIS Referenced Time Series</label>
-                                                 </li>
+                                                        <div class="col-sm-6">
+                                                            <img src="{{ STATIC_URL }}img/public.png" alt="Public Resource"/>
+                                                            <small>Public</small>
+                                                        </div>
 
-                                                 <li class="list-group-item">
-                                                     <span data-facet="" class="badge">0</span>
-                                                     <label class="checkbox noselect">
-                                                         <input type="checkbox" data-facet="owned" value="">Model Instance</label>
-                                                 </li>
+                                                        <div class="col-sm-6">
+                                                            <img src="{{ STATIC_URL }}img/private.png" alt="Private Resource"/>
+                                                            <small>Private</small>
+                                                        </div>
 
-                                                 <li class="list-group-item">
-                                                     <span data-facet="" class="badge">0</span>
-                                                     <label class="checkbox noselect">
-                                                         <input type="checkbox" data-facet="owned" value="">Model Program</label>
-                                                 </li>
+                                                        <div class="col-sm-6">
+                                                            <img src="{{ STATIC_URL }}img/discoverable.png" alt="Discoverable Resource"/>
+                                                            <small>Discoverable</small>
+                                                        </div>
 
-                                                 <li class="list-group-item">
-                                                     <span data-facet="" class="badge">0</span>
-                                                     <label class="checkbox noselect">
-                                                         <input type="checkbox" data-facet="owned" value="">Multidimensional (NetCDF)</label>
-                                                 </li>
+                                                        <div class="col-sm-6">
+                                                            <img src="{{ STATIC_URL }}img/published.png" alt="Published Resource"/>
+                                                            <small>Published</small>
+                                                        </div>
 
-                                                 <li class="list-group-item">
-                                                     <span data-facet="" class="badge">0</span>
-                                                     <label class="checkbox noselect">
-                                                         <input type="checkbox" data-facet="owned" value="">Script Resource</label>
-                                                 </li>
+                                                        <div class="col-sm-6">
+                                                            <img src="{{ STATIC_URL }}img/pending.png" alt="Pending Publication"/>
+                                                            <small>Pending publication</small>
+                                                        </div>
 
-                                                 <li class="list-group-item">
-                                                     <span data-facet="" class="badge">0</span>
-                                                     <label class="checkbox noselect">
-                                                         <input type="checkbox" data-facet="owned" value="">SWAT Model Instance</label>
-                                                 </li>
+                                                        <div class="col-sm-6">
+                                                            <img src="{{ STATIC_URL }}img/shareable.png" alt="Sharable Resource"/>
+                                                            <small>Shareable</small>
+                                                        </div>
 
-                                                 <li class="list-group-item">
-                                                     <span data-facet="" class="badge">0</span>
-                                                     <label class="checkbox noselect">
-                                                         <input type="checkbox" data-facet="owned" value="">Time Series</label>
-                                                 </li>
+                                                        <div class="col-sm-8">
+                                                            <img src="{{ STATIC_URL }}img/non-shareable.png" alt="Non Sharable Resource"/>
+                                                            <small>Not shareable</small>
+                                                        </div>
 
-                                                 <li class="list-group-item">
-                                                     <span data-facet="" class="badge">0</span>
-                                                     <label class="checkbox noselect">
-                                                         <input type="checkbox" data-facet="owned" value="">Web App</label>
-                                                 </li>
-                                             </ul>
-                                         </div>
-                                     </div>
-                                 </div>
-                             </div>
-                         </div>
-                         <div class="col-sm-12 col-md-9">
-                             <table id="item-selectors" class="table-hover table-striped group-resource-list">
-                                 <thead>
-                                 <tr>
-                                     <th><input class="all-rows-selector" type="checkbox"></th>
-                                     <th>Type</th>
-                                     <th>Title</th>
-                                     <th>Owners</th>
-                                     <th>Last modified</th>
-                                     <th>Subject</th>
-                                     {# Used in table processing #}
-                                     <th>Authors</th>
-                                     {# Used in table processing #}
-                                     <th>Permission Level</th>
-                                     {# Used in table processing #}
-                                     <th>Labels</th>
-                                     {# Used in table processing #}
-                                     <th>Favorite</th>
-                                     {# Used in table processing #}
-                                     <th>Last modified</th>
-                                     {# Used in table processing #}
-                                     <th>Sharing Status</th>
-                                     {# Used in table processing #}
-                                 </tr>
-                                 </thead>
-                                 <tbody>
-                                 {% for res in group.gaccess.view_resources %}
-                                     <tr data-tr-index="{{ forloop.counter0 }}">
-                                         <td>
-                                             <input class="row-selector" type="checkbox">
-                                             <span class="glyphicon glyphicon-tag btn-inline-label"
-                                                   data-toggle="dropdown" aria-expanded="false"></span>
+                                                    </div>
+                                                </div>
 
-                                             <div class="dropdown-menu inline-dropdown" role="menu">
-                                                 <div class="panel-body" role="form">
-                                                     <ul data-resource-id="{{ res.short_id }}"
-                                                         class="list-group list-labels">
-                                                     </ul>
-                                                 </div>
-                                             </div>
-                                         </td>
-                                         <td>
-                                             <span class="resource-type-text">{{ res|resource_type }}</span>
-                                             {% if res|resource_type == "Generic" %}
-                                                 <img src="{{ STATIC_URL }}img/resource-icons/generic48x48.png"
-                                                      alt="{{ res|resource_type }}" title="{{ res|resource_type }}"
-                                                      class="table-res-type-icon"/>
-                                             {% elif res|resource_type == "Geographic Raster" %}
-                                                 <img src="{{ STATIC_URL }}img/resource-icons/geographicraster48x48.png"
-                                                      alt="{{ res|resource_type }}" title="{{ res|resource_type }}"
-                                                      class="table-res-type-icon"/>
-                                             {% elif res|resource_type == "Model Program Resource" %}
-                                                 <img src="{{ STATIC_URL }}img/resource-icons/modelprogram48x48.png"
-                                                      alt="{{ res|resource_type }}" title="{{ res|resource_type }}"
-                                                      class="table-res-type-icon"/>
-                                             {% elif res|resource_type == "Model Instance Resource" %}
-                                                 <img src="{{ STATIC_URL }}img/resource-icons/modelinstance48x48.png"
-                                                      alt="{{ res|resource_type }}" title="{{ res|resource_type }}"
-                                                      class="table-res-type-icon"/>
-                                             {% elif res|resource_type == "SWAT Model Instance Resource" %}
-                                                 <img src="{{ STATIC_URL }}img/resource-icons/swat48x48.png"
-                                                      alt="{{ res|resource_type }}" title="{{ res|resource_type }}"
-                                                      class="table-res-type-icon"/>
-                                             {% elif res|resource_type == "Multidimensional (NetCDF)" %}
-                                                 <img src="{{ STATIC_URL }}img/resource-icons/multidimensional48x48.png"
-                                                      alt="{{ res|resource_type }}" title="{{ res|resource_type }}"
-                                                      class="table-res-type-icon"/>
-                                             {% elif res|resource_type == "Time Series" %}
-                                                 <img src="{{ STATIC_URL }}img/resource-icons/timeseries48x48.png"
-                                                      alt="{{ res|resource_type }}" title="{{ res|resource_type }}"
-                                                      class="table-res-type-icon"/>
-                                             {% elif res|resource_type == "Geographic Feature (ESRI Shapefiles)" %}
-                                                 <img src="{{ STATIC_URL }}img/resource-icons/geographicfeature48x48.png"
-                                                      alt="{{ res|resource_type }}" title="{{ res|resource_type }}"
-                                                      class="table-res-type-icon"/>
-                                             {% elif res|resource_type == "Web App Resource" %}
-                                                 <img src="{{ STATIC_URL }}img/resource-icons/webapp48x48.png"
-                                                      alt="{{ res|resource_type }}" title="{{ res|resource_type }}"
-                                                      class="table-res-type-icon"/>
-                                             {% elif res|resource_type == "HIS Referenced Time Series" %}
-                                                 <img src="{{ STATIC_URL }}img/resource-icons/his48x48.png"
-                                                      alt="{{ res|resource_type }}" title="{{ res|resource_type }}"
-                                                      class="table-res-type-icon"/>
-                                             {% elif res|resource_type == "Script Resource" %}
-                                                 <img src="{{ STATIC_URL }}img/resource-icons/script48x48.png"
-                                                      alt="{{ res|resource_type }}" title="{{ res|resource_type }}"
-                                                      class="table-res-type-icon"/>
-                                             {% endif %}
+                                                <div class="col-xs-12 col-sm-7">
+                                                    <div class="row" id="legend-resource-type">
+                                                        <div class="col-sm-12"><label>Resource types</label></div>
 
-                                             {#  Sharing Status icons  #}
-                                             {% if res.raccess.published %}
-                                                 <img src="{{ STATIC_URL }}img/published.png"
-                                                      alt="Published Resource" title="Published"/>
-                                             {% elif res.raccess.public %}
-                                                 <img src="{{ STATIC_URL }}img/public.png"
-                                                      alt="Public Resource" title="Public"/>
-                                             {% elif res.raccess.discoverable %}
-                                                 <img src="{{ STATIC_URL }}img/discoverable.png"
-                                                      alt="Discoverable Resource" title="Discoverable"/>
-                                             {% else %}
-                                                 <img src="{{ STATIC_URL }}img/private.png"
-                                                      alt="Private Resource" title="Private"/>
-                                             {% endif %}
+                                                        <div class="col-sm-6">
+                                                            <img src="{{ STATIC_URL }}img/resource-icons/generic48x48.png"
+                                                                 alt="Generic Resource Icon" class="table-res-type-icon"/>
+                                                            <small>&nbsp;Generic</small>
+                                                        </div>
 
-                                             {% if res.raccess.published %}
-                                                 {% if "pending" in cm.doi or "failure" in cm.doi %}
-                                                     <img src="{{ STATIC_URL }}img/pending.png"
-                                                          alt="Pending Publication"
-                                                          title="Pending Publication. Note that the DOI will not be available until it has been registered and activated."/>
-                                                 {% endif %}
-                                             {% else %}
-                                                 {% if res.raccess.shareable %}
-                                                     <img src="{{ STATIC_URL }}img/shareable.png"
-                                                          alt="Sharable Resource"
-                                                          title="Shareable"/>
-                                                 {% else %}
-                                                     <img src="{{ STATIC_URL }}img/non-shareable.png"
-                                                          alt="Non Sharable Resource"
-                                                          title="Not Shareable"/>
-                                                 {% endif %}
-                                             {% endif %}
-                                         </td>
-                                         <td>
-                                             <strong><a
-                                                     href="{{ res.get_absolute_url }}">{{ res.metadata.title }}</a></strong>
-                                         </td>
-                                         <td>{% for owner in res.raccess.owners.all %}
-                                             {% if forloop.counter0 > 0 %} · {% endif %}
-                                             <span>{{ owner|contact|safe }}</span>
-                                         {% endfor %}</td>
-                                         <td>{{ res.updated|date }}, {{ res.updated|time }}</td>
-                                         <td>
-                                             {% for kw in res.metadata.subjects.all %}
-                                                 {% if forloop.counter0 > 0 %},{% endif %}{{ kw.value }}
-                                             {% endfor %}
-                                         </td>
-                                         <td>
-                                             {% for creator in res.metadata.creators.all %}
-                                                 {% if forloop.counter0 != 0 %}<span> · </span>{% endif %}
-                                                 {% if creator.description %}
-                                                     <a href="{{ creator.description }}">{{ creator.name }}</a>
-                                                 {% else %}
-                                                     <span>{{ creator.name }}</span>
-                                                 {% endif %}
-                                             {% endfor %}
-                                         </td>
-                                         {% if res.owned %}
-                                             <td>Owned</td>
-                                         {% elif res.editable %}
-                                             <td>Editable</td>
-                                         {% elif res.viewable %}
-                                             <td>Viewable</td>
-                                         {% else %}
-                                             <td></td>
-                                         {% endif %}
-                                         <td class="col-labels">
-                                             {% for label in res.labels %}
-                                                 {% if forloop.counter0 > 0 %},{% endif %}{{ label }}
-                                             {% endfor %}
-                                         </td>
-                                         <td class="col-is-favorite">
-                                             {% if res.is_favorite %}
-                                                 Favorite
-                                             {% endif %}
-                                         </td>
-                                         <td>{{ res.updated|date:"Y/m/d H:i:s" }}</td>
-                                         <td>
-                                             {% if res.raccess.published %}
-                                                 Published
-                                             {% elif res.raccess.public %}
-                                                 Public
-                                             {% elif res.raccess.discoverable %}
-                                                 Discoverable
-                                             {% else %}
-                                                 Private
-                                             {% endif %}
-                                         </td>
-                                     </tr>
-                                 {% endfor %}
-                                 </tbody>
-                             </table>
+                                                        <div class="col-sm-6">
+                                                            <img src="{{ STATIC_URL }}img/resource-icons/geographicfeature48x48.png"
+                                                                 alt="Geographic Feature Resource Icon" class="table-res-type-icon"/>
+                                                            <small>&nbsp;Geographic Feature</small>
+                                                        </div>
 
-                             <div class="panel-group" role="tablist">
-                                 <div class="panel panel-default">
-                                     <div class="panel-heading" role="tab" id="headingLegend">
-                                         <h4 class="panel-title">
-                                             <span class="glyphicon glyphicon-info-sign"></span>&nbsp;
-                                             <a role="button" data-toggle="collapse" data-parent="#accordion"
-                                                href="#legend-collapse"
-                                                aria-expanded="true" aria-controls="legend-collapse">
-                                                 Legend
-                                             </a>
-                                         </h4>
-                                     </div>
+                                                        <div class="col-sm-6">
+                                                            <img src="{{ STATIC_URL }}img/resource-icons/geographicraster48x48.png"
+                                                                 alt="Geographic Raster Resource Icon" class="table-res-type-icon"/>
+                                                            <small>&nbsp;Geographic Raster</small>
+                                                        </div>
 
-                                     <div id="legend-collapse" class="panel-collapse collapse" role="tabpanel"
-                                          aria-labelledby="headingLegend">
-                                         <div class="panel-body">
-                                             <div class="row">
-                                                 <div class="col-xs-12 col-sm-5">
-                                                     <div class="row">
-                                                         <div class="col-sm-12"><label>Sharing and Access</label></div>
+                                                        <div class="col-sm-6">
+                                                            <img src="{{ STATIC_URL }}img/resource-icons/modelinstance48x48.png"
+                                                                 alt="Model Instance Resource Icon" class="table-res-type-icon"/>
+                                                            <small>&nbsp;Model Instance</small>
+                                                        </div>
 
-                                                         <div class="col-sm-6">
-                                                             <img src="{{ STATIC_URL }}img/public.png"
-                                                                  alt="Public Resource"/>
-                                                             <small>Public</small>
-                                                         </div>
+                                                        <div class="col-sm-6">
+                                                            <img src="{{ STATIC_URL }}img/resource-icons/swat48x48.png"
+                                                                 alt="SWAT Model Instance Resource Icon" class="table-res-type-icon"/>
+                                                            <small>&nbsp;SWAT Model Instance</small>
+                                                        </div>
 
-                                                         <div class="col-sm-6">
-                                                             <img src="{{ STATIC_URL }}img/private.png"
-                                                                  alt="Private Resource"/>
-                                                             <small>Private</small>
-                                                         </div>
+                                                        <div class="col-sm-6">
+                                                            <img src="{{ STATIC_URL }}img/resource-icons/modelprogram48x48.png"
+                                                                 alt="Model Program Resource Icon" class="table-res-type-icon"/>
+                                                            <small>&nbsp;Model Program</small>
+                                                        </div>
 
-                                                         <div class="col-sm-6">
-                                                             <img src="{{ STATIC_URL }}img/discoverable.png"
-                                                                  alt="Discoverable Resource"/>
-                                                             <small>Discoverable</small>
-                                                         </div>
+                                                        <div class="col-sm-6">
+                                                            <img src="{{ STATIC_URL }}img/resource-icons/multidimensional48x48.png"
+                                                                 alt="Multidimensional Resource Icon" class="table-res-type-icon"/>
+                                                            <small>&nbsp;Multidimensional</small>
+                                                        </div>
 
-                                                         <div class="col-sm-6">
-                                                             <img src="{{ STATIC_URL }}img/published.png"
-                                                                  alt="Published Resource"/>
-                                                             <small>Published</small>
-                                                         </div>
+                                                        <div class="col-sm-6">
+                                                            <img src="{{ STATIC_URL }}img/resource-icons/timeseries48x48.png"
+                                                                 alt="Time Series Resource Icon" class="table-res-type-icon"/>
+                                                            <small>&nbsp;Time Series</small>
+                                                        </div>
 
-                                                         <div class="col-sm-6">
-                                                             <img src="{{ STATIC_URL }}img/pending.png"
-                                                                  alt="Pending Publication"/>
-                                                             <small>Pending publication</small>
-                                                         </div>
+                                                        <div class="col-sm-6">
+                                                            <img src="{{ STATIC_URL }}img/resource-icons/his48x48.png"
+                                                                 alt="HIS Referenced Time Series Resource Icon"
+                                                                 class="table-res-type-icon"/>
+                                                            <small>&nbsp;HIS Referenced Time Series</small>
+                                                        </div>
 
-                                                         <div class="col-sm-6">
-                                                             <img src="{{ STATIC_URL }}img/shareable.png"
-                                                                  alt="Sharable Resource"/>
-                                                             <small>Shareable</small>
-                                                         </div>
-
-                                                         <div class="col-sm-8">
-                                                             <img src="{{ STATIC_URL }}img/non-shareable.png"
-                                                                  alt="Non Sharable Resource"/>
-                                                             <small>Not shareable</small>
-                                                         </div>
-
-                                                     </div>
-                                                 </div>
-
-                                                 <div class="col-xs-12 col-sm-7">
-                                                     <div class="row" id="legend-resource-type">
-                                                         <div class="col-sm-12"><label>Resource types</label></div>
-
-                                                         <div class="col-sm-6">
-                                                             <img src="{{ STATIC_URL }}img/resource-icons/generic48x48.png"
-                                                                  alt="Generic Resource Icon"
-                                                                  class="table-res-type-icon"/>
-                                                             <small>&nbsp;Generic</small>
-                                                         </div>
-
-                                                         <div class="col-sm-6">
-                                                             <img src="{{ STATIC_URL }}img/resource-icons/geographicfeature48x48.png"
-                                                                  alt="Geographic Feature Resource Icon"
-                                                                  class="table-res-type-icon"/>
-                                                             <small>&nbsp;Geographic Feature</small>
-                                                         </div>
-
-                                                         <div class="col-sm-6">
-                                                             <img src="{{ STATIC_URL }}img/resource-icons/geographicraster48x48.png"
-                                                                  alt="Geographic Raster Resource Icon"
-                                                                  class="table-res-type-icon"/>
-                                                             <small>&nbsp;Geographic Raster</small>
-                                                         </div>
-
-                                                         <div class="col-sm-6">
-                                                             <img src="{{ STATIC_URL }}img/resource-icons/modelinstance48x48.png"
-                                                                  alt="Model Instance Resource Icon"
-                                                                  class="table-res-type-icon"/>
-                                                             <small>&nbsp;Model Instance</small>
-                                                         </div>
-
-                                                         <div class="col-sm-6">
-                                                             <img src="{{ STATIC_URL }}img/resource-icons/swat48x48.png"
-                                                                  alt="SWAT Model Instance Resource Icon"
-                                                                  class="table-res-type-icon"/>
-                                                             <small>&nbsp;SWAT Model Instance</small>
-                                                         </div>
-
-                                                         <div class="col-sm-6">
-                                                             <img src="{{ STATIC_URL }}img/resource-icons/modelprogram48x48.png"
-                                                                  alt="Model Program Resource Icon"
-                                                                  class="table-res-type-icon"/>
-                                                             <small>&nbsp;Model Program</small>
-                                                         </div>
-
-                                                         <div class="col-sm-6">
-                                                             <img src="{{ STATIC_URL }}img/resource-icons/multidimensional48x48.png"
-                                                                  alt="Multidimensional Resource Icon"
-                                                                  class="table-res-type-icon"/>
-                                                             <small>&nbsp;Multidimensional</small>
-                                                         </div>
-
-                                                         <div class="col-sm-6">
-                                                             <img src="{{ STATIC_URL }}img/resource-icons/timeseries48x48.png"
-                                                                  alt="Time Series Resource Icon"
-                                                                  class="table-res-type-icon"/>
-                                                             <small>&nbsp;Time Series</small>
-                                                         </div>
-
-                                                         <div class="col-sm-6">
-                                                             <img src="{{ STATIC_URL }}img/resource-icons/his48x48.png"
-                                                                  alt="HIS Referenced Time Series Resource Icon"
-                                                                  class="table-res-type-icon"/>
-                                                             <small>&nbsp;HIS Referenced Time Series</small>
-                                                         </div>
-
-                                                         <div class="col-sm-6">
-                                                             <img src="{{ STATIC_URL }}img/resource-icons/webapp48x48.png"
-                                                                  alt="Web App Resource Icon"
-                                                                  class="table-res-type-icon"/>
-                                                             <small>&nbsp;Web App</small>
-                                                         </div>
+                                                        <div class="col-sm-6">
+                                                            <img src="{{ STATIC_URL }}img/resource-icons/webapp48x48.png"
+                                                                 alt="Web App Resource Icon" class="table-res-type-icon"/>
+                                                            <small>&nbsp;Web App</small>
+                                                        </div>
 
 
-                                                         <div class="col-sm-6">
-                                                             <img src="{{ STATIC_URL }}img/resource-icons/script48x48.png"
-                                                                  alt="Script Resource Icon"
-                                                                  class="table-res-type-icon"/>
-                                                             <small>&nbsp;Script</small>
-                                                         </div>
+
+                                                        <div class="col-sm-6">
+                                                            <img src="{{ STATIC_URL }}img/resource-icons/script48x48.png"
+                                                                 alt="Script Resource Icon" class="table-res-type-icon"/>
+                                                            <small>&nbsp;Script</small>
+                                                        </div>
 
 
-                                                     </div>
-                                                 </div>
+                                                    </div>
+                                                </div>
 
-                                             </div>
-                                         </div>
-                                     </div>
-                                 </div>
-                             </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
 
-                         </div>
+
+                        </div>
                      </div>
                  </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit Group Modal -->
+    <div class="modal fade" id="edit-group-dialog" tabindex="-1" role="dialog"
+         aria-labelledby="Invite">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <form action="/hsapi/_internal/update-user-group/{{ group.id }}" method="POST" enctype="multipart/form-data">
+                    <div class="modal-header">
+                        <button type="button" class="close" data-dismiss="modal"
+                                aria-label="Close"><span aria-hidden="true">&times;</span>
+                        </button>
+                        <h4 class="modal-title" id="myModalLabel">Create New Group</h4>
+                    </div>
+                    <div class="modal-body">
+                        {% csrf_token %}
+                        <div class="row">
+                            {# Group Name #}
+                            <fieldset class="col-sm-12">
+                                <label>Group Name *</label>
+                                <input class="form-control form-required" name="name" value="{{ group.name }}">
+                            </fieldset>
+
+                            {# Group Description #}
+                            <fieldset class="col-sm-12">
+                                <label>About this group *</label>
+                                <textarea class="form-control" name="description">{{ group.gaccess.description }}</textarea>
+                            </fieldset>
+
+                            {# Purpose #}
+                            <fieldset class="col-sm-12">
+                                <label>Purpose</label>
+                                <input class="form-control" name="purpose" value="{{ group.gaccess.purpose }}">
+                            </fieldset>
+
+                            <br>
+
+                            {# Picture #}
+                            <div class="col-sm-12">
+                                <fieldset>
+                                    <label>Add a photo</label>
+
+                                    <div class="input-group">
+                                        <span class="input-group-btn">
+                                            <span id="cv-custom-upload" class="btn btn-default btn-file">
+                                                Browse&hellip; <input class="upload-picture" type="file" name="picture">
+                                            </span>
+                                        </span>
+                                        <input type="text" class="form-control" readonly>
+                                    </div>
+                                </fieldset>
+                            </div>
+
+                            <br>
+
+                            {# Privacy #}
+                            <fieldset class="col-sm-12">
+                                <label>Privacy *</label>
+                                <div class="radio">
+                                    <label>
+                                        <input type="radio" name="privacy_level" value="public" {% if group.gaccess.public and group.gaccess.discoverable %}checked{% endif %}>Public
+                                        <div class="text-muted">Other users can find the group and see who has
+                                            membership.
+                                        </div>
+                                    </label>
+                                </div>
+
+                                <div class="radio">
+                                    <label>
+                                        <input type="radio" name="privacy_level" value="discoverable" {% if not group.gaccess.public and group.gaccess.discoverable %}checked{% endif %}>Discoverable
+                                        <div class="text-muted">Other users can find this group, but membership
+                                            information is hidden.
+                                        </div>
+                                    </label>
+                                </div>
+
+                                <div class="radio">
+                                    <label>
+                                        <input type="radio" name="privacy_level" value="private" {% if not group.gaccess.public and not group.gaccess.discoverable %}checked{% endif %}>Private
+                                        <div class="text-muted">Other users can not find this group.</div>
+                                    </label>
+                                </div>
+                            </fieldset>
+                        </div>
+
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-primary">Save</button>
+                    </div>
+                </form>
             </div>
         </div>
     </div>
@@ -905,8 +1030,65 @@
 
 {% block extra_js %}
     <script type="text/javascript" charset="utf8" src="//cdn.datatables.net/1.10.10/js/jquery.dataTables.js"></script>
+        <script>
+        var colDefs = [
+            {
+                "targets": [0],     // Row selector and controls
+                "visible": false,
+            },
+            {
+                "targets": [1],     // Resource type
+                "width": "100px"
+            },
+            {
+                "targets": [0],     // Actions
+                "orderable": false,
+                "searchable": false,
+                "width": "70px"
+            },
+            {
+                "targets": [4],     // Last modified
+                "iDataSort": 10
+            },
+            {
+                "targets": [5],     // Subject
+                "visible": false,
+                "searchable": true
+            },
+            {
+                "targets": [6],     // Authors
+                "visible": false,
+                "searchable": true
+            },
+            {
+                "targets": [7],     // Permission level
+                "visible": false,
+                "searchable": true
+            },
+            {
+                "targets": [8],     // Labels
+                "visible": false,
+                "searchable": true
+            },
+            {
+                "targets": [9],     // Favorite
+                "visible": false,
+                "searchable": true
+            },
+            {
+                "targets": [10],     // Last modified (for sorting)
+                "visible": false,
+                "searchable": true
+            },
+            {
+                "targets": [11],     // Sharing status
+                "visible": false,
+                "searchable": false
+            }
+        ];
+    </script>
+    <script type="text/javascript" src="{{ STATIC_URL }}js/hs_resource_table.js"></script>
     <script>
-
         function group_invite_ajax_submit() {
             if (!$("#id_user-deck > .hilight").length) {
                 return false; // If no user selected, ignore the request
@@ -948,6 +1130,7 @@
         }
 
         function act_on_request_ajax_submit() {
+            var target = $(this);
             var form = $(this).closest("form");
             var datastring = form.serialize();
             var url = form.attr('action');
@@ -957,11 +1140,29 @@
                 dataType: 'html',
                 data: datastring,
                 success: function (result) {
-                    var json_response = JSON.parse(result);
-                    console.log(json_response);
-                    if (json_response.status == "success") {
+                    if (target.attr("data-user-action") == "Accept") {
+                        // Get a copy of the member row template
+                        var rowTemplate = $("#templateRow").clone();
 
+                        var name = target.attr("data-name");
+                        var title = target.attr("data-title");
+                        var picture = target.parent().parent().parent().find("[data-id='picture']");
+
+                        rowTemplate.find("[data-id='name']").text(name);
+                        rowTemplate.find("[data-id='title']").text(title);
+                        var forms = rowTemplate.find("form");
+                        for (var i = 0; i < forms.length; i++) {
+                            var newAction = $(forms[i]).attr("action").replace("member_id", target.attr("data-member-id"));
+                            $(forms[i]).attr("action", newAction);
+                        }
+                        rowTemplate.prepend(picture);
+
+                        $("#all-members-table tbody").append($("<tr data-filter='view-user' style='display: none;'>" + rowTemplate.html() + "</tr>"));
+                        $(".btn-share-group").click(share_group_ajax_submit);
+                        $(".btn-unshare-group").click(unshare_group_ajax_submit);
                     }
+
+                    target.parent().parent().parent().remove();
                 },
                 error: function (XMLHttpRequest, textStatus, errorThrown) {
                     console.log("error");
@@ -1085,80 +1286,6 @@
             $("#btn-leave-group").click(function(){
                 $(this).closest("form").submit();
             });
-
-            /*==================================================
-            Table columns
-            0 - actions
-            1 - Resource Type
-            2 - Title
-            3 - Owner
-            4 - Last Modified
-            5 - Subject
-            6 - Authors
-            7 - Permission Level
-            8 - Labels
-            9 - Favorite
-            10 - Last modified (sortable format)
-            11 - Sharing Status
-        ==================================================*/
-            resourceTable = $("#item-selectors").DataTable({
-                "order": [[4, "desc"]],
-                "paging": false,
-                "info": false,
-                "columnDefs": [
-                    {
-                        "targets": [1],     // Resource type
-                        "width": "100px"
-                    },
-                    {
-                        "targets": [0],     // Actions
-                        "orderable": false,
-                        "searchable": false,
-                        "width": "70px"
-                    },
-                    {
-                        "targets": [4],     // Last modified
-                        "iDataSort": 10
-                    },
-                    {
-                        "targets": [5],     // Subject
-                        "visible": false,
-                        "searchable": true
-                    },
-                    {
-                        "targets": [6],     // Authors
-                        "visible": false,
-                        "searchable": true
-                    },
-                    {
-                        "targets": [7],     // Permission level
-                        "visible": false,
-                        "searchable": true
-                    },
-                    {
-                        "targets": [8],     // Labels
-                        "visible": false,
-                        "searchable": true
-                    },
-                    {
-                        "targets": [9],     // Favorite
-                        "visible": false,
-                        "searchable": true
-                    },
-                    {
-                        "targets": [10],     // Last modified (for sorting)
-                        "visible": false,
-                        "searchable": true
-                    },
-                    {
-                        "targets": [11],     // Sharing status
-                        "visible": false,
-                        "searchable": false
-                    }
-
-                ]
-            });
-            $("#item-selectors").show();
         });
     </script>
 {% endblock %}
