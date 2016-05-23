@@ -192,7 +192,6 @@ class BandInfoFormHelper(BandBaseFormHelper):
                         Field('minimumValue', css_class=field_width),
                         Field('method', css_class=field_width),
                         Field('comment', css_class=field_width),
-
                  )
 
         super(BandInfoFormHelper, self).__init__(res_short_id, element_id, element_name, layout, *args, **kwargs)

@@ -249,7 +249,7 @@ def raster_pre_add_files_to_resource_trigger(sender, **kwargs):
                 res.metadata.create_element('BandInformation', name=band['name'], variableName='',
                                             variableUnit=band['variableUnit'], method='', comment='',
                                             noDataValue=band['noDataValue'], maximumValue=band['maximumValue'],
-                                            minimumValue=band['minimumValue'],
+                                            minimumValue=band['minimumValue']
                                             )
 
         else:
@@ -278,7 +278,7 @@ def raster_pre_delete_file_from_resource_trigger(sender, **kwargs):
     res.metadata.cellInformation.delete()
     res.metadata.create_element('CellInformation', name=res.metadata.title.value, rows=None, columns=None,
                                 cellSizeXValue=None, cellSizeYValue=None,
-                                cellDataType=None,
+                                cellDataType=None
                                 )
 
     # reset extended metadata BandInformation now that the only file is deleted
