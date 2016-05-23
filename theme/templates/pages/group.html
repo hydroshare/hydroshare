@@ -215,33 +215,12 @@
                         </div>
                         <div class="col-sm-12 col-md-9">
                             {#  All members #}
-                            <table data-owner-count="{{ group.gaccess.owners|length }}"
-                                   data-edit-count="{{ edit_users|length }}"
+                            <table data-edit-count="{{ edit_users|length }}"
                                    data-view-count="{{ view_users|length }}"
                                    data-pending-count="{{ group.gaccess.group_membership_requests|length }}"
                                    id="all-members-table" class="table-members-list active">
-                                {% for owner in group.gaccess.owners %}
-                                    <tr data-filter-by="creator">
-                                        <td>
-                                            {% if owner.userprofile.picture and owner.userprofile.picture.url %}
-                                                <div style="background-image: url('{{ owner.userprofile.picture.url }}');"
-                                                     class="profile-pic-thumbnail round-image pull-left">
-                                                </div>
-                                            {% else %}
-                                                <div class="profile-pic-thumbnail-small round-image user-icon"></div>
-                                            {% endif %}
-                                        </td>
-                                        <td>
-                                            <h4><strong><a href="/user/{{ owner.id }}">{{ owner|best_name }}</a></strong></h4>
-                                            {% if owner.userprofile.title %}
-                                                <span class="text-muted">{{ owner.userprofile.title }}</span>
-                                            {% endif %}
-                                        </td>
-                                        <td>Owner</td>
-                                    </tr>
-                                {% endfor %}
 
-                                {% for owner in edit_users %}
+                                {% for owner in group.gaccess.owners %}
                                     <tr data-filter-by="edit-user">
                                         <td>
                                             {% if  owner.userprofile.picture and owner.userprofile.picture.url %}
@@ -254,7 +233,7 @@
                                         </td>
                                         <td>
                                             <h4><strong><a href="#">{{ owner|best_name }}</a></strong></h4>
-                                            <span class="text-muted">{{ owner.userprofile.title }}</span>
+                                            {% if  owner.userprofile.title %}<span class="text-muted">{{ owner.userprofile.title }}</span>{% endif %}
                                         </td>
                                         <td>
                                             {% if profile_user.is_group_owner or profile_user.is_group_editor %}
@@ -269,7 +248,7 @@
                                                 <ul class="dropdown-menu"
                                                     aria-labelledby="roleDropDown-{{ member.id }}">
                                                     <li>
-                                                        <form action="/hsapi/_internal/share-group-with-user/{{ group.id }}/{{ owner.id }}/edit/">
+                                                        <form action="/hsapi/_internal/share-group-with-user/{{ group.id }}/{{ owner.id }}/owner/">
                                                             {% csrf_token %}
                                                             <a href="#" class="btn-share-group" data-role="Owner">Owner</a>
                                                         </form>
