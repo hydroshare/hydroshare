@@ -10,12 +10,13 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import Group, User
 from django.contrib.sites.models import Site
 from django.contrib import messages
+from django.utils.decorators import method_decorator
 from django.core.exceptions import ValidationError, PermissionDenied, ObjectDoesNotExist
 from django.http import HttpResponseRedirect, HttpResponse
 from django.shortcuts import get_object_or_404, render_to_response, render, redirect
 from django.template import RequestContext
 from django.core import signing
-from django.db import Error
+from django.db import Error, IntegrityError
 from django import forms
 from django.views.generic import TemplateView
 from django.core.urlresolvers import reverse
@@ -45,7 +46,7 @@ from . import user_rest_api
 from hs_core.hydroshare import utils
 
 from hs_core.signals import *
-from hs_access_control.models import PrivilegeCodes, GroupMembershipRequest
+from hs_access_control.models import PrivilegeCodes, GroupMembershipRequest, GroupResourcePrivilege
 
 from hs_collection_resource.models import CollectionDeletedResource
 
@@ -617,11 +618,11 @@ class GroupForm(forms.Form):
     picture = forms.ImageField(required=False)
     privacy_level = forms.CharField(required=True)
 
-    def clean_name(self):
-        data = self.cleaned_data['name']
-        if Group.objects.filter(name__iexact=data).exists():
-            raise forms.ValidationError("A group exits with the same name.")
-        return data
+    # def clean_name(self):
+    #     data = self.cleaned_data['name']
+    #     if Group.objects.filter(name__iexact=data).exists():
+    #         raise forms.ValidationError("A group exits with the same name.")
+    #     return data
 
     def clean_privacy_level(self):
         data = self.cleaned_data['privacy_level']
@@ -665,6 +666,10 @@ class GroupForm(forms.Form):
 @processor_for('my-resources')
 @login_required
 def my_resources(request, page):
+    import sys
+    sys.path.append("/home/docker/pycharm-debug")
+    import pydevd
+    pydevd.settrace('129.123.51.193', port=21000, suspend=False)
     resource_collection = get_my_resources_list(request)
 
     context = {'collection': resource_collection}
@@ -769,9 +774,16 @@ def create_resource(request, *args, **kwargs):
 def create_user_group(request, *args, **kwargs):
     group_form = GroupForm(request.POST, request.FILES)
     if group_form.is_valid():
-        new_group = group_form.save(request)
-        messages.success(request, "Group creation was successful.")
-        return HttpResponseRedirect(reverse('Group', args=[new_group.id]))
+        try:
+            new_group = group_form.save(request)
+            messages.success(request, "Group creation was successful.")
+            return HttpResponseRedirect(reverse('Group', args=[new_group.id]))
+        except IntegrityError as ex:
+            if group_form.cleaned_data['name'] in ex.message:
+                message = "Group name '{}' already exists".format(group_form.cleaned_data['name'])
+                messages.error(request, "Group creation errors: {}.".format(message))
+            else:
+                messages.error(request, "Group creation errors:{}.".format(ex.message))
     else:
         messages.error(request, "Group creation errors:{}.".format(group_form.errors.as_json))
 
@@ -782,18 +794,25 @@ def create_user_group(request, *args, **kwargs):
 def update_user_group(request, group_id, *args, **kwargs):
     user = request.user
     group_to_update = utils.group_from_id(group_id)
-    status = 'error'
+
     if user.uaccess.can_change_group(group_to_update):
         group_form = GroupForm(request.POST, request.FILES)
         if group_form.is_valid():
-            group_form.update(group_to_update, request)
-            status = 'success'
-            ajax_response_data = {'status': status, 'updated_group': group_to_update}
+            try:
+                group_form.update(group_to_update, request)
+                messages.success(request, "Group update was successful.")
+            except IntegrityError as ex:
+                if group_form.cleaned_data['name'] in ex.message:
+                    message = "Group name '{}' already exists".format(group_form.cleaned_data['name'])
+                    messages.error(request, "Group update errors: {}.".format(message))
+                else:
+                    messages.error(request, "Group update errors:{}.".format(ex.message))
         else:
-            ajax_response_data = {'status': status, 'errors': group_form.errors.as_json()}
+            messages.error(request, "Group update errors:{}.".format(group_form.errors.as_json))
     else:
-        ajax_response_data = {'status': status, 'errors': "You don't have permission to update this group"}
-    return HttpResponse(json.dumps(ajax_response_data))
+        messages.error(request, "Group update errors: You don't have permission to update this group")
+
+    return HttpResponseRedirect(request.META['HTTP_REFERER'])
 
 
 @login_required
@@ -845,18 +864,15 @@ def unshare_group_with_user(request, group_id, user_id, *args, **kwargs):
     group_to_unshare = utils.group_from_id(group_id)
     user_to_unshare_with = utils.user_from_id(user_id)
 
-    if requesting_user.uaccess.can_unshare_group_with_user(group_to_unshare, user_to_unshare_with):
-        try:
-            requesting_user.uaccess.unshare_group_with_user(group_to_unshare, user_to_unshare_with)
-            if requesting_user == user_to_unshare_with:
-                success_msg = "You successfully left the group."
-            else:
-                success_msg = "User successfully removed from the group."
-            messages.success(request, success_msg)
-        except PermissionDenied as ex:
-            messages.error(request, ex.message)
-    else:
-        messages.error(request, "You don't have permission to remove users from a group.")
+    try:
+        requesting_user.uaccess.unshare_group_with_user(group_to_unshare, user_to_unshare_with)
+        if requesting_user == user_to_unshare_with:
+            success_msg = "You successfully left the group."
+        else:
+            success_msg = "User successfully removed from the group."
+        messages.success(request, success_msg)
+    except PermissionDenied as ex:
+        messages.error(request, ex.message)
 
     if requesting_user == user_to_unshare_with:
         return HttpResponseRedirect(reverse("MyGroups"))
@@ -938,6 +954,7 @@ def act_on_group_membership_request(request, membership_request_id, action, *arg
             user_acting.uaccess.act_on_group_membership_request(membership_request, accept_request)
             if accept_request:
                 message = 'Membership request accepted'
+                messages.success(request, message)
                 # send email to the user whose request/invitation got accepted
                 if membership_request.invitation_to is not None:
                     email_msg = """Your invitation to user ({}) to join the group({}) has been accepted.
@@ -952,11 +969,12 @@ def act_on_group_membership_request(request, membership_request_id, action, *arg
                           recipient_list=[membership_request.request_from.email], fail_silently=True)
             else:
                 message = 'Membership request declined'
-            ajax_response_data = {'status': 'success', 'message': message}
-        except PermissionDenied as ex:
-            ajax_response_data = {'status': 'error', 'message': ex.message}
+                messages.error(request, message)
 
-    return HttpResponse(json.dumps(ajax_response_data))
+        except PermissionDenied as ex:
+            messages.error(request, ex.message)
+
+    return HttpResponseRedirect(request.META['HTTP_REFERER'])
 
 
 @login_required
@@ -1082,6 +1100,10 @@ def _get_message_for_setting_resource_flag(has_files, has_metadata, resource_fla
 class MyGroupsView(TemplateView):
     template_name = 'pages/my-groups.html'
 
+    @method_decorator(login_required)
+    def dispatch(self, *args, **kwargs):
+        return super(MyGroupsView, self).dispatch(*args, **kwargs)
+
     def get_context_data(self, **kwargs):
         u = User.objects.get(pk=self.request.user.id)
 
@@ -1104,6 +1126,10 @@ class AddUserForm(forms.Form):
 class GroupView(TemplateView):
     template_name = 'pages/group.html'
 
+    @method_decorator(login_required)
+    def dispatch(self, *args, **kwargs):
+        return super(GroupView, self).dispatch(*args, **kwargs)
+
     def get_context_data(self, **kwargs):
         group_id = kwargs['group_id']
         g = Group.objects.get(pk=group_id)
@@ -1112,17 +1138,29 @@ class GroupView(TemplateView):
         u.is_group_editor = g in u.uaccess.edit_groups
         u.is_group_viewer = g in u.uaccess.view_groups
 
+        group_resources = []
+        for res in g.gaccess.view_resources:
+            grp = GroupResourcePrivilege.objects.filter(resource=res, group=g).first()
+            res.grantor = grp.grantor
+            res.date_granted = grp.start
+            group_resources.append(res)
+
         return {
             'profile_user': u,
             'group': g,
             'edit_users': g.gaccess.get_users_with_explicit_access(PrivilegeCodes.CHANGE),
             'view_users': g.gaccess.get_users_with_explicit_access(PrivilegeCodes.VIEW),
+            'group_resources': group_resources,
             'add_view_user_form': AddUserForm(),
         }
 
 
 class CollaborateView(TemplateView):
     template_name = 'pages/collaborate.html'
+
+    @method_decorator(login_required)
+    def dispatch(self, *args, **kwargs):
+        return super(CollaborateView, self).dispatch(*args, **kwargs)
 
     def get_context_data(self, **kwargs):
         u = User.objects.get(pk=self.request.user.id)

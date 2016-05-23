@@ -14,6 +14,7 @@
         </div>
     </div>
 
+    {% if profile_user.is_group_owner or profile_user.is_group_editor or profile_user.is_group_viewer %}
     <div class="container">
         <div class="row">
             <div class="col-sm-2">
@@ -31,12 +32,13 @@
                 {% endif %}
                 </div>
 
-                <div class="col-sm-8">
+            <div class="col-sm-8">
                 <h2 class="group-title">{{ group.name }}</h2>
                 <h4 class="text-muted">{{ group.gaccess.purpose }}</h4>
 
                 <p>{{ group.gaccess.description }}</p>
             </div>
+
             <div class="col-sm-2">
                 <!-- Single button -->
                 <div class="dropdown custom-dropdown">
@@ -61,14 +63,16 @@
                                    data-target="#edit-group-dialog"><span
                                         class="glyphicon glyphicon-pencil btn-edit"></span>&nbsp;&nbsp;Edit Group</a>
                             </li>
-                            <li role="separator" class="divider"></li>
-                            <li>
-                                <form action="/hsapi/_internal/unshare-group-with-user/{{ group.id }}/{{ user.id }}/">
-                                    {% csrf_token %}
-                                    <a href="#" id="btn-leave-group"><span
-                                            class="glyphicon glyphicon-trash btn-remove"></span>&nbsp;&nbsp;Delete Group</a>
-                                </form>
-                            </li>
+
+                            {#  TODO: Pending delete group functionality #}
+{#                            <li role="separator" class="divider"></li>#}
+{#                            <li>#}
+{#                                <form action="/hsapi/_internal/delete-group/{{ group.id }}">#}
+{#                                    {% csrf_token %}#}
+{#                                    <a href="#" id="btn-leave-group"><span#}
+{#                                            class="glyphicon glyphicon-trash btn-remove"></span>&nbsp;&nbsp;Delete Group</a>#}
+{#                                </form>#}
+{#                            </li>#}
                         {% endif %}
                     </ul>
                 </div>
@@ -112,16 +116,24 @@
 
                             <h4>Recent Activity</h4>
 
-                            {% if group.gaccess.view_resources %}
-                                {% for res in group.gaccess.view_resources %}
+                            {% if group_resources %}
+                                {% for res in group_resources %}
                                     <div class="group-activity-block activity-block">
+                                        {% if res.grantor.profile.picture and res.grantor.profile.picture.url %}
+                                            <div style="background-image: url('{{ res.grantor.profile.picture.url }}');"
+                                                 class="profile-pic-thumbnail round-image pull-left">
+                                            </div>
+                                        {% else %}
+                                            <div class="profile-pic-thumbnail round-image user-icon"></div>
+                                        {% endif %}
                                         <div>
                                             <div class="shared-resource-info">
+                                                <a>{{ res.grantor|contact|safe }}</a> <span class="text-muted">shared</span>
                                                 <span><a href="{{ res.get_absolute_url }}">{{ res.metadata.title }}</a></span>
                                             </div>
                                             <h5><span class="text-muted">Resource type: </span>{{ res|resource_type }}
                                             </h5>
-                                            <h5><span class="text-muted">Date: </span>{{ res.created }}</h5>
+                                            <h5><span class="text-muted">Date: </span>{{ res.date_granted }}</h5>
                                         </div>
 
                                         {% if res.metadata.description %}
@@ -131,19 +143,13 @@
                                             </div>
                                             <div class="show-more-btn btn-default" title="Show less">···</div>
                                         {% endif %}
-
-                                        {#                                <div class="group-activity-comment">#}
-                                        {#                                    <fieldset>#}
-                                        {#                                        <label>Write a comment</label>#}
-                                        {#                                        <textarea class="form-control"></textarea>#}
-                                        {#                                    </fieldset>#}
-                                        {#                                    <a class="btn btn-primary">Post</a>#}
-                                        {#                                </div>#}
                                     </div>
                             {% endfor %}
                                 {% else %}
                                 <i>No recent activity.</i>
                             {% endif %}
+
+
 
 
 {#                            <div class="group-activity-block activity-block">#}
@@ -394,6 +400,7 @@
                             <table data-filter-by="pending" class="table-members-list">
                             {% if group.gaccess.group_membership_requests %}
                                 {% for pendingrequest in group.gaccess.group_membership_requests %}
+                                    {% if not pendingrequest.invitation_to %}
                                     <tr>
                                         <td data-id="picture">
                                             {% if pendingrequest.request_from.userprofile and pendingrequest.request_from.userprofile.picture.url %}
@@ -436,7 +443,37 @@
                                             {% endif %}
                                         </td>
                                     </tr>
-
+                                    {% else %}
+                                        <tr>
+                                            <td data-id="picture">
+                                                {% if pendingrequest.request_from.userprofile and pendingrequest.request_from.userprofile.picture.url %}
+                                                    <div style="background-image: url('{{ pendingrequest.request_from.userprofile.picture.url }}');"
+                                                         class="profile-pic-thumbnail round-image pull-left">
+                                                    </div>
+                                                {% else %}
+                                                    <div class="profile-pic-thumbnail-small round-image user-icon"></div>
+                                                {% endif %}
+                                            </td>
+                                            <td>
+                                                <h4><strong><a
+                                                        href="#">{{ pendingrequest.invitation_to|best_name }}</a></strong>
+                                                </h4>
+                                                {% if  pendingrequest.invitation_to.userprofile.title %}
+                                                    <span class="text-muted">{{ pendingrequest.invitation_to.userprofile.title }}</span>
+                                                {% endif %}
+                                            </td>
+                                            <td>
+                                                {% if profile_user.is_group_owner or profile_user.is_group_editor %}
+                                                    <form action="/hsapi/_internal/act-on-group-membership-request/{{ pendingrequest.id }}/reject/">
+                                                        {% csrf_token %}
+                                                        <a href="#" class="btn btn-default btn-act-on-request">Cancel Invitation</a>
+                                                    </form>
+                                                {% endif %}
+                                            </td>
+                                            <td>
+                                            </td>
+                                        </tr>
+                                    {% endif %}
                                 {% endfor %}
                                 {% else %}
                                 <tr class="no-pending-requests"><td><i>No pending requests.</i></td></tr>
@@ -1011,6 +1048,14 @@
             </div>
         </div>
     </div>
+    {% else %}
+        <div class="container">
+            <div class="col-sm-12">
+                <h4>You are not a member of this group.</h4>
+            </div>
+        </div>
+    {% endif %}
+
 {% endblock %}
 
 {% block extra_js %}

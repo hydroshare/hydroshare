@@ -297,6 +297,10 @@ class UserAccess(models.Model):
         # invited user acting on membership invitation from a group owner
         elif this_request.invitation_to == self.user:
             membership_grantor = this_request.request_from.uaccess
+            # owner may cancel his own invitation
+        elif self.owns_group(this_request.group_to_join) or self.user.is_superuser:
+                # allow owner to cancel invitation
+                pass
         else:
             raise PermissionDenied("You don't have permission to act on the group membership request")
 
