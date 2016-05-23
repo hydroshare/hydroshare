@@ -1110,6 +1110,8 @@ class MyGroupsView(TemplateView):
         groups = u.uaccess.view_groups
         # get a list of groupmembershiprequests
         group_membership_requests = GroupMembershipRequest.objects.filter(invitation_to=u).all()
+        for g in groups:
+            g.is_group_owner = u.uaccess.owns_group(g)
 
         return {
             'profile_user': u,
@@ -1144,6 +1146,8 @@ class GroupView(TemplateView):
             res.grantor = grp.grantor
             res.date_granted = grp.start
             group_resources.append(res)
+
+        # TODO: need to sort this resource list using the date_granted field
 
         return {
             'profile_user': u,

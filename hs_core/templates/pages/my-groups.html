@@ -119,7 +119,7 @@
                                         <small class="text-muted">21 Members</small>
                                     </td>
                                     {#  TODO: Populate with Member or Owner #}
-                                    <td><span>Member</span></td>
+                                    <td><span>{% if group.is_group_owner %}Owner{% else %}Member{% endif %}</span></td>
                                 </tr>
 
                             {% endfor %}
