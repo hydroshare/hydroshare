@@ -5,6 +5,7 @@ import shutil
 import logging
 import tempfile
 import subprocess
+import xml.etree.ElementTree as ET
 
 from django.db import migrations
 from django.core.files.uploadedfile import UploadedFile
@@ -43,6 +44,13 @@ def migrate_tif_file(apps, schema_editor):
                         with open(os.devnull, 'w') as fp:
                             subprocess.Popen(['gdal_translate', '-of', 'VRT', tif_file_path, vrt_file_path], stdout=fp, stderr=fp).wait()   # remember to add .wait()
 
+                        # modify the vrt file contents
+                        tree = ET.parse(vrt_file_path)
+                        root = tree.getroot()
+                        for element in root.iter('SourceFilename'):
+                            element.attrib['relativeToVRT'] = '1'
+                        tree.write(vrt_file_path)
+                        
                         # delete vrt res file
                         for f in res.files.all():
                             if 'vrt' == f.resource_file.name[-3:]:
