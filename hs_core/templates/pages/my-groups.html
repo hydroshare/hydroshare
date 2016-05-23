@@ -31,8 +31,9 @@
                 {% endif %}
                 {% if my_pending_requests %}
                     {% for request in my_pending_requests %}
-                        <strong>{{ request.group_to_join.name }}</strong>
-                        <p class="text-muted">Request Sent</p>
+                        <span>Invited </span><a>{{ request.invitation_to|contact|safe }}</a> <span> to join </span><strong>{{ request.group_to_join.name }}</strong>
+                        <div class="text-muted">Request Sent</div>
+                        <div class="text-muted">{{ request.date_requested }}</div>
                         <table>
                             <tr>
                                 <form id="act-on-request"
