@@ -184,7 +184,7 @@ def create_bag_by_irods(resource_id, istorage = None):
     :param resource_id: the resource uuid that is used to look for the resource to create the bag for.
            istorage: IrodsStorage object that is used to call irods bagit rule operation and zipping up operation
 
-    :return: none
+    :return: True if bag creation operation succeeds; False if there is an exception raised.
     """
     if not istorage:
         istorage = IrodsStorage()
@@ -205,8 +205,9 @@ def create_bag_by_irods(resource_id, istorage = None):
             # the very same resource gets deleted by another request when being downloaded
             istorage.runBagitRule(bagit_rule_file, bagit_input_path, bagit_input_resource)
             istorage.zipup(irods_bagit_input_path, 'bags/{res_id}.zip'.format(res_id=resource_id))
+            return True
         except SessionException:
-            pass
+            return False
 
 
 def create_bag(resource):
