@@ -49,7 +49,7 @@
                                 <div class="text-center group-thumbnail-footer">
                                     {% if group.gaccess.public %}
                                         <div class="users-joined height-fix">
-                                            <div><a class="text-muted" href="#" data-toggle="modal" data-target="#modal-members-list-{{ group.id }}">MEMBERS</a></div>
+                                            <div class="link-members"><a class="text-muted" href="#" data-toggle="modal" data-target="#modal-members-list-{{ group.id }}">MEMBERS</a></div>
                                             {% for member in group.gaccess.members|slice:":5" %}
                                                 {% if  member.userprofile.picture and member.userprofile.picture.url %}
                                                     <div style="background-image: url('{{ member.userprofile.picture.url }}');"
