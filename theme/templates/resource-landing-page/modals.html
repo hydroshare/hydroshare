@@ -1046,14 +1046,9 @@
                             <tr id="row-id-{{ u.pk }}">
                                 <td>
                                     <div class="user-scope">
-                                        <div
-                                        {% if u.userprofile.picture %}
-                                            style="background-image: url('{{ u.userprofile.picture.url }}');"
-                                            class="profile-pic-thumbnail round-image"
-                                        {% else %}
-                                             class="profile-pic-thumbnail round-image user-icon"
-                                        {% endif %}
-                                        >
+                                        <div class="group-image-wrapper extra-small">
+                                            <div class="group-image-extra-small group-preview-image-default"
+                                                 style="background-image: url({{ STATIC_URL }}img/home-page/step4.png)"></div>
                                         </div>
                                         <span value="{{ u.pk }}" class="user-name">{{ u.name }}</span>
                                         <br>
@@ -1105,14 +1100,9 @@
                             <tr id="row-id-{{ u.pk }}">
                                 <td>
                                     <div class="user-scope">
-                                        <div
-                                        {% if u.userprofile.picture %}
-                                            style="background-image: url('{{ u.userprofile.picture.url }}');"
-                                            class="profile-pic-thumbnail round-image"
-                                        {% else %}
-                                             class="profile-pic-thumbnail round-image user-icon"
-                                        {% endif %}
-                                        >
+                                        <div class="group-image-wrapper extra-small">
+                                            <div class="group-image-extra-small group-preview-image-default"
+                                                 style="background-image: url({{ STATIC_URL }}img/home-page/step4.png)"></div>
                                         </div>
                                         <span value="{{ u.pk }}" class="user-name">{{ u.name }}</span>
                                         <br>

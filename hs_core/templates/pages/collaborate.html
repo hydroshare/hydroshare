@@ -20,12 +20,9 @@
             <div class="col-sm-12">
                 <h3>Find groups</h3>
                 <hr class="solid">
-                <div class="input-group group-search">
+                <div class="group-search input-group">
+                    <span class="glyphicon glyphicon-search search-icon"></span>
                     <input id="txt-search-groups" type="text" class="form-control" placeholder="Search by group name...">
-                  <span class="input-group-btn">
-                    <button class="btn btn-default" type="button"><span class="glyphicon glyphicon-search"></span>
-                    </button>
-                  </span>
                 </div>
             </div>
         </div>
@@ -215,7 +212,7 @@
                 error: function (XMLHttpRequest, textStatus, errorThrown) {
                     console.log("error");
                 }
-            });
+            });9
             //don't submit the form
             return false;
         }
@@ -235,6 +232,9 @@
                     target.parent().parent().parent().remove();
                     if (target.attr("data-user-action") == "Accept") {
                         container.append('<div class="text-center"><h4 class="flag-joined"><span class="glyphicon glyphicon-ok"></span> You have joined this group.</h4></div>');
+                    }
+                    else {
+                        container.append('<div class="text-center"><h4 class="flag-declined"><span class="glyphicon glyphicon-remove"></span> You have declined to join this group.</h4></div>');
                     }
                 },
                 error: function (XMLHttpRequest, textStatus, errorThrown) {

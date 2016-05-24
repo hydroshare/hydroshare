@@ -121,8 +121,8 @@
                             {% if group_resources %}
                                 {% for res in group_resources %}
                                     <div class="group-activity-block activity-block">
-                                        {% if res.grantor.profile.picture and res.grantor.profile.picture.url %}
-                                            <div style="background-image: url('{{ res.grantor.profile.picture.url }}');"
+                                        {% if res.grantor.userprofile.picture and res.grantor.userprofile.picture.url %}
+                                            <div style="background-image: url('{{ res.grantor.userprofile.picture.url }}');"
                                                  class="profile-pic-thumbnail round-image pull-left">
                                             </div>
                                         {% else %}
@@ -428,8 +428,8 @@
                                     {% else %}
                                         <tr>
                                             <td data-id="picture">
-                                                {% if pendingrequest.request_from.userprofile and pendingrequest.request_from.userprofile.picture.url %}
-                                                    <div style="background-image: url('{{ pendingrequest.request_from.userprofile.picture.url }}');"
+                                                {% if pendingrequest.invitation_to.userprofile and pendingrequest.invitation_to.userprofile.picture.url %}
+                                                    <div style="background-image: url('{{ pendingrequest.invitation_to.userprofile.picture.url }}');"
                                                          class="profile-pic-thumbnail round-image pull-left">
                                                     </div>
                                                 {% else %}
@@ -929,19 +929,19 @@
                             {# Group Name #}
                             <fieldset class="col-sm-12">
                                 <label>Group Name *</label>
-                                <input class="form-control form-required" name="name" value="{{ group.name }}">
-                            </fieldset>
-
-                            {# Group Description #}
-                            <fieldset class="col-sm-12">
-                                <label>About this group *</label>
-                                <textarea class="form-control" name="description">{{ group.gaccess.description }}</textarea>
+                                <input class="form-control" required="required" name="name" value="{{ group.name }}" maxlength="150">
                             </fieldset>
 
                             {# Purpose #}
                             <fieldset class="col-sm-12">
                                 <label>Purpose</label>
-                                <input class="form-control" name="purpose" value="{{ group.gaccess.purpose }}">
+                                <textarea class="form-control" name="purpose" maxlength="300">{{ group.gaccess.purpose }}</textarea>
+                            </fieldset>
+
+                            {# Group Description #}
+                            <fieldset class="col-sm-12">
+                                <label>About this group *</label>
+                                <textarea class="form-control" required="required" name="description">{{ group.gaccess.description }}</textarea>
                             </fieldset>
 
                             <br>

@@ -3405,6 +3405,8 @@ button.no-style:focus {
 
 .group-description {
     margin-top:20px;
+	max-height:150px;
+	overflow-y: auto;
 }
 
 .group-name {
@@ -3413,6 +3415,11 @@ button.no-style:focus {
 
 .group-search {
     margin-bottom: 20px;
+	width: 100%;
+}
+
+#txt-search-groups {
+	padding-left: 25px;
 }
 
 .group-preview-image {
@@ -3451,6 +3458,13 @@ button.no-style:focus {
 	height: 90px;
 }
 
+.group-image-wrapper.extra-small {
+	width: 45px;
+	height: 45px;
+	float: left;
+	margin-right: 5px;
+}
+
 .group-image-wrapper-medium {
 	width: 130px;
 	height: 130px;
@@ -3466,9 +3480,9 @@ button.no-style:focus {
 }
 
 .group-image-extra-small {
-    height: 40px;
+    height: 35px;
     text-align: center;
-    width: 40px;
+    width: 35px;
     background-size: cover;
     background-position: center center;
     display: inline-block;
@@ -3613,8 +3627,20 @@ div.group-add-photo {
 	color: #4BB5C1;
 }
 
+.flag-declined {
+	color:#d9534f;
+}
+
 .flag-joined .glyphicon {
 	border: 1px solid #4BB5C1;
+	border-radius: 50%;
+	height: 30px;
+	width: 30px;
+	padding-top: 5px;
+}
+
+.flag-declined .glyphicon {
+	border: 1px solid #d9534f;
 	border-radius: 50%;
 	height: 30px;
 	width: 30px;
