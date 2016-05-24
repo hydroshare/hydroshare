@@ -3405,6 +3405,8 @@ button.no-style:focus {
 
 .group-description {
     margin-top:20px;
+	max-height:150px;
+	overflow-y: auto;
 }
 
 .group-name {
