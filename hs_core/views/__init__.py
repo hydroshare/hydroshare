@@ -639,17 +639,7 @@ class GroupForm(forms.Form):
             new_group.gaccess.picture = request.FILES['picture']
 
         privacy_level = frm_data['privacy_level']
-        if privacy_level == 'public':
-            new_group.gaccess.public = True
-            new_group.gaccess.discoverable = True
-        elif privacy_level == 'private':
-            new_group.gaccess.public = False
-            new_group.gaccess.discoverable = False
-        elif privacy_level == 'discoverable':
-            new_group.gaccess.discoverable = True
-            new_group.gaccess.public = False
-
-        new_group.gaccess.save()
+        self._set_privacy_level(new_group, privacy_level)
         return new_group
 
     def update(self, group_to_update, request):
@@ -660,7 +650,22 @@ class GroupForm(forms.Form):
         group_to_update.gaccess.purpose = frm_data['purpose']
         if 'picture' in request.FILES:
             group_to_update.gaccess.picture = request.FILES['picture']
-        group_to_update.gaccess.save()
+
+        privacy_level = frm_data['privacy_level']
+        self._set_privacy_level(group_to_update, privacy_level)
+
+    def _set_privacy_level(self, group, privacy_level):
+        if privacy_level == 'public':
+            group.gaccess.public = True
+            group.gaccess.discoverable = True
+        elif privacy_level == 'private':
+            group.gaccess.public = False
+            group.gaccess.discoverable = False
+        elif privacy_level == 'discoverable':
+            group.gaccess.discoverable = True
+            group.gaccess.public = False
+
+        group.gaccess.save()
 
 
 @processor_for('my-resources')
