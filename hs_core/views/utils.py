@@ -291,5 +291,5 @@ def send_action_to_take_email(request, user, action_type, **kwargs):
     subject_template_name = "email/%s_subject.txt" % action_type
     subject = subject_template(subject_template_name, context)
     send_mail_template(subject, "email/%s" % action_type,
-                       settings.DEFAULT_FROM_EMAIL, action_url,
+                       settings.DEFAULT_FROM_EMAIL, user.email,
                        context=context)
