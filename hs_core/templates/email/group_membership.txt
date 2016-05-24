@@ -1,11 +1,11 @@
 {% load i18n %}
 {% block main %}
-    {% if user %}
+    {% if group_owner %}
+        {% trans "Dear " %}{{ group_owner.first_name }}
+        {% trans "User " %}{{ request.user.first_name }} has requested to join your HydroShare group ({{ group.name }}). Please click on the link below to see details.
+    {% else %}
         {% trans "Dear " %}{{ user.first_name }}
         {% trans "You have been invited to join HydroShare user group ("%}{{ group.name }} ). Please click on the link below to see details.
-    {% else %}
-        {% trans "Dear " %}{{ group_owner.first_name }}
-        {% trans "User " %}{{ request.user.first_name }} have requested to join your HydroShare group ({{ group.name }}). Please click on the link below to see details.
     {% endif %}
     {{ request.scheme }}://{{ request.get_host }}{{ action_url }}
     {% trans "The HydroShare Team" %}
