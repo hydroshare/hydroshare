@@ -3413,6 +3413,11 @@ button.no-style:focus {
 
 .group-search {
     margin-bottom: 20px;
+	width: 100%;
+}
+
+#txt-search-groups {
+	padding-left: 25px;
 }
 
 .group-preview-image {
