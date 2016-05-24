@@ -277,9 +277,10 @@ def send_action_to_take_email(request, user, action_type, **kwargs):
     to use. Additional context variable needed in the email template can be
     passed using the kwargs
     """
+    email_to = kwargs.get('group_owner', user)
     action_url = reverse(action_type, kwargs={
-        "uidb36": int_to_base36(user.id),
-        "token": default_token_generator.make_token(user)
+        "uidb36": int_to_base36(email_to.id),
+        "token": default_token_generator.make_token(email_to)
     }) + "?next=" + (next_url(request) or "/")
     context = {
         "request": request,
@@ -291,5 +292,5 @@ def send_action_to_take_email(request, user, action_type, **kwargs):
     subject_template_name = "email/%s_subject.txt" % action_type
     subject = subject_template(subject_template_name, context)
     send_mail_template(subject, "email/%s" % action_type,
-                       settings.DEFAULT_FROM_EMAIL, action_url,
+                       settings.DEFAULT_FROM_EMAIL, email_to.email,
                        context=context)

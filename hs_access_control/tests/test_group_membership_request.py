@@ -176,6 +176,20 @@ class GroupMembershipRequest(MockIRODSTestCaseMixin, TestCase):
         # modeling group should have no pending membership requests
         self.assertEquals(self.modeling_group.gaccess.group_membership_requests.count(), 0)
 
+        # test group owner cancelling invitation
+
+        # let john (group owner) invite lisa to join group
+        membership_request = self.john_group_owner.uaccess.create_group_membership_request(self.modeling_group,
+                                                                                           self.lisa_group_member)
+        # let john cancel his own invitation
+        self.john_group_owner.uaccess.act_on_group_membership_request(membership_request, accept_request=False)
+
+        # let john (group owner) invite lisa to join group
+        membership_request = self.john_group_owner.uaccess.create_group_membership_request(self.modeling_group,
+                                                                                           self.lisa_group_member)
+        # let mike (group owner) cancel john's invitation to lisa
+        self.mike_group_owner.uaccess.act_on_group_membership_request(membership_request, accept_request=False)
+
     def test_owner_inviting_same_user_different_groups(self):
         # lisa should not be one of the members of the modeling group
         self.assertNotIn(self.lisa_group_member, self.modeling_group.gaccess.members)
