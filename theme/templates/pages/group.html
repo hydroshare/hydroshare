@@ -1275,12 +1275,19 @@
         function updateMembersLabelCount() {
             var viewCount = $("#all-members-table tr[data-filter-by='view-user']").length - 1;  // Subtract hidden template row
             var editCount = $("#all-members-table tr[data-filter-by='edit-user']").length;
-            var ownersCount = $("#all-members-table tr[data-filter-by='creator']").length;
             var pendingCount = $("table[data-filter-by='pending'] tr:not('.no-pending-requests')").length;
 
-            $("#members-filter .badge[data-filter-by='All']").text(viewCount + editCount + ownersCount);
-            $("#members-filter .badge[data-filter-by='Owners']").text(editCount + ownersCount);
+            $("#members-filter .badge[data-filter-by='All']").text(viewCount + editCount);
+            $("#members-filter .badge[data-filter-by='Owners']").text(editCount);
             $("#members-filter .badge[data-filter-by='Pending']").text(pendingCount);
+
+            // Disable options to leave or remove for last owner item.
+            if (editCount == 1) {
+                $("#all-members-table tr[data-filter-by='edit-user'] .dropdown-toggle").attr("disabled", true);
+            }
+            else {
+                $("#all-members-table tr[data-filter-by='edit-user'] .dropdown-toggle").attr("disabled", false);
+            }
         }
 
         $(document).ready(function () {
