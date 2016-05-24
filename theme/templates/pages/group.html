@@ -70,11 +70,9 @@
                             {#                            </li>#}
                         {% endif %}
                         <li>
-                            <form action="/hsapi/_internal/unshare-group-with-user/{{ group.id }}/{{ user.id }}/">
-                                {% csrf_token %}
-                                <a href="#" id="btn-leave-group"><span
-                                        class="glyphicon glyphicon-hand-left btn-remove"></span>&nbsp;&nbsp;Leave Group</a>
-                            </form>
+                            <a href="#" id="btn-leave-group" data-toggle="modal"
+                               data-target="#leave-group-dialog"><span
+                                    class="glyphicon glyphicon-hand-left btn-remove"></span>&nbsp;&nbsp;Leave Group</a>
                         </li>
                     </ul>
                 </div>
@@ -1035,6 +1033,31 @@
             </div>
         </div>
     </div>
+
+    <!-- Leave Group Modal -->
+    <div class="modal fade" id="leave-group-dialog" tabindex="-1" role="dialog"
+         aria-labelledby="Leave">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal"
+                            aria-label="Close"><span aria-hidden="true">&times;</span>
+                    </button>
+                    <h4 class="modal-title" id="Leave">Leave Group</h4>
+                </div>
+                <form action="/hsapi/_internal/unshare-group-with-user/{{ group.id }}/{{ user.id }}/">
+                    <div class="modal-body">
+                        <h5>Are you sure you want to leave this group?</h5>
+                    </div>
+
+                    <div class="modal-footer">
+                        <button type="submit" class="btn btn-primary">Confirm</button>
+                        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
     {% else %}
         <div class="container">
             <div class="col-sm-12">
@@ -1316,9 +1339,6 @@
             $(".btn-act-on-request").click(act_on_request_ajax_submit);
             $(".btn-share-group").click(share_group_ajax_submit);
             $(".btn-unshare-group").click(unshare_group_ajax_submit);
-            $("#btn-leave-group").click(function(){
-                $(this).closest("form").submit();
-            });
 
             // Initialize filters counters
             updateMembersLabelCount();
