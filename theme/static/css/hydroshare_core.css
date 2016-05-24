@@ -3451,6 +3451,13 @@ button.no-style:focus {
 	height: 90px;
 }
 
+.group-image-wrapper.extra-small {
+	width: 45px;
+	height: 45px;
+	float: left;
+	margin-right: 5px;
+}
+
 .group-image-wrapper-medium {
 	width: 130px;
 	height: 130px;
@@ -3466,9 +3473,9 @@ button.no-style:focus {
 }
 
 .group-image-extra-small {
-    height: 40px;
+    height: 35px;
     text-align: center;
-    width: 40px;
+    width: 35px;
     background-size: cover;
     background-position: center center;
     display: inline-block;
