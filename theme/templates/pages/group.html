@@ -479,11 +479,7 @@
                                     <div class="panel-body">
                                         <div class="list-group">
                                             <ul class="list-group inputs-group">
-{#                                                <li class="list-group-item">#}
-{#                                                    <span data-facet="owned" class="badge">0</span>#}
-{#                                                    <label class="checkbox noselect">#}
-{#                                                        <input type="checkbox" class="grantor" data-grantor-id="4">Some User Name</label>#}
-{#                                                </li>#}
+                                                <h5><i>No resources have been shared with this group yet.</i></h5>
                                             </ul>
                                         </div>
 
@@ -1329,6 +1325,8 @@
 
             // Initialize Shared By filter
             var grantors = $("#grantors-list span");
+            if (grantors.length)
+                $("#filter-shared-by h5").remove();
             for (var i = 0; i < grantors.length; i++) {
                 var id = $(grantors[i]).attr("data-grantor-id");
                 if ($("#filter-shared-by .grantor[data-grantor-id='" + id + "']").length == 0) {
