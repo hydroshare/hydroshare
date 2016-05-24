@@ -666,6 +666,10 @@ class GroupForm(forms.Form):
 @processor_for('my-resources')
 @login_required
 def my_resources(request, page):
+    import sys
+    sys.path.append("/home/docker/pycharm-debug")
+    import pydevd
+    pydevd.settrace('129.123.51.193', port=21000, suspend=False)
     resource_collection = get_my_resources_list(request)
 
     context = {'collection': resource_collection}

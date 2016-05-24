@@ -292,7 +292,7 @@
                                             </button>
                                             <ul class="dropdown-menu">
                                                 <li>
-                                                    <form action="/hsapi/_internal/share-group-with-user/{{ group.id }}/member_id/edit/">
+                                                    <form action="/hsapi/_internal/share-group-with-user/{{ group.id }}/member_id/owner/">
                                                         {% csrf_token %}
                                                         <a href="#" class="btn-share-group"
                                                            data-role="Owner">Owner</a>
@@ -348,7 +348,7 @@
                                                 <ul class="dropdown-menu"
                                                     aria-labelledby="roleDropDown-{{ member.id }}">
                                                     <li>
-                                                        <form action="/hsapi/_internal/share-group-with-user/{{ group.id }}/{{ member.id }}/edit/">
+                                                        <form action="/hsapi/_internal/share-group-with-user/{{ group.id }}/{{ member.id }}/owner/">
                                                             {% csrf_token %}
                                                             <a href="#" class="btn-share-group" data-role="Owner">Owner</a>
                                                         </form>
