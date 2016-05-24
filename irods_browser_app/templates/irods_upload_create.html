@@ -11,7 +11,6 @@
           <form class="form-signin" role="form" action="/irods/upload/" method="post" id="irodsUpload">
             <div class="modal-body">
               {% csrf_token %}
-              <input type="hidden" name="input_trigger" id="input_trigger" value=""/>
               <input type="hidden" name="store" id="root_store" value=""/>
               <input type="hidden" name="res_type" id="res_type" value=""/>
               <input type="hidden" name="upload" id="upload_store" value=""/>

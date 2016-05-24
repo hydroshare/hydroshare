@@ -1466,7 +1466,7 @@ body > .container{
 }
 
 .btn-add-access {
-	height: 34px;
+	height: 32px;
 	top: 0;
 	border-radius: 0;
 	margin: 0 2px;
@@ -1585,7 +1585,7 @@ body > .container{
     word-break: break-word;
 }
 
-#btn-download-all, #btn-add-file, #btn-select-irods-file, #btn-select-irods-file-uz, #rep-res-bag {
+#btn-download-all, #btn-add-file, #btn-select-irods-file, #rep-res-bag {
     margin-bottom:5px;
     max-width:100%;
 }

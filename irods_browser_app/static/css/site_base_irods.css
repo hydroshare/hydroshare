@@ -94,3 +94,16 @@
     -moz-user-select: none;
     -webkit-user-select: none;
 }
+
+#sign-in-info {
+   margin-right: 10px;
+}
+
+#irods-sel-file, #btn-signout-irods {
+    margin-left: 10px;
+    margin-right: 10px;
+}
+
+#irods-browse {
+    margin-top: 6px;
+}

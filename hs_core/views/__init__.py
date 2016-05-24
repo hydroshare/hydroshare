@@ -577,18 +577,18 @@ def my_resources(request, page):
 @login_required
 def create_resource_page_processor(request, page):
     user = request.user
-    in_production, show_user_zone_selection = utils.get_user_zone_status_info(user)
+    in_production, user_zone_account_exist = utils.get_user_zone_status_info(user)
 
     context = {
         'user_name': user.username,
-        'show_user_zone_selection': show_user_zone_selection
+        'user_zone_account_exist': user_zone_account_exist
     }
     return context
 
 @processor_for(GenericResource)
 def add_generic_context(request, page):
     user = request.user
-    in_production, show_user_zone_selection = utils.get_user_zone_status_info(user)
+    in_production, user_zone_account_exist = utils.get_user_zone_status_info(user)
 
     class AddUserForm(forms.Form):
         user = forms.ModelChoiceField(User.objects.filter(is_active=True).all(),
@@ -605,7 +605,7 @@ def add_generic_context(request, page):
         'add_view_group_form': AddGroupForm(),
         'add_edit_group_form': AddGroupForm(),
         'user_name': user.username,
-        'show_user_zone_selection': show_user_zone_selection,
+        'user_zone_account_exist': user_zone_account_exist,
     }
 
 
@@ -622,23 +622,25 @@ def create_resource(request, *args, **kwargs):
     resource_files = request.FILES.getlist('files')
 
     irods_fnames = request.POST.get('irods_file_names')
+    federated = request.POST.get("irods_federated")
     if irods_fnames:
-        user = request.POST.get('irods-username')
-        password = request.POST.get("irods-password")
-        port = request.POST.get("irods-port")
-        host = request.POST.get("irods-host")
-        zone = request.POST.get("irods-zone")
-        try:
-            upload_from_irods(username=user, password=password, host=host, port=port,
-                                  zone=zone, irods_fnames=irods_fnames, res_files=resource_files)
-        except utils.ResourceFileSizeException as ex:
-            context = {'file_size_error': ex.message}
-            return render_to_response('pages/create-resource.html', context, context_instance=RequestContext(request))
-        except SessionException as ex:
-            context = {'resource_creation_error': ex.stderr}
-            return render_to_response('pages/create-resource.html', context, context_instance=RequestContext(request))
-
-    irods_fnames_uz = request.POST.get('irods_file_names_uz')
+        if federated:
+            irods_fnames_uz = irods_fnames
+        else:
+            user = request.POST.get('irods-username')
+            password = request.POST.get("irods-password")
+            port = request.POST.get("irods-port")
+            host = request.POST.get("irods-host")
+            zone = request.POST.get("irods-zone")
+            try:
+                upload_from_irods(username=user, password=password, host=host, port=port,
+                                      zone=zone, irods_fnames=irods_fnames, res_files=resource_files)
+            except utils.ResourceFileSizeException as ex:
+                context = {'file_size_error': ex.message}
+                return render_to_response('pages/create-resource.html', context, context_instance=RequestContext(request))
+            except SessionException as ex:
+                context = {'resource_creation_error': ex.stderr}
+                return render_to_response('pages/create-resource.html', context, context_instance=RequestContext(request))
 
     url_key = "page_redirect_url"
 

@@ -122,6 +122,19 @@ def group_from_id(grp):
     return tgt
 
 
+def is_in_production():
+    """
+    This function determines whether the site is in production or not
+    Returns:
+        True if the site is in production and False if not
+    """
+    if settings.IRODS_USERNAME == settings.HS_WWW_IRODS_PROXY_USER \
+            or settings.IRODS_USERNAME == "wwwHydroProxy":
+        return True
+    else:
+        return False
+
+
 def get_user_zone_status_info(user):
     """
     This function should be called to determine whether the site is in production and whether user zone
@@ -137,12 +150,8 @@ def get_user_zone_status_info(user):
     if user.userprofile is None:
         return None, None
 
-    if settings.IRODS_USERNAME == settings.HS_WWW_IRODS_PROXY_USER \
-            or settings.IRODS_USERNAME == "wwwHydroProxy":
-        in_production = True
-    else:
-        in_production = False
 
+    in_production = is_in_production()
     enable_user_zone = user.userprofile.create_irods_user_account
     if not in_production and enable_user_zone:
         # if these settings are not empty, for example, in users' local
@@ -171,6 +180,30 @@ def set_user_zone_session(user, irods_storage):
                                    port=settings.IRODS_PORT,
                                    def_res=settings.HS_IRODS_USER_ZONE_DEF_RES,
                                    zone=settings.HS_WWW_IRODS_ZONE)
+
+
+def is_federated(homepath):
+    """
+    Get size of a data object from iRODS user zone
+    Args:
+        user: the requesting user
+        fname: the logical iRODS file name with full logical path
+
+    Returns:
+    the size of the file
+    """
+    in_production = is_in_production()
+    irods_storage = IrodsStorage()
+    if not in_production:
+        # for testing, has to switch irods session to hydroshare production proxy iRODS user
+        irods_storage.set_user_session(username=settings.HS_WWW_IRODS_PROXY_USER,
+                                   password=settings.HS_WWW_IRODS_PROXY_USER_PWD,
+                                   host=settings.HS_WWW_IRODS_HOST,
+                                   port=settings.IRODS_PORT,
+                                   def_res=settings.HS_IRODS_USER_ZONE_DEF_RES,
+                                   zone=settings.HS_WWW_IRODS_ZONE)
+    # if HS WWW iRODS proxy user can list homepath, homepath is federated; otherwise, it is not federated
+    return irods_storage.exists(homepath)
 
 
 def get_user_zone_file_size(user, fname):

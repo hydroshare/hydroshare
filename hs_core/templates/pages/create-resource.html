@@ -41,7 +41,7 @@
     <li>File size is limited to 1 GB per file for direct browser upload from your local disk.</li>
     <li>For file size larger than 1GB, you can create an iRODS account in HydroShare user server
         from your profile page if you have not done so already, then you can add large files
-        from your iRODS user HydroShare server directly.
+        from your iRODS user HydroShare server.
     </li>
     <li> You can also add files directly from any iRODS server regardless of the file size. </li>
     </ul>
@@ -94,40 +94,32 @@
                     <input type="file" class="btn-add-access" name="files" id="select-file" multiple/>
                 </td>
             </tr>
-            {% if show_user_zone_selection %}
-                <tr>
-                    <td>
-                        To load large files from your iRODS user HydroShare server:
-                        <div>
-                            <input type="hidden" id="irods_file_names_uz" name="irods_file_names_uz" value="">
-                            <input type="hidden" id="irods_username_uz" name="irods_username_uz" value="{{ user_name }}">
-                            <input type="hidden" id="irods_store_uz" name="irods_store_uz" value="/hydroshareuserZone/home/{{ user_name }}">
-                            <a id="btn-select-irods-file-uz" type="button" class="btn btn-default row-selector"
-                               data-toggle="modal" data-target="#irodsContent">Browse your iRODS HydroShare User Zone...</a>
-                            <span id="irods-sel-file-uz">No file selected.</span>
-                        </div>
-                    </td>
-                </tr>
-            {% endif %}
+
             <tr>
                 <td>
-                    <span id="log-into-irods">
-                        To load files from an iRODS server,
-                        <a id="btn-signin-irods" type="button" class="btn-link" data-toggle="modal" data-target="#irodsSignin">log in to iRODS</a>
+                    To load files from an iRODS server including your iRODS user HydroShare server:
+                    <div id="irods-browse">
+                        <span id="log-into-irods">
+                            <a id="btn-signin-irods" type="button" class="btn-link" data-toggle="modal" data-target="#irodsSignin">log in to iRODS</a>
+                        </span>
+                        <input type="hidden" id="irods-username" name="irods-username" value="">
+                        <input type="hidden" id="irods-password" name="irods-password" value="">
+                        <input type="hidden" id="irods-host" name="irods-host" value="">
+                        <input type="hidden" id="irods-port" name="irods-port" value="">
+                        <input type="hidden" id="irods-zone" name="irods-zone" value="">
+                        <input type="hidden" id="irods_file_names" name="irods_file_names" value="">
+                        <input type="hidden" id="irods_federated" name="irods_federated" value="">
                         <span id="sign-in-info"></span>
-                        <br>
-                    </span>
-                    <input type="hidden" id="irods-username" name="irods-username" value="">
-                    <input type="hidden" id="irods-password" name="irods-password" value="">
-                    <input type="hidden" id="irods-host" name="irods-host" value="">
-                    <input type="hidden" id="irods-port" name="irods-port" value="">
-                    <input type="hidden" id="irods-zone" name="irods-zone" value="">
-                    <input type="hidden" id="irods_file_names" name="irods_file_names" value="">
-                    <a id="btn-select-irods-file" type="button" class="btn btn-default row-selector hidden-form" data-toggle="modal" data-target="#irodsContent">
-                        Browse iRODS you just logged in...
-                    </a>
-                    <span id="irods-sel-file"></span>
-                    <a id="btn-signout-irods" type="button" class="btn-link hidden-form">log out of iRODS</a>
+                        <a id="btn-select-irods-file" type="button" class="btn btn-default hidden-form" data-toggle="modal" data-target="#irodsContent">
+                            Browse iRODS...
+                        </a>
+                        <span id="irods-sel-file"></span>
+                        <span id="irods-copy-move" class="hidden-form">
+                            <input type="radio" name="copy-move" value="copy" checked="checked"> Copy
+                            <input type="radio" name="copy-move" value="move"> Move
+                        </span>
+                        <a id="btn-signout-irods" type="button" class="btn-link hidden-form">log out of iRODS</a>
+                    </div>
                 </td>
             </tr>
         </tbody>
@@ -167,7 +159,6 @@
             $('#select-file').value = '';
             $('#select-file').attr('value', '');
             $('#irods-sel-file').text("No file selected.");
-            $('#irods-sel-file-uz').text("No file selected.");
 
             if(selected_file != undefined){
                 selected_file.value = '';

@@ -161,13 +161,7 @@
                                     <span class="glyphicon glyphicon-plus"><span class="button-label"> Add file...</span></span>
                                 </a>
                             </span>
-                            {% if show_user_zone_selection %}
-                                <input type="hidden" id="irods_username_uz" name="irods_username_uz" value="{{ user_name }}">
-                                <input type="hidden" id="irods_store_uz" name="irods_store_uz" value="/hydroshareuserZone/home/{{ user_name }}">
-                                <a id="btn-select-irods-file-uz" type="button" class="btn btn-success row-selector"
-                                   title="Add files larger than 1GB in size" data-toggle="modal"
-                                   data-target="#irodsContent">Add files from your iRODS User Zone...</a>
-                            {% endif %}
+
                             <a id="btn-select-irods-file" type="button" class="btn btn-success row-selector hidden-form" data-toggle="modal" data-target="#irodsContent" >
                                 <span class="glyphicon glyphicon-plus"><span class="button-label"> Add files from iRODS you just logged in...</span></span>
                             </a>
@@ -190,7 +184,7 @@
                     <!-- Buttons -->
                     {% block download_bag %}
                     <div>
-                        {% if show_user_zone_selection %}
+                        {% if user_zone_account_exist %}
                             <a id="rep-res-bag" type="button" class="btn btn-default row-selector" data-toggle="modal" data-target="#rep-resource-to-irods-dialog">
                                 <span class="glyphicon">
                                    <span title='Replicate Resource Bag to iRODS User Zone' class="button-label">Replicate Resource Bag to iRODS User Zone</span>
@@ -205,7 +199,7 @@
                                 <a target="_blank" href="http://en.wikipedia.org/wiki/BagIt">Learn more about the Bagit archive format</a>
                             </a>
                         {% endfor %}
-                        {% if show_user_zone_selection %}
+                        {% if user_zone_account_exist %}
                             <div id='rep-alert-success' class="alert alert-success alert-dismissible" role="alert" style="display:none">
                                 <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
                                 <span id="rep-status-success"></span>
@@ -1504,7 +1498,6 @@
                     $("#add-file-input").removeAttr('multiple');
                     if (file_count > 0) {
                         $("#btn-add-file").hide();
-                        $("#btn-select-irods-file-uz").hide();
                         $("#log-into-irods").hide();
                         $("#sign-in-info").hide();
                         $("#btn-select-irods-file").hide();
@@ -1513,7 +1506,6 @@
                 // hide add file button if file upload is not allowed for the resource type
                 if (file_types == "()") {
                     $("#btn-add-file").hide();
-                    $("#btn-select-irods-file-uz").hide();
                     $("#log-into-irods").hide();
                     $("#sign-in-info").hide();
                     $("#btn-select-irods-file").hide();
