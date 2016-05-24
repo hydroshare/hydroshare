@@ -944,7 +944,7 @@ def act_on_group_membership_request(request, membership_request_id, action, *arg
     try:
         membership_request = GroupMembershipRequest.objects.get(pk=membership_request_id)
     except ObjectDoesNotExist:
-        ajax_response_data = {'status': 'error', 'message': 'No matching group membership request was found'}
+        messages.error(request, 'No matching group membership request was found')
     else:
         try:
             user_acting.uaccess.act_on_group_membership_request(membership_request, accept_request)
@@ -953,14 +953,24 @@ def act_on_group_membership_request(request, membership_request_id, action, *arg
                 messages.success(request, message)
                 # send email to the user whose request/invitation got accepted
                 if membership_request.invitation_to is not None:
-                    email_msg = """Your invitation to user ({}) to join the group({}) has been accepted.
-                    """.format(membership_request.invitation_to.first_name, membership_request.group_to_join.name)
+                    # here we are sending email to group owner who invited
+                    email_msg = """Dear {}
+                    <p>Your invitation to user '{}' to join the group '{}' has been accepted.</p>
+                    <p>Thank you</p>
+                    <p>The HydroShare Team</p>
+                    """.format(membership_request.request_from.first_name,
+                               membership_request.invitation_to.first_name, membership_request.group_to_join.name)
                 else:
-                    email_msg = """Your request to join the group({}) has been accepted.
-                    """.format(membership_request.group_to_join.name)
+                    # here wre are sending email to the user whose request to join got accepted
+                    email_msg = """Dear {}
+                    <p>Your request to join the group '{}' has been accepted.</p>
+                    <p>Thank you</p>
+                    <p>The HydroShare Team</p>
+                    """.format(membership_request.request_from.first_name, membership_request.group_to_join.name)
 
                 send_mail(subject="HydroShare group membership",
-                          message=email_msg,
+                          message= email_msg,
+                          html_message=email_msg,
                           from_email=settings.DEFAULT_FROM_EMAIL,
                           recipient_list=[membership_request.request_from.email], fail_silently=True)
             else:
