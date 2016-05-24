@@ -227,9 +227,15 @@ function share_resource_ajax_submit(form_id) {
                 }
 
 
-                if (json_response.profile_pic != "No picture provided") {
-                    rowTemplate.find(".profile-pic-thumbnail").attr("style", "background-image: url('" + json_response.profile_pic + "')");
-                    rowTemplate.find(".profile-pic-thumbnail").removeClass("user-icon");
+                if (shareType == "user") {
+                    if (json_response.profile_pic != "No picture provided") {
+                        rowTemplate.find(".group-image-wrapper").remove();
+                        rowTemplate.find(".profile-pic-thumbnail").attr("style", "background-image: url('" + json_response.profile_pic + "')");
+                        rowTemplate.find(".profile-pic-thumbnail").removeClass("user-icon");
+                    }
+                }
+                else {
+                    rowTemplate.find(".profile-pic-thumbnail").remove();
                 }
 
                 if (access_type == "view") {
