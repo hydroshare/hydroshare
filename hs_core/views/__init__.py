@@ -884,18 +884,19 @@ def make_group_membership_request(request, group_id, user_id=None, *args, **kwar
     if user_id is not None:
         user_to_join = utils.user_from_id(user_id)
     try:
-        requesting_user.uaccess.create_group_membership_request(group_to_join, user_to_join)
+        membership_request = requesting_user.uaccess.create_group_membership_request(group_to_join, user_to_join)
         if user_to_join is not None:
             message = 'Group membership invitation was successful'
             # send mail to the user who was invited to join group
             send_action_to_take_email(request, user=user_to_join, action_type='group_membership',
-                                      group=group_to_join)
+                                      group=group_to_join, membership_request=membership_request)
         else:
             message = 'Group membership request was successful'
             # send mail to all owners of the group
             for grp_owner in group_to_join.gaccess.owners:
                 send_action_to_take_email(request, user=requesting_user, action_type='group_membership',
-                                          group=group_to_join, group_owner=grp_owner)
+                                          group=group_to_join, group_owner=grp_owner,
+                                          membership_request=membership_request)
 
         status_code = 200
         ajax_response_data = {'status': 'success', 'message': message}
@@ -906,20 +907,31 @@ def make_group_membership_request(request, group_id, user_id=None, *args, **kwar
     return HttpResponse(json.dumps(ajax_response_data), status=status_code)
 
 
-def group_membership(request, uidb36=None, token=None):
+def group_membership(request, uidb36=None, token=None, membership_request_id=None):
     """
     View for the link in the verification email sent to a user
     when they request/invite to join a group.
     User is logged in and redirecting to the user profile page so that
     the actual action of accepting or declining request to join group can be taken by the user.
     """
+    membership_request = GroupMembershipRequest.objects.filter(id=membership_request_id).first()
+    if membership_request is not None:
+        user = authenticate(uidb36=uidb36, token=token, is_active=True)
+        if user is not None:
+            user.uaccess.act_on_group_membership_request(membership_request, accept_request=True)
+            auth_login(request, user)
+            if membership_request.invitation_to is not None:
+                message = "You just joined the group '{}'".format(membership_request.group_to_join.name)
+            else:
+                message = "User '{}' just joined the group '{}'".format(membership_request.request_from.first_name,
+                                                                        membership_request.group_to_join.name)
 
-    user = authenticate(uidb36=uidb36, token=token, is_active=True)
-    if user is not None:
-        auth_login(request, user)
-        messages.info(request, "There are group membership requests for you to act on")
-        # redirect to user profile page
-        return HttpResponseRedirect('/user/{}/'.format(user.id))
+            messages.info(request, message)
+            # redirect to user profile page
+            return HttpResponseRedirect('/group/{}/'.format(membership_request.group_to_join.id))
+        else:
+            messages.error(request, "The link you clicked is no longer valid.")
+            return redirect("/")
     else:
         messages.error(request, "The link you clicked is no longer valid.")
         return redirect("/")

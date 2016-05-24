@@ -276,17 +276,28 @@ def send_action_to_take_email(request, user, action_type, **kwargs):
     the action link, as well as the names of the email templates
     to use. Additional context variable needed in the email template can be
     passed using the kwargs
+
+    for action_type == 'group_membership', an instance of GroupMembershipRequest and instance of Group are expected to
+    be passed into this function
     """
     email_to = kwargs.get('group_owner', user)
-    action_url = reverse(action_type, kwargs={
-        "uidb36": int_to_base36(email_to.id),
-        "token": default_token_generator.make_token(email_to)
-    }) + "?next=" + (next_url(request) or "/")
-    context = {
-        "request": request,
-        "user": user,
-        "action_url": action_url,
-    }
+    context = {'request': request, 'user':user}
+    if action_type == 'group_membership':
+        membership_request = kwargs['membership_request']
+        action_url = reverse(action_type, kwargs={
+            "uidb36": int_to_base36(email_to.id),
+            "token": default_token_generator.make_token(email_to),
+            "membership_request_id": membership_request.id
+        }) + "?next=" + (next_url(request) or "/")
+
+        context['group'] = kwargs.pop('group')
+    else:
+        action_url = reverse(action_type, kwargs={
+            "uidb36": int_to_base36(email_to.id),
+            "token": default_token_generator.make_token(email_to)
+        }) + "?next=" + (next_url(request) or "/")
+
+    context['action_url'] = action_url
     context.update(kwargs)
 
     subject_template_name = "email/%s_subject.txt" % action_type
