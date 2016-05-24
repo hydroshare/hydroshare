@@ -177,23 +177,6 @@
 
 {% block extra_js %}
     <script>
-        // Makes all group preview containers have the same height.
-        function fixViewPort() {
-            var row = $('.group-thumbnails');
-            $.each(row, function () {
-                var maxh = 0;
-                $.each($(this).find('div[class^="col-"]'), function () {
-                    if ($(this).height() > maxh)
-                        maxh = $(this).height();
-                });
-                if (maxh) {
-                    $.each($(this).find('div[class^="col-"]'), function () {
-                        $(this).height(maxh);
-                    });
-                }
-            });
-        }
-
         function request_join_group_ajax_submit() {
             var target = $(this);
             var dataFormID = $(this).attr("data-form-id");
@@ -260,7 +243,6 @@
                     }
                 }
             });
-            fixViewPort();
         });
     </script>
 {% endblock %}
