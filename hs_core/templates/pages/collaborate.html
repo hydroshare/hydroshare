@@ -81,7 +81,8 @@
                                                     </div>
 
                                                     <div class="modal-body">
-                                                        <table class="table access-table" style="text-align: left;">
+                                                        <table class="table access-table members-table"
+                                                               style="text-align: left;">
                                                             <tbody>
                                                             {% for u in group.gaccess.members %}
                                                                 <tr id="row-id-{{ u.pk }}"
@@ -95,14 +96,13 @@
                                                                                 <div class="profile-pic-thumbnail round-image user-icon"></div>
                                                                             {% endif %}
 
-                                                                            <span data-col="name"
-                                                                                  class="user-name">{{ u|best_name }}</span>
+                                                                            <a data-col="name"
+                                                                               class="user-name">{{ u|contact|safe }}</a>
                                                                             {% if u.pk == current_user.pk %}
                                                                                 <span class="text-muted you-flag">(You)</span>
                                                                             {% endif %}
                                                                             <br>
-                                                        <span data-col="user-name"
-                                                              class="user-username-content">{{ u.username }}</span>
+                                                                            <span data-col="user-name" class="user-username-content">{{ u.username }}</span>
                                                                         </div>
                                                                     </td>
                                                                 </tr>
@@ -125,7 +125,7 @@
 
                                     {% if group.is_user_member %}
                                         <div class="text-center">
-                                            <h4 class="text-muted">You have joined this group.</h4>
+                                            <h4 class="flag-joined"><span class="glyphicon glyphicon-ok"></span> You have joined this group.</h4>
                                         </div>
                                     {% elif group.join_request_waiting_owner_action %}
                                         <h4 class="text-muted">Request Sent</h4>
@@ -234,7 +234,7 @@
                     var container = target.parent().parent().parent().parent();
                     target.parent().parent().parent().remove();
                     if (target.attr("data-user-action") == "Accept") {
-                        container.append('<div class="text-center"><h4 class="text-muted">You have joined this group.</h4></div>');
+                        container.append('<div class="text-center"><h4 class="flag-joined"><span class="glyphicon glyphicon-ok"></span> You have joined this group.</h4></div>');
                     }
                 },
                 error: function (XMLHttpRequest, textStatus, errorThrown) {

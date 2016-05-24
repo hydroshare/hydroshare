@@ -51,12 +51,7 @@
                         {% endif %} <span class="caret"></span>
                     </button>
                     <ul class="dropdown-menu">
-                        <li>
-                            <form action="/hsapi/_internal/unshare-group-with-user/{{ group.id }}/{{ user.id }}/">
-                                {% csrf_token %}
-                                <a href="#" id="btn-leave-group"><span class="glyphicon glyphicon-hand-left btn-edit"></span>&nbsp;&nbsp;Leave Group</a>
-                            </form>
-                        </li>
+
                         {% if profile_user.is_group_owner or profile_user.is_group_editor %}
                             <li>
                                 <a href="#" id="btn-edit-group" data-toggle="modal"
@@ -65,15 +60,22 @@
                             </li>
 
                             {#  TODO: Pending delete group functionality #}
-{#                            <li role="separator" class="divider"></li>#}
-{#                            <li>#}
-{#                                <form action="/hsapi/_internal/delete-group/{{ group.id }}">#}
-{#                                    {% csrf_token %}#}
-{#                                    <a href="#" id="btn-leave-group"><span#}
-{#                                            class="glyphicon glyphicon-trash btn-remove"></span>&nbsp;&nbsp;Delete Group</a>#}
-{#                                </form>#}
-{#                            </li>#}
+                            {#                            <li role="separator" class="divider"></li>#}
+                            {#                            <li>#}
+                            {#                                <form action="/hsapi/_internal/delete-group/{{ group.id }}">#}
+                            {#                                    {% csrf_token %}#}
+                            {#                                    <a href="#" id="btn-leave-group"><span#}
+                            {#                                            class="glyphicon glyphicon-trash btn-remove"></span>&nbsp;&nbsp;Delete Group</a>#}
+                            {#                                </form>#}
+                            {#                            </li>#}
                         {% endif %}
+                        <li>
+                            <form action="/hsapi/_internal/unshare-group-with-user/{{ group.id }}/{{ user.id }}/">
+                                {% csrf_token %}
+                                <a href="#" id="btn-leave-group"><span
+                                        class="glyphicon glyphicon-hand-left btn-remove"></span>&nbsp;&nbsp;Leave Group</a>
+                            </form>
+                        </li>
                     </ul>
                 </div>
             </div>
@@ -127,13 +129,14 @@
                                             <div class="profile-pic-thumbnail round-image user-icon"></div>
                                         {% endif %}
                                         <div>
+                                            <h5 class="text-muted pull-right">{{ res.date_granted }}</h5>
                                             <div class="shared-resource-info">
-                                                <a>{{ res.grantor|contact|safe }}</a> <span class="text-muted">shared</span>
+                                                <strong><a>{{ res.grantor|contact|safe }}</a></strong><span class="text-muted"> shared</span>
                                                 <span><a href="{{ res.get_absolute_url }}">{{ res.metadata.title }}</a></span>
                                             </div>
                                             <h5><span class="text-muted">Resource type: </span>{{ res|resource_type }}
                                             </h5>
-                                            <h5><span class="text-muted">Date: </span>{{ res.date_granted }}</h5>
+
                                         </div>
 
                                         {% if res.metadata.description %}
@@ -472,16 +475,23 @@
                                         <span class="glyphicon glyphicon glyphicon-search"></span>
                                         <a data-toggle="collapse" class="accordion-toggle" data-parent="#accordion" href="#filter">&nbsp;Shared by</a></h4>
                                 </div>
-                                <div id="filter" class="facet-list panel-collapse collapse in">
+                                <div id="filter-shared-by" class="facet-list panel-collapse collapse in">
                                     <div class="panel-body">
                                         <div class="list-group">
                                             <ul class="list-group inputs-group">
-                                                <li class="list-group-item">
-                                                    <span data-facet="owned" class="badge">0</span>
-                                                    <label class="checkbox noselect">
-                                                        <input type="checkbox" data-facet="owned" value="Owned">Some User Name</label>
-                                                </li>
+{#                                                <li class="list-group-item">#}
+{#                                                    <span data-facet="owned" class="badge">0</span>#}
+{#                                                    <label class="checkbox noselect">#}
+{#                                                        <input type="checkbox" class="grantor" data-grantor-id="4">Some User Name</label>#}
+{#                                                </li>#}
                                             </ul>
+                                        </div>
+
+                                        <div id="grantors-list">
+                                            {% for res in group_resources %}
+                                                <span data-grantor-id="{{ res.grantor.id }}"
+                                                      data-grantor-name="{{ res.grantor|best_name }}"></span>
+                                            {% endfor %}
                                         </div>
                                     </div>
                                 </div>
@@ -594,10 +604,11 @@
                                     <th>Favorite</th>{# Used in table processing #}
                                     <th>Last modified</th>{# Used in table processing #}
                                     <th>Sharing Status</th>{# Used in table processing #}
+                                    <th>Grantor</th>{# Used in table processing #}
                                 </tr>
                                 </thead>
                                 <tbody>
-                                    {% for res in group.gaccess.view_resources %}
+                                    {% for res in group_resources %}
                                         <tr data-tr-index="{{ forloop.counter0 }}">
                                             <td>
 {#                                                <input class="row-selector" type="checkbox">#}
@@ -755,6 +766,7 @@
                                                     Private
                                                 {% endif %}
                                             </td>
+                                            <td>{{ res.grantor.id }}</td>
                                         </tr>
                                     {% endfor %}
                                 </tbody>
@@ -1039,7 +1051,8 @@
 
 {% block extra_js %}
     <script type="text/javascript" charset="utf8" src="//cdn.datatables.net/1.10.10/js/jquery.dataTables.js"></script>
-        <script>
+
+    <script>
         var colDefs = [
             {
                 "targets": [0],     // Row selector and controls
@@ -1093,11 +1106,13 @@
                 "targets": [11],     // Sharing status
                 "visible": false,
                 "searchable": false
+            },
+            {
+                "targets": [12],     // Access Grantor
+                "visible": false,
+                "searchable": true
             }
         ];
-    </script>
-    <script type="text/javascript" src="{{ STATIC_URL }}js/hs_resource_table.js"></script>
-    <script>
         function group_invite_ajax_submit() {
             if (!$("#id_user-deck > .hilight").length) {
                 return false; // If no user selected, ignore the request
@@ -1312,6 +1327,26 @@
             // Initialize filters counters
             updateMembersLabelCount();
 
+            // Initialize Shared By filter
+            var grantors = $("#grantors-list span");
+            for (var i = 0; i < grantors.length; i++) {
+                var id = $(grantors[i]).attr("data-grantor-id");
+                if ($("#filter-shared-by .grantor[data-grantor-id='" + id + "']").length == 0) {
+                    var count = $("#grantors-list span[data-grantor-id='" + id + "']").length;
+                    var name = $(grantors[i]).attr("data-grantor-name").trim();
+
+                    $("#filter-shared-by .inputs-group").append('<li class="list-group-item">' +
+                                                                    '<span data-facet="owned" class="badge">' + count + '</span>' +
+                                                                    '<label class="checkbox noselect">' +
+                                                                    '<input type="checkbox" class="grantor" data-grantor-id="' + id + '">' + name + '</label>' +
+                                                                '</li>')
+                }
+            }
+
+            $("#grantors-list").remove();   // Remove temporary list
+
         });
     </script>
+    <script type="text/javascript" src="{{ STATIC_URL }}js/hs_resource_table.js"></script>
+
 {% endblock %}
