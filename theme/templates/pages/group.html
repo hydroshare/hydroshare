@@ -121,8 +121,8 @@
                             {% if group_resources %}
                                 {% for res in group_resources %}
                                     <div class="group-activity-block activity-block">
-                                        {% if res.grantor.profile.picture and res.grantor.profile.picture.url %}
-                                            <div style="background-image: url('{{ res.grantor.profile.picture.url }}');"
+                                        {% if res.grantor.userprofile.picture and res.grantor.userprofile.picture.url %}
+                                            <div style="background-image: url('{{ res.grantor.userprofile.picture.url }}');"
                                                  class="profile-pic-thumbnail round-image pull-left">
                                             </div>
                                         {% else %}
@@ -428,8 +428,8 @@
                                     {% else %}
                                         <tr>
                                             <td data-id="picture">
-                                                {% if pendingrequest.request_from.userprofile and pendingrequest.request_from.userprofile.picture.url %}
-                                                    <div style="background-image: url('{{ pendingrequest.request_from.userprofile.picture.url }}');"
+                                                {% if pendingrequest.invitation_to.userprofile and pendingrequest.invitation_to.userprofile.picture.url %}
+                                                    <div style="background-image: url('{{ pendingrequest.invitation_to.userprofile.picture.url }}');"
                                                          class="profile-pic-thumbnail round-image pull-left">
                                                     </div>
                                                 {% else %}

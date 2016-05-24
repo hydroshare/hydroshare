@@ -3613,8 +3613,20 @@ div.group-add-photo {
 	color: #4BB5C1;
 }
 
+.flag-declined {
+	color:#d9534f;
+}
+
 .flag-joined .glyphicon {
 	border: 1px solid #4BB5C1;
+	border-radius: 50%;
+	height: 30px;
+	width: 30px;
+	padding-top: 5px;
+}
+
+.flag-declined .glyphicon {
+	border: 1px solid #d9534f;
 	border-radius: 50%;
 	height: 30px;
 	width: 30px;

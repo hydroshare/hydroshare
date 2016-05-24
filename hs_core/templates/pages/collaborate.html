@@ -236,6 +236,9 @@
                     if (target.attr("data-user-action") == "Accept") {
                         container.append('<div class="text-center"><h4 class="flag-joined"><span class="glyphicon glyphicon-ok"></span> You have joined this group.</h4></div>');
                     }
+                    else {
+                        container.append('<div class="text-center"><h4 class="flag-declined"><span class="glyphicon glyphicon-remove"></span> You have declined to join this group.</h4></div>');
+                    }
                 },
                 error: function (XMLHttpRequest, textStatus, errorThrown) {
                     console.log("error");
