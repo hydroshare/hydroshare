@@ -2404,7 +2404,7 @@ div.affiliation {
 }
 .metadata-wrapper {
     margin-left: 50px;
-    margin-bottom: 5px;
+    margin-bottom: 20px;
 }
 
 .metadata-wrapper > h5 {
@@ -2456,10 +2456,9 @@ form.act-on-request button {
 }
 
 form.act-on-request {
-    width: 50%;
-    float: left;
     text-align: center;
-	margin-top: 20px;
+	margin:10px;
+	display: inline;
 }
 
 table.overview tr > td:first-child {
@@ -3405,7 +3404,7 @@ button.no-style:focus {
 
 .group-description {
     margin-top:20px;
-	max-height:150px;
+	max-height:250px;
 	overflow-y: auto;
 }
 
@@ -3637,6 +3636,7 @@ div.group-add-photo {
 	height: 30px;
 	width: 30px;
 	padding-top: 5px;
+	padding-right: 2px;
 }
 
 .flag-declined .glyphicon {
@@ -3645,4 +3645,11 @@ div.group-add-photo {
 	height: 30px;
 	width: 30px;
 	padding-top: 5px;
+}
+
+.request-block {
+    margin-top: 20px;
+    border: 1px solid #DDD;
+    padding: 10px;
+    border-radius: 4px;
 }

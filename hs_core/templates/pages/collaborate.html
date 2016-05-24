@@ -117,20 +117,22 @@
                                                 </div>
                                             </div>
                                         </div>
-
                                     {% endif %}
+
+                                    <br>
 
                                     {% if group.is_user_member %}
                                         <div class="text-center">
-                                            <h4 class="flag-joined"><span class="glyphicon glyphicon-ok"></span> You have joined this group.</h4>
+                                            <h4 class="flag-joined"><span class="glyphicon glyphicon-ok"></span> You have joined this group</h4>
                                         </div>
                                     {% elif group.join_request_waiting_owner_action %}
-                                        <h4 class="text-muted">Request Sent</h4>
+                                        <h4 class="flag-joined"><span class="glyphicon glyphicon-send"></span> Request Sent</h4>
 
                                     {% elif group.join_request_waiting_user_action %}
                                         {#  TODO: MAKE BOTH OF THIS AJAX #}
                                         <div>
                                             <span class="text-muted">You have been invited to join this group!</span>
+                                            <br><br>
                                             <div class="height-fix">
                                                 <form class="act-on-request height-fix"
                                                       action="/hsapi/_internal/act-on-group-membership-request/{{ group.join_request.id }}/accept/"
@@ -207,7 +209,7 @@
                 success: function (result) {
                     var container = target.parent().parent();
                     target.parent().remove();
-                    container.append('<h4 class="text-muted">Request Sent</h4>');
+                    container.append('<h4 class="flag-joined"><span class="glyphicon glyphicon-send"></span> Request Sent</h4>');
                 },
                 error: function (XMLHttpRequest, textStatus, errorThrown) {
                     console.log("error");
@@ -231,7 +233,7 @@
                     var container = target.parent().parent().parent().parent();
                     target.parent().parent().parent().remove();
                     if (target.attr("data-user-action") == "Accept") {
-                        container.append('<div class="text-center"><h4 class="flag-joined"><span class="glyphicon glyphicon-ok"></span> You have joined this group.</h4></div>');
+                        container.append('<div class="text-center"><h4 class="flag-joined"><span class="glyphicon glyphicon-ok"></span> You have joined this group</h4></div>');
                     }
                     else {
                         container.append('<div class="text-center"><h4 class="flag-declined"><span class="glyphicon glyphicon-remove"></span> You have declined to join this group.</h4></div>');

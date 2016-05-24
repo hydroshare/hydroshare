@@ -31,62 +31,69 @@
                 {% endif %}
                 {% if my_pending_requests %}
                     {% for request in my_pending_requests %}
-                        <span>Invited </span><a>{{ request.invitation_to|contact|safe }}</a> <span> to join </span><strong>{{ request.group_to_join.name }}</strong>
-                        <div class="text-muted">Request Sent</div>
-                        <div class="text-muted">{{ request.date_requested }}</div>
-                        <table>
-                            <tr>
-                                <form id="act-on-request"
-                                      action="/hsapi/_internal/act-on-group-membership-request/{{ request.id }}/reject/"
-                                      method="POST">
-                                    {% csrf_token %}
-                                    <button type="submit" class="btn btn-default">Cancel Request</button>
-                                </form>
-                            </tr>
-                        </table>
-                        <br>
+                        <div class="request-block">
+                            {% if request.invitation_to %}
+                                <span>You invited </span><a>{{ request.invitation_to|contact|safe }}</a>
+                                <span> to join </span><strong>{{ request.group_to_join.name }}</strong>
+                            {% else %}
+                                <span>You asked to join <strong>{{ request.group_to_join.name }}</strong>
+                            {% endif %}
+                            <div class="text-muted">{{ request.date_requested }}</div>
+                            <br>
+                            <table>
+                                <tr>
+                                    <form id="act-on-request"
+                                          action="/hsapi/_internal/act-on-group-membership-request/{{ request.id }}/reject/"
+                                          method="POST">
+                                        {% csrf_token %}
+                                        <button type="submit" class="btn btn-default">Cancel Request</button>
+                                    </form>
+                                </tr>
+                            </table>
+                        </div>
                     {% endfor %}
                 {% endif %}
 
                 {% if group_membership_requests %}
                     {% for request in group_membership_requests %}
-                        {#      TODO: MAKE BOTH OF THIS AJAX    #}
-                        <form></form>
-                        <div class="activity-block height-fix" style="margin-top:20px; padding-top:5px; border-bottom:1px dashed #DDD; padding-bottom:20px;">
-                            {% if request.request_from.userprofile.picture and request.request_from.userprofile.picture.url %}
-                                <div style="background-image: url('{{ profile.picture.url }}');"
-                                     class="profile-pic-thumbnail round-image pull-left">
-                                </div>
-                            {% else %}
-                                <div class="profile-pic-thumbnail round-image user-icon"></div>
-                            {% endif %}
 
-                            <div class="metadata-wrapper">
-                                <div class="shared-resource-info">
-                                    <a>{{ request.request_from|contact|safe }}</a>
+                        <div class="request-block">
+                            <form></form>
+                            <div class="activity-block height-fix">
+                                {% if request.request_from.userprofile.picture and request.request_from.userprofile.picture.url %}
+                                    <div style="background-image: url('{{ request.request_from.userprofile.picture.url }}');"
+                                         class="profile-pic-thumbnail round-image pull-left">
+                                    </div>
+                                {% else %}
+                                    <div class="profile-pic-thumbnail round-image user-icon"></div>
+                                {% endif %}
 
-                                    <span class="text-muted"> invites you to join </span>
-                                    <strong>{{ request.group_to_join.name }}</strong>
+                                <div class="metadata-wrapper">
+                                    <div class="shared-resource-info">
+                                        <a>{{ request.request_from|contact|safe }}</a>
+
+                                        <span class="text-muted"> invites you to join </span>
+                                        <strong>{{ request.group_to_join.name }}</strong>
+                                    </div>
                                 </div>
+
+                                {#  TODO: MAKE THIS URLS REFRESH THE PAGE #}
+                                <form class="act-on-request height-fix"
+                                      action="/hsapi/_internal/act-on-group-membership-request/{{ request.id }}/accept/"
+                                      method="POST">
+                                    {% csrf_token %}
+                                    <button type="submit" class="btn btn-primary btn-act-on-request" data-user-action="Accept">Accept</button>
+                                </form>
+
+                                <form class="act-on-request height-fix"
+                                      action="/hsapi/_internal/act-on-group-membership-request/{{ request.id }}/reject/"
+                                      method="POST">
+                                    {% csrf_token %}
+                                    <button type="submit" class="btn btn-default btn-act-on-request">
+                                        Decline
+                                    </button>
+                                </form>
                             </div>
-
-                            {#  TODO: MAKE THIS URLS REFRESH THE PAGE #}
-                            <form class="act-on-request height-fix"
-                                  action="/hsapi/_internal/act-on-group-membership-request/{{ request.id }}/accept/"
-                                  method="POST">
-                                {% csrf_token %}
-                                <button type="submit" class="btn btn-primary btn-act-on-request" data-user-action="Accept">Accept</button>
-                            </form>
-
-                            <form class="act-on-request height-fix"
-                                  action="/hsapi/_internal/act-on-group-membership-request/{{ request.id }}/reject/"
-                                  method="POST">
-                                {% csrf_token %}
-                                <button type="submit" class="btn btn-default btn-act-on-request">
-                                    Decline
-                                </button>
-                            </form>
-                        <hr>
                         </div>
                     {% endfor %}
                 {% endif %}
