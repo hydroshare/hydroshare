@@ -361,6 +361,10 @@ function updateLabelLists() {
         resourceTable.draw();
     });
 
+    $("#filter-shared-by input[type='checkbox']").change(function(){
+        resourceTable.draw();
+    });
+
     $("#user-labels-left input[type='checkbox']").change(function () {
         resourceTable.draw();
     });
@@ -592,6 +596,7 @@ function typeQueryStrings () {
     9 - Favorite
     10 - Last modified (sortable format)
     11 - Sharing Status
+    12 - Access Grantor
 ==================================================*/
 
 /* Custom filtering function which will search data for the values in the custom filter dropdown or query strings */
@@ -670,6 +675,22 @@ $.fn.dataTable.ext.search.push (
                     return true;
 
                 if (data[7] != "Owned" && data[7] != "Viewable" && data[7] != "Editable") {
+                    return false;
+                }
+            }
+
+            // Shared by - Used in group resource listing
+            var grantors = $('#filter-shared-by .grantor:checked');
+            if (grantors.length) {
+                var grantorFlag = false;
+                for (var i = 0; i < grantors.length; i++) {
+                    var user = parseInt($(grantors[i]).attr("data-grantor-id"));
+                    if (parseInt(data[12]) == user) {
+                        grantorFlag = true;
+                    }
+                }
+
+                if (!grantorFlag) {
                     return false;
                 }
             }

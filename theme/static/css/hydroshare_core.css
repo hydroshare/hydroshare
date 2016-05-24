@@ -1956,6 +1956,14 @@ td.user-actions > span:hover {
 	pointer-events: none;
 }
 
+.members-table tr:first-child td {
+	border-top: 0;
+}
+
+.members-table tr:last-child {
+	border-bottom: 0;
+}
+
 #manage-access .custom-well > .input-group {
     width: 100%;
 }
@@ -3599,4 +3607,16 @@ div.group-add-photo {
 
 .link-members {
 	margin-bottom: 10px;
+}
+
+.flag-joined {
+	color: #4BB5C1;
+}
+
+.flag-joined .glyphicon {
+	border: 1px solid #4BB5C1;
+	border-radius: 50%;
+	height: 30px;
+	width: 30px;
+	padding-top: 5px;
 }

@@ -117,7 +117,7 @@
                                     </td>
                                     <td>
                                         <h4><a href="/group/{{ group.id }}">{{ group.name }}</a></h4>
-                                        <small class="text-muted">21 Members</small>
+                                        <small class="text-muted">{{ group.gaccess.members|length }} Member{% if group.gaccess.members|length > 1 %}s{% endif %}</small>
                                     </td>
                                     {#  TODO: Populate with Member or Owner #}
                                     <td><span>{% if group.is_group_owner %}Owner{% else %}Member{% endif %}</span></td>
