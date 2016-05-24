@@ -122,11 +122,19 @@
                                             </div>
                                         {% endif %}
                                     </td>
+
                                     <td>
                                         <h4><a href="/group/{{ group.id }}">{{ group.name }}</a></h4>
+                                        {% if group.gaccess.public and group.gaccess.discoverable %}
+                                            <img src="/static/img/public.png" alt="Public Group" title="Public Group">
+                                        {% elif not group.gaccess.public and group.gaccess.discoverable %}
+                                            <img src="/static/img/discoverable.png" alt="Discoverable Group" title="Discoverable Group">
+                                        {% else %}
+                                            <img src="/static/img/private.png" alt="Private Group" title="Private Group">
+                                        {% endif %}
                                         <small class="text-muted">{{ group.gaccess.members|length }} Member{% if group.gaccess.members|length > 1 %}s{% endif %}</small>
                                     </td>
-                                    {#  TODO: Populate with Member or Owner #}
+
                                     <td><span>{% if group.is_group_owner %}Owner{% else %}Member{% endif %}</span></td>
                                 </tr>
 
