@@ -1655,12 +1655,18 @@
                             $(".add-view-group-form").hide();
                             action = action.replace("share-resource-with-group", "share-resource-with-user");
                             form.attr("action", action);
+                            $("#list-roles li:nth-child(3)").show();
                         }
                         else {
                             $(".add-view-group-form").show();
                             $(".add-view-user-form").hide();
                             action = action.replace("share-resource-with-user", "share-resource-with-group");
                             form.attr("action", action);
+                            if ($("#selected_role").attr("data-role") == "owner") {
+                                $("#selected_role").attr("data-role", "view");
+                                $("#selected_role").text("Can view");
+                            }
+                            $("#list-roles li:nth-child(3)").hide();
                         }
                     }
                 });
