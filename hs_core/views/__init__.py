@@ -23,6 +23,7 @@ from django.core.urlresolvers import reverse
 
 
 from rest_framework.decorators import api_view
+from rest_framework import status
 
 from mezzanine.conf import settings
 from mezzanine.pages.page_processors import processor_for
@@ -618,12 +619,6 @@ class GroupForm(forms.Form):
     picture = forms.ImageField(required=False)
     privacy_level = forms.CharField(required=True)
 
-    # def clean_name(self):
-    #     data = self.cleaned_data['name']
-    #     if Group.objects.filter(name__iexact=data).exists():
-    #         raise forms.ValidationError("A group exits with the same name.")
-    #     return data
-
     def clean_privacy_level(self):
         data = self.cleaned_data['privacy_level']
         if data not in ('public', 'private', 'discoverable'):
@@ -817,20 +812,6 @@ def update_user_group(request, group_id, *args, **kwargs):
 
 
 @login_required
-def delete_user_group(request, group_id, *args, **kwargs):
-    user = request.user
-    group_to_delete = utils.group_from_id(group_id)
-    status = 'error'
-    if user.uaccess.can_delete_group(group_to_delete):
-        user.uaccess.delete_group(group_to_delete)
-        status = 'success'
-        ajax_response_data = {'status': status}
-    else:
-        ajax_response_data = {'status': status, 'errors': "You don't have permission to delete this group"}
-    return HttpResponse(json.dumps(ajax_response_data))
-
-
-@login_required
 def share_group_with_user(request, group_id, user_id, privilege, *args, **kwargs):
     requesting_user = request.user
     group_to_share = utils.group_from_id(group_id)
@@ -861,6 +842,14 @@ def share_group_with_user(request, group_id, user_id, privilege, *args, **kwargs
 
 @login_required
 def unshare_group_with_user(request, group_id, user_id, *args, **kwargs):
+    """
+    Remove a user from a group
+
+    :param request: group owner who is removing the user from the group
+    :param group_id: id of the user being removed from the group
+    :param user_id: id of the group from which the user to be removed
+    :return:
+    """
     requesting_user = request.user
     group_to_unshare = utils.group_from_id(group_id)
     user_to_unshare_with = utils.user_from_id(user_id)
@@ -883,6 +872,15 @@ def unshare_group_with_user(request, group_id, user_id, *args, **kwargs):
 
 @login_required
 def make_group_membership_request(request, group_id, user_id=None, *args, **kwargs):
+    """
+    Allows either an owner of the group to invite a user to join a group or a user to make a request
+    to join a group
+    :param request: the user who is making the request
+    :param group_id: ID of the group for which the join request/invitation to me made
+    :param user_id: needed only when an owner is inviting a user to join a group. This is the id of the user the owner
+                    is inviting
+    :return:
+    """
     requesting_user = request.user
     group_to_join = utils.group_from_id(group_id)
     user_to_join = None
@@ -903,21 +901,25 @@ def make_group_membership_request(request, group_id, user_id=None, *args, **kwar
                                           group=group_to_join, group_owner=grp_owner,
                                           membership_request=membership_request)
 
-        status_code = 200
+        status_code = status.HTTP_200_OK
         ajax_response_data = {'status': 'success', 'message': message}
     except PermissionDenied as ex:
-        status_code = 400
+        status_code = status.HTTP_400_BAD_REQUEST
         ajax_response_data = {'status': 'error', 'message': ex.message}
 
     return HttpResponse(json.dumps(ajax_response_data), status=status_code)
 
 
-def group_membership(request, uidb36=None, token=None, membership_request_id=None):
+def group_membership(request, uidb36, token, membership_request_id, **kwargs):
     """
-    View for the link in the verification email sent to a user
+    View for the link in the verification email that was sent to a user
     when they request/invite to join a group.
-    User is logged in and redirecting to the user profile page so that
-    the actual action of accepting or declining request to join group can be taken by the user.
+    User is logged in and the request to join a group is accepted. Then the user is redirected to the group
+    profile page of the group for which the membership got accepted.
+
+    :param uidb36: ID of the user to whom the email was sent (part of the link in the email)
+    :param token: token that was part of the link in the email
+    :param membership_request_id: ID of the GroupMembershipRequest object (part of the link in the email)
     """
     membership_request = GroupMembershipRequest.objects.filter(id=membership_request_id).first()
     if membership_request is not None:
@@ -934,7 +936,7 @@ def group_membership(request, uidb36=None, token=None, membership_request_id=Non
                                                                         membership_request.group_to_join.name)
 
             messages.info(request, message)
-            # redirect to user profile page
+            # redirect to group profile page
             return HttpResponseRedirect('/group/{}/'.format(membership_request.group_to_join.id))
         else:
             messages.error(request, "The link you clicked is no longer valid.")
@@ -947,17 +949,17 @@ def group_membership(request, uidb36=None, token=None, membership_request_id=Non
 @login_required
 def act_on_group_membership_request(request, membership_request_id, action, *args, **kwargs):
     """
-    take action (accept or decline) on group membership request
+    Take action (accept or decline) on group membership request
+
     :param request: requesting user is either owner of the group taking action on a request from a user
                     or a user taking action on a invitation to join a group from a group owner
-    :param membership_request_id: id of the membership request object to act on
+    :param membership_request_id: id of the membership request object (an instance of GroupMembershipRequest)
+                                  to act on
     :param action: need to have a value of either 'accept' or 'decline'
-    :param args:
-    :param kwargs:
     :return:
     """
 
-    accept_request = True if action == 'accept' else False
+    accept_request = action == 'accept'
     user_acting = request.user
 
     try:
@@ -1000,10 +1002,12 @@ def get_metadata_terms_page(request, *args, **kwargs):
 
 def _send_email_on_group_membership_acceptance(membership_request):
     """
-    sends email notification of group membership acceptance
+    Sends email notification of group membership acceptance
+
     :param membership_request: an instance of GroupMembershipRequest class
     :return:
     """
+
     if membership_request.invitation_to is not None:
         # here we are sending email to group owner who invited
         email_msg = """Dear {}
@@ -1142,8 +1146,8 @@ class MyGroupsView(TemplateView):
         u = User.objects.get(pk=self.request.user.id)
 
         groups = u.uaccess.view_groups
-        # get a list of groupmembershiprequests
         group_membership_requests = GroupMembershipRequest.objects.filter(invitation_to=u).all()
+        # for each group object, set a dynamic attribute to know if the user owns the group
         for g in groups:
             g.is_group_owner = u.uaccess.owns_group(g)
 
@@ -1175,6 +1179,8 @@ class GroupView(TemplateView):
         u.is_group_viewer = g in u.uaccess.view_groups
 
         group_resources = []
+        # for each of the resources this group has access to, set resource dynamic
+        # attributes (grantor - group member who granted access to the resource) and (date_granted)
         for res in g.gaccess.view_resources:
             grp = GroupResourcePrivilege.objects.filter(resource=res, group=g).first()
             res.grantor = grp.grantor
@@ -1202,8 +1208,9 @@ class CollaborateView(TemplateView):
     def get_context_data(self, **kwargs):
         u = User.objects.get(pk=self.request.user.id)
         groups = Group.objects.all().exclude(name="Hydroshare Author")
+        # for each group set group dynamic attributes
         for g in groups:
-            g.is_user_member = True if u in g.gaccess.members else False
+            g.is_user_member = u in g.gaccess.members
             g.join_request_waiting_owner_action = g.gaccess.group_membership_requests.filter(request_from=u).exists()
             g.join_request_waiting_user_action = g.gaccess.group_membership_requests.filter(invitation_to=u).exists()
             g.join_request = None
