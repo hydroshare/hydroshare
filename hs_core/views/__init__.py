@@ -865,7 +865,7 @@ def unshare_group_with_user(request, group_id, user_id, *args, **kwargs):
         messages.error(request, ex.message)
 
     if requesting_user == user_to_unshare_with:
-        return HttpResponseRedirect(reverse("MyGroups"))
+        return HttpResponseRedirect(reverse("my_groups"))
     else:
         return HttpResponseRedirect(request.META['HTTP_REFERER'])
 

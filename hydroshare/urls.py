@@ -50,9 +50,9 @@ urlpatterns = i18n_patterns("",
     url(r'^search/$', DiscoveryView.as_view(), name='haystack_search'),
     url(r'^searchjson/$', DiscoveryJsonView.as_view(), name='haystack_json_search'),
     url(r'^sitemap/$', 'hs_sitemap.views.sitemap', name='sitemap'),
-    url(r'^collaborate/$', hs_core_views.CollaborateView.as_view(), name='Collaborate'),
-    url(r'^my-groups/$', hs_core_views.MyGroupsView.as_view(), name='MyGroups'),
-    url(r'^group/(?P<group_id>[0-9]+)', hs_core_views.GroupView.as_view(), name='Group'),
+    url(r'^collaborate/$', hs_core_views.CollaborateView.as_view(), name='collaborate'),
+    url(r'^my-groups/$', hs_core_views.MyGroupsView.as_view(), name='my_groups'),
+    url(r'^group/(?P<group_id>[0-9]+)', hs_core_views.GroupView.as_view(), name='group'),
 )
 
 # Filebrowser admin media library.
