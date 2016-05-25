@@ -19,7 +19,7 @@
         <div class="row">
             <div class="col-sm-12">
                 <a class="btn btn-success" data-toggle="modal" data-target="#create-group-dialog"><i class="fa fa-plus"></i> Create Group</a>
-                <h3>Find groups</h3>
+                <h3>Find Groups</h3>
                 <hr class="solid">
                 <div class="group-search input-group">
                     <span class="glyphicon glyphicon-search search-icon"></span>
@@ -39,7 +39,7 @@
                                 <div class="group-preview-image group-preview-image-default" style="background-image: url({{ STATIC_URL }}img/home-page/step4.png)"></div>
                             {% endif %}
                             <div class="group-caption">
-                                <h3 class="group-name">{{ group.name }}</h3>
+                                <h3 class="group-name"><a href="/group/{{ group.id }}">{{ group.name }}</a></h3>
                                 <small class="text-muted group-keywords">{{ group.gaccess.purpose }}</small>
 
                                 <p class="group-description">{{ group.gaccess.description }}</p>
