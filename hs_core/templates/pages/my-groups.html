@@ -46,7 +46,7 @@
                                           action="/hsapi/_internal/act-on-group-membership-request/{{ request.id }}/reject/"
                                           method="POST">
                                         {% csrf_token %}
-                                        <button type="submit" class="btn btn-default">Cancel Request</button>
+                                        <button type="submit" class="btn btn-warning">Cancel Request</button>
                                     </form>
                                 </tr>
                             </table>
@@ -74,6 +74,7 @@
 
                                         <span class="text-muted"> invites you to join </span>
                                         <strong>{{ request.group_to_join.name }}</strong>
+                                        <div class="text-muted">{{ request.date_requested }}</div>
                                     </div>
                                 </div>
 
