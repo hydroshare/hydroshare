@@ -34,9 +34,9 @@
                         <div class="request-block">
                             {% if request.invitation_to %}
                                 <span>You invited </span><a>{{ request.invitation_to|contact|safe }}</a>
-                                <span> to join </span><strong>{{ request.group_to_join.name }}</strong>
+                                <span> to join </span><strong><a href="/group/{{ request.group_to_join.id }}">{{ request.group_to_join.name }}</a></strong>
                             {% else %}
-                                <span>You asked to join <strong>{{ request.group_to_join.name }}</strong>
+                                <span>You asked to join <strong><a href="/group/{{ request.group_to_join.id }}">{{ request.group_to_join.name }}</a></strong>
                             {% endif %}
                             <div class="text-muted">{{ request.date_requested }}</div>
                             <br>
