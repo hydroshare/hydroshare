@@ -40,36 +40,32 @@ def migrate_tif_file(apps, schema_editor):
                     tif_file_path = [os.path.join(temp_dir, f) for f in os.listdir(temp_dir) if '.tif' == f[-4:]].pop()
                     vrt_file_path = [os.path.join(temp_dir, f) for f in os.listdir(temp_dir) if '.vrt' == f[-4:]].pop()
 
-                    try:
-                        with open(os.devnull, 'w') as fp:
-                            subprocess.Popen(['gdal_translate', '-of', 'VRT', tif_file_path, vrt_file_path], stdout=fp, stderr=fp).wait()   # remember to add .wait()
+                    with open(os.devnull, 'w') as fp:
+                        subprocess.Popen(['gdal_translate', '-of', 'VRT', tif_file_path, vrt_file_path], stdout=fp, stderr=fp).wait()   # remember to add .wait()
 
-                        # modify the vrt file contents
-                        tree = ET.parse(vrt_file_path)
-                        root = tree.getroot()
-                        for element in root.iter('SourceFilename'):
-                            element.attrib['relativeToVRT'] = '1'
-                        tree.write(vrt_file_path)
+                    # modify the vrt file contents
+                    tree = ET.parse(vrt_file_path)
+                    root = tree.getroot()
+                    for element in root.iter('SourceFilename'):
+                        element.attrib['relativeToVRT'] = '1'
+                    tree.write(vrt_file_path)
 
-                        # delete vrt res file
-                        for f in res.files.all():
-                            if 'vrt' == f.resource_file.name[-3:]:
-                                f.resource_file.delete()
-                                f.delete()
+                    # delete vrt res file
+                    for f in res.files.all():
+                        if 'vrt' == f.resource_file.name[-3:]:
+                            f.resource_file.delete()
+                            f.delete()
 
-                        # add new vrt file to resource
-                        new_file = UploadedFile(file=open(vrt_file_path, 'r'), name=os.path.basename(vrt_file_path))
-                        hydroshare.add_resource_files(res.short_id, new_file)
+                    # add new vrt file to resource
+                    new_file = UploadedFile(file=open(vrt_file_path, 'r'), name=os.path.basename(vrt_file_path))
+                    hydroshare.add_resource_files(res.short_id, new_file)
 
-                        # update the bag
-                        bag_name = 'bags/{res_id}.zip'.format(res_id=res.short_id)
-                        if istorage.exists(bag_name):
-                            # delete the resource bag as the old bag is not valid
-                            istorage.delete(bag_name)
-                        resource_modified(res, res.creator)
-
-                    except Exception:
-                        print 'fail to update VRT'
+                    # update the bag
+                    bag_name = 'bags/{res_id}.zip'.format(res_id=res.short_id)
+                    if istorage.exists(bag_name):
+                        # delete the resource bag as the old bag is not valid
+                        istorage.delete(bag_name)
+                    resource_modified(res, res.creator)
 
                 # metadata extraction from temp dir
                 ori_dir = os.getcwd()
