@@ -14,7 +14,6 @@
         </div>
     </div>
 
-
     <div class="container">
         <div class="row">
             <div class="col-sm-2">
@@ -80,19 +79,6 @@
                     <div class="row">
                         <div class="col-sm-12">
                         {% if profile_user.is_group_owner or profile_user.is_group_editor or profile_user.is_group_viewer %}
-{#                            <div class="group-activity-block activity-block start-conversation">#}
-{#                                <div style="background-image: url('{{ request.user.userprofile.picture.url }}');"#}
-{#                                     class="profile-pic-thumbnail round-image pull-left">#}
-{#                                </div>#}
-{#                                <h4>Share something</h4>#}
-{##}
-{#                                <div class="group-activity-comment">#}
-{#                                    <fieldset>#}
-{#                                        <textarea class="form-control"></textarea>#}
-{#                                    </fieldset>#}
-{#                                </div>#}
-{#                                <a class="btn btn-primary">Post</a>#}
-{#                            </div>#}
 
                             <h4>Recent Activity</h4>
 
@@ -130,47 +116,42 @@
                                 <i>No recent activity.</i>
                             {% endif %}
 
-{#                            <div class="group-activity-block activity-block">#}
-{#                                <div style="background-image: url('{{ request.user.userprofile.picture.url }}');"#}
-{#                                     class="profile-pic-thumbnail round-image pull-left">#}
-{#                                </div>#}
-{##}
-{#                                <div class="metadata-wrapper">#}
-{#                                    <div class="shared-resource-info">#}
-{#                                        <strong><a href="#">Maurier Ramirez</a></strong>#}
-{#                                    </div>#}
-{#                                    <h5><span class="text-muted">Date: </span>March 14, 2016, 5:14 p.m.</h5>#}
-{#                                </div>#}
-{##}
-{#                                <div class="activity-description conversation-description col-sm-12" style="max-height: 50px;">#}
-{#                                    <p class="description">#}
-{#                                    <p>The Viterbi Graduate Student Association (VGSA) represents all the full#}
-{#                                        time and part time Master's and Doctoral students in the Viterbi School#}
-{#                                        of Engineering. VGSA is the largest student umbrella organization at the#}
-{#                                        University of Southern California with over 5,000 active engineering#}
-{#                                        graduate student members each year, and has an even greater Alumni#}
-{#                                        population. The VGSA promotes professional, academic, and social affairs#}
-{#                                        on campus, and is committed to creating a positive student experience at#}
-{#                                        USC.Show less</p>#}
-{#                                </div>#}
-{#                                <div class="show-more-btn btn-default" title="Show less">···</div>#}
-{##}
-{##}
-{#                                <div class="group-activity-comment">#}
-{#                                    <fieldset>#}
-{#                                        <label>Write a comment</label>#}
-{#                                        <textarea class="form-control"></textarea>#}
-{#                                    </fieldset>#}
-{#                                    <a class="btn btn-primary">Post</a>#}
-{#                                </div>#}
-{#                            </div>#}
                         {% else %}
                             <h4><i>You are not a member of this group.</i></h4>
-                            <form id="join-{{ group.id }}" method="post"
-                                  action="/hsapi/_internal/make-group-membership-request/{{ group.id }}/">
-                                {% csrf_token %}
-                                <button type="submit" class="btn btn-primary" role="button">Ask to join</button>
-                            </form>
+                            {% if group.join_request_waiting_user_action %}
+                                <div class="request-block pull-left">
+                                    <span class="flag-joined">You have been invited to join!</span>
+                                    <br><br>
+                                    <div class="height-fix">
+                                        <form class="act-on-request height-fix"
+                                              action="/hsapi/_internal/act-on-group-membership-request/{{ group.join_request.id }}/accept/"
+                                              method="POST">
+                                            {% csrf_token %}
+                                            <button type="submit" class="btn btn-success"
+                                                    data-user-action="Accept">Accept
+                                            </button>
+                                        </form>
+
+                                        <form class="act-on-request height-fix"
+                                              action="/hsapi/_internal/act-on-group-membership-request/{{ group.join_request.id }}/reject/"
+                                              method="POST">
+                                            {% csrf_token %}
+                                            <button type="submit" class="btn btn-default">
+                                                Decline
+                                            </button>
+                                        </form>
+                                    </div>
+                                </div>
+                            {% elif group.join_request_waiting_owner_action %}
+                                <h4 class="flag-joined"><span class="glyphicon glyphicon-send"></span> Request Sent</h4>
+                            {% else %}
+                                <form id="join-{{ group.id }}" method="post"
+                                      action="/hsapi/_internal/make-group-membership-request/{{ group.id }}/">
+                                    {% csrf_token %}
+                                    <button type="submit" class="btn btn-primary" role="button">Ask to join</button>
+                                </form>
+                            {% endif %}
+
                         {% endif %}
                         </div>
                     </div>
@@ -896,101 +877,7 @@
         </div>
     </div>
 
-
     {% if profile_user.is_group_owner or profile_user.is_group_editor or profile_user.is_group_viewer %}
-        <!-- Edit Group Modal -->
-        <div class="modal fade" id="edit-group-dialog" tabindex="-1" role="dialog"
-             aria-labelledby="Invite">
-            <div class="modal-dialog" role="document">
-                <div class="modal-content">
-                    <form action="/hsapi/_internal/update-user-group/{{ group.id }}" method="POST" enctype="multipart/form-data">
-                        <div class="modal-header">
-                            <button type="button" class="close" data-dismiss="modal"
-                                    aria-label="Close"><span aria-hidden="true">&times;</span>
-                            </button>
-                            <h4 class="modal-title" id="myModalLabel">Create New Group</h4>
-                        </div>
-                        <div class="modal-body">
-                            {% csrf_token %}
-                            <div class="row">
-                                {# Group Name #}
-                                <fieldset class="col-sm-12">
-                                    <label>Group Name *</label>
-                                    <input class="form-control" required="required" name="name" value="{{ group.name }}" maxlength="150">
-                                </fieldset>
-
-                                {# Purpose #}
-                                <fieldset class="col-sm-12">
-                                    <label>Purpose</label>
-                                    <textarea class="form-control" name="purpose" maxlength="300">{{ group.gaccess.purpose }}</textarea>
-                                </fieldset>
-
-                                {# Group Description #}
-                                <fieldset class="col-sm-12">
-                                    <label>About this group *</label>
-                                    <textarea class="form-control" required="required" name="description">{{ group.gaccess.description }}</textarea>
-                                </fieldset>
-
-                                <br>
-
-                                {# Picture #}
-                                <div class="col-sm-12">
-                                    <fieldset>
-                                        <label>Add a photo</label>
-
-                                        <div class="input-group">
-                                            <span class="input-group-btn">
-                                                <span id="cv-custom-upload" class="btn btn-default btn-file">
-                                                    Browse&hellip; <input class="upload-picture" type="file" name="picture">
-                                                </span>
-                                            </span>
-                                            <input type="text" class="form-control" readonly>
-                                        </div>
-                                    </fieldset>
-                                </div>
-
-                                <br>
-
-                                {# Privacy #}
-                                <fieldset class="col-sm-12">
-                                    <label>Privacy *</label>
-                                    <div class="radio">
-                                        <label>
-                                            <input type="radio" name="privacy_level" value="public" {% if group.gaccess.public and group.gaccess.discoverable %}checked{% endif %}>Public
-                                            <div class="text-muted">Other users can find the group and see who has
-                                                membership.
-                                            </div>
-                                        </label>
-                                    </div>
-
-                                    <div class="radio">
-                                        <label>
-                                            <input type="radio" name="privacy_level" value="discoverable" {% if not group.gaccess.public and group.gaccess.discoverable %}checked{% endif %}>Discoverable
-                                            <div class="text-muted">Other users can find this group, but membership
-                                                information is hidden.
-                                            </div>
-                                        </label>
-                                    </div>
-
-                                    <div class="radio">
-                                        <label>
-                                            <input type="radio" name="privacy_level" value="private" {% if not group.gaccess.public and not group.gaccess.discoverable %}checked{% endif %}>Private
-                                            <div class="text-muted">Other users can not find this group.</div>
-                                        </label>
-                                    </div>
-                                </fieldset>
-                            </div>
-
-                        </div>
-                        <div class="modal-footer">
-                            <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
-                            <button type="submit" class="btn btn-primary">Save</button>
-                        </div>
-                    </form>
-                </div>
-            </div>
-        </div>
-
         <!-- Invite to Group Modal -->
         <div class="modal fade" id="invite-dialog" tabindex="-1" role="dialog"
              aria-labelledby="Invite">
@@ -1008,8 +895,9 @@
                                 {% csrf_token %}
                                 {{ add_view_user_form.user }}
                                 <form action="">
-                                    <a id="btn-invite"  onclick="group_invite_ajax_submit(); return false;"
-                                       class="btn btn-add-access btn-success pull-left glyphicon glyphicon-send"><span class="button-label">&nbsp;&nbsp;Send Invitation</span>
+                                    <a id="btn-invite" onclick="group_invite_ajax_submit(); return false;"
+                                       class="btn btn-add-access btn-success pull-left glyphicon glyphicon-send"><span
+                                            class="button-label">&nbsp;&nbsp;Send Invitation</span>
                                     </a>
                                 </form>
                             </div>
@@ -1042,6 +930,110 @@
                         <div class="modal-footer">
                             <button type="submit" class="btn btn-primary">Confirm</button>
                             <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+    {% endif %}
+
+    {% if profile_user.is_group_owner or profile_user.is_group_editor %}
+        <!-- Edit Group Modal -->
+        <div class="modal fade" id="edit-group-dialog" tabindex="-1" role="dialog"
+             aria-labelledby="Invite">
+            <div class="modal-dialog" role="document">
+                <div class="modal-content">
+                    <form action="/hsapi/_internal/update-user-group/{{ group.id }}" method="POST"
+                          enctype="multipart/form-data">
+                        <div class="modal-header">
+                            <button type="button" class="close" data-dismiss="modal"
+                                    aria-label="Close"><span aria-hidden="true">&times;</span>
+                            </button>
+                            <h4 class="modal-title" id="myModalLabel">Create New Group</h4>
+                        </div>
+                        <div class="modal-body">
+                            {% csrf_token %}
+                            <div class="row">
+                                {# Group Name #}
+                                <fieldset class="col-sm-12">
+                                    <label>Group Name *</label>
+                                    <input class="form-control" required="required" name="name" value="{{ group.name }}"
+                                           maxlength="150">
+                                </fieldset>
+
+                                {# Purpose #}
+                                <fieldset class="col-sm-12">
+                                    <label>Purpose</label>
+                                    <textarea class="form-control" name="purpose"
+                                              maxlength="300">{{ group.gaccess.purpose }}</textarea>
+                                </fieldset>
+
+                                {# Group Description #}
+                                <fieldset class="col-sm-12">
+                                    <label>About this group *</label>
+                                    <textarea class="form-control" required="required"
+                                              name="description">{{ group.gaccess.description }}</textarea>
+                                </fieldset>
+
+                                <br>
+
+                                {# Picture #}
+                                <div class="col-sm-12">
+                                    <fieldset>
+                                        <label>Add a photo</label>
+
+                                        <div class="input-group">
+                                            <span class="input-group-btn">
+                                                <span id="cv-custom-upload" class="btn btn-default btn-file">
+                                                    Browse&hellip; <input class="upload-picture" type="file"
+                                                                          name="picture">
+                                                </span>
+                                            </span>
+                                            <input type="text" class="form-control" readonly>
+                                        </div>
+                                    </fieldset>
+                                </div>
+
+                                <br>
+
+                                {# Privacy #}
+                                <fieldset class="col-sm-12">
+                                    <label>Privacy *</label>
+                                    <div class="radio">
+                                        <label>
+                                            <input type="radio" name="privacy_level" value="public"
+                                                   {% if group.gaccess.public and group.gaccess.discoverable %}checked{% endif %}>Public
+                                            <div class="text-muted">Other users can find the group and see who has
+                                                membership.
+                                            </div>
+                                        </label>
+                                    </div>
+
+                                    <div class="radio">
+                                        <label>
+                                            <input type="radio" name="privacy_level" value="discoverable"
+                                                   {% if not group.gaccess.public and group.gaccess.discoverable %}checked{% endif %}>Discoverable
+                                            <div class="text-muted">Other users can find this group, but membership
+                                                information is hidden.
+                                            </div>
+                                        </label>
+                                    </div>
+
+                                    <div class="radio">
+                                        <label>
+                                            <input type="radio" name="privacy_level" value="private"
+                                                   {% if not group.gaccess.public and not group.gaccess.discoverable %}checked{% endif %}>Private
+                                            <div class="text-muted">Other users can not find this group.</div>
+                                        </label>
+                                    </div>
+                                </fieldset>
+                            </div>
+
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+                            <button type="submit" class="btn btn-primary">Save</button>
                         </div>
                     </form>
                 </div>

@@ -901,14 +901,11 @@ def make_group_membership_request(request, group_id, user_id=None, *args, **kwar
                                           group=group_to_join, group_owner=grp_owner,
                                           membership_request=membership_request)
 
-        status_code = status.HTTP_200_OK
-        ajax_response_data = {'status': 'success', 'message': message}
+        messages.success(request, message)
     except PermissionDenied as ex:
-        status_code = status.HTTP_400_BAD_REQUEST
-        ajax_response_data = {'status': 'error', 'message': ex.message}
+        messages.error(request, ex.message)
 
-    return HttpResponse(json.dumps(ajax_response_data), status=status_code)
-
+    return HttpResponseRedirect(request.META['HTTP_REFERER'])
 
 def group_membership(request, uidb36, token, membership_request_id, **kwargs):
     """
@@ -1177,6 +1174,10 @@ class GroupView(TemplateView):
         u.is_group_owner = u.uaccess.owns_group(g)
         u.is_group_editor = g in u.uaccess.edit_groups
         u.is_group_viewer = g in u.uaccess.view_groups
+
+        g.join_request_waiting_owner_action = g.gaccess.group_membership_requests.filter(request_from=u).exists()
+        g.join_request_waiting_user_action = g.gaccess.group_membership_requests.filter(invitation_to=u).exists()
+        g.join_request = g.gaccess.group_membership_requests.filter(invitation_to=u).first()
 
         group_resources = []
         # for each of the resources this group has access to, set resource dynamic
