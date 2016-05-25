@@ -304,4 +304,4 @@ def send_action_to_take_email(request, user, action_type, **kwargs):
     subject = subject_template(subject_template_name, context)
     send_mail_template(subject, "email/%s" % action_type,
                        settings.DEFAULT_FROM_EMAIL, email_to.email,
-                       context=context)
+                       context=context, fail_silently=True)
