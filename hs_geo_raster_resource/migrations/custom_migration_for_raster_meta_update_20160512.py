@@ -50,7 +50,7 @@ def migrate_tif_file(apps, schema_editor):
                         for element in root.iter('SourceFilename'):
                             element.attrib['relativeToVRT'] = '1'
                         tree.write(vrt_file_path)
-                        
+
                         # delete vrt res file
                         for f in res.files.all():
                             if 'vrt' == f.resource_file.name[-3:]:
@@ -68,7 +68,7 @@ def migrate_tif_file(apps, schema_editor):
                             istorage.delete(bag_name)
                         resource_modified(res, res.creator)
 
-                    except:
+                    except Exception:
                         print 'fail to update VRT'
 
                 # metadata extraction from temp dir
@@ -132,7 +132,7 @@ def undo_migrate_tif_file(apps, schema_editor):
                                             minimumValue=None,
                                             noDataValue=None,
                                             )
-        except:
+        except Exception:
             pass
 
 
