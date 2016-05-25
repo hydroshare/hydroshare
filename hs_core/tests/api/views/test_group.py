@@ -5,6 +5,9 @@ from django.test import TestCase, RequestFactory
 from django.core.urlresolvers import reverse
 from django.contrib.auth.models import Group
 from django.contrib.messages.storage.fallback import FallbackStorage
+from django.db import transaction
+
+from rest_framework import status
 
 from hs_core import hydroshare
 from hs_core.views import create_user_group, share_group_with_user, unshare_group_with_user, \
@@ -66,8 +69,8 @@ class TestGroup(MockIRODSTestCaseMixin, TestCase):
         self.assertEquals(new_group.gaccess.description, 'This is a cool group-1')
         self.assertEquals(new_group.gaccess.public, True)
         self.assertEquals(new_group.gaccess.discoverable, True)
-        self.assertEquals(response.status_code, 302)
-        self.assertEquals(response['Location'], reverse('Group', args=[new_group.id]))
+        self.assertEquals(response.status_code, status.HTTP_302_FOUND)
+        self.assertEquals(response['Location'], reverse('group', args=[new_group.id]))
 
         # test passing privacy_level = 'private'
         grp_data = {'name': 'Test Group-2', 'description': 'This is a cool group-2', 'privacy_level': 'private'}
@@ -113,7 +116,7 @@ class TestGroup(MockIRODSTestCaseMixin, TestCase):
         request.user = self.john
         request.META['HTTP_REFERER'] = "/some_url/"
         response = create_user_group(request)
-        self.assertEquals(response.status_code, 302)
+        self.assertEquals(response.status_code, status.HTTP_302_FOUND)
         self.assertEquals(response['Location'], request.META['HTTP_REFERER'])
         new_group = Group.objects.filter(gaccess__description='This is a cool group').first()
         self.assertEquals(new_group, None)
@@ -129,7 +132,7 @@ class TestGroup(MockIRODSTestCaseMixin, TestCase):
         request.user = self.john
         request.META['HTTP_REFERER'] = "/some_url/"
         response = create_user_group(request)
-        self.assertEquals(response.status_code, 302)
+        self.assertEquals(response.status_code, status.HTTP_302_FOUND)
         self.assertEquals(response['Location'], request.META['HTTP_REFERER'])
         new_group = Group.objects.filter(name='Test Group').first()
         self.assertEquals(new_group, None)
@@ -145,7 +148,7 @@ class TestGroup(MockIRODSTestCaseMixin, TestCase):
         request.user = self.john
         request.META['HTTP_REFERER'] = "/some_url/"
         response = create_user_group(request)
-        self.assertEquals(response.status_code, 302)
+        self.assertEquals(response.status_code, status.HTTP_302_FOUND)
         self.assertEquals(response['Location'], request.META['HTTP_REFERER'])
         new_group = Group.objects.filter(name='Test Group').first()
         self.assertEquals(new_group, None)
@@ -161,7 +164,7 @@ class TestGroup(MockIRODSTestCaseMixin, TestCase):
         request.user = self.john
         request.META['HTTP_REFERER'] = "/some_url/"
         response = create_user_group(request)
-        self.assertEquals(response.status_code, 302)
+        self.assertEquals(response.status_code, status.HTTP_302_FOUND)
         self.assertEquals(response['Location'], request.META['HTTP_REFERER'])
         new_group = Group.objects.filter(name='Test Group').first()
         self.assertEquals(new_group, None)
@@ -175,7 +178,7 @@ class TestGroup(MockIRODSTestCaseMixin, TestCase):
 
         request.user = self.john
         response = create_user_group(request)
-        self.assertEquals(response.status_code, 302)
+        self.assertEquals(response.status_code, status.HTTP_302_FOUND)
         # at this point there should be 2 groups
         self.assertEquals(Group.objects.count(), 2)
 
@@ -186,10 +189,13 @@ class TestGroup(MockIRODSTestCaseMixin, TestCase):
 
         request.user = self.john
         request.META['HTTP_REFERER'] = "/some_url/"
-        response = create_user_group(request)
-        self.assertEquals(response.status_code, 302)
-        self.assertEquals(response['Location'], request.META['HTTP_REFERER'])
-        # at this point there should be still 2 groups
+        # had to do this as a transaction for some reason, otherwise the last statement
+        # of this function generates a transaction error
+        with transaction.atomic():
+            response = create_user_group(request)
+            self.assertEquals(response.status_code, status.HTTP_302_FOUND)
+            self.assertEquals(response['Location'], request.META['HTTP_REFERER'])
+            # at this point there should be still 2 groups
         self.assertEquals(Group.objects.count(), 2)
 
     def test_share_group_with_user(self):
@@ -225,7 +231,7 @@ class TestGroup(MockIRODSTestCaseMixin, TestCase):
         self._set_request_message_attributes(request)
         request.user = self.john
         response = share_group_with_user(request, group_id=new_group.id, user_id=self.mike.id, privilege="badprivilege")
-        self.assertEquals(response.status_code, 302)
+        self.assertEquals(response.status_code, status.HTTP_302_FOUND)
 
         # check mike is not a member of the group
         self.assertNotIn(self.mike, new_group.gaccess.members)
@@ -247,7 +253,7 @@ class TestGroup(MockIRODSTestCaseMixin, TestCase):
         self._set_request_message_attributes(request)
         request.user = self.john
         response = unshare_group_with_user(request, group_id=new_group.id, user_id=self.mike.id)
-        self.assertEquals(response.status_code, 302)
+        self.assertEquals(response.status_code, status.HTTP_302_FOUND)
 
         # check mike is not a member of the group
         self.assertNotIn(self.mike, new_group.gaccess.members)
@@ -259,7 +265,7 @@ class TestGroup(MockIRODSTestCaseMixin, TestCase):
         # let group owner john share resource with view privilege
         response = self._share_resource_with_group(group=new_group, privilege='view')
 
-        self.assertEquals(response.status_code, 200)
+        self.assertEquals(response.status_code, status.HTTP_200_OK)
         response_content = json.loads(response.content)
         self.assertEquals(response_content['status'], 'success')
         self.assertIn(self.resource, new_group.gaccess.view_resources)
@@ -270,7 +276,7 @@ class TestGroup(MockIRODSTestCaseMixin, TestCase):
         self.assertNotIn(self.resource, new_group.gaccess.view_resources)
         response = self._share_resource_with_group(group=new_group, privilege='edit')
 
-        self.assertEquals(response.status_code, 200)
+        self.assertEquals(response.status_code, status.HTTP_200_OK)
         response_content = json.loads(response.content)
         self.assertEquals(response_content['status'], 'success')
         self.assertIn(self.resource, new_group.gaccess.edit_resources)
@@ -282,7 +288,7 @@ class TestGroup(MockIRODSTestCaseMixin, TestCase):
 
         response = self._share_resource_with_group(group=new_group, privilege='owner')
 
-        self.assertEquals(response.status_code, 400)
+        self.assertEquals(response.status_code, status.HTTP_400_BAD_REQUEST)
         response_content = json.loads(response.content)
         self.assertEquals(response_content['status'], 'error')
         self.assertNotIn(self.resource, new_group.gaccess.view_resources)
@@ -303,7 +309,7 @@ class TestGroup(MockIRODSTestCaseMixin, TestCase):
         self._set_request_message_attributes(request)
         request.user = self.john
         response = unshare_resource_with_group(request, shortkey=self.resource.short_id, group_id=new_group.id)
-        self.assertEquals(response.status_code, 302)
+        self.assertEquals(response.status_code, status.HTTP_302_FOUND)
         self.assertEquals(response['Location'], request.META['HTTP_REFERER'])
         self.assertNotIn(self.resource, new_group.gaccess.view_resources)
 
@@ -321,7 +327,7 @@ class TestGroup(MockIRODSTestCaseMixin, TestCase):
         request.META['HTTP_REFERER'] = "/my-resource/"
         request.user = self.mike
         response = unshare_resource_with_group(request, shortkey=self.resource.short_id, group_id=new_group.id)
-        self.assertEquals(response.status_code, 302)
+        self.assertEquals(response.status_code, status.HTTP_302_FOUND)
         self.assertEquals(response['Location'], request.META['HTTP_REFERER'])
         self.assertNotIn(self.resource, new_group.gaccess.view_resources)
 
@@ -338,13 +344,13 @@ class TestGroup(MockIRODSTestCaseMixin, TestCase):
         self._set_request_message_attributes(request)
         request.user = self.mike
         response = make_group_membership_request(request, group_id=new_group.id)
-        self.assertEquals(response.status_code, 200)
+        self.assertEquals(response.status_code, status.HTTP_200_OK)
         response_content = json.loads(response.content)
         self.assertEquals(response_content['status'], 'success')
 
         # test user making request more than once for the same group should fail
         response = make_group_membership_request(request, group_id=new_group.id)
-        self.assertEquals(response.status_code, 400)
+        self.assertEquals(response.status_code, status.HTTP_400_BAD_REQUEST)
         response_content = json.loads(response.content)
         self.assertEquals(response_content['status'], 'error')
 
@@ -361,13 +367,13 @@ class TestGroup(MockIRODSTestCaseMixin, TestCase):
         self._set_request_message_attributes(request)
         request.user = self.john
         response = make_group_membership_request(request, group_id=new_group.id, user_id=self.mike.id)
-        self.assertEquals(response.status_code, 200)
+        self.assertEquals(response.status_code, status.HTTP_200_OK)
         response_content = json.loads(response.content)
         self.assertEquals(response_content['status'], 'success')
 
         # test group owner inviting same user to the same group more than once should fail
         response = make_group_membership_request(request, group_id=new_group.id, user_id=self.mike.id)
-        self.assertEquals(response.status_code, 400)
+        self.assertEquals(response.status_code, status.HTTP_400_BAD_REQUEST)
         response_content = json.loads(response.content)
         self.assertEquals(response_content['status'], 'error')
 
@@ -451,12 +457,12 @@ class TestGroup(MockIRODSTestCaseMixin, TestCase):
         request = self.factory.post(url)
         self._set_request_message_attributes(request)
         request.user = self.john
+        request.META['HTTP_REFERER'] = "/some_url/"
         response = act_on_group_membership_request(request, membership_request_id=membership_request.id,
                                                    action=action)
 
-        self.assertEquals(response.status_code, 200)
-        response_content = json.loads(response.content)
-        self.assertEquals(response_content['status'], 'success')
+        self.assertEquals(response.status_code, status.HTTP_302_FOUND)
+        self.assertEquals(response['Location'], request.META['HTTP_REFERER'])
 
     def _user_act_on_invitation(self, membership_request, action):
         url_params = {'membership_request_id': membership_request.id, 'action': action}
@@ -464,12 +470,12 @@ class TestGroup(MockIRODSTestCaseMixin, TestCase):
         request = self.factory.post(url)
         self._set_request_message_attributes(request)
         request.user = self.mike
+        request.META['HTTP_REFERER'] = "/some_url/"
         response = act_on_group_membership_request(request, membership_request_id=membership_request.id,
                                                    action=action)
 
-        self.assertEquals(response.status_code, 200)
-        response_content = json.loads(response.content)
-        self.assertEquals(response_content['status'], 'success')
+        self.assertEquals(response.status_code, status.HTTP_302_FOUND)
+        self.assertEquals(response['Location'], request.META['HTTP_REFERER'])
 
     def _generate_user_request_to_join_group(self, group):
         url_params = {'group_id': group.id}
@@ -511,7 +517,8 @@ class TestGroup(MockIRODSTestCaseMixin, TestCase):
         self._set_request_message_attributes(request)
         request.user = self.john
         response = share_group_with_user(request, group_id=group.id, user_id=self.mike.id, privilege=privilege)
-        self.assertEquals(response.status_code, 302)
+        self.assertEquals(response.status_code, status.HTTP_302_FOUND)
+        self.assertEquals(response['Location'], request.META['HTTP_REFERER'])
 
         # check mike is a member of the group
         self.assertIn(self.mike, group.gaccess.members)

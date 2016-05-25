@@ -773,7 +773,7 @@ def create_user_group(request, *args, **kwargs):
         try:
             new_group = group_form.save(request)
             messages.success(request, "Group creation was successful.")
-            return HttpResponseRedirect(reverse('Group', args=[new_group.id]))
+            return HttpResponseRedirect(reverse('group', args=[new_group.id]))
         except IntegrityError as ex:
             if group_form.cleaned_data['name'] in ex.message:
                 message = "Group name '{}' already exists".format(group_form.cleaned_data['name'])
