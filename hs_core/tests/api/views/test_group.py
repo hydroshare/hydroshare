@@ -337,22 +337,29 @@ class TestGroup(MockIRODSTestCaseMixin, TestCase):
         # create a group
         new_group = self._create_group()
 
+        # now there should be no GroupMembershipRequest associated with Mile
+        self.assertEquals(self.mike.uaccess.group_membership_requests.count(), 0)
+
         # test that user mike can make a request to join the new_group
         url_params = {'group_id': new_group.id}
         url = reverse('make_group_membership_request', kwargs=url_params)
         request = self.factory.post(url)
         self._set_request_message_attributes(request)
+        request.META['HTTP_REFERER'] = "/some_url/"
         request.user = self.mike
         response = make_group_membership_request(request, group_id=new_group.id)
-        self.assertEquals(response.status_code, status.HTTP_200_OK)
-        response_content = json.loads(response.content)
-        self.assertEquals(response_content['status'], 'success')
+        self.assertEquals(response.status_code, status.HTTP_302_FOUND)
+        self.assertEquals(response['Location'], request.META['HTTP_REFERER'])
+        # now there should be one GroupMembershipRequest associated with Mike
+        self.assertEquals(self.mike.uaccess.group_membership_requests.count(), 1)
 
         # test user making request more than once for the same group should fail
         response = make_group_membership_request(request, group_id=new_group.id)
-        self.assertEquals(response.status_code, status.HTTP_400_BAD_REQUEST)
-        response_content = json.loads(response.content)
-        self.assertEquals(response_content['status'], 'error')
+        self.assertEquals(response.status_code, status.HTTP_302_FOUND)
+        self.assertEquals(response['Location'], request.META['HTTP_REFERER'])
+        # there should be still one GroupMembershipRequest associated with Mike
+        self.assertEquals(self.mike.uaccess.group_membership_requests.count(), 1)
+
 
     def test_make_group_membership_invitation(self):
         # test group owner inviting a user to join a group
@@ -360,22 +367,27 @@ class TestGroup(MockIRODSTestCaseMixin, TestCase):
         # create a group
         new_group = self._create_group()
 
+        # there should be no GroupMembershipRequest associated with John
+        self.assertEquals(self.john.uaccess.group_membership_requests.count(), 0)
         # test that group owner john can invite mike to join the new_group
         url_params = {'group_id': new_group.id, 'user_id': self.mike.id}
         url = reverse('make_group_membership_request', kwargs=url_params)
         request = self.factory.post(url)
         self._set_request_message_attributes(request)
+        request.META['HTTP_REFERER'] = "/some_url/"
         request.user = self.john
         response = make_group_membership_request(request, group_id=new_group.id, user_id=self.mike.id)
-        self.assertEquals(response.status_code, status.HTTP_200_OK)
-        response_content = json.loads(response.content)
-        self.assertEquals(response_content['status'], 'success')
+        self.assertEquals(response.status_code, status.HTTP_302_FOUND)
+        self.assertEquals(response['Location'], request.META['HTTP_REFERER'])
+        # now there should be one GroupMembershipRequest associated with John
+        self.assertEquals(self.john.uaccess.group_membership_requests.count(), 1)
 
         # test group owner inviting same user to the same group more than once should fail
         response = make_group_membership_request(request, group_id=new_group.id, user_id=self.mike.id)
-        self.assertEquals(response.status_code, status.HTTP_400_BAD_REQUEST)
-        response_content = json.loads(response.content)
-        self.assertEquals(response_content['status'], 'error')
+        self.assertEquals(response.status_code, status.HTTP_302_FOUND)
+        self.assertEquals(response['Location'], request.META['HTTP_REFERER'])
+        # there should be still one GroupMembershipRequest associated with John
+        self.assertEquals(self.john.uaccess.group_membership_requests.count(), 1)
 
     def test_act_on_group_membership_request(self):
         # test group owner accepting/declining a request from a user to join a group
@@ -482,6 +494,7 @@ class TestGroup(MockIRODSTestCaseMixin, TestCase):
         url = reverse('make_group_membership_request', kwargs=url_params)
         request = self.factory.post(url)
         self._set_request_message_attributes(request)
+        request.META['HTTP_REFERER'] = "/some_url/"
         request.user = self.mike
         make_group_membership_request(request, group_id=group.id)
         membership_request = self.mike.uaccess.group_membership_requests.first()
@@ -492,6 +505,7 @@ class TestGroup(MockIRODSTestCaseMixin, TestCase):
         url = reverse('make_group_membership_request', kwargs=url_params)
         request = self.factory.post(url)
         self._set_request_message_attributes(request)
+        request.META['HTTP_REFERER'] = "/some_url/"
         request.user = self.john
         make_group_membership_request(request, group_id=group.id, user_id=self.mike.id)
         membership_request = self.john.uaccess.group_membership_requests.first()
