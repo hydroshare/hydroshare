@@ -73,7 +73,7 @@
                                         <a>{{ request.request_from|contact|safe }}</a>
 
                                         <span class="text-muted"> invites you to join </span>
-                                        <strong>{{ request.group_to_join.name }}</strong>
+                                        <strong><a href="/group/{{ request.group_to_join.id }}">{{ request.group_to_join.name }}</a></strong>
                                         <div class="text-muted">{{ request.date_requested }}</div>
                                     </div>
                                 </div>
