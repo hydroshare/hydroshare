@@ -5,10 +5,12 @@
 
     <div class="collaborate-header">
         <div class="container">
-            <div class="col-sm-12">
-                <div class="collaborate-nav">
-                    <a href="{% url "collaborate" %}" class="collaborate-nav-item">Find Groups</a>
-                    <a href="{% url "my_groups" %}" class="collaborate-nav-item">My Groups</a>
+            <div class="row">
+                <div class="col-sm-12">
+                    <div class="collaborate-nav">
+                        <a href="{% url "collaborate" %}" class="collaborate-nav-item">Find Groups</a>
+                        <a href="{% url "my_groups" %}" class="collaborate-nav-item">My Groups</a>
+                    </div>
                 </div>
             </div>
         </div>
@@ -477,7 +479,7 @@
                         </div>
                         <div class="col-lg-10" id="items">
                             <div class="row">
-                                <div class="col-sm-8 col-xs-12 pull-right">
+                                <div class="col-sm-12">
                                     <div id="search-container" class="input-group">
                                         <span class="glyphicon glyphicon-search search-icon"></span>
                                         <input id="resource-search-input" type="text" class="form-control" placeholder="Search"/>
