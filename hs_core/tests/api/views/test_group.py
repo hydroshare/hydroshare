@@ -1,11 +1,14 @@
 import json
 from mock import patch
 
-from django.test import TestCase, RequestFactory
+from django.test import TestCase, RequestFactory, Client
 from django.core.urlresolvers import reverse
 from django.contrib.auth.models import Group
 from django.contrib.messages.storage.fallback import FallbackStorage
 from django.db import transaction
+from django.utils.http import int_to_base36
+
+from mezzanine.utils.email import default_token_generator
 
 from rest_framework import status
 
@@ -360,7 +363,6 @@ class TestGroup(MockIRODSTestCaseMixin, TestCase):
         # there should be still one GroupMembershipRequest associated with Mike
         self.assertEquals(self.mike.uaccess.group_membership_requests.count(), 1)
 
-
     def test_make_group_membership_invitation(self):
         # test group owner inviting a user to join a group
 
@@ -452,6 +454,56 @@ class TestGroup(MockIRODSTestCaseMixin, TestCase):
         self._user_act_on_invitation(membership_request, 'decline')
         # check mike is no more a member of the group
         self.assertNotIn(self.mike, new_group.gaccess.members)
+
+    def test_group_membership_acceptance_via_email_link(self):
+        # here we are testing group_membership view function which is invoked
+        # when the user clicks the link provided in the email
+
+        # create a group
+        new_group = self._create_group()
+
+        # test user accepting group owner's invitation
+        # check mike is no more a member of the group
+        self.assertNotIn(self.mike, new_group.gaccess.members)
+        # let john invite mike to join group
+        membership_request = self.john.uaccess.create_group_membership_request(new_group, self.mike)
+        # create the link that mike should find in his email
+        uidb36 = int_to_base36(self.mike.id)
+        token = default_token_generator.make_token(self.mike)
+        url_params = {"uidb36": uidb36, "token": token, "membership_request_id": membership_request.id}
+        url = reverse('group_membership', kwargs=url_params)
+        # due to session requirement of the view being tested, using the Client class
+        client = Client()
+        # let mike click the link in the email
+        response = client.get(url)
+        redirect_url = '/group/{}/'.format(new_group.id)
+
+        self.assertEquals(response.status_code, status.HTTP_302_FOUND)
+        self.assertTrue(response['Location'].endswith(redirect_url))
+        # check mike is now a member of the group
+        self.assertIn(self.mike, new_group.gaccess.members)
+
+        # test group owner (john) accepting user (mike) request to join a group
+
+        # remove mike from group
+        self.john.uaccess.unshare_group_with_user(new_group, self.mike)
+        # check mike is no more a member of the group
+        self.assertNotIn(self.mike, new_group.gaccess.members)
+        # let mike make a request to join group
+        membership_request = self.mike.uaccess.create_group_membership_request(new_group)
+        # create the link that john should find in his email
+        uidb36 = int_to_base36(self.john.id)
+        token = default_token_generator.make_token(self.john)
+        url_params = {"uidb36": uidb36, "token": token, "membership_request_id": membership_request.id}
+        url = reverse('group_membership', kwargs=url_params)
+        # let john click the link
+        response = client.get(url)
+        redirect_url = '/group/{}/'.format(new_group.id)
+
+        self.assertEquals(response.status_code, status.HTTP_302_FOUND)
+        self.assertTrue(response['Location'].endswith(redirect_url))
+        # check mike is now a member of the group
+        self.assertIn(self.mike, new_group.gaccess.members)
 
     def _share_resource_with_group(self, group, privilege):
         url_params = {'shortkey': self.resource.short_id, 'privilege': privilege, 'group_id': group.id}
