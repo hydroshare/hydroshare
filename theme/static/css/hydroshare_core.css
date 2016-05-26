@@ -3339,7 +3339,7 @@ button.no-style:focus {
     pointer-events: none;
 }
 
-/* -------------- Collaborate page styling --------------- */
+/* -------------- Collaborate and Groups page styling --------------- */
 
 .collaborate-header {
     background: #093E54;
@@ -3354,7 +3354,7 @@ button.no-style:focus {
 
 .collaborate-nav-item {
     font-size: 18px;
-    margin: 10px;
+    margin-right: 10px;
     padding: 10px 0;
 }
 

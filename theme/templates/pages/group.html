@@ -5,10 +5,12 @@
 
     <div class="collaborate-header">
         <div class="container">
-            <div class="col-sm-12">
-                <div class="collaborate-nav">
-                    <a href="{% url "collaborate" %}" class="collaborate-nav-item">Find Groups</a>
-                    <a href="{% url "my_groups" %}" class="collaborate-nav-item">My Groups</a>
+            <div class="row">
+                <div class="col-sm-12">
+                    <div class="collaborate-nav">
+                        <a href="{% url "collaborate" %}" class="collaborate-nav-item">Find Groups</a>
+                        <a href="{% url "my_groups" %}" class="collaborate-nav-item">My Groups</a>
+                    </div>
                 </div>
             </div>
         </div>
@@ -457,27 +459,10 @@
                                     </div>
                                 </div>
                             </div>
-
-{#                            <div class="panel panel-default">#}
-{#                                <div class="panel-heading">#}
-{#                                    <h4 class="panel-title">#}
-{#                                        <span class="glyphicon glyphicon-tags"></span>#}
-{#                                        <a data-toggle="collapse" class="accordion-toggle" data-parent="#accordion" href="#labels">&nbsp;&nbsp;Labels</a></h4>#}
-{#                                </div>#}
-{#                                <div id="labels" class="facet-list panel-collapse collapse in">#}
-{#                                    <div class="panel-body">#}
-{#                                        <div class="list-group">#}
-{#                                            <ul id="user-labels-left" class="list-group inputs-group">#}
-{##}
-{#                                            </ul>#}
-{#                                        </div>#}
-{#                                    </div>#}
-{#                                </div>#}
-{#                            </div>#}
                         </div>
                         <div class="col-lg-10" id="items">
                             <div class="row">
-                                <div class="col-sm-8 col-xs-12 pull-right">
+                                <div class="col-sm-12">
                                     <div id="search-container" class="input-group">
                                         <span class="glyphicon glyphicon-search search-icon"></span>
                                         <input id="resource-search-input" type="text" class="form-control" placeholder="Search"/>
@@ -526,27 +511,6 @@
                                         </div>
                                     </div>
                                  </div>
-{#                                <div class="col-sm-4 col-xs-12 pull-left">#}
-{#                                    <div id="resource-actions-container" class="noselect">#}
-{#                                        <span id="btn-label" class="glyphicon glyphicon-tags dropdown-toggle"#}
-{#                                              data-toggle="dropdown" aria-expanded="false" title="Label"></span>#}
-{##}
-{#                                        <span id="btn-favorite" class="glyphicon  glyphicon-star" data-toggle="tooltip" data-placement="bottom" title="Favorite"></span>#}
-{##}
-{#                                        <div id="toolbar-labels-dropdown" class="dropdown-menu" role="menu">#}
-{#                                            <div class="panel-body" role="form">#}
-{#                                                <span>Label as:</span>#}
-{#                                                <ul class="list-group list-labels">#}
-{#                                                    <li class="divider persist"></li>#}
-{#                                                    <li class="list-group-item persist" data-toggle="modal" data-target="#modalCreateLabel">#}
-{#                                                        <span style="color:#5cb85c" class="glyphicon glyphicon-plus"></span>&nbsp;&nbsp;&nbsp;&nbsp;Create New Label</li>#}
-{#                                                    <li class="list-group-item persist" data-toggle="modal" data-target="#modalManageLabels">#}
-{#                                                        <span style="color:#0A91AB" class="glyphicon glyphicon-folder-open"></span>&nbsp;&nbsp;&nbsp;&nbsp;Manage Labels</li>#}
-{#                                                </ul>#}
-{#                                            </div>#}
-{#                                        </div>#}
-{#                                    </div>#}
-{#                                </div>#}
                             </div>
 
                             <!-- /input-group -->
@@ -571,41 +535,7 @@
                                 <tbody>
                                     {% for res in group_resources %}
                                         <tr data-tr-index="{{ forloop.counter0 }}">
-                                            <td>
-{#                                                <input class="row-selector" type="checkbox">#}
-{#                                                {% if res.is_favorite %}#}
-{#                                                    <span data-form-id="form-favorite-{{ res.short_id }}" data-form-type="toggle-favorite"#}
-{#                                                          class="glyphicon glyphicon-star btn-inline-favorite isfavorite"></span>#}
-{##}
-{#                                                    <form class="hidden-form" data-id="form-favorite-{{ res.short_id }}"#}
-{#                                                          action="/hsapi/_internal/{{ res.short_id }}/label-resource-action/"#}
-{#                                                          method="post">#}
-{#                                                        {% csrf_token %}#}
-{#                                                        <input type="hidden" name="action" value="DELETE">#}
-{#                                                        <input type="hidden" name="label_type" value="FAVORITE">#}
-{#                                                    </form>#}
-{#                                                {% else %}#}
-{#                                                    <span data-form-id="form-favorite-{{ res.short_id }}" data-form-type="toggle-favorite"#}
-{#                                                          class="glyphicon glyphicon-star btn-inline-favorite"></span>#}
-{##}
-{#                                                    <form class="hidden-form" data-id="form-favorite-{{ res.short_id }}"#}
-{#                                                          action="/hsapi/_internal/{{ res.short_id }}/label-resource-action/"#}
-{#                                                          method="post">#}
-{#                                                        {% csrf_token %}#}
-{#                                                        <input type="hidden" name="action" value="CREATE">#}
-{#                                                        <input type="hidden" name="label_type" value="FAVORITE">#}
-{#                                                    </form>#}
-{#                                                {% endif %}#}
-{##}
-{#                                                <span class="glyphicon glyphicon-tag btn-inline-label" data-toggle="dropdown" aria-expanded="false"></span>#}
-{##}
-{#                                                <div class="dropdown-menu inline-dropdown" role="menu">#}
-{#                                                    <div class="panel-body" role="form">#}
-{#                                                        <ul data-resource-id="{{ res.short_id }}" class="list-group list-labels">#}
-{#                                                        </ul>#}
-{#                                                    </div>#}
-{#                                                </div>#}
-                                            </td>
+                                            <td></td> {# Empty for now, needed for the script to run correctly #}
                                             <td>
                                                 <span class="resource-type-text">{{ res|resource_type }}</span>
                                                 {% if res|resource_type == "Generic" %}
@@ -1287,6 +1217,8 @@
         });
 
         $(document).ready(function () {
+            $("title").text($(".group-title").text() + " | HydroShare"); // Fix page title
+
             // Abstract collapse toggle
             $(".show-more-btn").click(function () {
                 if ($(this).parent().find(".activity-description").css("max-height") == "50px") {
