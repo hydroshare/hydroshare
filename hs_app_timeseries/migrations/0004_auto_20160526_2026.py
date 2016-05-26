@@ -14,6 +14,6 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='method',
             name='method_code',
-            field=models.CharField(max_length=100),
+            field=models.CharField(max_length=50),
         ),
     ]
