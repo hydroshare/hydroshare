@@ -34,10 +34,10 @@ class TestScienceMetadata(SciMetaTestCase):
             # Get science metadata
             response = self.getScienceMetadata(self.pid, exhaust_stream=False)
             sci_meta_orig = os.path.join(tmp_dir, self.RESOURCE_METADATA_OLD)
-            f = open(sci_meta_orig, 'w')
-            for l in response.streaming_content:
-                f.write(l)
-            f.close()
+            with open(sci_meta_orig, 'w') as f:
+                for l in response.streaming_content:
+                    f.write(l)
+
             scimeta = etree.parse(sci_meta_orig)
             self.getAbstract(scimeta, should_exist=False)
 
@@ -50,9 +50,8 @@ class TestScienceMetadata(SciMetaTestCase):
             # Write out to a file
             out = etree.tostring(scimeta, pretty_print=True)
             sci_meta_new = os.path.join(tmp_dir, self.RESOURCE_METADATA)
-            f = open(sci_meta_new, 'w')
-            f.writelines(out)
-            f.close()
+            with open(sci_meta_new, 'w') as f:
+                f.writelines(out)
 
             #    Send updated metadata to REST API
             self.updateScimeta(self.pid, sci_meta_new)
@@ -60,13 +59,13 @@ class TestScienceMetadata(SciMetaTestCase):
             #    Get science metadata
             response = self.getScienceMetadata(self.pid, exhaust_stream=False)
             sci_meta_updated = os.path.join(tmp_dir, self.RESOURCE_METADATA_UPDATED)
-            f = open(sci_meta_updated, 'w')
-            for l in response.streaming_content:
-                f.write(l)
-            f.close()
+            with open(sci_meta_updated, 'w') as f:
+                for l in response.streaming_content:
+                    f.write(l)
+
             scimeta = etree.parse(sci_meta_updated)
             abstract = self.getAbstract(scimeta)
-            self.assertEquals(abstract, abstract_text)
+            self.assertEqual(abstract, abstract_text)
 
             # Make sure metadata update is idempotent
             #   Resend the previous request
@@ -76,9 +75,8 @@ class TestScienceMetadata(SciMetaTestCase):
             self.updateScimetaResourceID(scimeta, 'THISISNOTARESOURCEID')
             #    Write out to a file
             out = etree.tostring(scimeta, pretty_print=True)
-            f = open(sci_meta_new, 'w')
-            f.writelines(out)
-            f.close()
+            with open(sci_meta_new, 'w') as f:
+                f.writelines(out)
 
             #    Send broken metadata to REST API
             self.updateScimeta(self.pid, sci_meta_new, should_succeed=False)

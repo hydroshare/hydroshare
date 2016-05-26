@@ -211,8 +211,9 @@ class SWATModelInstanceResourceMeta(GenericResourceMeta):
                 try:
                     resource.metadata.create_element('ExecutedBy',
                                                      model_name=short_id)
-                except:
-                    msg = "Creation of ExecutedBy failed, resource {0} may not exist.".format(short_id)
+                except Exception:
+                    msg = "Creation of ExecutedBy failed, resource {0} may not exist.".format(
+                        short_id)
                     raise HsDeserializationDependencyException(short_id, msg)
 
         if self.model_objective:

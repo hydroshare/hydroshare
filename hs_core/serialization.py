@@ -163,8 +163,7 @@ def create_resource_from_bag(bag_content_path, preserve_uuid=True):
                                    short_id=resource_id,
                                    **kwargs)
     except Exception as ex:
-        import traceback
-        logger.critical(traceback.print_exc())
+        logger.exception("Resource creation failed.")
         raise HsDeserializationException(ex.message)
 
     # Add additional metadata

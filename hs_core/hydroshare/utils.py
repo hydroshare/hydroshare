@@ -482,4 +482,4 @@ class ZipContents(object):
 
 
 def get_file_storage():
-    return IrodsStorage() if getattr(settings,'USE_IRODS', False) else DefaultStorage()
+    return IrodsStorage() if getattr(settings, 'USE_IRODS', False) else DefaultStorage()

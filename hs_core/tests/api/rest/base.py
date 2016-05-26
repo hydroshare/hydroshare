@@ -90,7 +90,7 @@ class HSRESTTestCase(APITestCase):
         url = "/hsapi/scimeta/{res_id}/".format(res_id=res_id)
         response = self._get_file_irods(url, exhaust_stream)
         self.assertEqual(response['Content-Type'], 'application/xml')
-        self.assertTrue(int(response['Content-Length']) > 0)
+        self.assertGreater(int(response['Content-Length']), 0)
 
         return response
 
@@ -119,10 +119,10 @@ class SciMetaTestCase(HSRESTTestCase):
         title = scimeta.xpath('/rdf:RDF/rdf:Description[1]/dc:title', namespaces=self.NS)
 
         if should_exist:
-            self.assertEquals(len(title), 1)
+            self.assertEqual(len(title), 1)
             return title[0].text
         else:
-            self.assertEquals(len(title), 0)
+            self.assertEqual(len(title), 0)
 
         return None
 
@@ -136,10 +136,10 @@ class SciMetaTestCase(HSRESTTestCase):
         abstract = scimeta.xpath('/rdf:RDF/rdf:Description[1]/dc:description/rdf:Description/dcterms:abstract',
                                  namespaces=self.NS)
         if should_exist:
-            self.assertEquals(len(abstract), 1)
+            self.assertEqual(len(abstract), 1)
             return abstract[0].text
         else:
-            self.assertEquals(len(abstract), 0)
+            self.assertEqual(len(abstract), 0)
 
         return None
 

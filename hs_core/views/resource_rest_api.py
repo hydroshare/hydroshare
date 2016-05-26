@@ -487,8 +487,10 @@ class ScienceMetadataRetrieveUpdate(APIView):
 
     def put(self, request, pk):
         # Update science metadata based on resourcemetadata.xml uploaded
-        resource, authorized, user = view_utils.authorize(request, pk, needed_permission=ACTION_TO_AUTHORIZE.EDIT_RESOURCE,
-                                                     raises_exception=False)
+        resource, authorized, user = view_utils.authorize(
+            request, pk,
+            needed_permission=ACTION_TO_AUTHORIZE.EDIT_RESOURCE,
+            raises_exception=False)
         if not authorized:
             raise PermissionDenied()
 
@@ -527,11 +529,11 @@ class ScienceMetadataRetrieveUpdate(APIView):
             # (use a file-like object as the file may be in iRODS, so we can't
             #  just copy it to a local path)
             resmeta_path = os.path.join(bag_data_path, 'resourcemap.xml')
-            resmeta = open(resmeta_path, 'wb')
-            storage = get_file_storage()
-            resmeta_irods = storage.open(AbstractResource.sysmeta_path(pk))
-            shutil.copyfileobj(resmeta_irods, resmeta)
-            resmeta.close()
+            with open(resmeta_path, 'wb') as resmeta:
+                storage = get_file_storage()
+                resmeta_irods = storage.open(AbstractResource.sysmeta_path(pk))
+                shutil.copyfileobj(resmeta_irods, resmeta)
+
             resmeta_irods.close()
 
             try:

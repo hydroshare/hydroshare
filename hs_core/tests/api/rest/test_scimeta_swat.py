@@ -45,9 +45,8 @@ class TestScienceMetadataSWAT(ModelInstanceSciMetaTestCase):
             #   Write out to a file
             out = etree.tostring(scimeta, pretty_print=True)
             sci_meta_new = os.path.join(tmp_dir, self.RESOURCE_METADATA)
-            f = open(sci_meta_new, 'w')
-            f.writelines(out)
-            f.close()
+            with open(sci_meta_new, 'w') as f:
+                f.writelines(out)
 
             #   Send updated metadata to REST API
             self.updateScimeta(pid, sci_meta_new)
@@ -55,36 +54,36 @@ class TestScienceMetadataSWAT(ModelInstanceSciMetaTestCase):
             #   Get science metadata
             response = self.getScienceMetadata(pid, exhaust_stream=False)
             sci_meta_updated = os.path.join(tmp_dir, self.RESOURCE_METADATA_UPDATED)
-            f = open(sci_meta_updated, 'w')
-            for l in response.streaming_content:
-                f.write(l)
-            f.close()
+            with open(sci_meta_updated, 'w') as f:
+                for l in response.streaming_content:
+                    f.write(l)
+
             scimeta = etree.parse(sci_meta_updated)
             abstract = self.getAbstract(scimeta)
-            self.assertEquals(abstract, abstract_text_1)
+            self.assertEqual(abstract, abstract_text_1)
 
             title = self.getTitle(scimeta)
-            self.assertEquals(title, title_1)
+            self.assertEqual(title, title_1)
 
             keywords = self.getKeywords(scimeta)
             kw_comp = zip(kwords_1, keywords)
             for k in kw_comp:
-                self.assertEquals(k[0], k[1])
+                self.assertEqual(k[0], k[1])
 
             model_output = scimeta.xpath(self.MOD_OUT_PATH,
                                          namespaces=self.NS)
-            self.assertEquals(len(model_output), 1)
-            self.assertEquals(model_output_1, model_output[0].text)
+            self.assertEqual(len(model_output), 1)
+            self.assertEqual(model_output_1, model_output[0].text)
 
             prog_name = scimeta.xpath(self.EXECUTED_BY_NAME_PATH,
                                       namespaces=self.NS)
-            self.assertEquals(len(prog_name), 1)
-            self.assertEquals(model_prog_name_1, prog_name[0].text)
+            self.assertEqual(len(prog_name), 1)
+            self.assertEqual(model_prog_name_1, prog_name[0].text)
 
             prog_id = scimeta.xpath(self.EXECUTED_BY_ID_PATH,
                                     namespaces=self.NS)
-            self.assertEquals(len(prog_id), 1)
-            self.assertEquals(model_prog_id_1, prog_id[0].text)
+            self.assertEqual(len(prog_id), 1)
+            self.assertEqual(model_prog_id_1, prog_id[0].text)
 
             # Make sure metadata update is idempotent
             self.updateScimeta(pid, sci_meta_new)
@@ -92,37 +91,36 @@ class TestScienceMetadataSWAT(ModelInstanceSciMetaTestCase):
             #    Get science metadata
             response = self.getScienceMetadata(pid, exhaust_stream=False)
             sci_meta_updated = os.path.join(tmp_dir, self.RESOURCE_METADATA_UPDATED)
-            f = open(sci_meta_updated, 'w')
-            for l in response.streaming_content:
-                f.write(l)
-            f.close()
+            with open(sci_meta_updated, 'w') as f:
+                for l in response.streaming_content:
+                    f.write(l)
 
             scimeta = etree.parse(sci_meta_updated)
             abstract = self.getAbstract(scimeta)
-            self.assertEquals(abstract, abstract_text_1)
+            self.assertEqual(abstract, abstract_text_1)
 
             title = self.getTitle(scimeta)
-            self.assertEquals(title, title_1)
+            self.assertEqual(title, title_1)
 
             keywords = self.getKeywords(scimeta)
             kw_comp = zip(kwords_1, keywords)
             for k in kw_comp:
-                self.assertEquals(k[0], k[1])
+                self.assertEqual(k[0], k[1])
 
             model_output = scimeta.xpath(self.MOD_OUT_PATH,
                              namespaces=self.NS)
-            self.assertEquals(len(model_output), 1)
-            self.assertEquals(model_output_1, model_output[0].text)
+            self.assertEqual(len(model_output), 1)
+            self.assertEqual(model_output_1, model_output[0].text)
 
             prog_name = scimeta.xpath(self.EXECUTED_BY_NAME_PATH,
                                       namespaces=self.NS)
-            self.assertEquals(len(prog_name), 1)
-            self.assertEquals(model_prog_name_1, prog_name[0].text)
+            self.assertEqual(len(prog_name), 1)
+            self.assertEqual(model_prog_name_1, prog_name[0].text)
 
             prog_id = scimeta.xpath(self.EXECUTED_BY_ID_PATH,
                                     namespaces=self.NS)
-            self.assertEquals(len(prog_id), 1)
-            self.assertEquals(model_prog_id_1, prog_id[0].text)
+            self.assertEqual(len(prog_id), 1)
+            self.assertEqual(model_prog_id_1, prog_id[0].text)
 
             # Overwrite metadata with other resource metadata
             #   First update the resource ID so that it matches the ID of the
@@ -133,9 +131,8 @@ class TestScienceMetadataSWAT(ModelInstanceSciMetaTestCase):
             #   Write out to a file
             out = etree.tostring(scimeta, pretty_print=True)
             sci_meta_new = os.path.join(tmp_dir, self.RESOURCE_METADATA)
-            f = open(sci_meta_new, 'w')
-            f.writelines(out)
-            f.close()
+            with open(sci_meta_new, 'w') as f:
+                f.writelines(out)
 
             #   Send updated metadata to REST API
             self.updateScimeta(pid, sci_meta_new)
@@ -143,39 +140,39 @@ class TestScienceMetadataSWAT(ModelInstanceSciMetaTestCase):
             #   Get science metadata
             response = self.getScienceMetadata(pid, exhaust_stream=False)
             sci_meta_updated = os.path.join(tmp_dir, self.RESOURCE_METADATA_UPDATED)
-            f = open(sci_meta_updated, 'w')
-            for l in response.streaming_content:
-                f.write(l)
-            f.close()
+            with open(sci_meta_updated, 'w') as f:
+                for l in response.streaming_content:
+                    f.write(l)
+
             scimeta = etree.parse(sci_meta_updated)
 
             abstract = self.getAbstract(scimeta)
-            self.assertEquals(abstract, abstract_text_2)
+            self.assertEqual(abstract, abstract_text_2)
 
             title = self.getTitle(scimeta)
-            self.assertEquals(title, title_2)
+            self.assertEqual(title, title_2)
 
             keywords = self.getKeywords(scimeta)
             kw_comp = zip(kwords_2, keywords)
             for k in kw_comp:
-                self.assertEquals(k[0], k[1])
+                self.assertEqual(k[0], k[1])
 
             model_output = scimeta.xpath(self.MOD_OUT_PATH,
                              namespaces=self.NS)
-            self.assertEquals(len(model_output), 1)
-            self.assertEquals(model_output_2, model_output[0].text)
+            self.assertEqual(len(model_output), 1)
+            self.assertEqual(model_output_2, model_output[0].text)
 
             prog_name = scimeta.xpath(self.EXECUTED_BY_NAME_PATH,
                                       namespaces=self.NS)
-            self.assertEquals(len(prog_name), 1)
-            self.assertEquals(model_prog_name_2, prog_name[0].text)
+            self.assertEqual(len(prog_name), 1)
+            self.assertEqual(model_prog_name_2, prog_name[0].text)
 
             prog_id = scimeta.xpath(self.EXECUTED_BY_ID_PATH,
                                     namespaces=self.NS)
-            self.assertEquals(len(prog_id), 1)
+            self.assertEqual(len(prog_id), 1)
 
             prog_id_2 = prog_id[0].text.strip('/').rpartition('/')[-1]
-            self.assertEquals(model_prog_id_2, prog_id_2)
+            self.assertEqual(model_prog_id_2, prog_id_2)
 
         finally:
             shutil.rmtree(tmp_dir)
