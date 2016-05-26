@@ -396,18 +396,16 @@
                 input.val(label);
             });
 
-
-            fixViewPort();
         });
 
 
-        // Wrap IIFE around your code
+        // Uses bootstrap toolkit to trigger FixViewPort on bootstrap responsive breakpoints
         (function ($, viewport) {
             $(document).ready(function () {
                 // Executes when page loads
                 fixViewPort(viewport.current());
 
-                // Execute code each time window size changes
+                // Executes each time window size changes
                 $(window).resize(
                         viewport.changed(function () {
                             fixViewPort(viewport.current());
