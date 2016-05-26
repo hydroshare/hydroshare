@@ -105,7 +105,7 @@ class MethodForm(ModelForm):
 
 
 class MethodValidationForm(forms.Form):
-    method_code = forms.IntegerField()
+    method_code = forms.CharField(max_length=100)
     method_name = forms.CharField(max_length=200)
     method_type = forms.CharField(max_length=200)
     method_description = forms.CharField(required=False)
