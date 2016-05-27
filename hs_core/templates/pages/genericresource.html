@@ -1035,6 +1035,7 @@
                 $($(this).closest(".tags").parent().find(".btn-primary")[0]).show();    // Show save button
                 $(event.target).closest(".tag").remove();
                 updateKeywords();
+                update_keywords_ajax_submit();
                 return false;
             }
 
@@ -1066,6 +1067,7 @@
                 }
 
                 $("#txt-keyword").val("");  // Clear text input
+                update_keywords_ajax_submit();
                 return false;
             }
 
