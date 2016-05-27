@@ -15,7 +15,7 @@
                                 title="Remove from my resources" data-form-id="form-add-to-my-resources"
                                 class="glyphicon glyphicon-inbox icon-button btn-resource-remove"></button>
                     </form>
-                {% else %}
+                {% elif user.pk %}
                     <form class="pull-right" data-id="form-add-to-my-resources"
                           action="/hsapi/_internal/{{ cm.short_id }}/label-resource-action/"
                           method="post">
