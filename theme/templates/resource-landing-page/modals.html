@@ -1046,13 +1046,19 @@
                             </tr>
                             {% endfor %}
 
+                            {# Groups who can edit the content of this resource #}
                             {% for u in edit_groups %}
                             <tr id="row-id-{{ u.pk }}">
                                 <td>
                                     <div class="user-scope">
                                         <div class="group-image-wrapper extra-small">
-                                            <div class="group-image-extra-small group-preview-image-default"
+                                            {% if u.gaccess.picture and u.gaccess.picture.url %}
+                                                <div class="group-image-extra-small group-preview-image-default"
+                                                 style="background-image: url({{ u.gaccess.picture.url }})"></div>
+                                            {% else %}
+                                                <div class="group-image-extra-small group-preview-image-default"
                                                  style="background-image: url({{ STATIC_URL }}img/home-page/step4.png)"></div>
+                                            {% endif %}
                                         </div>
                                         <span value="{{ u.pk }}" class="user-name">{{ u.name }}</span>
                                         <br>
@@ -1100,13 +1106,19 @@
                             </tr>
                             {% endfor %}
 
+                            {# Users who can view the content of this resource #}
                             {% for u in view_groups %}
                             <tr id="row-id-{{ u.pk }}">
                                 <td>
                                     <div class="user-scope">
                                         <div class="group-image-wrapper extra-small">
-                                            <div class="group-image-extra-small group-preview-image-default"
-                                                 style="background-image: url({{ STATIC_URL }}img/home-page/step4.png)"></div>
+                                            {% if u.gaccess.picture and u.gaccess.picture.url %}
+                                                <div class="group-image-extra-small group-preview-image-default"
+                                                     style="background-image: url({{ u.gaccess.picture.url }})"></div>
+                                            {% else %}
+                                                <div class="group-image-extra-small group-preview-image-default"
+                                                     style="background-image: url({{ STATIC_URL }}img/home-page/step4.png)"></div>
+                                            {% endif %}
                                         </div>
                                         <span value="{{ u.pk }}" class="user-name">{{ u.name }}</span>
                                         <br>

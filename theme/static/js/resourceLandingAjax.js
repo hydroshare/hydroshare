@@ -143,22 +143,30 @@ function change_share_permission_ajax_submit(form_id) {
 }
 
 function share_resource_ajax_submit(form_id) {
-    if (!$("#id_user-deck > .hilight").length && !$("#id_group-deck > .hilight").length) {
-        return false; // If no user or group selected, ignore the request
-    }
     $form = $('#' + form_id);
 
     var datastring = $form.serialize();
     var share_with;
     var shareType;
 
-    if ($("#id_user-deck > .hilight").length > 0) {
-        share_with = $("#id_user-deck > .hilight")[0].getAttribute("data-value");
-        shareType = "user";
+    if ($("#div-invite-people input[value='users']:checked").length) {
+        if ($("#id_user-deck > .hilight").length > 0) {
+            share_with = $("#id_user-deck > .hilight")[0].getAttribute("data-value");
+            shareType = "user";
+        }
+        else {
+            return false;
+        }
     }
     else {
-        share_with = $("#id_group-deck > .hilight")[0].getAttribute("data-value");
-        shareType = "group";
+        if ($("#id_group-deck > .hilight").length > 0) {
+            share_with = $("#id_group-deck > .hilight")[0].getAttribute("data-value");
+            shareType = "group";
+        }
+        else {
+            return false;
+        }
+
     }
 
     var access_type = $("#selected_role")[0].getAttribute("data-role");
@@ -241,6 +249,7 @@ function share_resource_ajax_submit(form_id) {
                 }
                 else {
                     rowTemplate.find(".profile-pic-thumbnail").remove();
+                    rowTemplate.find(".group-image-wrapper .group-image-extra-small").attr("style", "background-image: url('" + json_response.group_pic + "')");
                 }
 
                 if (access_type == "view") {
