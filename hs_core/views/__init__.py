@@ -497,7 +497,7 @@ def _share_resource(request, shortkey, privilege, user_or_group_id, user_or_grou
 
     else:
         group_pic_url = 'No picture provided'
-        if group_to_share_with.gaccess.picture.url:
+        if group_to_share_with.gaccess.picture:
             group_pic_url = group_to_share_with.gaccess.picture.url
 
         ajax_response_data = {'status': status, 'name': group_to_share_with.name,
