@@ -13,7 +13,7 @@ class Migration(migrations.Migration):
     operations = [
         migrations.AddField(
             model_name='resourcefile',
-            name='resource_file_size',
+            name='fed_resource_file_size',
             field=models.CharField(max_length=15, null=True, blank=True),
         ),
     ]

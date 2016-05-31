@@ -158,7 +158,7 @@ def upload_add(request):
     irods_fnames = request.POST.get('irods_file_names', '')
     irods_fnames_list = string.split(irods_fnames, ',')
     res_cls = resource.__class__
-    ref_res_file_names = ''
+    fed_res_file_names = ''
 
     valid, ext = check_upload_files(res_cls, irods_fnames_list)
 
@@ -179,7 +179,7 @@ def upload_add(request):
             return HttpResponseRedirect(request.META['HTTP_REFERER'])
     try:
         utils.resource_file_add_pre_process(resource=resource, files=res_files, user=request.user,
-                                            extract_metadata=extract_metadata, ref_res_file_names=ref_res_file_names)
+                                            extract_metadata=extract_metadata, fed_res_file_names=fed_res_file_names)
 
     except hydroshare.utils.ResourceFileSizeException as ex:
         request.session['file_size_error'] = ex.message
@@ -191,7 +191,7 @@ def upload_add(request):
 
     try:
         hydroshare.utils.resource_file_add_process(resource=resource, files=res_files, user=request.user,
-                                                   extract_metadata=extract_metadata, ref_res_file_names=ref_res_file_names)
+                                                   extract_metadata=extract_metadata, fed_res_file_names=fed_res_file_names)
 
     except (hydroshare.utils.ResourceFileValidationException, Exception) as ex:
         request.session['validation_error'] = ex.message

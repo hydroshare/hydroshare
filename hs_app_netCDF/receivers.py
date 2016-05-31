@@ -24,8 +24,7 @@ def netcdf_pre_create_resource(sender, **kwargs):
     metadata = kwargs['metadata']
     validate_files_dict = kwargs['validate_files']
     res_title = kwargs['title']
-    ref_res_fnames = kwargs['ref_res_file_names']
-    user = kwargs['user']
+    ref_res_fnames = kwargs['fed_res_file_names']
 
     file_selected = False
 
@@ -33,7 +32,7 @@ def netcdf_pre_create_resource(sender, **kwargs):
         file_selected = True
         in_file_name = files[0].file.name
     elif ref_res_fnames:
-        ref_tmpfiles = utils.get_user_zone_files(user, ref_res_fnames)
+        ref_tmpfiles = utils.get_fed_zone_files(ref_res_fnames)
         if ref_tmpfiles:
             in_file_name = ref_tmpfiles[0]
             file_selected = True
@@ -196,7 +195,7 @@ def netcdf_pre_delete_file_from_resource(sender, **kwargs):
     del_file = kwargs['file']
     res_fname = del_file.resource_file.name
     if not res_fname:
-        res_fname = del_file.resource_file_name
+        res_fname = del_file.fed_resource_file_name_or_path
 
     del_file_ext = os.path.splitext(res_fname)[-1]
 
@@ -231,8 +230,7 @@ def netcdf_pre_add_files_to_resource(sender, **kwargs):
     nc_res = kwargs['resource']
     files = kwargs['files']
     validate_files_dict = kwargs['validate_files']
-    user = kwargs['user']
-    ref_res_fnames = kwargs['ref_res_file_names']
+    ref_res_fnames = kwargs['fed_res_file_names']
 
     if len(files) > 1:
         # file number validation
@@ -244,7 +242,7 @@ def netcdf_pre_add_files_to_resource(sender, **kwargs):
         file_selected = True
         in_file_name = files[0].file.name
     elif ref_res_fnames:
-        ref_tmpfiles = utils.get_user_zone_files(user, ref_res_fnames)
+        ref_tmpfiles = utils.get_fed_zone_files(ref_res_fnames)
         if ref_tmpfiles:
             in_file_name = ref_tmpfiles[0]
             file_selected = True

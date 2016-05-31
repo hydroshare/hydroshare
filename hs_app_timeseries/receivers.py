@@ -44,9 +44,9 @@ def post_add_files_to_resource_handler(sender, **kwargs):
         if res_file.resource_file:
             fl_ext = os.path.splitext(res_file.resource_file.name)[1]
             fl_obj_name = res_file.resource_file.file.name
-        elif res_file.resource_file_name:
-            fl_ext = os.path.splitext(res_file.resource_file_name)[1]
-            fl_obj_name = utils.get_user_zone_files(user, res_file.resource_file_name)[0]
+        elif res_file.fed_resource_file_name_or_path:
+            fl_ext = os.path.splitext(res_file.fed_resource_file_name_or_path)[1]
+            fl_obj_name = utils.get_fed_zone_files(res_file.fed_resource_file_name_or_path)[0]
 
         if fl_ext == '.sqlite':
             validate_err_message = _validate_odm2_db_file(fl_obj_name)
@@ -83,9 +83,9 @@ def post_create_resource_handler(sender, **kwargs):
         if res_file.resource_file:
             fl_ext = os.path.splitext(res_file.resource_file.name)[1]
             fl_obj_name = res_file.resource_file.file.name
-        elif res_file.resource_file_name:
-            fl_ext = os.path.splitext(res_file.resource_file_name)[1]
-            fl_obj_name = utils.get_user_zone_files(user, res_file.resource_file_name)[0]
+        elif res_file.fed_resource_file_name_or_path:
+            fl_ext = os.path.splitext(res_file.fed_resource_file_name_or_path)[1]
+            fl_obj_name = utils.get_fed_zone_files(res_file.fed_resource_file_name_or_path)[0]
 
         if fl_ext == '.sqlite':
             validate_err_message = _validate_odm2_db_file(fl_obj_name)

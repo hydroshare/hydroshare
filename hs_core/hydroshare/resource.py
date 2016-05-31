@@ -348,10 +348,10 @@ def add_zip_file_contents_to_resource_async(resource, f):
 
 
 def create_resource(
-        resource_type, owner, title, requesting_user=None,
+        resource_type, owner, title,
         edit_users=None, view_users=None, edit_groups=None, view_groups=None,
-        keywords=(), metadata=None, content=None,
-        files=(), ref_res_file_names='', create_metadata=True,
+        keywords=(), metadata=None,
+        files=(), fed_res_file_names='', fed_copy=True, create_metadata=True,
         create_bag=True, unpack_file=False, **kwargs):
 
 
@@ -426,6 +426,8 @@ def create_resource(
         if not metadata:
             metadata = []
 
+        fed_zone_home_path = utils.get_federated_zone_home_path(fed_res_file_names)
+
         if len(files) == 1 and unpack_file and zipfile.is_zipfile(files[0]):
             # Add contents of zipfile as resource files asynchronously
             # Note: this is done asynchronously as unzipping may take
@@ -437,7 +439,8 @@ def create_resource(
             # few seconds.  We may want to add the option to do this
             # asynchronously if the file size is large and would take
             # more than ~15 seconds to complete.
-            add_resource_files(resource.short_id, *files, ref_res_file_names=ref_res_file_names, user=requesting_user)
+            add_resource_files(resource.short_id, *files, fed_res_file_names=fed_res_file_names,
+                               fed_zone_home_path=fed_zone_home_path)
 
         # by default resource is private
         resource_access = ResourceAccess(resource=resource)
@@ -484,7 +487,7 @@ def create_resource(
             resource.title = resource.metadata.title.value
             resource.save()
         if create_bag:
-            hs_bagit.create_bag(resource)
+            hs_bagit.create_bag(resource, fed_zone_home_path=fed_zone_home_path, fed_copy=fed_copy)
 
     return resource
 
@@ -724,15 +727,21 @@ def add_resource_files(pk, *files, **kwargs):
 
     """
     resource = utils.get_resource_by_shortkey(pk)
-    ref_res_file_names=kwargs.pop('ref_res_file_names', '')
-    user=kwargs.pop('user', None)
+    fed_res_file_names=kwargs.pop('fed_res_file_names', '')
     ret = []
+    fed_zone_home_path = kwargs.pop('fed_zone_home_path', '')
+
     for f in files:
-        ret.append(utils.add_file_to_resource(resource, f))
-    if ref_res_file_names and user:
-        ifnames = string.split(ref_res_file_names, ',')
+        if fed_zone_home_path:
+            # user has selected files from a federated iRODS zone, so files uploaded from local disk
+            # need to be stored to the federated iRODS zone rather than HydroShare zone as well
+            ret.append(utils.add_file_to_resource(resource, f, fed_res_file_name_or_path=fed_zone_home_path))
+        else:
+            ret.append(utils.add_file_to_resource(resource, f))
+    if fed_res_file_names:
+        ifnames = string.split(fed_res_file_names, ',')
         for ifname in ifnames:
-            ret.append(utils.add_file_to_resource(resource, None, ref_res_file_name=ifname, user=user))
+            ret.append(utils.add_file_to_resource(resource, None, fed_res_file_name_or_path=ifname))
     return ret
 
 

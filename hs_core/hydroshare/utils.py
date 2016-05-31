@@ -162,18 +162,18 @@ def get_user_zone_status_info(user):
     return in_production, enable_user_zone
 
 
-def set_user_zone_session(user, irods_storage):
+def set_fed_zone_session(irods_storage):
     """
-    Set iRODS session to iRODS user zone for irods_storage input object
+    Set iRODS session to wwwHydroProxy for irods_storage input object for iRODS federated zone direct file operations
     Args:
-        user: the requesting user whose user name is the same as its corresponding iRODS account
-        irods_storage: the iRODS storage object being used to interact with iRODS user zone
+        irods_storage: the iRODS storage object being used to interact with iRODS federated zone
 
     Returns:None
     """
-    in_production, enable_user_zone = get_user_zone_status_info(user)
-    if enable_user_zone and not in_production:
-        # for testing, has to switch irods session to hydroshare production proxy iRODS user
+    in_production = is_in_production()
+    if not in_production:
+        # for testing in an environment other than production, has to switch irods session
+        # to hydroshare production proxy iRODS user
         irods_storage.set_user_session(username=settings.HS_WWW_IRODS_PROXY_USER,
                                    password=settings.HS_WWW_IRODS_PROXY_USER_PWD,
                                    host=settings.HS_WWW_IRODS_HOST,
@@ -206,11 +206,27 @@ def is_federated(homepath):
     return irods_storage.exists(homepath)
 
 
-def get_user_zone_file_size(user, fname):
+def get_federated_zone_home_path(filepath):
+    """
+    Args:
+        filepath: the iRODS data object file path that included zone name in the format of /zone_name/home/user_name/file_path
+
+    Returns:
+        the zone name extracted from filepath
+    """
+    if filepath and filepath.startswith('/'):
+        split_path_strs = filepath.split('/')
+        # the Zone name should follow the first slash
+        zone = split_path_strs[1]
+        return '/{zone}/home/{local_proxy_user}'.format(zone=zone, local_proxy_user=settings.HS_LOCAL_PROXY_USER_IN_FED_ZONE)
+    else:
+        return ''
+
+
+def get_fed_zone_file_size(fname):
     """
     Get size of a data object from iRODS user zone
     Args:
-        user: the requesting user
         fname: the logical iRODS file name with full logical path
 
     Returns:
@@ -218,26 +234,24 @@ def get_user_zone_file_size(user, fname):
     """
 
     irods_storage = IrodsStorage()
-    set_user_zone_session(user, irods_storage)
+    set_fed_zone_session(irods_storage)
     return irods_storage.size(fname)
 
 
-def get_user_zone_files(user, irods_fnames):
+def get_fed_zone_files(irods_fnames):
     """
-    Get the file from iRODS user zone to Django server for metadata extraction on-demand for specific resource types
+    Get the file from iRODS federated zone to Django server for metadata extraction on-demand for specific resource types
     Args:
-        user: the requesting user
         fname: the logical iRODS file name with full logical path
 
     Returns:
     the named temp file being copied over to local Django server
     """
     irods_storage = IrodsStorage()
-    set_user_zone_session(user, irods_storage)
+    set_fed_zone_session(irods_storage)
     ifnames = string.split(irods_fnames, ',')
     ret_file_list = []
     for ifname in ifnames:
-        size = irods_storage.size(ifname)
         fname = os.path.basename(ifname.rstrip(os.sep))
         tmpfile = os.path.join(settings.TEMP_FILE_DIR, fname)
         irods_storage.getFile(ifname, tmpfile)
@@ -268,7 +282,7 @@ def rep_res_bag_to_user_zone(user, res_id):
             istorage.setAVU(res_id, 'bag_modified', "false")
 
     # do replication of the resource bag to irods user zone
-    set_user_zone_session(user, istorage)
+    set_fed_zone_session(istorage)
     src_file = 'bags/{resid}.zip'.format(resid=res_id)
     tgt_file = '/hydroshareuserZone/home/{username}/{resid}.zip'.format(username=user.username, resid=res_id)
     istorage.copyFiles(src_file, tgt_file)
@@ -427,7 +441,7 @@ def validate_resource_file_count(resource_cls, files, resource=None):
 
 
 def resource_pre_create_actions(resource_type, resource_title, page_redirect_url_key,
-                                files=(), ref_res_file_names='', metadata=None,
+                                files=(), fed_res_file_names='', metadata=None,
                                 requesting_user=None, **kwargs):
     from.resource import check_resource_type
     if not resource_title:
@@ -455,7 +469,7 @@ def resource_pre_create_actions(resource_type, resource_title, page_redirect_url
     # to redirect to their own page for resource creation rather than use core resource creation code
     pre_create_resource.send(sender=resource_cls, metadata=metadata, files=files, title=resource_title,
                              url_key=page_redirect_url_key, page_url_dict=page_url_dict,
-                             validate_files=file_validation_dict, ref_res_file_names=ref_res_file_names,
+                             validate_files=file_validation_dict, fed_res_file_names=fed_res_file_names,
                              user=requesting_user, **kwargs)
 
     if len(files) > 0:
@@ -558,7 +572,7 @@ def get_party_data_from_user(user):
     return party_data
 
 
-def resource_file_add_pre_process(resource, files, user, extract_metadata=False, ref_res_file_names='', **kwargs):
+def resource_file_add_pre_process(resource, files, user, extract_metadata=False, fed_res_file_names='', **kwargs):
     resource_cls = resource.__class__
     validate_resource_file_size(files)
     validate_resource_file_type(resource_cls, files)
@@ -566,20 +580,20 @@ def resource_file_add_pre_process(resource, files, user, extract_metadata=False,
 
     file_validation_dict = {'are_files_valid': True, 'message': 'Files are valid'}
     pre_add_files_to_resource.send(sender=resource_cls, files=files, resource=resource, user=user,
-                                   ref_res_file_names=ref_res_file_names, validate_files=file_validation_dict,
+                                   fed_res_file_names=fed_res_file_names, validate_files=file_validation_dict,
                                    extract_metadata=extract_metadata, **kwargs)
 
     check_file_dict_for_error(file_validation_dict)
 
 
-def resource_file_add_process(resource, files, user, extract_metadata=False, ref_res_file_names='', **kwargs):
+def resource_file_add_process(resource, files, user, extract_metadata=False, fed_res_file_names='', **kwargs):
     from .resource import add_resource_files
-    resource_file_objects = add_resource_files(resource.short_id, *files, ref_res_file_names=ref_res_file_names, user=user)
+    resource_file_objects = add_resource_files(resource.short_id, *files, fed_res_file_names=fed_res_file_names)
 
     # receivers need to change the values of this dict if file validation fails
     # in case of file validation failure it is assumed the resource type also deleted the file
     file_validation_dict = {'are_files_valid': True, 'message': 'Files are valid'}
-    post_add_files_to_resource.send(sender=resource.__class__, files=files, ref_res_file_names=ref_res_file_names,
+    post_add_files_to_resource.send(sender=resource.__class__, files=files, fed_res_file_names=fed_res_file_names,
                                     resource=resource, user=user,
                                     validate_files=file_validation_dict, extract_metadata=extract_metadata, **kwargs)
 
@@ -589,26 +603,36 @@ def resource_file_add_process(resource, files, user, extract_metadata=False, ref
     return resource_file_objects
 
 
-def add_file_to_resource(resource, f, ref_res_file_name='', user=None):
+def add_file_to_resource(resource, f, fed_res_file_name_or_path=''):
     """
     Add a ResourceFile to a Resource.  Adds the 'format' metadata element to the resource.
     :param resource: Resource to which file should be added
     :param f: File-like object to add to a resource
-    :param ref_res_file_name: the logical file name of the resource content file for reference iRODS resource;
-                              By default, it is empty. A non-empty value indicates this is a reference iRODS
-                              logical file name in which case the parameter f is ignored as no file will be uploaded
-                              but instead a reference entry is created to point to the file in iRODS user zone
+    :param fed_res_file_name_or_path: the logical file name of the resource content file for federated iRODS resource
+                                      or the federated zone name; By default, it is empty. A non-empty value indicates
+                                      the file needs to be added into the federated zone, either from local disk where
+                                      f holds the uploaded file from local disk, or from the federated zone directly
+                                      where f is empty but fed_res_file_name_or_path has the whole data object iRODS path
+                                      in the federated zone
     :return: The identifier of the ResourceFile added.
     """
-    if ref_res_file_name and user:
-        size = get_user_zone_file_size(user, ref_res_file_name)
-        ret = ResourceFile.objects.create(content_object=resource, resource_file_name=ref_res_file_name, resource_file_size=size)
-        file_format_type = get_file_mime_type(ref_res_file_name)
-    else:
-        ret = ResourceFile.objects.create(content_object=resource,
-                                      resource_file=File(f) if not isinstance(f, UploadedFile) else f)
+    if f:
+        if fed_res_file_name_or_path:
+            ret = ResourceFile.objects.create(content_object=resource,
+                                              resource_file=File(f) if not isinstance(f, UploadedFile) else f,
+                                              fed_resource_file_name_or_path=fed_res_file_name_or_path)
+        else:
+            ret = ResourceFile.objects.create(content_object=resource,
+                                              resource_file=File(f) if not isinstance(f, UploadedFile) else f)
         # add format metadata element if necessary
         file_format_type = get_file_mime_type(f.name)
+    elif fed_res_file_name_or_path:
+        size = get_fed_zone_file_size(fed_res_file_name_or_path)
+        ret = ResourceFile.objects.create(content_object=resource, fed_resource_file_name_or_path=fed_res_file_name_or_path, fed_resource_file_size=size)
+        file_format_type = get_file_mime_type(fed_res_file_name_or_path)
+    else:
+        return None
+
     if file_format_type not in [mime.value for mime in resource.metadata.formats.all()]:
         resource.metadata.create_element('format', value=file_format_type)
 

@@ -573,18 +573,6 @@ def my_resources(request, page):
     return context
 
 
-@processor_for('create-resource')
-@login_required
-def create_resource_page_processor(request, page):
-    user = request.user
-    in_production, user_zone_account_exist = utils.get_user_zone_status_info(user)
-
-    context = {
-        'user_name': user.username,
-        'user_zone_account_exist': user_zone_account_exist
-    }
-    return context
-
 @processor_for(GenericResource)
 def add_generic_context(request, page):
     user = request.user
@@ -604,7 +592,6 @@ def add_generic_context(request, page):
         'add_edit_user_form': AddUserForm(),
         'add_view_group_form': AddGroupForm(),
         'add_edit_group_form': AddGroupForm(),
-        'user_name': user.username,
         'user_zone_account_exist': user_zone_account_exist,
     }
 
@@ -623,9 +610,15 @@ def create_resource(request, *args, **kwargs):
 
     irods_fnames = request.POST.get('irods_file_names')
     federated = request.POST.get("irods_federated")
+    do_copy = request.POST.get("copy-or-move")
+    fed_copy = True
+    if do_copy:
+        if do_copy.lower()=='move':
+            fed_copy = False
+
     if irods_fnames:
         if federated:
-            irods_fnames_uz = irods_fnames
+            fed_res_file_names = irods_fnames
         else:
             user = request.POST.get('irods-username')
             password = request.POST.get("irods-password")
@@ -646,7 +639,7 @@ def create_resource(request, *args, **kwargs):
 
     try:
         page_url_dict, res_title, metadata = hydroshare.utils.resource_pre_create_actions(resource_type=resource_type, files=resource_files,
-                                                                    resource_title=res_title, ref_res_file_names=irods_fnames_uz,
+                                                                    resource_title=res_title, fed_res_file_names=fed_res_file_names,
                                                                     page_redirect_url_key=url_key, requesting_user=request.user, **kwargs)
     except utils.ResourceFileSizeException as ex:
         context = {'file_size_error': ex.message}
@@ -669,9 +662,9 @@ def create_resource(request, *args, **kwargs):
             owner=request.user,
             title=res_title,
             metadata=metadata,
-            requesting_user = request.user,
             files=resource_files,
-            ref_res_file_names=irods_fnames_uz,
+            fed_res_file_names=fed_res_file_names,
+            fed_copy=fed_copy,
             content=res_title
     )
     # except Exception as ex:

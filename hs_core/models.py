@@ -1297,7 +1297,12 @@ class AbstractResource(ResourcePermissionsMixin):
         unique_together = ("content_type", "object_id")
 
 def get_path(instance, filename):
-    return os.path.join(instance.content_object.short_id, 'data', 'contents', filename)
+    # fed_resource_file_name_or_path needs to hold the logical home collection path for federated local HydroShare proxy user if
+    # the local file will be uploaded to federated local zone as part of the resource
+    if instance.fed_resource_file_name_or_path:
+        return os.path.join(instance.fed_resource_file_name_or_path, instance.content_object.short_id, 'data', 'contents', filename)
+    else:
+        return os.path.join(instance.content_object.short_id, 'data', 'contents', filename)
 
 class ResourceFile(models.Model):
     object_id = models.PositiveIntegerField()
@@ -1306,10 +1311,11 @@ class ResourceFile(models.Model):
     content_object = GenericForeignKey('content_type', 'object_id')
     resource_file = models.FileField(upload_to=get_path, max_length=500, null=True, blank=True,
                                      storage=IrodsStorage() if getattr(settings,'USE_IRODS', False) else DefaultStorage())
-    # this optional field is added for use by reference iRODS resources where resource content files are not copied over from iRODS user zone to HydroShare zone,
-    # in which case resource_file is empty, but we record iRODS logical resource file name to write to AVU iRODS metadata after the reference resource is created
-    resource_file_name = models.CharField(max_length=255, null=True, blank=True)
-    resource_file_size = models.CharField(max_length=15, null=True, blank=True)
+    # this optional field is added for use by federated iRODS resources where resources are created in the local federated zone rather than hydroshare zone,
+    # in which case resource_file is empty, and we record iRODS logical resource file name and file size for customized copy or move operations for resource
+    # creation and other operations
+    fed_resource_file_name_or_path = models.CharField(max_length=255, null=True, blank=True)
+    fed_resource_file_size = models.CharField(max_length=15, null=True, blank=True)
 
 
 class Bags(models.Model):

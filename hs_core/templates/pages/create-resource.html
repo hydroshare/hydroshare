@@ -114,9 +114,10 @@
                             Browse iRODS...
                         </a>
                         <span id="irods-sel-file"></span>
+                        <input type="hidden" id="copy-or-move" name="copy-or-move" value='copy'>
                         <span id="irods-copy-move" class="hidden-form">
-                            <input type="radio" name="copy-move" value="copy" checked="checked"> Copy
-                            <input type="radio" name="copy-move" value="move"> Move
+                            <input type="radio" id='copy-radio' name="copy-move" value="copy" checked="checked"> Copy
+                            <input type="radio" id='move-radio' name="copy-move" value="move"> Move
                         </span>
                         <a id="btn-signout-irods" type="button" class="btn-link hidden-form">log out of iRODS</a>
                     </div>

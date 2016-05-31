@@ -11,7 +11,7 @@ from urlparse import urlparse
 def script_pre_create(sender, **kwargs):
     files = kwargs['files']
     metadata = kwargs['metadata']
-    ref_res_fnames = kwargs['ref_res_file_names']
+    ref_res_fnames = kwargs['fed_res_file_names']
     extended_metadata = {}
     script_language = None
     file_selected = False

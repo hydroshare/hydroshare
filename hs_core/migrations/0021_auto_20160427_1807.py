@@ -15,7 +15,7 @@ class Migration(migrations.Migration):
     operations = [
         migrations.AddField(
             model_name='resourcefile',
-            name='resource_file_name',
+            name='fed_resource_file_name_or_path',
             field=models.CharField(max_length=255, null=True, blank=True),
         ),
         migrations.AlterField(

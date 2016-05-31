@@ -47,7 +47,7 @@ def delete_bag(resource):
         bag.delete()
 
 
-def create_bag_files(resource):
+def create_bag_files(resource, fed_zone_home_path='', fed_copy=True):
     """
     create and update all files needed by bagit operation that is conducted on iRODS server; no bagit operation
     is performed, only files that will be included in the bag are created or updated.
@@ -60,6 +60,8 @@ def create_bag_files(resource):
     from . import utils as hs_core_utils
     DATE_FORMAT = "YYYY-MM-DDThh:mm:ssTZD"
     istorage=IrodsStorage()
+    if fed_zone_home_path:
+        hs_core_utils.set_fed_zone_session(istorage)
 
     dest_prefix = getattr(settings, 'BAGIT_TEMP_LOCATION', '/tmp/hydroshare/')
     bagit_path = os.path.join(dest_prefix, resource.short_id, arrow.get(resource.updated).format("YYYY.MM.DD.HH.mm.ss"))
@@ -87,6 +89,8 @@ def create_bag_files(resource):
         out.write(resource.metadata.get_xml())
 
     to_file_name = '{res_id}/data/resourcemetadata.xml'.format(res_id=resource.short_id)
+    if fed_zone_home_path:
+        to_file_name = '{fed_zone_home_path}/{rel_path}'.format(fed_zone_home_path=fed_zone_home_path, rel_path=to_file_name)
     istorage.saveFile(from_file_name, to_file_name, True)
 
     # make the resource map
@@ -121,23 +125,30 @@ def create_bag_files(resource):
     resMetaFile._ore.isAggregatedBy = ag_url
     resMetaFile._dc.format = "application/rdf+xml"
 
-
     #Create a description of the content file and add it to the aggregation
     files = ResourceFile.objects.filter(object_id=resource.id)
     resFiles = []
     for n, f in enumerate(files):
-        if f.resource_file_name:
-            filename = f.resource_file_name
-            resFiles.append(AggregatedResource(os.path.join('{hs_url}/resource/{res_id}/data/contents{file_name}'.format(
-                hs_url=current_site_url, res_id=resource.short_id, file_name=filename))))
-        else:
+        if f.resource_file:
             filename = os.path.basename(f.resource_file.name)
+        elif f.fed_resource_file_name_or_path:
+            # move or copy the file under the user account to under local hydro proxy account in federated zone
+            from_fname = f.fed_resource_file_name_or_path
+            filename = from_fname.rsplit('/')[-1]
+            to_fname = '{base_path}/{res_id}/data/contents/{file_name}'.format(base_path=fed_zone_home_path,
+                                                                               res_id=resource.short_id,
+                                                                               file_name=filename)
+            if fed_copy:
+                istorage.copyFiles(from_fname, to_fname)
+            else:
+                istorage.moveFile(from_fname, to_fname)
+        else:
+            filename = ''
+        if filename:
             resFiles.append(AggregatedResource(os.path.join('{hs_url}/resource/{res_id}/data/contents/{file_name}'.format(
                 hs_url=current_site_url, res_id=resource.short_id, file_name=filename))))
-        
-
-        resFiles[n]._ore.isAggregatedBy = ag_url
-        resFiles[n]._dc.format = hs_core_utils.get_file_mime_type(filename)
+            resFiles[n]._ore.isAggregatedBy = ag_url
+            resFiles[n]._dc.format = hs_core_utils.get_file_mime_type(filename)
 
     #Add the resource files to the aggregation
     a.add_resource(resMetaFile)
@@ -175,6 +186,9 @@ def create_bag_files(resource):
     with open(from_file_name, 'w') as out:
         out.write(xml_string)
     to_file_name = os.path.join(resource.short_id, 'data', 'resourcemap.xml')
+    if fed_zone_home_path:
+        to_file_name = '{fed_zone_home_path}/{rel_path}'.format(fed_zone_home_path=fed_zone_home_path, rel_path=to_file_name)
+
     istorage.saveFile(from_file_name, to_file_name, False)
 
     shutil.rmtree(bagit_path)
@@ -227,7 +241,7 @@ def create_bag_by_irods(resource_id, istorage = None):
             return False
 
 
-def create_bag(resource):
+def create_bag(resource, fed_zone_home_path='', fed_copy=True):
     """
     Modified to implement the new bagit workflow. The previous workflow was to create a bag from the current filesystem
     of the resource, then zip it up and add it to the resource. The new workflow is to delegate bagit and zip-up
@@ -242,14 +256,19 @@ def create_bag(resource):
     :return: the hs_core.models.Bags instance associated with the new bag.
     """
 
-    istorage = create_bag_files(resource)
+    istorage = create_bag_files(resource, fed_zone_home_path, fed_copy)
 
     # set bag_modified-true AVU pair for on-demand bagging.to indicate the resource bag needs to be created when user clicks on download button
-    istorage.setAVU(resource.short_id, "bag_modified", "true")
+    if fed_zone_home_path:
+        to_coll_name = '{fed_zone_home_path}/{rel_path}'.format(fed_zone_home_path=fed_zone_home_path, rel_path=resource.short_id)
+    else:
+        to_coll_name = resource.short_id
 
-    istorage.setAVU(resource.short_id, "isPublic", str(resource.raccess.public))
+    istorage.setAVU(to_coll_name, "bag_modified", "true")
 
-    istorage.setAVU(resource.short_id, "resourceType", resource._meta.object_name)
+    istorage.setAVU(to_coll_name, "isPublic", str(resource.raccess.public))
+
+    istorage.setAVU(to_coll_name, "resourceType", resource._meta.object_name)
 
     # delete if there exists any bags for the resource
     resource.bags.all().delete()

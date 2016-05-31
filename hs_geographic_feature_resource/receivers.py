@@ -209,15 +209,14 @@ def geofeature_pre_create_resource(sender, **kwargs):
         files = kwargs['files']
         metadata = kwargs['metadata']
         validate_files_dict = kwargs['validate_files']
-        ref_res_fnames = kwargs['ref_res_file_names']
-        user = kwargs['user']
+        ref_res_fnames = kwargs['fed_res_file_names']
         file_selected = False
 
         if files:
             file_selected = True
             file_list = [file.name for file in files]
         elif ref_res_fnames:
-            file_list = utils.get_user_zone_files(user, ref_res_fnames)
+            file_list = utils.get_fed_zone_files(ref_res_fnames)
             if file_list:
                 file_selected = True
 
@@ -285,7 +284,7 @@ def geofeature_pre_delete_file_from_resource(sender, **kwargs):
     del_file = kwargs['file']
     res_fname = del_file.resource_file.name
     if not res_fname:
-        res_fname = del_file.resource_file_name
+        res_fname = del_file.fed_resource_file_name_or_path
     one_file_removed = True
     all_file_removed = False
     ori_file_info = res_obj.metadata.originalfileinfo.all().first()
@@ -330,8 +329,7 @@ def geofeature_pre_add_files_to_resource(sender, **kwargs):
 
     res_obj = kwargs['resource']
     files = kwargs['files']
-    user = kwargs['user']
-    ref_res_fnames = kwargs['ref_res_file_names']
+    ref_res_fnames = kwargs['fed_res_file_names']
     validate_files_dict = kwargs['validate_files']
     ori_file_info = res_obj.metadata.originalfileinfo.all().first()
     some_new_files_added = True
@@ -340,7 +338,7 @@ def geofeature_pre_add_files_to_resource(sender, **kwargs):
     if files:
         file_list = [file.name for file in files]
     elif ref_res_fnames:
-        file_list = utils.get_user_zone_files(user, ref_res_fnames)
+        file_list = utils.get_fed_zone_files(ref_res_fnames)
 
     try:
         if ori_file_info and ResourceFile.objects.filter(object_id=res_obj.id).count() > 0: # just add non-required files
@@ -464,8 +462,7 @@ def geofeature_post_add_files_to_resource_handler(sender, **kwargs):
     tmp_dir = None
     resource = kwargs['resource']
     files = kwargs['files']
-    user = kwargs['user']
-    ref_res_fnames = kwargs['ref_res_file_names']
+    ref_res_fnames = kwargs['fed_res_file_names']
     found_shp = False
     found_prj = False
     found_zip = False
@@ -473,7 +470,7 @@ def geofeature_post_add_files_to_resource_handler(sender, **kwargs):
     if files:
         file_list = [file.name for file in files]
     elif ref_res_fnames:
-        file_list = utils.get_user_zone_files(user, ref_res_fnames)
+        file_list = utils.get_fed_zone_files(ref_res_fnames)
 
     for fname in file_list:
         if fname.endswith(".shp"):
@@ -490,7 +487,7 @@ def geofeature_post_add_files_to_resource_handler(sender, **kwargs):
                 f_fullname = res_f.resource_file.file.name
                 tmp_dir = os.path.dirname(f_fullname)
                 if not f_fullname:
-                    f_fullname = res_f.resource_file_name
+                    f_fullname = res_f.fed_resource_file_name_or_path
 
                 f_fullname = f_fullname[f_fullname.rfind('/')+1:]
 
