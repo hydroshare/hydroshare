@@ -235,34 +235,36 @@
                                 {% endif %}
 
                                 {#  Sharing Status icons #}
-                                {% if res.raccess.published %}
-                                    <img src="{{ STATIC_URL }}img/published.png"
-                                         alt="Published Resource" title="Published"/>
-                                {% elif res.raccess.public %}
-                                    <img src="{{ STATIC_URL }}img/public.png"
-                                         alt="Public Resource" title="Public"/>
-                                {% elif res.raccess.discoverable %}
-                                    <img src="{{ STATIC_URL }}img/discoverable.png"
-                                         alt="Discoverable Resource" title="Discoverable"/>
-                                {% else %}
-                                    <img src="{{ STATIC_URL }}img/private.png"
-                                         alt="Private Resource" title="Private"/>
-                                {% endif %}
-
-                                {% if res.raccess.published %}
-                                    {% if "pending" in cm.doi or "failure" in cm.doi %}
-                                        <img src="{{ STATIC_URL }}img/pending.png" alt="Pending Publication"
-                                             title="Pending Publication. Note that the DOI will not be available until it has been registered and activated."/>
-                                    {% endif %}
-                                {% else %}
-                                    {% if res.raccess.shareable %}
-                                        <img src="{{ STATIC_URL }}img/shareable.png" alt="Sharable Resource"
-                                             title="Shareable"/>
+                                <div class="access-icon-wrapper">
+                                    {% if res.raccess.published %}
+                                        <img src="{{ STATIC_URL }}img/published.png"
+                                             alt="Published Resource" title="Published"/>
+                                    {% elif res.raccess.public %}
+                                        <img src="{{ STATIC_URL }}img/public.png"
+                                             alt="Public Resource" title="Public"/>
+                                    {% elif res.raccess.discoverable %}
+                                        <img src="{{ STATIC_URL }}img/discoverable.png"
+                                             alt="Discoverable Resource" title="Discoverable"/>
                                     {% else %}
-                                        <img src="{{ STATIC_URL }}img/non-shareable.png" alt="Non Sharable Resource"
-                                             title="Not Shareable"/>
+                                        <img src="{{ STATIC_URL }}img/private.png"
+                                             alt="Private Resource" title="Private"/>
                                     {% endif %}
-                                {% endif %}
+
+                                    {% if res.raccess.published %}
+                                        {% if "pending" in cm.doi or "failure" in cm.doi %}
+                                            <img src="{{ STATIC_URL }}img/pending.png" alt="Pending Publication"
+                                                 title="Pending Publication. Note that the DOI will not be available until it has been registered and activated."/>
+                                        {% endif %}
+                                    {% else %}
+                                        {% if res.raccess.shareable %}
+                                            <img src="{{ STATIC_URL }}img/shareable.png" alt="Sharable Resource"
+                                                 title="Shareable"/>
+                                        {% else %}
+                                            <img src="{{ STATIC_URL }}img/non-shareable.png" alt="Non Sharable Resource"
+                                                 title="Not Shareable"/>
+                                        {% endif %}
+                                    {% endif %}
+                                </div>
                             </td>
                             <td>
                                 <strong><a href="{{ res.get_absolute_url }}">{{ res.metadata.title }}</a></strong>

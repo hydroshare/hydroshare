@@ -2674,6 +2674,7 @@ h4.title {
 
 #item-selectors {
     display: none;
+	width: 100% !important;
 }
 
 .resource-custom-table {
@@ -3467,6 +3468,7 @@ button.no-style:focus {
 .group-image-wrapper-medium {
 	width: 130px;
 	height: 130px;
+	margin: auto;
 }
 
 .group-image-small {
@@ -3656,4 +3658,8 @@ div.group-add-photo {
 
 .request-block .activity-block {
 	padding: 2px;
+}
+
+.access-icon-wrapper {
+	display: inline-block;
 }

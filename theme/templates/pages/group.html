@@ -18,7 +18,7 @@
 
     <div class="container">
         <div class="row">
-            <div class="col-sm-2">
+            <div class="col-sm-3">
                 {#  Group Picture #}
                 {% if group.gaccess.picture and group.gaccess.picture.url %}
                     <div class="group-image-wrapper group-image-wrapper-medium">
@@ -33,7 +33,7 @@
                 {% endif %}
                 </div>
 
-            <div class="col-sm-8">
+            <div class="col-sm-7">
                 <h2 class="group-title">{{ group.name }}</h2>
                 <h4 class="text-muted">{{ group.gaccess.purpose }}</h4>
 
@@ -202,7 +202,7 @@
                                             {% endif %}
                                         </td>
                                         <td>
-                                            <h4><strong><a href="#">{{ owner|best_name }}</a></strong></h4>
+                                            <h4><strong><a>{{ owner|contact|safe }}</a></strong></h4>
                                             {% if  owner.userprofile.title %}<span class="text-muted">{{ owner.userprofile.title }}</span>{% endif %}
                                         </td>
                                         <td>
@@ -248,7 +248,7 @@
                                 {#  Template to generate subsequent rows after accepting join request   #}
                                 <tr data-filter-by="view-user" id="templateRow">
                                     <td>
-                                        <h4><strong><a href="#" data-id="name"></a></strong></h4>
+                                        <h4><strong><a data-id="name"></a></strong></h4>
                                         <span class="text-muted" data-id="title"></span>
                                     </td>
                                     <td>
@@ -574,34 +574,36 @@
                                                 {% endif %}
 
                                                 {#  Sharing Status icons #}
-                                                {% if res.raccess.published %}
-                                                    <img src="{{ STATIC_URL }}img/published.png"
-                                                         alt="Published Resource" title="Published"/>
-                                                {% elif res.raccess.public %}
-                                                    <img src="{{ STATIC_URL }}img/public.png"
-                                                         alt="Public Resource" title="Public"/>
-                                                {% elif res.raccess.discoverable %}
-                                                    <img src="{{ STATIC_URL }}img/discoverable.png"
-                                                         alt="Discoverable Resource" title="Discoverable"/>
-                                                {% else %}
-                                                    <img src="{{ STATIC_URL }}img/private.png"
-                                                         alt="Private Resource" title="Private"/>
-                                                {% endif %}
-
-                                                {% if res.raccess.published %}
-                                                    {% if "pending" in cm.doi or "failure" in cm.doi %}
-                                                        <img src="{{ STATIC_URL }}img/pending.png" alt="Pending Publication"
-                                                             title="Pending Publication. Note that the DOI will not be available until it has been registered and activated."/>
-                                                    {% endif %}
-                                                {% else %}
-                                                    {% if res.raccess.shareable %}
-                                                        <img src="{{ STATIC_URL }}img/shareable.png" alt="Sharable Resource"
-                                                             title="Shareable"/>
+                                                <div class="access-icon-wrapper">
+                                                    {% if res.raccess.published %}
+                                                        <img src="{{ STATIC_URL }}img/published.png"
+                                                             alt="Published Resource" title="Published"/>
+                                                    {% elif res.raccess.public %}
+                                                        <img src="{{ STATIC_URL }}img/public.png"
+                                                             alt="Public Resource" title="Public"/>
+                                                    {% elif res.raccess.discoverable %}
+                                                        <img src="{{ STATIC_URL }}img/discoverable.png"
+                                                             alt="Discoverable Resource" title="Discoverable"/>
                                                     {% else %}
-                                                        <img src="{{ STATIC_URL }}img/non-shareable.png" alt="Non Sharable Resource"
-                                                             title="Not Shareable"/>
+                                                        <img src="{{ STATIC_URL }}img/private.png"
+                                                             alt="Private Resource" title="Private"/>
                                                     {% endif %}
-                                                {% endif %}
+
+                                                    {% if res.raccess.published %}
+                                                        {% if "pending" in cm.doi or "failure" in cm.doi %}
+                                                            <img src="{{ STATIC_URL }}img/pending.png" alt="Pending Publication"
+                                                                 title="Pending Publication. Note that the DOI will not be available until it has been registered and activated."/>
+                                                        {% endif %}
+                                                    {% else %}
+                                                        {% if res.raccess.shareable %}
+                                                            <img src="{{ STATIC_URL }}img/shareable.png" alt="Sharable Resource"
+                                                                 title="Shareable"/>
+                                                        {% else %}
+                                                            <img src="{{ STATIC_URL }}img/non-shareable.png" alt="Non Sharable Resource"
+                                                                 title="Not Shareable"/>
+                                                        {% endif %}
+                                                    {% endif %}
+                                                </div>
                                             </td>
                                             <td>
                                                 <strong><a href="{{ res.get_absolute_url }}">{{ res.metadata.title }}</a></strong>
@@ -793,7 +795,6 @@
                                                         </div>
                                                     </div>
                                                 </div>
-
                                             </div>
                                         </div>
                                     </div>
@@ -880,7 +881,7 @@
                             <button type="button" class="close" data-dismiss="modal"
                                     aria-label="Close"><span aria-hidden="true">&times;</span>
                             </button>
-                            <h4 class="modal-title" id="myModalLabel">Create New Group</h4>
+                            <h4 class="modal-title" id="myModalLabel">Edit Group Details</h4>
                         </div>
                         <div class="modal-body">
                             {% csrf_token %}
@@ -1097,6 +1098,7 @@
                         var picture = target.parent().parent().parent().find("[data-id='picture']");
 
                         rowTemplate.find("[data-id='name']").text(name);
+                        rowTemplate.find("[data-id='name']").attr("href", "/user/" + target.attr("data-member-id") + "/");
                         rowTemplate.find("[data-id='title']").text(title);
                         var forms = rowTemplate.find("form");
                         for (var i = 0; i < forms.length; i++) {
