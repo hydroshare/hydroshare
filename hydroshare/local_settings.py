@@ -9,7 +9,6 @@ from kombu import Queue, Exchange
 from kombu.common import Broadcast
 
 DEBUG = True
-TEMPLATE_DEBUG = True
 
 # DEVELOPMENT EXAMPLE ONLY
 # Make these unique, and don't share it with anybody

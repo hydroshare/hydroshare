@@ -519,9 +519,9 @@ function removeQueryOccurrences(inputString) {
 
 // Looks at the query strings in the searchbox and sets the values in the dropdown options
 function applyQueryStrings() {
-    var inputString = $("#resource-search-input").val();
+    var inputString = $("#resource-search-input").val().toLowerCase();
     // Matches occurrences of query strings. i.e.: author:mauriel
-    var regExp = /\[(type|TYPE|author|AUTHOR|subject|SUBJECT):[^\]|^\[]+]/g;
+    var regExp = /\[(type|author|subject):[^\]|^\[]+]/g;
     var occurrences = inputString.match(regExp);
 
     var inputType = "";
@@ -602,9 +602,9 @@ function typeQueryStrings () {
 /* Custom filtering function which will search data for the values in the custom filter dropdown or query strings */
 $.fn.dataTable.ext.search.push (
         function (settings, data, dataIndex) {
-            var inputString = $("#resource-search-input").val();
+            var inputString = $("#resource-search-input").val().toLowerCase();
             // Matches occurrences of query strings. i.e.: author:mauriel
-            var regExp = /\[(type|author|subject|TYPE|AUTHOR|SUBJECT):[^\]|^\[]+]/g;
+            var regExp = /\[(type|author|subject):[^\]|^\[]+]/g;
             var occurrences = inputString.match(regExp);
 
             var inputType = "";
