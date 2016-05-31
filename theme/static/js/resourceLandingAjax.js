@@ -233,8 +233,8 @@ function share_resource_ajax_submit(form_id) {
                 }
 
                 if (shareType == "user") {
+                    rowTemplate.find(".group-image-wrapper").remove();
                     if (json_response.profile_pic != "No picture provided") {
-                        rowTemplate.find(".group-image-wrapper").remove();
                         rowTemplate.find(".profile-pic-thumbnail").attr("style", "background-image: url('" + json_response.profile_pic + "')");
                         rowTemplate.find(".profile-pic-thumbnail").removeClass("user-icon");
                     }
