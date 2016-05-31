@@ -246,19 +246,23 @@ function metadata_update_ajax_submit(form_id){
         <button type="button" class="close" data-dismiss="alert">x</button> \
         <strong>Success! </strong> \
         Metadata updated.\
-    </div>'
+    </div>';
     $alert_error = '<div class="alert alert-danger" id="error-alert"> \
         <button type="button" class="close" data-dismiss="alert">x</button> \
         <strong>Error! </strong> \
         Metadata failed to update.\
-    </div>'
-    $form=$('#' + form_id);
+    </div>';
+
+    var flagAsync = (form_id == "id-subject" ? false : true);   // Run keyword related changes synchronously to prevent integrity error
+
+    $form = $('#' + form_id);
     var datastring = $form.serialize();
     $.ajax({
         type: "POST",
         url: $form.attr('action'),
         dataType: 'html',
         data: datastring,
+        async: flagAsync,
         success: function(result)
         {
             /* The div contains now the updated form */
@@ -319,23 +323,4 @@ function metadata_update_ajax_submit(form_id){
     });
     //don't submit the form
     return false;
-}
-
-function update_keywords_ajax_submit() {
-    $form = $('#id-subject');
-    var datastring = $form.serialize();
-    var url = $form.attr('action');
-
-    $.ajax({
-        type: "POST",
-        url: url,
-        dataType: 'html',
-        data: datastring,
-        success: function (result) {
-
-        },
-        error: function(XMLHttpRequest, textStatus, errorThrown){
-
-        }
-    });
 }
