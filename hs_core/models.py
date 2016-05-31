@@ -1195,11 +1195,15 @@ class AbstractResource(ResourcePermissionsMixin):
             return CREATOR_NAME_ERROR
 
         if len(name_parts) > 2:
-            citation_str_lst.append("{last_name}, {first_initial}.{middle_initial}., ".format(last_name=name_parts[-1],
-                                                                              first_initial=name_parts[0][0],
-                                                                              middle_initial=name_parts[1][0]))
+            author_name = "{last_name}, {first_initial}. {middle_initial}., "
+            author_name = author_name.format(last_name=name_parts[-1], first_initial=name_parts[0][0],
+                                             middle_initial=name_parts[1][0])
+            citation_str_lst.append(author_name)
+
         else:
-            citation_str_lst.append("{last_name}, {first_initial}., ".format(last_name=name_parts[-1], first_initial=name_parts[0][0]))
+            author_name = "{last_name}, {first_initial}., "
+            author_name = author_name.format(last_name=name_parts[-1], first_initial=name_parts[0][0])
+            citation_str_lst.append(author_name)
 
         other_authors = self.metadata.creators.all().filter(order__gt=1)
         for author in other_authors:
@@ -1208,13 +1212,18 @@ class AbstractResource(ResourcePermissionsMixin):
                 return CREATOR_NAME_ERROR
 
             if len(name_parts) > 2:
-                citation_str_lst.append("{first_initial}.{middle_initial}.{last_name}, ".format(first_initial=name_parts[0][0],
-                                                                                  middle_initial=name_parts[1][0],
-                                                                                  last_name=name_parts[-1]))
-            else:
-                citation_str_lst.append("{first_initial}.{last_name}, ".format(first_initial=name_parts[0][0], last_name=name_parts[-1]))
+                author_name = "{first_initial}. {middle_initial}. {last_name}, "
+                author_name = author_name.format(first_initial=name_parts[0][0], middle_initial=name_parts[1][0],
+                                                 last_name=name_parts[-1])
+                citation_str_lst.append(author_name)
 
-        #  remove the last added comma and the space
+            else:
+                author_name = "{first_initial}. {last_name}, "
+                author_name = author_name.format(first_initial=name_parts[0][0], last_name=name_parts[-1])
+
+                citation_str_lst.append(author_name)
+
+        # remove the last added comma and the space
         if len(citation_str_lst[-1]) > 2:
             citation_str_lst[-1] = citation_str_lst[-1][:-2]
         else:
@@ -1242,7 +1251,8 @@ class AbstractResource(ResourcePermissionsMixin):
 
         ref_rel = self.metadata.relations.all().filter(type='isHostedBy').first()
         repl_rel = self.metadata.relations.all().filter(type='isCopiedFrom').first()
-        date_str = "%s/%s/%s" % (citation_date.start_date.month, citation_date.start_date.day, citation_date.start_date.year)
+        date_str = "%s/%s/%s" % (citation_date.start_date.month, citation_date.start_date.day,
+                                 citation_date.start_date.year)
         if ref_rel:
             citation_str_lst.append(", {ref_rel_value}, last accessed {creation_date}.".format(ref_rel_value=ref_rel.value,
                                                                                                creation_date=date_str))
