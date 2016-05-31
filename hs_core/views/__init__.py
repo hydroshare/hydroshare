@@ -421,6 +421,18 @@ def share_resource_with_group(request, shortkey, privilege, group_id, *args, **k
 
 
 def _share_resource(request, shortkey, privilege, user_or_group_id, user_or_group):
+    """
+    share resource with a user or group
+    :param request:
+    :param shortkey: id of the resource to share with
+    :param privilege: access privilege need for the resource
+    :param user_or_group_id: id of the user or group with whom the resource to be shared
+    :param user_or_group: indicates if the resource to be shared with a user or group. A value of 'user' will share
+                          the resource with a user whose id is provided with the parameter 'user_or_group_id'.
+                          Any other value for this parameter assumes resource to be shared with a group.
+    :return:
+    """
+    
     res, _, user = authorize(request, shortkey, needed_permission=ACTION_TO_AUTHORIZE.VIEW_RESOURCE)
     user_to_share_with = None
     group_to_share_with = None
