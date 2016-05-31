@@ -51,6 +51,7 @@
                 <option value="GenericResource">Generic</option>
                 <option value="NetcdfResource">Multidimensional (NetCDF)</option>
                 <option value="ToolResource">Web App</option>
+                <option value="CollectionResource">Collection Resource</option>
 
                 <optgroup label="Geographic Resources">
                     <option value="RasterResource">Geographic Raster</option>
@@ -130,7 +131,6 @@
 {% endblock %}
 
 {% block extra_js %}
-    <script type="text/javascript" src="{{STATIC_URL}}js/irods.js" ></script>
     <script type="text/javascript">
     $(function() {
     });

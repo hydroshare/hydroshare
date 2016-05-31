@@ -8,7 +8,9 @@ from mezzanine.core.views import direct_to_template
 from mezzanine.conf import settings
 
 from haystack.views import FacetedSearchView
-from hs_core.customer_form import MyForm
+from hs_core.discovery_form import DiscoveryForm
+from hs_core.views.discovery_view import DiscoveryView
+from hs_core.views.discovery_json_view import DiscoveryJsonView
 from theme import views as theme
 import autocomplete_light
 
@@ -43,7 +45,8 @@ urlpatterns = i18n_patterns("",
     url(r'^django_irods/', include('django_irods.urls')),
     url(r'^django_docker_processes/', include('django_docker_processes.urls')),
     url(r'^autocomplete/', include('autocomplete_light.urls')),
-    url(r'^search/$', FacetedSearchView(form_class=MyForm), name='haystack_search'),
+    url(r'^search/$', DiscoveryView.as_view(), name='haystack_search'),
+    url(r'^searchjson/$', DiscoveryJsonView.as_view(), name='haystack_json_search'),
     url(r'^sitemap/$', 'hs_sitemap.views.sitemap', name='sitemap'),
 )
 
@@ -65,6 +68,7 @@ urlpatterns += patterns('',
     url('^hs_metrics/', include('hs_metrics.urls')),
     url('^hsapi/', include('hs_model_program.urls')),
     url('^hsapi/', include('hs_labels.urls')),
+    url('^hsapi/', include('hs_collection_resource.urls')),
 )
 
 if settings.DEBUG is False:   #if DEBUG is True it will be served automatically

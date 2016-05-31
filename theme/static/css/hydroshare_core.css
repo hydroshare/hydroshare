@@ -943,7 +943,7 @@ li.account p{
     border: 0;
 }
 
-#contact-table .icon-button{
+#contact-table .icon-button, .funding-agencies-table .icon-button {
     float:left;
     background-color: transparent;
     border: 0;
@@ -1020,7 +1020,7 @@ span.remove{
     margin-top: 20px;
 }
 
-.info-group table td{
+table.info-table td{
     padding-left:15px;
 }
 
@@ -1236,7 +1236,7 @@ a[data-toggle='tab']{
 	border-bottom-left-radius: 0;
 }
 
-#permission-panel #id_user-autocomplete {
+#add-access-form #id_user-autocomplete {
     width: 100%;
     height: 100%;
     border: 0;
@@ -1602,10 +1602,6 @@ body > .container{
 
 div#sharing-status {
     overflow: hidden; /* Fixes height for floating elements */
-}
-
-.info-group {
-	width: calc(100% - 220px);
 }
 
 .tag-list {
@@ -2184,6 +2180,10 @@ button.loading {
 	border:1px solid #DDD;
 }
 
+.coverage-container {
+    margin-top: -20px; margin-bottom:20px;
+}
+
 #id_name {
     max-width: 467px;
 }
@@ -2618,17 +2618,20 @@ h4.title {
 
 #item-selectors {
     display: none;
-    font-size: 14px;
-    border: 1px solid #ddd;
-    margin-bottom: 10px;
 }
 
-#item-selectors tbody td {
+.resource-custom-table {
+    font-size: 14px;
+    border: 1px solid #ddd !important;
+    margin-bottom: 10px !important;
+}
+
+.resource-custom-table tbody td {
 	border-bottom: 1px solid #EEE;
 }
 
-#item-selectors thead th {
-    border-bottom: 1px solid #DDD;
+.resource-custom-table thead th {
+    border-bottom: 1px solid #DDD !important;
 }
 
 #item-selectors thead th:first-child {
@@ -3243,4 +3246,15 @@ button.no-style:focus {
 
 .blured-out {
     pointer-events: none;
+}
+#btn-add-funding-agency {
+    margin-bottom: 20px;
+}
+
+.funding-agencies-table {
+    border: 1px solid #DDD;
+}
+
+#collection-table_wrapper {
+    margin-bottom: 20px;
 }

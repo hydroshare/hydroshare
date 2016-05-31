@@ -2,6 +2,7 @@ import os
 import zipfile
 import shutil
 import logging
+import copy
 
 import requests
 
@@ -575,12 +576,22 @@ def create_new_version_resource(ori_res, new_res, user):
     hs_identifier = ori_res.metadata.identifiers.all().filter(name="hydroShareIdentifier")[0]
     new_res.metadata.create_element('relation', type='isVersionOf', value=hs_identifier.url)
 
+    if ori_res.resource_type.lower() == "collectionresource":
+        # clone contained_res list of original collection and add to new collection
+        # note that new version collection will not contain "deleted resources"
+        new_res.resources = ori_res.resources.all()
+
+    # create the key/value metadata
+    new_res.extra_metadata = copy.deepcopy(ori_res.extra_metadata)
+
     # create bag for the new resource
     hs_bagit.create_bag(new_res)
 
     # since an isReplaceBy relation element is added to original resource, needs to call resource_modified() for original resource
     utils.resource_modified(ori_res, user)
-
+    # if everything goes well up to this point, set original resource to be immutable so that obsoleted resources cannot be modified from REST API
+    ori_res.raccess.immutable = True
+    ori_res.raccess.save()
     return new_res
 
 
@@ -762,7 +773,6 @@ def update_science_metadata(pk, metadata):
     resource = utils.get_resource_by_shortkey(pk)
     resource.metadata.update(metadata)
 
-
 def delete_resource(pk):
     """
     Deletes a resource managed by HydroShare. The caller must be an owner of the resource or an administrator to perform
@@ -807,7 +817,9 @@ def delete_resource(pk):
         if obsolete_res.metadata.relations.all().filter(type='isReplacedBy').exists():
             eid = obsolete_res.metadata.relations.all().filter(type='isReplacedBy').first().id
             obsolete_res.metadata.delete_element('relation', eid)
-
+            # also make this obsoleted resource editable now that it becomes the latest version
+            obsolete_res.raccess.immutable = False
+            obsolete_res.raccess.save()
     res.delete()
     return pk
 

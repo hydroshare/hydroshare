@@ -28,7 +28,8 @@ def landing_page(request, page):
         attributes = content_model.metadata.scriptspecificmetadata.model._meta.get_fields_with_model()
         attribute_dict = {}
         for att in attributes:
-            attribute_dict[att[0].attname] = att[0].help_text
+            if hasattr(att[0], 'help_text'):
+                attribute_dict[att[0].attname] = att[0].help_text
         context["scripthelptext"] = attribute_dict
 
     else:

@@ -161,7 +161,7 @@ def verify_rest_url(request):
         if f.is_valid():
             params = f.cleaned_data
             url = params['url']
-            ts = requests.get(url)
+            ts = requests.get(url, verify=False)
             ts_xml = etree.XML(ts.text.encode('utf-8'))
             if ts.status_code == 200 and 'timeseriesresponse' in ts_xml.tag.lower():
                 return json_or_jsonp(request, {"status": "success"})

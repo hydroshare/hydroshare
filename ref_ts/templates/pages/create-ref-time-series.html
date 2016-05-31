@@ -18,8 +18,13 @@
             <p id="his-loading" style="color:blue"><i>loading HIS Central services...</i></p>
             <div class="ui-widget">
                 <label for="" class="col-sm-2 control-label">URL</label>
-                <div class="col-sm-10">
-                    <select class="" name="url" id="url" size="10" style="overflow-y: scroll;"></select>
+                <div class="row">
+                    <div class="col-sm-8">
+                        <select class="" name="url" id="url" style="overflow-y: scroll;"></select>
+                    </div>
+                    <div>
+                        <input id="check-url-btn" type="button" value="Check URL" onclick="check_url(document.getElementById('input_url').value)"/>
+                    </div>
                 </div>
             </div>
         </div>
@@ -83,14 +88,41 @@
 
 {% block extra_js %}
     <script type="text/javascript">
-        $(function() {
             var globurl = "";
 
             $(document).ready(function(){
+
+                $('#site').change(function(){
+                    var site = $('#site').val();
+                    if (site != "-1")
+                    {
+                        get_variables(site);
+                    }
+                });
+
+                $('#variable').change(function(){
+                    var variable = $('#variable').val();
+                    var site = $('#site').val();
+                    if  (site != "-1" && variable != "-1")
+                    {
+                        getVals('soap', site, variable);
+                    }
+                });
+
+                // prevent from unexpectedly submitting form when users press down "Enter" key
+                $('#create-form').on("keyup keypress", function(e) {
+                var code = e.keyCode || e.which;
+                    if (code  == 13) {
+                        e.preventDefault();
+                        return false;
+                    }
+                });
+
                 $('#site-div').hide();
                 $('#variable-div').hide();
                 $('#message-div').show();
                 $('#preview-div').hide();
+                $('#check-url-btn').prop('disabled', false);
                 get_his_central_urls();
             });
 
@@ -117,7 +149,6 @@
                             $('#his-loading')
                                     .html('HIS Central Servers available')
                                     .css('color', 'Green');
-                            console.log("urls:" + data["url_list"].length);
                             var select = document.getElementsByName('url')[0];
                             removeOptions(select);
                             for (var i=0; i < data["url_list"].length; i++)
@@ -146,6 +177,7 @@
 
              // check the url users input
             function check_url(url){
+                $('#check-url-btn').prop('disabled', true);
                 globurl = url;
 
                 show_message(false);
@@ -153,7 +185,7 @@
                 $('#variable-div').hide();
                 $('#preview-div').hide();
                 $('#submit').addClass('disabled');
-
+                show_message(true, 'Checking URL...', 'Black');
                 if (url.toLowerCase().match(/wsdl$/))
                 { // SOAP
                     get_sites(url);
@@ -164,6 +196,8 @@
                         url: '/hsapi/_internal/verify-rest-url/',
                         data: {url: url},
                         success: function (data, xhr, status) {
+                            $('#check-url-btn').prop('disabled', false);
+                            show_message(false);
                             if (data["status"] == "success")
                             {
                                 getVals('rest');
@@ -174,12 +208,12 @@
                             }
                         },
                         error: function(){
+                            $('#check-url-btn').prop('disabled', false);
                             show_message(true, '<h3>URL did not verify. There may be a problem with the URL you entered</h3>', 'Red');
                         }
                     });
                 }
             } // function check_url(url)
-
 
             function removeOptions(selectbox){
                 for(var i=selectbox.options.length-1; i>=0; i--)
@@ -199,11 +233,21 @@
                     url:'/hsapi/_internal/search-sites/',
                     data: {url: url},
                     success: function(data, xhr, status){
+                        $('#check-url-btn').prop("disabled", false);
                         if(data["status"] == "success")
                         {
-                            console.log("sites:" + data["sites"].length);
                             var select = document.getElementsByName('site')[0];
                             removeOptions(select);
+                            if (data["sites"].length > 1)
+                            {
+                                var opt = document.createElement('option');
+                                opt.value = "";
+                                opt.innerHTML = "Please select a Site";
+                                opt.disabled = true;
+                                opt.selected = true;
+                                select.appendChild(opt);
+                            }
+
                             for(var i=0; i < data["sites"].length; i++)
                             {
                                 var ln = data["sites"][i];
@@ -212,10 +256,15 @@
                                 opt.innerHTML = ln.substring(0, ln.indexOf(" ["));
                                 select.appendChild(opt);
                             }
+
                             show_message(false);
                             $('#site-div').show();
                             // enable url textbox
                             $('.ui-autocomplete-input').prop("disabled", false);
+
+                            if (data["sites"].length == 1){
+                                $('#site').trigger("change");
+                            }
                         }
                         else
                         {
@@ -223,9 +272,11 @@
                         }
                     },
                     error: function(data, stuff){
+                        $('#check-url-btn').prop("disabled", false);
                         get_sites_failed();
                     }
                 });
+
             } // get_sites(url)
 
             function get_sites_failed()
@@ -252,6 +303,7 @@
                 $('#variable-div').hide();
                 $('#preview-div').hide();
                 $('#submit').addClass('disabled');
+                $('#check-url-btn').prop("disabled", true);
 
                 $.ajax({
                     type:"GET",
@@ -259,9 +311,9 @@
                     data: {url: url,
                         site: site_code},
                     success: function(data, xhr, status){
+                        $('#check-url-btn').prop("disabled", false);
                         if(data["status"] == "success")
                         {
-                            console.log("var:" + data["variables"].length);
                             show_message(false);
                             $('.ui-autocomplete-input').prop("disabled", false);
                             $('#site-div').show();
@@ -271,6 +323,16 @@
 
                             var select = document.getElementsByName('variable')[0];
                             removeOptions(select);
+                            if (data["variables"].length > 1)
+                            {
+                                var opt = document.createElement('option');
+                                opt.value = "";
+                                opt.innerHTML = "Please select a Variable";
+                                opt.disabled = true;
+                                opt.selected = true;
+                                select.appendChild(opt);
+                            }
+
                             for(var i=0; i < data["variables"].length; i++)
                             {
                                 var ln = data["variables"][i];
@@ -290,6 +352,7 @@
                         }
                     },
                     error: function(data, stuff) {
+                        $('#check-url-btn').prop("disabled", false);
                         get_variables_failed();
                     }
                 })
@@ -312,6 +375,7 @@
                 show_message(true, 'Retrieving Data...', "Black");
                 $('#submit').addClass('disabled');
                 $('#preview-div').hide();
+                $('#check-url-btn').prop("disabled", true);
 
                 var service_url = "";
                 var site = "";
@@ -340,6 +404,7 @@
                         site: site,
                         variable: variable},
                     success: function(data, xhr, status){
+                        $('#check-url-btn').prop("disabled", false);
                         if (data["status"] == "success")
                         {
                             $('.ui-autocomplete-input').prop("disabled", false);
@@ -358,6 +423,7 @@
                         }
                     },
                     error: function(data, stuff){
+                        $('#check-url-btn').prop("disabled", false);
                         getVals_failed();
                     }
                 });
@@ -371,25 +437,6 @@
                 $('#site').prop("disabled", false);
                 $('#variable').prop("disabled", false);
             }
-
-            $('#site').change(function(){
-                var site = $('#site').val();
-                get_variables(site);
-            });
-
-            $('#variable').change(function(){
-                var variable = $('#variable').val();
-                var site = $('#site').val();
-                getVals('soap', site, variable);
-            });
-
-            $('#create-form').on("keyup keypress", function(e) {
-                var code = e.keyCode || e.which;
-                if (code  == 13) {
-                    e.preventDefault();
-                    return false;
-                }
-            });
 
             $.widget( "custom.combobox", {
                 _create: function() {
@@ -409,7 +456,8 @@
                     this.input = $( "<input>" )
                             .appendTo( this.wrapper )
                             .val( value )
-                            .attr( "title", "" )
+                            .attr( "title", "")
+                            .attr("id", "input_url")
                             .addClass( "" )
                             .autocomplete({
                                 delay: 0,
@@ -508,7 +556,6 @@
                     this.element.show();
                 }
             });
-        });
 
         $(function() {
             $("#url").combobox();

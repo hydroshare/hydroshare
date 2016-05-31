@@ -6,6 +6,7 @@ from languages_iso import languages as iso_languages
 from dateutil import parser
 from lxml import etree
 
+from django.contrib.postgres.fields import HStoreField
 from django.contrib.contenttypes.fields import GenericForeignKey
 from django.contrib.contenttypes.fields import GenericRelation
 from django.contrib.auth.models import User, Group
@@ -29,7 +30,6 @@ from mezzanine.core.models import Ownable
 from mezzanine.generic.fields import CommentsField, RatingField
 from mezzanine.generic.fields import KeywordsField
 from mezzanine.conf import settings as s
-
 
 class GroupOwnership(models.Model):
     group = models.ForeignKey(Group)
@@ -962,6 +962,33 @@ class Format(AbstractMetaDataElement):
         return self.value
 
 
+class FundingAgency(AbstractMetaDataElement):
+    term = 'FundingAgency'
+    agency_name = models.TextField(null=False)
+    award_title = models.TextField(null=True, blank=True)
+    award_number = models.TextField(null=True, blank=True)
+    agency_url = models.URLField(null=True, blank=True)
+
+    def __unicode__(self):
+        return self.agency_name
+
+    @classmethod
+    def create(cls, **kwargs):
+        agency_name = kwargs.get('agency_name', None)
+        if agency_name is None or len(agency_name.strip()) == 0:
+            raise ValidationError("Agency name is missing")
+
+        return super(FundingAgency, cls).create(**kwargs)
+
+    @classmethod
+    def update(cls, element_id, **kwargs):
+        agency_name = kwargs.get('agency_name', None)
+        if agency_name and len(agency_name.strip()) == 0:
+            raise ValidationError("Agency name is missing")
+
+        super(FundingAgency, cls).update(element_id, **kwargs)
+
+
 class Subject(AbstractMetaDataElement):
     term = 'Subject'
     value = models.CharField(max_length=100)
@@ -1089,7 +1116,7 @@ class AbstractResource(ResourcePermissionsMixin):
     content_type = models.ForeignKey(ContentType, null=True, blank=True)
     content_object = GenericForeignKey('content_type', 'object_id')
 
-    #keywords = KeywordsField(verbose_name="Keywords", for_concrete_model=False)
+    extra_metadata = HStoreField(default={})
 
     @classmethod
     def bag_url(cls, resource_id):
@@ -1317,6 +1344,8 @@ class BaseResource(Page, AbstractResource):
     public_resources = PublicResourceManager()
     discoverable_resources = DiscoverableResourceManager()
 
+    collections = models.ManyToManyField('BaseResource', related_name='resources')
+
     class Meta:
         verbose_name = 'Generic'
         db_table = 'hs_core_genericresource'
@@ -1379,6 +1408,10 @@ class BaseResource(Page, AbstractResource):
         etree.SubElement(doi_data, 'resource').text = self.metadata.identifiers.all().filter(name='hydroShareIdentifier')[0].url
 
         return '<?xml version="1.0" encoding="UTF-8"?>\n' + etree.tostring(ROOT, pretty_print=pretty_print)
+
+    @property
+    def verbose_name(self):
+        return self.get_content_model()._meta.verbose_name
 
     @classmethod
     def get_supported_upload_file_types(cls):
@@ -1457,6 +1490,7 @@ class CoreMetaData(models.Model):
     _rights = GenericRelation(Rights)
     _type = GenericRelation(Type)
     _publisher = GenericRelation(Publisher)
+    funding_agencies = GenericRelation(FundingAgency)
 
     @property
     def title(self):
@@ -1498,7 +1532,8 @@ class CoreMetaData(models.Model):
                 'Subject',
                 'Source',
                 'Relation',
-                'Publisher']
+                'Publisher',
+                'FundingAgency']
 
     # this method needs to be overriden by any subclass of this class
     # if they implement additional metadata elements that are required
@@ -1520,9 +1555,6 @@ class CoreMetaData(models.Model):
             return False
         elif len(self.rights.statement.strip()) == 0:
             return False
-
-        # if self.coverages.count() == 0:
-        #     return False
 
         if self.subjects.count() == 0:
             return False
@@ -1563,6 +1595,7 @@ class CoreMetaData(models.Model):
         self.subjects.all().delete()
         self.sources.all().delete()
         self.relations.all().delete()
+        self.funding_agencies.all().delete()
 
     def copy_all_elements_from(self, src_md, exclude_elements=None):
         md_type = ContentType.objects.get_for_model(src_md)
@@ -1646,12 +1679,31 @@ class CoreMetaData(models.Model):
             dc_type = etree.SubElement(rdf_Description, '{%s}type' % self.NAMESPACES['dc'])
             dc_type.set('{%s}resource' % self.NAMESPACES['rdf'], self.type.url)
 
-        # create the Description element (we named it as Abstract to differentiate from the parent "Description" element)
+        # create the Description element (we named it as Abstract to differentiate from the parent "Description"
+        # element)
         if self.description:
             dc_description = etree.SubElement(rdf_Description, '{%s}description' % self.NAMESPACES['dc'])
             dc_des_rdf_Desciption = etree.SubElement(dc_description, '{%s}Description' % self.NAMESPACES['rdf'])
             dcterms_abstract = etree.SubElement(dc_des_rdf_Desciption, '{%s}abstract' % self.NAMESPACES['dcterms'])
             dcterms_abstract.text = self.description.abstract
+
+        for agency in self.funding_agencies.all():
+            hsterms_agency = etree.SubElement(rdf_Description, '{%s}awardInfo' % self.NAMESPACES['hsterms'])
+            hsterms_agency_rdf_Description = etree.SubElement(hsterms_agency, '{%s}Description' %
+                                                              self.NAMESPACES['rdf'])
+            hsterms_name = etree.SubElement(hsterms_agency_rdf_Description, '{%s}fundingAgencyName' %
+                                            self.NAMESPACES['hsterms'])
+            hsterms_name.text = agency.agency_name
+            if agency.agency_url:
+                hsterms_agency_rdf_Description.set('{%s}about' % self.NAMESPACES['rdf'], agency.agency_url)
+            if agency.award_title:
+                hsterms_title = etree.SubElement(hsterms_agency_rdf_Description, '{%s}awardTitle' %
+                                                 self.NAMESPACES['hsterms'])
+                hsterms_title.text = agency.award_title
+            if agency.award_number:
+                hsterms_number = etree.SubElement(hsterms_agency_rdf_Description, '{%s}awardNumber' %
+                                                  self.NAMESPACES['hsterms'])
+                hsterms_number.text = agency.award_number
 
         # use all creators associated with this metadata object to
         # generate creator xml elements
@@ -1686,7 +1738,8 @@ class CoreMetaData(models.Model):
                 if 'projection' in coverage.value:
                     cov_value = cov_value + '; projection=%s' % coverage.value['projection']
 
-            else: # this is box type
+            else:
+                # this is box type
                 cov_value = 'northlimit=%s; eastlimit=%s; southlimit=%s; westlimit=%s; units=%s' \
                             %(coverage.value['northlimit'], coverage.value['eastlimit'],
                               coverage.value['southlimit'], coverage.value['westlimit'], coverage.value['units'])
@@ -1789,6 +1842,16 @@ class CoreMetaData(models.Model):
         rdfs1_label.text = resource._meta.verbose_name
         rdfs1_isDefinedBy = etree.SubElement(rdf_Description_resource, '{%s}isDefinedBy' % self.NAMESPACES['rdfs1'])
         rdfs1_isDefinedBy.text = current_site_url() + "/terms"
+
+        # encode extended key/value arbitrary metadata
+        resource = BaseResource.objects.filter(object_id=self.id).first()
+        for key, value in resource.extra_metadata.items():
+            hsterms_key_value = etree.SubElement(rdf_Description, '{%s}extendedMetadata' % self.NAMESPACES['hsterms'])
+            hsterms_key_value_rdf_Description = etree.SubElement(hsterms_key_value, '{%s}Description' % self.NAMESPACES['rdf'])
+            hsterms_key = etree.SubElement(hsterms_key_value_rdf_Description, '{%s}key' % self.NAMESPACES['hsterms'])
+            hsterms_key.text = key
+            hsterms_value = etree.SubElement(hsterms_key_value_rdf_Description, '{%s}value' % self.NAMESPACES['hsterms'])
+            hsterms_value.text = value
 
         return self.XML_HEADER + '\n' + etree.tostring(RDF_ROOT, pretty_print=pretty_print)
 

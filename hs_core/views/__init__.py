@@ -2,6 +2,7 @@ from __future__ import absolute_import
 import json
 import datetime
 import pytz
+import logging
 
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import Group, User
@@ -12,6 +13,7 @@ from django.http import HttpResponseRedirect, HttpResponse
 from django.shortcuts import get_object_or_404, render_to_response, render
 from django.template import RequestContext
 from django.core import signing
+from django.db import Error
 from django import forms
 
 from rest_framework.decorators import api_view
@@ -27,7 +29,7 @@ from django_irods.storage import IrodsStorage
 from django_irods.icommands import SessionException
 from hs_core import hydroshare
 from hs_core.hydroshare.utils import get_resource_by_shortkey, resource_modified
-from .utils import authorize, upload_from_irods, ACTION_TO_AUTHORIZE, run_script_to_update_hyrax_input_files
+from .utils import authorize, upload_from_irods, ACTION_TO_AUTHORIZE, run_script_to_update_hyrax_input_files, get_my_resources_list
 from hs_core.models import GenericResource, resource_processor, CoreMetaData, Relation
 from hs_core.hydroshare.resource import METADATA_STATUS_SUFFICIENT, METADATA_STATUS_INSUFFICIENT
 
@@ -39,6 +41,9 @@ from . import utils as view_utils
 from hs_core.signals import *
 from hs_access_control.models import PrivilegeCodes
 
+from hs_collection_resource.models import CollectionDeletedResource
+
+logger = logging.getLogger(__name__)
 
 def short_url(request, *args, **kwargs):
     try:
@@ -128,6 +133,44 @@ def is_multiple_file_allowed_for_resource_type(request, resource_type, *args, **
         return HttpResponseRedirect(request.META['HTTP_REFERER'])
 
 
+def update_key_value_metadata(request, shortkey, *args, **kwargs):
+    """
+    This one view function is for CRUD operation for resource key/value arbitrary metadata.
+    key/value data in request.POST is assigned to the resource.extra_metadata field
+    """
+    res, _, _ = authorize(request, shortkey, needed_permission=ACTION_TO_AUTHORIZE.EDIT_RESOURCE)
+    post_data = request.POST.copy()
+    resource_mode = post_data.pop('resource-mode', None)
+    res.extra_metadata = post_data.dict()
+    is_update_success = True
+    err_message = ""
+    try:
+        res.save()
+    except Error as ex:
+        is_update_success = False
+        err_message = ex.message
+
+    if is_update_success:
+        resource_modified(res, request.user)
+
+    if request.is_ajax():
+        if is_update_success:
+            ajax_response_data = {'status': 'success'}
+        else:
+            ajax_response_data = {'status': 'error', 'message': err_message}
+        return HttpResponse(json.dumps(ajax_response_data))
+
+    if resource_mode is not None:
+        request.session['resource-mode'] = 'edit'
+
+    if is_update_success:
+        messages.success(request, "Metadata update successful")
+    else:
+        messages.error(request, err_message)
+
+    return HttpResponseRedirect(request.META['HTTP_REFERER'])
+
+
 def add_metadata_element(request, shortkey, element_name, *args, **kwargs):
     res, _, _ = authorize(request, shortkey, needed_permission=ACTION_TO_AUTHORIZE.EDIT_RESOURCE)
 
@@ -135,6 +178,7 @@ def add_metadata_element(request, shortkey, element_name, *args, **kwargs):
     handler_response = pre_metadata_element_create.send(sender=sender_resource, element_name=element_name,
                                                         request=request)
     is_add_success = False
+    err_msg = "Failed to create metadata element '{}'. {}."
     for receiver, response in handler_response:
         if 'is_valid' in response:
             if response['is_valid']:
@@ -145,13 +189,21 @@ def add_metadata_element(request, shortkey, element_name, *args, **kwargs):
                         res.metadata.subjects.all().delete()
                     for kw in keywords:
                         res.metadata.create_element(element_name, value=kw)
+                    is_add_success = True
                 else:
                     try:
                         element = res.metadata.create_element(element_name, **element_data_dict)
+                        is_add_success = True
                     except ValidationError as exp:
-                        request.session['validation_error'] = exp.message
-                is_add_success = True
-                resource_modified(res, request.user)
+                        err_msg = err_msg.format(element_name, exp.message)
+                        request.session['validation_error'] = err_msg
+                    except Error as exp:
+                        # some database error occurred
+                        err_msg = err_msg.format(element_name, exp.message)
+                        request.session['validation_error'] = err_msg
+
+                if is_add_success:
+                    resource_modified(res, request.user)
 
     if request.is_ajax():
         if is_add_success:
@@ -168,7 +220,7 @@ def add_metadata_element(request, shortkey, element_name, *args, **kwargs):
             return HttpResponse(json.dumps(ajax_response_data))
 
         else:
-            ajax_response_data = {'status': 'error'}
+            ajax_response_data = {'status': 'error', 'message': err_msg}
             return HttpResponse (json.dumps(ajax_response_data))
 
     if 'resource-mode' in request.POST:
@@ -183,23 +235,29 @@ def update_metadata_element(request, shortkey, element_name, element_id, *args, 
     handler_response = pre_metadata_element_update.send(sender=sender_resource, element_name=element_name,
                                                         element_id=element_id, request=request)
     is_update_success = False
-
+    err_msg = "Failed to update metadata element '{}'. {}."
     for receiver, response in handler_response:
         if 'is_valid' in response:
             if response['is_valid']:
                 element_data_dict = response['element_data_dict']
                 try:
                     res.metadata.update_element(element_name, element_id, **element_data_dict)
+                    is_update_success = True
                 except ValidationError as exp:
-                    request.session['validation_error'] = exp.message
+                    err_msg = err_msg.format(element_name, exp.message)
+                    request.session['validation_error'] = err_msg
+                except Error as exp:
+                    # some database error occurred
+                    err_msg = err_msg.format(element_name, exp.message)
+                    request.session['validation_error'] = err_msg
                 if element_name == 'title':
                     if res.raccess.public:
                         if not res.can_be_public_or_discoverable:
                             res.raccess.public = False
                             res.raccess.save()
 
-                resource_modified(res, request.user)
-                is_update_success = True
+                if is_update_success:
+                    resource_modified(res, request.user)
 
     if request.is_ajax():
         if is_update_success:
@@ -211,8 +269,11 @@ def update_metadata_element(request, shortkey, element_name, element_id, *args, 
             ajax_response_data = {'status': 'success', 'element_name': element_name, 'metadata_status': metadata_status}
             return HttpResponse(json.dumps(ajax_response_data))
         else:
-            ajax_response_data = {'status': 'error'}
+            ajax_response_data = {'status': 'error', 'message': err_msg}
             return HttpResponse(json.dumps(ajax_response_data))
+
+    if 'resource-mode' in request.POST:
+        request.session['resource-mode'] = 'edit'
 
     return HttpResponseRedirect(request.META['HTTP_REFERER'])
 
@@ -244,7 +305,12 @@ def delete_file(request, shortkey, f, *args, **kwargs):
 
 
 def delete_resource(request, shortkey, *args, **kwargs):
-    res, _, _ = authorize(request, shortkey, needed_permission=ACTION_TO_AUTHORIZE.DELETE_RESOURCE)
+    res, _, user = authorize(request, shortkey, needed_permission=ACTION_TO_AUTHORIZE.DELETE_RESOURCE)
+
+    res_title = res.metadata.title
+    res_id = shortkey
+    res_type = res.resource_type
+    resource_related_collections = [col for col in res.collections.all()]
 
     try:
         hydroshare.delete_resource(shortkey)
@@ -252,8 +318,17 @@ def delete_resource(request, shortkey, *args, **kwargs):
         request.session['validation_error'] = ex.message
         return HttpResponseRedirect(request.META['HTTP_REFERER'])
 
-    return HttpResponseRedirect('/my-resources/')
+    # if the deleted resource is part of any collection resource, then for each of those collection
+    # create a CollectionDeletedResource object which can then be used to list collection deleted
+    # resources on collection resource landing page
+    for collection_res in resource_related_collections:
+        CollectionDeletedResource.objects.create(resource_title=res_title,
+                                                 deleted_by=user,
+                                                 resource_id=res_id,
+                                                 resource_type=res_type,
+                                                 collection=collection_res)
 
+    return HttpResponseRedirect('/my-resources/')
 
 def create_new_version_resource(request, shortkey, *args, **kwargs):
     res, authorized, user = authorize(request, shortkey, needed_permission=ACTION_TO_AUTHORIZE.CREATE_RESOURCE_VERSION)
@@ -386,7 +461,7 @@ def unshare_resource_with_user(request, shortkey, user_id, *args, **kwargs):
             user.uaccess.unshare_resource_with_user(res, user_to_unshare_with)
         else:
             # requesting user is the original grantor of privilege to user_to_unshare_with
-            # COUCH: This can raise a PermissionDenied exception without a guard such as 
+            # COUCH: This can raise a PermissionDenied exception without a guard such as
             # user.uaccess.can_undo_share_resource_with_user(res, user_to_unshare_with)
             user.uaccess.undo_share_resource_with_user(res, user_to_unshare_with)
 
@@ -477,44 +552,7 @@ class FilterForm(forms.Form):
 @processor_for('my-resources')
 @login_required
 def my_resources(request, page):
-    user = request.user
-    # get a list of resources with effective OWNER privilege
-    owned_resources = user.uaccess.get_resources_with_explicit_access(PrivilegeCodes.OWNER)
-    # remove obsoleted resources from the owned_resources
-    owned_resources = owned_resources.exclude(object_id__in=Relation.objects.filter(type='isReplacedBy').values('object_id'))
-    # get a list of resources with effective CHANGE privilege
-    editable_resources = user.uaccess.get_resources_with_explicit_access(PrivilegeCodes.CHANGE)
-    # remove obsoleted resources from the editable_resources
-    editable_resources = editable_resources.exclude(object_id__in=Relation.objects.filter(type='isReplacedBy').values('object_id'))
-    # get a list of resources with effective VIEW privilege
-    viewable_resources = user.uaccess.get_resources_with_explicit_access(PrivilegeCodes.VIEW)
-    # remove obsoleted resources from the viewable_resources
-    viewable_resources = viewable_resources.exclude(object_id__in=Relation.objects.filter(type='isReplacedBy').values('object_id'))
-
-    owned_resources = list(owned_resources)
-    editable_resources = list(editable_resources)
-    viewable_resources = list(viewable_resources)
-    favorite_resources = list(user.ulabels.favorited_resources)
-    labeled_resources = list(user.ulabels.labeled_resources)
-    discovered_resources = list(user.ulabels.my_resources)
-    
-    for res in owned_resources:
-        res.owned = True
-
-    for res in editable_resources:
-        res.editable = True
-
-    for res in viewable_resources:
-        res.viewable = True
-
-    for res in (owned_resources + editable_resources + viewable_resources + discovered_resources):
-        res.is_favorite = False
-        if res in favorite_resources:
-            res.is_favorite = True
-        if res in labeled_resources:
-            res.labels = res.rlabels.get_labels(user)
-
-    resource_collection = (owned_resources + editable_resources + viewable_resources + discovered_resources)
+    resource_collection = get_my_resources_list(request)
 
     context = {'collection': resource_collection}
     return context
@@ -524,10 +562,12 @@ def my_resources(request, page):
 def add_generic_context(request, page):
 
     class AddUserForm(forms.Form):
-        user = forms.ModelChoiceField(User.objects.all(), widget=autocomplete_light.ChoiceWidget("UserAutocomplete"))
+        user = forms.ModelChoiceField(User.objects.filter(is_active=True).all(),
+                                      widget=autocomplete_light.ChoiceWidget("UserAutocomplete"))
 
     class AddGroupForm(forms.Form):
-        group = forms.ModelChoiceField(Group.objects.all(), widget=autocomplete_light.ChoiceWidget("GroupAutocomplete"))
+        group = forms.ModelChoiceField(Group.objects.filter(gaccess__active=True).all(),
+                                       widget=autocomplete_light.ChoiceWidget("GroupAutocomplete"))
 
     return {
         'add_owner_user_form': AddUserForm(),
@@ -662,7 +702,7 @@ def _unshare_resource_with_users(request, requesting_user, users_to_unshare_with
                     requesting_user.uaccess.unshare_resource_with_user(resource, user)
                 else:
                     # requesting user is the original grantor of privilege to user
-                    # TODO from @alvacouch: This can raise a PermissionDenied exception without a guard such as 
+                    # TODO from @alvacouch: This can raise a PermissionDenied exception without a guard such as
                     # user.uaccess.can_undo_share_resource_with_user(res, user_to_unshare_with)
                     requesting_user.uaccess.undo_share_resource_with_user(resource, user)
 

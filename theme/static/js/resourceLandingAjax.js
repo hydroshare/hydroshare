@@ -320,3 +320,22 @@ function metadata_update_ajax_submit(form_id){
     //don't submit the form
     return false;
 }
+
+function update_keywords_ajax_submit() {
+    $form = $('#id-subject');
+    var datastring = $form.serialize();
+    var url = $form.attr('action');
+
+    $.ajax({
+        type: "POST",
+        url: url,
+        dataType: 'html',
+        data: datastring,
+        success: function (result) {
+
+        },
+        error: function(XMLHttpRequest, textStatus, errorThrown){
+
+        }
+    });
+}

@@ -1,5 +1,5 @@
 postgis:
-  image: mjstealey/postgresql
+  image: mjstealey/hs_postgres:9.4.7
   container_name: postgis
 redis:
   image: redis:2.8
@@ -44,7 +44,7 @@ hydroshare:
     # shared location for uwsgi.sock between containers
     - "/var/run"
     # temp directory shared with celery workers
-    - /shared_temp
+    - "/shared_temp"
   ports:
     - "1338:22"
     - "8000:8000"

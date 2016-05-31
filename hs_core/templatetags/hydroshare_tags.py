@@ -50,6 +50,22 @@ from mezzanine import template
 
 register = template.Library()
 
+@register.filter
+def user_permission(content, arg):
+    user_pk = arg
+    permission = "None"
+    res_obj = content.get_content_model()
+    if res_obj.raccess.owners.filter(pk=user_pk).exists():
+        permission = "Owner"
+    elif res_obj.raccess.edit_users.filter(pk=user_pk).exists():
+        permission = "Edit"
+    elif res_obj.raccess.view_users.filter(pk=user_pk).exists():
+        permission = "View"
+
+    if permission == "None":
+        if res_obj.raccess.published or res_obj.raccess.discoverable or res_obj.raccess.public:
+            permission = "Open Access"
+    return permission
 
 @register.filter
 def resource_type(content):
@@ -88,3 +104,18 @@ def best_name(content):
         content = content.username
 
     return content
+
+@register.filter
+def clean_pagination_url(content):
+    if "?q=" not in content:
+        content += "?q="
+    if "&page=" not in content:
+        return content
+    else:
+        clean_content = ''
+        parsed_content = content.split("&")
+        for token in parsed_content:
+            if "page=" not in token:
+                clean_content += token + '&'
+        clean_content = clean_content[:-1]
+        return clean_content

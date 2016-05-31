@@ -1,8 +1,6 @@
 {# This template is used as the landing page for TimeSeriesResource #}
 
 {% extends "pages/genericresource.html" %}
-{#{% load geoanalytics_tags pages_tags mezzanine_tags crispy_forms_tags %}#}
-{#{% load geoanalytics_tags pages_tags mezzanine_tags comment_tags keyword_tags hydroshare_tags crispy_forms_tags inplace_edit %}#}
 
 {% block extended_metadata %}
     {% if extended_metadata_exists %}
@@ -97,40 +95,52 @@
     {%  endif %}
 {%  endblock %}
 {%  block modal_add_file %}
-            <div class="modal fade" id="add-file-dialog" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
-              <div class="modal-dialog">
-                <div class="modal-content">
-                  <form action="/hsapi/_internal/{{ cm.short_id }}/add-file-to-resource/" method="POST" enctype="multipart/form-data">
+    <div class="modal fade" id="add-file-dialog" tabindex="-1" role="dialog" aria-labelledby="myModalLabel"
+         aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <form action="/hsapi/_internal/{{ cm.short_id }}/add-file-to-resource/" method="POST"
+                      enctype="multipart/form-data">
 
-                  <div class="modal-header">
-                    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
-                    <h4 class="modal-title" id="myModalLabel">Add file to resource</h4>
-                  </div>
-                  <div class="modal-body">
-                          {% csrf_token %}
-                          <div class="form-group">
-                              <label for="add-file-input">Select files:</label>
-                              <input type="file" name="files" id="add-file-input" multiple/>
-                          </div>
-                          <div id="file-types">Any file type can be uploaded.</div>
-                          <div id="file-multiple">Multiple file upload is allowed.</div>
-                          <br>
-                             <h3 style="color: red" id="file-type-error"></h3>
-                          <hr>
-                          <div>
-                              <strong><input type="checkbox" name="extract-metadata" value="No" onclick="setCheckboxValue(this)"> Check to extract metadata from this uploaded file</strong>
-                              <h3 style="color:red">If metadata is extracted, existing metadata will be replaced with the extracted ones.</h3>
-                          </div>
-                  </div>
-                  <div class="modal-footer">
-                    <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-                    <button type="submit" class="btn btn-primary">Save changes</button>
-                  </div>
-                  </form>
-                </div>
-              </div>
+                    <div class="modal-header">
+                        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                        <h4 class="modal-title" id="myModalLabel">Add file to resource</h4>
+                    </div>
+                    <div class="modal-body">
+                        {% csrf_token %}
+                        <div class="form-group">
+                            <label for="add-file-input">Select files:</label>
+                            <input type="file" name="files" id="add-file-input" multiple/>
+                        </div>
+                        <div id="file-types">Any file type can be uploaded.</div>
+                        <div id="file-multiple">Multiple file upload is allowed.</div>
+                        <br>
+                        <h3 style="color: red" id="file-type-error"></h3>
+                        <hr>
+                        <div>
+                            <div class="checkbox">
+                                <label>
+                                    <input type="checkbox" name="extract-metadata" value="No"
+                                           onclick="setCheckboxValue(this)">
+                                    Check to extract metadata from this uploaded file
+                                </label>
+                            </div>
+
+                            <div class="alert alert-warning" role="alert">
+                                <span class="glyphicon glyphicon-info-sign" aria-hidden="true"></span>
+                                If metadata is extracted, existing metadata will be replaced with the extracted ones.
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                        <button type="submit" class="btn btn-primary">Save changes</button>
+                    </div>
+                </form>
             </div>
-        {% endblock %}
+        </div>
+    </div>
+{% endblock %}
 {% block extra_js %}
     {{ block.super }}
 

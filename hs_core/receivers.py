@@ -31,6 +31,8 @@ def metadata_element_pre_create_handler(sender, **kwargs):
         element_form = LanguageValidationForm(request.POST)
     elif element_name == 'date':
         element_form = ValidDateValidationForm(request.POST)
+    elif element_name == 'fundingagency':
+        element_form = FundingAgencyValidationForm(request.POST)
     elif element_name == 'coverage':
         if 'type' in request.POST:
             element_form = CoverageSpatialForm(data=request.POST)
@@ -48,51 +50,29 @@ def metadata_element_pre_update_handler(sender, **kwargs):
     element_name = kwargs['element_name'].lower()
     element_id = kwargs['element_id']
     request = kwargs['request']
+    repeatable_elements = {'creator': CreatorValidationForm,
+                           'contributor': ContributorValidationForm,
+                           'relation': RelationValidationForm,
+                           'source': SourceValidationForm
+                           }
+
     if element_name == 'title':
         element_form = TitleValidationForm(request.POST)
     elif element_name == "description":   #abstract
         element_form = AbstractValidationForm(request.POST)
-    elif element_name == "creator":
-        # since creator is a repeatable element and creator data is displayed on the landing page
-        # using formset, the data coming from a single creator form in the request for update
-        # needs to be parsed to match with creator field names
+    elif element_name == "fundingagency":
+        element_form = FundingAgencyValidationForm(request.POST)
+    elif element_name in repeatable_elements:
+        # since element_name is a repeatable element (e.g creator) and data for the element is displayed on the
+        # landing page using formset, the data coming from a single element form in the request for update
+        # needs to be parsed to match with element field names
+        element_validation_form = repeatable_elements[element_name]
         form_data = {}
-        for field_name in CreatorValidationForm().fields:
+        for field_name in element_validation_form().fields:
             matching_key = [key for key in request.POST if '-'+field_name in key][0]
             form_data[field_name] = request.POST[matching_key]
 
-        element_form = CreatorValidationForm(form_data)
-    elif element_name == "contributor":
-        # since contributor is a repeatable element and contributor data is displayed on the landing page
-        # using formset, the data coming from a single contributor form in the request for update
-        # needs to be parsed to match with contributor field names
-        form_data = {}
-        for field_name in ContributorValidationForm().fields:
-            matching_key = [key for key in request.POST if '-'+field_name in key][0]
-            form_data[field_name] = request.POST[matching_key]
-
-        element_form = ContributorValidationForm(form_data)
-    elif element_name == "relation":
-        # since relation is a repeatable element and relation data is displayed on the landing page
-        # using formset, the data coming from a single relation form in the request for update
-        # needs to be parsed to match with relation field names
-        form_data = {}
-        for field_name in RelationValidationForm().fields:
-            matching_key = [key for key in request.POST if '-'+field_name in key][0]
-            form_data[field_name] = request.POST[matching_key]
-
-        element_form = RelationValidationForm(form_data)
-
-    elif element_name == "source":
-        # since source is a repeatable element and source data is displayed on the landing page
-        # using formset, the data coming from a single source form in the request for update
-        # needs to be parsed to match with source field names
-        form_data = {}
-        for field_name in SourceValidationForm().fields:
-            matching_key = [key for key in request.POST if '-'+field_name in key][0]
-            form_data[field_name] = request.POST[matching_key]
-
-        element_form = SourceValidationForm(form_data)
+        element_form = element_validation_form(form_data)
     elif element_name == 'rights':
         element_form = RightsValidationForm(request.POST)
     elif element_name == 'language':
