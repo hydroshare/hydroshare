@@ -1006,6 +1006,7 @@ def _send_email_on_group_membership_acceptance(membership_request):
     """
 
     if membership_request.invitation_to is not None:
+        # user accepted invitation from the group owner
         # here we are sending email to group owner who invited
         email_msg = """Dear {}
         <p>Your invitation to user '{}' to join the group '{}' has been accepted.</p>
@@ -1014,6 +1015,7 @@ def _send_email_on_group_membership_acceptance(membership_request):
         """.format(membership_request.request_from.first_name,
                    membership_request.invitation_to.first_name, membership_request.group_to_join.name)
     else:
+        # group owner accepted user request
         # here wre are sending email to the user whose request to join got accepted
         email_msg = """Dear {}
         <p>Your request to join the group '{}' has been accepted.</p>
@@ -1025,7 +1027,7 @@ def _send_email_on_group_membership_acceptance(membership_request):
               message=email_msg,
               html_message=email_msg,
               from_email=settings.DEFAULT_FROM_EMAIL,
-              recipient_list=[membership_request.request_from.email], fail_silently=True)
+              recipient_list=[membership_request.request_from.email])
 
 
 def _share_resource_with_user(request, frm, resource, requesting_user, privilege):
