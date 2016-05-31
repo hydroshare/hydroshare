@@ -432,7 +432,7 @@ def _share_resource(request, shortkey, privilege, user_or_group_id, user_or_grou
                           Any other value for this parameter assumes resource to be shared with a group.
     :return:
     """
-    
+
     res, _, user = authorize(request, shortkey, needed_permission=ACTION_TO_AUTHORIZE.VIEW_RESOURCE)
     user_to_share_with = None
     group_to_share_with = None
@@ -496,8 +496,12 @@ def _share_resource(request, shortkey, privilege, user_or_group_id, user_or_grou
                               'error_msg': err_message}
 
     else:
+        group_pic_url = 'No picture provided'
+        if group_to_share_with.gaccess.picture.url:
+            group_pic_url = group_to_share_with.gaccess.picture.url
+
         ajax_response_data = {'status': status, 'name': group_to_share_with.name,
-                              'privilege_granted': privilege,
+                              'privilege_granted': privilege, 'group_pic': group_pic_url,
                               'current_user_privilege': current_user_privilege,
                               'error_msg': err_message}
 
