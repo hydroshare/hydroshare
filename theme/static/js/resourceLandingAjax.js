@@ -144,7 +144,6 @@ function change_share_permission_ajax_submit(form_id) {
 
 function share_resource_ajax_submit(form_id) {
     $form = $('#' + form_id);
-
     var datastring = $form.serialize();
     var share_with;
     var shareType;
@@ -166,7 +165,6 @@ function share_resource_ajax_submit(form_id) {
         else {
             return false;
         }
-
     }
 
     var access_type = $("#selected_role")[0].getAttribute("data-role");
