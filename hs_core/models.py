@@ -1173,6 +1173,10 @@ class AbstractResource(ResourcePermissionsMixin):
 
         return scimeta_url
 
+    @classmethod
+    def sysmeta_path(cls, resource_id):
+        return "{resource_id}/data/resourcemap.xml".format(resource_id=resource_id)
+
     def delete(self, using=None):
         from hydroshare import hs_bagit
         for fl in self.files.all():

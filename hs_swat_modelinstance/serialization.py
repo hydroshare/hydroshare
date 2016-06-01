@@ -1,4 +1,5 @@
 import os
+import logging
 
 import rdflib
 
@@ -14,6 +15,9 @@ from hs_swat_modelinstance.forms import model_objective_choices, parameters_choi
 
 MODEL_OBJECTIVE_CHOICES = [c[0] for c in model_objective_choices]
 MODEL_PARAMETER_CHOICES = [p[0] for p in parameters_choices]
+
+logger = logging.getLogger(__name__)
+
 
 class SWATModelInstanceResourceMeta(GenericResourceMeta):
 
@@ -39,7 +43,7 @@ class SWATModelInstanceResourceMeta(GenericResourceMeta):
     def _read_resource_metadata(self):
         super(SWATModelInstanceResourceMeta, self)._read_resource_metadata()
 
-        print("--- SWATModelInstanceResource ---")
+        logger.debug("--- SWATModelInstanceResource ---")
 
         hsterms = rdflib.namespace.Namespace('http://hydroshare.org/terms/')
 
@@ -52,9 +56,10 @@ class SWATModelInstanceResourceMeta(GenericResourceMeta):
                 raise GenericResourceMeta.ResourceMetaException(msg)
             self.model_output = SWATModelInstanceResourceMeta.ModelOutput()
             self.model_output.includes_output = str(model_output_lit) == 'Yes'
-            print("\t\t{0}".format(self.model_output))
+            logger.debug("\t\t{0}".format(self.model_output))
         # Get ExecutedBy
-        for s, p, o in self._rmeta_graph.triples((None, hsterms.ExecutedBy, None)):
+        # Should be hsterms.ExecutedBy, BUT THERE IS A TYPO IN THE XML!
+        for s, p, o in self._rmeta_graph.triples((None, hsterms.ExecutedBY, None)):
             # Get modelProgramName
             executed_by_name_lit = self._rmeta_graph.value(o, hsterms.modelProgramName)
             if executed_by_name_lit is not None:
@@ -66,16 +71,17 @@ class SWATModelInstanceResourceMeta(GenericResourceMeta):
             if (self.executed_by_name is not None) ^ (self.executed_by_uri is not None):
                 msg = "Both modelProgramName and modelProgramIdentifier must be supplied if one is supplied."
                 raise GenericResourceMeta.ResourceMetaException(msg)
-        print("\t\t{0}".format(str(self)))
+        logger.debug("\t\tmodelProgramName {0}".format(str(self.executed_by_name)))
+        logger.debug("\t\tmodelProgramIdentifier {0}".format(str(self.executed_by_uri)))
         # Get modelObjective
         for s, p, o in self._rmeta_graph.triples((None, hsterms.modelObjective, None)):
             self.model_objective = SWATModelInstanceResourceMeta.ModelObjective(str(o))
-            print("\t\t{0}".format(self.model_objective))
+            logger.debug("\t\t{0}".format(self.model_objective))
         # Get simulationType
         for s, p, o in self._rmeta_graph.triples((None, hsterms.simulationType, None)):
             self.simulation_type = SWATModelInstanceResourceMeta.SimulationType()
             self.simulation_type.simulation_type_name = str(o)
-            print("\t\t{0}".format(self.simulation_type))
+            logger.debug("\t\t{0}".format(self.simulation_type))
         # Get ModelMethod
         for s, p, o in self._rmeta_graph.triples((None, hsterms.ModelMethod, None)):
             self.model_method = SWATModelInstanceResourceMeta.ModelMethod()
@@ -91,11 +97,11 @@ class SWATModelInstanceResourceMeta(GenericResourceMeta):
             pet_method_lit = self._rmeta_graph.value(o, hsterms.petEstimationMethod)
             if pet_method_lit is not None:
                 self.model_method.PET_estimation_method = str(pet_method_lit)
-            print("\t\t{0}".format(self.model_method))
+            logger.debug("\t\t{0}".format(self.model_method))
         # Get modelParameter
         for s, p, o in self._rmeta_graph.triples((None, hsterms.modelParameter, None)):
             self.model_parameter = SWATModelInstanceResourceMeta.ModelParameter(str(o))
-            print("\t\t{0}".format(self.model_parameter))
+            logger.debug("\t\t{0}".format(self.model_parameter))
         # Get ModelInput
         for s, p, o in self._rmeta_graph.triples((None, hsterms.ModelInput, None)):
             self.model_input = SWATModelInstanceResourceMeta.ModelInput()
@@ -171,43 +177,45 @@ class SWATModelInstanceResourceMeta(GenericResourceMeta):
             soil_data_source_URL_lit = self._rmeta_graph.value(o, hsterms.soilDataSourceURL)
             if soil_data_source_URL_lit is not None:
                 self.model_input.soil_data_source_URL = str(soil_data_source_URL_lit)
-            print("\t\t{0}".format(self.model_input))
+            logger.debug("\t\t{0}".format(self.model_input))
 
     @transaction.atomic
-    def write_metadata_to_resource(self, resource):
+    def write_metadata_to_resource(self, resource, **kwargs):
         """
         Write metadata to resource
 
         :param resource: RasterResource instance
         """
-        super(SWATModelInstanceResourceMeta, self).write_metadata_to_resource(resource)
+        super(SWATModelInstanceResourceMeta, self).write_metadata_to_resource(resource, **kwargs)
 
-        if self.model_output:
-            resource.metadata._model_output.update(includes_output=self.model_output.includes_output)
-        if self.executed_by_uri:
-            uri_stripped = self.executed_by_uri.strip('/')
-            short_id = os.path.basename(uri_stripped)
-            if short_id == '':
-                msg = "ExecutedBy URL {0} does not contain a model program resource ID, "
-                msg += "for resource {1}"
-                msg = msg.format(self.executed_by_uri, self.root_uri)
-                raise GenericResourceMeta.ResourceMetaException(msg)
-            # Make sure the resource specified by ExecutedBy exists
-            try:
-                executed_by_resource = get_resource_by_shortkey(short_id,
-                                                                or_404=False)
-            except BaseResource.DoesNotExist:
-                msg = "ExecutedBy resource {0} does not exist.".format(short_id)
-                raise HsDeserializationDependencyException(short_id, msg)
-            executed_by = resource.metadata.executed_by
-            if not executed_by:
-                # Create
-                ExecutedBy.create(content_object=resource.metadata,
-                                  model_name=short_id)
+        if self.model_output is not None:
+            if resource.metadata.model_output:
+                resource.metadata.update_element('modeloutput', resource.metadata.model_output.id,
+                                                 includes_output=self.model_output.includes_output)
             else:
-                # Update
-                ExecutedBy.update(executed_by.element_id,
-                                  model_name=short_id)
+                resource.metadata.create_element('modeloutput',
+                                                 includes_output=self.model_output.includes_output)
+        if self.executed_by_uri is not None:
+            if resource.metadata.executed_by:
+                # Remove existing
+                resource.metadata._executed_by.all().delete()
+            if self.executed_by_uri != 'None':
+                # Only create ExecutedBy if URI is a URL.
+                uri_stripped = self.executed_by_uri.strip('/')
+                short_id = os.path.basename(uri_stripped)
+                if short_id == '':
+                    msg = "ExecutedBy URL {0} does not contain a model program resource ID, "
+                    msg += "for resource {1}"
+                    msg = msg.format(self.executed_by_uri, self.root_uri)
+                    raise GenericResourceMeta.ResourceMetaException(msg)
+                try:
+                    resource.metadata.create_element('ExecutedBy',
+                                                     model_name=short_id)
+                except Exception:
+                    msg = "Creation of ExecutedBy failed, resource {0} may not exist.".format(
+                        short_id)
+                    raise HsDeserializationDependencyException(short_id, msg)
+
         if self.model_objective:
             swat_model_objectives = []
             other_objectives = []
@@ -221,39 +229,33 @@ class SWATModelInstanceResourceMeta(GenericResourceMeta):
                 other_objectives_str = ",".join(other_objectives)
             model_objective = resource.metadata.model_objective
             if not model_objective:
-                # Create
                 ModelObjective.create(content_object=resource.metadata,
                                       swat_model_objectives=swat_model_objectives,
                                       other_objectives=other_objectives_str)
             else:
-                # Update
-                ModelObjective.update(model_objective.element_id,
+                ModelObjective.update(model_objective.id,
                                       swat_model_objectives=swat_model_objectives,
                                       other_objectives=other_objectives_str)
         if self.simulation_type:
             simulation_type = resource.metadata.simulation_type
             if not simulation_type:
-                # Create
                 SimulationType.create(content_object=resource.metadata,
                                       simulation_type_name=self.simulation_type.simulation_type_name)
             else:
-                # Update
-                SimulationType.update(simulation_type.element_id,
+                SimulationType.update(simulation_type.id,
                                       simulation_type_name=self.simulation_type.simulation_type_name)
         if self.model_method:
             model_method = resource.metadata.model_method
             if not model_method:
-                # Create
                 ModelMethod.create(content_object=resource.metadata,
-                                   runoff_calculation_method=self.model_method.runoff_calculation_method,
-                                   flow_routing_method=self.model_method.flow_routing_method,
-                                   PET_estimation_method=self.model_method.PET_estimation_method)
+                                   runoffCalculationMethod=self.model_method.runoff_calculation_method,
+                                   flowRoutingMethod=self.model_method.flow_routing_method,
+                                   petEstimationMethod=self.model_method.PET_estimation_method)
             else:
-                #Update
-                ModelMethod.create(model_method.element_id,
-                                   runoff_calculation_method=self.model_method.runoff_calculation_method,
-                                   flow_routing_method=self.model_method.flow_routing_method,
-                                   PET_estimation_method=self.model_method.PET_estimation_method)
+                ModelMethod.update(model_method.id,
+                                   runoffCalculationMethod=self.model_method.runoff_calculation_method,
+                                   flowRoutingMethod=self.model_method.flow_routing_method,
+                                   petEstimationMethod=self.model_method.PET_estimation_method)
         if self.model_parameter:
             model_parameters = []
             other_parameters = []
@@ -267,57 +269,53 @@ class SWATModelInstanceResourceMeta(GenericResourceMeta):
                 other_parameters_str = ",".join(other_parameters)
             model_parameter = resource.metadata.model_parameter
             if not model_parameter:
-                # Create
                 ModelParameter.create(content_object=resource.metadata,
                                       model_parameters=model_parameters,
                                       other_parameters=other_parameters_str)
             else:
-                # Update
-                ModelParameter.update(model_parameter.element_id,
+                ModelParameter.update(model_parameter.id,
                                       model_parameters=model_parameters,
                                       other_parameters=other_parameters_str)
         if self.model_input:
             model_input = resource.metadata.model_input
             if not model_input:
-                # Create
                 ModelInput.create(content_object=resource.metadata,
-                                  warm_up_period=self.model_input.warm_up_period_value,
-                                  rainfall_time_step_type=self.model_input.rainfall_time_step_type,
-                                  rainfall_time_step_value=self.model_input.rainfall_time_step_value,
-                                  routing_time_step_type=self.model_input.routing_time_step_type,
-                                  routing_time_step_value=self.model_input.routing_time_step_value,
-                                  simulation_time_step_type=self.model_input.simulation_time_step_type,
-                                  simulation_time_step_value=self.model_input.simulation_time_step_value,
-                                  watershed_area=self.model_input.watershed_area,
-                                  number_of_subbasins=self.model_input.number_of_subbasins,
-                                  number_of_HRUs=self.model_input.number_of_HRUs,
-                                  DEM_resolution=self.model_input.DEM_resolution,
-                                  DEM_source_name=self.model_input.DEM_source_name,
-                                  DEM_source_URL=self.model_input.DEM_source_URL,
-                                  landUse_data_source_name=self.model_input.landUse_data_source_name,
-                                  landUse_data_source_URL=self.model_input.landUse_data_source_URL,
-                                  soil_data_source_name=self.model_input.soil_data_source_name,
-                                  soil_data_source_URL=self.model_input.soil_data_source_URL)
+                                  warmupPeriodValue=self.model_input.warm_up_period_value,
+                                  rainfallTimeStepType=self.model_input.rainfall_time_step_type,
+                                  rainfallTimeStepValue=self.model_input.rainfall_time_step_value,
+                                  routingTimeStepType=self.model_input.routing_time_step_type,
+                                  routingTimeStepValue=self.model_input.routing_time_step_value,
+                                  simulationTimeStepType=self.model_input.simulation_time_step_type,
+                                  simulationTimeStepValue=self.model_input.simulation_time_step_value,
+                                  watershedArea=self.model_input.watershed_area,
+                                  numberOfSubbasins=self.model_input.number_of_subbasins,
+                                  numberOfHRUs=self.model_input.number_of_HRUs,
+                                  demResolution=self.model_input.DEM_resolution,
+                                  demSourceName=self.model_input.DEM_source_name,
+                                  demSourceURL=self.model_input.DEM_source_URL,
+                                  landUseDataSourceName=self.model_input.landUse_data_source_name,
+                                  landUseDataSourceURL=self.model_input.landUse_data_source_URL,
+                                  soilDataSourceName=self.model_input.soil_data_source_name,
+                                  soilDataSourceURL=self.model_input.soil_data_source_URL)
             else:
-                # Update
-                ModelInput.update(model_parameter.element_id,
-                                  warm_up_period=self.model_input.warm_up_period_value,
-                                  rainfall_time_step_type=self.model_input.rainfall_time_step_type,
-                                  rainfall_time_step_value=self.model_input.rainfall_time_step_value,
-                                  routing_time_step_type=self.model_input.routing_time_step_type,
-                                  routing_time_step_value=self.model_input.routing_time_step_value,
-                                  simulation_time_step_type=self.model_input.simulation_time_step_type,
-                                  simulation_time_step_value=self.model_input.simulation_time_step_value,
-                                  watershed_area=self.model_input.watershed_area,
-                                  number_of_subbasins=self.model_input.number_of_subbasins,
-                                  number_of_HRUs=self.model_input.number_of_HRUs,
-                                  DEM_resolution=self.model_input.DEM_resolution,
-                                  DEM_source_name=self.model_input.DEM_source_name,
-                                  DEM_source_URL=self.model_input.DEM_source_URL,
-                                  landUse_data_source_name=self.model_input.landUse_data_source_name,
-                                  landUse_data_source_URL=self.model_input.landUse_data_source_URL,
-                                  soil_data_source_name=self.model_input.soil_data_source_name,
-                                  soil_data_source_URL=self.model_input.soil_data_source_URL)
+                ModelInput.update(model_input.id,
+                                  warmupPeriodValue=self.model_input.warm_up_period_value,
+                                  rainfallTimeStepType=self.model_input.rainfall_time_step_type,
+                                  rainfallTimeStepValue=self.model_input.rainfall_time_step_value,
+                                  routingTimeStepType=self.model_input.routing_time_step_type,
+                                  routingTimeStepValue=self.model_input.routing_time_step_value,
+                                  simulationTimeStepType=self.model_input.simulation_time_step_type,
+                                  simulationTimeStepValue=self.model_input.simulation_time_step_value,
+                                  watershedArea=self.model_input.watershed_area,
+                                  numberOfSubbasins=self.model_input.number_of_subbasins,
+                                  numberOfHRUs=self.model_input.number_of_HRUs,
+                                  demResolution=self.model_input.DEM_resolution,
+                                  demSourceName=self.model_input.DEM_source_name,
+                                  demSourceURL=self.model_input.DEM_source_URL,
+                                  landUseDataSourceName=self.model_input.landUse_data_source_name,
+                                  landUseDataSourceURL=self.model_input.landUse_data_source_URL,
+                                  soilDataSourceName=self.model_input.soil_data_source_name,
+                                  soilDataSourceURL=self.model_input.soil_data_source_URL)
 
     class ModelOutput(object):
 
@@ -336,7 +334,7 @@ class SWATModelInstanceResourceMeta(GenericResourceMeta):
 
         def __init__(self):
             self.name = None
-            self.url = None  # Ignored for now as refactor is planned.
+            self.url = None
 
         def __str__(self):
             msg = "ExecutedBy name: {name}, url: {url}"
