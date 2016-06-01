@@ -1034,8 +1034,7 @@
             function onRemoveKeyword(event) {
                 $(event.target).closest(".tag").remove();
                 updateKeywords();
-                update_keywords_ajax_submit();
-                return false;
+                metadata_update_ajax_submit('id-subject');
             }
 
             function onAddKeyword(event) {
@@ -1065,8 +1064,7 @@
                 }
 
                 $("#txt-keyword").val("");  // Clear text input
-                update_keywords_ajax_submit();
-                return false;
+                metadata_update_ajax_submit('id-subject');
             }
 
             function updateKeywords() {
