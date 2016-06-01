@@ -30,14 +30,19 @@ def delete_bag(resource):
     :param resource: the resource to delete the bag for.
     :return: none
     """
+    from . import utils as hs_core_utils
     res_id = resource.short_id
     istorage = IrodsStorage()
-
+    res_path = res_id
+    bagname = 'bags/{res_id}.zip'.format(res_id=res_id)
+    if resource.resource_federation_path:
+        hs_core_utils.set_fed_zone_session(istorage)
+        res_path='{}/{}'.format(resource.resource_federation_path, res_path)
+        bagname='{}/{}'.format(resource.resource_federation_path, bagname)
     # delete resource directory first to remove all generated bag-related files for the resource
-    istorage.delete(res_id)
+    istorage.delete(res_path)
 
     # the resource bag may not exist due to on-demand bagging
-    bagname = 'bags/{res_id}.zip'.format(res_id=res_id)
     if istorage.exists(bagname):
         # delete the resource bag
         istorage.delete(bagname)
@@ -47,14 +52,19 @@ def delete_bag(resource):
         bag.delete()
 
 
-def create_bag_files(resource, fed_zone_home_path='', fed_copy=True):
+def create_bag_files(resource, fed_zone_home_path='', fed_copy=None):
     """
     create and update all files needed by bagit operation that is conducted on iRODS server; no bagit operation
     is performed, only files that will be included in the bag are created or updated.
 
     Parameters:
     :param resource: A resource whose files will be created or updated to be included in the resource bag.
-
+    :param fed_zone_home_path: Optional, A passed-in non-empty value indicates the resource needs to be created
+    in a federated zone rather than in the default hydroshare zone.
+    :param fed_copy: Optional, the default value is None which means no resource content files need to be copied
+    or moved in a federated zone, a True or False boolean value will be passed in only during initial resource
+    creation when the resource needs to be created in a federated zone with hydroshare zone to inform whether
+    resource contents need to be copied or moved from local accounts to local proxy account in the federated zone
     :return: istorage, an IrodsStorage object,that will be used by subsequent operation to create a bag on demand as needed.
     """
     from . import utils as hs_core_utils
@@ -129,19 +139,24 @@ def create_bag_files(resource, fed_zone_home_path='', fed_copy=True):
     files = ResourceFile.objects.filter(object_id=resource.id)
     resFiles = []
     for n, f in enumerate(files):
-        if f.resource_file:
-            filename = os.path.basename(f.resource_file.name)
-        elif f.fed_resource_file_name_or_path:
+        if f.fed_resource_file_name_or_path:
             # move or copy the file under the user account to under local hydro proxy account in federated zone
             from_fname = f.fed_resource_file_name_or_path
             filename = from_fname.rsplit('/')[-1]
-            to_fname = '{base_path}/{res_id}/data/contents/{file_name}'.format(base_path=fed_zone_home_path,
-                                                                               res_id=resource.short_id,
-                                                                               file_name=filename)
-            if fed_copy:
-                istorage.copyFiles(from_fname, to_fname)
-            else:
-                istorage.moveFile(from_fname, to_fname)
+            # only copy or move file when initially creating the resource
+            if fed_copy is not None:
+                to_fname = '{base_path}/{res_id}/data/contents/{file_name}'.format(base_path=fed_zone_home_path,
+                                                                                   res_id=resource.short_id,
+                                                                                   file_name=filename)
+                if fed_copy:
+                    istorage.copyFiles(from_fname, to_fname)
+                else:
+                    istorage.moveFile(from_fname, to_fname)
+                # update file path now that file has been copied or moved to local proxy account space
+                f.fed_resource_file_name_or_path = 'data/contents/{file_name}'.format(file_name=filename)
+                f.save()
+        elif f.resource_file:
+            filename = os.path.basename(f.resource_file.name)
         else:
             filename = ''
         if filename:

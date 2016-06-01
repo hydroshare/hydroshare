@@ -488,8 +488,10 @@ def create_resource(
             resource.save()
         if create_bag:
             hs_bagit.create_bag(resource, fed_zone_home_path=fed_zone_home_path, fed_copy=fed_copy)
-
+        resource.resource_federation_path = fed_zone_home_path
+        resource.save()
     return resource
+
 
 def create_new_version_empty_resource(pk, user):
     """

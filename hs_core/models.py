@@ -1351,7 +1351,11 @@ class BaseResource(Page, AbstractResource):
     # the time when the resource is locked for a new version action. A value of null
     # means the resource is not locked
     locked_time = models.DateTimeField(null=True, blank=True)
-
+    #this resource_federation_path is added to record where a HydroShare resource is
+    # stored. The default is empty string meaning the resource is stored in HydroShare
+    # zone. If a resource is stored in a fedearated zone, the field should store the
+    # federated root path in the format of /federated_zone/home/localHydroProxy
+    resource_federation_path = models.CharField(max_length=100, blank=True, default='')
     objects = models.Manager()
     public_resources = PublicResourceManager()
     discoverable_resources = DiscoverableResourceManager()
