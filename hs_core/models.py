@@ -890,13 +890,11 @@ class Coverage(AbstractMetaDataElement):
         changing_coverage_type = False
 
         if 'type' in kwargs:
-            if cov.type != kwargs['type']:
-                if 'value' in kwargs:
-                    cls._validate_coverage_type_value_attributes(kwargs['type'], kwargs['value'])
-                else:
-                    raise ValidationError('Coverage value is missing.')
-
-                changing_coverage_type = True
+            changing_coverage_type = cov.type != kwargs['type']
+            if 'value' in kwargs:
+                cls._validate_coverage_type_value_attributes(kwargs['type'], kwargs['value'])
+            else:
+                raise ValidationError('Coverage value is missing.')
 
         if 'value' in kwargs:
             if changing_coverage_type:
@@ -943,13 +941,49 @@ class Coverage(AbstractMetaDataElement):
             # check that all the required sub-elements exist
             if 'east' not in value_dict or 'north' not in value_dict or 'units' not in value_dict:
                 raise ValidationError("For coverage of type 'point' values for 'east', 'north' and 'units' are needed.")
+
+            for value_item in ('east', 'north'):
+                try:
+                    value_dict[value_item] = float(value_dict[value_item])
+                except TypeError:
+                    raise ValidationError("Value for '{}' must be numeric".format(value_item))
+
+            if value_dict['east'] < -180 or value_dict['east'] > 180:
+                raise ValidationError("Value for East longitude should be in the range of -180 to 180")
+
+            if value_dict['north'] < -90 or value_dict['north'] > 90:
+                raise ValidationError("Value for North latitude should be in the range of -90 to 90")
+
         elif coverage_type == 'box':
             # check that all the required sub-elements exist
             for value_item in ['units', 'northlimit', 'eastlimit', 'southlimit', 'westlimit']:
                 if value_item not in value_dict:
                     raise ValidationError("For coverage of type 'box' values for one or more bounding box limits or "
                                           "'units' is missing.")
+                else:
+                    if value_item != 'units':
+                        try:
+                            value_dict[value_item] = float(value_dict[value_item])
+                        except TypeError:
+                            raise ValidationError("Value for '{}' must be numeric".format(value_item))
 
+            if value_dict['northlimit'] <= value_dict['southlimit']:
+                raise ValidationError("Value for North latitude must be greater than that of South latitude.")
+
+            if value_dict['northlimit'] < -90 or value_dict['northlimit'] > 90:
+                raise ValidationError("Value for North latitude should be in the range of -90 to 90")
+
+            if value_dict['southlimit'] < -90 or value_dict['southlimit'] > 90:
+                raise ValidationError("Value for South latitude should be in the range of -90 to 90")
+
+            if value_dict['eastlimit'] <= value_dict['westlimit']:
+                raise ValidationError("Value for East longitude must be greater than that of West longitude.")
+
+            if value_dict['eastlimit'] < -180 or value_dict['eastlimit'] > 180:
+                raise ValidationError("Value for East longitude should be in the range of -180 to 180")
+
+            if value_dict['westlimit'] < -180 or value_dict['westlimit'] > 180:
+                raise ValidationError("Value for West longitude should be in the range of -180 to 180")
 
 class Format(AbstractMetaDataElement):
     term = 'Format'
