@@ -143,13 +143,30 @@ function change_share_permission_ajax_submit(form_id) {
 }
 
 function share_resource_ajax_submit(form_id) {
-    if (!$("#id_user-deck > .hilight").length) {
-        return false; // If no user selected, ignore the request
-    }
     $form = $('#' + form_id);
-
     var datastring = $form.serialize();
-    var share_with = $("#id_user-deck > .hilight")[0].getAttribute("data-value");
+    var share_with;
+    var shareType;
+
+    if ($("#div-invite-people input[value='users']:checked").length) {
+        if ($("#id_user-deck > .hilight").length > 0) {
+            share_with = $("#id_user-deck > .hilight")[0].getAttribute("data-value");
+            shareType = "user";
+        }
+        else {
+            return false;
+        }
+    }
+    else {
+        if ($("#id_group-deck > .hilight").length > 0) {
+            share_with = $("#id_group-deck > .hilight")[0].getAttribute("data-value");
+            shareType = "group";
+        }
+        else {
+            return false;
+        }
+    }
+
     var access_type = $("#selected_role")[0].getAttribute("data-role");
     var url = $form.attr('action') + access_type + "/" + share_with + "/";
     setPointerEvents(false);
@@ -169,10 +186,19 @@ function share_resource_ajax_submit(form_id) {
                 var rowTemplate = $("#templateRow").clone();
 
                 // Form actions
-                var unshareUrl = $form.attr('action').replace("share-resource-with-user", "unshare-resource-with-user") + share_with + "/";
+                var unshareUrl;
+                if (shareType == "user"){
+                    unshareUrl = $form.attr('action').replace("share-resource-with-user", "unshare-resource-with-user") + share_with + "/";
+                }
+                else {
+                    unshareUrl = $form.attr('action').replace("share-resource-with-group", "unshare-resource-with-group") + share_with + "/";
+                }
+
                 var viewUrl = $form.attr('action') + "view" + "/" + share_with + "/";
                 var changeUrl = $form.attr('action') + "edit" + "/" + share_with + "/";
                 var ownerUrl = $form.attr('action') + "owner" + "/" + share_with + "/";
+
+
                 rowTemplate.find(".remove-user-form").attr('action', unshareUrl);
                 rowTemplate.find(".remove-user-form").attr('id', 'form-remove-user-' + share_with);
                 rowTemplate.find(".remove-user-form .btn-remove-row").attr("onclick", "unshare_resource_ajax_submit('form-remove-user-" + share_with + "')")
@@ -185,10 +211,16 @@ function share_resource_ajax_submit(form_id) {
                 rowTemplate.find(".share-form-edit").attr("id", "share-edit-" + share_with);
                 rowTemplate.find(".share-form-edit").attr("data-access-type", "Can edit");
                 rowTemplate.find(".share-form-edit a").attr("onclick", "change_share_permission_ajax_submit('share-edit-" + share_with + "')");
-                rowTemplate.find(".share-form-owner").attr('action', ownerUrl);
-                rowTemplate.find(".share-form-owner").attr("id", "share-owner-" + share_with);
-                rowTemplate.find(".share-form-owner").attr("data-access-type", "Is owner");
-                rowTemplate.find(".share-form-owner a").attr("onclick", "change_share_permission_ajax_submit('share-owner-" + share_with + "')");
+                if (shareType == "user") {
+                    rowTemplate.find(".share-form-owner").attr('action', ownerUrl);
+                    rowTemplate.find(".share-form-owner").attr("id", "share-owner-" + share_with);
+                    rowTemplate.find(".share-form-owner").attr("data-access-type", "Is owner");
+                    rowTemplate.find(".share-form-owner a").attr("onclick", "change_share_permission_ajax_submit('share-owner-" + share_with + "')");
+                }
+                else {
+                    rowTemplate.find(".share-form-owner").parent().remove();
+                }
+
                 if (json_response.name) {
                     rowTemplate.find("span[data-col='name']").text(json_response.name);
                 }
@@ -199,11 +231,23 @@ function share_resource_ajax_submit(form_id) {
                 if (!json_response.is_current_user) {
                     rowTemplate.find(".you-flag").hide();
                 }
-                rowTemplate.find("span[data-col='user-name']").text(json_response.username);
+                if (shareType == "user") {
+                    rowTemplate.find("span[data-col='user-name']").text(json_response.username);
+                }
+                else {
+                    rowTemplate.find("span[data-col='user-name']").text("(Group)");
+                }
 
-                if (json_response.profile_pic != "No picture provided") {
-                    rowTemplate.find(".profile-pic-thumbnail").attr("style", "background-image: url('" + json_response.profile_pic + "')");
-                    rowTemplate.find(".profile-pic-thumbnail").removeClass("user-icon");
+                if (shareType == "user") {
+                    rowTemplate.find(".group-image-wrapper").remove();
+                    if (json_response.profile_pic != "No picture provided") {
+                        rowTemplate.find(".profile-pic-thumbnail").attr("style", "background-image: url('" + json_response.profile_pic + "')");
+                        rowTemplate.find(".profile-pic-thumbnail").removeClass("user-icon");
+                    }
+                }
+                else {
+                    rowTemplate.find(".profile-pic-thumbnail").remove();
+                    rowTemplate.find(".group-image-wrapper .group-image-extra-small").attr("style", "background-image: url('" + json_response.group_pic + "')");
                 }
 
                 if (access_type == "view") {

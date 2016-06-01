@@ -126,6 +126,8 @@ def page_permissions_page_processor(request, page):
     owners = cm.raccess.owners.all()
     editors = cm.raccess.edit_users.exclude(pk__in=owners)
     viewers = cm.raccess.view_users.exclude(pk__in=editors).exclude(pk__in=owners)
+    edit_groups = cm.raccess.edit_groups
+    view_groups = cm.raccess.view_groups.exclude(pk__in=edit_groups)
 
     if cm.metadata.relations.all().filter(type='isReplacedBy').exists():
         is_replaced_by = cm.metadata.relations.all().filter(type='isReplacedBy').first().value
@@ -148,6 +150,8 @@ def page_permissions_page_processor(request, page):
         "edit_users": editors,
         "view_users": viewers,
         "owners": owners,
+        "edit_groups": edit_groups,
+        "view_groups": view_groups,
         "is_owner_user": is_owner_user,
         "is_edit_user": is_edit_user,
         "is_view_user": is_view_user,

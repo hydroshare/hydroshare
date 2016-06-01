@@ -788,13 +788,6 @@
                     <h4 class="modal-title">Manage access</h4>
                 </div>
 
-                <div class="row">
-                    <div class="col-sm-12">
-
-                    </div>
-                </div>
-
-
                 <div class="modal-body first-modal">
                     <div class="alert alert-info" role="alert">
                         <span class="glyphicon glyphicon-info-sign" aria-hidden="true"></span>
@@ -802,6 +795,7 @@
                             users the ability to view or edit this resource. You can also add additional owners who
                             will have full permissions.</span>
                     </div>
+
                     <p>Who has access</p>
                     <table class="table access-table">
                         <tbody>
@@ -810,6 +804,10 @@
                                 <td>
                                     <div class="profile-pic-thumbnail round-image user-icon"></div>
                                     <div class="user-scope">
+                                        <div class="group-image-wrapper extra-small">
+                                            <div class="group-image-extra-small group-preview-image-default"
+                                                 style="background-image: url({{ STATIC_URL }}img/home-page/step4.png)"></div>
+                                        </div>
                                         <span data-col="name" class="user-name"></span>
                                         <span class="text-muted you-flag">(You)</span>
                                         <br>
@@ -1014,6 +1012,126 @@
                             </tr>
                             {% endfor %}
 
+                            {# Groups who can edit the content of this resource #}
+                            {% for u in edit_groups %}
+                            <tr id="row-id-{{ u.pk }}">
+                                <td>
+                                    <div class="user-scope">
+                                        <div class="group-image-wrapper extra-small">
+                                            {% if u.gaccess.picture and u.gaccess.picture.url %}
+                                                <div class="group-image-extra-small group-preview-image-default"
+                                                 style="background-image: url({{ u.gaccess.picture.url }})"></div>
+                                            {% else %}
+                                                <div class="group-image-extra-small group-preview-image-default"
+                                                 style="background-image: url({{ STATIC_URL }}img/home-page/step4.png)"></div>
+                                            {% endif %}
+                                        </div>
+                                        <span value="{{ u.pk }}" class="user-name">{{ u.name }}</span>
+                                        <br>
+                                        <span class="user-username-content">(Group)</span>
+                                    </div>
+                                </td>
+
+                                <td class="user-roles">
+                                    <span class="dropdown role-dropdown">
+                                        <span class="dropdown-toggle" data-col="current-access"
+                                              id="roles-menu" data-toggle="dropdown"
+                                              aria-haspopup="true" aria-expanded="true">
+                                            Can edit
+                                            <span class="caret"></span>
+                                        </span>
+                                        <ul class="dropdown-menu" aria-labelledby="roles-menu">
+                                            <li data-access-type="Can view">
+                                                <form id="share-view-{{ u.pk }}" class="share-form-view" data-access-type="Can view"
+                                                      action="/hsapi/_internal/{{ cm.short_id }}/share-resource-with-group/view/{{ u.pk }}/"
+                                                      method="POST">
+                                                    {% csrf_token %}
+                                                    <a onclick="change_share_permission_ajax_submit('share-view-{{ u.pk }}')">Can view</a>
+                                                </form>
+                                            </li>
+                                            <li class="active" data-access-type="Can edit" {% if not is_owner_user and not is_edit_user %}class="disabled"{% endif %}>
+                                                <form id="share-edit-{{ u.pk }}" class="share-form-edit" data-access-type="Can edit"
+                                                      action="/hsapi/_internal/{{ cm.short_id }}/share-resource-with-group/edit/{{ u.pk }}/"
+                                                      method="POST">
+                                                    {% csrf_token %}
+                                                    <a onclick="change_share_permission_ajax_submit('share-edit-{{ u.pk }}')">Can edit</a>
+                                                </form>
+                                            </li>
+                                        </ul>
+                                    </span>
+                                </td>
+                                <td class="user-actions">
+                                    <form id="form-remove-group-{{ u.pk }}" class="remove-user-form"
+                                          action="/hsapi/_internal/{{ cm.short_id }}/unshare-resource-with-group/{{ u.pk }}/"
+                                          method="POST">
+                                        {% csrf_token %}
+                                        <span onclick="unshare_resource_ajax_submit('form-remove-group-{{ u.pk }}')"
+                                              class="glyphicon glyphicon-remove btn-remove-row"></span>
+                                    </form>
+                                </td>
+                            </tr>
+                            {% endfor %}
+
+                            {# Users who can view the content of this resource #}
+                            {% for u in view_groups %}
+                            <tr id="row-id-{{ u.pk }}">
+                                <td>
+                                    <div class="user-scope">
+                                        <div class="group-image-wrapper extra-small">
+                                            {% if u.gaccess.picture and u.gaccess.picture.url %}
+                                                <div class="group-image-extra-small group-preview-image-default"
+                                                     style="background-image: url({{ u.gaccess.picture.url }})"></div>
+                                            {% else %}
+                                                <div class="group-image-extra-small group-preview-image-default"
+                                                     style="background-image: url({{ STATIC_URL }}img/home-page/step4.png)"></div>
+                                            {% endif %}
+                                        </div>
+                                        <span value="{{ u.pk }}" class="user-name">{{ u.name }}</span>
+                                        <br>
+                                        <span class="user-username-content">(Group)</span>
+                                    </div>
+                                </td>
+
+                                <td class="user-roles">
+                                    <span class="dropdown role-dropdown">
+                                        <span class="dropdown-toggle" data-col="current-access"
+                                              id="roles-menu" data-toggle="dropdown"
+                                              aria-haspopup="true" aria-expanded="true">
+                                            Can view
+                                            <span class="caret"></span>
+                                        </span>
+                                        <ul class="dropdown-menu" aria-labelledby="roles-menu">
+                                            <li class="active"  data-access-type="Can view">
+                                                <form id="share-view-{{ u.pk }}" class="share-form-view" data-access-type="Can view"
+                                                      action="/hsapi/_internal/{{ cm.short_id }}/share-resource-with-group/view/{{ u.pk }}/"
+                                                      method="POST">
+                                                    {% csrf_token %}
+                                                    <a onclick="change_share_permission_ajax_submit('share-view-{{ u.pk }}')">Can view</a>
+                                                </form>
+                                            </li>
+                                            <li data-access-type="Can edit" {% if not is_owner_user and not is_edit_user %}class="disabled"{% endif %}>
+                                                <form id="share-edit-{{ u.pk }}" class="share-form-edit" data-access-type="Can edit"
+                                                      action="/hsapi/_internal/{{ cm.short_id }}/share-resource-with-group/edit/{{ u.pk }}/"
+                                                      method="POST">
+                                                    {% csrf_token %}
+                                                    <a onclick="change_share_permission_ajax_submit('share-edit-{{ u.pk }}')">Can edit</a>
+                                                </form>
+                                            </li>
+                                        </ul>
+                                    </span>
+                                </td>
+                                <td class="user-actions">
+                                    <form id="form-remove-group-{{ u.pk }}" class="remove-user-form"
+                                          action="/hsapi/_internal/{{ cm.short_id }}/unshare-resource-with-group/{{ u.pk }}/"
+                                          method="POST">
+                                        {% csrf_token %}
+                                        <span onclick="unshare_resource_ajax_submit('form-remove-group-{{ u.pk }}')"
+                                              class="glyphicon glyphicon-remove btn-remove-row"></span>
+                                    </form>
+                                </td>
+                            </tr>
+                            {% endfor %}
+
                             {# Users who can view the content of this resource #}
                             {% for u in view_users %}
                             <tr id="row-id-{{ u.pk }}">
@@ -1090,17 +1208,29 @@
                 </div>
                 <div class="modal-body">
                     <div id="div-invite-people">
-                        <p>Invite people:</p>
+                        <p>Invite:</p>
+
+                        <label class="radio-inline">
+                            <input type="radio" name="chkInvite" value="users" checked>Users
+                        </label>
+                        <label class="radio-inline">
+                            <input type="radio" name="chkInvite" value="groups">Groups
+                        </label>
 
                         <div class="input-group" style="width:100%">
-                            <form id="add-access-form"
-                                  action="/hsapi/_internal/{{ cm.short_id }}/share-resource-with-user/"
+                            <form id="add-access-form" action="/hsapi/_internal/{{ cm.short_id }}/share-resource-with-user/"
                                   method="POST">
                                 {% csrf_token %}
 
-                                {{ add_view_user_form.user }}
+                                <div class="add-view-user-form">
+                                    {{ add_view_user_form.user }}
+                                </div>
 
-                                <div class="dropdown">
+                                <div class="add-view-group-form">
+                                    {{ add_view_group_form.group }}
+                                </div>
+
+                                <div class="dropdown custom-dropdown">
                                     <button class="btn btn-default dropdown-toggle" type="button"
                                             id="roles_list" data-toggle="dropdown"
                                             aria-haspopup="true">

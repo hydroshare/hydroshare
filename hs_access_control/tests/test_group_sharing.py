@@ -73,7 +73,8 @@ class T09GroupSharing(MockIRODSTestCaseMixin, TestCase):
                                                      title='all about sofas as scrathing posts',
                                                      metadata=[],)
 
-        self.felines = self.dog.uaccess.create_group('felines')  # dog owns felines group
+        # dog owns felines group
+        self.felines = self.dog.uaccess.create_group(title='felines', description="We are the felines")
         self.dog.uaccess.share_group_with_user(self.felines, self.cat, PrivilegeCodes.VIEW)  # poetic justice
 
     def test_00_defaults(self):
