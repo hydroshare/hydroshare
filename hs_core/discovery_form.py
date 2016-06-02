@@ -27,8 +27,8 @@ class DiscoveryForm(FacetedSearchForm):
             field, value = facet.split(":", 1)
 
             if value:
-                if "author" in field:
-                    author_sq.add(SQ(author=sqs.query.clean(value)), SQ.OR)
+                if "creators" in field:
+                    author_sq.add(SQ(creators=sqs.query.clean(value)), SQ.OR)
 
                 elif "subjects" in field:
                     subjects_sq.add(SQ(subjects=sqs.query.clean(value)), SQ.OR)
