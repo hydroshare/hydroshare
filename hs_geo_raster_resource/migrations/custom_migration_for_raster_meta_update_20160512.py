@@ -6,7 +6,6 @@ import logging
 import tempfile
 import subprocess
 import xml.etree.ElementTree as ET
-import urllib2
 
 from django.db import migrations
 from django.core.files.uploadedfile import UploadedFile
@@ -32,14 +31,11 @@ def migrate_tif_file(apps, schema_editor):
     meta_update_success = []
 
     # check whether the migration has been executed or not
-    print RasterResource.objects.all()
     for res in RasterResource.objects.all():
         try:
-
             scimeta_path = "{}/data/resourcemetadata.xml".format(res.short_id)
-            scimeta_url = istorage.url(scimeta_path)
-            print scimeta_url
-            scimeta_str = urllib2.urlopen(scimeta_url).read()
+            scimeta_file_obj = istorage.download(scimeta_path)
+            scimeta_str = scimeta_file_obj.read()
 
             check_success = True
 
