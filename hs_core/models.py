@@ -551,7 +551,8 @@ class Relation(AbstractMetaDataElement):
     )
 
     # HS_RELATION_TERMS contains hydroshare custom terms that are not Dublin Core terms
-    HS_RELATION_TERMS = ('isHostedBy', 'isCopiedFrom')
+    HS_RELATION_TERMS = ('isHostedBy', 'isCopiedFrom', 'isExecutedBy', 'isCreatedBy', 'isDataFor',
+                         'cites', 'isDescribedBy')
 
     term = 'Relation'
     type = models.CharField(max_length=100, choices=SOURCE_TYPES)
@@ -1780,7 +1781,7 @@ class CoreMetaData(models.Model):
 
             elif coverage.type == 'point':
                 cov_value = 'east=%s; north=%s; units=%s' % (coverage.value['east'], coverage.value['north'],
-                                                  coverage.value['units'])
+                                                             coverage.value['units'])
                 if 'name' in coverage.value:
                     cov_value = 'name=%s; ' % coverage.value['name'] + cov_value
                 if 'elevation' in coverage.value:
@@ -1840,7 +1841,8 @@ class CoreMetaData(models.Model):
         if self.publisher:
             dc_publisher = etree.SubElement(rdf_Description, '{%s}publisher' % self.NAMESPACES['dc'])
             dc_pub_rdf_Description = etree.SubElement(dc_publisher, '{%s}Description' % self.NAMESPACES['rdf'])
-            hsterms_pub_name = etree.SubElement(dc_pub_rdf_Description, '{%s}publisherName' % self.NAMESPACES['hsterms'])
+            hsterms_pub_name = etree.SubElement(dc_pub_rdf_Description,
+                                                '{%s}publisherName' % self.NAMESPACES['hsterms'])
             hsterms_pub_name.text = self.publisher.name
             hsterms_pub_url = etree.SubElement(dc_pub_rdf_Description, '{%s}publisherURL' % self.NAMESPACES['hsterms'])
             hsterms_pub_url.set('{%s}resource' % self.NAMESPACES['rdf'], self.publisher.url)
@@ -1863,18 +1865,20 @@ class CoreMetaData(models.Model):
         for src in self.sources.all():
             dc_source = etree.SubElement(rdf_Description, '{%s}source' % self.NAMESPACES['dc'])
             dc_source_rdf_Description = etree.SubElement(dc_source, '{%s}Description' % self.NAMESPACES['rdf'])
-            dcterms_derived_from = etree.SubElement(dc_source_rdf_Description, '{%s}isDerivedFrom' % self.NAMESPACES['dcterms'])
+            hsterms_derived_from = etree.SubElement(dc_source_rdf_Description,
+                                                    '{%s}isDerivedFrom' % self.NAMESPACES['hsterms'])
 
             # if the source value starts with 'http://' or 'https://' add value as an attribute
             if src.derived_from.lower().find('http://') == 0 or src.derived_from.lower().find('https://') == 0:
-                dcterms_derived_from.set('{%s}resource' % self.NAMESPACES['rdf'], src.derived_from)
+                hsterms_derived_from.set('{%s}resource' % self.NAMESPACES['rdf'], src.derived_from)
             else:
-                dcterms_derived_from.text = src.derived_from
+                hsterms_derived_from.text = src.derived_from
 
         if self.rights:
             dc_rights = etree.SubElement(rdf_Description, '{%s}rights' % self.NAMESPACES['dc'])
             dc_rights_rdf_Description = etree.SubElement(dc_rights, '{%s}Description' % self.NAMESPACES['rdf'])
-            hsterms_statement = etree.SubElement(dc_rights_rdf_Description, '{%s}rightsStatement' % self.NAMESPACES['hsterms'])
+            hsterms_statement = etree.SubElement(dc_rights_rdf_Description,
+                                                 '{%s}rightsStatement' % self.NAMESPACES['hsterms'])
             hsterms_statement.text = self.rights.statement
             if self.rights.url:
                 hsterms_url = etree.SubElement(dc_rights_rdf_Description, '{%s}URL' % self.NAMESPACES['hsterms'])
@@ -1899,10 +1903,12 @@ class CoreMetaData(models.Model):
         resource = BaseResource.objects.filter(object_id=self.id).first()
         for key, value in resource.extra_metadata.items():
             hsterms_key_value = etree.SubElement(rdf_Description, '{%s}extendedMetadata' % self.NAMESPACES['hsterms'])
-            hsterms_key_value_rdf_Description = etree.SubElement(hsterms_key_value, '{%s}Description' % self.NAMESPACES['rdf'])
+            hsterms_key_value_rdf_Description = etree.SubElement(hsterms_key_value,
+                                                                 '{%s}Description' % self.NAMESPACES['rdf'])
             hsterms_key = etree.SubElement(hsterms_key_value_rdf_Description, '{%s}key' % self.NAMESPACES['hsterms'])
             hsterms_key.text = key
-            hsterms_value = etree.SubElement(hsterms_key_value_rdf_Description, '{%s}value' % self.NAMESPACES['hsterms'])
+            hsterms_value = etree.SubElement(hsterms_key_value_rdf_Description,
+                                             '{%s}value' % self.NAMESPACES['hsterms'])
             hsterms_value.text = value
 
         return self.XML_HEADER + '\n' + etree.tostring(RDF_ROOT, pretty_print=pretty_print)
