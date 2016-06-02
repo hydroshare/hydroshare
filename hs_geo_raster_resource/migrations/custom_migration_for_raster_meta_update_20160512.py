@@ -49,9 +49,6 @@ def migrate_tif_file(apps, schema_editor):
             print e.message
 
     # start migration for each raster resource that has raster files
-    check_success = True
-    start_migrate = True  # TODO remove the two variables
-
     if check_success and start_migrate:
 
         for res in RasterResource.objects.all():
@@ -146,7 +143,7 @@ def migrate_tif_file(apps, schema_editor):
                     log.exception(e.message)
                     meta_update_fail.append('{}:{}'.format(res.short_id, res.metadata.title.value))
 
-        # Print migration information
+        # Print migration results
         print 'Copy resource to temp folder failure: Number: {} List: {}'.format(len(copy_res_fail), copy_res_fail)
         print 'VRT file update success: Number: {} List{}'.format(len(vrt_update_success), vrt_update_success)
         print 'VRT file update fail: Number: {} List{}'.format(len(vrt_update_fail), vrt_update_fail)
