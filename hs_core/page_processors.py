@@ -186,8 +186,8 @@ def get_page_context(page, user, resource_edit=False, extended_metadata_layout=N
                    'just_published': just_published,
                    'bag_url': bag_url,
                    'show_content_files': show_content_files,
-                   'discoverable': discoverable,
-                   'is_mine': content_model.is_mine
+                   'discoverable': discoverable
+
         }
         return context
 
@@ -381,6 +381,7 @@ def get_page_context(page, user, resource_edit=False, extended_metadata_layout=N
                'relation_source_types': tuple((type_value, type_display)
                                               for type_value, type_display in Relation.SOURCE_TYPES
                                               if type_value != 'isReplacedBy' and type_value != 'isVersionOf')
+
     }
 
     return context

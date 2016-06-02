@@ -357,7 +357,7 @@ class TestTimeSeriesMetaData(MockIRODSTestCaseMixin, TransactionTestCase):
                                                                            'water.', speciation='Applicable')
 
         self.assertEquals(self.resTimeSeries.metadata.method, None)
-        self.resTimeSeries.metadata.create_element('method', method_code=59, method_name='Optical DO',
+        self.resTimeSeries.metadata.create_element('method', method_code='Code59', method_name='Optical DO',
                                                    method_type='Instrument deployment',
                                                    method_description='Dissolved oxygen concentration measured '
                                                                       'optically using a YSI EXO multi-parameter water '
@@ -365,7 +365,7 @@ class TestTimeSeriesMetaData(MockIRODSTestCaseMixin, TransactionTestCase):
                                                    method_link='http://www.exowater.com')
 
         method_element = self.resTimeSeries.metadata.method
-        self.assertEquals(method_element.method_code, 59)
+        self.assertEquals(method_element.method_code, 'Code59')
         self.assertEquals(method_element.method_name, 'Optical DO')
         self.assertEquals(method_element.method_type, 'Instrument deployment')
         method_desc = 'Dissolved oxygen concentration measured optically using a YSI EXO multi-parameter water ' \
@@ -375,7 +375,7 @@ class TestTimeSeriesMetaData(MockIRODSTestCaseMixin, TransactionTestCase):
 
         # multiple method elements are not allowed - should raise exception
         with self.assertRaises(IntegrityError):
-            self.resTimeSeries.metadata.create_element('method', method_code=591, method_name='Optical DO1',
+            self.resTimeSeries.metadata.create_element('method', method_code='Code 591', method_name='Optical DO1',
                                                        method_type='Instrument deployment',
                                                        method_description='Dissolved oxygen concentration measured '
                                                                           'optically using a YSI EXO-1 multi-parameter '
@@ -452,14 +452,15 @@ class TestTimeSeriesMetaData(MockIRODSTestCaseMixin, TransactionTestCase):
 
         method_desc = 'Dissolved oxygen concentration measured optically using a YSI EXO multi-parameter water ' \
                       'quality sonde-1.'
-        self.resTimeSeries.metadata.update_element('method', self.resTimeSeries.metadata.method.id, method_code=69,
+        self.resTimeSeries.metadata.update_element('method', self.resTimeSeries.metadata.method.id,
+                                                   method_code='Code 69',
                                                    method_name='Optical DO-1',
                                                    method_type='Instrument deployment-1',
                                                    method_description=method_desc,
                                                    method_link='http://www.ex-water.com')
 
         method_element = self.resTimeSeries.metadata.method
-        self.assertEquals(method_element.method_code, 69)
+        self.assertEquals(method_element.method_code, 'Code 69')
         self.assertEquals(method_element.method_name, 'Optical DO-1')
         self.assertEquals(method_element.method_type, 'Instrument deployment-1')
 
@@ -605,7 +606,7 @@ class TestTimeSeriesMetaData(MockIRODSTestCaseMixin, TransactionTestCase):
         self.assertEquals(self.resTimeSeries.metadata.variable.speciation, 'Not Applicable')
 
         self.assertNotEquals(self.resTimeSeries.metadata.method, None)
-        self.assertEquals(self.resTimeSeries.metadata.method.method_code, 28)
+        self.assertEquals(self.resTimeSeries.metadata.method.method_code, '28')
         method_name = 'Quality Control Level 1 Data Series created from raw QC Level 0 data using ODM Tools.'
         self.assertEquals(self.resTimeSeries.metadata.method.method_name, method_name)
         self.assertEquals(self.resTimeSeries.metadata.method.method_type, 'Instrument deployment')

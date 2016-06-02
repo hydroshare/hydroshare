@@ -82,10 +82,10 @@ class T13Delete(MockIRODSTestCaseMixin, TestCase):
                                                 title='Guiseppe Verdi',
                                                 metadata=[],)
 
-        self.operas = self.dog.uaccess.create_group("operas")
+        self.operas = self.dog.uaccess.create_group(title="operas", description="We are the operas")
         self.dog.uaccess.share_resource_with_user(self.verdi, self.cat, PrivilegeCodes.CHANGE)
         self.dog.uaccess.share_resource_with_group(self.verdi, self.operas, PrivilegeCodes.CHANGE)
-        self.singers = self.dog.uaccess.create_group('singers')
+        self.singers = self.dog.uaccess.create_group(title='singers', description="We are the singers")
         self.dog.uaccess.share_group_with_user(self.singers, self.cat, PrivilegeCodes.CHANGE)
 
     def test_01_delete_resource(self):

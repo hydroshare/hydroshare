@@ -260,6 +260,7 @@ INSTALLED_APPS = (
     "django.contrib.sitemaps",
     "django.contrib.staticfiles",
     "django.contrib.gis",
+    "django.contrib.postgres",
     "inplaceeditform",
     "django_nose",
     "django_irods",
@@ -449,7 +450,7 @@ AUTH_PROFILE_MODULE = "theme.UserProfile"
 CRISPY_TEMPLATE_PACK = 'bootstrap'
 REST_FRAMEWORK = {
     'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
-    'PAGE_SIZE': 5,
+    'PAGE_SIZE': 100,
     'PAGE_SIZE_QUERY_PARAM': 'PAGE_SIZE',
     'EXCEPTION_HANDLER': 'rest_framework.views.exception_handler',
     'DEFAULT_AUTHENTICATION_CLASSES': (

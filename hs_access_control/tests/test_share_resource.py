@@ -64,7 +64,7 @@ class T05ShareResource(MockIRODSTestCaseMixin, TestCase):
                                                 title='all about dog holes',
                                                 metadata=[],)
 
-        self.meowers = self.cat.uaccess.create_group('some random meowers')
+        self.meowers = self.cat.uaccess.create_group(title='some random meowers', description="some random group")
 
     def test_01_resource_unshared_state(self):
         """Resources cannot be accessed by users with no access"""
