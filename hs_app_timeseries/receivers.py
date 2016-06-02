@@ -143,13 +143,11 @@ def _extract_metadata(resource, sqlite_file):
             con.row_factory = sqlite3.Row
 
             # read data from necessary tables and create metadata elements
-            cur = con.cursor()
-
             # check if the AuthorList table exists
             authorlists_table_exists = False
             cur = con.cursor()
             cur.execute("SELECT COUNT(*) FROM sqlite_master WHERE type=? AND name=?", ("table", "AuthorLists"))
-            qry_result =cur.fetchone()
+            qry_result = cur.fetchone()
             if qry_result[0] > 0:
                 authorlists_table_exists = True
 
@@ -169,77 +167,88 @@ def _extract_metadata(resource, sqlite_file):
 
             # extract keywords/subjects
             # these are the comma separated values in the VariableNameCV column of the Variables table
-            cur.execute("SELECT VariableNameCV FROM Variables")
-            variable = cur.fetchone()
-            keywords = variable["VariableNameCV"].split(",")
-            for kw in keywords:
+            cur.execute("SELECT VariableID, VariableNameCV FROM Variables")
+            variables = cur.fetchall()
+            keyword_list = []
+            for variable in variables:
+                keywords = variable["VariableNameCV"].split(",")
+                keyword_list = keyword_list + keywords
+
+            # use set() to remove any duplicate keywords
+            for kw in set(keyword_list):
                 resource.metadata.create_element("subject", value=kw)
 
             # find the contributors for metadata
             # contributors are People associated with the Actions that created the Result
+            cur.execute("SELECT * FROM People")
+            people = cur.fetchall()
+            is_create_multiple_author_elements = len(people) > 1
+
             cur.execute("SELECT FeatureActionID FROM Results")
             results = cur.fetchall()
             authors_data_dict = {}
             for result in results:
-                cur.execute("SELECT ActionID FROM FeatureActions WHERE FeatureActionID=?", (result["FeatureActionID"],))
-                feature_actions = cur.fetchall()
-                for feature_action in feature_actions:
-                    cur.execute("SELECT ActionID FROM Actions WHERE ActionID=?", (feature_action["ActionID"],))
+                if is_create_multiple_author_elements or (len(resource.metadata.creators.all()) == 0 and
+                                                                  len(resource.metadata.contributors.all()) == 0):
+                    cur.execute("SELECT ActionID FROM FeatureActions WHERE FeatureActionID=?", (result["FeatureActionID"],))
+                    feature_actions = cur.fetchall()
+                    for feature_action in feature_actions:
+                        cur.execute("SELECT ActionID FROM Actions WHERE ActionID=?", (feature_action["ActionID"],))
 
-                    actions = cur.fetchall()
-                    for action in actions:
-                        # get the AffiliationID from the ActionsBy table for the matching ActionID
-                        cur.execute("SELECT AffiliationID FROM ActionBy WHERE ActionID=?", (action["ActionID"],))
-                        actionby_rows = cur.fetchall()
+                        actions = cur.fetchall()
+                        for action in actions:
+                            # get the AffiliationID from the ActionsBy table for the matching ActionID
+                            cur.execute("SELECT AffiliationID FROM ActionBy WHERE ActionID=?", (action["ActionID"],))
+                            actionby_rows = cur.fetchall()
 
-                        for actionby in actionby_rows:
-                            # get the matching Affiliations records
-                            cur.execute("SELECT * FROM Affiliations WHERE AffiliationID=?",
-                                        (actionby["AffiliationID"],))
-                            affiliation_rows = cur.fetchall()
-                            for affiliation in affiliation_rows:
-                                # get records from the People table
-                                cur.execute("SELECT * FROM People WHERE PersonID=?", (affiliation['PersonID'],))
-                                person = cur.fetchone()
+                            for actionby in actionby_rows:
+                                # get the matching Affiliations records
+                                cur.execute("SELECT * FROM Affiliations WHERE AffiliationID=?",
+                                            (actionby["AffiliationID"],))
+                                affiliation_rows = cur.fetchall()
+                                for affiliation in affiliation_rows:
+                                    # get records from the People table
+                                    cur.execute("SELECT * FROM People WHERE PersonID=?", (affiliation['PersonID'],))
+                                    person = cur.fetchone()
 
-                                # get person organization name - get only one organization name
-                                organization = None
-                                if affiliation['OrganizationID']:
-                                    cur.execute("SELECT OrganizationName FROM Organizations WHERE OrganizationID=?",
-                                                (affiliation["OrganizationID"],))
-                                    organization = cur.fetchone()
+                                    # get person organization name - get only one organization name
+                                    organization = None
+                                    if affiliation['OrganizationID']:
+                                        cur.execute("SELECT OrganizationName FROM Organizations WHERE OrganizationID=?",
+                                                    (affiliation["OrganizationID"],))
+                                        organization = cur.fetchone()
 
-                                # create contributor metadata elements
-                                person_name = person["PersonFirstName"]
-                                if person['PersonMiddleName']:
-                                    person_name = person_name + " " + person['PersonMiddleName']
+                                    # create contributor metadata elements
+                                    person_name = person["PersonFirstName"]
+                                    if person['PersonMiddleName']:
+                                        person_name = person_name + " " + person['PersonMiddleName']
 
-                                person_name = person_name + " " + person['PersonLastName']
-                                data_dict = {}
-                                data_dict['name'] = person_name
-                                if affiliation['PrimaryPhone']:
-                                    data_dict["phone"] = affiliation["PrimaryPhone"]
-                                if affiliation["PrimaryEmail"]:
-                                    data_dict["email"] = affiliation["PrimaryEmail"]
-                                if affiliation["PrimaryAddress"]:
-                                    data_dict["address"] = affiliation["PrimaryAddress"]
-                                if organization:
-                                    data_dict["organization"] = organization[0]
+                                    person_name = person_name + " " + person['PersonLastName']
+                                    data_dict = {}
+                                    data_dict['name'] = person_name
+                                    if affiliation['PrimaryPhone']:
+                                        data_dict["phone"] = affiliation["PrimaryPhone"]
+                                    if affiliation["PrimaryEmail"]:
+                                        data_dict["email"] = affiliation["PrimaryEmail"]
+                                    if affiliation["PrimaryAddress"]:
+                                        data_dict["address"] = affiliation["PrimaryAddress"]
+                                    if organization:
+                                        data_dict["organization"] = organization[0]
 
-                                # check if this person is an author (creator)
-                                author = None
-                                if authorlists_table_exists:
-                                    cur.execute("SELECT * FROM AuthorLists WHERE PersonID=?", (person['PersonID'],))
-                                    author = cur.fetchone()
+                                    # check if this person is an author (creator)
+                                    author = None
+                                    if authorlists_table_exists:
+                                        cur.execute("SELECT * FROM AuthorLists WHERE PersonID=?", (person['PersonID'],))
+                                        author = cur.fetchone()
 
-                                if author:
-                                    # save the extracted creator data in the dictionary
-                                    # so that we can later sort it based on author order
-                                    # and then create the creator metadata elements
-                                    authors_data_dict[author["AuthorOrder"]] = data_dict
-                                else:
-                                    # create contributor metadata element
-                                    resource.metadata.create_element('contributor', **data_dict)
+                                    if author:
+                                        # save the extracted creator data in the dictionary
+                                        # so that we can later sort it based on author order
+                                        # and then create the creator metadata elements
+                                        authors_data_dict[author["AuthorOrder"]] = data_dict
+                                    else:
+                                        # create contributor metadata element
+                                        resource.metadata.create_element('contributor', **data_dict)
 
             # TODO: extraction of creator data has not been tested as the sample database does not have any records
             # in the AuthorLists table
@@ -249,10 +258,11 @@ def _extract_metadata(resource, sqlite_file):
                 resource.metadata.create_element('creator', **data_dict)
 
             # extract coverage data
-            # get point coverage
+            # get point or box coverage
             cur.execute("SELECT * FROM Sites")
-            site = cur.fetchone()
-            if site:
+            sites = cur.fetchall()
+            if len(sites) == 1:
+                site = sites[0]
                 if site["Latitude"] and site["Longitude"]:
                     value_dict = {'east': site["Longitude"], 'north': site["Latitude"], 'units': "Decimal degrees"}
                     # get spatial reference
@@ -263,127 +273,205 @@ def _extract_metadata(resource, sqlite_file):
                         if spatialref:
                             if spatialref["SRSName"]:
                                 value_dict["projection"] = spatialref["SRSName"]
+
                     resource.metadata.create_element('coverage', type='point', value=value_dict)
+            else:
+                # in case of multiple sites we will create one coverage element of type 'box'
+                bbox = {'northlimit': -90, 'southlimit': 90, 'eastlimit': -180, 'westlimit': 180,
+                        'projection': 'Unknown', 'units': "Decimal degrees"}
+                for site in sites:
+                    if site["Latitude"]:
+                        if bbox['northlimit'] < site["Latitude"]:
+                            bbox['northlimit'] = site["Latitude"]
+                        if bbox['southlimit'] > site["Latitude"]:
+                            bbox['southlimit'] = site["Latitude"]
+
+                    if site["Longitude"]:
+                        if bbox['eastlimit'] < site['Longitude']:
+                            bbox['eastlimit'] = site['Longitude']
+
+                        if bbox['westlimit'] > site['Longitude']:
+                            bbox['westlimit'] = site['Longitude']
+
+                    if bbox['projection'] == 'Unknown':
+                        if site["SpatialReferenceID"]:
+                            cur.execute("SELECT * FROM SpatialReferences WHERE SpatialReferenceID=?",
+                                        (site["SpatialReferenceID"],))
+                            spatialref = cur.fetchone()
+                            if spatialref:
+                                if spatialref["SRSName"]:
+                                    bbox['projection'] = spatialref["SRSName"]
+
+                resource.metadata.create_element('coverage', type='box', value=bbox)
 
             # get period coverage
             # navigate from Results table to -> FeatureActions table to ->  Actions table to find the date values
+            cur.execute("SELECT * FROM Sites")
+            sites = cur.fetchall()
+            is_create_multiple_site_elements = len(sites) > 1
+
+            cur.execute("SELECT * FROM Variables")
+            variables = cur.fetchall()
+            is_create_multiple_variable_elements = len(variables) > 1
+
+            cur.execute("SELECT * FROM Methods")
+            methods = cur.fetchall()
+            is_create_multiple_method_elements = len(methods) > 1
+
+            cur.execute("SELECT * FROM ProcessingLevels")
+            processing_levels = cur.fetchall()
+            is_create_multiple_processinglevel_elements = len(processing_levels) > 1
+
+            cur.execute("SELECT * FROM TimeSeriesResults")
+            timeseries_results = cur.fetchall()
+            is_create_multiple_timeseriesresult_elements = len(timeseries_results) > 1
+
             cur.execute("SELECT * FROM Results")
-            result = cur.fetchone()
-            cur.execute("SELECT ActionID FROM FeatureActions WHERE FeatureActionID=?", (result["FeatureActionID"],))
-            feature_action = cur.fetchone()
-            cur.execute("SELECT BeginDateTime, EndDateTime FROM Actions WHERE ActionID=?",
-                        (feature_action["ActionID"],))
-            action = cur.fetchone()
+            results = cur.fetchall()
+            min_begin_date = None
+            max_end_date = None
+            for result in results:
+                cur.execute("SELECT ActionID FROM FeatureActions WHERE FeatureActionID=?", (result["FeatureActionID"],))
+                feature_action = cur.fetchone()
+                cur.execute("SELECT BeginDateTime, EndDateTime FROM Actions WHERE ActionID=?",
+                            (feature_action["ActionID"],))
+                action = cur.fetchone()
+                if min_begin_date is None:
+                    min_begin_date = action["BeginDateTime"]
+                elif min_begin_date > action["BeginDateTime"]:
+                    min_begin_date = action["BeginDateTime"]
+
+                if max_end_date is None:
+                    max_end_date = action["EndDateTime"]
+                elif max_end_date < action["EndDateTime"]:
+                    max_end_date = action["EndDateTime"]
 
             # create coverage element
-            value_dict = {"start": action["BeginDateTime"], "end": action["EndDateTime"]}
+            value_dict = {"start": min_begin_date, "end": max_end_date}
             resource.metadata.create_element('coverage', type='period', value=value_dict)
 
             # extract extended metadata
 
-            # extract site element data
-            # Start with Results table to -> FeatureActions table -> SamplingFeatures table
-            cur.execute("SELECT * FROM FeatureActions WHERE FeatureActionID=?", (result["FeatureActionID"],))
-            feature_action = cur.fetchone()
-            cur.execute("SELECT * FROM SamplingFeatures WHERE SamplingFeatureID=?",
-                        (feature_action["SamplingFeatureID"],))
-            sampling_feature = cur.fetchone()
-            data_dict = {}
-            data_dict['site_code'] = sampling_feature["SamplingFeatureCode"]
-            data_dict['site_name'] = sampling_feature["SamplingFeatureName"]
-            if sampling_feature["Elevation_m"]:
-                data_dict["elevation_m"] = sampling_feature["Elevation_m"]
-
-            if sampling_feature["ElevationDatumCV"]:
-                data_dict["elevation_datum"] = sampling_feature["ElevationDatumCV"]
-
-            if site["SiteTypeCV"]:
-                data_dict["site_type"] = site["SiteTypeCV"]
-
-            # create site element
-            resource.metadata.create_element('site', **data_dict)
-
-            # extract variable element data
-            # Start with Results table to -> Variables table
-            cur.execute("SELECT * FROM Variables WHERE VariableID=?", (result["VariableID"],))
-            variable = cur.fetchone()
-            data_dict = {}
-            data_dict['variable_code'] = variable["VariableCode"]
-            data_dict["variable_name"] = variable["VariableNameCV"]
-            data_dict['variable_type'] = variable["VariableTypeCV"]
-            data_dict["no_data_value"] = variable["NoDataValue"]
-            if variable["VariableDefinition"]:
-                data_dict["variable_definition"] = variable["VariableDefinition"]
-
-            if variable["SpeciationCV"]:
-                data_dict["speciation"] = variable["SpeciationCV"]
-
-            # create variable element
-            resource.metadata.create_element('variable', **data_dict)
-
-            # extract method element data
-            # Start with Results table -> FeatureActions table to -> Actions table to -> Method table
-            cur.execute("SELECT MethodID from Actions WHERE ActionID=?", (feature_action["ActionID"],))
-            action = cur.fetchone()
-            cur.execute("SELECT * FROM Methods WHERE MethodID=?", (action["MethodID"],))
-            method = cur.fetchone()
-            data_dict = {}
-            data_dict['method_code'] = method["MethodCode"]
-            data_dict["method_name"] = method["MethodName"]
-            data_dict['method_type'] = method["MethodTypeCV"]
-
-            if method["MethodDescription"]:
-                data_dict["method_description"] = method["MethodDescription"]
-
-            if method["MethodLink"]:
-                data_dict["method_link"] = method["MethodLink"]
-
-            # create method element
-            resource.metadata.create_element('method', **data_dict)
-
-            # extract processinglevel element data
-            # Start with Results table to -> ProcessingLevels table
-            cur.execute("SELECT * FROM ProcessingLevels WHERE ProcessingLevelID=?", (result["ProcessingLevelID"],))
-            pro_level = cur.fetchone()
-            data_dict = {}
-            data_dict['processing_level_code'] = pro_level["ProcessingLevelCode"]
-            if pro_level["Definition"]:
-                data_dict["definition"] = pro_level["Definition"]
-
-            if pro_level["Explanation"]:
-                data_dict["explanation"] = pro_level["Explanation"]
-
-            # create processinglevel element
-            resource.metadata.create_element('processinglevel', **data_dict)
-
-            # extract data for TimeSeriesResult element
-            # Start with Results table
-            data_dict = {}
-
             cur.execute("SELECT * FROM Results")
-            result = cur.fetchone()
-            data_dict["status"] = result["StatusCV"]
-            data_dict["sample_medium"] = result["SampledMediumCV"]
-            data_dict["value_count"] = result["ValueCount"]
+            results = cur.fetchall()
+            for result in results:
+                # extract site element data
+                # Start with Results table to -> FeatureActions table -> SamplingFeatures table
+                # check if we need to create multiple site elements
+                if is_create_multiple_site_elements or len(resource.metadata.sites) == 0:
+                    cur.execute("SELECT * FROM FeatureActions WHERE FeatureActionID=?", (result["FeatureActionID"],))
+                    feature_action = cur.fetchone()
+                    cur.execute("SELECT * FROM SamplingFeatures WHERE SamplingFeatureID=?",
+                                (feature_action["SamplingFeatureID"],))
+                    sampling_feature = cur.fetchone()
 
-            cur.execute("SELECT * FROM Units WHERE UnitsID=?", (result["UnitsID"],))
-            unit = cur.fetchone()
-            data_dict['units_type'] = unit["UnitsTypeCV"]
-            data_dict['units_name'] = unit["UnitsName"]
-            data_dict['units_abbreviation'] = unit["UnitsAbbreviation"]
+                    data_dict = {}
+                    data_dict['series_id'] = result["ResultUUID"]
+                    data_dict['site_code'] = sampling_feature["SamplingFeatureCode"]
+                    data_dict['site_name'] = sampling_feature["SamplingFeatureName"]
+                    if sampling_feature["Elevation_m"]:
+                        data_dict["elevation_m"] = sampling_feature["Elevation_m"]
 
-            cur.execute("SELECT AggregationStatisticCV FROM TimeSeriesResults WHERE ResultID=?", (result["ResultID"],))
-            ts_result = cur.fetchone()
-            data_dict["aggregation_statistics"] = ts_result["AggregationStatisticCV"]
+                    if sampling_feature["ElevationDatumCV"]:
+                        data_dict["elevation_datum"] = sampling_feature["ElevationDatumCV"]
 
-            # create the TimeSeriesResult element
-            resource.metadata.create_element('timeseriesresult', **data_dict)
+                    if site["SiteTypeCV"]:
+                        data_dict["site_type"] = site["SiteTypeCV"]
+
+                    # create site element
+                    resource.metadata.create_element('site', **data_dict)
+
+
+                # extract variable element data
+                # Start with Results table to -> Variables table
+                if is_create_multiple_variable_elements or len(resource.metadata.variables) == 0:
+                    cur.execute("SELECT * FROM Variables WHERE VariableID=?", (result["VariableID"],))
+                    variable = cur.fetchone()
+                    data_dict = {}
+                    data_dict['series_id'] = result["ResultUUID"]
+                    data_dict['variable_code'] = variable["VariableCode"]
+                    data_dict["variable_name"] = variable["VariableNameCV"]
+                    data_dict['variable_type'] = variable["VariableTypeCV"]
+                    data_dict["no_data_value"] = variable["NoDataValue"]
+                    if variable["VariableDefinition"]:
+                        data_dict["variable_definition"] = variable["VariableDefinition"]
+
+                    if variable["SpeciationCV"]:
+                        data_dict["speciation"] = variable["SpeciationCV"]
+
+                    # create variable element
+                    resource.metadata.create_element('variable', **data_dict)
+
+                # extract method element data
+                # Start with Results table -> FeatureActions table to -> Actions table to -> Method table
+                if is_create_multiple_method_elements or len(resource.metadata.methods) == 0:
+                    cur.execute("SELECT MethodID from Actions WHERE ActionID=?", (feature_action["ActionID"],))
+                    action = cur.fetchone()
+                    cur.execute("SELECT * FROM Methods WHERE MethodID=?", (action["MethodID"],))
+                    method = cur.fetchone()
+                    data_dict = {}
+                    data_dict['series_id'] = result["ResultUUID"]
+                    data_dict['method_code'] = method["MethodCode"]
+                    data_dict["method_name"] = method["MethodName"]
+                    data_dict['method_type'] = method["MethodTypeCV"]
+
+                    if method["MethodDescription"]:
+                        data_dict["method_description"] = method["MethodDescription"]
+
+                    if method["MethodLink"]:
+                        data_dict["method_link"] = method["MethodLink"]
+
+                    # create method element
+                    resource.metadata.create_element('method', **data_dict)
+
+                # extract processinglevel element data
+                # Start with Results table to -> ProcessingLevels table
+                if is_create_multiple_processinglevel_elements or len(resource.metadata.processing_levels) == 0:
+                    cur.execute("SELECT * FROM ProcessingLevels WHERE ProcessingLevelID=?", (result["ProcessingLevelID"],))
+                    pro_level = cur.fetchone()
+                    data_dict = {}
+                    data_dict['series_id'] = result["ResultUUID"]
+                    data_dict['processing_level_code'] = pro_level["ProcessingLevelCode"]
+                    if pro_level["Definition"]:
+                        data_dict["definition"] = pro_level["Definition"]
+
+                    if pro_level["Explanation"]:
+                        data_dict["explanation"] = pro_level["Explanation"]
+
+                    # create processinglevel element
+                    resource.metadata.create_element('processinglevel', **data_dict)
+
+                # extract data for TimeSeriesResult element
+                # Start with Results table
+                if is_create_multiple_timeseriesresult_elements or len(resource.metadata.time_series_results) == 0:
+                    data_dict = {}
+                    data_dict['series_id'] = result["ResultUUID"]
+                    # cur.execute("SELECT * FROM Results")
+                    # result = cur.fetchone()
+                    data_dict["status"] = result["StatusCV"]
+                    data_dict["sample_medium"] = result["SampledMediumCV"]
+                    data_dict["value_count"] = result["ValueCount"]
+
+                    cur.execute("SELECT * FROM Units WHERE UnitsID=?", (result["UnitsID"],))
+                    unit = cur.fetchone()
+                    data_dict['units_type'] = unit["UnitsTypeCV"]
+                    data_dict['units_name'] = unit["UnitsName"]
+                    data_dict['units_abbreviation'] = unit["UnitsAbbreviation"]
+
+                    cur.execute("SELECT AggregationStatisticCV FROM TimeSeriesResults WHERE ResultID=?",
+                                (result["ResultID"],))
+                    ts_result = cur.fetchone()
+                    data_dict["aggregation_statistics"] = ts_result["AggregationStatisticCV"]
+
+                    # create the TimeSeriesResult element
+                    resource.metadata.create_element('timeseriesresult', **data_dict)
             return None
 
     except sqlite3.Error, e:
         sqlite_err_msg = str(e.args[0])
         return sqlite_err_msg
-    except:
+    except Exception, ex:
+        print ex.message
         return err_message
 
 

@@ -24,41 +24,41 @@ def landing_page(request, page):
         # get the context from hs_core
         context = page_processors.get_page_context(page, request.user, resource_edit=edit_resource, extended_metadata_layout=None, request=request)
         extended_metadata_exists = False
-        if content_model.metadata.site or \
-                content_model.metadata.variable or \
-                content_model.metadata.method or \
-                content_model.metadata.processing_level or \
-                content_model.metadata.time_series_result:
+        if content_model.metadata.sites or \
+                content_model.metadata.variables or \
+                content_model.metadata.methods or \
+                content_model.metadata.processing_levels or \
+                content_model.metadata.time_series_results:
             extended_metadata_exists = True
 
         context['extended_metadata_exists'] = extended_metadata_exists
-        context['site'] = content_model.metadata.site
-        context['variable'] = content_model.metadata.variable
-        context['method'] = content_model.metadata.method
-        context['processing_level'] = content_model.metadata.processing_level
-        context['timeseries_result'] = content_model.metadata.time_series_result
+        context['site'] = content_model.metadata.sites[0]
+        context['variable'] = content_model.metadata.variables[0]
+        context['method'] = content_model.metadata.methods[0]
+        context['processing_level'] = content_model.metadata.processing_levels[0]
+        context['timeseries_result'] = content_model.metadata.time_series_results[0]
     else:
         # EDIT MODE
 
         # add some forms
-        site_form = SiteForm(instance=content_model.metadata.site, res_short_id=content_model.short_id,
-                             element_id=content_model.metadata.site.id if content_model.metadata.site else None)
+        site_form = SiteForm(instance=content_model.metadata.sites[0], res_short_id=content_model.short_id,
+                             element_id=content_model.metadata.site[0].id if content_model.metadata.sites else None)
 
-        variable_form = VariableForm(instance=content_model.metadata.variable, res_short_id=content_model.short_id,
-                             element_id=content_model.metadata.variable.id if content_model.metadata.variable else None)
+        variable_form = VariableForm(instance=content_model.metadata.variables[0], res_short_id=content_model.short_id,
+                             element_id=content_model.metadata.variables[0].id if content_model.metadata.variables else None)
 
-        method_form = MethodForm(instance=content_model.metadata.method, res_short_id=content_model.short_id,
-                                 element_id=content_model.metadata.method.id if content_model.metadata.method else None)
+        method_form = MethodForm(instance=content_model.metadata.methods[0], res_short_id=content_model.short_id,
+                                 element_id=content_model.metadata.methods[0].id if content_model.metadata.methods else None)
 
-        processing_level_form = ProcessingLevelForm(instance=content_model.metadata.processing_level,
+        processing_level_form = ProcessingLevelForm(instance=content_model.metadata.processing_levels[0],
                                                     res_short_id=content_model.short_id,
-                                                    element_id=content_model.metadata.processing_level.id
-                                                    if content_model.metadata.processing_level else None)
+                                                    element_id=content_model.metadata.processing_levels[0].id
+                                                    if content_model.metadata.processing_levels else None)
 
-        timeseries_result_form = TimeSeriesResultForm(instance=content_model.metadata.time_series_result,
+        timeseries_result_form = TimeSeriesResultForm(instance=content_model.metadata.time_series_results[0],
                                                       res_short_id=content_model.short_id,
-                                                      element_id=content_model.metadata.time_series_result.id
-                                                      if content_model.metadata.time_series_result else None)
+                                                      element_id=content_model.metadata.time_series_results[0].id
+                                                      if content_model.metadata.time_series_results else None)
         ext_md_layout = Layout(
             HTML('<div class="form-group col-sm-6 col-xs-12">'
                      '<div id="site">'
