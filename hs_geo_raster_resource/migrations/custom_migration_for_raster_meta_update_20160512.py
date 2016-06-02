@@ -49,6 +49,9 @@ def migrate_tif_file(apps, schema_editor):
             print e.message
 
     # start migration for each raster resource that has raster files
+    check_success = True
+    start_migrate = True  # TODO remove the two variables
+
     if check_success and start_migrate:
 
         for res in RasterResource.objects.all():
