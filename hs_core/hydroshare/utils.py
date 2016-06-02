@@ -162,26 +162,6 @@ def get_user_zone_status_info(user):
     return in_production, enable_user_zone
 
 
-def set_fed_zone_session(irods_storage):
-    """
-    Set iRODS session to wwwHydroProxy for irods_storage input object for iRODS federated zone direct file operations
-    Args:
-        irods_storage: the iRODS storage object being used to interact with iRODS federated zone
-
-    Returns:None
-    """
-    in_production = is_in_production()
-    if not in_production:
-        # for testing in an environment other than production, has to switch irods session
-        # to hydroshare production proxy iRODS user
-        irods_storage.set_user_session(username=settings.HS_WWW_IRODS_PROXY_USER,
-                                   password=settings.HS_WWW_IRODS_PROXY_USER_PWD,
-                                   host=settings.HS_WWW_IRODS_HOST,
-                                   port=settings.IRODS_PORT,
-                                   def_res=settings.HS_IRODS_USER_ZONE_DEF_RES,
-                                   zone=settings.HS_WWW_IRODS_ZONE)
-
-
 def is_federated(homepath):
     """
     Get size of a data object from iRODS user zone
@@ -192,16 +172,7 @@ def is_federated(homepath):
     Returns:
     the size of the file
     """
-    in_production = is_in_production()
-    irods_storage = IrodsStorage()
-    if not in_production:
-        # for testing, has to switch irods session to hydroshare production proxy iRODS user
-        irods_storage.set_user_session(username=settings.HS_WWW_IRODS_PROXY_USER,
-                                   password=settings.HS_WWW_IRODS_PROXY_USER_PWD,
-                                   host=settings.HS_WWW_IRODS_HOST,
-                                   port=settings.IRODS_PORT,
-                                   def_res=settings.HS_IRODS_USER_ZONE_DEF_RES,
-                                   zone=settings.HS_WWW_IRODS_ZONE)
+    irods_storage = IrodsStorage('federated')
     # if HS WWW iRODS proxy user can list homepath, homepath is federated; otherwise, it is not federated
     return irods_storage.exists(homepath)
 
@@ -233,8 +204,7 @@ def get_fed_zone_file_size(fname):
     the size of the file
     """
 
-    irods_storage = IrodsStorage()
-    set_fed_zone_session(irods_storage)
+    irods_storage = IrodsStorage('federated')
     return irods_storage.size(fname)
 
 
@@ -247,8 +217,7 @@ def get_fed_zone_files(irods_fnames):
     Returns:
     the named temp file being copied over to local Django server
     """
-    irods_storage = IrodsStorage()
-    set_fed_zone_session(irods_storage)
+    irods_storage = IrodsStorage('federated')
     ifnames = string.split(irods_fnames, ',')
     ret_file_list = []
     for ifname in ifnames:
@@ -270,21 +239,31 @@ def rep_res_bag_to_user_zone(user, res_id):
     None, but exceptions will be raised if there is an issue with iRODS operation
     """
     # do on-demand bag creation
-    istorage = IrodsStorage()
+    res = get_resource_by_shortkey(res_id)
+    res_coll = res_id
+    if res.resource_federation_path:
+        istorage = IrodsStorage('federated')
+        res_coll = os.path.join(res.resource_federation_path, res_coll)
+    else:
+        istorage = IrodsStorage()
+
     bag_modified = "false"
     # needs to check whether res_id collection exists before getting/setting AVU on it to accommodate the case
     # where the very same resource gets deleted by another request when it is getting downloaded
-    if istorage.exists(res_id):
-        bag_modified = istorage.getAVU(res_id, 'bag_modified')
+    if istorage.exists(res_coll):
+        bag_modified = istorage.getAVU(res_coll, 'bag_modified')
     if bag_modified == "true":
         create_bag_by_irods(res_id, istorage)
-        if istorage.exists(res_id):
-            istorage.setAVU(res_id, 'bag_modified', "false")
+        if istorage.exists(res_coll):
+            istorage.setAVU(res_coll, 'bag_modified', "false")
 
     # do replication of the resource bag to irods user zone
-    set_fed_zone_session(istorage)
+    if not res.resource_federation_path:
+        istorage.set_fed_zone_session()
     src_file = 'bags/{resid}.zip'.format(resid=res_id)
-    tgt_file = '/hydroshareuserZone/home/{username}/{resid}.zip'.format(username=user.username, resid=res_id)
+    if res.resource_federation_path:
+        src_file = os.path.join(res.resource_federation_path, src_file)
+    tgt_file = '/{userzone}/home/{username}/{resid}.zip'.format(userzone=settings.HS_USER_IRODS_ZONE, username=user.username, resid=res_id)
     istorage.copyFiles(src_file, tgt_file)
 
 
@@ -320,15 +299,23 @@ def serialize_system_metadata(res):
 
 def copy_resource_files_and_AVUs(src_res_id, dest_res_id, set_to_private=False):
     avu_list = ['bag_modified', 'isPublic', 'resourceType']
-    istorage = IrodsStorage()
-    istorage.copyFiles(src_res_id, dest_res_id)
+    src_res = get_resource_by_shortkey(src_res_id)
+    if src_res.resource_federation_path:
+        istorage = IrodsStorage('federated')
+        src_coll = os.path.join(src_res.resource_federation_path, src_res_id)
+        dest_coll = os.path.join(src_res.resource_federation_path, dest_res_id)
+    else:
+        istorage = IrodsStorage()
+        src_coll = src_res_id
+        dest_coll = dest_res_id
+    istorage.copyFiles(src_coll, dest_coll)
     for avu_name in avu_list:
-        value = istorage.getAVU(src_res_id, avu_name)
+        value = istorage.getAVU(src_coll, avu_name)
         if value:
             if avu_name == 'isPublic' and set_to_private:
-                istorage.setAVU(dest_res_id, avu_name, 'False')
+                istorage.setAVU(dest_coll, avu_name, 'False')
             else:
-                istorage.setAVU(dest_res_id, avu_name, value)
+                istorage.setAVU(dest_coll, avu_name, value)
 
 
 def resource_modified(resource, by_user=None, overwrite_bag=True):
@@ -345,10 +332,15 @@ def resource_modified(resource, by_user=None, overwrite_bag=True):
     if overwrite_bag:
         create_bag_files(resource, fed_zone_home_path=resource.resource_federation_path)
 
-    istorage = IrodsStorage()
     # set bag_modified-true AVU pair for the modified resource in iRODS to indicate
     # the resource is modified for on-demand bagging.
-    istorage.setAVU(resource.short_id, "bag_modified", "true")
+    res_coll = resource.short_id
+    if resource.resource_federation_path:
+        istorage = IrodsStorage('federated')
+        res_coll = os.path.join(resource.resource_federation_path, res_coll)
+    else:
+        istorage = IrodsStorage()
+    istorage.setAVU(res_coll, "bag_modified", "true")
 
 
 def _validate_email(email):
@@ -618,8 +610,13 @@ def add_file_to_resource(resource, f, fed_res_file_name_or_path=''):
     """
     if f:
         if fed_res_file_name_or_path:
-            ret = ResourceFile.objects.create(content_object=resource,
+            if f:
+                ret = ResourceFile.objects.create(content_object=resource,
                                               resource_file=File(f) if not isinstance(f, UploadedFile) else f,
+                                              fed_resource_file_name_or_path=fed_res_file_name_or_path)
+            else:
+                ret = ResourceFile.objects.create(content_object=resource,
+                                              resource_file=None,
                                               fed_resource_file_name_or_path=fed_res_file_name_or_path)
         else:
             ret = ResourceFile.objects.create(content_object=resource,

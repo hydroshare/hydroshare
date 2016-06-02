@@ -30,15 +30,16 @@ def delete_bag(resource):
     :param resource: the resource to delete the bag for.
     :return: none
     """
-    from . import utils as hs_core_utils
     res_id = resource.short_id
-    istorage = IrodsStorage()
+
     res_path = res_id
     bagname = 'bags/{res_id}.zip'.format(res_id=res_id)
     if resource.resource_federation_path:
-        hs_core_utils.set_fed_zone_session(istorage)
+        istorage = IrodsStorage('federated')
         res_path='{}/{}'.format(resource.resource_federation_path, res_path)
         bagname='{}/{}'.format(resource.resource_federation_path, bagname)
+    else:
+        istorage = IrodsStorage()
     # delete resource directory first to remove all generated bag-related files for the resource
     istorage.delete(res_path)
 
@@ -67,11 +68,13 @@ def create_bag_files(resource, fed_zone_home_path='', fed_copy=None):
     resource contents need to be copied or moved from local accounts to local proxy account in the federated zone
     :return: istorage, an IrodsStorage object,that will be used by subsequent operation to create a bag on demand as needed.
     """
-    from . import utils as hs_core_utils
+    from hs_core.hydroshare.utils import current_site_url, get_file_mime_type
     DATE_FORMAT = "YYYY-MM-DDThh:mm:ssTZD"
-    istorage=IrodsStorage()
+
     if fed_zone_home_path:
-        hs_core_utils.set_fed_zone_session(istorage)
+        istorage=IrodsStorage('federated')
+    else:
+        istorage=IrodsStorage()
 
     dest_prefix = getattr(settings, 'BAGIT_TEMP_LOCATION', '/tmp/hydroshare/')
     bagit_path = os.path.join(dest_prefix, resource.short_id, arrow.get(resource.updated).format("YYYY.MM.DD.HH.mm.ss"))
@@ -104,7 +107,7 @@ def create_bag_files(resource, fed_zone_home_path='', fed_copy=None):
     istorage.saveFile(from_file_name, to_file_name, True)
 
     # make the resource map
-    current_site_url = hs_core_utils.current_site_url()
+    current_site_url = current_site_url()
     hs_res_url = '{hs_url}/resource/{res_id}/data'.format(hs_url=current_site_url, res_id=resource.short_id)
     metadata_url = os.path.join(hs_res_url, 'resourcemetadata.xml')
     res_map_url = os.path.join(hs_res_url, 'resourcemap.xml')
@@ -163,7 +166,7 @@ def create_bag_files(resource, fed_zone_home_path='', fed_copy=None):
             resFiles.append(AggregatedResource(os.path.join('{hs_url}/resource/{res_id}/data/contents/{file_name}'.format(
                 hs_url=current_site_url, res_id=resource.short_id, file_name=filename))))
             resFiles[n]._ore.isAggregatedBy = ag_url
-            resFiles[n]._dc.format = hs_core_utils.get_file_mime_type(filename)
+            resFiles[n]._dc.format = get_file_mime_type(filename)
 
     #Add the resource files to the aggregation
     a.add_resource(resMetaFile)
@@ -221,16 +224,44 @@ def create_bag_by_irods(resource_id, istorage = None):
 
     :return: True if bag creation operation succeeds; False if there is an exception raised.
     """
-    if not istorage:
-        istorage = IrodsStorage()
+    from hs_core.hydroshare.utils import get_resource_by_shortkey
 
-    # only proceed when the resource is not deleted potentially by another request when being downloaded
-    if istorage.exists(resource_id):
-        # call iRODS bagit rule here
+    res = get_resource_by_shortkey(resource_id)
+    is_exist = False
+    bag_full_name = 'bags/{res_id}.zip'.format(res_id=resource_id)
+    if res.resource_federation_path:
+        if not istorage:
+            istorage = IrodsStorage('federated')
+        irods_bagit_input_path = os.path.join(res.resource_federation_path, resource_id)
+        is_exist = istorage.exists(irods_bagit_input_path)
+        bagit_input_path = "*BAGITDATA='{path}'".format(path=irods_bagit_input_path)
+        bagit_input_resource = "*DESTRESC='{def_res}'".format(def_res=settings.HS_IRODS_LOCAL_ZONE_DEF_RES)
+        bag_full_name = os.path.join(res.resource_federation_path, bag_full_name)
+        bagit_files = [
+                '{fed_path}/{res_id}/bagit.txt'.format(fed_path=res.resource_federation_path, res_id=resource_id),
+                '{fed_path}/{res_id}/manifest-md5.txt'.format(fed_path=res.resource_federation_path, res_id=resource_id),
+                '{fed_path}/{res_id}/tagmanifest-md5.txt'.format(fed_path=res.resource_federation_path, res_id=resource_id),
+                '{fed_path}/bags/{res_id}.zip'.format(fed_path=res.resource_federation_path, res_id=resource_id)
+        ]
+    else:
+        if not istorage:
+            istorage = IrodsStorage()
+        is_exist = istorage.exists(resource_id)
         irods_dest_prefix = "/" + settings.IRODS_ZONE + "/home/" + settings.IRODS_USERNAME
         irods_bagit_input_path = os.path.join(irods_dest_prefix, resource_id)
         bagit_input_path = "*BAGITDATA='{path}'".format(path=irods_bagit_input_path)
         bagit_input_resource = "*DESTRESC='{def_res}'".format(def_res=settings.IRODS_DEFAULT_RESOURCE)
+        bagit_files = [
+                '{res_id}/bagit.txt'.format(res_id=resource_id),
+                '{res_id}/manifest-md5.txt'.format(res_id=resource_id),
+                '{res_id}/tagmanifest-md5.txt'.format(res_id=resource_id),
+                'bags/{res_id}.zip'.format(res_id=resource_id)
+        ]
+
+
+    # only proceed when the resource is not deleted potentially by another request when being downloaded
+    if is_exist:
+        # call iRODS bagit rule here
         bagit_rule_file = getattr(settings, 'IRODS_BAGIT_RULE', 'hydroshare/irods/ruleGenerateBagIt_HS.r')
 
         try:
@@ -239,24 +270,18 @@ def create_bag_by_irods(resource_id, istorage = None):
             # from potential race conditions when multiple ibun commands try to create the same zip file or
             # the very same resource gets deleted by another request when being downloaded
             istorage.runBagitRule(bagit_rule_file, bagit_input_path, bagit_input_resource)
-            istorage.zipup(irods_bagit_input_path, 'bags/{res_id}.zip'.format(res_id=resource_id))
+            istorage.zipup(irods_bagit_input_path, bag_full_name)
             return True
         except SessionException:
             # if an exception occurs, delete incomplete files potentially being generated by
             # iRODS bagit rule and zipping operations
-            bagit_files = [
-                '{res_id}/bagit.txt'.format(res_id=resource_id),
-                '{res_id}/manifest-md5.txt'.format(res_id=resource_id),
-                '{res_id}/tagmanifest-md5.txt'.format(res_id=resource_id),
-                'bags/{res_id}.zip'.format(res_id=resource_id)
-            ]
             for fname in bagit_files:
                 if istorage.exists(fname):
                     istorage.delete(fname)
             return False
 
 
-def create_bag(resource, fed_zone_home_path='', fed_copy=True):
+def create_bag(resource, fed_zone_home_path='', fed_copy=None):
     """
     Modified to implement the new bagit workflow. The previous workflow was to create a bag from the current filesystem
     of the resource, then zip it up and add it to the resource. The new workflow is to delegate bagit and zip-up

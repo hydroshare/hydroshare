@@ -16,7 +16,6 @@ from django.db.models import Q
 from django.db.models.signals import post_save
 from django.db import transaction
 from django.dispatch import receiver
-from django import forms
 from django.utils.timezone import now
 from django_irods.storage import IrodsStorage
 from django.conf import settings
@@ -25,10 +24,8 @@ from django.core.exceptions import ObjectDoesNotExist, ValidationError
 from django.forms.models import model_to_dict
 
 from mezzanine.pages.models import Page, RichText
-from mezzanine.pages.page_processors import processor_for
 from mezzanine.core.models import Ownable
 from mezzanine.generic.fields import CommentsField, RatingField
-from mezzanine.generic.fields import KeywordsField
 from mezzanine.conf import settings as s
 
 class GroupOwnership(models.Model):
@@ -1120,12 +1117,17 @@ class AbstractResource(ResourcePermissionsMixin):
 
     @classmethod
     def bag_url(cls, resource_id):
+        from hs_core.hydroshare.utils import get_resource_by_shortkey
         bagit_path = getattr(settings, 'IRODS_BAGIT_PATH', 'bags')
         bagit_postfix = getattr(settings, 'IRODS_BAGIT_POSTFIX', 'zip')
-
         bag_path = "{path}/{resource_id}.{postfix}".format(path=bagit_path,
                                                            resource_id=resource_id,
                                                            postfix=bagit_postfix)
+        res = get_resource_by_shortkey(resource_id)
+        if res.resource_federation_path:
+            rel_fed_path = res.resource_federation_path[1:]
+            bag_path = os.path.join(rel_fed_path, bag_path)
+
         istorage = IrodsStorage()
         bag_url = istorage.url(bag_path)
 
@@ -1142,7 +1144,11 @@ class AbstractResource(ResourcePermissionsMixin):
     def delete(self, using=None):
         from hydroshare import hs_bagit
         for fl in self.files.all():
-            fl.resource_file.delete()
+            if fl.fed_resource_file_name_or_path:
+                istorage = IrodsStorage('federated')
+                istorage.delete(fl.fed_resource_file_name_or_path)
+            else:
+                fl.resource_file.delete()
 
         hs_bagit.delete_bag(self)
 

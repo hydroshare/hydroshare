@@ -542,8 +542,14 @@ def create_new_version_resource(ori_res, new_res, user):
     # link copied resource files to Django resource model
     files = ResourceFile.objects.filter(object_id=ori_res.id)
     for n, f in enumerate(files):
-        ResourceFile.objects.create(content_object=new_res,
-            resource_file = os.path.join('{res_id}/data/contents/{file_name}'.format(
+        if f.fed_resource_file_name_or_path:
+            ResourceFile.objects.create(content_object=new_res,
+                                        resource_file=None,
+                                        fed_resource_file_name_or_path=f.fed_resource_file_name_or_path,
+                                        fed_resource_file_size=f.fed_resource_file_size)
+        else:
+            ResourceFile.objects.create(content_object=new_res,
+                resource_file = os.path.join('{res_id}/data/contents/{file_name}'.format(
                             res_id=new_res.short_id,
                             file_name=os.path.basename(f.resource_file.name))))
 
@@ -591,7 +597,7 @@ def create_new_version_resource(ori_res, new_res, user):
     new_res.extra_metadata = copy.deepcopy(ori_res.extra_metadata)
 
     # create bag for the new resource
-    hs_bagit.create_bag(new_res)
+    hs_bagit.create_bag(new_res, ori_res.resource_federation_path)
 
     # since an isReplaceBy relation element is added to original resource, needs to call resource_modified() for original resource
     utils.resource_modified(ori_res, user)
