@@ -146,6 +146,8 @@ def create_bag_files(resource, fed_zone_home_path='', fed_copy=None):
             # move or copy the file under the user account to under local hydro proxy account in federated zone
             from_fname = f.fed_resource_file_name_or_path
             filename = from_fname.rsplit('/')[-1]
+            res_path = os.path.join('{hs_url}/resource/{zone}/{res_id}/data/contents/{file_name}'.format(
+                hs_url=current_site_url, zone=resource.resource_federation_path, res_id=resource.short_id, file_name=filename))
             # only copy or move file when initially creating the resource
             if fed_copy is not None:
                 to_fname = '{base_path}/{res_id}/data/contents/{file_name}'.format(base_path=fed_zone_home_path,
@@ -160,11 +162,17 @@ def create_bag_files(resource, fed_zone_home_path='', fed_copy=None):
                 f.save()
         elif f.resource_file:
             filename = os.path.basename(f.resource_file.name)
+            res_path = os.path.join('{hs_url}/resource/{res_id}/data/contents/{file_name}'.format(
+                hs_url=current_site_url, res_id=resource.short_id, file_name=filename))
+        elif f.fed_resource_file:
+            filename = os.path.basename(f.fed_resource_file.name)
+            res_path = os.path.join('{hs_url}/resource/{zone}/{res_id}/data/contents/{file_name}'.format(
+                hs_url=current_site_url, zone=resource.resource_federation_path, res_id=resource.short_id,
+                file_name=filename))
         else:
             filename = ''
         if filename:
-            resFiles.append(AggregatedResource(os.path.join('{hs_url}/resource/{res_id}/data/contents/{file_name}'.format(
-                hs_url=current_site_url, res_id=resource.short_id, file_name=filename))))
+            resFiles.append(res_path)
             resFiles[n]._ore.isAggregatedBy = ag_url
             resFiles[n]._dc.format = get_file_mime_type(filename)
 

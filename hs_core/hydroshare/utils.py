@@ -122,19 +122,6 @@ def group_from_id(grp):
     return tgt
 
 
-def is_in_production():
-    """
-    This function determines whether the site is in production or not
-    Returns:
-        True if the site is in production and False if not
-    """
-    if settings.IRODS_USERNAME == settings.HS_WWW_IRODS_PROXY_USER \
-            or settings.IRODS_USERNAME == "wwwHydroProxy":
-        return True
-    else:
-        return False
-
-
 def get_user_zone_status_info(user):
     """
     This function should be called to determine whether the site is in production and whether user zone
@@ -151,7 +138,7 @@ def get_user_zone_status_info(user):
         return None, None
 
 
-    in_production = is_in_production()
+    in_production = True if settings.IRODS_USERNAME == settings.HS_WWW_IRODS_PROXY_USER else False
     enable_user_zone = user.userprofile.create_irods_user_account
     if not in_production and enable_user_zone:
         # if these settings are not empty, for example, in users' local
@@ -610,22 +597,19 @@ def add_file_to_resource(resource, f, fed_res_file_name_or_path=''):
     """
     if f:
         if fed_res_file_name_or_path:
-            if f:
-                ret = ResourceFile.objects.create(content_object=resource,
-                                              resource_file=File(f) if not isinstance(f, UploadedFile) else f,
-                                              fed_resource_file_name_or_path=fed_res_file_name_or_path)
-            else:
-                ret = ResourceFile.objects.create(content_object=resource,
-                                              resource_file=None,
-                                              fed_resource_file_name_or_path=fed_res_file_name_or_path)
+            ret = ResourceFile.objects.create(content_object=resource,
+                                          resource_file=None,
+                                          fed_resource_file=File(f) if not isinstance(f, UploadedFile) else f)
         else:
             ret = ResourceFile.objects.create(content_object=resource,
-                                              resource_file=File(f) if not isinstance(f, UploadedFile) else f)
+                                              resource_file=File(f) if not isinstance(f, UploadedFile) else f,
+                                              fed_resource_file=None)
         # add format metadata element if necessary
         file_format_type = get_file_mime_type(f.name)
     elif fed_res_file_name_or_path:
         size = get_fed_zone_file_size(fed_res_file_name_or_path)
-        ret = ResourceFile.objects.create(content_object=resource, fed_resource_file_name_or_path=fed_res_file_name_or_path, fed_resource_file_size=size)
+        ret = ResourceFile.objects.create(content_object=resource, resource_file=None, fed_resource_file=None,
+                                          fed_resource_file_name_or_path=fed_res_file_name_or_path, fed_resource_file_size=size)
         file_format_type = get_file_mime_type(fed_res_file_name_or_path)
     else:
         return None

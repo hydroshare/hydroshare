@@ -427,7 +427,8 @@ def create_resource(
             metadata = []
 
         fed_zone_home_path = utils.get_federated_zone_home_path(fed_res_file_names)
-
+        resource.resource_federation_path = fed_zone_home_path
+        resource.save()
         if len(files) == 1 and unpack_file and zipfile.is_zipfile(files[0]):
             # Add contents of zipfile as resource files asynchronously
             # Note: this is done asynchronously as unzipping may take
@@ -488,8 +489,6 @@ def create_resource(
             resource.save()
         if create_bag:
             hs_bagit.create_bag(resource, fed_zone_home_path=fed_zone_home_path, fed_copy=fed_copy)
-        resource.resource_federation_path = fed_zone_home_path
-        resource.save()
     return resource
 
 

@@ -1146,7 +1146,7 @@ class AbstractResource(ResourcePermissionsMixin):
         for fl in self.files.all():
             if fl.fed_resource_file_name_or_path:
                 istorage = IrodsStorage('federated')
-                istorage.delete(fl.fed_resource_file_name_or_path)
+                istorage.delete('{}/{}'.format(self.resource_federation_path, fl.fed_resource_file_name_or_path))
             else:
                 fl.resource_file.delete()
 
@@ -1303,10 +1303,9 @@ class AbstractResource(ResourcePermissionsMixin):
         unique_together = ("content_type", "object_id")
 
 def get_path(instance, filename):
-    # fed_resource_file_name_or_path needs to hold the logical home collection path for federated local HydroShare proxy user if
-    # the local file will be uploaded to federated local zone as part of the resource
-    if instance.fed_resource_file_name_or_path:
-        return os.path.join(instance.fed_resource_file_name_or_path, instance.content_object.short_id, 'data', 'contents', filename)
+    if instance.content_object.resource_federation_path:
+        return os.path.join(instance.content_object.resource_federation_path, instance.content_object.short_id, 'data',
+                            'contents', filename)
     else:
         return os.path.join(instance.content_object.short_id, 'data', 'contents', filename)
 
@@ -1317,9 +1316,13 @@ class ResourceFile(models.Model):
     content_object = GenericForeignKey('content_type', 'object_id')
     resource_file = models.FileField(upload_to=get_path, max_length=500, null=True, blank=True,
                                      storage=IrodsStorage() if getattr(settings,'USE_IRODS', False) else DefaultStorage())
-    # this optional field is added for use by federated iRODS resources where resources are created in the local federated zone rather than hydroshare zone,
-    # in which case resource_file is empty, and we record iRODS logical resource file name and file size for customized copy or move operations for resource
-    # creation and other operations
+    # the following optional fields are added for use by federated iRODS resources where resources are created in the local federated
+    # zone rather than hydroshare zone, in which case resource_file is empty, and we record iRODS logical resource file name and
+    # file size for customized copy or move operations for resource creation and other operations
+    # fed_resource_file in particular is a counterpart of resource_file, but handles files uploaded from local disk and store the files
+    # to federated zone rather than hydroshare zone.
+    fed_resource_file = models.FileField(upload_to=get_path, max_length=500, null=True, blank=True,
+                                     storage=IrodsStorage('federated') if getattr(settings,'USE_IRODS', False) else DefaultStorage())
     fed_resource_file_name_or_path = models.CharField(max_length=255, null=True, blank=True)
     fed_resource_file_size = models.CharField(max_length=15, null=True, blank=True)
 

@@ -60,7 +60,7 @@
                         <div class="table-container">
                             <table class="table-plain table-striped">
                                 {% for f in cm.files.all %}
-                                    {% if f.resource_file or f.fed_resource_file_name_or_path %}
+                                    {% if f.resource_file or f.fed_resource_file or f.fed_resource_file_name_or_path %}
                                         {#======= Modal window begins =======#}
                                         {% if page.perms.change and metadata_form %}
                                             <div class="modal fade" id="delete-resource-file-{{ f.pk }}" tabindex="-1"
@@ -99,6 +99,9 @@
                                                 {% if f.resource_file %}
                                                     {{ f.resource_file.name|slice:"33:" }}
                                                 {% endif %}
+                                                {% if f.fed_resource_file %}
+                                                    {{ f.fed_resource_file.name|relative_irods_path }}
+                                                {% endif %}
                                                 {% if f.fed_resource_file_name_or_path %}
                                                     {{ f.fed_resource_file_name_or_path }}
                                                 {% endif %}
@@ -106,6 +109,8 @@
                                             <p class="label-file-size">
                                                 {% if f.resource_file %}
                                                     {{ f.resource_file.size|filesizeformat }}
+                                                {% elif f.fed_resource_file %}
+                                                    {{ f.fed_resource_file.size|filesizeformat }}
                                                 {% else %}
                                                     {{ f.fed_resource_file_size|filesizeformat }}
                                                 {% endif %}
@@ -115,7 +120,9 @@
                                             {#                    <td>{% if preview %}<a class="btn btn-info btn-block" href="{{ preview }}">Preview</a>{% endif %}</td>#}
                                             <td>
                                                 {% if page.perms.change and metadata_form %}
-                                                    <a href="{% if f.resource_file %} {{ f.resource_file.url }} {% else %} {{ f.fed_resource_file_name_or_path }}{% endif %}"><span data-toggle="modal"
+                                                    <a href="{% if f.resource_file %} {{ f.resource_file.url }}
+                                                    {% elif f.fed_resource_file %} {{ f.fed_resource_file.url }}
+                                                    {% else %} {{ f.fed_resource_file_name_or_path }}{% endif %}"><span data-toggle="modal"
                                                                                               data-target="#delete-resource-file-{{ f.pk }}"
                                                                                               data-placement="auto"
                                                                                               title="Delete"
@@ -124,6 +131,11 @@
                                                 {% endif %}
                                                 {% if f.resource_file %}
                                                     <a href="{{ f.resource_file.url }}"><span data-toggle="tooltip"
+                                                                                          data-placement="auto"
+                                                                                          title="Download"
+                                                                                          class="glyphicon glyphicon-download icon-button btn-download"></span></a>
+                                                {% elif f.fed_resource_file %}
+                                                    <a href="{{ f.fed_resource_file.url }}"><span data-toggle="tooltip"
                                                                                           data-placement="auto"
                                                                                           title="Download"
                                                                                           class="glyphicon glyphicon-download icon-button btn-download"></span></a>
