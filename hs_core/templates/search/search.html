@@ -11,7 +11,6 @@
             </div>
             <div id="filter-items">
                 {% for key, values in facets.fields.items %}
-                    {{ key }}
                     {% if values and key != 'public' and key != 'discoverable' %}
                         <div class="panel-group" id="faceting-{{ key }}">
                             <div class="panel panel-primary">
@@ -206,6 +205,12 @@
                 </div>
                 <div id="map-view" class="tab-pane fade">
                     <div id="discover-map" style="width:850px; height:650px"></div>
+                    <div id="legend"></div>
+                    <div id="resetZoom" style="margin-right:5px">
+                        <a id="reset-zoom-btn" class="btn btn-default btn-sm" onclick="resetMapZoom()">
+                            <span class="glyphicon glyphicon-record"></span>
+                        </a>
+                    </div>
                 </div>
             </div>
         </div>
@@ -219,9 +224,11 @@
     <script src="//maps.googleapis.com/maps/api/js?v=3" type="text/javascript"></script>
     <script src="//cdn.rawgit.com/googlemaps/v3-utility-library/master/keydragzoom/src/keydragzoom.js" type="text/javascript"></script>
     <script src="//cdn.rawgit.com/googlemaps/js-marker-clusterer/gh-pages/src/markerclusterer.js" type="text/javascript"></script>
+
     <script type="text/javascript">
         var minFloatingNumber = 0.0001;
         var map = null;
+        var map_default_bounds;
         var initMap = function(json_results) {
             var markers = [];
             var modified_points_data = [];
@@ -234,8 +241,17 @@
                 zoomControl: true,
                 scaleControl: true
             });
+
+            /*map.enableKeyDragZoom({
+                visualEnabled: true,
+                visualPosition: google.maps.ControlPosition.LEFT,
+                visualSprite: "http://maps.gstatic.com/mapfiles/ftr/controls/dragzoom_btn.png",
+            });*/
+
             map.enableKeyDragZoom({
-                key: 'shift'
+                key: 'shift',
+                //visualEnabled: true,
+                //visualPosition: google.maps.ControlPosition.RIGHT_BOTTOM,
             });
 
             var info_window = new google.maps.InfoWindow();
@@ -268,22 +284,25 @@
             }
 
             modified_points_data.forEach(function(point){
-               var info_content = point.info_link;
+                var info_content = point.info_link;
                 var lat = parseFloat(point.north);
                 var lng = parseFloat(point.east);
-                createPointResourceMarker(lat, lng, info_content, bounds, info_window, rectangle, modified_data);
+                var counter = point.counter.toString();
+                createPointResourceMarker(lat, lng, info_content, counter, bounds, info_window, rectangle, modified_data);
             });
 
-            modified_boxes_data.forEach(function(box){
+            /*modified_boxes_data.forEach(function(box){
                 var info_content = box.info_link;
                 var northlimit = parseFloat(box.northlimit);
                 var southlimit = parseFloat(box.southlimit);
                 var eastlimit = parseFloat(box.eastlimit);
                 var westlimit = parseFloat(box.westlimit);
-                createBoxResourceMarker (northlimit, southlimit, eastlimit, westlimit, info_content, bounds, info_window, rectangle, markers);
-            });
+                var counter = box.counter.toString();
+                createBoxResourceMarker (northlimit, southlimit, eastlimit, westlimit, info_content, bounds, info_window, counter, rectangle, markers);
+            });*/
 
             map.fitBounds(bounds);
+            map_default_bounds = bounds;
             var listener = google.maps.event.addListener(map, "idle", function () {
                 map.setZoom(2);
                 google.maps.event.removeListener(listener);
@@ -291,13 +310,32 @@
             var markerCluster = new MarkerClusterer(map, markers, {
                 imagePath: 'https://cdn.rawgit.com/googlemaps/js-marker-clusterer/gh-pages/images/m'
             });
+            var map_legend = document.getElementById('legend');
+            map.controls[google.maps.ControlPosition.RIGHT_TOP].push(map_legend);
+            map_legend.style.background = "white";
+            var legend_content = [];
+            legend_content.push("<p style='margin-left:5px'><img src='//cdn.rawgit.com/googlemaps/js-marker-clusterer/gh-pages/images/m2.png'> markers cluster </p>");
+            legend_content.push("<p style='margin-left:20px'><img src='//cdn.rawgit.com/Concept211/Google-Maps-Markers/master/images/marker_red%23.png'> point coverage</p>");
+            legend_content.push("<p style='margin-left:20px'><img src='//cdn.rawgit.com/Concept211/Google-Maps-Markers/master/images/marker_blue%23.png'> box coverage</p>");
+            map_legend.innerHTML = legend_content.join('');
+            var reset_zoom_button = document.getElementById('resetZoom');
+            map.controls[google.maps.ControlPosition.RIGHT_BOTTOM].push(reset_zoom_button);
         }
 
-        var createPointResourceMarker = function (lat, lng, info_content, bounds, info_window, rectangle, markers) {
+        var resetMapZoom = function() {
+            map.fitBounds(map_default_bounds);
+            //map_default_bounds = bounds;
+            var listener = google.maps.event.addListener(map, "idle", function () {
+                map.setZoom(2);
+                google.maps.event.removeListener(listener);
+            });
+        }
+
+        var createPointResourceMarker = function (lat, lng, info_content, counter, bounds, info_window, rectangle, markers) {
             var latlng = new google.maps.LatLng(lat, lng);
             var marker = new google.maps.Marker({
                 map: map,
-                icon: '//maps.google.com/intl/en_us/mapfiles/ms/micons/red-dot.png',
+                icon: '//cdn.rawgit.com/Concept211/Google-Maps-Markers/master/images/marker_red' + counter + '.png',
                 position: latlng
             });
             markers.push(marker);
@@ -314,13 +352,13 @@
             bounds.extend(latlng);
         }
 
-        var createBoxResourceMarker = function (northlimit, southlimit, eastlimit, westlimit, info_content, bounds, info_window, rectangle, markers) {
+        var createBoxResourceMarker = function (northlimit, southlimit, eastlimit, westlimit, info_content, bounds, info_window, counter, rectangle, markers) {
             var lat = (parseFloat(northlimit) + parseFloat(southlimit)) / 2;
             var lng = (parseFloat(eastlimit) + parseFloat(westlimit)) / 2;
             var latlng = new google.maps.LatLng(lat, lng);
             var marker = new google.maps.Marker({
                 map: map,
-                icon: '//maps.google.com/mapfiles/dd-end.png',
+                icon: '//cdn.rawgit.com/Concept211/Google-Maps-Markers/master/images/marker_blue' + counter + '.png',
                 position: latlng
             });
             markers.push(marker);
@@ -350,11 +388,13 @@
                 if (lat_diff < minFloatingNumber && lng_diff < minFloatingNumber) {
                     item.title = item.title + "<br />" + test.title;
                     item.info_link += '<br />' + '"<a href="' + test.get_absolute_url + '">' + test.title + '</a>';
+                    item.counter++;
                     existed = true;
                 }
             });
             if (!existed){
                 test.info_link = '"<a href="' + test.get_absolute_url + '">' + test.title + '</a>';
+                test.counter = 1;
                 modified_points_data.push(test);
             }
         }
@@ -373,14 +413,17 @@
                 if (lat_diff < minFloatingNumber && lng_diff < minFloatingNumber) {
                     item.title = item.title + "<br />" + test.title;
                     item.info_link += '<br />' + '"<a href="' + test.get_absolute_url + '">' + test.title + '</a>';
+                    item.counter++;
                     existed = true;
                 }
             });
             if (!existed){
                 test.info_link = '"<a href="' + test.get_absolute_url + '">' + test.title + '</a>';
+                test.counter = 1;
                 modified_boxes_data.push(test);
             }
         }
+
         var reorderDivs = function() {
             var faceted_fields = ['creators', 'subjects', 'resource_type', 'owners_names', 'availability'];
             var div_ordering = [];
@@ -493,7 +536,6 @@
                                 json_results.push(item);
                             }
                             initMap(json_results);
-
                         }
                         , failure: function(data){
                             console.error("fail");
@@ -501,6 +543,8 @@
                     });
                 }
             });
+
+
             $(".nav-tabs a").click(function(){
                 $(this).tab('show');
             });
