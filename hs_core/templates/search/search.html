@@ -389,6 +389,12 @@
 
         var resetMapZoom = function() {
             map.fitBounds(map_default_bounds);
+            var ne = map_default_bounds.getNorthEast();
+            var sw = map_default_bounds.getSouthWest();
+            document.getElementById("NElng").value = ne.lng();
+            document.getElementById("NElat").value = ne.lat();
+            document.getElementById("SWlng").value = sw.lng();
+            document.getElementById("SWlat").value = sw.lat();
             var listener = google.maps.event.addListener(map, "idle", function () {
                 map.setCenter(map_default_bounds.getCenter());
                 map.setZoom(map_default_zoom);
