@@ -158,6 +158,18 @@
                     {% endfor %}
                 </form>
             </div>
+        <!--
+            <div id="geo-search-filter">
+                <table class="table table-hover" id="geo-filter">
+                    <tr>
+                        <td>NE lng: <input type="text" name="NElng" value=""></td>
+                        <td>NE lat: <input type="text" name="NElat" value=""></td>
+                        <td>SW lng: <input type="text" name="SWlng" value=""></td>
+                        <td>SW lat: <input type="text" name="SWlar" value=""></td>
+                    </tr>
+                </table>
+            </div>
+        -->
             <ul id="switch-view" class="nav nav-tabs">
                 <li class="active"><a href="#list-view">List</a></li>
                 <li><a href="#map-view">Map</a></li>
@@ -228,13 +240,20 @@
     <script type="text/javascript">
         var minFloatingNumber = 0.0001;
         var map = null;
-        var map_default_bounds;
+        var map_default_bounds = null;
+        var map_default_zoom = 0;
         var initMap = function(json_results) {
             var markers = [];
             var modified_points_data = [];
             var modified_boxes_data = [];
             var modified_data = [];
-            var bounds = new google.maps.LatLngBounds();
+            //var bounds = new google.maps.LatLngBounds();
+            var $mapDiv = $("#discover-map");
+            var mapDim = {
+                height: $mapDiv.height(),
+                width: $mapDiv.width()
+            }
+
             map = new google.maps.Map(document.getElementById('discover-map'), {
                 zoom: 2,
                 mapTypeId: google.maps.MapTypeId.TERRAIN,
@@ -242,17 +261,21 @@
                 scaleControl: true
             });
 
-            /*map.enableKeyDragZoom({
-                visualEnabled: true,
-                visualPosition: google.maps.ControlPosition.LEFT,
-                visualSprite: "http://maps.gstatic.com/mapfiles/ftr/controls/dragzoom_btn.png",
-            });*/
-
             map.enableKeyDragZoom({
                 key: 'shift',
                 //visualEnabled: true,
                 //visualPosition: google.maps.ControlPosition.RIGHT_BOTTOM,
             });
+
+
+            var dz = map.getDragZoomObject();
+
+            google.maps.event.addListener(dz, 'dragend', function (bnds) {
+                console.log('KeyDragZoom Ended: ' + bnds);
+                map.setCenter(bnds.getCenter());
+                map.setZoom(getBoundsZoomLevel(bnds, mapDim));
+            });
+
 
             var info_window = new google.maps.InfoWindow();
             var rectangle = new google.maps.Rectangle({
@@ -288,7 +311,7 @@
                 var lat = parseFloat(point.north);
                 var lng = parseFloat(point.east);
                 var counter = point.counter.toString();
-                createPointResourceMarker(lat, lng, info_content, counter, bounds, info_window, rectangle, modified_data);
+                createPointResourceMarker(lat, lng, info_content, counter, info_window, rectangle, markers);
             });
 
             /*modified_boxes_data.forEach(function(box){
@@ -298,18 +321,70 @@
                 var eastlimit = parseFloat(box.eastlimit);
                 var westlimit = parseFloat(box.westlimit);
                 var counter = box.counter.toString();
-                createBoxResourceMarker (northlimit, southlimit, eastlimit, westlimit, info_content, bounds, info_window, counter, rectangle, markers);
+                createBoxResourceMarker (northlimit, southlimit, eastlimit, westlimit, info_content, info_window, counter, rectangle, markers);
             });*/
 
-            map.fitBounds(bounds);
+            var bounds = (markers.length > 0) ? createBoundsForMarkers(markers) : null;
+            //map.fitBounds(bounds);
             map_default_bounds = bounds;
+            map_default_zoom = getBoundsZoomLevel(map_default_bounds, mapDim);
             var listener = google.maps.event.addListener(map, "idle", function () {
-                map.setZoom(2);
+                map.setCenter(map_default_bounds.getCenter());
+                map.setZoom(map_default_zoom);
                 google.maps.event.removeListener(listener);
             });
             var markerCluster = new MarkerClusterer(map, markers, {
                 imagePath: 'https://cdn.rawgit.com/googlemaps/js-marker-clusterer/gh-pages/images/m'
             });
+            generateLegend();
+        }
+
+        var createBoundsForMarkers = function(markers) {
+            var bounds = new google.maps.LatLngBounds();
+            $.each(markers, function() {
+                bounds.extend(this.getPosition());
+            });
+            return bounds;
+        }
+
+        var getBoundsZoomLevel = function getBoundsZoomLevel(bounds, mapDim) {
+            var WORLD_DIM = {height: 256, width: 256};
+            var ZOOM_MAX = 21;
+
+            function latRad(lat) {
+                var sin = Math.sin(lat * Math.PI / 180);
+                var radX2 = Math.log((1 + sin) / (1 - sin)) / 2;
+                return Math.max(Math.min(radX2, Math.PI), -Math.PI) / 2;
+            }
+
+            function zoom(mapPx, worldPx, fraction) {
+                return Math.floor(Math.log(mapPx / worldPx / fraction) / Math.LN2);
+            }
+
+            var ne = bounds.getNorthEast();
+            var sw = bounds.getSouthWest();
+
+            var latFraction = (latRad(ne.lat()) - latRad(sw.lat())) / Math.PI;
+
+            var lngDiff = ne.lng() - sw.lng();
+            var lngFraction = ((lngDiff < 0) ? (lngDiff + 360) : lngDiff) / 360;
+
+            var latZoom = zoom(mapDim.height, WORLD_DIM.height, latFraction);
+            var lngZoom = zoom(mapDim.width, WORLD_DIM.width, lngFraction);
+
+            return Math.min(latZoom, lngZoom, ZOOM_MAX);
+        }
+
+        var resetMapZoom = function() {
+            map.fitBounds(map_default_bounds);
+            var listener = google.maps.event.addListener(map, "idle", function () {
+                map.setCenter(map_default_bounds.getCenter());
+                map.setZoom(map_default_zoom);
+                google.maps.event.removeListener(listener);
+            });
+        }
+
+        var generateLegend = function() {
             var map_legend = document.getElementById('legend');
             map.controls[google.maps.ControlPosition.RIGHT_TOP].push(map_legend);
             map_legend.style.background = "white";
@@ -322,16 +397,7 @@
             map.controls[google.maps.ControlPosition.RIGHT_BOTTOM].push(reset_zoom_button);
         }
 
-        var resetMapZoom = function() {
-            map.fitBounds(map_default_bounds);
-            //map_default_bounds = bounds;
-            var listener = google.maps.event.addListener(map, "idle", function () {
-                map.setZoom(2);
-                google.maps.event.removeListener(listener);
-            });
-        }
-
-        var createPointResourceMarker = function (lat, lng, info_content, counter, bounds, info_window, rectangle, markers) {
+        var createPointResourceMarker = function (lat, lng, info_content, counter, info_window, rectangle, markers) {
             var latlng = new google.maps.LatLng(lat, lng);
             var marker = new google.maps.Marker({
                 map: map,
@@ -349,10 +415,10 @@
                 rectangle.set('bounds', rectBounds);
 
             });
-            bounds.extend(latlng);
+            //bounds.extend(latlng);
         }
 
-        var createBoxResourceMarker = function (northlimit, southlimit, eastlimit, westlimit, info_content, bounds, info_window, counter, rectangle, markers) {
+        var createBoxResourceMarker = function (northlimit, southlimit, eastlimit, westlimit, info_content, info_window, counter, rectangle, markers) {
             var lat = (parseFloat(northlimit) + parseFloat(southlimit)) / 2;
             var lng = (parseFloat(eastlimit) + parseFloat(westlimit)) / 2;
             var latlng = new google.maps.LatLng(lat, lng);
@@ -372,7 +438,7 @@
                 rectangle.set('bounds', rectBounds);
 
             });
-            bounds.extend(latlng);
+            //bounds.extend(latlng);
         }
 
         var checkDuplicatePointResults = function (modified_points_data, test){
