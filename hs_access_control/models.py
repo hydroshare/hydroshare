@@ -289,6 +289,9 @@ class UserAccess(models.Model):
         if not user_to_join_group.is_active:
             raise PermissionDenied("User to be granted group membership is not active")
 
+        if not this_request.group_to_join.gaccess.active:
+            raise PermissionDenied("Group is not active")
+
         membership_grantor = None
         # group owner acting on membership request from a user
         if this_request.invitation_to is None:

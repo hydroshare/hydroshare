@@ -634,6 +634,7 @@ class GroupForm(forms.Form):
     purpose = forms.CharField(required=False)
     picture = forms.ImageField(required=False)
     privacy_level = forms.CharField(required=True)
+    active = forms.CharField(required=False)
 
     def clean_privacy_level(self):
         data = self.cleaned_data['privacy_level']
@@ -661,6 +662,12 @@ class GroupForm(forms.Form):
         group_to_update.gaccess.purpose = frm_data['purpose']
         if 'picture' in request.FILES:
             group_to_update.gaccess.picture = request.FILES['picture']
+
+        # group 'active' status can be set to False (group becomes inactive)
+        # by passing 'false' as value for the key 'active'. Any other value for
+        # key 'active' will set the group to active status
+        if 'active' in frm_data:
+            group_to_update.gaccess.active = frm_data['active'] != 'false'
 
         privacy_level = frm_data['privacy_level']
         self._set_privacy_level(group_to_update, privacy_level)
@@ -936,23 +943,27 @@ def group_membership(request, uidb36, token, membership_request_id, **kwargs):
     """
     membership_request = GroupMembershipRequest.objects.filter(id=membership_request_id).first()
     if membership_request is not None:
-        user = authenticate(uidb36=uidb36, token=token, is_active=True)
-        if user is not None:
-            user.uaccess.act_on_group_membership_request(membership_request, accept_request=True)
-            auth_login(request, user)
-            # send email to notify membership acceptance
-            _send_email_on_group_membership_acceptance(membership_request)
-            if membership_request.invitation_to is not None:
-                message = "You just joined the group '{}'".format(membership_request.group_to_join.name)
-            else:
-                message = "User '{}' just joined the group '{}'".format(membership_request.request_from.first_name,
-                                                                        membership_request.group_to_join.name)
+        if membership_request.group_to_join.gaccess.active:
+            user = authenticate(uidb36=uidb36, token=token, is_active=True)
+            if user is not None:
+                user.uaccess.act_on_group_membership_request(membership_request, accept_request=True)
+                auth_login(request, user)
+                # send email to notify membership acceptance
+                _send_email_on_group_membership_acceptance(membership_request)
+                if membership_request.invitation_to is not None:
+                    message = "You just joined the group '{}'".format(membership_request.group_to_join.name)
+                else:
+                    message = "User '{}' just joined the group '{}'".format(membership_request.request_from.first_name,
+                                                                            membership_request.group_to_join.name)
 
-            messages.info(request, message)
-            # redirect to group profile page
-            return HttpResponseRedirect('/group/{}/'.format(membership_request.group_to_join.id))
+                messages.info(request, message)
+                # redirect to group profile page
+                return HttpResponseRedirect('/group/{}/'.format(membership_request.group_to_join.id))
+            else:
+                messages.error(request, "The link you clicked is no longer valid.")
+                return redirect("/")
         else:
-            messages.error(request, "The link you clicked is no longer valid.")
+            messages.error(request, "The group is no more active.")
             return redirect("/")
     else:
         messages.error(request, "The link you clicked is no longer valid.")
@@ -980,19 +991,22 @@ def act_on_group_membership_request(request, membership_request_id, action, *arg
     except ObjectDoesNotExist:
         messages.error(request, 'No matching group membership request was found')
     else:
-        try:
-            user_acting.uaccess.act_on_group_membership_request(membership_request, accept_request)
-            if accept_request:
-                message = 'Membership request accepted'
-                messages.success(request, message)
-                # send email to notify membership acceptance
-                _send_email_on_group_membership_acceptance(membership_request)
-            else:
-                message = 'Membership request declined'
-                messages.error(request, message)
+        if membership_request.group_to_join.gaccess.active:
+            try:
+                user_acting.uaccess.act_on_group_membership_request(membership_request, accept_request)
+                if accept_request:
+                    message = 'Membership request accepted'
+                    messages.success(request, message)
+                    # send email to notify membership acceptance
+                    _send_email_on_group_membership_acceptance(membership_request)
+                else:
+                    message = 'Membership request declined'
+                    messages.error(request, message)
 
-        except PermissionDenied as ex:
-            messages.error(request, ex.message)
+            except PermissionDenied as ex:
+                messages.error(request, ex.message)
+        else:
+            messages.error(request, "Group is not active")
 
     return HttpResponseRedirect(request.META['HTTP_REFERER'])
 
@@ -1226,7 +1240,7 @@ class CollaborateView(TemplateView):
 
     def get_context_data(self, **kwargs):
         u = User.objects.get(pk=self.request.user.id)
-        groups = Group.objects.all().exclude(name="Hydroshare Author")
+        groups = Group.objects.filter(gaccess__active=True).exclude(name="Hydroshare Author")
         # for each group set group dynamic attributes
         for g in groups:
             g.is_user_member = u in g.gaccess.members
