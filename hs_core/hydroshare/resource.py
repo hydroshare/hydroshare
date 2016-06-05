@@ -351,7 +351,8 @@ def create_resource(
         resource_type, owner, title,
         edit_users=None, view_users=None, edit_groups=None, view_groups=None,
         keywords=(), metadata=None,
-        files=(), fed_res_file_names='', fed_copy=True, create_metadata=True,
+        files=(), fed_res_file_names='', fed_res_path='', fed_copy=None,
+        create_metadata=True,
         create_bag=True, unpack_file=False, **kwargs):
 
 
@@ -395,6 +396,12 @@ def create_resource(
     :param keywords: string list. list of keywords to add to the resource
     :param metadata: list of dicts containing keys (element names) and corresponding values as dicts { 'creator': {'name':'John Smith'}}.
     :param files: list of Django File or UploadedFile objects to be attached to the resource
+    :param fed_res_file_names: the file names separated by comma from a federated zone to be
+                               used to create the resource in the federated zone, default is empty string
+    :param fed_res_path: the federated zone path in the format of /federation_zone/home/localHydroProxy that
+                         indicate where the resource is stored, default is empty string
+    :param fed_copy: boolean indicating whether the content files should be copied or moved to localHydroProxy space.
+                     default is None
     :param create_bag: whether to create a bag for the newly created resource or not. By default, the bag is created.
     :param unpack_file: boolean.  If files contains a single zip file, and unpack_file is True,
                         the unpacked contents of the zip file will be added to the resource instead of the zip file.
@@ -426,9 +433,16 @@ def create_resource(
         if not metadata:
             metadata = []
 
-        fed_zone_home_path = utils.get_federated_zone_home_path(fed_res_file_names)
-        resource.resource_federation_path = fed_zone_home_path
-        resource.save()
+        fed_zone_home_path = ''
+        if fed_res_path:
+            fed_zone_home_path = fed_res_path
+            resource.resource_federation_path = fed_res_path
+            resource.save()
+        elif fed_res_file_names:
+            fed_zone_home_path = utils.get_federated_zone_home_path(fed_res_file_names)
+            resource.resource_federation_path = fed_zone_home_path
+            resource.save()
+
         if len(files) == 1 and unpack_file and zipfile.is_zipfile(files[0]):
             # Add contents of zipfile as resource files asynchronously
             # Note: this is done asynchronously as unzipping may take
@@ -515,10 +529,11 @@ def create_new_version_empty_resource(pk, user):
         owner=user,
         title=res.metadata.title.value,
         create_metadata=False,
+        fed_res_path=res.resource_federation_path,
         create_bag=False
     )
-
     return new_resource
+
 
 def create_new_version_resource(ori_res, new_res, user):
     """
@@ -546,7 +561,12 @@ def create_new_version_resource(ori_res, new_res, user):
                                         resource_file=None,
                                         fed_resource_file_name_or_path=f.fed_resource_file_name_or_path,
                                         fed_resource_file_size=f.fed_resource_file_size)
-        else:
+        elif f.fed_resource_file:
+            ResourceFile.objects.create(content_object=new_res,
+                                        fed_resource_file=os.path.join('{zone}/{res_id}/data/contents/{file_name}'.format(
+                                            zone=ori_res.resource_federation_path, res_id=new_res.short_id,
+                                            file_name=os.path.basename(f.fed_resource_file.name))))
+        elif f.resource_file:
             ResourceFile.objects.create(content_object=new_res,
                 resource_file = os.path.join('{res_id}/data/contents/{file_name}'.format(
                             res_id=new_res.short_id,
