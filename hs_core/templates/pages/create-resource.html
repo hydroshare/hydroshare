@@ -156,6 +156,12 @@
             $("#irods-sel-file").text("No file selected.");
         }
 
+        $('input:radio[name="copy-move"]').change(function(){
+            if($(this).val()=='move')
+                $("#copy-or-move").val('move');
+            else
+                $("#copy-or-move").val('copy');
+        });
         $('#resource-type').on('change', function(){
             $('#select-file').value = '';
             $('#select-file').attr('value', '');

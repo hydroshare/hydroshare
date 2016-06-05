@@ -206,10 +206,6 @@ function irods_upload() {
             $('#irods_file_names').val(json.irods_file_names);
             $('#irods_federated').val(json.irods_federated);
             $("#file-type-error").text(json.file_type_error);
-            if($('copy-radio').checked)
-                $("#copy-or-move").text($('copy-radio').value);
-            else
-                $("#copy-or-move").text($('move-radio').value);
             $('#irodsContent').modal('hide');
             if(json.irods_federated)
                 $('#irods-copy-move').show();
