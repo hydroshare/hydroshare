@@ -1146,9 +1146,14 @@ class AbstractResource(ResourcePermissionsMixin):
         for fl in self.files.all():
             if fl.fed_resource_file_name_or_path:
                 istorage = IrodsStorage('federated')
-                istorage.delete('{}/{}'.format(self.resource_federation_path, fl.fed_resource_file_name_or_path))
-            else:
+                if fl.fed_resource_file_name_or_path.find(self.short_id)>=0:
+                    istorage.delete('{}/{}'.format(self.resource_federation_path, fl.fed_resource_file_name_or_path))
+                else:
+                    istorage.delete('{}/{}/{}'.format(self.resource_federation_path, self.short_id, fl.fed_resource_file_name_or_path))
+            elif fl.resource_file:
                 fl.resource_file.delete()
+            elif fl.fed_resource_file:
+                fl.fed_resource_file.delete()
 
         hs_bagit.delete_bag(self)
 
