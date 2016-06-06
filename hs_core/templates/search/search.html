@@ -162,10 +162,15 @@
             <div id="geo-search-filter">
                 <table class="table table-hover" id="geo-filter">
                     <tr>
-                        <td>NE lng: <input type="text" id="NElng" name="NElng" value=""></td>
-                        <td>NE lat: <input type="text" id="NElat" name="NElat" value=""></td>
-                        <td>SW lng: <input type="text" id="SWlng" name="SWlng" value=""></td>
-                        <td>SW lat: <input type="text" id="SWlat" name="SWlat" value=""></td>
+                        <td><label for="NElng">NE lng: </label> <input type="text" id="NElng" name="NElng" value=""></td>
+                        <td><label for="NElat">NE lat: </label> <input type="text" id="NElat" name="NElat" value=""></td>
+                        <td><label for="SWlng">SW lng: </label><input type="text" id="SWlng" name="SWlng" value=""></td>
+                        <td><label for="SWlat">SW lat: </label><input type="text" id="SWlat" name="SWlat" value=""></td>
+                        <td>
+                            <a id="manual-zoom-btn" class="btn btn-default" onclick="manualZoomMap()">
+                                zoom in
+                            </a>
+                        </td>
                     </tr>
                 </table>
             </div>
@@ -254,7 +259,7 @@
                 width: $mapDiv.width()
             }
 
-            map = new google.maps.Map(document.getElementById('discover-map'), {
+            map = new google.maps.Map($mapDiv[0], {
                 zoom: 2,
                 mapTypeId: google.maps.MapTypeId.TERRAIN,
                 zoomControl: true,
@@ -263,7 +268,7 @@
 
             map.enableKeyDragZoom({
                 key: 'shift',
-                //visualEnabled: true,
+                visualEnabled: true,
                 //visualPosition: google.maps.ControlPosition.RIGHT_BOTTOM,
             });
 
@@ -398,6 +403,28 @@
             var listener = google.maps.event.addListener(map, "idle", function () {
                 map.setCenter(map_default_bounds.getCenter());
                 map.setZoom(map_default_zoom);
+                google.maps.event.removeListener(listener);
+            });
+        }
+
+        var manualZoomMap = function() {
+
+            var $mapDiv = $("#discover-map");
+            var mapDim = {
+                height: $mapDiv.height(),
+                width: $mapDiv.width()
+            }
+            var swlat = document.getElementById("SWlat").value;
+            var swlng = document.getElementById("SWlng").value;
+            var nelat = document.getElementById("NElat").value;
+            var nelng = document.getElementById("NElng").value;
+            var sw = new google.maps.LatLng(swlat, swlng);
+            var ne = new google.maps.LatLng(nelat, nelng);
+            var customized_bounds = new google.maps.LatLngBounds(sw, ne);
+            map.fitBounds(customized_bounds);
+            var listener = google.maps.event.addListener(map, "idle", function () {
+                map.setCenter(customized_bounds.getCenter());
+                map.setZoom(getBoundsZoomLevel(customized_bounds, mapDim));
                 google.maps.event.removeListener(listener);
             });
         }
