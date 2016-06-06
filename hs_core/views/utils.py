@@ -306,39 +306,3 @@ def send_action_to_take_email(request, user, action_type, **kwargs):
                        settings.DEFAULT_FROM_EMAIL, email_to.email,
                        context=context)
 
-
-def get_resource_edit_users(resource, include_access_via_group=False):
-    """
-    get a QuerySet of users who have explicit edit permission on a resource
-    :param resource: resource for which users with explicit edit permission are needed
-    :param include_access_via_group: If true, users with edit access to the resource via group are included
-    :return:
-    """
-
-    owners = resource.raccess.owners.all()
-    editors = resource.raccess.edit_users.exclude(pk__in=owners)
-    if include_access_via_group:
-        return editors
-    else:
-        # filter out access to resource via group
-        return editors.exclude(u2ugp__group__g2grp__resource=resource,
-                               u2ugp__group__g2grp__privilege__lte=PrivilegeCodes.CHANGE)
-
-
-def get_resource_view_users(resource, include_access_via_group=False):
-    """
-    get a QuerySet of users who have explicit view permission on a resource
-    :param resource: resource for which users with explicit view permission are needed
-    :param include_access_via_group: If true, users with view access to the resource via group are included
-    :return:
-    """
-
-    owners = resource.raccess.owners.all()
-    editors = resource.raccess.edit_users.exclude(pk__in=owners)
-    viewers = resource.raccess.view_users.exclude(pk__in=editors).exclude(pk__in=owners)
-    if include_access_via_group:
-        return viewers
-    else:
-        # filter out access to resource via group
-        return viewers.exclude(u2ugp__group__g2grp__resource=resource,
-                               u2ugp__group__g2grp__privilege__lte=PrivilegeCodes.VIEW)

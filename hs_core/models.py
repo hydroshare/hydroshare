@@ -16,7 +16,6 @@ from django.db.models import Q
 from django.db.models.signals import post_save
 from django.db import transaction
 from django.dispatch import receiver
-from django import forms
 from django.utils.timezone import now
 from django_irods.storage import IrodsStorage
 from django.conf import settings
@@ -25,10 +24,8 @@ from django.core.exceptions import ObjectDoesNotExist, ValidationError
 from django.forms.models import model_to_dict
 
 from mezzanine.pages.models import Page, RichText
-from mezzanine.pages.page_processors import processor_for
 from mezzanine.core.models import Ownable
 from mezzanine.generic.fields import CommentsField, RatingField
-from mezzanine.generic.fields import KeywordsField
 from mezzanine.conf import settings as s
 
 class GroupOwnership(models.Model):
@@ -108,7 +105,6 @@ class ResourcePermissionsMixin(Ownable):
 # this should be used as the page processor for anything with pagepermissionsmixin
 # page_processor_for(MyPage)(ga_resources.views.page_permissions_page_processor)
 def page_permissions_page_processor(request, page):
-    from hs_core.views.utils import get_resource_edit_users, get_resource_view_users
     from hs_access_control.models import PrivilegeCodes
 
     cm = page.get_content_model()
@@ -127,8 +123,8 @@ def page_permissions_page_processor(request, page):
                 is_view_user = cm.raccess.view_users.filter(pk=request.user.pk).exists()
 
     owners = cm.raccess.owners.all()
-    editors = cm.raccess.get_users_with_explicit_access(PrivilegeCodes.CHANGE, include_group_granted_access=False) #get_resource_edit_users(cm)
-    viewers = cm.raccess.get_users_with_explicit_access(PrivilegeCodes.VIEW, include_group_granted_access=False)  #get_resource_view_users(cm)
+    editors = cm.raccess.get_users_with_explicit_access(PrivilegeCodes.CHANGE, include_group_granted_access=False)
+    viewers = cm.raccess.get_users_with_explicit_access(PrivilegeCodes.VIEW, include_group_granted_access=False)
     edit_groups = cm.raccess.edit_groups
     view_groups = cm.raccess.view_groups.exclude(pk__in=edit_groups)
 
