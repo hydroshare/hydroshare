@@ -148,8 +148,8 @@ HS_USER_ZONE_PROXY_USER_PWD = ''
 HS_USER_ZONE_PROXY_USER_CREATE_USER_CMD = ''
 HS_USER_ZONE_PROXY_USER_DELETE_USER_CMD = ''
 
-# this is the local HydroShare proxy user (a counterpart of wwwHydroProxy) in a federated zone with HydroShare Zone
-HS_LOCAL_PROXY_USER_IN_FED_ZONE = 'localHydroProxy'
+# the local HydroShare proxy user (a counterpart of wwwHydroProxy) in a federated zone with HydroShare Zone
+HS_LOCAL_PROXY_USER_IN_FED_ZONE = 'localTestHydroProxy'
 
 # Please keep the line below unchanged since it is used to check whether
 # the current site is in production or not

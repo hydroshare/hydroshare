@@ -198,6 +198,11 @@ def upload_add(request):
                                                    extract_metadata=extract_metadata, fed_res_file_names=fed_res_file_names)
 
     except (hydroshare.utils.ResourceFileValidationException, Exception) as ex:
-        request.session['validation_error'] = ex.message
+        if ex.message:
+            request.session['validation_error'] = ex.message
+        elif ex.stderr:
+            request.session['validation_error'] = ex.stderr
+    except SessionException as ex:
+        request.session['validation_error'] = ex.stderr
 
     return HttpResponseRedirect(request.META['HTTP_REFERER'])

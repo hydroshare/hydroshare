@@ -567,10 +567,9 @@ go to http://{domain}/verify/{token}/ and verify your account.
 @processor_for('my-resources')
 @login_required
 def my_resources(request, page):
-
     resource_collection = get_my_resources_list(request)
-
     context = {'collection': resource_collection}
+
     return context
 
 
@@ -610,7 +609,7 @@ def create_resource(request, *args, **kwargs):
     resource_files = request.FILES.getlist('files')
     fed_res_file_names=''
     irods_fnames = request.POST.get('irods_file_names')
-    federated = request.POST.get("irods_federated")
+    federated = True if request.POST.get("irods_federated").lower()=='true' else False
     do_copy = request.POST.get("copy-or-move")
     fed_copy = True
     if do_copy:

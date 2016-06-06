@@ -24,6 +24,7 @@ from hs_core.signals import *
 from hs_core.models import AbstractResource, BaseResource, ResourceFile
 from hs_core.hydroshare.hs_bagit import create_bag_files, create_bag_by_irods
 
+from django_irods.icommands import SessionException
 from django_irods.storage import IrodsStorage
 
 
@@ -613,23 +614,30 @@ def add_file_to_resource(resource, f, fed_res_file_name_or_path='', fed_copy=Non
         ret = ResourceFile.objects.create(content_object=resource, resource_file=None, fed_resource_file=None,
                                           fed_resource_file_name_or_path=fed_res_file_name_or_path, fed_resource_file_size=size)
         if fed_copy is not None:
-            from_fname = fed_res_file_name_or_path
-            filename = from_fname.rsplit('/')[-1]
-            if resource.resource_federation_path:
-                to_fname = '{base_path}/{res_id}/data/contents/{file_name}'.format(base_path=resource.resource_federation_path,
-                                                                               res_id=resource.short_id,
-                                                                               file_name=filename)
-                istorage = IrodsStorage('federated')
-            else:
-                to_fname = '{res_id}/data/contents/{file_name}'.format(res_id=resource.short_id, file_name=filename)
-                istorage = IrodsStorage()
-            if fed_copy:
-                istorage.copyFiles(from_fname, to_fname)
-            else:
-                istorage.moveFile(from_fname, to_fname)
-            # update file path now that file has been copied or moved to HydroShare proxy account space
-            ret.fed_resource_file_name_or_path = 'data/contents/{file_name}'.format(file_name=filename)
-            ret.save()
+            try:
+                from_fname = fed_res_file_name_or_path
+                filename = from_fname.rsplit('/')[-1]
+                if resource.resource_federation_path:
+                    to_fname = '{base_path}/{res_id}/data/contents/{file_name}'.format(base_path=resource.resource_federation_path,
+                                                                                   res_id=resource.short_id,
+                                                                                   file_name=filename)
+                    istorage = IrodsStorage('federated')
+                else:
+                    to_fname = '{res_id}/data/contents/{file_name}'.format(res_id=resource.short_id, file_name=filename)
+                    istorage = IrodsStorage()
+                if fed_copy:
+                    istorage.copyFiles(from_fname, to_fname)
+                else:
+                    istorage.moveFile(from_fname, to_fname)
+                # update file path now that file has been copied or moved to HydroShare proxy account space
+                ret.fed_resource_file_name_or_path = 'data/contents/{file_name}'.format(file_name=filename)
+                ret.save()
+            except SessionException as ex:
+                # delete the file added if there is any exception
+                ret.delete()
+                # raise the exception for the calling function to inform the error on the page interface
+                raise SessionException(ex.exitcode, ex.stdout, ex.stderr)
+
         file_format_type = get_file_mime_type(fed_res_file_name_or_path)
     else:
         return None

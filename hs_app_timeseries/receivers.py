@@ -91,7 +91,12 @@ def post_create_resource_handler(sender, **kwargs):
             fl_obj_name = res_file.fed_resource_file.file.name
         elif res_file.fed_resource_file_name_or_path:
             fl_ext = os.path.splitext(res_file.fed_resource_file_name_or_path)[1]
-            fl_obj_name = utils.get_fed_zone_files(res_file.fed_resource_file_name_or_path)[0]
+            if res_file.fed_resource_file_name_or_path.startswith('/'):
+                fl_obj_name = utils.get_fed_zone_files(res_file.fed_resource_file_name_or_path)[0]
+            else:
+                fl_obj_name = utils.get_fed_zone_files(
+                    os.path.join(resource.resource_federation_path, resource.short_id,
+                                 res_file.fed_resource_file_name_or_path))[0]
 
         if fl_ext == '.sqlite':
             validate_err_message = _validate_odm2_db_file(fl_obj_name)
