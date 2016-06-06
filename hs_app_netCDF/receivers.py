@@ -193,8 +193,11 @@ def netcdf_pre_create_resource(sender, **kwargs):
 def netcdf_pre_delete_file_from_resource(sender, **kwargs):
     nc_res = kwargs['resource']
     del_file = kwargs['file']
-    res_fname = del_file.resource_file.name
-    if not res_fname:
+    if del_file.resource_file:
+        res_fname = del_file.resource_file.name
+    elif del_file.fed_resource_file:
+        res_fname = del_file.fed_resource_file.name
+    else:
         res_fname = del_file.fed_resource_file_name_or_path
 
     del_file_ext = os.path.splitext(res_fname)[-1]
@@ -212,7 +215,10 @@ def netcdf_pre_delete_file_from_resource(sender, **kwargs):
         for f in ResourceFile.objects.filter(object_id=nc_res.id):
             ext = os.path.splitext(res_fname)[-1]
             if ext in file_ext:
-                f.resource_file.delete()
+                if f.resource_file:
+                    f.resource_file.delete()
+                elif f.fed_resource_file:
+                    f.fed_resource_file.delete()
                 f.delete()
                 nc_res.metadata.formats.filter(value=file_ext[ext]).delete()
                 break
@@ -253,7 +259,10 @@ def netcdf_pre_add_files_to_resource(sender, **kwargs):
         if isinstance(nc_dataset, netCDF4.Dataset):
             # delete all existing resource files and metadata related
             for f in ResourceFile.objects.filter(object_id=nc_res.id):
-                    f.resource_file.delete()
+                    if f.resource_file:
+                        f.resource_file.delete()
+                    elif f.fed_resource_file:
+                        f.fed_resource_file.delete()
                     f.delete()
 
             # update resource modification info

@@ -153,18 +153,6 @@ def create_bag_files(resource, fed_zone_home_path='', fed_copy=None):
             filename = from_fname.rsplit('/')[-1]
             res_path = os.path.join('{hs_url}/resource{zone}/{res_id}/data/contents/{file_name}'.format(
                 hs_url=current_site_url, zone=resource.resource_federation_path, res_id=resource.short_id, file_name=filename))
-            # only copy or move file when initially creating the resource
-            if fed_copy is not None:
-                to_fname = '{base_path}/{res_id}/data/contents/{file_name}'.format(base_path=fed_zone_home_path,
-                                                                                   res_id=resource.short_id,
-                                                                                   file_name=filename)
-                if fed_copy:
-                    istorage.copyFiles(from_fname, to_fname)
-                else:
-                    istorage.moveFile(from_fname, to_fname)
-                # update file path now that file has been copied or moved to local proxy account space
-                f.fed_resource_file_name_or_path = 'data/contents/{file_name}'.format(file_name=filename)
-                f.save()
         elif f.resource_file:
             filename = os.path.basename(f.resource_file.name)
             res_path = os.path.join('{hs_url}/resource/{res_id}/data/contents/{file_name}'.format(

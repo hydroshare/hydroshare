@@ -567,7 +567,9 @@ def resource_file_add_pre_process(resource, files, user, extract_metadata=False,
 
 def resource_file_add_process(resource, files, user, extract_metadata=False, fed_res_file_names='', **kwargs):
     from .resource import add_resource_files
-    resource_file_objects = add_resource_files(resource.short_id, *files, fed_res_file_names=fed_res_file_names)
+    resource_file_objects = add_resource_files(resource.short_id, *files, fed_res_file_names=fed_res_file_names,
+                                               fed_copy=True,
+                                               fed_zone_home_path=resource.resource_federation_path)
 
     # receivers need to change the values of this dict if file validation fails
     # in case of file validation failure it is assumed the resource type also deleted the file
@@ -582,7 +584,7 @@ def resource_file_add_process(resource, files, user, extract_metadata=False, fed
     return resource_file_objects
 
 
-def add_file_to_resource(resource, f, fed_res_file_name_or_path=''):
+def add_file_to_resource(resource, f, fed_res_file_name_or_path='', fed_copy=None):
     """
     Add a ResourceFile to a Resource.  Adds the 'format' metadata element to the resource.
     :param resource: Resource to which file should be added
@@ -610,6 +612,24 @@ def add_file_to_resource(resource, f, fed_res_file_name_or_path=''):
         size = get_fed_zone_file_size(fed_res_file_name_or_path)
         ret = ResourceFile.objects.create(content_object=resource, resource_file=None, fed_resource_file=None,
                                           fed_resource_file_name_or_path=fed_res_file_name_or_path, fed_resource_file_size=size)
+        if fed_copy is not None:
+            from_fname = fed_res_file_name_or_path
+            filename = from_fname.rsplit('/')[-1]
+            if resource.resource_federation_path:
+                to_fname = '{base_path}/{res_id}/data/contents/{file_name}'.format(base_path=resource.resource_federation_path,
+                                                                               res_id=resource.short_id,
+                                                                               file_name=filename)
+                istorage = IrodsStorage('federated')
+            else:
+                to_fname = '{res_id}/data/contents/{file_name}'.format(res_id=resource.short_id, file_name=filename)
+                istorage = IrodsStorage()
+            if fed_copy:
+                istorage.copyFiles(from_fname, to_fname)
+            else:
+                istorage.moveFile(from_fname, to_fname)
+            # update file path now that file has been copied or moved to HydroShare proxy account space
+            ret.fed_resource_file_name_or_path = 'data/contents/{file_name}'.format(file_name=filename)
+            ret.save()
         file_format_type = get_file_mime_type(fed_res_file_name_or_path)
     else:
         return None

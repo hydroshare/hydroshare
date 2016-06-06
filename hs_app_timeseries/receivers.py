@@ -44,7 +44,10 @@ def post_add_files_to_resource_handler(sender, **kwargs):
         if res_file.resource_file:
             fl_ext = os.path.splitext(res_file.resource_file.name)[1]
             fl_obj_name = res_file.resource_file.file.name
-        elif res_file.fed_resource_file_name_or_path:
+        elif res_file.fed_resource_file:
+            fl_ext = os.path.splitext(res_file.fed_resource_file.name)[1]
+            fl_obj_name = res_file.fed_resource_file.file.name
+        else:
             fl_ext = os.path.splitext(res_file.fed_resource_file_name_or_path)[1]
             fl_obj_name = utils.get_fed_zone_files(res_file.fed_resource_file_name_or_path)[0]
 
@@ -83,6 +86,9 @@ def post_create_resource_handler(sender, **kwargs):
         if res_file.resource_file:
             fl_ext = os.path.splitext(res_file.resource_file.name)[1]
             fl_obj_name = res_file.resource_file.file.name
+        elif res_file.fed_resource_file:
+            fl_ext = os.path.splitext(res_file.fed_resource_file.name)[1]
+            fl_obj_name = res_file.fed_resource_file.file.name
         elif res_file.fed_resource_file_name_or_path:
             fl_ext = os.path.splitext(res_file.fed_resource_file_name_or_path)[1]
             fl_obj_name = utils.get_fed_zone_files(res_file.fed_resource_file_name_or_path)[0]

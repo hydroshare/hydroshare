@@ -279,12 +279,15 @@ def validate_form(request, element_name):
 
 @receiver(pre_delete_file_from_resource, sender=GeographicFeatureResource)
 def geofeature_pre_delete_file_from_resource(sender, **kwargs):
-
     res_obj = kwargs['resource']
     del_file = kwargs['file']
-    res_fname = del_file.resource_file.name
-    if not res_fname:
+    if del_file.resource_file:
+        res_fname = del_file.resource_file.name
+    elif del_file.fed_resource_file:
+        res_fname = del_file.fed_resource_file.name
+    else:
         res_fname = del_file.fed_resource_file_name_or_path
+
     one_file_removed = True
     all_file_removed = False
     ori_file_info = res_obj.metadata.originalfileinfo.all().first()
@@ -298,10 +301,18 @@ def geofeature_pre_delete_file_from_resource(sender, **kwargs):
             one_file_removed = False
 
             for f in ResourceFile.objects.filter(object_id=res_obj.id):
-                res_f_fullname = f.resource_file.name
+                if f.resource_file:
+                    res_f_fullname = f.resource_file.name
+                elif f.fed_resource_file:
+                    res_f_fullname = f.fed_resource_file.name
+                else:
+                    res_f_fullname = f.fed_resource_file_name_or_path
                 res_f_fullname = res_f_fullname[res_f_fullname.rfind('/')+1:]
                 if res_f_fullname != del_f_fullname:
-                    f.resource_file.delete()
+                    if f.resource_file:
+                        f.resource_file.delete()
+                    elif f.fed_resource_file:
+                        f.fed_resource_file.delete()
                     f.delete()
 
         elif del_f_ext == ".prj":
@@ -484,11 +495,14 @@ def geofeature_post_add_files_to_resource_handler(sender, **kwargs):
         res_file_list = resource.files.all() if resource.files.all() else None
         if res_file_list:
             for res_f in res_file_list:
-                f_fullname = res_f.resource_file.file.name
-                tmp_dir = os.path.dirname(f_fullname)
-                if not f_fullname:
+                if res_f.resource_file:
+                    f_fullname = res_f.resource_file.file.name
+                elif res_f.fed_resource_file:
+                    f_fullname = res_f.fed_resource_file.file.name
+                else:
                     f_fullname = res_f.fed_resource_file_name_or_path
 
+                tmp_dir = os.path.dirname(f_fullname)
                 f_fullname = f_fullname[f_fullname.rfind('/')+1:]
 
                 fileName, fileExtension = os.path.splitext(f_fullname)

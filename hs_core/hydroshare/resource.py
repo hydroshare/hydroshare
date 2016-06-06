@@ -455,7 +455,7 @@ def create_resource(
             # asynchronously if the file size is large and would take
             # more than ~15 seconds to complete.
             add_resource_files(resource.short_id, *files, fed_res_file_names=fed_res_file_names,
-                               fed_zone_home_path=fed_zone_home_path)
+                               fed_copy=fed_copy, fed_zone_home_path=fed_zone_home_path)
 
         # by default resource is private
         resource_access = ResourceAccess(resource=resource)
@@ -757,18 +757,21 @@ def add_resource_files(pk, *files, **kwargs):
     fed_res_file_names=kwargs.pop('fed_res_file_names', '')
     ret = []
     fed_zone_home_path = kwargs.pop('fed_zone_home_path', '')
-
+    fed_copy = kwargs.pop('fed_copy', None)
     for f in files:
         if fed_zone_home_path:
             # user has selected files from a federated iRODS zone, so files uploaded from local disk
             # need to be stored to the federated iRODS zone rather than HydroShare zone as well
             ret.append(utils.add_file_to_resource(resource, f, fed_res_file_name_or_path=fed_zone_home_path))
+        elif resource.resource_federation_path:
+            # file needs to be added to a resource in a federated zone
+            ret.append(utils.add_file_to_resource(resource, f, fed_res_file_name_or_path=resource.resource_federation_path))
         else:
             ret.append(utils.add_file_to_resource(resource, f))
     if fed_res_file_names:
         ifnames = string.split(fed_res_file_names, ',')
         for ifname in ifnames:
-            ret.append(utils.add_file_to_resource(resource, None, fed_res_file_name_or_path=ifname))
+            ret.append(utils.add_file_to_resource(resource, None, fed_res_file_name_or_path=ifname, fed_copy=fed_copy))
     return ret
 
 

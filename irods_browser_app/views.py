@@ -154,33 +154,37 @@ def upload_add(request):
     res_files = request.FILES.getlist('files')
     extract_metadata = request.REQUEST.get('extract-metadata', 'No')
     extract_metadata = True if extract_metadata.lower() == 'yes' else False
-
     irods_fnames = request.POST.get('irods_file_names', '')
     irods_fnames_list = string.split(irods_fnames, ',')
     res_cls = resource.__class__
-    fed_res_file_names = ''
 
     valid, ext = check_upload_files(res_cls, irods_fnames_list)
-
+    fed_res_file_names = ''
+    irods_federated = False
     if not valid:
         request.session['file_type_error'] = "Invalid file type: {ext}".format(ext=ext)
         return HttpResponseRedirect(request.META['HTTP_REFERER'])
     else:
-        user = request.POST.get('irods-username')
-        password = request.POST.get("irods-password")
-        port = request.POST.get("irods-port")
-        host = request.POST.get("irods-host")
-        zone = request.POST.get("irods-zone")
-        try:
-            upload_from_irods(username=user, password=password, host=host, port=port,
-                              zone=zone, irods_fnames=irods_fnames, res_files=res_files)
-        except SessionException as ex:
-            request.session['validation_error'] = ex.stderr
-            return HttpResponseRedirect(request.META['HTTP_REFERER'])
+        homepath = irods_fnames_list[0]
+        irods_federated = utils.is_federated(homepath)
+        if irods_federated:
+            fed_res_file_names = irods_fnames
+        else:
+            user = request.POST.get('irods-username')
+            password = request.POST.get("irods-password")
+            port = request.POST.get("irods-port")
+            host = request.POST.get("irods-host")
+            zone = request.POST.get("irods-zone")
+            try:
+                upload_from_irods(username=user, password=password, host=host, port=port,
+                                  zone=zone, irods_fnames=irods_fnames, res_files=res_files)
+            except SessionException as ex:
+                request.session['validation_error'] = ex.stderr
+                return HttpResponseRedirect(request.META['HTTP_REFERER'])
+
     try:
         utils.resource_file_add_pre_process(resource=resource, files=res_files, user=request.user,
                                             extract_metadata=extract_metadata, fed_res_file_names=fed_res_file_names)
-
     except hydroshare.utils.ResourceFileSizeException as ex:
         request.session['file_size_error'] = ex.message
         return HttpResponseRedirect(request.META['HTTP_REFERER'])
