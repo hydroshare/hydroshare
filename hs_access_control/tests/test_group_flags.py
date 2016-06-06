@@ -238,4 +238,135 @@ class T10GroupFlags(MockIRODSTestCaseMixin, TestCase):
         self.assertTrue(felines.gaccess.discoverable)
         self.assertTrue(felines.gaccess.shareable)
 
+    def test_09_make_not_active(self):
+        felines = self.felines
+
+        # dog is group owner
+        dog = self.dog
+        # cat is a group member
+        cat = self.cat
+
+        # make group inactive
+        self.assertTrue(felines.gaccess.active)
+        felines.gaccess.active = False
+        felines.gaccess.save()
+        self.assertFalse(felines.gaccess.active)
+
+        self.assertTrue(dog.uaccess.owns_group(felines))
+
+        # even the group owner (dog) can't edit inactive group
+        with self.assertRaises(PermissionDenied):
+            dog.uaccess.can_change_group(felines)
+
+        # group owner should be able to view inactive group
+        self.assertTrue(dog.uaccess.can_view_group(felines))
+
+        # group owner shouldn't be able to view metadata for an inactive group
+        with self.assertRaises(PermissionDenied):
+            dog.uaccess.can_view_group_metadata(felines)
+
+        # group member (cat) should not be able to view inactive group
+        with self.assertRaises(PermissionDenied):
+            cat.uaccess.can_view_group(felines)
+
+        # group owner (dog) should be able to change  group flags for inactive group
+        self.assertTrue(dog.uaccess.can_change_group_flags(felines))
+
+        # group owner (dog) should be able to delete inactive group
+        self.assertTrue(dog.uaccess.can_delete_group(felines))
+
+        # even the group owner (dog) can't share/unshare inactive group
+        with self.assertRaises(PermissionDenied):
+            dog.uaccess.can_share_group(felines, PrivilegeCodes.VIEW)
+
+        with self.assertRaises(PermissionDenied):
+            dog.uaccess.share_group_with_user(felines, self.bat, PrivilegeCodes.VIEW)
+
+        with self.assertRaises(PermissionDenied):
+            dog.uaccess.can_share_resource_with_group(self.scratching, felines, PrivilegeCodes.VIEW)
+
+        with self.assertRaises(PermissionDenied):
+            dog.uaccess.share_resource_with_group(self.scratching, felines, PrivilegeCodes.VIEW)
+
+        with self.assertRaises(PermissionDenied):
+            dog.uaccess.can_unshare_group_with_user(felines, self.cat)
+
+        with self.assertRaises(PermissionDenied):
+            dog.uaccess.unshare_group_with_user(felines, self.cat)
+
+        with self.assertRaises(PermissionDenied):
+            dog.uaccess.can_unshare_resource_with_group(self.scratching, felines)
+
+        with self.assertRaises(PermissionDenied):
+            dog.uaccess.unshare_resource_with_group(self.scratching, felines)
+
+        # group owner (dog) can invite a user to join a group
+        with self.assertRaises(PermissionDenied):
+            dog.uaccess.create_group_membership_request(felines, self.bat)
+
+        # user can't make a request to join a group
+        with self.assertRaises(PermissionDenied):
+            self.bat.uaccess.create_group_membership_request(felines)
+
+        # group owner should have 1 owned group
+        self.assertEqual(len(dog.uaccess.owned_groups), 1)
+
+        # group owner should not have any edit groups
+        self.assertEqual(len(dog.uaccess.edit_groups), 0)
+
+        # group owner should not have any view groups
+        self.assertEqual(len(dog.uaccess.view_groups), 0)
+
+        # make the group active for testing resource related groups
+        felines.gaccess.active = True
+        felines.gaccess.save()
+        self.assertTrue(felines.gaccess.active)
+
+        # share the resource with the group
+        dog.uaccess.share_resource_with_group(self.scratching, felines, PrivilegeCodes.VIEW)
+        # for the active group the resource should have 1 group with view permission
+        self.assertEqual(len(self.scratching.raccess.view_groups), 1)
+        # for the active group the resource should not have any group with edit permission
+        self.assertEqual(len(self.scratching.raccess.edit_groups), 0)
+
+        self.assertEqual(len(felines.gaccess.members), 2)
+        # for the active group the resource should have 2 user with view permission
+        self.assertEqual(len(self.scratching.raccess.view_users), 2)
+        # for the active group the resource should have one user with edit permission
+        self.assertEqual(len(self.scratching.raccess.edit_users), 1)
+
+        dog.uaccess.share_resource_with_group(self.scratching, felines, PrivilegeCodes.CHANGE)
+        # for the active group the resource should have 1 group with view permission
+        self.assertEqual(len(self.scratching.raccess.view_groups), 1)
+        # for the active group the resource should have 1 group with edit permission
+        self.assertEqual(len(self.scratching.raccess.edit_groups), 1)
+
+        # for the active group the resource should have 2 user with view permission
+        self.assertEqual(len(self.scratching.raccess.view_users), 2)
+        # for the active group the resource should have one user with edit permission
+        self.assertEqual(len(self.scratching.raccess.edit_users), 2)
+
+        # make the group inactive
+        felines.gaccess.active = False
+        felines.gaccess.save()
+        self.assertFalse(felines.gaccess.active)
+        # for the inactive group the resource should have no group with view permission
+        self.assertEqual(len(self.scratching.raccess.view_groups), 0)
+        # for the inactive group the resource should have no group with edit permission
+        self.assertEqual(len(self.scratching.raccess.edit_groups), 0)
+
+        # for the inactive group the resource should have no user with view permission
+        self.assertEqual(len(self.scratching.raccess.view_users), 0)
+        # for the inactive group the resource should have no user with edit permission
+        self.assertEqual(len(self.scratching.raccess.edit_users), 0)
+
+        # TODO: Test get_effective_privilege() for inactive group status
+
+
+
+
+
+
+
+
 

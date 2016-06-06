@@ -537,7 +537,12 @@ class UserAccess(models.Model):
             assert isinstance(this_group, Group)
 
         if not self.user.is_active: raise PermissionDenied("Requesting user is not active")
-        if not this_group.gaccess.active: raise PermissionDenied("Group is not active")
+
+        if self.user.is_superuser:
+            return True
+
+        if not this_group.gaccess.active and not self.owns_group(this_group):
+            raise PermissionDenied("Group is not active")
 
         access_group = this_group.gaccess
 
@@ -2527,7 +2532,7 @@ class ResourceAccess(models.Model):
         For VIEW, effective privilege = declared privilege, in the sense that all editors have VIEW, even if the
         resource is immutable.
         """
-        return User.objects.filter(Q(is_active=True) \
+        return User.objects.filter(Q(is_active=True) & (Q(u2ugp__group__gaccess__active=True))
                                    & (Q(u2urp__resource=self.resource,
                                         u2urp__privilege__lte=PrivilegeCodes.VIEW) \
                                     | Q(u2ugp__group__g2grp__resource=self.resource,
@@ -2545,7 +2550,7 @@ class ResourceAccess(models.Model):
         if self.immutable:
             return User.objects.none()
         else:
-            return User.objects.filter(Q(is_active=True) \
+            return User.objects.filter(Q(is_active=True) & (Q(u2ugp__group__gaccess__active=True))
                                        & (Q(u2urp__resource=self.resource,
                                             u2urp__privilege__lte=PrivilegeCodes.CHANGE) \
                                         | Q(u2ugp__group__g2grp__resource=self.resource,
