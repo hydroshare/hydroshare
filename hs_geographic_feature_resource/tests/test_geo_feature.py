@@ -98,8 +98,8 @@ class TestGeoFeature(TransactionTestCase):
 
         # add a point type coverage
         value_dict = {'name': 'Name for box coverage',
-                      'northlimit': '1', 'eastlimit': '2',
-                      'southlimit': '3', 'westlimit': '4'}
+                      'northlimit': '80', 'eastlimit': '130',
+                      'southlimit': '70', 'westlimit': '120'}
 
         value_dict["projection"] = "WGS 84 EPSG:4326"
         value_dict["units"] = "Decimal degrees"

@@ -104,7 +104,7 @@
                                 </a>
                             {% else %}
                                 <a href="#" class="dropdown-toggle" data-toggle="dropdown">
-                                    <div class="nav-bar-profile-pic-thumbnail round-image pull-left"></div>
+                                    <div class="profile-pic-thumbnail-small round-image pull-left"></div>
                                 </a>
                             {% endif %}
                             <ul class="dropdown-menu arrow_box">
@@ -175,26 +175,13 @@
     {% endif %}
     {% endnevercache %}
 
-
     {% block all_content %}
-{#    <div class="section-header">#}
-{#        <div class="container">#}
-{#            <div class="row">#}
-{#                <div class="col-md-12">#}
-{#                    <h1><span>{% block title %}{% endblock %}</span></h1>#}
-{#                </div>#}
-{#            </div>#}
-{#        </div>#}
-{#    </div>#}
-    <div class="container">
-        <div class="row">
-            <div class="{% block main_cols %}col-md-12{% endblock %}">
-                {% block main %}{% endblock %}
-            </div>
+        <div class="main-container">
+            {% block main %}{% endblock %}
             {% block after_main %}{% endblock %}
-        </div>
-    </div>
+                </div>
     {% endblock %}
+
     <!-- Foooter
     ================== -->
     <footer>
@@ -294,6 +281,7 @@
             </div>
         </div>
     </footer>
+
 
 </body>
 </html>

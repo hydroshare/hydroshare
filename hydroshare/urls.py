@@ -12,6 +12,8 @@ from hs_core.discovery_form import DiscoveryForm
 from hs_core.views.discovery_view import DiscoveryView
 from hs_core.views.discovery_json_view import DiscoveryJsonView
 from theme import views as theme
+from hs_core import views as hs_core_views
+
 import autocomplete_light
 
 
@@ -50,6 +52,9 @@ urlpatterns = i18n_patterns("",
     url(r'^search/$', DiscoveryView.as_view(), name='haystack_search'),
     url(r'^searchjson/$', DiscoveryJsonView.as_view(), name='haystack_json_search'),
     url(r'^sitemap/$', 'hs_sitemap.views.sitemap', name='sitemap'),
+    url(r'^collaborate/$', hs_core_views.CollaborateView.as_view(), name='collaborate'),
+    url(r'^my-groups/$', hs_core_views.MyGroupsView.as_view(), name='my_groups'),
+    url(r'^group/(?P<group_id>[0-9]+)', hs_core_views.GroupView.as_view(), name='group'),
 )
 
 # Filebrowser admin media library.

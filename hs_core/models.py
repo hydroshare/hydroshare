@@ -123,6 +123,8 @@ def page_permissions_page_processor(request, page):
     owners = cm.raccess.owners.all()
     editors = cm.raccess.edit_users.exclude(pk__in=owners)
     viewers = cm.raccess.view_users.exclude(pk__in=editors).exclude(pk__in=owners)
+    edit_groups = cm.raccess.edit_groups
+    view_groups = cm.raccess.view_groups.exclude(pk__in=edit_groups)
 
     if cm.metadata.relations.all().filter(type='isReplacedBy').exists():
         is_replaced_by = cm.metadata.relations.all().filter(type='isReplacedBy').first().value
@@ -145,6 +147,8 @@ def page_permissions_page_processor(request, page):
         "edit_users": editors,
         "view_users": viewers,
         "owners": owners,
+        "edit_groups": edit_groups,
+        "view_groups": view_groups,
         "is_owner_user": is_owner_user,
         "is_edit_user": is_edit_user,
         "is_view_user": is_view_user,
@@ -544,7 +548,8 @@ class Relation(AbstractMetaDataElement):
     )
 
     # HS_RELATION_TERMS contains hydroshare custom terms that are not Dublin Core terms
-    HS_RELATION_TERMS = ('isHostedBy', 'isCopiedFrom')
+    HS_RELATION_TERMS = ('isHostedBy', 'isCopiedFrom', 'isExecutedBy', 'isCreatedBy', 'isDataFor',
+                         'cites', 'isDescribedBy')
 
     term = 'Relation'
     type = models.CharField(max_length=100, choices=SOURCE_TYPES)
@@ -887,13 +892,11 @@ class Coverage(AbstractMetaDataElement):
         changing_coverage_type = False
 
         if 'type' in kwargs:
-            if cov.type != kwargs['type']:
-                if 'value' in kwargs:
-                    cls._validate_coverage_type_value_attributes(kwargs['type'], kwargs['value'])
-                else:
-                    raise ValidationError('Coverage value is missing.')
-
-                changing_coverage_type = True
+            changing_coverage_type = cov.type != kwargs['type']
+            if 'value' in kwargs:
+                cls._validate_coverage_type_value_attributes(kwargs['type'], kwargs['value'])
+            else:
+                raise ValidationError('Coverage value is missing.')
 
         if 'value' in kwargs:
             if changing_coverage_type:
@@ -940,13 +943,49 @@ class Coverage(AbstractMetaDataElement):
             # check that all the required sub-elements exist
             if 'east' not in value_dict or 'north' not in value_dict or 'units' not in value_dict:
                 raise ValidationError("For coverage of type 'point' values for 'east', 'north' and 'units' are needed.")
+
+            for value_item in ('east', 'north'):
+                try:
+                    value_dict[value_item] = float(value_dict[value_item])
+                except TypeError:
+                    raise ValidationError("Value for '{}' must be numeric".format(value_item))
+
+            if value_dict['east'] < -180 or value_dict['east'] > 180:
+                raise ValidationError("Value for East longitude should be in the range of -180 to 180")
+
+            if value_dict['north'] < -90 or value_dict['north'] > 90:
+                raise ValidationError("Value for North latitude should be in the range of -90 to 90")
+
         elif coverage_type == 'box':
             # check that all the required sub-elements exist
             for value_item in ['units', 'northlimit', 'eastlimit', 'southlimit', 'westlimit']:
                 if value_item not in value_dict:
                     raise ValidationError("For coverage of type 'box' values for one or more bounding box limits or "
                                           "'units' is missing.")
+                else:
+                    if value_item != 'units':
+                        try:
+                            value_dict[value_item] = float(value_dict[value_item])
+                        except TypeError:
+                            raise ValidationError("Value for '{}' must be numeric".format(value_item))
 
+            if value_dict['northlimit'] <= value_dict['southlimit']:
+                raise ValidationError("Value for North latitude must be greater than that of South latitude.")
+
+            if value_dict['northlimit'] < -90 or value_dict['northlimit'] > 90:
+                raise ValidationError("Value for North latitude should be in the range of -90 to 90")
+
+            if value_dict['southlimit'] < -90 or value_dict['southlimit'] > 90:
+                raise ValidationError("Value for South latitude should be in the range of -90 to 90")
+
+            if value_dict['eastlimit'] <= value_dict['westlimit']:
+                raise ValidationError("Value for East longitude must be greater than that of West longitude.")
+
+            if value_dict['eastlimit'] < -180 or value_dict['eastlimit'] > 180:
+                raise ValidationError("Value for East longitude should be in the range of -180 to 180")
+
+            if value_dict['westlimit'] < -180 or value_dict['westlimit'] > 180:
+                raise ValidationError("Value for West longitude should be in the range of -180 to 180")
 
 class Format(AbstractMetaDataElement):
     term = 'Format'
@@ -1141,6 +1180,10 @@ class AbstractResource(ResourcePermissionsMixin):
 
         return scimeta_url
 
+    @classmethod
+    def sysmeta_path(cls, resource_id):
+        return "{resource_id}/data/resourcemap.xml".format(resource_id=resource_id)
+
     def delete(self, using=None):
         from hydroshare import hs_bagit
         for fl in self.files.all():
@@ -1206,11 +1249,15 @@ class AbstractResource(ResourcePermissionsMixin):
             return CREATOR_NAME_ERROR
 
         if len(name_parts) > 2:
-            citation_str_lst.append("{last_name}, {first_initial}.{middle_initial}., ".format(last_name=name_parts[-1],
-                                                                              first_initial=name_parts[0][0],
-                                                                              middle_initial=name_parts[1][0]))
+            author_name = "{last_name}, {first_initial}. {middle_initial}., "
+            author_name = author_name.format(last_name=name_parts[-1], first_initial=name_parts[0][0],
+                                             middle_initial=name_parts[1][0])
+            citation_str_lst.append(author_name)
+
         else:
-            citation_str_lst.append("{last_name}, {first_initial}., ".format(last_name=name_parts[-1], first_initial=name_parts[0][0]))
+            author_name = "{last_name}, {first_initial}., "
+            author_name = author_name.format(last_name=name_parts[-1], first_initial=name_parts[0][0])
+            citation_str_lst.append(author_name)
 
         other_authors = self.metadata.creators.all().filter(order__gt=1)
         for author in other_authors:
@@ -1219,13 +1266,18 @@ class AbstractResource(ResourcePermissionsMixin):
                 return CREATOR_NAME_ERROR
 
             if len(name_parts) > 2:
-                citation_str_lst.append("{first_initial}.{middle_initial}.{last_name}, ".format(first_initial=name_parts[0][0],
-                                                                                  middle_initial=name_parts[1][0],
-                                                                                  last_name=name_parts[-1]))
-            else:
-                citation_str_lst.append("{first_initial}.{last_name}, ".format(first_initial=name_parts[0][0], last_name=name_parts[-1]))
+                author_name = "{first_initial}. {middle_initial}. {last_name}, "
+                author_name = author_name.format(first_initial=name_parts[0][0], middle_initial=name_parts[1][0],
+                                                 last_name=name_parts[-1])
+                citation_str_lst.append(author_name)
 
-        #  remove the last added comma and the space
+            else:
+                author_name = "{first_initial}. {last_name}, "
+                author_name = author_name.format(first_initial=name_parts[0][0], last_name=name_parts[-1])
+
+                citation_str_lst.append(author_name)
+
+        # remove the last added comma and the space
         if len(citation_str_lst[-1]) > 2:
             citation_str_lst[-1] = citation_str_lst[-1][:-2]
         else:
@@ -1253,7 +1305,8 @@ class AbstractResource(ResourcePermissionsMixin):
 
         ref_rel = self.metadata.relations.all().filter(type='isHostedBy').first()
         repl_rel = self.metadata.relations.all().filter(type='isCopiedFrom').first()
-        date_str = "%s/%s/%s" % (citation_date.start_date.month, citation_date.start_date.day, citation_date.start_date.year)
+        date_str = "%s/%s/%s" % (citation_date.start_date.month, citation_date.start_date.day,
+                                 citation_date.start_date.year)
         if ref_rel:
             citation_str_lst.append(", {ref_rel_value}, last accessed {creation_date}.".format(ref_rel_value=ref_rel.value,
                                                                                                creation_date=date_str))
@@ -1758,7 +1811,7 @@ class CoreMetaData(models.Model):
 
             elif coverage.type == 'point':
                 cov_value = 'east=%s; north=%s; units=%s' % (coverage.value['east'], coverage.value['north'],
-                                                  coverage.value['units'])
+                                                             coverage.value['units'])
                 if 'name' in coverage.value:
                     cov_value = 'name=%s; ' % coverage.value['name'] + cov_value
                 if 'elevation' in coverage.value:
@@ -1818,7 +1871,8 @@ class CoreMetaData(models.Model):
         if self.publisher:
             dc_publisher = etree.SubElement(rdf_Description, '{%s}publisher' % self.NAMESPACES['dc'])
             dc_pub_rdf_Description = etree.SubElement(dc_publisher, '{%s}Description' % self.NAMESPACES['rdf'])
-            hsterms_pub_name = etree.SubElement(dc_pub_rdf_Description, '{%s}publisherName' % self.NAMESPACES['hsterms'])
+            hsterms_pub_name = etree.SubElement(dc_pub_rdf_Description,
+                                                '{%s}publisherName' % self.NAMESPACES['hsterms'])
             hsterms_pub_name.text = self.publisher.name
             hsterms_pub_url = etree.SubElement(dc_pub_rdf_Description, '{%s}publisherURL' % self.NAMESPACES['hsterms'])
             hsterms_pub_url.set('{%s}resource' % self.NAMESPACES['rdf'], self.publisher.url)
@@ -1841,18 +1895,20 @@ class CoreMetaData(models.Model):
         for src in self.sources.all():
             dc_source = etree.SubElement(rdf_Description, '{%s}source' % self.NAMESPACES['dc'])
             dc_source_rdf_Description = etree.SubElement(dc_source, '{%s}Description' % self.NAMESPACES['rdf'])
-            dcterms_derived_from = etree.SubElement(dc_source_rdf_Description, '{%s}isDerivedFrom' % self.NAMESPACES['dcterms'])
+            hsterms_derived_from = etree.SubElement(dc_source_rdf_Description,
+                                                    '{%s}isDerivedFrom' % self.NAMESPACES['hsterms'])
 
             # if the source value starts with 'http://' or 'https://' add value as an attribute
             if src.derived_from.lower().find('http://') == 0 or src.derived_from.lower().find('https://') == 0:
-                dcterms_derived_from.set('{%s}resource' % self.NAMESPACES['rdf'], src.derived_from)
+                hsterms_derived_from.set('{%s}resource' % self.NAMESPACES['rdf'], src.derived_from)
             else:
-                dcterms_derived_from.text = src.derived_from
+                hsterms_derived_from.text = src.derived_from
 
         if self.rights:
             dc_rights = etree.SubElement(rdf_Description, '{%s}rights' % self.NAMESPACES['dc'])
             dc_rights_rdf_Description = etree.SubElement(dc_rights, '{%s}Description' % self.NAMESPACES['rdf'])
-            hsterms_statement = etree.SubElement(dc_rights_rdf_Description, '{%s}rightsStatement' % self.NAMESPACES['hsterms'])
+            hsterms_statement = etree.SubElement(dc_rights_rdf_Description,
+                                                 '{%s}rightsStatement' % self.NAMESPACES['hsterms'])
             hsterms_statement.text = self.rights.statement
             if self.rights.url:
                 hsterms_url = etree.SubElement(dc_rights_rdf_Description, '{%s}URL' % self.NAMESPACES['hsterms'])
@@ -1877,10 +1933,12 @@ class CoreMetaData(models.Model):
         resource = BaseResource.objects.filter(object_id=self.id).first()
         for key, value in resource.extra_metadata.items():
             hsterms_key_value = etree.SubElement(rdf_Description, '{%s}extendedMetadata' % self.NAMESPACES['hsterms'])
-            hsterms_key_value_rdf_Description = etree.SubElement(hsterms_key_value, '{%s}Description' % self.NAMESPACES['rdf'])
+            hsterms_key_value_rdf_Description = etree.SubElement(hsterms_key_value,
+                                                                 '{%s}Description' % self.NAMESPACES['rdf'])
             hsterms_key = etree.SubElement(hsterms_key_value_rdf_Description, '{%s}key' % self.NAMESPACES['hsterms'])
             hsterms_key.text = key
-            hsterms_value = etree.SubElement(hsterms_key_value_rdf_Description, '{%s}value' % self.NAMESPACES['hsterms'])
+            hsterms_value = etree.SubElement(hsterms_key_value_rdf_Description,
+                                             '{%s}value' % self.NAMESPACES['hsterms'])
             hsterms_value.text = value
 
         return self.XML_HEADER + '\n' + etree.tostring(RDF_ROOT, pretty_print=pretty_print)
