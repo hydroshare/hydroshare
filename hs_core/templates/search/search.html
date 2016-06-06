@@ -345,15 +345,28 @@
             //map.fitBounds(bounds);
             map_default_bounds = bounds;
             map_default_zoom = getBoundsZoomLevel(map_default_bounds, mapDim);
-            var listener = google.maps.event.addListener(map, "idle", function () {
+            var idle_listener = google.maps.event.addListener(map, "idle", function () {
                 map.setCenter(map_default_bounds.getCenter());
                 map.setZoom(map_default_zoom);
-                google.maps.event.removeListener(listener);
+                google.maps.event.removeListener(idle_listener);
             });
+
+            var bounds_listener = google.maps.event.addListener(map, 'bounds_changed', function(){
+                var bnds = map.getBounds();
+                var ne = bnds.getNorthEast();
+                var sw = bnds.getSouthWest();
+                document.getElementById("NElng").value = ne.lng();
+                document.getElementById("NElat").value = ne.lat();
+                document.getElementById("SWlng").value = sw.lng();
+                document.getElementById("SWlat").value = sw.lat();
+            });
+
+
+
             var markerCluster = new MarkerClusterer(map, markers, {
                 imagePath: 'https://cdn.rawgit.com/googlemaps/js-marker-clusterer/gh-pages/images/m'
             });
-            generateLegend();
+            //generateLegend();
         }
 
         var createBoundsForMarkers = function(markers) {
