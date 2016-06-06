@@ -246,11 +246,37 @@ class T10GroupFlags(MockIRODSTestCaseMixin, TestCase):
         # cat is a group member
         cat = self.cat
 
+        # test user view_groups and edit_groups
+
+        # cat should be a member of the group
+        self.assertIn(self.cat, felines.gaccess.members)
+        # cat should have one group with view permission (group is active)
+        self.assertEqual(len(self.cat.uaccess.view_groups), 1)
+
         # make group inactive
         self.assertTrue(felines.gaccess.active)
-        felines.gaccess.active = False
-        felines.gaccess.save()
-        self.assertFalse(felines.gaccess.active)
+        self._set_group_active_status(felines, False)
+
+        # cat should be a member of the group
+        self.assertIn(self.cat, felines.gaccess.members)
+        # cat should have no group with view permission since the group is now inactive
+        self.assertEqual(len(self.cat.uaccess.view_groups), 0)
+
+        self._set_group_active_status(felines, True)
+
+        # give cat edit permission on group
+        dog.uaccess.share_group_with_user(felines, self.cat, PrivilegeCodes.CHANGE)
+        # cat should be a member of the group
+        self.assertIn(self.cat, felines.gaccess.members)
+        # cat should have one group with edit permission (group is active)
+        self.assertEqual(len(self.cat.uaccess.edit_groups), 1)
+
+        self._set_group_active_status(felines, False)
+
+        # cat should be a member of the group
+        self.assertIn(self.cat, felines.gaccess.members)
+        # cat should have no group with edit permission (group is active)
+        self.assertEqual(len(self.cat.uaccess.edit_groups), 0)
 
         self.assertTrue(dog.uaccess.owns_group(felines))
 
@@ -318,9 +344,7 @@ class T10GroupFlags(MockIRODSTestCaseMixin, TestCase):
         self.assertEqual(len(dog.uaccess.view_groups), 0)
 
         # make the group active for testing resource related groups
-        felines.gaccess.active = True
-        felines.gaccess.save()
-        self.assertTrue(felines.gaccess.active)
+        self._set_group_active_status(felines, True)
 
         # share the resource with the group
         dog.uaccess.share_resource_with_group(self.scratching, felines, PrivilegeCodes.VIEW)
@@ -335,6 +359,9 @@ class T10GroupFlags(MockIRODSTestCaseMixin, TestCase):
         # for the active group the resource should have one user with edit permission
         self.assertEqual(len(self.scratching.raccess.edit_users), 1)
 
+        # user cat should have one viewable resource via group access
+        self.assertEqual(len(self.cat.uaccess.view_resources), 1)
+
         dog.uaccess.share_resource_with_group(self.scratching, felines, PrivilegeCodes.CHANGE)
         # for the active group the resource should have 1 group with view permission
         self.assertEqual(len(self.scratching.raccess.view_groups), 1)
@@ -346,10 +373,14 @@ class T10GroupFlags(MockIRODSTestCaseMixin, TestCase):
         # for the active group the resource should have one user with edit permission
         self.assertEqual(len(self.scratching.raccess.edit_users), 2)
 
+        # user cat should have one editable resource via group access
+        self.assertEqual(len(self.cat.uaccess.edit_resources), 1)
+        # user cat should have one viewable resource via group access
+        self.assertEqual(len(self.cat.uaccess.view_resources), 1)
+
         # make the group inactive
-        felines.gaccess.active = False
-        felines.gaccess.save()
-        self.assertFalse(felines.gaccess.active)
+        self._set_group_active_status(felines, False)
+
         # for the inactive group the resource should have no group with view permission
         self.assertEqual(len(self.scratching.raccess.view_groups), 0)
         # for the inactive group the resource should have no group with edit permission
@@ -360,8 +391,31 @@ class T10GroupFlags(MockIRODSTestCaseMixin, TestCase):
         # for the inactive group the resource should have no user with edit permission
         self.assertEqual(len(self.scratching.raccess.edit_users), 0)
 
-        # TODO: Test get_effective_privilege() for inactive group status
+        # user cat should have no editable resource via group access since the group is inactive
+        self.assertEqual(len(self.cat.uaccess.edit_resources), 0)
+        # user cat should have no viewable resource via group access since the group is inactive
+        self.assertEqual(len(self.cat.uaccess.view_resources), 0)
 
+        # test get_effective_privilege() for inactive group status
+        self._set_group_active_status(felines, True)
+
+        # share resource with user 'cat' with view permission
+        dog.uaccess.share_resource_with_user(self.scratching, self.cat, PrivilegeCodes.VIEW)
+        # so user 'cat' at this point has view permission on resource (access granted at user level) and
+        # edit permission (access granted at group level). The effective privilege then should be edit when
+        # the group is active
+        self.assertEqual(self.scratching.raccess.get_effective_privilege(self.cat), PrivilegeCodes.CHANGE)
+
+        # now make the group inactive
+        self._set_group_active_status(felines, False)
+
+        # now the user cat should have view as the effective permission for the resource
+        self.assertEqual(self.scratching.raccess.get_effective_privilege(self.cat), PrivilegeCodes.VIEW)
+
+    def _set_group_active_status(self, group, active):
+        group.gaccess.active = active
+        group.gaccess.save()
+        self.assertEqual(group.gaccess.active, active)
 
 
 

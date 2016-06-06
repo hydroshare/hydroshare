@@ -1238,7 +1238,8 @@ class UserAccess(models.Model):
         if not self.user.is_active: raise PermissionDenied("Requesting user is not active")
 
         # need distinct due to duplicates invoked via Q expressions 
-        return BaseResource.objects.filter(Q(r2urp__user=self.user) | Q(r2grp__group__g2ugp__user=self.user)).distinct()
+        return BaseResource.objects.filter(Q(r2urp__user=self.user) | Q(r2grp__group__g2ugp__user=self.user)).\
+            exclude(r2grp__group__gaccess__active=False).distinct()
 
     @property 
     def owned_resources(self):
@@ -1270,7 +1271,8 @@ class UserAccess(models.Model):
                                            & (Q(r2urp__user=self.user,
                                                 r2urp__privilege__lte=PrivilegeCodes.CHANGE) \
                                               | Q(r2grp__group__g2ugp__user=self.user,
-                                                  r2grp__privilege__lte=PrivilegeCodes.CHANGE))).distinct()
+                                                  r2grp__privilege__lte=PrivilegeCodes.CHANGE))).\
+            exclude(r2grp__group__gaccess__active=False).distinct()
 
     # TODO: make this conformant to Sphinx conventions. 
     def get_resources_with_explicit_access(self, this_privilege):
