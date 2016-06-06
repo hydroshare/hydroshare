@@ -2532,11 +2532,13 @@ class ResourceAccess(models.Model):
         For VIEW, effective privilege = declared privilege, in the sense that all editors have VIEW, even if the
         resource is immutable.
         """
-        return User.objects.filter(Q(is_active=True) & (Q(u2ugp__group__gaccess__active=True))
+
+        return User.objects.filter(Q(is_active=True)
                                    & (Q(u2urp__resource=self.resource,
                                         u2urp__privilege__lte=PrivilegeCodes.VIEW) \
                                     | Q(u2ugp__group__g2grp__resource=self.resource,
-                                        u2ugp__group__g2grp__privilege__lte=PrivilegeCodes.VIEW))).distinct()
+                                        u2ugp__group__g2grp__privilege__lte=PrivilegeCodes.VIEW))).\
+            exclude(u2ugp__group__gaccess__active=False).distinct()
 
     @property
     def edit_users(self):
@@ -2547,14 +2549,16 @@ class ResourceAccess(models.Model):
 
         If the resource is immutable, an empty QuerySet is returned.
         """
+
         if self.immutable:
             return User.objects.none()
         else:
-            return User.objects.filter(Q(is_active=True) & (Q(u2ugp__group__gaccess__active=True))
+            return User.objects.filter(Q(is_active=True)
                                        & (Q(u2urp__resource=self.resource,
                                             u2urp__privilege__lte=PrivilegeCodes.CHANGE) \
                                         | Q(u2ugp__group__g2grp__resource=self.resource,
-                                            u2ugp__group__g2grp__privilege__lte=PrivilegeCodes.CHANGE))).distinct()
+                                            u2ugp__group__g2grp__privilege__lte=PrivilegeCodes.CHANGE))).\
+                exclude(u2ugp__group__gaccess__active=False).distinct()
 
     @property
     def view_groups(self):
