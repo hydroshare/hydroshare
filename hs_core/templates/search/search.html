@@ -171,6 +171,11 @@
                                         </td>
                                 {% endif %}
                             {% endfor %}
+                            <td>
+                                <a id="manual-zoom-btn" class="btn btn-default" onclick="manualZoomMap()">
+                                    zoom in
+                                </a>
+                            </td>
                         </tr>
                     </table>
                 </form>
@@ -266,8 +271,11 @@
         var map = null;
         var map_default_bounds = null;
         var map_default_zoom = 0;
+        var map_default_center = new google.maps.LatLng(0, 0);
+        var markers = [];
+        var markerCluster = null;
         var initMap = function(json_results) {
-            var markers = [];
+            //var markers = [];
             var modified_points_data = [];
             var modified_boxes_data = [];
             var modified_data = [];
@@ -306,84 +314,44 @@
                 document.getElementById("id_SWlat").value = sw.lat();
             });
 
-
-            var info_window = new google.maps.InfoWindow();
-            var rectangle = new google.maps.Rectangle({
-                strokeColor: '#FF0000',
-                strokeOpacity: 0.8,
-                strokeWeight: 2,
-                fillColor: '#FF0000',
-                fillOpacity: 0.35,
-                map: map,
-                bounds: {
-                    north: 0,
-                    south: 0,
-                    east: 0,
-                    west: 0
-                }
-            });
-
-            for (var  i = 0; i < json_results.length; i++ ) {
-                if (json_results[i].coverage_type == 'point') {
-                    checkDuplicatePointResults(modified_points_data, json_results[i]);
-
-                } else if(json_results[i].coverage_type == 'box') {
-                    checkDuplicateBoxResults(modified_boxes_data, json_results[i]);
-
-                } else {
-                    continue;
-                }
-
-            }
-
-            modified_points_data.forEach(function(point){
-                var info_content = point.info_link;
-                var lat = parseFloat(point.north);
-                var lng = parseFloat(point.east);
-                var counter = point.counter.toString();
-                createPointResourceMarker(lat, lng, info_content, counter, info_window, rectangle, markers);
-            });
-
-            /*modified_boxes_data.forEach(function(box){
-                var info_content = box.info_link;
-                var northlimit = parseFloat(box.northlimit);
-                var southlimit = parseFloat(box.southlimit);
-                var eastlimit = parseFloat(box.eastlimit);
-                var westlimit = parseFloat(box.westlimit);
-                var counter = box.counter.toString();
-                createBoxResourceMarker (northlimit, southlimit, eastlimit, westlimit, info_content, info_window, counter, rectangle, markers);
-            });*/
+            removeMarkers();
+            setMarkers(json_results);
 
             var bounds = (markers.length > 0) ? createBoundsForMarkers(markers) : null;
-            var ne = bounds.getNorthEast();
-            var sw = bounds.getSouthWest();
-            document.getElementById("id_NElng").value = ne.lng();
-            document.getElementById("id_NElat").value = ne.lat();
-            document.getElementById("id_SWlng").value = sw.lng();
-            document.getElementById("id_SWlat").value = sw.lat();
-            //map.fitBounds(bounds);
-            map_default_bounds = bounds;
-            map_default_zoom = getBoundsZoomLevel(map_default_bounds, mapDim);
+
+            if (bounds) {
+                var ne = bounds.getNorthEast();
+                var sw = bounds.getSouthWest();
+                document.getElementById("id_NElng").value = ne.lng();
+                document.getElementById("id_NElat").value = ne.lat();
+                document.getElementById("id_SWlng").value = sw.lng();
+                document.getElementById("id_SWlat").value = sw.lat();
+                map_default_bounds = bounds;
+                map_default_zoom = getBoundsZoomLevel(map_default_bounds, mapDim);
+                map_default_center = map_default_bounds.getCenter();
+            }
             var idle_listener = google.maps.event.addListener(map, "idle", function () {
-                map.setCenter(map_default_bounds.getCenter());
+                map.setCenter(map_default_center);
                 map.setZoom(map_default_zoom);
                 google.maps.event.removeListener(idle_listener);
             });
 
             var bounds_listener = google.maps.event.addListener(map, 'bounds_changed', function(){
                 var bnds = map.getBounds();
-                var ne = bnds.getNorthEast();
-                var sw = bnds.getSouthWest();
-                document.getElementById("id_NElng").value = ne.lng();
-                document.getElementById("id_NElat").value = ne.lat();
-                document.getElementById("id_SWlng").value = sw.lng();
-                document.getElementById("id_SWlat").value = sw.lat();
+                if (bnds){
+                    var ne = bnds.getNorthEast();
+                    var sw = bnds.getSouthWest();
+                    document.getElementById("id_NElng").value = ne.lng();
+                    document.getElementById("id_NElat").value = ne.lat();
+                    document.getElementById("id_SWlng").value = sw.lng();
+                    document.getElementById("id_SWlat").value = sw.lat();
+                }
             });
 
 
 
-            var markerCluster = new MarkerClusterer(map, markers, {
-                imagePath: 'https://cdn.rawgit.com/googlemaps/js-marker-clusterer/gh-pages/images/m'
+            markerCluster = new MarkerClusterer(map, markers, {
+                imagePath: '//cdn.rawgit.com/googlemaps/js-marker-clusterer/gh-pages/images/m'
             });
             generateLegend();
         }
@@ -441,6 +409,7 @@
 
         var manualZoomMap = function() {
 
+            removeMarkers();
             var $mapDiv = $("#discover-map");
             var mapDim = {
                 height: $mapDiv.height(),
@@ -459,6 +428,37 @@
                 map.setZoom(getBoundsZoomLevel(customized_bounds, mapDim));
                 google.maps.event.removeListener(listener);
             });
+
+
+            var requestURL = "/searchjson/";
+
+            if(window.location.search.length == 0){
+                requestURL += "?q=";
+            }else{
+                requestURL += window.location.search;
+            }
+            $.ajax({
+                type: "GET",
+                url: requestURL,
+                data:{
+                    NElng:nelng,
+                    NElat:nelat,
+                    SWlng:swlng,
+                    SWlat:swlat,
+                },
+                dataType: 'json',
+                success: function(data) {
+                    var json_results = [];
+                    for(var j = 0; j < data.length; j++){
+                        var item = $.parseJSON(data[j]);
+                        json_results.push(item);
+                    }
+                    setMarkers(json_results);
+                }
+                , failure: function(data){
+                    console.error("fail");
+                }
+            });
         }
 
         var generateLegend = function() {
@@ -474,7 +474,70 @@
             map.controls[google.maps.ControlPosition.RIGHT_BOTTOM].push(reset_zoom_button);
         }
 
-        var createPointResourceMarker = function (lat, lng, info_content, counter, info_window, rectangle, markers) {
+        var removeMarkers = function() {
+            if (markerCluster) {
+                markerCluster.clearMarkers(markers);
+            }
+            for (var i = 0; i < markers.length; i++) {
+                if (markers[i].getMap() != null){
+                    markers[i].setMap(null);
+                }
+            }
+            markers = [];
+        }
+
+        var setMarkers = function(json_results) {
+
+            var modified_points_data = [];
+            var modified_boxes_data = [];
+            for (var  i = 0; i < json_results.length; i++ ) {
+                if (json_results[i].coverage_type == 'point') {
+                    checkDuplicatePointResults(modified_points_data, json_results[i]);
+
+                } else if(json_results[i].coverage_type == 'box') {
+                    checkDuplicateBoxResults(modified_boxes_data, json_results[i]);
+
+                } else {
+                    continue;
+                }
+
+            }
+            var info_window = new google.maps.InfoWindow();
+            var rectangle = new google.maps.Rectangle({
+                strokeColor: '#FF0000',
+                strokeOpacity: 0.8,
+                strokeWeight: 2,
+                fillColor: '#FF0000',
+                fillOpacity: 0.35,
+                map: map,
+                bounds: {
+                    north: 0,
+                    south: 0,
+                    east: 0,
+                    west: 0
+                }
+            });
+            modified_points_data.forEach(function(point){
+                var info_content = point.info_link;
+                var lat = parseFloat(point.north);
+                var lng = parseFloat(point.east);
+                var counter = point.counter.toString();
+                createPointResourceMarker(lat, lng, info_content, counter, info_window, rectangle);
+            });
+
+            /*modified_boxes_data.forEach(function(box){
+                var info_content = box.info_link;
+                var northlimit = parseFloat(box.northlimit);
+                var southlimit = parseFloat(box.southlimit);
+                var eastlimit = parseFloat(box.eastlimit);
+                var westlimit = parseFloat(box.westlimit);
+                var counter = box.counter.toString();
+                createBoxResourceMarker (northlimit, southlimit, eastlimit, westlimit, info_content, info_window, counter, rectangle, markers);
+            });*/
+
+        }
+
+        var createPointResourceMarker = function (lat, lng, info_content, counter, info_window, rectangle) {
             var latlng = new google.maps.LatLng(lat, lng);
             var marker = new google.maps.Marker({
                 map: map,
