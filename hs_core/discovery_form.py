@@ -5,11 +5,11 @@ from crispy_forms.bootstrap import *
 from django import forms
 
 class DiscoveryForm(FacetedSearchForm):
-    NElng = forms.FloatField(label='NElng', max_length=100, required=False)
-
-    # NElat = forms.FloatField(label='NElat', max_length=100, required=False)
-    # SWlng = forms.FloatField(label='SWlng', max_length=100, required=False)
-    # SWlat = forms.FloatField(label='SWlat', max_length=100, required=False)
+    NElat = forms.CharField(label='NElat', required=False)
+    NElng = forms.CharField(label='NElng', required=False)
+    SWlat = forms.CharField(label='SWlat', required=False)
+    SWlng = forms.CharField(label='SWlng', required=False)
+    #start_date = forms.DateField(required=False)
     #end_date = forms.DateField(required=False)
 
     def search(self):
@@ -67,7 +67,7 @@ class DiscoveryForm(FacetedSearchForm):
         if discoverable_sq:
             sqs = sqs.filter(discoverable_sq)
 
-        if self.cleaned_data['NElng']:
-            sqs = sqs.filter(creators='Gan')
+        #if self.cleaned_data['NElng']:
+        #    sqs = sqs.filter(author='Jeff')
 
         return sqs
