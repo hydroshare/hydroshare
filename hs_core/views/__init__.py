@@ -672,6 +672,20 @@ class GroupUpdateForm(forms.Form):
     description = forms.CharField(required=True)
     purpose = forms.CharField(required=False)
     picture = forms.ImageField(required=False)
+    privacy_level = forms.CharField(required=True)
+    active = forms.CharField(required=True)
+
+    def clean_privacy_level(self):
+        data = self.cleaned_data['privacy_level']
+        if data not in ('public', 'private', 'discoverable'):
+            raise forms.ValidationError("Invalid group privacy level.")
+        return data
+
+    def clean_active(self):
+        data = self.cleaned_data['active']
+        if data not in ('true', 'false'):
+            raise forms.ValidationError("Invalid active value.")
+        return data
 
     def update(self, group_to_update, request):
         frm_data = self.cleaned_data
@@ -679,10 +693,25 @@ class GroupUpdateForm(forms.Form):
         group_to_update.save()
         group_to_update.gaccess.description = frm_data['description']
         group_to_update.gaccess.purpose = frm_data['purpose']
+        group_to_update.gaccess.active = frm_data['active'] == 'true'
         if 'picture' in request.FILES:
             group_to_update.gaccess.picture = request.FILES['picture']
 
-        group_to_update.gaccess.save()
+        privacy_level = frm_data['privacy_level']
+        self._set_privacy_level(group_to_update, privacy_level)
+
+    def _set_privacy_level(self, group, privacy_level):
+        if privacy_level == 'public':
+            group.gaccess.public = True
+            group.gaccess.discoverable = True
+        elif privacy_level == 'private':
+            group.gaccess.public = False
+            group.gaccess.discoverable = False
+        elif privacy_level == 'discoverable':
+            group.gaccess.discoverable = True
+            group.gaccess.public = False
+
+        group.gaccess.save()
 
 
 class GroupSetFlagForm(forms.Form):
@@ -850,7 +879,7 @@ def update_user_group(request, group_id, *args, **kwargs):
     user = request.user
     group_to_update = utils.group_from_id(group_id)
 
-    if user.uaccess.can_change_group(group_to_update):
+    if user.uaccess.can_change_group_flags(group_to_update):
         group_form = GroupUpdateForm(request.POST, request.FILES)
         if group_form.is_valid():
             try:
