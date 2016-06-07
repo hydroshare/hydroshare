@@ -891,12 +891,12 @@
                         <div class="modal-body">
                             {% csrf_token %}
                             <div class="row">
-                                <div class="checkbox pull-right">
-                                    <label>
-                                        <input type="checkbox" name="active" {% if group.gaccess.active %}checked{% endif %}>
-                                        Active
-                                    </label>
-                                </div>
+                                <fieldset class="col-sm-12 pull-right">
+                                    <input id="active_flag" name="active" data-toggle="toggle" data-on="Active"
+                                           data-off="Inactive" type="checkbox"
+                                           data-onstyle="success"
+                                           {% if group.gaccess.active %}checked{% endif %} data-toggle="toggle">
+                                </fieldset>
 
                                 {# Group Name #}
                                 <fieldset class="col-sm-12">
@@ -988,6 +988,8 @@
 
 {% block extra_js %}
     <script type="text/javascript" charset="utf8" src="//cdn.datatables.net/1.10.10/js/jquery.dataTables.js"></script>
+    <link href="https://gitcdn.github.io/bootstrap-toggle/2.2.2/css/bootstrap-toggle.min.css" rel="stylesheet">
+    <script src="https://gitcdn.github.io/bootstrap-toggle/2.2.2/js/bootstrap-toggle.min.js"></script>
 
     <script>
         var colDefs = [
@@ -1316,6 +1318,7 @@
                 var input = $(this).parents('.input-group').find(':text');
                 input.val(label);
             });
+
 
         });
     </script>

@@ -1350,7 +1350,6 @@ table.table-plain td{
     border:none;
 }
 
-
 body > .main-container {
     min-height: calc(100% - 286px);
     padding-bottom: 20px;
@@ -3662,4 +3661,9 @@ div.group-add-photo {
 
 .access-icon-wrapper {
 	display: inline-block;
+}
+
+div.toggle.btn {
+	width: 100px !important;
+	float: right;
 }
