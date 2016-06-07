@@ -2651,7 +2651,6 @@ h4.title {
     display: flex !important;
 }
 .btn-group .btn {
-    border-radius: 0;
     margin-left: -1px;
 }
 .btn-group .btn:last-child {
@@ -2669,6 +2668,10 @@ h4.title {
 
 #item-selectors_filter {
 	display: none;
+}
+
+#invite-flag {
+	margin: 10px;
 }
 
 #item-selectors {
