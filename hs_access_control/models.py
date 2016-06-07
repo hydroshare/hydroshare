@@ -2602,6 +2602,37 @@ class ResourceAccess(models.Model):
                                    u2urp__privilege=PrivilegeCodes.OWNER,
                                    u2urp__resource=self.resource)
 
+    def get_users_with_explicit_access(self, this_privilege, include_user_granted_access=True,
+                                       include_group_granted_access=True):
+
+        """
+        Gets a QuerySet of Users who have the explicit specified privilege access to the resource. An empty
+        list is returned if both include_user_granted_access and include_group_granted_access are set to False.
+
+        :param this_privilege: the explict privilege over the resource for which list of users needed
+        :param include_user_granted_access: if True, then users who have been granted directly the specified privilege
+                                            will be included in the list
+        :param include_group_granted_access: if True, then users who have been granted the specified privilege via group
+                                             privilege over the resource will be included in the list
+        :return:
+        """
+        if include_user_granted_access and include_group_granted_access:
+            return User.objects.filter(Q(is_active=True)
+                                       & (Q(u2urp__resource=self.resource,
+                                            u2urp__privilege=this_privilege)
+                                        | Q(u2ugp__group__g2grp__resource=self.resource,
+                                            u2ugp__group__g2grp__privilege=this_privilege))).distinct()
+        elif include_user_granted_access:
+            return User.objects.filter(Q(is_active=True)
+                                       & (Q(u2urp__resource=self.resource,
+                                            u2urp__privilege=this_privilege)))
+        elif include_group_granted_access:
+            return User.objects.filter(Q(is_active=True) &
+                                       (Q(u2ugp__group__g2grp__resource=self.resource,
+                                          u2ugp__group__g2grp__privilege=this_privilege))).distinct()
+        else:
+            return []
+
     def __get_combined_privilege(self, this_user):
         """
         Return the total privilege of a specific user over this resource

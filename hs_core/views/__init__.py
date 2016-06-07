@@ -768,7 +768,7 @@ def add_generic_context(request, page):
                                       widget=autocomplete_light.ChoiceWidget("UserAutocomplete"))
 
     class AddGroupForm(forms.Form):
-        group = forms.ModelChoiceField(Group.objects.filter(gaccess__active=True).all(),
+        group = forms.ModelChoiceField(Group.objects.filter(gaccess__active=True).exclude(name='Hydroshare Author').all(),
                                        widget=autocomplete_light.ChoiceWidget("GroupAutocomplete"))
 
     return {
