@@ -1352,7 +1352,7 @@ table.table-plain td{
 
 
 body > .main-container {
-    min-height: calc(100% - 306px);
+    min-height: calc(100% - 286px);
     padding-bottom: 20px;
 	padding-top: 20px;
 }

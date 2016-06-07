@@ -2400,7 +2400,7 @@ class GroupAccess(models.Model):
         :return: QuerySet
         """
 
-        return GroupMembershipRequest.objects.filter(group_to_join=self.group)
+        return GroupMembershipRequest.objects.filter(group_to_join=self.group, group_to_join__gaccess__active=True)
 
     def get_resources_with_explicit_access(self, this_privilege):
         """

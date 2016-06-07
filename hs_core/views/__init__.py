@@ -1262,7 +1262,7 @@ class MyGroupsView(TemplateView):
         u = User.objects.get(pk=self.request.user.id)
 
         groups = u.uaccess.view_groups
-        group_membership_requests = GroupMembershipRequest.objects.filter(invitation_to=u).all()
+        group_membership_requests = GroupMembershipRequest.objects.filter(invitation_to=u).exclude(group_to_join__gaccess__active=False).all()
         # for each group object, set a dynamic attribute to know if the user owns the group
         for g in groups:
             g.is_group_owner = u.uaccess.owns_group(g)
@@ -1270,7 +1270,7 @@ class MyGroupsView(TemplateView):
         return {
             'profile_user': u,
             'groups': groups,
-            'my_pending_requests': GroupMembershipRequest.objects.filter(request_from=u),
+            'my_pending_requests': GroupMembershipRequest.objects.filter(request_from=u).exclude(group_to_join__gaccess__active=False),
             'group_membership_requests': group_membership_requests
         }
 
