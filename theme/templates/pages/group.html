@@ -3,6 +3,8 @@
 
 {% block main %}
 
+
+
     <div class="collaborate-header">
         <div class="container">
             <div class="row">
@@ -18,6 +20,23 @@
 
     <div class="container">
         <div class="row">
+            {% if profile_user.is_group_owner or profile_user.is_group_editor %}
+                {% if not group.gaccess.active %}
+                    <div class="alert alert-warning alert-dismissible" role="alert">
+                        <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span
+                                aria-hidden="true">&times;</span></button>
+                        This group is set to <strong>inactive.</strong> Only owners of the group have access. Resources
+                        cannot
+                        be shared with the group and other users cannot be invited.
+                        <hr>
+                        <span class="glyphicon glyphicon-question-sign"></span>
+                        <small> Click on the edit button ( <span class="glyphicon glyphicon-pencil"></span> ) below to
+                            if
+                            you want to make the group active again.
+                        </small>
+                    </div>
+                {% endif %}
+            {% endif %}
             <div class="col-sm-3">
                 {#  Group Picture #}
                 {% if group.gaccess.picture and group.gaccess.picture.url %}
