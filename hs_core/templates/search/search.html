@@ -345,10 +345,17 @@
                     document.getElementById("id_NElat").value = ne.lat();
                     document.getElementById("id_SWlng").value = sw.lng();
                     document.getElementById("id_SWlat").value = sw.lat();
+
                 }
             });
 
+            var zoom_listener = google.maps.event.addListener(map, 'zoom_changed', function(){
+                updateMapResults();
+            });
 
+            var drag_listener = google.maps.event.addListener(map, 'dragend', function(){
+                updateMapResults();
+            });
 
             markerCluster = new MarkerClusterer(map, markers, {
                 imagePath: '//cdn.rawgit.com/googlemaps/js-marker-clusterer/gh-pages/images/m'
@@ -409,7 +416,6 @@
 
         var manualZoomMap = function() {
 
-            removeMarkers();
             var $mapDiv = $("#discover-map");
             var mapDim = {
                 height: $mapDiv.height(),
@@ -430,6 +436,15 @@
             });
 
 
+            updateMapResults();
+        }
+
+        var updateMapResults = function() {
+            removeMarkers();
+            var swlat = document.getElementById("id_SWlat").value;
+            var swlng = document.getElementById("id_SWlng").value;
+            var nelat = document.getElementById("id_NElat").value;
+            var nelng = document.getElementById("id_NElng").value;
             var requestURL = "/searchjson/";
 
             if(window.location.search.length == 0){
