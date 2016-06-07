@@ -221,13 +221,15 @@
                                         <span id="rep-status-error"></span>
                                     </div>
                                 {% endif %}
+                            </div>
+                            {% endblock %} {#  download_bag #}
                         {% else %}
                             <i class="glyphicon glyphicon-eye-close text-danger no-access-icon"></i>&nbsp;
                             <span>You do not have permission to see these content files. Please contact the Authors if you wish to obtain access.</span>
                         {% endif %}
                     </div>
                 {% endif %}
-               {% endblock %} {# content_block #}
+                {% endblock %} {# content_block #}
 
                 {# ======= Content tabs (code moved here because django does not render blocks inside included templates) ======= #}
                 <div class="col-sm-12">
