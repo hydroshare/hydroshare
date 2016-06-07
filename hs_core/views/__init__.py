@@ -673,7 +673,7 @@ class GroupUpdateForm(forms.Form):
     purpose = forms.CharField(required=False)
     picture = forms.ImageField(required=False)
     privacy_level = forms.CharField(required=True)
-    active = forms.CharField(required=True)
+    active = forms.CharField(required=False)
 
     def clean_privacy_level(self):
         data = self.cleaned_data['privacy_level']
@@ -681,11 +681,11 @@ class GroupUpdateForm(forms.Form):
             raise forms.ValidationError("Invalid group privacy level.")
         return data
 
-    def clean_active(self):
-        data = self.cleaned_data['active']
-        if data not in ('true', 'false'):
-            raise forms.ValidationError("Invalid active value.")
-        return data
+    # def clean_active(self):
+    #     data = self.cleaned_data['active']
+    #     if data not in ('true', 'false'):
+    #         raise forms.ValidationError("Invalid active value.")
+    #     return data
 
     def update(self, group_to_update, request):
         frm_data = self.cleaned_data
@@ -693,7 +693,7 @@ class GroupUpdateForm(forms.Form):
         group_to_update.save()
         group_to_update.gaccess.description = frm_data['description']
         group_to_update.gaccess.purpose = frm_data['purpose']
-        group_to_update.gaccess.active = frm_data['active'] == 'true'
+        group_to_update.gaccess.active = frm_data['active'] == 'on'
         if 'picture' in request.FILES:
             group_to_update.gaccess.picture = request.FILES['picture']
 

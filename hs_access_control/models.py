@@ -407,7 +407,9 @@ class UserAccess(models.Model):
         """
         if not self.user.is_active: raise PermissionDenied("Requesting user is not active")
 
-        return Group.objects.filter(g2ugp__user=self.user, gaccess__active=True)
+        # return Group.objects.filter(g2ugp__user=self.user, gaccess__active=True)
+
+        return Group.objects.filter(Q(g2ugp__user=self.user) & (Q(gaccess__active=True) | Q(pk__in=self.owned_groups)))
 
     @property
     def edit_groups(self):

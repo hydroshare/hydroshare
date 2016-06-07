@@ -81,9 +81,7 @@
                     <div class="row">
                         <div class="col-sm-12">
                         {% if profile_user.is_group_owner or profile_user.is_group_editor or profile_user.is_group_viewer %}
-
                             <h4>Recent Activity</h4>
-
                             {% if group_resources %}
                                 {% for res in group_resources %}
                                     <div class="group-activity-block activity-block">
@@ -117,8 +115,8 @@
                                 {% else %}
                                 <i>No recent activity.</i>
                             {% endif %}
-
                         {% else %}
+                            {% if group.gaccess.active %}
                             <h4><i>You are not a member of this group.</i></h4>
                             {% if group.join_request_waiting_user_action %}
                                 <div class="request-block pull-left">
@@ -153,7 +151,9 @@
                                     <button type="submit" class="btn btn-primary" role="button">Ask to join</button>
                                 </form>
                             {% endif %}
-
+                                {% else %}
+                                <h4><i>This group is currently inactive.</i></h4>
+                            {% endif %}
                         {% endif %}
                         </div>
                     </div>
@@ -163,8 +163,12 @@
                     <div class="row">
                         <div class="col-sm-12 col-md-3">
                             {% if profile_user.is_group_owner or profile_user.is_group_editor or profile_user.is_group_viewer %}
-                            <div class="text-center"><a href="#" class="btn btn-primary" role="button" data-toggle="modal" data-target="#invite-dialog">Invite People</a></div>
-                            <br>
+                                {% if group.gaccess.active %}
+                                    <div class="text-center"><a href="#" class="btn btn-primary" role="button"
+                                                                data-toggle="modal" data-target="#invite-dialog">Invite
+                                        People</a></div>
+                                    <br>
+                                {% endif %}
                             {% endif %}
                             <table id="members-filter" class="table-user-contributions table table-hover">
                                 <tbody>
@@ -205,40 +209,41 @@
                                             <h4><strong><a>{{ owner|contact|safe }}</a></strong></h4>
                                             {% if  owner.userprofile.title %}<span class="text-muted">{{ owner.userprofile.title }}</span>{% endif %}
                                         </td>
+
                                         <td>
-                                            {% if profile_user.is_group_owner or profile_user.is_group_editor %}
+                                            {% if profile_user.is_group_owner and group.gaccess.active or profile_user.is_group_editor and group.gaccess.active %}
                                                 <div class="dropdown custom-dropdown">
-                                                <button class="btn btn-default dropdown-toggle" type="button"
-                                                        id="roleDropDown-{{ member.id }}" data-toggle="dropdown"
-                                                        aria-haspopup="true"
-                                                        aria-expanded="true">
-                                                    Owner
-                                                    <span class="caret"></span>
-                                                </button>
-                                                <ul class="dropdown-menu"
-                                                    aria-labelledby="roleDropDown-{{ member.id }}">
-                                                    <li>
-                                                        <form action="/hsapi/_internal/share-group-with-user/{{ group.id }}/{{ owner.id }}/owner/">
-                                                            {% csrf_token %}
-                                                            <a href="#" class="btn-share-group" data-role="Owner">Owner</a>
-                                                        </form>
-                                                    </li>
-                                                    <li>
-                                                        <form action="/hsapi/_internal/share-group-with-user/{{ group.id }}/{{ owner.id }}/view/">
-                                                            {% csrf_token %}
-                                                            <a href="#" class="btn-share-group" data-role="Member">Member</a>
-                                                        </form>
-                                                    </li>
-                                                    <li role="separator" class="divider"></li>
-                                                    <li>
-                                                        <form action="/hsapi/_internal/unshare-group-with-user/{{ group.id }}/{{ owner.id }}/">
-                                                            {% csrf_token %}
-                                                            <a href="#" class="btn-unshare-group">Expel</a>
-                                                        </form>
-                                                    </li>
-                                                </ul>
-                                            </div>
-                                                {% else %}
+                                                    <button class="btn btn-default dropdown-toggle" type="button"
+                                                            id="roleDropDown-{{ member.id }}" data-toggle="dropdown"
+                                                            aria-haspopup="true"
+                                                            aria-expanded="true">
+                                                        Owner
+                                                        <span class="caret"></span>
+                                                    </button>
+                                                    <ul class="dropdown-menu"
+                                                        aria-labelledby="roleDropDown-{{ member.id }}">
+                                                        <li>
+                                                            <form action="/hsapi/_internal/share-group-with-user/{{ group.id }}/{{ owner.id }}/owner/">
+                                                                {% csrf_token %}
+                                                                <a href="#" class="btn-share-group" data-role="Owner">Owner</a>
+                                                            </form>
+                                                        </li>
+                                                        <li>
+                                                            <form action="/hsapi/_internal/share-group-with-user/{{ group.id }}/{{ owner.id }}/view/">
+                                                                {% csrf_token %}
+                                                                <a href="#" class="btn-share-group" data-role="Member">Member</a>
+                                                            </form>
+                                                        </li>
+                                                        <li role="separator" class="divider"></li>
+                                                        <li>
+                                                            <form action="/hsapi/_internal/unshare-group-with-user/{{ group.id }}/{{ owner.id }}/">
+                                                                {% csrf_token %}
+                                                                <a href="#" class="btn-unshare-group">Expel</a>
+                                                            </form>
+                                                        </li>
+                                                    </ul>
+                                                </div>
+                                            {% else %}
                                                 Owner
                                             {% endif %}
                                         </td>
@@ -305,7 +310,7 @@
                                             {% endif %}
                                         </td>
                                         <td>
-                                            {% if profile_user.is_group_owner or profile_user.is_group_editor %}
+                                            {% if profile_user.is_group_owner and group.gaccess.active or profile_user.is_group_editor and group.gaccess.active %}
                                             <div class="dropdown custom-dropdown">
                                                 <button class="btn btn-default dropdown-toggle" type="button"
                                                         id="roleDropDown-{{ member.id }}" data-toggle="dropdown"
@@ -886,6 +891,13 @@
                         <div class="modal-body">
                             {% csrf_token %}
                             <div class="row">
+                                <div class="checkbox pull-right">
+                                    <label>
+                                        <input type="checkbox" name="active" {% if group.gaccess.active %}checked{% endif %}>
+                                        Active
+                                    </label>
+                                </div>
+
                                 {# Group Name #}
                                 <fieldset class="col-sm-12">
                                     <label>Group Name *</label>
