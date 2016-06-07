@@ -148,7 +148,7 @@ function share_resource_ajax_submit(form_id) {
     var share_with;
     var shareType;
 
-    if ($("#div-invite-people input[value='users']:checked").length) {
+    if ($("#div-invite-people button[data-value='users']").hasClass("btn-primary")) {
         if ($("#id_user-deck > .hilight").length > 0) {
             share_with = $("#id_user-deck > .hilight")[0].getAttribute("data-value");
             shareType = "user";
