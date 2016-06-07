@@ -920,15 +920,19 @@
                                 {# Group Name #}
                                 <fieldset class="col-sm-12">
                                     <label>Group Name *</label>
+                                    <small class="text-muted">150 characters or less</small>
                                     <input class="form-control" required="required" name="name" value="{{ group.name }}"
                                            maxlength="150">
+
                                 </fieldset>
 
                                 {# Purpose #}
                                 <fieldset class="col-sm-12">
                                     <label>Purpose</label>
+                                    <small class="text-muted">300 characters or less</small>
                                     <textarea class="form-control" name="purpose"
                                               maxlength="300">{{ group.gaccess.purpose }}</textarea>
+
                                 </fieldset>
 
                                 {# Group Description #}
@@ -990,6 +994,13 @@
                                         </label>
                                     </div>
                                 </fieldset>
+
+                                <br>
+                                <fieldset class="col-sm-12">
+                                    <small class="text-muted">( * ) Required fields</small>
+                                </fieldset>
+
+
                             </div>
 
                         </div>
