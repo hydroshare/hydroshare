@@ -628,13 +628,12 @@ class FilterForm(forms.Form):
     from_date = forms.DateTimeField(required=False)
 
 
-class GroupForm(forms.Form):
+class GroupCreateForm(forms.Form):
     name = forms.CharField(required=True)
     description = forms.CharField(required=True)
     purpose = forms.CharField(required=False)
     picture = forms.ImageField(required=False)
     privacy_level = forms.CharField(required=True)
-    active = forms.CharField(required=False)
 
     def clean_privacy_level(self):
         data = self.cleaned_data['privacy_level']
@@ -654,24 +653,6 @@ class GroupForm(forms.Form):
         self._set_privacy_level(new_group, privacy_level)
         return new_group
 
-    def update(self, group_to_update, request):
-        frm_data = self.cleaned_data
-        group_to_update.name = frm_data['name']
-        group_to_update.save()
-        group_to_update.gaccess.description = frm_data['description']
-        group_to_update.gaccess.purpose = frm_data['purpose']
-        if 'picture' in request.FILES:
-            group_to_update.gaccess.picture = request.FILES['picture']
-
-        # group 'active' status can be set to False (group becomes inactive)
-        # by passing 'false' as value for the key 'active'. Any other value for
-        # key 'active' will set the group to active status
-        if 'active' in frm_data:
-            group_to_update.gaccess.active = frm_data['active'] != 'false'
-
-        privacy_level = frm_data['privacy_level']
-        self._set_privacy_level(group_to_update, privacy_level)
-
     def _set_privacy_level(self, group, privacy_level):
         if privacy_level == 'public':
             group.gaccess.public = True
@@ -685,6 +666,61 @@ class GroupForm(forms.Form):
 
         group.gaccess.save()
 
+
+class GroupUpdateForm(forms.Form):
+    name = forms.CharField(required=True)
+    description = forms.CharField(required=True)
+    purpose = forms.CharField(required=False)
+    picture = forms.ImageField(required=False)
+
+    def update(self, group_to_update, request):
+        frm_data = self.cleaned_data
+        group_to_update.name = frm_data['name']
+        group_to_update.save()
+        group_to_update.gaccess.description = frm_data['description']
+        group_to_update.gaccess.purpose = frm_data['purpose']
+        if 'picture' in request.FILES:
+            group_to_update.gaccess.picture = request.FILES['picture']
+
+        group_to_update.gaccess.save()
+
+
+class GroupSetFlagForm(forms.Form):
+    flag_name = forms.CharField(required=True)
+    flag_value = forms.CharField(required=True)
+
+    def clean_flag_name(self):
+        data = self.cleaned_data['flag_name']
+        if data not in ('public', 'shareable', 'discoverable', 'active'):
+            raise forms.ValidationError("Invalid group flag name.")
+        return data
+
+    def clean_flag_value(self):
+        data = self.cleaned_data['flag_value']
+        if data not in ('true', 'false'):
+            raise forms.ValidationError("Invalid group flag value.")
+        return data
+
+    def set_flag(self, group):
+        flag_name = self.cleaned_data['flag_name']
+        flag_value = self.cleaned_data['flag_value']
+        if flag_name == 'public':
+            group.gaccess.public = flag_value == 'true'
+            group.gaccess.discoverable = flag_value == 'true'
+        elif flag_name == 'discoverable':
+            if flag_value == 'false':
+                group.gaccess.discoverable = False
+                group.gaccess.public = False
+            else:
+                group.gaccess.discoverable = True
+
+        elif flag_name == 'shareable':
+            group.gaccess.shareable = flag_value == 'true'
+        else:
+            # flag_name == 'active'
+            group.gaccess.active = flag_value == 'true'
+
+        group.gaccess.save()
 
 @processor_for('my-resources')
 @login_required
@@ -791,7 +827,7 @@ def create_resource(request, *args, **kwargs):
 
 @login_required
 def create_user_group(request, *args, **kwargs):
-    group_form = GroupForm(request.POST, request.FILES)
+    group_form = GroupCreateForm(request.POST, request.FILES)
     if group_form.is_valid():
         try:
             new_group = group_form.save(request)
@@ -815,7 +851,7 @@ def update_user_group(request, group_id, *args, **kwargs):
     group_to_update = utils.group_from_id(group_id)
 
     if user.uaccess.can_change_group(group_to_update):
-        group_form = GroupForm(request.POST, request.FILES)
+        group_form = GroupUpdateForm(request.POST, request.FILES)
         if group_form.is_valid():
             try:
                 group_form.update(group_to_update, request)
@@ -833,6 +869,28 @@ def update_user_group(request, group_id, *args, **kwargs):
 
     return HttpResponseRedirect(request.META['HTTP_REFERER'])
 
+@login_required
+def set_user_group_flag(request, group_id, *args, **kwargs):
+    user = request.user
+    group_to_update = utils.group_from_id(group_id)
+
+    try:
+        if user.uaccess.can_change_group_flags(group_to_update):
+            group_form = GroupSetFlagForm(request.POST)
+            if group_form.is_valid():
+                group_form.set_flag(group_to_update)
+                messages.success(request, "Group sharing status update was successful.")
+            else:
+                messages.error(request, "Group sharing status update errors:{}.".format(group_form.errors.as_json))
+
+        else:
+            messages.error(request, "Group sharing status update errors: You don't have permission to set group "
+                                    "sharing status.")
+
+    except PermissionDenied as ex:
+        messages.error(request, "Group sharing status update errors:{}.".format(ex.message))
+
+    return HttpResponseRedirect(request.META['HTTP_REFERER'])
 
 @login_required
 def share_group_with_user(request, group_id, user_id, privilege, *args, **kwargs):
