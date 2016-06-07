@@ -305,3 +305,4 @@ def send_action_to_take_email(request, user, action_type, **kwargs):
     send_mail_template(subject, "email/%s" % action_type,
                        settings.DEFAULT_FROM_EMAIL, email_to.email,
                        context=context)
+
