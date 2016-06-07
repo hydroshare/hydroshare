@@ -2,9 +2,15 @@ from haystack.forms import FacetedSearchForm
 from haystack.query import SQ, SearchQuerySet
 from crispy_forms.layout import *
 from crispy_forms.bootstrap import *
-
+from django import forms
 
 class DiscoveryForm(FacetedSearchForm):
+    NElng = forms.FloatField(label='NElng', max_length=100, required=False)
+
+    # NElat = forms.FloatField(label='NElat', max_length=100, required=False)
+    # SWlng = forms.FloatField(label='SWlng', max_length=100, required=False)
+    # SWlat = forms.FloatField(label='SWlat', max_length=100, required=False)
+    #end_date = forms.DateField(required=False)
 
     def search(self):
         if not self.cleaned_data.get('q'):
@@ -60,4 +66,8 @@ class DiscoveryForm(FacetedSearchForm):
             sqs = sqs.filter(owner_sq)
         if discoverable_sq:
             sqs = sqs.filter(discoverable_sq)
+
+        if self.cleaned_data['NElng']:
+            sqs = sqs.filter(creators='Gan')
+
         return sqs

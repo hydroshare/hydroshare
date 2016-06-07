@@ -151,14 +151,17 @@
             -->
             <div class=resource-search>
                 <form id="search-field" method="get" action=".">
+                {{ form.as_p }}
+                    <!--
                     {% for field in form %}
                         <div class="fieldWrapper">
                             {{ field }}
                         </div>
-                    {% endfor %}
+                    {% endfor %}-->
+
                 </form>
             </div>
-
+            <!--
             <div id="geo-search-filter">
                 <table class="table table-hover" id="geo-filter">
                     <tr>
@@ -174,7 +177,7 @@
                     </tr>
                 </table>
             </div>
-
+              -->
             <ul id="switch-view" class="nav nav-tabs">
                 <li class="active"><a href="#list-view">List</a></li>
                 <li><a href="#map-view">Map</a></li>
@@ -677,7 +680,7 @@
             var hash = window.location.hash;
             $('#switch-view a[href="' + hash + '"]').tab('show');
 
-            $("#id_q").attr('placeholder', 'Search...');
+            //$("#id_q").attr('placeholder', 'Search...');
             reorderDivs();
 
             $('.collapse').on('shown.bs.collapse', function(){
