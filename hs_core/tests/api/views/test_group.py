@@ -722,8 +722,6 @@ class TestGroup(MockIRODSTestCaseMixin, TestCase):
         original_group = Group.objects.filter(name=group_name).first()
         self.assertNotEqual(original_group, None)
 
-        # self.assertNotEqual(group.name, 'Test Group-2')
-        # self.assertEqual(group.name, 'Test Group-1')
         self.assertEqual(response.status_code, status.HTTP_302_FOUND)
         self.assertEqual(response['Location'], request.META['HTTP_REFERER'])
 
