@@ -180,23 +180,6 @@
                     </table>
                 </form>
             </div>
-            <!--
-            <div id="geo-search-filter">
-                <table class="table table-hover" id="geo-filter">
-                    <tr>
-                        <td><label for="NElng">NE lng: </label> <input type="text" id="NElng" name="NElng" value=""></td>
-                        <td><label for="NElat">NE lat: </label> <input type="text" id="NElat" name="NElat" value=""></td>
-                        <td><label for="SWlng">SW lng: </label><input type="text" id="SWlng" name="SWlng" value=""></td>
-                        <td><label for="SWlat">SW lat: </label><input type="text" id="SWlat" name="SWlat" value=""></td>
-                        <td>
-                            <a id="manual-zoom-btn" class="btn btn-default" onclick="manualZoomMap()">
-                                zoom in
-                            </a>
-                        </td>
-                    </tr>
-                </table>
-            </div>
-              -->
             <div id="discovery-results">
                 <ul id="switch-view" class="nav nav-tabs">
                     <li class="active"><a href="#list-view">List</a></li>
@@ -275,11 +258,9 @@
         var markers = [];
         var markerCluster = null;
         var initMap = function(json_results) {
-            //var markers = [];
             var modified_points_data = [];
             var modified_boxes_data = [];
             var modified_data = [];
-            //var bounds = new google.maps.LatLngBounds();
             var $mapDiv = $("#discover-map");
             var mapDim = {
                 height: $mapDiv.height(),
@@ -303,7 +284,6 @@
             var dz = map.getDragZoomObject();
 
             google.maps.event.addListener(dz, 'dragend', function (bnds) {
-                console.log('KeyDragZoom Ended: ' + bnds);
                 map.setCenter(bnds.getCenter());
                 map.setZoom(getBoundsZoomLevel(bnds, mapDim));
                 var ne = bnds.getNorthEast();
@@ -312,6 +292,7 @@
                 document.getElementById("id_NElat").value = ne.lat();
                 document.getElementById("id_SWlng").value = sw.lng();
                 document.getElementById("id_SWlat").value = sw.lat();
+                updateMapResults();
             });
 
             removeMarkers();
@@ -491,8 +472,8 @@
             map_legend.style.background = "white";
             var legend_content = [];
             legend_content.push("<p style='margin-left:5px'><img src='//cdn.rawgit.com/googlemaps/js-marker-clusterer/gh-pages/images/m2.png'> markers cluster </p>");
-            legend_content.push("<p style='margin-left:20px'><img src='//cdn.rawgit.com/Concept211/Google-Maps-Markers/master/images/marker_red%23.png'> point coverage</p>");
-            legend_content.push("<p style='margin-left:20px'><img src='//cdn.rawgit.com/Concept211/Google-Maps-Markers/master/images/marker_blue%23.png'> box coverage</p>");
+            legend_content.push("<p style='margin-left:20px'><img src='//cdn.rawgit.com/Concept211/Google-Maps-Markers/master/images/marker_redn.png'> point coverage</p>");
+            legend_content.push("<p style='margin-left:20px'><img src='//cdn.rawgit.com/Concept211/Google-Maps-Markers/master/images/marker_bluen.png'> box coverage</p>");
             map_legend.innerHTML = legend_content.join('');
             var reset_zoom_button = document.getElementById('resetZoom');
             map.controls[google.maps.ControlPosition.RIGHT_BOTTOM].push(reset_zoom_button);
