@@ -5,10 +5,10 @@ from crispy_forms.bootstrap import *
 from django import forms
 
 class DiscoveryForm(FacetedSearchForm):
-    NElat = forms.CharField(label='NElat', required=False)
-    NElng = forms.CharField(label='NElng', required=False)
-    SWlat = forms.CharField(label='SWlat', required=False)
-    SWlng = forms.CharField(label='SWlng', required=False)
+    NElat = forms.CharField(label='NE latitude', required=False)
+    NElng = forms.CharField(label='NE longitude', required=False)
+    SWlat = forms.CharField(label='SW latitude', required=False)
+    SWlng = forms.CharField(label='SW longitude', required=False)
     #start_date = forms.DateField(required=False)
     #end_date = forms.DateField(required=False)
 
@@ -67,7 +67,16 @@ class DiscoveryForm(FacetedSearchForm):
         if discoverable_sq:
             sqs = sqs.filter(discoverable_sq)
 
-        #if self.cleaned_data['NElng']:
-        #    sqs = sqs.filter(author='Jeff')
+        if self.cleaned_data['NElng']:
+            sqs = sqs.filter(coverage_east__lte=self.cleaned_data['NElng'])
+
+        if self.cleaned_data['SWlng']:
+            sqs = sqs.filter(coverage_east__gte=self.cleaned_data['SWlng'])
+
+        if self.cleaned_data['NElat']:
+            sqs = sqs.filter(coverage_north__lte=self.cleaned_data['NElat'])
+
+        if self.cleaned_data['SWlat']:
+            sqs = sqs.filter(coverage_north__gte=self.cleaned_data['SWlat'])
 
         return sqs

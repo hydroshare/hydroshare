@@ -329,6 +329,7 @@
                 map_default_bounds = bounds;
                 map_default_zoom = getBoundsZoomLevel(map_default_bounds, mapDim);
                 map_default_center = map_default_bounds.getCenter();
+                map.fitBounds(map_default_bounds);
             }
             var idle_listener = google.maps.event.addListener(map, "idle", function () {
                 map.setCenter(map_default_center);
