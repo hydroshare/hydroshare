@@ -401,20 +401,20 @@ class UserAccess(models.Model):
     @property
     def view_groups(self):
         """ 
-        Get a list of groups accessible to self for view.
+        Get a list of active groups accessible to self for view. Inactive groups will be included only if self owns
+        those groups.
 
         :return: QuerySet evaluating to held groups.
         """
         if not self.user.is_active: raise PermissionDenied("Requesting user is not active")
-
-        # return Group.objects.filter(g2ugp__user=self.user, gaccess__active=True)
 
         return Group.objects.filter(Q(g2ugp__user=self.user) & (Q(gaccess__active=True) | Q(pk__in=self.owned_groups)))
 
     @property
     def edit_groups(self):
         """
-        Return a list of active groups editable by self.
+        Return a list of active groups editable by self. Inactive groups will be included only if self owns
+        those groups.
 
         :return: QuerySet of groups editable by self.
 
@@ -432,8 +432,8 @@ class UserAccess(models.Model):
         """
         if not self.user.is_active: raise PermissionDenied("Requesting user is not active")
 
-        return Group.objects.filter(g2ugp__user=self.user,
-                                    g2ugp__privilege__lte=PrivilegeCodes.CHANGE, gaccess__active=True)
+        return Group.objects.filter(Q(g2ugp__user=self.user) & Q(g2ugp__privilege__lte=PrivilegeCodes.CHANGE) &
+                                    (Q(gaccess__active=True) | Q(pk__in=self.owned_groups)))
 
     @property
     def owned_groups(self):

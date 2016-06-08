@@ -275,7 +275,7 @@ class T10GroupFlags(MockIRODSTestCaseMixin, TestCase):
 
         # cat should be a member of the group
         self.assertIn(self.cat, felines.gaccess.members)
-        # cat should have no group with edit permission (group is active)
+        # cat should have no group with edit permission (group is inactive)
         self.assertEqual(len(self.cat.uaccess.edit_groups), 0)
 
         self.assertTrue(dog.uaccess.owns_group(felines))
@@ -326,22 +326,22 @@ class T10GroupFlags(MockIRODSTestCaseMixin, TestCase):
         with self.assertRaises(PermissionDenied):
             dog.uaccess.unshare_resource_with_group(self.scratching, felines)
 
-        # group owner (dog) can invite a user to join a group
+        # group owner (dog) can invite a user to join an inactive group
         with self.assertRaises(PermissionDenied):
             dog.uaccess.create_group_membership_request(felines, self.bat)
 
-        # user can't make a request to join a group
+        # user can't make a request to join an  inactive group
         with self.assertRaises(PermissionDenied):
             self.bat.uaccess.create_group_membership_request(felines)
 
         # group owner should have 1 owned group
         self.assertEqual(len(dog.uaccess.owned_groups), 1)
 
-        # group owner should not have any edit groups
-        self.assertEqual(len(dog.uaccess.edit_groups), 0)
+        # group owner should have 1 edit group
+        self.assertEqual(len(dog.uaccess.edit_groups), 1)
 
-        # group owner should not have any view groups
-        self.assertEqual(len(dog.uaccess.view_groups), 0)
+        # group owner should have 1 view group
+        self.assertEqual(len(dog.uaccess.view_groups), 1)
 
         # make the group active for testing resource related groups
         self._set_group_active_status(felines, True)

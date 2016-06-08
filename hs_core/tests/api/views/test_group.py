@@ -15,7 +15,7 @@ from rest_framework import status
 from hs_core import hydroshare
 from hs_core.views import create_user_group, update_user_group, share_group_with_user, unshare_group_with_user, \
     make_group_membership_request, act_on_group_membership_request, share_resource_with_group, \
-    unshare_resource_with_group, set_user_group_flag
+    unshare_resource_with_group
 from hs_core.testing import MockIRODSTestCaseMixin
 from hs_access_control.models import PrivilegeCodes
 
@@ -230,7 +230,7 @@ class TestGroup(MockIRODSTestCaseMixin, TestCase):
         url = reverse('update_user_group', kwargs=url_params)
         # update name, description, purpose
         grp_data = {'name': 'Test Group-2', 'description': 'This is a cool group-2',
-                    'purpose': 'This group now has purpose'}
+                    'purpose': 'This group now has purpose', 'privacy_level': 'public', 'active': 'on'}
         request = self.factory.post(url, data=grp_data)
 
         self._set_request_message_attributes(request)
@@ -249,7 +249,8 @@ class TestGroup(MockIRODSTestCaseMixin, TestCase):
         self.assertEqual(response['Location'], request.META['HTTP_REFERER'])
 
         # update group to remove purpose
-        grp_data = {'name': 'Test Group-2', 'description': 'This is a cool group-2'}
+        grp_data = {'name': 'Test Group-2', 'description': 'This is a cool group-2', 'privacy_level': 'public',
+                    'active': 'on'}
         request = self.factory.post(url, data=grp_data)
 
         self._set_request_message_attributes(request)
@@ -267,8 +268,89 @@ class TestGroup(MockIRODSTestCaseMixin, TestCase):
         self.assertEqual(response.status_code, status.HTTP_302_FOUND)
         self.assertEqual(response['Location'], request.META['HTTP_REFERER'])
 
+        # update privacy_level (set to private)- this set public to false and discoverable to false
+        grp_data = {'name': 'Test Group-2', 'description': 'This is a cool group-2', 'privacy_level': 'private',
+                    'active': 'on'}
+        request = self.factory.post(url, data=grp_data)
+
+        self._set_request_message_attributes(request)
+        request.user = self.john
+        request.META['HTTP_REFERER'] = "/some_url/"
+        response = update_user_group(request, group_id=new_group.id)
+        new_group = Group.objects.filter(name='Test Group-2').first()
+        self.assertNotEqual(new_group, None)
+        self.assertEqual(new_group.gaccess.description, 'This is a cool group-2')
+        self.assertEqual(new_group.gaccess.purpose, '')
+        self.assertEqual(new_group.gaccess.public, False)
+        self.assertEqual(new_group.gaccess.discoverable, False)
+        self.assertEqual(new_group.gaccess.active, True)
+
+        self.assertEqual(response.status_code, status.HTTP_302_FOUND)
+        self.assertEqual(response['Location'], request.META['HTTP_REFERER'])
+
+        # update privacy_level (set to public) - this set public to true and discoverable to true
+        grp_data = {'name': 'Test Group-2', 'description': 'This is a cool group-2', 'privacy_level': 'public',
+                    'active': 'on'}
+        request = self.factory.post(url, data=grp_data)
+
+        self._set_request_message_attributes(request)
+        request.user = self.john
+        request.META['HTTP_REFERER'] = "/some_url/"
+        response = update_user_group(request, group_id=new_group.id)
+        new_group = Group.objects.filter(name='Test Group-2').first()
+        self.assertNotEqual(new_group, None)
+        self.assertEqual(new_group.gaccess.description, 'This is a cool group-2')
+        self.assertEqual(new_group.gaccess.purpose, '')
+        self.assertEqual(new_group.gaccess.public, True)
+        self.assertEqual(new_group.gaccess.discoverable, True)
+        self.assertEqual(new_group.gaccess.active, True)
+
+        self.assertEqual(response.status_code, status.HTTP_302_FOUND)
+        self.assertEqual(response['Location'], request.META['HTTP_REFERER'])
+
+        # update privacy_level (set to discoverable) - this should set discoverable to true and public to false
+        grp_data = {'name': 'Test Group-2', 'description': 'This is a cool group-2', 'privacy_level': 'discoverable',
+                    'active': 'on'}
+        request = self.factory.post(url, data=grp_data)
+
+        self._set_request_message_attributes(request)
+        request.user = self.john
+        request.META['HTTP_REFERER'] = "/some_url/"
+        response = update_user_group(request, group_id=new_group.id)
+        new_group = Group.objects.filter(name='Test Group-2').first()
+        self.assertNotEqual(new_group, None)
+        self.assertEqual(new_group.gaccess.description, 'This is a cool group-2')
+        self.assertEqual(new_group.gaccess.purpose, '')
+        self.assertEqual(new_group.gaccess.public, False)
+        self.assertEqual(new_group.gaccess.discoverable, True)
+        self.assertEqual(new_group.gaccess.active, True)
+
+        self.assertEqual(response.status_code, status.HTTP_302_FOUND)
+        self.assertEqual(response['Location'], request.META['HTTP_REFERER'])
+
+        # update active to make group inactive - this should set active to false
+        grp_data = {'name': 'Test Group-2', 'description': 'This is a cool group-2', 'privacy_level': 'discoverable'}
+        request = self.factory.post(url, data=grp_data)
+
+        self._set_request_message_attributes(request)
+        request.user = self.john
+        request.META['HTTP_REFERER'] = "/some_url/"
+        response = update_user_group(request, group_id=new_group.id)
+        new_group = Group.objects.filter(name='Test Group-2').first()
+        self.assertNotEqual(new_group, None)
+        self.assertEqual(new_group.gaccess.description, 'This is a cool group-2')
+        self.assertEqual(new_group.gaccess.purpose, '')
+        self.assertEqual(new_group.gaccess.public, False)
+        self.assertEqual(new_group.gaccess.discoverable, True)
+        self.assertEqual(new_group.gaccess.active, False)
+
+        self.assertEqual(response.status_code, status.HTTP_302_FOUND)
+        self.assertEqual(response['Location'], request.META['HTTP_REFERER'])
+
     def test_group_update_failure(self):
-        # test that post data for 'name' and 'description' are required when updating a group
+        # test that post data for 'name', 'description', and 'privacy_level' are required
+        # when updating a group
+
         # first create a group to test updating group
         url = reverse('create_user_group')
         grp_data = {'name': 'Test Group-1', 'description': 'This is a cool group-1',
@@ -298,18 +380,17 @@ class TestGroup(MockIRODSTestCaseMixin, TestCase):
         self.assertEqual(response['Location'], request.META['HTTP_REFERER'])
 
         # test description is required -> update should fail
-        grp_data = {'name': 'Test Group-2', 'purpose': 'This group has purpose'}
+        grp_data = {'name': 'Test Group-2', 'purpose': 'This group has purpose', 'privacy_level': 'public', 'active': 'on'}
         request = self.factory.post(url, data=grp_data)
 
-        self._set_request_message_attributes(request)
-        request.user = self.john
-        request.META['HTTP_REFERER'] = "/some_url/"
-        response = update_user_group(request, group_id=new_group.id)
-        # name has not changed proves update failed
-        self.assertNotEqual(new_group.name, 'Test Group-2')
-        self.assertEqual(new_group.name, 'Test Group-1')
-        self.assertEqual(response.status_code, status.HTTP_302_FOUND)
-        self.assertEqual(response['Location'], request.META['HTTP_REFERER'])
+        self._update_failure(new_group, request)
+
+        # test privacy_level is required -> update should fail
+        grp_data = {'name': 'Test Group-2', 'description': 'This is a cool group', 'purpose': 'This group has purpose',
+                    'active': 'on'}
+        request = self.factory.post(url, data=grp_data)
+
+        self._update_failure(new_group, request)
 
         # test trying to update group with a duplicate name ('HydroShare Author') should fail
         grp_data = {'name': 'Hydroshare Author', 'description': 'This is a cool group-1',
@@ -320,149 +401,10 @@ class TestGroup(MockIRODSTestCaseMixin, TestCase):
         request.META['HTTP_REFERER'] = "/some_url/"
         response = update_user_group(request, group_id=new_group.id)
         # name has not changed proves update failed
-        self.assertNotEqual(new_group.name, 'Hydroshare Author')
-        self.assertEqual(new_group.name, 'Test Group-1')
+        updated_group = Group.objects.filter(name='Hydroshare Author').first()
+        self.assertNotEqual(updated_group.id, new_group.id)
         self.assertEqual(response.status_code, status.HTTP_302_FOUND)
         self.assertEqual(response['Location'], request.META['HTTP_REFERER'])
-
-    def test_set_group_flags(self):
-        # first create a group to test setting group flags
-        url = reverse('create_user_group')
-        grp_data = {'name': 'Test Group-1', 'description': 'This is a cool group-1',
-                    'purpose': 'This group has purpose', 'privacy_level': 'public'}
-        request = self.factory.post(url, data=grp_data)
-
-        self._set_request_message_attributes(request)
-        request.user = self.john
-        response = create_user_group(request)
-        new_group = Group.objects.filter(name='Test Group-1').first()
-        self.assertEqual(new_group.gaccess.public, True)
-        self.assertEqual(new_group.gaccess.discoverable, True)
-        self.assertEqual(new_group.gaccess.active, True)
-        self.assertEqual(new_group.gaccess.shareable, True)
-        self.assertEqual(response.status_code, status.HTTP_302_FOUND)
-
-        # now test setting public flag to false
-        url_params = {'group_id': new_group.id}
-        url = reverse('set_user_group_flag', kwargs=url_params)
-        grp_data = {'flag_name': 'public', 'flag_value': 'false'}
-        request = self.factory.post(url, data=grp_data)
-
-        self._set_request_message_attributes(request)
-        request.user = self.john
-        request.META['HTTP_REFERER'] = "/some_url/"
-        response = set_user_group_flag(request, group_id=new_group.id)
-        group = Group.objects.filter(name='Test Group-1').first()
-        self.assertEqual(group.gaccess.public, False)
-        self.assertEqual(group.gaccess.discoverable, False)
-        self.assertEqual(group.gaccess.active, True)
-        self.assertEqual(group.gaccess.shareable, True)
-        self.assertEqual(response.status_code, status.HTTP_302_FOUND)
-
-        # now test setting public flag to true
-        grp_data = {'flag_name': 'public', 'flag_value': 'true'}
-        request = self.factory.post(url, data=grp_data)
-
-        self._set_request_message_attributes(request)
-        request.user = self.john
-        request.META['HTTP_REFERER'] = "/some_url/"
-        response = set_user_group_flag(request, group_id=new_group.id)
-        group = Group.objects.filter(name='Test Group-1').first()
-        self.assertEqual(group.gaccess.public, True)
-        self.assertEqual(group.gaccess.discoverable, True)
-        self.assertEqual(group.gaccess.active, True)
-        self.assertEqual(group.gaccess.shareable, True)
-        self.assertEqual(response.status_code, status.HTTP_302_FOUND)
-
-        # now test setting discoverable flag to false
-        grp_data = {'flag_name': 'discoverable', 'flag_value': 'false'}
-        request = self.factory.post(url, data=grp_data)
-
-        self._set_request_message_attributes(request)
-        request.user = self.john
-        request.META['HTTP_REFERER'] = "/some_url/"
-        response = set_user_group_flag(request, group_id=new_group.id)
-        group = Group.objects.filter(name='Test Group-1').first()
-        self.assertEqual(group.gaccess.public, False)
-        self.assertEqual(group.gaccess.discoverable, False)
-        self.assertEqual(group.gaccess.active, True)
-        self.assertEqual(group.gaccess.shareable, True)
-        self.assertEqual(response.status_code, status.HTTP_302_FOUND)
-
-        # now test setting discoverable flag to true
-        grp_data = {'flag_name': 'discoverable', 'flag_value': 'true'}
-        request = self.factory.post(url, data=grp_data)
-
-        self._set_request_message_attributes(request)
-        request.user = self.john
-        request.META['HTTP_REFERER'] = "/some_url/"
-        response = set_user_group_flag(request, group_id=new_group.id)
-        group = Group.objects.filter(name='Test Group-1').first()
-        self.assertEqual(group.gaccess.public, False)
-        self.assertEqual(group.gaccess.discoverable, True)
-        self.assertEqual(group.gaccess.active, True)
-        self.assertEqual(group.gaccess.shareable, True)
-        self.assertEqual(response.status_code, status.HTTP_302_FOUND)
-
-        # now test setting shareable flag to false
-        grp_data = {'flag_name': 'shareable', 'flag_value': 'false'}
-        request = self.factory.post(url, data=grp_data)
-
-        self._set_request_message_attributes(request)
-        request.user = self.john
-        request.META['HTTP_REFERER'] = "/some_url/"
-        response = set_user_group_flag(request, group_id=new_group.id)
-        group = Group.objects.filter(name='Test Group-1').first()
-        self.assertEqual(group.gaccess.public, False)
-        self.assertEqual(group.gaccess.discoverable, True)
-        self.assertEqual(group.gaccess.active, True)
-        self.assertEqual(group.gaccess.shareable, False)
-        self.assertEqual(response.status_code, status.HTTP_302_FOUND)
-
-        # now test setting shareable flag to true
-        grp_data = {'flag_name': 'shareable', 'flag_value': 'true'}
-        request = self.factory.post(url, data=grp_data)
-
-        self._set_request_message_attributes(request)
-        request.user = self.john
-        request.META['HTTP_REFERER'] = "/some_url/"
-        response = set_user_group_flag(request, group_id=new_group.id)
-        group = Group.objects.filter(name='Test Group-1').first()
-        self.assertEqual(group.gaccess.public, False)
-        self.assertEqual(group.gaccess.discoverable, True)
-        self.assertEqual(group.gaccess.active, True)
-        self.assertEqual(group.gaccess.shareable, True)
-        self.assertEqual(response.status_code, status.HTTP_302_FOUND)
-
-        # now test setting active flag to false
-        grp_data = {'flag_name': 'active', 'flag_value': 'false'}
-        request = self.factory.post(url, data=grp_data)
-
-        self._set_request_message_attributes(request)
-        request.user = self.john
-        request.META['HTTP_REFERER'] = "/some_url/"
-        response = set_user_group_flag(request, group_id=new_group.id)
-        group = Group.objects.filter(name='Test Group-1').first()
-        self.assertEqual(group.gaccess.public, False)
-        self.assertEqual(group.gaccess.discoverable, True)
-        self.assertEqual(group.gaccess.active, False)
-        self.assertEqual(group.gaccess.shareable, True)
-        self.assertEqual(response.status_code, status.HTTP_302_FOUND)
-
-        # now test setting active flag to true
-        grp_data = {'flag_name': 'active', 'flag_value': 'true'}
-        request = self.factory.post(url, data=grp_data)
-
-        self._set_request_message_attributes(request)
-        request.user = self.john
-        request.META['HTTP_REFERER'] = "/some_url/"
-        response = set_user_group_flag(request, group_id=new_group.id)
-        group = Group.objects.filter(name='Test Group-1').first()
-        self.assertEqual(group.gaccess.public, False)
-        self.assertEqual(group.gaccess.discoverable, True)
-        self.assertEqual(group.gaccess.active, True)
-        self.assertEqual(group.gaccess.shareable, True)
-        self.assertEqual(response.status_code, status.HTTP_302_FOUND)
 
     def test_share_group_with_user(self):
         # create a group to share
@@ -767,6 +709,23 @@ class TestGroup(MockIRODSTestCaseMixin, TestCase):
         self.assertTrue(response['Location'].endswith(redirect_url))
         # check mike is now a member of the group
         self.assertIn(self.mike, new_group.gaccess.members)
+
+    def _update_failure(self, group, request):
+        group_name = group.name
+        self._set_request_message_attributes(request)
+        request.user = self.john
+        request.META['HTTP_REFERER'] = "/some_url/"
+        response = update_user_group(request, group_id=group.id)
+        # name has not changed proves update failed
+        updated_group = Group.objects.filter(name='Test Group-2').first()
+        self.assertEqual(updated_group, None)
+        original_group = Group.objects.filter(name=group_name).first()
+        self.assertNotEqual(original_group, None)
+
+        # self.assertNotEqual(group.name, 'Test Group-2')
+        # self.assertEqual(group.name, 'Test Group-1')
+        self.assertEqual(response.status_code, status.HTTP_302_FOUND)
+        self.assertEqual(response['Location'], request.META['HTTP_REFERER'])
 
     def _share_resource_with_group(self, group, privilege):
         url_params = {'shortkey': self.resource.short_id, 'privilege': privilege, 'group_id': group.id}
