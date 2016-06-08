@@ -401,6 +401,7 @@ class TestGroup(MockIRODSTestCaseMixin, TestCase):
         request.META['HTTP_REFERER'] = "/some_url/"
         response = update_user_group(request, group_id=new_group.id)
         # name has not changed proves update failed
+        self.assertEqual(Group.objects.filter(name='Hydroshare Author').count(), 1)
         updated_group = Group.objects.filter(name='Hydroshare Author').first()
         self.assertNotEqual(updated_group.id, new_group.id)
         self.assertEqual(response.status_code, status.HTTP_302_FOUND)
