@@ -26,8 +26,8 @@ from hs_access_control.models import ResourceAccess, UserResourcePrivilege, Priv
 from hs_labels.models import ResourceLabels
 
 
-FILE_SIZE_LIMIT = 10*(1024 ** 3)
-FILE_SIZE_LIMIT_FOR_DISPLAY = '10G'
+FILE_SIZE_LIMIT = 1*(1024 ** 3)
+FILE_SIZE_LIMIT_FOR_DISPLAY = '1G'
 METADATA_STATUS_SUFFICIENT = 'Sufficient to publish or make public'
 METADATA_STATUS_INSUFFICIENT = 'Insufficient to publish or make public'
 
