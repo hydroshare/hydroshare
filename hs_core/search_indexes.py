@@ -1,6 +1,10 @@
 from haystack import indexes
 from hs_core.models import BaseResource
 from django.db.models import Q
+import json
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
@@ -22,6 +26,13 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
     publisher = indexes.CharField(faceted=True)
     rating = indexes.IntegerField(model_attr='rating_sum')
     coverages = indexes.MultiValueField()
+    coverage_types = indexes.MultiValueField()
+    coverage_east = indexes.FloatField()
+    coverage_north = indexes.FloatField()
+    coverage_northlimit = indexes.FloatField()
+    coverage_eastlimit = indexes.FloatField()
+    coverage_southlimit = indexes.FloatField()
+    coverage_westlimit = indexes.FloatField()
     formats = indexes.MultiValueField()
     identifiers = indexes.MultiValueField()
     language = indexes.CharField(faceted=True)
@@ -120,6 +131,61 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
             return [coverage._value for coverage in obj.metadata.coverages.all()]
         else:
             return []
+
+    def prepare_coverage_types(self, obj):
+        if hasattr(obj, 'metadata'):
+            return [coverage.type for coverage in obj.metadata.coverages.all()]
+        else:
+            return []
+
+    def prepare_coverage_east(self, obj):
+        if hasattr(obj, 'metadata'):
+            for coverage in obj.metadata.coverages.all():
+                logger.debug(coverage.type)
+                if coverage.type == 'point':
+                    return coverage.value["east"]
+        else:
+            return 'none'
+
+    def prepare_coverage_north(self, obj):
+        if hasattr(obj, 'metadata'):
+            for coverage in obj.metadata.coverages.all():
+                if coverage.type == 'point':
+                    return coverage.value["north"]
+        else:
+            return 'none'
+
+    def prepare_coverage_northlimit(self, obj):
+        if hasattr(obj, 'metadata'):
+            for coverage in obj.metadata.coverages.all():
+                if coverage.type == 'box':
+                    return coverage.value["northlimit"]
+        else:
+            return 'none'
+
+    def prepare_coverage_eastlimit(self, obj):
+        if hasattr(obj, 'metadata'):
+            for coverage in obj.metadata.coverages.all():
+                if coverage.type == 'box':
+                    return coverage.value["eastlimit"]
+        else:
+            return 'none'
+
+    def prepare_coverage_southlimit(self, obj):
+        if hasattr(obj, 'metadata'):
+            for coverage in obj.metadata.coverages.all():
+                if coverage.type == 'box':
+                    return coverage.value["southlimit"]
+        else:
+            return 'none'
+
+    def prepare_coverage_westlimit(self, obj):
+        if hasattr(obj, 'metadata'):
+            for coverage in obj.metadata.coverages.all():
+                if coverage.type == 'box':
+                    return coverage.value["westlimit"]
+        else:
+            return 'none'
 
     def prepare_formats(self, obj):
         if hasattr(obj, 'metadata'): 
