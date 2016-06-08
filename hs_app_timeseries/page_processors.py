@@ -42,7 +42,7 @@ def landing_page(request, page):
 
         # add some forms
         site_form = SiteForm(instance=content_model.metadata.sites[0], res_short_id=content_model.short_id,
-                             element_id=content_model.metadata.site[0].id if content_model.metadata.sites else None)
+                             element_id=content_model.metadata.sites[0].id if content_model.metadata.sites else None)
 
         variable_form = VariableForm(instance=content_model.metadata.variables[0], res_short_id=content_model.short_id,
                              element_id=content_model.metadata.variables[0].id if content_model.metadata.variables else None)
