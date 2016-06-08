@@ -105,6 +105,8 @@ class ResourcePermissionsMixin(Ownable):
 # this should be used as the page processor for anything with pagepermissionsmixin
 # page_processor_for(MyPage)(ga_resources.views.page_permissions_page_processor)
 def page_permissions_page_processor(request, page):
+    from hs_access_control.models import PrivilegeCodes
+
     cm = page.get_content_model()
     can_change_resource_flags = False
     is_owner_user = False
@@ -121,8 +123,8 @@ def page_permissions_page_processor(request, page):
                 is_view_user = cm.raccess.view_users.filter(pk=request.user.pk).exists()
 
     owners = cm.raccess.owners.all()
-    editors = cm.raccess.edit_users.exclude(pk__in=owners)
-    viewers = cm.raccess.view_users.exclude(pk__in=editors).exclude(pk__in=owners)
+    editors = cm.raccess.get_users_with_explicit_access(PrivilegeCodes.CHANGE, include_group_granted_access=False)
+    viewers = cm.raccess.get_users_with_explicit_access(PrivilegeCodes.VIEW, include_group_granted_access=False)
     edit_groups = cm.raccess.edit_groups
     view_groups = cm.raccess.view_groups.exclude(pk__in=edit_groups)
 
