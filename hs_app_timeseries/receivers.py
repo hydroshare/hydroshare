@@ -1,7 +1,6 @@
 import os
 import sqlite3
 
-from django.core.exceptions import ValidationError
 from django.dispatch import receiver
 
 from hs_core.signals import *
@@ -191,7 +190,8 @@ def _extract_metadata(resource, sqlite_file):
             for result in results:
                 if is_create_multiple_author_elements or (len(resource.metadata.creators.all()) == 1 and
                                                                   len(resource.metadata.contributors.all()) == 0):
-                    cur.execute("SELECT ActionID FROM FeatureActions WHERE FeatureActionID=?", (result["FeatureActionID"],))
+                    cur.execute("SELECT ActionID FROM FeatureActions WHERE FeatureActionID=?",
+                                (result["FeatureActionID"],))
                     feature_actions = cur.fetchall()
                     for feature_action in feature_actions:
                         cur.execute("SELECT ActionID FROM Actions WHERE ActionID=?", (feature_action["ActionID"],))
@@ -217,8 +217,8 @@ def _extract_metadata(resource, sqlite_file):
                                         # get person organization name - get only one organization name
                                         organization = None
                                         if affiliation['OrganizationID']:
-                                            cur.execute("SELECT OrganizationName FROM Organizations WHERE OrganizationID=?",
-                                                        (affiliation["OrganizationID"],))
+                                            cur.execute("SELECT OrganizationName FROM Organizations WHERE "
+                                                        "OrganizationID=?", (affiliation["OrganizationID"],))
                                             organization = cur.fetchone()
 
                                         # create contributor metadata elements
@@ -241,7 +241,8 @@ def _extract_metadata(resource, sqlite_file):
                                         # check if this person is an author (creator)
                                         author = None
                                         if authorlists_table_exists:
-                                            cur.execute("SELECT * FROM AuthorLists WHERE PersonID=?", (person['PersonID'],))
+                                            cur.execute("SELECT * FROM AuthorLists WHERE PersonID=?",
+                                                        (person['PersonID'],))
                                             author = cur.fetchone()
 
                                         if author:
@@ -357,9 +358,6 @@ def _extract_metadata(resource, sqlite_file):
 
             cur.execute("SELECT * FROM Results")
             results = cur.fetchall()
-            variable_ids_already_used = []
-            method_ids_already_used = []
-            processinglevel_ids_already_used = []
             for result in results:
                 # extract site element data
                 # Start with Results table to -> FeatureActions table -> SamplingFeatures table
@@ -367,8 +365,6 @@ def _extract_metadata(resource, sqlite_file):
                 cur.execute("SELECT * FROM FeatureActions WHERE FeatureActionID=?", (result["FeatureActionID"],))
                 feature_action = cur.fetchone()
                 if is_create_multiple_site_elements or len(resource.metadata.sites) == 0:
-                    # cur.execute("SELECT * FROM FeatureActions WHERE FeatureActionID=?", (result["FeatureActionID"],))
-                    # feature_action = cur.fetchone()
                     cur.execute("SELECT * FROM SamplingFeatures WHERE SamplingFeatureID=?",
                                 (feature_action["SamplingFeatureID"],))
                     sampling_feature = cur.fetchone()
@@ -393,82 +389,75 @@ def _extract_metadata(resource, sqlite_file):
 
                 # extract variable element data
                 # Start with Results table to -> Variables table
-                if result["VariableID"] not in variable_ids_already_used:
-                    variable_ids_already_used.append(result["VariableID"])
-                    if is_create_multiple_variable_elements or len(resource.metadata.variables) == 0:
-                        cur.execute("SELECT * FROM Variables WHERE VariableID=?", (result["VariableID"],))
-                        variable = cur.fetchone()
-                        data_dict = {}
-                        data_dict['series_ids'] = [result["ResultUUID"]]
-                        data_dict['variable_code'] = variable["VariableCode"]
-                        data_dict["variable_name"] = variable["VariableNameCV"]
-                        data_dict['variable_type'] = variable["VariableTypeCV"]
-                        data_dict["no_data_value"] = variable["NoDataValue"]
-                        if variable["VariableDefinition"]:
-                            data_dict["variable_definition"] = variable["VariableDefinition"]
+                if is_create_multiple_variable_elements or len(resource.metadata.variables) == 0:
+                    cur.execute("SELECT * FROM Variables WHERE VariableID=?", (result["VariableID"],))
+                    variable = cur.fetchone()
+                    data_dict = {}
+                    data_dict['series_ids'] = [result["ResultUUID"]]
+                    data_dict['variable_code'] = variable["VariableCode"]
+                    data_dict["variable_name"] = variable["VariableNameCV"]
+                    data_dict['variable_type'] = variable["VariableTypeCV"]
+                    data_dict["no_data_value"] = variable["NoDataValue"]
+                    if variable["VariableDefinition"]:
+                        data_dict["variable_definition"] = variable["VariableDefinition"]
 
-                        if variable["SpeciationCV"]:
-                            data_dict["speciation"] = variable["SpeciationCV"]
+                    if variable["SpeciationCV"]:
+                        data_dict["speciation"] = variable["SpeciationCV"]
 
-                        # create variable element
-                        resource.metadata.create_element('variable', **data_dict)
-                    else:
-                        _update_element_series_ids(resource.metadata.variables[0], result["ResultUUID"])
+                    # create variable element
+                    resource.metadata.create_element('variable', **data_dict)
+                else:
+                    _update_element_series_ids(resource.metadata.variables[0], result["ResultUUID"])
 
                 # extract method element data
                 # Start with Results table -> FeatureActions table to -> Actions table to -> Method table
                 if is_create_multiple_method_elements or len(resource.metadata.methods) == 0:
                     cur.execute("SELECT MethodID from Actions WHERE ActionID=?", (feature_action["ActionID"],))
                     action = cur.fetchone()
-                    if action["MethodID"] not in method_ids_already_used:
-                        method_ids_already_used.append(action["MethodID"])
-                        cur.execute("SELECT * FROM Methods WHERE MethodID=?", (action["MethodID"],))
-                        method = cur.fetchone()
-                        data_dict = {}
-                        data_dict['series_ids'] = [result["ResultUUID"]]
-                        data_dict['method_code'] = method["MethodCode"]
-                        data_dict["method_name"] = method["MethodName"]
-                        data_dict['method_type'] = method["MethodTypeCV"]
+                    cur.execute("SELECT * FROM Methods WHERE MethodID=?", (action["MethodID"],))
+                    method = cur.fetchone()
+                    data_dict = {}
+                    data_dict['series_ids'] = [result["ResultUUID"]]
+                    data_dict['method_code'] = method["MethodCode"]
+                    data_dict["method_name"] = method["MethodName"]
+                    data_dict['method_type'] = method["MethodTypeCV"]
 
-                        if method["MethodDescription"]:
-                            data_dict["method_description"] = method["MethodDescription"]
+                    if method["MethodDescription"]:
+                        data_dict["method_description"] = method["MethodDescription"]
 
-                        if method["MethodLink"]:
-                            data_dict["method_link"] = method["MethodLink"]
+                    if method["MethodLink"]:
+                        data_dict["method_link"] = method["MethodLink"]
 
-                        # create method element
-                        resource.metadata.create_element('method', **data_dict)
-                    else:
-                        _update_element_series_ids(resource.metadata.methods[0], result["ResultUUID"])
+                    # create method element
+                    resource.metadata.create_element('method', **data_dict)
+                else:
+                    _update_element_series_ids(resource.metadata.methods[0], result["ResultUUID"])
 
                 # extract processinglevel element data
                 # Start with Results table to -> ProcessingLevels table
-                if result["ProcessingLevelID"] not in processinglevel_ids_already_used:
-                    processinglevel_ids_already_used.append(result["ProcessingLevelID"])
-                    if is_create_multiple_processinglevel_elements or len(resource.metadata.processing_levels) == 0:
-                        cur.execute("SELECT * FROM ProcessingLevels WHERE ProcessingLevelID=?", (result["ProcessingLevelID"],))
-                        pro_level = cur.fetchone()
-                        data_dict = {}
-                        data_dict['series_ids'] = [result["ResultUUID"]]
-                        data_dict['processing_level_code'] = pro_level["ProcessingLevelCode"]
-                        if pro_level["Definition"]:
-                            data_dict["definition"] = pro_level["Definition"]
+                if is_create_multiple_processinglevel_elements or len(resource.metadata.processing_levels) == 0:
+                    cur.execute("SELECT * FROM ProcessingLevels WHERE ProcessingLevelID=?",
+                                (result["ProcessingLevelID"],))
+                    pro_level = cur.fetchone()
+                    data_dict = {}
+                    data_dict['series_ids'] = [result["ResultUUID"]]
+                    data_dict['processing_level_code'] = pro_level["ProcessingLevelCode"]
+                    if pro_level["Definition"]:
+                        data_dict["definition"] = pro_level["Definition"]
 
-                        if pro_level["Explanation"]:
-                            data_dict["explanation"] = pro_level["Explanation"]
+                    if pro_level["Explanation"]:
+                        data_dict["explanation"] = pro_level["Explanation"]
 
-                        # create processinglevel element
-                        resource.metadata.create_element('processinglevel', **data_dict)
-                    else:
-                        _update_element_series_ids(resource.metadata.processing_levels[0], result["ResultUUID"])
+                    # create processinglevel element
+                    resource.metadata.create_element('processinglevel', **data_dict)
+                else:
+                    _update_element_series_ids(resource.metadata.processing_levels[0], result["ResultUUID"])
 
                 # extract data for TimeSeriesResult element
                 # Start with Results table
                 if is_create_multiple_timeseriesresult_elements or len(resource.metadata.time_series_results) == 0:
                     data_dict = {}
                     data_dict['series_ids'] = [result["ResultUUID"]]
-                    # cur.execute("SELECT * FROM Results")
-                    # result = cur.fetchone()
                     data_dict["status"] = result["StatusCV"]
                     data_dict["sample_medium"] = result["SampledMediumCV"]
                     data_dict["value_count"] = result["ValueCount"]
@@ -493,10 +482,10 @@ def _extract_metadata(resource, sqlite_file):
 
     except sqlite3.Error, e:
         sqlite_err_msg = str(e.args[0])
+        # TODO: log the error
         return sqlite_err_msg
     except Exception, ex:
-        # TODO: remove print
-        print ex.message
+        # TODO: log the error
         return err_message
 
 
