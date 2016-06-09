@@ -160,7 +160,7 @@
                             {% endif %}
                         {% endfor %}
                     </div>
-                    <table class="table">
+                    <table id="geo-filter-coordinates" class="table">
                         <tr>
                             {% for field in form %}
                                 {% if field.auto_id  != "id_q" %}
@@ -257,6 +257,7 @@
         var map_default_center = new google.maps.LatLng(0, 0);
         var markers = [];
         var markerCluster = null;
+        var update_markers = false;
         var initMap = function(json_results) {
             var modified_points_data = [];
             var modified_boxes_data = [];
@@ -268,7 +269,7 @@
             }
 
             map = new google.maps.Map($mapDiv[0], {
-                zoom: 2,
+                //zoom: 2,
                 mapTypeId: google.maps.MapTypeId.TERRAIN,
                 zoomControl: true,
                 scaleControl: true
@@ -277,7 +278,6 @@
             map.enableKeyDragZoom({
                 key: 'shift',
                 visualEnabled: true,
-                //visualPosition: google.maps.ControlPosition.RIGHT_BOTTOM,
             });
 
 
@@ -296,21 +296,21 @@
             });
 
             removeMarkers();
-            setMarkers(json_results);
-
+            if (!update_markers) {
+                setMarkers(json_results);
+            }
             var bounds = (markers.length > 0) ? createBoundsForMarkers(markers) : null;
 
             if (bounds) {
                 var ne = bounds.getNorthEast();
                 var sw = bounds.getSouthWest();
-                document.getElementById("id_NElng").value = ne.lng();
                 document.getElementById("id_NElat").value = ne.lat();
-                document.getElementById("id_SWlng").value = sw.lng();
+                document.getElementById("id_NElng").value = ne.lng();
                 document.getElementById("id_SWlat").value = sw.lat();
+                document.getElementById("id_SWlng").value = sw.lng();
                 map_default_bounds = bounds;
                 map_default_zoom = getBoundsZoomLevel(map_default_bounds, mapDim);
                 map_default_center = map_default_bounds.getCenter();
-                map.fitBounds(map_default_bounds);
             }
             var idle_listener = google.maps.event.addListener(map, "idle", function () {
                 map.setCenter(map_default_center);
@@ -327,19 +327,39 @@
                     document.getElementById("id_NElat").value = ne.lat();
                     document.getElementById("id_SWlng").value = sw.lng();
                     document.getElementById("id_SWlat").value = sw.lat();
-
                 }
             });
 
-            /*var zoom_listener = google.maps.event.addListener(map, 'zoom_changed', function(){
-                updateMapResults();
-            });*/
-
-            var drag_listener = google.maps.event.addListener(map, 'dragend', function(){
-                updateMapResults();
+            var zoom_listener = google.maps.event.addListener(map, 'zoom_changed', function(){
+                //updateMapResults();
+                update_markers = true
             });
 
+            var drag_listener = google.maps.event.addListener(map, 'dragend', function(){
+                //updateMapResults();
+                update_markers = true;
+            });
+
+            var markers_listener = google.maps.event.addListener(map, "idle", function () {
+                if (update_markers) {
+                    updateMapResults();
+                    update_markers = false;
+                }
+            });
             generateLegend();
+        }
+
+        var generateLegend = function() {
+            var map_legend = document.getElementById('legend');
+            map.controls[google.maps.ControlPosition.RIGHT_TOP].push(map_legend);
+            map_legend.style.background = "white";
+            var legend_content = [];
+            legend_content.push("<p style='margin-left:5px'><img src='//cdn.rawgit.com/googlemaps/js-marker-clusterer/gh-pages/images/m2.png'> number of sites </p>");
+            legend_content.push("<p style='margin-left:20px'><img src='//cdn.rawgit.com/Concept211/Google-Maps-Markers/master/images/marker_redN.png'> N = number of point coverages</p>");
+            legend_content.push("<p style='margin-left:20px'><img src='//cdn.rawgit.com/Concept211/Google-Maps-Markers/master/images/marker_blueN.png'> N = number of box coverages</p>");
+            map_legend.innerHTML = legend_content.join('');
+            var reset_zoom_button = document.getElementById('resetZoom');
+            map.controls[google.maps.ControlPosition.RIGHT_BOTTOM].push(reset_zoom_button);
         }
 
         var createBoundsForMarkers = function(markers) {
@@ -379,14 +399,14 @@
         }
 
         var resetMapZoom = function() {
-            map.fitBounds(map_default_bounds);
             var ne = map_default_bounds.getNorthEast();
             var sw = map_default_bounds.getSouthWest();
             document.getElementById("id_NElng").value = ne.lng();
             document.getElementById("id_NElat").value = ne.lat();
             document.getElementById("id_SWlng").value = sw.lng();
             document.getElementById("id_SWlat").value = sw.lat();
-            updateMapResults();
+            map.fitBounds(map_default_bounds);
+            update_markers = true;
             var listener = google.maps.event.addListener(map, "idle", function () {
                 map.setCenter(map_default_bounds.getCenter());
                 map.setZoom(map_default_zoom);
@@ -414,9 +434,8 @@
                 map.setZoom(getBoundsZoomLevel(customized_bounds, mapDim));
                 google.maps.event.removeListener(listener);
             });
-
-            updateMapResults();
         }
+
         var removeMarkers = function() {
 
             if (markerCluster) {
@@ -429,6 +448,7 @@
             }
             markers = [];
         }
+
         var updateMapResults = function() {
             removeMarkers();
             var swlat = document.getElementById("id_SWlat").value;
@@ -465,20 +485,6 @@
                 }
             });
         }
-
-        var generateLegend = function() {
-            var map_legend = document.getElementById('legend');
-            map.controls[google.maps.ControlPosition.RIGHT_TOP].push(map_legend);
-            map_legend.style.background = "white";
-            var legend_content = [];
-            legend_content.push("<p style='margin-left:5px'><img src='//cdn.rawgit.com/googlemaps/js-marker-clusterer/gh-pages/images/m2.png'> markers cluster </p>");
-            legend_content.push("<p style='margin-left:20px'><img src='//cdn.rawgit.com/Concept211/Google-Maps-Markers/master/images/marker_redn.png'> point coverage</p>");
-            legend_content.push("<p style='margin-left:20px'><img src='//cdn.rawgit.com/Concept211/Google-Maps-Markers/master/images/marker_bluen.png'> box coverage</p>");
-            map_legend.innerHTML = legend_content.join('');
-            var reset_zoom_button = document.getElementById('resetZoom');
-            map.controls[google.maps.ControlPosition.RIGHT_BOTTOM].push(reset_zoom_button);
-        }
-
 
         var setMarkers = function(json_results) {
 
@@ -552,7 +558,6 @@
                 rectangle.set('bounds', rectBounds);
 
             });
-            //bounds.extend(latlng);
         }
 
         var createBoxResourceMarker = function (northlimit, southlimit, eastlimit, westlimit, info_content, info_window, counter, rectangle, markers) {
@@ -575,7 +580,6 @@
                 rectangle.set('bounds', rectBounds);
 
             });
-            //bounds.extend(latlng);
         }
 
         var checkDuplicatePointResults = function (modified_points_data, test){
@@ -720,7 +724,7 @@
             $("ul.nav-tabs > li > a").on("shown.bs.tab", function (e) {
                 var tabId = $(e.target).attr("href").substr(1);
                 window.location.hash = tabId;
-                if(tabId == 'map-view' && map == null){
+                if(tabId == "map-view" && map == null){
                     var requestURL = "/searchjson/";
                     if(window.location.search.length == 0){
                         requestURL += "?q=";
