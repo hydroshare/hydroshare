@@ -5,10 +5,14 @@
 {% block extended_metadata %}
     {% if extended_metadata_exists %}
         <div class="row">
-            {% if site or variable or method %}
-                <div {% if not processing_level and not timeseries_result %}class="col-md-12 col-xs-12" {% else %}class="col-md-6 col-xs-12"{% endif %}>
-                    {% if site %}
-                        <legend>Site</legend>
+            {% if sites or variables or methods %}
+                <div {% if not processing_levels and not timeseries_results %}class="col-md-12 col-xs-12" {% else %}class="col-md-6 col-xs-12"{% endif %}>
+                    {% if sites %}
+                         <legend>Sites</legend>
+                        {% for site in sites %}
+                             {% if not forloop.first %}
+                                <legend></legend>
+                            {% endif %}
                         <table class="custom-table">
                             <tbody>
                                 <tr><th class="text-muted">Code </th><td>{{ site.site_code }}</td></tr>
@@ -19,10 +23,15 @@
                             </tbody>
                         </table>
                         <hr style="border:0">
+                        {% endfor %}
                     {%  endif %}
 
-                    {% if variable %}
-                        <legend>Variable</legend>
+                    {% if variables %}
+                        <legend>Variables</legend>
+                        {% for variable in variables %}
+                            {% if not forloop.first %}
+                                <legend></legend>
+                            {% endif %}
                         <table class="custom-table">
                             <tbody>
                                 <tr><th class="text-muted">Code </th><td>{{ variable.variable_code }}</td></tr>
@@ -34,10 +43,15 @@
                             </tbody>
                         </table>
                         <hr style="border:0">
+                        {% endfor %}
                     {% endif %}
 
-                    {% if method %}
-                        <legend>Method</legend>
+                    {% if methods %}
+                        <legend>Methods</legend>
+                        {% for method in methods %}
+                            {% if not forloop.first %}
+                                <legend></legend>
+                            {% endif %}
                         <table class="custom-table">
                             <tbody>
                                 <tr><th class="text-muted">Code </th><td>{{ method.method_code }}</td></tr>
@@ -52,14 +66,19 @@
                             </tbody>
                         </table>
                         <hr style="border:0">
+                        {% endfor %}
                     {% endif %}
                 </div>
             {% endif %}
 
-            {% if processing_level or timeseries_result %}
-                <div {% if not site and not variable and not method %}class="col-md-12 col-xs-12" {% else %}class="col-md-6 col-xs-12"{% endif %}>
-                {% if processing_level %}
-                    <legend>Processing Level</legend>
+            {% if processing_levels or timeseries_results %}
+                <div {% if not sites and not variables and not methods %}class="col-md-12 col-xs-12" {% else %}class="col-md-6 col-xs-12"{% endif %}>
+                {% if processing_levels %}
+                    <legend>Processing Levels</legend>
+                    {% for processing_level in processing_levels %}
+                        {% if not forloop.first %}
+                            <legend></legend>
+                        {% endif %}
                     <table class="custom-table">
                         <tbody>
                             <tr><th class="text-muted">Code </th><td>{{ processing_level.processing_level_code }}</td></tr>
@@ -73,10 +92,15 @@
                         </tbody>
                     </table>
                     <hr style="border:0">
+                    {% endfor %}
                 {% endif %}
 
-                {% if timeseries_result %}
-                    <legend>Time Series Result</legend>
+                {% if timeseries_results %}
+                    <legend>Time Series Results</legend>
+                    {% for timeseries_result in timeseries_results %}
+                        {% if not forloop.first %}
+                            <legend></legend>
+                        {% endif %}
                     <table class="custom-table">
                         <tbody>
                             <tr><th class="text-muted">Units Type </th><td>{{ timeseries_result.units_type }}</td></tr>
@@ -88,6 +112,8 @@
                             <tr><th class="text-muted">Aggregation Statistics </th><td>{{ timeseries_result.aggregation_statistics }}</td></tr>
                         </tbody>
                     </table>
+                    <hr style="border:0">
+                    {% endfor %}
                 {% endif %}
                 </div>
             {% endif %}

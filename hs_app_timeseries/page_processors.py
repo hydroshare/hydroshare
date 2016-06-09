@@ -32,11 +32,11 @@ def landing_page(request, page):
             extended_metadata_exists = True
 
         context['extended_metadata_exists'] = extended_metadata_exists
-        context['site'] = content_model.metadata.sites[0]
-        context['variable'] = content_model.metadata.variables[0]
-        context['method'] = content_model.metadata.methods[0]
-        context['processing_level'] = content_model.metadata.processing_levels[0]
-        context['timeseries_result'] = content_model.metadata.time_series_results[0]
+        context['sites'] = content_model.metadata.sites
+        context['variables'] = content_model.metadata.variables
+        context['methods'] = content_model.metadata.methods
+        context['processing_levels'] = content_model.metadata.processing_levels
+        context['timeseries_results'] = content_model.metadata.time_series_results
     else:
         # EDIT MODE
 
