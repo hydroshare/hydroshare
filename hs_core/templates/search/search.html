@@ -257,7 +257,6 @@
         var map_default_center = new google.maps.LatLng(0, 0);
         var markers = [];
         var markerCluster = null;
-        var update_markers = false;
         var initMap = function(json_results) {
             var modified_points_data = [];
             var modified_boxes_data = [];
@@ -296,9 +295,8 @@
             });
 
             removeMarkers();
-            if (!update_markers) {
-                setMarkers(json_results);
-            }
+            setMarkers(json_results);
+
             var bounds = (markers.length > 0) ? createBoundsForMarkers(markers) : null;
 
             if (bounds) {
@@ -331,21 +329,13 @@
             });
 
             var zoom_listener = google.maps.event.addListener(map, 'zoom_changed', function(){
-                //updateMapResults();
-                update_markers = true
+                updateMapResults();
             });
 
             var drag_listener = google.maps.event.addListener(map, 'dragend', function(){
-                //updateMapResults();
-                update_markers = true;
+                updateMapResults();
             });
 
-            var markers_listener = google.maps.event.addListener(map, "idle", function () {
-                if (update_markers) {
-                    updateMapResults();
-                    update_markers = false;
-                }
-            });
             generateLegend();
         }
 
@@ -361,6 +351,7 @@
             var reset_zoom_button = document.getElementById('resetZoom');
             map.controls[google.maps.ControlPosition.RIGHT_BOTTOM].push(reset_zoom_button);
         }
+
 
         var createBoundsForMarkers = function(markers) {
             var bounds = new google.maps.LatLngBounds();
@@ -406,7 +397,7 @@
             document.getElementById("id_SWlng").value = sw.lng();
             document.getElementById("id_SWlat").value = sw.lat();
             map.fitBounds(map_default_bounds);
-            update_markers = true;
+            updateMapResults();
             var listener = google.maps.event.addListener(map, "idle", function () {
                 map.setCenter(map_default_bounds.getCenter());
                 map.setZoom(map_default_zoom);
@@ -435,7 +426,6 @@
                 google.maps.event.removeListener(listener);
             });
         }
-
         var removeMarkers = function() {
 
             if (markerCluster) {
@@ -448,7 +438,6 @@
             }
             markers = [];
         }
-
         var updateMapResults = function() {
             removeMarkers();
             var swlat = document.getElementById("id_SWlat").value;
