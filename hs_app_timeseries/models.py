@@ -1,6 +1,8 @@
 from django.contrib.contenttypes.fields import GenericRelation
 from django.contrib.auth.models import User, Group
 from django.contrib.contenttypes.models import ContentType
+from django.contrib.postgres.fields import ArrayField
+
 from django.core.exceptions import ValidationError, ObjectDoesNotExist
 from django.db import models
 
@@ -12,10 +14,16 @@ from hs_core.models import BaseResource, ResourceManager, resource_processor, Co
     Coverage, Subject
 
 
+class TimeSeriesAbstractMetaDataElement(AbstractMetaDataElement):
+    series_ids = ArrayField(models.CharField(max_length=36, null=True, blank=True), default=[])
+
+    class Meta:
+        abstract = True
+
 # define extended metadata elements for Time Series resource type
-class Site(AbstractMetaDataElement):
+class Site(TimeSeriesAbstractMetaDataElement):
     term = 'Site'
-    series_id = models.CharField(max_length=36, null=True, blank=True)
+    # series_id = models.CharField(max_length=36, null=True, blank=True)
     site_code = models.CharField(max_length=200)
     site_name = models.CharField(max_length=255)
     elevation_m = models.IntegerField(null=True, blank=True)
@@ -25,18 +33,18 @@ class Site(AbstractMetaDataElement):
     def __unicode__(self):
         return self.site_name
 
-    class Meta:
-        # site element is not repeatable
-        unique_together = ("content_type", "object_id", "series_id")
+    # class Meta:
+    #     # site element is not repeatable
+    #     unique_together = ("content_type", "object_id", "series_id")
 
     @classmethod
     def remove(cls, element_id):
         raise ValidationError("Site element of a resource can't be deleted.")
 
 
-class Variable(AbstractMetaDataElement):
+class Variable(TimeSeriesAbstractMetaDataElement):
     term = 'Variable'
-    series_id = models.CharField(max_length=36, null=True, blank=True)
+    # series_id = models.CharField(max_length=36, null=True, blank=True)
     variable_code = models.CharField(max_length=20)
     variable_name = models.CharField(max_length=100)
     variable_type = models.CharField(max_length=100)
@@ -47,18 +55,18 @@ class Variable(AbstractMetaDataElement):
     def __unicode__(self):
         return self.variable_name
 
-    class Meta:
-        # variable element is not repeatable
-        unique_together = ("content_type", "object_id", "series_id")
+    # class Meta:
+    #     # variable element is not repeatable
+    #     unique_together = ("content_type", "object_id", "series_id")
 
     @classmethod
     def remove(cls, element_id):
         raise ValidationError("Variable element of a resource can't be deleted.")
 
 
-class Method(AbstractMetaDataElement):
+class Method(TimeSeriesAbstractMetaDataElement):
     term = 'Method'
-    series_id = models.CharField(max_length=36, null=True, blank=True)
+    # series_id = models.CharField(max_length=36, null=True, blank=True)
     method_code = models.CharField(max_length=50)
     method_name = models.CharField(max_length=200)
     method_type = models.CharField(max_length=200)
@@ -68,18 +76,18 @@ class Method(AbstractMetaDataElement):
     def __unicode__(self):
         return self.method_name
 
-    class Meta:
-        # method element is not repeatable
-        unique_together = ("content_type", "object_id", "series_id")
+    # class Meta:
+    #     # method element is not repeatable
+    #     unique_together = ("content_type", "object_id", "series_id")
 
     @classmethod
     def remove(cls, element_id):
         raise ValidationError("Method element of a resource can't be deleted.")
 
 
-class ProcessingLevel(AbstractMetaDataElement):
+class ProcessingLevel(TimeSeriesAbstractMetaDataElement):
     term = 'ProcessingLevel'
-    series_id = models.CharField(max_length=36, null=True, blank=True)
+    # series_id = models.CharField(max_length=36, null=True, blank=True)
     processing_level_code = models.IntegerField()
     definition = models.CharField(max_length=200, null=True, blank=True)
     explanation = models.TextField(null=True, blank=True)
@@ -87,18 +95,18 @@ class ProcessingLevel(AbstractMetaDataElement):
     def __unicode__(self):
         return self.processing_level_code
 
-    class Meta:
-        # processinglevel element is not repeatable for the same series id
-        unique_together = ("content_type", "object_id", "series_id")
+    # class Meta:
+    #     # processinglevel element is not repeatable for the same series id
+    #     unique_together = ("content_type", "object_id", "series_id")
 
     @classmethod
     def remove(cls, element_id):
         raise ValidationError("ProcessingLevel element of a resource can't be deleted.")
 
 
-class TimeSeriesResult(AbstractMetaDataElement):
+class TimeSeriesResult(TimeSeriesAbstractMetaDataElement):
     term = 'TimeSeriesResult'
-    series_id = models.CharField(max_length=36, null=True, blank=True)
+    # series_id = models.CharField(max_length=36, null=True, blank=True)
     units_type = models.CharField(max_length=255)
     units_name = models.CharField(max_length=255)
     units_abbreviation = models.CharField(max_length=20)
@@ -110,9 +118,9 @@ class TimeSeriesResult(AbstractMetaDataElement):
     def __unicode__(self):
         return self.units_type
 
-    class Meta:
-        # processinglevel element is not repeatable
-        unique_together = ("content_type", "object_id", "series_id")
+    # class Meta:
+    #     # processinglevel element is not repeatable
+    #     unique_together = ("content_type", "object_id", "series_id")
 
     @classmethod
     def remove(cls, element_id):
@@ -232,59 +240,61 @@ class TimeSeriesMetaData(CoreMetaData):
         # get root 'Description' element that contains all other elements
         container = RDF_ROOT.find('rdf:Description', namespaces=self.NAMESPACES)
 
-        for site in self.sites:
-            element_fields = [('site_code', 'SiteCode'), ('site_name', 'SiteName')]
-
-            if site.elevation_m:
-                element_fields.append(('elevation_m', 'Elevation_m'))
-
-            if site.elevation_datum:
-                element_fields.append(('elevation_datum', 'ElevationDatum'))
-
-            if site.site_type:
-                element_fields.append(('site_type', 'SiteType'))
-
-            self.add_metadata_element_to_xml(container, (site, 'site'), element_fields)
-
-        for variable in self.variables:
-            element_fields = [('variable_code', 'VariableCode'), ('variable_name', 'VariableName'),
-                              ('variable_type', 'VariableType'), ('no_data_value', 'NoDataValue')]
-
-            if variable.variable_definition:
-                element_fields.append(('variable_definition', 'VariableDefinition'))
-
-            if variable.speciation:
-                element_fields.append(('speciation', 'Speciation'))
-
-            self.add_metadata_element_to_xml(container, (variable, 'variable'), element_fields)
-
-        for method in self.methods:
-            element_fields = [('method_code', 'MethodCode'), ('method_name', 'MethodName'),
-                              ('method_type', 'MethodType')]
-
-            if method.method_description:
-                element_fields.append(('method_description', 'MethodDescription'))
-
-            if method.method_link:
-                element_fields.append(('method_link', 'MethodLink'))
-
-            self.add_metadata_element_to_xml(container, (method, 'method'), element_fields)
-
-        for processing_level in self.processing_levels:
-            element_fields = [('processing_level_code', 'ProcessingLevelCode')]
-
-            if processing_level.definition:
-                element_fields.append(('definition', 'Definition'))
-
-            if processing_level.explanation:
-                element_fields.append(('explanation', 'Explanation'))
-
-            self.add_metadata_element_to_xml(container, (processing_level, 'processingLevel'), element_fields)
+        # for site in self.sites:
+        #     element_fields = [('site_code', 'SiteCode'), ('site_name', 'SiteName')]
+        #
+        #     if site.elevation_m:
+        #         element_fields.append(('elevation_m', 'Elevation_m'))
+        #
+        #     if site.elevation_datum:
+        #         element_fields.append(('elevation_datum', 'ElevationDatum'))
+        #
+        #     if site.site_type:
+        #         element_fields.append(('site_type', 'SiteType'))
+        #
+        #     self.add_metadata_element_to_xml(container, (site, 'site'), element_fields)
+        #
+        # for variable in self.variables:
+        #     element_fields = [('variable_code', 'VariableCode'), ('variable_name', 'VariableName'),
+        #                       ('variable_type', 'VariableType'), ('no_data_value', 'NoDataValue')]
+        #
+        #     if variable.variable_definition:
+        #         element_fields.append(('variable_definition', 'VariableDefinition'))
+        #
+        #     if variable.speciation:
+        #         element_fields.append(('speciation', 'Speciation'))
+        #
+        #     self.add_metadata_element_to_xml(container, (variable, 'variable'), element_fields)
+        #
+        # for method in self.methods:
+        #     element_fields = [('method_code', 'MethodCode'), ('method_name', 'MethodName'),
+        #                       ('method_type', 'MethodType')]
+        #
+        #     if method.method_description:
+        #         element_fields.append(('method_description', 'MethodDescription'))
+        #
+        #     if method.method_link:
+        #         element_fields.append(('method_link', 'MethodLink'))
+        #
+        #     self.add_metadata_element_to_xml(container, (method, 'method'), element_fields)
+        #
+        # for processing_level in self.processing_levels:
+        #     element_fields = [('processing_level_code', 'ProcessingLevelCode')]
+        #
+        #     if processing_level.definition:
+        #         element_fields.append(('definition', 'Definition'))
+        #
+        #     if processing_level.explanation:
+        #         element_fields.append(('explanation', 'Explanation'))
+        #
+        #     self.add_metadata_element_to_xml(container, (processing_level, 'processingLevel'), element_fields)
 
         for time_series_result in self.time_series_results:
             # since 2nd level nesting of elements exists here, can't use the helper function add_metadata_element_to_xml()
             hsterms_time_series_result = etree.SubElement(container, '{%s}timeSeriesResult' % self.NAMESPACES['hsterms'])
             hsterms_time_series_result_rdf_Description = etree.SubElement(hsterms_time_series_result, '{%s}Description' % self.NAMESPACES['rdf'])
+            hsterms_result_UUID = etree.SubElement(hsterms_time_series_result_rdf_Description, '{%s}timeSeriesResultUUID' % self.NAMESPACES['hsterms'])
+            hsterms_result_UUID.text = str(time_series_result.series_id)
             hsterms_units = etree.SubElement(hsterms_time_series_result_rdf_Description, '{%s}units' % self.NAMESPACES['hsterms'])
             hsterms_units_rdf_Description = etree.SubElement(hsterms_units, '{%s}Description' % self.NAMESPACES['rdf'])
             hsterms_units_type = etree.SubElement(hsterms_units_rdf_Description, '{%s}UnitsType' % self.NAMESPACES['hsterms'])
@@ -307,6 +317,63 @@ class TimeSeriesMetaData(CoreMetaData):
 
             hsterms_statistics = etree.SubElement(hsterms_time_series_result_rdf_Description, '{%s}AggregationStatistic' % self.NAMESPACES['hsterms'])
             hsterms_statistics.text = time_series_result.aggregation_statistics
+
+            for site in self.sites:
+                if time_series_result.series_id in site.series_ids:
+                    element_fields = [('site_code', 'SiteCode'), ('site_name', 'SiteName')]
+
+                    if site.elevation_m:
+                        element_fields.append(('elevation_m', 'Elevation_m'))
+
+                    if site.elevation_datum:
+                        element_fields.append(('elevation_datum', 'ElevationDatum'))
+
+                    if site.site_type:
+                        element_fields.append(('site_type', 'SiteType'))
+
+                    self.add_metadata_element_to_xml(hsterms_time_series_result, (site, 'site'), element_fields)
+                    break
+
+            for variable in self.variables:
+                if time_series_result.series_id in variable.series_ids:
+                    element_fields = [('variable_code', 'VariableCode'), ('variable_name', 'VariableName'),
+                                      ('variable_type', 'VariableType'), ('no_data_value', 'NoDataValue')]
+
+                    if variable.variable_definition:
+                        element_fields.append(('variable_definition', 'VariableDefinition'))
+
+                    if variable.speciation:
+                        element_fields.append(('speciation', 'Speciation'))
+
+                    self.add_metadata_element_to_xml(hsterms_time_series_result, (variable, 'variable'), element_fields)
+                    break
+
+            for method in self.methods:
+                if time_series_result.series_id in method.series_ids:
+                    element_fields = [('method_code', 'MethodCode'), ('method_name', 'MethodName'),
+                                      ('method_type', 'MethodType')]
+
+                    if method.method_description:
+                        element_fields.append(('method_description', 'MethodDescription'))
+
+                    if method.method_link:
+                        element_fields.append(('method_link', 'MethodLink'))
+
+                    self.add_metadata_element_to_xml(hsterms_time_series_result, (method, 'method'), element_fields)
+                    break
+
+            for processing_level in self.processing_levels:
+                if time_series_result.series_id in processing_level.series_ids:
+                    element_fields = [('processing_level_code', 'ProcessingLevelCode')]
+
+                    if processing_level.definition:
+                        element_fields.append(('definition', 'Definition'))
+
+                    if processing_level.explanation:
+                        element_fields.append(('explanation', 'Explanation'))
+
+                    self.add_metadata_element_to_xml(hsterms_time_series_result, (processing_level, 'processingLevel'), element_fields)
+                    break
 
         return etree.tostring(RDF_ROOT, pretty_print=True)
 

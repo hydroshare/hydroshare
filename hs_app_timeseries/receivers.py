@@ -374,7 +374,7 @@ def _extract_metadata(resource, sqlite_file):
                     sampling_feature = cur.fetchone()
 
                     data_dict = {}
-                    data_dict['series_id'] = result["ResultUUID"]
+                    data_dict['series_ids'] = [result["ResultUUID"]]
                     data_dict['site_code'] = sampling_feature["SamplingFeatureCode"]
                     data_dict['site_name'] = sampling_feature["SamplingFeatureName"]
                     if sampling_feature["Elevation_m"]:
@@ -388,7 +388,8 @@ def _extract_metadata(resource, sqlite_file):
 
                     # create site element
                     resource.metadata.create_element('site', **data_dict)
-
+                else:
+                    _update_element_series_ids(resource.metadata.sites[0], result["ResultUUID"])
 
                 # extract variable element data
                 # Start with Results table to -> Variables table
@@ -398,7 +399,7 @@ def _extract_metadata(resource, sqlite_file):
                         cur.execute("SELECT * FROM Variables WHERE VariableID=?", (result["VariableID"],))
                         variable = cur.fetchone()
                         data_dict = {}
-                        data_dict['series_id'] = result["ResultUUID"]
+                        data_dict['series_ids'] = [result["ResultUUID"]]
                         data_dict['variable_code'] = variable["VariableCode"]
                         data_dict["variable_name"] = variable["VariableNameCV"]
                         data_dict['variable_type'] = variable["VariableTypeCV"]
@@ -411,6 +412,8 @@ def _extract_metadata(resource, sqlite_file):
 
                         # create variable element
                         resource.metadata.create_element('variable', **data_dict)
+                    else:
+                        _update_element_series_ids(resource.metadata.variables[0], result["ResultUUID"])
 
                 # extract method element data
                 # Start with Results table -> FeatureActions table to -> Actions table to -> Method table
@@ -422,7 +425,7 @@ def _extract_metadata(resource, sqlite_file):
                         cur.execute("SELECT * FROM Methods WHERE MethodID=?", (action["MethodID"],))
                         method = cur.fetchone()
                         data_dict = {}
-                        data_dict['series_id'] = result["ResultUUID"]
+                        data_dict['series_ids'] = [result["ResultUUID"]]
                         data_dict['method_code'] = method["MethodCode"]
                         data_dict["method_name"] = method["MethodName"]
                         data_dict['method_type'] = method["MethodTypeCV"]
@@ -435,6 +438,8 @@ def _extract_metadata(resource, sqlite_file):
 
                         # create method element
                         resource.metadata.create_element('method', **data_dict)
+                    else:
+                        _update_element_series_ids(resource.metadata.methods[0], result["ResultUUID"])
 
                 # extract processinglevel element data
                 # Start with Results table to -> ProcessingLevels table
@@ -444,7 +449,7 @@ def _extract_metadata(resource, sqlite_file):
                         cur.execute("SELECT * FROM ProcessingLevels WHERE ProcessingLevelID=?", (result["ProcessingLevelID"],))
                         pro_level = cur.fetchone()
                         data_dict = {}
-                        data_dict['series_id'] = result["ResultUUID"]
+                        data_dict['series_ids'] = [result["ResultUUID"]]
                         data_dict['processing_level_code'] = pro_level["ProcessingLevelCode"]
                         if pro_level["Definition"]:
                             data_dict["definition"] = pro_level["Definition"]
@@ -454,12 +459,14 @@ def _extract_metadata(resource, sqlite_file):
 
                         # create processinglevel element
                         resource.metadata.create_element('processinglevel', **data_dict)
+                    else:
+                        _update_element_series_ids(resource.metadata.processing_levels[0], result["ResultUUID"])
 
                 # extract data for TimeSeriesResult element
                 # Start with Results table
                 if is_create_multiple_timeseriesresult_elements or len(resource.metadata.time_series_results) == 0:
                     data_dict = {}
-                    data_dict['series_id'] = result["ResultUUID"]
+                    data_dict['series_ids'] = [result["ResultUUID"]]
                     # cur.execute("SELECT * FROM Results")
                     # result = cur.fetchone()
                     data_dict["status"] = result["StatusCV"]
@@ -479,14 +486,23 @@ def _extract_metadata(resource, sqlite_file):
 
                     # create the TimeSeriesResult element
                     resource.metadata.create_element('timeseriesresult', **data_dict)
+                else:
+                    _update_element_series_ids(resource.metadata.time_series_results[0], result["ResultUUID"])
+
             return None
 
     except sqlite3.Error, e:
         sqlite_err_msg = str(e.args[0])
         return sqlite_err_msg
     except Exception, ex:
+        # TODO: remove print
         print ex.message
         return err_message
+
+
+def _update_element_series_ids(element, series_id):
+    element.series_ids = element.series_ids + [series_id]
+    element.save()
 
 
 def _delete_extracted_metadata(resource):
