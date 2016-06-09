@@ -1013,6 +1013,22 @@ def get_metadata_terms_page(request, *args, **kwargs):
     return render(request, 'pages/metadata_terms.html')
 
 
+@login_required
+def get_user_data(request, user_id, *args, **kwargs):
+    user = utils.user_from_id(user_id)
+
+    if user.userprofile.middle_name:
+        user_name = "{} {} {}".format(user.first_name, user.userprofile.middle_name, user.last_name)
+    else:
+        user_name = "{} {}".format(user.first_name, user.last_name)
+
+    user_data = {'name': user_name, 'email': user.email, 'url': '/user/{uid}/'.format(uid=user.pk)}
+    user_data['phone'] = user.userprofile.organization if user.userprofile.phone_1 else ''
+    user_data['organization'] = user.userprofile.organization if user.userprofile.organization else ''
+    user_data['website'] = user.userprofile.organization if user.userprofile.website else ''
+
+    return HttpResponse(json.dumps(user_data))
+
 def _send_email_on_group_membership_acceptance(membership_request):
     """
     Sends email notification of group membership acceptance
