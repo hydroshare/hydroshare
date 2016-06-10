@@ -32,17 +32,17 @@
                             {% if not forloop.first %}
                                 <legend></legend>
                             {% endif %}
-                        <table class="custom-table">
-                            <tbody>
-                                <tr><th class="text-muted">Code </th><td>{{ variable.variable_code }}</td></tr>
-                                <tr><th class="text-muted">Name </th><td>{{ variable.variable_name }}</td></tr>
-                                <tr><th class="text-muted">Type </th><td>{{ variable.variable_type }}</td></tr>
-                                <tr><th class="text-muted">No Data Value </th><td>{{ variable.no_data_value }}</td></tr>
-                                <tr><th class="text-muted">Definition </th><td>{{ variable.variable_definition }}</td></tr>
-                                <tr><th class="text-muted">Speciation </th><td>{{ variable.speciation }}</td></tr>
-                            </tbody>
-                        </table>
-                        <hr style="border:0">
+                            <table class="custom-table">
+                                <tbody>
+                                    <tr><th class="text-muted">Code </th><td>{{ variable.variable_code }}</td></tr>
+                                    <tr><th class="text-muted">Name </th><td>{{ variable.variable_name }}</td></tr>
+                                    <tr><th class="text-muted">Type </th><td>{{ variable.variable_type }}</td></tr>
+                                    <tr><th class="text-muted">No Data Value </th><td>{{ variable.no_data_value }}</td></tr>
+                                    <tr><th class="text-muted">Definition </th><td>{{ variable.variable_definition }}</td></tr>
+                                    <tr><th class="text-muted">Speciation </th><td>{{ variable.speciation }}</td></tr>
+                                </tbody>
+                            </table>
+                            <hr style="border:0">
                         {% endfor %}
                     {% endif %}
 
@@ -88,7 +88,6 @@
                             {% if processing_level.explanation %}
                                 <tr><th class="text-muted">Explanation </th><td>{{ processing_level.explanation }}</td></tr>
                             {% endif %}
-
                         </tbody>
                     </table>
                     <hr style="border:0">

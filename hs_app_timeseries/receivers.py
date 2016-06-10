@@ -111,15 +111,22 @@ def metadata_element_pre_update_handler(sender, **kwargs):
     request = kwargs['request']
 
     if element_name == "site":
-        element_form = SiteValidationForm(request.POST)
+        form_data = _get_form_post_data(request, SiteValidationForm)
+        element_form = SiteValidationForm(form_data)
     elif element_name == 'variable':
-        element_form = VariableValidationForm(request.POST)
+        form_data = _get_form_post_data(request, VariableValidationForm)
+        element_form = VariableValidationForm(form_data)
     elif element_name == 'method':
-        element_form = MethodValidationForm(request.POST)
+        form_data = _get_form_post_data(request, MethodValidationForm)
+        element_form = MethodValidationForm(form_data)
     elif element_name == 'processinglevel':
-        element_form = ProcessingLevelValidationForm(request.POST)
+        form_data = _get_form_post_data(request, ProcessingLevelValidationForm)
+        element_form = ProcessingLevelValidationForm(form_data)
     elif element_name == 'timeseriesresult':
-        element_form = TimeSeriesResultValidationForm(request.POST)
+        form_data = _get_form_post_data(request, TimeSeriesResultValidationForm)
+        element_form = TimeSeriesResultValidationForm(form_data)
+    else:
+        return {'is_valid': False, 'element_data_dict': None}
 
     if element_form.is_valid():
         return {'is_valid': True, 'element_data_dict': element_form.cleaned_data}
@@ -130,6 +137,14 @@ def metadata_element_pre_update_handler(sender, **kwargs):
  Since each of the timeseries metadata element is required no need to listen to any delete signal
  The timeseries landing page should not have delete UI functionality for the resource specific metadata elements
 """
+
+
+def _get_form_post_data(request, validation_form):
+    form_data = {}
+    for field_name in validation_form().fields:
+        matching_key = [key for key in request.POST if '-'+field_name in key][0]
+        form_data[field_name] = request.POST[matching_key]
+    return form_data
 
 
 def _extract_metadata(resource, sqlite_file):
