@@ -160,7 +160,7 @@
                             {% endif %}
                         {% endfor %}
                     </div>
-                    <table id="geo-filter-coordinates" class="table">
+                    <table id="geo-filter-coordinates" class="table" style="display:none">
                         <tr>
                             {% for field in form %}
                                 {% if field.auto_id  != "id_q" %}
@@ -257,10 +257,8 @@
         var map_default_center = new google.maps.LatLng(0, 0);
         var markers = [];
         var markerCluster = null;
+        var update_markers = false;
         var initMap = function(json_results) {
-            var modified_points_data = [];
-            var modified_boxes_data = [];
-            var modified_data = [];
             var $mapDiv = $("#discover-map");
             var mapDim = {
                 height: $mapDiv.height(),
@@ -291,12 +289,11 @@
                 document.getElementById("id_NElat").value = ne.lat();
                 document.getElementById("id_SWlng").value = sw.lng();
                 document.getElementById("id_SWlat").value = sw.lat();
-                updateMapResults();
+                //updateMapResults();
             });
 
             removeMarkers();
             setMarkers(json_results);
-
             var bounds = (markers.length > 0) ? createBoundsForMarkers(markers) : null;
 
             if (bounds) {
@@ -310,6 +307,7 @@
                 map_default_zoom = getBoundsZoomLevel(map_default_bounds, mapDim);
                 map_default_center = map_default_bounds.getCenter();
             }
+
             var idle_listener = google.maps.event.addListener(map, "idle", function () {
                 map.setCenter(map_default_center);
                 map.setZoom(map_default_zoom);
@@ -329,11 +327,28 @@
             });
 
             var zoom_listener = google.maps.event.addListener(map, 'zoom_changed', function(){
-                updateMapResults();
+                update_markers = true;
+                console.log("zoom changed");
+                //updateMapResults();
             });
 
             var drag_listener = google.maps.event.addListener(map, 'dragend', function(){
-                updateMapResults();
+                update_markers = true;
+                console.log("drag changed");
+                //updateMapResults();
+            });
+
+            /*var center_listener = google.maps.event.addListener(map, 'center_changed', function(){
+                update_markers = true;
+                console.log("center changed");
+                //updateMapResults();
+            });*/
+
+            var markers_listener = google.maps.event.addListener(map, "idle", function () {
+                if(update_markers) {
+                    updateMapResults();
+                    update_markers = false;
+                }
             });
 
             generateLegend();
@@ -390,14 +405,14 @@
         }
 
         var resetMapZoom = function() {
-            var ne = map_default_bounds.getNorthEast();
+            /*var ne = map_default_bounds.getNorthEast();
             var sw = map_default_bounds.getSouthWest();
             document.getElementById("id_NElng").value = ne.lng();
             document.getElementById("id_NElat").value = ne.lat();
             document.getElementById("id_SWlng").value = sw.lng();
-            document.getElementById("id_SWlat").value = sw.lat();
+            document.getElementById("id_SWlat").value = sw.lat();*/
             map.fitBounds(map_default_bounds);
-            updateMapResults();
+            //updateMapResults();
             var listener = google.maps.event.addListener(map, "idle", function () {
                 map.setCenter(map_default_bounds.getCenter());
                 map.setZoom(map_default_zoom);
@@ -438,38 +453,40 @@
             }
             markers = [];
         }
+
         var updateMapResults = function() {
             removeMarkers();
-            var swlat = document.getElementById("id_SWlat").value;
-            var swlng = document.getElementById("id_SWlng").value;
             var nelat = document.getElementById("id_NElat").value;
             var nelng = document.getElementById("id_NElng").value;
+            var swlat = document.getElementById("id_SWlat").value;
+            var swlng = document.getElementById("id_SWlng").value;
             var requestURL = "/searchjson/";
-
-            if(window.location.search.length == 0){
+            if (window.location.search.length == 0) {
                 requestURL += "?q=";
-            }else{
+            } else {
                 requestURL += window.location.search;
             }
             $.ajax({
                 type: "GET",
                 url: requestURL,
-                data:{
-                    NElng:nelng,
-                    NElat:nelat,
-                    SWlng:swlng,
-                    SWlat:swlat,
+                data: {
+                    NElat: nelat,
+                    NElng: nelng,
+                    SWlat: swlat,
+                    SWlng: swlng,
                 },
                 dataType: 'json',
-                success: function(data) {
+                success: function (data) {
+                    console.log(data);
                     var json_results = [];
-                    for(var j = 0; j < data.length; j++){
+                    for (var j = 0; j < data.length; j++) {
                         var item = $.parseJSON(data[j]);
                         json_results.push(item);
                     }
+                    console.log(json_results.length);
                     setMarkers(json_results);
                 }
-                , failure: function(data){
+                , failure: function (data) {
                     console.error("fail");
                 }
             });
@@ -714,6 +731,7 @@
                 var tabId = $(e.target).attr("href").substr(1);
                 window.location.hash = tabId;
                 if(tabId == "map-view" && map == null){
+                    $("#geo-filter-coordinates").show();
                     var requestURL = "/searchjson/";
                     if(window.location.search.length == 0){
                         requestURL += "?q=";
@@ -731,6 +749,7 @@
                                 var item = $.parseJSON(data[j]);
                                 json_results.push(item);
                             }
+                            console.log("from doc ready");
                             initMap(json_results);
                         }
                         , failure: function(data){
