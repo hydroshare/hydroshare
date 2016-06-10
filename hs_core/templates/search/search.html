@@ -160,7 +160,7 @@
                             {% endif %}
                         {% endfor %}
                     </div>
-                    <table id="geo-filter-coordinates" class="table" style="display:none">
+                    <table id="geo-filter-coordinates" class="table">
                         <tr>
                             {% for field in form %}
                                 {% if field.auto_id  != "id_q" %}
@@ -708,7 +708,6 @@
                 var tabId = $(e.target).attr("href").substr(1);
                 window.location.hash = tabId;
                 if(tabId == "map-view" && map == null){
-                    $("#geo-filter-coordinates").show();
                     var requestURL = "/searchjson/";
                     if(window.location.search.length == 0){
                         requestURL += "?q=";
