@@ -642,6 +642,9 @@
             var sessionStorageCheckboxId = 'search-' + checkboxId;
             sessionStorage[sessionStorageCheckboxId] = 'true';
             requestURL += buildURLOnCheckboxes();
+            if (window.location.hash){
+                requestURL += window.location.hash;
+            }
             window.location = requestURL;
         }
 
@@ -778,7 +781,9 @@
                     var checkboxId = $(this).attr("id");
                     var sessionStorageCheckboxId = 'search-' + checkboxId;
                     sessionStorage[sessionStorageCheckboxId] = 'true';
-
+                    if(window.location.hash){
+                        requestURL += window.location.hash;
+                    }
                     window.location = requestURL;
                 }else{
 
@@ -789,6 +794,9 @@
                     var textSearch = $("#id_q").val();
                     var updateURL = "/search/?q=" + textSearch;
                     updateURL += buildURLOnCheckboxes();
+                    if(window.location.hash){
+                        updateURL += window.location.hash;
+                    }
                     window.location = updateURL;
                 }
             });
