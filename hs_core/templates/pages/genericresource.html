@@ -1198,16 +1198,8 @@
 
             function saveExtraMetadata()
             {
-                $alert_success_extra_meta = '<div class="alert alert-success" id="success-alert"> \
-                <button type="button" class="close" data-dismiss="alert">x</button> \
-                <strong>Success! </strong> \
-                Extended metadata updated.\
-                </div>';
-                $alert_error_extra_meta = '<div class="alert alert-danger" id="error-alert"> \
-                <button type="button" class="close" data-dismiss="alert">x</button> \
-                <strong>Error! </strong> \
-                Extended metadata failed to update.\
-                </div>' ;
+                $alert_success_extra_meta = "<i class='glyphicon glyphicon-flag custom-alert-icon'></i><strong>Success:</strong> Extended metadata updated";
+                $alert_error_extra_meta = "<i class='glyphicon glyphicon-flag custom-alert-icon'></i><strong>Error:</strong> Extended metadata failed to update";
 
                 var json_obj = {};
                 var t = $('#extraMetaTable').DataTable();
@@ -1230,29 +1222,14 @@
                         json_response = result;
                         if (json_response.status === 'success') {
                              $('#save-extra-meta-btn').hide();
-                             $('body > .container').append($alert_success_extra_meta);
-                             $('#error-alert').each(function(){
-                                this.remove();
-                                });
-                             $(".alert-success").fadeTo(2000, 500).fadeOut(1000, function() {
-                                $(document).trigger("submit-success");
-                                $(".alert-success").alert('close');
-                             });
+                             customAlert($alert_success_extra_meta, 3000);
                         }
                         else {
-                            $('body > .container').append($alert_error_extra_meta);
-                            $(".alert-danger").fadeTo(3000, 500).fadeOut(1000, function() {
-                            $(document).trigger("submit-error");
-                            $(".alert-danger").alert('close');
-                        });
+                             customAlert($alert_error_extra_meta, 3000);
                         }
                     },
                     error: function(XMLHttpRequest, textStatus, errorThrown) {
-                        $('body > .container').append($alert_error_extra_meta);
-                        $(".alert-danger").fadeTo(3000, 500).fadeOut(1000, function() {
-                            $(document).trigger("submit-error");
-                            $(".alert-danger").alert('close');
-                        });
+                        customAlert($alert_error_extra_meta, 3000);
                     }
                 });
             } // function saveExtraMetadata()
