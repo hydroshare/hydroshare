@@ -233,12 +233,14 @@
                                         </a>
                                     </li>
                                 {% endif %}
-                                 <li class="col-xs-2 col-md-2">
-                                    <a href="#extraMetaTab" data-toggle="tab" title="Extended Metadata">
-                                        <span class="glyphicon glyphicon-folder-close"> </span>
-                                        &nbspExtended Metadata
-                                    </a>
-                                 </li>
+                                {% if metadata_form or page.get_content_model.extra_metadata.items|length > 0 %}
+                                    <li class="col-xs-2 col-md-2">
+                                        <a href="#extraMetaTab" data-toggle="tab" title="Extended Metadata">
+                                            <span class="glyphicon glyphicon-folder-close"> </span>
+                                            &nbspExtended Metadata
+                                        </a>
+                                     </li>
+                                {% endif %}
                             </ul>
                         </div>
                         <div class="tabs-body">
@@ -852,7 +854,8 @@
                                     </div>
                                 {% endif %}
                                 <!-- ========= EXTRA METADATA TAB ========= -->
-                                <div class="tab-pane" id="extraMetaTab">
+                                {% if metadata_form or page.get_content_model.extra_metadata.items|length > 0 %}
+                                    <div class="tab-pane" id="extraMetaTab">
                                         {% if metadata_form %}
                                             <a type="button" class="btn btn-success" onclick="showAddEditExtraMetaPopup(false, '')">
                                                                     <span class="glyphicon glyphicon-plus"><span class="button-label"> Add new entry...</span></span>
@@ -894,6 +897,8 @@
                                     {% endif %}
 
                                 </div>
+                                {% endif %}
+
 
                             </div>
                         </div>
