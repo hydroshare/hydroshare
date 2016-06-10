@@ -1,10 +1,6 @@
 from haystack import indexes
 from hs_core.models import BaseResource
 from django.db.models import Q
-import json
-import logging
-
-logger = logging.getLogger(__name__)
 
 
 class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
@@ -143,7 +139,9 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
             for coverage in obj.metadata.coverages.all():
                 logger.debug(coverage.type)
                 if coverage.type == 'point':
-                    return coverage.value["east"]
+                    return float(coverage.value["east"])
+                elif coverage.type == 'box':
+                    return (float(coverage.value["eastlimit"]) + float(coverage.value["westlimit"])) / 2
         else:
             return 'none'
 
@@ -151,7 +149,9 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
         if hasattr(obj, 'metadata'):
             for coverage in obj.metadata.coverages.all():
                 if coverage.type == 'point':
-                    return coverage.value["north"]
+                    return float(coverage.value["north"])
+                elif coverage.type == 'box':
+                    return (float(coverage.value["northlimit"]) + float(coverage.value["southlimit"])) / 2
         else:
             return 'none'
 
@@ -186,6 +186,7 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
                     return coverage.value["westlimit"]
         else:
             return 'none'
+
 
     def prepare_formats(self, obj):
         if hasattr(obj, 'metadata'): 
