@@ -67,16 +67,16 @@ class DiscoveryForm(FacetedSearchForm):
         if discoverable_sq:
             sqs = sqs.filter(discoverable_sq)
 
-        if self.cleaned_data['NElng']:
-            sqs = sqs.filter(coverage_east__lte=float(self.cleaned_data['NElng']))
-
-        if self.cleaned_data['SWlng']:
-            sqs = sqs.filter(coverage_east__gte=float(self.cleaned_data['SWlng']))
-
-        if self.cleaned_data['NElat']:
-            sqs = sqs.filter(coverage_north__lte=float(self.cleaned_data['NElat']))
-
-        if self.cleaned_data['SWlat']:
-            sqs = sqs.filter(coverage_north__gte=float(self.cleaned_data['SWlat']))
+        # if self.cleaned_data['NElng']:
+        #     sqs = sqs.filter(coverage_east__lte=float(self.cleaned_data['NElng']))
+        #
+        # if self.cleaned_data['SWlng']:
+        #     sqs = sqs.filter(coverage_east__gte=float(self.cleaned_data['SWlng']))
+        #
+        # if self.cleaned_data['NElat']:
+        #     sqs = sqs.filter(coverage_north__lte=float(self.cleaned_data['NElat']))
+        #
+        # if self.cleaned_data['SWlat']:
+        #     sqs = sqs.filter(coverage_north__gte=float(self.cleaned_data['SWlat']))
 
         return sqs
