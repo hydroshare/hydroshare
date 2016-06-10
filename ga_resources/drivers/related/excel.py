@@ -1,4 +1,3 @@
-__author__ = 'th'
 from . import Driver
 from pandas import ExcelFile
 

@@ -1,4 +1,3 @@
-__author__ = 'tonycastronova'
 
 from django.http import HttpResponse
 from hs_model_program.models import ModelProgramResource

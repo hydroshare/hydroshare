@@ -6,7 +6,6 @@ Module provides utility functions to manipulate netCDF dataset.
 Reference code
 http://netcdf4-python.googlecode.com/svn/trunk/docs/netCDF4-module.html
 """
-__author__ = 'Tian Gan'
 
 
 import netCDF4

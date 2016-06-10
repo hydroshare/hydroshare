@@ -1,4 +1,3 @@
-__author__ = 'Alva'
 
 import unittest
 from django.http import Http404
