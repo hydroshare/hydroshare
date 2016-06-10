@@ -206,9 +206,14 @@ def get_fed_zone_files(irods_fnames):
     Returns:
     the named temp file being copied over to local Django server
     """
-    irods_storage = IrodsStorage('federated')
-    ifnames = string.split(irods_fnames, ',')
     ret_file_list = []
+    if isinstance(irods_fnames, basestring):
+        ifnames = string.split(irods_fnames, ',')
+    elif isinstance(irods_fnames, list):
+        ifnames = irods_fnames
+    else:
+        return ret_file_list
+    irods_storage = IrodsStorage('federated')
     for ifname in ifnames:
         fname = os.path.basename(ifname.rstrip(os.sep))
         tmpfile = os.path.join(settings.TEMP_FILE_DIR, fname)
@@ -618,6 +623,7 @@ def add_file_to_resource(resource, f, fed_res_file_name_or_path='', fed_copy=Non
             try:
                 from_fname = fed_res_file_name_or_path
                 filename = from_fname.rsplit('/')[-1]
+
                 if resource.resource_federation_path:
                     to_fname = '{base_path}/{res_id}/data/contents/{file_name}'.format(base_path=resource.resource_federation_path,
                                                                                    res_id=resource.short_id,

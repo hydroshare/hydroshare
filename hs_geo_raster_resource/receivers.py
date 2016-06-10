@@ -32,10 +32,11 @@ def raster_file_validation(files, ref_tmp_file_names=[]):
     vrt_file_path = ''
 
     # process uploaded .tif or .zip file or file retrieved from iRODS user zone
+    in_filename = ''
     if len(files) >= 1:
         in_filename = files[0].name
         file = files[0]
-    if len(ref_tmp_file_names) >= 1:
+    elif len(ref_tmp_file_names) >= 1:
         in_filename = ref_tmp_file_names[0]
         file = None
 
@@ -47,10 +48,12 @@ def raster_file_validation(files, ref_tmp_file_names=[]):
                 files.append(UploadedFile(file=open(temp_vrt_file_path, 'r'), name=os.path.basename(temp_vrt_file_path)))
 
         elif ext == '.zip':
-            extract_file_paths, temp_dir = explode_zip_file(in_filename)
+            extract_file_paths, temp_dir = explode_zip_file(in_filename, file)
             if extract_file_paths:
                 if len(files) == 1:
                     del files[0]
+                if len(ref_tmp_file_names) == 1:
+                    del ref_tmp_file_names[0]
                 for file_path in extract_file_paths:
                     files.append(UploadedFile(file=open(file_path, 'r'), name=os.path.basename(file_path)))
 
@@ -118,10 +121,13 @@ def create_vrt_file(tif_file_name, file):
     return vrt_file_path, temp_dir
 
 
-def explode_zip_file(zip_file_name):
+def explode_zip_file(zip_file_name, file):
     temp_dir = tempfile.mkdtemp()
     try:
-        zf = zipfile.ZipFile(zip_file_name, 'r')
+        if file:
+            zf = zipfile.ZipFile(file.file.name, 'r')
+        else:
+            zf = zipfile.ZipFile(zip_file_name, 'r')
         zf.extractall(temp_dir)
         zf.close()
         # get all the file abs names in temp_dir
@@ -156,6 +162,10 @@ def raster_pre_create_resource_trigger(sender, **kwargs):
         ref_tmpfiles = utils.get_fed_zone_files(fed_res_fnames)
         # raster file validation
         error_info, vrt_file_path, temp_dir = raster_file_validation(files, ref_tmp_file_names=ref_tmpfiles)
+        ext = os.path.splitext(fed_res_fnames[0])[1]
+        if ext == '.zip':
+            # clear up the original zip file so that it will not be added into the resource
+            del fed_res_fnames[0]
         file_selected = True
 
     if file_selected:

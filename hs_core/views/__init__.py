@@ -747,7 +747,7 @@ def create_resource(request, *args, **kwargs):
     res_title = request.POST['title']
 
     resource_files = request.FILES.getlist('files')
-    fed_res_file_names=''
+    fed_res_file_names=[]
     irods_fnames = request.POST.get('irods_file_names')
     federated = True if request.POST.get("irods_federated").lower()=='true' else False
     do_copy = request.POST.get("copy-or-move")
@@ -758,7 +758,7 @@ def create_resource(request, *args, **kwargs):
 
     if irods_fnames:
         if federated:
-            fed_res_file_names = irods_fnames
+            fed_res_file_names = irods_fnames.split(',')
         else:
             user = request.POST.get('irods-username')
             password = request.POST.get("irods-password")

@@ -439,7 +439,7 @@ def create_resource(
             resource.resource_federation_path = fed_res_path
             resource.save()
         elif fed_res_file_names:
-            fed_zone_home_path = utils.get_federated_zone_home_path(fed_res_file_names)
+            fed_zone_home_path = utils.get_federated_zone_home_path(fed_res_file_names[0])
             resource.resource_federation_path = fed_zone_home_path
             resource.save()
 
@@ -769,7 +769,12 @@ def add_resource_files(pk, *files, **kwargs):
         else:
             ret.append(utils.add_file_to_resource(resource, f))
     if fed_res_file_names:
-        ifnames = string.split(fed_res_file_names, ',')
+        if isinstance(fed_res_file_names, basestring):
+            ifnames = string.split(fed_res_file_names, ',')
+        elif isinstance(fed_res_file_names, list):
+            ifnames = fed_res_file_names
+        else:
+            return ret
         for ifname in ifnames:
             ret.append(utils.add_file_to_resource(resource, None, fed_res_file_name_or_path=ifname, fed_copy=fed_copy))
     return ret
