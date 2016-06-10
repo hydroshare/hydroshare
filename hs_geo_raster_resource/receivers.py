@@ -34,13 +34,15 @@ def raster_file_validation(files, ref_tmp_file_names=[]):
     # process uploaded .tif or .zip file or file retrieved from iRODS user zone
     if len(files) >= 1:
         in_filename = files[0].name
+        file = files[0]
     if len(ref_tmp_file_names) >= 1:
         in_filename = ref_tmp_file_names[0]
+        file = None
 
     if in_filename:
         ext = os.path.splitext(in_filename)[1]
         if ext == '.tif':
-            temp_vrt_file_path, temp_dir = create_vrt_file(in_filename)
+            temp_vrt_file_path, temp_dir = create_vrt_file(in_filename, file)
             if os.path.isfile(temp_vrt_file_path):
                 files.append(UploadedFile(file=open(temp_vrt_file_path, 'r'), name=os.path.basename(temp_vrt_file_path)))
 
@@ -91,14 +93,17 @@ def raster_file_validation(files, ref_tmp_file_names=[]):
     return error_info, vrt_file_path, temp_dir
 
 
-def create_vrt_file(tif_file_name):
+def create_vrt_file(tif_file_name, file):
     # create vrt file
     temp_dir = tempfile.mkdtemp()
     tif_base_name = os.path.basename(tif_file_name)
     vrt_file_path = os.path.join(temp_dir, os.path.splitext(tif_base_name)[0]+'.vrt')
 
     with open(os.devnull, 'w') as fp:
-        subprocess.Popen(['gdalbuildvrt', vrt_file_path, tif_file_name], stdout=fp, stderr=fp).wait()   # remember to add .wait()
+        if file:
+            subprocess.Popen(['gdalbuildvrt', vrt_file_path, file.file.name], stdout=fp, stderr=fp).wait()
+        else:
+            subprocess.Popen(['gdalbuildvrt', vrt_file_path, tif_file_name], stdout=fp, stderr=fp).wait()   # remember to add .wait()
 
     # modify vrt file SourceFileName
     try:
