@@ -145,28 +145,28 @@ class TestRasterMetaData(MockIRODSTestCaseMixin, TransactionTestCase):
         # there should be default cell information:
         cell_info = self.resRaster.metadata.cellInformation
         self.assertNotEqual(cell_info, None)
-        self.assertEquals(cell_info.rows, 0)
-        self.assertEquals(cell_info.columns, 0)
-        self.assertEquals(cell_info.cellSizeXValue, 0)
-        self.assertEquals(cell_info.cellSizeYValue, 0)
-        self.assertEquals(cell_info.cellDataType, 'NA')
-        self.assertEquals(cell_info.noDataValue, 0)
+        self.assertEquals(cell_info.rows, None)
+        self.assertEquals(cell_info.columns, None)
+        self.assertEquals(cell_info.cellSizeXValue, None)
+        self.assertEquals(cell_info.cellSizeYValue, None)
+        self.assertEquals(cell_info.cellDataType, None)
+
 
         # there should be default spatial reference info
         ori_coverage = self.resRaster.metadata.originalCoverage
         self.assertNotEquals(ori_coverage, None)
-        self.assertEquals(ori_coverage.value['northlimit'], 'NA')
-        self.assertEquals(ori_coverage.value['eastlimit'], 'NA')
-        self.assertEquals(ori_coverage.value['southlimit'], 'NA')
-        self.assertEquals(ori_coverage.value['westlimit'], 'NA')
-        self.assertEquals(ori_coverage.value['units'], 'NA')
-        self.assertEquals(ori_coverage.value['projection'], 'NA')
+        self.assertEquals(ori_coverage.value['northlimit'], None)
+        self.assertEquals(ori_coverage.value['eastlimit'], None)
+        self.assertEquals(ori_coverage.value['southlimit'], None)
+        self.assertEquals(ori_coverage.value['westlimit'], None)
+        self.assertEquals(ori_coverage.value['units'], None)
+        self.assertEquals(ori_coverage.value['projection'], None)
 
         # there should be default band information:
         band_info = self.resRaster.metadata.bandInformation.first()
         self.assertNotEqual(band_info, 0)
-        self.assertEquals(band_info.variableName, 'Unnamed')
-        self.assertEquals(band_info.variableUnit, 'Unnamed')
+        self.assertEquals(band_info.variableName, None)
+        self.assertEquals(band_info.variableUnit, None)
 
     def test_metadata_extraction_on_resource_creation(self):
         # passing the file object that points to the temp dir doesn't work - create_resource throws error
@@ -385,9 +385,8 @@ class TestRasterMetaData(MockIRODSTestCaseMixin, TransactionTestCase):
 
         # create new cell information metadata with meaningful value
         self.resRaster.metadata.create_element('cellinformation', name='cellinfo', cellDataType='Float32',
-                                                   rows=1660, columns=985,
-                                                   cellSizeXValue=30.0, cellSizeYValue=30.0,
-                                                   noDataValue=-3.40282346639e+38)
+                                                   rows=1660, columns=985, cellSizeXValue=30.0, cellSizeYValue=30.0,
+                                               )
 
         cell_info = self.resRaster.metadata.cellInformation
         self.assertEquals(cell_info.rows, 1660)
@@ -395,14 +394,14 @@ class TestRasterMetaData(MockIRODSTestCaseMixin, TransactionTestCase):
         self.assertEquals(cell_info.cellSizeXValue, 30.0)
         self.assertEquals(cell_info.cellSizeYValue, 30.0)
         self.assertEquals(cell_info.cellDataType, 'Float32')
-        self.assertEquals(cell_info.noDataValue, -3.40282346639e+38)
+
 
         # multiple cell Information elements are not allowed - should raise exception
         with self.assertRaises(IntegrityError):
             self.resRaster.metadata.create_element('cellinformation', name='cellinfo', cellDataType='Float32',
                                                    rows=1660, columns=985,
                                                    cellSizeXValue=30.0, cellSizeYValue=30.0,
-                                                   noDataValue=-3.40282346639e+38)
+                                                   )
 
         # delete default band information element
         self.assertNotEquals(self.resRaster.metadata.bandInformation, None)
@@ -413,7 +412,8 @@ class TestRasterMetaData(MockIRODSTestCaseMixin, TransactionTestCase):
                                                variableName='diginal elevation',
                                                variableUnit='meter',
                                                method='this is method',
-                                               comment='this is comment')
+                                               comment='this is comment',
+                                               maximumValue=1000, minimumValue=0, noDataValue=-9999)
 
         band_info = self.resRaster.metadata.bandInformation.first()
         self.assertEquals(band_info.name, 'bandinfo')
@@ -421,13 +421,17 @@ class TestRasterMetaData(MockIRODSTestCaseMixin, TransactionTestCase):
         self.assertEquals(band_info.variableUnit, 'meter')
         self.assertEquals(band_info.method, 'this is method')
         self.assertEquals(band_info.comment, 'this is comment')
+        self.assertEquals(band_info.maximumValue, '1000')
+        self.assertEquals(band_info.minimumValue, '0')
+        self.assertEquals(band_info.noDataValue, '-9999')
 
         # multiple band information elements are allowed
         self.resRaster.metadata.create_element('bandinformation', name='bandinfo',
                                                variableName='diginal elevation2',
                                                variableUnit='meter',
                                                method='this is method',
-                                               comment='this is comment')
+                                               comment='this is comment',
+                                               maximumValue=1000, minimumValue=0, noDataValue=-9999)
         self.assertEquals(self.resRaster.metadata.bandInformation.all().count(), 2)
 
         # delete
@@ -457,7 +461,7 @@ class TestRasterMetaData(MockIRODSTestCaseMixin, TransactionTestCase):
                                                name='cellinfo', cellDataType='Double',
                                                rows=166, columns=98,
                                                cellSizeXValue=3.0, cellSizeYValue=3.0,
-                                               noDataValue=-3.40)
+                                               )
 
         cell_info = self.resRaster.metadata.cellInformation
         self.assertEquals(cell_info.rows, 166)
@@ -465,7 +469,7 @@ class TestRasterMetaData(MockIRODSTestCaseMixin, TransactionTestCase):
         self.assertEquals(cell_info.cellSizeXValue, 3.0)
         self.assertEquals(cell_info.cellSizeYValue, 3.0)
         self.assertEquals(cell_info.cellDataType, 'Double')
-        self.assertEquals(cell_info.noDataValue, -3.40)
+
 
         # update band info element
         self.resRaster.metadata.update_element('bandinformation',
@@ -474,7 +478,9 @@ class TestRasterMetaData(MockIRODSTestCaseMixin, TransactionTestCase):
                                                variableName='precipitation',
                                                variableUnit='mm/h',
                                                method='this is method2',
-                                               comment='this is comment2')
+                                               comment='this is comment2',
+                                               maximumValue=1001, minimumValue=1, noDataValue=-9998
+                                               )
 
         band_info = self.resRaster.metadata.bandInformation.first()
         self.assertEquals(band_info.name, 'bandinfo')
@@ -482,6 +488,9 @@ class TestRasterMetaData(MockIRODSTestCaseMixin, TransactionTestCase):
         self.assertEquals(band_info.variableUnit, 'mm/h')
         self.assertEquals(band_info.method, 'this is method2')
         self.assertEquals(band_info.comment, 'this is comment2')
+        self.assertEquals(band_info.maximumValue, '1001')
+        self.assertEquals(band_info.minimumValue, '1')
+        self.assertEquals(band_info.noDataValue, '-9998')
 
     def test_get_xml(self):
         # add a valid raster file to generate metadata
@@ -565,8 +574,12 @@ class TestRasterMetaData(MockIRODSTestCaseMixin, TransactionTestCase):
         self.assertEquals(cell_info.cellSizeXValue, 30.0)
         self.assertEquals(cell_info.cellSizeYValue, 30.0)
         self.assertEquals(cell_info.cellDataType, 'Float32')
-        self.assertEquals(cell_info.noDataValue, -3.40282346638529e+38)
 
         # testing extended metadata element: band information
         self.assertEquals(self.resRaster.metadata.bandInformation.count(), 1)
+        band_info = self.resRaster.metadata.bandInformation.first()
+        self.assertEquals(band_info.noDataValue, '-3.40282346639e+38')
+        self.assertEquals(band_info.maximumValue, '3031.44311523')
+        self.assertEquals(band_info.minimumValue, '1358.33459473')
+
 
