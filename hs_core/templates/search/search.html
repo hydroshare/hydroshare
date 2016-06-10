@@ -405,11 +405,11 @@
                     var data_lng = parseFloat(data.east);
                     var latlng = new google.maps.LatLng(data_lat, data_lng);
                     if(map.getBounds().contains(latlng)) {
-                        console.log(data)
                         filtered_results.push(data);
                     }
                 });
             }
+            console.log(filtered_results.length);
         }
 
         var removeMarkers = function() {
@@ -578,6 +578,30 @@
             }
         }
 
+        var manualZoomMap = function() {
+            var ne_lat = document.getElementById("id_NElat").value;
+            var ne_lng = document.getElementById("id_NElng").value;
+            var sw_lat = document.getElementById("id_SWlat").value;
+            var sw_lng = document.getElementById("id_SWlng").value;
+
+            var ne = new google.maps.LatLng(ne_lat, ne_lng);
+            var sw = new google.maps.LatLng(sw_lat, sw_lng);
+
+            var customized_bounds = new google.maps.LatLngBounds(sw, ne);
+            map.fitBounds(customized_bounds);
+            var $mapDiv = $("#discover-map");
+
+            var mapDim = {
+                height: $mapDiv.height(),
+                width: $mapDiv.width()
+            }
+            var listener = google.maps.event.addListener(map, "idle", function () {
+                map.setCenter(customized_bounds.getCenter());
+                map.setZoom(getBoundsZoomLevel(customized_bounds, mapDim));
+                google.maps.event.removeListener(listener);
+            });
+        }
+
         var reorderDivs = function() {
             var faceted_fields = ['creators', 'subjects', 'resource_type', 'owners_names', 'availability'];
             var div_ordering = [];
@@ -682,7 +706,6 @@
                                 var item = $.parseJSON(data[j]);
                                 json_results.push(item);
                             }
-                            console.log("from doc ready");
                             initMap(json_results);
                         }
                         , failure: function(data){
