@@ -196,7 +196,7 @@
                                     <th>Last Modified</th>
                                 </tr>
                             </thead>
-                            <tbody>
+                            <tbody id="items-discovered-tbody">
                                 {% for result in page_obj.object_list %}
                                     <tr>
                                         <td><a href="{{ result.object.get_absolute_url }}">{{ result.object.metadata.title.value }}</a></td>
@@ -288,12 +288,14 @@
                 document.getElementById("id_SWlat").value = sw.lat();
                 document.getElementById("id_SWlng").value = sw.lng();
                 map_default_bounds = bounds;
+                map.fitBounds(map_default_bounds);
                 map_default_zoom = getBoundsZoomLevel(map_default_bounds, mapDim);
                 map_default_center = map_default_bounds.getCenter();
             }
 
             var idle_listener = google.maps.event.addListener(map, "idle", function () {
                 map.setCenter(map_default_center);
+                map.setZoom(map_default_zoom);
                 google.maps.event.removeListener(idle_listener);
             });
 
@@ -324,7 +326,6 @@
                 document.getElementById("id_NElat").value = ne.lat();
                 document.getElementById("id_SWlng").value = sw.lng();
                 document.getElementById("id_SWlat").value = sw.lat();
-                //updateMapResults();
             });
 
             var zoom_listener = google.maps.event.addListener(map, 'zoom_changed', function(){
@@ -577,17 +578,16 @@
             setMarkers(raw_results);
             var bounds = (markers.length > 0) ? createBoundsForMarkers(markers) : null;
             if (bounds){
-                console.log("bounds reset");
                 map.fitBounds(bounds);
                 var listener = google.maps.event.addListener(map, "idle", function () {
-                    map.setZoom(2);
+                    map.setZoom(map_default_zoom);
                     map.setCenter(map_default_center);
                     google.maps.event.removeListener(listener);
                 });
             }
         }
 
-        var manualZoomMap = function() {
+        var manualZoomMap = function(){
             var ne_lat = document.getElementById("id_NElat").value;
             var ne_lng = document.getElementById("id_NElng").value;
             var sw_lat = document.getElementById("id_SWlat").value;
@@ -611,6 +611,8 @@
             });
         }
 
+
+
         var reorderDivs = function() {
             var faceted_fields = ['creators', 'subjects', 'resource_type', 'owners_names', 'availability'];
             var div_ordering = [];
@@ -630,7 +632,12 @@
             var textSearch = $("#id_q").val();
             var searchURL = "?q=" + textSearch;
             var windowPath = window.location.pathname;
-            var requestURL =  windowPath + searchURL;
+            var ne_lat = document.getElementById("id_NElat").value;
+            var ne_lng = document.getElementById("id_NElng").value;
+            var sw_lat = document.getElementById("id_SWlat").value;
+            var sw_lng = document.getElementById("id_SWlng").value;
+            var geoSearchParams = "&NElat=" + ne_lat + "&NElng=" + ne_lng + "&SWlat=" + sw_lat + "&SWlng=" + sw_lng;
+            var requestURL =  windowPath + searchURL + geoSearchParams;
             var checkboxId =  key + "-" + value;
             var sessionStorageCheckboxId = 'search-' + checkboxId;
             sessionStorage[sessionStorageCheckboxId] = 'true';
@@ -678,6 +685,7 @@
             var clearURL = "/search/";
             window.location = clearURL;
         }
+
         $(document).ready(function () {
 
             if (window.location.search.length == 0){
@@ -756,8 +764,13 @@
                 var value = tokens[1];
                 var textSearch = $("#id_q").val();
                 var searchURL = "?q=" + textSearch;
+                var ne_lat = document.getElementById("id_NElat").value;
+                var ne_lng = document.getElementById("id_NElng").value;
+                var sw_lat = document.getElementById("id_SWlat").value;
+                var sw_lng = document.getElementById("id_SWlng").value;
+                var geoSearchParams = "&NElat=" + ne_lat + "&NElng=" + ne_lng + "&SWlat=" + sw_lat + "&SWlng=" + sw_lng;
                 var windowPath = window.location.pathname;
-                var requestURL =  windowPath + searchURL;
+                var requestURL =  windowPath + searchURL + geoSearchParams;
 
                 if($(this).is(":checked")) {
                     requestURL = requestURL + "&selected_facets="+key+"_exact:"+value;
