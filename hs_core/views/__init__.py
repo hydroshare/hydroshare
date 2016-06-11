@@ -778,7 +778,7 @@ def create_resource(request, *args, **kwargs):
     url_key = "page_redirect_url"
 
     try:
-        page_url_dict, res_title, metadata = hydroshare.utils.resource_pre_create_actions(resource_type=resource_type, files=resource_files,
+        page_url_dict, res_title, metadata, fed_res_path = hydroshare.utils.resource_pre_create_actions(resource_type=resource_type, files=resource_files,
                                                                     resource_title=res_title, fed_res_file_names=fed_res_file_names,
                                                                     page_redirect_url_key=url_key, requesting_user=request.user, **kwargs)
     except utils.ResourceFileSizeException as ex:
@@ -804,6 +804,7 @@ def create_resource(request, *args, **kwargs):
             metadata=metadata,
             files=resource_files,
             fed_res_file_names=fed_res_file_names,
+            fed_res_path = fed_res_path[0] if len(fed_res_path)==1 else '',
             fed_copy=fed_copy,
             content=res_title
     )

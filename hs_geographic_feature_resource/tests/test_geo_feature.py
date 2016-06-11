@@ -296,7 +296,7 @@ class TestGeoFeature(TransactionTestCase):
         self.assertEqual(len(files), 1)
         res_title = "test title"
         url_key = "page_redirect_url"
-        page_url_dict, res_title, metadata = \
+        page_url_dict, res_title, metadata, _ = \
             hydroshare.utils.resource_pre_create_actions(resource_type=resource_type, files=files,
                                                          resource_title=res_title, page_redirect_url_key=url_key)
         self.assertEqual(len(files), 7)

@@ -52,10 +52,13 @@ def check_fn_for_shp(filelists):
     else:
         return False
 
-def is_zipped_shapefiles(filelist):
+def is_zipped_shapefiles(files, filelist):
     # check if the uploaded zip files contains valid shapefiles (shp, shx, dbf)
     if(len(filelist) == 1) and filelist[0].lower().endswith(".zip"):
-        zipfile_path = filelist[0]
+        if files:
+            zipfile_path = files[0].file.name
+        else:
+            zipfile_path = filelist[0]
         if zipfile.is_zipfile(zipfile_path):
             zf = zipfile.ZipFile(zipfile_path, 'r')
             content_fn_list = zf.namelist()
@@ -94,12 +97,15 @@ def check_uploaded_files_type(files, filelist):
         files_type_dict["are_files_valid"] = True
         files_type_dict['message'] = 'All files are validated.'
 
-    elif is_zipped_shapefiles(filelist):
+    elif is_zipped_shapefiles(files, filelist):
         uploaded_file_type = "zipped_shp"
         files_type_dict["uploaded_file_type"] = uploaded_file_type
         tmp_dir = tempfile.mkdtemp()
         files_type_dict["tmp_dir"] = tmp_dir
-        zipfile_path = filelist[0]
+        if files:
+            zipfile_path = files[0].file.name
+        else:
+            zipfile_path = filelist[0]
         zf = zipfile.ZipFile(zipfile_path, 'r')
         fn_list = zf.namelist()
         # extract all zip contents (files and folders) to tmp_dir (/tmp/tmpXXXXXX/)
@@ -210,6 +216,7 @@ def geofeature_pre_create_resource(sender, **kwargs):
         metadata = kwargs['metadata']
         validate_files_dict = kwargs['validate_files']
         fed_res_fnames = kwargs['fed_res_file_names']
+        fed_res_path = kwargs['fed_res_path']
         file_selected = False
 
         if files:
@@ -239,6 +246,11 @@ def geofeature_pre_create_resource(sender, **kwargs):
                                                            uploadedFilenameString,
                                                            shp_full_path)
                     metadata.extend(meta_array)
+                if uploaded_file_type == "zipped_shp" and len(fed_res_fnames) == 1:
+                    fed_res_path.append(utils.get_federated_zone_home_path(fed_res_fnames[0]))
+                    del fed_res_fnames[0]
+
+
         else:
             validate_files_dict['are_files_valid'] = False
             validate_files_dict['message'] = 'Please upload valid file(s).'

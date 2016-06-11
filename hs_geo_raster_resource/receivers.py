@@ -152,6 +152,7 @@ def raster_pre_create_resource_trigger(sender, **kwargs):
     validate_files_dict = kwargs['validate_files']
     metadata = kwargs['metadata']
     fed_res_fnames = kwargs['fed_res_file_names']
+    fed_res_path = kwargs['fed_res_path']
     file_selected = False
 
     if files:
@@ -165,6 +166,7 @@ def raster_pre_create_resource_trigger(sender, **kwargs):
         ext = os.path.splitext(fed_res_fnames[0])[1]
         if ext == '.zip':
             # clear up the original zip file so that it will not be added into the resource
+            fed_res_path.append(utils.get_federated_zone_home_path(fed_res_fnames[0]))
             del fed_res_fnames[0]
         file_selected = True
 

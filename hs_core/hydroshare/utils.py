@@ -446,7 +446,12 @@ def resource_pre_create_actions(resource_type, resource_title, page_redirect_url
     if not metadata:
         metadata = []
     page_url_dict = {}
-
+    # this is needed since raster and feature resource types allows to upload a zip file,
+    # then replace zip file with exploded files. If the zip file is loaded from hydroshare
+    # federation zone, the original zip file encoded in fed_res_file_names gets deleted
+    # in this case and fed_res_path is used to keep the federation path, so that the resource
+    # will be stored in the federated zone rather than the hydroshare zone
+    fed_res_path = []
     # receivers need to change the values of this dict if file validation fails
     file_validation_dict = {'are_files_valid': True, 'message': 'Files are valid'}
 
@@ -456,12 +461,12 @@ def resource_pre_create_actions(resource_type, resource_title, page_redirect_url
     pre_create_resource.send(sender=resource_cls, metadata=metadata, files=files, title=resource_title,
                              url_key=page_redirect_url_key, page_url_dict=page_url_dict,
                              validate_files=file_validation_dict, fed_res_file_names=fed_res_file_names,
-                             user=requesting_user, **kwargs)
+                             user=requesting_user, fed_res_path=fed_res_path, **kwargs)
 
     if len(files) > 0:
         check_file_dict_for_error(file_validation_dict)
 
-    return page_url_dict, resource_title,  metadata
+    return page_url_dict, resource_title,  metadata, fed_res_path
 
 
 def resource_post_create_actions(resource, user, metadata,  **kwargs):

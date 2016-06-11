@@ -339,7 +339,7 @@ class ResourceCreate(generics.CreateAPIView):
         else:
             files = []
 
-        _, res_title, metadata = hydroshare.utils.resource_pre_create_actions(resource_type=resource_type,
+        _, res_title, metadata, _ = hydroshare.utils.resource_pre_create_actions(resource_type=resource_type,
                                                                               resource_title=res_title,
                                                                               page_redirect_url_key=None,
                                                                               files=files,
