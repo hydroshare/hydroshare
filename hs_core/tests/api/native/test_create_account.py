@@ -1,4 +1,3 @@
-__author__ = 'shaunjl'
 
 """
 comments- not sure how to implement test_email_function

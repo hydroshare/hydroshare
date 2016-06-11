@@ -1,4 +1,3 @@
-__author__ = 'pabitra'
 
 import os
 import tempfile

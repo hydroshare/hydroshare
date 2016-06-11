@@ -1,4 +1,3 @@
-__author__ = 'pabitra'
 from mezzanine.pages.page_processors import processor_for
 from models import TimeSeriesResource
 from crispy_forms.layout import Layout, Fieldset, ButtonHolder, Submit, HTML
