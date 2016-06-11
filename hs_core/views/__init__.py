@@ -968,7 +968,7 @@ def group_membership(request, uidb36, token, membership_request_id, **kwargs):
                 messages.error(request, "The link you clicked is no longer valid.")
                 return redirect("/")
         else:
-            messages.error(request, "The group is no more active.")
+            messages.error(request, "The group is no longer active.")
             return redirect("/")
     else:
         messages.error(request, "The link you clicked is no longer valid.")
