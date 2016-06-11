@@ -20,7 +20,7 @@ def script_pre_create(sender, **kwargs):
         file_selected = True
         file_type = files[0].name.split('.')[-1]
     elif fed_res_fnames:
-        file_type = fed_res_fnames.split('.')[-1]
+        file_type = fed_res_fnames[0].split('.')[-1]
         file_selected = True
 
     if file_selected:
