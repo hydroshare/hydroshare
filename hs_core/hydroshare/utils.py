@@ -136,7 +136,7 @@ def get_user_zone_status_info(user):
     """
     if user is None:
         return None, None
-    if user.userprofile is None:
+    if not hasattr(user, 'userprofile') or user.userprofile is None:
         return None, None
 
 
