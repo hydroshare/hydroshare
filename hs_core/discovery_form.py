@@ -17,13 +17,32 @@ class DiscoveryForm(FacetedSearchForm):
             sqs = self.searchqueryset.filter(discoverable=True)
         else:
             sqs = super(FacetedSearchForm, self).search().filter(discoverable=True)
+
+        geo_sq = SQ()
+        if self.cleaned_data['NElng'] and self.cleaned_data['SWlng']:
+            if float(self.cleaned_data['NElng']) > float(self.cleaned_data['SWlng']):
+                geo_sq.add(SQ(coverage_east__lte=float(self.cleaned_data['NElng'])), SQ.AND)
+                geo_sq.add(SQ(coverage_east__gte=float(self.cleaned_data['SWlng'])), SQ.AND)
+            else:
+                geo_sq.add(SQ(coverage_east__gte=float(self.cleaned_data['SWlng'])), SQ.AND)
+                geo_sq.add(SQ(coverage_east__lte=float(180)), SQ.OR)
+                geo_sq.add(SQ(coverage_east__lte=float(self.cleaned_data['NElng'])), SQ.AND)
+                geo_sq.add(SQ(coverage_east__gte=float(-180)), SQ.AND)
+
+        if self.cleaned_data['NElat'] and self.cleaned_data['SWlat']:
+            geo_sq.add(SQ(coverage_north__lte=float(self.cleaned_data['NElat'])), SQ.AND)
+            geo_sq.add(SQ(coverage_north__gte=float(self.cleaned_data['SWlat'])), SQ.AND)
+
+        if geo_sq:
+            sqs = sqs.filter(geo_sq)
+
         author_sq = SQ()
         subjects_sq = SQ()
         resource_sq = SQ()
         public_sq = SQ()
         owner_sq = SQ()
         discoverable_sq = SQ()
-        geo_sq = SQ()
+
         # We need to process each facet to ensure that the field name and the
         # value are quoted correctly and separately:
 
@@ -67,24 +86,5 @@ class DiscoveryForm(FacetedSearchForm):
             sqs = sqs.filter(owner_sq)
         if discoverable_sq:
             sqs = sqs.filter(discoverable_sq)
-
-        if self.cleaned_data['NElng'] and self.cleaned_data['SWlng']:
-            #sqs = sqs.filter_or(coverage_east__lte=float(self.cleaned_data['NElng']), coverage_east__gte=float(-180))
-            if float(self.cleaned_data['NElng']) > float(self.cleaned_data['SWlng']):
-                geo_sq.add(SQ(coverage_east__lte=float(self.cleaned_data['NElng'])), SQ.AND)
-                geo_sq.add(SQ(coverage_east__gte=float(self.cleaned_data['SWlng'])), SQ.AND)
-            else:
-                geo_sq.add(SQ(coverage_east__gte=float(self.cleaned_data['SWlng'])), SQ.AND)
-                geo_sq.add(SQ(coverage_east__lte=float(180)), SQ.OR)
-                geo_sq.add(SQ(coverage_east__lte=float(self.cleaned_data['NElng'])), SQ.AND)
-                geo_sq.add(SQ(coverage_east__gte=float(-180)), SQ.AND)
-
-        if self.cleaned_data['NElat'] and self.cleaned_data['SWlat']:
-            geo_sq.add(SQ(coverage_north__lte=float(self.cleaned_data['NElat'])), SQ.AND)
-            geo_sq.add(SQ(coverage_north__gte=float(self.cleaned_data['SWlat'])), SQ.AND)
-
-
-        if geo_sq:
-            sqs = sqs.filter(geo_sq)
 
         return sqs

@@ -172,7 +172,7 @@
                                 {% endif %}
                             {% endfor %}
                             <td>
-                                <a id="manual-zoom-btn" class="btn btn-default" onclick="manualZoomMap()">
+                                <a id="manual-zoom-btn" class="btn btn-default" onclick="manualZoomMap()" style="margin-top:20px">
                                     zoom in
                                 </a>
                             </td>
@@ -419,7 +419,6 @@
                     }
                 }
             }
-            console.log(filtered_results.length);
         }
 
         var removeMarkers = function() {
@@ -643,7 +642,7 @@
             sessionStorage[sessionStorageCheckboxId] = 'true';
             requestURL += buildURLOnCheckboxes();
             if (window.location.hash){
-                requestURL += window.location.hash;
+                requestURL = requestURL + "/" + window.location.hash;
             }
             window.location = requestURL;
         }
@@ -695,7 +694,7 @@
                 clearCheckboxes();
             }
 
-            $('#items-discovered').DataTable({
+            var results_table = $('#items-discovered').DataTable({
                 "paging":   false,
                 "searching": false,
                 "info": false,
@@ -707,11 +706,11 @@
             $("ul.nav-tabs > li > a").on("shown.bs.tab", function (e) {
                 var tabId = $(e.target).attr("href").substr(1);
                 window.location.hash = tabId;
-                if(tabId == "map-view" && map == null){
+                if (tabId == "map-view" && map == null) {
                     var requestURL = "/searchjson/";
-                    if(window.location.search.length == 0){
+                    if (window.location.search.length == 0) {
                         requestURL += "?q=";
-                    }else{
+                    } else {
                         requestURL += window.location.search;
                     }
 
@@ -781,7 +780,7 @@
                     var sessionStorageCheckboxId = 'search-' + checkboxId;
                     sessionStorage[sessionStorageCheckboxId] = 'true';
                     if(window.location.hash){
-                        requestURL += window.location.hash;
+                        requestURL = requestURL + "/" + window.location.hash;
                     }
                     window.location = requestURL;
                 }else{
@@ -794,7 +793,7 @@
                     var updateURL = "/search/?q=" + textSearch;
                     updateURL += buildURLOnCheckboxes();
                     if(window.location.hash){
-                        updateURL += window.location.hash;
+                        updateURL = updateURL + "/" + window.location.hash;
                     }
                     window.location = updateURL;
                 }
