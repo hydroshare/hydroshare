@@ -237,6 +237,8 @@ class UserAccess(models.Model):
         if this_user and not this_user.is_active:
             raise PermissionDenied("Invited user is not active")
 
+        if not this_group.gaccess.active: raise PermissionDenied("Group is not active")
+
         if this_user is None:
             if self.user in this_group.gaccess.members:
                 raise PermissionDenied("You are already a member of this group")
@@ -286,6 +288,9 @@ class UserAccess(models.Model):
         if not user_to_join_group.is_active:
             raise PermissionDenied("User to be granted group membership is not active")
 
+        if not this_request.group_to_join.gaccess.active:
+            raise PermissionDenied("Group is not active")
+
         membership_grantor = None
         # group owner acting on membership request from a user
         if this_request.invitation_to is None:
@@ -323,7 +328,8 @@ class UserAccess(models.Model):
         if not self.user.is_active:
             raise PermissionDenied("Requesting user is not active")
 
-        return GroupMembershipRequest.objects.filter(Q(request_from=self.user) | Q(invitation_to=self.user))
+        return GroupMembershipRequest.objects.filter(Q(request_from=self.user) |
+                                                     Q(invitation_to=self.user)).filter(group_to_join__gaccess__active=True)
 
     def create_group(self, title, description, purpose=None):
         """
@@ -394,18 +400,20 @@ class UserAccess(models.Model):
     @property
     def view_groups(self):
         """ 
-        Get a list of groups accessible to self for view.
+        Get a list of active groups accessible to self for view. Inactive groups will be included only if self owns
+        those groups.
 
         :return: QuerySet evaluating to held groups.
         """
         if not self.user.is_active: raise PermissionDenied("Requesting user is not active")
 
-        return Group.objects.filter(g2ugp__user=self.user)
+        return Group.objects.filter(Q(g2ugp__user=self.user) & (Q(gaccess__active=True) | Q(pk__in=self.owned_groups)))
 
     @property
     def edit_groups(self):
         """
-        Return a list of groups editable by self.
+        Return a list of active groups editable by self. Inactive groups will be included only if self owns
+        those groups.
 
         :return: QuerySet of groups editable by self.
 
@@ -423,13 +431,13 @@ class UserAccess(models.Model):
         """
         if not self.user.is_active: raise PermissionDenied("Requesting user is not active")
 
-        return Group.objects.filter(g2ugp__user=self.user,
-                                    g2ugp__privilege__lte=PrivilegeCodes.CHANGE)
+        return Group.objects.filter(Q(g2ugp__user=self.user) & Q(g2ugp__privilege__lte=PrivilegeCodes.CHANGE) &
+                                    (Q(gaccess__active=True) | Q(pk__in=self.owned_groups)))
 
     @property
     def owned_groups(self):
         """
-        Return a QuerySet of groups owned by self.
+        Return a QuerySet of groups (includes inactive groups) owned by self.
 
         :return: QuerySet of groups owned by self.
 
@@ -502,6 +510,7 @@ class UserAccess(models.Model):
             assert isinstance(this_group, Group)
 
         if not self.user.is_active: raise PermissionDenied("Requesting user is not active")
+        if not this_group.gaccess.active: raise PermissionDenied("Group is not active")
 
         if self.user.is_superuser:
             return True
@@ -530,6 +539,12 @@ class UserAccess(models.Model):
 
         if not self.user.is_active: raise PermissionDenied("Requesting user is not active")
 
+        if self.user.is_superuser:
+            return True
+
+        if not this_group.gaccess.active and not self.owns_group(this_group):
+            raise PermissionDenied("Group is not active")
+
         access_group = this_group.gaccess
 
         return self.user.is_superuser or access_group.public or self.user in this_group.gaccess.members
@@ -557,6 +572,7 @@ class UserAccess(models.Model):
             assert isinstance(this_group, Group)
 
         if not self.user.is_active: raise PermissionDenied("Requesting user is not active")
+        if not this_group.gaccess.active: raise PermissionDenied("Group is not active")
 
         access_group = this_group.gaccess
 
@@ -655,6 +671,7 @@ class UserAccess(models.Model):
             assert this_privilege >= PrivilegeCodes.OWNER and this_privilege <= PrivilegeCodes.VIEW
 
         if not self.user.is_active: raise PermissionDenied("Requesting user is not active")
+        if not this_group.gaccess.active: raise PermissionDenied("Group is not active")
 
         access_group = this_group.gaccess
 
@@ -709,6 +726,7 @@ class UserAccess(models.Model):
 
         if not self.user.is_active: raise PermissionDenied("Requesting user is not active")
         if not this_user.is_active: raise PermissionDenied("Grantee user is not active")
+        if not this_group.gaccess.active: raise PermissionDenied("Group is not active")
 
         access_group = this_group.gaccess
 
@@ -790,6 +808,7 @@ class UserAccess(models.Model):
 
         if not self.user.is_active: raise PermissionDenied("Requesting user is not active")
         if not this_user.is_active: raise PermissionDenied("Grantee user is not active")
+        if not this_group.gaccess.active: raise PermissionDenied("Group is not active")
 
         if this_user not in this_group.gaccess.members:
             raise PermissionDenied("User is not a member of the group")
@@ -819,7 +838,6 @@ class UserAccess(models.Model):
                                               .delete()
         else:
             raise PermissionDenied("Cannot remove sole owner of group")
-
 
     def can_unshare_group_with_user(self, this_group, this_user):
         """
@@ -851,6 +869,7 @@ class UserAccess(models.Model):
 
         if not self.user.is_active: raise PermissionDenied("Requesting user is not active")
         if not this_user.is_active: raise PermissionDenied("Grantee user is not active")
+        if not this_group.gaccess.active: raise PermissionDenied("Group is not active")
 
         if this_user not in this_group.gaccess.members:
             return False  # unshare raises PermissionDenied("User is not a member of the group")
@@ -909,6 +928,7 @@ class UserAccess(models.Model):
 
         if not self.user.is_active: raise PermissionDenied("Requesting user is not active")
         if not this_user.is_active: raise PermissionDenied("Grantee user is not active")
+        if not this_group.gaccess.active: raise PermissionDenied("Group is not active")
 
         access_group = this_group.gaccess
 
@@ -1004,6 +1024,8 @@ class UserAccess(models.Model):
 
         access_group = this_group.gaccess
 
+        if not access_group.active: raise PermissionDenied("Group is not active")
+
         if this_user == self.user:
             return False  # undo_share raises PermissionDenied("Cannot undo grants to self")
 
@@ -1069,6 +1091,7 @@ class UserAccess(models.Model):
             assert isinstance(this_group, Group)
 
         if not self.user.is_active: raise PermissionDenied("Requesting user is not active")
+        if not this_group.gaccess.active: raise PermissionDenied("Group is not active")
 
         access_group = this_group.gaccess
 
@@ -1106,7 +1129,6 @@ class UserAccess(models.Model):
                                                                        u2ugp__grantor=self.user,
                                                                        u2ugp__privilege=PrivilegeCodes.OWNER))
 
-
     def get_group_unshare_users(self, this_group):
         """
         Get a QuerySet of users who could be unshared from this group.
@@ -1137,6 +1159,7 @@ class UserAccess(models.Model):
             assert isinstance(this_group, Group)
 
         if not self.user.is_active: raise PermissionDenied("Requesting user is not active")
+        if not this_group.gaccess.active: raise PermissionDenied("Group is not active")
 
         access_group = this_group.gaccess
 
@@ -1193,6 +1216,11 @@ class UserAccess(models.Model):
             .exclude(pk__in=Group.objects \
                      .filter(g2ugp__user=self.user,
                              g2ugp__privilege__lt=this_privilege))
+
+        # filter out inactive groups for non owner privileges
+        if this_privilege != PrivilegeCodes.OWNER:
+            selected.filter(gaccess__active=True)
+
         return selected
 
     ##########################################
@@ -1211,7 +1239,8 @@ class UserAccess(models.Model):
         if not self.user.is_active: raise PermissionDenied("Requesting user is not active")
 
         # need distinct due to duplicates invoked via Q expressions 
-        return BaseResource.objects.filter(Q(r2urp__user=self.user) | Q(r2grp__group__g2ugp__user=self.user)).distinct()
+        return BaseResource.objects.filter(Q(r2urp__user=self.user) | Q(r2grp__group__g2ugp__user=self.user)).\
+            exclude(r2grp__group__gaccess__active=False).distinct()
 
     @property 
     def owned_resources(self):
@@ -1243,7 +1272,8 @@ class UserAccess(models.Model):
                                            & (Q(r2urp__user=self.user,
                                                 r2urp__privilege__lte=PrivilegeCodes.CHANGE) \
                                               | Q(r2grp__group__g2ugp__user=self.user,
-                                                  r2grp__privilege__lte=PrivilegeCodes.CHANGE))).distinct()
+                                                  r2grp__privilege__lte=PrivilegeCodes.CHANGE))).\
+            exclude(r2grp__group__gaccess__active=False).distinct()
 
     # TODO: make this conformant to Sphinx conventions. 
     def get_resources_with_explicit_access(self, this_privilege):
@@ -1528,6 +1558,7 @@ class UserAccess(models.Model):
             assert this_privilege >= PrivilegeCodes.OWNER and this_privilege <= PrivilegeCodes.VIEW
 
         if not self.user.is_active: raise PermissionDenied("Requesting user is not active")
+        if not this_group.gaccess.active: raise PermissionDenied("Group is not active")
 
         if this_privilege == PrivilegeCodes.OWNER:
             return False
@@ -1561,6 +1592,7 @@ class UserAccess(models.Model):
             assert this_grantor is None or isinstance(this_grantor, User)
 
         if not self.user.is_active: raise PermissionDenied("Requesting user is not active")
+        if not this_group.gaccess.active: raise PermissionDenied("Group is not active")
 
         access_resource = this_resource.raccess
 
@@ -1606,6 +1638,7 @@ class UserAccess(models.Model):
             assert this_grantor is None or isinstance(this_grantor, User)
 
         if not self.user.is_active: raise PermissionDenied("Requesting user is not active")
+        if not this_group.gaccess.active: raise PermissionDenied("Group is not active")
 
         access_resource = this_resource.raccess
 
@@ -1980,6 +2013,8 @@ class UserAccess(models.Model):
 
         access_group = this_group.gaccess
 
+        if not access_group.active: raise PermissionDenied("Group to share with is not active")
+
         if this_privilege == PrivilegeCodes.OWNER:
             raise PermissionDenied("Groups cannot own resources")
         if this_privilege < PrivilegeCodes.OWNER or this_privilege > PrivilegeCodes.VIEW:
@@ -2034,8 +2069,7 @@ class UserAccess(models.Model):
             assert isinstance(this_group, Group)
 
         if not self.user.is_active: raise PermissionDenied("Requesting user is not active")
-
-        access_resource = this_resource.raccess
+        if not this_group.gaccess.active: raise PermissionDenied("Group is not active")
 
         if this_group not in this_resource.raccess.view_groups:
             raise PermissionDenied("Group does not have access to resource")
@@ -2073,8 +2107,7 @@ class UserAccess(models.Model):
             assert isinstance(this_group, Group)
 
         if not self.user.is_active: raise PermissionDenied("Requesting user is not active")
-
-        access_resource = this_resource.raccess
+        if not this_group.gaccess.active: raise PermissionDenied("Group is not active")
 
         if this_group not in this_resource.raccess.view_groups:
             return False  # unshare raises PermissionDenied("Group does not have access to resource")
@@ -2194,7 +2227,7 @@ class UserAccess(models.Model):
 
     def get_resource_undo_groups(self, this_resource):
         """
-        DEPRECATED: Get a list of groups to whom self granted access
+        DEPRECATED: Get a list of groups (active groups only) to whom self granted access
 
         :param this_resource: resource to check.
         :return: list of groups granted access by self.
@@ -2213,10 +2246,10 @@ class UserAccess(models.Model):
         if not self.user.is_active: raise PermissionDenied("Requesting user is not active")
 
         if self.user.is_superuser or self.owns_resource(this_resource):
-            return Group.objects.filter(g2grp__resource=this_resource)
+            return Group.objects.filter(g2grp__resource=this_resource, gaccess__active=True)
         else:  #  privilege only for grantor
             return Group.objects.filter(g2grp__resource=this_resource,
-                                        g2grp__grantor=self.user)
+                                        g2grp__grantor=self.user, gaccess__active=True)
            
     def get_resource_unshare_groups(self, this_resource):
         """
@@ -2238,10 +2271,10 @@ class UserAccess(models.Model):
 
         if self.user.is_superuser or self.owns_resource(this_resource):
             # all shared groups
-            return Group.objects.filter(g2grp__resource=this_resource)
+            return Group.objects.filter(g2grp__resource=this_resource, gaccess__active=True)
         else:
             return Group.objects.filter(g2ugp__user=self.user,
-                                        g2ugp__privilege=PrivilegeCodes.OWNER)
+                                        g2ugp__privilege=PrivilegeCodes.OWNER, gaccess__active=True)
 
 
 class GroupMembershipRequest(models.Model):
@@ -2366,7 +2399,7 @@ class GroupAccess(models.Model):
         :return: QuerySet
         """
 
-        return GroupMembershipRequest.objects.filter(group_to_join=self.group)
+        return GroupMembershipRequest.objects.filter(group_to_join=self.group, group_to_join__gaccess__active=True)
 
     def get_resources_with_explicit_access(self, this_privilege):
         """
@@ -2502,11 +2535,13 @@ class ResourceAccess(models.Model):
         For VIEW, effective privilege = declared privilege, in the sense that all editors have VIEW, even if the
         resource is immutable.
         """
-        return User.objects.filter(Q(is_active=True) \
+
+        return User.objects.filter(Q(is_active=True)
                                    & (Q(u2urp__resource=self.resource,
                                         u2urp__privilege__lte=PrivilegeCodes.VIEW) \
                                     | Q(u2ugp__group__g2grp__resource=self.resource,
-                                        u2ugp__group__g2grp__privilege__lte=PrivilegeCodes.VIEW))).distinct()
+                                        u2ugp__group__g2grp__privilege__lte=PrivilegeCodes.VIEW))).\
+            exclude(u2ugp__group__gaccess__active=False).distinct()
 
     @property
     def edit_users(self):
@@ -2517,14 +2552,16 @@ class ResourceAccess(models.Model):
 
         If the resource is immutable, an empty QuerySet is returned.
         """
+
         if self.immutable:
             return User.objects.none()
         else:
-            return User.objects.filter(Q(is_active=True) \
+            return User.objects.filter(Q(is_active=True)
                                        & (Q(u2urp__resource=self.resource,
                                             u2urp__privilege__lte=PrivilegeCodes.CHANGE) \
                                         | Q(u2ugp__group__g2grp__resource=self.resource,
-                                            u2ugp__group__g2grp__privilege__lte=PrivilegeCodes.CHANGE))).distinct()
+                                            u2ugp__group__g2grp__privilege__lte=PrivilegeCodes.CHANGE))).\
+                exclude(u2ugp__group__gaccess__active=False).distinct()
 
     @property
     def view_groups(self):
@@ -2534,7 +2571,7 @@ class ResourceAccess(models.Model):
         This is a property so that it is a workalike for a prior explicit list 
         """
         return Group.objects.filter(g2grp__resource=self.resource,
-                                    g2grp__privilege__lte=PrivilegeCodes.VIEW)
+                                    g2grp__privilege__lte=PrivilegeCodes.VIEW, gaccess__active=True)
 
     @property
     def edit_groups(self):
@@ -2549,7 +2586,7 @@ class ResourceAccess(models.Model):
             return Group.objects.none()
         else:
             return Group.objects.filter(g2grp__resource=self.resource,
-                                        g2grp__privilege__lte=PrivilegeCodes.CHANGE)
+                                        g2grp__privilege__lte=PrivilegeCodes.CHANGE, gaccess__active=True)
 
     @property
     def owners(self):
@@ -2629,9 +2666,9 @@ class ResourceAccess(models.Model):
         if response1 is None:
             response1 = PrivilegeCodes.NONE
 
-        # include group active flag
         group_priv = GroupResourcePrivilege.objects\
             .filter(resource=self.resource,
+                    group__gaccess__active=True,
                     group__g2ugp__user=this_user,
                     group__g2ugp__user__is_active=True)\
             .aggregate(models.Min('privilege'))
