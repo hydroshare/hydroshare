@@ -213,8 +213,8 @@
                                 {% endfor %}
                             </tbody>
                         </table>
+                        <div id="page-options" style="float: right">
                         {% if page_obj.has_previous or page_obj.has_next %}
-                            <div style="float: right">
                                 {% if page_obj.has_previous %}
                                     <a href="{{ request.get_full_path|clean_pagination_url }}&amp;page={{ page_obj.previous_page_number }}">
                                 {% endif %}&laquo; Previous
@@ -223,8 +223,8 @@
                                 {% if page_obj.has_next %}
                                     <a href="{{ request.get_full_path|clean_pagination_url }}&amp;page={{ page_obj.next_page_number }}">
                                 {% endif %}Next &raquo;{% if page_obj.has_next %}</a>{% endif %}
-                            </div>
                         {% endif %}
+                        </div>
                     </div>
                     <div id="map-view" class="tab-pane fade">
                         <div id="discover-map" style="width:850px; height:650px"></div>
@@ -330,12 +330,14 @@
                 var filtered_results = [];
                 clientUpdateMarkers(filtered_results);
                 setMarkers(filtered_results);
+                updateListView();
             });
 
             var drag_listener = google.maps.event.addListener(map, 'dragend', function(){
                 var filtered_results = [];
                 clientUpdateMarkers(filtered_results);
                 setMarkers(filtered_results);
+                updateListView();
             });
             generateLegend();
         }
@@ -436,6 +438,7 @@
             }
             markers = [];
         }
+
         var checkDuplicatePointResults = function (modified_points_data, test){
             var test_lat = parseFloat(test.north);
             var test_lng = parseFloat(test.east);
@@ -612,7 +615,44 @@
             });
         }
 
-
+        var updateListView = function() {
+            $("ul.nav-tabs > li > a").on("shown.bs.tab", function (e) {
+                var tabId = $(e.target).attr("href").substr(1);
+                if (tabId == "list-view") {
+                    $('#items-discovered').empty();
+                    var requestURL = "/search/";
+                    if (window.location.search.length == 0) {
+                        requestURL += "?q=";
+                    } else {
+                        requestURL += window.location.search;
+                    }
+                    var ne_lat = document.getElementById("id_NElat").value;
+                    var ne_lng = document.getElementById("id_NElng").value;
+                    var sw_lat = document.getElementById("id_SWlat").value;
+                    var sw_lng = document.getElementById("id_SWlng").value;
+                    $.ajax({
+                        type: "GET",
+                        url: requestURL,
+                        data: {
+                            NElat: ne_lat,
+                            NElng: ne_lng,
+                            SWlat: sw_lat,
+                            SWlng: sw_lng
+                        },
+                        dataType: 'html',
+                        success: function (data) {
+                            var tableDiv = $("#items-discovered", data);
+                            $("#items-discovered").html(tableDiv);
+                            var pageOptionDiv = $("#page-options", data);
+                            $("#page-options").html(pageOptionDiv);
+                        }
+                        , failure: function (data) {
+                            console.error("fail");
+                        }
+                    });
+                }
+            });
+        }
 
         var reorderDivs = function() {
             var faceted_fields = ['creators', 'subjects', 'resource_type', 'owners_names', 'availability'];
@@ -665,6 +705,7 @@
             });
             return requestURL;
         }
+
         var popCheckboxes = function() {
             $(".faceted-selections").each(function () {
                 var checkboxId = $(this).attr("id");
@@ -696,7 +737,7 @@
                 clearCheckboxes();
             }
 
-            var results_table = $('#items-discovered').DataTable({
+            $('#items-discovered').DataTable({
                 "paging":   false,
                 "searching": false,
                 "info": false,
@@ -715,10 +756,20 @@
                     } else {
                         requestURL += window.location.search;
                     }
+                    var ne_lat = document.getElementById("id_NElat").value;
+                    var ne_lng = document.getElementById("id_NElng").value;
+                    var sw_lat = document.getElementById("id_SWlat").value;
+                    var sw_lng = document.getElementById("id_SWlng").value;
 
                     $.ajax({
                         type: "GET",
                         url: requestURL,
+                        data: {
+                            NElat: ne_lat,
+                            NElng: ne_lng,
+                            SWlat: sw_lat,
+                            SWlng: sw_lng
+                        },
                         dataType: 'json',
                         success: function(data) {
                             var json_results = [];
