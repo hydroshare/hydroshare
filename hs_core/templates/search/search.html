@@ -258,13 +258,10 @@
         var markers = [];
         var raw_results = [];
         var markerCluster = null;
-        var update_markers = false;
+        var info_window = null;
+        var rectangle = null;
 
         var initMap = function(json_results) {
-
-            json_results.forEach(function(result){
-                raw_results.push(result);
-            });
 
             var $mapDiv = $("#discover-map");
             var mapDim = {
@@ -278,6 +275,7 @@
             });
 
             setMarkers(json_results);
+
 
             var bounds = (markers.length > 0) ? createBoundsForMarkers(markers) : null;
             if (bounds) {
@@ -359,8 +357,8 @@
                 }
             }
 
-            var info_window = new google.maps.InfoWindow();
-            var rectangle = new google.maps.Rectangle({
+            info_window = new google.maps.InfoWindow();
+            rectangle = new google.maps.Rectangle({
                 strokeColor: '#FF0000',
                 strokeOpacity: 0.8,
                 strokeWeight: 2,
@@ -374,6 +372,8 @@
                     west: 0
                 }
             });
+
+
             modified_points_data.forEach(function(point){
                 var info_content = point.info_link;
                 var lat = parseFloat(point.north);
@@ -381,6 +381,7 @@
                 var counter = point.counter.toString();
                 createPointResourceMarker(lat, lng, info_content, counter, info_window, rectangle);
             });
+
 
             modified_boxes_data.forEach(function(box){
                 var info_content = box.info_link;
@@ -418,10 +419,13 @@
                         filtered_results.push(raw_results[i]);
                     }
                 }
+
+
             }
         }
 
         var removeMarkers = function() {
+            rectangle.setMap(null);
             if (markerCluster) {
                 markerCluster.clearMarkers(markers);
             }
@@ -443,8 +447,7 @@
                 var lat_diff = Math.abs(test_lat - item_lat);
                 var lng_diff = Math.abs(test_lng - item_lng);
                 if (lat_diff < minFloatingNumber && lng_diff < minFloatingNumber) {
-                    item.title = item.title + "<br />" + test.title;
-                    item.info_link += '<br />' + '"<a href="' + test.get_absolute_url + '">' + test.title + '</a>';
+                    item.info_link = item.info_link + '<br />' + '"<a href="' + test.get_absolute_url + '">' + test.title + '</a>';
                     item.counter++;
                     existed = true;
                 }
@@ -468,8 +471,7 @@
                 var lng_diff = Math.abs(test_lng - item_lng);
 
                 if (lat_diff < minFloatingNumber && lng_diff < minFloatingNumber) {
-                    item.title = item.title + "<br />" + test.title;
-                    item.info_link += '<br />' + '"<a href="' + test.get_absolute_url + '">' + test.title + '</a>';
+                    item.info_link = item.info_link + '<br />' + '"<a href="' + test.get_absolute_url + '">' + test.title + '</a>';
                     item.counter++;
                     existed = true;
                 }
@@ -720,9 +722,11 @@
                         dataType: 'json',
                         success: function(data) {
                             var json_results = [];
+                            raw_results = [];
                             for(var j = 0; j < data.length; j++){
                                 var item = $.parseJSON(data[j]);
                                 json_results.push(item);
+                                raw_results.push(item);
                             }
                             initMap(json_results);
                         }
