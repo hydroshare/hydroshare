@@ -187,6 +187,14 @@
                 </ul>
                 <div class="tab-content">
                     <div id="list-view" class="tab-pane fade in active">
+                        <div id="list-data-options" style="float:right">
+                            <label class="radio-inline">
+                                <input type="radio" name="results-selection" value="map-results-selected">Map Results
+                            </label>
+                            <label class="radio-inline">
+                                <input type="radio" name="results-selection" value="all-results-selected" checked="">All Results
+                            </label>
+                        </div>
                         <table class="table table-striped table-hover" id="items-discovered">
                             <thead>
                                 <tr>
@@ -260,6 +268,7 @@
         var markerCluster = null;
         var info_window = null;
         var rectangle = null;
+        var update_markers = false;
 
         var initMap = function(json_results) {
 
@@ -327,18 +336,13 @@
             });
 
             var zoom_listener = google.maps.event.addListener(map, 'zoom_changed', function(){
-                var filtered_results = [];
-                clientUpdateMarkers(filtered_results);
-                setMarkers(filtered_results);
-                updateListView();
+                updateMapView();
             });
 
             var drag_listener = google.maps.event.addListener(map, 'dragend', function(){
-                var filtered_results = [];
-                clientUpdateMarkers(filtered_results);
-                setMarkers(filtered_results);
-                updateListView();
+                updateMapView();
             });
+
             generateLegend();
         }
 
@@ -615,41 +619,41 @@
             });
         }
 
-        var updateListView = function() {
-            $("ul.nav-tabs > li > a").on("shown.bs.tab", function (e) {
-                var tabId = $(e.target).attr("href").substr(1);
-                if (tabId == "list-view") {
-                    $('#items-discovered').empty();
-                    var requestURL = "/search/";
-                    if (window.location.search.length == 0) {
-                        requestURL += "?q=";
-                    } else {
-                        requestURL += window.location.search;
-                    }
-                    var ne_lat = document.getElementById("id_NElat").value;
-                    var ne_lng = document.getElementById("id_NElng").value;
-                    var sw_lat = document.getElementById("id_SWlat").value;
-                    var sw_lng = document.getElementById("id_SWlng").value;
-                    $.ajax({
-                        type: "GET",
-                        url: requestURL,
-                        data: {
-                            NElat: ne_lat,
-                            NElng: ne_lng,
-                            SWlat: sw_lat,
-                            SWlng: sw_lng
-                        },
-                        dataType: 'html',
-                        success: function (data) {
-                            var tableDiv = $("#items-discovered", data);
-                            $("#items-discovered").html(tableDiv);
-                            var pageOptionDiv = $("#page-options", data);
-                            $("#page-options").html(pageOptionDiv);
-                        }
-                        , failure: function (data) {
-                            console.error("fail");
-                        }
-                    });
+        var updateMapView = function() {
+            update_markers = true;
+            var filtered_results = [];
+            clientUpdateMarkers(filtered_results);
+            setMarkers(filtered_results);
+        }
+
+        var updateListView = function(data) {
+            $('#items-discovered').empty();
+            $("#page-options").empty();
+            var requestURL = "/search/";
+            if (window.location.search.length == 0) {
+                requestURL += "?q=";
+            } else {
+                requestURL += window.location.search;
+            }
+            var ne_lat = document.getElementById("id_NElat").value;
+            var ne_lng = document.getElementById("id_NElng").value;
+            var sw_lat = document.getElementById("id_SWlat").value;
+            var sw_lng = document.getElementById("id_SWlng").value;
+
+            $.ajax({
+                type: "GET",
+                url: requestURL,
+                data: data,
+                dataType: 'html',
+                success: function (data) {
+                    var tableDiv = $("#items-discovered", data);
+                    $("#items-discovered").html(tableDiv);
+                    var pageOptionDiv = $("#page-options", data);
+                    $("#page-options").html(pageOptionDiv);
+                    update_markers = false;
+                }
+                , failure: function (data) {
+                    console.error("fail");
                 }
             });
         }
@@ -784,6 +788,24 @@
                         , failure: function(data){
                             console.error("fail");
                         }
+                    });
+                }else if(tabId == "list-view") {
+                    var selected_results = $('input[name=results-selection]:checked').val();
+                    $('input[type=radio][name=results-selection]').change(function() {
+                        var data = null;
+                        if(this.value == 'map-results-selected'){
+                            var ne_lat = document.getElementById("id_NElat").value;
+                            var ne_lng = document.getElementById("id_NElng").value;
+                            var sw_lat = document.getElementById("id_SWlat").value;
+                            var sw_lng = document.getElementById("id_SWlng").value;
+                            data = {
+                            NElat: ne_lat,
+                            NElng: ne_lng,
+                            SWlat: sw_lat,
+                            SWlng: sw_lng
+                            };
+                        }
+                        updateListView(data);
                     });
                 }
             });
