@@ -10,6 +10,7 @@ import xml.etree.ElementTree as ET
 from django.db import migrations
 from django.core.files.uploadedfile import UploadedFile
 
+from django_irods.storage import IrodsStorage
 from hs_core import hydroshare
 from hs_core.hydroshare.utils import resource_modified
 from hs_geo_raster_resource.models import RasterResource
@@ -18,6 +19,7 @@ from hs_geo_raster_resource import raster_meta_extract
 
 def migrate_tif_file(apps, schema_editor):
     log = logging.getLogger()
+    istorage = IrodsStorage()
 
     copy_res_fail = []
     vrt_update_fail = []
@@ -68,6 +70,10 @@ def migrate_tif_file(apps, schema_editor):
                     hydroshare.add_resource_files(res.short_id, new_file)
 
                     # update the bag
+                    bag_name = 'bags/{res_id}.zip'.format(res_id=res.short_id)
+                    if istorage.exists(bag_name):
+                        # delete the resource bag as the old bag is not valid
+                        istorage.delete(bag_name)
                     resource_modified(res, res.creator)
                     vrt_update_success.append('{}:{}'.format(res.short_id,res.metadata.title.value))
 
@@ -101,6 +107,10 @@ def migrate_tif_file(apps, schema_editor):
 
                 # update the bag if meta is updated
                 if meta_updated:
+                    bag_name = 'bags/{res_id}.zip'.format(res_id=res.short_id)
+                    if istorage.exists(bag_name):
+                        # delete the resource bag as the old bag is not valid
+                        istorage.delete(bag_name)
                     resource_modified(res, res.creator)
                     meta_update_success.append('{}:{}'.format(res.short_id, res.metadata.title.value))
 
