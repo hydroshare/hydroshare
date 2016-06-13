@@ -150,7 +150,7 @@
             {% endif %}
             -->
             <div id="resource-search">
-                <form id="search-field" method="get" action=".">
+                <form id="search-fields" method="get" action=".">
                     <div class="resource-search">
                         {% for field in form %}
                             {% if field.auto_id  == "id_q" %}
@@ -644,7 +644,7 @@
             sessionStorage[sessionStorageCheckboxId] = 'true';
             requestURL += buildURLOnCheckboxes();
             if (window.location.hash){
-                requestURL = requestURL + "/" + window.location.hash;
+                requestURL = requestURL + window.location.hash;
             }
             window.location = requestURL;
         }
@@ -755,11 +755,23 @@
                 $(this).parent().find(".glyphicon-minus").removeClass("glyphicon-minus").addClass("glyphicon-plus");
             });
 
-            $("#id_q").keypress(function(event) {
+            $("#search-fields").keypress(function(event) {
                 if (event.which == 13) {
                     event.preventDefault();
                     clearCheckboxes();
-                    $("#search-field").submit();
+                    var textSearch = $("#id_q").val();
+                    var searchURL = "?q=" + textSearch;
+                    var ne_lat = document.getElementById("id_NElat").value;
+                    var ne_lng = document.getElementById("id_NElng").value;
+                    var sw_lat = document.getElementById("id_SWlat").value;
+                    var sw_lng = document.getElementById("id_SWlng").value;
+                    var geoSearchParams = "&NElat=" + ne_lat + "&NElng=" + ne_lng + "&SWlat=" + sw_lat + "&SWlng=" + sw_lng;
+                    var windowPath = window.location.pathname;
+                    var requestURL =  windowPath + searchURL + geoSearchParams;
+                    if(window.location.hash){
+                        requestURL = requestURL + window.location.hash;
+                    }
+                    window.location = requestURL;
                 }
             });
 
@@ -784,7 +796,7 @@
                     var sessionStorageCheckboxId = 'search-' + checkboxId;
                     sessionStorage[sessionStorageCheckboxId] = 'true';
                     if(window.location.hash){
-                        requestURL = requestURL + "/" + window.location.hash;
+                        requestURL = requestURL + window.location.hash;
                     }
                     window.location = requestURL;
                 }else{
@@ -797,7 +809,7 @@
                     var updateURL = "/search/?q=" + textSearch;
                     updateURL += buildURLOnCheckboxes();
                     if(window.location.hash){
-                        updateURL = updateURL + "/" + window.location.hash;
+                        updateURL = updateURL + window.location.hash;
                     }
                     window.location = updateURL;
                 }
