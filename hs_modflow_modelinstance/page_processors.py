@@ -79,10 +79,14 @@ def landing_page(request, page):
         ModelInputFormSetEdit = formset_factory(wraps(ModelInputForm)(partial(ModelInputForm, allow_edit=True)), formset=BaseFormSet, extra=0)
         model_input_formset = ModelInputFormSetEdit(initial=content_model.metadata.model_inputs.values(), prefix='modelinput')
         for model_input_form in model_input_formset.forms:
-            model_input_form.helper.set_form_action("/hsapi/_internal/%s/modelinput/%s/update-metadata/" % (content_model.short_id, model_input_form.initial['id']))
-            model_input_form.delete_modal_form = MetaDataElementDeleteForm(content_model.short_id, 'modelinput', model_input_form.initial['id'])
-            model_input_form.number = model_input_form.initial['id']
-            model_input_form.helper.form_id = 'id-modelinput-%s' % model_input_form.number
+            if len(model_input_form.initial) > 0:
+                model_input_form.action = "/hsapi/_internal/%s/modelinput/%s/update-metadata/" % (content_model.short_id, model_input_form.initial['id'])
+                # model_input_form.helper.set_form_action("/hsapi/_internal/%s/modelinput/%s/update-metadata/" % (content_model.short_id, model_input_form.initial['id']))
+                model_input_form.delete_modal_form = MetaDataElementDeleteForm(content_model.short_id, 'modelinput', model_input_form.initial['id'])
+                model_input_form.number = model_input_form.initial['id']
+                # model_input_form.helper.form_id = 'id-modelinput-%s' % model_input_form.number
+            else:
+                model_input_form.action = "/hsapi/_internal/%s/modelinput/add-metadata/" % content_model.short_id
 
         add_modelinput_modal_form = ModelInputForm(allow_edit=False, res_short_id=content_model.short_id)
 

@@ -4,7 +4,7 @@ from django import forms
 from crispy_forms import layout
 from crispy_forms.layout import Layout, Field, HTML
 
-from hs_core.forms import BaseFormHelper
+from hs_core.forms import BaseFormHelper, Helper
 from hs_core.hydroshare import users
 
 from hs_modelinstance.models import ModelOutput, ExecutedBy
@@ -396,18 +396,31 @@ class ModelInputForm(ModelForm):
     def __init__(self, allow_edit=True, res_short_id=None, element_id=None, *args, **kwargs):
         super(ModelInputForm, self).__init__(*args, **kwargs)
         self.helper = ModelInputFormHelper(allow_edit, res_short_id, element_id, element_name='ModelInput')
-
-    @property
-    def action(self):
-        return self.helper.form_action
+        if res_short_id:
+            self.action = "/hsapi/_internal/%s/modelinput/add-metadata/" % res_short_id
+        else:
+            self.action = ""
+    # @property
+    # def action(self):
+    #     return self.helper.form_action
 
     @property
     def form_id(self):
-        return self.helper.form_id
+        form_id = 'id_modelinput_%s' % self.number
+        return form_id
 
     @property
-    def form_id_str(self):
-        return "'" + self.helper.form_id + "'"
+    def form_id_button(self):
+        form_id = 'id_modelinput_%s' % self.number
+        return "'" + form_id + "'"
+
+    # @property
+    # def form_id(self):
+    #     return self.helper.form_id
+    #
+    # @property
+    # def form_id_str(self):
+    #     return "'" + self.helper.form_id + "'"
 
     class Meta:
         model = ModelInput
@@ -473,7 +486,7 @@ ModelInputLayoutEdit = Layout(
                                                 '<input class="btn-danger btn btn-md" type="button" data-toggle="modal" data-target="#delete-modelinput-element-dialog_{{ form.number }}" value="Delete model input">'
                                             '</div>'
                                             '<div class="col-md-2">'
-                                                '<button type="button" class="btn btn-primary pull-right" onclick="metadata_update_ajax_submit({{ form.form_id_str }}); return false;">Save changes</button>'
+                                                '<button type="button" class="btn btn-primary pull-right" onclick="metadata_update_ajax_submit({{ form.form_id_button }}); return false;">Save changes</button>'
                                             '</div>'
                                         '</div>'
                                         '{% crispy form.delete_modal_form %} '
@@ -488,32 +501,36 @@ ModelInputLayoutEdit = Layout(
                             ),
                     )
 
-ModalDialogLayoutAddModelInput = Layout(
-                            HTML('<div class="modal fade" id="add-modelinput-dialog" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">'
-                                    '<div class="modal-dialog">'
-                                        '<div class="modal-content">'),
-                                            HTML('<form action="{{ add_modelinput_modal_form.action }}" method="POST" enctype="multipart/form-data"> '),
-                                            HTML('{% csrf_token %} '
-                                            '<input name="resource-mode" type="hidden" value="edit"/>'
-                                            '<div class="modal-header">'
-                                                '<button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>'),
-                                                HTML('<h4 class="modal-title" id="myModalLabel"> Add Model Input </h4>'),
-                                            HTML('</div>'
-                                            '<div class="modal-body">'
-                                                '{% csrf_token %}'
-                                                '<div class="form-group">'),
-                                                   HTML('{% load crispy_forms_tags %} '
-                                                       '{% crispy add_modelinput_modal_form %} '),
-                                                HTML('</div>'
-                                            '</div>'
-                                            '<div class="modal-footer">'
-                                                '<button type="button" class="btn btn-default" data-dismiss="modal">Close</button>'
-                                                '<button type="submit" class="btn btn-primary">Save changes</button>'
-                                            '</div>'
-                                            '</form>'
-                                        '</div>'
-                                    '</div>'
-                                '</div>')
-                        )
+
+ModalDialogLayoutAddModelInput = Helper.get_element_add_modal_form('ModelInput', 'add_modelinput_modal_form')
+
+
+# ModalDialogLayoutAddModelInput = Layout(
+#                             HTML('<div class="modal fade" id="add-modelinput-dialog" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">'
+#                                     '<div class="modal-dialog">'
+#                                         '<div class="modal-content">'),
+#                                             HTML('<form action="{{ add_modelinput_modal_form.action }}" method="POST" enctype="multipart/form-data"> '),
+#                                             HTML('{% csrf_token %} '
+#                                             '<input name="resource-mode" type="hidden" value="edit"/>'
+#                                             '<div class="modal-header">'
+#                                                 '<button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>'),
+#                                                 HTML('<h4 class="modal-title" id="myModalLabel"> Add Model Input </h4>'),
+#                                             HTML('</div>'
+#                                             '<div class="modal-body">'
+#                                                 '{% csrf_token %}'
+#                                                 '<div class="form-group">'),
+#                                                    HTML('{% load crispy_forms_tags %} '
+#                                                        '{% crispy add_modelinput_modal_form %} '),
+#                                                 HTML('</div>'
+#                                             '</div>'
+#                                             '<div class="modal-footer">'
+#                                                 '<button type="button" class="btn btn-default" data-dismiss="modal">Close</button>'
+#                                                 '<button type="submit" class="btn btn-primary">Save changes</button>'
+#                                             '</div>'
+#                                             '</form>'
+#                                         '</div>'
+#                                     '</div>'
+#                                 '</div>')
+#                         )
 
 
