@@ -5,6 +5,25 @@
 {% block extended_metadata %}
     {% if extended_metadata_exists %}
         <div class="row">
+            <div class="col-sm-5">
+                <strong>Select a a timeseries to see corresponding metadata:</strong>
+            </div>
+            <div class="col-sm-7">
+            <form action="/resource/{{ cm.short_id }}/" method="get" enctype="multipart/form-data">
+            {% csrf_token %}
+                <select class="form-control" name="series_id" id="series_id" onchange="this.form.submit()">
+                    {% for series_id, label in series_ids.items %}
+                        {% if selected_series_id == series_id %}
+                            <option value="{{ series_id }}" selected="selected">{{ label }}</option>
+                        {% else %}
+                            <option value={{ series_id }}>{{ label }}</option>
+                        {% endif %}
+                    {% endfor %}
+                </select>
+            </form>
+            </div>
+        </div>
+        <div class="row">
             {% if sites or variables or methods %}
                 <div {% if not processing_levels and not timeseries_results %}class="col-md-12 col-xs-12" {% else %}class="col-md-6 col-xs-12"{% endif %}>
                     {% if sites %}

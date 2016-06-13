@@ -12,16 +12,7 @@ from hs_tools_resource.utils import parse_app_url_template
 
 @processor_for(GenericResource)
 def landing_page(request, page):
-    # TODO: this if/else is an exact copy of the function 'check_resource_mode', defined below
-    if request.method == "GET":
-        resource_mode = request.session.get('resource-mode', None)
-        if resource_mode == 'edit':
-            edit_resource = True
-            del request.session['resource-mode']
-        else:
-            edit_resource = False
-    else:
-        edit_resource = True
+    edit_resource = check_resource_mode(request)
 
     return get_page_context(page, request.user, resource_edit=edit_resource, request=request)
 
