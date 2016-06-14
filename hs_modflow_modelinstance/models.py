@@ -330,8 +330,11 @@ class MODFLOWModelInstanceResource(BaseResource):
                     nam_file_exists = True
                     name_file = res_file.resource_file.file
                     for rows in name_file:
+                        rows = rows.strip()
                         rows = rows.split(" ")
-                        if rows[0] != '#' and rows[0] != '#\n' and rows[0] != ' ' and rows[0] != 'LIST' and rows[0] != 'DATA' and rows[0] != 'DATA(BINARY)':
+                        r = rows[0].strip()
+                        if r != '#' and r != '' and r.lower() != 'list' and r.lower() != 'data' \
+                                and r.lower() != 'data(binary)':
                             reqd_files.append(rows[-1].strip())
         return nam_file_exists, reqd_files, existing_files
 
