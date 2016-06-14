@@ -289,17 +289,14 @@ class MODFLOWModelInstanceResource(BaseResource):
         return self._get_metadata(md)
 
     def has_required_content_files(self):
-        missing_files = []
         if self.files.all().count() >= 1:
             files = self.find_content_files()
-            if not files[0]:
+            if files[0] != 1:
                 return False
             else:
                 for f in files[1]:
                     if f not in files[2]:
-                        missing_files.append(f)
-                if missing_files:
-                    return False
+                        return False
                 else:
                     return True
         else:
@@ -312,22 +309,25 @@ class MODFLOWModelInstanceResource(BaseResource):
             if not files[0]:
                 return ['.nam']
             else:
-                for f in files[1]:
-                    if f not in files[2]:
-                        missing_files.append(f)
-                return missing_files
+                if files[0] > 1:
+                    return 'multiple_nam'
+                else:
+                    for f in files[1]:
+                        if f not in files[2]:
+                            missing_files.append(f)
+                    return missing_files
         else:
             return ['.nam']
 
     def find_content_files(self):
-        nam_file_exists = False
+        nam_file_count = 0
         existing_files = []
         reqd_files = []
         for res_file in self.files.all():
                 ext = os.path.splitext(res_file.resource_file.name)[-1]
                 existing_files.append(res_file.resource_file.name.split("/")[-1])
                 if ext == '.nam':
-                    nam_file_exists = True
+                    nam_file_count += 1
                     name_file = res_file.resource_file.file
                     for rows in name_file:
                         rows = rows.strip()
@@ -336,7 +336,7 @@ class MODFLOWModelInstanceResource(BaseResource):
                         if r != '#' and r != '' and r.lower() != 'list' and r.lower() != 'data' \
                                 and r.lower() != 'data(binary)':
                             reqd_files.append(rows[-1].strip())
-        return nam_file_exists, reqd_files, existing_files
+        return nam_file_count, reqd_files, existing_files
 
 
 processor_for(MODFLOWModelInstanceResource)(resource_processor)
