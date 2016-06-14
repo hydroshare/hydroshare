@@ -75,27 +75,18 @@ def landing_page(request, page):
         model_calibration_form = ModelCalibrationForm(instance=content_model.metadata.model_calibration, res_short_id=content_model.short_id,
                                                       element_id=content_model.metadata.model_calibration.id if content_model.metadata.model_calibration else None)
 
-        # THIS HAS TO BE A FORMSET
         ModelInputFormSetEdit = formset_factory(wraps(ModelInputForm)(partial(ModelInputForm, allow_edit=True)), formset=BaseFormSet, extra=0)
         model_input_formset = ModelInputFormSetEdit(initial=content_model.metadata.model_inputs.values(), prefix='modelinput')
         for model_input_form in model_input_formset.forms:
             if len(model_input_form.initial) > 0:
                 model_input_form.action = "/hsapi/_internal/%s/modelinput/%s/update-metadata/" % (content_model.short_id, model_input_form.initial['id'])
-                # model_input_form.helper.set_form_action("/hsapi/_internal/%s/modelinput/%s/update-metadata/" % (content_model.short_id, model_input_form.initial['id']))
                 model_input_form.delete_modal_form = MetaDataElementDeleteForm(content_model.short_id, 'modelinput', model_input_form.initial['id'])
                 model_input_form.number = model_input_form.initial['id']
-                # model_input_form.helper.form_id = 'id-modelinput-%s' % model_input_form.number
             else:
                 model_input_form.action = "/hsapi/_internal/%s/modelinput/add-metadata/" % content_model.short_id
 
         add_modelinput_modal_form = ModelInputForm(allow_edit=False, res_short_id=content_model.short_id)
 
-
-        # model_input_form = ModelInputForm(instance=content_model.metadata.model_inputs.first(), res_short_id=content_model.short_id,
-        #                                   element_id=content_model.metadata.model_inputs.first().id if content_model.metadata.model_inputs.first() else None)
-
-        # model_input_form = ModelInputForm(instance=content_model.metadata.model_inputs.first(), res_short_id=content_model.short_id,
-        #                                   element_id=None)
         general_elements_form = GeneralElementsForm(instance=content_model.metadata.general_elements, res_short_id=content_model.short_id,
                                                     element_id=content_model.metadata.general_elements.id if content_model.metadata.general_elements else None)
 
@@ -120,24 +111,9 @@ def landing_page(request, page):
                                     '</div>'),
                                HTML("</div>"),
 
-                               # HTML("<div id='model-inputs-container'>"),
-                               #
-                               # HTML('<div class="form-group" id="model-input-template" style="display:none;"> '
-                               #      '{% load crispy_forms_tags %} '
-                               #      '{% crispy model_input_form %} '
-                               #      '</div>'),
-
-                               # HTML('<div class="form-group" id="modelinput"> '
-                               #      '{% load crispy_forms_tags %} '
-                               #      '{% crispy model_input_form %} '
-                               #      '</div></div>'),
-                               # ModelInputFormSetEdit,
                                ModelInputLayoutEdit,
+
                                ModalDialogLayoutAddModelInput,
-                               # HTML('<div style="margin-top:10px">'
-                               #   '<p><a id="btn-add-model-input" class="btn btn-success">'
-                               #   '<i class="fa fa-plus"></i>Add another Model Input</a>'
-                               #   '</div></div>'),
 
                                HTML('<div class="col-xs-12 col-sm-6"><div class="form-group" id="studyarea"> '
                                     '{% load crispy_forms_tags %} '

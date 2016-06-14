@@ -321,13 +321,8 @@ class BoundaryConditionForm(ModelForm):
             if self.instance.id:
                 self.fields['boundaryConditionType'].initial = [types.description for types in
                                                                 self.instance.boundaryConditionType.all()]
-            # else:
-            #     self.fields['boundaryConditionType'].initial = []
-
-            # if self.instance.id:
                 self.fields['boundaryConditionPackage'].initial = [packages.description for packages in
                                                                    self.instance.boundaryConditionPackage.all()]
-                # self.fields['boundaryConditionPackage'].initial = []
 
     class Meta:
         model = BoundaryCondition
@@ -400,9 +395,6 @@ class ModelInputForm(ModelForm):
             self.action = "/hsapi/_internal/%s/modelinput/add-metadata/" % res_short_id
         else:
             self.action = ""
-    # @property
-    # def action(self):
-    #     return self.helper.form_action
 
     @property
     def form_id(self):
@@ -413,14 +405,6 @@ class ModelInputForm(ModelForm):
     def form_id_button(self):
         form_id = 'id_modelinput_%s' % self.number
         return "'" + form_id + "'"
-
-    # @property
-    # def form_id(self):
-    #     return self.helper.form_id
-    #
-    # @property
-    # def form_id_str(self):
-    #     return "'" + self.helper.form_id + "'"
 
     class Meta:
         model = ModelInput
@@ -503,34 +487,3 @@ ModelInputLayoutEdit = Layout(
 
 
 ModalDialogLayoutAddModelInput = Helper.get_element_add_modal_form('ModelInput', 'add_modelinput_modal_form')
-
-
-# ModalDialogLayoutAddModelInput = Layout(
-#                             HTML('<div class="modal fade" id="add-modelinput-dialog" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">'
-#                                     '<div class="modal-dialog">'
-#                                         '<div class="modal-content">'),
-#                                             HTML('<form action="{{ add_modelinput_modal_form.action }}" method="POST" enctype="multipart/form-data"> '),
-#                                             HTML('{% csrf_token %} '
-#                                             '<input name="resource-mode" type="hidden" value="edit"/>'
-#                                             '<div class="modal-header">'
-#                                                 '<button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>'),
-#                                                 HTML('<h4 class="modal-title" id="myModalLabel"> Add Model Input </h4>'),
-#                                             HTML('</div>'
-#                                             '<div class="modal-body">'
-#                                                 '{% csrf_token %}'
-#                                                 '<div class="form-group">'),
-#                                                    HTML('{% load crispy_forms_tags %} '
-#                                                        '{% crispy add_modelinput_modal_form %} '),
-#                                                 HTML('</div>'
-#                                             '</div>'
-#                                             '<div class="modal-footer">'
-#                                                 '<button type="button" class="btn btn-default" data-dismiss="modal">Close</button>'
-#                                                 '<button type="submit" class="btn btn-primary">Save changes</button>'
-#                                             '</div>'
-#                                             '</form>'
-#                                         '</div>'
-#                                     '</div>'
-#                                 '</div>')
-#                         )
-
-

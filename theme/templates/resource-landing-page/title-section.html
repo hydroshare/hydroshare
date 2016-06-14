@@ -48,9 +48,14 @@
                     </ul>
                 {%  endif %}
                 {% if cm.resource_type == "MODFLOWModelInstanceResource" %}
-                    {% if not cm.has_required_content_files %}
+                    {% if cm.check_content_files %}
                         <br>
-                        <span>Name file (.nam) is required to publish the resource or make the resource public or discoverable.</span>
+                        <span>The following file(s) is(are) required to publish the resource or make the resource public or discoverable:<br>
+                            <ul>
+                               {% for f in cm.check_content_files %}
+                                   <li>{{ f }} </li>
+                               {% endfor %}
+                            </ul></span>
                     {% endif %}
                 {%  elif not cm.has_required_content_files %}
                          <br>

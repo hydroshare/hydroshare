@@ -289,19 +289,51 @@ class MODFLOWModelInstanceResource(BaseResource):
         return self._get_metadata(md)
 
     def has_required_content_files(self):
-        nam_file_exists = False
-        if len(self.get_supported_upload_file_types()) > 0:
-            if self.files.all().count() >= 1:
-                for res_file in self.files.all():
-                     ext = os.path.splitext(res_file.resource_file.name)[-1]
-                     if ext == '.nam':
-                         nam_file_exists = True
-
-                return nam_file_exists
-            else:
+        missing_files = []
+        if self.files.all().count() >= 1:
+            files = self.find_content_files()
+            if not files[0]:
                 return False
+            else:
+                for f in files[1]:
+                    if f not in files[2]:
+                        missing_files.append(f)
+                if missing_files:
+                    return False
+                else:
+                    return True
         else:
-            return True
+            return False
+
+    def check_content_files(self):
+        missing_files = []
+        if self.files.all().count() >= 1:
+            files = self.find_content_files()
+            if not files[0]:
+                return ['.nam']
+            else:
+                for f in files[1]:
+                    if f not in files[2]:
+                        missing_files.append(f)
+                return missing_files
+        else:
+            return ['.nam']
+
+    def find_content_files(self):
+        nam_file_exists = False
+        existing_files = []
+        reqd_files = []
+        for res_file in self.files.all():
+                ext = os.path.splitext(res_file.resource_file.name)[-1]
+                existing_files.append(res_file.resource_file.name.split("/")[-1])
+                if ext == '.nam':
+                    nam_file_exists = True
+                    name_file = res_file.resource_file.file
+                    for rows in name_file:
+                        rows = rows.split(" ")
+                        if rows[0] != '#' and rows[0] != '#\n' and rows[0] != ' ' and rows[0] != 'LIST' and rows[0] != 'DATA' and rows[0] != 'DATA(BINARY)':
+                            reqd_files.append(rows[-1].strip())
+        return nam_file_exists, reqd_files, existing_files
 
 
 processor_for(MODFLOWModelInstanceResource)(resource_processor)
