@@ -16,6 +16,7 @@ from django.contrib.auth.models import User, Group
 from django.core.serializers import get_serializer
 from django.core.files import File
 from django.core.files.uploadedfile import UploadedFile
+from django.core.files.storage import DefaultStorage
 
 from mezzanine.conf import settings
 
@@ -480,3 +481,7 @@ class ZipContents(object):
                             yield f
         finally:
             shutil.rmtree(temp_dir)
+
+
+def get_file_storage():
+    return IrodsStorage() if getattr(settings, 'USE_IRODS', False) else DefaultStorage()

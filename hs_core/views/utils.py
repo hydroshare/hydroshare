@@ -1,5 +1,5 @@
 from __future__ import absolute_import
-from rest_framework.exceptions import *
+
 import json
 import os
 import string
@@ -7,11 +7,19 @@ from collections import namedtuple
 import paramiko
 import logging
 
+from django.core.urlresolvers import reverse
 from django.contrib.auth.models import Group, User
 from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import ObjectDoesNotExist
 from django.core.files.uploadedfile import UploadedFile
+from django.utils.http import int_to_base36
 from django.conf import settings
+
+from rest_framework.exceptions import *
+
+from mezzanine.utils.email import subject_template, default_token_generator, send_mail_template
+from mezzanine.utils.urls import next_url
+from mezzanine.conf import settings
 
 from ga_resources.utils import get_user
 
@@ -258,3 +266,43 @@ def get_my_resources_list(request):
 
     resource_collection = (owned_resources + editable_resources + viewable_resources + discovered_resources)
     return resource_collection
+
+def send_action_to_take_email(request, user, action_type, **kwargs):
+    """
+    Sends an email with an action link to a user.
+    The actual action takes place when the user clicks on the link
+
+    The ``action_type`` arg is both the name of the urlpattern for
+    the action link, as well as the names of the email templates
+    to use. Additional context variable needed in the email template can be
+    passed using the kwargs
+
+    for action_type == 'group_membership', an instance of GroupMembershipRequest and instance of Group are expected to
+    be passed into this function
+    """
+    email_to = kwargs.get('group_owner', user)
+    context = {'request': request, 'user':user}
+    if action_type == 'group_membership':
+        membership_request = kwargs['membership_request']
+        action_url = reverse(action_type, kwargs={
+            "uidb36": int_to_base36(email_to.id),
+            "token": default_token_generator.make_token(email_to),
+            "membership_request_id": membership_request.id
+        }) + "?next=" + (next_url(request) or "/")
+
+        context['group'] = kwargs.pop('group')
+    else:
+        action_url = reverse(action_type, kwargs={
+            "uidb36": int_to_base36(email_to.id),
+            "token": default_token_generator.make_token(email_to)
+        }) + "?next=" + (next_url(request) or "/")
+
+    context['action_url'] = action_url
+    context.update(kwargs)
+
+    subject_template_name = "email/%s_subject.txt" % action_type
+    subject = subject_template(subject_template_name, context)
+    send_mail_template(subject, "email/%s" % action_type,
+                       settings.DEFAULT_FROM_EMAIL, email_to.email,
+                       context=context)
+

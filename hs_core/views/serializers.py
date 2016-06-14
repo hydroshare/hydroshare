@@ -1,4 +1,3 @@
-__author__ = 'Pabitra'
 
 from collections import namedtuple
 

@@ -1,4 +1,3 @@
-__author__ = 'Alva'
 
 import unittest
 from django.http import Http404
@@ -63,7 +62,7 @@ class T06ProtectGroup(MockIRODSTestCaseMixin, TestCase):
         "Initial group state is correct"
 
         cat = self.cat
-        polyamory = cat.uaccess.create_group('polyamory')
+        polyamory = cat.uaccess.create_group(title='polyamory', description="We are the polyamory")
 
         # flag state
         self.assertTrue(polyamory.gaccess.public)
@@ -92,7 +91,7 @@ class T06ProtectGroup(MockIRODSTestCaseMixin, TestCase):
         "Groups cannot be changed by non-members"
         cat = self.cat
         dog = self.dog
-        polyamory = cat.uaccess.create_group('polyamory')
+        polyamory = cat.uaccess.create_group(title='polyamory', description="We are the polyamory")
 
         # dog should not have access to the group privilege
         self.assertFalse(dog.uaccess.owns_group(polyamory))
@@ -119,7 +118,7 @@ class T06ProtectGroup(MockIRODSTestCaseMixin, TestCase):
         cat = self.cat
         dog = self.dog
         bat = self.bat
-        polyamory = cat.uaccess.create_group('polyamory')
+        polyamory = cat.uaccess.create_group(title='polyamory', description="We are the polyamory")
         self.assertTrue(cat.uaccess.can_share_group(polyamory, PrivilegeCodes.CHANGE))
         cat.uaccess.share_group_with_user(polyamory, dog, PrivilegeCodes.CHANGE)
 
@@ -157,7 +156,7 @@ class T06ProtectGroup(MockIRODSTestCaseMixin, TestCase):
         cat = self.cat
         dog = self.dog
         bat = self.bat
-        polyamory = cat.uaccess.create_group('polyamory')
+        polyamory = cat.uaccess.create_group(title='polyamory', description="We are the polyamory")
         cat.uaccess.share_group_with_user(polyamory, dog, PrivilegeCodes.VIEW)
 
         # now check the state of 'dog'

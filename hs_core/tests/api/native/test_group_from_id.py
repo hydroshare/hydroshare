@@ -18,7 +18,7 @@ class TestGroupFromId(TestCase):
             superuser=False,
             groups=[]
         )
-        self.group = self.user.uaccess.create_group('Jamy group')
+        self.group = self.user.uaccess.create_group(title='Jamy group', description='This is Jamy group')
 
     def test_accept_group_instance(self):
         self.assertEquals(

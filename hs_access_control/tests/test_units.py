@@ -1,4 +1,3 @@
-__author__ = 'Alva'
 
 
 import unittest
@@ -70,13 +69,13 @@ class UnitTests(MockIRODSTestCaseMixin, TestCase):
                                                 metadata=[],)
 
         # george creates a group 'bikers'
-        self.bikers = self.george.uaccess.create_group('Bikers')
+        self.bikers = self.george.uaccess.create_group(title='Bikers', description="We rae the bikers")
 
     def test_user_create_group(self):
         george = self.george
         bikers = self.bikers
         self.assertTrue(is_equal_to_as_set(george.uaccess.view_groups, [bikers]))
-        foo = george.uaccess.create_group('Foozball')
+        foo = george.uaccess.create_group(title='Foozball', description="We are the foozball")
         self.assertTrue(is_equal_to_as_set(george.uaccess.view_groups, [foo, bikers]))
 
     def test_user_delete_group(self):

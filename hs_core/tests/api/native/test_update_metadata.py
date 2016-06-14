@@ -116,8 +116,8 @@ class TestUpdateMetadata(MockIRODSTestCaseMixin, TestCase):
 
         cov_point = self.res.metadata.coverages.filter(type='point').first()
         self.assertEquals(cov_point.value['name'], 'Name for point coverage')
-        self.assertEquals(cov_point.value['east'], '56.45678')
-        self.assertEquals(cov_point.value['north'], '12.6789')
+        self.assertEquals(cov_point.value['east'], 56.45678)
+        self.assertEquals(cov_point.value['north'], 12.6789)
         self.assertEquals(cov_point.value['units'], 'decimal deg')
 
         # there should be no format elements
@@ -161,7 +161,7 @@ class TestUpdateMetadata(MockIRODSTestCaseMixin, TestCase):
              {'coverage': {'type': 'period', 'value': {'name': 'Name for period coverage', 'start': '1/1/2000',
                                                        'end': '12/12/2012'}}},
              {'coverage': {'type': 'box', 'value': {'name': 'Name for box coverage', 'northlimit': '56.45678',
-                                                    'eastlimit': '12.6789', 'southlimit': '16.45678',
+                                                    'eastlimit': '130.6789', 'southlimit': '16.45678',
                                                     'westlimit': '16.6789', 'units': 'decimal deg'}}},
          ]
 
@@ -180,10 +180,10 @@ class TestUpdateMetadata(MockIRODSTestCaseMixin, TestCase):
 
         cov_box = self.res.metadata.coverages.filter(type='box').first()
         self.assertEquals(cov_box.value['name'], 'Name for box coverage')
-        self.assertEquals(cov_box.value['northlimit'], '56.45678')
-        self.assertEquals(cov_box.value['eastlimit'], '12.6789')
-        self.assertEquals(cov_box.value['southlimit'], '16.45678')
-        self.assertEquals(cov_box.value['westlimit'], '16.6789')
+        self.assertEquals(cov_box.value['northlimit'], 56.45678)
+        self.assertEquals(cov_box.value['eastlimit'], 130.6789)
+        self.assertEquals(cov_box.value['southlimit'], 16.45678)
+        self.assertEquals(cov_box.value['westlimit'], 16.6789)
         self.assertEquals(cov_box.value['units'], 'decimal deg')
 
     def test_update_metadata_ignored_elements(self):

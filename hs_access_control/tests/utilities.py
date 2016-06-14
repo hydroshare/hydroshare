@@ -4,8 +4,6 @@ This is a method in which the whole state of the access
 control system is checked after every change. 
 """
 
-__author__ = 'Alva'
-
 
 import unittest
 from django.http import Http404
