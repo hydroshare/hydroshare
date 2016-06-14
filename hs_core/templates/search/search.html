@@ -635,10 +635,6 @@
             } else {
                 requestURL += window.location.search;
             }
-            var ne_lat = document.getElementById("id_NElat").value;
-            var ne_lng = document.getElementById("id_NElng").value;
-            var sw_lat = document.getElementById("id_SWlat").value;
-            var sw_lng = document.getElementById("id_SWlng").value;
 
             $.ajax({
                 type: "GET",
@@ -658,6 +654,7 @@
             });
         }
 
+
         var reorderDivs = function() {
             var faceted_fields = ['creators', 'subjects', 'resource_type', 'owners_names', 'availability'];
             var div_ordering = [];
@@ -673,15 +670,25 @@
             }
         }
 
+        var formGeoParameters = function() {
+            var selected_results = $('input[name=results-selection]:checked').val();
+            var geoSearchParams = "";
+            if(selected_results == 'map-results-selected') {
+                var ne_lat = document.getElementById("id_NElat").value;
+                var ne_lng = document.getElementById("id_NElng").value;
+                var sw_lat = document.getElementById("id_SWlat").value;
+                var sw_lng = document.getElementById("id_SWlng").value;
+                geoSearchParams = "&NElat=" + ne_lat + "&NElng=" + ne_lng + "&SWlat=" + sw_lat + "&SWlng=" + sw_lng;
+            }
+            return geoSearchParams
+        }
+
+
         var formLinkButtonURL = function(key, value){
             var textSearch = $("#id_q").val();
             var searchURL = "?q=" + textSearch;
+            var geoSearchParams = formGeoParameters();
             var windowPath = window.location.pathname;
-            var ne_lat = document.getElementById("id_NElat").value;
-            var ne_lng = document.getElementById("id_NElng").value;
-            var sw_lat = document.getElementById("id_SWlat").value;
-            var sw_lng = document.getElementById("id_SWlng").value;
-            var geoSearchParams = "&NElat=" + ne_lat + "&NElng=" + ne_lng + "&SWlat=" + sw_lat + "&SWlng=" + sw_lng;
             var requestURL =  windowPath + searchURL + geoSearchParams;
             var checkboxId =  key + "-" + value;
             var sessionStorageCheckboxId = 'search-' + checkboxId;
@@ -737,7 +744,7 @@
 
         $(document).ready(function () {
 
-            if (window.location.search.length == 0){
+            if (window.location.search.length == 0) {
                 clearCheckboxes();
             }
 
@@ -790,20 +797,21 @@
                         }
                     });
                 }else if(tabId == "list-view") {
-                    var selected_results = $('input[name=results-selection]:checked').val();
                     $('input[type=radio][name=results-selection]').change(function() {
-                        var data = null;
+                        var data;
                         if(this.value == 'map-results-selected'){
                             var ne_lat = document.getElementById("id_NElat").value;
                             var ne_lng = document.getElementById("id_NElng").value;
                             var sw_lat = document.getElementById("id_SWlat").value;
                             var sw_lng = document.getElementById("id_SWlng").value;
                             data = {
-                            NElat: ne_lat,
-                            NElng: ne_lng,
-                            SWlat: sw_lat,
-                            SWlng: sw_lng
+                                NElat: ne_lat,
+                                NElng: ne_lng,
+                                SWlat: sw_lat,
+                                SWlng: sw_lng
                             };
+                        }else {
+                            data = null;
                         }
                         updateListView(data);
                     });
@@ -834,11 +842,7 @@
                     clearCheckboxes();
                     var textSearch = $("#id_q").val();
                     var searchURL = "?q=" + textSearch;
-                    var ne_lat = document.getElementById("id_NElat").value;
-                    var ne_lng = document.getElementById("id_NElng").value;
-                    var sw_lat = document.getElementById("id_SWlat").value;
-                    var sw_lng = document.getElementById("id_SWlng").value;
-                    var geoSearchParams = "&NElat=" + ne_lat + "&NElng=" + ne_lng + "&SWlat=" + sw_lat + "&SWlng=" + sw_lng;
+                    var geoSearchParams = formGeoParameters();
                     var windowPath = window.location.pathname;
                     var requestURL =  windowPath + searchURL + geoSearchParams;
                     if(window.location.hash){
@@ -854,11 +858,7 @@
                 var value = tokens[1];
                 var textSearch = $("#id_q").val();
                 var searchURL = "?q=" + textSearch;
-                var ne_lat = document.getElementById("id_NElat").value;
-                var ne_lng = document.getElementById("id_NElng").value;
-                var sw_lat = document.getElementById("id_SWlat").value;
-                var sw_lng = document.getElementById("id_SWlng").value;
-                var geoSearchParams = "&NElat=" + ne_lat + "&NElng=" + ne_lng + "&SWlat=" + sw_lat + "&SWlng=" + sw_lng;
+                var geoSearchParams = formGeoParameters();
                 var windowPath = window.location.pathname;
                 var requestURL =  windowPath + searchURL + geoSearchParams;
 

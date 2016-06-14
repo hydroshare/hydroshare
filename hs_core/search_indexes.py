@@ -137,7 +137,6 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
     def prepare_coverage_east(self, obj):
         if hasattr(obj, 'metadata'):
             for coverage in obj.metadata.coverages.all():
-                logger.debug(coverage.type)
                 if coverage.type == 'point':
                     return float(coverage.value["east"])
                 elif coverage.type == 'box':
