@@ -187,7 +187,7 @@
                 </ul>
                 <div class="tab-content">
                     <div id="list-view" class="tab-pane fade in active">
-                        <div id="list-data-options" style="float:right; display:none">
+                        <div id="list-data-options" style="float:right">
                             <label class="radio-inline">
                                 <input type="radio" name="results-selection" value="map-results-selected">Map Results
                             </label>
@@ -633,7 +633,10 @@
             if (window.location.search.length == 0) {
                 requestURL += "?q=";
             } else {
-                requestURL += window.location.search;
+                var textSearch = $("#id_q").val();
+                var searchURL = "?q=" + textSearch;
+                requestURL += searchURL;
+                requestURL += buildURLOnCheckboxes();
             }
 
             $.ajax({
@@ -767,7 +770,10 @@
                     if (window.location.search.length == 0) {
                         requestURL += "?q=";
                     } else {
-                        requestURL += window.location.search;
+                        var textSearch = $("#id_q").val();
+                        var searchURL = "?q=" + textSearch;
+                        requestURL += searchURL;
+                        requestURL += buildURLOnCheckboxes();
                     }
                     var ne_lat = document.getElementById("id_NElat").value;
                     var ne_lng = document.getElementById("id_NElng").value;
@@ -799,7 +805,6 @@
                         }
                     });
                 }else if(tabId == "list-view") {
-                    $("#list-data-options").show();
                     $('input[type=radio][name=results-selection]').change(function() {
                         var data;
                         if(this.value == 'map-results-selected'){
