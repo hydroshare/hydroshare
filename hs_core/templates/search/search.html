@@ -187,7 +187,7 @@
                 </ul>
                 <div class="tab-content">
                     <div id="list-view" class="tab-pane fade in active">
-                        <div id="list-data-options" style="float:right">
+                        <div id="list-data-options" style="float:right; display:none">
                             <label class="radio-inline">
                                 <input type="radio" name="results-selection" value="map-results-selected">Map Results
                             </label>
@@ -673,12 +673,14 @@
         var formGeoParameters = function() {
             var selected_results = $('input[name=results-selection]:checked').val();
             var geoSearchParams = "";
-            if(selected_results == 'map-results-selected') {
+            if (selected_results == 'map-results-selected') {
                 var ne_lat = document.getElementById("id_NElat").value;
                 var ne_lng = document.getElementById("id_NElng").value;
                 var sw_lat = document.getElementById("id_SWlat").value;
                 var sw_lng = document.getElementById("id_SWlng").value;
                 geoSearchParams = "&NElat=" + ne_lat + "&NElng=" + ne_lng + "&SWlat=" + sw_lat + "&SWlng=" + sw_lng;
+            } else {
+                geoSearchParams = "&NElat=&NElng=&SWlat=&SWlng=";
             }
             return geoSearchParams
         }
@@ -797,6 +799,7 @@
                         }
                     });
                 }else if(tabId == "list-view") {
+                    $("#list-data-options").show();
                     $('input[type=radio][name=results-selection]').change(function() {
                         var data;
                         if(this.value == 'map-results-selected'){
@@ -811,7 +814,12 @@
                                 SWlng: sw_lng
                             };
                         }else {
-                            data = null;
+                            data = {
+                                NElat: '',
+                                NElng: '',
+                                SWlat: '',
+                                SWlng: ''
+                            };
                         }
                         updateListView(data);
                     });
