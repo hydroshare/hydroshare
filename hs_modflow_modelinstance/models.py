@@ -333,7 +333,7 @@ class MODFLOWModelInstanceResource(BaseResource):
                         rows = rows.strip()
                         rows = rows.split(" ")
                         r = rows[0].strip()
-                        if r != '#' and r != '' and r.lower() != 'list' and r.lower() != 'data' \
+                        if not r.startswith('#') and r != '' and r.lower() != 'list' and r.lower() != 'data' \
                                 and r.lower() != 'data(binary)':
                             reqd_files.append(rows[-1].strip())
         return nam_file_count, reqd_files, existing_files
