@@ -249,6 +249,7 @@ def _get_html_snippet(html_snippet_file_name):
         html_snippet = fobj.read()
     return html_snippet
 
+SeriesSelectionLayout = Layout(HTML(_get_html_snippet('series_selection.html')))
 SiteLayoutEdit = Layout(HTML(_get_html_snippet('site_element_edit.html')))
 VariableLayoutEdit = Layout(HTML(_get_html_snippet('variable_element_edit.html')))
 MethodLayoutEdit = Layout(HTML(_get_html_snippet('method_element_edit.html')))

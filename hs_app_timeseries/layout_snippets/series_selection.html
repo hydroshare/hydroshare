@@ -1,0 +1,20 @@
+<div class="row">
+    <div class="col-sm-5">
+        <strong>Select a timeseries to see corresponding metadata:</strong>
+    </div>
+    <div class="col-sm-7">
+        <form action="/resource/{{ cm.short_id }}/" method="get" enctype="multipart/form-data">
+        {% csrf_token %}
+            <input name="resource-mode" type="hidden" value="edit">
+            <select class="form-control" name="series_id" id="series_id" onchange="this.form.submit()">
+                {% for series_id, label in series_ids.items %}
+                    {% if selected_series_id == series_id %}
+                        <option value="{{ series_id }}" selected="selected">{{ label }}</option>
+                    {% else %}
+                        <option value={{ series_id }}>{{ label }}</option>
+                    {% endif %}
+                {% endfor %}
+            </select>
+        </form>
+    </div>
+</div>

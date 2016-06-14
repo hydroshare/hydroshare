@@ -387,28 +387,20 @@ def check_resource_mode(request):
 
     This function erases the 'resource-mode' property of `request.session` if it exists.
 
-    TODO:
-        1. simplify this function by:
-            a) no side effects (dont remove 'resource-mode')
-            b) the 2 conditions can be expressed in one line:
-                    return request.method != "GET" :keyword or request.session.get('resource-mode', None) == 'edit'
-        2. rename this function to better express its return value:
-            - perhaps requests_edit_mode(request)
-
     :param request: the `request` for a resource
     :return: True if the request represents an attempt to edit a resource, and False otherwise.
     """
     if request.method == "GET":
-        resource_mode = request.session.get('resource-mode', None)
-        if resource_mode == 'edit':
-            edit_resource = True
+        edit_resource = request.session.get('resource-mode', None) == 'edit'
+        if edit_resource:
             del request.session['resource-mode']
         else:
-            edit_resource = False
+            edit_resource = request.GET.get('resource-mode', None) == 'edit'
     else:
         edit_resource = True
 
     return edit_resource
+
 
 def check_for_validation(request):
     if request.method == "GET":
@@ -418,6 +410,7 @@ def check_for_validation(request):
             return validation_error
 
     return None
+
 
 def _get_metadata_status(resource):
     if resource.metadata.has_all_required_elements():
