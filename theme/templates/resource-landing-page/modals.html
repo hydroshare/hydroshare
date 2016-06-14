@@ -1208,14 +1208,12 @@
                 </div>
                 <div class="modal-body">
                     <div id="div-invite-people">
-                        <p>Invite:</p>
+                        <span>Invite:</span>
 
-                        <label class="radio-inline">
-                            <input type="radio" name="chkInvite" value="users" checked>Users
-                        </label>
-                        <label class="radio-inline">
-                            <input type="radio" name="chkInvite" value="groups">Groups
-                        </label>
+                        <div id="invite-flag" class="btn-group" role="group" aria-label="Share with users or groups">
+                            <button type="button" class="btn btn-primary" data-value="users">Users</button>
+                            <button type="button" class="btn btn-default" data-value="groups">Groups</button>
+                        </div>
 
                         <div class="input-group" style="width:100%">
                             <form id="add-access-form" action="/hsapi/_internal/{{ cm.short_id }}/share-resource-with-user/"

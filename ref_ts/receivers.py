@@ -1,4 +1,3 @@
-__author__ = 'jeff'
 
 from django.dispatch import receiver
 from hs_core.signals import pre_create_resource

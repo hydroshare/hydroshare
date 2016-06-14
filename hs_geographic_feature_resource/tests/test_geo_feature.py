@@ -1,4 +1,3 @@
-__author__ = 'drew'
 
 import os
 from dateutil import parser
