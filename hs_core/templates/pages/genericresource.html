@@ -1277,12 +1277,13 @@
                 });
 
                 // Display toggle for Add Author/Contributor radio buttons
-                $("input[name='add_form_user_type']").click(function(){
+                function onAddContributorTypeChange() {
                     var type = $(this).val();
                     $("div[data-hs-user-type]").hide();
                     $("div[data-hs-user-type='" + type + "']").show();
-
-                });
+                }
+                $("input[name='add_author_user_type']").click(onAddContributorTypeChange);
+                $("input[name='add_contributor_user_type']").click(onAddContributorTypeChange);
                 
 
                 $("#citation-text").on("click", function (e) {

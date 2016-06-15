@@ -2230,10 +2230,6 @@ button.loading {
     margin-top: -20px; margin-bottom:20px;
 }
 
-#id_name {
-    max-width: 467px;
-}
-
 .invalid-input {
 	border-color: #F00 !important;
 }
