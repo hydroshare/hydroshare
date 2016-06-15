@@ -341,28 +341,39 @@ def delete_resource(request, shortkey, *args, **kwargs):
 
 
 def rep_res_bag_to_irods_user_zone(request, shortkey, *args, **kwargs):
-    if request.is_ajax:
-        res, authorized, user = authorize(request, shortkey, needed_permission=ACTION_TO_AUTHORIZE.VIEW_RESOURCE)
-        if not authorized:
-            return HttpResponse(
-            json.dumps({"error": "You are not authorized to replicate this resource."}),
-            content_type="application/json"
-            )
+    '''
+    This function needs to be called via AJAX. The function replicates resource bag to iRODS user zone on users.hydroshare.org
+    which is federated with hydroshare zone under the iRODS user account corresponding to a HydroShare user. This function
+    should only be called or exposed to be called from web interface when a corresponding iRODS user account on hydroshare
+    user Zone exists. The purpose of this function is to allow HydroShare resource bag that a HydroShare user has access
+    to be copied to HydroShare user's iRODS space in HydroShare user zone so that users can do analysis or computations on
+    the resource
+    Args:
+        request: an AJAX request
+        shortkey: UUID of the resource to be copied to the login user's iRODS user space
 
-        try:
-            utils.rep_res_bag_to_user_zone(user, shortkey)
-            #utils.rep_res_bag_to_user_zone(user, '4ea093d6e622400db5477a49d4b7ef5b')
-            return HttpResponse(
-                json.dumps({"success": "This resource bag zip file has been successfully replicated to your iRODS user zone."}),
-                content_type = "application/json"
-            )
-        except SessionException as ex:
-            return HttpResponse(
-            json.dumps({"error": ex.stderr}),
-            content_type="application/json"
-            )
-    else:
-        return HttpResponseRedirect(request.META['HTTP_REFERER'])
+    Returns:
+        JSON list that indicates status of resource replication, i.e., success or error
+    '''
+    res, authorized, user = authorize(request, shortkey, needed_permission=ACTION_TO_AUTHORIZE.VIEW_RESOURCE, raises_exception=False)
+    if not authorized:
+        return HttpResponse(
+        json.dumps({"error": "You are not authorized to replicate this resource."}),
+        content_type="application/json"
+        )
+
+    try:
+        utils.rep_res_bag_to_user_zone(user, shortkey)
+        #utils.rep_res_bag_to_user_zone(user, '4ea093d6e622400db5477a49d4b7ef5b')
+        return HttpResponse(
+            json.dumps({"success": "This resource bag zip file has been successfully replicated to your iRODS user zone."}),
+            content_type = "application/json"
+        )
+    except SessionException as ex:
+        return HttpResponse(
+        json.dumps({"error": ex.stderr}),
+        content_type="application/json"
+        )
 
 def create_new_version_resource(request, shortkey, *args, **kwargs):
     res, authorized, user = authorize(request, shortkey, needed_permission=ACTION_TO_AUTHORIZE.CREATE_RESOURCE_VERSION)
