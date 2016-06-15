@@ -942,6 +942,11 @@
                 input.val(label);
             });
 
+            // Empty password input. Necessary because some browsers (ex:Firefox) now ignore 'autocomplete=off'
+            setTimeout(function () {
+                $("input[type=password]").val('');
+            }, 500);
+
             $(".upload-picture").change(function(){
                 readURL(this);
             });
