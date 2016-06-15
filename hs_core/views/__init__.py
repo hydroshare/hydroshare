@@ -1043,7 +1043,7 @@ def get_user_data(request, user_id, *args, **kwargs):
     user_data['organization'] = user.userprofile.organization if user.userprofile.organization else ''
     user_data['website'] = user.userprofile.website if user.userprofile.website else ''
 
-    return JsonResponse(json.dumps(user_data))
+    return JsonResponse(user_data)
 
 def _send_email_on_group_membership_acceptance(membership_request):
     """
