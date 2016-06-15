@@ -382,13 +382,14 @@ function get_user_info_ajax_submit(url, obj) {
             $("#div-invite-people").find(".label-danger").remove(); // Remove previous alerts
             var json_response = JSON.parse(result);
             formContainer.find("input[name='name']").val(json_response.name);
-            formContainer.find("input[name='description']").val(json_response.url);
-            formContainer.find("input[name='email']").val(json_response.name);
+            // formContainer.find("input[name='description']").val(json_response.url);
+            formContainer.find("input[name='organization']").val(json_response.organization);
+            formContainer.find("input[name='email']").val(json_response.email);
             formContainer.find("input[name='address']").val(json_response.address);
             formContainer.find("input[name='phone']").val(json_response.phone);
             formContainer.find("input[name='homepage']").val(json_response.website);
+            formContainer.submit();
             console.log(json_response);
-
         },
         error: function(XMLHttpRequest, textStatus, errorThrown){
             console.log(textStatus);

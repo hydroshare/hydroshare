@@ -616,9 +616,7 @@
                     {% csrf_token %}
                     <input name="resource-mode" type="hidden" value="edit">
                     <div class="modal-body">
-                        {% csrf_token %}
                         <div class="form-group">
-                            {% csrf_token %}
                             <fieldset>
                                 <div id="div_id_name" class="control-group">
                                     <label for="id_name" class="control-label requiredField">Name<span
@@ -628,6 +626,7 @@
                                                                  id="id_name" maxlength="100" name="name"
                                                                  required="required" type="text"></div>
                                 </div>
+
                                 <div id="div_id_description" class="control-group">
                                     <label for="id_description" class="control-label">HydroShare User Identifier
                                         (URL)</label>
@@ -636,12 +635,13 @@
                                                                  name="description" type="url"></div>
                                 </div>
 
-                                <div id="div_id_organization" class="control-group" style="display:none;">
+                                <div id="div_id_organization" class="control-group">
                                     <label for="id_organization" class="control-label">Organization</label>
                                     <div class="controls"><input class="form-control input-sm textinput textInput"
                                                                  id="id_organization" maxlength="200"
                                                                  name="organization" type="text"></div>
                                 </div>
+
                                 <div id="div_id_email" class="control-group">
                                     <label for="id_email" class="control-label">Email</label>
 
@@ -651,6 +651,7 @@
                                                type="email">
                                     </div>
                                 </div>
+
                                 <div id="div_id_address" class="control-group">
                                     <label for="id_address" class="control-label">Address</label>
                                     <div class="controls">
@@ -659,6 +660,7 @@
                                                type="text">
                                     </div>
                                 </div>
+
                                 <div id="div_id_phone" class="control-group">
                                     <label for="id_phone" class="control-label">Phone</label>
                                     <div class="controls">
@@ -667,6 +669,7 @@
                                                type="text">
                                     </div>
                                 </div>
+
                                 <div id="div_id_homepage" class="control-group">
                                     <label for="id_homepage" class="control-label">Homepage</label>
                                     <div class="controls"><input class="form-control input-sm urlinput"
@@ -703,6 +706,7 @@
                                                                  id="id_name" maxlength="100" name="name"
                                                                  required="required" type="text"></div>
                                 </div>
+
                                 <div id="div_id_description" class="control-group">
                                     <label for="id_description" class="control-label">HydroShare User Identifier
                                         (URL)</label>
@@ -711,7 +715,7 @@
                                                                  name="description" type="url"></div>
                                 </div>
 
-                                <div id="div_id_organization" class="control-group" style="display:none;">
+                                <div id="div_id_organization" class="control-group">
                                     <label for="id_organization" class="control-label">Organization</label>
                                     <div class="controls"><input class="form-control input-sm textinput textInput"
                                                                  id="id_organization" maxlength="200"
