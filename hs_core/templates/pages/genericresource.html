@@ -1276,6 +1276,15 @@
                     return txtArea || (e.keyCode || e.which || e.charCode || 0) !== 13;
                 });
 
+                // Display toggle for Add Author/Contributor radio buttons
+                $("input[name='add_form_user_type']").click(function(){
+                    var type = $(this).val();
+                    $("div[data-hs-user-type]").hide();
+                    $("div[data-hs-user-type='" + type + "']").show();
+
+                });
+                
+
                 $("#citation-text").on("click", function (e) {
                     // document.selection logic is added in for IE 8 and lower
                     if (document.selection) {

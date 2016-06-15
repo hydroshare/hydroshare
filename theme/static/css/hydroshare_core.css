@@ -3663,3 +3663,22 @@ div.group-add-photo {
 .access-icon-wrapper {
 	display: inline-block;
 }
+
+.center-radio-inline {
+    padding: 8px;
+    border-radius: 4px;
+    width: 190px;
+}
+
+.center-radio-inline input[type='radio']{
+	float: initial;
+	margin: 0;
+}
+
+.center-radio-inline label {
+	cursor: pointer;
+}
+
+.or-separator {
+	margin-top: 20px;
+}

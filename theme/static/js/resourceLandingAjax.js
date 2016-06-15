@@ -368,3 +368,30 @@ function metadata_update_ajax_submit(form_id){
     //don't submit the form
     return false;
 }
+
+function get_user_info_ajax_submit(url, obj) {
+    var userID = share_with = $("#id_user-deck > .hilight")[0].getAttribute("data-value");
+    url = url + userID;
+
+    $.ajax({
+        type: "POST",
+        url: url,
+        dataType: 'html',
+        success: function (result) {
+            var formContainer = $(obj).parent().parent();
+            $("#div-invite-people").find(".label-danger").remove(); // Remove previous alerts
+            var json_response = JSON.parse(result);
+            formContainer.find("input[name='name']").val(json_response.name);
+            formContainer.find("input[name='description']").val(json_response.url);
+            formContainer.find("input[name='email']").val(json_response.name);
+            formContainer.find("input[name='address']").val(json_response.address);
+            formContainer.find("input[name='phone']").val(json_response.phone);
+            formContainer.find("input[name='homepage']").val(json_response.website);
+            console.log(json_response);
+
+        },
+        error: function(XMLHttpRequest, textStatus, errorThrown){
+            console.log(textStatus);
+        }
+    });
+}
