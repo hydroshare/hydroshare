@@ -1545,6 +1545,10 @@ class CoreMetaData(models.Model):
     funding_agencies = GenericRelation(FundingAgency)
 
     @property
+    def resource(self):
+        return BaseResource.objects.filter(object_id=self.id).first()
+
+    @property
     def title(self):
         return self._title.all().first()
 

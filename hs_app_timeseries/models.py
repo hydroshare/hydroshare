@@ -1,3 +1,8 @@
+import os
+import sqlite3
+import tempfile
+import shutil
+
 from django.contrib.contenttypes.fields import GenericRelation
 from django.contrib.auth.models import User, Group
 from django.contrib.contenttypes.models import ContentType
@@ -12,6 +17,8 @@ from mezzanine.pages.page_processors import processor_for
 
 from hs_core.models import BaseResource, ResourceManager, resource_processor, CoreMetaData, AbstractMetaDataElement, \
     Coverage, Subject
+
+from django_irods.storage import IrodsStorage
 
 
 class TimeSeriesAbstractMetaDataElement(AbstractMetaDataElement):
@@ -58,6 +65,55 @@ class Variable(TimeSeriesAbstractMetaDataElement):
     # class Meta:
     #     # variable element is not repeatable
     #     unique_together = ("content_type", "object_id", "series_id")
+
+    @classmethod
+    def update(cls, element_id, **kwargs):
+        super(Variable, cls).update(element_id, **kwargs)
+        element = cls.objects.get(id=element_id)
+        resource = element.metadata.resource
+        sqlite_file_to_update = resource.files.first()
+        if sqlite_file_to_update is not None:
+            istorage = IrodsStorage()
+
+            # retrieve the sqlite file from iRODS and save it to temp directory
+            temp_dir = tempfile.mkdtemp()
+            sqlite_file_name = os.path.basename(sqlite_file_to_update.resource_file.name)
+            temp_sqlite_file_destination = os.path.join(temp_dir, sqlite_file_name)
+            istorage.getFile(sqlite_file_to_update.resource_file.name, temp_sqlite_file_destination)
+            try:
+                con = sqlite3.connect(temp_sqlite_file_destination)
+                with con:
+                    # get the records in python dictionary format
+                    con.row_factory = sqlite3.Row
+                    cur = con.cursor()
+                    # get the VariableID from Results table to update the corresponding row in Variables table
+                    series_id = element.series_ids[0]
+                    cur.execute("SELECT VariableID FROM Results WHERE ResultUUID=?", (series_id,))
+                    ts_result = cur.fetchone()
+                    update_sql = "UPDATE Variables SET VariableCode=?, VariableTypeCV=?, VariableNameCV=?, " \
+                                 "VariableDefinition=?, SpeciationCV=?, NoDataValue=?  WHERE VariableID=?"
+
+                    params = (element.variable_code, element.variable_type, element.variable_name,
+                              element.variable_definition, element.speciation, element.no_data_value,
+                              ts_result['VariableID'])
+                    cur.execute(update_sql, params)
+                    con.commit()
+
+                    # push the updated sqlite file to iRODS
+                    sqlite_file_original = resource.files.first()
+                    to_file_name = sqlite_file_original.resource_file.name
+                    from_file_name = temp_sqlite_file_destination
+                    istorage.saveFile(from_file_name, to_file_name, True)
+            except sqlite3.Error, ex:
+                sqlite_err_msg = str(ex.args[0])
+                # TODO: log the error
+                print (sqlite_err_msg)
+            except Exception, ex:
+                # TODO: log the error
+                print (ex.message)
+            finally:
+                if os.path.exists(temp_dir):
+                    shutil.rmtree(temp_dir)
 
     @classmethod
     def remove(cls, element_id):
