@@ -233,12 +233,14 @@
                                         </a>
                                     </li>
                                 {% endif %}
-                                 <li class="col-xs-2 col-md-2">
-                                    <a href="#extraMetaTab" data-toggle="tab" title="Extended Metadata">
-                                        <span class="glyphicon glyphicon-folder-close"> </span>
-                                        &nbspExtended Metadata
-                                    </a>
-                                 </li>
+                                {% if metadata_form or page.get_content_model.extra_metadata.items|length > 0 %}
+                                    <li class="col-xs-2 col-md-2">
+                                        <a href="#extraMetaTab" data-toggle="tab" title="Extended Metadata">
+                                            <span class="glyphicon glyphicon-folder-close"> </span>
+                                            &nbspExtended Metadata
+                                        </a>
+                                     </li>
+                                {% endif %}
                             </ul>
                         </div>
                         <div class="tabs-body">
@@ -852,7 +854,8 @@
                                     </div>
                                 {% endif %}
                                 <!-- ========= EXTRA METADATA TAB ========= -->
-                                <div class="tab-pane" id="extraMetaTab">
+                                {% if metadata_form or page.get_content_model.extra_metadata.items|length > 0 %}
+                                    <div class="tab-pane" id="extraMetaTab">
                                         {% if metadata_form %}
                                             <a type="button" class="btn btn-success" onclick="showAddEditExtraMetaPopup(false, '')">
                                                                     <span class="glyphicon glyphicon-plus"><span class="button-label"> Add new entry...</span></span>
@@ -894,6 +897,8 @@
                                     {% endif %}
 
                                 </div>
+                                {% endif %}
+
 
                             </div>
                         </div>
@@ -1193,16 +1198,8 @@
 
             function saveExtraMetadata()
             {
-                $alert_success_extra_meta = '<div class="alert alert-success" id="success-alert"> \
-                <button type="button" class="close" data-dismiss="alert">x</button> \
-                <strong>Success! </strong> \
-                Extended metadata updated.\
-                </div>';
-                $alert_error_extra_meta = '<div class="alert alert-danger" id="error-alert"> \
-                <button type="button" class="close" data-dismiss="alert">x</button> \
-                <strong>Error! </strong> \
-                Extended metadata failed to update.\
-                </div>' ;
+                $alert_success_extra_meta = "<i class='glyphicon glyphicon-flag custom-alert-icon'></i><strong>Success:</strong> Extended metadata updated";
+                $alert_error_extra_meta = "<i class='glyphicon glyphicon-flag custom-alert-icon'></i><strong>Error:</strong> Extended metadata failed to update";
 
                 var json_obj = {};
                 var t = $('#extraMetaTable').DataTable();
@@ -1225,29 +1222,14 @@
                         json_response = result;
                         if (json_response.status === 'success') {
                              $('#save-extra-meta-btn').hide();
-                             $('body > .container').append($alert_success_extra_meta);
-                             $('#error-alert').each(function(){
-                                this.remove();
-                                });
-                             $(".alert-success").fadeTo(2000, 500).fadeOut(1000, function() {
-                                $(document).trigger("submit-success");
-                                $(".alert-success").alert('close');
-                             });
+                             customAlert($alert_success_extra_meta, 3000);
                         }
                         else {
-                            $('body > .container').append($alert_error_extra_meta);
-                            $(".alert-danger").fadeTo(3000, 500).fadeOut(1000, function() {
-                            $(document).trigger("submit-error");
-                            $(".alert-danger").alert('close');
-                        });
+                             customAlert($alert_error_extra_meta, 3000);
                         }
                     },
                     error: function(XMLHttpRequest, textStatus, errorThrown) {
-                        $('body > .container').append($alert_error_extra_meta);
-                        $(".alert-danger").fadeTo(3000, 500).fadeOut(1000, function() {
-                            $(document).trigger("submit-error");
-                            $(".alert-danger").alert('close');
-                        });
+                        customAlert($alert_error_extra_meta, 3000);
                     }
                 });
             } // function saveExtraMetadata()
@@ -1655,28 +1637,40 @@
                 $(".add-view-group-form").hide();
 
                 // Toggle invite user or group form
-                $("input[name='chkInvite']").change(function () {
+                $("#invite-flag button").click(function () {
                     var form = $("#add-access-form");
                     var action = form.attr("action");
-                    if (this.checked) {
-                        if ($(this).val() == "users") {
-                            $(".add-view-user-form").show();
-                            $(".add-view-group-form").hide();
-                            action = action.replace("share-resource-with-group", "share-resource-with-user");
-                            form.attr("action", action);
-                            $("#list-roles li:nth-child(3)").show();
+                    if ($(this).attr("data-value") == "users") {
+                        $(".add-view-user-form").show();
+                        $(".add-view-group-form").hide();
+                        action = action.replace("share-resource-with-group", "share-resource-with-user");
+                        form.attr("action", action);
+                        $("#list-roles li:nth-child(3)").show();
+
+                        $("#invite-flag button[data-value='groups']").removeClass("btn-primary");
+                        $("#invite-flag button[data-value='groups']").addClass("btn-default");
+                        $("#invite-flag button[data-value='users']").removeClass("btn-default");
+                        $("#invite-flag button[data-value='users']").addClass("btn-primary");
+
+                    }
+                    else {
+                        $(".add-view-group-form").show();
+                        $(".add-view-user-form").hide();
+                        action = action.replace("share-resource-with-user", "share-resource-with-group");
+                        form.attr("action", action);
+                        if ($("#selected_role").attr("data-role") == "owner") {
+                            $("#selected_role").attr("data-role", "view");
+                            $("#selected_role").text("Can view");
                         }
-                        else {
-                            $(".add-view-group-form").show();
-                            $(".add-view-user-form").hide();
-                            action = action.replace("share-resource-with-user", "share-resource-with-group");
-                            form.attr("action", action);
-                            if ($("#selected_role").attr("data-role") == "owner") {
-                                $("#selected_role").attr("data-role", "view");
-                                $("#selected_role").text("Can view");
-                            }
-                            $("#list-roles li:nth-child(3)").hide();
-                        }
+                        $("#list-roles li:nth-child(3)").hide();
+                        $("#invite-flag button[data-value='users']").disabled = true;
+                        $("#invite-flag button[data-value='groups']").disabled = false;
+
+
+                        $("#invite-flag button[data-value='users']").removeClass("btn-primary");
+                        $("#invite-flag button[data-value='users']").addClass("btn-default");
+                        $("#invite-flag button[data-value='groups']").removeClass("btn-default");
+                        $("#invite-flag button[data-value='groups']").addClass("btn-primary");
                     }
                 });
             });

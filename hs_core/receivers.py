@@ -1,4 +1,3 @@
-__author__ = 'hydro'
 
 ## Note: this module has been imported in the models.py in order to receive signals
 ## se the end of the models.py for the import of this module

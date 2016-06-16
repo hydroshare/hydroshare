@@ -1,4 +1,3 @@
-__author__ = 'tonycastronova'
 
 from models import *
 from crispy_forms.layout import Layout, HTML

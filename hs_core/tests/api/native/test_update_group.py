@@ -1,4 +1,3 @@
-__author__ = 'Pabitra'
 
 # TODO: These unit tests are for the update_group() api which needs to be updated based on access_control app. Until
 # then these unit tests have to be skipped from test run

@@ -1,4 +1,3 @@
-__author__ = 'drew'
 
 from osgeo import ogr, osr
 

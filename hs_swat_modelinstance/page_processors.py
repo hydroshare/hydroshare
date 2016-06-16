@@ -1,4 +1,3 @@
-__author__ = 'Mohamed Morsy'
 from crispy_forms.bootstrap import AccordionGroup
 from crispy_forms.layout import Layout, HTML
 
