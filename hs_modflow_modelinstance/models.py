@@ -16,10 +16,19 @@ from hs_model_program.models import ModelProgramResource
 from hs_modelinstance.models import ModelInstanceMetaData, ModelOutput, ExecutedBy
 
 
-def validate_choice(values, choices):
-    for value in values:
-        if value not in [c[0] for c in choices]:
-            raise ValidationError('Invalid parameter: {} not in {}'.format(value, choices))
+def uncouple(choices):
+    uncoupled = [c[0] for c in choices]
+    return uncoupled
+
+
+def validate_choice(value, choices):
+    choices = choices if isinstance(choices[0], basestring) else uncouple(choices)
+    if 'Choose' in value:
+        return ''
+    if value not in choices:
+        raise ValidationError('Invalid parameter: {} not in {}'.format(value, ", ".join(choices)))
+    else:
+        return value
 
 
 class ModelOutput(ModelOutput):
@@ -90,13 +99,8 @@ class GridDimensions(AbstractMetaDataElement):
     @classmethod
     def _validate_params(cls, **kwargs):
         for key, val in kwargs.iteritems():
-            if val == 'Choose a type':
-                kwargs[key] = ''
-            else:
-                if key == 'typeOfRows' or key == 'typeOfColumns':
-                    validate_choice([val], cls.gridTypeChoices)
-                    # elif key == 'outputControlPackage':
-                    #     validate_choice([val], cls.outputControlPackageChoices)
+            if key == 'typeOfRows' or key == 'typeOfColumns':
+                validate_choice(val, cls.gridTypeChoices)
         return kwargs
 
 
@@ -139,13 +143,10 @@ class StressPeriod(AbstractMetaDataElement):
     @classmethod
     def _validate_params(cls, **kwargs):
         for key, val in kwargs.iteritems():
-            if val == 'Choose a type':
-                kwargs[key] = ''
-            else:
-                if key == 'stressPeriodType':
-                    validate_choice([val], cls.stressPeriodTypeChoices)
-                elif key == 'transientStateValueType':
-                    validate_choice([val], cls.transientStateValueTypeChoices)
+            if key == 'stressPeriodType':
+                validate_choice(val, cls.stressPeriodTypeChoices)
+            elif key == 'transientStateValueType':
+                validate_choice(val, cls.transientStateValueTypeChoices)
         return kwargs
 
 
@@ -186,13 +187,10 @@ class GroundWaterFlow(AbstractMetaDataElement):
     @classmethod
     def _validate_params(cls, **kwargs):
         for key, val in kwargs.iteritems():
-            if val == 'Choose a parameter' or val == 'Choose a package':
-                kwargs[key] = ''
-            else:
-                if key == 'flowPackage':
-                    validate_choice([val], cls.flowPackageChoices)
-                elif key == 'flowParameter':
-                    validate_choice([val], cls.flowParameterChoices)
+            if key == 'flowPackage':
+                validate_choice(val, cls.flowPackageChoices)
+            elif key == 'flowParameter':
+                validate_choice(val, cls.flowParameterChoices)
         return kwargs
 
 
@@ -292,18 +290,16 @@ class BoundaryCondition(AbstractMetaDataElement):
 
     @classmethod
     def _validate_boundary_condition_types(cls, types):
+        choices = ['Specified Head Boundaries', 'Specified Flux Boundaries', 'Head-Dependent Flux Boundary']
         for boundary_types in types:
-            if boundary_types not in ['Specified Head Boundaries', 'Specified Flux Boundaries',
-                                      'Head-Dependent Flux Boundary']:
-                raise ValidationError('Invalid Boundary Condition Type:%s' % types)
+            validate_choice(boundary_types, choices)
 
     @classmethod
     def _validate_boundary_condition_packages(cls, packages):
+        choices = ['BFH', 'CHD', 'FHB', 'RCH', 'WEL', 'DAF', 'DAFG', 'DRN', 'DRT', 'ETS', 'EVT', 'GHB', 'LAK', 'MNW1', 'MNW2',
+         'RES', 'RIP', 'RIV', 'SFR', 'STR', 'UZF']
         for boundary_packages in packages:
-            if boundary_packages not in ['BFH', 'CHD', 'FHB', 'RCH', 'WEL', 'DAF', 'DAFG', 'DRN', 'DRT', 'ETS', 'EVT',
-                                         'GHB', 'LAK', 'MNW1', 'MNW2', 'RES', 'RIP', 'RIV', 'SFR', 'STR', 'UZF']:
-                raise ValidationError('Invalid Boundary Condition Type:%s' % packages)
-
+            validate_choice(boundary_packages, choices)
 
 class ModelCalibration(AbstractMetaDataElement):
     term = 'ModelCalibration'
@@ -343,11 +339,8 @@ class ModelCalibration(AbstractMetaDataElement):
     @classmethod
     def _validate_params(cls, **kwargs):
         for key, val in kwargs.iteritems():
-            if val == 'Choose a package':
-                kwargs[key] = ''
-            else:
-                if key == 'observationProcessPackage':
-                    validate_choice([val], cls.observationProcessPackageChoices)
+            if key == 'observationProcessPackage':
+                validate_choice(val, cls.observationProcessPackageChoices)
         return kwargs
 
 
@@ -399,15 +392,12 @@ class GeneralElements(AbstractMetaDataElement):
     @classmethod
     def _validate_params(cls, **kwargs):
         for key, val in kwargs.iteritems():
-            if val == 'Choose a solver' or val == 'Choose a package':
-                kwargs[key] = ''
-            else:
-                if key == 'modelSolver':
-                    validate_choice([val], cls.modelSolverChoices)
-                elif key == 'outputControlPackage':
-                    validate_choice([val], cls.outputControlPackageChoices)
-                elif key == 'subsidencePackage':
-                    validate_choice([val], cls.subsidencePackageChoices)
+            if key == 'modelSolver':
+                kwargs[key] = validate_choice(val, cls.modelSolverChoices)
+            elif key == 'outputControlPackage':
+                kwargs[key] = validate_choice(val, cls.outputControlPackageChoices)
+            elif key == 'subsidencePackage':
+                kwargs[key] = validate_choice(val, cls.subsidencePackageChoices)
         return kwargs
 
 
