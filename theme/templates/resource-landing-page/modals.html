@@ -145,7 +145,7 @@
                     <button type="button" class="close" data-dismiss="modal"
                             aria-hidden="true">×
                     </button>
-                    <h4 class="modal-title" id="edit-contributor"> Edit contributor </h4></div>
+                    <h4 class="modal-title" id="edit-contributor"> Edit Contributor </h4></div>
                 <div class="modal-body">
                     {% csrf_token %}
                     <div class="form-group">
@@ -160,15 +160,16 @@
                                         id="id_contributor-{{ contributor.order|add:"- 1" }}-name" maxlength="100" name="contributor-{{ contributor.order|add:"- 1" }}-name"
                                         required="required" type="text" value="{% if contributor.name %}{{ contributor.name }}{% endif %}"></div>
                             </div>
-                            <div id="div_id_description" class="control-group">
-                                <label class="control-label">HydroShare User Identifier (URL)</label>
-
-                                <div class="controls"><input
-                                        class="form-control input-sm urlinput"
-                                        id="id_contributor-{{ contributor.order|add:"- 1" }}-description" maxlength="200"
-                                        name="contributor-{{ contributor.order|add:"- 1" }}-description" type="url"
-                                        value="{% if contributor.description %}{{ contributor.description }}{% endif %}"></div>
-                            </div>
+{#                            We might enable this field in the future #}
+{#                            <div id="div_id_description" class="control-group">#}
+{#                                <label class="control-label">HydroShare User Identifier (URL)</label>#}
+{##}
+{#                                <div class="controls"><input#}
+{#                                        class="form-control input-sm urlinput"#}
+{#                                        id="id_contributor-{{ contributor.order|add:"- 1" }}-description" maxlength="200"#}
+{#                                        name="contributor-{{ contributor.order|add:"- 1" }}-description" type="url"#}
+{#                                        value="{% if contributor.description %}{{ contributor.description }}{% endif %}"></div>#}
+{#                            </div>#}
                             <div id="div_id_organization" class="control-group">
                                 <label class="control-label">Organization</label>
 
@@ -260,7 +261,7 @@
                     <button type="button" class="close" data-dismiss="modal"
                             aria-hidden="true">×
                     </button>
-                    <h4 class="modal-title" id="edit-creator"> Edit author </h4></div>
+                    <h4 class="modal-title" id="edit-creator"> Edit Author </h4></div>
                 <div class="modal-body">
                     {% csrf_token %}
                     <div class="form-group">
@@ -275,15 +276,15 @@
                                         id="id_creator-{{ author.order|add:"- 1" }}-name" maxlength="100" name="creator-{{ author.order|add:"- 1" }}-name"
                                         required="required" type="text" value="{% if author.name %}{{ author.name }}{% endif %}"></div>
                             </div>
-                            <div id="div_id_description" class="control-group">
-                                <label class="control-label">HydroShare User Identifier (URL)</label>
-
-                                <div class="controls"><input
-                                        class="form-control input-sm urlinput"
-                                        id="id_creator-{{ author.order|add:"- 1" }}-description" maxlength="200"
-                                        name="creator-{{ author.order|add:"- 1" }}-description" type="url"
-                                        value="{% if author.description %}{{ author.description }}{% endif %}"></div>
-                            </div>
+{#                            <div id="div_id_description" class="control-group">#}
+{#                                <label class="control-label">HydroShare User Identifier (URL)</label>#}
+{##}
+{#                                <div class="controls"><input#}
+{#                                        class="form-control input-sm urlinput"#}
+{#                                        id="id_creator-{{ author.order|add:"- 1" }}-description" maxlength="200"#}
+{#                                        name="creator-{{ author.order|add:"- 1" }}-description" type="url"#}
+{#                                        value="{% if author.description %}{{ author.description }}{% endif %}"></div>#}
+{#                            </div>#}
                             <div id="div_id_organization" class="control-group">
                                 <label class="control-label">Organization</label>
 

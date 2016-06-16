@@ -375,7 +375,7 @@ function get_user_info_ajax_submit(url, obj) {
         return;
     }
 
-    var userID = share_with = entry[0].getAttribute("data-value");
+    var userID = entry[0].getAttribute("data-value");
     url = url + userID;
 
     $.ajax({
@@ -384,8 +384,8 @@ function get_user_info_ajax_submit(url, obj) {
         dataType: 'html',
         success: function (result) {
             var formContainer = $(obj).parent().parent();
-            $("#div-invite-people").find(".label-danger").remove(); // Remove previous alerts
             var json_response = JSON.parse(result);
+
             formContainer.find("input[name='name']").val(json_response.name);
             formContainer.find("input[name='description']").val(json_response.url);
             formContainer.find("input[name='organization']").val(json_response.organization);
@@ -394,10 +394,9 @@ function get_user_info_ajax_submit(url, obj) {
             formContainer.find("input[name='phone']").val(json_response.phone);
             formContainer.find("input[name='homepage']").val(json_response.website);
             formContainer.submit();
-            console.log(json_response);
         },
         error: function(XMLHttpRequest, textStatus, errorThrown){
-            console.log(textStatus);
+
         }
     });
 }
