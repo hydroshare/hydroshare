@@ -1247,10 +1247,6 @@ a[data-toggle='tab']{
     padding: 0 4px;
 }
 
-#permission-panel .panel-body{
-    padding: 15px 0;
-}
-
 span.hilight {
 	background: #EEE;
 	margin-left: 16px;
@@ -1435,11 +1431,6 @@ body > .main-container {
 	height: 31px;
 }
 
-#permission-panel .custom-well {
-	background: #F7F7F7;
-	margin-top: 30px;
-}
-
 .info-icon {
 	color: #FFFFFF;
 	margin-top: 4px;
@@ -1451,14 +1442,6 @@ body > .main-container {
 
 .info-icon:hover{
     color: #CCC;
-}
-
-#permission-panel .form-control{
-    margin-bottom:0;
-}
-
-#permission-panel .custom-well .form-group{
-    width:100%;
 }
 
 .btn-update-list{
@@ -1613,6 +1596,7 @@ body > .main-container {
 
 div#sharing-status {
     overflow: hidden; /* Fixes height for floating elements */
+	margin-top: 20px;
 }
 
 .tag-list {
