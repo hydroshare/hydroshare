@@ -160,16 +160,14 @@
                                         id="id_contributor-{{ contributor.order|add:"- 1" }}-name" maxlength="100" name="contributor-{{ contributor.order|add:"- 1" }}-name"
                                         required="required" type="text" value="{% if contributor.name %}{{ contributor.name }}{% endif %}"></div>
                             </div>
-{#                            We might enable this field in the future #}
-{#                            <div id="div_id_description" class="control-group">#}
-{#                                <label class="control-label">HydroShare User Identifier (URL)</label>#}
-{##}
-{#                                <div class="controls"><input#}
-{#                                        class="form-control input-sm urlinput"#}
-{#                                        id="id_contributor-{{ contributor.order|add:"- 1" }}-description" maxlength="200"#}
-{#                                        name="contributor-{{ contributor.order|add:"- 1" }}-description" type="url"#}
-{#                                        value="{% if contributor.description %}{{ contributor.description }}{% endif %}"></div>#}
-{#                            </div>#}
+                            {% if contributor.description %}
+                                <div id="div_id_description" class="control-group">
+                                    <label class="control-label">HydroShare User Identifier (URL)</label>
+
+                                    <div class="controls"><input class="form-control input-sm urlinput" type="url"
+                                                                 value="{{ contributor.description }}" readonly></div>
+                                </div>
+                            {% endif %}
                             <div id="div_id_organization" class="control-group">
                                 <label class="control-label">Organization</label>
 
@@ -276,15 +274,14 @@
                                         id="id_creator-{{ author.order|add:"- 1" }}-name" maxlength="100" name="creator-{{ author.order|add:"- 1" }}-name"
                                         required="required" type="text" value="{% if author.name %}{{ author.name }}{% endif %}"></div>
                             </div>
-{#                            <div id="div_id_description" class="control-group">#}
-{#                                <label class="control-label">HydroShare User Identifier (URL)</label>#}
-{##}
-{#                                <div class="controls"><input#}
-{#                                        class="form-control input-sm urlinput"#}
-{#                                        id="id_creator-{{ author.order|add:"- 1" }}-description" maxlength="200"#}
-{#                                        name="creator-{{ author.order|add:"- 1" }}-description" type="url"#}
-{#                                        value="{% if author.description %}{{ author.description }}{% endif %}"></div>#}
-{#                            </div>#}
+                            {% if author.description %}
+                                <div id="div_id_description" class="control-group">
+                                    <label class="control-label">HydroShare User Identifier (URL)</label>
+
+                                    <div class="controls"><input class="form-control input-sm urlinput" type="url"
+                                                                 value="{{ author.description }}" readonly></div>
+                                </div>
+                            {% endif %}
                             <div id="div_id_organization" class="control-group">
                                 <label class="control-label">Organization</label>
 
