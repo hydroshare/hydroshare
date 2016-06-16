@@ -323,7 +323,7 @@
                                             {% endif %}
                                         </td>
                                         <td>
-                                            <h4><strong><a href="#">{{ member|best_name }}</a></strong></h4>
+                                            <h4><strong><a>{{ member|contact|safe }}</a></strong></h4>
                                             {% if  member.userprofile.title %}
                                                 <span class="text-muted">{{ member.userprofile.title }}</span>
                                             {% endif %}

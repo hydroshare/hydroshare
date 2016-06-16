@@ -136,8 +136,7 @@
     <div class="modal-dialog">
         <div class="modal-content">
             <form id="id_contributor_{{ contributor.id }}" action="/hsapi/_internal/{{ cm.short_id }}/contributor/{{ contributor.id }}/update-metadata/"
-                  method="POST"
-                  enctype="multipart/form-data">
+                  method="POST" enctype="multipart/form-data">
                 {% csrf_token %}
                 <input name="resource-mode" type="hidden" value="edit">
 
@@ -145,11 +144,10 @@
                     <button type="button" class="close" data-dismiss="modal"
                             aria-hidden="true">×
                     </button>
-                    <h4 class="modal-title" id="edit-contributor"> Edit Contributor </h4></div>
+                    <h4 class="modal-title" id="edit-contributor"> Edit Contributor </h4>
+                </div>
                 <div class="modal-body">
-                    {% csrf_token %}
                     <div class="form-group">
-                        {% csrf_token %}
                         <fieldset>
                             <div id="div_id_name" class="control-group">
                                 <label class="control-label requiredField">Name<span
@@ -250,8 +248,7 @@
     <div class="modal-dialog">
         <div class="modal-content">
             <form id="id_creator_{{ author.id }}" action="/hsapi/_internal/{{ cm.short_id }}/creator/{{ author.id }}/update-metadata/"
-                  method="POST"
-                  enctype="multipart/form-data">
+                  method="POST" enctype="multipart/form-data">
                 {% csrf_token %}
                 <input name="resource-mode" type="hidden" value="edit">
 
@@ -259,11 +256,10 @@
                     <button type="button" class="close" data-dismiss="modal"
                             aria-hidden="true">×
                     </button>
-                    <h4 class="modal-title" id="edit-creator"> Edit Author </h4></div>
+                    <h4 class="modal-title" id="edit-creator"> Edit Author </h4>
+                </div>
                 <div class="modal-body">
-                    {% csrf_token %}
                     <div class="form-group">
-                        {% csrf_token %}
                         <fieldset>
                             <div id="div_id_name" class="control-group">
                                 <label class="control-label requiredField">Name<span
@@ -274,6 +270,7 @@
                                         id="id_creator-{{ author.order|add:"- 1" }}-name" maxlength="100" name="creator-{{ author.order|add:"- 1" }}-name"
                                         required="required" type="text" value="{% if author.name %}{{ author.name }}{% endif %}"></div>
                             </div>
+
                             {% if author.description %}
                                 <div id="div_id_description" class="control-group">
                                     <label class="control-label">HydroShare User Identifier (URL)</label>
@@ -282,6 +279,7 @@
                                                                  value="{{ author.description }}" readonly></div>
                                 </div>
                             {% endif %}
+
                             <div id="div_id_organization" class="control-group">
                                 <label class="control-label">Organization</label>
 
@@ -290,6 +288,7 @@
                                         id="id_creator-{{ author.order|add:"- 1" }}-organization" maxlength="200"
                                         name="creator-{{ author.order|add:"- 1" }}-organization" type="text" value="{% if author.organization %}{{ author.organization }}{% endif %}"></div>
                             </div>
+
                             <div id="div_id_email" class="control-group">
                                 <label class="control-label">Email</label>
 
@@ -299,6 +298,7 @@
                                            type="email" value="{% if author.email %}{{ author.email }}{% endif %}">
                                 </div>
                             </div>
+
                             <div id="div_id_address" class="control-group">
                                 <label class="control-label">Address</label>
 
@@ -309,6 +309,7 @@
                                            type="text" value="{% if author.address %}{{ author.address }}{% endif %}">
                                 </div>
                             </div>
+
                             <div id="div_id_phone" class="control-group">
                                 <label class="control-label">Phone</label>
 
@@ -318,6 +319,7 @@
                                            type="text" value="{% if author.phone %}{{ author.phone }}{% endif %}">
                                 </div>
                             </div>
+
                             <div id="div_id_homepage" class="control-group">
                                 <label class="control-label">Homepage</label>
 
@@ -326,6 +328,7 @@
                                         id="id_creator-{{ author.order|add:"- 1" }}-homepage" maxlength="200" name="creator-{{ author.order|add:"- 1" }}-homepage"
                                         type="url" value="{% if author.homepage %}{{ author.homepage }}{% endif %}"></div>
                             </div>
+
                             <div id="div_id_order" class="control-group">
                                 <label class="control-label">Order<span class="asteriskField">*</span></label>
 
@@ -334,6 +337,7 @@
                                         id="id_creator-{{ author.order|add:"- 1" }}-order" name="creator-{{ author.order|add:"- 1" }}-order" required="required"
                                         type="number" value="{% if author.order %}{{ author.order }}{% endif %}"></div>
                             </div>
+
                         </fieldset>
                     </div>
                 </div>
@@ -890,9 +894,7 @@
                     {% csrf_token %}
                     <input name="resource-mode" type="hidden" value="edit">
                     <div class="modal-body">
-                        {% csrf_token %}
                         <div class="form-group">
-                            {% csrf_token %}
                             <fieldset>
                                 <div id="div_id_name" class="control-group">
                                     <label for="id_name" class="control-label requiredField">Name<span
