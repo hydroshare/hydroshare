@@ -16,6 +16,12 @@ from hs_model_program.models import ModelProgramResource
 from hs_modelinstance.models import ModelInstanceMetaData, ModelOutput, ExecutedBy
 
 
+def validate_choice(values, choices):
+    for value in values:
+        if value not in [c[0] for c in choices]:
+            raise ValidationError('Invalid parameter: {} not in {}'.format(value, choices))
+
+
 class ModelOutput(ModelOutput):
     class Meta:
         proxy = True
@@ -68,6 +74,31 @@ class GridDimensions(AbstractMetaDataElement):
         # GridDimensions element is not repeatable
         unique_together = ("content_type", "object_id")
 
+    @classmethod
+    def create(cls, **kwargs):
+        kwargs = cls._validate_params(**kwargs)
+        grid_dimensions = super(GridDimensions, cls).create(**kwargs)
+        return grid_dimensions
+
+    @classmethod
+    def update(cls, element_id, **kwargs):
+        kwargs = cls._validate_params(**kwargs)
+        grid_dimensions = super(GridDimensions, cls).update(element_id, **kwargs)
+        return grid_dimensions
+
+
+    @classmethod
+    def _validate_params(cls, **kwargs):
+        for key, val in kwargs.iteritems():
+            if val == 'Choose a type':
+                kwargs[key] = ''
+            else:
+                if key == 'typeOfRows' or key == 'typeOfColumns':
+                    validate_choice([val], cls.gridTypeChoices)
+                    # elif key == 'outputControlPackage':
+                    #     validate_choice([val], cls.outputControlPackageChoices)
+        return kwargs
+
 
 class StressPeriod(AbstractMetaDataElement):
     term = 'StressPeriod'
@@ -92,6 +123,33 @@ class StressPeriod(AbstractMetaDataElement):
         # StressPeriod element is not repeatable
         unique_together = ("content_type", "object_id")
 
+    @classmethod
+    def create(cls, **kwargs):
+        kwargs = cls._validate_params(**kwargs)
+        stress_period = super(StressPeriod, cls).create(**kwargs)
+        return stress_period
+
+    @classmethod
+    def update(cls, element_id, **kwargs):
+        kwargs = cls._validate_params(**kwargs)
+        stress_period = super(StressPeriod, cls).update(element_id, **kwargs)
+        return stress_period
+
+
+    @classmethod
+    def _validate_params(cls, **kwargs):
+        for key, val in kwargs.iteritems():
+            if val == 'Choose a type':
+                kwargs[key] = ''
+            else:
+                if key == 'stressPeriodType':
+                    validate_choice([val], cls.stressPeriodTypeChoices)
+                elif key == 'transientStateValueType':
+                    validate_choice([val], cls.transientStateValueTypeChoices)
+        return kwargs
+
+
+
 
 class GroundWaterFlow(AbstractMetaDataElement):
     term = 'GroundWaterFlow'
@@ -111,6 +169,32 @@ class GroundWaterFlow(AbstractMetaDataElement):
     class Meta:
         # GroundWaterFlow element is not repeatable
         unique_together = ("content_type", "object_id")
+
+    @classmethod
+    def create(cls, **kwargs):
+        kwargs = cls._validate_params(**kwargs)
+        gw_flow = super(GroundWaterFlow, cls).create(**kwargs)
+        return gw_flow
+
+    @classmethod
+    def update(cls, element_id, **kwargs):
+        kwargs = cls._validate_params(**kwargs)
+        gw_flow = super(GroundWaterFlow, cls).update(element_id, **kwargs)
+        return gw_flow
+
+
+    @classmethod
+    def _validate_params(cls, **kwargs):
+        for key, val in kwargs.iteritems():
+            if val == 'Choose a parameter' or val == 'Choose a package':
+                kwargs[key] = ''
+            else:
+                if key == 'flowPackage':
+                    validate_choice([val], cls.flowPackageChoices)
+                elif key == 'flowParameter':
+                    validate_choice([val], cls.flowParameterChoices)
+        return kwargs
+
 
 
 class BoundaryConditionTypeChoices(models.Model):
@@ -242,6 +326,31 @@ class ModelCalibration(AbstractMetaDataElement):
         unique_together = ("content_type", "object_id")
 
 
+    @classmethod
+    def create(cls, **kwargs):
+        kwargs = cls._validate_params(**kwargs)
+        model_calibration = super(ModelCalibration, cls).create(**kwargs)
+        return model_calibration
+
+
+    @classmethod
+    def update(cls, element_id, **kwargs):
+        kwargs = cls._validate_params(**kwargs)
+        model_calibration = super(ModelCalibration, cls).update(element_id, **kwargs)
+        return model_calibration
+
+
+    @classmethod
+    def _validate_params(cls, **kwargs):
+        for key, val in kwargs.iteritems():
+            if val == 'Choose a package':
+                kwargs[key] = ''
+            else:
+                if key == 'observationProcessPackage':
+                    validate_choice([val], cls.observationProcessPackageChoices)
+        return kwargs
+
+
 class ModelInput(AbstractMetaDataElement):
     term = 'ModelInput'
     inputType = models.CharField(max_length=200, null=True, blank=True, verbose_name='Type')
@@ -273,6 +382,33 @@ class GeneralElements(AbstractMetaDataElement):
     class Meta:
         # GeneralElements element is not repeatable
         unique_together = ("content_type", "object_id")
+
+    @classmethod
+    def create(cls, **kwargs):
+        kwargs = cls._validate_params(**kwargs)
+        general_elements = super(GeneralElements, cls).create(**kwargs)
+        return general_elements
+
+    @classmethod
+    def update(cls, element_id, **kwargs):
+        kwargs = cls._validate_params(**kwargs)
+        general_elements = super(GeneralElements, cls).update(element_id, **kwargs)
+        return general_elements
+
+
+    @classmethod
+    def _validate_params(cls, **kwargs):
+        for key, val in kwargs.iteritems():
+            if val == 'Choose a solver' or val == 'Choose a package':
+                kwargs[key] = ''
+            else:
+                if key == 'modelSolver':
+                    validate_choice([val], cls.modelSolverChoices)
+                elif key == 'outputControlPackage':
+                    validate_choice([val], cls.outputControlPackageChoices)
+                elif key == 'subsidencePackage':
+                    validate_choice([val], cls.subsidencePackageChoices)
+        return kwargs
 
 
 # MODFLOW Model Instance Resource type

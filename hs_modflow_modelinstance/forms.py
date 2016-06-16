@@ -480,7 +480,7 @@ ModelInputLayoutEdit = Layout(
                             ),
                             HTML('<div style="margin-top:10px" class="col-md-2">'
                                  '<p><a id="add-modelinput" class="btn btn-success" data-toggle="modal" data-target="#add-modelinput-dialog">'
-                                 '<i class="fa fa-plus"></i>Add another model input</a>'
+                                 '<i class="fa fa-plus"></i>Add Model Input</a>'
                                  '</div>'
                             ),
                     )
