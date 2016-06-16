@@ -100,7 +100,7 @@ class GridDimensions(AbstractMetaDataElement):
     def _validate_params(cls, **kwargs):
         for key, val in kwargs.iteritems():
             if key == 'typeOfRows' or key == 'typeOfColumns':
-                validate_choice(val, cls.gridTypeChoices)
+                kwargs[key] = validate_choice(val, cls.gridTypeChoices)
         return kwargs
 
 
@@ -144,9 +144,9 @@ class StressPeriod(AbstractMetaDataElement):
     def _validate_params(cls, **kwargs):
         for key, val in kwargs.iteritems():
             if key == 'stressPeriodType':
-                validate_choice(val, cls.stressPeriodTypeChoices)
+                kwargs[key] = validate_choice(val, cls.stressPeriodTypeChoices)
             elif key == 'transientStateValueType':
-                validate_choice(val, cls.transientStateValueTypeChoices)
+                kwargs[key] = validate_choice(val, cls.transientStateValueTypeChoices)
         return kwargs
 
 
@@ -188,9 +188,9 @@ class GroundWaterFlow(AbstractMetaDataElement):
     def _validate_params(cls, **kwargs):
         for key, val in kwargs.iteritems():
             if key == 'flowPackage':
-                validate_choice(val, cls.flowPackageChoices)
+                kwargs[key] = validate_choice(val, cls.flowPackageChoices)
             elif key == 'flowParameter':
-                validate_choice(val, cls.flowParameterChoices)
+                kwargs[key] = validate_choice(val, cls.flowParameterChoices)
         return kwargs
 
 
@@ -340,7 +340,7 @@ class ModelCalibration(AbstractMetaDataElement):
     def _validate_params(cls, **kwargs):
         for key, val in kwargs.iteritems():
             if key == 'observationProcessPackage':
-                validate_choice(val, cls.observationProcessPackageChoices)
+                kwargs[key] = validate_choice(val, cls.observationProcessPackageChoices)
         return kwargs
 
 
