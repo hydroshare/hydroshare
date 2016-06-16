@@ -2,6 +2,7 @@ import os
 import sqlite3
 import tempfile
 import shutil
+import logging
 
 from django.contrib.contenttypes.fields import GenericRelation
 from django.contrib.auth.models import User, Group
@@ -23,6 +24,7 @@ from django_irods.storage import IrodsStorage
 
 class TimeSeriesAbstractMetaDataElement(AbstractMetaDataElement):
     series_ids = ArrayField(models.CharField(max_length=36, null=True, blank=True), default=[])
+    is_dirty = models.BooleanField(default=False)
 
     class Meta:
         abstract = True
@@ -70,50 +72,8 @@ class Variable(TimeSeriesAbstractMetaDataElement):
     def update(cls, element_id, **kwargs):
         super(Variable, cls).update(element_id, **kwargs)
         element = cls.objects.get(id=element_id)
-        resource = element.metadata.resource
-        sqlite_file_to_update = resource.files.first()
-        if sqlite_file_to_update is not None:
-            istorage = IrodsStorage()
-
-            # retrieve the sqlite file from iRODS and save it to temp directory
-            temp_dir = tempfile.mkdtemp()
-            sqlite_file_name = os.path.basename(sqlite_file_to_update.resource_file.name)
-            temp_sqlite_file_destination = os.path.join(temp_dir, sqlite_file_name)
-            istorage.getFile(sqlite_file_to_update.resource_file.name, temp_sqlite_file_destination)
-            try:
-                con = sqlite3.connect(temp_sqlite_file_destination)
-                with con:
-                    # get the records in python dictionary format
-                    con.row_factory = sqlite3.Row
-                    cur = con.cursor()
-                    # get the VariableID from Results table to update the corresponding row in Variables table
-                    series_id = element.series_ids[0]
-                    cur.execute("SELECT VariableID FROM Results WHERE ResultUUID=?", (series_id,))
-                    ts_result = cur.fetchone()
-                    update_sql = "UPDATE Variables SET VariableCode=?, VariableTypeCV=?, VariableNameCV=?, " \
-                                 "VariableDefinition=?, SpeciationCV=?, NoDataValue=?  WHERE VariableID=?"
-
-                    params = (element.variable_code, element.variable_type, element.variable_name,
-                              element.variable_definition, element.speciation, element.no_data_value,
-                              ts_result['VariableID'])
-                    cur.execute(update_sql, params)
-                    con.commit()
-
-                    # push the updated sqlite file to iRODS
-                    sqlite_file_original = resource.files.first()
-                    to_file_name = sqlite_file_original.resource_file.name
-                    from_file_name = temp_sqlite_file_destination
-                    istorage.saveFile(from_file_name, to_file_name, True)
-            except sqlite3.Error, ex:
-                sqlite_err_msg = str(ex.args[0])
-                # TODO: log the error
-                print (sqlite_err_msg)
-            except Exception, ex:
-                # TODO: log the error
-                print (ex.message)
-            finally:
-                if os.path.exists(temp_dir):
-                    shutil.rmtree(temp_dir)
+        element.is_dirty = True
+        element.save()
 
     @classmethod
     def remove(cls, element_id):
@@ -222,6 +182,21 @@ class TimeSeriesMetaData(CoreMetaData):
     _methods = GenericRelation(Method)
     _processing_levels = GenericRelation(ProcessingLevel)
     _time_series_results = GenericRelation(TimeSeriesResult)
+
+    @property
+    def is_dirty(self):
+        # this property is used to determine if the SQLite file needs
+        # to be synced with metadata in database
+        if self.resource.files.first() is None:
+            # the SQLite file is missing - so nothing to update
+            return False
+        dirty = any(site.is_dirty for site in self.sites) or \
+                any(variable.is_dirty for variable in self.variables) or \
+                any(method.is_dirty for method in self.methods) or \
+                any(processing_level.is_dirty for processing_level in self.processing_levels) or \
+                any(ts_result.is_dirty for ts_result in self.time_series_results)
+
+        return dirty
 
     @property
     def sites(self):
@@ -350,7 +325,7 @@ class TimeSeriesMetaData(CoreMetaData):
             if site.site_type:
                 element_fields.append(('site_type', 'SiteType'))
 
-            self.add_metadata_element_to_xml(hsterms_time_series_result, (site, 'site'), element_fields)
+            self.add_metadata_element_to_xml(hsterms_time_series_result_rdf_Description, (site, 'site'), element_fields)
 
             # generate xml for 'variable' element
             variable = [variable for variable in self.variables if time_series_result.series_ids[0] in
@@ -364,7 +339,7 @@ class TimeSeriesMetaData(CoreMetaData):
             if variable.speciation:
                 element_fields.append(('speciation', 'Speciation'))
 
-            self.add_metadata_element_to_xml(hsterms_time_series_result, (variable, 'variable'), element_fields)
+            self.add_metadata_element_to_xml(hsterms_time_series_result_rdf_Description, (variable, 'variable'), element_fields)
 
             # generate xml for 'method' element
             method = [method for method in self.methods if time_series_result.series_ids[0] in method.series_ids][0]
@@ -377,7 +352,7 @@ class TimeSeriesMetaData(CoreMetaData):
             if method.method_link:
                 element_fields.append(('method_link', 'MethodLink'))
 
-            self.add_metadata_element_to_xml(hsterms_time_series_result, (method, 'method'), element_fields)
+            self.add_metadata_element_to_xml(hsterms_time_series_result_rdf_Description, (method, 'method'), element_fields)
 
             # generate xml for 'processing_level' element
             processing_level = [processing_level for processing_level in self.processing_levels if
@@ -391,7 +366,7 @@ class TimeSeriesMetaData(CoreMetaData):
             if processing_level.explanation:
                 element_fields.append(('explanation', 'Explanation'))
 
-            self.add_metadata_element_to_xml(hsterms_time_series_result, (processing_level, 'processingLevel'),
+            self.add_metadata_element_to_xml(hsterms_time_series_result_rdf_Description, (processing_level, 'processingLevel'),
                                              element_fields)
 
         return etree.tostring(RDF_ROOT, pretty_print=True)
@@ -409,5 +384,56 @@ class TimeSeriesMetaData(CoreMetaData):
         if self.time_series_results:
             self.time_series_results.delete()
 
+    def update_sqlite_file(self):
+        if not self.is_dirty:
+            return
+        sqlite_file_to_update = self.resource.files.first()
+        if sqlite_file_to_update is not None:
+            istorage = IrodsStorage()
+            log = logging.getLogger()
+
+            # retrieve the sqlite file from iRODS and save it to temp directory
+            temp_dir = tempfile.mkdtemp()
+            sqlite_file_name = os.path.basename(sqlite_file_to_update.resource_file.name)
+            temp_sqlite_file_destination = os.path.join(temp_dir, sqlite_file_name)
+            istorage.getFile(sqlite_file_to_update.resource_file.name, temp_sqlite_file_destination)
+            try:
+                con = sqlite3.connect(temp_sqlite_file_destination)
+                with con:
+                    # get the records in python dictionary format
+                    con.row_factory = sqlite3.Row
+                    cur = con.cursor()
+                    for variable in self.variables:
+                        if variable.is_dirty:
+                            # get the VariableID from Results table to update the corresponding row in Variables table
+                            series_id = variable.series_ids[0]
+                            cur.execute("SELECT VariableID FROM Results WHERE ResultUUID=?", (series_id,))
+                            ts_result = cur.fetchone()
+                            update_sql = "UPDATE Variables SET VariableCode=?, VariableTypeCV=?, VariableNameCV=?, " \
+                                         "VariableDefinition=?, SpeciationCV=?, NoDataValue=?  WHERE VariableID=?"
+
+                            params = (variable.variable_code, variable.variable_type, variable.variable_name,
+                                      variable.variable_definition, variable.speciation, variable.no_data_value,
+                                      ts_result['VariableID'])
+                            cur.execute(update_sql, params)
+                            con.commit()
+                            variable.is_dirty = False
+                            variable.save()
+
+                    # push the updated sqlite file to iRODS
+                    sqlite_file_original = self.resource.files.first()
+                    to_file_name = sqlite_file_original.resource_file.name
+                    from_file_name = temp_sqlite_file_destination
+                    istorage.saveFile(from_file_name, to_file_name, True)
+            except sqlite3.Error, ex:
+                sqlite_err_msg = str(ex.args[0])
+                log.error("Failed to update SQLite file. Error:" + sqlite_err_msg)
+                raise Exception(sqlite_err_msg)
+            except Exception, ex:
+                log.error("Failed to update SQLite file. Error:" + ex.message)
+                raise ex
+            finally:
+                if os.path.exists(temp_dir):
+                    shutil.rmtree(temp_dir)
 
 import receivers

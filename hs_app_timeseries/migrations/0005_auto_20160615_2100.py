@@ -14,8 +14,18 @@ class Migration(migrations.Migration):
     operations = [
         migrations.AddField(
             model_name='method',
+            name='is_dirty',
+            field=models.BooleanField(default=False),
+        ),
+        migrations.AddField(
+            model_name='method',
             name='series_ids',
             field=django.contrib.postgres.fields.ArrayField(default=[], base_field=models.CharField(max_length=36, null=True, blank=True), size=None),
+        ),
+        migrations.AddField(
+            model_name='processinglevel',
+            name='is_dirty',
+            field=models.BooleanField(default=False),
         ),
         migrations.AddField(
             model_name='processinglevel',
@@ -24,13 +34,28 @@ class Migration(migrations.Migration):
         ),
         migrations.AddField(
             model_name='site',
+            name='is_dirty',
+            field=models.BooleanField(default=False),
+        ),
+        migrations.AddField(
+            model_name='site',
             name='series_ids',
             field=django.contrib.postgres.fields.ArrayField(default=[], base_field=models.CharField(max_length=36, null=True, blank=True), size=None),
         ),
         migrations.AddField(
             model_name='timeseriesresult',
+            name='is_dirty',
+            field=models.BooleanField(default=False),
+        ),
+        migrations.AddField(
+            model_name='timeseriesresult',
             name='series_ids',
             field=django.contrib.postgres.fields.ArrayField(default=[], base_field=models.CharField(max_length=36, null=True, blank=True), size=None),
+        ),
+        migrations.AddField(
+            model_name='variable',
+            name='is_dirty',
+            field=models.BooleanField(default=False),
         ),
         migrations.AddField(
             model_name='variable',

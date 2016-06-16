@@ -124,13 +124,23 @@ def _get_resource_edit_context(page, request, content_model, selected_series_id,
                                                           form.initial['id'])
             form.number = form.initial['id']
 
-    ext_md_layout = Layout(SeriesSelectionLayout,
-                           SiteLayoutEdit,
-                           VariableLayoutEdit,
-                           MethodLayoutEdit,
-                           ProcessingLevelLayoutEdit,
-                           TimeSeriesResultLayoutEdit
-                          )
+    if content_model.metadata.is_dirty:
+        ext_md_layout = Layout(UpdateSQLiteLayout,
+                               SeriesSelectionLayout,
+                               SiteLayoutEdit,
+                               VariableLayoutEdit,
+                               MethodLayoutEdit,
+                               ProcessingLevelLayoutEdit,
+                               TimeSeriesResultLayoutEdit
+                              )
+    else:
+        ext_md_layout = Layout(SeriesSelectionLayout,
+                               SiteLayoutEdit,
+                               VariableLayoutEdit,
+                               MethodLayoutEdit,
+                               ProcessingLevelLayoutEdit,
+                               TimeSeriesResultLayoutEdit
+                              )
 
     # get the context from hs_core
     context = page_processors.get_page_context(page, request.user, resource_edit=True,
