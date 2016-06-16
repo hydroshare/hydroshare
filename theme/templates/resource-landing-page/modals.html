@@ -162,8 +162,13 @@
                                 <div id="div_id_description" class="control-group">
                                     <label class="control-label">HydroShare User Identifier (URL)</label>
 
-                                    <div class="controls"><input class="form-control input-sm urlinput" type="url"
-                                                                 value="{{ contributor.description }}" readonly></div>
+                                    <div class="controls"><input
+                                            class="form-control input-sm urlinput"
+                                            id="id_creator-{{ contributor.order|add:"- 1" }}-description"
+                                            maxlength="200"
+                                            name="creator-{{ contributor.order|add:"- 1" }}-description" type="url"
+                                            value="{{ contributor.description }}"
+                                            readonly></div>
                                 </div>
                             {% endif %}
                             <div id="div_id_organization" class="control-group">
@@ -270,16 +275,18 @@
                                         id="id_creator-{{ author.order|add:"- 1" }}-name" maxlength="100" name="creator-{{ author.order|add:"- 1" }}-name"
                                         required="required" type="text" value="{% if author.name %}{{ author.name }}{% endif %}"></div>
                             </div>
-
                             {% if author.description %}
                                 <div id="div_id_description" class="control-group">
                                     <label class="control-label">HydroShare User Identifier (URL)</label>
 
-                                    <div class="controls"><input class="form-control input-sm urlinput" type="url"
-                                                                 value="{{ author.description }}" readonly></div>
+                                    <div class="controls"><input
+                                            class="form-control input-sm urlinput"
+                                            id="id_creator-{{ author.order|add:"- 1" }}-description" maxlength="200"
+                                            name="creator-{{ author.order|add:"- 1" }}-description" type="url"
+                                            value="{{ author.description }}"
+                                            readonly></div>
                                 </div>
                             {% endif %}
-
                             <div id="div_id_organization" class="control-group">
                                 <label class="control-label">Organization</label>
 
@@ -288,7 +295,6 @@
                                         id="id_creator-{{ author.order|add:"- 1" }}-organization" maxlength="200"
                                         name="creator-{{ author.order|add:"- 1" }}-organization" type="text" value="{% if author.organization %}{{ author.organization }}{% endif %}"></div>
                             </div>
-
                             <div id="div_id_email" class="control-group">
                                 <label class="control-label">Email</label>
 
@@ -298,7 +304,6 @@
                                            type="email" value="{% if author.email %}{{ author.email }}{% endif %}">
                                 </div>
                             </div>
-
                             <div id="div_id_address" class="control-group">
                                 <label class="control-label">Address</label>
 
@@ -309,7 +314,6 @@
                                            type="text" value="{% if author.address %}{{ author.address }}{% endif %}">
                                 </div>
                             </div>
-
                             <div id="div_id_phone" class="control-group">
                                 <label class="control-label">Phone</label>
 
@@ -319,7 +323,6 @@
                                            type="text" value="{% if author.phone %}{{ author.phone }}{% endif %}">
                                 </div>
                             </div>
-
                             <div id="div_id_homepage" class="control-group">
                                 <label class="control-label">Homepage</label>
 
@@ -328,7 +331,6 @@
                                         id="id_creator-{{ author.order|add:"- 1" }}-homepage" maxlength="200" name="creator-{{ author.order|add:"- 1" }}-homepage"
                                         type="url" value="{% if author.homepage %}{{ author.homepage }}{% endif %}"></div>
                             </div>
-
                             <div id="div_id_order" class="control-group">
                                 <label class="control-label">Order<span class="asteriskField">*</span></label>
 
@@ -337,7 +339,6 @@
                                         id="id_creator-{{ author.order|add:"- 1" }}-order" name="creator-{{ author.order|add:"- 1" }}-order" required="required"
                                         type="number" value="{% if author.order %}{{ author.order }}{% endif %}"></div>
                             </div>
-
                         </fieldset>
                     </div>
                 </div>
