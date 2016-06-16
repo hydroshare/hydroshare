@@ -659,7 +659,7 @@ def add_file_to_resource(resource, f, fed_res_file_name_or_path='', fed_copy=Non
 
         file_format_type = get_file_mime_type(fed_res_file_name_or_path)
     else:
-        return None
+        raise ValueError('No file input parameter is passed into this add_file_to_resource() function')
 
     if file_format_type not in [mime.value for mime in resource.metadata.formats.all()]:
         resource.metadata.create_element('format', value=file_format_type)
