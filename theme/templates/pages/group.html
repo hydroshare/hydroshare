@@ -181,11 +181,11 @@
                 <div role="tabpanel" class="tab-pane fade" id="members">
                     <div class="row">
                         <div class="col-sm-12 col-md-3">
-                            {% if profile_user.is_group_owner or profile_user.is_group_editor or profile_user.is_group_viewer %}
+                            {% if profile_user.is_group_owner %}
                                 {% if group.gaccess.active %}
-                                    <div class="text-center"><a href="#" class="btn btn-primary" role="button"
-                                                                data-toggle="modal" data-target="#invite-dialog">Invite
-                                        People</a></div>
+                                    <div class="text-center">
+                                        <a href="#" class="btn btn-primary" role="button" data-toggle="modal"
+                                           data-target="#invite-dialog">Invite People</a></div>
                                     <br>
                                 {% endif %}
                             {% endif %}
