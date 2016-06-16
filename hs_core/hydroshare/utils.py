@@ -153,13 +153,13 @@ def get_user_zone_status_info(user):
 
 def is_federated(homepath):
     """
-    Get size of a data object from iRODS user zone
+    Check if the selected file via the iRODS browser is from a federated zone or not
     Args:
-        user: the requesting user
-        fname: the logical iRODS file name with full logical path
+        homepath: the logical iRODS file name with full logical path, e.g., selected from
+                  iRODS browser
 
     Returns:
-    the size of the file
+    True is the selected file indicated by homepath is from a federated zone, False if otherwise
     """
     irods_storage = IrodsStorage('federated')
     # if HS WWW iRODS proxy user can list homepath, homepath is federated; otherwise, it is not federated
@@ -201,10 +201,11 @@ def get_fed_zone_files(irods_fnames):
     """
     Get the file from iRODS federated zone to Django server for metadata extraction on-demand for specific resource types
     Args:
-        fname: the logical iRODS file name with full logical path
+        irods_fnames: the logical iRODS file names with full logical path separated by comma
 
     Returns:
-    the named temp file being copied over to local Django server
+    a list of the named temp files which have been copied over to local Django server
+    or raise exceptions if input parameter is wrong or iRODS operations fail
     """
     ret_file_list = []
     if isinstance(irods_fnames, basestring):
@@ -212,7 +213,7 @@ def get_fed_zone_files(irods_fnames):
     elif isinstance(irods_fnames, list):
         ifnames = irods_fnames
     else:
-        return ret_file_list
+        raise ValueError("Input parameter to get_fed_zone_files() must be String or List")
     irods_storage = IrodsStorage('federated')
     for ifname in ifnames:
         fname = os.path.basename(ifname.rstrip(os.sep))
@@ -222,7 +223,7 @@ def get_fed_zone_files(irods_fnames):
     return ret_file_list
 
 
-def rep_res_bag_to_user_zone(user, res_id):
+def replicate_resource_bag_to_user_zone(user, res_id):
     """
     Replicate resource bag to iRODS user zone
     Args:
@@ -607,6 +608,12 @@ def add_file_to_resource(resource, f, fed_res_file_name_or_path='', fed_copy=Non
                                       f holds the uploaded file from local disk, or from the federated zone directly
                                       where f is empty but fed_res_file_name_or_path has the whole data object iRODS path
                                       in the federated zone
+    :param fed_copy: indicate whether the file should be copied from private user account to proxy user account in
+                     federated zone; A value of True indicates copy is needed, a value of False indicates no copy, but
+                     the file will be moved from private user account to proxy user account. The default value is None,
+                     which indicates N/A, or not applicable, since the files do not come from a federated zone, and this
+                     copy or move operation is not applicable.
+
     :return: The identifier of the ResourceFile added.
     """
     if f:

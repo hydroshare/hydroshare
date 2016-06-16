@@ -9,7 +9,7 @@ from kombu import Queue, Exchange
 from kombu.common import Broadcast
 
 DEBUG = True
-TEMPLATE_DEBUG = True
+
 # DEVELOPMENT EXAMPLE ONLY
 # Make these unique, and don't share it with anybody
 SECRET_KEY = "9e2e3c2d-8282-41b2-a027-de304c0bc3d944963c9a-4778-43e0-947c-38889e976dcab9f328cb-1576-4314-bfa6-70c42a6e773c"
@@ -128,26 +128,25 @@ IRODS_BAGIT_POSTFIX = 'zip'
 
 # crossref login credential for resource publication
 USE_CROSSREF_TEST = True
-CROSSREF_LOGIN_ID = 'cuapi'
-CROSSREF_LOGIN_PWD = 'fsd.38_C'
+CROSSREF_LOGIN_ID = ''
+CROSSREF_LOGIN_PWD = ''
 
 # Since Hyrax server on-demand update is only needed when private netCDF resources on www
 # are made public, in local development environments or VM deployments other than the www
 # production, this should not be run by setting RUN_HYRAX_UPDATE to False. RUN_HYRAX_UPDATE
 # should only be set to True on www.hydroshare.org
 RUN_HYRAX_UPDATE = False
-HYRAX_SSH_HOST = "hyrax01.renci.org"
-HYRAX_SSH_PROXY_USER = 'hsproxy'
-HYRAX_SSH_PROXY_USER_PWD = '6hpRFC9!/ngr&{`ff}8Ye2t[`+Mj:g<t'
-#HYRAX_SCRIPT_RUN_COMMAND = "sudo -u ihydroshare /opt/anaconda/bin/python /home/ihydroshare/scripts/expose_pub_netcdf_res.py"
-HYRAX_SCRIPT_RUN_COMMAND = "sudo -u bes /usr/local/bin/python2.7 /var/log/bes/scripts/expose_pub_netcdf_res.py"
+HYRAX_SSH_HOST = ''
+HYRAX_SSH_PROXY_USER = ''
+HYRAX_SSH_PROXY_USER_PWD = ''
+HYRAX_SCRIPT_RUN_COMMAND = ''
 
 # hsuserproxy system user configuration used to create hydroshare iRODS users on-demand
-HS_USER_ZONE_HOST = 'users.hydroshare.org'
-HS_USER_ZONE_PROXY_USER = 'hsuserproxy'
-HS_USER_ZONE_PROXY_USER_PWD = 'x/>r{7`tXm(MK$brqy@L>RB3CU@=Fv"@'
-HS_USER_ZONE_PROXY_USER_CREATE_USER_CMD = '/home/hsuserproxy/create_user.sh'
-HS_USER_ZONE_PROXY_USER_DELETE_USER_CMD = '/home/hsuserproxy/delete_user.sh'
+HS_USER_ZONE_HOST = ''
+HS_USER_ZONE_PROXY_USER = ''
+HS_USER_ZONE_PROXY_USER_PWD = ''
+HS_USER_ZONE_PROXY_USER_CREATE_USER_CMD = ''
+HS_USER_ZONE_PROXY_USER_DELETE_USER_CMD = ''
 
 # the local HydroShare proxy user (a counterpart of wwwHydroProxy) in a federated zone with HydroShare Zone
 HS_LOCAL_PROXY_USER_IN_FED_ZONE = 'localTestHydroProxy'
@@ -156,23 +155,23 @@ HS_LOCAL_PROXY_USER_IN_FED_ZONE = 'localTestHydroProxy'
 # the current site is in production or not
 HS_WWW_IRODS_PROXY_USER = 'wwwHydroProxy'
 # credentials for HydroShare proxy user iRODS account which is set to have own access control
-# to all collections in any federated zone with HydroShare zone, which is only useful when testing HydroShare
-# federated zone in local test development environment since in www production environment,
-# IRODS_USERNAME and other associated settings already represent wwwHydroProxy settings
-HS_WWW_IRODS_PROXY_USER_PWD = 'RmjYVeRnKj39vqAoTcAfpm7ksnoCxseh'
-HS_WWW_IRODS_HOST = 'data.hydroshare.org'
+# to all collections in any federated zone with HydroShare zone, which is only useful when
+# testing HydroShare federated zone in local test development environment since in www
+# production environment, IRODS_USERNAME and other associated settings already represent wwwHydroProxy settings
+HS_WWW_IRODS_PROXY_USER_PWD = ''
+HS_WWW_IRODS_HOST = ''
 HS_IRODS_LOCAL_ZONE_DEF_RES = 'hydroshareLocalResc'
-HS_WWW_IRODS_ZONE = 'hydroshareZone'
+HS_WWW_IRODS_ZONE = ''
 HS_USER_IRODS_ZONE = 'hydroshareuserZone'
 
 # Email configuration
 EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
-#EMAIL_HOST_USER = 'hydroshare@hydroshare.org'
-#EMAIL_HOST_PASSWORD = 'zR=D~QBxU&}+'
-#EMAIL_HOST = 'gator3038.hostgator.com'
-#EMAIL_PORT = '26'
+#EMAIL_HOST_USER = ''
+#EMAIL_HOST_PASSWORD = ''
+#EMAIL_HOST = ''
+#EMAIL_PORT = ''
 #EMAIL_USE_TLS = True
-DEFAULT_FROM_EMAIL = 'hydroshare@hydroshare.org'
-DEFAULT_SUPPORT_EMAIL='hongyi@renci.org'
+#DEFAULT_FROM_EMAIL = ''
+#DEFAULT_SUPPORT_EMAIL=''
 
 HYDROSHARE_SHARED_TEMP = '/shared_temp'
