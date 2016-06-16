@@ -150,8 +150,6 @@ class StressPeriod(AbstractMetaDataElement):
         return kwargs
 
 
-
-
 class GroundWaterFlow(AbstractMetaDataElement):
     term = 'GroundWaterFlow'
     flowPackageChoices = (('BCF6', 'BCF6'), ('LPF', 'LPF'), ('HUF2', 'HUF2'),
@@ -192,7 +190,6 @@ class GroundWaterFlow(AbstractMetaDataElement):
             elif key == 'flowParameter':
                 kwargs[key] = validate_choice(val, cls.flowParameterChoices)
         return kwargs
-
 
 
 class BoundaryConditionTypeChoices(models.Model):
