@@ -159,11 +159,15 @@ def _get_resource_edit_context(page, request, content_model, selected_series_id,
 
 
 def _get_series_label(series_id, resource):
-    label = "(Site:{}, Variable:{}, Method:{})"
+    label = "{site_code}:{site_name}, {variable_code}:{variable_name}, {units_name}, {pro_level_code}, {method_name}"
     site = [site for site in resource.metadata.sites if series_id in site.series_ids][0]
     variable = [variable for variable in resource.metadata.variables if series_id in variable.series_ids][0]
     method = [method for method in resource.metadata.methods if series_id in method.series_ids][0]
-    label = label.format(site.site_code, variable.variable_name, method.method_type)
+    pro_level = [pro_level for pro_level in resource.metadata.processing_levels if series_id in pro_level.series_ids][0]
+    ts_result = [ts_result for ts_result in resource.metadata.time_series_results if series_id in ts_result.series_ids][0]
+    label = label.format(site_code=site.site_code, site_name=site.site_name, variable_code= variable.variable_code,
+                         variable_name= variable.variable_name, units_name=ts_result.units_name,
+                         pro_level_code=pro_level.processing_level_code, method_name = method.method_name)
     return label
 
 

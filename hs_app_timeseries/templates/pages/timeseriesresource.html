@@ -5,18 +5,16 @@
 {% block extended_metadata %}
     {% if extended_metadata_exists %}
         <div class="row">
-            <div class="col-sm-5">
+            <div class="col-sm-12">
                 <strong>Select a timeseries to see corresponding metadata:</strong>
-            </div>
-            <div class="col-sm-7">
             <form action="/resource/{{ cm.short_id }}/" method="get" enctype="multipart/form-data">
             {% csrf_token %}
                 <select class="form-control" name="series_id" id="series_id" onchange="this.form.submit()">
                     {% for series_id, label in series_ids.items %}
                         {% if selected_series_id == series_id %}
-                            <option value="{{ series_id }}" selected="selected">{{ label }}</option>
+                            <option value="{{ series_id }}" selected="selected" title="{{ label }}">{{ label|slice:":120"|add:"..." }}</option>
                         {% else %}
-                            <option value={{ series_id }}>{{ label }}</option>
+                            <option value="{{ series_id }}" title="{{ label }}" >{{ label|slice:":120"|add:"..." }}</option>
                         {% endif %}
                     {% endfor %}
                 </select>
@@ -27,7 +25,7 @@
             {% if sites or variables or methods %}
                 <div {% if not processing_levels and not timeseries_results %}class="col-md-12 col-xs-12" {% else %}class="col-md-6 col-xs-12"{% endif %}>
                     {% if sites %}
-                         <legend>Sites</legend>
+                         <legend>Site</legend>
                         {% for site in sites %}
                              {% if not forloop.first %}
                                 <legend></legend>
@@ -46,7 +44,7 @@
                     {%  endif %}
 
                     {% if variables %}
-                        <legend>Variables</legend>
+                        <legend>Variable</legend>
                         {% for variable in variables %}
                             {% if not forloop.first %}
                                 <legend></legend>
@@ -66,7 +64,7 @@
                     {% endif %}
 
                     {% if methods %}
-                        <legend>Methods</legend>
+                        <legend>Method</legend>
                         {% for method in methods %}
                             {% if not forloop.first %}
                                 <legend></legend>
@@ -93,7 +91,7 @@
             {% if processing_levels or timeseries_results %}
                 <div {% if not sites and not variables and not methods %}class="col-md-12 col-xs-12" {% else %}class="col-md-6 col-xs-12"{% endif %}>
                 {% if processing_levels %}
-                    <legend>Processing Levels</legend>
+                    <legend>Processing Level</legend>
                     {% for processing_level in processing_levels %}
                         {% if not forloop.first %}
                             <legend></legend>
@@ -114,7 +112,7 @@
                 {% endif %}
 
                 {% if timeseries_results %}
-                    <legend>Time Series Results</legend>
+                    <legend>Time Series Result</legend>
                     {% for timeseries_result in timeseries_results %}
                         {% if not forloop.first %}
                             <legend></legend>
