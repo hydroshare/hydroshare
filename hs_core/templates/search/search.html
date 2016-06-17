@@ -164,26 +164,79 @@
             </ul>
             <div class="tab-content">
                 <div id="list-view" class="tab-pane fade in active">
-                    <table class="table table-striped table-hover" id="items-discovered">
+                    <table class="table-hover table-striped resource-custom-table" id="items-discovered">
                         <thead>
                             <tr>
-                                <th>Title</th>
                                 <th>Type</th>
+                                <th>Title</th>
                                 <th>First Author</th>
                                 <th>Last Modified</th>
+                                <th>Last modified</th>{# Used in table sorting #}
                             </tr>
                         </thead>
                         <tbody>
                             {% for result in page_obj.object_list %}
                                 <tr>
+                                    <td>
+                                        {% if  result.object|resource_type == "Generic" %}
+                                            <img src="{{ STATIC_URL }}img/resource-icons/generic48x48.png"
+                                                 alt="{{  result.object|resource_type }}" title="{{  result.object|resource_type }}"
+                                                 class="table-res-type-icon"/>
+                                        {% elif  result.object|resource_type == "Geographic Raster" %}
+                                            <img src="{{ STATIC_URL }}img/resource-icons/geographicraster48x48.png"
+                                                 alt="{{  result.object|resource_type }}" title="{{  result.object|resource_type }}"
+                                                 class="table-res-type-icon"/>
+                                        {% elif  result.object|resource_type == "Model Program Resource" %}
+                                            <img src="{{ STATIC_URL }}img/resource-icons/modelprogram48x48.png"
+                                                 alt="{{  result.object|resource_type }}" title="{{  result.object|resource_type }}"
+                                                 class="table-res-type-icon"/>
+                                        {% elif  result.object|resource_type == "Model Instance Resource" %}
+                                            <img src="{{ STATIC_URL }}img/resource-icons/modelinstance48x48.png"
+                                                 alt="{{  result.object|resource_type }}" title="{{  result.object|resource_type }}"
+                                                 class="table-res-type-icon"/>
+                                        {% elif  result.object|resource_type == "SWAT Model Instance Resource" %}
+                                            <img src="{{ STATIC_URL }}img/resource-icons/swat48x48.png"
+                                                 alt="{{  result.object|resource_type }}" title="{{  result.object|resource_type }}"
+                                                 class="table-res-type-icon"/>
+                                        {% elif  result.object|resource_type == "Multidimensional (NetCDF)" %}
+                                            <img src="{{ STATIC_URL }}img/resource-icons/multidimensional48x48.png"
+                                                 alt="{{  result.object|resource_type }}" title="{{  result.object|resource_type }}"
+                                                 class="table-res-type-icon"/>
+                                        {% elif  result.object|resource_type == "Time Series" %}
+                                            <img src="{{ STATIC_URL }}img/resource-icons/timeseries48x48.png"
+                                                 alt="{{  result.object|resource_type }}" title="{{  result.object|resource_type }}"
+                                                 class="table-res-type-icon"/>
+                                        {% elif  result.object|resource_type == "Geographic Feature (ESRI Shapefiles)" %}
+                                            <img src="{{ STATIC_URL }}img/resource-icons/geographicfeature48x48.png"
+                                                 alt="{{  result.object|resource_type }}" title="{{  result.object|resource_type }}"
+                                                 class="table-res-type-icon"/>
+                                        {% elif  result.object|resource_type == "Web App Resource" %}
+                                            <img src="{{ STATIC_URL }}img/resource-icons/webapp48x48.png"
+                                                 alt="{{  result.object|resource_type }}" title="{{  result.object|resource_type }}"
+                                                 class="table-res-type-icon"/>
+                                        {% elif  result.object|resource_type == "HIS Referenced Time Series" %}
+                                            <img src="{{ STATIC_URL }}img/resource-icons/his48x48.png"
+                                                 alt="{{  result.object|resource_type }}" title="{{  result.object|resource_type }}"
+                                                 class="table-res-type-icon"/>
+                                        {% elif  result.object|resource_type == "Script Resource" %}
+                                            <img src="{{ STATIC_URL }}img/resource-icons/script48x48.png"
+                                                 alt="{{  result.object|resource_type }}" title="{{  result.object|resource_type }}"
+                                                 class="table-res-type-icon"/>
+                                        {% elif  result.object|resource_type == "Collection Resource" %}
+                                            <img src="{{ STATIC_URL }}img/resource-icons/collection48x48.png"
+                                                 alt="{{ result.object|resource_type }}"
+                                                 title="{{ result.object|resource_type }}"
+                                                 class="table-res-type-icon"/>
+                                        {% endif %}
+                                    </td>
                                     <td><a href="{{ result.object.get_absolute_url }}">{{ result.object.metadata.title.value }}</a></td>
-                                    <td>{{ result.object|resource_type }}</td>
                                     {% if result.object.first_creator.description %}
                                         <td><a href="{{ result.object.first_creator.description }}">{{ result.object.first_creator.name  }}</a></td>
                                     {% else %}
                                         <td>{{ result.object.first_creator.name }}</td>
                                     {% endif %}
                                     <td>{{ result.object.updated|date }} {{ result.object.updated|time }}</td>
+                                    <td>{{ result.object.updated|date }}, {{ result.object.updated|time }}</td> {# Used in table sorting #}
                                 </tr>
                             {% empty %}
                                 <p>No results found.</p>
@@ -461,11 +514,23 @@
                 clearCheckboxes();
             }
 
+            var colDefs = [
+                {
+                    "targets": [3],     // Last modified
+                    "iDataSort": 4
+                },
+                {
+                    "targets": [5],     // Last modified (for sorting)
+                    "visible": false,
+                }
+            ];
+
             $('#items-discovered').DataTable({
                 "paging":   false,
                 "searching": false,
                 "info": false,
-                "order": [[ 0, "asc" ]]
+                "order": [[ 0, "asc" ]],
+                "columnDefs": colDefs
             });
 
             popCheckboxes();
