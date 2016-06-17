@@ -55,7 +55,7 @@ class Variable(AbstractMetaDataElement):
 
 class Method(AbstractMetaDataElement):
     term = 'Method'
-    method_code = models.IntegerField()
+    method_code = models.CharField(max_length=50)
     method_name = models.CharField(max_length=200)
     method_type = models.CharField(max_length=200)
     method_description = models.TextField(null=True, blank=True)

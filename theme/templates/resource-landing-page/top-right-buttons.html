@@ -4,7 +4,7 @@
     <div class="custom-btn-toolbar">
         {% if not metadata_form %}
             {% if not is_owner_user and not is_edit_user and not is_view_user %}
-                {% if is_mine %}
+                {% if cm.is_mine %}
                     <form class="pull-right" data-id="form-add-to-my-resources"
                           action="/hsapi/_internal/{{ cm.short_id }}/label-resource-action/"
                           method="post">
@@ -15,7 +15,7 @@
                                 title="Remove from my resources" data-form-id="form-add-to-my-resources"
                                 class="glyphicon glyphicon-inbox icon-button btn-resource-remove"></button>
                     </form>
-                {% else %}
+                {% elif user.is_authenticated %}
                     <form class="pull-right" data-id="form-add-to-my-resources"
                           action="/hsapi/_internal/{{ cm.short_id }}/label-resource-action/"
                           method="post">

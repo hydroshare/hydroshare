@@ -1,4 +1,3 @@
-__author__ = 'shaunjl'
 """
 tests for update_account() api
 

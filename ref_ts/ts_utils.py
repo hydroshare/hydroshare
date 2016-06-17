@@ -457,7 +457,7 @@ def QueryHydroServerGetParsedWML(service_url, soap_or_rest, site_code=None, vari
             client = connect_wsdl_url(service_url)
             response = client.service.GetValues(site_code, variable_code, start_date, end_date, auth_token)
         elif soap_or_rest == 'rest':
-            r = requests.get(service_url)
+            r = requests.get(service_url, verify=False)
             if r.status_code != 200:
                 raise Exception("Query REST endpoint failed")
             response = r.text.encode('utf-8')

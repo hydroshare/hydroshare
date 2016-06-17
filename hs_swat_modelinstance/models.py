@@ -1,4 +1,3 @@
-__author__ = 'Mohamed Morsy'
 from lxml import etree
 
 from django.contrib.contenttypes.fields import GenericRelation
@@ -17,9 +16,11 @@ class ModelOutput(ModelOutput):
     class Meta:
         proxy = True
 
+
 class ExecutedBy(ExecutedBy):
     class Meta:
         proxy = True
+
 
 # extended metadata elements for SWAT Model Instance resource type
 class ModelObjectiveChoices(models.Model):
@@ -28,9 +29,10 @@ class ModelObjectiveChoices(models.Model):
     def __unicode__(self):
         return self.description
 
+
 class ModelObjective(AbstractMetaDataElement):
     term = 'ModelObjective'
-    swat_model_objectives = models.ManyToManyField(ModelObjectiveChoices, null=True, blank=True)
+    swat_model_objectives = models.ManyToManyField(ModelObjectiveChoices, blank=True)
     other_objectives = models.CharField(max_length=200, null=True, blank=True)
 
     def __unicode__(self):
@@ -44,7 +46,7 @@ class ModelObjective(AbstractMetaDataElement):
         return ', '.join([objective.description for objective in self.swat_model_objectives.all()])
 
     @classmethod
-    def _add_swat_objective(cls,model_objective,objectives):
+    def _add_swat_objective(cls, model_objective, objectives):
         for swat_objective in objectives:
             qs = ModelObjectiveChoices.objects.filter(description__iexact=swat_objective)
             if qs.exists():
@@ -58,7 +60,8 @@ class ModelObjective(AbstractMetaDataElement):
             cls._validate_swat_model_objectives(kwargs['swat_model_objectives'])
         else:
             raise ValidationError("swat_model_objectives is missing.")
-        model_objective = super(ModelObjective,cls).create(content_object=kwargs['content_object'], other_objectives=kwargs['other_objectives'])
+        model_objective = super(ModelObjective, cls).create(content_object=kwargs['content_object'],
+                                                            other_objectives=kwargs['other_objectives'])
         cls._add_swat_objective(model_objective, kwargs['swat_model_objectives'])
 
         return model_objective
@@ -90,6 +93,7 @@ class ModelObjective(AbstractMetaDataElement):
             if swat_objective not in ['Hydrology', 'Water quality', 'BMPs', 'Climate / Landuse Change']:
                 raise ValidationError('Invalid swat_model_objectives:%s' % objectives)
 
+
 class SimulationType(AbstractMetaDataElement):
     term = 'SimulationType'
     type_choices = (('Normal Simulation', 'Normal Simulation'), ('Sensitivity Analysis', 'Sensitivity Analysis'),
@@ -103,9 +107,42 @@ class SimulationType(AbstractMetaDataElement):
         # SimulationType element is not repeatable
         unique_together = ("content_type", "object_id")
 
+    @classmethod
+    def create(cls, **kwargs):
+        if 'simulation_type_name' in kwargs:
+            if kwargs['simulation_type_name'] == 'Choose a type':
+                kwargs['simulation_type_name'] = ''
+                return super(SimulationType, cls).create(**kwargs)
+            cls._validate_simulation_type(kwargs['simulation_type_name'])
+        else:
+            raise ValidationError("simulation_type_name is missing.")
+        simulation_type = super(SimulationType, cls).create(**kwargs)
+        return simulation_type
+
+    @classmethod
+    def update(cls, element_id, **kwargs):
+        if 'simulation_type_name' in kwargs:
+            if kwargs['simulation_type_name'] == 'Choose a type':
+                kwargs['simulation_type_name'] = ''
+                return super(SimulationType, cls).update(element_id, **kwargs)
+            cls._validate_simulation_type(kwargs['simulation_type_name'])
+        else:
+            raise ValidationError("simulation_type_name is missing.")
+        simulation_type = super(SimulationType, cls).update(element_id, **kwargs)
+        return simulation_type
+
+    @classmethod
+    def _validate_simulation_type(cls, swat_simulation_type):
+        types = [c[0] for c in cls.type_choices]
+        if swat_simulation_type not in types:
+            raise ValidationError('Invalid swat_model_simulation_type:{} not in {}'.format(swat_simulation_type,
+                                                                                           types))
+
+
 class ModelMethod(AbstractMetaDataElement):
     term = 'ModelMethod'
-    runoffCalculationMethod = models.CharField(max_length=200, null=True, blank=True, verbose_name='Runoff calculation method')
+    runoffCalculationMethod = models.CharField(max_length=200, null=True, blank=True,
+                                               verbose_name='Runoff calculation method')
     flowRoutingMethod = models.CharField(max_length=200, null=True, blank=True, verbose_name='Flow routing method')
     petEstimationMethod = models.CharField(max_length=200, null=True, blank=True, verbose_name='PET estimation method')
 
@@ -116,15 +153,17 @@ class ModelMethod(AbstractMetaDataElement):
         # ModelMethod element is not repeatable
         unique_together = ("content_type", "object_id")
 
+
 class ModelParametersChoices(models.Model):
     description = models.CharField(max_length=300)
 
     def __unicode__(self):
         return self.description
 
+
 class ModelParameter(AbstractMetaDataElement):
     term = 'ModelParameter'
-    model_parameters = models.ManyToManyField(ModelParametersChoices, null=True, blank=True)
+    model_parameters = models.ManyToManyField(ModelParametersChoices, blank=True)
     other_parameters = models.CharField(max_length=200, null=True, blank=True)
 
     def __unicode__(self):
@@ -138,7 +177,7 @@ class ModelParameter(AbstractMetaDataElement):
         return ', '.join([parameter.description for parameter in self.model_parameters.all()])
 
     @classmethod
-    def _add_swat_parameters(cls,swat_model_parameters,parameters):
+    def _add_swat_parameters(cls, swat_model_parameters, parameters):
         for swat_parameter in parameters:
             qs = ModelParametersChoices.objects.filter(description__iexact=swat_parameter)
             if qs.exists():
@@ -152,8 +191,9 @@ class ModelParameter(AbstractMetaDataElement):
             cls._validate_swat_model_parameters(kwargs['model_parameters'])
         else:
             raise ValidationError("model_parameters is missing.")
-        swat_model_parameters = super(ModelParameter,cls).create(content_object=kwargs['content_object'], other_parameters=kwargs['other_parameters'])
-        cls._add_swat_parameters(swat_model_parameters,kwargs['model_parameters'])
+        swat_model_parameters = super(ModelParameter, cls).create(content_object=kwargs['content_object'],
+                                                                  other_parameters=kwargs['other_parameters'])
+        cls._add_swat_parameters(swat_model_parameters, kwargs['model_parameters'])
 
         return swat_model_parameters
 
@@ -165,7 +205,7 @@ class ModelParameter(AbstractMetaDataElement):
                 cls._validate_swat_model_parameters(kwargs['model_parameters'])
                 # delete the the m2m association records
                 swat_model_parameters.model_parameters.clear()
-                cls._add_swat_parameters(swat_model_parameters,kwargs['model_parameters'])
+                cls._add_swat_parameters(swat_model_parameters, kwargs['model_parameters'])
 
             if 'other_parameters' in kwargs:
                 swat_model_parameters.other_parameters = kwargs['other_parameters']
@@ -173,7 +213,8 @@ class ModelParameter(AbstractMetaDataElement):
             swat_model_parameters.save()
 
             # delete model_parameters metadata element if it has no data
-            if len(swat_model_parameters.model_parameters.all()) == 0 and len(swat_model_parameters.other_parameters) == 0:
+            if swat_model_parameters.model_parameters.all().count() == 0 and \
+                    len(swat_model_parameters.other_parameters) == 0:
                 swat_model_parameters.delete()
         else:
             raise ObjectDoesNotExist("No ModelParameter element was found for the provided id:%s" % kwargs['id'])
@@ -181,8 +222,10 @@ class ModelParameter(AbstractMetaDataElement):
     @classmethod
     def _validate_swat_model_parameters(cls, parameters):
         for swat_parameters in parameters:
-            if swat_parameters not in ['Crop rotation', 'Tile drainage', 'Point source', 'Fertilizer', 'Tillage operation', 'Inlet of draining watershed', 'Irrigation operation']:
+            if swat_parameters not in ['Crop rotation', 'Tile drainage', 'Point source', 'Fertilizer',
+                                       'Tillage operation', 'Inlet of draining watershed', 'Irrigation operation']:
                 raise ValidationError('Invalid swat_model_parameters:%s' % parameters)
+
 
 class ModelInput(AbstractMetaDataElement):
     term = 'ModelInput'
@@ -191,19 +234,27 @@ class ModelInput(AbstractMetaDataElement):
     simulation_type_choices = (('Annual', 'Annual'), ('Monthly', 'Monthly'), ('Daily', 'Daily'), ('Hourly', 'Hourly'),)
 
     warmupPeriodValue = models.CharField(max_length=100, null=True, blank=True, verbose_name='Warm-up period in years')
-    rainfallTimeStepType = models.CharField(max_length=100, choices=rainfall_type_choices, null=True, blank=True, verbose_name='Rainfall time step type')
-    rainfallTimeStepValue = models.CharField(max_length=100, null=True, blank=True, verbose_name='Rainfall time step value')
-    routingTimeStepType = models.CharField(max_length=100, choices=routing_type_choices, null=True, blank=True, verbose_name='Routing time step type')
-    routingTimeStepValue = models.CharField(max_length=100, null=True, blank=True, verbose_name='Routing time step value')
-    simulationTimeStepType = models.CharField(max_length=100,choices=simulation_type_choices, null=True, blank=True, verbose_name='Simulation time step type')
-    simulationTimeStepValue = models.CharField(max_length=100, null=True, blank=True, verbose_name='Simulation time step value')
-    watershedArea = models.CharField(max_length=100, null=True, blank=True, verbose_name='Watershed area in square kilometers')
+    rainfallTimeStepType = models.CharField(max_length=100, choices=rainfall_type_choices, null=True, blank=True,
+                                            verbose_name='Rainfall time step type')
+    rainfallTimeStepValue = models.CharField(max_length=100, null=True, blank=True,
+                                             verbose_name='Rainfall time step value')
+    routingTimeStepType = models.CharField(max_length=100, choices=routing_type_choices, null=True, blank=True,
+                                           verbose_name='Routing time step type')
+    routingTimeStepValue = models.CharField(max_length=100, null=True, blank=True,
+                                            verbose_name='Routing time step value')
+    simulationTimeStepType = models.CharField(max_length=100, choices=simulation_type_choices, null=True, blank=True,
+                                              verbose_name='Simulation time step type')
+    simulationTimeStepValue = models.CharField(max_length=100, null=True, blank=True,
+                                               verbose_name='Simulation time step value')
+    watershedArea = models.CharField(max_length=100, null=True, blank=True,
+                                     verbose_name='Watershed area in square kilometers')
     numberOfSubbasins = models.CharField(max_length=100, null=True, blank=True, verbose_name='Number of subbasins')
     numberOfHRUs = models.CharField(max_length=100, null=True, blank=True, verbose_name='Number of HRUs')
     demResolution = models.CharField(max_length=100, null=True, blank=True, verbose_name='DEM resolution in meters')
     demSourceName = models.CharField(max_length=200, null=True, blank=True, verbose_name='DEM source name')
     demSourceURL = models.URLField(null=True, blank=True, verbose_name='DEM source URL')
-    landUseDataSourceName = models.CharField(max_length=200, null=True, blank=True, verbose_name='LandUse data source name')
+    landUseDataSourceName = models.CharField(max_length=200, null=True, blank=True,
+                                             verbose_name='LandUse data source name')
     landUseDataSourceURL = models.URLField(null=True, blank=True, verbose_name='LandUse data source URL')
     soilDataSourceName = models.CharField(max_length=200, null=True, blank=True, verbose_name='Soil data source name')
     soilDataSourceURL = models.URLField(null=True, blank=True, verbose_name='Soil data source URL')
@@ -215,11 +266,50 @@ class ModelInput(AbstractMetaDataElement):
         # ModelInput element is not repeatable
         unique_together = ("content_type", "object_id")
 
+    @classmethod
+    def create(cls, **kwargs):
+        kwargs = cls._validate_time_step(**kwargs)
+        model_input = super(ModelInput, cls).create(**kwargs)
+        return model_input
+
+    @classmethod
+    def update(cls, element_id, **kwargs):
+        kwargs = cls._validate_time_step(**kwargs)
+        model_input = super(ModelInput, cls).update(element_id, **kwargs)
+        return model_input
+
+
     @property
     def warmupPeriodType(self):
         return "Year"
 
-#SWAT Model Instance Resource type
+    @classmethod
+    def _validate_time_step(cls, **kwargs):
+        for key, val in kwargs.iteritems():
+            if val == 'Choose a type':
+                kwargs[key] = ''
+            else:
+                if key == 'rainfallTimeStepType':
+                    time_step = val
+                    types = [c[0] for c in cls.rainfall_type_choices]
+                    cls.check_time_steps(time_step, types)
+                elif key == 'routingTimeStepType':
+                    time_step = val
+                    types = [c[0] for c in cls.routing_type_choices]
+                    cls.check_time_steps(time_step, types)
+                elif key == 'simulationTimeStepType':
+                    time_step = val
+                    types = [c[0] for c in cls.simulation_type_choices]
+                    cls.check_time_steps(time_step, types)
+        return kwargs
+
+    @classmethod
+    def check_time_steps(cls, time_step, types):
+        if time_step not in types:
+            raise ValidationError('Invalid time step choice:{} not in {}'.format(time_step, types))
+
+
+# SWAT Model Instance Resource type
 class SWATModelInstanceResource(BaseResource):
     objects = ResourceManager("SWATModelInstanceResource")
 
@@ -242,6 +332,7 @@ class SWATModelInstanceResource(BaseResource):
         return True
 
 processor_for(SWATModelInstanceResource)(resource_processor)
+
 
 # metadata container class
 class SWATModelInstanceMetaData(ModelInstanceMetaData):
@@ -311,32 +402,36 @@ class SWATModelInstanceMetaData(ModelInstanceMetaData):
             hsterms_model_objective = etree.SubElement(container, '{%s}modelObjective' % self.NAMESPACES['hsterms'])
 
             if self.model_objective.other_objectives:
-                hsterms_model_objective.text = ', '.join([objective.description for objective in self.model_objective.swat_model_objectives.all()]) + ', ' + self.model_objective.other_objectives
+                hsterms_model_objective.text = self.model_objective.get_swat_model_objectives() + \
+                                               ', ' + self.model_objective.other_objectives
             else:
-                hsterms_model_objective.text = ', '.join([objective.description for objective in self.model_objective.swat_model_objectives.all()])
-
+                hsterms_model_objective.text = self.model_objective.get_swat_model_objectives()
         if self.simulation_type:
-            hsterms_simulation_type = etree.SubElement(container, '{%s}simulationType' % self.NAMESPACES['hsterms'])
-            hsterms_simulation_type.text = self.simulation_type.simulation_type_name
+            if self.simulation_type.simulation_type_name:
+                hsterms_simulation_type = etree.SubElement(container, '{%s}simulationType' % self.NAMESPACES['hsterms'])
+                hsterms_simulation_type.text = self.simulation_type.simulation_type_name
 
         if self.model_method:
-            modelMethodFields = ['runoffCalculationMethod','flowRoutingMethod','petEstimationMethod']
-            self.add_metadata_element_to_xml(container,self.model_method,modelMethodFields)
+            modelMethodFields = ['runoffCalculationMethod', 'flowRoutingMethod', 'petEstimationMethod']
+            self.add_metadata_element_to_xml(container, self.model_method, modelMethodFields)
 
         if self.model_parameter:
-            hsterms_swat_model_parameters = etree.SubElement(container, '{%s}modelParameter' % self.NAMESPACES['hsterms'])
+            hsterms_swat_model_parameters = etree.SubElement(container,
+                                                             '{%s}modelParameter' % self.NAMESPACES['hsterms'])
 
             if self.model_parameter.other_parameters:
-                hsterms_swat_model_parameters.text = ', '.join([parameter.description for parameter in self.model_parameter.model_parameters.all()]) + ', ' + self.model_parameter.other_parameters
+                hsterms_swat_model_parameters.text = self.model_parameter.get_swat_model_parameters() + \
+                                                     ', ' + self.model_parameter.other_parameters
             else:
-                hsterms_swat_model_parameters.text = ', '.join([parameter.description for parameter in self.model_parameter.model_parameters.all()])
-
+                hsterms_swat_model_parameters.text = self.model_parameter.get_swat_model_parameters()
 
         if self.model_input:
-            modelInputFields = ['warmupPeriodType','warmupPeriodValue','rainfallTimeStepType','rainfallTimeStepValue','routingTimeStepType',\
-                                'routingTimeStepValue','simulationTimeStepType','simulationTimeStepValue','watershedArea','numberOfSubbasins',\
-                                'numberOfHRUs','demResolution','demSourceName','demSourceURL','landUseDataSourceName','landUseDataSourceURL',\
-                                'soilDataSourceName','soilDataSourceURL']
+            modelInputFields = ['warmupPeriodType', 'warmupPeriodValue', 'rainfallTimeStepType',
+                                'rainfallTimeStepValue', 'routingTimeStepType', 'routingTimeStepValue',
+                                'simulationTimeStepType', 'simulationTimeStepValue', 'watershedArea',
+                                'numberOfSubbasins', 'numberOfHRUs', 'demResolution', 'demSourceName', 'demSourceURL',
+                                'landUseDataSourceName', 'landUseDataSourceURL', 'soilDataSourceName',
+                                'soilDataSourceURL']
             self.add_metadata_element_to_xml(container,self.model_input,modelInputFields)
 
         return etree.tostring(RDF_ROOT, pretty_print=True)
@@ -350,3 +445,4 @@ class SWATModelInstanceMetaData(ModelInstanceMetaData):
         self._model_input.all().delete()
 
 import receivers
+

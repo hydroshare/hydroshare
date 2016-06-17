@@ -1,4 +1,3 @@
-__author__ = 'shaunjl'
 
 """
 comments- not sure how to implement test_email_function
@@ -81,9 +80,9 @@ class CreateAccountTest(TestCase):
             groups=groups
             )
 
-        g0 = user.uaccess.create_group('group0')
-        g1 = user.uaccess.create_group('group1')
-        g2 = user.uaccess.create_group('group2')
+        g0 = user.uaccess.create_group(title='group0', description='This is group0')
+        g1 = user.uaccess.create_group(title='group1', description='This is group1')
+        g2 = user.uaccess.create_group(title='group2', description='This is group2')
 
         # TODO from @alvacouch: no order assumption -> poor test. 
         user_groups = list(Group.objects.filter(g2ugp__user=user))

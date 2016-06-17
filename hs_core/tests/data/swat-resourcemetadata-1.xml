@@ -1,0 +1,58 @@
+<rdf:RDF xmlns:dcterms="http://purl.org/dc/terms/" xmlns:hsterms="http://hydroshare.org/terms/" xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" xmlns:rdfs1="http://www.w3.org/2001/01/rdf-schema#" xmlns:dc="http://purl.org/dc/elements/1.1/">
+  <rdf:Description rdf:about="http://www.hydroshare.org/resource/78b6a717c0654cd78fab8cf7e486f425">
+    <dc:title>Flat River SWAT Instance</dc:title>
+    <dc:type rdf:resource="http://www.hydroshare.org/terms/SWATModelInstanceResource"/>
+    <dc:description>
+      <rdf:Description>
+        <dcterms:abstract>This model is created for Flat River.</dcterms:abstract>
+      </rdf:Description>
+    </dc:description>
+    <dc:creator>
+      <rdf:Description rdf:about="http://www.hydroshare.org/user/5/">
+        <hsterms:name>I Luk Kim</hsterms:name>
+        <hsterms:creatorOrder>1</hsterms:creatorOrder>
+        <hsterms:email>kim1634@purdue.edu</hsterms:email>
+      </rdf:Description>
+    </dc:creator>
+    <dc:date>
+      <dcterms:created>
+        <rdf:value>2016-03-07T18:07:45.916955+00:00</rdf:value>
+      </dcterms:created>
+    </dc:date>
+    <dc:date>
+      <dcterms:modified>
+        <rdf:value>2016-03-10T23:55:01.967498+00:00</rdf:value>
+      </dcterms:modified>
+    </dc:date>
+    <dc:format>application/zip</dc:format>
+    <dc:identifier>
+      <rdf:Description>
+        <hsterms:hydroShareIdentifier>http://www.hydroshare.org/resource/78b6a717c0654cd78fab8cf7e486f425</hsterms:hydroShareIdentifier>
+      </rdf:Description>
+    </dc:identifier>
+    <dc:language>eng</dc:language>
+    <dc:rights>
+      <rdf:Description>
+        <hsterms:rightsStatement>This resource is shared under the Creative Commons Attribution CC BY.</hsterms:rightsStatement>
+        <hsterms:URL rdf:resource="http://creativecommons.org/licenses/by/4.0/"/>
+      </rdf:Description>
+    </dc:rights>
+    <dc:subject>SWAT2009</dc:subject>
+    <dc:subject>FlatRIver</dc:subject>
+    <hsterms:ModelOutput>
+      <rdf:Description>
+        <hsterms:includesModelOutput>No</hsterms:includesModelOutput>
+      </rdf:Description>
+    </hsterms:ModelOutput>
+    <hsterms:ExecutedBY>
+      <rdf:Description>
+        <hsterms:modelProgramName>Unspecified</hsterms:modelProgramName>
+        <hsterms:modelProgramIdentifier>None</hsterms:modelProgramIdentifier>
+      </rdf:Description>
+    </hsterms:ExecutedBY>
+  <hsterms:modelObjective>Hydrology</hsterms:modelObjective><hsterms:simulationType>Normal Simulation</hsterms:simulationType><hsterms:ModelMethod><rdf:Description><hsterms:runoffCalculationMethod>Curve Number</hsterms:runoffCalculationMethod><hsterms:flowRoutingMethod>Variable Storage</hsterms:flowRoutingMethod><hsterms:petEstimationMethod>Penman-Monteith</hsterms:petEstimationMethod></rdf:Description></hsterms:ModelMethod><hsterms:modelParameter>Fertilizer, other</hsterms:modelParameter><hsterms:ModelInput><rdf:Description><hsterms:warmupPeriodType>Year</hsterms:warmupPeriodType><hsterms:warmupPeriodValue>0</hsterms:warmupPeriodValue><hsterms:rainfallTimeStepType>Daily</hsterms:rainfallTimeStepType><hsterms:routingTimeStepType>Daily</hsterms:routingTimeStepType><hsterms:simulationTimeStepType>Monthly</hsterms:simulationTimeStepType><hsterms:watershedArea>385.003</hsterms:watershedArea><hsterms:numberOfSubbasins>19</hsterms:numberOfSubbasins><hsterms:numberOfHRUs>561</hsterms:numberOfHRUs><hsterms:demResolution>30</hsterms:demResolution><hsterms:demSourceName>USGS</hsterms:demSourceName><hsterms:landUseDataSourceName>NLCD 1992</hsterms:landUseDataSourceName><hsterms:soilDataSourceName>SSURGO</hsterms:soilDataSourceName></rdf:Description></hsterms:ModelInput></rdf:Description>
+  <rdf:Description rdf:about="http://www.hydroshare.org/terms/SWATModelInstanceResource">
+    <rdfs1:label>SWAT Model Instance Resource</rdfs1:label>
+    <rdfs1:isDefinedBy>http://www.hydroshare.org/terms</rdfs1:isDefinedBy>
+  </rdf:Description>
+</rdf:RDF>

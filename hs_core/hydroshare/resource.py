@@ -2,6 +2,7 @@ import os
 import zipfile
 import shutil
 import logging
+import copy
 
 import requests
 
@@ -580,6 +581,9 @@ def create_new_version_resource(ori_res, new_res, user):
         # note that new version collection will not contain "deleted resources"
         new_res.resources = ori_res.resources.all()
 
+    # create the key/value metadata
+    new_res.extra_metadata = copy.deepcopy(ori_res.extra_metadata)
+
     # create bag for the new resource
     hs_bagit.create_bag(new_res)
 
@@ -768,7 +772,6 @@ def update_science_metadata(pk, metadata):
 
     resource = utils.get_resource_by_shortkey(pk)
     resource.metadata.update(metadata)
-
 
 def delete_resource(pk):
     """

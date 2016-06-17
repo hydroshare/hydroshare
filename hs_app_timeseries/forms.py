@@ -1,4 +1,3 @@
-__author__ = 'pabitra'
 from django.forms import ModelForm
 from django import forms
 from crispy_forms.layout import *
@@ -105,7 +104,7 @@ class MethodForm(ModelForm):
 
 
 class MethodValidationForm(forms.Form):
-    method_code = forms.IntegerField()
+    method_code = forms.CharField(max_length=50)
     method_name = forms.CharField(max_length=200)
     method_type = forms.CharField(max_length=200)
     method_description = forms.CharField(required=False)

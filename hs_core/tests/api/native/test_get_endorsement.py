@@ -1,4 +1,3 @@
-__author__ = 'Tian Gan'
 
 # unit test for get_endorsement() from social.py
 

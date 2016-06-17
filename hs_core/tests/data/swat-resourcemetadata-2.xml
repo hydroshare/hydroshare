@@ -1,0 +1,72 @@
+<rdf:RDF xmlns:dcterms="http://purl.org/dc/terms/" xmlns:hsterms="http://hydroshare.org/terms/" xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" xmlns:rdfs1="http://www.w3.org/2001/01/rdf-schema#" xmlns:dc="http://purl.org/dc/elements/1.1/">
+  <rdf:Description rdf:about="http://www.hydroshare.org/resource/080ee0e6b1a447f7aa8830006623223b">
+    <dc:title>Cannon river</dc:title>
+    <dc:type rdf:resource="http://www.hydroshare.org/terms/SWATModelInstanceResource"/>
+    <dc:description>
+      <rdf:Description>
+        <dcterms:abstract>This is a test to the SWAT Model Instance resource. All the data had been obtained from real share SWAT model from SWATShare https://mygeohub.org/groups/water-hub/swatshare. Some of the metadata entries are assumed just used to test the resource implementation</dcterms:abstract>
+      </rdf:Description>
+    </dc:description>
+    <dc:creator>
+      <rdf:Description rdf:about="http://www.hydroshare.org/user/4/">
+        <hsterms:name>Mohamed Morsy</hsterms:name>
+        <hsterms:creatorOrder>1</hsterms:creatorOrder>
+        <hsterms:organization>University of Virginia </hsterms:organization>
+        <hsterms:email>mmm4dh@virginia.edu</hsterms:email>
+        <hsterms:phone rdf:resource="tel: (434) 924-7630"/>
+      </rdf:Description>
+    </dc:creator>
+    <dc:coverage>
+      <dcterms:point>
+        <rdf:value>name=Cannon River; east=-92.76272; north=44.55755; units=Decimal degrees; projection=WGS 84 EPSG:4326</rdf:value>
+      </dcterms:point>
+    </dc:coverage>
+    <dc:coverage>
+      <dcterms:period>
+        <rdf:value>start=2004-01-01T00:00:00; end=2011-12-31T00:00:00; scheme=W3C-DTF</rdf:value>
+      </dcterms:period>
+    </dc:coverage>
+    <dc:date>
+      <dcterms:modified>
+        <rdf:value>2015-12-14T19:43:46.192517+00:00</rdf:value>
+      </dcterms:modified>
+    </dc:date>
+    <dc:date>
+      <dcterms:created>
+        <rdf:value>2015-12-14T19:15:36.884709+00:00</rdf:value>
+      </dcterms:created>
+    </dc:date>
+    <dc:format>application/x-tar</dc:format>
+    <dc:format>application/zip</dc:format>
+    <dc:identifier>
+      <rdf:Description>
+        <hsterms:hydroShareIdentifier>http://www.hydroshare.org/resource/080ee0e6b1a447f7aa8830006623223b</hsterms:hydroShareIdentifier>
+      </rdf:Description>
+    </dc:identifier>
+    <dc:language>eng</dc:language>
+    <dc:rights>
+      <rdf:Description>
+        <hsterms:rightsStatement>This resource is shared under the Creative Commons Attribution CC BY.</hsterms:rightsStatement>
+        <hsterms:URL rdf:resource="http://creativecommons.org/licenses/by/4.0/"/>
+      </rdf:Description>
+    </dc:rights>
+    <dc:subject>Cannon River</dc:subject>
+    <dc:subject>SWAT</dc:subject>
+    <dc:subject>SWATShare</dc:subject>
+    <hsterms:ModelOutput>
+      <rdf:Description>
+        <hsterms:includesModelOutput>Yes</hsterms:includesModelOutput>
+      </rdf:Description>
+    </hsterms:ModelOutput>
+    <hsterms:ExecutedBY>
+      <rdf:Description>
+        <hsterms:modelProgramName>SWAT Model created from web interface</hsterms:modelProgramName>
+        <hsterms:modelProgramIdentifier>http://www.hydroshare.org/resource/8c552b5ae92a40b7b83149640e5ad580/</hsterms:modelProgramIdentifier>
+      </rdf:Description>
+    </hsterms:ExecutedBY>
+  <hsterms:modelObjective>Hydrology, water resources</hsterms:modelObjective><hsterms:simulationType>Normal Simulation</hsterms:simulationType><hsterms:ModelMethod><rdf:Description><hsterms:runoffCalculationMethod>Curve Number method</hsterms:runoffCalculationMethod><hsterms:flowRoutingMethod>Muskingum method</hsterms:flowRoutingMethod><hsterms:petEstimationMethod>Penman Monteith method</hsterms:petEstimationMethod></rdf:Description></hsterms:ModelMethod><hsterms:modelParameter>Crop rotation, Inlet of draining watershed, Infiltration, Evaporation</hsterms:modelParameter><hsterms:ModelInput><rdf:Description><hsterms:warmupPeriodType>Year</hsterms:warmupPeriodType><hsterms:warmupPeriodValue>5</hsterms:warmupPeriodValue><hsterms:rainfallTimeStepType>Sub-hourly</hsterms:rainfallTimeStepType><hsterms:rainfallTimeStepValue>15</hsterms:rainfallTimeStepValue><hsterms:routingTimeStepType>Hourly</hsterms:routingTimeStepType><hsterms:routingTimeStepValue>1</hsterms:routingTimeStepValue><hsterms:simulationTimeStepType>Hourly</hsterms:simulationTimeStepType><hsterms:simulationTimeStepValue>1</hsterms:simulationTimeStepValue><hsterms:watershedArea>3780</hsterms:watershedArea><hsterms:numberOfSubbasins>1</hsterms:numberOfSubbasins><hsterms:numberOfHRUs>10</hsterms:numberOfHRUs><hsterms:demResolution>30</hsterms:demResolution><hsterms:demSourceName>USGS</hsterms:demSourceName><hsterms:demSourceURL>http://viewer.nationalmap.gov/viewer/</hsterms:demSourceURL><hsterms:landUseDataSourceName>NCLD 2006</hsterms:landUseDataSourceName><hsterms:landUseDataSourceURL>http://www.mrlc.gov/nlcd2006.php</hsterms:landUseDataSourceURL><hsterms:soilDataSourceName>STATSGO</hsterms:soilDataSourceName><hsterms:soilDataSourceURL>http://www.nrcs.usda.gov/wps/portal/nrcs/detail/soils/survey/geo/?cid=nrcs142p2_053629</hsterms:soilDataSourceURL></rdf:Description></hsterms:ModelInput></rdf:Description>
+  <rdf:Description rdf:about="http://www.hydroshare.org/terms/SWATModelInstanceResource">
+    <rdfs1:label>SWAT Model Instance Resource</rdfs1:label>
+    <rdfs1:isDefinedBy>http://www.hydroshare.org/terms</rdfs1:isDefinedBy>
+  </rdf:Description>
+</rdf:RDF>

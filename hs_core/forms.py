@@ -1,4 +1,3 @@
-__author__ = 'Pabitra'
 import copy
 from models import *
 from django.forms import ModelForm, BaseFormSet, DateInput, Select, TextInput
@@ -864,6 +863,67 @@ class FormatForm(ModelForm):
         # fields that will be displayed are specified here - but not necessarily in the same order
         fields = ['value']
         labels = {'value': 'Mime type'}
+
+
+class FundingAgencyFormSetHelper(FormHelper):
+    def __init__(self, *args, **kwargs):
+        super(FundingAgencyFormSetHelper, self).__init__(*args, **kwargs)
+        # the order in which the model fields are listed for the FieldSet is the order these fields will be displayed
+        field_width = 'form-control input-sm'
+        self.form_tag = False
+        self.form_show_errors = True
+        self.error_text_inline = True
+        self.html5_required = False
+        self.layout = Layout(
+            Fieldset('Funding Agency',
+                     Field('agency_name', css_class=field_width),
+                     Field('award_title', css_class=field_width),
+                     Field('award_number', css_class=field_width),
+                     Field('agency_url', css_class=field_width),
+                     ),
+        )
+
+
+class FundingAgencyForm(ModelForm):
+    def __init__(self, allow_edit=True, res_short_id=None, *args, **kwargs):
+        super(FundingAgencyForm, self).__init__(*args, **kwargs)
+        self.helper = FundingAgencyFormSetHelper()
+        self.number = 0
+        self.delete_modal_form = None
+        if res_short_id:
+            self.action = "/hsapi/_internal/%s/fundingagency/add-metadata/" % res_short_id
+        else:
+            self.action = ""
+
+        if not allow_edit:
+            for fld_name in self.Meta.fields:
+                self.fields[fld_name].widget.attrs['readonly'] = True
+                self.fields[fld_name].widget.attrs['style'] = "background-color:white;"
+
+    @property
+    def form_id(self):
+        form_id = 'id_fundingagency_%s' % self.number
+        return form_id
+
+    @property
+    def form_id_button(self):
+        form_id = 'id_fundingagency_%s' % self.number
+        return "'" + form_id + "'"
+
+    class Meta:
+        model = FundingAgency
+        # fields that will be displayed are specified here - but not necessarily in the same order
+        fields = ['agency_name', 'award_title', 'award_number', 'agency_url']
+        labels = {'agency_name': 'Funding agency name', 'award_title': 'Title of the award',
+                  'award_number': 'Award number', 'agency_url': 'Agency website' }
+
+
+class FundingAgencyValidationForm(forms.Form):
+    agency_name = forms.CharField(required=True)
+    award_title = forms.CharField(required=False)
+    award_number = forms.CharField(required=False)
+    agency_url = forms.URLField(required=False)
+
 
 
 # Non repeatable element related forms
