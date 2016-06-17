@@ -351,7 +351,7 @@ def create_resource(
         resource_type, owner, title,
         edit_users=None, view_users=None, edit_groups=None, view_groups=None,
         keywords=(), metadata=None,
-        files=(), fed_res_file_names='', fed_res_path='', fed_copy=None,
+        files=(), fed_res_file_names='', fed_res_path='', fed_copy_or_move=None,
         create_metadata=True,
         create_bag=True, unpack_file=False, **kwargs):
 
@@ -400,8 +400,8 @@ def create_resource(
                                used to create the resource in the federated zone, default is empty string
     :param fed_res_path: the federated zone path in the format of /federation_zone/home/localHydroProxy that
                          indicate where the resource is stored, default is empty string
-    :param fed_copy: boolean indicating whether the content files should be copied or moved to localHydroProxy space.
-                     default is None
+    :param fed_copy_or_move: a string value of 'copy' or 'move' indicating whether the content files
+                             should be copied or moved to localHydroProxy space. default is None
     :param create_bag: whether to create a bag for the newly created resource or not. By default, the bag is created.
     :param unpack_file: boolean.  If files contains a single zip file, and unpack_file is True,
                         the unpacked contents of the zip file will be added to the resource instead of the zip file.
@@ -455,7 +455,7 @@ def create_resource(
             # asynchronously if the file size is large and would take
             # more than ~15 seconds to complete.
             add_resource_files(resource.short_id, *files, fed_res_file_names=fed_res_file_names,
-                               fed_copy=fed_copy, fed_zone_home_path=fed_zone_home_path)
+                               fed_copy_or_move=fed_copy_or_move, fed_zone_home_path=fed_zone_home_path)
 
         # by default resource is private
         resource_access = ResourceAccess(resource=resource)
@@ -502,7 +502,7 @@ def create_resource(
             resource.title = resource.metadata.title.value
             resource.save()
         if create_bag:
-            hs_bagit.create_bag(resource, fed_zone_home_path=fed_zone_home_path, fed_copy=fed_copy)
+            hs_bagit.create_bag(resource, fed_zone_home_path=fed_zone_home_path)
     return resource
 
 
@@ -757,7 +757,7 @@ def add_resource_files(pk, *files, **kwargs):
     fed_res_file_names=kwargs.pop('fed_res_file_names', '')
     ret = []
     fed_zone_home_path = kwargs.pop('fed_zone_home_path', '')
-    fed_copy = kwargs.pop('fed_copy', None)
+    fed_copy_or_move = kwargs.pop('fed_copy_or_move', None)
     for f in files:
         if fed_zone_home_path:
             # user has selected files from a federated iRODS zone, so files uploaded from local disk
@@ -776,7 +776,8 @@ def add_resource_files(pk, *files, **kwargs):
         else:
             return ret
         for ifname in ifnames:
-            ret.append(utils.add_file_to_resource(resource, None, fed_res_file_name_or_path=ifname, fed_copy=fed_copy))
+            ret.append(utils.add_file_to_resource(resource, None, fed_res_file_name_or_path=ifname,
+                                                  fed_copy_or_move=fed_copy_or_move))
     return ret
 
 

@@ -760,11 +760,9 @@ def create_resource(request, *args, **kwargs):
     fed_res_file_names=[]
     irods_fnames = request.POST.get('irods_file_names')
     federated = request.POST.get("irods_federated").lower()=='true'
-    do_copy = request.POST.get("copy-or-move")
-    fed_copy = True
-    if do_copy:
-        if do_copy.lower()=='move':
-            fed_copy = False
+    fed_copy_or_move = request.POST.get("copy-or-move")
+    if fed_copy_or_move != 'copy' and fed_copy_or_move != 'move':
+        fed_copy_or_move = None
 
     if irods_fnames:
         if federated:
@@ -815,7 +813,7 @@ def create_resource(request, *args, **kwargs):
             files=resource_files,
             fed_res_file_names=fed_res_file_names,
             fed_res_path = fed_res_path[0] if len(fed_res_path)==1 else '',
-            fed_copy=fed_copy,
+            fed_copy_or_move=fed_copy_or_move,
             content=res_title
     )
     # except Exception as ex:

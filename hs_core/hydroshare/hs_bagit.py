@@ -53,7 +53,7 @@ def delete_bag(resource):
         bag.delete()
 
 
-def create_bag_files(resource, fed_zone_home_path='', fed_copy=None):
+def create_bag_files(resource, fed_zone_home_path=''):
     """
     create and update all files needed by bagit operation that is conducted on iRODS server; no bagit operation
     is performed, only files that will be included in the bag are created or updated.
@@ -62,10 +62,6 @@ def create_bag_files(resource, fed_zone_home_path='', fed_copy=None):
     :param resource: A resource whose files will be created or updated to be included in the resource bag.
     :param fed_zone_home_path: Optional, A passed-in non-empty value indicates the resource needs to be created
     in a federated zone rather than in the default hydroshare zone.
-    :param fed_copy: Optional, the default value is None which means no resource content files need to be copied
-    or moved in a federated zone, a True or False boolean value will be passed in only during initial resource
-    creation when the resource needs to be created in a federated zone with hydroshare zone to inform whether
-    resource contents need to be copied or moved from local accounts to local proxy account in the federated zone
     :return: istorage, an IrodsStorage object,that will be used by subsequent operation to create a bag on demand as needed.
     """
     from hs_core.hydroshare.utils import current_site_url, get_file_mime_type
@@ -287,7 +283,7 @@ def create_bag_by_irods(resource_id, istorage = None):
             return False
 
 
-def create_bag(resource, fed_zone_home_path='', fed_copy=None):
+def create_bag(resource, fed_zone_home_path=''):
     """
     Modified to implement the new bagit workflow. The previous workflow was to create a bag from the current filesystem
     of the resource, then zip it up and add it to the resource. The new workflow is to delegate bagit and zip-up
@@ -298,11 +294,14 @@ def create_bag(resource, fed_zone_home_path='', fed_copy=None):
 
     Parameters:
     :param resource: (subclass of AbstractResource) A resource to create a bag for.
-
+           fed_zone_home_path: default is empty indicating the resource bag should be created and
+                               stored in the default hydroshare zone; a non-empty string value
+                               indicates the absolute logical home path for the federated zone where
+                               the new created bag should be stored in
     :return: the hs_core.models.Bags instance associated with the new bag.
     """
 
-    istorage = create_bag_files(resource, fed_zone_home_path, fed_copy)
+    istorage = create_bag_files(resource, fed_zone_home_path)
 
     # set bag_modified-true AVU pair for on-demand bagging.to indicate the resource bag needs to be created when user clicks on download button
     if fed_zone_home_path:

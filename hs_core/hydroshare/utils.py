@@ -581,7 +581,6 @@ def resource_file_add_pre_process(resource, files, user, extract_metadata=False,
 def resource_file_add_process(resource, files, user, extract_metadata=False, fed_res_file_names='', **kwargs):
     from .resource import add_resource_files
     resource_file_objects = add_resource_files(resource.short_id, *files, fed_res_file_names=fed_res_file_names,
-                                               fed_copy=True,
                                                fed_zone_home_path=resource.resource_federation_path)
 
     # receivers need to change the values of this dict if file validation fails
@@ -597,7 +596,7 @@ def resource_file_add_process(resource, files, user, extract_metadata=False, fed
     return resource_file_objects
 
 
-def add_file_to_resource(resource, f, fed_res_file_name_or_path='', fed_copy=None):
+def add_file_to_resource(resource, f, fed_res_file_name_or_path='', fed_copy_or_move=None):
     """
     Add a ResourceFile to a Resource.  Adds the 'format' metadata element to the resource.
     :param resource: Resource to which file should be added
@@ -608,11 +607,12 @@ def add_file_to_resource(resource, f, fed_res_file_name_or_path='', fed_copy=Non
                                       f holds the uploaded file from local disk, or from the federated zone directly
                                       where f is empty but fed_res_file_name_or_path has the whole data object iRODS path
                                       in the federated zone
-    :param fed_copy: indicate whether the file should be copied from private user account to proxy user account in
-                     federated zone; A value of True indicates copy is needed, a value of False indicates no copy, but
-                     the file will be moved from private user account to proxy user account. The default value is None,
-                     which indicates N/A, or not applicable, since the files do not come from a federated zone, and this
-                     copy or move operation is not applicable.
+    :param fed_copy_or_move: indicate whether the file should be copied or moved from private user account to proxy user
+                             account in federated zone; A value of 'copy' indicates copy is needed, a value of 'move'
+                             indicates no copy, but the file will be moved from private user account to proxy user account.
+                             The default value is None, which indicates N/A, or not applicable, since the files do not come
+                             from a federated zone, and this copy or move operation is not applicable, but any value other
+                             than 'copy' or 'move' is regarded as N/A.
 
     :return: The identifier of the ResourceFile added.
     """
@@ -627,39 +627,38 @@ def add_file_to_resource(resource, f, fed_res_file_name_or_path='', fed_copy=Non
                                               fed_resource_file=None)
         # add format metadata element if necessary
         file_format_type = get_file_mime_type(f.name)
-    elif fed_res_file_name_or_path:
+    elif fed_res_file_name_or_path and (fed_copy_or_move == 'copy' or fed_copy_or_move == 'move'):
         size = get_fed_zone_file_size(fed_res_file_name_or_path)
         ret = ResourceFile.objects.create(content_object=resource, resource_file=None, fed_resource_file=None,
                                           fed_resource_file_name_or_path=fed_res_file_name_or_path, fed_resource_file_size=size)
-        if fed_copy is not None:
-            try:
-                from_fname = fed_res_file_name_or_path
-                filename = from_fname.rsplit('/')[-1]
+        try:
+            from_fname = fed_res_file_name_or_path
+            filename = from_fname.rsplit('/')[-1]
 
-                if resource.resource_federation_path:
-                    to_fname = '{base_path}/{res_id}/data/contents/{file_name}'.format(base_path=resource.resource_federation_path,
-                                                                                   res_id=resource.short_id,
-                                                                                   file_name=filename)
-                    istorage = IrodsStorage('federated')
-                else:
-                    to_fname = '{res_id}/data/contents/{file_name}'.format(res_id=resource.short_id, file_name=filename)
-                    istorage = IrodsStorage()
-                if fed_copy:
-                    istorage.copyFiles(from_fname, to_fname)
-                else:
-                    istorage.moveFile(from_fname, to_fname)
-                # update file path now that file has been copied or moved to HydroShare proxy account space
-                ret.fed_resource_file_name_or_path = 'data/contents/{file_name}'.format(file_name=filename)
-                ret.save()
-            except SessionException as ex:
-                # delete the file added if there is any exception
-                ret.delete()
-                # raise the exception for the calling function to inform the error on the page interface
-                raise SessionException(ex.exitcode, ex.stdout, ex.stderr)
+            if resource.resource_federation_path:
+                to_fname = '{base_path}/{res_id}/data/contents/{file_name}'.format(base_path=resource.resource_federation_path,
+                                                                               res_id=resource.short_id,
+                                                                               file_name=filename)
+                istorage = IrodsStorage('federated')
+            else:
+                to_fname = '{res_id}/data/contents/{file_name}'.format(res_id=resource.short_id, file_name=filename)
+                istorage = IrodsStorage()
+            if fed_copy_or_move == 'copy':
+                istorage.copyFiles(from_fname, to_fname)
+            else:
+                istorage.moveFile(from_fname, to_fname)
+            # update file path now that file has been copied or moved to HydroShare proxy account space
+            ret.fed_resource_file_name_or_path = 'data/contents/{file_name}'.format(file_name=filename)
+            ret.save()
+        except SessionException as ex:
+            # delete the file added if there is any exception
+            ret.delete()
+            # raise the exception for the calling function to inform the error on the page interface
+            raise SessionException(ex.exitcode, ex.stdout, ex.stderr)
 
         file_format_type = get_file_mime_type(fed_res_file_name_or_path)
     else:
-        raise ValueError('No file input parameter is passed into this add_file_to_resource() function')
+        raise ValueError('Invalid input parameter is passed into this add_file_to_resource() function')
 
     if file_format_type not in [mime.value for mime in resource.metadata.formats.all()]:
         resource.metadata.create_element('format', value=file_format_type)
