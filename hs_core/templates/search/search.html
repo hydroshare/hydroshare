@@ -178,6 +178,7 @@
                             {% for result in page_obj.object_list %}
                                 <tr>
                                     <td>
+                                        <span class="resource-type-text">{{ result.object|resource_type }}</span>
                                         {% if  result.object|resource_type == "Generic" %}
                                             <img src="{{ STATIC_URL }}img/resource-icons/generic48x48.png"
                                                  alt="{{  result.object|resource_type }}" title="{{  result.object|resource_type }}"
@@ -236,7 +237,7 @@
                                         <td>{{ result.object.first_creator.name }}</td>
                                     {% endif %}
                                     <td>{{ result.object.updated|date }} {{ result.object.updated|time }}</td>
-                                    <td>{{ result.object.updated|date }}, {{ result.object.updated|time }}</td> {# Used in table sorting #}
+                                    <td>{{ result.object.updated|date:"Y/m/d H:i:s" }}</td> {# Used in table sorting #}
                                 </tr>
                             {% empty %}
                                 <p>No results found.</p>
@@ -343,7 +344,7 @@
             var markerCluster = new MarkerClusterer(map, markers, {
                 imagePath: 'https://cdn.rawgit.com/googlemaps/js-marker-clusterer/gh-pages/images/m'
             });
-        }
+        };
 
         var createPointResourceMarker = function (lat, lng, info_content, bounds, info_window, rectangle, markers) {
             var latlng = new google.maps.LatLng(lat, lng);
@@ -364,7 +365,7 @@
 
             });
             bounds.extend(latlng);
-        }
+        };
 
         var createBoxResourceMarker = function (northlimit, southlimit, eastlimit, westlimit, info_content, bounds, info_window, rectangle, markers) {
             var lat = (parseFloat(northlimit) + parseFloat(southlimit)) / 2;
@@ -387,7 +388,7 @@
 
             });
             bounds.extend(latlng);
-        }
+        };
 
         var checkDuplicatePointResults = function (modified_points_data, test){
             var test_lat = parseFloat(test.north);
@@ -409,7 +410,7 @@
                 test.info_link = '"<a href="' + test.get_absolute_url + '">' + test.title + '</a>';
                 modified_points_data.push(test);
             }
-        }
+        };
 
         var checkDuplicateBoxResults = function (modified_boxes_data, test){
             var test_lat = (parseFloat(test.northlimit) + parseFloat(test.southlimit)) / 2;
@@ -432,7 +433,8 @@
                 test.info_link = '"<a href="' + test.get_absolute_url + '">' + test.title + '</a>';
                 modified_boxes_data.push(test);
             }
-        }
+        };
+
         var reorderDivs = function() {
             var faceted_fields = ['author', 'subjects', 'resource_type', 'owners_names', 'availability'];
             var div_ordering = [];
@@ -446,13 +448,13 @@
                 var div1 = "#" + div_ordering[i];
                 $(div1).insertAfter(div0);
             }
-        }
+        };
 
         var copySearchResults = function(search_results){
             search_results.forEach(function(item){
                 json_results.push(item);
             });
-        }
+        };
         
         var formLinkButtonURL = function(key, value){
             var textSearch = $("#id_q").val();
@@ -464,7 +466,7 @@
             sessionStorage[sessionStorageCheckboxId] = 'true';
             requestURL += buildURLOnCheckboxes();
             window.location = requestURL;
-        }
+        };
 
         var buildURLOnCheckboxes = function () {
             var requestURL = '';
@@ -481,7 +483,8 @@
                 }
             });
             return requestURL;
-        }
+        };
+
         var popCheckboxes = function() {
             $(".faceted-selections").each(function () {
                 var checkboxId = $(this).attr("id");
@@ -490,7 +493,7 @@
                 var isChecked = val !== undefined ? val == 'true' : false;
                 $(this).prop("checked", isChecked);
             });
-        }
+        };
 
         var clearCheckboxes = function() {
             $(".faceted-selections").each(function () {
@@ -499,13 +502,13 @@
                 sessionStorage[sessionStorageCheckboxId] = 'false';
                 sessionStorage.removeItem(sessionStorageCheckboxId);
             });
-        }
+        };
 
         var clearAllFaceted = function() {
             clearCheckboxes();
             var clearURL = "/search/";
             window.location = clearURL;
-        }
+        };
 
 
         $(document).ready(function () {
@@ -514,14 +517,16 @@
                 clearCheckboxes();
             }
 
+            $("title").text("Discover | HydroShare");   // Set browser tab title
+
             var colDefs = [
                 {
                     "targets": [3],     // Last modified
                     "iDataSort": 4
                 },
                 {
-                    "targets": [5],     // Last modified (for sorting)
-                    "visible": false,
+                    "targets": [4],     // Last modified (for sorting)
+                    "visible": false
                 }
             ];
 
