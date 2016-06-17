@@ -44,8 +44,10 @@ class T12UserDelete(MockIRODSTestCaseMixin, TestCase):
         "Deleting a user cascade-deletes its access control"
         cat = self.cat
         caccess = cat.uaccess 
+	id = caccess.id
 
+        self.assertEqual(UserAccess.objects.filter(id=id).count(), 1) 
         cat.delete()
-        self.assertEqual(UserAccess.objects.filter(id=caccess), []) 
+        self.assertEqual(UserAccess.objects.filter(id=id).count(), 0) 
 
 
