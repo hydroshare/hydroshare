@@ -1,19 +1,12 @@
 
-import unittest
-from django.http import Http404
 from django.test import TestCase
-from django.utils import timezone
-# from django.core.exceptions import PermissionDenied
-from django.contrib.auth.models import User, Group
-from pprint import pprint
+from django.contrib.auth.models import Group
 
-from hs_access_control.models import UserAccess, GroupAccess, ResourceAccess
+from hs_access_control.models import UserAccess
 
 from hs_core import hydroshare
-from hs_core.models import GenericResource, BaseResource
 from hs_core.testing import MockIRODSTestCaseMixin
-
-from hs_access_control.tests.utilities import *
+from hs_access_control.tests.utilities import global_reset
 
 
 class T12UserDelete(MockIRODSTestCaseMixin, TestCase):
@@ -43,11 +36,9 @@ class T12UserDelete(MockIRODSTestCaseMixin, TestCase):
     def test_00_cascade(self):
         "Deleting a user cascade-deletes its access control"
         cat = self.cat
-        caccess = cat.uaccess 
-	id = caccess.id
+        caccess = cat.uaccess
+        id = caccess.id
 
-        self.assertEqual(UserAccess.objects.filter(id=id).count(), 1) 
+        self.assertEqual(UserAccess.objects.filter(id=id).count(), 1)
         cat.delete()
-        self.assertEqual(UserAccess.objects.filter(id=id).count(), 0) 
-
-
+        self.assertEqual(UserAccess.objects.filter(id=id).count(), 0)
