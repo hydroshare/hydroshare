@@ -16,6 +16,17 @@ from hs_model_program.models import ModelProgramResource
 from hs_modelinstance.models import ModelInstanceMetaData, ModelOutput, ExecutedBy
 
 
+def delete_if_empty(term_obj):
+    all_blank = True
+    standard_elements = ['content_type_id', '_state', 'object_id', 'content_type_id', 'id', '_content_type_cache',
+                         '_content_object_cache']
+    for attr, val in vars(term_obj).iteritems():
+        if attr not in standard_elements and val != '':
+            all_blank = False
+    if all_blank:
+        term_obj.delete()
+
+
 def uncouple(choices):
     uncoupled = [c[0] for c in choices]
     return uncoupled
@@ -93,7 +104,7 @@ class GridDimensions(AbstractMetaDataElement):
     def update(cls, element_id, **kwargs):
         kwargs = cls._validate_params(**kwargs)
         grid_dimensions = super(GridDimensions, cls).update(element_id, **kwargs)
-        return grid_dimensions
+        delete_if_empty(grid_dimensions)
 
 
     @classmethod
@@ -137,7 +148,7 @@ class StressPeriod(AbstractMetaDataElement):
     def update(cls, element_id, **kwargs):
         kwargs = cls._validate_params(**kwargs)
         stress_period = super(StressPeriod, cls).update(element_id, **kwargs)
-        return stress_period
+        delete_if_empty(stress_period)
 
 
     @classmethod
@@ -179,7 +190,7 @@ class GroundWaterFlow(AbstractMetaDataElement):
     def update(cls, element_id, **kwargs):
         kwargs = cls._validate_params(**kwargs)
         gw_flow = super(GroundWaterFlow, cls).update(element_id, **kwargs)
-        return gw_flow
+        delete_if_empty(gw_flow)
 
 
     @classmethod
@@ -330,7 +341,7 @@ class ModelCalibration(AbstractMetaDataElement):
     def update(cls, element_id, **kwargs):
         kwargs = cls._validate_params(**kwargs)
         model_calibration = super(ModelCalibration, cls).update(element_id, **kwargs)
-        return model_calibration
+        delete_if_empty(model_calibration)
 
 
     @classmethod
@@ -383,7 +394,7 @@ class GeneralElements(AbstractMetaDataElement):
     def update(cls, element_id, **kwargs):
         kwargs = cls._validate_params(**kwargs)
         general_elements = super(GeneralElements, cls).update(element_id, **kwargs)
-        return general_elements
+        delete_if_empty(general_elements)
 
 
     @classmethod
