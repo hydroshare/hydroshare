@@ -1,4 +1,3 @@
-from json import loads, dumps
 from datetime import datetime, timedelta
 
 from django.db import models
@@ -14,7 +13,8 @@ PROFILE_FIELDS = settings.TRACKING_PROFILE_FIELDS
 USER_FIELDS = settings.TRACKING_USER_FIELDS
 VISITOR_FIELDS = ["id"] + USER_FIELDS + PROFILE_FIELDS
 if set(PROFILE_FIELDS) & set(USER_FIELDS):
-    raise ImproperlyConfigured("hs_tracking PROFILE_FIELDS and USER_FIELDS must not contain overlapping field names")
+    raise ImproperlyConfigured("hs_tracking PROFILE_FIELDS and USER_FIELDS must not contain"
+                               " overlapping field names")
 
 
 class SessionManager(models.Manager):
@@ -25,7 +25,8 @@ class SessionManager(models.Manager):
             cut_off = datetime.now() - timedelta(seconds=SESSION_TIMEOUT)
             session = None
             try:
-                session = Session.objects.filter(variable__timestamp__gte=cut_off).filter(id=tracking_id['id']).first()
+                session = Session.objects.filter(
+                    variable__timestamp__gte=cut_off).filter(id=tracking_id['id']).first()
             except Session.DoesNotExist:
                 pass
             if session is not None:
@@ -97,11 +98,11 @@ class Variable(models.Model):
         ('Flag', bool),
         ('None', lambda o: None)
     )
-    TYPE_CHOICES = (
+    TYPE_CHOICES = [
         (i, label)
         for (i, label) in
-        enumerate((label for (label, coercer) in TYPES))
-    )
+        enumerate(label for (label, coercer) in TYPES)
+    ]
 
     session = models.ForeignKey(Session)
     timestamp = models.DateTimeField(auto_now_add=True)
@@ -133,8 +134,10 @@ class Variable(models.Model):
             except (ValueError, TypeError):
                 continue
         else:
-            raise TypeError("Unable to record variable of unrecognized type %s" % (type(value).__name__,))
-        return Variable.objects.create(session=session, name=name, type=type_code, value=cls.encode(value))
+            raise TypeError("Unable to record variable of unrecognized type %s",
+                            type(value).__name__)
+        return Variable.objects.create(session=session, name=name, type=type_code,
+                                       value=cls.encode(value))
 
     @classmethod
     def encode(cls, value):
@@ -145,4 +148,5 @@ class Variable(models.Model):
         elif isinstance(value, (int, float, str, unicode)):
             return unicode(value)
         else:
-            raise ValueError("Unknown type (%s) for tracking variable: %r" % (type(value).__name__, value))
+            raise ValueError("Unknown type (%s) for tracking variable: %r",
+                             type(value).__name__, value)

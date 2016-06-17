@@ -61,7 +61,7 @@ class TrackingTests(TestCase):
         request = self.createRequest(user=self.user)
         request.session = {}
         session = Session.objects.for_request(request)
-        self.assertTrue(request.session.has_key('hs_tracking_id'))
+        self.assertIn('hs_tracking_id', request.session)
         self.assertEqual(session.visitor.user.id, self.user.id)
 
     def test_for_request_existing(self):
@@ -131,13 +131,13 @@ class TrackingTests(TestCase):
         rows = list(reader)
 
         count = Variable.objects.all().count()
-        self.assertEqual(len(rows), count - 1) # -1 to account for the session fetching report
+        self.assertEqual(len(rows), count - 1)  # -1 to account for the session fetching report
 
     def test_history_variables(self):
         self.user.is_staff = True
         self.user.save()
         client = Client()
-        count = Variable.objects.all().count()
+
         variable = self.session.record('testvar', "abcdef")
         self.assertEqual(variable.session.id, self.session.id)
 
