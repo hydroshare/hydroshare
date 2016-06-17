@@ -297,6 +297,100 @@ class TestMODFLOWModelInstanceMetaData(MockIRODSTestCaseMixin, TransactionTestCa
                                                                  flowPackage='BCF6',
                                                                  flowParameter='Tranasmissivity')
 
+        # create modelcalibration
+        self.resMODFLOWModelInstance.metadata.create_element('ModelCalibration',
+                                                             calibratedParameter='a',
+                                                             observationType='b',
+                                                             observationProcessPackage='RVOB',
+                                                             calibrationMethod='c')
+        modelparam_element = self.resMODFLOWModelInstance.metadata.model_calibration
+        self.assertNotEqual(modelparam_element, None)
+        self.assertEquals(modelparam_element.calibratedParameter, 'a')
+        self.assertEquals(modelparam_element.observationType, 'b')
+        self.assertEquals(modelparam_element.observationProcessPackage, 'RVOB')
+        self.assertEquals(modelparam_element.calibrationMethod, 'c')
+
+        # try to create another modelcalibration - it would raise an exception
+        with self.assertRaises(IntegrityError):
+            self.resMODFLOWModelInstance.metadata.create_element('ModelCalibration',
+                                                                 calibratedParameter='aa',
+                                                                 observationType='b',
+                                                                 observationProcessPackage='RVOB',
+                                                                 calibrationMethod='c')
+        # try with wrong modelcalibration types - raises exception
+        with self.assertRaises(ValidationError):
+            self.resMODFLOWModelInstance.metadata.create_element('ModelCalibration',
+                                                                 calibratedParameter='a',
+                                                                 observationType='b',
+                                                                 observationProcessPackage='RVoB',
+                                                                 calibrationMethod='c')
+
+        # create ModelInput
+        self.resMODFLOWModelInstance.metadata.create_element('ModelInput',
+                                                             inputType='a',
+                                                             inputSourceName='b',
+                                                             inputSourceURL='http://www.RVOB.com')
+        modelparam_elements = self.resMODFLOWModelInstance.metadata.model_inputs
+        self.assertEqual(len(modelparam_elements), 1)
+        modelparam_element = modelparam_elements[0]
+        self.assertNotEqual(modelparam_element, None)
+        self.assertEquals(modelparam_element.inputType, 'a')
+        self.assertEquals(modelparam_element.inputSourceName, 'b')
+        self.assertEquals(modelparam_element.inputSourceURL, 'http://www.RVOB.com')
+
+        # create another modelinput
+        self.resMODFLOWModelInstance.metadata.create_element('ModelInput',
+                                                             inputType='aa',
+                                                             inputSourceName='bd',
+                                                             inputSourceURL='http://www.RVOBs.com')
+        modelparam_elements = self.resMODFLOWModelInstance.metadata.model_inputs
+        self.assertEqual(len(modelparam_elements), 2)
+        modelparam_element = modelparam_elements[0]
+        self.assertNotEqual(modelparam_element, None)
+        self.assertEquals(modelparam_element.inputType, 'aa')
+        self.assertEquals(modelparam_element.inputSourceName, 'bd')
+        self.assertEquals(modelparam_element.inputSourceURL, 'http://www.RVOBs.com')
+
+        # create generalelements
+        # try with wrong generalelements types - raises exception
+        with self.assertRaises(ValidationError):
+            self.resMODFLOWModelInstance.metadata.create_element('GeneralElements',
+                                                                 modelParameter='BCF6',
+                                                                 modelSolver='DsE4',
+                                                                 outputControlPackage='LMT6',
+                                                                 subsidencePackage='SUB')
+        with self.assertRaises(ValidationError):
+            self.resMODFLOWModelInstance.metadata.create_element('GeneralElements',
+                                                                 modelParameter='BCF6',
+                                                                 modelSolver='DE4',
+                                                                 outputControlPackage='LMTd6',
+                                                                 subsidencePackage='SUB')
+        with self.assertRaises(ValidationError):
+            self.resMODFLOWModelInstance.metadata.create_element('GeneralElements',
+                                                                 modelParameter='BCF6',
+                                                                 modelSolver='DE4',
+                                                                 outputControlPackage='LMT6',
+                                                                 subsidencePackage='SaUB')
+
+        self.resMODFLOWModelInstance.metadata.create_element('GeneralElements',
+                                                             modelParameter='BCF6',
+                                                             modelSolver='DE4',
+                                                             outputControlPackage='LMT6',
+                                                             subsidencePackage='SUB')
+        modelparam_element = self.resMODFLOWModelInstance.metadata.general_elements
+        self.assertNotEqual(modelparam_element, None)
+        self.assertEquals(modelparam_element.modelParameter, 'BCF6')
+        self.assertEquals(modelparam_element.modelSolver, 'DE4')
+        self.assertEquals(modelparam_element.outputControlPackage, 'LMT6')
+        self.assertEquals(modelparam_element.subsidencePackage, 'SUB')
+
+        # try to create another generalelements - it would raise an exception
+        with self.assertRaises(IntegrityError):
+            self.resMODFLOWModelInstance.metadata.create_element('GeneralElements',
+                                                                 modelParameter='BCF6',
+                                                                 modelSolver='DE4',
+                                                                 outputControlPackage='LMT6',
+                                                                 subsidencePackage='SUB')
             #     # create simulation type
     #     # try to create a simulation type with a non cv term - it would raise an exception
     #     with self.assertRaises(ValidationError):
