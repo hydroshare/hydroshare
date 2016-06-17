@@ -278,7 +278,7 @@
                         </tbody>
                     </table>
                     {% if page_obj.has_previous or page_obj.has_next %}
-                        <div style="float: right">
+                        <div>
                             {% if page_obj.has_previous %}
                                 <a href="{{ request.get_full_path|clean_pagination_url }}&amp;page={{ page_obj.previous_page_number }}">
                             {% endif %}&laquo; Previous
