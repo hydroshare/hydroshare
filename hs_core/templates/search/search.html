@@ -232,13 +232,13 @@
 
                                         {#  Sharing Status icons #}
                                         <div class="access-icon-wrapper">
-                                            {% if res.raccess.published %}
+                                            {% if result.object.raccess.published %}
                                                 <img src="{{ STATIC_URL }}img/published.png"
                                                      alt="Published Resource" title="Published"/>
-                                            {% elif res.raccess.public %}
+                                            {% elif result.object.raccess.public %}
                                                 <img src="{{ STATIC_URL }}img/public.png"
                                                      alt="Public Resource" title="Public"/>
-                                            {% elif res.raccess.discoverable %}
+                                            {% elif result.object.raccess.discoverable %}
                                                 <img src="{{ STATIC_URL }}img/discoverable.png"
                                                      alt="Discoverable Resource" title="Discoverable"/>
                                             {% else %}
@@ -246,13 +246,13 @@
                                                      alt="Private Resource" title="Private"/>
                                             {% endif %}
 
-                                            {% if res.raccess.published %}
+                                            {% if result.object.raccess.published %}
                                                 {% if "pending" in cm.doi or "failure" in cm.doi %}
                                                     <img src="{{ STATIC_URL }}img/pending.png" alt="Pending Publication"
                                                          title="Pending Publication. Note that the DOI will not be available until it has been registered and activated."/>
                                                 {% endif %}
                                             {% else %}
-                                                {% if res.raccess.shareable %}
+                                                {% if result.object.raccess.shareable %}
                                                     <img src="{{ STATIC_URL }}img/shareable.png" alt="Sharable Resource"
                                                          title="Shareable"/>
                                                 {% else %}
