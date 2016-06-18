@@ -223,6 +223,17 @@ def get_fed_zone_files(irods_fnames):
     return ret_file_list
 
 
+def delete_fed_zone_file(file_name_with_full_path):
+    '''
+    Args:
+        file_name_with_full_path: the absolute full logical path in a federated iRODS zone
+    Returns:
+        None, but exceptions will be raised if there is an issue with iRODS delete operation
+    '''
+    istorage = IrodsStorage('federated')
+    istorage.delete(file_name_with_full_path)
+
+
 def replicate_resource_bag_to_user_zone(user, res_id):
     """
     Replicate resource bag to iRODS user zone

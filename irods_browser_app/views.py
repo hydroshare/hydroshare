@@ -168,7 +168,7 @@ def upload_add(request):
         homepath = irods_fnames_list[0]
         irods_federated = utils.is_federated(homepath)
         if irods_federated:
-            fed_res_file_names = irods_fnames
+            fed_res_file_names = irods_fnames.split(',')
         else:
             user = request.POST.get('irods-username')
             password = request.POST.get("irods-password")
@@ -195,7 +195,8 @@ def upload_add(request):
 
     try:
         hydroshare.utils.resource_file_add_process(resource=resource, files=res_files, user=request.user,
-                                                   extract_metadata=extract_metadata, fed_res_file_names=fed_res_file_names)
+                                                   extract_metadata=extract_metadata,
+                                                   fed_res_file_names=fed_res_file_names)
 
     except (hydroshare.utils.ResourceFileValidationException, Exception) as ex:
         if ex.message:

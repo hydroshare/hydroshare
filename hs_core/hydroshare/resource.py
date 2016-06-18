@@ -757,7 +757,8 @@ def add_resource_files(pk, *files, **kwargs):
     fed_res_file_names=kwargs.pop('fed_res_file_names', '')
     ret = []
     fed_zone_home_path = kwargs.pop('fed_zone_home_path', '')
-    fed_copy_or_move = kwargs.pop('fed_copy_or_move', None)
+    # for adding files to existing resources, the default action is copy
+    fed_copy_or_move = kwargs.pop('fed_copy_or_move', 'copy')
     for f in files:
         if fed_zone_home_path:
             # user has selected files from a federated iRODS zone, so files uploaded from local disk
@@ -884,8 +885,9 @@ def delete_resource_file(pk, filename_or_id, user):
     REST URL:  DELETE /resource/{pid}/files/{filename}
 
     Parameters:
-    pid - The unique HydroShare identifier for the resource from which the file will be deleted
+    pk - The unique HydroShare identifier for the resource from which the file will be deleted
     filename - Name of the file to be deleted from the resource
+    user - requesting user
 
     Returns:    The pid of the resource from which the file was deleted
 
@@ -909,20 +911,32 @@ def delete_resource_file(pk, filename_or_id, user):
     """
     resource = utils.get_resource_by_shortkey(pk)
     res_cls = resource.__class__
-
+    fed_path = resource.resource_federation_path
     try:
         file_id = int(filename_or_id)
         filter_condition = lambda fl: fl.id == file_id
     except ValueError:
-        filter_condition = lambda fl: os.path.basename(fl.resource_file.name) == filename_or_id
+        if fed_path:
+            filter_condition = lambda fl: os.path.basename(fl.fed_resource_file_name_or_path) == filename_or_id \
+                                          or os.path.basename(fl.fed_resource_file.name) == filename_or_id
+        else:
+            filter_condition = lambda fl: os.path.basename(fl.resource_file.name) == filename_or_id
 
     for f in ResourceFile.objects.filter(object_id=resource.id):
         if filter_condition(f):
             # send signal
             signals.pre_delete_file_from_resource.send(sender=res_cls, file=f, resource=resource, user=user)
+            if fed_path:
+                if f.fed_resource_file:
+                    file_name = f.fed_resource_file.name
+                    f.fed_resource_file.delete()
+                elif f.fed_resource_file_name_or_path:
+                    file_name = os.path.join(fed_path, resource.short_id, f.fed_resource_file_name_or_path);
+                    utils.delete_fed_zone_file(file_name)
+            else:
+                file_name = f.resource_file.name
+                f.resource_file.delete()
 
-            file_name = f.resource_file.name
-            f.resource_file.delete()
             f.delete()
             delete_file_mime_type = utils.get_file_mime_type(file_name)
             delete_file_extension = os.path.splitext(file_name)[1]

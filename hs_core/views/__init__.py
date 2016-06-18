@@ -719,7 +719,7 @@ class GroupForm(forms.Form):
 def my_resources(request, page):
     resource_collection = get_my_resources_list(request)
     context = {'collection': resource_collection}
-
+    
     return context
 
 
@@ -761,8 +761,6 @@ def create_resource(request, *args, **kwargs):
     irods_fnames = request.POST.get('irods_file_names')
     federated = request.POST.get("irods_federated").lower()=='true'
     fed_copy_or_move = request.POST.get("copy-or-move")
-    if fed_copy_or_move != 'copy' and fed_copy_or_move != 'move':
-        fed_copy_or_move = None
 
     if irods_fnames:
         if federated:

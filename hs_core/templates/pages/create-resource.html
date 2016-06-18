@@ -42,8 +42,8 @@
             <li>Files you upload here will be grouped together into a "Resource" in HydroShare.</li>
             <li>File size is limited to 1 GB per file for direct browser upload from your local disk.</li>
             <li>Files larger than 1GB can be imported directly from any iRODS account. You can create
-                a HydroShare iRODS account from your user profile page. See help for information on
-                working with iRODS directly.
+                a HydroShare iRODS account from your <a href="/user/{{ user.id }}/">user profile</a> page.
+                See help for information on working with iRODS directly.
             </li>
             <li> You can also add files directly from any iRODS server regardless of the file size. </li>
             </ul>
@@ -129,7 +129,8 @@
                     <div id="file-types">Any file type can be uploaded.</div>
                     <div id="file-multiple">Multiple file upload is allowed.</div>
                     </table>
-
+                    <h2 id="file-move-warning" class="text-red hidden-form">You selected move option which will move
+                        the selected files out of your iRODS account into a HydroShare resource once created. </h2>
                     <h2 class="text-red">{{ file_size_error }}</h2>
                     <h2 id="file-type-error" class="text-red">{{ validation_error }}</h2>
                 </div>
@@ -160,10 +161,14 @@
         }
 
         $('input:radio[name="copy-move"]').change(function(){
-            if($(this).val()=='move')
+            if($(this).val()=='move') {
                 $("#copy-or-move").val('move');
-            else
+                $("#file-move-warning").show();
+            }
+            else {
                 $("#copy-or-move").val('copy');
+                $("#file-move-warning").hide();
+            }
         });
         $('#resource-type').on('change', function(){
             $('#select-file').value = '';
