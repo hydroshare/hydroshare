@@ -142,6 +142,36 @@ class TimeSeriesResult(TimeSeriesAbstractMetaDataElement):
     def remove(cls, element_id):
         raise ValidationError("ProcessingLevel element of a resource can't be deleted.")
 
+
+class AbstractCVLookupTable(models.Model):
+    term = models.CharField(max_length=255)
+    name = models.CharField(max_length=255)
+
+    class Meta:
+        abstract = True
+
+class CVVariableType(AbstractCVLookupTable):
+    metadata = models.ForeignKey('TimeSeriesMetaData', related_name="cv_variable_types")
+
+
+class CVVariableName(AbstractCVLookupTable):
+    metadata = models.ForeignKey('TimeSeriesMetaData', related_name="cv_variable_names")
+
+class CVSpeciation(AbstractCVLookupTable):
+    metadata = models.ForeignKey('TimeSeriesMetaData', related_name="cv_speciations")
+
+
+class CVElevationDatum(AbstractCVLookupTable):
+    metadata = models.ForeignKey('TimeSeriesMetaData', related_name="cv_elevation_datums")
+
+
+class CVSiteType(AbstractCVLookupTable):
+    metadata = models.ForeignKey('TimeSeriesMetaData', related_name="cv_site_types")
+
+
+class CVMethodType(AbstractCVLookupTable):
+    metadata = models.ForeignKey('TimeSeriesMetaData', related_name="cv_method_types")
+
 # To create a new resource, use these three super-classes.
 #
 

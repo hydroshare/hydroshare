@@ -5,7 +5,8 @@ from django.dispatch import receiver
 
 from hs_core.signals import *
 from hs_core.hydroshare import utils
-from hs_app_timeseries.models import TimeSeriesResource
+from hs_app_timeseries.models import TimeSeriesResource, CVVariableType, CVVariableName, CVSpeciation, CVSiteType,\
+    CVElevationDatum, CVMethodType
 from forms import SiteValidationForm, VariableValidationForm, MethodValidationForm, ProcessingLevelValidationForm, \
     TimeSeriesResultValidationForm
 
@@ -148,6 +149,7 @@ def _get_form_post_data(request, validation_form):
 
 
 def _extract_metadata(resource, sqlite_file):
+    # TODO: Refactor this too large function to multiple functions
     err_message = "Not a valid ODM2 SQLite file"
     try:
         con = sqlite3.connect(sqlite_file.name)
@@ -155,11 +157,20 @@ def _extract_metadata(resource, sqlite_file):
         with con:
             # get the records in python dictionary format
             con.row_factory = sqlite3.Row
+            cur = con.cursor()
+
+            # populate the lookup CV tables that are needed later for metadata editing
+            _create_cv_lookup_models(cur, resource.metadata, 'CV_VariableType', CVVariableType)
+            _create_cv_lookup_models(cur, resource.metadata, 'CV_VariableName', CVVariableName)
+            _create_cv_lookup_models(cur, resource.metadata, 'CV_Speciation', CVSpeciation)
+            _create_cv_lookup_models(cur, resource.metadata, 'CV_SiteType', CVSiteType)
+            _create_cv_lookup_models(cur, resource.metadata, 'CV_ElevationDatum', CVElevationDatum)
+            _create_cv_lookup_models(cur, resource.metadata, 'CV_MethodType', CVMethodType)
 
             # read data from necessary tables and create metadata elements
             # check if the AuthorList table exists
             authorlists_table_exists = False
-            cur = con.cursor()
+            # cur = con.cursor()
             cur.execute("SELECT COUNT(*) FROM sqlite_master WHERE type=? AND name=?", ("table", "AuthorLists"))
             qry_result = cur.fetchone()
             if qry_result[0] > 0:
@@ -503,6 +514,12 @@ def _extract_metadata(resource, sqlite_file):
         # TODO: log the error
         return err_message
 
+
+def _create_cv_lookup_models(sql_cur, metadata_obj, table_name, model_class):
+    sql_cur.execute("SELECT Term, Name FROM {}".format(table_name))
+    table_rows = sql_cur.fetchall()
+    for row in table_rows:
+        model_class.objects.create(metadata=metadata_obj, term=row['Term'], name=row['Name'])
 
 def _update_element_series_ids(element, series_id):
     element.series_ids = element.series_ids + [series_id]

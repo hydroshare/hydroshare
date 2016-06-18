@@ -64,7 +64,9 @@ def _get_resource_view_context(page, request, content_model, selected_series_id,
 
 
 def _get_resource_edit_context(page, request, content_model, selected_series_id, series_ids):
-    SiteFormSetEdit = formset_factory(wraps(SiteForm)(partial(SiteForm, allow_edit=True)),
+    SiteFormSetEdit = formset_factory(wraps(SiteForm)(partial(SiteForm, allow_edit=True,
+                                                              cv_site_types=content_model.metadata.cv_site_types.all(),
+                                                              cv_elevation_datums=content_model.metadata.cv_elevation_datums.all())),
                                       formset=BaseFormSet, extra=0)
 
     sites = content_model.metadata.sites.filter(series_ids__contains=[selected_series_id])
@@ -75,8 +77,12 @@ def _get_resource_edit_context(page, request, content_model, selected_series_id,
             form.action = _get_element_update_form_action('site', content_model.short_id,
                                                           form.initial['id'])
             form.number = form.initial['id']
+            form.set_dropdown_widgets(form.initial['site_type'], form.initial['elevation_datum'])
 
-    VariableFormSetEdit = formset_factory(wraps(VariableForm)(partial(VariableForm, allow_edit=True)),
+    VariableFormSetEdit = formset_factory(wraps(VariableForm)(partial(VariableForm, allow_edit=True,
+                                                                      cv_variable_types=content_model.metadata.cv_variable_types.all(),
+                                                                      cv_variable_names=content_model.metadata.cv_variable_names.all(),
+                                                                      cv_speciations=content_model.metadata.cv_speciations.all())),
                                           formset=BaseFormSet, extra=0)
     variables = content_model.metadata.variables.filter(series_ids__contains=[selected_series_id])
     variable_formset = VariableFormSetEdit(initial=variables.values(), prefix='variable')
@@ -86,8 +92,12 @@ def _get_resource_edit_context(page, request, content_model, selected_series_id,
             form.action = _get_element_update_form_action('variable', content_model.short_id,
                                                           form.initial['id'])
             form.number = form.initial['id']
+            # 3 dropdowns (one for variable_type, one for 'variable_name' one for 'speciation')
+            form.set_dropdown_widgets(form.initial['variable_type'], form.initial['variable_name'],
+                                      form.initial['speciation'])
 
-    MethodFormSetEdit = formset_factory(wraps(MethodForm)(partial(MethodForm, allow_edit=True)),
+    MethodFormSetEdit = formset_factory(wraps(MethodForm)(partial(MethodForm, allow_edit=True,
+                                                                  cv_method_types=content_model.metadata.cv_method_types.all())),
                                         formset=BaseFormSet, extra=0)
     methods = content_model.metadata.methods.filter(series_ids__contains=[selected_series_id])
     method_formset = MethodFormSetEdit(initial=methods.values(), prefix='method')
@@ -97,6 +107,7 @@ def _get_resource_edit_context(page, request, content_model, selected_series_id,
             form.action = _get_element_update_form_action('method', content_model.short_id,
                                                           form.initial['id'])
             form.number = form.initial['id']
+            form.set_dropdown_widgets(form.initial['method_type'])
 
     ProcessingLevelFormSetEdit = formset_factory(wraps(ProcessingLevelForm)(partial(ProcessingLevelForm,
                                                                                     allow_edit=True)),

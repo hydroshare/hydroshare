@@ -2,6 +2,8 @@ import os
 
 from django.forms import ModelForm
 from django import forms
+from django.contrib.admin.widgets import *
+
 from crispy_forms.layout import *
 from crispy_forms.bootstrap import *
 from models import *
@@ -28,8 +30,31 @@ class SiteFormHelper(BaseFormHelper):
 
 class SiteForm(ModelForm):
     def __init__(self, allow_edit=True, res_short_id=None, element_id=None, *args, **kwargs):
+        self.cv_site_types = list(kwargs['cv_site_types'])
+        self.cv_elevation_datums = list(kwargs['cv_elevation_datums'])
+        kwargs.pop('cv_site_types')
+        kwargs.pop('cv_elevation_datums')
         super(SiteForm, self).__init__(*args, **kwargs)
         self.helper = SiteFormHelper(allow_edit, res_short_id, element_id, element_name='Site')
+
+    def set_dropdown_widgets(self, site_type, elevation_datum):
+        for s_type in self.cv_site_types:
+            if s_type.name == site_type:
+                self.cv_site_types.remove(s_type)
+
+        cv_site_types = [(s_type.name, s_type.name) for s_type in self.cv_site_types]
+        cv_site_types = [(site_type, site_type)] + cv_site_types
+        cv_site_type_choices = tuple(cv_site_types)
+        self.fields['site_type'].widget = forms.Select(choices=cv_site_type_choices)
+
+        for e_datum in self.cv_elevation_datums:
+            if e_datum.name == elevation_datum:
+                self.cv_elevation_datums.remove(e_datum)
+
+        cv_elevation_datums = [(e_datum.name, e_datum.name) for e_datum in self.cv_elevation_datums]
+        cv_elevation_datums = [(elevation_datum, elevation_datum)] + cv_elevation_datums
+        cv_e_datum_choices = tuple(cv_elevation_datums)
+        self.fields['elevation_datum'].widget = forms.Select(choices=cv_e_datum_choices)
 
     @property
     def form_id(self):
@@ -74,8 +99,42 @@ class VariableFormHelper(BaseFormHelper):
 
 class VariableForm(ModelForm):
     def __init__(self, allow_edit=True, res_short_id=None, element_id=None, *args, **kwargs):
+        self.cv_variable_types = list(kwargs['cv_variable_types'])
+        self.cv_variable_names = list(kwargs['cv_variable_names'])
+        self.cv_speciations = list(kwargs['cv_speciations'])
+        kwargs.pop('cv_variable_types')
+        kwargs.pop('cv_variable_names')
+        kwargs.pop('cv_speciations')
         super(VariableForm, self).__init__(*args, **kwargs)
         self.helper = VariableFormHelper(allow_edit, res_short_id, element_id, element_name='Variable')
+
+    def set_dropdown_widgets(self, variable_type, variable_name, speciation):
+        for v_type in self.cv_variable_types:
+            if v_type.name == variable_type:
+                self.cv_variable_types.remove(v_type)
+
+        cv_variable_types = [(v_type.name, v_type.name) for v_type in self.cv_variable_types]
+        cv_variable_types = [(variable_type, variable_type)] + cv_variable_types
+        cv_var_type_choices = tuple(cv_variable_types)
+        self.fields['variable_type'].widget = forms.Select(choices=cv_var_type_choices)
+
+        for v_name in self.cv_variable_names:
+            if v_name.name == variable_name:
+                self.cv_variable_names.remove(v_name)
+
+        cv_variable_names = [(v_name.name, v_name.name) for v_name in self.cv_variable_names]
+        cv_variable_names = [(variable_name, variable_name)] + cv_variable_names
+        cv_var_name_choices = tuple(cv_variable_names)
+        self.fields['variable_name'].widget = forms.Select(choices=cv_var_name_choices)
+
+        for v_speciation in self.cv_speciations:
+            if v_speciation.name == speciation:
+                self.cv_speciations.remove(v_speciation)
+
+        cv_speciations = [(v_spec.name, v_spec.name) for v_spec in self.cv_speciations]
+        cv_speciations = [(speciation, speciation)] + cv_speciations
+        cv_speciation_choices = tuple(cv_speciations)
+        self.fields['speciation'].widget = forms.Select(choices=cv_speciation_choices)
 
     @property
     def form_id(self):
@@ -122,8 +181,20 @@ class MethodFormHelper(BaseFormHelper):
 
 class MethodForm(ModelForm):
     def __init__(self, allow_edit=True, res_short_id=None, element_id=None, *args, **kwargs):
+        self.cv_method_types = list(kwargs['cv_method_types'])
+        kwargs.pop('cv_method_types')
         super(MethodForm, self).__init__(*args, **kwargs)
         self.helper = MethodFormHelper(allow_edit, res_short_id, element_id, element_name='Method')
+
+    def set_dropdown_widgets(self, method_type):
+        for m_type in self.cv_method_types:
+            if m_type.name == method_type:
+                self.cv_method_types.remove(m_type)
+
+        cv_method_types = [(m_type.name, m_type.name) for m_type in self.cv_method_types]
+        cv_method_types = [(method_type, method_type)] + cv_method_types
+        cv_method_type_choices = tuple(cv_method_types)
+        self.fields['method_type'].widget = forms.Select(choices=cv_method_type_choices)
 
     @property
     def form_id(self):
