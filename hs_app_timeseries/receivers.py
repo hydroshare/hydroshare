@@ -6,7 +6,7 @@ from django.dispatch import receiver
 from hs_core.signals import *
 from hs_core.hydroshare import utils
 from hs_app_timeseries.models import TimeSeriesResource, CVVariableType, CVVariableName, CVSpeciation, CVSiteType,\
-    CVElevationDatum, CVMethodType
+    CVElevationDatum, CVMethodType, CVUnitsType, CVStatus, CVMedium, CVAggregationStatistic
 from forms import SiteValidationForm, VariableValidationForm, MethodValidationForm, ProcessingLevelValidationForm, \
     TimeSeriesResultValidationForm
 
@@ -166,6 +166,10 @@ def _extract_metadata(resource, sqlite_file):
             _create_cv_lookup_models(cur, resource.metadata, 'CV_SiteType', CVSiteType)
             _create_cv_lookup_models(cur, resource.metadata, 'CV_ElevationDatum', CVElevationDatum)
             _create_cv_lookup_models(cur, resource.metadata, 'CV_MethodType', CVMethodType)
+            _create_cv_lookup_models(cur, resource.metadata, 'CV_UnitsType', CVUnitsType)
+            _create_cv_lookup_models(cur, resource.metadata, 'CV_Status', CVStatus)
+            _create_cv_lookup_models(cur, resource.metadata, 'CV_Medium', CVMedium)
+            _create_cv_lookup_models(cur, resource.metadata, 'CV_AggregationStatistic', CVAggregationStatistic)
 
             # read data from necessary tables and create metadata elements
             # check if the AuthorList table exists

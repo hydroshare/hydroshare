@@ -9,7 +9,7 @@ from django.contrib.auth.models import User, Group
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.postgres.fields import ArrayField
 
-from django.core.exceptions import ValidationError, ObjectDoesNotExist
+from django.core.exceptions import ValidationError
 from django.db import models
 
 from mezzanine.pages.models import Page, RichText
@@ -26,13 +26,21 @@ class TimeSeriesAbstractMetaDataElement(AbstractMetaDataElement):
     series_ids = ArrayField(models.CharField(max_length=36, null=True, blank=True), default=[])
     is_dirty = models.BooleanField(default=False)
 
+    @classmethod
+    def update(cls, element_id, **kwargs):
+        super(TimeSeriesAbstractMetaDataElement, cls).update(element_id, **kwargs)
+        element = cls.objects.get(id=element_id)
+        element.is_dirty = True
+        element.save()
+
     class Meta:
         abstract = True
+
 
 # define extended metadata elements for Time Series resource type
 class Site(TimeSeriesAbstractMetaDataElement):
     term = 'Site'
-    # series_id = models.CharField(max_length=36, null=True, blank=True)
+
     site_code = models.CharField(max_length=200)
     site_name = models.CharField(max_length=255)
     elevation_m = models.IntegerField(null=True, blank=True)
@@ -42,10 +50,6 @@ class Site(TimeSeriesAbstractMetaDataElement):
     def __unicode__(self):
         return self.site_name
 
-    # class Meta:
-    #     # site element is not repeatable
-    #     unique_together = ("content_type", "object_id", "series_id")
-
     @classmethod
     def remove(cls, element_id):
         raise ValidationError("Site element of a resource can't be deleted.")
@@ -53,7 +57,6 @@ class Site(TimeSeriesAbstractMetaDataElement):
 
 class Variable(TimeSeriesAbstractMetaDataElement):
     term = 'Variable'
-    # series_id = models.CharField(max_length=36, null=True, blank=True)
     variable_code = models.CharField(max_length=20)
     variable_name = models.CharField(max_length=100)
     variable_type = models.CharField(max_length=100)
@@ -64,17 +67,6 @@ class Variable(TimeSeriesAbstractMetaDataElement):
     def __unicode__(self):
         return self.variable_name
 
-    # class Meta:
-    #     # variable element is not repeatable
-    #     unique_together = ("content_type", "object_id", "series_id")
-
-    @classmethod
-    def update(cls, element_id, **kwargs):
-        super(Variable, cls).update(element_id, **kwargs)
-        element = cls.objects.get(id=element_id)
-        element.is_dirty = True
-        element.save()
-
     @classmethod
     def remove(cls, element_id):
         raise ValidationError("Variable element of a resource can't be deleted.")
@@ -82,7 +74,6 @@ class Variable(TimeSeriesAbstractMetaDataElement):
 
 class Method(TimeSeriesAbstractMetaDataElement):
     term = 'Method'
-    # series_id = models.CharField(max_length=36, null=True, blank=True)
     method_code = models.CharField(max_length=50)
     method_name = models.CharField(max_length=200)
     method_type = models.CharField(max_length=200)
@@ -92,10 +83,6 @@ class Method(TimeSeriesAbstractMetaDataElement):
     def __unicode__(self):
         return self.method_name
 
-    # class Meta:
-    #     # method element is not repeatable
-    #     unique_together = ("content_type", "object_id", "series_id")
-
     @classmethod
     def remove(cls, element_id):
         raise ValidationError("Method element of a resource can't be deleted.")
@@ -103,17 +90,12 @@ class Method(TimeSeriesAbstractMetaDataElement):
 
 class ProcessingLevel(TimeSeriesAbstractMetaDataElement):
     term = 'ProcessingLevel'
-    # series_id = models.CharField(max_length=36, null=True, blank=True)
     processing_level_code = models.IntegerField()
     definition = models.CharField(max_length=200, null=True, blank=True)
     explanation = models.TextField(null=True, blank=True)
 
     def __unicode__(self):
         return self.processing_level_code
-
-    # class Meta:
-    #     # processinglevel element is not repeatable for the same series id
-    #     unique_together = ("content_type", "object_id", "series_id")
 
     @classmethod
     def remove(cls, element_id):
@@ -122,7 +104,6 @@ class ProcessingLevel(TimeSeriesAbstractMetaDataElement):
 
 class TimeSeriesResult(TimeSeriesAbstractMetaDataElement):
     term = 'TimeSeriesResult'
-    # series_id = models.CharField(max_length=36, null=True, blank=True)
     units_type = models.CharField(max_length=255)
     units_name = models.CharField(max_length=255)
     units_abbreviation = models.CharField(max_length=20)
@@ -133,10 +114,6 @@ class TimeSeriesResult(TimeSeriesAbstractMetaDataElement):
 
     def __unicode__(self):
         return self.units_type
-
-    # class Meta:
-    #     # processinglevel element is not repeatable
-    #     unique_together = ("content_type", "object_id", "series_id")
 
     @classmethod
     def remove(cls, element_id):
@@ -149,6 +126,7 @@ class AbstractCVLookupTable(models.Model):
 
     class Meta:
         abstract = True
+
 
 class CVVariableType(AbstractCVLookupTable):
     metadata = models.ForeignKey('TimeSeriesMetaData', related_name="cv_variable_types")
@@ -171,6 +149,23 @@ class CVSiteType(AbstractCVLookupTable):
 
 class CVMethodType(AbstractCVLookupTable):
     metadata = models.ForeignKey('TimeSeriesMetaData', related_name="cv_method_types")
+
+
+class CVUnitsType(AbstractCVLookupTable):
+    metadata = models.ForeignKey('TimeSeriesMetaData', related_name="cv_units_types")
+
+
+class CVStatus(AbstractCVLookupTable):
+    metadata = models.ForeignKey('TimeSeriesMetaData', related_name="cv_statuses")
+
+
+class CVMedium(AbstractCVLookupTable):
+    metadata = models.ForeignKey('TimeSeriesMetaData', related_name="cv_mediums")
+
+
+class CVAggregationStatistic(AbstractCVLookupTable):
+    metadata = models.ForeignKey('TimeSeriesMetaData', related_name="cv_aggregation_statistics")
+
 
 # To create a new resource, use these three super-classes.
 #
