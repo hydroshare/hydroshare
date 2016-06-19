@@ -2577,6 +2577,10 @@ h4.title {
     background-color: rgb(221, 15, 176);
 }
 
+#badge-collection .badge {
+	background-color: #bc836f;
+}
+
 #color-scheme {
     float: right;
     padding: 5px 0 0 0;
