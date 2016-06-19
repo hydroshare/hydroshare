@@ -1049,7 +1049,13 @@ def get_user_data(request, user_id, *args, **kwargs):
 
     user_data = {'name': user_name, 'email': user.email}
     user_data['url'] = '{domain}/user/{uid}/'.format(domain=utils.current_site_url(), uid=user.pk)
-    user_data['phone'] = user.userprofile.phone_1 if user.userprofile.phone_1 else ''
+    if user.userprofile.phone_1:
+        user_data['phone'] = user.userprofile.phone_1
+    elif user.userprofile.phone_2:
+        user_data['phone'] = user.userprofile.phone_2
+    else:
+        user_data['phone'] = ''
+
     address = ''
     if user.userprofile.state and user.userprofile.state.lower() != 'unspecified':
         address = user.userprofile.state

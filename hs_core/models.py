@@ -270,7 +270,7 @@ class Party(AbstractMetaDataElement):
         if 'description' in kwargs:
             party = cls.objects.get(id=element_id)
             if party.description is not None and kwargs['description'] is not None:
-                if len(party.description) > 0 and len(kwargs['description']) > 0:
+                if len(party.description.strip()) > 0 and len(kwargs['description'].strip()) > 0:
                     if party.description != kwargs['description']:
                         raise ValidationError("HydroShare user identifier can't be changed.")
 
