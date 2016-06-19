@@ -1038,7 +1038,7 @@ def get_user_data(request, user_id, *args, **kwargs):
     This view function must be called as an AJAX call
 
     :param user_id: id if the user for whom data is needed
-    :return:
+    :return: JsonResponse() containing user data
     """
     user = utils.user_from_id(user_id)
 
