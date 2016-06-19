@@ -413,9 +413,10 @@ def validate_resource_file_type(resource_cls, files):
         # all file types are supported
         return
 
+    supported_file_types = [x.lower() for x in supported_file_types]
     for f in files:
         file_ext = os.path.splitext(f.name)[1]
-        if file_ext not in supported_file_types:
+        if file_ext.lower() not in supported_file_types:
             err_msg = "{file_name} is not a supported file type for {res_type} resource"
             err_msg = err_msg.format(file_name=f.name, res_type=resource_cls)
             raise ResourceFileValidationException(err_msg)

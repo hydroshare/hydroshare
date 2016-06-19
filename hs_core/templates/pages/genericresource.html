@@ -129,12 +129,12 @@
                                                                                                       class="glyphicon glyphicon-trash icon-button btn-remove"></span></a>
 
                                                         {% endif %}
-                                                        {% if f.resource_file %}
+                                                        {% if f.resource_file and f.resource_file.size < 1000000000 %}
                                                             <a href="{{ f.resource_file.url }}"><span data-toggle="tooltip"
                                                                                                   data-placement="auto"
                                                                                                   title="Download"
                                                                                                   class="glyphicon glyphicon-download icon-button btn-download"></span></a>
-                                                        {% elif f.fed_resource_file %}
+                                                        {% elif f.fed_resource_file and f.fed_resource_file.size < 1000000000 %}
                                                             <a href="{{ f.fed_resource_file.url }}"><span data-toggle="tooltip"
                                                                                                   data-placement="auto"
                                                                                                   title="Download"
@@ -147,8 +147,8 @@
                                                                                                   class="glyphicon glyphicon-download icon-button btn-download"></span></a>
                                                         {% else %}
                                                             <span data-toggle="tooltip" data-placement="auto"
-                                                                                                  title="Referenced file larger than 1GB cannot be downloaded directly"
-                                                                                                  class="glyphicon glyphicon-download icon-button btn-download"></span>
+                                                                  title="File larger than 1GB cannot be downloaded directly via HTTP. Please download the large file via iRODS clients."
+                                                                  class="glyphicon glyphicon-download icon-button btn-download"></span>
                                                         {% endif %}
                                                         {% if preview %}
                                                             <a href="{{ preview }}"><span data-toggle="tooltip"

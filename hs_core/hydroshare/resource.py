@@ -13,7 +13,6 @@ from django.core.files import File
 from django.core.files.uploadedfile import UploadedFile
 from django.core.exceptions import ValidationError
 from django.db import transaction
-from django.conf import settings
 from rest_framework import status
 
 from mezzanine.generic.models import Keyword, AssignedKeyword
