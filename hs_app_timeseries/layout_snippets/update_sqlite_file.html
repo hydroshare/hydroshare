@@ -1,8 +1,7 @@
 <div class="row" style="margin-bottom:10px">
-    <div class="col-sm-5">
+    <div class="col-sm-12">
         <strong>SQLite file needs to be synced with metadata changes:</strong>
-    </div>
-    <div class="col-sm-7">
+
         <form action="/timeseries/sqlite/update/{{ cm.short_id }}/" method="post" enctype="multipart/form-data">
             {% csrf_token %}
             <button type="button" class="btn btn-primary" onclick="this.form.submit(); return false;">Update SQLite File</button>

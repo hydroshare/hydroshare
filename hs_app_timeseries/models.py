@@ -407,6 +407,7 @@ class TimeSeriesMetaData(CoreMetaData):
     def update_sqlite_file(self):
         if not self.is_dirty:
             return
+
         sqlite_file_to_update = self.resource.files.first()
         if sqlite_file_to_update is not None:
             istorage = IrodsStorage()
@@ -423,22 +424,11 @@ class TimeSeriesMetaData(CoreMetaData):
                     # get the records in python dictionary format
                     con.row_factory = sqlite3.Row
                     cur = con.cursor()
-                    for variable in self.variables:
-                        if variable.is_dirty:
-                            # get the VariableID from Results table to update the corresponding row in Variables table
-                            series_id = variable.series_ids[0]
-                            cur.execute("SELECT VariableID FROM Results WHERE ResultUUID=?", (series_id,))
-                            ts_result = cur.fetchone()
-                            update_sql = "UPDATE Variables SET VariableCode=?, VariableTypeCV=?, VariableNameCV=?, " \
-                                         "VariableDefinition=?, SpeciationCV=?, NoDataValue=?  WHERE VariableID=?"
-
-                            params = (variable.variable_code, variable.variable_type, variable.variable_name,
-                                      variable.variable_definition, variable.speciation, variable.no_data_value,
-                                      ts_result['VariableID'])
-                            cur.execute(update_sql, params)
-                            con.commit()
-                            variable.is_dirty = False
-                            variable.save()
+                    self._update_variables_table(con, cur)
+                    self._update_methods_table(con, cur)
+                    self._update_processinglevels_table(con, cur)
+                    self._update_sites_related_tables(con, cur)
+                    self._update_results_related_tables(con, cur)
 
                     # push the updated sqlite file to iRODS
                     sqlite_file_original = self.resource.files.first()
@@ -455,5 +445,127 @@ class TimeSeriesMetaData(CoreMetaData):
             finally:
                 if os.path.exists(temp_dir):
                     shutil.rmtree(temp_dir)
+
+    def _update_variables_table(self, con, cur):
+        for variable in self.variables:
+            if variable.is_dirty:
+                # get the VariableID from Results table to update the corresponding row in Variables table
+                series_id = variable.series_ids[0]
+                cur.execute("SELECT VariableID FROM Results WHERE ResultUUID=?", (series_id,))
+                ts_result = cur.fetchone()
+                update_sql = "UPDATE Variables SET VariableCode=?, VariableTypeCV=?, VariableNameCV=?, " \
+                             "VariableDefinition=?, SpeciationCV=?, NoDataValue=?  WHERE VariableID=?"
+
+                params = (variable.variable_code, variable.variable_type, variable.variable_name,
+                          variable.variable_definition, variable.speciation, variable.no_data_value,
+                          ts_result['VariableID'])
+                cur.execute(update_sql, params)
+                con.commit()
+                variable.is_dirty = False
+                variable.save()
+
+    def _update_methods_table(self, con, cur):
+        # updates the Methods table
+        for method in self.methods:
+            if method.is_dirty:
+                # get the MethodID to update the corresponding row in Methods table
+                series_id = method.series_ids[0]
+                cur.execute("SELECT FeatureActionID FROM Results WHERE ResultUUID=?", (series_id,))
+                result = cur.fetchone()
+                cur.execute("SELECT ActionID FROM FeatureActions WHERE FeatureActionID=?", (result["FeatureActionID"],))
+                feature_action = cur.fetchone()
+                cur.execute("SELECT MethodID from Actions WHERE ActionID=?", (feature_action["ActionID"],))
+                action = cur.fetchone()
+
+                update_sql = "UPDATE Methods SET MethodCode=?, MethodName=?, MethodTypeCV=?, " \
+                             "MethodDescription=?, MethodLink=?  WHERE MethodID=?"
+
+                params = (method.method_code, method.method_name, method.method_type,
+                          method.method_description, method.method_link,
+                          action['MethodID'])
+                cur.execute(update_sql, params)
+                con.commit()
+                method.is_dirty = False
+                method.save()
+
+    def _update_processinglevels_table(self, con, cur):
+        # updates the ProcessingLevels table
+        for processing_level in self.processing_levels:
+            if processing_level.is_dirty:
+                # get the ProcessingLevelID to update the corresponding row in ProcessingLevels table
+                series_id = processing_level.series_ids[0]
+                cur.execute("SELECT ProcessingLevelID FROM Results WHERE ResultUUID=?", (series_id,))
+                result = cur.fetchone()
+
+                update_sql = "UPDATE ProcessingLevels SET ProcessingLevelCode=?, Definition=?, Explanation=? " \
+                             "WHERE ProcessingLevelID=?"
+
+                params = (processing_level.processing_level_code, processing_level.definition,
+                          processing_level.explanation, result['ProcessingLevelID'])
+
+                cur.execute(update_sql, params)
+                con.commit()
+                processing_level.is_dirty = False
+                processing_level.save()
+
+    def _update_sites_related_tables(self, con, cur):
+        # updates 'Sites' and 'SamplingFeatures' tables
+        for site in self.sites:
+            if site.is_dirty:
+                # get the SamplingFeatureID to update the corresponding row in Sites and SamplingFeatures tables
+                series_id = site.series_ids[0]
+                cur.execute("SELECT FeatureActionID FROM Results WHERE ResultUUID=?", (series_id,))
+                result = cur.fetchone()
+                cur.execute("SELECT SamplingFeatureID FROM FeatureActions WHERE FeatureActionID=?",
+                            (result["FeatureActionID"],))
+                feature_action = cur.fetchone()
+
+                # first update the sites table
+                update_sql = "UPDATE Sites SET SiteTypeCV=? WHERE SamplingFeatureID=?"
+                params = (site.site_type, feature_action["SamplingFeatureID"])
+                cur.execute(update_sql, params)
+
+                # then update the SamplingFeatures table
+                update_sql = "UPDATE SamplingFeatures SET SamplingFeatureCode=?, SamplingFeatureName=?, Elevation_m=?, " \
+                             "ElevationDatumCV=? WHERE SamplingFeatureID=?"
+
+                params = (site.site_code, site.site_name, site.elevation_m,
+                          site.elevation_datum, feature_action["SamplingFeatureID"])
+                cur.execute(update_sql, params)
+                con.commit()
+                site.is_dirty = False
+                site.save()
+
+    def _update_results_related_tables(self, con, cur):
+        # updates 'Results', 'Units' and 'TimeSeriesResults' tables
+        for ts_result in self.time_series_results:
+            if ts_result.is_dirty:
+                # get the UnitsID and ResultID to update the corresponding row in Results, Units and TimeSeriesResults
+                # tables
+                series_id = ts_result.series_ids[0]
+                cur.execute("SELECT UnitsID, ResultID FROM Results WHERE ResultUUID=?", (series_id,))
+                result = cur.fetchone()
+
+                # update Units table
+                update_sql = "UPDATE Units SET UnitsTypeCV=?, UnitsName=?, UnitsAbbreviation=? WHERE UnitsID=?"
+                params = (ts_result.units_type, ts_result.units_name, ts_result.units_abbreviation, result['UnitsID'])
+                cur.execute(update_sql, params)
+
+                # update TimeSeriesResults table
+                update_sql = "UPDATE TimeSeriesResults SET AggregationStatisticCV=? WHERE ResultID=?"
+                params = (ts_result.aggregation_statistics, result['ResultID'])
+                cur.execute(update_sql, params)
+
+                # then update the Results table
+                update_sql = "UPDATE Results SET StatusCV=?, SampledMediumCV=?, ValueCount=? " \
+                             "WHERE ResultID=?"
+
+                params = (ts_result.status, ts_result.sample_medium, ts_result.value_count,
+                          result['ResultID'])
+                cur.execute(update_sql, params)
+                con.commit()
+                ts_result.is_dirty = False
+                ts_result.save()
+
 
 import receivers
