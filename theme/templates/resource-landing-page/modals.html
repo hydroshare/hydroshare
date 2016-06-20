@@ -790,10 +790,47 @@
 
                 <div class="modal-body first-modal">
                     <div class="alert alert-info" role="alert">
-                        <span class="glyphicon glyphicon-info-sign" aria-hidden="true"></span>
-                        <span>Use this window to share your resource with specific HydroShare users. You can give other
+
+
+
+                        <p><span class="glyphicon glyphicon-info-sign" aria-hidden="true" data-toggle="collapse" data-target="#usage-info">&nbsp;</span>Use this window to share your resource with specific HydroShare users. You can give other
                             users the ability to view or edit this resource. You can also add additional owners who
-                            will have full permissions.</span>
+                            will
+                            have full permissions.</p>
+
+                        <p><a href="#" data-toggle="collapse" data-target="#usage-info">Show more/less</a></p>
+
+                        <div id="usage-info" class="collapse">
+                            <ul>
+                                <li>
+                                    <p><strong>Owners</strong> can perform all operations on a resource and set whether
+                                        a
+                                        resource is Public,
+                                        Discoverable, or Private and Shareable. Resources that are Public have all their
+                                        content
+                                        visible to all users. Resources that are Discoverable have only their metadata
+                                        public.
+                                        Resources that are private are only accessible to specific users or groups that
+                                        they
+                                        have
+                                        been shared with.</p>
+                                </li>
+                                <li>
+                                    <p><strong>Editors</strong> can edit resource metadata and add and delete resource
+                                        content files. If the resource
+                                        is Shareable editors can use manage access to extend editing or viewing access
+                                        to
+                                        other
+                                        users.</p>
+                                </li>
+                                <li><p><strong>Viewers</strong> can view resource metadata and download resource content
+                                    files. If the resource is
+                                    Shareable viewers can use manage access to extend viewing access to other users.</p>
+                                </li>
+                            </ul>
+                        </div>
+
+
                     </div>
 
                     <p>Who has access</p>

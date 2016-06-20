@@ -266,6 +266,7 @@ INSTALLED_APPS = (
     "django_irods",
     "theme",
     "theme.blog_mods",
+    "heartbeat",
     "mezzanine.boot",
     "mezzanine.conf",
     "mezzanine.core",
@@ -301,7 +302,8 @@ INSTALLED_APPS = (
     "hs_geographic_feature_resource",
     "hs_script_resource",
     "hs_sitemap",
-    "hs_collection_resource"
+    "hs_collection_resource",
+    "hs_tracking",
 )
 
 # These apps are excluded by hs_core.tests.runner.CustomTestSuiteRunner
@@ -362,6 +364,7 @@ MIDDLEWARE_CLASSES = (
     "mezzanine.pages.middleware.PageMiddleware",
     "mezzanine.core.middleware.FetchFromCacheMiddleware",
     "ga_resources.middleware.PagePermissionsViewableMiddleware",
+    "hs_tracking.middleware.Tracking",
 )
 
 # Store these package names here as they may change in the future since
@@ -550,3 +553,8 @@ LOGGING = {
         },
     }
 }
+
+# hs_tracking settings
+TRACKING_SESSION_TIMEOUT = 60 * 15
+TRACKING_PROFILE_FIELDS = ["title", "user_type", "subject_areas", "public", "state", "country"]
+TRACKING_USER_FIELDS = ["username", "email", "first_name", "last_name"]
