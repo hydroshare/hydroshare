@@ -81,6 +81,13 @@ if settings.DEBUG is False:   #if DEBUG is True it will be served automatically
   url(r'^static/(?P<path>.*)$', 'django.views.static.serve', {'document_root': settings.STATIC_ROOT}),
 )
 
+if 'heartbeat' in settings.INSTALLED_APPS:
+  from heartbeat.urls import urlpatterns as heartbeat_urls
+
+  urlpatterns += [
+    url(r'^heartbeat/', include(heartbeat_urls))
+  ]
+
 urlpatterns += patterns('',
 
     # We don't want to presume how your homepage works, so here are a

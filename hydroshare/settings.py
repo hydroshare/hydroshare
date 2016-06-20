@@ -266,6 +266,7 @@ INSTALLED_APPS = (
     "django_irods",
     "theme",
     "theme.blog_mods",
+    "heartbeat",
     "mezzanine.boot",
     "mezzanine.conf",
     "mezzanine.core",
