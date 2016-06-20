@@ -398,16 +398,11 @@ class TimeSeriesMetaData(CoreMetaData):
 
     def delete_all_elements(self):
         super(TimeSeriesMetaData, self).delete_all_elements()
-        if self.sites:
-            self.sites.delete()
-        if self.variables:
-            self.variables.delete()
-        if self.methods:
-            self.methods.delete()
-        if self.processing_levels:
-            self.processing_levels.delete()
-        if self.time_series_results:
-            self.time_series_results.delete()
+        self.sites.delete()
+        self.variables.delete()
+        self.methods.delete()
+        self.processing_levels.delete()
+        self.time_series_results.delete()
 
     def update_sqlite_file(self):
         if not self.is_dirty:
