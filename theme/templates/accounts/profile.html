@@ -582,6 +582,10 @@
                                             <td><span>Web App</span></td>
                                             <td><span class="badge">0</span></td>
                                         </tr>
+                                        <tr id="badge-collection" data-type="type-Collection Resource">
+                                            <td><span>Collection</span></td>
+                                            <td><span class="badge">0</span></td>
+                                        </tr>
                                     </tbody>
                                 </table>
                             </div>
@@ -634,6 +638,11 @@
                                                      title="{{ res|resource_type }}"/>
                                             {% elif res|resource_type == "Web App Resource" %}
                                                 <img src="{{ STATIC_URL }}img/resource-icons/webapp48x48.png"
+                                                     alt="{{ res|resource_type }}"
+                                                     title="{{ res|resource_type }}"/>
+
+                                            {% elif res|resource_type == "Collection Resource" %}
+                                                <img src="{{ STATIC_URL }}img/resource-icons/collection48x48.png"
                                                      alt="{{ res|resource_type }}"
                                                      title="{{ res|resource_type }}"/>
                                             {% endif %}

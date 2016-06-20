@@ -7,15 +7,16 @@ from django.contrib import admin
 from mezzanine.core.views import direct_to_template
 from mezzanine.conf import settings
 
+import autocomplete_light
+
 from haystack.views import FacetedSearchView
 from hs_core.discovery_form import DiscoveryForm
 from hs_core.views.discovery_view import DiscoveryView
 from hs_core.views.discovery_json_view import DiscoveryJsonView
 from theme import views as theme
+from hs_tracking import views as tracking
 from hs_core import views as hs_core_views
 from hs_app_timeseries import views as hs_ts_views
-
-import autocomplete_light
 
 
 autocomplete_light.autodiscover()
@@ -36,6 +37,9 @@ urlpatterns = i18n_patterns("",
     #url('^ga_interactive/', include('ga_interactive.urls')),
     url('^r/(?P<shortkey>[A-z0-9\-_]+)', 'hs_core.views.short_url'),
     # url('^party/', include('hs_scholar_profile.urls'))
+    url(r'^tracking/reports/profiles/$', tracking.VisitorProfileReport.as_view(), name='tracking-report-profiles'),
+    url(r'^tracking/reports/history/$', tracking.HistoryReport.as_view(), name='tracking-report-history'),
+    url(r'^tracking/$', tracking.UseTrackingView.as_view(), name='tracking'),
     url(r'^user/$', theme.UserProfileView.as_view()),
     url(r'^user/(?P<user>.*)/', theme.UserProfileView.as_view()),
     url(r'^comment/$', theme.comment),
@@ -83,6 +87,13 @@ if settings.DEBUG is False:   #if DEBUG is True it will be served automatically
   urlpatterns += patterns('',
   url(r'^static/(?P<path>.*)$', 'django.views.static.serve', {'document_root': settings.STATIC_ROOT}),
 )
+
+if 'heartbeat' in settings.INSTALLED_APPS:
+  from heartbeat.urls import urlpatterns as heartbeat_urls
+
+  urlpatterns += [
+    url(r'^heartbeat/', include(heartbeat_urls))
+  ]
 
 urlpatterns += patterns('',
 
