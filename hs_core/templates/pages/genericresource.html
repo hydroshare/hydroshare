@@ -197,7 +197,7 @@
                                 {% if spatial_coverage.north or spatial_coverage.northlimit or temporal_coverage or metadata_form %}
                                     <li class="col-xs-2 col-md-2">
                                         <a id="coverageTabBtn" href="#coverageTab" data-toggle="tab" title="Coverage">
-                                            <span class="glyphicon glyphicon-globe"></span>
+                                            <span class="glyphicon glyphicon-map-marker"></span>
                                             &nbspCoverage
                                         </a>
                                     </li>
@@ -318,7 +318,7 @@
                                                         <td>{% if  author.phone %}{{ author.phone }}{% endif %}</td>
                                                         <td>
                                                             <a data-toggle="modal" data-placement="auto" title="Edit"
-                                                               class="glyphicon glyphicon-pencil icon-button btn-edit"
+                                                               class="glyphicon glyphicon-pencil icon-button icon-blue"
                                                                data-target="#edit-creator-dialog{{ author.id }}"
                                                                     ></a>
 
@@ -362,7 +362,7 @@
                                                         <td>{% if  contributor.phone %}{{ contributor.phone }}{% endif %}</td>
                                                         <td>
                                                             <a data-toggle="modal" data-placement="auto" title="Edit"
-                                                               class="glyphicon glyphicon-pencil icon-button btn-edit"
+                                                               class="glyphicon glyphicon-pencil icon-button icon-blue"
                                                                data-target="#edit-contributor-dialog{{ contributor.id }}"
                                                                     ></a>
                                                             <a data-toggle="modal" data-placement="auto" title="Remove"
@@ -751,7 +751,7 @@
                                                             <td class="dataset-details">{{ source.derived_from }}</td>
                                                             <td>
                                                                 <a data-toggle="modal" data-placement="auto" title="Edit"
-                                                                   class="glyphicon glyphicon-pencil icon-button btn-edit"
+                                                                   class="glyphicon glyphicon-pencil icon-button icon-blue"
                                                                    data-target="#edit-source-dialog{{ source.id }}"
                                                                    style="top: -5px; "></a>
                                                             </td>
@@ -784,7 +784,7 @@
                                                             <td class="dataset-details">{{ relation.value }}</td>
                                                             <td>
                                                                 <a data-toggle="modal" data-placement="auto" title="Edit"
-                                                                   class="glyphicon glyphicon-pencil icon-button btn-edit"
+                                                                   class="glyphicon glyphicon-pencil icon-button icon-blue"
                                                                    data-target="#edit-relation-dialog_{{ relation.id }}"
                                                                    style="top: -5px; "></a>
                                                             </td>

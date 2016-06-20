@@ -1521,8 +1521,12 @@ body > .main-container {
     color:#d9534f;
 }
 
-.btn-edit, .btn-share{
+.icon-blue {
     color: #428BD2;
+}
+
+#delete > span {
+	margin-left: 20px;
 }
 
 .btn-download{
