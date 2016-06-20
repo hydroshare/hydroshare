@@ -308,7 +308,7 @@
 
             var bounds_listener = google.maps.event.addListener(map, 'bounds_changed', function(){
                 var bnds = map.getBounds();
-                if (bnds){
+                if (bnds) {
                     var ne = bnds.getNorthEast();
                     var sw = bnds.getSouthWest();
                     document.getElementById("id_NElng").value = ne.lng();
@@ -355,7 +355,7 @@
             for (var  i = 0; i < json_results.length; i++ ) {
                 if (json_results[i].coverage_type == 'point') {
                     checkDuplicatePointResults(modified_points_data, json_results[i]);
-                } else if(json_results[i].coverage_type == 'box') {
+                } else if (json_results[i].coverage_type == 'box') {
                     checkDuplicateBoxResults(modified_boxes_data, json_results[i]);
 
                 } else {
@@ -421,7 +421,7 @@
                         continue;
                     }
                     var latlng = new google.maps.LatLng(data_lat, data_lng);
-                    if(map.getBounds().contains(latlng)) {
+                    if (map.getBounds().contains(latlng)) {
                         filtered_results.push(raw_results[i]);
                     }
                 }
@@ -436,7 +436,7 @@
                 markerCluster.clearMarkers(markers);
             }
             for (var i = 0; i < markers.length; i++) {
-                if (markers[i].getMap() != null){
+                if (markers[i].getMap() != null) {
                     markers[i].setMap(null);
                 }
             }
@@ -447,7 +447,7 @@
             var test_lat = parseFloat(test.north);
             var test_lng = parseFloat(test.east);
             var existed = false;
-            modified_points_data.forEach(function(item){
+            modified_points_data.forEach(function(item) {
                 var item_lat = parseFloat(item.north);
                 var item_lng = parseFloat(item.east);
 
@@ -459,7 +459,7 @@
                     existed = true;
                 }
             });
-            if (!existed){
+            if (!existed) {
                 test.info_link = '"<a href="' + test.get_absolute_url + '">' + test.title + '</a>';
                 test.counter = 1;
                 modified_points_data.push(test);
@@ -483,7 +483,7 @@
                     existed = true;
                 }
             });
-            if (!existed){
+            if (!existed) {
                 test.info_link = '"<a href="' + test.get_absolute_url + '">' + test.title + '</a>';
                 test.counter = 1;
                 modified_boxes_data.push(test);
@@ -571,7 +571,6 @@
         var generateLegend = function() {
             var map_legend = document.getElementById('discover-map-legend');
             map.controls[google.maps.ControlPosition.RIGHT_TOP].push(map_legend);
-            //map_legend.style.background = "white";
             var legend_content = [];
             legend_content.push("<p style='margin-left:5px'><img src='//cdn.rawgit.com/googlemaps/js-marker-clusterer/gh-pages/images/m2.png'> number of sites </p>");
             legend_content.push("<p style='margin-left:20px'><img src='//cdn.rawgit.com/Concept211/Google-Maps-Markers/master/images/marker_redN.png'> N = number of point coverage resources</p>");
@@ -585,7 +584,7 @@
             removeMarkers();
             setMarkers(raw_results);
             var bounds = (markers.length > 0) ? createBoundsForMarkers(markers) : null;
-            if (bounds){
+            if (bounds) {
                 map.fitBounds(bounds);
                 var listener = google.maps.event.addListener(map, "idle", function () {
                     map.setZoom(map_default_zoom);
@@ -650,9 +649,8 @@
                     var pageOptionDiv = $("#discover-page-options", data);
                     $("#discover-page-options").html(pageOptionDiv);
                     update_markers = false;
-                }
-                , failure: function (data) {
-                    console.error("fail");
+                } , failure: function (data) {
+                    console.error("Ajax call for updating list-view data failed");
                 }
             });
         }
@@ -661,7 +659,7 @@
         var reorderDivs = function() {
             var faceted_fields = ['creators', 'subjects', 'resource_type', 'owners_names', 'availability'];
             var div_ordering = [];
-            faceted_fields.forEach(function(field){
+            faceted_fields.forEach(function(field) {
                 var faceting_div = "faceting-"+field;
                 div_ordering.push(faceting_div);
             });
@@ -699,7 +697,7 @@
             var sessionStorageCheckboxId = 'search-' + checkboxId;
             sessionStorage[sessionStorageCheckboxId] = 'true';
             requestURL += buildURLOnCheckboxes();
-            if (window.location.hash){
+            if (window.location.hash) {
                 requestURL = requestURL + window.location.hash;
             }
             window.location = requestURL;
@@ -712,7 +710,7 @@
                 var sessionStorageCheckboxId = 'search-' + checkboxId;
                 var val = sessionStorage[sessionStorageCheckboxId];
                 var isChecked = val === 'true';
-                if(isChecked){
+                if (isChecked) {
                     var arr = $(this).val().split(",");
                     var key = arr[0];
                     var value = arr[1];
@@ -799,15 +797,14 @@
                                 raw_results.push(item);
                             }
                             initMap(json_results);
-                        }
-                        , failure: function(data){
-                            console.error("fail");
+                        } , failure: function(data) {
+                            console.error("Ajax call for getting map data failed");
                         }
                     });
                 }else if(tabId == "list-view") {
                     $('input[type=radio][name=results-selection]').change(function() {
                         var data;
-                        if(this.value == 'map-results-selected'){
+                        if (this.value == 'map-results-selected') {
                             var ne_lat = document.getElementById("id_NElat").value;
                             var ne_lng = document.getElementById("id_NElng").value;
                             var sw_lat = document.getElementById("id_SWlat").value;
@@ -818,7 +815,7 @@
                                 SWlat: sw_lat,
                                 SWlng: sw_lng
                             };
-                        }else {
+                        } else {
                             data = {
                                 NElat: '',
                                 NElng: '',
@@ -832,7 +829,7 @@
             });
 
 
-            $(".nav-tabs a").click(function(){
+            $(".nav-tabs a").click(function() {
                 $(this).tab('show');
             });
 
@@ -843,9 +840,9 @@
             $("#id_q").attr('placeholder', 'Search...');
             reorderDivs();
 
-            $('.collapse').on('shown.bs.collapse', function(){
+            $('.collapse').on('shown.bs.collapse', function() {
                 $(this).parent().find(".glyphicon-plus").removeClass("glyphicon-plus").addClass("glyphicon-minus");
-            }).on('hidden.bs.collapse', function(){
+            }).on('hidden.bs.collapse', function() {
                 $(this).parent().find(".glyphicon-minus").removeClass("glyphicon-minus").addClass("glyphicon-plus");
             });
 
@@ -858,7 +855,7 @@
                     var geoSearchParams = formGeoParameters();
                     var windowPath = window.location.pathname;
                     var requestURL =  windowPath + searchURL + geoSearchParams;
-                    if(window.location.hash){
+                    if(window.location.hash) {
                         requestURL = requestURL + window.location.hash;
                     }
                     window.location = requestURL;
@@ -881,7 +878,7 @@
                     var checkboxId = $(this).attr("id");
                     var sessionStorageCheckboxId = 'search-' + checkboxId;
                     sessionStorage[sessionStorageCheckboxId] = 'true';
-                    if(window.location.hash){
+                    if(window.location.hash) {
                         requestURL = requestURL + window.location.hash;
                     }
                     window.location = requestURL;
@@ -894,7 +891,7 @@
                     var textSearch = $("#id_q").val();
                     var updateURL = "/search/?q=" + textSearch;
                     updateURL += buildURLOnCheckboxes();
-                    if(window.location.hash){
+                    if(window.location.hash) {
                         updateURL = updateURL + window.location.hash;
                     }
                     window.location = updateURL;
