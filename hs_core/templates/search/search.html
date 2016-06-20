@@ -5,7 +5,7 @@
 <div class="container" id="main">
     <div class="row">
         <div class="col-lg-3" id="filter-panel">
-            <div id="filter-buttons" style="margin-bottom: 10px;">
+            <div id="discover-filter-buttons">
                 <button class="btn btn-default" onclick="clearAllFaceted()">Show All</button>
                 <button class="btn btn-info pull-right" data-toggle="popover" data-placement="right"><i class="glyphicon glyphicon-info-sign"></i></button>
             </div>
@@ -46,7 +46,7 @@
                                     {% else %}
                                         class="panel-collapse collapse"
                                     {% endif %}>
-                                    <ul class="list-group" id="list-group-{{ key }}" style="height: 200px; overflow-y: auto;">
+                                    <ul class="list-group discover-faceting-group" id="list-group-{{ key }}">
                                     {% for item in values %}
                                         {% if item.1 > 0 %}
                                             <li class="list-group-item clearfix" rel="{{ key }},{{ item.0 }}">
@@ -94,7 +94,7 @@
                             </h4>
                         </div>
                         <div id="availability" class="panel-collapse collapse">
-                            <ul class="list-group" id="list-group-availability" style="height: 200px; overflow-y: auto;">
+                            <ul class="list-group discover-faceting-group" id="list-group-availability">
                                 {% for key, values in facets.fields.items %}
                                     {% if key == 'public' or key == 'discoverable' %}
                                         {% for item in values %}
@@ -172,7 +172,7 @@
                                 {% endif %}
                             {% endfor %}
                             <td>
-                                <a id="manual-zoom-btn" class="btn btn-default" onclick="manualZoomMap()" style="margin-top:20px">
+                                <a id="manual-zoom-btn" class="btn btn-default" onclick="manualZoomMap()">
                                     zoom in
                                 </a>
                             </td>
@@ -187,7 +187,7 @@
                 </ul>
                 <div class="tab-content">
                     <div id="list-view" class="tab-pane fade in active">
-                        <div id="list-data-options" style="float:right">
+                        <div id="list-data-options">
                             <label class="radio-inline">
                                 <input type="radio" name="results-selection" value="map-results-selected">Map Results
                             </label>
@@ -221,7 +221,7 @@
                                 {% endfor %}
                             </tbody>
                         </table>
-                        <div id="page-options" style="float: right">
+                        <div id="discover-page-options">
                         {% if page_obj.has_previous or page_obj.has_next %}
                                 {% if page_obj.has_previous %}
                                     <a href="{{ request.get_full_path|clean_pagination_url }}&amp;page={{ page_obj.previous_page_number }}">
@@ -235,9 +235,9 @@
                         </div>
                     </div>
                     <div id="map-view" class="tab-pane fade">
-                        <div id="discover-map" style="width:850px; height:650px"></div>
-                        <div id="legend"></div>
-                        <div id="resetZoom" style="margin-right:5px">
+                        <div id="discover-map"></div>
+                        <div id="discover-map-legend"></div>
+                        <div id="resetZoom">
                             <a id="reset-zoom-btn" class="btn btn-default btn-sm" onclick="resetMapZoom()">
                                 <span class="glyphicon glyphicon-record"></span>
                             </a>
@@ -569,9 +569,9 @@
         }
 
         var generateLegend = function() {
-            var map_legend = document.getElementById('legend');
+            var map_legend = document.getElementById('discover-map-legend');
             map.controls[google.maps.ControlPosition.RIGHT_TOP].push(map_legend);
-            map_legend.style.background = "white";
+            //map_legend.style.background = "white";
             var legend_content = [];
             legend_content.push("<p style='margin-left:5px'><img src='//cdn.rawgit.com/googlemaps/js-marker-clusterer/gh-pages/images/m2.png'> number of sites </p>");
             legend_content.push("<p style='margin-left:20px'><img src='//cdn.rawgit.com/Concept211/Google-Maps-Markers/master/images/marker_redN.png'> N = number of point coverage resources</p>");
@@ -628,7 +628,7 @@
 
         var updateListView = function(data) {
             $('#items-discovered').empty();
-            $("#page-options").empty();
+            $("#discover-page-options").empty();
             var requestURL = "/search/";
             if (window.location.search.length == 0) {
                 requestURL += "?q=";
@@ -647,8 +647,8 @@
                 success: function (data) {
                     var tableDiv = $("#items-discovered", data);
                     $("#items-discovered").html(tableDiv);
-                    var pageOptionDiv = $("#page-options", data);
-                    $("#page-options").html(pageOptionDiv);
+                    var pageOptionDiv = $("#discover-page-options", data);
+                    $("#discover-page-options").html(pageOptionDiv);
                     update_markers = false;
                 }
                 , failure: function (data) {

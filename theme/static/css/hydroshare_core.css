@@ -3663,3 +3663,37 @@ div.group-add-photo {
 .access-icon-wrapper {
 	display: inline-block;
 }
+
+#discover-filter-buttons {
+	margin-bottom: 10px;
+}
+
+.discover-faceting-group {
+	height: 200px;
+	overflow-y: auto;
+}
+
+#discover-page-options {
+	float: right;
+}
+
+#list-data-options {
+	float:right;
+}
+
+#discover-map {
+	width:850px;
+	height:650px;
+}
+
+#discover-map-legend {
+	background: white;
+}
+
+#manual-zoom-btn {
+	margin-top:20px;
+}
+
+#resetZoom {
+	margin-right:5px;
+}
