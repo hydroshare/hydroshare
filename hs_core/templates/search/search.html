@@ -189,10 +189,10 @@
                     <div id="list-view" class="tab-pane fade in active">
                         <div id="list-data-options">
                             <label class="radio-inline">
-                                <input type="radio" name="results-selection" value="map-results-selected">Map Results
+                                <input type="radio" name="results-selection" id="map-results-selected" value="map-results-selected">Map Results
                             </label>
                             <label class="radio-inline">
-                                <input type="radio" name="results-selection" value="all-results-selected">All Results
+                                <input type="radio" name="results-selection" id="all-results-selected" value="all-results-selected">All Results
                             </label>
                         </div>
                         <table class="table table-striped table-hover" id="items-discovered">
@@ -623,6 +623,20 @@
             var filtered_results = [];
             clientUpdateMarkers(filtered_results);
             setMarkers(filtered_results);
+            var results_selection = $('input:radio[name=results-selection]:checked').val();
+            if (results_selection == 'map-results-selected') {
+                var ne_lat = document.getElementById("id_NElat").value;
+                var ne_lng = document.getElementById("id_NElng").value;
+                var sw_lat = document.getElementById("id_SWlat").value;
+                var sw_lng = document.getElementById("id_SWlng").value;
+                var data = {
+                    NElat: ne_lat,
+                    NElng: ne_lng,
+                    SWlat: sw_lat,
+                    SWlng: sw_lng
+                };
+                updateListView(data);
+            }
         }
 
         var updateListView = function(data) {
@@ -720,6 +734,16 @@
             return requestURL;
         }
 
+        var popRadioButtons = function() {
+            if (sessionStorage["map-results-selected"] == undefined && sessionStorage["all-results-selected"] == undefined) {
+               $("#all-results-selected").prop("checked", true);
+            } else if (sessionStorage["map-results-selected"] == 'true') {
+                $("#map-results-selected").prop("checked", true);
+            } else if (sessionStorage["all-results-selected"] == 'true') {
+                $("#all-results-selected").prop("checked", true);
+            }
+        }
+
         var popCheckboxes = function() {
             $(".faceted-selections").each(function () {
                 var checkboxId = $(this).attr("id");
@@ -757,8 +781,9 @@
                 "info": false,
                 "order": [[ 0, "asc" ]]
             });
-
+            
             popCheckboxes();
+            popRadioButtons();
 
             $("ul.nav-tabs > li > a").on("shown.bs.tab", function (e) {
                 var tabId = $(e.target).attr("href").substr(1);
@@ -801,33 +826,36 @@
                             console.error("Ajax call for getting map data failed");
                         }
                     });
-                }else if(tabId == "list-view") {
-                    $('input[type=radio][name=results-selection]').change(function() {
-                        var data;
-                        if (this.value == 'map-results-selected') {
-                            var ne_lat = document.getElementById("id_NElat").value;
-                            var ne_lng = document.getElementById("id_NElng").value;
-                            var sw_lat = document.getElementById("id_SWlat").value;
-                            var sw_lng = document.getElementById("id_SWlng").value;
-                            data = {
-                                NElat: ne_lat,
-                                NElng: ne_lng,
-                                SWlat: sw_lat,
-                                SWlng: sw_lng
-                            };
-                        } else {
-                            data = {
-                                NElat: '',
-                                NElng: '',
-                                SWlat: '',
-                                SWlng: ''
-                            };
-                        }
-                        updateListView(data);
-                    });
                 }
             });
 
+            $('input[type=radio][name=results-selection]').change(function() {
+                var data;
+                if (this.value == 'map-results-selected') {
+                    var ne_lat = document.getElementById("id_NElat").value;
+                    var ne_lng = document.getElementById("id_NElng").value;
+                    var sw_lat = document.getElementById("id_SWlat").value;
+                    var sw_lng = document.getElementById("id_SWlng").value;
+                    data = {
+                        NElat: ne_lat,
+                        NElng: ne_lng,
+                        SWlat: sw_lat,
+                        SWlng: sw_lng
+                    };
+                    sessionStorage['map-results-selected'] = 'true';
+                    sessionStorage['all-results-selected'] = 'false';
+                } else {
+                    data = {
+                        NElat: '',
+                        NElng: '',
+                        SWlat: '',
+                        SWlng: ''
+                    };
+                    sessionStorage['all-results-selected'] = 'true';
+                    sessionStorage['map-results-selected'] = 'false';
+                }
+                updateListView(data);
+            });
 
             $(".nav-tabs a").click(function() {
                 $(this).tab('show');
