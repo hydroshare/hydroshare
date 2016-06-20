@@ -16,6 +16,14 @@ def landing_page(request, page):
     content_model = page.get_content_model()
     edit_resource = page_processors.check_resource_mode(request)
 
+    extended_metadata_exists = False
+    if content_model.metadata.sites or \
+            content_model.metadata.variables or \
+            content_model.metadata.methods or \
+            content_model.metadata.processing_levels or \
+            content_model.metadata.time_series_results:
+        extended_metadata_exists = True
+
     series_ids = {}
     for result in content_model.metadata.time_series_results:
         for series_id in result.series_ids:
@@ -25,16 +33,18 @@ def landing_page(request, page):
         selected_series_id = request.GET['series_id']
         is_resource_specific_tab_active = True
     else:
-        selected_series_id = series_ids.keys()[0]
+        selected_series_id = series_ids.keys()[0] if series_ids.keys() else None
         is_resource_specific_tab_active = False
 
     # view depends on whether the resource is being edited
     if not edit_resource:
         # resource in VIEW Mode
-        context = _get_resource_view_context(page, request, content_model, selected_series_id, series_ids)
+        context = _get_resource_view_context(page, request, content_model, selected_series_id, series_ids,
+                                             extended_metadata_exists)
     else:
         # resource in EDIT Mode
-        context = _get_resource_edit_context(page, request, content_model, selected_series_id, series_ids)
+        context = _get_resource_edit_context(page, request, content_model, selected_series_id, series_ids,
+                                             extended_metadata_exists)
 
     context['is_resource_specific_tab_active'] = is_resource_specific_tab_active
 
@@ -44,19 +54,12 @@ def landing_page(request, page):
     return context
 
 
-def _get_resource_view_context(page, request, content_model, selected_series_id, series_ids):
+def _get_resource_view_context(page, request, content_model, selected_series_id, series_ids, extended_metadata_exists):
     # get the context from hs_core
     context = page_processors.get_page_context(page, request.user, resource_edit=False,
                                                extended_metadata_layout=None, request=request)
-    extended_metadata_exists = False
-    if content_model.metadata.sites or \
-            content_model.metadata.variables or \
-            content_model.metadata.methods or \
-            content_model.metadata.processing_levels or \
-            content_model.metadata.time_series_results:
-        extended_metadata_exists = True
 
-    context['extended_metadata_exists'] = extended_metadata_exists,
+    context['extended_metadata_exists'] = extended_metadata_exists
     context['selected_series_id'] = selected_series_id
     context['series_ids'] = series_ids
     context['sites'] = [site for site in content_model.metadata.sites if selected_series_id in site.series_ids]
@@ -68,7 +71,7 @@ def _get_resource_view_context(page, request, content_model, selected_series_id,
     return context
 
 
-def _get_resource_edit_context(page, request, content_model, selected_series_id, series_ids):
+def _get_resource_edit_context(page, request, content_model, selected_series_id, series_ids, extended_metadata_exists):
 
     SiteFormSetEdit = formset_factory(wraps(SiteForm)(partial(SiteForm, allow_edit=True,
                                                               cv_site_types=content_model.metadata.cv_site_types.all(),
@@ -146,7 +149,7 @@ def _get_resource_edit_context(page, request, content_model, selected_series_id,
             form.set_dropdown_widgets(form.initial['sample_medium'], form.initial['units_type'],
                                       form.initial['aggregation_statistics'])
 
-    if content_model.metadata.is_dirty:
+    if extended_metadata_exists and content_model.metadata.is_dirty:
         ext_md_layout = Layout(UpdateSQLiteLayout,
                                SeriesSelectionLayout,
                                SiteLayoutEdit,
@@ -155,7 +158,7 @@ def _get_resource_edit_context(page, request, content_model, selected_series_id,
                                ProcessingLevelLayoutEdit,
                                TimeSeriesResultLayoutEdit
                               )
-    else:
+    elif extended_metadata_exists:
         ext_md_layout = Layout(SeriesSelectionLayout,
                                SiteLayoutEdit,
                                VariableLayoutEdit,
@@ -163,12 +166,15 @@ def _get_resource_edit_context(page, request, content_model, selected_series_id,
                                ProcessingLevelLayoutEdit,
                                TimeSeriesResultLayoutEdit
                               )
+    else:
+        ext_md_layout = Layout()
 
     # get the context from hs_core
     context = page_processors.get_page_context(page, request.user, resource_edit=True,
                                                extended_metadata_layout=ext_md_layout, request=request)
 
     # customize base context
+    context['extended_metadata_exists'] = extended_metadata_exists
     context['resource_type'] = 'Time Series Resource'
     context['selected_series_id'] = selected_series_id
     context['series_ids'] = series_ids
