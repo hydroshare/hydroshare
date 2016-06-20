@@ -23,8 +23,10 @@ def landing_page(request, page):
 
     if 'series_id' in request.GET:
         selected_series_id = request.GET['series_id']
+        is_resource_specific_tab_active = True
     else:
         selected_series_id = series_ids.keys()[0]
+        is_resource_specific_tab_active = False
 
     # view depends on whether the resource is being edited
     if not edit_resource:
@@ -33,6 +35,8 @@ def landing_page(request, page):
     else:
         # resource in EDIT Mode
         context = _get_resource_edit_context(page, request, content_model, selected_series_id, series_ids)
+
+    context['is_resource_specific_tab_active'] = is_resource_specific_tab_active
 
     # TODO: can we refactor to make it impossible to skip adding the generic context
     hs_core_context = add_generic_context(request, page)
@@ -60,10 +64,12 @@ def _get_resource_view_context(page, request, content_model, selected_series_id,
     context['methods'] = [method for method in content_model.metadata.methods if selected_series_id in method.series_ids]
     context['processing_levels'] = [pro_level for pro_level in content_model.metadata.processing_levels if selected_series_id in pro_level.series_ids]
     context['timeseries_results'] = [ts_result for ts_result in content_model.metadata.time_series_results if selected_series_id in ts_result.series_ids]
+
     return context
 
 
 def _get_resource_edit_context(page, request, content_model, selected_series_id, series_ids):
+
     SiteFormSetEdit = formset_factory(wraps(SiteForm)(partial(SiteForm, allow_edit=True,
                                                               cv_site_types=content_model.metadata.cv_site_types.all(),
                                                               cv_elevation_datums=content_model.metadata.cv_elevation_datums.all())),
