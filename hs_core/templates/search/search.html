@@ -187,7 +187,14 @@
                                         </td>
                                 {% endif %}
                             {% endfor %}
+                        <!--
+                            <td>
+                                <a id="clear-dates-options" class="btn btn-default" onclick="clearDates()" style="margin-top:20px">
+                                    Clear Dates
+                                </a>
+                            </td>
                         </tr>
+                        -->
                     </table>
                 </form>
             </div>
@@ -279,7 +286,6 @@
         var markerCluster = null;
         var info_window = null;
         var rectangle = null;
-        var update_markers = false;
 
         var initMap = function(json_results) {
 
@@ -630,23 +636,31 @@
         }
 
         var updateMapView = function() {
-            update_markers = true;
             var filtered_results = [];
             clientUpdateMarkers(filtered_results);
             setMarkers(filtered_results);
             var results_selection = $('input:radio[name=results-selection]:checked').val();
             if (results_selection == 'map-results-selected') {
-                var ne_lat = document.getElementById("id_NElat").value;
-                var ne_lng = document.getElementById("id_NElng").value;
-                var sw_lat = document.getElementById("id_SWlat").value;
-                var sw_lng = document.getElementById("id_SWlng").value;
-                var data = {
-                    NElat: ne_lat,
-                    NElng: ne_lng,
-                    SWlat: sw_lat,
-                    SWlng: sw_lng
-                };
-                updateListView(data);
+                var bnds = map.getBounds();
+                var start_date = $("#id_start_date").val();
+                var end_date = $("#id_end_date").val();
+                if (bnds) {
+                    var ne = bnds.getNorthEast();
+                    var sw = bnds.getSouthWest();
+                    var ne_lat = ne.lat();
+                    var ne_lng = ne.lng();
+                    var sw_lat = sw.lat();
+                    var sw_lng = value = sw.lng();
+                    var data = {
+                        NElat: ne_lat,
+                        NElng: ne_lng,
+                        SWlat: sw_lat,
+                        SWlng: sw_lng,
+                        start_date: start_date,
+                        end_date: end_date
+                    };
+                    updateListView(data);
+                }
             }
         }
 
@@ -673,7 +687,6 @@
                     $("#items-discovered").html(tableDiv);
                     var pageOptionDiv = $("#discover-page-options", data);
                     $("#discover-page-options").html(pageOptionDiv);
-                    update_markers = false;
                 } , failure: function (data) {
                     console.error("Ajax call for updating list-view data failed");
                 }
@@ -785,6 +798,23 @@
             var clearURL = "/search/";
             window.location = clearURL;
         }
+
+{#        var clearDates = function() {#}
+{#            var textSearch = $("#id_q").val();#}
+{#            var searchURL = "?q=" + textSearch;#}
+{#            var geoSearchParams = formGeoParameters();#}
+{#            var dateSearchParams = "&start_date=&end_date=";#}
+{#            var windowPath = window.location.pathname;#}
+{#            var requestURL =  windowPath + searchURL + geoSearchParams + dateSearchParams;#}
+{#            var checkboxId =  key + "-" + value;#}
+{#            var sessionStorageCheckboxId = 'search-' + checkboxId;#}
+{#            sessionStorage[sessionStorageCheckboxId] = 'true';#}
+{#            requestURL += buildURLOnCheckboxes();#}
+{#            if (window.location.hash) {#}
+{#                requestURL = requestURL + window.location.hash;#}
+{#            }#}
+{#            window.location = requestURL;#}
+{#        }#}
 
         $(document).ready(function () {
 
