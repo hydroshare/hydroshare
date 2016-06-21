@@ -1,4 +1,3 @@
-__author__ = 'pabitra'
 
 import os
 import tempfile
@@ -103,7 +102,7 @@ class TestNetcdfMetaData(MockIRODSTestCaseMixin, TransactionTestCase):
         # passing the file object that points to the temp dir doesn't work - create_resource throws error
         # open the file from the fixed file location
         files = [UploadedFile(file=self.netcdf_file_obj, name=self.netcdf_file_name)]
-        _, _, metadata = utils.resource_pre_create_actions(resource_type='NetcdfResource',
+        _, _, metadata, _ = utils.resource_pre_create_actions(resource_type='NetcdfResource',
                                                                           resource_title='Snow water equivalent '
                                                                                          'estimation at TWDEF site '
                                                                                          'from Oct 2009 to June 2010',

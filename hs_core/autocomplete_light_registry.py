@@ -37,7 +37,7 @@ class GroupAutocomplete(autocomplete_light.AutocompleteModelBase):
     search_fields=['name']
 
     def choices_for_request(self):
-        self.choices = self.choices.filter(gaccess_active=True)
+        self.choices = self.choices.filter(gaccess__active=True).exclude(name='Hydroshare Author')
         return super(GroupAutocomplete, self).choices_for_request()
 
 autocomplete_light.register(Group, GroupAutocomplete)

@@ -1,4 +1,3 @@
-__author__ = 'Pabitra'
 
 from django_nose.runner import NoseTestSuiteRunner
 

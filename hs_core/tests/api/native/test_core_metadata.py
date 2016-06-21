@@ -362,8 +362,8 @@ class TestCoreMetadata(MockIRODSTestCaseMixin, TestCase):
         self.assertEqual(self.res.metadata.coverages.all().count(), 0, msg="One more coverages found.")
 
         # add a period type coverage
-        value_dict = {'name':'Name for period coverage', 'start':'1/1/2000', 'end':'12/12/2012'}
-        resource.create_metadata_element(self.res.short_id,'coverage', type='period', value=value_dict)
+        value_dict = {'name': 'Name for period coverage', 'start': '1/1/2000', 'end': '12/12/2012'}
+        resource.create_metadata_element(self.res.short_id, 'coverage', type='period', value=value_dict)
 
         # there should be now one coverage element
         self.assertEqual(self.res.metadata.coverages.all().count(), 1, msg="Number of coverages not equal to 1.")
@@ -412,7 +412,7 @@ class TestCoreMetadata(MockIRODSTestCaseMixin, TestCase):
                                                                                cov_pt.id ))
 
         # change the point coverage to type box
-        value_dict = {'northlimit':'56.45678', 'eastlimit':'12.6789','southlimit':'16.45678', 'westlimit':'16.6789',
+        value_dict = {'northlimit':'56.45678', 'eastlimit':'120.6789','southlimit':'16.45678', 'westlimit':'16.6789',
                       'units':'decimal deg' }
         resource.update_metadata_element(self.res.short_id,'coverage', cov_pt.id, type='box', value=value_dict)
         self.assertIn('box', [cov.type for cov in self.res.metadata.coverages.all()],
@@ -422,13 +422,105 @@ class TestCoreMetadata(MockIRODSTestCaseMixin, TestCase):
 
         # test that the name, uplimit, downlimit, zunits and projection are optional
         self.res.metadata.coverages.get(type='box').delete()
-        value_dict = {'northlimit': '56.45678', 'eastlimit': '12.6789','southlimit': '16.45678', 'westlimit': '16.6789',
+        value_dict = {'northlimit': '56.45678', 'eastlimit': '120.6789','southlimit': '16.45678', 'westlimit': '16.6789',
                       'units': 'decimal deg', 'name': 'Bear river', 'uplimit': '45.234', 'downlimit': '12.345',
                       'zunits': 'decimal deg', 'projection': 'NAD83'}
         resource.create_metadata_element(self.res.short_id, 'coverage', type='box', value=value_dict)
 
         # there should be now 2 coverage elements
         self.assertEqual(self.res.metadata.coverages.all().count(), 2, msg="Total overages not equal to 2.")
+
+        # for point type coverage test valid data for 'north' and 'east'
+
+        self.res.metadata.coverages.get(type='box').delete()
+        # now try to create point type coverage with invalid data
+        # value for 'east' should be >= -180 and <= 180 and 'north' >= -90 and <= 90
+        value_dict = {'east': '181.45678', 'north': '50', 'units': 'decimal deg'}
+        with self.assertRaises(ValidationError):
+            resource.create_metadata_element(self.res.short_id,'coverage', type='point', value=value_dict)
+
+        value_dict = {'east': '-181.45678', 'north': '50', 'units': 'decimal deg'}
+        with self.assertRaises(ValidationError):
+            resource.create_metadata_element(self.res.short_id,'coverage', type='point', value=value_dict)
+
+        value_dict = {'east': '120.45678', 'north': '91', 'units': 'decimal deg'}
+        with self.assertRaises(ValidationError):
+            resource.create_metadata_element(self.res.short_id,'coverage', type='point', value=value_dict)
+
+        value_dict = {'east': '120.45678', 'north': '-91', 'units': 'decimal deg'}
+        with self.assertRaises(ValidationError):
+            resource.create_metadata_element(self.res.short_id,'coverage', type='point', value=value_dict)
+
+        # now create coverage of type 'point' with all valid data
+        value_dict = {'east': '120.45678', 'north': '80.60', 'units': 'decimal deg'}
+        resource.create_metadata_element(self.res.short_id,'coverage', type='point', value=value_dict)
+        self.assertEqual(self.res.metadata.coverages.filter(type='point').count(), 1)
+
+        # for box type coverage test valid data for 'northlimit', 'southlimit', 'eastlimit' and 'westlimit'
+
+        self.res.metadata.coverages.get(type='point').delete()
+        # valid value for 'northlimit' should be in the range of -90 to 90
+        value_dict = {'northlimit': '91.45678', 'eastlimit': '120.6789', 'southlimit': '16.45678',
+                      'westlimit': '16.6789', 'units': 'decimal deg' }
+        with self.assertRaises(ValidationError):
+            resource.create_metadata_element(self.res.short_id,'coverage', type='box', value=value_dict)
+
+        value_dict = {'northlimit': '-91.45678', 'eastlimit': '120.6789', 'southlimit': '16.45678',
+                      'westlimit': '16.6789', 'units': 'decimal deg' }
+        with self.assertRaises(ValidationError):
+            resource.create_metadata_element(self.res.short_id,'coverage', type='box', value=value_dict)
+
+        # value for 'southlimit' should be in the range of -90 to 90
+        value_dict = {'northlimit': '80.45678', 'eastlimit': '120.6789', 'southlimit': '-91.45678',
+                      'westlimit': '16.6789', 'units': 'decimal deg' }
+        with self.assertRaises(ValidationError):
+            resource.create_metadata_element(self.res.short_id,'coverage', type='box', value=value_dict)
+
+        value_dict = {'northlimit': '80.45678', 'eastlimit': '120.6789', 'southlimit': '91.45678',
+                      'westlimit': '16.6789', 'units': 'decimal deg' }
+        with self.assertRaises(ValidationError):
+            resource.create_metadata_element(self.res.short_id,'coverage', type='box', value=value_dict)
+
+        # value for 'northlimit' must be greater than 'southlimit'
+        value_dict = {'northlimit': '70.45678', 'eastlimit': '120.6789', 'southlimit': '80.45678',
+                      'westlimit': '16.6789', 'units': 'decimal deg' }
+        with self.assertRaises(ValidationError):
+            resource.create_metadata_element(self.res.short_id,'coverage', type='box', value=value_dict)
+
+        # value for 'eastlimit should be in the range of -180 to 180
+        value_dict = {'northlimit': '80.45678', 'eastlimit': '181.6789', 'southlimit': '70.45678',
+                      'westlimit': '16.6789', 'units': 'decimal deg' }
+        with self.assertRaises(ValidationError):
+            resource.create_metadata_element(self.res.short_id,'coverage', type='box', value=value_dict)
+
+        value_dict = {'northlimit': '80.45678', 'eastlimit': '-181.6789', 'southlimit': '70.45678',
+                      'westlimit': '16.6789', 'units': 'decimal deg' }
+        with self.assertRaises(ValidationError):
+            resource.create_metadata_element(self.res.short_id,'coverage', type='box', value=value_dict)
+
+        # value for 'westlimit' must be in the range of -180 to 180
+        value_dict = {'northlimit': '80.45678', 'eastlimit': '120.6789', 'southlimit': '70.45678',
+                      'westlimit': '-181.6789', 'units': 'decimal deg' }
+        with self.assertRaises(ValidationError):
+            resource.create_metadata_element(self.res.short_id,'coverage', type='box', value=value_dict)
+
+        value_dict = {'northlimit': '80.45678', 'eastlimit': '120.6789', 'southlimit': '70.45678',
+                      'westlimit': '181.6789', 'units': 'decimal deg' }
+        with self.assertRaises(ValidationError):
+            resource.create_metadata_element(self.res.short_id,'coverage', type='box', value=value_dict)
+
+        # value for 'eastlimit' must be greater than 'westlimit'
+        value_dict = {'northlimit': '80.45678', 'eastlimit': '120.6789', 'southlimit': '70.45678',
+                      'westlimit': '130.6789', 'units': 'decimal deg' }
+        with self.assertRaises(ValidationError):
+            resource.create_metadata_element(self.res.short_id,'coverage', type='box', value=value_dict)
+
+        # now create with all valid data
+        value_dict = {'northlimit': '80.45678', 'eastlimit': '120.6789', 'southlimit': '70.45678',
+                      'westlimit': '110.6789', 'units': 'decimal deg' }
+        resource.create_metadata_element(self.res.short_id,'coverage', type='box', value=value_dict)
+
+        self.assertEqual(self.res.metadata.coverages.filter(type='box').count(), 1)
 
     def test_date(self):
         # test that when a resource is created it already generates the 'created' and 'modified' date elements
@@ -1253,7 +1345,7 @@ class TestCoreMetadata(MockIRODSTestCaseMixin, TestCase):
         # self.res.metadata.create_element('coverage', type='point', value=value_dict)
 
         # TODO: test box type coverage - uncomment this one and comment the above point type test
-        value_dict = {'northlimit':'56.45678', 'eastlimit':'12.6789','southlimit':'16.45678', 'westlimit':'16.6789',
+        value_dict = {'northlimit':'56.45678', 'eastlimit':'120.6789','southlimit':'16.45678', 'westlimit':'16.6789',
                       'units': 'decimal deg','name': 'Bear river', 'uplimit': '45.234', 'downlimit': '12.345',
                       'zunits': 'decimal deg', 'projection': 'NAD83'}
         self.res.metadata.create_element('coverage', type='box', value=value_dict)

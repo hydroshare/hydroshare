@@ -12,7 +12,6 @@ coverage info by acdd:
     http://wiki.esipfed.org/index.php/Attribute_Convention_for_Data_Discovery
 
 """
-__author__ = 'Tian Gan'
 
 from nc_utils import *
 import json

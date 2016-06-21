@@ -266,6 +266,7 @@ INSTALLED_APPS = (
     "django_irods",
     "theme",
     "theme.blog_mods",
+    "heartbeat",
     "mezzanine.boot",
     "mezzanine.conf",
     "mezzanine.core",
@@ -302,7 +303,8 @@ INSTALLED_APPS = (
     "hs_script_resource",
     "hs_sitemap",
     "hs_collection_resource",
-    "hs_modflow_modelinstance"
+    "hs_modflow_modelinstance",
+    "hs_tracking",
 )
 
 # These apps are excluded by hs_core.tests.runner.CustomTestSuiteRunner
@@ -363,6 +365,7 @@ MIDDLEWARE_CLASSES = (
     "mezzanine.pages.middleware.PageMiddleware",
     "mezzanine.core.middleware.FetchFromCacheMiddleware",
     "ga_resources.middleware.PagePermissionsViewableMiddleware",
+    "hs_tracking.middleware.Tracking",
 )
 
 # Store these package names here as they may change in the future since
@@ -480,6 +483,9 @@ PASSWORD_RESET_TIMEOUT_DAYS = 1
 #
 RESOURCE_LOCK_TIMEOUT_SECONDS = 300 # in seconds
 
+# customized temporary file path for large files retrieved from iRODS user zone for metadata extraction
+TEMP_FILE_DIR = '/tmp'
+
 ####################
 # OAUTH TOKEN SETTINGS #
 ####################
@@ -551,3 +557,8 @@ LOGGING = {
         },
     }
 }
+
+# hs_tracking settings
+TRACKING_SESSION_TIMEOUT = 60 * 15
+TRACKING_PROFILE_FIELDS = ["title", "user_type", "subject_areas", "public", "state", "country"]
+TRACKING_USER_FIELDS = ["username", "email", "first_name", "last_name"]

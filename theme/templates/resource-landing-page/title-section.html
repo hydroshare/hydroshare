@@ -67,12 +67,12 @@
                     {% endif %}
                 {%  elif not cm.has_required_content_files %}
                          <br>
-                         <span>Content files are required to publish the resource or make the resource public or discoverable.</span>
-                 {% endif %}
+                        <span>You must {% if missing_metadata_elements %}also {% endif %}add content files to your resource before it can be published, public or discoverable.</span>
+                {% endif %}
                 {%  if cm.resource_type|lower == "collectionresource" %}
                     {% if not cm.has_resources%}
                         <br>
-                        <span>Collection should contain at least one resource to be made it published, public or discoverable.</span>
+                        <span>A collection must contain at least one resource before it can be published, public or discoverable.</span>
                     {% endif %}
                 {% endif %}
                 <hr>

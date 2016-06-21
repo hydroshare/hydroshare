@@ -1,4 +1,3 @@
-__author__ = 'Alva'
 
 
 import unittest
@@ -69,10 +68,10 @@ class BasicFunction(MockIRODSTestCaseMixin, TestCase):
                                                 metadata=[],)
 
         # george creates a group 'bikers'
-        self.bikers = self.george.uaccess.create_group('Bikers')
+        self.bikers = self.george.uaccess.create_group(title='Bikers', description="We are the bikers")
 
         # george creates a group 'harpers'
-        self.harpers = self.george.uaccess.create_group('Harpers')
+        self.harpers = self.george.uaccess.create_group(title='Harpers', description="We are the harpers")
 
     def test_matrix_testing(self):
         """ Test that matrix testing routines function as believed """

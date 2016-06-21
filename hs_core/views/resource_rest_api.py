@@ -1,28 +1,36 @@
-__author__ = 'Pabitra'
-
 import os
 import mimetypes
 import copy
+import tempfile
+import shutil
+import logging
 
 from django.core.urlresolvers import reverse
 from django.core.exceptions import ObjectDoesNotExist
 from django.http import HttpResponseRedirect
 from django.shortcuts import redirect
+from django.contrib.sites.models import Site
 
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.views import APIView
 from rest_framework.response import Response
-from rest_framework import status, generics
+from rest_framework import generics
 from rest_framework.request import Request
 from rest_framework.exceptions import *
 
 from hs_core import hydroshare
-from hs_core.models import AbstractResource, ResourceManager
+from hs_core.models import AbstractResource
 from hs_core.hydroshare.utils import get_resource_by_shortkey, get_resource_types
 from hs_core.views import utils as view_utils
 from hs_core.views.utils import ACTION_TO_AUTHORIZE
 from hs_core.views import serializers
 from hs_core.views import pagination
+from hs_core.hydroshare.utils import get_file_storage, resource_modified
+from hs_core.serialization import GenericResourceMeta, HsDeserializationDependencyException, HsDeserializationException
+from hs_core.hydroshare.hs_bagit import create_bag_files
+
+
+logger = logging.getLogger(__name__)
 
 
 # Mixins
@@ -331,7 +339,7 @@ class ResourceCreate(generics.CreateAPIView):
         else:
             files = []
 
-        _, res_title, metadata = hydroshare.utils.resource_pre_create_actions(resource_type=resource_type,
+        _, res_title, metadata, _ = hydroshare.utils.resource_pre_create_actions(resource_type=resource_type,
                                                                               resource_title=res_title,
                                                                               page_redirect_url_key=None,
                                                                               files=files,
@@ -467,6 +475,8 @@ class ScienceMetadataRetrieveUpdate(APIView):
     PermissionDenied: return json format: {'detail': 'You do not have permission to perform this action.'}
     ValidationError: return json format: {parameter-1': ['error message-1'], 'parameter-2': ['error message-2'], .. }
     """
+    ACCEPT_FORMATS = ('application/xml', 'application/rdf+xml')
+
     allowed_methods = ('GET', 'PUT')
 
     def get(self, request, pk):
@@ -475,12 +485,78 @@ class ScienceMetadataRetrieveUpdate(APIView):
         scimeta_url = hydroshare.utils.current_site_url() + AbstractResource.scimeta_url(pk)
         return redirect(scimeta_url)
 
-
     def put(self, request, pk):
-        # TODO: update science metadata using the metadata json data provided - will do in the next iteration
-        # Should this update any extracted metadata? It would be easier to implement if we allow update of
-        # any metadata.
-        raise NotImplementedError()
+        # Update science metadata based on resourcemetadata.xml uploaded
+        resource, authorized, user = view_utils.authorize(
+            request, pk,
+            needed_permission=ACTION_TO_AUTHORIZE.EDIT_RESOURCE,
+            raises_exception=False)
+        if not authorized:
+            raise PermissionDenied()
+
+        files = request.FILES.values()
+        if len(files) == 0:
+            error_msg = {'file': 'No resourcemetadata.xml file was found to update resource metadata.'}
+            raise ValidationError(detail=error_msg)
+        elif len(files) > 1:
+            error_msg = {'file': ('More than one file was found. Only one file, named resourcemetadata.xml, '
+                                  'can be used to update resource metadata.')}
+            raise ValidationError(detail=error_msg)
+
+        scimeta = files[0]
+        if scimeta.content_type not in self.ACCEPT_FORMATS:
+            error_msg = {'file': ("Uploaded file has content type {t}, "
+                                  "but only these types are accepted: {e}.").format(t=scimeta.content_type,
+                                                                                    e=",".join(self.ACCEPT_FORMATS))}
+            raise ValidationError(detail=error_msg)
+        expect = 'resourcemetadata.xml'
+        if scimeta.name != expect:
+            error_msg = {'file': "Uploaded file has name {n}, but expected {e}.".format(n=scimeta.name,
+                                                                                        e=expect)}
+            raise ValidationError(detail=error_msg)
+
+        # Temp directory to store resourcemetadata.xml
+        tmp_dir = tempfile.mkdtemp()
+        try:
+            # Fake the bag structure so that GenericResourceMeta.read_metadata_from_resource_bag
+            # can read and validate the system and science metadata for us.
+            bag_data_path = os.path.join(tmp_dir, 'data')
+            os.mkdir(bag_data_path)
+            # Copy new science metadata to bag data path
+            scimeta_path = os.path.join(bag_data_path, 'resourcemetadata.xml')
+            shutil.copy(scimeta.temporary_file_path(), scimeta_path)
+            # Copy existing resource map to bag data path
+            # (use a file-like object as the file may be in iRODS, so we can't
+            #  just copy it to a local path)
+            resmeta_path = os.path.join(bag_data_path, 'resourcemap.xml')
+            with open(resmeta_path, 'wb') as resmeta:
+                storage = get_file_storage()
+                resmeta_irods = storage.open(AbstractResource.sysmeta_path(pk))
+                shutil.copyfileobj(resmeta_irods, resmeta)
+
+            resmeta_irods.close()
+
+            try:
+                # Read resource system and science metadata
+                domain = Site.objects.get_current().domain
+                rm = GenericResourceMeta.read_metadata_from_resource_bag(tmp_dir,
+                                                                         hydroshare_host=domain)
+                # Update resource metadata
+                rm.write_metadata_to_resource(resource, update_title=True, update_keywords=True)
+                create_bag_files(resource)
+            except HsDeserializationDependencyException as e:
+                msg = ("HsDeserializationDependencyException encountered when updating "
+                       "science metadata for resource {pk}; depedent resource was {dep}.")
+                msg = msg.format(pk=pk, dep=e.dependency_resource_id)
+                logger.error(msg)
+                raise ValidationError(detail=msg)
+            except HsDeserializationException as e:
+                raise ValidationError(detail=e.message)
+
+            resource_modified(resource, request.user)
+            return Response(data={'resource_id': pk}, status=status.HTTP_202_ACCEPTED)
+        finally:
+            shutil.rmtree(tmp_dir)
 
 
 class ResourceFileCRUD(APIView):
@@ -604,6 +680,7 @@ class ResourceFileCRUD(APIView):
         # prepare response data
         file_name = os.path.basename(res_file_objects[0].resource_file.name)
         response_data = {'resource_id': pk, 'file_name': file_name}
+        resource_modified(resource, request.user)
         return Response(data=response_data, status=status.HTTP_201_CREATED)
 
     def delete(self, request, pk, filename):
@@ -615,6 +692,7 @@ class ResourceFileCRUD(APIView):
 
         # prepare response data
         response_data = {'resource_id': pk, 'file_name': filename}
+        resource_modified(resource, request.user)
         return Response(data=response_data, status=status.HTTP_200_OK)
 
     def put(self, request, pk, filename):

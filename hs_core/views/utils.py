@@ -1,5 +1,5 @@
 from __future__ import absolute_import
-from rest_framework.exceptions import *
+
 import json
 import os
 import string
@@ -7,11 +7,19 @@ from collections import namedtuple
 import paramiko
 import logging
 
+from django.core.urlresolvers import reverse
 from django.contrib.auth.models import Group, User
 from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import ObjectDoesNotExist
 from django.core.files.uploadedfile import UploadedFile
+from django.utils.http import int_to_base36
 from django.conf import settings
+
+from rest_framework.exceptions import *
+
+from mezzanine.utils.email import subject_template, default_token_generator, send_mail_template
+from mezzanine.utils.urls import next_url
+from mezzanine.conf import settings
 
 from ga_resources.utils import get_user
 
@@ -62,24 +70,46 @@ def upload_from_irods(username, password, host, port, zone, irods_fnames, res_fi
         fname = os.path.basename(ifname.rstrip(os.sep))
         res_files.append(UploadedFile(file=tmpFile, name=fname, size=size))
 
-# run the update script on hyrax server via ssh session for netCDF resources on demand
-# when private netCDF resources are made public so that all links of data services
-# provided by Hyrax service are instantaneously available on demand
-def run_script_to_update_hyrax_input_files():
+
+def run_ssh_command(host, uname, pwd, exec_cmd):
+    """
+    run ssh client to ssh to a remote host and run a command on the remote host
+    Args:
+        host: remote host name to ssh to
+        uname: the username on the remote host to ssh to
+        pwd: the password of the user on the remote host to ssh to
+        exec_cmd: the command to be executed on the remote host via ssh
+
+    Returns:
+        None, but raises SSHException from paramiko if there is any error during ssh
+        connection and command execution
+    """
     ssh = paramiko.SSHClient()
     ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-    ssh.connect(settings.HYRAX_SSH_HOST, username=settings.HYRAX_SSH_PROXY_USER, password=settings.HYRAX_SSH_PROXY_USER_PWD)
+    ssh.connect(host, username=uname, password=pwd)
     transport = ssh.get_transport()
     session = transport.open_session()
     session.set_combine_stderr(True)
     session.get_pty()
-    session.exec_command(settings.HYRAX_SCRIPT_RUN_COMMAND)
+    session.exec_command(exec_cmd)
     stdin = session.makefile('wb', -1)
     stdout = session.makefile('rb', -1)
-    stdin.write("{cmd}\n".format(cmd=settings.HYRAX_SSH_PROXY_USER_PWD))
+    stdin.write("{cmd}\n".format(cmd=pwd))
     stdin.flush()
     logger = logging.getLogger('django')
-    logger.debug(stdout.readlines())
+    output = stdout.readlines()
+    if output:
+        logger.debug(output)
+        return '.'.join(output)
+    else:
+        return ''
+
+
+# run the update script on hyrax server via ssh session for netCDF resources on demand
+# when private netCDF resources are made public so that all links of data services
+# provided by Hyrax service are instantaneously available on demand
+def run_script_to_update_hyrax_input_files():
+    run_ssh_command(host=settings.HYRAX_SSH_HOST, uname=settings.HYRAX_SSH_PROXY_USER, pwd=settings.HYRAX_SSH_PROXY_USER_PWD, exec_cmd=settings.HYRAX_SCRIPT_RUN_COMMAND)
 
 
 def authorize(request, res_id, needed_permission=ACTION_TO_AUTHORIZE.VIEW_RESOURCE, raises_exception=True):
@@ -258,3 +288,42 @@ def get_my_resources_list(request):
 
     resource_collection = (owned_resources + editable_resources + viewable_resources + discovered_resources)
     return resource_collection
+
+def send_action_to_take_email(request, user, action_type, **kwargs):
+    """
+    Sends an email with an action link to a user.
+    The actual action takes place when the user clicks on the link
+
+    The ``action_type`` arg is both the name of the urlpattern for
+    the action link, as well as the names of the email templates
+    to use. Additional context variable needed in the email template can be
+    passed using the kwargs
+
+    for action_type == 'group_membership', an instance of GroupMembershipRequest and instance of Group are expected to
+    be passed into this function
+    """
+    email_to = kwargs.get('group_owner', user)
+    context = {'request': request, 'user':user}
+    if action_type == 'group_membership':
+        membership_request = kwargs['membership_request']
+        action_url = reverse(action_type, kwargs={
+            "uidb36": int_to_base36(email_to.id),
+            "token": default_token_generator.make_token(email_to),
+            "membership_request_id": membership_request.id
+        }) + "?next=" + (next_url(request) or "/")
+
+        context['group'] = kwargs.pop('group')
+    else:
+        action_url = reverse(action_type, kwargs={
+            "uidb36": int_to_base36(email_to.id),
+            "token": default_token_generator.make_token(email_to)
+        }) + "?next=" + (next_url(request) or "/")
+
+    context['action_url'] = action_url
+    context.update(kwargs)
+
+    subject_template_name = "email/%s_subject.txt" % action_type
+    subject = subject_template(subject_template_name, context)
+    send_mail_template(subject, "email/%s" % action_type,
+                       settings.DEFAULT_FROM_EMAIL, email_to.email,
+                       context=context)
