@@ -52,7 +52,7 @@ class TestNewVersionResource(TestCase):
         shutil.copy(raster_file, temp_raster_file)
         self.raster_obj = open(temp_raster_file, 'r')
         files = [UploadedFile(file=self.raster_obj, name='cea.tif')]
-        _, _, metadata = utils.resource_pre_create_actions(resource_type='RasterResource',
+        _, _, metadata, _ = utils.resource_pre_create_actions(resource_type='RasterResource',
                                                           resource_title='Test Raster Resource',
                                                           page_redirect_url_key=None,
                                                           files=files,

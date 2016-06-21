@@ -15,7 +15,8 @@ from django.core.files.uploadedfile import UploadedFile
 from django.dispatch import receiver
 
 from hs_core.hydroshare import utils
-from hs_core.hydroshare.resource import ResourceFile
+from hs_core.hydroshare.resource import ResourceFile, \
+    get_resource_file_name, delete_resource_file_only
 from hs_core.signals import pre_create_resource, pre_add_files_to_resource, pre_delete_file_from_resource, \
     pre_metadata_element_create, pre_metadata_element_update
 from forms import CellInfoValidationForm, BandInfoValidationForm, OriginalCoverageSpatialForm
@@ -26,29 +27,45 @@ import raster_meta_extract
 # to populate create-resource.html template page
 
 
-def raster_file_validation(files):
+def raster_file_validation(files, ref_tmp_file_names=[]):
     error_info = []
     vrt_file_path = ''
 
-    # process uploaded .tif or .zip file
-    if len(files) == 1:
-        ext = os.path.splitext(files[0].name)[1]
+    # process uploaded .tif or .zip file or file retrieved from iRODS user zone
+    in_filename = ''
+    if len(files) >= 1:
+        in_filename = files[0].name
+        file = files[0]
+    elif len(ref_tmp_file_names) >= 1:
+        in_filename = ref_tmp_file_names[0]
+        file = None
+
+    if in_filename:
+        ext = os.path.splitext(in_filename)[1]
         if ext == '.tif':
-            temp_vrt_file_path, temp_dir = create_vrt_file(files[0])
+            temp_vrt_file_path, temp_dir = create_vrt_file(in_filename, file)
             if os.path.isfile(temp_vrt_file_path):
                 files.append(UploadedFile(file=open(temp_vrt_file_path, 'r'), name=os.path.basename(temp_vrt_file_path)))
 
         elif ext == '.zip':
-            extract_file_paths, temp_dir = explode_zip_file(files[0])
+            extract_file_paths, temp_dir = explode_zip_file(in_filename, file)
             if extract_file_paths:
-                del files[0]
+                if len(files) == 1:
+                    del files[0]
+                if len(ref_tmp_file_names) == 1:
+                    del ref_tmp_file_names[0]
                 for file_path in extract_file_paths:
                     files.append(UploadedFile(file=open(file_path, 'r'), name=os.path.basename(file_path)))
 
     # check if raster is valid in format and data
-    files_names = [f.name for f in files]
+    if len(files) >= 1:
+        files_names = [f.name for f in files]
+        files_path = [f.file.name for f in files]
+    if len(ref_tmp_file_names) >= 1:
+        for fname in ref_tmp_file_names:
+            files_names.append(os.path.split(fname)[1])
+
     files_ext = [os.path.splitext(path)[1] for path in files_names]
-    files_path = [f.file.name for f in files]
 
     if set(files_ext) == {'.vrt', '.tif'} and files_ext.count('.vrt') == 1:
         vrt_file_path = files_path[files_ext.index('.vrt')]
@@ -79,15 +96,23 @@ def raster_file_validation(files):
     return error_info, vrt_file_path, temp_dir
 
 
-def create_vrt_file(tif_file):
+def create_vrt_file(tif_file_name, file):
     # create vrt file
     temp_dir = tempfile.mkdtemp()
-    tif_base_name = os.path.basename(tif_file.name)
-    shutil.copy(tif_file.file.name, os.path.join(temp_dir, tif_base_name))
+    tif_base_name = os.path.basename(tif_file_name)
+    if file:
+        shutil.copy(file.file.name, os.path.join(temp_dir, tif_base_name))
+    else:
+        shutil.copy(tif_file_name, os.path.join(temp_dir, tif_base_name))
     vrt_file_path = os.path.join(temp_dir, os.path.splitext(tif_base_name)[0]+'.vrt')
 
     with open(os.devnull, 'w') as fp:
-        subprocess.Popen(['gdal_translate', '-of', 'VRT', tif_file.file.name, vrt_file_path], stdout=fp, stderr=fp).wait()   # remember to add .wait()
+        if file:
+            subprocess.Popen(['gdal_translate', '-of', 'VRT', file.file.name, vrt_file_path], stdout=fp,
+                             stderr=fp).wait()  # remember to add .wait()
+        else:
+            subprocess.Popen(['gdal_translate', '-of', 'VRT', tif_file_name, vrt_file_path], stdout=fp,
+                             stderr=fp).wait()  # remember to add .wait()
 
     # edit VRT contents
     try:
@@ -105,10 +130,13 @@ def create_vrt_file(tif_file):
     return vrt_file_path, temp_dir
 
 
-def explode_zip_file(zip_file):
+def explode_zip_file(zip_file_name, file):
     temp_dir = tempfile.mkdtemp()
     try:
-        zf = zipfile.ZipFile(zip_file.file.name, 'r')
+        if file:
+            zf = zipfile.ZipFile(file.file.name, 'r')
+        else:
+            zf = zipfile.ZipFile(zip_file_name, 'r')
         zf.extractall(temp_dir)
         zf.close()
 
@@ -134,11 +162,26 @@ def raster_pre_create_resource_trigger(sender, **kwargs):
     title = kwargs['title']
     validate_files_dict = kwargs['validate_files']
     metadata = kwargs['metadata']
+    fed_res_fnames = kwargs['fed_res_file_names']
+    fed_res_path = kwargs['fed_res_path']
+    file_selected = False
 
     if files:
+        file_selected = True
         # raster file validation
         error_info, vrt_file_path, temp_dir = raster_file_validation(files)
+    elif fed_res_fnames:
+        ref_tmpfiles = utils.get_fed_zone_files(fed_res_fnames)
+        # raster file validation
+        error_info, vrt_file_path, temp_dir = raster_file_validation(files, ref_tmp_file_names=ref_tmpfiles)
+        ext = os.path.splitext(fed_res_fnames[0])[1]
+        if ext == '.zip':
+            # clear up the original zip file so that it will not be added into the resource
+            fed_res_path.append(utils.get_federated_zone_home_path(fed_res_fnames[0]))
+            del fed_res_fnames[0]
+        file_selected = True
 
+    if file_selected:
         # metadata extraction
         if not error_info:
             temp_vrt_file_path = [os.path.join(temp_dir, f) for f in os.listdir(temp_dir) if '.vrt' == os.path.splitext(f)[1]].pop()
@@ -208,12 +251,25 @@ def raster_pre_create_resource_trigger(sender, **kwargs):
 def raster_pre_add_files_to_resource_trigger(sender, **kwargs):
     files = kwargs['files']
     res = kwargs['resource']
+    fed_res_fnames = kwargs['fed_res_file_names']
     validate_files_dict = kwargs['validate_files']
+    file_selected = False
 
     if files:
+        file_selected = True
         # raster file validation
         error_info, vrt_file_path, temp_dir = raster_file_validation(files)
+    elif fed_res_fnames:
+        ref_tmpfiles = utils.get_fed_zone_files(fed_res_fnames)
+        # raster file validation
+        error_info, vrt_file_path, temp_dir = raster_file_validation(files, ref_tmp_file_names=ref_tmpfiles)
+        ext = os.path.splitext(fed_res_fnames[0])[1]
+        if ext == '.zip':
+            # clear up the original zip file so that it will not be added into the resource
+            del fed_res_fnames[0]
+        file_selected = True
 
+    if file_selected:
         # metadata extraction
         if not error_info:
             temp_vrt_file_path = [os.path.join(temp_dir, f) for f in os.listdir(temp_dir) if '.vrt' == os.path.splitext(f)[1]].pop()
@@ -266,7 +322,7 @@ def raster_pre_add_files_to_resource_trigger(sender, **kwargs):
 def raster_pre_delete_file_from_resource_trigger(sender, **kwargs):
     res = kwargs['resource']
     del_file = kwargs['file']
-
+    del_res_fname = get_resource_file_name(del_file)
     # delete core metadata coverage now that the only file is deleted
     res.metadata.coverages.all().delete()
 
@@ -288,12 +344,12 @@ def raster_pre_delete_file_from_resource_trigger(sender, **kwargs):
 
     # delete all the files that is not the user selected file
     for f in ResourceFile.objects.filter(object_id=res.id):
-        if f.resource_file.name != del_file.resource_file.name:
-            f.resource_file.delete()
-            f.delete()
+        fname = get_resource_file_name(f)
+        if fname != del_res_fname:
+            delete_resource_file_only(res, f)
 
     # delete the format of the files that is not the user selected delete file
-    del_file_format = utils.get_file_mime_type(del_file.resource_file.name)
+    del_file_format = utils.get_file_mime_type(del_res_fname)
     for format_element in res.metadata.formats.all():
         if format_element.value != del_file_format:
             res.metadata.delete_element(format_element.term, format_element.id)

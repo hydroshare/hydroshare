@@ -11,11 +11,19 @@ from urlparse import urlparse
 def script_pre_create(sender, **kwargs):
     files = kwargs['files']
     metadata = kwargs['metadata']
+    fed_res_fnames = kwargs['fed_res_file_names']
     extended_metadata = {}
     script_language = None
+    file_selected = False
 
     if files:
+        file_selected = True
         file_type = files[0].name.split('.')[-1]
+    elif fed_res_fnames:
+        file_type = fed_res_fnames[0].split('.')[-1]
+        file_selected = True
+
+    if file_selected:
         if file_type.lower() == "py":
             script_language = "Python"
         elif file_type.lower() == "r":

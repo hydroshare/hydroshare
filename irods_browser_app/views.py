@@ -2,8 +2,10 @@ import json
 import os
 import string
 from django.http import HttpResponse, HttpResponseRedirect
+
 from irods.session import iRODSSession
 from irods.exception import CollectionDoesNotExist
+
 from django_irods.icommands import SessionException
 from hs_core import hydroshare
 from hs_core.views.utils import authorize, upload_from_irods, ACTION_TO_AUTHORIZE
@@ -32,12 +34,12 @@ def check_upload_files(resource_cls, fnames_list):
         valid = True
     else:
         for fname in fnames_list:
-            ext = os.path.splitext(fname)[1]
+            ext = os.path.splitext(fname)[1].lower()
             if ext == file_types:
                 valid = True
             else:
                 for index in range(len(file_types)):
-                    file_type_str = file_types[index].strip()
+                    file_type_str = file_types[index].strip().lower()
                     if file_type_str == ".*" or ext == file_type_str:
                         valid = True
                         break
@@ -91,6 +93,12 @@ def login(request):
         )
 
 def store(request):
+    """
+    Get file hierarchy (collection of subcollections and data objects) for the requested directory
+    in an iRODS zone the requested user has logged in.
+    It is invoked by an AJAX call, so it returns json object that holds content for files and folders
+    under the requested directory/collection/subcollection
+    """
     return_object = {}
     irods_sess = iRODSSession(user=str(request.POST['user']), password=str(request.POST['password']),
                                   zone=str(request.POST['zone']), host=str(request.POST['host']),
@@ -122,10 +130,12 @@ def upload(request):
             response_data['irods_file_names'] = file_names
             # get selected file names without path for informational display on the page
             response_data['irods_sel_file'] = ', '.join(os.path.basename(f.rstrip(os.sep)) for f in fnames_list)
+            homepath = fnames_list[0]
+            response_data['irods_federated'] = utils.is_federated(homepath)
         else:
             response_data['file_type_error'] = "Invalid file type: {ext}".format(ext=ext)
             response_data['irods_file_names'] = ''
-            response_data['irods_sel_file'] = 'No file selected'
+            response_data['irods_sel_file'] = 'No file selected.'
 
         return HttpResponse(
             json.dumps(response_data),
@@ -144,33 +154,37 @@ def upload_add(request):
     res_files = request.FILES.getlist('files')
     extract_metadata = request.REQUEST.get('extract-metadata', 'No')
     extract_metadata = True if extract_metadata.lower() == 'yes' else False
-
     irods_fnames = request.POST.get('irods_file_names', '')
     irods_fnames_list = string.split(irods_fnames, ',')
     res_cls = resource.__class__
 
     valid, ext = check_upload_files(res_cls, irods_fnames_list)
-
+    fed_res_file_names = ''
+    irods_federated = False
     if not valid:
         request.session['file_type_error'] = "Invalid file type: {ext}".format(ext=ext)
         return HttpResponseRedirect(request.META['HTTP_REFERER'])
     else:
-        user = request.POST.get('irods-username')
-        password = request.POST.get("irods-password")
-        port = request.POST.get("irods-port")
-        host = request.POST.get("irods-host")
-        zone = request.POST.get("irods-zone")
-        try:
-            upload_from_irods(username=user, password=password, host=host, port=port,
-                              zone=zone, irods_fnames=irods_fnames, res_files=res_files)
-        except SessionException as ex:
-            request.session['validation_error'] = ex.stderr
-            return HttpResponseRedirect(request.META['HTTP_REFERER'])
+        homepath = irods_fnames_list[0]
+        irods_federated = utils.is_federated(homepath)
+        if irods_federated:
+            fed_res_file_names = irods_fnames.split(',')
+        else:
+            user = request.POST.get('irods-username')
+            password = request.POST.get("irods-password")
+            port = request.POST.get("irods-port")
+            host = request.POST.get("irods-host")
+            zone = request.POST.get("irods-zone")
+            try:
+                upload_from_irods(username=user, password=password, host=host, port=port,
+                                  zone=zone, irods_fnames=irods_fnames, res_files=res_files)
+            except SessionException as ex:
+                request.session['validation_error'] = ex.stderr
+                return HttpResponseRedirect(request.META['HTTP_REFERER'])
 
     try:
         utils.resource_file_add_pre_process(resource=resource, files=res_files, user=request.user,
-                                            extract_metadata=extract_metadata)
-
+                                            extract_metadata=extract_metadata, fed_res_file_names=fed_res_file_names)
     except hydroshare.utils.ResourceFileSizeException as ex:
         request.session['file_size_error'] = ex.message
         return HttpResponseRedirect(request.META['HTTP_REFERER'])
@@ -181,9 +195,15 @@ def upload_add(request):
 
     try:
         hydroshare.utils.resource_file_add_process(resource=resource, files=res_files, user=request.user,
-                                                   extract_metadata=extract_metadata)
+                                                   extract_metadata=extract_metadata,
+                                                   fed_res_file_names=fed_res_file_names)
 
     except (hydroshare.utils.ResourceFileValidationException, Exception) as ex:
-        request.session['validation_error'] = ex.message
+        if ex.message:
+            request.session['validation_error'] = ex.message
+        elif ex.stderr:
+            request.session['validation_error'] = ex.stderr
+    except SessionException as ex:
+        request.session['validation_error'] = ex.stderr
 
     return HttpResponseRedirect(request.META['HTTP_REFERER'])

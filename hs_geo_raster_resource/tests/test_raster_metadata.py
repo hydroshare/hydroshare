@@ -33,7 +33,7 @@ class TestRasterMetaData(MockIRODSTestCaseMixin, TransactionTestCase):
         )
 
         # even there is no file uploaded to resource, there are default extended automatically metadata created
-        _, _, metadata = utils.resource_pre_create_actions(resource_type='RasterResource',
+        _, _, metadata, _ = utils.resource_pre_create_actions(resource_type='RasterResource',
                                                           resource_title='My Test Raster Resource',
                                                           page_redirect_url_key=None,
                                                           metadata=None,)
@@ -171,7 +171,7 @@ class TestRasterMetaData(MockIRODSTestCaseMixin, TransactionTestCase):
         # passing the file object that points to the temp dir doesn't work - create_resource throws error
         # open the file from the fixed file location
         files = [UploadedFile(file=self.raster_tif_file_obj, name=self.raster_tif_file_name)]
-        _, _, metadata = utils.resource_pre_create_actions(resource_type='RasterResource',
+        _, _, metadata, _ = utils.resource_pre_create_actions(resource_type='RasterResource',
                                                           resource_title='My Test Raster Resource',
                                                           page_redirect_url_key=None,
                                                           files=files,

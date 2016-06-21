@@ -424,6 +424,25 @@
     </div>
 </div>
 
+<div class="modal fade" id="rep-resource-to-irods-dialog" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                <h4 class="modal-title" id="rep-res-to-irods-title">Replicate resource bag to your iRODS user zone</h4>
+            </div>
+            <div class="modal-body">
+                Are you sure you want to replicate this resource bag to your iRODS user zone?
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+                <a type="button" class="btn btn-danger"
+                   onclick="rep_res_to_irods_user_zone_ajax_submit('{{ cm.short_id }}');return false;">Replicate</a>
+            </div>
+        </div>
+    </div>
+</div>
+
 <div class="modal fade" id="add-source-dialog" tabindex="-1" role="dialog" aria-labelledby="add-source"
      aria-hidden="true">
     <div class="modal-dialog">
@@ -1449,3 +1468,33 @@
     </div>
 
 {% endfor %}
+
+{% block extra_js %}
+    <script type="text/javascript">
+        function rep_res_to_irods_user_zone_ajax_submit(res_id) {
+            setPointerEvents(false);
+            $.ajax({
+                url: "/hsapi/_internal/" + res_id + "/rep-res-bag-to-irods-user-zone/",
+                type: "POST",
+                data: {},
+                success: function(json) {
+                    if (json.success) {
+                        $("#rep-alert-success").show();
+                        $("#rep-status-success").text(json.success);
+                    }
+                    if (json.error) {
+                        $("#rep-alert-error").show();
+                        $("#rep-status-error").text(json.error);
+                    }
+                    $('#rep-resource-to-irods-dialog').modal('hide');
+                },
+                error: function(xhr, errmsg, err) {
+                    status_error = xhr.status + ": " + xhr.responseText + ". Error message: " + errmsg;
+                    console.log(status_error);
+                    $("#rep-status-error").text(status_error);
+                    $('#rep-resource-to-irods-dialog').modal('hide');
+                }
+            });
+        }
+    </script>
+{% endblock %}
