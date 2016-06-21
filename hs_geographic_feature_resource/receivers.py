@@ -8,7 +8,8 @@ from django.dispatch import receiver
 from django.core.files.uploadedfile import UploadedFile
 
 from hs_core.hydroshare import utils
-from hs_core.hydroshare.resource import ResourceFile
+from hs_core.hydroshare.resource import ResourceFile, \
+    get_resource_file_name, delete_resource_file_only
 from hs_core.signals import pre_create_resource, pre_metadata_element_create,\
                             pre_metadata_element_update, pre_delete_file_from_resource,\
                             pre_add_files_to_resource, post_add_files_to_resource
@@ -314,19 +315,11 @@ def geofeature_pre_delete_file_from_resource(sender, **kwargs):
     del_file = kwargs['file']
     one_file_removed = True
     all_file_removed = False
-    if del_file.resource_file:
-        # file was originally from local disk, and is currently stored on main hs irods
-        res_fname = del_file.resource_file.name
-    elif del_file.fed_resource_file:
-        # file was originally from local disk, but is currently stored on fed'd irods
-        res_fname = del_file.fed_resource_file.name
-    else:
-        # file was originally from fed'd irods, and is currently stored on fed's irods
-        res_fname = del_file.fed_resource_file_name_or_path
+    del_res_fname = get_resource_file_name(del_file)
 
     ori_file_info = res_obj.metadata.originalfileinfo.all().first()
     if ori_file_info.fileType == "SHP" or ori_file_info.fileType == "ZSHP":
-        del_f_fullname = res_fname[res_fname.rfind('/')+1:].lower()
+        del_f_fullname = del_res_fname[del_res_fname.rfind('/')+1:].lower()
         del_f_name, del_f_ext = os.path.splitext(del_f_fullname)
         if del_f_ext in [".shp", ".shx", ".dbf"]:
             # The shp, shx or dbf files cannot be removed.
@@ -335,19 +328,9 @@ def geofeature_pre_delete_file_from_resource(sender, **kwargs):
 
             # remove all files in this res right now except for the file user just clicked to remove (hs_core will remove it later)
             for f in ResourceFile.objects.filter(object_id=res_obj.id):
-                if f.resource_file and f.resource_file.name != res_fname:
-                    # file was originally from local disk, and is currently stored on main hs irods
-                    f.resource_file.delete()
-                    f.delete()
-                elif f.fed_resource_file_name_or_path and f.fed_resource_file_name_or_path != res_fname:
-                    # file was originally from fed'd irods, and is currently stored on fed's irods
-                    file_name = os.path.join(res_obj.resource_federation_path, res_obj.short_id, f.fed_resource_file_name_or_path);
-                    utils.delete_fed_zone_file(file_name)
-                    f.delete()
-                elif f.fed_resource_file and f.fed_resource_file != res_fname:
-                    # file was originally from local disk, but is currently stored on fed'd irods
-                    f.fed_resource_file.delete()
-                    f.delete()  # work for files not selected
+                fname = get_resource_file_name(f)
+                if fname != del_res_fname:
+                    delete_resource_file_only(res_obj, f)
 
         elif del_f_ext == ".prj":
             originalcoverage_obj = res_obj.metadata.originalcoverage.all().first()
@@ -561,7 +544,7 @@ def geofeature_post_add_files_to_resource_handler(sender, **kwargs):
                     elif res_f.fed_resource_file:
                         # file was originally from local disk, but now is stored on fed'd user irods
                         source = res_f.fed_resource_file.file.name
-                        f_fullname = res_f.fed_resource_file.url
+                        f_fullname = res_f.fed_resource_file.name
 
                     f_fullname = f_fullname[f_fullname.rfind('/')+1:]
                     fileName, fileExtension = os.path.splitext(f_fullname.lower())

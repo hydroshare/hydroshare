@@ -199,7 +199,7 @@ def get_fed_zone_file_size(fname):
 
 def get_fed_zone_files(irods_fnames):
     """
-    Get the file from iRODS federated zone to Django server for metadata extraction on-demand for specific resource types
+    Get the files from iRODS federated zone to Django server for metadata extraction on-demand for specific resource types
     Args:
         irods_fnames: the logical iRODS file names with full logical path separated by comma
 

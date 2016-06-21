@@ -876,6 +876,58 @@ def delete_resource(pk):
     return pk
 
 
+def get_resource_file_name(f):
+    '''
+    get the file name of a specific ResourceFile object f
+    Args:
+        f: the ResourceFile object to return name for
+    Returns:
+        the file name of the ResourceFile object f
+    '''
+    if f.resource_file:
+        # file was originally from local disk, and is currently stored in irods hydroshare zone
+        res_fname = f.resource_file.name
+    elif f.fed_resource_file:
+        # file was originally from local disk, but is currently stored in federated irods zone
+        res_fname = f.fed_resource_file.name
+    else:
+        # file was originally from federated irods zone, and is currently stored in the
+        # same federated irods zone
+        res_fname = f.fed_resource_file_name_or_path
+    return res_fname
+
+
+def delete_resource_file_only(resource, f):
+    '''
+    Delete the single resource file f from the resource without sending signals and
+    without deleting related metadata element. This function is called by delete_resource_file()
+    function as well as from pre-delete signal handler for specific resource types
+    (e.g., netCDF, raster, and feature) where when one resource file is deleted,
+    some other resource files needs to be deleted as well.
+    Args:
+        resource: the resource from which the file f is to be deleted
+        f: the ResourceFile object to be deleted
+    Returns: file name that has been deleted
+    '''
+    fed_path = resource.resource_federation_path
+    if fed_path:
+        if f.fed_resource_file:
+            # file was originally from local disk, but is currently stored in federated irods zone
+            file_name = f.fed_resource_file.name
+            f.fed_resource_file.delete()
+        elif f.fed_resource_file_name_or_path:
+            # file was originally from federated irods zone, and is currently stored in the
+            # same federated irods zone
+            file_name = os.path.join(fed_path, resource.short_id, f.fed_resource_file_name_or_path);
+            utils.delete_fed_zone_file(file_name)
+    else:
+        # file was originally from local disk, and is currently stored in main irods hydroshare zone
+        file_name = f.resource_file.name
+        f.resource_file.delete()
+    f.delete()
+    return file_name
+
+
 def delete_resource_file(pk, filename_or_id, user):
     """
     Deletes an individual file from a HydroShare resource. If the file does not exist, the Exceptions.NotFound exception
@@ -925,18 +977,7 @@ def delete_resource_file(pk, filename_or_id, user):
         if filter_condition(f):
             # send signal
             signals.pre_delete_file_from_resource.send(sender=res_cls, file=f, resource=resource, user=user)
-            if fed_path:
-                if f.fed_resource_file:
-                    file_name = f.fed_resource_file.name
-                    f.fed_resource_file.delete()
-                elif f.fed_resource_file_name_or_path:
-                    file_name = os.path.join(fed_path, resource.short_id, f.fed_resource_file_name_or_path);
-                    utils.delete_fed_zone_file(file_name)
-            else:
-                file_name = f.resource_file.name
-                f.resource_file.delete()
-
-            f.delete()
+            file_name = delete_resource_file_only(resource, f)
             delete_file_mime_type = utils.get_file_mime_type(file_name)
             delete_file_extension = os.path.splitext(file_name)[1]
 

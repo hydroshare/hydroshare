@@ -15,7 +15,8 @@ from django.core.files.uploadedfile import UploadedFile
 from django.dispatch import receiver
 
 from hs_core.hydroshare import utils
-from hs_core.hydroshare.resource import ResourceFile
+from hs_core.hydroshare.resource import ResourceFile, \
+    get_resource_file_name, delete_resource_file_only
 from hs_core.signals import pre_create_resource, pre_add_files_to_resource, pre_delete_file_from_resource, \
     pre_metadata_element_create, pre_metadata_element_update
 from forms import CellInfoValidationForm, BandInfoValidationForm, OriginalCoverageSpatialForm
@@ -321,13 +322,7 @@ def raster_pre_add_files_to_resource_trigger(sender, **kwargs):
 def raster_pre_delete_file_from_resource_trigger(sender, **kwargs):
     res = kwargs['resource']
     del_file = kwargs['file']
-    if del_file.resource_file:
-        res_fname = del_file.resource_file.name
-    elif del_file.fed_resource_file:
-        res_fname = del_file.fed_resource_file.name
-    else:
-        res_fname = del_file.fed_resource_file_name_or_path
-
+    del_res_fname = get_resource_file_name(del_file)
     # delete core metadata coverage now that the only file is deleted
     res.metadata.coverages.all().delete()
 
@@ -349,19 +344,12 @@ def raster_pre_delete_file_from_resource_trigger(sender, **kwargs):
 
     # delete all the files that is not the user selected file
     for f in ResourceFile.objects.filter(object_id=res.id):
-        if f.resource_file and f.resource_file.name != res_fname:
-            f.resource_file.delete()
-            f.delete()
-        elif f.fed_resource_file and f.fed_resource_file != res_fname:
-            f.fed_resource_file.delete()
-            f.delete()
-        elif f.fed_resource_file_name_or_path and f.fed_resource_file_name_or_path != res_fname:
-            file_name = os.path.join(res.resource_federation_path, res.short_id, f.fed_resource_file_name_or_path);
-            utils.delete_fed_zone_file(file_name)
-            f.delete()
+        fname = get_resource_file_name(f)
+        if fname != del_res_fname:
+            delete_resource_file_only(res, f)
 
     # delete the format of the files that is not the user selected delete file
-    del_file_format = utils.get_file_mime_type(res_fname)
+    del_file_format = utils.get_file_mime_type(del_res_fname)
     for format_element in res.metadata.formats.all():
         if format_element.value != del_file_format:
             res.metadata.delete_element(format_element.term, format_element.id)

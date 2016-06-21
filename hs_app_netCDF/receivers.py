@@ -8,7 +8,8 @@ from django.dispatch import receiver
 from django.core.files.uploadedfile import InMemoryUploadedFile
 
 from hs_core.signals import *
-from hs_core.hydroshare.resource import ResourceFile
+from hs_core.hydroshare.resource import ResourceFile, \
+    get_resource_file_name, delete_resource_file_only
 from hs_core.hydroshare import utils
 from hs_app_netCDF.forms import *
 import nc_functions.nc_utils as nc_utils
@@ -193,13 +194,7 @@ def netcdf_pre_create_resource(sender, **kwargs):
 def netcdf_pre_delete_file_from_resource(sender, **kwargs):
     nc_res = kwargs['resource']
     del_file = kwargs['file']
-    if del_file.resource_file:
-        res_fname = del_file.resource_file.name
-    elif del_file.fed_resource_file:
-        res_fname = del_file.fed_resource_file.name
-    else:
-        res_fname = del_file.fed_resource_file_name_or_path
-
+    res_fname = get_resource_file_name(del_file)
     del_file_ext = os.path.splitext(res_fname)[-1]
 
     # update resource modification info
@@ -213,13 +208,9 @@ def netcdf_pre_delete_file_from_resource(sender, **kwargs):
     if del_file_ext in file_ext:
         del file_ext[del_file_ext]
         for f in ResourceFile.objects.filter(object_id=nc_res.id):
-            ext = os.path.splitext(res_fname)[-1]
+            ext = os.path.splitext(utils.get_resource_file_name(f))[-1]
             if ext in file_ext:
-                if f.resource_file:
-                    f.resource_file.delete()
-                elif f.fed_resource_file:
-                    f.fed_resource_file.delete()
-                f.delete()
+                delete_resource_file_only(nc_res, f)
                 nc_res.metadata.formats.filter(value=file_ext[ext]).delete()
                 break
 
@@ -259,11 +250,7 @@ def netcdf_pre_add_files_to_resource(sender, **kwargs):
         if isinstance(nc_dataset, netCDF4.Dataset):
             # delete all existing resource files and metadata related
             for f in ResourceFile.objects.filter(object_id=nc_res.id):
-                    if f.resource_file:
-                        f.resource_file.delete()
-                    elif f.fed_resource_file:
-                        f.fed_resource_file.delete()
-                    f.delete()
+                delete_resource_file_only(nc_res, f)
 
             # update resource modification info
             user = kwargs['user']

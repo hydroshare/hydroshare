@@ -11,6 +11,23 @@ from forms import SiteValidationForm, VariableValidationForm, MethodValidationFo
     TimeSeriesResultValidationForm
 
 
+def get_file_ext_and_obj_name(res, res_file):
+    fl_ext = ''
+    fl_obj_name = ''
+    if res_file.resource_file:
+        fl_ext = os.path.splitext(res_file.resource_file.name)[1]
+        fl_obj_name = res_file.resource_file.file.name
+    elif res_file.fed_resource_file:
+        fl_ext = os.path.splitext(res_file.fed_resource_file.name)[1]
+        fl_obj_name = res_file.fed_resource_file.file.name
+    elif res_file.fed_resource_file_name_or_path:
+        fl_ext = os.path.splitext(res_file.fed_resource_file_name_or_path)[1]
+        fl_obj_name = utils.get_fed_zone_files(
+            os.path.join(res.resource_federation_path, res.short_id,
+                         res_file.fed_resource_file_name_or_path))[0]
+    return fl_ext, fl_obj_name
+
+
 @receiver(pre_create_resource, sender=TimeSeriesResource)
 def resource_pre_create_handler(sender, **kwargs):
     # if needed more actions can be taken here before the TimeSeries resource is created
@@ -39,17 +56,7 @@ def post_add_files_to_resource_handler(sender, **kwargs):
     res_file = resource.files.all()[0] if resource.files.all() else None
     if res_file:
         # check if it a sqlite file
-        fl_ext = ''
-        fl_obj_name = ''
-        if res_file.resource_file:
-            fl_ext = os.path.splitext(res_file.resource_file.name)[1]
-            fl_obj_name = res_file.resource_file.file.name
-        elif res_file.fed_resource_file:
-            fl_ext = os.path.splitext(res_file.fed_resource_file.name)[1]
-            fl_obj_name = res_file.fed_resource_file.file.name
-        else:
-            fl_ext = os.path.splitext(res_file.fed_resource_file_name_or_path)[1]
-            fl_obj_name = utils.get_fed_zone_files(res_file.fed_resource_file_name_or_path)[0]
+        fl_ext, fl_obj_name = get_file_ext_and_obj_name(resource, res_file)
 
         if fl_ext == '.sqlite':
             validate_err_message = _validate_odm2_db_file(fl_obj_name)
@@ -81,22 +88,7 @@ def post_create_resource_handler(sender, **kwargs):
     res_file = resource.files.all()[0] if resource.files.all() else None
     if res_file:
         # check if it a sqlite file
-        fl_ext = ''
-        fl_obj_name = ''
-        if res_file.resource_file:
-            fl_ext = os.path.splitext(res_file.resource_file.name)[1]
-            fl_obj_name = res_file.resource_file.file.name
-        elif res_file.fed_resource_file:
-            fl_ext = os.path.splitext(res_file.fed_resource_file.name)[1]
-            fl_obj_name = res_file.fed_resource_file.file.name
-        elif res_file.fed_resource_file_name_or_path:
-            fl_ext = os.path.splitext(res_file.fed_resource_file_name_or_path)[1]
-            if res_file.fed_resource_file_name_or_path.startswith('/'):
-                fl_obj_name = utils.get_fed_zone_files(res_file.fed_resource_file_name_or_path)[0]
-            else:
-                fl_obj_name = utils.get_fed_zone_files(
-                    os.path.join(resource.resource_federation_path, resource.short_id,
-                                 res_file.fed_resource_file_name_or_path))[0]
+        fl_ext, fl_obj_name = get_file_ext_and_obj_name(resource, res_file)
 
         if fl_ext == '.sqlite':
             validate_err_message = _validate_odm2_db_file(fl_obj_name)
