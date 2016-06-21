@@ -9,8 +9,8 @@ class DiscoveryForm(FacetedSearchForm):
     NElng = forms.CharField(label='NE longitude', required=False)
     SWlat = forms.CharField(label='SW latitude', required=False)
     SWlng = forms.CharField(label='SW longitude', required=False)
-    #start_date = forms.DateField(required=False)
-    #end_date = forms.DateField(required=False)
+    start_date = forms.DateField(label='From Date', required=False)
+    end_date = forms.DateField(label='To Date', required=False)
 
     def search(self):
         if not self.cleaned_data.get('q'):
@@ -35,6 +35,15 @@ class DiscoveryForm(FacetedSearchForm):
 
         if geo_sq:
             sqs = sqs.filter(geo_sq)
+
+
+        # Check to see if a start_date was chosen.
+        if self.cleaned_data['start_date']:
+            sqs = sqs.filter(coverage_start_date__gte=self.cleaned_data['start_date'])
+
+        # Check to see if an end_date was chosen.
+        if self.cleaned_data['end_date']:
+            sqs = sqs.filter(coverage_end_date__lte=self.cleaned_data['end_date'])
 
         author_sq = SQ()
         subjects_sq = SQ()

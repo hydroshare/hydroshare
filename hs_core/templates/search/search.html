@@ -163,7 +163,7 @@
                     <table id="geo-filter-coordinates" class="table">
                         <tr>
                             {% for field in form %}
-                                {% if field.auto_id  != "id_q" %}
+                                {% if field.auto_id  == "id_NElat" or field.auto_id  == "id_NElng" or field.auto_id  == "id_SWlat" or field.auto_id  == "id_SWlng" %}
                                         <td>
                                             <div class="fieldWrapper">
                                                 {{ field.label_tag }}: {{ field }}
@@ -172,10 +172,21 @@
                                 {% endif %}
                             {% endfor %}
                             <td>
-                                <a id="manual-zoom-btn" class="btn btn-default" onclick="manualZoomMap()">
+                                <a id="manual-zoom-btn" class="btn btn-default" onclick="manualZoomMap()" style="margin-top:20px">
                                     zoom in
                                 </a>
                             </td>
+                        </tr>
+                        <tr>
+                            {% for field in form %}
+                                {% if field.auto_id == "id_start_date" or field.auto_id == "id_end_date" %}
+                                        <td>
+                                            <div class="fieldWrapper">
+                                                {{ field.label_tag }}: {{ field }}
+                                            </div>
+                                        </td>
+                                {% endif %}
+                            {% endfor %}
                         </tr>
                     </table>
                 </form>
@@ -625,17 +636,26 @@
             setMarkers(filtered_results);
             var results_selection = $('input:radio[name=results-selection]:checked').val();
             if (results_selection == 'map-results-selected') {
-                var ne_lat = document.getElementById("id_NElat").value;
-                var ne_lng = document.getElementById("id_NElng").value;
-                var sw_lat = document.getElementById("id_SWlat").value;
-                var sw_lng = document.getElementById("id_SWlng").value;
-                var data = {
-                    NElat: ne_lat,
-                    NElng: ne_lng,
-                    SWlat: sw_lat,
-                    SWlng: sw_lng
-                };
-                updateListView(data);
+                var bnds = map.getBounds();
+                var start_date = $("#id_start_date").val();
+                var end_date = $("#id_end_date").val();
+                if (bnds) {
+                    var ne = bnds.getNorthEast();
+                    var sw = bnds.getSouthWest();
+                    var ne_lat = ne.lat();
+                    var ne_lng = ne.lng();
+                    var sw_lat = sw.lat();
+                    var sw_lng = value = sw.lng();
+                    var data = {
+                        NElat: ne_lat,
+                        NElng: ne_lng,
+                        SWlat: sw_lat,
+                        SWlng: sw_lng,
+                        start_date: start_date,
+                        end_date: end_date
+                    };
+                    updateListView(data);
+                }
             }
         }
 
@@ -700,13 +720,19 @@
             return geoSearchParams
         }
 
+        var formDateParameters = function() {
+            var start_date = $("#id_start_date").val();
+            var end_date = $("#id_end_date").val();
+            return "&start_date="+start_date+"&end_date="+end_date;
+        }
 
-        var formLinkButtonURL = function(key, value){
+        var formLinkButtonURL = function(key, value) {
             var textSearch = $("#id_q").val();
             var searchURL = "?q=" + textSearch;
             var geoSearchParams = formGeoParameters();
+            var dateSearchParams = formDateParameters();
             var windowPath = window.location.pathname;
-            var requestURL =  windowPath + searchURL + geoSearchParams;
+            var requestURL =  windowPath + searchURL + geoSearchParams + dateSearchParams;
             var checkboxId =  key + "-" + value;
             var sessionStorageCheckboxId = 'search-' + checkboxId;
             sessionStorage[sessionStorageCheckboxId] = 'true';
@@ -771,6 +797,19 @@
 
         $(document).ready(function () {
 
+            $("#id_start_date").datepicker({
+                dateFormat: 'yy-mm-dd',
+                changeMonth: true,
+                changeYear: true,
+                yearRange: '1950:'
+            });
+            $("#id_end_date").datepicker({
+                dateFormat: 'yy-mm-dd',
+                changeMonth: true,
+                changeYear: true,
+                yearRange: '1950:'
+            });
+
             if (window.location.search.length == 0) {
                 clearCheckboxes();
             }
@@ -802,6 +841,8 @@
                     var ne_lng = document.getElementById("id_NElng").value;
                     var sw_lat = document.getElementById("id_SWlat").value;
                     var sw_lng = document.getElementById("id_SWlng").value;
+                    var start_date = $("#id_start_date").val();
+                    var end_date = $("#id_end_date").val();
 
                     $.ajax({
                         type: "GET",
@@ -810,7 +851,9 @@
                             NElat: ne_lat,
                             NElng: ne_lng,
                             SWlat: sw_lat,
-                            SWlng: sw_lng
+                            SWlng: sw_lng,
+                            start_date: start_date,
+                            end_date: end_date
                         },
                         dataType: 'json',
                         success: function(data) {
@@ -831,6 +874,8 @@
 
             $('input[type=radio][name=results-selection]').change(function() {
                 var data;
+                var start_date = $("#id_start_date").val();
+                var end_date = $("#id_end_date").val();
                 if (this.value == 'map-results-selected') {
                     var ne_lat = document.getElementById("id_NElat").value;
                     var ne_lng = document.getElementById("id_NElng").value;
@@ -840,7 +885,9 @@
                         NElat: ne_lat,
                         NElng: ne_lng,
                         SWlat: sw_lat,
-                        SWlng: sw_lng
+                        SWlng: sw_lng,
+                        start_date: start_date,
+                        end_date: end_date
                     };
                     sessionStorage['map-results-selected'] = 'true';
                     sessionStorage['all-results-selected'] = 'false';
@@ -849,7 +896,9 @@
                         NElat: '',
                         NElng: '',
                         SWlat: '',
-                        SWlng: ''
+                        SWlng: '',
+                        start_date: start_date,
+                        end_date: end_date
                     };
                     sessionStorage['all-results-selected'] = 'true';
                     sessionStorage['map-results-selected'] = 'false';
@@ -881,9 +930,10 @@
                     var textSearch = $("#id_q").val();
                     var searchURL = "?q=" + textSearch;
                     var geoSearchParams = formGeoParameters();
+                    var dateSearchParams = formDateParameters();
                     var windowPath = window.location.pathname;
-                    var requestURL =  windowPath + searchURL + geoSearchParams;
-                    if(window.location.hash) {
+                    var requestURL =  windowPath + searchURL + geoSearchParams + dateSearchParams;
+                    if (window.location.hash) {
                         requestURL = requestURL + window.location.hash;
                     }
                     window.location = requestURL;
@@ -897,20 +947,21 @@
                 var textSearch = $("#id_q").val();
                 var searchURL = "?q=" + textSearch;
                 var geoSearchParams = formGeoParameters();
+                var dateSearchParams = formDateParameters();
                 var windowPath = window.location.pathname;
-                var requestURL =  windowPath + searchURL + geoSearchParams;
+                var requestURL =  windowPath + searchURL + geoSearchParams + dateSearchParams;
 
-                if($(this).is(":checked")) {
+                if ($(this).is(":checked")) {
                     requestURL = requestURL + "&selected_facets="+key+"_exact:"+value;
                     requestURL += buildURLOnCheckboxes();
                     var checkboxId = $(this).attr("id");
                     var sessionStorageCheckboxId = 'search-' + checkboxId;
                     sessionStorage[sessionStorageCheckboxId] = 'true';
-                    if(window.location.hash) {
+                    if (window.location.hash) {
                         requestURL = requestURL + window.location.hash;
                     }
                     window.location = requestURL;
-                }else{
+                } else {
 
                     var checkboxId = $(this).attr("id");
                     var sessionStorageCheckboxId = 'search-' + checkboxId;
@@ -919,7 +970,7 @@
                     var textSearch = $("#id_q").val();
                     var updateURL = "/search/?q=" + textSearch;
                     updateURL += buildURLOnCheckboxes();
-                    if(window.location.hash) {
+                    if (window.location.hash) {
                         updateURL = updateURL + window.location.hash;
                     }
                     window.location = updateURL;
