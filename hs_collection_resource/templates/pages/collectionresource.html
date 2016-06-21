@@ -509,6 +509,7 @@
                                 }
                             }
                         }
+                        updateCoverageMetadataTabpage(json_response.new_coverage_list);
                         customAlert($alert_success, 3000);
                     }
                     else {
@@ -553,6 +554,45 @@
                $('#clear-deleted-res-warning').show();
             }
             });
+        }
+
+        function updateCoverageMetadataTabpage(new_coverage_list)
+        {
+            for (var i=0; i<new_coverage_list.length; i++)
+            {
+                var coverage =  new_coverage_list[i];
+                if (coverage.type == 'point')
+                {
+                    document.getElementById("id_east").value = coverage.value.east;
+                    document.getElementById("id_north").value = coverage.value.north;
+{#                    $("#id_east").value(coverage.value.east);#}
+{#                    $("#id_north").value(coverage.value.north);#}
+                    document.getElementById("id_type_2").checked = true;
+                    $("#id_type_2").trigger("change");
+                }
+                else if (coverage.type == 'box')
+                {
+                    document.getElementById('id_northlimit').value = coverage.value.northlimit;
+                    document.getElementById('id_eastlimit').value = coverage.value.eastlimit;
+                    document.getElementById('id_southlimit').value = coverage.value.southlimit;
+                    document.getElementById('id_westlimit').value = coverage.value.westlimit;
+{#                    $("#id_northlimit").value(coverage.value.northlimit);#}
+{#                    $("#id_eastlimit").value(coverage.value.eastlimit);#}
+{#                    $("#id_southlimit").value(coverage.value.southlimit);#}
+{#                    $("#id_westlimit").value(coverage.value.westlimit);#}
+                    document.getElementById("id_type_1").checked = true;
+                    $("#id_type_1").trigger("change");
+
+                }
+                else if (coverage.type == 'period')
+                {
+
+                    document.getElementById('id_start').value = coverage.value.start;
+                    document.getElementById('id_end').value = coverage.value.end;
+{#                    $("#id_start").value(coverage.value.start);#}
+{#                    $("#id_end").value(coverage.value.end);#}
+                }
+            }
         }
 
     </script>

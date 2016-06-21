@@ -25,6 +25,7 @@ def update_collection(request, shortkey, *args, **kwargs):
     status = "success"
     msg = ""
     metadata_status = "Insufficient to make public"
+    new_coverage_list = []
     try:
         with transaction.atomic():
             collection_res_obj, is_authorized, user = authorize(request, shortkey,
@@ -63,7 +64,7 @@ def update_collection(request, shortkey, *args, **kwargs):
             if collection_res_obj.can_be_public_or_discoverable:
                 metadata_status = "Sufficient to make public"
 
-            _update_collection_coverages(collection_res_obj)
+            new_coverage_list = _update_collection_coverages(collection_res_obj)
 
             resource_modified(collection_res_obj, user)
 
@@ -75,7 +76,7 @@ def update_collection(request, shortkey, *args, **kwargs):
         status = "error"
         msg = ex.message
     finally:
-        ajax_response_data = {'status': status, 'msg': msg, 'metadata_status': metadata_status}
+        ajax_response_data = {'status': status, 'msg': msg, 'metadata_status': metadata_status, 'new_coverage_list': new_coverage_list}
         return JsonResponse(ajax_response_data)
 
 
@@ -95,7 +96,8 @@ def update_collection_for_deleted_resources(request, shortkey, *args, **kwargs):
         if collection_res.resource_type.lower() != "collectionresource":
             raise Exception("Resource {0} is not a collection resource.".format(shortkey))
 
-        _update_collection_coverages(collection_res)
+        new_coverage_list = _update_collection_coverages(collection_res)
+        ajax_response_data['new_coverage_list'] = new_coverage_list
 
         resource_modified(collection_res, user)
         # remove all logged deleted resources for the collection
@@ -113,6 +115,7 @@ def update_collection_for_deleted_resources(request, shortkey, *args, **kwargs):
 def _update_collection_coverages(collection_res_obj):
 
     res_id = collection_res_obj.short_id
+    new_coverage_list = []
     try:
         with transaction.atomic():
             lon_list = []
@@ -143,35 +146,46 @@ def _update_collection_coverages(collection_res_obj):
                                            "Msg: {2} ".format(res_id, contained_res_obj.short_id, ex.message))
 
             collection_res_obj.metadata.coverages.all().delete()
+
+            # spatial coverage
             if len(lon_list) > 0 and len(lon_list) > 0:
+                value_dict = {}
+                type_str = 'point'
                 lon_min = min(lon_list)
                 lon_max = max(lon_list)
                 lat_min = min(lat_list)
                 lat_max = max(lat_list)
                 if lon_min == lon_max and lat_min == lat_max:
-                    collection_res_obj.metadata.create_element('Coverage',
-                                                            type='point',
-                                                            value={'east': lon_min,
-                                                                   'north': lat_min,
-                                                                   'units': output_spatial_units_str})
-
+                    type_str = 'point'
+                    value_dict['east'] = lon_min
+                    value_dict['north'] = lat_min
+                    value_dict['units'] = output_spatial_units_str
                 else:
-                    collection_res_obj.metadata.create_element('Coverage',
-                                                            type='box',
-                                                            value={'eastlimit': lon_max,
-                                                                   'westlimit': lon_min,
-                                                                   'northlimit': lat_max,
-                                                                   'southlimit': lat_min,
-                                                                   'units': output_spatial_units_str,
-                                                                   'projection': output_spatial_projection_str})
+                    type_str = 'box'
+                    value_dict['eastlimit'] = lon_max
+                    value_dict['westlimit'] = lon_min
+                    value_dict['northlimit'] = lat_max
+                    value_dict['southlimit'] = lat_min
+                    value_dict['units'] = output_spatial_units_str,
+                    value_dict['projection'] = output_spatial_projection_str
+                collection_res_obj.metadata.create_element('Coverage',
+                                                           type=type_str,
+                                                           value=value_dict)
+                new_coverage_list.append({'type': type_str, 'value': value_dict})
+
+            # temporal coverage
             if len(time_list) > 0:
                 time_start = min(time_list)
                 time_end = max(time_list)
+                value_dict = {'start': str(time_start), 'end': str(time_end)}
                 collection_res_obj.metadata.create_element('Coverage',
-                                                            type='period',
-                                                            value={'start': str(time_start),
-                                                                   'end': str(time_end)})
+                                                           type='period',
+                                                           value=value_dict)
+                new_coverage_list.append({'type': 'period', 'value': value_dict})
+
     except Exception as ex:
         logger.exception("Failed to update collection coverages. Collection resource ID: {0}. "
                          "Error: {1} ".format(res_id, ex.message))
         raise Exception("Failed to update collection coverages")
+    finally:
+        return new_coverage_list
