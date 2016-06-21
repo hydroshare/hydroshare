@@ -73,6 +73,8 @@ def _get_resource_view_context(page, request, content_model, selected_series_id,
 
 def _get_resource_edit_context(page, request, content_model, selected_series_id, series_ids, extended_metadata_exists):
 
+    # TODO: Since we are displaying metadata for a selected series, we don't need formset. There will be only one
+    # metadata element of specific type.
     SiteFormSetEdit = formset_factory(wraps(SiteForm)(partial(SiteForm, allow_edit=True,
                                                               cv_site_types=content_model.metadata.cv_site_types.all(),
                                                               cv_elevation_datums=content_model.metadata.cv_elevation_datums.all())),

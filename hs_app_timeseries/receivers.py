@@ -140,6 +140,13 @@ def metadata_element_pre_update_handler(sender, **kwargs):
 """
 
 
+@receiver(pre_download_file, sender=TimeSeriesResource)
+def file_pre_download_handler(sender, **kwargs):
+    resource = kwargs['resource']
+    if resource.metadata.is_dirty:
+        resource.metadata.update_sqlite_file()
+
+
 def _get_form_post_data(request, validation_form):
     form_data = {}
     for field_name in validation_form().fields:
