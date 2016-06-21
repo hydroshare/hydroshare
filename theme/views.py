@@ -26,8 +26,8 @@ from mezzanine.utils.email import send_verification_mail, send_approve_mail, sub
 from mezzanine.utils.urls import login_redirect, next_url
 from mezzanine.utils.views import render
 
+from hs_core.views.utils import run_ssh_command
 from hs_access_control.models import GroupMembershipRequest
-
 from theme.forms import ThreadedCommentForm
 from theme.forms import RatingForm, UserProfileForm, UserForm
 from theme.models import UserProfile
@@ -304,3 +304,68 @@ def deactivate_user(request):
     user.save()
     messages.success(request, "Your account has been successfully deactivated.")
     return HttpResponseRedirect('/accounts/logout/')
+
+@login_required
+def delete_irods_account(request):
+    if request.method == 'POST':
+        user = request.user
+        try:
+            exec_cmd = "{0} {1}".format(settings.HS_USER_ZONE_PROXY_USER_DELETE_USER_CMD, user.username)
+            output = run_ssh_command(host=settings.HS_USER_ZONE_HOST, uname=settings.HS_USER_ZONE_PROXY_USER, pwd=settings.HS_USER_ZONE_PROXY_USER_PWD,
+                            exec_cmd=exec_cmd)
+            if output:
+                if 'ERROR:' in output.upper():
+                    # there is an error from icommand run, report the error
+                    return HttpResponse(
+                        dumps({"error": 'iRODS server failed to delete this iRODS account {0}. Check the server log for details.'.format(user.username)}),
+                        content_type = "application/json"
+                    )
+
+            user_profile = UserProfile.objects.filter(user=user).first()
+            user_profile.create_irods_user_account = False
+            user_profile.save()
+            return HttpResponse(
+                    dumps({"success": "iRODS account {0} is deleted successfully".format(user.username)}),
+                    content_type = "application/json"
+            )
+        except Exception as ex:
+            return HttpResponse(
+                    dumps({"error": ex.message}),
+                    content_type = "application/json"
+            )
+
+
+@login_required
+def create_irods_account(request):
+    if request.method == 'POST':
+        try:
+            user = request.user
+            pwd = str(request.POST.get('password'))
+            exec_cmd = "{0} {1} {2}".format(settings.HS_USER_ZONE_PROXY_USER_CREATE_USER_CMD, user.username, pwd)
+            output = run_ssh_command(host=settings.HS_USER_ZONE_HOST, uname=settings.HS_USER_ZONE_PROXY_USER, pwd=settings.HS_USER_ZONE_PROXY_USER_PWD,
+                            exec_cmd=exec_cmd)
+            if output:
+                if 'ERROR:' in output.upper():
+                    # there is an error from icommand run, report the error
+                    return HttpResponse(
+                        dumps({"error": 'iRODS server failed to create this iRODS account {0}. Check the server log for details.'.format(user.username)}),
+                        content_type = "application/json"
+                    )
+
+            user_profile = UserProfile.objects.filter(user=user).first()
+            user_profile.create_irods_user_account = True
+            user_profile.save()
+            return HttpResponse(
+                    dumps({"success": "iRODS account {0} is created successfully".format(user.username)}),
+                    content_type = "application/json"
+            )
+        except Exception as ex:
+            return HttpResponse(
+                    dumps({"error": ex.message}),
+                    content_type = "application/json"
+            )
+    else:
+        return HttpResponse(
+            dumps({"error": "Not POST request"}),
+            content_type="application/json"
+        )

@@ -39,8 +39,13 @@
             <h2>Select a resource type and upload files as needed to create a new resource</h2>
 
             <ul>
-            <li>Files you upload here will be grouped together into a "Resource"</li>
-            <li>File size is limited to 1 GB per file</li>
+            <li>Files you upload here will be grouped together into a "Resource" in HydroShare.</li>
+            <li>File size is limited to 1 GB per file for direct browser upload from your local disk.</li>
+            <li>Files larger than 1GB can be imported directly from any iRODS account. You can create
+                a HydroShare iRODS account from your <a href="/user/{{ user.id }}/">user profile</a> page.
+                See help for information on working with iRODS directly.
+            </li>
+            <li> You can also add files directly from any iRODS server regardless of the file size. </li>
             </ul>
 
             <form class="form-horizontal" role="form" method="POST" enctype="multipart/form-data" action="/hsapi/_internal/create-resource/do/">
@@ -87,34 +92,45 @@
                     <table class="table" id="file-list">
                     <tbody id="files">
                         <tr>
-                            <td><input type="file" name="files" id="select-file" multiple/></td>
+                            <td>To load files from your local disk with file size limited to 1GB per file:
+                                <input type="file" class="btn-add-access" name="files" id="select-file" multiple/>
+                            </td>
                         </tr>
+
                         <tr>
                             <td>
-                                <span id="log-into-irods">
-                                    To load files from an iRODS server,
-                                    <a id="btn-signin-irods" type="button" class="btn-link" data-toggle="modal" data-target="#irodsSignin">log in to iRODS</a>
+                                To load files from an iRODS server including your iRODS user HydroShare server:
+                                <div id="irods-browse">
+                                    <span id="log-into-irods">
+                                        <a id="btn-signin-irods" type="button" class="btn-link" data-toggle="modal" data-target="#irodsSignin">log in to iRODS</a>
+                                    </span>
+                                    <input type="hidden" id="irods-username" name="irods-username" value="">
+                                    <input type="hidden" id="irods-password" name="irods-password" value="">
+                                    <input type="hidden" id="irods-host" name="irods-host" value="">
+                                    <input type="hidden" id="irods-port" name="irods-port" value="">
+                                    <input type="hidden" id="irods-zone" name="irods-zone" value="">
+                                    <input type="hidden" id="irods_file_names" name="irods_file_names" value="">
+                                    <input type="hidden" id="irods_federated" name="irods_federated" value="">
                                     <span id="sign-in-info"></span>
-                                    <br>
-                                </span>
-                                <input type="hidden" id="irods-username" name="irods-username" value="">
-                                <input type="hidden" id="irods-password" name="irods-password" value="">
-                                <input type="hidden" id="irods-host" name="irods-host" value="">
-                                <input type="hidden" id="irods-port" name="irods-port" value="">
-                                <input type="hidden" id="irods-zone" name="irods-zone" value="">
-                                <input type="hidden" id="irods_file_names" name="irods_file_names" value="">
-                                <a id="btn-select-irods-file"  type="button" class="btn btn-default row-selector hidden-form" data-toggle="modal" data-target="#irodsContent" >
-                                    Browse iRODS...
-                                </a>
-                                <span id="irods-sel-file"></span>
-                                <a id="btn-signout-irods" type="button" class="btn-link hidden-form">log out of iRODS</a>
+                                    <a id="btn-select-irods-file" type="button" class="btn btn-default hidden-form" data-toggle="modal" data-target="#irodsContent">
+                                        Browse iRODS...
+                                    </a>
+                                    <span id="irods-sel-file"></span>
+                                    <input type="hidden" id="copy-or-move" name="copy-or-move" value='copy'>
+                                    <span id="irods-copy-move" class="hidden-form">
+                                        <input type="radio" id='copy-radio' name="copy-move" value="copy" checked="checked"> Copy
+                                        <input type="radio" id='move-radio' name="copy-move" value="move"> Move
+                                    </span>
+                                    <a id="btn-signout-irods" type="button" class="btn-link hidden-form">log out of iRODS</a>
+                                </div>
                             </td>
                         </tr>
                     </tbody>
                     <div id="file-types">Any file type can be uploaded.</div>
                     <div id="file-multiple">Multiple file upload is allowed.</div>
                     </table>
-
+                    <h2 id="file-move-warning" class="text-red hidden-form">You selected move option which will move
+                        the selected files out of your iRODS account into a HydroShare resource once created. </h2>
                     <h2 class="text-red">{{ file_size_error }}</h2>
                     <h2 id="file-type-error" class="text-red">{{ validation_error }}</h2>
                 </div>
@@ -134,8 +150,6 @@
 
 {% block extra_js %}
     <script type="text/javascript">
-    $(function() {
-    });
     $(document).ready(function() {
         var json_response_file_types = {};
         var json_response_multiple_file = {};
@@ -143,12 +157,23 @@
         if (sessionStorage.signininfo) {
             $("#sign-in-info").text(sessionStorage.signininfo);
             $("#btn-select-irods-file").show();
-            $("#irods-sel-file").text("No file selected");
+            $("#irods-sel-file").text("No file selected.");
         }
+
+        $('input:radio[name="copy-move"]').change(function(){
+            if($(this).val()=='move') {
+                $("#copy-or-move").val('move');
+                $("#file-move-warning").show();
+            }
+            else {
+                $("#copy-or-move").val('copy');
+                $("#file-move-warning").hide();
+            }
+        });
         $('#resource-type').on('change', function(){
             $('#select-file').value = '';
             $('#select-file').attr('value', '');
-            $('#irods-sel-file').text("No file selected");
+            $('#irods-sel-file').text("No file selected.");
 
             if(selected_file != undefined){
                 selected_file.value = '';
