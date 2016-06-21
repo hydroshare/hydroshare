@@ -465,7 +465,8 @@ class TestGeoFeature(TransactionTestCase):
         hydroshare.add_resource_files(self.resGeoFeature.short_id, *add_files)
         self.assertEqual(ResourceFile.objects.filter(object_id=self.resGeoFeature.id).count(), 5)
         geofeature_post_add_files_to_resource_handler(sender=GeographicFeatureResource,
-                                                      resource=self.resGeoFeature, files=add_files)
+                                                      resource=self.resGeoFeature, files=add_files,
+                                                      validate_files={'are_files_valid': True, 'message': ''})
         originalcoverage_obj = self.resGeoFeature.metadata.originalcoverage.all().first()
         self.assertNotEqual(originalcoverage_obj.projection_string, UNKNOWN_STR)
 
