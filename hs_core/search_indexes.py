@@ -1,6 +1,7 @@
 from haystack import indexes
 from hs_core.models import BaseResource
 from django.db.models import Q
+from datetime import datetime
 
 
 class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
@@ -29,6 +30,8 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
     coverage_eastlimit = indexes.FloatField()
     coverage_southlimit = indexes.FloatField()
     coverage_westlimit = indexes.FloatField()
+    coverage_start_date = indexes.DateField()
+    coverage_end_date = indexes.DateField()
     formats = indexes.MultiValueField()
     identifiers = indexes.MultiValueField()
     language = indexes.CharField(faceted=True)
@@ -186,6 +189,37 @@ class BaseResourceIndex(indexes.SearchIndex, indexes.Indexable):
         else:
             return 'none'
 
+    def prepare_coverage_start_date(self, obj):
+        if hasattr(obj, 'metadata'):
+            for coverage in obj.metadata.coverages.all():
+                if coverage.type == 'period':
+                    clean_date = coverage.value["start"][:10]
+                    if "/" in clean_date:
+                        parsed_date = clean_date.split("/")
+                        start_date = parsed_date[2] + '-' + parsed_date[0] + '-' + parsed_date[1]
+                    else:
+                        parsed_date = clean_date.split("-")
+                        start_date = parsed_date[0] + '-' + parsed_date[1] + '-' + parsed_date[2]
+                    start_date_object = datetime.strptime(start_date, '%Y-%m-%d')
+                    return start_date_object
+        else:
+            return 'none'
+
+    def prepare_coverage_end_date(self, obj):
+        if hasattr(obj, 'metadata'):
+            for coverage in obj.metadata.coverages.all():
+                if coverage.type == 'period':
+                    clean_date = coverage.value["end"][:10]
+                    if "/" in clean_date:
+                        parsed_date = clean_date.split("/")
+                        end_date = parsed_date[2] + '-' + parsed_date[0] + '-' + parsed_date[1]
+                    else:
+                        parsed_date = clean_date.split("-")
+                        end_date = parsed_date[0] + '-' + parsed_date[1] + '-' + parsed_date[2]
+                    end_date_object = datetime.strptime(end_date, '%Y-%m-%d')
+                    return end_date_object
+        else:
+            return 'none'
 
     def prepare_formats(self, obj):
         if hasattr(obj, 'metadata'): 

@@ -636,26 +636,17 @@
             setMarkers(filtered_results);
             var results_selection = $('input:radio[name=results-selection]:checked').val();
             if (results_selection == 'map-results-selected') {
-                var bnds = map.getBounds();
-                var start_date = $("#id_start_date").val();
-                var end_date = $("#id_end_date").val();
-                if (bnds) {
-                    var ne = bnds.getNorthEast();
-                    var sw = bnds.getSouthWest();
-                    var ne_lat = ne.lat();
-                    var ne_lng = ne.lng();
-                    var sw_lat = sw.lat();
-                    var sw_lng = value = sw.lng();
-                    var data = {
-                        NElat: ne_lat,
-                        NElng: ne_lng,
-                        SWlat: sw_lat,
-                        SWlng: sw_lng,
-                        start_date: start_date,
-                        end_date: end_date
-                    };
-                    updateListView(data);
-                }
+                var ne_lat = document.getElementById("id_NElat").value;
+                var ne_lng = document.getElementById("id_NElng").value;
+                var sw_lat = document.getElementById("id_SWlat").value;
+                var sw_lng = document.getElementById("id_SWlng").value;
+                var data = {
+                    NElat: ne_lat,
+                    NElng: ne_lng,
+                    SWlat: sw_lat,
+                    SWlng: sw_lng
+                };
+                updateListView(data);
             }
         }
 
