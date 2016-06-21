@@ -101,7 +101,11 @@ class T12UserDelete(MockIRODSTestCaseMixin, TestCase):
         self.assertEqual(GroupAccess.objects.filter(id=agid).count(), 1)
         self.assertEqual(Group.objects.filter(id=ogid).count(), 1)
 
-        # these two tests will fail for an unknown reason
+        # the following tests will fail, because the resource field
+        # "creator" is a foreign key to User with on_delete=models.CASCADE
+        # and null=False. Thus removing the creator of a resource will
+        # remove the resource record (and orphan many files in the process).
+
         # print('resource access count is ', ResourceAccess.objects.filter(id=arid).count())
         # print('resource count is ', BaseResource.objects.filter(id=orid).count())
         # self.assertEqual(ResourceAccess.objects.filter(id=arid).count(), 1)
