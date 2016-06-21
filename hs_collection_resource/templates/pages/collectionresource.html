@@ -509,28 +509,14 @@
                                 }
                             }
                         }
-                        $('body > .container').append($alert_success);
-                        $('#error-alert').each(function(){
-                            this.remove();
-                        });
-                        $(".alert-success").fadeTo(2000, 500).fadeOut(1000, function(){
-                            $(document).trigger("submit-success");
-                            $(".alert-success").alert('close');
-                        });
+                        customAlert($alert_success, 3000);
                     }
                     else {
-                        $('body > .container').append($alert_error);
-                        $(".alert-danger").fadeTo(3000, 500).fadeOut(1000, function(){
-                            $(document).trigger("submit-error");
-                            $(".alert-danger").alert('close');
-                        });
+                        customAlert($alert_error, 3000);
                     }
                 },
                 error: function(XMLHttpRequest, textStatus, errorThrown) {
-                    $('#' + form_id).before($alert_error);
-                    $(".alert-error").fadeTo(2000, 500).slideUp(1000, function() {
-                        $(".alert-error").alert('close');
-                    });
+                     customAlert($alert_error, 3000);
                 }
             });
             //don't submit the form

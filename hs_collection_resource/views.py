@@ -1,4 +1,5 @@
 import logging
+from dateutil import parser
 
 from django.http import JsonResponse
 from django.db import transaction
@@ -62,6 +63,8 @@ def update_collection(request, shortkey, *args, **kwargs):
             if collection_res_obj.can_be_public_or_discoverable:
                 metadata_status = "Sufficient to make public"
 
+            _update_collection_coverages(collection_res_obj)
+
             resource_modified(collection_res_obj, user)
 
     except Exception as ex:
@@ -92,6 +95,8 @@ def update_collection_for_deleted_resources(request, shortkey, *args, **kwargs):
         if collection_res.resource_type.lower() != "collectionresource":
             raise Exception("Resource {0} is not a collection resource.".format(shortkey))
 
+        _update_collection_coverages(collection_res)
+
         resource_modified(collection_res, user)
         # remove all logged deleted resources for the collection
         collection_res.deleted_resources.all().delete()
@@ -104,3 +109,69 @@ def update_collection_for_deleted_resources(request, shortkey, *args, **kwargs):
     finally:
         return JsonResponse(ajax_response_data)
 
+
+def _update_collection_coverages(collection_res_obj):
+
+    res_id = collection_res_obj.short_id
+    try:
+        with transaction.atomic():
+            lon_list = []
+            lat_list = []
+            time_list = []
+            output_spatial_projection_str = "WGS84 EPSG:4326"
+            output_spatial_units_str = "Decimal degrees"
+            for contained_res_obj in collection_res_obj.resources.all():
+                for cvg in contained_res_obj.metadata.coverages.all():
+                    if cvg.type.lower() == "box":
+                        lon_list.append(float(cvg.value["eastlimit"]))
+                        lon_list.append(float(cvg.value["westlimit"]))
+                        lat_list.append(float(cvg.value["northlimit"]))
+                        lat_list.append(float(cvg.value["southlimit"]))
+                    elif cvg.type.lower() == "point":
+                        lon_list.append(float(cvg.value["east"]))
+                        lat_list.append(float(cvg.value["north"]))
+                    elif cvg.type.lower() == "period":
+                        try:
+                            if cvg.value.get("start", None) is not None:
+                                time_list.append(parser.parse(cvg.value["start"]))
+                            if cvg.value.get("end", None) is not None:
+                                time_list.append(parser.parse(cvg.value["end"]))
+                        except ValueError as ex:
+                            # skip the res if it has invalid datetime string
+                            logger.warning("Ignore unknown datetime string. Collection resource ID: {0}. "
+                                           "Contained res ID: {1}"
+                                           "Msg: {2} ".format(res_id, contained_res_obj.short_id, ex.message))
+
+            collection_res_obj.metadata.coverages.all().delete()
+            if len(lon_list) > 0 and len(lon_list) > 0:
+                lon_min = min(lon_list)
+                lon_max = max(lon_list)
+                lat_min = min(lat_list)
+                lat_max = max(lat_list)
+                if lon_min == lon_max and lat_min == lat_max:
+                    collection_res_obj.metadata.create_element('Coverage',
+                                                            type='point',
+                                                            value={'east': lon_min,
+                                                                   'north': lat_min,
+                                                                   'units': output_spatial_units_str})
+
+                else:
+                    collection_res_obj.metadata.create_element('Coverage',
+                                                            type='box',
+                                                            value={'eastlimit': lon_max,
+                                                                   'westlimit': lon_min,
+                                                                   'northlimit': lat_max,
+                                                                   'southlimit': lat_min,
+                                                                   'units': output_spatial_units_str,
+                                                                   'projection': output_spatial_projection_str})
+            if len(time_list) > 0:
+                time_start = min(time_list)
+                time_end = max(time_list)
+                collection_res_obj.metadata.create_element('Coverage',
+                                                            type='period',
+                                                            value={'start': str(time_start),
+                                                                   'end': str(time_end)})
+    except Exception as ex:
+        logger.exception("Failed to update collection coverages. Collection resource ID: {0}. "
+                         "Error: {1} ".format(res_id, ex.message))
+        raise Exception("Failed to update collection coverages")
