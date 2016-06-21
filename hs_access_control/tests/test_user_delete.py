@@ -101,7 +101,7 @@ class T12UserDelete(MockIRODSTestCaseMixin, TestCase):
         self.assertEqual(GroupAccess.objects.filter(id=agid).count(), 1)
         self.assertEqual(Group.objects.filter(id=ogid).count(), 1)
 
-        # these two tests will fail for an unknown reason 
+        # these two tests will fail for an unknown reason
         # print('resource access count is ', ResourceAccess.objects.filter(id=arid).count())
         # print('resource count is ', BaseResource.objects.filter(id=orid).count())
         # self.assertEqual(ResourceAccess.objects.filter(id=arid).count(), 1)
