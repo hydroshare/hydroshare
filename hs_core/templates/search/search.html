@@ -187,14 +187,12 @@
                                         </td>
                                 {% endif %}
                             {% endfor %}
-                        <!--
                             <td>
                                 <a id="clear-dates-options" class="btn btn-default" onclick="clearDates()" style="margin-top:20px">
                                     Clear Dates
                                 </a>
                             </td>
                         </tr>
-                        -->
                     </table>
                 </form>
             </div>
@@ -799,22 +797,19 @@
             window.location = clearURL;
         }
 
-{#        var clearDates = function() {#}
-{#            var textSearch = $("#id_q").val();#}
-{#            var searchURL = "?q=" + textSearch;#}
-{#            var geoSearchParams = formGeoParameters();#}
-{#            var dateSearchParams = "&start_date=&end_date=";#}
-{#            var windowPath = window.location.pathname;#}
-{#            var requestURL =  windowPath + searchURL + geoSearchParams + dateSearchParams;#}
-{#            var checkboxId =  key + "-" + value;#}
-{#            var sessionStorageCheckboxId = 'search-' + checkboxId;#}
-{#            sessionStorage[sessionStorageCheckboxId] = 'true';#}
-{#            requestURL += buildURLOnCheckboxes();#}
-{#            if (window.location.hash) {#}
-{#                requestURL = requestURL + window.location.hash;#}
-{#            }#}
-{#            window.location = requestURL;#}
-{#        }#}
+        var clearDates = function() {
+            var textSearch = $("#id_q").val();
+            var searchURL = "?q=" + textSearch;
+            var geoSearchParams = formGeoParameters();
+            var facetingParams = buildURLOnCheckboxes();
+            var dateSearchParams = "&start_date=&end_date=";
+            var windowPath = window.location.pathname;
+            var requestURL =  windowPath + searchURL + facetingParams + geoSearchParams + dateSearchParams;
+            if (window.location.hash) {
+                requestURL = requestURL + window.location.hash;
+            }
+            window.location = requestURL;
+        }
 
         $(document).ready(function () {
 
@@ -987,9 +982,7 @@
                     var checkboxId = $(this).attr("id");
                     var sessionStorageCheckboxId = 'search-' + checkboxId;
                     sessionStorage.removeItem(sessionStorageCheckboxId);
-
-                    var textSearch = $("#id_q").val();
-                    var updateURL = "/search/?q=" + textSearch;
+                    var updateURL =  windowPath + searchURL + geoSearchParams + dateSearchParams;
                     updateURL += buildURLOnCheckboxes();
                     if (window.location.hash) {
                         updateURL = updateURL + window.location.hash;
