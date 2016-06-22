@@ -615,22 +615,30 @@
             var sw_lat = document.getElementById("id_SWlat").value;
             var sw_lng = document.getElementById("id_SWlng").value;
 
-            var ne = new google.maps.LatLng(ne_lat, ne_lng);
-            var sw = new google.maps.LatLng(sw_lat, sw_lng);
+            if (!isNaN(ne_lat) && !isNaN(ne_lng) && !isNaN(sw_lat) && !isNaN(sw_lng)) {
+                var ne = new google.maps.LatLng(ne_lat, ne_lng);
+                var sw = new google.maps.LatLng(sw_lat, sw_lng);
 
-            var customized_bounds = new google.maps.LatLngBounds(sw, ne);
-            map.fitBounds(customized_bounds);
-            var $mapDiv = $("#discover-map");
+                var customized_bounds = new google.maps.LatLngBounds(sw, ne);
+                map.fitBounds(customized_bounds);
+                var $mapDiv = $("#discover-map");
 
-            var mapDim = {
-                height: $mapDiv.height(),
-                width: $mapDiv.width()
+                var mapDim = {
+                    height: $mapDiv.height(),
+                    width: $mapDiv.width()
+                }
+                var listener = google.maps.event.addListener(map, "idle", function () {
+                    map.setCenter(customized_bounds.getCenter());
+                    map.setZoom(getBoundsZoomLevel(customized_bounds, mapDim));
+                    google.maps.event.removeListener(listener);
+                });
+            } else {
+                document.getElementById("id_NElat").value = "";
+                document.getElementById("id_NElng").value = "";
+                document.getElementById("id_SWlat").value = "";
+                document.getElementById("id_SWlng").value = "";
             }
-            var listener = google.maps.event.addListener(map, "idle", function () {
-                map.setCenter(customized_bounds.getCenter());
-                map.setZoom(getBoundsZoomLevel(customized_bounds, mapDim));
-                google.maps.event.removeListener(listener);
-            });
+
         }
 
         var updateMapView = function() {
