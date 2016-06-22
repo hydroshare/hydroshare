@@ -1,4 +1,5 @@
-<div class="row" style="margin-bottom:10px">
+
+<div id="sql-file-update" class="row" {% if not cm.metadata.is_dirty  %}style="display:none;"{% endif %} style="margin-bottom:10px">
     <div class="col-sm-12">
         <strong>SQLite file needs to be synced with metadata changes:</strong>
 

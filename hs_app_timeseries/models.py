@@ -68,6 +68,24 @@ class Variable(TimeSeriesAbstractMetaDataElement):
         return self.variable_name
 
     @classmethod
+    def update(cls, element_id, **kwargs):
+        element = cls.objects.get(id=element_id)
+        # if the user has entered a new variable name
+        if 'variable_name' in kwargs:
+            if element.variable_name != kwargs['variable_name']:
+                # check if the user has entered a new name
+                if kwargs['variable_name'] not in [item.name for item in element.metadata.cv_variable_names.all()]:
+                    # generate term for the new name
+                    kwargs['variable_name'] = kwargs['variable_name'].strip()
+                    term = _generate_term_from_name(kwargs['variable_name'])
+                    variable_name = CVVariableName.objects.create(metadata=element.metadata, term=term,
+                                                                  name=kwargs['variable_name'])
+                    variable_name.is_dirty = True
+                    variable_name.save()
+
+        super(Variable, cls).update(element_id, **kwargs)
+
+    @classmethod
     def remove(cls, element_id):
         raise ValidationError("Variable element of a resource can't be deleted.")
 
@@ -123,6 +141,7 @@ class TimeSeriesResult(TimeSeriesAbstractMetaDataElement):
 class AbstractCVLookupTable(models.Model):
     term = models.CharField(max_length=255)
     name = models.CharField(max_length=255)
+    is_dirty = models.BooleanField(default=False)
 
     class Meta:
         abstract = True
@@ -134,6 +153,7 @@ class CVVariableType(AbstractCVLookupTable):
 
 class CVVariableName(AbstractCVLookupTable):
     metadata = models.ForeignKey('TimeSeriesMetaData', related_name="cv_variable_names")
+
 
 class CVSpeciation(AbstractCVLookupTable):
     metadata = models.ForeignKey('TimeSeriesMetaData', related_name="cv_speciations")
@@ -219,7 +239,11 @@ class TimeSeriesMetaData(CoreMetaData):
                 any(variable.is_dirty for variable in self.variables) or \
                 any(method.is_dirty for method in self.methods) or \
                 any(processing_level.is_dirty for processing_level in self.processing_levels) or \
-                any(ts_result.is_dirty for ts_result in self.time_series_results)
+                any(ts_result.is_dirty for ts_result in self.time_series_results) or \
+                any(cv_variable_name.is_dirty for cv_variable_name in CVVariableName.objects.filter(metadata=self)) or \
+                any(cv_variable_type.is_dirty for cv_variable_type in CVVariableType.objects.filter(metadata=self)) or \
+                any(cv_speciation.is_dirty for cv_speciation in CVSpeciation.objects.filter(metadata=self)) or \
+                any(cv_site_type.is_dirty for cv_site_type in CVSiteType.objects.filter(metadata=self))
 
         return dirty
 
@@ -429,6 +453,7 @@ class TimeSeriesMetaData(CoreMetaData):
                     self._update_processinglevels_table(con, cur)
                     self._update_sites_related_tables(con, cur)
                     self._update_results_related_tables(con, cur)
+                    self._update_CV_tables(con, cur)
 
                     # push the updated sqlite file to iRODS
                     sqlite_file_original = self.resource.files.first()
@@ -445,6 +470,29 @@ class TimeSeriesMetaData(CoreMetaData):
             finally:
                 if os.path.exists(temp_dir):
                     shutil.rmtree(temp_dir)
+
+    def _update_CV_tables(self, con, cur):
+        # here 'is_dirty' true means a new term has been added
+        # so a new record needs to be added to the specific CV table
+        def insert_cv_record(cv_elements, cv_table_name):
+            for cv_element in cv_elements:
+                if cv_element.is_dirty:
+                    insert_sql = "INSERT INTO {table_name}(Term, Name) VALUES(?, ?)".format(table_name=cv_table_name)
+                    cur.execute(insert_sql, (cv_element.term, cv_element.name))
+                    con.commit()
+                    cv_element.is_dirty = False
+                    cv_element.save()
+
+        insert_cv_record(self.cv_variable_names.all(), 'CV_VariableName')
+        insert_cv_record(self.cv_variable_types.all(), 'CV_VariableType')
+        insert_cv_record(self.cv_speciations.all(), 'CV_Speciation')
+        insert_cv_record(self.cv_site_types.all(), 'CV_SiteType')
+        insert_cv_record(self.cv_elevation_datums.all(), 'CV_ElevationDatum')
+        insert_cv_record(self.cv_method_types.all(), 'CV_MethodType')
+        insert_cv_record(self.cv_units_types.all(), 'CV_UnitsType')
+        insert_cv_record(self.cv_statuses.all(), 'CV_Status')
+        insert_cv_record(self.cv_mediums.all(), 'CV_Medium')
+        insert_cv_record(self.cv_aggregation_statistics.all(), 'CV_AggregationStatistic')
 
     def _update_variables_table(self, con, cur):
         for variable in self.variables:
@@ -567,5 +615,20 @@ class TimeSeriesMetaData(CoreMetaData):
                 ts_result.is_dirty = False
                 ts_result.save()
 
+
+def _generate_term_from_name(name):
+    name = name.strip()
+    # remove any commas
+    name = name.replace(',', '')
+    # replace - with _
+    name = name.replace('-', '_')
+    # replace ( and ) with _
+    name = name.replace('(', '_')
+    name = name.replace(')', '_')
+
+    name_parts = name.split()
+    # first word lowercase, subsequent words start with a uppercase
+    term = name_parts[0].lower() + ''.join([item.title() for item in name_parts[1:]])
+    return term
 
 import receivers

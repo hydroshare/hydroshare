@@ -18,6 +18,7 @@ class Migration(migrations.Migration):
                 ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
                 ('term', models.CharField(max_length=255)),
                 ('name', models.CharField(max_length=255)),
+                ('is_dirty', models.BooleanField(default=False)),
                 ('metadata', models.ForeignKey(related_name='cv_aggregation_statistics', to='hs_app_timeseries.TimeSeriesMetaData')),
             ],
             options={
@@ -30,6 +31,7 @@ class Migration(migrations.Migration):
                 ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
                 ('term', models.CharField(max_length=255)),
                 ('name', models.CharField(max_length=255)),
+                ('is_dirty', models.BooleanField(default=False)),
                 ('metadata', models.ForeignKey(related_name='cv_elevation_datums', to='hs_app_timeseries.TimeSeriesMetaData')),
             ],
             options={
@@ -42,6 +44,7 @@ class Migration(migrations.Migration):
                 ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
                 ('term', models.CharField(max_length=255)),
                 ('name', models.CharField(max_length=255)),
+                ('is_dirty', models.BooleanField(default=False)),
                 ('metadata', models.ForeignKey(related_name='cv_mediums', to='hs_app_timeseries.TimeSeriesMetaData')),
             ],
             options={
@@ -54,6 +57,7 @@ class Migration(migrations.Migration):
                 ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
                 ('term', models.CharField(max_length=255)),
                 ('name', models.CharField(max_length=255)),
+                ('is_dirty', models.BooleanField(default=False)),
                 ('metadata', models.ForeignKey(related_name='cv_method_types', to='hs_app_timeseries.TimeSeriesMetaData')),
             ],
             options={
@@ -66,6 +70,7 @@ class Migration(migrations.Migration):
                 ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
                 ('term', models.CharField(max_length=255)),
                 ('name', models.CharField(max_length=255)),
+                ('is_dirty', models.BooleanField(default=False)),
                 ('metadata', models.ForeignKey(related_name='cv_site_types', to='hs_app_timeseries.TimeSeriesMetaData')),
             ],
             options={
@@ -78,6 +83,7 @@ class Migration(migrations.Migration):
                 ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
                 ('term', models.CharField(max_length=255)),
                 ('name', models.CharField(max_length=255)),
+                ('is_dirty', models.BooleanField(default=False)),
                 ('metadata', models.ForeignKey(related_name='cv_speciations', to='hs_app_timeseries.TimeSeriesMetaData')),
             ],
             options={
@@ -90,6 +96,7 @@ class Migration(migrations.Migration):
                 ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
                 ('term', models.CharField(max_length=255)),
                 ('name', models.CharField(max_length=255)),
+                ('is_dirty', models.BooleanField(default=False)),
                 ('metadata', models.ForeignKey(related_name='cv_statuses', to='hs_app_timeseries.TimeSeriesMetaData')),
             ],
             options={
@@ -102,6 +109,7 @@ class Migration(migrations.Migration):
                 ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
                 ('term', models.CharField(max_length=255)),
                 ('name', models.CharField(max_length=255)),
+                ('is_dirty', models.BooleanField(default=False)),
                 ('metadata', models.ForeignKey(related_name='cv_units_types', to='hs_app_timeseries.TimeSeriesMetaData')),
             ],
             options={
@@ -114,6 +122,7 @@ class Migration(migrations.Migration):
                 ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
                 ('term', models.CharField(max_length=255)),
                 ('name', models.CharField(max_length=255)),
+                ('is_dirty', models.BooleanField(default=False)),
                 ('metadata', models.ForeignKey(related_name='cv_variable_names', to='hs_app_timeseries.TimeSeriesMetaData')),
             ],
             options={
@@ -126,6 +135,7 @@ class Migration(migrations.Migration):
                 ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
                 ('term', models.CharField(max_length=255)),
                 ('name', models.CharField(max_length=255)),
+                ('is_dirty', models.BooleanField(default=False)),
                 ('metadata', models.ForeignKey(related_name='cv_variable_types', to='hs_app_timeseries.TimeSeriesMetaData')),
             ],
             options={

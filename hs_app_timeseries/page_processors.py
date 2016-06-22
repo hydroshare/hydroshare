@@ -151,17 +151,9 @@ def _get_resource_edit_context(page, request, content_model, selected_series_id,
             form.set_dropdown_widgets(form.initial['sample_medium'], form.initial['units_type'],
                                       form.initial['aggregation_statistics'])
 
-    if extended_metadata_exists and content_model.metadata.is_dirty:
+    if extended_metadata_exists:
         ext_md_layout = Layout(UpdateSQLiteLayout,
                                SeriesSelectionLayout,
-                               SiteLayoutEdit,
-                               VariableLayoutEdit,
-                               MethodLayoutEdit,
-                               ProcessingLevelLayoutEdit,
-                               TimeSeriesResultLayoutEdit
-                              )
-    elif extended_metadata_exists:
-        ext_md_layout = Layout(SeriesSelectionLayout,
                                SiteLayoutEdit,
                                VariableLayoutEdit,
                                MethodLayoutEdit,
