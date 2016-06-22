@@ -3,6 +3,7 @@ import tempfile
 import shutil
 import zipfile
 import json
+import logging
 
 from django.dispatch import receiver
 from django.core.files.uploadedfile import UploadedFile
@@ -20,6 +21,8 @@ from hs_geographic_feature_resource.forms import OriginalCoverageValidationForm,
                                                  GeometryInformationValidationForm,\
                                                  FieldInformationValidationForm
 from hs_geographic_feature_resource.models import GeographicFeatureResource
+
+logger = logging.getLogger(__name__)
 
 def is_shapefiles(file_info_list):
     # check if uploaded files are valid shapefiles (shp, shx, dbf)
@@ -273,9 +276,10 @@ def geofeature_pre_create_resource(sender, **kwargs):
         else:
             validate_files_dict['are_files_valid'] = False
             validate_files_dict['message'] = "Invalid files uploaded. Please note the three mandatory files (.shp, .shx, .dbf) of ESRI Shapefiles should be uploaded at the same time (or in a zip file)."
-    except:
+    except Exception as ex:
         validate_files_dict['are_files_valid'] = False
         validate_files_dict['message'] = 'Uploaded files are invalid or corrupt.'
+        logger.exception("geofeature_pre_create_resource: {0} ".format(ex.message))
     finally:
         if tmp_dir is not None:
             shutil.rmtree(tmp_dir)
@@ -313,7 +317,6 @@ def geofeature_pre_delete_file_from_resource(sender, **kwargs):
 
     res_obj = kwargs['resource']
     del_file = kwargs['file']
-    one_file_removed = True
     all_file_removed = False
     del_res_fname = get_resource_file_name(del_file)
 
@@ -324,7 +327,6 @@ def geofeature_pre_delete_file_from_resource(sender, **kwargs):
         if del_f_ext in [".shp", ".shx", ".dbf"]:
             # The shp, shx or dbf files cannot be removed.
             all_file_removed = True
-            one_file_removed = False
 
             # remove all files in this res right now except for the file user just clicked to remove (hs_core will remove it later)
             for f in ResourceFile.objects.filter(object_id=res_obj.id):
@@ -339,23 +341,25 @@ def geofeature_pre_delete_file_from_resource(sender, **kwargs):
                                             datum=UNKNOWN_STR, unit=UNKNOWN_STR)
             res_obj.metadata.coverages.all().delete()
 
-        if one_file_removed:
+        if not all_file_removed:
             ori_fn_dict = json.loads(ori_file_info.filenameString)
             if del_f_fullname in ori_fn_dict:
                 del ori_fn_dict[del_f_fullname]
                 res_obj.metadata.update_element('OriginalFileInfo', element_id=ori_file_info.id,
                                                 filenameString=json.dumps(ori_fn_dict))
-        elif all_file_removed:
+        else:
             res_obj.metadata.originalfileinfo.all().delete()
             res_obj.metadata.geometryinformation.all().delete()
             res_obj.metadata.fieldinformation.all().delete()
             res_obj.metadata.originalcoverage.all().delete()
             res_obj.metadata.coverages.all().delete()
 
+
 @receiver(pre_add_files_to_resource, sender=GeographicFeatureResource)
 def geofeature_pre_add_files_to_resource(sender, **kwargs):
 
     res_obj = kwargs['resource']
+    res_id = res_obj.short_id
     files = kwargs['files']
     fed_res_fnames = kwargs['fed_res_file_names']
 
@@ -496,16 +500,18 @@ def geofeature_pre_add_files_to_resource(sender, **kwargs):
                 validate_files_dict['message'] = "Invalid files uploaded. Please note the three mandatory files (.shp, .shx, .dbf) of ESRI Shapefiles should be uploaded at the same time (or in a zip file)."
             if tmp_dir is not None:
                 shutil.rmtree(tmp_dir)
-    except:
+    except Exception as ex:
+        logger.exception("geofeature_pre_add_files_to_resource: {0}. Error:{1} ".format(res_id, ex.message))
         validate_files_dict['are_files_valid'] = False
         validate_files_dict['message'] = "Invalid files uploaded. Please note the three mandatory files (.shp, .shx, .dbf) of ESRI Shapefiles should be uploaded at the same time (or in a zip file)."
 
 @receiver(post_add_files_to_resource, sender=GeographicFeatureResource)
 def geofeature_post_add_files_to_resource_handler(sender, **kwargs):
     tmp_dir = None
+    resource = kwargs['resource']
+    res_id = resource.short_id
     validate_files_dict = kwargs['validate_files']
     try:
-        resource = kwargs['resource']
         files = kwargs['files']
         fed_res_fnames = kwargs.get('fed_res_file_names', [])
         found_shp = False
@@ -572,6 +578,7 @@ def geofeature_post_add_files_to_resource_handler(sender, **kwargs):
                     resource.metadata.create_element('Coverage', type='box', value=parsed_md_dict["wgs84_extent_dict"])
 
     except Exception as ex:
+        logger.exception("geofeature_post_add_files_to_resource_handler: {0}. Error:{1} ".format(res_id, ex.message))
         validate_files_dict['are_files_valid'] = False
         validate_files_dict['message'] = "Invalid files uploaded."
     finally:
