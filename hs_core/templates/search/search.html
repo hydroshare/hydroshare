@@ -4,8 +4,20 @@
 {% block main %}
 <div class="container" id="main">
     <div class="row">
+        <div class="col-sm-9 pull-right">
+            <div class="resource-search">
+                <form id="search-field" method="get" action=".">
+                    {% for field in form %}
+                        <div class="fieldWrapper">
+                            {{ field }}
+                        </div>
+                    {% endfor %}
+                </form>
+            </div>
+            <br>
+        </div>
         <div class="col-lg-3" id="facets">
-            <div id="filter-buttons" style="margin-bottom: 10px;">
+            <div id="filter-buttons">
                 <button class="btn btn-default" onclick="clearAllFaceted()">Show All</button>
                 <button class="btn btn-info pull-right" data-toggle="popover" data-placement="right"><i class="glyphicon glyphicon-info-sign"></i></button>
             </div>
@@ -40,9 +52,8 @@
                                         </a>
                                     </h4>
                                 </div>
-                                <div id="{{ key }}" class="facet-list panel-collapse collapse in"
->
-                                    <ul class="list-group" id="list-group-{{ key }}" style="height: 200px; overflow-y: auto;">
+                                <div id="{{ key }}" class="facet-list panel-collapse collapse in">
+                                    <ul class="list-group" id="list-group-{{ key }}">
                                     {% for item in values %}
                                         {% if item.1 > 0 %}
                                             <li class="list-group-item" rel="{{ key }},{{ item.0 }}">
@@ -69,7 +80,7 @@
                             </h4>
                         </div>
                         <div id="availability" class="facet-list panel-collapse collapse in">
-                            <ul class="list-group" id="list-group-availability" style="max-height: 200px; overflow-y: auto;">
+                            <ul class="list-group" id="list-group-availability">
                                 {% for key, values in facets.fields.items %}
                                     {% if key == 'public' or key == 'discoverable' %}
                                         {% for item in values %}
@@ -106,18 +117,10 @@
                 <h4>Enter a search term to find resources on HydroShare</h4>
             {% endif %}
             -->
-            <div class=resource-search>
-                <form id="search-field" method="get" action=".">
-                    {% for field in form %}
-                        <div class="fieldWrapper">
-                            {{ field }}
-                        </div>
-                    {% endfor %}
-                </form>
-            </div>
+
             <ul id="switch-view" class="nav nav-tabs">
-                <li class="active"><a href="#list-view">List</a></li>
-                <li><a href="#map-view">Map</a></li>
+                <li class="active"><a href="#list-view"><i class="glyphicon glyphicon-list-alt"></i> List</a></li>
+                <li><a href="#map-view"><i class="glyphicon glyphicon-map-marker"></i> Map</a></li>
             </ul>
             <div class="tab-content">
                 <div id="list-view" class="tab-pane fade in active">
@@ -246,6 +249,7 @@
                             {% endif %}Next &raquo;{% if page_obj.has_next %}</a>{% endif %}
                         </div>
                     {% endif %}
+                <br>
                     <div class="panel-group" role="tablist">
                         <div class="panel panel-default">
                             <div class="panel-heading" role="tab" id="headingLegend">
@@ -259,7 +263,7 @@
                                 </h4>
                             </div>
 
-                            <div id="legend-collapse" class="facet-list panel-collapse collapse" role="tabpanel"
+                            <div id="legend-collapse" class="panel-collapse collapse" role="tabpanel"
                                  aria-labelledby="headingLegend">
                                 <div class="panel-body">
                                     <div class="row">
@@ -400,7 +404,7 @@
                     </div>
                 </div>
                 <div id="map-view" class="tab-pane fade">
-                    <div id="discover-map" style="width:850px; height:650px"></div>
+                    <div id="discover-map" style="height:650px"></div>
                 </div>
             </div>
         </div>

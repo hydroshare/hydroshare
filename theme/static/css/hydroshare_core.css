@@ -2333,7 +2333,7 @@ button.loading {
     text-shadow: 0 1px 0 #fff;
 }
 
-.full-width-tabs-container .nav-tabs > li > a {
+.nav-tabs > li > a {
     background: #FFF;
     color:#757575;
     -webkit-border-top-left-radius: 5px;
@@ -2845,6 +2845,11 @@ h4.title {
 	background: #DDD;
 }
 
+.facet-list .list-group {
+	max-height: 200px;
+	overflow-y: auto;
+}
+
 .facet-list .panel-body {
 	padding: 0;
 }
@@ -2877,10 +2882,6 @@ h4.title {
 
 #facets .panel {
 	margin-top: 20px;
-}
-
-#facets {
-	text-align: center;
 }
 
 #facets h4.panel-title, #headingLegend h4.panel-title {
@@ -3673,4 +3674,8 @@ div.group-add-photo {
 div.toggle.btn {
 	width: 100px !important;
 	float: right;
+}
+
+#map-view {
+	border: 1px solid #DDD;
 }
