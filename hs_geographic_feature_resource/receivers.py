@@ -232,7 +232,9 @@ def geofeature_pre_create_resource(sender, **kwargs):
             if fed_res_fnames:
                 # copy all irods files to django server to extract metadata
                 irods_file_path_list = utils.get_fed_zone_files(fed_res_fnames)
+                fed_tmpfile_name_list = []
                 for file_path in irods_file_path_list:
+                    fed_tmpfile_name_list.append(file_path)
                     file_full_name = file_path[file_path.rfind('/')+1:]
                     f_info = [file_full_name, file_path]
                     file_info_list.append(f_info)
@@ -263,6 +265,9 @@ def geofeature_pre_create_resource(sender, **kwargs):
 
                     if uploaded_file_type == "zipped_shp":
                         if fed_res_fnames:
+                            # remove the temp zip file retrieved from federated zone
+                            if fed_tmpfile_name_list:
+                                shutil.rmtree(os.path.dirname(fed_tmpfile_name_list[0]))
                             # zip file from fed'd irods zone should be extracted on django sever
                             # the original zip file should NOT be stored in res
                             # instead, those unzipped files should be stored
@@ -283,6 +288,10 @@ def geofeature_pre_create_resource(sender, **kwargs):
     finally:
         if tmp_dir is not None:
             shutil.rmtree(tmp_dir)
+        # remove all temp files retrieved from federated zone
+        if fed_res_fnames and fed_tmpfile_name_list:
+            for file_path in fed_tmpfile_name_list:
+                shutil.rmtree(os.path.dirname(file_path))
 
 # This handler is executed only when a metadata element is added as part of editing a resource
 @receiver(pre_metadata_element_create, sender=GeographicFeatureResource)
@@ -379,7 +388,9 @@ def geofeature_pre_add_files_to_resource(sender, **kwargs):
     if fed_res_fnames:
         # copy all irods files to django server to extract metadata
         irods_file_path_list = utils.get_fed_zone_files(fed_res_fnames)
+        fed_tmpfile_name_list = []
         for file_path in irods_file_path_list:
+            fed_tmpfile_name_list.append(file_path)
             file_full_name = file_path[file_path.rfind('/')+1:]
             f_info = [file_full_name, file_path]
             file_info_list.append(f_info)
@@ -491,6 +502,9 @@ def geofeature_pre_add_files_to_resource(sender, **kwargs):
                                                 )
                 if uploaded_file_type == "zipped_shp":
                         if fed_res_fnames:
+                            # remove the temp zip file retrieved from federated zone
+                            if fed_tmpfile_name_list:
+                                shutil.rmtree(os.path.dirname(fed_tmpfile_name_list[0]))
                             del kwargs['fed_res_file_names'][:]
                         del kwargs['files'][:]
                         kwargs['files'].extend(files_type["files_new"])
@@ -500,6 +514,10 @@ def geofeature_pre_add_files_to_resource(sender, **kwargs):
                 validate_files_dict['message'] = "Invalid files uploaded. Please note the three mandatory files (.shp, .shx, .dbf) of ESRI Shapefiles should be uploaded at the same time (or in a zip file)."
             if tmp_dir is not None:
                 shutil.rmtree(tmp_dir)
+            # remove all temp files retrieved from federated zone
+            if fed_res_fnames and fed_tmpfile_name_list:
+                for file_path in fed_tmpfile_name_list:
+                    shutil.rmtree(os.path.dirname(file_path))
     except Exception as ex:
         logger.exception("geofeature_pre_add_files_to_resource: {0}. Error:{1} ".format(res_id, ex.message))
         validate_files_dict['are_files_valid'] = False
@@ -537,7 +555,6 @@ def geofeature_post_add_files_to_resource_handler(sender, **kwargs):
             if res_file_list:
                 tmp_dir = tempfile.mkdtemp()
                 for res_f in res_file_list:
-
                     if res_f.resource_file:
                         # file is stored on hs irods
                         source = res_f.resource_file.file.name
@@ -556,6 +573,9 @@ def geofeature_post_add_files_to_resource_handler(sender, **kwargs):
                     fileName, fileExtension = os.path.splitext(f_fullname.lower())
                     target = tmp_dir + "/" + fileName + fileExtension
                     shutil.copy(source, target)
+                    # for temp file retrieved from federation zone, it should be deleted after it is copied
+                    if res_f.fed_resource_file_name_or_path:
+                        shutil.rmtree(source)
                 ori_file_info = resource.metadata.originalfileinfo.all().first()
                 shp_full_path = tmp_dir + "/" + ori_file_info.baseFilename + ".shp"
                 parsed_md_dict = parse_shp(shp_full_path)

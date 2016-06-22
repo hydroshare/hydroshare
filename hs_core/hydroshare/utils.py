@@ -7,6 +7,8 @@ import tempfile
 import logging
 import shutil
 import string
+import arrow
+import errno
 
 from django.apps import apps
 from django.http import Http404
@@ -217,7 +219,16 @@ def get_fed_zone_files(irods_fnames):
     irods_storage = IrodsStorage('federated')
     for ifname in ifnames:
         fname = os.path.basename(ifname.rstrip(os.sep))
-        tmpfile = os.path.join(settings.TEMP_FILE_DIR, fname)
+        tmpdir = os.path.join(settings.TEMP_FILE_DIR, arrow.utcnow().format("YYYY.MM.DD.HH.mm.ss"))
+        tmpfile = os.path.join(tmpdir, fname)
+        try:
+            os.makedirs(tmpdir)
+        except OSError as ex:
+            if ex.errno == errno.EEXIST:
+                shutil.rmtree(tmpdir)
+                os.makedirs(tmpdir)
+            else:
+                raise Exception(ex.message)
         irods_storage.getFile(ifname, tmpfile)
         ret_file_list.append(tmpfile)
     return ret_file_list
