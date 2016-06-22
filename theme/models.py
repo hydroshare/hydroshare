@@ -111,6 +111,20 @@ class IconBox(Orderable):
 
 
 class UserProfile(models.Model):
+    USER_TYPE_CHOICES = (
+        ('', "(unspecified)"),
+        ("University Faculty", "University Faculty"),
+        ("University Professional or Research Staff", "University Professional or Research Staff"),
+        ("Post-Doctoral Fellow", "Post-Doctoral Fellow"),
+        ("University Graduate Student", "University Graduate Student"),
+        ("University Undergraduate Student", "University Undergraduate Student"),
+        ("Commercial/Professional", "Commercial/Professional"),
+        ("Government Official", "Government Official"),
+        ("School Student Kindergarten to 12th Grade", "School Student Kindergarten to 12th Grade"),
+        ("School Teacher Kindergarten to 12th Grade", "School Teacher Kindergarten to 12th Grade"),
+        ("Other", "Other"),
+    )
+
     user = models.OneToOneField(User)
     picture = models.ImageField(upload_to='profile', null=True, blank=True)
     middle_name = models.CharField(max_length=1024, null=True, blank=True)
@@ -120,9 +134,12 @@ class UserProfile(models.Model):
         help_text='e.g. Assistant Professor, Program Director, Adjunct Professor, Software Developer.')
     user_type = models.CharField(
         max_length=1024,
-        null=True,
-        blank=True,
+        choices=USER_TYPE_CHOICES,
         default='Unspecified'
+    )
+    user_type_other = models.CharField(
+        max_length=1024,
+        blank=True
     )
     subject_areas = models.CharField(
         max_length=1024, null=True, blank=True,
