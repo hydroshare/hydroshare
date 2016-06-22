@@ -113,7 +113,8 @@ def update_collection_for_deleted_resources(request, shortkey, *args, **kwargs):
 
 
 def _update_collection_coverages(collection_res_obj):
-
+    # calculate the overall coverages of all contained resources
+    # to update the collection coverages metadata.
     res_id = collection_res_obj.short_id
     new_coverage_list = []
     try:

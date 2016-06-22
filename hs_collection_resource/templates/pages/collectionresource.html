@@ -547,6 +547,7 @@
                 if (json_response.status === 'success') {
                     $('#deleted-resources-table').DataTable().rows().remove().draw(false);
                     $("#clear-deleted-res-warning").hide();
+                    updateCoverageMetadataTabpage(json_response.new_coverage_list);
                 }
             },
             error: function(XMLHttpRequest, textStatus, errorThrown) {
@@ -603,10 +604,12 @@
                 cleanTemporalCoverageUI();
             }
         }
+
     var empty_value = '';
+
     function cleanSpatialCoverageUI()
     {
-        var empty_value = '';
+
         document.getElementById('id_northlimit').value = empty_value;
         document.getElementById('id_eastlimit').value = empty_value;
         document.getElementById('id_southlimit').value = empty_value;
@@ -614,6 +617,7 @@
         document.getElementById('id_east').value = empty_value;
         document.getElementById('id_north').value = empty_value;
     }
+
     function cleanTemporalCoverageUI()
     {
         document.getElementById('id_start').value = empty_value;
