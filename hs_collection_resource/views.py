@@ -136,6 +136,30 @@ def update_collection_coverages(request, shortkey, *args, **kwargs):
         return JsonResponse(ajax_response_data)
 
 
+def calculate_collection_coverages(request, shortkey, *args, **kwargs):
+
+    ajax_response_data = {'status': "success"}
+    try:
+        collection_res, is_authorized, user = authorize(request, shortkey,
+                                                        needed_permission=ACTION_TO_AUTHORIZE.VIEW_RESOURCE)
+
+        if collection_res.resource_type.lower() != "collectionresource":
+            raise Exception("Resource {0} is not a collection resource.".format(shortkey))
+
+        new_coverage_list = _calculate_collection_coverages(collection_res)
+        ajax_response_data['new_coverage_list'] = new_coverage_list
+
+        resource_modified(collection_res, user)
+
+    except Exception as ex:
+        logger.error("Failed to calculate collection coverages. Collection resource ID: {0}. "
+                     "Error:{1} ".format(shortkey, ex.message))
+
+        ajax_response_data = {'status': "error", 'message': ex.message}
+    finally:
+        return JsonResponse(ajax_response_data)
+
+
 def _update_collection_coverages(collection_res_obj):
     #  update the collection coverages metadata.
     res_id = collection_res_obj.short_id
@@ -155,30 +179,6 @@ def _update_collection_coverages(collection_res_obj):
         raise Exception("Failed to update collection coverages")
     finally:
         return new_coverage_list
-
-
-def calculate_collection_coverages(request, shortkey, *args, **kwargs):
-
-    ajax_response_data = {'status': "success"}
-    try:
-        collection_res, is_authorized, user = authorize(request, shortkey,
-                                                        needed_permission=ACTION_TO_AUTHORIZE.EDIT_RESOURCE)
-
-        if collection_res.resource_type.lower() != "collectionresource":
-            raise Exception("Resource {0} is not a collection resource.".format(shortkey))
-
-        new_coverage_list = _calculate_collection_coverages(collection_res)
-        ajax_response_data['new_coverage_list'] = new_coverage_list
-
-        resource_modified(collection_res, user)
-
-    except Exception as ex:
-        logger.error("Failed to calculate collection coverages. Collection resource ID: {0}. "
-                     "Error:{1} ".format(shortkey, ex.message))
-
-        ajax_response_data = {'status': "error", 'message': ex.message}
-    finally:
-        return JsonResponse(ajax_response_data)
 
 
 def _calculate_collection_coverages(collection_res_obj):
