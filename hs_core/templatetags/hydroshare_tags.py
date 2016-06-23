@@ -119,3 +119,12 @@ def clean_pagination_url(content):
                 clean_content += token + '&'
         clean_content = clean_content[:-1]
         return clean_content
+
+@register.filter
+def to_int(value):
+    return int(value)
+
+@register.filter
+def relative_irods_path(fed_irods_file_name):
+    idx = fed_irods_file_name.find('/data/contents/')
+    return fed_irods_file_name[idx+1:]
