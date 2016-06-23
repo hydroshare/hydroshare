@@ -1842,11 +1842,20 @@ a.tag:hover {
   }
 }}
 
+
+
 .resource-search {
 	position: relative;
 	height: 34px;
 	border: 1px solid #DDD;
 	margin-bottom: 3px;
+}
+
+#discover-resource-search {
+	width: calc(100% - 50px);
+	margin-bottom: 20px;
+	margin-left: 10px;
+	float: right;
 }
 
 .resource-search input {
@@ -2680,6 +2689,9 @@ h4.title {
 
 #item-selectors {
     display: none;
+}
+
+#items-discovered, #item-selectors {
 	width: 100% !important;
 }
 
