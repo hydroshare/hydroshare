@@ -51,6 +51,41 @@ class Site(TimeSeriesAbstractMetaDataElement):
         return self.site_name
 
     @classmethod
+    def update(cls, element_id, **kwargs):
+        element = cls.objects.get(id=element_id)
+
+        # if the user has entered a new elevation datum
+        elevation_datum_str = 'elevation_datum'
+        if elevation_datum_str in kwargs:
+            if element.elevation_datum != kwargs[elevation_datum_str]:
+                # check if the user has entered a new name for elevation datum
+                if kwargs[elevation_datum_str] not in [item.name for item in
+                                                       element.metadata.cv_elevation_datums.all()]:
+                    # generate term for the new name
+                    kwargs[elevation_datum_str] = kwargs[elevation_datum_str].strip()
+                    term = _generate_term_from_name(kwargs[elevation_datum_str])
+                    elevation_datum = CVElevationDatum.objects.create(metadata=element.metadata, term=term,
+                                                                      name=kwargs[elevation_datum_str])
+                    elevation_datum.is_dirty = True
+                    elevation_datum.save()
+
+        # if the user has entered a new site type
+        site_type_str = 'site_type'
+        if site_type_str in kwargs:
+            if element.site_type != kwargs[site_type_str]:
+                # check if the user has entered a new name for site type
+                if kwargs[site_type_str] not in [item.name for item in element.metadata.cv_site_types.all()]:
+                    # generate term for the new name
+                    kwargs[site_type_str] = kwargs[site_type_str].strip()
+                    term = _generate_term_from_name(kwargs[site_type_str])
+                    site_type = CVSiteType.objects.create(metadata=element.metadata, term=term,
+                                                          name=kwargs[site_type_str])
+                    site_type.is_dirty = True
+                    site_type.save()
+
+        super(Site, cls).update(element_id, **kwargs)
+
+    @classmethod
     def remove(cls, element_id):
         raise ValidationError("Site element of a resource can't be deleted.")
 
@@ -70,18 +105,48 @@ class Variable(TimeSeriesAbstractMetaDataElement):
     @classmethod
     def update(cls, element_id, **kwargs):
         element = cls.objects.get(id=element_id)
+
         # if the user has entered a new variable name
-        if 'variable_name' in kwargs:
-            if element.variable_name != kwargs['variable_name']:
+        variable_name_str = 'variable_name'
+        if variable_name_str in kwargs:
+            if element.variable_name != kwargs[variable_name_str]:
                 # check if the user has entered a new name
-                if kwargs['variable_name'] not in [item.name for item in element.metadata.cv_variable_names.all()]:
+                if kwargs[variable_name_str] not in [item.name for item in element.metadata.cv_variable_names.all()]:
                     # generate term for the new name
-                    kwargs['variable_name'] = kwargs['variable_name'].strip()
-                    term = _generate_term_from_name(kwargs['variable_name'])
+                    kwargs[variable_name_str] = kwargs[variable_name_str].strip()
+                    term = _generate_term_from_name(kwargs[variable_name_str])
                     variable_name = CVVariableName.objects.create(metadata=element.metadata, term=term,
-                                                                  name=kwargs['variable_name'])
+                                                                  name=kwargs[variable_name_str])
                     variable_name.is_dirty = True
                     variable_name.save()
+
+        # if the user has entered a new variable type
+        variable_type_str = 'variable_type'
+        if variable_type_str in kwargs:
+            if element.variable_type != kwargs[variable_type_str]:
+                # check if the user has entered a new type
+                if kwargs[variable_type_str] not in [item.name for item in element.metadata.cv_variable_types.all()]:
+                    # generate term for the new name
+                    kwargs[variable_type_str] = kwargs[variable_type_str].strip()
+                    term = _generate_term_from_name(kwargs[variable_type_str])
+                    variable_type = CVVariableType.objects.create(metadata=element.metadata, term=term,
+                                                                  name=kwargs[variable_type_str])
+                    variable_type.is_dirty = True
+                    variable_type.save()
+
+        # if the user has entered a new speciation
+        speciation_str = 'speciation'
+        if speciation_str in kwargs:
+            if element.speciation != kwargs[speciation_str]:
+                # check if the user has entered a new speciation
+                if kwargs[speciation_str] not in [item.name for item in element.metadata.cv_speciations.all()]:
+                    # generate term for the new name
+                    kwargs[speciation_str] = kwargs[speciation_str].strip()
+                    term = _generate_term_from_name(kwargs[speciation_str])
+                    speciation = CVSpeciation.objects.create(metadata=element.metadata, term=term,
+                                                             name=kwargs[speciation_str])
+                    speciation.is_dirty = True
+                    speciation.save()
 
         super(Variable, cls).update(element_id, **kwargs)
 
@@ -100,6 +165,26 @@ class Method(TimeSeriesAbstractMetaDataElement):
 
     def __unicode__(self):
         return self.method_name
+
+    @classmethod
+    def update(cls, element_id, **kwargs):
+        element = cls.objects.get(id=element_id)
+
+        # if the user has entered a new method type
+        method_type_str = 'method_type'
+        if method_type_str in kwargs:
+            if element.method_type != kwargs[method_type_str]:
+                # check if the user has entered a new name for method type
+                if kwargs[method_type_str] not in [item.name for item in element.metadata.cv_method_types.all()]:
+                    # generate term for the new name
+                    kwargs[method_type_str] = kwargs[method_type_str].strip()
+                    term = _generate_term_from_name(kwargs[method_type_str])
+                    method_type = CVMethodType.objects.create(metadata=element.metadata, term=term,
+                                                              name=kwargs[method_type_str])
+                    method_type.is_dirty = True
+                    method_type.save()
+
+        super(Method, cls).update(element_id, **kwargs)
 
     @classmethod
     def remove(cls, element_id):
@@ -132,6 +217,54 @@ class TimeSeriesResult(TimeSeriesAbstractMetaDataElement):
 
     def __unicode__(self):
         return self.units_type
+
+    @classmethod
+    def update(cls, element_id, **kwargs):
+        element = cls.objects.get(id=element_id)
+        # if the user has entered a new sample medium
+        sample_medium_str = 'sample_medium'
+        if sample_medium_str in kwargs:
+            if element.sample_medium != kwargs[sample_medium_str]:
+                # check if the user has entered a new name for sample medium
+                if kwargs[sample_medium_str] not in [item.name for item in element.metadata.cv_mediums.all()]:
+                    # generate term for the new name
+                    kwargs[sample_medium_str] = kwargs[sample_medium_str].strip()
+                    term = _generate_term_from_name(kwargs[sample_medium_str])
+                    sample_medium = CVMedium.objects.create(metadata=element.metadata, term=term,
+                                                            name=kwargs[sample_medium_str])
+                    sample_medium.is_dirty = True
+                    sample_medium.save()
+
+        # if the user has entered a new units type
+        units_type_str = 'units_type'
+        if units_type_str in kwargs:
+            if element.units_type != kwargs[units_type_str]:
+                # check if the user has entered a new name for units type
+                if kwargs[units_type_str] not in [item.name for item in element.metadata.cv_units_types.all()]:
+                    # generate term for the new name
+                    kwargs[units_type_str] = kwargs[units_type_str].strip()
+                    term = _generate_term_from_name(kwargs[units_type_str])
+                    units_type = CVUnitsType.objects.create(metadata=element.metadata, term=term,
+                                                            name=kwargs[units_type_str])
+                    units_type.is_dirty = True
+                    units_type.save()
+
+        # if the user has entered a new aggregation statistics
+        agg_statistics_str = 'aggregation_statistics'
+        if agg_statistics_str in kwargs:
+            if element.aggregation_statistics != kwargs[agg_statistics_str]:
+                # check if the user has entered a new name for aggregation statistics
+                if kwargs[agg_statistics_str] not in [item.name for item in
+                                                      element.metadata.cv_aggregation_statistics.all()]:
+                    # generate term for the new name
+                    kwargs[agg_statistics_str] = kwargs[agg_statistics_str].strip()
+                    term = _generate_term_from_name(kwargs[agg_statistics_str])
+                    agg_statistics = CVAggregationStatistic.objects.create(metadata=element.metadata, term=term,
+                                                                           name=kwargs[agg_statistics_str])
+                    agg_statistics.is_dirty = True
+                    agg_statistics.save()
+
+        super(TimeSeriesResult, cls).update(element_id, **kwargs)
 
     @classmethod
     def remove(cls, element_id):
@@ -187,10 +320,6 @@ class CVAggregationStatistic(AbstractCVLookupTable):
     metadata = models.ForeignKey('TimeSeriesMetaData', related_name="cv_aggregation_statistics")
 
 
-# To create a new resource, use these three super-classes.
-#
-
-
 class TimeSeriesResource(BaseResource):
     objects = ResourceManager("TimeSeriesResource")
 
@@ -209,7 +338,6 @@ class TimeSeriesResource(BaseResource):
         #return (".csv", ".xml", ".sqlite")
         # phase-1 of implementation supports only sqlite file
         return (".sqlite",)
-
 
     @classmethod
     def can_have_multiple_files(cls):
