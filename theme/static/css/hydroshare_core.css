@@ -3697,3 +3697,7 @@ div.group-add-photo {
 #resetZoom {
 	margin-right:5px;
 }
+
+.manualzoom-input {
+	color: red;
+}

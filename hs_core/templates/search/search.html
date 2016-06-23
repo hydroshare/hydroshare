@@ -610,12 +610,12 @@
         }
 
         var manualZoomMap = function(){
-            var ne_lat = document.getElementById("id_NElat").value;
-            var ne_lng = document.getElementById("id_NElng").value;
-            var sw_lat = document.getElementById("id_SWlat").value;
-            var sw_lng = document.getElementById("id_SWlng").value;
+            var ne_lat = parseFloat(document.getElementById("id_NElat").value);
+            var ne_lng = parseFloat(document.getElementById("id_NElng").value);
+            var sw_lat = parseFloat(document.getElementById("id_SWlat").value);
+            var sw_lng = parseFloat(document.getElementById("id_SWlng").value);
 
-            if (!isNaN(ne_lat) && !isNaN(ne_lng) && !isNaN(sw_lat) && !isNaN(sw_lng)) {
+            if (verfiyZoomInput(ne_lat, ne_lng, sw_lat, sw_lng)) {
                 var ne = new google.maps.LatLng(ne_lat, ne_lng);
                 var sw = new google.maps.LatLng(sw_lat, sw_lng);
 
@@ -639,6 +639,34 @@
                 document.getElementById("id_SWlng").value = "";
             }
 
+        }
+
+        var verfiyZoomInput = function (ne_lat, ne_lng, sw_lat, sw_lng) {
+            if (!isNaN(ne_lat) && !isNaN(ne_lng) && !isNaN(sw_lat) && !isNaN(sw_lng)) {
+                if (ne_lat >= -90 &&  ne_lat <= 90 && sw_lat >= -90 &&  sw_lat <= 90) {
+                    if (ne_lng >= -180 &&  ne_lng <= 180 && sw_lng >= -180 &&  sw_lng <= 180) {
+                        if (ne_lat >= sw_lat) {
+                            return true;
+                        } else {
+                            $(".manualzoom-input").empty();
+                            $("#resource-search").append("<p class='manualzoom-input'> Northeastern latitude should be greater than southwestern latitude. </p>");
+                            return false;
+                        }
+                    } else {
+                        $(".manualzoom-input").empty();
+                        $("#resource-search").append("<p class='manualzoom-input'> Longitudes shoule be in range from -180 to 180. </p>");
+                        return false;
+                    }
+                } else {
+                    $(".manualzoom-input").empty();
+                    $("#resource-search").append("<p class='manualzoom-input'> Latitudes shoule be in range from -90 to 90. </p>");
+                    return false;
+                }
+            } else {
+                $(".manualzoom-input").empty();
+                $("#resource-search").append("<p class='manualzoom-input'> Latitudes and longitudes should be numbers. </p>");
+                return false;
+            }
         }
 
         var updateMapView = function() {
