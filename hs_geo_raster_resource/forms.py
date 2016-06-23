@@ -27,12 +27,12 @@ class OriginalCoverageFormHelper(BaseFormHelper):
 
 
 class OriginalCoverageSpatialForm(forms.Form):
-    projection = forms.CharField(max_length=100, required=False, label='Coordinate Reference System')
-    northlimit = forms.DecimalField(label='North Extent', widget=forms.TextInput())
+    projection = forms.CharField(max_length=100, required=False, label='Coordinate Reference System',widget=forms.TextInput(attrs={'readonly': 'readonly'}))
+    northlimit = forms.DecimalField(label='North Extent', widget=forms.TextInput(attrs={'readonly': 'readonly'}))
     eastlimit = forms.DecimalField(label='East Extent', widget=forms.TextInput(attrs={'readonly': 'readonly'}))
     southlimit = forms.DecimalField(label='South Extent', widget=forms.TextInput(attrs={'readonly': 'readonly'}))
-    westlimit = forms.DecimalField(label='West Extent', widget=forms.TextInput())
-    units = forms.CharField(max_length=50, label='Coordinate Reference System Unit')
+    westlimit = forms.DecimalField(label='West Extent', widget=forms.TextInput(attrs={'readonly': 'readonly'}))
+    units = forms.CharField(max_length=50, label='Coordinate Reference System Unit', widget=forms.TextInput(attrs={'readonly': 'readonly'}))
 
     def __init__(self, allow_edit=True, res_short_id=None, element_id=None, *args, **kwargs):
         super(OriginalCoverageSpatialForm, self).__init__(*args, **kwargs)
@@ -107,7 +107,6 @@ class CellInfoFormHelper(BaseFormHelper):
                         Field('cellSizeXValue', css_class=field_width),
                         Field('cellSizeYValue', css_class=field_width),
                         Field('cellDataType', css_class=field_width),
-                        Field('noDataValue', css_class=field_width)
                  )
 
         super(CellInfoFormHelper, self).__init__(allow_edit, res_short_id, element_id, element_name, layout, element_name_label='Cell Information', *args, **kwargs)
@@ -125,23 +124,22 @@ class CellInfoForm(ModelForm):
 
     class Meta:
         model = CellInformation
-        fields = ['rows', 'columns', 'cellSizeXValue', 'cellSizeYValue', 'cellDataType', 'noDataValue']
+        fields = ['rows', 'columns', 'cellSizeXValue', 'cellSizeYValue', 'cellDataType']
         exclude = ['content_object']
-        widgets = { 'rows': forms.TextInput(attrs={'readonly':'readonly'}),
-                    'columns': forms.TextInput(attrs={'readonly':'readonly'}),
-                    'cellSizeXValue': forms.TextInput(), #(attrs={'readonly':'readonly'}),
-                    'cellSizeYValue': forms.TextInput(), #(attrs={'readonly':'readonly'}),
-                    'cellDataType': forms.TextInput(attrs={'readonly':'readonly'}),
-                    'noDataValue': forms.TextInput()}
+        widgets = { 'rows': forms.TextInput(attrs={'readonly': 'readonly'}),
+                    'columns': forms.TextInput(attrs={'readonly': 'readonly'}),
+                    'cellSizeXValue': forms.TextInput(attrs={'readonly': 'readonly'}),
+                    'cellSizeYValue': forms.TextInput(attrs={'readonly': 'readonly'}),
+                    'cellDataType': forms.TextInput(attrs={'readonly': 'readonly'}),
+                }
 
 
 class CellInfoValidationForm(forms.Form):
     rows = forms.IntegerField(required=True)
     columns = forms.IntegerField(required=True)
-    cellSizeXValue = forms.FloatField(required = True)
-    cellSizeYValue = forms.FloatField(required = True)
+    cellSizeXValue = forms.FloatField(required=True)
+    cellSizeYValue = forms.FloatField(required=True)
     cellDataType = forms.CharField(max_length=50, required=True)
-    noDataValue = forms.FloatField(required = False)
 
 
 # repeatable element related forms
@@ -189,8 +187,11 @@ class BandInfoFormHelper(BandBaseFormHelper):
                         Field('name', css_class=field_width),
                         Field('variableName', css_class=field_width),
                         Field('variableUnit', css_class=field_width),
+                        Field('noDataValue', css_class=field_width),
+                        Field('maximumValue', css_class=field_width),
+                        Field('minimumValue', css_class=field_width),
                         Field('method', css_class=field_width),
-                        Field('comment', css_class=field_width)
+                        Field('comment', css_class=field_width),
                  )
 
         super(BandInfoFormHelper, self).__init__(res_short_id, element_id, element_name, layout, *args, **kwargs)
@@ -199,6 +200,7 @@ class BandInfoFormHelper(BandBaseFormHelper):
 class BandInfoForm(ModelForm):
     def __init__(self, allow_edit=False, res_short_id=None, element_id=None, *args, **kwargs):
         super(BandInfoForm, self).__init__(*args, **kwargs)
+
         self.helper = BandInfoFormHelper(res_short_id, element_id, element_name='Band Information')
         self.delete_modal_form = None
         self.number = 0
@@ -225,19 +227,28 @@ class BandInfoForm(ModelForm):
 
     class Meta:
         model = BandInformation
-        fields = ['name', 'variableName', 'variableUnit', 'method', 'comment']
+        fields = ['name', 'variableName', 'variableUnit', 'noDataValue', 'maximumValue', 'minimumValue', 'method', 'comment']
         exclude = ['content_object']
+        # set the form layout of each field here.
         widgets = {'variableName': forms.TextInput(),
+                   'noDataValue': forms.TextInput(),
+                   'maximumValue': forms.TextInput(),
+                   'minimumValue': forms.TextInput(),
                    'comment': forms.Textarea,
-                   'method': forms.Textarea}
+                   'method': forms.Textarea,
+                   }
 
 
 class BandInfoValidationForm(forms.Form):
-    name = forms.CharField(max_length=50, required=True)
-    variableName = forms.CharField(max_length=100, required=True)
-    variableUnit = forms.CharField(max_length=50, required=True)
+    # This is mainly used for form validation after user clicks on "Save Changes"
+    name = forms.CharField(max_length=50)
+    variableName = forms.CharField(max_length=100)
+    variableUnit = forms.CharField(max_length=50)
+    noDataValue = forms.DecimalField(required=False)
+    maximumValue = forms.DecimalField(required=False)
+    minimumValue = forms.DecimalField(required=False)
     method = forms.CharField(required=False)
-    comment = forms.CharField(required=True)
+    comment = forms.CharField(required=False)
 
 
 class BaseBandInfoFormSet(BaseFormSet):

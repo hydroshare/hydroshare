@@ -1,4 +1,3 @@
-__author__ = 'tonycastronova'
 
 from django.contrib.auth.models import Group
 from django.test import TestCase

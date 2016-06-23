@@ -1350,9 +1350,8 @@ table.table-plain td{
     border:none;
 }
 
-
 body > .main-container {
-    min-height: calc(100% - 306px);
+    min-height: calc(100% - 286px);
     padding-bottom: 20px;
 	padding-top: 20px;
 }
@@ -2652,7 +2651,6 @@ h4.title {
     display: flex !important;
 }
 .btn-group .btn {
-    border-radius: 0;
     margin-left: -1px;
 }
 .btn-group .btn:last-child {
@@ -2670,6 +2668,10 @@ h4.title {
 
 #item-selectors_filter {
 	display: none;
+}
+
+#invite-flag {
+	margin: 10px;
 }
 
 #item-selectors {
@@ -3700,4 +3702,9 @@ div.group-add-photo {
 
 .manualzoom-input {
 	color: red;
+}
+
+div.toggle.btn {
+	width: 100px !important;
+	float: right;
 }

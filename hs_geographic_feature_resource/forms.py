@@ -1,4 +1,3 @@
-__author__ = 'drew'
 
 from django import forms
 from crispy_forms.layout import Layout, Field, HTML

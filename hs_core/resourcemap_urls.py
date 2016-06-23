@@ -1,4 +1,3 @@
-__author__ = 'pabitra'
 from django.conf.urls import patterns, url
 from hs_core import views
 

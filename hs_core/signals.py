@@ -1,4 +1,3 @@
-__author__ = 'Hong Yi'
 import django.dispatch
 
 pre_create_resource = django.dispatch.Signal(providing_args=['metadata', 'files'])

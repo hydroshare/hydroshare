@@ -1,4 +1,3 @@
-__author__ = 'drew'
 
 from mezzanine.pages.page_processors import processor_for
 
