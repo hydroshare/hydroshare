@@ -50,11 +50,29 @@ class TestMODFLOWModelInstanceMetaData(MockIRODSTestCaseMixin, TransactionTestCa
         )
 
         self.temp_dir = tempfile.mkdtemp()
+
+        d = 'hs_modflow_modelinstance/tests/modflow_example/'
+        self.file_list = []
+        self.file_names = []
+        self.sample_nam_name = 'example.nam'
+        self.sample_nam_name2 = 'example2.nam'
+        for file in os.listdir(d):
+            self.file_names.append(file)
+            target_temp_file = os.path.join(self.temp_dir, file)
+            shutil.copy("{}{}".format(d, file), target_temp_file)
+            if self.sample_nam_name == file:
+                self.sample_nam_obj = open(target_temp_file, 'r')
+            elif self.sample_nam_name2 == file:
+                self.sample_nam_obj2 = open(target_temp_file, 'r')
+            else:
+                self.file_list.append(target_temp_file)
+
         self.file_name = "MIR.txt"
         temp_text_file = os.path.join(self.temp_dir, self.file_name)
         text_file = open(temp_text_file, 'w')
-        text_file.write("Model MODFLOW Instance resource files")
+        text_file.write("Model Instance resource files")
         self.text_file_obj = open(temp_text_file, 'r')
+
 
     def tearDown(self):
         super(TestMODFLOWModelInstanceMetaData, self).tearDown()
@@ -577,7 +595,7 @@ class TestMODFLOWModelInstanceMetaData(MockIRODSTestCaseMixin, TransactionTestCa
         for p in boundary_condition_packages:
             self.assertEquals(p in v, True)
 
-        # create modelcalibration
+        # update modelcalibration
         self.resMODFLOWModelInstance.metadata.update_element('ModelCalibration',
                                                              self.resMODFLOWModelInstance.metadata.model_calibration.id,
                                                              calibratedParameter='b',
@@ -600,259 +618,196 @@ class TestMODFLOWModelInstanceMetaData(MockIRODSTestCaseMixin, TransactionTestCa
                                                                  observationProcessPackage='dtarb',
                                                                  calibrationMethod='c')
 
-        # # create ModelInput
-        # self.resMODFLOWModelInstance.metadata.create_element('ModelInput',
-        #                                                      inputType='a',
-        #                                                      inputSourceName='b',
-        #                                                      inputSourceURL='http://www.RVOB.com')
-        # modelparam_elements = self.resMODFLOWModelInstance.metadata.model_inputs
-        # self.assertEqual(len(modelparam_elements), 1)
-        # modelparam_element = modelparam_elements[0]
-        # self.assertNotEqual(modelparam_element, None)
-        # self.assertEquals(modelparam_element.inputType, 'a')
-        # self.assertEquals(modelparam_element.inputSourceName, 'b')
-        # self.assertEquals(modelparam_element.inputSourceURL, 'http://www.RVOB.com')
-        #
-        # # create another modelinput
-        # self.resMODFLOWModelInstance.metadata.create_element('ModelInput',
-        #                                                      inputType='aa',
-        #                                                      inputSourceName='bd',
-        #                                                      inputSourceURL='http://www.RVOBs.com')
-        # modelparam_elements = self.resMODFLOWModelInstance.metadata.model_inputs
-        # self.assertEqual(len(modelparam_elements), 2)
-        # modelparam_element = modelparam_elements[0]
-        # self.assertNotEqual(modelparam_element, None)
-        # self.assertEquals(modelparam_element.inputType, 'aa')
-        # self.assertEquals(modelparam_element.inputSourceName, 'bd')
-        # self.assertEquals(modelparam_element.inputSourceURL, 'http://www.RVOBs.com')
-        #
-        # # create generalelements
-        # # try with wrong generalelements types - raises exception
-        # with self.assertRaises(ValidationError):
-        #     self.resMODFLOWModelInstance.metadata.create_element('GeneralElements',
-        #                                                          modelParameter='BCF6',
-        #                                                          modelSolver='DsE4',
-        #                                                          outputControlPackage='LMT6',
-        #                                                          subsidencePackage='SUB')
-        # with self.assertRaises(ValidationError):
-        #     self.resMODFLOWModelInstance.metadata.create_element('GeneralElements',
-        #                                                          modelParameter='BCF6',
-        #                                                          modelSolver='DE4',
-        #                                                          outputControlPackage='LMTd6',
-        #                                                          subsidencePackage='SUB')
-        # with self.assertRaises(ValidationError):
-        #     self.resMODFLOWModelInstance.metadata.create_element('GeneralElements',
-        #                                                          modelParameter='BCF6',
-        #                                                          modelSolver='DE4',
-        #                                                          outputControlPackage='LMT6',
-        #                                                          subsidencePackage='SaUB')
-        #
-        # self.resMODFLOWModelInstance.metadata.create_element('GeneralElements',
-        #                                                      modelParameter='BCF6',
-        #                                                      modelSolver='DE4',
-        #                                                      outputControlPackage='LMT6',
-        #                                                      subsidencePackage='SUB')
-        # modelparam_element = self.resMODFLOWModelInstance.metadata.general_elements
-        # self.assertNotEqual(modelparam_element, None)
-        # self.assertEquals(modelparam_element.modelParameter, 'BCF6')
-        # self.assertEquals(modelparam_element.modelSolver, 'DE4')
-        # self.assertEquals(modelparam_element.outputControlPackage, 'LMT6')
-        # self.assertEquals(modelparam_element.subsidencePackage, 'SUB')
-        #
-        # # try to create another generalelements - it would raise an exception
-        # with self.assertRaises(IntegrityError):
-        #     self.resMODFLOWModelInstance.metadata.create_element('GeneralElements',
-        #                                                          modelParameter='BCF6',
-        #                                                          modelSolver='DE4',
-        #                                                          outputControlPackage='LMT6',
-        #                                                          subsidencePackage='SUB')
+        # update ModelInput
+        self.resMODFLOWModelInstance.metadata.update_element('ModelInput',
+                                                             self.resMODFLOWModelInstance.metadata.model_inputs[1].id,
+                                                             inputType='b',
+                                                             inputSourceName='c',
+                                                             inputSourceURL='http://www.RVOB.com')
+        modelparam_elements = self.resMODFLOWModelInstance.metadata.model_inputs
+        self.assertEqual(len(modelparam_elements), 2)
+        modelparam_element = modelparam_elements[1]
+        self.assertNotEqual(modelparam_element, None)
+        self.assertEquals(modelparam_element.inputType, 'b')
+        self.assertEquals(modelparam_element.inputSourceName, 'c')
+        self.assertEquals(modelparam_element.inputSourceURL, 'http://www.RVOB.com')
+
+        # update another modelinput
+        self.resMODFLOWModelInstance.metadata.update_element('ModelInput',
+                                                             self.resMODFLOWModelInstance.metadata.model_inputs[0].id,
+                                                             inputType='bb',
+                                                             inputSourceName='cc',
+                                                             inputSourceURL='http://www.RVOBss.com')
+        modelparam_elements = self.resMODFLOWModelInstance.metadata.model_inputs
+        self.assertEqual(len(modelparam_elements), 2)
+        modelparam_element = modelparam_elements[0]
+        self.assertNotEqual(modelparam_element, None)
+        self.assertEquals(modelparam_element.inputType, 'bb')
+        self.assertEquals(modelparam_element.inputSourceName, 'cc')
+        self.assertEquals(modelparam_element.inputSourceURL, 'http://www.RVOBss.com')
+
+        # update generalelements
+        # try with wrong generalelements types - raises exception
+        with self.assertRaises(ValidationError):
+            self.resMODFLOWModelInstance.metadata.update_element('GeneralElements',
+                                                                 self.resMODFLOWModelInstance.metadata.general_elements.id,
+                                                                 modelParameter='BCF6',
+                                                                 modelSolver='DsE4',
+                                                                 outputControlPackage='LMT6',
+                                                                 subsidencePackage='SUB')
+        with self.assertRaises(ValidationError):
+            self.resMODFLOWModelInstance.metadata.update_element('GeneralElements',
+                                                                 self.resMODFLOWModelInstance.metadata.general_elements.id,
+                                                                 modelParameter='BCF6',
+                                                                 modelSolver='DE4',
+                                                                 outputControlPackage='LMTd6',
+                                                                 subsidencePackage='SUB')
+        with self.assertRaises(ValidationError):
+            self.resMODFLOWModelInstance.metadata.update_element('GeneralElements',
+                                                                 self.resMODFLOWModelInstance.metadata.general_elements.id,
+                                                                 modelParameter='BCF6',
+                                                                 modelSolver='DE4',
+                                                                 outputControlPackage='LMT6',
+                                                                 subsidencePackage='SaUB')
+
+        self.resMODFLOWModelInstance.metadata.update_element('GeneralElements',
+                                                             self.resMODFLOWModelInstance.metadata.general_elements.id,
+                                                             modelParameter='hydraulic conductivity',
+                                                             modelSolver='PCGN',
+                                                             outputControlPackage='GAGE',
+                                                             subsidencePackage='SWT')
+        modelparam_element = self.resMODFLOWModelInstance.metadata.general_elements
+        self.assertNotEqual(modelparam_element, None)
+        self.assertEquals(modelparam_element.modelParameter, 'hydraulic conductivity')
+        self.assertEquals(modelparam_element.modelSolver, 'PCGN')
+        self.assertEquals(modelparam_element.outputControlPackage, 'GAGE')
+        self.assertEquals(modelparam_element.subsidencePackage, 'SWT')
 
 
-                # try with a non cv term
+        # delete
 
-        # with self.assertRaises(ValidationError):
-        #     self.resMODFLOWModelInstance.metadata.update_element('ModelObjective',
-        #                                                          self.resMODFLOWModelInstance.metadata.model_objective.id,
-        #                                                          swat_model_objectives=["gravity waves"])
-        # # update just other objective
-        # self.resMODFLOWModelInstance.metadata.update_element('ModelObjective',
-        #                                                      self.resMODFLOWModelInstance.metadata.model_objective.id,
-        #                                                      other_objectives="einstein")
-        # modelparam_element = self.resMODFLOWModelInstance.metadata.model_objective
-        # self.assertEquals(modelparam_element.other_objectives, 'einstein')
-    #
-    #     # update SimulationType
-    #     self.resMODFLOWModelInstance.metadata.update_element('SimulationType',
-    #                                                          self.resMODFLOWModelInstance.metadata.simulation_type.id,
-    #                                                          simulation_type_name='Auto-Calibration')
-    #     modelparam_element = self.resMODFLOWModelInstance.metadata.simulation_type
-    #     self.assertEquals(modelparam_element.get_simulation_type_name_display(), 'Auto-Calibration')
-    #     # try with non cv term
-    #     with self.assertRaises(ValidationError):
-    #         self.resMODFLOWModelInstance.metadata.update_element('SimulationType',
-    #                                                              self.resMODFLOWModelInstance.metadata.simulation_type.id,
-    #                                                              simulation_type_name="Panda")
-    #
-    #     # update ModelMethod
-    #     self.resMODFLOWModelInstance.metadata.update_element('ModelMethod',
-    #                                                          self.resMODFLOWModelInstance.metadata.model_method.id,
-    #                                                          runoffCalculationMethod="go hoos",
-    #                                                          flowRoutingMethod='rotunda',
-    #                                                          petEstimationMethod='honor code')
-    #     self.assertEqual(self.resMODFLOWModelInstance.metadata.model_method.runoffCalculationMethod, 'go hoos')
-    #     self.assertEqual(self.resMODFLOWModelInstance.metadata.model_method.flowRoutingMethod, 'rotunda')
-    #     self.assertEqual(self.resMODFLOWModelInstance.metadata.model_method.petEstimationMethod, 'honor code')
-    #
-    #     # update ModelParameter
-    #     # try to update a modelparam with a non cv term
-    #     with self.assertRaises(ValidationError):
-    #         self.resMODFLOWModelInstance.metadata.update_element('ModelParameter',
-    #                                                              self.resMODFLOWModelInstance.metadata.model_parameter.id,
-    #                                                              model_parameters="chucky cheese")
-    #     # update legit modelparam
-    #     s_params = ["Point source", "Fertilizer"]
-    #     self.resMODFLOWModelInstance.metadata.update_element('ModelParameter',
-    #                                                          self.resMODFLOWModelInstance.metadata.model_parameter.id,
-    #                                                          model_parameters=s_params)
-    #     modelparam_element = self.resMODFLOWModelInstance.metadata.model_parameter
-    #     v = modelparam_element.get_swat_model_parameters()
-    #     for p in s_params:
-    #         self.assertEquals(p in v, True)
-    #     self.assertEquals(modelparam_element.other_parameters, o_params)
-    #     # now update the other params
-    #     o_params = 'square pants'
-    #     self.resMODFLOWModelInstance.metadata.update_element('ModelParameter',
-    #                                                          self.resMODFLOWModelInstance.metadata.model_parameter.id,
-    #                                                          other_parameters=o_params)
-    #     # check that the other params was updated and that the model params are the same
-    #     modelparam_element = self.resMODFLOWModelInstance.metadata.model_parameter
-    #     v = modelparam_element.get_swat_model_parameters()
-    #     for p in s_params:
-    #         self.assertEquals(p in v, True)
-    #     self.assertEquals(modelparam_element.other_parameters, o_params)
-    #
-    #     # update ModelInput
-    #     # try to update a ModelInput with non cv terms
-    #     with self.assertRaises(ValidationError):
-    #         self.resMODFLOWModelInstance.metadata.update_element('ModelInput',
-    #                                                              self.resMODFLOWModelInstance.metadata.model_input.id,
-    #                                                              rainfallTimeStepType='frodo baggins')
-    #         self.resMODFLOWModelInstance.metadata.update_element('ModelInput',
-    #                                                              self.resMODFLOWModelInstance.metadata.model_input.id,
-    #                                                              routingTimeStepType='legolas')
-    #         self.resMODFLOWModelInstance.metadata.update_element('ModelInput',
-    #                                                              self.resMODFLOWModelInstance.metadata.model_input.id,
-    #                                                              simulationTimeStepType='gandalf')
-    #     # update normal ModelInput
-    #     self.resMODFLOWModelInstance.metadata.update_element('ModelInput',
-    #                                                          self.resMODFLOWModelInstance.metadata.model_input.id,
-    #                                                          warmupPeriodValue='b',
-    #                                                          rainfallTimeStepType='Sub-hourly',
-    #                                                          rainfallTimeStepValue='d',
-    #                                                          routingTimeStepType='Hourly',
-    #                                                          routingTimeStepValue='f',
-    #                                                          simulationTimeStepType='Annual',
-    #                                                          simulationTimeStepValue='h',
-    #                                                          watershedArea='i',
-    #                                                          numberOfSubbasins='j',
-    #                                                          numberOfHRUs='k',
-    #                                                          demResolution='l',
-    #                                                          demSourceName='m',
-    #                                                          demSourceURL='n',
-    #                                                          landUseDataSourceName='o',
-    #                                                          landUseDataSourceURL='p',
-    #                                                          soilDataSourceName='q',
-    #                                                          soilDataSourceURL='r',
-    #                                                          )
-    #     self.assertNotEqual(self.resMODFLOWModelInstance.metadata.simulation_type, None)
-    #     self.assertEqual(self.resMODFLOWModelInstance.metadata.model_input.warmupPeriodValue, 'b')
-    #     self.assertEqual(self.resMODFLOWModelInstance.metadata.model_input.rainfallTimeStepType, 'Sub-hourly')
-    #     self.assertEqual(self.resMODFLOWModelInstance.metadata.model_input.rainfallTimeStepValue, 'd')
-    #     self.assertEqual(self.resMODFLOWModelInstance.metadata.model_input.routingTimeStepType, 'Hourly')
-    #     self.assertEqual(self.resMODFLOWModelInstance.metadata.model_input.routingTimeStepValue, 'f')
-    #     self.assertEqual(self.resMODFLOWModelInstance.metadata.model_input.simulationTimeStepType, 'Annual')
-    #     self.assertEqual(self.resMODFLOWModelInstance.metadata.model_input.simulationTimeStepValue, 'h')
-    #     self.assertEqual(self.resMODFLOWModelInstance.metadata.model_input.watershedArea, 'i')
-    #     self.assertEqual(self.resMODFLOWModelInstance.metadata.model_input.numberOfSubbasins, 'j')
-    #     self.assertEqual(self.resMODFLOWModelInstance.metadata.model_input.numberOfHRUs, 'k')
-    #     self.assertEqual(self.resMODFLOWModelInstance.metadata.model_input.demResolution, 'l')
-    #     self.assertEqual(self.resMODFLOWModelInstance.metadata.model_input.demSourceName, 'm')
-    #     self.assertEqual(self.resMODFLOWModelInstance.metadata.model_input.demSourceURL, 'n')
-    #     self.assertEqual(self.resMODFLOWModelInstance.metadata.model_input.landUseDataSourceName, 'o')
-    #     self.assertEqual(self.resMODFLOWModelInstance.metadata.model_input.landUseDataSourceURL, 'p')
-    #     self.assertEqual(self.resMODFLOWModelInstance.metadata.model_input.soilDataSourceName, 'q')
-    #     self.assertEqual(self.resMODFLOWModelInstance.metadata.model_input.soilDataSourceURL, 'r')
-    #
-    #     # delete
-    #
-    #     # check that there are all extended metadata elements at this point
-    #     self.assertNotEqual(self.resMODFLOWModelInstance.metadata.model_output, None)
-    #     self.assertNotEqual(self.resMODFLOWModelInstance.metadata.executed_by, None)
-    #     self.assertNotEqual(self.resMODFLOWModelInstance.metadata.model_input, None)
-    #     self.assertNotEqual(self.resMODFLOWModelInstance.metadata.model_parameter, None)
-    #     self.assertNotEqual(self.resMODFLOWModelInstance.metadata.model_method, None)
-    #     self.assertNotEqual(self.resMODFLOWModelInstance.metadata.simulation_type, None)
-    #     self.assertNotEqual(self.resMODFLOWModelInstance.metadata.model_objective, None)
-    #
-    #     # delete all elements
-    #     self.resMODFLOWModelInstance.metadata.delete_element('ModelOutput',
-    #                                                          self.resMODFLOWModelInstance.metadata.model_output.id)
-    #     self.resMODFLOWModelInstance.metadata.delete_element('ExecutedBy',
-    #                                                          self.resMODFLOWModelInstance.metadata.executed_by.id)
-    #     self.resMODFLOWModelInstance.metadata.delete_element('ModelInput',
-    #                                                          self.resMODFLOWModelInstance.metadata.model_input.id)
-    #     self.resMODFLOWModelInstance.metadata.delete_element('ModelParameter',
-    #                                                          self.resMODFLOWModelInstance.metadata.model_parameter.id)
-    #     self.resMODFLOWModelInstance.metadata.delete_element('ModelMethod',
-    #                                                          self.resMODFLOWModelInstance.metadata.model_method.id)
-    #     self.resMODFLOWModelInstance.metadata.delete_element('SimulationType',
-    #                                                          self.resMODFLOWModelInstance.metadata.simulation_type.id)
-    #     self.resMODFLOWModelInstance.metadata.delete_element('ModelObjective',
-    #                                                          self.resMODFLOWModelInstance.metadata.model_objective.id)
-    #
-    #     # make sure they are deleted
-    #     self.assertEquals(self.resMODFLOWModelInstance.metadata.model_output, None)
-    #     self.assertEquals(self.resMODFLOWModelInstance.metadata.executed_by, None)
-    #     self.assertEquals(self.resMODFLOWModelInstance.metadata.model_input, None)
-    #     self.assertEquals(self.resMODFLOWModelInstance.metadata.model_parameter, None)
-    #     self.assertEquals(self.resMODFLOWModelInstance.metadata.model_method, None)
-    #     self.assertEquals(self.resMODFLOWModelInstance.metadata.simulation_type, None)
-    #     self.assertEquals(self.resMODFLOWModelInstance.metadata.model_objective, None)
-    #
-    # def test_public_or_discoverable(self):
-    #     self.assertFalse(self.resMODFLOWModelInstance.has_required_content_files())
-    #     self.assertFalse(self.resMODFLOWModelInstance.metadata.has_all_required_elements())
-    #     self.assertFalse(self.resMODFLOWModelInstance.can_be_public_or_discoverable)
-    #
-    #     # add file
-    #     files = [UploadedFile(file=self.text_file_obj, name=self.text_file_obj.name)]
-    #     utils.resource_file_add_pre_process(resource=self.resMODFLOWModelInstance, files=files, user=self.user,
-    #                                         extract_metadata=False)
-    #
-    #     utils.resource_file_add_process(resource=self.resMODFLOWModelInstance, files=files, user=self.user,
-    #                                     extract_metadata=False)
-    #     self.assertTrue(self.resMODFLOWModelInstance.has_required_content_files())
-    #     self.assertFalse(self.resMODFLOWModelInstance.can_be_public_or_discoverable)
-    #
-    #     # add generically required elements; still should not be made public
-    #     self.resMODFLOWModelInstance.metadata.create_element('Description', abstract="test abstract")
-    #     self.assertFalse(self.resMODFLOWModelInstance.can_be_public_or_discoverable)
-    #
-    #     self.resMODFLOWModelInstance.metadata.create_element('Subject', value="test subject")
-    #     self.assertFalse(self.resMODFLOWModelInstance.can_be_public_or_discoverable)
-    #
-    #     # add model objective; should now be ok
-    #     s_objs = ["BMPs", "Hydrology", "Water quality"]
-    #     o_objs = "elon musk"
-    #     self.resMODFLOWModelInstance.metadata.create_element('ModelObjective',
-    #                                                          swat_model_objectives=s_objs,
-    #                                                          other_objectives=o_objs)
-    #
-    #     self.assertTrue(self.resMODFLOWModelInstance.metadata.has_all_required_elements())
-    #     self.assertTrue(self.resMODFLOWModelInstance.can_be_public_or_discoverable)
-    #
-    # def test_multiple_content_files(self):
-    #     self.assertTrue(self.resMODFLOWModelInstance.can_have_multiple_files())
+        # check that there are all extended metadata elements at this point
+        self.assertNotEqual(self.resMODFLOWModelInstance.metadata.model_output, None)
+        self.assertNotEqual(self.resMODFLOWModelInstance.metadata.executed_by, None)
+        self.assertNotEqual(self.resMODFLOWModelInstance.metadata.study_area, None)
+        self.assertNotEqual(self.resMODFLOWModelInstance.metadata.grid_dimensions, None)
+        self.assertNotEqual(self.resMODFLOWModelInstance.metadata.stress_period, None)
+        self.assertNotEqual(self.resMODFLOWModelInstance.metadata.ground_water_flow, None)
+        self.assertNotEqual(self.resMODFLOWModelInstance.metadata.boundary_condition, None)
+        self.assertNotEqual(self.resMODFLOWModelInstance.metadata.model_calibration, None)
+        self.assertNotEqual(self.resMODFLOWModelInstance.metadata.model_inputs, None)
+        self.assertNotEqual(self.resMODFLOWModelInstance.metadata.general_elements, None)
+
+        # delete all elements
+        self.resMODFLOWModelInstance.metadata.delete_element('ModelOutput',
+                                                             self.resMODFLOWModelInstance.metadata.model_output.id)
+        self.resMODFLOWModelInstance.metadata.delete_element('ExecutedBy',
+                                                             self.resMODFLOWModelInstance.metadata.executed_by.id)
+        self.resMODFLOWModelInstance.metadata.delete_element('StudyArea',
+                                                             self.resMODFLOWModelInstance.metadata.study_area.id)
+        self.resMODFLOWModelInstance.metadata.delete_element('GridDimensions',
+                                                             self.resMODFLOWModelInstance.metadata.grid_dimensions.id)
+        self.resMODFLOWModelInstance.metadata.delete_element('StressPeriod',
+                                                             self.resMODFLOWModelInstance.metadata.stress_period.id)
+        self.resMODFLOWModelInstance.metadata.delete_element('GroundWaterFlow',
+                                                             self.resMODFLOWModelInstance.metadata.ground_water_flow.id)
+        self.resMODFLOWModelInstance.metadata.delete_element('BoundaryCondition',
+                                                             self.resMODFLOWModelInstance.metadata.boundary_condition.id)
+        self.resMODFLOWModelInstance.metadata.delete_element('ModelCalibration',
+                                                             self.resMODFLOWModelInstance.metadata.model_calibration.id)
+        for items in range(len(self.resMODFLOWModelInstance.metadata.model_inputs)):
+            self.resMODFLOWModelInstance.metadata.delete_element('ModelInput', self.resMODFLOWModelInstance.metadata.model_inputs[0].id)
+        self.resMODFLOWModelInstance.metadata.delete_element('GeneralElements',
+                                                             self.resMODFLOWModelInstance.metadata.general_elements.id)
+
+        # make sure they are deleted
+        self.assertEqual(self.resMODFLOWModelInstance.metadata.model_output, None)
+        self.assertEqual(self.resMODFLOWModelInstance.metadata.executed_by, None)
+        self.assertEqual(self.resMODFLOWModelInstance.metadata.study_area, None)
+        self.assertEqual(self.resMODFLOWModelInstance.metadata.grid_dimensions, None)
+        self.assertEqual(self.resMODFLOWModelInstance.metadata.stress_period, None)
+        self.assertEqual(self.resMODFLOWModelInstance.metadata.ground_water_flow, None)
+        self.assertEqual(self.resMODFLOWModelInstance.metadata.boundary_condition, None)
+        self.assertEqual(self.resMODFLOWModelInstance.metadata.model_calibration, None)
+        self.assertEqual(len(self.resMODFLOWModelInstance.metadata.model_inputs), 0)
+        self.assertEqual(self.resMODFLOWModelInstance.metadata.general_elements, None)
+
+    def test_public_or_discoverable(self):
+        self.assertFalse(self.resMODFLOWModelInstance.has_required_content_files())
+        self.assertFalse(self.resMODFLOWModelInstance.metadata.has_all_required_elements())
+        self.assertFalse(self.resMODFLOWModelInstance.can_be_public_or_discoverable)
+
+        # add txt file
+        files = [UploadedFile(file=self.text_file_obj, name=self.text_file_obj.name)]
+        utils.resource_file_add_pre_process(resource=self.resMODFLOWModelInstance, files=files, user=self.user,
+                                            extract_metadata=False)
+        utils.resource_file_add_process(resource=self.resMODFLOWModelInstance, files=files, user=self.user,
+                                        extract_metadata=False)
+        self.assertFalse(self.resMODFLOWModelInstance.has_required_content_files())
+        self.assertFalse(self.resMODFLOWModelInstance.can_be_public_or_discoverable)
+
+        # add .nam file
+        files = [UploadedFile(file=self.sample_nam_obj, name=self.sample_nam_obj.name)]
+        utils.resource_file_add_pre_process(resource=self.resMODFLOWModelInstance, files=files, user=self.user,
+                                            extract_metadata=False)
+        utils.resource_file_add_process(resource=self.resMODFLOWModelInstance, files=files, user=self.user,
+                                        extract_metadata=False)
+        self.assertFalse(self.resMODFLOWModelInstance.has_required_content_files())
+        self.assertFalse(self.resMODFLOWModelInstance.can_be_public_or_discoverable)
+
+        # add reqd files except 2
+        for f in self.file_list[2:]:
+            self.assertFalse(self.resMODFLOWModelInstance.has_required_content_files())
+            self.assertFalse(self.resMODFLOWModelInstance.can_be_public_or_discoverable)
+            f_obj = open(f, 'r')
+            files = [UploadedFile(file=f_obj, name=f_obj.name)]
+            utils.resource_file_add_pre_process(resource=self.resMODFLOWModelInstance, files=files, user=self.user,
+                                                extract_metadata=False)
+            utils.resource_file_add_process(resource=self.resMODFLOWModelInstance, files=files, user=self.user,
+                                            extract_metadata=False)
+        self.assertFalse(self.resMODFLOWModelInstance.has_required_content_files())
+        self.assertFalse(self.resMODFLOWModelInstance.can_be_public_or_discoverable)
+
+        # add all reqd files
+        for f in self.file_list[:2]:
+            self.assertFalse(self.resMODFLOWModelInstance.has_required_content_files())
+            self.assertFalse(self.resMODFLOWModelInstance.can_be_public_or_discoverable)
+            f_obj = open(f, 'r')
+            files = [UploadedFile(file=f_obj, name=f_obj.name)]
+            utils.resource_file_add_pre_process(resource=self.resMODFLOWModelInstance, files=files, user=self.user,
+                                                extract_metadata=False)
+            utils.resource_file_add_process(resource=self.resMODFLOWModelInstance, files=files, user=self.user,
+                                            extract_metadata=False)
+        self.assertTrue(self.resMODFLOWModelInstance.has_required_content_files())
+        self.assertFalse(self.resMODFLOWModelInstance.can_be_public_or_discoverable)
+
+
+
+        # add generically required elements; still should not be made public
+        self.resMODFLOWModelInstance.metadata.create_element('Description', abstract="test abstract")
+        self.assertFalse(self.resMODFLOWModelInstance.can_be_public_or_discoverable)
+
+        self.resMODFLOWModelInstance.metadata.create_element('Subject', value="test subject")
+        self.assertTrue(self.resMODFLOWModelInstance.can_be_public_or_discoverable)
+
+        # add another .nam file
+        files = [UploadedFile(file=self.sample_nam_obj2, name=self.sample_nam_obj2.name)]
+        utils.resource_file_add_pre_process(resource=self.resMODFLOWModelInstance, files=files, user=self.user,
+                                            extract_metadata=False)
+        utils.resource_file_add_process(resource=self.resMODFLOWModelInstance, files=files, user=self.user,
+                                        extract_metadata=False)
+        self.assertFalse(self.resMODFLOWModelInstance.has_required_content_files())
+        self.assertFalse(self.resMODFLOWModelInstance.can_be_public_or_discoverable)
+
+        # delete extra .nam file
+        hydroshare.delete_resource_file(self.resMODFLOWModelInstance.short_id, self.sample_nam_name2, self.user)
+        self.assertTrue(self.resMODFLOWModelInstance.has_required_content_files())
+        self.assertTrue(self.resMODFLOWModelInstance.can_be_public_or_discoverable)
+
+
+
+    def test_multiple_content_files(self):
+        self.assertTrue(self.resMODFLOWModelInstance.can_have_multiple_files())
     #
     # def test_get_xml(self):
     #     self.resMODFLOWModelInstance.metadata.create_element('Description', abstract="test abstract")
