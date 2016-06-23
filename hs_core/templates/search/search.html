@@ -229,13 +229,13 @@
                                             {% endif %}
                                         </div>
                                     </td>
-                                    <td><a href="{{ result.object.get_absolute_url }}">{{ result.object.metadata.title.value }}</a></td>
+                                    <td><strong><a href="{{ result.object.get_absolute_url }}">{{ result.object.metadata.title.value }}</a></strong></td>
                                     {% if result.object.first_creator.description %}
                                         <td><a href="{{ result.object.first_creator.description }}">{{ result.object.first_creator.name  }}</a></td>
                                     {% else %}
                                         <td>{{ result.object.first_creator.name }}</td>
                                     {% endif %}
-                                    <td>{{ result.object.updated|date }} {{ result.object.updated|time }}</td>
+                                    <td>{{ result.object.updated|date:"m/d/Y" }}, {{ result.object.updated|time }}</td>
                                     <td>{{ result.object.updated|date:"Y/m/d H:i:s" }}</td> {# Used in table sorting #}
                                 </tr>
                             {% empty %}
