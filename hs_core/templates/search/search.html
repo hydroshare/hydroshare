@@ -4,11 +4,17 @@
 {% block main %}
 <div class="container" id="main">
     <div class="row">
+        <div class="col-sm-12">
+            <h2 class="page-title">Discover
+                <small class="text-muted"><i>Discover content shared by your colleagues and other users.</i></small>
+            </h2>
+        </div>
         <div class="col-sm-9 pull-right">
             <div class="resource-search">
                 <form id="search-field" method="get" action=".">
                     {% for field in form %}
                         <div class="fieldWrapper">
+                            <span class="glyphicon glyphicon-search search-icon"></span>
                             {{ field }}
                         </div>
                     {% endfor %}
@@ -58,7 +64,7 @@
                                         {% if item.1 > 0 %}
                                             <li class="list-group-item" rel="{{ key }},{{ item.0 }}">
                                                 <span class="badge">{{ item.1 }}</span>
-                                                <label onclick="formLinkButtonURL('{{ key }}', '{{ item.0 }}')" class="checkbox noselect">
+                                                <label class="checkbox noselect">
                                                     <input type="checkbox" class="faceted-selections" id="{{ key }}-{{ item.0 }}" value="{{ key }},{{ item.0 }}">{{ item.0 }}</label>
                                             </li>
                                         {% endif %}
@@ -87,8 +93,7 @@
                                             {% if item.1 > 0 and item.0 != 'false' %}
                                                 <li class="list-group-item" rel="{{ key }},{{ item.0 }}">
                                                     <span class="badge">{{ item.1 }}</span>
-                                                    <label onclick="formLinkButtonURL('{{ key }}', '{{ item.0 }}')"
-                                                           class="checkbox noselect">
+                                                    <label class="checkbox noselect">
                                                         <input type="checkbox" class="faceted-selections"
                                                                id="{{ key }}-{{ item.0 }}"
                                                                value="{{ key }},{{ item.0 }}">
@@ -457,13 +462,11 @@
                 if (json_results[i].coverage_type == 'point') {
                     checkDuplicatePointResults(modified_points_data, json_results[i]);
 
-                } else if(json_results[i].coverage_type == 'box') {
+                }
+                else if(json_results[i].coverage_type == 'box') {
                     checkDuplicateBoxResults(modified_boxes_data, json_results[i]);
 
-                } else {
-                    continue;
                 }
-
             }
 
             modified_points_data.forEach(function(point){
@@ -614,14 +617,12 @@
             window.location = requestURL;
         };
 
-        var buildURLOnCheckboxes = function () {
+        var buildURLOnCheckboxes = function (target) {
             var requestURL = '';
             $(".faceted-selections").each(function () {
                 var checkboxId = $(this).attr("id");
                 var sessionStorageCheckboxId = 'search-' + checkboxId;
-                var val = sessionStorage[sessionStorageCheckboxId];
-                var isChecked = val === 'true';
-                if(isChecked){
+                if(document.getElementById(checkboxId).checked){
                     var arr = $(this).val().split(",");
                     var key = arr[0];
                     var value = arr[1];
@@ -705,16 +706,16 @@
                         type: "GET",
                         url: requestURL,
                         dataType: 'json',
-                        success: function(data) {
+                        success: function (data) {
                             var json_results = [];
-                            for(var j = 0; j < data.length; j++){
+                            for (var j = 0; j < data.length; j++) {
                                 var item = $.parseJSON(data[j]);
                                 json_results.push(item);
                             }
                             initMap(json_results);
 
-                        }
-                        , failure: function(data){
+                        },
+                        failure: function (data) {
                             console.error("fail");
                         }
                     });
@@ -746,16 +747,12 @@
             });
 
             $(".faceted-selections").click(function () {
-                var tokens = $(this).val().split(",");
-                var key = tokens[0];
-                var value = tokens[1];
                 var textSearch = $("#id_q").val();
                 var searchURL = "?q=" + textSearch;
                 var windowPath = window.location.pathname;
                 var requestURL =  windowPath + searchURL;
 
                 if($(this).is(":checked")) {
-                    requestURL = requestURL + "&selected_facets="+key+"_exact:"+value;
                     requestURL += buildURLOnCheckboxes();
                     var checkboxId = $(this).attr("id");
                     var sessionStorageCheckboxId = 'search-' + checkboxId;
