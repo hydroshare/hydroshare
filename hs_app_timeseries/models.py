@@ -27,7 +27,25 @@ class TimeSeriesAbstractMetaDataElement(AbstractMetaDataElement):
     is_dirty = models.BooleanField(default=False)
 
     @classmethod
+    def create(cls, **kwargs):
+        if 'series_ids' not in kwargs:
+            raise ValidationError("Timeseries ID(s) is missing")
+        elif not isinstance(kwargs['series_ids'], list):
+            raise ValidationError("Timeseries ID(s) must be a list")
+        elif not kwargs['series_ids']:
+            raise ValidationError("Timeseries ID(s) is missing")
+        else:
+            # series ids must be unique
+            set_series_ids = set(kwargs['series_ids'])
+            if len(set_series_ids) != len(kwargs['series_ids']):
+                raise ValidationError("Duplicate series IDs are found")
+
+        super(TimeSeriesAbstractMetaDataElement, cls).create(**kwargs)
+
+    @classmethod
     def update(cls, element_id, **kwargs):
+        if 'series_ids' in kwargs:
+            raise ValidationError("Timeseries ID(s) can't be updated")
         super(TimeSeriesAbstractMetaDataElement, cls).update(element_id, **kwargs)
         element = cls.objects.get(id=element_id)
         element.is_dirty = True
