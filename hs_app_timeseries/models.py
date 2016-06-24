@@ -550,11 +550,23 @@ class TimeSeriesMetaData(CoreMetaData):
 
     def delete_all_elements(self):
         super(TimeSeriesMetaData, self).delete_all_elements()
+        # delete resource specific metadata
         self.sites.delete()
         self.variables.delete()
         self.methods.delete()
         self.processing_levels.delete()
         self.time_series_results.delete()
+        # delete CV lookup django tables
+        self.cv_variable_types.all().delete()
+        self.cv_variable_names.all().delete()
+        self.cv_speciations.all().delete()
+        self.cv_elevation_datums.all().delete()
+        self.cv_site_types.all().delete()
+        self.cv_method_types.all().delete()
+        self.cv_units_types.all().delete()
+        self.cv_statuses.all().delete()
+        self.cv_mediums.all().delete()
+        self.cv_aggregation_statistics.all().delete()
 
     def update_sqlite_file(self):
         if not self.is_dirty:

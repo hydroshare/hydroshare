@@ -39,10 +39,36 @@ def pre_add_files_to_resource_handler(sender, **kwargs):
     # if needed more actions can be taken here before content file is added to a TimeSeries resource
     pass
 
+
 @receiver(pre_delete_file_from_resource, sender=TimeSeriesResource)
 def pre_delete_file_from_resource_handler(sender, **kwargs):
-    # if needed more actions can be taken here before content file is deleted from a TimeSeries resource
-    pass
+    # if the deleted file is the sqlite file then reset the 'is_dirty' attribute
+    # for all extracted metadata to False
+    resource = kwargs['resource']
+    del_file = kwargs['file']
+
+    def reset_metadata_elements_is_dirty(elements):
+        for element in elements:
+            element.is_dirty = False
+            element.save()
+
+    # check if it a sqlite file
+    fl_ext, fl_obj_name = get_file_ext_and_obj_name(resource, del_file)
+    if fl_ext == '.sqlite':
+        reset_metadata_elements_is_dirty(resource.metadata.sites.all())
+        reset_metadata_elements_is_dirty(resource.metadata.variables.all())
+        reset_metadata_elements_is_dirty(resource.metadata.methods.all())
+        reset_metadata_elements_is_dirty(resource.metadata.processing_levels.all())
+        reset_metadata_elements_is_dirty(resource.metadata.time_series_results.all())
+        reset_metadata_elements_is_dirty(resource.metadata.cv_variable_types.all())
+        reset_metadata_elements_is_dirty(resource.metadata.cv_variable_names.all())
+        reset_metadata_elements_is_dirty(resource.metadata.cv_speciations.all())
+        reset_metadata_elements_is_dirty(resource.metadata.cv_elevation_datums.all())
+        reset_metadata_elements_is_dirty(resource.metadata.cv_site_types.all())
+        reset_metadata_elements_is_dirty(resource.metadata.cv_method_types.all())
+        reset_metadata_elements_is_dirty(resource.metadata.cv_units_types.all())
+        reset_metadata_elements_is_dirty(resource.metadata.cv_statuses.all())
+        reset_metadata_elements_is_dirty(resource.metadata.cv_aggregation_statistics.all())
 
 
 @receiver(post_add_files_to_resource, sender=TimeSeriesResource)
@@ -567,22 +593,23 @@ def _delete_extracted_metadata(resource):
     resource.metadata.subjects.all().delete()
     resource.metadata.sources.all().delete()
     resource.metadata.relations.all().delete()
+    resource.metadata.sites.delete()
+    resource.metadata.variables.delete()
+    resource.metadata.methods.delete()
+    resource.metadata.processing_levels.delete()
+    resource.metadata.time_series_results.delete()
 
-    # delete extended metadata elements
-    if resource.metadata.site:
-        resource.metadata.site.delete()
-
-    if resource.metadata.variable:
-        resource.metadata.variable.delete()
-
-    if resource.metadata.method:
-        resource.metadata.method.delete()
-
-    if resource.metadata.processing_level:
-        resource.metadata.processing_level.delete()
-
-    if resource.metadata.time_series_result:
-        resource.metadata.time_series_result.delete()
+    # delete CV lookup django tables
+    resource.metadata.cv_variable_types.all().delete()
+    resource.metadata.cv_variable_names.all().delete()
+    resource.metadata.cv_speciations.all().delete()
+    resource.metadata.cv_elevation_datums.all().delete()
+    resource.metadata.cv_site_types.all().delete()
+    resource.metadata.cv_method_types.all().delete()
+    resource.metadata.cv_units_types.all().delete()
+    resource.metadata.cv_statuses.all().delete()
+    resource.metadata.cv_mediums.all().delete()
+    resource.metadata.cv_aggregation_statistics.all().delete()
 
     # add the title element as "Untitled resource"
     res_title = 'Untitled resource'
