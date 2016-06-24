@@ -646,6 +646,7 @@
                 if (ne_lat >= -90 &&  ne_lat <= 90 && sw_lat >= -90 &&  sw_lat <= 90) {
                     if (ne_lng >= -180 &&  ne_lng <= 180 && sw_lng >= -180 &&  sw_lng <= 180) {
                         if (ne_lat >= sw_lat) {
+                            $(".manualzoom-input").empty();
                             return true;
                         } else {
                             $(".manualzoom-input").empty();
