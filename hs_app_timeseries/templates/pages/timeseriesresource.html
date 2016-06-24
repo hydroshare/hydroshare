@@ -4,7 +4,7 @@
 
 {% block extended_metadata %}
     {% if extended_metadata_exists %}
-        <div class="row">
+        <div id="div-series-selection" class="row">
             <div class="col-sm-12">
                 <strong>Select a timeseries to see corresponding metadata:</strong>
             <form action="/resource/{{ cm.short_id }}/" method="get" enctype="multipart/form-data">
@@ -188,6 +188,11 @@
 
     {# resource specific js can go here #}
     <script>
+        $(document).ready(function(){
+            var el = $('#div-series-selection');
+            $(window).scrollTop($(el).offset().top - 300);
+
+        });
         function setCheckboxValue(el){
             if ($(el).is(':checked')){
                 $(el).attr('value', 'Yes')

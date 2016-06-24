@@ -31,9 +31,18 @@ def landing_page(request, page):
 
     if 'series_id' in request.GET:
         selected_series_id = request.GET['series_id']
-        is_resource_specific_tab_active = True
+        if 'series_id' in request.session:
+            if selected_series_id != request.session['series_id']:
+                is_resource_specific_tab_active = True
+                request.session['series_id'] = selected_series_id
+            else:
+                is_resource_specific_tab_active = False
+        else:
+            request.session['series_id'] = selected_series_id
+            is_resource_specific_tab_active = False
     else:
         selected_series_id = series_ids.keys()[0] if series_ids.keys() else None
+        request.session['series_id'] = selected_series_id
         is_resource_specific_tab_active = False
 
     # view depends on whether the resource is being edited
