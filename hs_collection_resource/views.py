@@ -161,7 +161,11 @@ def calculate_collection_coverages(request, shortkey, *args, **kwargs):
 
 
 def _update_collection_coverages(collection_res_obj):
-    #  update the collection coverages metadata.
+    """
+    update the collection coverages metadata.
+    :param collection_res_obj: collection obj
+    :return: a json response contains a list of coverage metadata dict
+    """
     res_id = collection_res_obj.short_id
     new_coverage_list = _calculate_collection_coverages(collection_res_obj)
     try:
@@ -182,7 +186,11 @@ def _update_collection_coverages(collection_res_obj):
 
 
 def _calculate_collection_coverages(collection_res_obj):
-    # calculate the overall coverages of all contained resources
+    """
+    calculate the overall coverages of all contained resources
+    :param collection_res_obj: collection obj
+    :return: a list of coverage metadata dict
+    """
     res_id = collection_res_obj.short_id
     new_coverage_list = []
     try:
@@ -216,7 +224,7 @@ def _calculate_collection_coverages(collection_res_obj):
                                        "Msg: {2} ".format(res_id, contained_res_obj.short_id, ex.message))
 
         # spatial coverage
-        if len(lon_list) > 0 and len(lon_list) > 0:
+        if len(lon_list) > 0 and len(lat_list) > 0:
             value_dict = {}
             type_str = 'point'
             lon_min = min(lon_list)
@@ -239,13 +247,13 @@ def _calculate_collection_coverages(collection_res_obj):
 
             new_coverage_list.append({'type': type_str, 'value': value_dict, 'element_id_str': "-1"})
 
-            # temporal coverage
-            if len(time_list) > 0:
-                time_start = min(time_list)
-                time_end = max(time_list)
-                value_dict = {'start': time_start.strftime(ui_datetime_format), 'end': time_end.strftime(ui_datetime_format)}
+        # temporal coverage
+        if len(time_list) > 0:
+            time_start = min(time_list)
+            time_end = max(time_list)
+            value_dict = {'start': time_start.strftime(ui_datetime_format), 'end': time_end.strftime(ui_datetime_format)}
 
-                new_coverage_list.append({'type': 'period', 'value': value_dict, 'element_id_str': "-1"})
+            new_coverage_list.append({'type': 'period', 'value': value_dict, 'element_id_str': "-1"})
 
     except Exception as ex:
         raise Exception("Failed to calculate collection coverages")
