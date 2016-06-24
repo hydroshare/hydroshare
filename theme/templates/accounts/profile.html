@@ -330,10 +330,10 @@
 
                                             <table class="overview" data-page-mode="view">
                                                 <tbody>
-                                                {% if profile.user_type and profile.user_type != "Unspecified"%}
+                                                {% if profile.user_type %}
                                                     <tr>
                                                         <td><span class="text-muted">User type</span></td>
-                                                        <td id="db-user-type">{{ profile.user_type }}</td>
+                                                        <td><span id="db-user-type">{{ profile.user_type }}</span><span id="db-user-type-other">{% if profile.user_type == 'Other' %}: {{ profile.user_type_other }}{% endif %}</span></td>
                                                     </tr>
                                                 {% endif %}
                                                 {% if profile.country and profile.country != "Unspecified" %}
@@ -378,7 +378,7 @@
                                             <fieldset>
                                                 <label for="selectUserType">User type *</label>
                                                 <select name="user_type" class="form-control form-required" id="selectUserType">
-                                                    <option value="Unspecified">Unspecified</option>
+                                                    <option value="">Unspecified</option>
                                                     <option value="University Faculty">University Faculty</option>
                                                     <option value="University Professional or Research Staff">University Professional or Research Staff</option>
                                                     <option value="Post-Doctoral Fellow">Post-Doctoral Fellow</option>
@@ -395,7 +395,7 @@
                                             {#        User Type - Other       #}
                                             <fieldset id="user-type-other">
                                                 <label>Specify: *</label>
-                                                <input name="user_type" class="form-control">
+                                                <input name="user_type_other" class="form-control">
                                             </fieldset>
 
                                             {#        Country       #}
@@ -977,18 +977,17 @@
             });
 
             var userTypeValue = $("#db-user-type").text();
+            var userTypeValueOther = $("#db-user-type-other").text();
             var selectedUserType = $('#selectUserType option[value="' + userTypeValue + '"]');
 
             if (selectedUserType.length > 0) {
                 selectedUserType.attr('selected', 'selected');
             }
-            else if (userTypeValue) {
-                $('#selectUserType option[value="' + 'Other' + '"]').attr('selected', 'selected');
+
+            if (userTypeValue === 'Other') {
                 $("#user-type-other").show();
-                $("#selectUserType").removeAttr("name");
-                var userTypeOther =  $("#user-type-other input");
-                userTypeOther.attr("name", "user_type");
-                userTypeOther.val(userTypeValue);
+                var userTypeOther = $("#user-type-other input");
+                userTypeOther.val(userTypeValueOther.substring(2));
                 userTypeOther.addClass("form-required");
             }
 
@@ -1127,19 +1126,16 @@
             });
 
             $("#selectUserType").change(function () {
-                 var inputOther = $("#user-type-other input");
+                var inputOther = $("#user-type-other input");
                 if ($(this).val() == "Other") {
                     $("#user-type-other").show();
-                    $("#selectUserType").removeAttr("name");
-                    inputOther.attr("name", "user_type");
                     inputOther.addClass("form-required");
                     inputOther.change(onFormRequiredChange);
                 }
                 else {
                     $("#user-type-other").hide();
-                    inputOther.removeAttr("name");
+                    inputOther.val("");
                     inputOther.removeClass("form-required");
-                    $("#selectUserType").attr("name", "user_type");
                 }
             });
 
