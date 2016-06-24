@@ -8,6 +8,6 @@ urlpatterns = patterns(
         views.update_collection_for_deleted_resources),
     url(r'^_internal/(?P<shortkey>[A-z0-9]+)/update-collection-coverages/$',
         views.update_collection_coverages),
-     url(r'^_internal/(?P<shortkey>[A-z0-9]+)/calculate-collection-coverages/$',
+    url(r'^_internal/(?P<shortkey>[A-z0-9]+)/calculate-collection-coverages/$',
         views.calculate_collection_coverages),
     )
