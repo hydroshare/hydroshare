@@ -1,6 +1,7 @@
 import re
 import os
 import StringIO
+import shutil
 
 import netCDF4
 
@@ -155,6 +156,9 @@ def netcdf_pre_create_resource(sender, **kwargs):
         else:
             validate_files_dict['are_files_valid'] = False
             validate_files_dict['message'] = 'Please check if the uploaded file is in valid NetCDF format.'
+
+        if fed_res_fnames and in_file_name:
+            shutil.rmtree(os.path.dirname(in_file_name))
 
 
 # # receiver used to create netcdf header text after user click on "create resource"
@@ -382,6 +386,9 @@ def netcdf_pre_add_files_to_resource(sender, **kwargs):
         else:
             validate_files_dict['are_files_valid'] = False
             validate_files_dict['message'] = 'Please check if the uploaded file is in valid NetCDF format.'
+
+        if fed_res_fnames and in_file_name:
+            shutil.rmtree(os.path.dirname(in_file_name))
 
 # @receiver(post_add_files_to_resource, sender=NetcdfResource)
 # def netcdf_post_add_files_to_resource(sender, **kwargs):
