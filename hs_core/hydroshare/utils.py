@@ -7,7 +7,7 @@ import tempfile
 import logging
 import shutil
 import string
-import arrow
+from uuid import uuid4
 import errno
 
 from django.apps import apps
@@ -219,7 +219,7 @@ def get_fed_zone_files(irods_fnames):
     irods_storage = IrodsStorage('federated')
     for ifname in ifnames:
         fname = os.path.basename(ifname.rstrip(os.sep))
-        tmpdir = os.path.join(settings.TEMP_FILE_DIR, arrow.utcnow().format("YYYY.MM.DD.HH.mm.ss"))
+        tmpdir = os.path.join(settings.TEMP_FILE_DIR, uuid4().hex)
         tmpfile = os.path.join(tmpdir, fname)
         try:
             os.makedirs(tmpdir)
