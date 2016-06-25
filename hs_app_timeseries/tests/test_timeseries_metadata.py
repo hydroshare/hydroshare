@@ -313,8 +313,11 @@ class TestTimeSeriesMetaData(MockIRODSTestCaseMixin, TransactionTestCase):
         # there should be no TimeSeriesResult metadata objects
         self.assertFalse(TimeSeriesResult.objects.filter(object_id=core_metadata_obj.id).exists())
 
+        # TODO: check the deletion of CV lookup objects
+
     def test_extended_metadata_CRUD(self):
         # create
+        self.assertEquals(self.resTimeSeries.metadata.is_dirty, False)
         self.assertEquals(self.resTimeSeries.metadata.sites.all().count(), 0)
         self.resTimeSeries.metadata.create_element('site', series_ids=['a456789-89yughys'],  site_code='LR_WaterLab_AA',
                                                    site_name='Logan River at the Utah Water Research Laboratory '
@@ -329,6 +332,9 @@ class TestTimeSeriesMetaData(MockIRODSTestCaseMixin, TransactionTestCase):
         self.assertEquals(site_element.elevation_m, 1414)
         self.assertEquals(site_element.elevation_datum, 'EGM96')
         self.assertEquals(site_element.site_type, 'Stream')
+        self.assertEquals(site_element.is_dirty, False)
+
+        self.assertEquals(self.resTimeSeries.metadata.is_dirty, False)
 
         self.assertEquals(self.resTimeSeries.metadata.variables.all().count(), 0)
         self.resTimeSeries.metadata.create_element('variable', series_ids=['a456789-89yughys'], variable_code='ODO',
@@ -346,6 +352,9 @@ class TestTimeSeriesMetaData(MockIRODSTestCaseMixin, TransactionTestCase):
         self.assertEquals(variable_element.no_data_value, -9999)
         self.assertEquals(variable_element.variable_definition, 'Concentration of oxygen gas dissolved in water.')
         self.assertEquals(variable_element.speciation, 'Not Applicable')
+        self.assertEquals(variable_element.is_dirty, False)
+
+        self.assertEquals(self.resTimeSeries.metadata.is_dirty, False)
 
         self.assertEquals(self.resTimeSeries.metadata.methods.all().count(), 0)
         self.resTimeSeries.metadata.create_element('method', series_ids=['a456789-89yughys'], method_code='Code59',
@@ -366,6 +375,9 @@ class TestTimeSeriesMetaData(MockIRODSTestCaseMixin, TransactionTestCase):
                       'quality sonde.'
         self.assertEquals(method_element.method_description, method_desc)
         self.assertEquals(method_element.method_link, 'http://www.exowater.com')
+        self.assertEquals(method_element.is_dirty, False)
+
+        self.assertEquals(self.resTimeSeries.metadata.is_dirty, False)
 
         self.assertEquals(self.resTimeSeries.metadata.processing_levels.all().count(), 0)
         exp_text = """Raw and unprocessed data and data products that have not undergone quality control.
@@ -382,6 +394,9 @@ class TestTimeSeriesMetaData(MockIRODSTestCaseMixin, TransactionTestCase):
         self.assertEquals(proc_level_element.processing_level_code, 0)
         self.assertEquals(proc_level_element.definition, 'Raw data')
         self.assertEquals(proc_level_element.explanation, exp_text)
+        self.assertEquals(proc_level_element.is_dirty, False)
+
+        self.assertEquals(self.resTimeSeries.metadata.is_dirty, False)
 
         self.assertEquals(self.resTimeSeries.metadata.time_series_results.all().count(), 0)
         self.resTimeSeries.metadata.create_element('timeseriesresult', series_ids=['a456789-89yughys'],
@@ -400,6 +415,9 @@ class TestTimeSeriesMetaData(MockIRODSTestCaseMixin, TransactionTestCase):
         self.assertEquals(ts_result_element.sample_medium, 'Surface water')
         self.assertEquals(ts_result_element.value_count, 11283)
         self.assertEquals(ts_result_element.aggregation_statistics, 'Average')
+        self.assertEquals(ts_result_element.is_dirty, False)
+
+        self.assertEquals(self.resTimeSeries.metadata.is_dirty, False)
 
         # update
         self.resTimeSeries.metadata.update_element('site', self.resTimeSeries.metadata.sites.all().first().id,
@@ -414,6 +432,11 @@ class TestTimeSeriesMetaData(MockIRODSTestCaseMixin, TransactionTestCase):
         self.assertEquals(site_element.elevation_m, 1515)
         self.assertEquals(site_element.elevation_datum, 'EGM97')
         self.assertEquals(site_element.site_type, 'Stream flow')
+        self.assertEquals(site_element.is_dirty, True)
+
+        # since there is no sqlite file for the resource, the 'is_dirty' flag of metadata still be False
+        self.assertEquals(self.resTimeSeries.files.all().count(), 0)
+        self.assertEquals(self.resTimeSeries.metadata.is_dirty, False)
 
         self.resTimeSeries.metadata.update_element('variable', self.resTimeSeries.metadata.variables.all().first().id,
                                                    variable_code='ODO-1', variable_name='H2O dissolved',
@@ -428,6 +451,9 @@ class TestTimeSeriesMetaData(MockIRODSTestCaseMixin, TransactionTestCase):
         self.assertEquals(variable_element.no_data_value, -999)
         self.assertEquals(variable_element.variable_definition, 'Concentration of oxygen dissolved in water.')
         self.assertEquals(variable_element.speciation, 'Applicable')
+        self.assertEquals(variable_element.is_dirty, True)
+
+        self.assertEquals(self.resTimeSeries.metadata.is_dirty, False)
 
         method_desc = 'Dissolved oxygen concentration measured optically using a YSI EXO multi-parameter water ' \
                       'quality sonde-1.'
@@ -445,6 +471,9 @@ class TestTimeSeriesMetaData(MockIRODSTestCaseMixin, TransactionTestCase):
 
         self.assertEquals(method_element.method_description, method_desc)
         self.assertEquals(method_element.method_link, 'http://www.ex-water.com')
+        self.assertEquals(method_element.is_dirty, True)
+
+        self.assertEquals(self.resTimeSeries.metadata.is_dirty, False)
 
         self.resTimeSeries.metadata.update_element('processinglevel',
                                                    self.resTimeSeries.metadata.processing_levels.all().first().id,
@@ -455,6 +484,9 @@ class TestTimeSeriesMetaData(MockIRODSTestCaseMixin, TransactionTestCase):
         self.assertEquals(proc_level_element.processing_level_code, 9)
         self.assertEquals(proc_level_element.definition, 'data')
         self.assertEquals(proc_level_element.explanation, exp_text + 'some more text')
+        self.assertEquals(proc_level_element.is_dirty, True)
+
+        self.assertEquals(self.resTimeSeries.metadata.is_dirty, False)
 
         self.resTimeSeries.metadata.update_element('timeseriesresult',
                                                    self.resTimeSeries.metadata.time_series_results.all().first().id,
@@ -471,6 +503,9 @@ class TestTimeSeriesMetaData(MockIRODSTestCaseMixin, TransactionTestCase):
         self.assertEquals(ts_result_element.sample_medium, 'Fresh water')
         self.assertEquals(ts_result_element.value_count, 11211)
         self.assertEquals(ts_result_element.aggregation_statistics, 'Mean')
+        self.assertEquals(ts_result_element.is_dirty, True)
+
+        self.assertEquals(self.resTimeSeries.metadata.is_dirty, False)
 
         # delete
         # extended metadata deletion is not allowed - should raise exception
@@ -490,6 +525,52 @@ class TestTimeSeriesMetaData(MockIRODSTestCaseMixin, TransactionTestCase):
         with self.assertRaises(ValidationError):
             self.resTimeSeries.metadata.delete_element('timeseriesresult',
                                                        self.resTimeSeries.metadata.time_series_results.all().first().id)
+
+    def test_metadata_is_dirty_flag(self):
+        # resource.metadata.is_dirty flag be set to True if any of the resource specific metadata elements
+        # is updated when the resource has a sqlite file
+
+        # create a resource with uploded sqlite file
+        self.odm2_sqlite_file_obj = open(self.odm2_sqlite_file, 'r')
+
+        self.resTimeSeries = hydroshare.create_resource(
+            resource_type='TimeSeriesResource',
+            owner=self.user,
+            title='My Test TimeSeries Resource',
+            files=(self.odm2_sqlite_file_obj,)
+            )
+        utils.resource_post_create_actions(resource=self.resTimeSeries, user=self.user, metadata=[])
+
+        # at this point the is_dirty be set to false
+        self.assertEquals(self.resTimeSeries.metadata.is_dirty, False)
+        site = self.resTimeSeries.metadata.sites.all().first()
+        self.assertEquals(site.is_dirty, False)
+        # now update the site element
+        self.resTimeSeries.metadata.update_element('site', site.id,
+                                                   site_code='LR_WaterLab_BB',
+                                                   site_name='Logan River at the Utah WRL west bridge',
+                                                   elevation_m=1515,
+                                                   elevation_datum=site.elevation_datum,
+                                                   site_type=site.site_type)
+
+        site = self.resTimeSeries.metadata.sites.all().first()
+        self.assertEquals(site.is_dirty, True)
+        # at this point the is_dirty must be true
+        self.assertEquals(self.resTimeSeries.metadata.is_dirty, True)
+        site.is_dirty = False
+        site.save()
+        site = self.resTimeSeries.metadata.sites.all().first()
+        self.assertEquals(site.is_dirty, False)
+        # at this point the is_dirty must be true
+        self.assertEquals(self.resTimeSeries.metadata.is_dirty, False)
+
+        # TODO: test updating other elements
+
+    def test_cv_lookup_tables(self):
+        # TODO:
+        # Here we will test that when new CV terms are used for updating metadata elements, there should be
+        # new records added to the corresponding CV table (Django db table)
+        pass
 
     def test_get_xml(self):
         # add a valid odm2 sqlite file to generate metadata

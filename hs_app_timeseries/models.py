@@ -389,7 +389,13 @@ class TimeSeriesMetaData(CoreMetaData):
                 any(cv_variable_name.is_dirty for cv_variable_name in CVVariableName.objects.filter(metadata=self)) or \
                 any(cv_variable_type.is_dirty for cv_variable_type in CVVariableType.objects.filter(metadata=self)) or \
                 any(cv_speciation.is_dirty for cv_speciation in CVSpeciation.objects.filter(metadata=self)) or \
-                any(cv_site_type.is_dirty for cv_site_type in CVSiteType.objects.filter(metadata=self))
+                any(cv_site_type.is_dirty for cv_site_type in CVSiteType.objects.filter(metadata=self)) or \
+                any(cv_elev_datum.is_dirty for cv_elev_datum in CVElevationDatum.objects.filter(metadata=self)) or \
+                any(cv_method_type.is_dirty for cv_method_type in CVMethodType.objects.filter(metadata=self)) or \
+                any(cv_units_type.is_dirty for cv_units_type in CVUnitsType.objects.filter(metadata=self)) or \
+                any(cv_status.is_dirty for cv_status in CVStatus.objects.filter(metadata=self)) or \
+                any(cv_medium.is_dirty for cv_medium in CVMedium.objects.filter(metadata=self)) or \
+                any(cv_agg_stat.is_dirty for cv_agg_stat in CVAggregationStatistic.objects.filter(metadata=self))
 
         return dirty
 
