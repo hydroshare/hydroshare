@@ -1307,6 +1307,16 @@
                     return txtArea || (e.keyCode || e.which || e.charCode || 0) !== 13;
                 });
 
+                // Display toggle for Add Author/Contributor radio buttons
+                function onAddContributorTypeChange() {
+                    var type = $(this).val();
+                    $("div[data-hs-user-type]").hide();
+                    $("div[data-hs-user-type='" + type + "']").show();
+                }
+                $("input[name='add_author_user_type']").click(onAddContributorTypeChange);
+                $("input[name='add_contributor_user_type']").click(onAddContributorTypeChange);
+                
+
                 $("#citation-text").on("click", function (e) {
                     // document.selection logic is added in for IE 8 and lower
                     if (document.selection) {

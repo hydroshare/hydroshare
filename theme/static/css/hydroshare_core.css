@@ -2229,10 +2229,6 @@ button.loading {
     margin-top: -20px; margin-bottom:20px;
 }
 
-#id_name {
-    max-width: 467px;
-}
-
 .invalid-input {
 	border-color: #F00 !important;
 }
@@ -2796,6 +2792,10 @@ h4.title {
 
 #search-container {
 	margin-bottom: 10px;
+}
+
+#search-container .dropdown-toggle {
+	border-radius: 0;
 }
 
 /*Waiting on firefox support for background-clip:text*/
@@ -3673,4 +3673,23 @@ div.group-add-photo {
 div.toggle.btn {
 	width: 100px !important;
 	float: right;
+}
+
+.center-radio-inline {
+    padding: 8px;
+    border-radius: 4px;
+    width: 190px;
+}
+
+.center-radio-inline input[type='radio']{
+	float: initial;
+	margin: 0;
+}
+
+.center-radio-inline label {
+	cursor: pointer;
+}
+
+.or-separator {
+	margin-top: 20px;
 }

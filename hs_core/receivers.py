@@ -68,7 +68,19 @@ def metadata_element_pre_update_handler(sender, **kwargs):
         element_validation_form = repeatable_elements[element_name]
         form_data = {}
         for field_name in element_validation_form().fields:
-            matching_key = [key for key in request.POST if '-'+field_name in key][0]
+            if element_name.lower() == "creator" or element_name.lower() == "contributor":
+                # for creator or contributor who is not a hydroshare user the 'description'
+                # key might be missing in the POST form data
+                if field_name == 'description':
+                    matching_key = [key for key in request.POST if '-'+field_name in key]
+                    if matching_key:
+                        matching_key = matching_key[0]
+                    else:
+                        continue
+                else:
+                    matching_key = [key for key in request.POST if '-'+field_name in key][0]
+            else:
+                matching_key = [key for key in request.POST if '-'+field_name in key][0]
             form_data[field_name] = request.POST[matching_key]
 
         element_form = element_validation_form(form_data)

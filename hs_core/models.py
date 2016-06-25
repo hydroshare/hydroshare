@@ -267,6 +267,13 @@ class Party(AbstractMetaDataElement):
     def update(cls, element_id, **kwargs):
         element_name = cls.__name__
         creator_order = None
+        if 'description' in kwargs:
+            party = cls.objects.get(id=element_id)
+            if party.description is not None and kwargs['description'] is not None:
+                if len(party.description.strip()) > 0 and len(kwargs['description'].strip()) > 0:
+                    if party.description != kwargs['description']:
+                        raise ValidationError("HydroShare user identifier can't be changed.")
+
         if 'order' in kwargs and element_name == 'Creator':
             creator_order = kwargs['order']
             if creator_order <= 0:
