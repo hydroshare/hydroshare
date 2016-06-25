@@ -43,7 +43,6 @@ class TestGetUserData(TestCase):
         post_data = {'user_id': self.john.id}
         url = reverse('get_user_data', kwargs=post_data)
         request = self.factory.post(url, data=post_data)
-        # self._set_request_message_attributes(request)
         request.user = self.mike
         response = get_user_data(request, user_id=self.john.id)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -190,7 +189,6 @@ class TestGetUserData(TestCase):
         post_data = {'user_id': 9999999}
         url = reverse('get_user_data', kwargs=post_data)
         request = self.factory.post(url, data=post_data)
-        # self._set_request_message_attributes(request)
         request.user = self.mike
         with self.assertRaises(Http404):
             get_user_data(request, user_id=101)
