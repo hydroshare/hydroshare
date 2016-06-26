@@ -15,4 +15,7 @@ def update_sqlite_file(request, resource_id, *args, **kwargs):
         except Exception, ex:
             messages.error(request, "Failed to update SQLite file. Error:" + ex.message)
 
+    if 'resource-mode' in request.POST:
+        request.session['resource-mode'] = 'edit'
+
     return HttpResponseRedirect(request.META['HTTP_REFERER'])
