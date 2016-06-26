@@ -3670,6 +3670,40 @@ div.group-add-photo {
 	display: inline-block;
 }
 
+#discover-filter-buttons {
+	margin-bottom: 10px;
+}
+
+.discover-faceting-group {
+	height: 200px;
+	overflow-y: auto;
+}
+
+#list-data-options {
+	float:right;
+}
+
+#discover-map {
+	width:850px;
+	height:650px;
+}
+
+#discover-map-legend {
+	background: white;
+}
+
+#manual-zoom-btn {
+	margin-top:20px;
+}
+
+#resetZoom {
+	margin-right:5px;
+}
+
+.manualzoom-input {
+	color: red;
+}
+
 div.toggle.btn {
 	width: 100px !important;
 	float: right;
