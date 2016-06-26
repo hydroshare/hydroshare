@@ -6,7 +6,7 @@
     {% if extended_metadata_exists %}
         <div id="div-series-selection" class="row">
             <div class="col-sm-12">
-                <strong>Select a timeseries to see corresponding metadata:</strong>
+                <strong>Select a timeseries to see corresponding metadata(Number of timeseries:{{ series_ids.items|length }}):</strong>
             <form action="/resource/{{ cm.short_id }}/" method="get" enctype="multipart/form-data">
             {% csrf_token %}
                 <select class="form-control" name="series_id" id="series_id" onchange="this.form.submit()">
