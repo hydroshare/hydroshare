@@ -305,6 +305,8 @@ INSTALLED_APPS = (
     "hs_collection_resource",
     "hs_modflow_modelinstance",
     "hs_tracking",
+    "django_countries",
+    "localflavor",
 )
 
 # These apps are excluded by hs_core.tests.runner.CustomTestSuiteRunner
