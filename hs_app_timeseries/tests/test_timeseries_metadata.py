@@ -80,22 +80,13 @@ class TestTimeSeriesMetaData(MockIRODSTestCaseMixin, TransactionTestCase):
         utils.resource_file_add_pre_process(resource=self.resTimeSeries, files=files, user=self.user,
                                             extract_metadata=False)
 
-        # should raise file validation error even though the file gets added to the resource
+        # should raise file validation error and the file will not be added to the resource
         with self.assertRaises(utils.ResourceFileValidationException):
             utils.resource_file_add_process(resource=self.resTimeSeries, files=files, user=self.user,
                                             extract_metadata=False)
 
-        # there should 1 content file
-        self.assertEquals(self.resTimeSeries.files.all().count(), 1)
-
-        # file pre add process should raise validation error if we try to add a 2nd file when the resource has
-        # already one content file
-        with self.assertRaises(utils.ResourceFileValidationException):
-            utils.resource_file_add_pre_process(resource=self.resTimeSeries, files=files, user=self.user,
-                                                extract_metadata=False)
-
-        # delete the content file
-        hydroshare.delete_resource_file(self.resTimeSeries.short_id, self.odm2_sqlite_bad_file_name, self.user)
+        # there should not be aby content file
+        self.assertEquals(self.resTimeSeries.files.all().count(), 0)
 
         # there should no content file
         self.assertEquals(self.resTimeSeries.files.all().count(), 0)
@@ -110,6 +101,12 @@ class TestTimeSeriesMetaData(MockIRODSTestCaseMixin, TransactionTestCase):
 
         # there should one content file
         self.assertEquals(self.resTimeSeries.files.all().count(), 1)
+
+        # file pre add process should raise validation error if we try to add a 2nd file when the resource has
+        # already has one content file
+        with self.assertRaises(utils.ResourceFileValidationException):
+            utils.resource_file_add_pre_process(resource=self.resTimeSeries, files=files, user=self.user,
+                                                extract_metadata=False)
 
     def test_metadata_extraction_on_resource_creation(self):
         # passing the file object that points to the temp dir doesn't work - create_resource throws error

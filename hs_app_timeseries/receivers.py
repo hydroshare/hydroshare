@@ -5,11 +5,12 @@ import logging
 from django.dispatch import receiver
 
 from hs_core.signals import *
-from hs_core.hydroshare import utils
+from hs_core.hydroshare import utils, delete_resource_file_only
 from hs_app_timeseries.models import TimeSeriesResource, CVVariableType, CVVariableName, CVSpeciation, CVSiteType,\
     CVElevationDatum, CVMethodType, CVUnitsType, CVStatus, CVMedium, CVAggregationStatistic
 from forms import SiteValidationForm, VariableValidationForm, MethodValidationForm, ProcessingLevelValidationForm, \
     TimeSeriesResultValidationForm
+
 
 
 def get_file_ext_and_obj_name(res, res_file):
@@ -76,7 +77,6 @@ def pre_delete_file_from_resource_handler(sender, **kwargs):
 def post_add_files_to_resource_handler(sender, **kwargs):
     resource = kwargs['resource']
     validate_files_dict = kwargs['validate_files']
-    extract_metadata = kwargs['extract_metadata']
     user = kwargs['user']
 
     # extract metadata from the just uploaded file
@@ -88,21 +88,25 @@ def post_add_files_to_resource_handler(sender, **kwargs):
         if fl_ext == '.sqlite':
             validate_err_message = _validate_odm2_db_file(fl_obj_name)
             if not validate_err_message:
-                if extract_metadata:
-                    # first delete relevant metadata elements
+                # first delete relevant metadata elements
+                _delete_extracted_metadata(resource)
+                extract_err_message = _extract_metadata(resource, fl_obj_name)
+                if extract_err_message:
+                    # delete the invalid file
+                    delete_resource_file_only(resource, res_file)
+                    # cleanup any extracted metadata
                     _delete_extracted_metadata(resource)
-                    extract_err_message = _extract_metadata(resource, fl_obj_name)
+                    validate_files_dict['are_files_valid'] = False
+                    validate_files_dict['message'] = extract_err_message + " (Uploaded file was deleted)"
+                else:
                     utils.resource_modified(resource, user)
-                    if extract_err_message:
-                        validate_files_dict['are_files_valid'] = False
-                        validate_files_dict['message'] = extract_err_message + " (Failed to extract all metadata)"
+
             else:   # file validation failed
                 # delete the invalid file just uploaded
-                #file_name = os.path.basename(res_file.resource_file.name)
-                #delete_resource_file(resource.short_id, file_name)
+                delete_resource_file_only(resource, res_file)
                 validate_files_dict['are_files_valid'] = False
-                if extract_metadata:
-                    validate_err_message += " (Metadata was not extracted)"
+
+                validate_err_message += " (Uploaded file was deleted)"
                 validate_files_dict['message'] = validate_err_message
 
 
@@ -121,13 +125,20 @@ def post_create_resource_handler(sender, **kwargs):
             validate_err_message = _validate_odm2_db_file(fl_obj_name)
             if not validate_err_message:
                 extract_err_message = _extract_metadata(resource, fl_obj_name)
-                utils.resource_modified(resource, user)
                 if extract_err_message:
+                    # delete the invalid file
+                    delete_resource_file_only(resource, res_file)
+                    # cleanup any extracted metadata
+                    _delete_extracted_metadata(resource)
                     validate_files_dict['are_files_valid'] = False
-                    validate_files_dict['message'] = extract_err_message + " (Failed to extract all metadata)"
+                    validate_files_dict['message'] = extract_err_message + " (Uploaded file was deleted)"
+                else:
+                    utils.resource_modified(resource, user)
             else:
+                # delete the invalid file
+                delete_resource_file_only(resource, res_file)
                 validate_files_dict['are_files_valid'] = False
-                validate_files_dict['message'] = validate_err_message + " (Metadata was not extracted)"
+                validate_files_dict['message'] = validate_err_message + " (Uploaded file was deleted)"
 
 
 @receiver(pre_metadata_element_create, sender=TimeSeriesResource)
@@ -639,7 +650,7 @@ def _delete_extracted_metadata(resource):
 
 
 def _validate_odm2_db_file(uploaded_file_sqlite_file_name):
-    err_message = "Not a valid ODM2 SQLite file"
+    err_message = "Uploaded file is not a valid ODM2 SQLite file"
     log = logging.getLogger()
     try:
         con = sqlite3.connect(uploaded_file_sqlite_file_name)
