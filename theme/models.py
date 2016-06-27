@@ -5,6 +5,8 @@ from django.template import RequestContext, Template, TemplateSyntaxError
 from django.utils.translation import ugettext_lazy as _
 from django.core.exceptions import ValidationError
 
+from django_countries.fields import CountryField
+from localflavor.us.models import USStateField
 from mezzanine.core.fields import FileField, RichTextField
 from mezzanine.core.models import Orderable, SiteRelated
 from mezzanine.core.request import current_request
@@ -179,8 +181,8 @@ class UserProfile(models.Model):
                                help_text='Tell the HydroShare community a little about yourself.',
                                null=True, blank=True)
 
-    state = models.CharField(max_length=1024, null=True, blank=True)
-    country = models.CharField(max_length=1024, null=True, blank=True)
+    state = USStateField(blank=True, default='')
+    country = CountryField(blank=True, default='')
 
     create_irods_user_account = models.BooleanField(
         default=False,
