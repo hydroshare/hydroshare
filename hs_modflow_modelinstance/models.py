@@ -21,7 +21,7 @@ def delete_if_empty(term_obj):
     standard_elements = ['content_type_id', '_state', 'object_id', 'content_type_id', 'id', '_content_type_cache',
                          '_content_object_cache']
     for attr, val in vars(term_obj).iteritems():
-        if attr not in standard_elements and val != '':
+        if attr not in standard_elements and val != '' or val != []:
             all_blank = False
     if all_blank:
         term_obj.delete()
@@ -203,14 +203,21 @@ class GroundWaterFlow(AbstractMetaDataElement):
         return kwargs
 
 
-class BoundaryConditionTypeChoices(models.Model):
+class SpecifiedHeadBoundaryPackageChoices(models.Model):
     description = models.CharField(max_length=300)
 
     def __unicode__(self):
         return self.description
 
 
-class BoundaryConditionPackageChoices(models.Model):
+class SpecifiedFluxBoundaryPackageChoices(models.Model):
+    description = models.CharField(max_length=300)
+
+    def __unicode__(self):
+        return self.description
+
+
+class HeadDependentFluxBoundaryPackageChoices(models.Model):
     description = models.CharField(max_length=300)
 
     def __unicode__(self):
@@ -219,8 +226,9 @@ class BoundaryConditionPackageChoices(models.Model):
 
 class BoundaryCondition(AbstractMetaDataElement):
     term = 'BoundaryCondition'
-    boundaryConditionType = models.ManyToManyField(BoundaryConditionTypeChoices, null=True, blank=True)
-    boundaryConditionPackage = models.ManyToManyField(BoundaryConditionPackageChoices, null=True, blank=True)
+    specified_head_boundary_packages = models.ManyToManyField(SpecifiedHeadBoundaryPackageChoices, blank=True)
+    specified_flux_boundary_packages = models.ManyToManyField(SpecifiedFluxBoundaryPackageChoices, blank=True)
+    head_dependent_flux_boundary_packages = models.ManyToManyField(HeadDependentFluxBoundaryPackageChoices, blank=True)
 
     # may be this could cause a problem
     def __unicode__(self):
@@ -230,44 +238,61 @@ class BoundaryCondition(AbstractMetaDataElement):
         # BoundaryCondition element is not repeatable
         unique_together = ("content_type", "object_id")
 
-    def get_boundary_condition_type(self):
-        return ', '.join([types.description for types in self.boundaryConditionType.all()])
+    def get_specified_head_boundary_packages(self):
+        return ', '.join([types.description for types in self.specified_head_boundary_packages.all()])
 
-    def get_boundary_condition_package(self):
-        return ', '.join([packages.description for packages in self.boundaryConditionPackage.all()])
+    def get_specified_flux_boundary_packages(self):
+        return ', '.join([packages.description for packages in self.specified_flux_boundary_packages.all()])
 
-    @classmethod
-    def _add_boundary_types(cls, boundary_choices, choices):
-        for type_choices in choices:
-            qs = BoundaryConditionTypeChoices.objects.filter(description__exact=type_choices)
-            if qs.exists():
-                boundary_choices.boundaryConditionType.add(qs[0])
-            else:
-                boundary_choices.boundaryConditionType.create(description=type_choices)
+    def get_head_dependent_flux_boundary_packages(self):
+        return ', '.join([packages.description for packages in self.head_dependent_flux_boundary_packages.all()])
 
     @classmethod
-    def _add_boundary_packages(cls, boundary_packages, packages):
+    def _add_specified_head_boundary_packages(cls, boundary_packages, packages):
         for package in packages:
-            qs = BoundaryConditionPackageChoices.objects.filter(description__exact=package)
+            qs = SpecifiedHeadBoundaryPackageChoices.objects.filter(description__exact=package)
             if qs.exists():
-                boundary_packages.boundaryConditionPackage.add(qs[0])
+                boundary_packages.specified_head_boundary_packages.add(qs[0])
             else:
-                boundary_packages.boundaryConditionPackage.create(description=package)
+                boundary_packages.specified_head_boundary_packages.create(description=package)
+
+    @classmethod
+    def _add_specified_flux_boundary_packages(cls, boundary_packages, packages):
+        for package in packages:
+            qs = SpecifiedFluxBoundaryPackageChoices.objects.filter(description__exact=package)
+            if qs.exists():
+                boundary_packages.specified_flux_boundary_packages.add(qs[0])
+            else:
+                boundary_packages.specified_flux_boundary_packages.create(description=package)
+
+    @classmethod
+    def _add_head_dependent_flux_boundary_packages(cls, boundary_packages, packages):
+        for package in packages:
+            qs = HeadDependentFluxBoundaryPackageChoices.objects.filter(description__exact=package)
+            if qs.exists():
+                boundary_packages.head_dependent_flux_boundary_packages.add(qs[0])
+            else:
+                boundary_packages.head_dependent_flux_boundary_packages.create(description=package)
 
     # need to define create and update methods
     @classmethod
     def create(cls, **kwargs):
-        if 'boundaryConditionType' in kwargs:
-            cls._validate_boundary_condition_types(kwargs['boundaryConditionType'])
+        if 'specified_head_boundary_packages' in kwargs:
+            cls._validate_specified_head_boundary_packages(kwargs['specified_head_boundary_packages'])
         else:
-            raise ValidationError("boundaryConditionType is missing.")
-        if 'boundaryConditionPackage' in kwargs:
-            cls._validate_boundary_condition_packages(kwargs['boundaryConditionPackage'])
+            raise ValidationError("specified_head_boundary_packages is missing.")
+        if 'specified_flux_boundary_packages' in kwargs:
+            cls._validate_specified_flux_boundary_packages(kwargs['specified_flux_boundary_packages'])
         else:
-            raise ValidationError("boundaryConditionPackage is missing.")
+            raise ValidationError("specified_flux_boundary_packages is missing.")
+        if 'head_dependent_flux_boundary_packages' in kwargs:
+            cls._validate_head_dependent_flux_boundary_packages(kwargs['head_dependent_flux_boundary_packages'])
+        else:
+            raise ValidationError("head_dependent_flux_boundary_packages is missing.")
         model_boundary_condition = super(BoundaryCondition, cls).create(content_object=kwargs['content_object'])
-        cls._add_boundary_types(model_boundary_condition, kwargs['boundaryConditionType'])
-        cls._add_boundary_packages(model_boundary_condition, kwargs['boundaryConditionPackage'])
+        cls._add_specified_head_boundary_packages(model_boundary_condition, kwargs['specified_head_boundary_packages'])
+        cls._add_specified_flux_boundary_packages(model_boundary_condition, kwargs['specified_flux_boundary_packages'])
+        cls._add_head_dependent_flux_boundary_packages(model_boundary_condition, kwargs['head_dependent_flux_boundary_packages'])
 
         return model_boundary_condition
 
@@ -275,37 +300,50 @@ class BoundaryCondition(AbstractMetaDataElement):
     def update(cls, element_id, **kwargs):
         model_boundary_condition = BoundaryCondition.objects.get(id=element_id)
         if model_boundary_condition:
-            if 'boundaryConditionType' in kwargs:
-                cls._validate_boundary_condition_types(kwargs['boundaryConditionType'])
+            if 'specified_head_boundary_packages' in kwargs:
+                cls._validate_specified_head_boundary_packages(kwargs['specified_head_boundary_packages'])
                 # delete ManyToMany associated records
-                model_boundary_condition.boundaryConditionType.clear()
-                cls._add_boundary_types(model_boundary_condition, kwargs['boundaryConditionType'])
+                model_boundary_condition.specified_head_boundary_packages.clear()
+                cls._add_specified_head_boundary_packages(model_boundary_condition, kwargs['specified_head_boundary_packages'])
 
-            if 'boundaryConditionPackage' in kwargs:
-                cls._validate_boundary_condition_packages(kwargs['boundaryConditionPackage'])
+            if 'specified_flux_boundary_packages' in kwargs:
+                cls._validate_specified_flux_boundary_packages(kwargs['specified_flux_boundary_packages'])
                 # delete ManyToMany associated records
-                model_boundary_condition.boundaryConditionPackage.clear()
-                cls._add_boundary_packages(model_boundary_condition, kwargs['boundaryConditionPackage'])
+                model_boundary_condition.specified_flux_boundary_packages.clear()
+                cls._add_specified_flux_boundary_packages(model_boundary_condition, kwargs['specified_flux_boundary_packages'])
+
+            if 'head_dependent_flux_boundary_packages' in kwargs:
+                cls._validate_head_dependent_flux_boundary_packages(kwargs['head_dependent_flux_boundary_packages'])
+                # delete ManyToMany associated records
+                model_boundary_condition.head_dependent_flux_boundary_packages.clear()
+                cls._add_head_dependent_flux_boundary_packages(model_boundary_condition, kwargs['head_dependent_flux_boundary_packages'])
 
             model_boundary_condition.save()
 
             # delete boundaryConditionType and boundaryConditionPackage elements if it has no data
-            if len(model_boundary_condition.boundaryConditionType.all()) == 0 and\
-               len(model_boundary_condition.boundaryConditionPackage.all()) == 0:
+            if len(model_boundary_condition.specified_head_boundary_packages.all()) == 0 and\
+               len(model_boundary_condition.specified_flux_boundary_packages.all()) == 0 and\
+               len(model_boundary_condition.head_dependent_flux_boundary_packages.all()) == 0:
                 model_boundary_condition.delete()
         else:
             raise ObjectDoesNotExist("No BoundaryCondition element was found for the provided id:%s" % kwargs['id'])
 
     @classmethod
-    def _validate_boundary_condition_types(cls, types):
-        choices = ['Specified Head Boundaries', 'Specified Flux Boundaries', 'Head-Dependent Flux Boundary']
-        for boundary_types in types:
-            validate_choice(boundary_types, choices)
+    def _validate_specified_head_boundary_packages(cls, packages):
+        choices = ['BFH', 'CHD', 'FHB']
+        for boundary_packages in packages:
+            validate_choice(boundary_packages, choices)
 
     @classmethod
-    def _validate_boundary_condition_packages(cls, packages):
-        choices = ['BFH', 'CHD', 'FHB', 'RCH', 'WEL', 'DAF', 'DAFG', 'DRN', 'DRT', 'ETS', 'EVT', 'GHB', 'LAK', 'MNW1', 'MNW2',
-         'RES', 'RIP', 'RIV', 'SFR', 'STR', 'UZF']
+    def _validate_specified_flux_boundary_packages(cls, packages):
+        choices = ['FHB', 'RCH', 'WEL']
+        for boundary_packages in packages:
+            validate_choice(boundary_packages, choices)
+
+    @classmethod
+    def _validate_head_dependent_flux_boundary_packages(cls, packages):
+        choices = ['DAF', 'DAFG', 'DRN', 'DRT', 'ETS', 'EVT', 'GHB', 'LAK', 'MNW1', 'MNW2', 'RES', 'RIP', 'RIV', 'SFR',
+                   'STR', 'UZF']
         for boundary_packages in packages:
             validate_choice(boundary_packages, choices)
 
@@ -362,6 +400,13 @@ class ModelInput(AbstractMetaDataElement):
         return self.inputType
 
 
+class OutputControlPackageChoices(models.Model):
+    description = models.CharField(max_length=300)
+
+    def __unicode__(self):
+        return self.description
+
+
 class GeneralElements(AbstractMetaDataElement):
     term = 'GeneralElements'
     modelSolverChoices = (('DE4', 'DE4'), ('GMG', 'GMG'), ('LMG', 'LMG'), ('PCG', 'PCG'),
@@ -372,8 +417,7 @@ class GeneralElements(AbstractMetaDataElement):
     modelParameter = models.CharField(max_length=200, null=True, blank=True, verbose_name='Model parameter(s)')
     modelSolver = models.CharField(max_length=100, choices=modelSolverChoices, null=True, blank=True,
                                    verbose_name='Model solver')
-    outputControlPackage = models.CharField(max_length=100, choices=outputControlPackageChoices, null=True, blank=True,
-                                            verbose_name='Output control package')
+    output_control_package = models.ManyToManyField(OutputControlPackageChoices, blank=True)
     subsidencePackage = models.CharField(max_length=100, choices=subsidencePackageChoices, null=True, blank=True,
                                          verbose_name='Subsidence package')
 
@@ -384,17 +428,51 @@ class GeneralElements(AbstractMetaDataElement):
         # GeneralElements element is not repeatable
         unique_together = ("content_type", "object_id")
 
+    def get_output_control_package(self):
+        return ', '.join([packages.description for packages in self.output_control_package.all()])
+
+    @classmethod
+    def _add_output_control_package(cls, package_choices, choices):
+        for type_choices in choices:
+            qs = OutputControlPackageChoices.objects.filter(description__exact=type_choices)
+            if qs.exists():
+                package_choices.output_control_package.add(qs[0])
+            else:
+                package_choices.output_control_package.create(description=type_choices)
+
     @classmethod
     def create(cls, **kwargs):
         kwargs = cls._validate_params(**kwargs)
-        general_elements = super(GeneralElements, cls).create(**kwargs)
+        general_elements = super(GeneralElements, cls).create(content_object=kwargs['content_object'],
+                                                            modelParameter=kwargs['modelParameter'],
+                                                              modelSolver=kwargs['modelSolver'],
+                                                              subsidencePackage=kwargs['subsidencePackage'])
+        cls._add_output_control_package(general_elements, kwargs['output_control_package'])
+
         return general_elements
+        # kwargs = cls._validate_params(**kwargs)
+        # if 'output_control_package' in kwargs:
+        #     output_control_package = kwargs['output_control_package']
+        # del kwargs['output_control_package']
+        # general_elements = super(GeneralElements, cls).create(**kwargs)
+        # if output_control_package:
+        #     cls._add_output_control_package(general_elements, output_control_package)
+        #
+        # return general_elements
+
 
     @classmethod
     def update(cls, element_id, **kwargs):
+        general_elements = GeneralElements.objects.get(id=element_id)
         kwargs = cls._validate_params(**kwargs)
-        general_elements = super(GeneralElements, cls).update(element_id, **kwargs)
-        delete_if_empty(general_elements)
+        if general_elements:
+            if 'output_control_package' in kwargs:
+                general_elements.output_control_package.clear()
+                cls._add_output_control_package(general_elements, kwargs['output_control_package'])
+
+
+            general_elements.save()
+            delete_if_empty(general_elements)
 
 
     @classmethod
@@ -402,8 +480,8 @@ class GeneralElements(AbstractMetaDataElement):
         for key, val in kwargs.iteritems():
             if key == 'modelSolver':
                 kwargs[key] = validate_choice(val, cls.modelSolverChoices)
-            elif key == 'outputControlPackage':
-                kwargs[key] = validate_choice(val, cls.outputControlPackageChoices)
+            elif key == 'output_control_package':
+                kwargs[key] = [validate_choice(package, cls.outputControlPackageChoices) for package in kwargs[key]]
             elif key == 'subsidencePackage':
                 kwargs[key] = validate_choice(val, cls.subsidencePackageChoices)
         return kwargs
@@ -570,13 +648,17 @@ class MODFLOWModelInstanceMetaData(ModelInstanceMetaData):
             hsterms_boundary = etree.SubElement(container, '{%s}BoundaryCondition' % self.NAMESPACES['hsterms'])
             hsterms_boundary_rdf_Description = etree.SubElement(hsterms_boundary, '{%s}Description' % self.NAMESPACES['rdf'])
 
-            if self.boundary_condition.boundaryConditionType:
-                hsterms_boundary_type = etree.SubElement(hsterms_boundary_rdf_Description, '{%s}boundaryConditionType' % self.NAMESPACES['hsterms'])
-                hsterms_boundary_type.text = ', '.join([types.description for types in self.boundary_condition.boundaryConditionType.all()])
+            if self.boundary_condition.specified_head_boundary_packages:
+                hsterms_boundary_type = etree.SubElement(hsterms_boundary_rdf_Description, '{%s}specifiedHeadBoundaryPackages' % self.NAMESPACES['hsterms'])
+                hsterms_boundary_type.text = self.boundary_condition.get_specified_head_boundary_packages()
 
-            if self.boundary_condition.boundaryConditionPackage:
-                hsterms_boundary_package = etree.SubElement(hsterms_boundary_rdf_Description, '{%s}boundaryConditionType' % self.NAMESPACES['hsterms'])
-                hsterms_boundary_package.text = ', '.join([packages.description for packages in self.boundary_condition.boundaryConditionPackage.all()])
+            if self.boundary_condition.specified_flux_boundary_packages:
+                hsterms_boundary_package = etree.SubElement(hsterms_boundary_rdf_Description, '{%s}specifiedFluxBoundaryPackages' % self.NAMESPACES['hsterms'])
+                hsterms_boundary_package.text = self.boundary_condition.get_specified_flux_boundary_packages()
+
+            if self.boundary_condition.head_dependent_flux_boundary_packages:
+                hsterms_boundary_package = etree.SubElement(hsterms_boundary_rdf_Description, '{%s}headDependentFluxBoundaryPackages' % self.NAMESPACES['hsterms'])
+                hsterms_boundary_package.text = self.boundary_condition.get_head_dependent_flux_boundary_packages()
 
         if self.model_calibration:
             modelCalibrationFields = ['calibratedParameter', 'observationType',
@@ -597,9 +679,9 @@ class MODFLOWModelInstanceMetaData(ModelInstanceMetaData):
                 model_solver = etree.SubElement(container, '{%s}modelSolver' % self.NAMESPACES['hsterms'])
                 model_solver.text = self.general_elements.modelSolver
 
-            if self.general_elements.outputControlPackage:
+            if self.general_elements.output_control_package:
                 output_package = etree.SubElement(container, '{%s}outputControlPackage' % self.NAMESPACES['hsterms'])
-                output_package.text = self.general_elements.outputControlPackage
+                output_package.text = self.general_elements.get_output_control_package()
 
             if self.general_elements.subsidencePackage:
                 subsidence_package = etree.SubElement(container, '{%s}subsidencePackage' % self.NAMESPACES['hsterms'])

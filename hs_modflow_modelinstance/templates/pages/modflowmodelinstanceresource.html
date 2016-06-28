@@ -195,15 +195,21 @@
             <table class="custom-table">
                 <tbody>
                 <tr>
-                    {% if boundary_condition.boundaryConditionType %}
-                        <th class="text-muted">Type(s)</th>
-                        <td>{{ boundary_condition.get_boundary_condition_type }}</td>
+                    {% if boundary_condition.specified_head_boundary_packages %}
+                        <th class="text-muted">Specified head boundary package(s)</th>
+                        <td>{{ boundary_condition.get_specified_head_boundary_packages }}</td>
                     {% endif %}
                 </tr>
                 <tr>
-                    {% if boundary_condition.boundaryConditionPackage %}
-                        <th class="text-muted">Package(s)</th>
-                        <td>{{ boundary_condition.get_boundary_condition_package }}</td>
+                    {% if boundary_condition.specified_flux_boundary_packages %}
+                        <th class="text-muted">Specified flux boundary package(s)</th>
+                        <td>{{ boundary_condition.get_specified_flux_boundary_packages }}</td>
+                    {% endif %}
+                </tr>
+                <tr>
+                    {% if boundary_condition.head_dependent_flux_boundary_packages %}
+                        <th class="text-muted">Head-dependent flux boundary package(s)</th>
+                        <td>{{ boundary_condition.get_head_dependent_flux_boundary_packages }}</td>
                     {% endif %}
                 </tr>
                 </tbody>
@@ -289,9 +295,9 @@
                     {% endif %}
                 </tr>
                 <tr>
-                    {% if general_elements.outputControlPackage %}
+                    {% if general_elements.output_control_package %}
                         <th class="text-muted">Output control package</th>
-                        <td>{{ general_elements.outputControlPackage }}</td>
+                        <td>{{ general_elements.get_output_control_package }}</td>
                     {% endif %}
                 </tr>
                 <tr>

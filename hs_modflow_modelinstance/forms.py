@@ -22,21 +22,18 @@ flowPackageChoices = (('Choose a package', 'Choose a package'), ('BCF6', 'BCF6')
 flowParameterChoices = (('Choose a parameter', 'Choose a parameter'),
                         ('Hydraulic Conductivity', 'Hydraulic Conductivity'),
                         ('Transmissivity', 'Transmissivity'),)
-boundaryConditionTypeChoices = (('Specified Head Boundaries', 'Specified Head Boundaries'),
-                                ('Specified Flux Boundaries', 'Specified Flux Boundaries'),
-                                ('Head-Dependent Flux Boundary', 'Head-Dependent Flux Boundary'),)
-boundaryConditionPackageChoices = (('BFH', 'BFH'), ('CHD', 'CHD'), ('FHB', 'FHB'), ('RCH', 'RCH'),
-                                   ('WEL', 'WEL'), ('DAF', 'DAF'), ('DAFG', 'DAFG'), ('DRN', 'DRN'),
-                                   ('DRT', 'DRT'), ('ETS', 'ETS'), ('EVT', 'EVT'), ('GHB', 'GHB'),
-                                   ('LAK', 'LAK'), ('MNW1', 'MNW1'), ('MNW2', 'MNW2'), ('RES', 'RES'),
-                                   ('RIP', 'RIP'), ('RIV', 'RIV'), ('SFR', 'SFR'), ('STR', 'STR'), ('UZF', 'UZF'),)
+specifiedHeadBoundaryPackageChoices = (('BFH', 'BFH'), ('CHD', 'CHD'), ('FHB', 'FHB'),)
+specifiedFluxBoundaryPackageChoices = (('FHB', 'FHB'), ('RCH', 'RCH'), ('WEL', 'WEL'),)
+HeadDependentFluxBoundaryPackageChoices = (('DAF', 'DAF'), ('DAFG', 'DAFG'), ('DRN', 'DRN'), ('DRT', 'DRT'),
+                                           ('ETS', 'ETS'), ('EVT', 'EVT'), ('GHB', 'GHB'), ('LAK', 'LAK'),
+                                           ('MNW1', 'MNW1'), ('MNW2', 'MNW2'), ('RES', 'RES'), ('RIP', 'RIP'),
+                                           ('RIV', 'RIV'), ('SFR', 'SFR'), ('STR', 'STR'), ('UZF', 'UZF'),)
 observationProcessPackageChoices = (('Choose a package', 'Choose a package'), ('ADV2', 'ADV2'), ('CHOB', 'CHOB'),
                                     ('DROB', 'DROB'), ('DTOB', 'DTOB'), ('GBOB', 'GBOB'), ('HOB', 'HOB'),
                                     ('OBS', 'OBS'), ('RVOB', 'RVOB'), ('STOB', 'STOB'),)
 modelSolverChoices = (('Choose a solver', 'Choose a solver'), ('DE4', 'DE4'), ('GMG', 'GMG'), ('LMG', 'LMG'),
                       ('PCG', 'PCG'), ('PCGN', 'PCGN'), ('SIP', 'SIP'), ('SOR', 'SOR'), ('NWT', 'NWT'),)
-outputControlPackageChoices = (('Choose a package', 'Choose a package'), ('GAGE', 'GAGE'), ('HYD', 'HYD'),
-                               ('LMT6', 'LMT6'), ('MNWI', 'MNWI'), ('OC', 'OC'),)
+outputControlPackageChoices = (('GAGE', 'GAGE'), ('HYD', 'HYD'), ('LMT6', 'LMT6'), ('MNWI', 'MNWI'), ('OC', 'OC'),)
 subsidencePackageChoices = (('Choose a package', 'Choose a package'), ('IBS', 'IBS'), ('SUB', 'SUB'), ('SWT', 'SWT'),)
 
 
@@ -298,8 +295,9 @@ class BoundaryConditionFormHelper(BaseFormHelper):
 
         # the order in which the model fields are listed for the FieldSet is the order these fields will be displayed
         layout = Layout(
-                        MetadataField('boundaryConditionType'),
-                        MetadataField('boundaryConditionPackage'),
+                        MetadataField('specified_head_boundary_packages'),
+                        MetadataField('specified_flux_boundary_packages'),
+                        MetadataField('head_dependent_flux_boundary_packages'),
                  )
         kwargs['element_name_label'] = 'Boundary Condition'
         super(BoundaryConditionFormHelper, self).__init__(allow_edit, res_short_id, element_id, element_name, layout,
@@ -307,10 +305,13 @@ class BoundaryConditionFormHelper(BaseFormHelper):
 
 
 class BoundaryConditionForm(ModelForm):
-    boundaryConditionType = forms.MultipleChoiceField(choices=boundaryConditionTypeChoices,
+    specified_head_boundary_packages = forms.MultipleChoiceField(choices=specifiedHeadBoundaryPackageChoices,
                                                        widget=forms.CheckboxSelectMultiple(
                                                           attrs={'style': 'width:auto;margin-top:-5px'}))
-    boundaryConditionPackage = forms.MultipleChoiceField(choices=boundaryConditionPackageChoices,
+    specified_flux_boundary_packages = forms.MultipleChoiceField(choices=specifiedFluxBoundaryPackageChoices,
+                                                          widget=forms.CheckboxSelectMultiple(
+                                                              attrs={'style': 'width:auto;margin-top:-5px'}))
+    head_dependent_flux_boundary_packages = forms.MultipleChoiceField(choices=HeadDependentFluxBoundaryPackageChoices,
                                                           widget=forms.CheckboxSelectMultiple(
                                                               attrs={'style': 'width:auto;margin-top:-5px'}))
 
@@ -319,21 +320,25 @@ class BoundaryConditionForm(ModelForm):
         self.helper = BoundaryConditionFormHelper(allow_edit, res_short_id, element_id, element_name='BoundaryCondition')
         if self.instance:
             if self.instance.id:
-                self.fields['boundaryConditionType'].initial = [types.description for types in
-                                                                self.instance.boundaryConditionType.all()]
-                self.fields['boundaryConditionPackage'].initial = [packages.description for packages in
-                                                                   self.instance.boundaryConditionPackage.all()]
+                self.fields['specified_head_boundary_packages'].initial = [types.description for types in
+                                                                self.instance.specified_head_boundary_packages.all()]
+                self.fields['specified_flux_boundary_packages'].initial = [packages.description for packages in
+                                                                   self.instance.specified_flux_boundary_packages.all()]
+                self.fields['head_dependent_flux_boundary_packages'].initial = [packages.description for packages in
+                                                                   self.instance.head_dependent_flux_boundary_packages.all()]
 
     class Meta:
         model = BoundaryCondition
-        exclude = ('boundaryConditionType',
-                   'boundaryConditionPackage',
+        exclude = ('specified_head_boundary_packages',
+                   'specified_flux_boundary_packages',
+                   'head_dependent_flux_boundary_packages',
                    )
 
 
 class BoundaryConditionValidationForm(forms.Form):
-    boundaryConditionType = forms.MultipleChoiceField(choices=boundaryConditionTypeChoices, required=False)
-    boundaryConditionPackage = forms.MultipleChoiceField(choices=boundaryConditionPackageChoices, required=False)
+    specified_head_boundary_packages = forms.MultipleChoiceField(choices=specifiedHeadBoundaryPackageChoices, required=False)
+    specified_flux_boundary_packages = forms.MultipleChoiceField(choices=specifiedFluxBoundaryPackageChoices, required=False)
+    head_dependent_flux_boundary_packages = forms.MultipleChoiceField(choices=HeadDependentFluxBoundaryPackageChoices, required=False)
 
 
 # ModelCalibration element forms
@@ -427,7 +432,7 @@ class GeneralElementsFormHelper(BaseFormHelper):
         layout = Layout(
                         MetadataField('modelParameter'),
                         MetadataField('modelSolver'),
-                        MetadataField('outputControlPackage'),
+                        MetadataField('output_control_package'),
                         MetadataField('subsidencePackage'),
         )
         kwargs['element_name_label'] = 'General'
@@ -436,18 +441,24 @@ class GeneralElementsFormHelper(BaseFormHelper):
 
 
 class GeneralElementsForm(ModelForm):
+    output_control_package = forms.MultipleChoiceField(choices=outputControlPackageChoices,
+                                                       widget=forms.CheckboxSelectMultiple(
+                                                          attrs={'style': 'width:auto;margin-top:-5px'}))
     def __init__(self, allow_edit=True, res_short_id=None, element_id=None, *args, **kwargs):
         super(GeneralElementsForm, self).__init__(*args, **kwargs)
         self.helper = GeneralElementsFormHelper(allow_edit, res_short_id, element_id, element_name='GeneralElements')
         self.fields['modelSolver'].choices = modelSolverChoices
-        self.fields['outputControlPackage'].choices = outputControlPackageChoices
         self.fields['subsidencePackage'].choices = subsidencePackageChoices
+        if self.instance:
+           if self.instance.id:
+               self.fields['output_control_package'].initial = [types.description for types in
+                                                                self.instance.output_control_package.all()]
 
     class Meta:
         model = GeneralElements
+        exclude = ('output_control_package',)
         fields = ('modelParameter',
                   'modelSolver',
-                  'outputControlPackage',
                   'subsidencePackage',
                   )
 
@@ -455,7 +466,7 @@ class GeneralElementsForm(ModelForm):
 class GeneralElementsValidationForm(forms.Form):
     modelParameter = forms.CharField(max_length=100, required=False)
     modelSolver = forms.CharField(max_length=100, required=False)
-    outputControlPackage = forms.CharField(max_length=100, required=False)
+    output_control_package = forms.MultipleChoiceField(choices=outputControlPackageChoices, required=False)
     subsidencePackage = forms.CharField(max_length=100, required=False)
 
 ModelInputLayoutEdit = Layout(
