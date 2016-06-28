@@ -12,6 +12,7 @@ from forms import SiteValidationForm, VariableValidationForm, MethodValidationFo
     TimeSeriesResultValidationForm
 
 
+FILE_UPLOAD_ERROR_MESSAGE = "(Uploaded file was not added to the resource)"
 
 def get_file_ext_and_obj_name(res, res_file):
     fl_ext = ''
@@ -97,7 +98,7 @@ def post_add_files_to_resource_handler(sender, **kwargs):
                     # cleanup any extracted metadata
                     _delete_extracted_metadata(resource)
                     validate_files_dict['are_files_valid'] = False
-                    validate_files_dict['message'] = extract_err_message + " (Uploaded file was deleted)"
+                    validate_files_dict['message'] = extract_err_message + " " + FILE_UPLOAD_ERROR_MESSAGE
                 else:
                     utils.resource_modified(resource, user)
 
@@ -105,9 +106,7 @@ def post_add_files_to_resource_handler(sender, **kwargs):
                 # delete the invalid file just uploaded
                 delete_resource_file_only(resource, res_file)
                 validate_files_dict['are_files_valid'] = False
-
-                validate_err_message += " (Uploaded file was deleted)"
-                validate_files_dict['message'] = validate_err_message
+                validate_files_dict['message'] = validate_err_message + " " + FILE_UPLOAD_ERROR_MESSAGE
 
 
 @receiver(post_create_resource, sender=TimeSeriesResource)
@@ -131,14 +130,14 @@ def post_create_resource_handler(sender, **kwargs):
                     # cleanup any extracted metadata
                     _delete_extracted_metadata(resource)
                     validate_files_dict['are_files_valid'] = False
-                    validate_files_dict['message'] = extract_err_message + " (Uploaded file was deleted)"
+                    validate_files_dict['message'] = extract_err_message + " " + FILE_UPLOAD_ERROR_MESSAGE
                 else:
                     utils.resource_modified(resource, user)
             else:
                 # delete the invalid file
                 delete_resource_file_only(resource, res_file)
                 validate_files_dict['are_files_valid'] = False
-                validate_files_dict['message'] = validate_err_message + " (Uploaded file was deleted)"
+                validate_files_dict['message'] = validate_err_message + " " + FILE_UPLOAD_ERROR_MESSAGE
 
 
 @receiver(pre_metadata_element_create, sender=TimeSeriesResource)
@@ -650,35 +649,46 @@ def _delete_extracted_metadata(resource):
 
 
 def _validate_odm2_db_file(uploaded_file_sqlite_file_name):
-    err_message = "Uploaded file is not a valid ODM2 SQLite file"
+    err_message = "Uploaded file is not a valid ODM2 SQLite file."
     log = logging.getLogger()
     try:
         con = sqlite3.connect(uploaded_file_sqlite_file_name)
         with con:
+
             # TODO: check that each of the core tables has the necessary columns
 
-            # check that the uploaded file has all the tables from ODM2Core
+            # check that the uploaded file has all the tables from ODM2Core and the CV tables
             cur = con.cursor()
             odm2_core_table_names = ['People', 'Affiliations', 'SamplingFeatures', 'ActionBy', 'Organizations',
                                      'Methods', 'FeatureActions', 'Actions', 'RelatedActions', 'Results', 'Variables',
-                                     'Units', 'Datasets', 'DatasetsResults', 'ProcessingLevels', 'TaxonomicClassifiers']
+                                     'Units', 'Datasets', 'DatasetsResults', 'ProcessingLevels', 'TaxonomicClassifiers',
+                                     'CV_VariableType', 'CV_VariableName', 'CV_Speciation', 'CV_SiteType',
+                                     'CV_ElevationDatum', 'CV_MethodType', 'CV_UnitsType', 'CV_Status', 'CV_Medium',
+                                     'CV_AggregationStatistic']
             # check the tables exist
             for table_name in odm2_core_table_names:
                 cur.execute("SELECT COUNT(*) FROM sqlite_master WHERE type=? AND name=?", ("table", table_name))
                 result = cur.fetchone()
                 if result[0] <= 0:
+                    err_message += " Table '{}' is missing.".format(table_name)
+                    log.info(err_message)
                     return err_message
 
             # check that the tables have at least one record
             for table_name in odm2_core_table_names:
-                if table_name == 'RelatedActions' or 'TaxonomicClassifiers':
+                if table_name == 'RelatedActions' or table_name == 'TaxonomicClassifiers':
                     continue
                 cur.execute("SELECT COUNT(*) FROM " + table_name)
                 result = cur.fetchone()
                 if result[0] <= 0:
+                    err_message += " Table '{}' has no records.".format(table_name)
+                    log.info(err_message)
                     return err_message
         return None
     except sqlite3.Error, e:
         sqlite_err_msg = str(e.args[0])
         log.error(sqlite_err_msg)
-        return err_message + '. ' + sqlite_err_msg
+        return sqlite_err_msg
+    except Exception, e:
+        log.error(e.message)
+        return e.message
