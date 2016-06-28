@@ -250,18 +250,22 @@ class TimeSeriesResultForm(ModelForm):
         self.cv_sample_mediums = list(kwargs['cv_sample_mediums'])
         self.cv_units_types = list(kwargs['cv_units_types'])
         self.cv_aggregation_statistics = list(kwargs['cv_aggregation_statistics'])
+        self.cv_statuses = list(kwargs['cv_statuses'])
         kwargs.pop('cv_sample_mediums')
         kwargs.pop('cv_units_types')
         kwargs.pop('cv_aggregation_statistics')
+        kwargs.pop('cv_statuses')
 
         super(TimeSeriesResultForm, self).__init__(*args, **kwargs)
         self.helper = TimeSeriesResultFormHelper(allow_edit, res_short_id, element_id, element_name='TimeSeriesResult')
 
-    def set_dropdown_widgets(self, current_sample_medium, current_units_type, current_agg_statistics):
+    def set_dropdown_widgets(self, current_sample_medium, current_units_type, current_agg_statistics, current_status):
         cv_sample_medium_choices = _get_cv_dropdown_widget_items(self.cv_sample_mediums, current_sample_medium)
         self.fields['sample_medium'].widget = forms.Select(choices=cv_sample_medium_choices)
         cv_units_type_choices = _get_cv_dropdown_widget_items(self.cv_units_types, current_units_type)
         self.fields['units_type'].widget = forms.Select(choices=cv_units_type_choices)
+        cv_status_choices = _get_cv_dropdown_widget_items(self.cv_statuses, current_status)
+        self.fields['status'].widget = forms.Select(choices=cv_status_choices)
         cv_agg_statistics_choices = _get_cv_dropdown_widget_items(self.cv_aggregation_statistics, current_agg_statistics)
         self.fields['aggregation_statistics'].widget = forms.Select(choices=cv_agg_statistics_choices)
 
@@ -312,6 +316,9 @@ def _get_html_snippet(html_snippet_file_name):
 
 UpdateSQLiteLayout = Layout(HTML(_get_html_snippet('update_sqlite_file.html')))
 SeriesSelectionLayout = Layout(HTML(_get_html_snippet('series_selection.html')))
+TimeSeriesMetaDataLayout = HTML(_get_html_snippet('timeseries_metadata_edit.html'))
+
+# TODO: The followings are no more used - need to delete (including the html files)
 SiteLayoutEdit = Layout(HTML(_get_html_snippet('site_element_edit.html')))
 VariableLayoutEdit = Layout(HTML(_get_html_snippet('variable_element_edit.html')))
 MethodLayoutEdit = Layout(HTML(_get_html_snippet('method_element_edit.html')))

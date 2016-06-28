@@ -169,21 +169,22 @@ def metadata_element_pre_update_handler(sender, **kwargs):
     element_name = kwargs['element_name'].lower()
     request = kwargs['request']
 
+    # TODO: remove the commented code
     if element_name == "site":
-        form_data = _get_form_post_data(request, SiteValidationForm)
-        element_form = SiteValidationForm(form_data)
+        #form_data = _get_form_post_data(request, SiteValidationForm)
+        element_form = SiteValidationForm(request.POST)
     elif element_name == 'variable':
-        form_data = _get_form_post_data(request, VariableValidationForm)
-        element_form = VariableValidationForm(form_data)
+        # form_data = _get_form_post_data(request, VariableValidationForm)
+        element_form = VariableValidationForm(request.POST)
     elif element_name == 'method':
-        form_data = _get_form_post_data(request, MethodValidationForm)
-        element_form = MethodValidationForm(form_data)
+        # form_data = _get_form_post_data(request, MethodValidationForm)
+        element_form = MethodValidationForm(request.POST)
     elif element_name == 'processinglevel':
-        form_data = _get_form_post_data(request, ProcessingLevelValidationForm)
-        element_form = ProcessingLevelValidationForm(form_data)
+        # form_data = _get_form_post_data(request, ProcessingLevelValidationForm)
+        element_form = ProcessingLevelValidationForm(request.POST)
     elif element_name == 'timeseriesresult':
-        form_data = _get_form_post_data(request, TimeSeriesResultValidationForm)
-        element_form = TimeSeriesResultValidationForm(form_data)
+        # form_data = _get_form_post_data(request, TimeSeriesResultValidationForm)
+        element_form = TimeSeriesResultValidationForm(request.POST)
     else:
         raise Exception("Invalid metadata element name:{}".format(element_name))
 
@@ -205,6 +206,7 @@ def file_pre_download_handler(sender, **kwargs):
         resource.metadata.update_sqlite_file()
 
 
+# TODO: the following function needs to be deleted
 def _get_form_post_data(request, validation_form):
     form_data = {}
     for field_name in validation_form().fields:
