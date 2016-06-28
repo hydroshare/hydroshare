@@ -5,7 +5,8 @@ from hs_core.views.utils import authorize, ACTION_TO_AUTHORIZE
 
 
 def update_sqlite_file(request, resource_id, *args, **kwargs):
-    res, _, user = authorize(request, resource_id, needed_permission=ACTION_TO_AUTHORIZE.EDIT_RESOURCE)
+    res, _, user = authorize(request, resource_id,
+                             needed_permission=ACTION_TO_AUTHORIZE.EDIT_RESOURCE)
     if res.resource_type != "TimeSeriesResource":
         messages.error(request, "This is not a timeseries resource.")
     else:
