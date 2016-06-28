@@ -26,8 +26,8 @@ def landing_page(request, page):
 
     series_ids = {}
     for result in content_model.metadata.time_series_results:
-        for series_id in result.series_ids:
-            series_ids[series_id] = _get_series_label(series_id, content_model)
+        series_id = result.series_ids[0]
+        series_ids[series_id] = _get_series_label(series_id, content_model)
 
     if 'series_id' in request.GET:
         selected_series_id = request.GET['series_id']
@@ -83,7 +83,9 @@ def _get_resource_view_context(page, request, content_model, selected_series_id,
 def _get_resource_edit_context(page, request, content_model, selected_series_id, series_ids, extended_metadata_exists):
 
     # TODO: Since we are displaying metadata for a selected series, we don't need formset. There will be only one
-    # metadata element of specific type.
+    # metadata element of specific type. Refer to code in current develop branch for using single form for each of the
+    # extended metadata elements
+
     SiteFormSetEdit = formset_factory(wraps(SiteForm)(partial(SiteForm, allow_edit=True,
                                                               cv_site_types=content_model.metadata.cv_site_types.all(),
                                                               cv_elevation_datums=content_model.metadata.cv_elevation_datums.all())),
