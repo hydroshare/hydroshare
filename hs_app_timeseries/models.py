@@ -267,6 +267,19 @@ class TimeSeriesResult(TimeSeriesAbstractMetaDataElement):
                     units_type.is_dirty = True
                     units_type.save()
 
+        # if the user has entered a new status
+        status_str = 'status'
+        if status_str in kwargs:
+            if element.status != kwargs[status_str]:
+                # check if the user has entered a new name for status
+                if kwargs[status_str] not in [item.name for item in element.metadata.cv_statuses.all()]:
+                    # generate term for the new name
+                    kwargs[status_str] = kwargs[status_str].strip()
+                    term = _generate_term_from_name(kwargs[status_str])
+                    status = CVStatus.objects.create(metadata=element.metadata, term=term, name=kwargs[status_str])
+                    status.is_dirty = True
+                    status.save()
+
         # if the user has entered a new aggregation statistics
         agg_statistics_str = 'aggregation_statistics'
         if agg_statistics_str in kwargs:
