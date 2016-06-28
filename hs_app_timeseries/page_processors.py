@@ -148,7 +148,9 @@ def _get_resource_edit_context(page, request, content_model, selected_series_id,
                                                   (partial(TimeSeriesResultForm, allow_edit=True,
                                                    cv_sample_mediums=content_model.metadata.cv_mediums.all(),
                                                    cv_units_types=content_model.metadata.cv_units_types.all(),
-                                                   cv_aggregation_statistics=content_model.metadata.cv_aggregation_statistics.all())),
+                                                   cv_aggregation_statistics=
+                                                           content_model.metadata.cv_aggregation_statistics.all(),
+                                                   cv_statuses= content_model.metadata.cv_statuses.all())),
                                                   formset=BaseFormSet, extra=0)
     time_series_results = content_model.metadata.time_series_results.filter(series_ids__contains=[selected_series_id])
     timeseries_result_formset = TimeSeriesResultFormSetEdit(
@@ -160,7 +162,7 @@ def _get_resource_edit_context(page, request, content_model, selected_series_id,
                                                           form.initial['id'])
             form.number = form.initial['id']
             form.set_dropdown_widgets(form.initial['sample_medium'], form.initial['units_type'],
-                                      form.initial['aggregation_statistics'])
+                                      form.initial['aggregation_statistics'], form.initial['status'])
 
     if extended_metadata_exists:
         ext_md_layout = Layout(UpdateSQLiteLayout,
