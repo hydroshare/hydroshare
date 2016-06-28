@@ -19,7 +19,7 @@ class TrackingTests(TestCase):
         self.user.save()
         profile = self.user.userprofile
         profile_data = {
-            'country': 'USA',
+            'country': 'US',
         }
         for field in profile_data:
             setattr(profile, field, profile_data[field])
@@ -100,7 +100,7 @@ class TrackingTests(TestCase):
         session1 = Session.objects.for_request(request)
         info = session1.visitor.export_visitor_information()
 
-        self.assertEqual(info['country'], 'USA')
+        self.assertEqual(info['country'], 'US')
         self.assertEqual(info['username'], 'testuser')
 
     def test_tracking_view(self):

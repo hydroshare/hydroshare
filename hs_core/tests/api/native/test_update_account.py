@@ -76,8 +76,8 @@ class UpdateAccountTest(unittest.TestCase):
         self.assertEqual(user_profile.details, None)
         self.assertEqual(user_profile.picture, None)
         self.assertEqual(user_profile.cv, None)
-        self.assertEqual(user_profile.state, None)
-        self.assertEqual(user_profile.country, None)
+        self.assertEqual(user_profile.state, '')
+        self.assertEqual(user_profile.country, '')
         self.assertTrue(user_profile.public)
 
         self.pic_file = open(self.pic_file.name, "w")
@@ -101,7 +101,7 @@ class UpdateAccountTest(unittest.TestCase):
                         'phone_2': '435-345-9099',
                         'phone_2_type': 'Home',
                         'details': 'Some details about me',
-                        'country': 'USA',
+                        'country': 'US',
                         'state': 'UT',
                         'public': False,
                         'picture': pic_file_obj,
@@ -122,7 +122,7 @@ class UpdateAccountTest(unittest.TestCase):
         self.assertEqual(user_profile.phone_2, '435-345-9099')
         self.assertEqual(user_profile.phone_2_type, 'Home')
         self.assertEqual(user_profile.details, 'Some details about me')
-        self.assertEqual(user_profile.country, 'USA')
+        self.assertEqual(user_profile.country, 'US')
         self.assertEqual(user_profile.state, 'UT')
         self.assertNotEquals(user_profile.picture, None)
         self.assertNotEquals(user_profile.cv, None)
