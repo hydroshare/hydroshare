@@ -24,7 +24,7 @@ flowParameterChoices = (('Choose a parameter', 'Choose a parameter'),
                         ('Transmissivity', 'Transmissivity'),)
 specifiedHeadBoundaryPackageChoices = (('BFH', 'BFH'), ('CHD', 'CHD'), ('FHB', 'FHB'),)
 specifiedFluxBoundaryPackageChoices = (('FHB', 'FHB'), ('RCH', 'RCH'), ('WEL', 'WEL'),)
-HeadDependentFluxBoundaryPackageChoices = (('DAF', 'DAF'), ('DAFG', 'DAFG'), ('DRN', 'DRN'), ('DRT', 'DRT'),
+headDependentFluxBoundaryPackageChoices = (('DAF', 'DAF'), ('DAFG', 'DAFG'), ('DRN', 'DRN'), ('DRT', 'DRT'),
                                            ('ETS', 'ETS'), ('EVT', 'EVT'), ('GHB', 'GHB'), ('LAK', 'LAK'),
                                            ('MNW1', 'MNW1'), ('MNW2', 'MNW2'), ('RES', 'RES'), ('RIP', 'RIP'),
                                            ('RIV', 'RIV'), ('SFR', 'SFR'), ('STR', 'STR'), ('UZF', 'UZF'),)
@@ -311,7 +311,7 @@ class BoundaryConditionForm(ModelForm):
     specified_flux_boundary_packages = forms.MultipleChoiceField(choices=specifiedFluxBoundaryPackageChoices,
                                                           widget=forms.CheckboxSelectMultiple(
                                                               attrs={'style': 'width:auto;margin-top:-5px'}))
-    head_dependent_flux_boundary_packages = forms.MultipleChoiceField(choices=HeadDependentFluxBoundaryPackageChoices,
+    head_dependent_flux_boundary_packages = forms.MultipleChoiceField(choices=headDependentFluxBoundaryPackageChoices,
                                                           widget=forms.CheckboxSelectMultiple(
                                                               attrs={'style': 'width:auto;margin-top:-5px'}))
 
@@ -338,7 +338,7 @@ class BoundaryConditionForm(ModelForm):
 class BoundaryConditionValidationForm(forms.Form):
     specified_head_boundary_packages = forms.MultipleChoiceField(choices=specifiedHeadBoundaryPackageChoices, required=False)
     specified_flux_boundary_packages = forms.MultipleChoiceField(choices=specifiedFluxBoundaryPackageChoices, required=False)
-    head_dependent_flux_boundary_packages = forms.MultipleChoiceField(choices=HeadDependentFluxBoundaryPackageChoices, required=False)
+    head_dependent_flux_boundary_packages = forms.MultipleChoiceField(choices=headDependentFluxBoundaryPackageChoices, required=False)
 
 
 # ModelCalibration element forms

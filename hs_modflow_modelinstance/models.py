@@ -21,7 +21,7 @@ def delete_if_empty(term_obj):
     standard_elements = ['content_type_id', '_state', 'object_id', 'content_type_id', 'id', '_content_type_cache',
                          '_content_object_cache']
     for attr, val in vars(term_obj).iteritems():
-        if attr not in standard_elements and val != '' or val != []:
+        if attr not in standard_elements and val != '' and val != []:
             all_blank = False
     if all_blank:
         term_obj.delete()
@@ -226,6 +226,12 @@ class HeadDependentFluxBoundaryPackageChoices(models.Model):
 
 class BoundaryCondition(AbstractMetaDataElement):
     term = 'BoundaryCondition'
+    specifiedHeadBoundaryPackageChoices = (('BFH', 'BFH'), ('CHD', 'CHD'), ('FHB', 'FHB'),)
+    specifiedFluxBoundaryPackageChoices = (('FHB', 'FHB'), ('RCH', 'RCH'), ('WEL', 'WEL'),)
+    headDependentFluxBoundaryPackageChoices = (('DAF', 'DAF'), ('DAFG', 'DAFG'), ('DRN', 'DRN'), ('DRT', 'DRT'),
+                                               ('ETS', 'ETS'), ('EVT', 'EVT'), ('GHB', 'GHB'), ('LAK', 'LAK'),
+                                               ('MNW1', 'MNW1'), ('MNW2', 'MNW2'), ('RES', 'RES'), ('RIP', 'RIP'),
+                                               ('RIV', 'RIV'), ('SFR', 'SFR'), ('STR', 'STR'), ('UZF', 'UZF'),)
     specified_head_boundary_packages = models.ManyToManyField(SpecifiedHeadBoundaryPackageChoices, blank=True)
     specified_flux_boundary_packages = models.ManyToManyField(SpecifiedFluxBoundaryPackageChoices, blank=True)
     head_dependent_flux_boundary_packages = models.ManyToManyField(HeadDependentFluxBoundaryPackageChoices, blank=True)
@@ -277,18 +283,7 @@ class BoundaryCondition(AbstractMetaDataElement):
     # need to define create and update methods
     @classmethod
     def create(cls, **kwargs):
-        if 'specified_head_boundary_packages' in kwargs:
-            cls._validate_specified_head_boundary_packages(kwargs['specified_head_boundary_packages'])
-        else:
-            raise ValidationError("specified_head_boundary_packages is missing.")
-        if 'specified_flux_boundary_packages' in kwargs:
-            cls._validate_specified_flux_boundary_packages(kwargs['specified_flux_boundary_packages'])
-        else:
-            raise ValidationError("specified_flux_boundary_packages is missing.")
-        if 'head_dependent_flux_boundary_packages' in kwargs:
-            cls._validate_head_dependent_flux_boundary_packages(kwargs['head_dependent_flux_boundary_packages'])
-        else:
-            raise ValidationError("head_dependent_flux_boundary_packages is missing.")
+        kwargs = cls._validate_params(**kwargs)
         model_boundary_condition = super(BoundaryCondition, cls).create(content_object=kwargs['content_object'])
         cls._add_specified_head_boundary_packages(model_boundary_condition, kwargs['specified_head_boundary_packages'])
         cls._add_specified_flux_boundary_packages(model_boundary_condition, kwargs['specified_flux_boundary_packages'])
@@ -299,53 +294,37 @@ class BoundaryCondition(AbstractMetaDataElement):
     @classmethod
     def update(cls, element_id, **kwargs):
         model_boundary_condition = BoundaryCondition.objects.get(id=element_id)
+        kwargs = cls._validate_params(**kwargs)
         if model_boundary_condition:
             if 'specified_head_boundary_packages' in kwargs:
-                cls._validate_specified_head_boundary_packages(kwargs['specified_head_boundary_packages'])
-                # delete ManyToMany associated records
                 model_boundary_condition.specified_head_boundary_packages.clear()
                 cls._add_specified_head_boundary_packages(model_boundary_condition, kwargs['specified_head_boundary_packages'])
 
             if 'specified_flux_boundary_packages' in kwargs:
-                cls._validate_specified_flux_boundary_packages(kwargs['specified_flux_boundary_packages'])
-                # delete ManyToMany associated records
                 model_boundary_condition.specified_flux_boundary_packages.clear()
                 cls._add_specified_flux_boundary_packages(model_boundary_condition, kwargs['specified_flux_boundary_packages'])
 
             if 'head_dependent_flux_boundary_packages' in kwargs:
-                cls._validate_head_dependent_flux_boundary_packages(kwargs['head_dependent_flux_boundary_packages'])
-                # delete ManyToMany associated records
                 model_boundary_condition.head_dependent_flux_boundary_packages.clear()
                 cls._add_head_dependent_flux_boundary_packages(model_boundary_condition, kwargs['head_dependent_flux_boundary_packages'])
 
             model_boundary_condition.save()
+            delete_if_empty(model_boundary_condition)
 
-            # delete boundaryConditionType and boundaryConditionPackage elements if it has no data
-            if len(model_boundary_condition.specified_head_boundary_packages.all()) == 0 and\
-               len(model_boundary_condition.specified_flux_boundary_packages.all()) == 0 and\
-               len(model_boundary_condition.head_dependent_flux_boundary_packages.all()) == 0:
-                model_boundary_condition.delete()
         else:
             raise ObjectDoesNotExist("No BoundaryCondition element was found for the provided id:%s" % kwargs['id'])
 
     @classmethod
-    def _validate_specified_head_boundary_packages(cls, packages):
-        choices = ['BFH', 'CHD', 'FHB']
-        for boundary_packages in packages:
-            validate_choice(boundary_packages, choices)
+    def _validate_params(cls, **kwargs):
+        for key, val in kwargs.iteritems():
+            if key == 'specified_head_boundary_packages':
+                kwargs[key] = [validate_choice(package, cls.specifiedHeadBoundaryPackageChoices) for package in kwargs[key]]
+            elif key == 'specified_flux_boundary_packages':
+                kwargs[key] = [validate_choice(package, cls.specifiedFluxBoundaryPackageChoices) for package in kwargs[key]]
+            elif key == 'head_dependent_flux_boundary_packages':
+                kwargs[key] = [validate_choice(package, cls.headDependentFluxBoundaryPackageChoices) for package in kwargs[key]]
+        return kwargs
 
-    @classmethod
-    def _validate_specified_flux_boundary_packages(cls, packages):
-        choices = ['FHB', 'RCH', 'WEL']
-        for boundary_packages in packages:
-            validate_choice(boundary_packages, choices)
-
-    @classmethod
-    def _validate_head_dependent_flux_boundary_packages(cls, packages):
-        choices = ['DAF', 'DAFG', 'DRN', 'DRT', 'ETS', 'EVT', 'GHB', 'LAK', 'MNW1', 'MNW2', 'RES', 'RIP', 'RIV', 'SFR',
-                   'STR', 'UZF']
-        for boundary_packages in packages:
-            validate_choice(boundary_packages, choices)
 
 class ModelCalibration(AbstractMetaDataElement):
     term = 'ModelCalibration'
@@ -450,16 +429,6 @@ class GeneralElements(AbstractMetaDataElement):
         cls._add_output_control_package(general_elements, kwargs['output_control_package'])
 
         return general_elements
-        # kwargs = cls._validate_params(**kwargs)
-        # if 'output_control_package' in kwargs:
-        #     output_control_package = kwargs['output_control_package']
-        # del kwargs['output_control_package']
-        # general_elements = super(GeneralElements, cls).create(**kwargs)
-        # if output_control_package:
-        #     cls._add_output_control_package(general_elements, output_control_package)
-        #
-        # return general_elements
-
 
     @classmethod
     def update(cls, element_id, **kwargs):
