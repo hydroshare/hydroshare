@@ -336,16 +336,16 @@
                                                         <td><span id="db-user-type">{{ profile.user_type }}</span><span id="db-user-type-other">{% if profile.user_type == 'Other' %}: {{ profile.user_type_other }}{% endif %}</span></td>
                                                     </tr>
                                                 {% endif %}
-                                                {% if profile.country and profile.country != "Unspecified" %}
+                                                {% if profile.country %}
                                                     <tr>
                                                         <td><span class="text-muted">Country</span></td>
-                                                        <td>{{ profile.country }}</td>
+                                                        <td>{{ profile.country.name }}</td>
                                                     </tr>
                                                 {% endif %}
-                                                {% if profile.state and profile.state != "Unspecified"%}
+                                                {% if profile.state %}
                                                     <tr>
-                                                        <td><span class="text-muted">State/Province</span></td>
-                                                        <td>{{ profile.state }}</td>
+                                                        <td><span class="text-muted">State</span></td>
+                                                        <td>{{ profile.get_state_display }}</td>
                                                     </tr>
                                                 {% endif %}
                                                 <tr>
@@ -406,8 +406,8 @@
 
                                             {#        State       #}
                                             <fieldset>
-                                                <label>State/Province *</label>
-                                                <input name="state" class="form-control form-required" {% if  profile.state %}value="{{ profile.state }}"{% else %}value="Unspecified"{% endif %}>
+                                                <label>State</label>
+                                                <input name="state" class="form-control" value="{{ profile.get_state_display }}">
                                             </fieldset>
 
                                             {#        Date Joined       #}
@@ -1096,11 +1096,6 @@
         }
 
         $(document).ready(function () {
-            // Change country first empty option to 'Unspecified'
-            var option = $("select[name='country'] option:first-child");
-            option.val("Unspecified");
-            option.text("Unspecified");
-
             // Only enable Confirm button when input password is longer than 8 characters
             $("#id_irods_password").keyup(function () {
                 pwdlen = $("input#id_irods_password").val().length;
@@ -1202,15 +1197,6 @@
             }
 
             $("tr[data-type='all']").find(".badge").text(collection["total"]);
-
-
-            // Unspecified goes away as soon as a user clicks.
-            $("input[name='state']").click(function () {
-                    if ($(this).val() == "Unspecified") {
-                        $(this).val("");
-                    }
-                }
-            );
         });
     </script>
 {% endblock %}

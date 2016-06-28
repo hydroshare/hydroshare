@@ -19,6 +19,8 @@ from mezzanine.utils.email import split_addresses, send_mail_template
 from mezzanine.utils.cache import add_cache_bypass
 from mezzanine.conf import settings
 
+from localflavor.us.forms import USStateField
+
 from .models import UserProfile
 from hs_core.hydroshare.users import create_account
 from hs_core.templatetags.hydroshare_tags import best_name
@@ -325,6 +327,8 @@ class UserForm(forms.ModelForm):
 
 
 class UserProfileForm(forms.ModelForm):
+    state = USStateField(required=False)
+
     class Meta:
         model = UserProfile
         exclude = ['user', 'public', 'create_irods_user_account']
@@ -333,17 +337,5 @@ class UserProfileForm(forms.ModelForm):
         data = self.cleaned_data['organization']
         if len(data.strip()) == 0:
             raise forms.ValidationError("Organization is a required field.")
-        return data
-
-    def clean_country(self):
-        data = self.cleaned_data['country']
-        if len(data.strip()) == 0:
-            raise forms.ValidationError("Country is a required field.")
-        return data
-
-    def clean_state(self):
-        data = self.cleaned_data['state']
-        if len(data.strip()) == 0:
-            raise forms.ValidationError("State is a required field.")
         return data
 
