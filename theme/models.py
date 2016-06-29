@@ -116,6 +116,10 @@ class IconBox(Orderable):
                             help_text="Optional, if provided clicking the box will go here.")
 
 
+class Organization(models.Model):
+    name = models.CharField(max_length=1024)
+
+
 class UserProfile(models.Model):
     USER_TYPE_CHOICES = (
         ('', "(unspecified)"),
@@ -152,11 +156,9 @@ class UserProfile(models.Model):
         max_length=1024, null=True, blank=True,
         help_text=('A comma-separated list of subject areas you are interested in researching. '
                    'e.g. "Computer Science, Hydrology, Water Management"'))
-    organization = models.CharField(
-        max_length=1024,
-        null=True,
-        blank=True,
-        help_text="The name of the organization you work for."
+    organization = models.ForeignKey(
+        Organization, null=True, blank=True,
+        help_text="The organization you work for."
     )
     phone_1 = models.CharField(max_length=1024, null=True, blank=True)
     phone_1_type = models.CharField(max_length=1024, null=True, blank=True, choices=(
