@@ -1,8 +1,3 @@
-from functools import partial, wraps
-
-from django.forms.models import formset_factory
-from django.forms import BaseFormSet
-
 from forms import *
 from hs_core import page_processors
 from hs_core.views import *
@@ -86,102 +81,7 @@ def _get_resource_view_context(page, request, content_model, selected_series_id,
 
 
 def _get_resource_edit_context(page, request, content_model, selected_series_id, series_ids, extended_metadata_exists):
-
-    # TODO: Since we are displaying metadata for a selected series, we don't need formset. There will be only one
-    # metadata element of specific type. Refer to code in current develop branch for using single form for each of the
-    # extended metadata elements
-
-    # SiteFormSetEdit = formset_factory(wraps(SiteForm)(partial(SiteForm, allow_edit=True,
-    #                                                           cv_site_types=content_model.metadata.cv_site_types.all(),
-    #                                                           cv_elevation_datums=content_model.metadata.cv_elevation_datums.all())),
-    #                                   formset=BaseFormSet, extra=0)
-    #
-    # sites = content_model.metadata.sites.filter(series_ids__contains=[selected_series_id])
-    # site_formset = SiteFormSetEdit(initial=sites.values(), prefix='site')
-    #
-    # for form in site_formset.forms:
-    #     if len(form.initial) > 0:
-    #         form.action = _get_element_update_form_action('site', content_model.short_id,
-    #                                                       form.initial['id'])
-    #         form.number = form.initial['id']
-    #         form.set_dropdown_widgets(form.initial['site_type'], form.initial['elevation_datum'])
-    #
-    # VariableFormSetEdit = formset_factory(wraps(VariableForm)(partial(VariableForm, allow_edit=True,
-    #                                                                   cv_variable_types=content_model.metadata.cv_variable_types.all(),
-    #                                                                   cv_variable_names=content_model.metadata.cv_variable_names.all(),
-    #                                                                   cv_speciations=content_model.metadata.cv_speciations.all())),
-    #                                       formset=BaseFormSet, extra=0)
-    # variables = content_model.metadata.variables.filter(series_ids__contains=[selected_series_id])
-    # variable_formset = VariableFormSetEdit(initial=variables.values(), prefix='variable')
-    #
-    # for form in variable_formset.forms:
-    #     if len(form.initial) > 0:
-    #         form.action = _get_element_update_form_action('variable', content_model.short_id,
-    #                                                       form.initial['id'])
-    #         form.number = form.initial['id']
-    #         # 3 dropdowns (one for variable_type, one for 'variable_name' one for 'speciation')
-    #         form.set_dropdown_widgets(form.initial['variable_type'], form.initial['variable_name'],
-    #                                   form.initial['speciation'])
-    #
-    # MethodFormSetEdit = formset_factory(wraps(MethodForm)(partial(MethodForm, allow_edit=True,
-    #                                                               cv_method_types=content_model.metadata.cv_method_types.all())),
-    #                                     formset=BaseFormSet, extra=0)
-    # methods = content_model.metadata.methods.filter(series_ids__contains=[selected_series_id])
-    # method_formset = MethodFormSetEdit(initial=methods.values(), prefix='method')
-    #
-    # for form in method_formset.forms:
-    #     if len(form.initial) > 0:
-    #         form.action = _get_element_update_form_action('method', content_model.short_id,
-    #                                                       form.initial['id'])
-    #         form.number = form.initial['id']
-    #         form.set_dropdown_widgets(form.initial['method_type'])
-    #
-    # ProcessingLevelFormSetEdit = formset_factory(wraps(ProcessingLevelForm)(partial(ProcessingLevelForm,
-    #                                                                                 allow_edit=True)),
-    #                                              formset=BaseFormSet, extra=0)
-    # processing_levels = content_model.metadata.processing_levels.filter(series_ids__contains=[selected_series_id])
-    # processing_level_formset = ProcessingLevelFormSetEdit(initial=processing_levels.values(),
-    #                                                       prefix='processing_level')
-    #
-    # for form in processing_level_formset.forms:
-    #     if len(form.initial) > 0:
-    #         form.action = _get_element_update_form_action('processinglevel', content_model.short_id,
-    #                                                       form.initial['id'])
-    #         form.number = form.initial['id']
-    #
-    # TimeSeriesResultFormSetEdit = formset_factory(wraps(TimeSeriesResultForm)
-    #                                               (partial(TimeSeriesResultForm, allow_edit=True,
-    #                                                cv_sample_mediums=content_model.metadata.cv_mediums.all(),
-    #                                                cv_units_types=content_model.metadata.cv_units_types.all(),
-    #                                                cv_aggregation_statistics=
-    #                                                        content_model.metadata.cv_aggregation_statistics.all(),
-    #                                                cv_statuses=content_model.metadata.cv_statuses.all())),
-    #                                               formset=BaseFormSet, extra=0)
-    # time_series_results = content_model.metadata.time_series_results.filter(series_ids__contains=[selected_series_id])
-    # timeseries_result_formset = TimeSeriesResultFormSetEdit(
-    #     initial=time_series_results.values(), prefix='timeseriesresult')
-    #
-    # for form in timeseries_result_formset.forms:
-    #     if len(form.initial) > 0:
-    #         form.action = _get_element_update_form_action('timeseriesresult', content_model.short_id,
-    #                                                       form.initial['id'])
-    #         form.number = form.initial['id']
-    #         form.set_dropdown_widgets(form.initial['sample_medium'], form.initial['units_type'],
-    #                                   form.initial['aggregation_statistics'], form.initial['status'])
-    #
-    # if extended_metadata_exists:
-    #     ext_md_layout = Layout(UpdateSQLiteLayout,
-    #                            SeriesSelectionLayout,
-    #                            SiteLayoutEdit,
-    #                            VariableLayoutEdit,
-    #                            MethodLayoutEdit,
-    #                            ProcessingLevelLayoutEdit,
-    #                            TimeSeriesResultLayoutEdit
-    #                           )
-    # else:
-    #     ext_md_layout = Layout()
-
-    # add some forms
+    # create timeseries sepecific metadata element forms
     site = content_model.metadata.sites.filter(series_ids__contains=[selected_series_id]).first()
     site_form = SiteForm(instance=site, res_short_id=content_model.short_id,
                          element_id=site.id if site else None,

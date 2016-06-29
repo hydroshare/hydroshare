@@ -144,54 +144,14 @@ def post_create_resource_handler(sender, **kwargs):
 def metadata_element_pre_create_handler(sender, **kwargs):
     element_name = kwargs['element_name'].lower()
     request = kwargs['request']
-
-    if element_name == "site":
-        element_form = SiteValidationForm(request.POST)
-    elif element_name == 'variable':
-        element_form = VariableValidationForm(request.POST)
-    elif element_name == 'method':
-        element_form = MethodValidationForm(request.POST)
-    elif element_name == 'processinglevel':
-        element_form = ProcessingLevelValidationForm(request.POST)
-    elif element_name == 'timeseriesresult':
-        element_form = TimeSeriesResultValidationForm(request.POST)
-    else:
-        raise Exception("Invalid metadata element name:{}".format(element_name))
-
-    if element_form.is_valid():
-        return {'is_valid': True, 'element_data_dict': element_form.cleaned_data}
-    else:
-        return {'is_valid': False, 'element_data_dict': None}
+    return _validate_metadata(request, element_name)
 
 
 @receiver(pre_metadata_element_update, sender=TimeSeriesResource)
 def metadata_element_pre_update_handler(sender, **kwargs):
     element_name = kwargs['element_name'].lower()
     request = kwargs['request']
-
-    # TODO: remove the commented code
-    if element_name == "site":
-        #form_data = _get_form_post_data(request, SiteValidationForm)
-        element_form = SiteValidationForm(request.POST)
-    elif element_name == 'variable':
-        # form_data = _get_form_post_data(request, VariableValidationForm)
-        element_form = VariableValidationForm(request.POST)
-    elif element_name == 'method':
-        # form_data = _get_form_post_data(request, MethodValidationForm)
-        element_form = MethodValidationForm(request.POST)
-    elif element_name == 'processinglevel':
-        # form_data = _get_form_post_data(request, ProcessingLevelValidationForm)
-        element_form = ProcessingLevelValidationForm(request.POST)
-    elif element_name == 'timeseriesresult':
-        # form_data = _get_form_post_data(request, TimeSeriesResultValidationForm)
-        element_form = TimeSeriesResultValidationForm(request.POST)
-    else:
-        raise Exception("Invalid metadata element name:{}".format(element_name))
-
-    if element_form.is_valid():
-        return {'is_valid': True, 'element_data_dict': element_form.cleaned_data}
-    else:
-        return {'is_valid': False, 'element_data_dict': None}
+    return _validate_metadata(request, element_name)
 
 """
  Since each of the timeseries metadata element is required no need to listen to any delete signal
@@ -199,20 +159,30 @@ def metadata_element_pre_update_handler(sender, **kwargs):
 """
 
 
+def _validate_metadata(request, element_name):
+    if element_name == "site":
+        element_form = SiteValidationForm(request.POST)
+    elif element_name == 'variable':
+        element_form = VariableValidationForm(request.POST)
+    elif element_name == 'method':
+        element_form = MethodValidationForm(request.POST)
+    elif element_name == 'processinglevel':
+        element_form = ProcessingLevelValidationForm(request.POST)
+    elif element_name == 'timeseriesresult':
+        element_form = TimeSeriesResultValidationForm(request.POST)
+    else:
+        raise Exception("Invalid metadata element name:{}".format(element_name))
+
+    if element_form.is_valid():
+        return {'is_valid': True, 'element_data_dict': element_form.cleaned_data}
+    else:
+        return {'is_valid': False, 'element_data_dict': None}
+
 @receiver(pre_download_file, sender=TimeSeriesResource)
 def file_pre_download_handler(sender, **kwargs):
     resource = kwargs['resource']
     if resource.metadata.is_dirty:
         resource.metadata.update_sqlite_file()
-
-
-# TODO: the following function needs to be deleted
-def _get_form_post_data(request, validation_form):
-    form_data = {}
-    for field_name in validation_form().fields:
-        matching_key = [key for key in request.POST if '-'+field_name in key][0]
-        form_data[field_name] = request.POST[matching_key]
-    return form_data
 
 
 def _extract_metadata(resource, sqlite_file_name):

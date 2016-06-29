@@ -318,10 +318,4 @@ UpdateSQLiteLayout = Layout(HTML(_get_html_snippet('update_sqlite_file.html')))
 SeriesSelectionLayout = Layout(HTML(_get_html_snippet('series_selection.html')))
 TimeSeriesMetaDataLayout = HTML(_get_html_snippet('timeseries_metadata_edit.html'))
 
-# TODO: The followings are no more used - need to delete (including the html files)
-SiteLayoutEdit = Layout(HTML(_get_html_snippet('site_element_edit.html')))
-VariableLayoutEdit = Layout(HTML(_get_html_snippet('variable_element_edit.html')))
-MethodLayoutEdit = Layout(HTML(_get_html_snippet('method_element_edit.html')))
-ProcessingLevelLayoutEdit = Layout(HTML(_get_html_snippet('processinglevel_element_edit.html')))
-TimeSeriesResultLayoutEdit = Layout(HTML(_get_html_snippet('timeseriesresult_element_edit.html')))
 
