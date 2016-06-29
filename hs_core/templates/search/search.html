@@ -578,7 +578,6 @@
 
 
         var setMarkers = function(json_results) {
-
             var modified_points_data = [];
             var modified_boxes_data = [];
 
@@ -605,17 +604,6 @@
                     west: 0
                 }
             });
-
-            for (var  i = 0; i < json_results.length; i++ ) {
-                if (json_results[i].coverage_type == 'point') {
-                    checkDuplicatePointResults(modified_points_data, json_results[i]);
-
-                }
-                else if(json_results[i].coverage_type == 'box') {
-                    checkDuplicateBoxResults(modified_boxes_data, json_results[i]);
-
-                }
-            }
 
             modified_points_data.forEach(function(point){
                 var info_content = point.info_link;
@@ -691,13 +679,13 @@
                 var lat_diff = Math.abs(test_lat - item_lat);
                 var lng_diff = Math.abs(test_lng - item_lng);
                 if (lat_diff < minFloatingNumber && lng_diff < minFloatingNumber) {
-                    item.info_link = item.info_link + '<br />' + '"<a href="' + test.get_absolute_url + '">' + test.title + '</a>';
+                    item.info_link = item.info_link + '<br />' + '<a href="' + test.get_absolute_url + '">' + test.title +'</a>';
                     item.counter++;
                     existed = true;
                 }
             });
             if (!existed) {
-                test.info_link = '"<a href="' + test.get_absolute_url + '">' + test.title + '</a>';
+                test.info_link = '<a href="' + test.get_absolute_url + '">' + test.title + '</a>';
                 test.counter = 1;
                 modified_points_data.push(test);
             }
@@ -715,13 +703,13 @@
                 var lng_diff = Math.abs(test_lng - item_lng);
 
                 if (lat_diff < minFloatingNumber && lng_diff < minFloatingNumber) {
-                    item.info_link = item.info_link + '<br />' + '"<a href="' + test.get_absolute_url + '">' + test.title + '</a>';
+                    item.info_link = item.info_link + '<br />' + '<a href="' + test.get_absolute_url + '">' + test.title + '</a>';
                     item.counter++;
                     existed = true;
                 }
             });
             if (!existed) {
-                test.info_link = '"<a href="' + test.get_absolute_url + '">' + test.title + '</a>';
+                test.info_link = '<a href="' + test.get_absolute_url + '">' + test.title + '</a>';
                 test.counter = 1;
                 modified_boxes_data.push(test);
             }
