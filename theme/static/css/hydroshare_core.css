@@ -1454,14 +1454,6 @@ body > .main-container {
     color: #CCC;
 }
 
-#permission-panel .form-control{
-    margin-bottom:0;
-}
-
-#permission-panel .custom-well .form-group{
-    width:100%;
-}
-
 .btn-update-list{
     margin-top:4px;
     margin-right:4px;
@@ -1470,7 +1462,7 @@ body > .main-container {
 }
 
 .btn-add-access {
-	height: 34px;
+	height: 32px;
 	top: 0;
 	border-radius: 0;
 	margin: 0 2px;
@@ -1539,8 +1531,12 @@ body > .main-container {
     color:#d9534f;
 }
 
-.btn-edit, .btn-share{
+.icon-blue {
     color: #428BD2;
+}
+
+#delete > span {
+	margin-left: 20px;
 }
 
 .btn-download{
@@ -1597,7 +1593,7 @@ body > .main-container {
     word-break: break-word;
 }
 
-#btn-download-all, #btn-add-file, #btn-select-irods-file {
+#btn-download-all, #btn-add-file, #btn-select-irods-file, #rep-res-bag {
     margin-bottom:5px;
     max-width:100%;
 }
@@ -1614,6 +1610,7 @@ body > .main-container {
 
 div#sharing-status {
     overflow: hidden; /* Fixes height for floating elements */
+	margin-top: 20px;
 }
 
 .tag-list {
@@ -2238,10 +2235,6 @@ button.loading {
     margin-top: -20px; margin-bottom:20px;
 }
 
-#id_name {
-    max-width: 467px;
-}
-
 .invalid-input {
 	border-color: #F00 !important;
 }
@@ -2810,6 +2803,10 @@ h4.title {
 
 #search-container {
 	margin-bottom: 10px;
+}
+
+#search-container .dropdown-toggle {
+	border-radius: 0;
 }
 
 /*Waiting on firefox support for background-clip:text*/
@@ -3685,6 +3682,40 @@ div.group-add-photo {
 	display: inline-block;
 }
 
+#discover-filter-buttons {
+	margin-bottom: 10px;
+}
+
+.discover-faceting-group {
+	height: 200px;
+	overflow-y: auto;
+}
+
+#list-data-options {
+	float:right;
+}
+
+#discover-map {
+	width:850px;
+	height:650px;
+}
+
+#discover-map-legend {
+	background: white;
+}
+
+#manual-zoom-btn {
+	margin-top:20px;
+}
+
+#resetZoom {
+	margin-right:5px;
+}
+
+.manualzoom-input {
+	color: red;
+}
+
 div.toggle.btn {
 	width: 100px !important;
 	float: right;
@@ -3692,4 +3723,23 @@ div.toggle.btn {
 
 #map-view {
 	border: 1px solid #DDD;
+}
+
+.center-radio-inline {
+    padding: 8px;
+    border-radius: 4px;
+    width: 190px;
+}
+
+.center-radio-inline input[type='radio']{
+	float: initial;
+	margin: 0;
+}
+
+.center-radio-inline label {
+	cursor: pointer;
+}
+
+.or-separator {
+	margin-top: 20px;
 }
