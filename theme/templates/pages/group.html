@@ -2,9 +2,6 @@
 {% load geoanalytics_tags pages_tags mezzanine_tags keyword_tags comment_tags hydroshare_tags %}
 
 {% block main %}
-
-
-
     <div class="collaborate-header">
         <div class="container">
             <div class="row">
@@ -641,7 +638,7 @@
                                                   {% if forloop.counter0 > 0 %} · {% endif %}
                                                 <span>{{ owner|contact|safe }}</span>
                                             {% endfor %}</td>
-                                            <td>{{ res.updated|date }}, {{ res.updated|time }}</td>
+                                            <td>{{ res.updated|date:"m/d/Y" }}, {{ res.updated|time }}</td>
                                             <td>
                                                 {% for kw in res.metadata.subjects.all %}
                                                    {% if forloop.counter0 > 0 %},{% endif %}{{ kw.value}}
