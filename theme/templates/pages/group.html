@@ -181,11 +181,11 @@
                 <div role="tabpanel" class="tab-pane fade" id="members">
                     <div class="row">
                         <div class="col-sm-12 col-md-3">
-                            {% if profile_user.is_group_owner or profile_user.is_group_editor or profile_user.is_group_viewer %}
+                            {% if profile_user.is_group_owner %}
                                 {% if group.gaccess.active %}
-                                    <div class="text-center"><a href="#" class="btn btn-primary" role="button"
-                                                                data-toggle="modal" data-target="#invite-dialog">Invite
-                                        People</a></div>
+                                    <div class="text-center">
+                                        <a href="#" class="btn btn-primary" role="button" data-toggle="modal"
+                                           data-target="#invite-dialog">Invite People</a></div>
                                     <br>
                                 {% endif %}
                             {% endif %}
@@ -323,7 +323,7 @@
                                             {% endif %}
                                         </td>
                                         <td>
-                                            <h4><strong><a href="#">{{ member|best_name }}</a></strong></h4>
+                                            <h4><strong><a>{{ member|contact|safe }}</a></strong></h4>
                                             {% if  member.userprofile.title %}
                                                 <span class="text-muted">{{ member.userprofile.title }}</span>
                                             {% endif %}
@@ -516,6 +516,7 @@
                                                                     <option value="swat model instance resource">Swat Model Instance</option>
                                                                     <option value="time series">Time Series</option>
                                                                     <option value="web app resource">Web App</option>
+                                                                    <option value="collection resource">Collection</option>
                                                                 </select>
                                                             </div>
                                                             <div class="form-group">
@@ -595,6 +596,10 @@
                                                 {% elif res|resource_type == "Script Resource" %}
                                                     <img src="{{ STATIC_URL }}img/resource-icons/script48x48.png"
                                                          alt="{{ res|resource_type }}" title="{{ res|resource_type }}" class="table-res-type-icon"/>
+                                                {% elif res|resource_type == "Collection Resource" %}
+                                                    <img src="{{ STATIC_URL }}img/resource-icons/collection48x48.png"
+                                                         alt="{{ res|resource_type }}" title="{{ res|resource_type }}"
+                                                         class="table-res-type-icon"/>
                                                 {% endif %}
 
                                                 {#  Sharing Status icons #}
@@ -816,6 +821,12 @@
                                                             <img src="{{ STATIC_URL }}img/resource-icons/script48x48.png"
                                                                  alt="Script Resource Icon" class="table-res-type-icon"/>
                                                             <small>&nbsp;Script</small>
+                                                        </div>
+
+                                                        <div class="col-sm-6">
+                                                            <img src="{{ STATIC_URL }}img/resource-icons/collection48x48.png"
+                                                                 alt="Collection Resource Icon" class="table-res-type-icon"/>
+                                                            <small>&nbsp;Collection</small>
                                                         </div>
                                                     </div>
                                                 </div>

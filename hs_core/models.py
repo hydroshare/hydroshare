@@ -267,6 +267,13 @@ class Party(AbstractMetaDataElement):
     def update(cls, element_id, **kwargs):
         element_name = cls.__name__
         creator_order = None
+        if 'description' in kwargs:
+            party = cls.objects.get(id=element_id)
+            if party.description is not None and kwargs['description'] is not None:
+                if len(party.description.strip()) > 0 and len(kwargs['description'].strip()) > 0:
+                    if party.description != kwargs['description']:
+                        raise ValidationError("HydroShare user identifier can't be changed.")
+
         if 'order' in kwargs and element_name == 'Creator':
             creator_order = kwargs['order']
             if creator_order <= 0:
@@ -1158,12 +1165,17 @@ class AbstractResource(ResourcePermissionsMixin):
 
     @classmethod
     def bag_url(cls, resource_id):
+        from hs_core.hydroshare.utils import get_resource_by_shortkey
         bagit_path = getattr(settings, 'IRODS_BAGIT_PATH', 'bags')
         bagit_postfix = getattr(settings, 'IRODS_BAGIT_POSTFIX', 'zip')
-
         bag_path = "{path}/{resource_id}.{postfix}".format(path=bagit_path,
                                                            resource_id=resource_id,
                                                            postfix=bagit_postfix)
+        res = get_resource_by_shortkey(resource_id)
+        if res.resource_federation_path:
+            rel_fed_path = res.resource_federation_path[1:]
+            bag_path = os.path.join(rel_fed_path, bag_path)
+
         istorage = IrodsStorage()
         bag_url = istorage.url(bag_path)
 
@@ -1184,7 +1196,16 @@ class AbstractResource(ResourcePermissionsMixin):
     def delete(self, using=None):
         from hydroshare import hs_bagit
         for fl in self.files.all():
-            fl.resource_file.delete()
+            if fl.fed_resource_file_name_or_path:
+                istorage = IrodsStorage('federated')
+                if fl.fed_resource_file_name_or_path.find(self.short_id)>=0:
+                    istorage.delete('{}/{}'.format(self.resource_federation_path, fl.fed_resource_file_name_or_path))
+                else:
+                    istorage.delete('{}/{}/{}'.format(self.resource_federation_path, self.short_id, fl.fed_resource_file_name_or_path))
+            elif fl.resource_file:
+                fl.resource_file.delete()
+            elif fl.fed_resource_file:
+                fl.fed_resource_file.delete()
 
         hs_bagit.delete_bag(self)
 
@@ -1349,14 +1370,29 @@ class AbstractResource(ResourcePermissionsMixin):
         unique_together = ("content_type", "object_id")
 
 def get_path(instance, filename):
-    return os.path.join(instance.content_object.short_id, 'data', 'contents', filename)
+    if instance.content_object.resource_federation_path:
+        return os.path.join(instance.content_object.resource_federation_path, instance.content_object.short_id, 'data',
+                            'contents', filename)
+    else:
+        return os.path.join(instance.content_object.short_id, 'data', 'contents', filename)
 
 class ResourceFile(models.Model):
     object_id = models.PositiveIntegerField()
     content_type = models.ForeignKey(ContentType)
 
     content_object = GenericForeignKey('content_type', 'object_id')
-    resource_file = models.FileField(upload_to=get_path, max_length=500, storage=IrodsStorage() if getattr(settings,'USE_IRODS', False) else DefaultStorage())
+    resource_file = models.FileField(upload_to=get_path, max_length=500, null=True, blank=True,
+                                     storage=IrodsStorage() if getattr(settings,'USE_IRODS', False) else DefaultStorage())
+    # the following optional fields are added for use by federated iRODS resources where resources are created in the local federated
+    # zone rather than hydroshare zone, in which case resource_file is empty, and we record iRODS logical resource file name and
+    # file size for customized copy or move operations for resource creation and other operations
+    # fed_resource_file in particular is a counterpart of resource_file, but handles files uploaded from local disk and store the files
+    # to federated zone rather than hydroshare zone.
+    fed_resource_file = models.FileField(upload_to=get_path, max_length=500, null=True, blank=True,
+                                     storage=IrodsStorage('federated') if getattr(settings,'USE_IRODS', False) else DefaultStorage())
+    fed_resource_file_name_or_path = models.CharField(max_length=255, null=True, blank=True)
+    fed_resource_file_size = models.CharField(max_length=15, null=True, blank=True)
+
 
 class Bags(models.Model):
     object_id = models.PositiveIntegerField()
@@ -1391,7 +1427,11 @@ class BaseResource(Page, AbstractResource):
     # the time when the resource is locked for a new version action. A value of null
     # means the resource is not locked
     locked_time = models.DateTimeField(null=True, blank=True)
-
+    #this resource_federation_path is added to record where a HydroShare resource is
+    # stored. The default is empty string meaning the resource is stored in HydroShare
+    # zone. If a resource is stored in a fedearated zone, the field should store the
+    # federated root path in the format of /federated_zone/home/localHydroProxy
+    resource_federation_path = models.CharField(max_length=100, blank=True, default='')
     objects = models.Manager()
     public_resources = PublicResourceManager()
     discoverable_resources = DiscoverableResourceManager()

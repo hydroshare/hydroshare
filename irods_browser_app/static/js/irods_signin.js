@@ -38,6 +38,7 @@ $('#btn-signout-irods').on('click', function() {
     $("#btn-select-irods-file").hide();
     $("#log-into-irods").show();
     $("#btn-signout-irods").hide();
+    $('#irods-copy-move').hide();
 });
 
 function irods_login() {
@@ -73,6 +74,7 @@ function irods_login() {
                 $("#sign-in-info").text('iRODS login failed');
                 sessionStorage.IRODS_signininfo = '';
                 $("#btn-select-irods-file").hide();
+                $("#irods-sel-file").text('');
             }
             $('#irodsSignin').modal('hide');
         },
@@ -87,7 +89,7 @@ function irods_login() {
             sessionStorage.IRODS_zone = '';
             $("#sign-in-info").text('iRODS login failed');
             $("#btn-select-irods-file").hide();
-            $("#irods-sel-file").text("No file selected");
+            $("#irods-sel-file").text('');
             $('#irodsSignin').modal('hide');
         }
     });

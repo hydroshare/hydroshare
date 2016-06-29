@@ -186,6 +186,19 @@ class TestCoreMetadata(MockIRODSTestCaseMixin, TestCase):
         # delete John
         resource.delete_metadata_element(self.res.short_id, 'creator', cr_john.id )
         self.assertEqual(Creator.objects.filter(id=cr_john.id).first(), None)
+
+        # trying to update (description) hydroshare user identifier to a different identifier should raise exception
+        with self.assertRaises(ValidationError):
+            resource.update_metadata_element(self.res.short_id,'creator', cr_mike.id,
+                                             description="http://hydroshare.org/user/002")
+
+        # however, it should be possible to to update (description) hydroshare identifier to empty string
+        cr_mike = self.res.metadata.creators.all().filter(email=cr_email).first()
+        self.assertEquals(cr_mike.description, 'http://hydroshare.org/user/001')
+        resource.update_metadata_element(self.res.short_id,'creator', cr_mike.id, description='')
+        cr_mike = self.res.metadata.creators.all().filter(email=cr_email).first()
+        self.assertEquals(cr_mike.description, '')
+
         # delete Mike
         resource.delete_metadata_element(self.res.short_id, 'creator', cr_mike.id )
         self.assertEqual(Creator.objects.filter(id=cr_mike.id).first(), None)
@@ -256,10 +269,24 @@ class TestCoreMetadata(MockIRODSTestCaseMixin, TestCase):
         con_mike = self.res.metadata.contributors.all().filter(email=con_email).first()
         self.assertEqual(con_mike.homepage, None)
 
+        # trying to update (description) hydroshare user identifier to a different identifier should raise exception
+        with self.assertRaises(ValidationError):
+            resource.update_metadata_element(self.res.short_id,'contributor', con_mike.id,
+                                             description="http://hydroshare.org/user/002")
+
+        # however, it should be possible to to update (description) hydroshare identifier to empty string
+        con_mike = self.res.metadata.contributors.all().filter(email=con_email).first()
+        self.assertEquals(con_mike.description, 'http://hydroshare.org/user/001')
+        resource.update_metadata_element(self.res.short_id,'contributor', con_mike.id, description='')
+        con_mike = self.res.metadata.contributors.all().filter(email=con_email).first()
+        self.assertEquals(con_mike.description, '')
+
         # test that all resource contributors can be deleted
         # delete John
         resource.delete_metadata_element(self.res.short_id, 'contributor', con_john.id )
         self.assertEqual(Contributor.objects.filter(id=con_john.id).first(), None)
+
+
         # delete Mike
         resource.delete_metadata_element(self.res.short_id, 'contributor', con_mike.id )
         self.assertEqual(Contributor.objects.filter(id=con_mike.id).first(), None)

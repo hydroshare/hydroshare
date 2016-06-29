@@ -118,7 +118,7 @@ def create_resource_from_bag(bag_content_path, preserve_uuid=True):
         if resource_files is None:
             resource_files = []
 
-        page_url_dict, res_title, metadata = resource_pre_create_actions(resource_type=rm.res_type,
+        page_url_dict, res_title, metadata, _ = resource_pre_create_actions(resource_type=rm.res_type,
                                                                          files=resource_files,
                                                                          resource_title=rm.title,
                                                                          page_redirect_url_key=None)

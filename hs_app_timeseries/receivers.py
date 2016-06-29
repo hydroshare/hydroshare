@@ -1,5 +1,6 @@
 import os
 import sqlite3
+import shutil
 
 from django.core.exceptions import ValidationError
 from django.dispatch import receiver
@@ -9,6 +10,23 @@ from hs_core.hydroshare import utils
 from hs_app_timeseries.models import TimeSeriesResource
 from forms import SiteValidationForm, VariableValidationForm, MethodValidationForm, ProcessingLevelValidationForm, \
     TimeSeriesResultValidationForm
+
+
+def get_file_ext_and_obj_name(res, res_file):
+    fl_ext = ''
+    fl_obj_name = ''
+    if res_file.resource_file:
+        fl_ext = os.path.splitext(res_file.resource_file.name)[1]
+        fl_obj_name = res_file.resource_file.file.name
+    elif res_file.fed_resource_file:
+        fl_ext = os.path.splitext(res_file.fed_resource_file.name)[1]
+        fl_obj_name = res_file.fed_resource_file.file.name
+    elif res_file.fed_resource_file_name_or_path:
+        fl_ext = os.path.splitext(res_file.fed_resource_file_name_or_path)[1]
+        fl_obj_name = utils.get_fed_zone_files(
+            os.path.join(res.resource_federation_path, res.short_id,
+                         res_file.fed_resource_file_name_or_path))[0]
+    return fl_ext, fl_obj_name
 
 
 @receiver(pre_create_resource, sender=TimeSeriesResource)
@@ -39,14 +57,15 @@ def post_add_files_to_resource_handler(sender, **kwargs):
     res_file = resource.files.all()[0] if resource.files.all() else None
     if res_file:
         # check if it a sqlite file
-        fl_ext = os.path.splitext(res_file.resource_file.name)[1]
+        fl_ext, fl_obj_name = get_file_ext_and_obj_name(resource, res_file)
+
         if fl_ext == '.sqlite':
-            validate_err_message = _validate_odm2_db_file(res_file.resource_file.file)
+            validate_err_message = _validate_odm2_db_file(fl_obj_name)
             if not validate_err_message:
                 if extract_metadata:
                     # first delete relevant metadata elements
                     _delete_extracted_metadata(resource)
-                    extract_err_message = _extract_metadata(resource, res_file.resource_file.file)
+                    extract_err_message = _extract_metadata(resource, fl_obj_name)
                     utils.resource_modified(resource, user)
                     if extract_err_message:
                         validate_files_dict['are_files_valid'] = False
@@ -59,7 +78,8 @@ def post_add_files_to_resource_handler(sender, **kwargs):
                 if extract_metadata:
                     validate_err_message += " (Metadata was not extracted)"
                 validate_files_dict['message'] = validate_err_message
-
+        if res_file.fed_resource_file_name_or_path and fl_obj_name:
+            shutil.rmtree(os.path.dirname(fl_obj_name))
 
 @receiver(post_create_resource, sender=TimeSeriesResource)
 def post_create_resource_handler(sender, **kwargs):
@@ -70,11 +90,12 @@ def post_create_resource_handler(sender, **kwargs):
     res_file = resource.files.all()[0] if resource.files.all() else None
     if res_file:
         # check if it a sqlite file
-        fl_ext = os.path.splitext(res_file.resource_file.name)[1]
+        fl_ext, fl_obj_name = get_file_ext_and_obj_name(resource, res_file)
+
         if fl_ext == '.sqlite':
-            validate_err_message = _validate_odm2_db_file(res_file.resource_file.file)
+            validate_err_message = _validate_odm2_db_file(fl_obj_name)
             if not validate_err_message:
-                extract_err_message = _extract_metadata(resource, res_file.resource_file.file)
+                extract_err_message = _extract_metadata(resource, fl_obj_name)
                 utils.resource_modified(resource, user)
                 if extract_err_message:
                     validate_files_dict['are_files_valid'] = False
@@ -83,6 +104,8 @@ def post_create_resource_handler(sender, **kwargs):
                 validate_files_dict['are_files_valid'] = False
                 validate_files_dict['message'] = validate_err_message + " (Metadata was not extracted)"
 
+        if res_file.fed_resource_file_name_or_path and fl_obj_name:
+            shutil.rmtree(os.path.dirname(fl_obj_name))
 
 @receiver(pre_metadata_element_create, sender=TimeSeriesResource)
 def metadata_element_pre_create_handler(sender, **kwargs):
@@ -133,10 +156,10 @@ def metadata_element_pre_update_handler(sender, **kwargs):
 """
 
 
-def _extract_metadata(resource, sqlite_file):
+def _extract_metadata(resource, sqlite_file_name):
     err_message = "Not a valid ODM2 SQLite file"
     try:
-        con = sqlite3.connect(sqlite_file.name)
+        con = sqlite3.connect(sqlite_file_name)
 
         with con:
             # get the records in python dictionary format
@@ -431,10 +454,10 @@ def _delete_extracted_metadata(resource):
     resource.metadata.create_element('creator', name=first_creator_name, email=first_creator_email, order=1)
 
 
-def _validate_odm2_db_file(uploaded_file_sqlite_file):
+def _validate_odm2_db_file(uploaded_file_sqlite_file_name):
     err_message = "Not a valid ODM2 SQLite file"
     try:
-        con = sqlite3.connect(uploaded_file_sqlite_file.name)
+        con = sqlite3.connect(uploaded_file_sqlite_file_name)
         with con:
             # TODO: check that each of the core tables has the necessary columns
 

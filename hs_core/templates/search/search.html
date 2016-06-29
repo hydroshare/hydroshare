@@ -5,7 +5,7 @@
 <div class="container" id="main">
     <div class="row">
         <div class="col-lg-3" id="filter-panel">
-            <div id="filter-buttons" style="margin-bottom: 10px;">
+            <div id="discover-filter-buttons">
                 <button class="btn btn-default" onclick="clearAllFaceted()">Show All</button>
                 <button class="btn btn-info pull-right" data-toggle="popover" data-placement="right"><i class="glyphicon glyphicon-info-sign"></i></button>
             </div>
@@ -17,7 +17,7 @@
                                 <div class="panel-heading">
                                     <h4 class="panel-title">
                                         <a data-toggle="collapse" href="#{{ key }}">
-                                            {% if key == 'author'%}
+                                            {% if key == 'creators'%}
                                                 &nbsp; Filter by Author
                                             {% elif key ==  'subjects'%}
                                                 &nbsp; Filter by Subject
@@ -31,7 +31,7 @@
                                                 &nbsp; Filter by Discoverable
                                             {% endif %}
                                             <span
-                                                {% if key == 'author' or key == 'subjects' or key == 'resource_type'%}
+                                                {% if key == 'creators' or key == 'subjects' or key == 'resource_type'%}
                                                     class="glyphicon glyphicon-minus pull-left"
                                                 {% else %}
                                                     class="glyphicon glyphicon-plus pull-left"
@@ -41,12 +41,12 @@
                                     </h4>
                                 </div>
                                 <div id="{{ key }}"
-                                    {% if key == 'author' or key == 'subjects' or key == 'resource_type'%}
+                                    {% if key == 'creators' or key == 'subjects' or key == 'resource_type'%}
                                         class="panel-collapse collapse in"
                                     {% else %}
                                         class="panel-collapse collapse"
                                     {% endif %}>
-                                    <ul class="list-group" id="list-group-{{ key }}" style="height: 200px; overflow-y: auto;">
+                                    <ul class="list-group discover-faceting-group" id="list-group-{{ key }}">
                                     {% for item in values %}
                                         {% if item.1 > 0 %}
                                             <li class="list-group-item clearfix" rel="{{ key }},{{ item.0 }}">
@@ -94,7 +94,7 @@
                             </h4>
                         </div>
                         <div id="availability" class="panel-collapse collapse">
-                            <ul class="list-group" id="list-group-availability" style="height: 200px; overflow-y: auto;">
+                            <ul class="list-group discover-faceting-group" id="list-group-availability">
                                 {% for key, values in facets.fields.items %}
                                     {% if key == 'public' or key == 'discoverable' %}
                                         {% for item in values %}
@@ -149,13 +149,51 @@
                 <h4>Enter a search term to find resources on HydroShare</h4>
             {% endif %}
             -->
-            <div class=resource-search>
-                <form id="search-field" method="get" action=".">
-                    {% for field in form %}
-                        <div class="fieldWrapper">
-                            {{ field }}
-                        </div>
-                    {% endfor %}
+            <div id="resource-search">
+                <form id="search-fields" method="get" action=".">
+                    <div class="resource-search">
+                        {% for field in form %}
+                            {% if field.auto_id  == "id_q" %}
+                                <div class="fieldWrapper">
+                                    {{ field }}
+                                </div>
+                            {% endif %}
+                        {% endfor %}
+                    </div>
+                    <table id="geo-filter-coordinates" class="table">
+                        <tr>
+                            {% for field in form %}
+                                {% if field.auto_id  == "id_NElat" or field.auto_id  == "id_NElng" or field.auto_id  == "id_SWlat" or field.auto_id  == "id_SWlng" %}
+                                        <td>
+                                            <div class="fieldWrapper">
+                                                {{ field.label_tag }}: {{ field }}
+                                            </div>
+                                        </td>
+                                {% endif %}
+                            {% endfor %}
+                            <td>
+                                <a id="manual-zoom-btn" class="btn btn-default" onclick="manualZoomMap()" style="margin-top:20px">
+                                    zoom in
+                                </a>
+                            </td>
+                        </tr>
+                        <tr>
+                            {% for field in form %}
+                                {% if field.auto_id == "id_start_date" or field.auto_id == "id_end_date" %}
+                                        <td>
+                                            <div class="fieldWrapper">
+                                                {{ field.label_tag }}: {{ field }}
+                                            </div>
+                                        </td>
+                                {% endif %}
+                            {% endfor %}
+                            <td>
+                                <a id="clear-dates-options" class="btn btn-default" onclick="clearDates()" style="margin-top:20px">
+                                    Clear Dates
+                                </a>
+                            </td>
+                        </tr>
+                    </table>
                 </form>
             </div>
             <ul id="switch-view" class="nav nav-tabs">
@@ -164,26 +202,121 @@
             </ul>
             <div class="tab-content">
                 <div id="list-view" class="tab-pane fade in active">
-                    <table class="table table-striped table-hover" id="items-discovered">
+                    <div id="list-data-options">
+                        <label class="radio-inline">
+                            <input type="radio" name="results-selection" id="map-results-selected" value="map-results-selected">Map Results
+                        </label>
+                        <label class="radio-inline">
+                            <input type="radio" name="results-selection" id="all-results-selected" value="all-results-selected">All Results
+                        </label>
+                    </div>
+                    <table class="table-hover table-striped resource-custom-table" id="items-discovered">
                         <thead>
                             <tr>
-                                <th>Title</th>
                                 <th>Type</th>
+                                <th>Title</th>
                                 <th>First Author</th>
                                 <th>Last Modified</th>
+                                <th>Last modified</th>{# Used in table sorting #}
                             </tr>
                         </thead>
                         <tbody>
                             {% for result in page_obj.object_list %}
                                 <tr>
+                                    <td>
+                                        <span class="resource-type-text">{{ result.object|resource_type }}</span>
+                                        {% if  result.object|resource_type == "Generic" %}
+                                            <img src="{{ STATIC_URL }}img/resource-icons/generic48x48.png"
+                                                 alt="{{  result.object|resource_type }}" title="{{  result.object|resource_type }}"
+                                                 class="table-res-type-icon"/>
+                                        {% elif  result.object|resource_type == "Geographic Raster" %}
+                                            <img src="{{ STATIC_URL }}img/resource-icons/geographicraster48x48.png"
+                                                 alt="{{  result.object|resource_type }}" title="{{  result.object|resource_type }}"
+                                                 class="table-res-type-icon"/>
+                                        {% elif  result.object|resource_type == "Model Program Resource" %}
+                                            <img src="{{ STATIC_URL }}img/resource-icons/modelprogram48x48.png"
+                                                 alt="{{  result.object|resource_type }}" title="{{  result.object|resource_type }}"
+                                                 class="table-res-type-icon"/>
+                                        {% elif  result.object|resource_type == "Model Instance Resource" %}
+                                            <img src="{{ STATIC_URL }}img/resource-icons/modelinstance48x48.png"
+                                                 alt="{{  result.object|resource_type }}" title="{{  result.object|resource_type }}"
+                                                 class="table-res-type-icon"/>
+                                        {% elif  result.object|resource_type == "SWAT Model Instance Resource" %}
+                                            <img src="{{ STATIC_URL }}img/resource-icons/swat48x48.png"
+                                                 alt="{{  result.object|resource_type }}" title="{{  result.object|resource_type }}"
+                                                 class="table-res-type-icon"/>
+                                        {% elif  result.object|resource_type == "Multidimensional (NetCDF)" %}
+                                            <img src="{{ STATIC_URL }}img/resource-icons/multidimensional48x48.png"
+                                                 alt="{{  result.object|resource_type }}" title="{{  result.object|resource_type }}"
+                                                 class="table-res-type-icon"/>
+                                        {% elif  result.object|resource_type == "Time Series" %}
+                                            <img src="{{ STATIC_URL }}img/resource-icons/timeseries48x48.png"
+                                                 alt="{{  result.object|resource_type }}" title="{{  result.object|resource_type }}"
+                                                 class="table-res-type-icon"/>
+                                        {% elif  result.object|resource_type == "Geographic Feature (ESRI Shapefiles)" %}
+                                            <img src="{{ STATIC_URL }}img/resource-icons/geographicfeature48x48.png"
+                                                 alt="{{  result.object|resource_type }}" title="{{  result.object|resource_type }}"
+                                                 class="table-res-type-icon"/>
+                                        {% elif  result.object|resource_type == "Web App Resource" %}
+                                            <img src="{{ STATIC_URL }}img/resource-icons/webapp48x48.png"
+                                                 alt="{{  result.object|resource_type }}" title="{{  result.object|resource_type }}"
+                                                 class="table-res-type-icon"/>
+                                        {% elif  result.object|resource_type == "HIS Referenced Time Series" %}
+                                            <img src="{{ STATIC_URL }}img/resource-icons/his48x48.png"
+                                                 alt="{{  result.object|resource_type }}" title="{{  result.object|resource_type }}"
+                                                 class="table-res-type-icon"/>
+                                        {% elif  result.object|resource_type == "Script Resource" %}
+                                            <img src="{{ STATIC_URL }}img/resource-icons/script48x48.png"
+                                                 alt="{{  result.object|resource_type }}" title="{{  result.object|resource_type }}"
+                                                 class="table-res-type-icon"/>
+                                        {% elif  result.object|resource_type == "Collection Resource" %}
+                                            <img src="{{ STATIC_URL }}img/resource-icons/collection48x48.png"
+                                                 alt="{{ result.object|resource_type }}"
+                                                 title="{{ result.object|resource_type }}"
+                                                 class="table-res-type-icon"/>
+                                        {% endif %}
+
+                                        {#  Sharing Status icons #}
+                                        <div class="access-icon-wrapper">
+                                            {% if result.object.raccess.published %}
+                                                <img src="{{ STATIC_URL }}img/published.png"
+                                                     alt="Published Resource" title="Published"/>
+                                            {% elif result.object.raccess.public %}
+                                                <img src="{{ STATIC_URL }}img/public.png"
+                                                     alt="Public Resource" title="Public"/>
+                                            {% elif result.object.raccess.discoverable %}
+                                                <img src="{{ STATIC_URL }}img/discoverable.png"
+                                                     alt="Discoverable Resource" title="Discoverable"/>
+                                            {% else %}
+                                                <img src="{{ STATIC_URL }}img/private.png"
+                                                     alt="Private Resource" title="Private"/>
+                                            {% endif %}
+
+                                            {% if result.object.raccess.published %}
+                                                {% if "pending" in cm.doi or "failure" in cm.doi %}
+                                                    <img src="{{ STATIC_URL }}img/pending.png" alt="Pending Publication"
+                                                         title="Pending Publication. Note that the DOI will not be available until it has been registered and activated."/>
+                                                {% endif %}
+                                            {% else %}
+                                                {% if result.object.raccess.shareable %}
+                                                    <img src="{{ STATIC_URL }}img/shareable.png" alt="Sharable Resource"
+                                                         title="Shareable"/>
+                                                {% else %}
+                                                    <img src="{{ STATIC_URL }}img/non-shareable.png"
+                                                         alt="Non Sharable Resource"
+                                                         title="Not Shareable"/>
+                                                {% endif %}
+                                            {% endif %}
+                                        </div>
+                                    </td>
                                     <td><a href="{{ result.object.get_absolute_url }}">{{ result.object.metadata.title.value }}</a></td>
-                                    <td>{{ result.object|resource_type }}</td>
                                     {% if result.object.first_creator.description %}
                                         <td><a href="{{ result.object.first_creator.description }}">{{ result.object.first_creator.name  }}</a></td>
                                     {% else %}
                                         <td>{{ result.object.first_creator.name }}</td>
                                     {% endif %}
                                     <td>{{ result.object.updated|date }} {{ result.object.updated|time }}</td>
+                                    <td>{{ result.object.updated|date:"Y/m/d H:i:s" }}</td> {# Used in table sorting #}
                                 </tr>
                             {% empty %}
                                 <p>No results found.</p>
@@ -191,7 +324,7 @@
                         </tbody>
                     </table>
                     {% if page_obj.has_previous or page_obj.has_next %}
-                        <div style="float: right">
+                        <div id="discover-page-options">
                             {% if page_obj.has_previous %}
                                 <a href="{{ request.get_full_path|clean_pagination_url }}&amp;page={{ page_obj.previous_page_number }}">
                             {% endif %}&laquo; Previous
@@ -202,9 +335,167 @@
                             {% endif %}Next &raquo;{% if page_obj.has_next %}</a>{% endif %}
                         </div>
                     {% endif %}
+                    <div class="panel-group" role="tablist">
+                        <div class="panel panel-default">
+                            <div class="panel-heading" role="tab" id="headingLegend">
+                                <h4 class="panel-title">
+                                    <span class="glyphicon glyphicon-info-sign"></span>&nbsp;
+                                    <a role="button" data-toggle="collapse" data-parent="#accordion"
+                                       href="#legend-collapse"
+                                       aria-expanded="true" aria-controls="legend-collapse">
+                                        Legend
+                                    </a>
+                                </h4>
+                            </div>
+
+                            <div id="legend-collapse" class="panel-collapse collapse" role="tabpanel"
+                                 aria-labelledby="headingLegend">
+                                <div class="panel-body">
+                                    <div class="row">
+                                        <div class="col-xs-12 col-sm-5">
+                                            <div class="row">
+                                                <div class="col-sm-12"><label>Sharing and Access</label></div>
+
+                                                <div class="col-sm-6">
+                                                    <img src="{{ STATIC_URL }}img/public.png" alt="Public Resource"/>
+                                                    <small>Public</small>
+                                                </div>
+
+                                                <div class="col-sm-6">
+                                                    <img src="{{ STATIC_URL }}img/private.png" alt="Private Resource"/>
+                                                    <small>Private</small>
+                                                </div>
+
+                                                <div class="col-sm-6">
+                                                    <img src="{{ STATIC_URL }}img/discoverable.png"
+                                                         alt="Discoverable Resource"/>
+                                                    <small>Discoverable</small>
+                                                </div>
+
+                                                <div class="col-sm-6">
+                                                    <img src="{{ STATIC_URL }}img/published.png"
+                                                         alt="Published Resource"/>
+                                                    <small>Published</small>
+                                                </div>
+
+                                                <div class="col-sm-6">
+                                                    <img src="{{ STATIC_URL }}img/pending.png"
+                                                         alt="Pending Publication"/>
+                                                    <small>Pending publication</small>
+                                                </div>
+
+                                                <div class="col-sm-6">
+                                                    <img src="{{ STATIC_URL }}img/shareable.png"
+                                                         alt="Sharable Resource"/>
+                                                    <small>Shareable</small>
+                                                </div>
+
+                                                <div class="col-sm-8">
+                                                    <img src="{{ STATIC_URL }}img/non-shareable.png"
+                                                         alt="Non Sharable Resource"/>
+                                                    <small>Not shareable</small>
+                                                </div>
+
+                                            </div>
+                                        </div>
+
+                                        <div class="col-xs-12 col-sm-7">
+                                            <div class="row" id="legend-resource-type">
+                                                <div class="col-sm-12"><label>Resource types</label></div>
+
+                                                <div class="col-sm-6">
+                                                    <img src="{{ STATIC_URL }}img/resource-icons/generic48x48.png"
+                                                         alt="Generic Resource Icon" class="table-res-type-icon"/>
+                                                    <small>&nbsp;Generic</small>
+                                                </div>
+
+                                                <div class="col-sm-6">
+                                                    <img src="{{ STATIC_URL }}img/resource-icons/geographicfeature48x48.png"
+                                                         alt="Geographic Feature Resource Icon"
+                                                         class="table-res-type-icon"/>
+                                                    <small>&nbsp;Geographic Feature</small>
+                                                </div>
+
+                                                <div class="col-sm-6">
+                                                    <img src="{{ STATIC_URL }}img/resource-icons/geographicraster48x48.png"
+                                                         alt="Geographic Raster Resource Icon"
+                                                         class="table-res-type-icon"/>
+                                                    <small>&nbsp;Geographic Raster</small>
+                                                </div>
+
+                                                <div class="col-sm-6">
+                                                    <img src="{{ STATIC_URL }}img/resource-icons/modelinstance48x48.png"
+                                                         alt="Model Instance Resource Icon"
+                                                         class="table-res-type-icon"/>
+                                                    <small>&nbsp;Model Instance</small>
+                                                </div>
+
+                                                <div class="col-sm-6">
+                                                    <img src="{{ STATIC_URL }}img/resource-icons/swat48x48.png"
+                                                         alt="SWAT Model Instance Resource Icon"
+                                                         class="table-res-type-icon"/>
+                                                    <small>&nbsp;SWAT Model Instance</small>
+                                                </div>
+
+                                                <div class="col-sm-6">
+                                                    <img src="{{ STATIC_URL }}img/resource-icons/modelprogram48x48.png"
+                                                         alt="Model Program Resource Icon" class="table-res-type-icon"/>
+                                                    <small>&nbsp;Model Program</small>
+                                                </div>
+
+                                                <div class="col-sm-6">
+                                                    <img src="{{ STATIC_URL }}img/resource-icons/multidimensional48x48.png"
+                                                         alt="Multidimensional Resource Icon"
+                                                         class="table-res-type-icon"/>
+                                                    <small>&nbsp;Multidimensional</small>
+                                                </div>
+
+                                                <div class="col-sm-6">
+                                                    <img src="{{ STATIC_URL }}img/resource-icons/timeseries48x48.png"
+                                                         alt="Time Series Resource Icon" class="table-res-type-icon"/>
+                                                    <small>&nbsp;Time Series</small>
+                                                </div>
+
+                                                <div class="col-sm-6">
+                                                    <img src="{{ STATIC_URL }}img/resource-icons/his48x48.png"
+                                                         alt="HIS Referenced Time Series Resource Icon"
+                                                         class="table-res-type-icon"/>
+                                                    <small>&nbsp;HIS Referenced Time Series</small>
+                                                </div>
+
+                                                <div class="col-sm-6">
+                                                    <img src="{{ STATIC_URL }}img/resource-icons/webapp48x48.png"
+                                                         alt="Web App Resource Icon" class="table-res-type-icon"/>
+                                                    <small>&nbsp;Web App</small>
+                                                </div>
+
+                                                <div class="col-sm-6">
+                                                    <img src="{{ STATIC_URL }}img/resource-icons/script48x48.png"
+                                                         alt="Script Resource Icon" class="table-res-type-icon"/>
+                                                    <small>&nbsp;Script</small>
+                                                </div>
+
+                                                <div class="col-sm-6">
+                                                    <img src="{{ STATIC_URL }}img/resource-icons/collection48x48.png"
+                                                         alt="Collection Resource Icon" class="table-res-type-icon"/>
+                                                    <small>&nbsp;Collection</small>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
                 <div id="map-view" class="tab-pane fade">
-                    <div id="discover-map" style="width:850px; height:650px"></div>
+                    <div id="discover-map"></div>
+                    <div id="discover-map-legend"></div>
+                    <div id="resetZoom">
+                        <a id="reset-zoom-btn" class="btn btn-default btn-sm" onclick="resetMapZoom()">
+                            <span class="glyphicon glyphicon-record"></span>
+                        </a>
+                    </div>
                 </div>
             </div>
         </div>
@@ -218,27 +509,114 @@
     <script src="//maps.googleapis.com/maps/api/js?v=3" type="text/javascript"></script>
     <script src="//cdn.rawgit.com/googlemaps/v3-utility-library/master/keydragzoom/src/keydragzoom.js" type="text/javascript"></script>
     <script src="//cdn.rawgit.com/googlemaps/js-marker-clusterer/gh-pages/src/markerclusterer.js" type="text/javascript"></script>
+
     <script type="text/javascript">
         var minFloatingNumber = 0.0001;
         var map = null;
+        var map_default_bounds = null;
+        var map_default_zoom = 0;
+        var map_default_center = new google.maps.LatLng(0, 0);
+        var markers = [];
+        var raw_results = [];
+        var markerCluster = null;
+        var info_window = null;
+        var rectangle = null;
+
         var initMap = function(json_results) {
-            var markers = [];
-            var modified_points_data = [];
-            var modified_boxes_data = [];
-            var modified_data = [];
-            var bounds = new google.maps.LatLngBounds();
-            map = new google.maps.Map(document.getElementById('discover-map'), {
+
+            var $mapDiv = $("#discover-map");
+            var mapDim = {
+                height: $mapDiv.height(),
+                width: $mapDiv.width()
+            }
+
+            map = new google.maps.Map($mapDiv[0], {
                 zoom: 2,
-                mapTypeId: google.maps.MapTypeId.TERRAIN,
-                zoomControl: true,
-                scaleControl: true
-            });
-            map.enableKeyDragZoom({
-                key: 'shift'
+                mapTypeId: google.maps.MapTypeId.TERRAIN
             });
 
-            var info_window = new google.maps.InfoWindow();
-            var rectangle = new google.maps.Rectangle({
+            setMarkers(json_results);
+
+
+            var bounds = (markers.length > 0) ? createBoundsForMarkers(markers) : null;
+            if (bounds) {
+                var ne = bounds.getNorthEast();
+                var sw = bounds.getSouthWest();
+                document.getElementById("id_NElat").value = ne.lat();
+                document.getElementById("id_NElng").value = ne.lng();
+                document.getElementById("id_SWlat").value = sw.lat();
+                document.getElementById("id_SWlng").value = sw.lng();
+                map_default_bounds = bounds;
+                map.fitBounds(map_default_bounds);
+                map_default_zoom = getBoundsZoomLevel(map_default_bounds, mapDim);
+                map_default_center = map_default_bounds.getCenter();
+            }
+
+            var idle_listener = google.maps.event.addListener(map, "idle", function () {
+                map.setCenter(map_default_center);
+                map.setZoom(map_default_zoom);
+                google.maps.event.removeListener(idle_listener);
+            });
+
+            var bounds_listener = google.maps.event.addListener(map, 'bounds_changed', function(){
+                var bnds = map.getBounds();
+                if (bnds) {
+                    var ne = bnds.getNorthEast();
+                    var sw = bnds.getSouthWest();
+                    document.getElementById("id_NElng").value = ne.lng();
+                    document.getElementById("id_NElat").value = ne.lat();
+                    document.getElementById("id_SWlng").value = sw.lng();
+                    document.getElementById("id_SWlat").value = sw.lat();
+                }
+            });
+
+            map.enableKeyDragZoom({
+                key: 'shift',
+                visualEnabled: true,
+            });
+
+            var dz = map.getDragZoomObject();
+            google.maps.event.addListener(dz, 'dragend', function (bnds) {
+                map.setCenter(bnds.getCenter());
+                map.setZoom(getBoundsZoomLevel(bnds, mapDim));
+                var ne = bnds.getNorthEast();
+                var sw = bnds.getSouthWest();
+                document.getElementById("id_NElng").value = ne.lng();
+                document.getElementById("id_NElat").value = ne.lat();
+                document.getElementById("id_SWlng").value = sw.lng();
+                document.getElementById("id_SWlat").value = sw.lat();
+            });
+
+            var zoom_listener = google.maps.event.addListener(map, 'zoom_changed', function(){
+                updateMapView();
+            });
+
+            var drag_listener = google.maps.event.addListener(map, 'dragend', function(){
+                updateMapView();
+            });
+
+            generateLegend();
+        };
+
+
+        var setMarkers = function(json_results) {
+
+            var modified_points_data = [];
+            var modified_boxes_data = [];
+
+            for (var  i = 0; i < json_results.length; i++ ) {
+                if (json_results[i].coverage_type == 'point') {
+                    checkDuplicatePointResults(modified_points_data, json_results[i]);
+                } else if (json_results[i].coverage_type == 'box') {
+                    checkDuplicateBoxResults(modified_boxes_data, json_results[i]);
+
+                } else {
+                    continue;
+                }
+            }
+
+            info_window = new google.maps.InfoWindow();
+            rectangle = new google.maps.Rectangle({
                 strokeColor: '#FF0000',
                 strokeOpacity: 0.8,
                 strokeWeight: 2,
@@ -253,25 +631,15 @@
                 }
             });
 
-            for (var  i = 0; i < json_results.length; i++ ) {
-                if (json_results[i].coverage_type == 'point') {
-                    checkDuplicatePointResults(modified_points_data, json_results[i]);
-
-                } else if(json_results[i].coverage_type == 'box') {
-                    checkDuplicateBoxResults(modified_boxes_data, json_results[i]);
-
-                } else {
-                    continue;
-                }
-
-            }
 
             modified_points_data.forEach(function(point){
-               var info_content = point.info_link;
+                var info_content = point.info_link;
                 var lat = parseFloat(point.north);
                 var lng = parseFloat(point.east);
-                createPointResourceMarker(lat, lng, info_content, bounds, info_window, rectangle, modified_data);
+                var counter = point.counter.toString();
+                createPointResourceMarker(lat, lng, info_content, counter, info_window, rectangle);
             });
+
 
             modified_boxes_data.forEach(function(box){
                 var info_content = box.info_link;
@@ -279,84 +647,76 @@
                 var southlimit = parseFloat(box.southlimit);
                 var eastlimit = parseFloat(box.eastlimit);
                 var westlimit = parseFloat(box.westlimit);
-                createBoxResourceMarker (northlimit, southlimit, eastlimit, westlimit, info_content, bounds, info_window, rectangle, markers);
+                var counter = box.counter.toString();
+                createBoxResourceMarker (northlimit, southlimit, eastlimit, westlimit, info_content, info_window, counter, rectangle);
             });
 
-            map.fitBounds(bounds);
-            var listener = google.maps.event.addListener(map, "idle", function () {
-                map.setZoom(2);
-                google.maps.event.removeListener(listener);
+            markerCluster = new MarkerClusterer(map, markers, {
+                imagePath: '//cdn.rawgit.com/googlemaps/js-marker-clusterer/gh-pages/images/m'
             });
-            var markerCluster = new MarkerClusterer(map, markers, {
-                imagePath: 'https://cdn.rawgit.com/googlemaps/js-marker-clusterer/gh-pages/images/m'
-            });
-        }
+        };
 
-        var createPointResourceMarker = function (lat, lng, info_content, bounds, info_window, rectangle, markers) {
-            var latlng = new google.maps.LatLng(lat, lng);
-            var marker = new google.maps.Marker({
-                map: map,
-                icon: '//maps.google.com/intl/en_us/mapfiles/ms/micons/red-dot.png',
-                position: latlng
-            });
-            markers.push(marker);
-            google.maps.event.addListener(marker, 'click', function() {
-                info_window.setContent(info_content);
-                info_window.open(map, marker);
-                var rectBounds = new google.maps.LatLngBounds(
-                        new google.maps.LatLng(0, 0),
-                        new google.maps.LatLng(0, 0)
-                );
-                rectangle.set('bounds', rectBounds);
+        var clientUpdateMarkers = function(filtered_results) {
+            removeMarkers();
+            var data_lat = 0;
+            var data_lng = 0;
+            var bnds = map.getBounds();
+            if (bnds) {
+                for (var  i = 0; i < raw_results.length; i++ ) {
+                    if (raw_results[i].coverage_type == 'point') {
+                        data_lat = parseFloat(raw_results[i].north);
+                        data_lng = parseFloat(raw_results[i].east);
+                    } else if (raw_results[i].coverage_type == 'box') {
+                        data_lat = (parseFloat(raw_results[i].northlimit) + parseFloat(raw_results[i].southlimit)) / 2;
+                        data_lng = (parseFloat(raw_results[i].eastlimit) + parseFloat(raw_results[i].westlimit)) / 2;
+                    } else {
+                        continue;
+                    }
+                    var latlng = new google.maps.LatLng(data_lat, data_lng);
+                    if (map.getBounds().contains(latlng)) {
+                        filtered_results.push(raw_results[i]);
+                    }
+                }
 
-            });
-            bounds.extend(latlng);
-        }
 
-        var createBoxResourceMarker = function (northlimit, southlimit, eastlimit, westlimit, info_content, bounds, info_window, rectangle, markers) {
-            var lat = (parseFloat(northlimit) + parseFloat(southlimit)) / 2;
-            var lng = (parseFloat(eastlimit) + parseFloat(westlimit)) / 2;
-            var latlng = new google.maps.LatLng(lat, lng);
-            var marker = new google.maps.Marker({
-                map: map,
-                icon: '//maps.google.com/mapfiles/dd-end.png',
-                position: latlng
-            });
-            markers.push(marker);
-            google.maps.event.addListener(marker, 'click', function() {
-                info_window.setContent(info_content);
-                info_window.open(map, marker);
-                var rectBounds = new google.maps.LatLngBounds(
-                        new google.maps.LatLng(northlimit, westlimit),
-                        new google.maps.LatLng(southlimit, eastlimit)
-                );
-                rectangle.set('bounds', rectBounds);
+            }
+        };
 
-            });
-            bounds.extend(latlng);
-        }
+        var removeMarkers = function() {
+            rectangle.setMap(null);
+            if (markerCluster) {
+                markerCluster.clearMarkers(markers);
+            }
+            for (var i = 0; i < markers.length; i++) {
+                if (markers[i].getMap() != null) {
+                    markers[i].setMap(null);
+                }
+            }
+            markers = [];
+        };
 
         var checkDuplicatePointResults = function (modified_points_data, test){
             var test_lat = parseFloat(test.north);
             var test_lng = parseFloat(test.east);
             var existed = false;
-            modified_points_data.forEach(function(item){
+            modified_points_data.forEach(function(item) {
                 var item_lat = parseFloat(item.north);
                 var item_lng = parseFloat(item.east);
 
                 var lat_diff = Math.abs(test_lat - item_lat);
                 var lng_diff = Math.abs(test_lng - item_lng);
                 if (lat_diff < minFloatingNumber && lng_diff < minFloatingNumber) {
-                    item.title = item.title + "<br />" + test.title;
-                    item.info_link += '<br />' + '"<a href="' + test.get_absolute_url + '">' + test.title + '</a>';
+                    item.info_link = item.info_link + '<br />' + '"<a href="' + test.get_absolute_url + '">' + test.title + '</a>';
+                    item.counter++;
                     existed = true;
                 }
             });
-            if (!existed){
+            if (!existed) {
                 test.info_link = '"<a href="' + test.get_absolute_url + '">' + test.title + '</a>';
+                test.counter = 1;
                 modified_points_data.push(test);
             }
-        }
+        };
 
         var checkDuplicateBoxResults = function (modified_boxes_data, test){
             var test_lat = (parseFloat(test.northlimit) + parseFloat(test.southlimit)) / 2;
@@ -370,20 +730,246 @@
                 var lng_diff = Math.abs(test_lng - item_lng);
 
                 if (lat_diff < minFloatingNumber && lng_diff < minFloatingNumber) {
-                    item.title = item.title + "<br />" + test.title;
-                    item.info_link += '<br />' + '"<a href="' + test.get_absolute_url + '">' + test.title + '</a>';
+                    item.info_link = item.info_link + '<br />' + '"<a href="' + test.get_absolute_url + '">' + test.title + '</a>';
+                    item.counter++;
                     existed = true;
                 }
             });
-            if (!existed){
+            if (!existed) {
                 test.info_link = '"<a href="' + test.get_absolute_url + '">' + test.title + '</a>';
+                test.counter = 1;
                 modified_boxes_data.push(test);
             }
-        }
+        };
+
+        var createPointResourceMarker = function (lat, lng, info_content, counter, info_window, rectangle) {
+            var latlng = new google.maps.LatLng(lat, lng);
+            var marker = new google.maps.Marker({
+                map: map,
+                icon: '//cdn.rawgit.com/Concept211/Google-Maps-Markers/master/images/marker_red' + counter + '.png',
+                position: latlng
+            });
+            markers.push(marker);
+            google.maps.event.addListener(marker, 'click', function() {
+                info_window.setContent(info_content);
+                info_window.open(map, marker);
+                var rectBounds = new google.maps.LatLngBounds(
+                        new google.maps.LatLng(0, 0),
+                        new google.maps.LatLng(0, 0)
+                );
+                rectangle.set('bounds', rectBounds);
+
+            });
+        };
+
+        var createBoxResourceMarker = function (northlimit, southlimit, eastlimit, westlimit, info_content, info_window, counter, rectangle) {
+            var lat = (parseFloat(northlimit) + parseFloat(southlimit)) / 2;
+            var lng = (parseFloat(eastlimit) + parseFloat(westlimit)) / 2;
+            var latlng = new google.maps.LatLng(lat, lng);
+            var marker = new google.maps.Marker({
+                map: map,
+                icon: '//cdn.rawgit.com/Concept211/Google-Maps-Markers/master/images/marker_blue' + counter + '.png',
+                position: latlng
+            });
+            markers.push(marker);
+            google.maps.event.addListener(marker, 'click', function() {
+                info_window.setContent(info_content);
+                info_window.open(map, marker);
+                var rectBounds = new google.maps.LatLngBounds(
+                        new google.maps.LatLng(northlimit, westlimit),
+                        new google.maps.LatLng(southlimit, eastlimit)
+                );
+                rectangle.set('bounds', rectBounds);
+
+            });
+        };
+
+        var createBoundsForMarkers = function(markers) {
+            var bounds = new google.maps.LatLngBounds();
+            $.each(markers, function() {
+                bounds.extend(this.getPosition());
+            });
+            return bounds;
+        };
+
+        var getBoundsZoomLevel = function (bounds, mapDim) {
+            var WORLD_DIM = {height: 256, width: 256};
+            var ZOOM_MAX = 21;
+
+            function latRad(lat) {
+                var sin = Math.sin(lat * Math.PI / 180);
+                var radX2 = Math.log((1 + sin) / (1 - sin)) / 2;
+                return Math.max(Math.min(radX2, Math.PI), -Math.PI) / 2;
+            }
+
+            function zoom(mapPx, worldPx, fraction) {
+                return Math.floor(Math.log(mapPx / worldPx / fraction) / Math.LN2);
+            }
+
+            var ne = bounds.getNorthEast();
+            var sw = bounds.getSouthWest();
+
+            var latFraction = (latRad(ne.lat()) - latRad(sw.lat())) / Math.PI;
+
+            var lngDiff = ne.lng() - sw.lng();
+            var lngFraction = ((lngDiff < 0) ? (lngDiff + 360) : lngDiff) / 360;
+
+            var latZoom = zoom(mapDim.height, WORLD_DIM.height, latFraction);
+            var lngZoom = zoom(mapDim.width, WORLD_DIM.width, lngFraction);
+
+            return Math.min(latZoom, lngZoom, ZOOM_MAX);
+        };
+
+        var generateLegend = function() {
+            var map_legend = document.getElementById('discover-map-legend');
+            map.controls[google.maps.ControlPosition.RIGHT_TOP].push(map_legend);
+            var legend_content = [];
+            legend_content.push("<p style='margin-left:5px'><img src='//cdn.rawgit.com/googlemaps/js-marker-clusterer/gh-pages/images/m2.png'> number of sites </p>");
+            legend_content.push("<p style='margin-left:20px'><img src='//cdn.rawgit.com/Concept211/Google-Maps-Markers/master/images/marker_redN.png'> N = number of point coverage resources</p>");
+            legend_content.push("<p style='margin-left:20px'><img src='//cdn.rawgit.com/Concept211/Google-Maps-Markers/master/images/marker_blueN.png'> N = number of box coverage resources</p>");
+            map_legend.innerHTML = legend_content.join('');
+            var reset_zoom_button = document.getElementById('resetZoom');
+            map.controls[google.maps.ControlPosition.RIGHT_BOTTOM].push(reset_zoom_button);
+        };
+
+        var resetMapZoom = function() {
+            removeMarkers();
+            setMarkers(raw_results);
+            var bounds = (markers.length > 0) ? createBoundsForMarkers(markers) : null;
+            if (bounds) {
+                map.fitBounds(bounds);
+                var listener = google.maps.event.addListener(map, "idle", function () {
+                    map.setZoom(map_default_zoom);
+                    map.setCenter(map_default_center);
+                    google.maps.event.removeListener(listener);
+                });
+            }
+        };
+
+        var manualZoomMap = function(){
+            var ne_lat = parseFloat(document.getElementById("id_NElat").value);
+            var ne_lng = parseFloat(document.getElementById("id_NElng").value);
+            var sw_lat = parseFloat(document.getElementById("id_SWlat").value);
+            var sw_lng = parseFloat(document.getElementById("id_SWlng").value);
+
+            if (verifyZoomInput(ne_lat, ne_lng, sw_lat, sw_lng)) {
+                var ne = new google.maps.LatLng(ne_lat, ne_lng);
+                var sw = new google.maps.LatLng(sw_lat, sw_lng);
+
+                var customized_bounds = new google.maps.LatLngBounds(sw, ne);
+                map.fitBounds(customized_bounds);
+                var $mapDiv = $("#discover-map");
+
+                var mapDim = {
+                    height: $mapDiv.height(),
+                    width: $mapDiv.width()
+                }
+                var listener = google.maps.event.addListener(map, "idle", function () {
+                    map.setCenter(customized_bounds.getCenter());
+                    map.setZoom(getBoundsZoomLevel(customized_bounds, mapDim));
+                    google.maps.event.removeListener(listener);
+                });
+            } else {
+                document.getElementById("id_NElat").value = "";
+                document.getElementById("id_NElng").value = "";
+                document.getElementById("id_SWlat").value = "";
+                document.getElementById("id_SWlng").value = "";
+            }
+
+        };
+
+        var verifyZoomInput = function (ne_lat, ne_lng, sw_lat, sw_lng) {
+            if (!isNaN(ne_lat) && !isNaN(ne_lng) && !isNaN(sw_lat) && !isNaN(sw_lng)) {
+                if (ne_lat >= -90 &&  ne_lat <= 90 && sw_lat >= -90 &&  sw_lat <= 90) {
+                    if (ne_lng >= -180 &&  ne_lng <= 180 && sw_lng >= -180 &&  sw_lng <= 180) {
+                        if (ne_lat >= sw_lat) {
+                            $(".manualzoom-input").empty();
+                            return true;
+                        } else {
+                            $(".manualzoom-input").empty();
+                            $("#resource-search").append("<p class='manualzoom-input'> Northeastern latitude should be greater than southwestern latitude. </p>");
+                            return false;
+                        }
+                    } else {
+                        $(".manualzoom-input").empty();
+                        $("#resource-search").append("<p class='manualzoom-input'> Longitudes shoule be in range from -180 to 180. </p>");
+                        return false;
+                    }
+                } else {
+                    $(".manualzoom-input").empty();
+                    $("#resource-search").append("<p class='manualzoom-input'> Latitudes shoule be in range from -90 to 90. </p>");
+                    return false;
+                }
+            } else {
+                $(".manualzoom-input").empty();
+                $("#resource-search").append("<p class='manualzoom-input'> Latitudes and longitudes should be numbers. </p>");
+                return false;
+            }
+        };
+
+        var updateMapView = function() {
+            var filtered_results = [];
+            clientUpdateMarkers(filtered_results);
+            setMarkers(filtered_results);
+            var results_selection = $('input:radio[name=results-selection]:checked').val();
+            if (results_selection == 'map-results-selected') {
+                var bnds = map.getBounds();
+                var start_date = $("#id_start_date").val();
+                var end_date = $("#id_end_date").val();
+                if (bnds) {
+                    var ne = bnds.getNorthEast();
+                    var sw = bnds.getSouthWest();
+                    var ne_lat = ne.lat();
+                    var ne_lng = ne.lng();
+                    var sw_lat = sw.lat();
+                    var sw_lng = value = sw.lng();
+                    var data = {
+                        NElat: ne_lat,
+                        NElng: ne_lng,
+                        SWlat: sw_lat,
+                        SWlng: sw_lng,
+                        start_date: start_date,
+                        end_date: end_date
+                    };
+                    updateListView(data);
+                }
+            }
+        };
+
+        var updateListView = function(data) {
+            $('#items-discovered').empty();
+            $("#discover-page-options").empty();
+            var requestURL = "/search/";
+            if (window.location.search.length == 0) {
+                requestURL += "?q=";
+            } else {
+                var textSearch = $("#id_q").val();
+                var searchURL = "?q=" + textSearch;
+                requestURL += searchURL;
+                requestURL += buildURLOnCheckboxes();
+            }
+
+            $.ajax({
+                type: "GET",
+                url: requestURL,
+                data: data,
+                dataType: 'html',
+                success: function (data) {
+                    var tableDiv = $("#items-discovered", data);
+                    $("#items-discovered").html(tableDiv);
+                    var pageOptionDiv = $("#discover-page-options", data);
+                    $("#discover-page-options").html(pageOptionDiv);
+                } , failure: function (data) {
+                    console.error("Ajax call for updating list-view data failed");
+                }
+            });
+        };
+
+
         var reorderDivs = function() {
-            var faceted_fields = ['author', 'subjects', 'resource_type', 'owners_names', 'availability'];
+            var faceted_fields = ['creators', 'subjects', 'resource_type', 'owners_names', 'availability'];
             var div_ordering = [];
-            faceted_fields.forEach(function(field){
+            faceted_fields.forEach(function(field) {
                 var faceting_div = "faceting-"+field;
                 div_ordering.push(faceting_div);
             });
@@ -393,25 +979,45 @@
                 var div1 = "#" + div_ordering[i];
                 $(div1).insertAfter(div0);
             }
-        }
+        };
 
-        var copySearchResults = function(search_results){
-            search_results.forEach(function(item){
-                json_results.push(item);
-            });
-        }
-        
-        var formLinkButtonURL = function(key, value){
+        var formGeoParameters = function() {
+            var selected_results = $('input[name=results-selection]:checked').val();
+            var geoSearchParams = "";
+            if (selected_results == 'map-results-selected') {
+                var ne_lat = document.getElementById("id_NElat").value;
+                var ne_lng = document.getElementById("id_NElng").value;
+                var sw_lat = document.getElementById("id_SWlat").value;
+                var sw_lng = document.getElementById("id_SWlng").value;
+                geoSearchParams = "&NElat=" + ne_lat + "&NElng=" + ne_lng + "&SWlat=" + sw_lat + "&SWlng=" + sw_lng;
+            } else {
+                geoSearchParams = "&NElat=&NElng=&SWlat=&SWlng=";
+            }
+            return geoSearchParams
+        };
+
+        var formDateParameters = function() {
+            var start_date = $("#id_start_date").val();
+            var end_date = $("#id_end_date").val();
+            return "&start_date="+start_date+"&end_date="+end_date;
+        };
+
+        var formLinkButtonURL = function(key, value) {
             var textSearch = $("#id_q").val();
             var searchURL = "?q=" + textSearch;
+            var geoSearchParams = formGeoParameters();
+            var dateSearchParams = formDateParameters();
             var windowPath = window.location.pathname;
-            var requestURL =  windowPath + searchURL;
+            var requestURL =  windowPath + searchURL + geoSearchParams + dateSearchParams;
             var checkboxId =  key + "-" + value;
             var sessionStorageCheckboxId = 'search-' + checkboxId;
             sessionStorage[sessionStorageCheckboxId] = 'true';
             requestURL += buildURLOnCheckboxes();
+            if (window.location.hash) {
+                requestURL = requestURL + window.location.hash;
+            }
             window.location = requestURL;
-        }
+        };
 
         var buildURLOnCheckboxes = function () {
             var requestURL = '';
@@ -420,7 +1026,7 @@
                 var sessionStorageCheckboxId = 'search-' + checkboxId;
                 var val = sessionStorage[sessionStorageCheckboxId];
                 var isChecked = val === 'true';
-                if(isChecked){
+                if (isChecked) {
                     var arr = $(this).val().split(",");
                     var key = arr[0];
                     var value = arr[1];
@@ -428,7 +1034,18 @@
                 }
             });
             return requestURL;
-        }
+        };
+
+        var popRadioButtons = function() {
+            if (sessionStorage["map-results-selected"] == undefined && sessionStorage["all-results-selected"] == undefined) {
+               $("#all-results-selected").prop("checked", true);
+            } else if (sessionStorage["map-results-selected"] == 'true') {
+                $("#map-results-selected").prop("checked", true);
+            } else if (sessionStorage["all-results-selected"] == 'true') {
+                $("#all-results-selected").prop("checked", true);
+            }
+        };
+
         var popCheckboxes = function() {
             $(".faceted-selections").each(function () {
                 var checkboxId = $(this).attr("id");
@@ -437,7 +1054,7 @@
                 var isChecked = val !== undefined ? val == 'true' : false;
                 $(this).prop("checked", isChecked);
             });
-        }
+        };
 
         var clearCheckboxes = function() {
             $(".faceted-selections").each(function () {
@@ -446,61 +1063,158 @@
                 sessionStorage[sessionStorageCheckboxId] = 'false';
                 sessionStorage.removeItem(sessionStorageCheckboxId);
             });
-        }
+        };
 
         var clearAllFaceted = function() {
             clearCheckboxes();
             var clearURL = "/search/";
             window.location = clearURL;
-        }
+        };
 
+        var clearDates = function() {
+            var textSearch = $("#id_q").val();
+            var searchURL = "?q=" + textSearch;
+            var geoSearchParams = formGeoParameters();
+            var facetingParams = buildURLOnCheckboxes();
+            var dateSearchParams = "&start_date=&end_date=";
+            var windowPath = window.location.pathname;
+            var requestURL =  windowPath + searchURL + facetingParams + geoSearchParams + dateSearchParams;
+            if (window.location.hash) {
+                requestURL = requestURL + window.location.hash;
+            }
+            window.location = requestURL;
+        };
 
         $(document).ready(function () {
 
-            if (window.location.search.length == 0){
+            $("#id_start_date").datepicker({
+                dateFormat: 'yy-mm-dd',
+                changeMonth: true,
+                changeYear: true,
+                yearRange: '1950:'
+            });
+            $("#id_end_date").datepicker({
+                dateFormat: 'yy-mm-dd',
+                changeMonth: true,
+                changeYear: true,
+                yearRange: '1950:'
+            });
+
+            if (window.location.search.length == 0) {
                 clearCheckboxes();
             }
+
+            $("title").text("Discover | HydroShare");   // Set browser tab title
+
+            var colDefs = [
+                {
+                    "targets": [0],     // Resource type
+                    "width": "110px"
+                },
+                {
+                    "targets": [3],     // Last modified
+                    "iDataSort": 4
+                },
+                {
+                    "targets": [4],     // Last modified (for sorting)
+                    "visible": false
+                }
+            ];
 
             $('#items-discovered').DataTable({
                 "paging":   false,
                 "searching": false,
                 "info": false,
-                "order": [[ 0, "asc" ]]
+                "order": [[ 0, "asc" ]],
+                "columnDefs": colDefs
             });
 
             popCheckboxes();
+            popRadioButtons();
 
             $("ul.nav-tabs > li > a").on("shown.bs.tab", function (e) {
                 var tabId = $(e.target).attr("href").substr(1);
                 window.location.hash = tabId;
-                if(tabId == 'map-view' && map == null){
+                if (tabId == "map-view" && map == null) {
                     var requestURL = "/searchjson/";
-                    if(window.location.search.length == 0){
+                    if (window.location.search.length == 0) {
                         requestURL += "?q=";
-                    }else{
-                        requestURL += window.location.search;
+                    } else {
+                        var textSearch = $("#id_q").val();
+                        var searchURL = "?q=" + textSearch;
+                        requestURL += searchURL;
+                        requestURL += buildURLOnCheckboxes();
                     }
+                    var ne_lat = document.getElementById("id_NElat").value;
+                    var ne_lng = document.getElementById("id_NElng").value;
+                    var sw_lat = document.getElementById("id_SWlat").value;
+                    var sw_lng = document.getElementById("id_SWlng").value;
+                    var start_date = $("#id_start_date").val();
+                    var end_date = $("#id_end_date").val();
 
                     $.ajax({
                         type: "GET",
                         url: requestURL,
+                        data: {
+                            NElat: ne_lat,
+                            NElng: ne_lng,
+                            SWlat: sw_lat,
+                            SWlng: sw_lng,
+                            start_date: start_date,
+                            end_date: end_date
+                        },
                         dataType: 'json',
                         success: function(data) {
                             var json_results = [];
+                            raw_results = [];
                             for(var j = 0; j < data.length; j++){
                                 var item = $.parseJSON(data[j]);
                                 json_results.push(item);
+                                raw_results.push(item);
                             }
                             initMap(json_results);
-
-                        }
-                        , failure: function(data){
-                            console.error("fail");
+                        } , failure: function(data) {
+                            console.error("Ajax call for getting map data failed");
                         }
                     });
                 }
             });
-            $(".nav-tabs a").click(function(){
+
+            $('input[type=radio][name=results-selection]').change(function() {
+                var data;
+                var start_date = $("#id_start_date").val();
+                var end_date = $("#id_end_date").val();
+                if (this.value == 'map-results-selected') {
+                    var ne_lat = document.getElementById("id_NElat").value;
+                    var ne_lng = document.getElementById("id_NElng").value;
+                    var sw_lat = document.getElementById("id_SWlat").value;
+                    var sw_lng = document.getElementById("id_SWlng").value;
+                    data = {
+                        NElat: ne_lat,
+                        NElng: ne_lng,
+                        SWlat: sw_lat,
+                        SWlng: sw_lng,
+                        start_date: start_date,
+                        end_date: end_date
+                    };
+                    sessionStorage['map-results-selected'] = 'true';
+                    sessionStorage['all-results-selected'] = 'false';
+                } else {
+                    data = {
+                        NElat: '',
+                        NElng: '',
+                        SWlat: '',
+                        SWlng: '',
+                        start_date: start_date,
+                        end_date: end_date
+                    };
+                    sessionStorage['all-results-selected'] = 'true';
+                    sessionStorage['map-results-selected'] = 'false';
+                }
+                updateListView(data);
+            });
+
+            $(".nav-tabs a").click(function() {
                 $(this).tab('show');
             });
 
@@ -511,17 +1225,26 @@
             $("#id_q").attr('placeholder', 'Search...');
             reorderDivs();
 
-            $('.collapse').on('shown.bs.collapse', function(){
+            $('.collapse').on('shown.bs.collapse', function() {
                 $(this).parent().find(".glyphicon-plus").removeClass("glyphicon-plus").addClass("glyphicon-minus");
-            }).on('hidden.bs.collapse', function(){
+            }).on('hidden.bs.collapse', function() {
                 $(this).parent().find(".glyphicon-minus").removeClass("glyphicon-minus").addClass("glyphicon-plus");
             });
 
-            $("#id_q").keypress(function(event) {
+            $("#search-fields").keypress(function(event) {
                 if (event.which == 13) {
                     event.preventDefault();
                     clearCheckboxes();
-                    $("#search-field").submit();
+                    var textSearch = $("#id_q").val();
+                    var searchURL = "?q=" + textSearch;
+                    var geoSearchParams = formGeoParameters();
+                    var dateSearchParams = formDateParameters();
+                    var windowPath = window.location.pathname;
+                    var requestURL =  windowPath + searchURL + geoSearchParams + dateSearchParams;
+                    if (window.location.hash) {
+                        requestURL = requestURL + window.location.hash;
+                    }
+                    window.location = requestURL;
                 }
             });
 
@@ -531,26 +1254,31 @@
                 var value = tokens[1];
                 var textSearch = $("#id_q").val();
                 var searchURL = "?q=" + textSearch;
+                var geoSearchParams = formGeoParameters();
+                var dateSearchParams = formDateParameters();
                 var windowPath = window.location.pathname;
-                var requestURL =  windowPath + searchURL;
+                var requestURL =  windowPath + searchURL + geoSearchParams + dateSearchParams;
 
-                if($(this).is(":checked")) {
+                if ($(this).is(":checked")) {
                     requestURL = requestURL + "&selected_facets="+key+"_exact:"+value;
                     requestURL += buildURLOnCheckboxes();
                     var checkboxId = $(this).attr("id");
                     var sessionStorageCheckboxId = 'search-' + checkboxId;
                     sessionStorage[sessionStorageCheckboxId] = 'true';
-
+                    if (window.location.hash) {
+                        requestURL = requestURL + window.location.hash;
+                    }
                     window.location = requestURL;
-                }else{
+                } else {
 
                     var checkboxId = $(this).attr("id");
                     var sessionStorageCheckboxId = 'search-' + checkboxId;
                     sessionStorage.removeItem(sessionStorageCheckboxId);
-
-                    var textSearch = $("#id_q").val();
-                    var updateURL = "/search/?q=" + textSearch;
+                    var updateURL =  windowPath + searchURL + geoSearchParams + dateSearchParams;
                     updateURL += buildURLOnCheckboxes();
+                    if (window.location.hash) {
+                        updateURL = updateURL + window.location.hash;
+                    }
                     window.location = updateURL;
                 }
             });
