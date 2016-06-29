@@ -6,7 +6,7 @@
     <div class="row">
         <div class="col-sm-12">
             <h2 class="page-title">Discover
-                <small class="text-muted"><i>Discover content shared by your colleagues and other users.</i></small>
+                <small class="text-muted"><i>Find content shared by your colleagues and other users.</i></small>
             </h2>
         </div>
         <div class="col-sm-8 col-sm-offset-4 col-xs-12">
@@ -15,10 +15,12 @@
             <div id="discover-resource-search" class="resource-search">
                 <form id="search-field" method="get" action=".">
                     {% for field in form %}
+                        {% if field.auto_id  == "id_q" %}
                         <div class="fieldWrapper">
                             <span class="glyphicon glyphicon-search search-icon"></span>
                             {{ field }}
                         </div>
+                        {% endif %}
                     {% endfor %}
                 </form>
             </div>
@@ -36,7 +38,7 @@
                                 <div class="panel-heading">
                                     <h4 class="panel-title">
                                         <a data-toggle="collapse" href="#{{ key }}">
-                                            {% if key == 'author'%}
+                                            {% if key == 'creators'%}
                                                 &nbsp; Filter by Author
                                             {% elif key ==  'subjects'%}
                                                 &nbsp; Filter by Subject
@@ -87,8 +89,8 @@
                             </h4>
                         </div>
 
-                        <div id="availability" class="panel-collapse collapse">
-                            <ul class="list-group discover-faceting-group" id="list-group-availability">
+                        <div id="availability" class="facet-list panel-collapse collapse in">
+                            <ul class="list-group" id="list-group-availability">
                                 {% for key, values in facets.fields.items %}
                                     {% if key == 'public' or key == 'discoverable' %}
                                         {% for item in values %}
@@ -124,52 +126,30 @@
                 <h4>Enter a search term to find resources on HydroShare</h4>
             {% endif %}
             -->
-            <div id="resource-search">
-                <form id="search-fields" method="get" action=".">
-                    <div class="resource-search">
-                        {% for field in form %}
-                            {% if field.auto_id  == "id_q" %}
-                                <div class="fieldWrapper">
-                                    {{ field }}
-                                </div>
-                            {% endif %}
-                        {% endfor %}
-                    </div>
-                    <table id="geo-filter-coordinates" class="table">
-                        <tr>
-                            {% for field in form %}
-                                {% if field.auto_id  == "id_NElat" or field.auto_id  == "id_NElng" or field.auto_id  == "id_SWlat" or field.auto_id  == "id_SWlng" %}
-                                        <td>
-                                            <div class="fieldWrapper">
-                                                {{ field.label_tag }}: {{ field }}
-                                            </div>
-                                        </td>
-                                {% endif %}
-                            {% endfor %}
-                            <td>
-                                <a id="manual-zoom-btn" class="btn btn-default" onclick="manualZoomMap()" style="margin-top:20px">
-                                    zoom in
-                                </a>
-                            </td>
-                        </tr>
+            <div>
+                <form id="date-search-fields" method="get" action=".">
+                    <h4 class="text-muted">Date Created</h4>
+                    <table>
                         <tr>
                             {% for field in form %}
                                 {% if field.auto_id == "id_start_date" or field.auto_id == "id_end_date" %}
-                                        <td>
-                                            <div class="fieldWrapper">
-                                                {{ field.label_tag }}: {{ field }}
-                                            </div>
-                                        </td>
+                                    <td>
+                                        <div class="fieldWrapper">
+                                            <span class="glyphicon glyphicon-calendar text-muted"></span> {{ field.label_tag }} {{ field }}
+                                        </div>
+                                    </td>
                                 {% endif %}
                             {% endfor %}
                             <td>
-                                <a id="clear-dates-options" class="btn btn-default" onclick="clearDates()" style="margin-top:20px">
-                                    Clear Dates
-                                </a>
+                                <a id="clear-dates-options" data-toggle="tooltip" title="Clear Dates"
+                                   class="glyphicon glyphicon-remove-circle icon-remove"
+                                   onclick="clearDates()"></a>
                             </td>
                         </tr>
                     </table>
+
                 </form>
+                <br>
             </div>
             <ul id="switch-view" class="nav nav-tabs">
                 <li class="active"><a href="#list-view"><i class="glyphicon glyphicon-list-alt"></i> List</a></li>
@@ -465,7 +445,31 @@
                     </div>
                 </div>
                 <div id="map-view" class="tab-pane fade">
-                    <div id="discover-map" style="height:650px"></div>
+                    <div id="resource-search">
+                        <form id="covereage-search-fields" method="get" action=".">
+                            <table id="geo-filter-coordinates">
+                                <tr>
+                                    {% for field in form %}
+                                        {% if field.auto_id  == "id_NElat" or field.auto_id  == "id_NElng" or field.auto_id  == "id_SWlat" or field.auto_id  == "id_SWlng" %}
+                                            <td>
+                                                <div class="fieldWrapper">
+                                                    {{ field.label_tag }} {{ field }}
+                                                </div>
+                                            </td>
+                                        {% endif %}
+                                    {% endfor %}
+                                    <td>
+                                        <a id="manual-zoom-btn" class="btn btn-default" onclick="manualZoomMap()"
+                                           style="margin-top:20px">
+                                            <span class="glyphicon glyphicon-zoom-in"></span> Zoom In
+                                        </a>
+                                    </td>
+                                </tr>
+                            </table>
+                        </form>
+                        <br>
+                    </div>
+                    <div id="discover-map"></div>
                     <div id="discover-map-legend"></div>
                     <div id="resetZoom">
                         <a id="reset-zoom-btn" class="btn btn-default btn-sm" onclick="resetMapZoom()">
@@ -498,12 +502,11 @@
         var rectangle = null;
 
         var initMap = function(json_results) {
-
             var $mapDiv = $("#discover-map");
             var mapDim = {
                 height: $mapDiv.height(),
                 width: $mapDiv.width()
-            }
+            };
 
             map = new google.maps.Map($mapDiv[0], {
                 zoom: 2,
@@ -547,7 +550,7 @@
 
             map.enableKeyDragZoom({
                 key: 'shift',
-                visualEnabled: true,
+                visualEnabled: true
             });
 
             var dz = map.getDragZoomObject();
@@ -579,14 +582,11 @@
             var modified_points_data = [];
             var modified_boxes_data = [];
 
-            for (var  i = 0; i < json_results.length; i++ ) {
+            for (var i = 0; i < json_results.length; i++ ) {
                 if (json_results[i].coverage_type == 'point') {
                     checkDuplicatePointResults(modified_points_data, json_results[i]);
                 } else if (json_results[i].coverage_type == 'box') {
                     checkDuplicateBoxResults(modified_boxes_data, json_results[i]);
-
-                } else {
-                    continue;
                 }
             }
 
@@ -809,9 +809,9 @@
             var map_legend = document.getElementById('discover-map-legend');
             map.controls[google.maps.ControlPosition.RIGHT_TOP].push(map_legend);
             var legend_content = [];
-            legend_content.push("<p style='margin-left:5px'><img src='//cdn.rawgit.com/googlemaps/js-marker-clusterer/gh-pages/images/m2.png'> number of sites </p>");
-            legend_content.push("<p style='margin-left:20px'><img src='//cdn.rawgit.com/Concept211/Google-Maps-Markers/master/images/marker_redN.png'> N = number of point coverage resources</p>");
-            legend_content.push("<p style='margin-left:20px'><img src='//cdn.rawgit.com/Concept211/Google-Maps-Markers/master/images/marker_blueN.png'> N = number of box coverage resources</p>");
+            // legend_content.push("<p style='margin-left:5px'><img src='//cdn.rawgit.com/googlemaps/js-marker-clusterer/gh-pages/images/m2.png'> number of sites </p>");
+            legend_content.push("<p><img src='//cdn.rawgit.com/Concept211/Google-Maps-Markers/master/images/marker_red.png'> Point Coverage Resources </p>");
+            legend_content.push("<p><img src='//cdn.rawgit.com/Concept211/Google-Maps-Markers/master/images/marker_blue.png'> Box Coverage Resources </p>");
             map_legend.innerHTML = legend_content.join('');
             var reset_zoom_button = document.getElementById('resetZoom');
             map.controls[google.maps.ControlPosition.RIGHT_BOTTOM].push(reset_zoom_button);
@@ -921,10 +921,11 @@
             }
         };
 
-        var updateListView = function(data) {
-            $('#items-discovered').empty();
+        function updateListView (data) {
+            $('#items-discovered_wrapper').empty();
             $("#discover-page-options").empty();
             var requestURL = "/search/";
+
             if (window.location.search.length == 0) {
                 requestURL += "?q=";
             } else {
@@ -941,10 +942,13 @@
                 dataType: 'html',
                 success: function (data) {
                     var tableDiv = $("#items-discovered", data);
-                    $("#items-discovered").html(tableDiv);
+                    $("#items-discovered_wrapper").html(tableDiv);
                     var pageOptionDiv = $("#discover-page-options", data);
                     $("#discover-page-options").html(pageOptionDiv);
-                } , failure: function (data) {
+
+                    initializeTable();
+                },
+                failure: function (data) {
                     console.error("Ajax call for updating list-view data failed");
                 }
             });
@@ -1068,27 +1072,7 @@
             window.location = requestURL;
         };
 
-        $(document).ready(function () {
-
-            $("#id_start_date").datepicker({
-                dateFormat: 'yy-mm-dd',
-                changeMonth: true,
-                changeYear: true,
-                yearRange: '1950:'
-            });
-            $("#id_end_date").datepicker({
-                dateFormat: 'yy-mm-dd',
-                changeMonth: true,
-                changeYear: true,
-                yearRange: '1950:'
-            });
-
-            if (window.location.search.length == 0) {
-                clearCheckboxes();
-            }
-
-            $("title").text("Discover | HydroShare");   // Set browser tab title
-
+        function initializeTable() {
             var colDefs = [
                 {
                     "targets": [0],     // Resource type
@@ -1105,12 +1089,36 @@
             ];
 
             $('#items-discovered').DataTable({
-                "paging":   false,
+                "paging": false,
                 "searching": false,
                 "info": false,
-                "order": [[ 0, "asc" ]],
+                "order": [[0, "asc"]],
                 "columnDefs": colDefs
             });
+        }
+
+        $(document).ready(function () {
+
+            $("#id_start_date").datepicker({
+                dateFormat: 'mm/dd/yy',
+                changeMonth: true,
+                changeYear: true,
+                yearRange: '1950:'
+            });
+            $("#id_end_date").datepicker({
+                dateFormat: 'mm/dd/yy',
+                changeMonth: true,
+                changeYear: true,
+                yearRange: '1950:'
+            });
+
+            if (window.location.search.length == 0) {
+                clearCheckboxes();
+            }
+
+            $("title").text("Discover | HydroShare");   // Set browser tab title
+
+            initializeTable();
 
             popCheckboxes();
             popRadioButtons();
@@ -1167,6 +1175,7 @@
                 var data;
                 var start_date = $("#id_start_date").val();
                 var end_date = $("#id_end_date").val();
+
                 if (this.value == 'map-results-selected') {
                     var ne_lat = document.getElementById("id_NElat").value;
                     var ne_lng = document.getElementById("id_NElng").value;
@@ -1182,7 +1191,8 @@
                     };
                     sessionStorage['map-results-selected'] = 'true';
                     sessionStorage['all-results-selected'] = 'false';
-                } else {
+                }
+                else {
                     data = {
                         NElat: '',
                         NElng: '',
@@ -1214,21 +1224,22 @@
                 $(this).parent().find(".glyphicon-minus").removeClass("glyphicon-minus").addClass("glyphicon-plus");
             });
 
-            $("#search-fields").keypress(function(event) {
-                if (event.which == 13) {
-                    event.preventDefault();
-                    clearCheckboxes();
-                    var textSearch = $("#id_q").val();
-                    var searchURL = "?q=" + textSearch;
-                    var geoSearchParams = formGeoParameters();
-                    var dateSearchParams = formDateParameters();
-                    var windowPath = window.location.pathname;
-                    var requestURL =  windowPath + searchURL + geoSearchParams + dateSearchParams;
-                    if (window.location.hash) {
-                        requestURL = requestURL + window.location.hash;
-                    }
-                    window.location = requestURL;
+            function updateResults () {
+                clearCheckboxes();
+                var textSearch = $("#id_q").val();
+                var searchURL = "?q=" + textSearch;
+                var geoSearchParams = formGeoParameters();
+                var dateSearchParams = formDateParameters();
+                var windowPath = window.location.pathname;
+                var requestURL = windowPath + searchURL + geoSearchParams + dateSearchParams;
+                if (window.location.hash) {
+                    requestURL = requestURL + window.location.hash;
                 }
+                window.location = requestURL;
+            }
+
+            $("#date-search-fields input").change(function () {
+                updateResults();
             });
 
             $(".faceted-selections").click(function () {

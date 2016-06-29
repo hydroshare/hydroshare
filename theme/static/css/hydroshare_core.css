@@ -3686,22 +3686,20 @@ div.group-add-photo {
 	margin-bottom: 10px;
 }
 
-.discover-faceting-group {
-	height: 200px;
-	overflow-y: auto;
-}
-
 #list-data-options {
 	float:right;
 }
 
 #discover-map {
-	width:850px;
 	height:650px;
+	border: 1px solid #DDD;
 }
 
 #discover-map-legend {
-	background: white;
+	background: rgba(255, 255, 255, 0.75);
+	padding: 10px;
+	margin: 5px;
+	border-radius: 4px;
 }
 
 #manual-zoom-btn {
@@ -3721,10 +3719,6 @@ div.toggle.btn {
 	float: right;
 }
 
-#map-view {
-	border: 1px solid #DDD;
-}
-
 .center-radio-inline {
     padding: 8px;
     border-radius: 4px;
@@ -3742,4 +3736,8 @@ div.toggle.btn {
 
 .or-separator {
 	margin-top: 20px;
+}
+
+#clear-dates-options:hover {
+	text-decoration: none;
 }
