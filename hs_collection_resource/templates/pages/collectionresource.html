@@ -411,7 +411,7 @@
             $("#collection-table-candidate td").click(onCollectionTableRowClick);
 
             if (edit_mode.toLowerCase() == "true") {
-                $("#coverageTab").prepend($('<input value="Calculate Coverages" class="btn btn-primary" type="button" onclick="collection_coverages_calculate_ajax()"/>'));
+                $("#coverageTab").append($('<input value="Calculate Coverages" class="btn btn-info" type="button" onclick="collection_coverages_calculate_ajax()"/>'));
             }
         }); // $(document).ready(function())
 
