@@ -9,6 +9,7 @@ from rest_framework import status
 
 from hs_core import hydroshare
 from hs_core.views import get_user_data
+from theme.models import Organization
 
 
 class TestGetUserData(TestCase):
@@ -156,7 +157,7 @@ class TestGetUserData(TestCase):
         self.assertEqual(resp_json['website'], '')
 
         # test organization
-        self.john.userprofile.organization = 'USU'
+        self.john.userprofile.organization = Organization.objects.create(name='USU')
         self.john.userprofile.save()
         response = get_user_data(request, user_id=self.john.id)
         self.assertEqual(response.status_code, status.HTTP_200_OK)

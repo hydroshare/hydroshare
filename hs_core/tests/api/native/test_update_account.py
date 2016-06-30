@@ -116,7 +116,7 @@ class UpdateAccountTest(unittest.TestCase):
         self.assertEqual(user_profile.middle_name, 'Larson')
         self.assertEqual(user_profile.user_type, 'Computer Programming')
         self.assertEqual(user_profile.subject_areas, 'Python, Django, SQL')
-        self.assertEqual(user_profile.organization, 'Utah State University')
+        self.assertEqual(user_profile.organization.name, 'Utah State University')
         self.assertEqual(user_profile.phone_1, '435-678-0987')
         self.assertEqual(user_profile.phone_1_type, 'Work')
         self.assertEqual(user_profile.phone_2, '435-345-9099')

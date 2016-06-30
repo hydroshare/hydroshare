@@ -1159,7 +1159,7 @@ def get_user_data(request, user_id, *args, **kwargs):
             address = str(user.userprofile.country.name)
 
     user_data['address'] = address
-    user_data['organization'] = (user.userprofile.organization
+    user_data['organization'] = (user.userprofile.organization.name
                                  if user.userprofile.organization else '')
     user_data['website'] = user.userprofile.website if user.userprofile.website else ''
 

@@ -5,7 +5,6 @@ from django.contrib.auth.models import Group, User
 from rest_framework import serializers
 
 from hs_core.hydroshare import utils
-from hs_core import hydroshare
 from .utils import validate_json, validate_user_name,  validate_group_name
 
 RESOURCE_TYPES = [rtype.__name__ for rtype in utils.get_resource_types()]
@@ -55,8 +54,8 @@ class ResourceUpdateRequestValidator(serializers.Serializer):
 class ResourceCreateRequestValidator(ResourceUpdateRequestValidator):
     resource_type = serializers.ChoiceField(
             choices=zip(
-                [x.__name__ for x in hydroshare.get_resource_types()],
-                [x.__name__ for x in hydroshare.get_resource_types()]
+                [x.__name__ for x in utils.get_resource_types()],
+                [x.__name__ for x in utils.get_resource_types()]
             ), default='GenericResource')
 
 
