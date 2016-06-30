@@ -15,9 +15,9 @@ from hs_core.hydroshare import utils
 from hs_core.models import CoreMetaData, Creator, Contributor, Coverage, Rights, Title, Language, \
     Publisher, Identifier, Type, Subject, Description, Date, Format, Relation, Source
 from hs_core.testing import MockIRODSTestCaseMixin
-from hs_app_timeseries.models import TimeSeriesResource, Site, Variable, Method, ProcessingLevel, TimeSeriesResult, \
-    CVVariableType, CVVariableName, CVSpeciation, CVElevationDatum, CVSiteType, CVMethodType, CVUnitsType, CVStatus, \
-    CVMedium, CVAggregationStatistic
+from hs_app_timeseries.models import TimeSeriesResource, Site, Variable, Method, ProcessingLevel, \
+    TimeSeriesResult, CVVariableType, CVVariableName, CVSpeciation, CVElevationDatum, CVSiteType, \
+    CVMethodType, CVUnitsType, CVStatus, CVMedium, CVAggregationStatistic
 
 
 class TestTimeSeriesMetaData(MockIRODSTestCaseMixin, TransactionTestCase):
@@ -40,14 +40,15 @@ class TestTimeSeriesMetaData(MockIRODSTestCaseMixin, TransactionTestCase):
         )
 
         self.temp_dir = tempfile.mkdtemp()
-        self.odm2_sqlite_file_name = 'ODM2_Multi_Site_One_Variable.sqlite' #'ODM2_valid.sqlite'
+        self.odm2_sqlite_file_name = 'ODM2_Multi_Site_One_Variable.sqlite'
         self.odm2_sqlite_file = 'hs_app_timeseries/tests/{}'.format(self.odm2_sqlite_file_name)
         target_temp_sqlite_file = os.path.join(self.temp_dir, self.odm2_sqlite_file_name)
         shutil.copy(self.odm2_sqlite_file, target_temp_sqlite_file)
         self.odm2_sqlite_file_obj = open(target_temp_sqlite_file, 'r')
 
         self.odm2_sqlite_bad_file_name = 'ODM2_invalid.sqlite'
-        self.odm2_sqlite_bad_file = 'hs_app_timeseries/tests/{}'.format(self.odm2_sqlite_bad_file_name)
+        self.odm2_sqlite_bad_file = 'hs_app_timeseries/tests/{}'.format(
+            self.odm2_sqlite_bad_file_name)
         target_temp_bad_sqlite_file = os.path.join(self.temp_dir, self.odm2_sqlite_bad_file_name)
         shutil.copy(self.odm2_sqlite_bad_file, target_temp_bad_sqlite_file)
         self.odm2_sqlite_bad_file_obj = open(target_temp_bad_sqlite_file, 'r')
@@ -73,18 +74,19 @@ class TestTimeSeriesMetaData(MockIRODSTestCaseMixin, TransactionTestCase):
         files = [UploadedFile(file=self.text_file_obj, name=self.text_file_obj.name)]
         # trying to add a text file to this resource should raise exception
         with self.assertRaises(utils.ResourceFileValidationException):
-            utils.resource_file_add_pre_process(resource=self.resTimeSeries, files=files, user=self.user,
-                                                extract_metadata=False)
+            utils.resource_file_add_pre_process(resource=self.resTimeSeries, files=files,
+                                                user=self.user, extract_metadata=False)
 
         # trying to add sqlite file should pass the file add pre process check
-        files = [UploadedFile(file=self.odm2_sqlite_bad_file_obj, name=self.odm2_sqlite_bad_file_name)]
-        utils.resource_file_add_pre_process(resource=self.resTimeSeries, files=files, user=self.user,
-                                            extract_metadata=False)
+        files = [UploadedFile(file=self.odm2_sqlite_bad_file_obj,
+                              name=self.odm2_sqlite_bad_file_name)]
+        utils.resource_file_add_pre_process(resource=self.resTimeSeries, files=files,
+                                            user=self.user, extract_metadata=False)
 
         # should raise file validation error and the file will not be added to the resource
         with self.assertRaises(utils.ResourceFileValidationException):
-            utils.resource_file_add_process(resource=self.resTimeSeries, files=files, user=self.user,
-                                            extract_metadata=False)
+            utils.resource_file_add_process(resource=self.resTimeSeries, files=files,
+                                            user=self.user, extract_metadata=False)
 
         # there should not be aby content file
         self.assertEquals(self.resTimeSeries.files.all().count(), 0)
@@ -94,8 +96,8 @@ class TestTimeSeriesMetaData(MockIRODSTestCaseMixin, TransactionTestCase):
 
         # use a valid ODM2 sqlite which should pass both the file pre add check post add check
         files = [UploadedFile(file=self.odm2_sqlite_file_obj, name=self.odm2_sqlite_file_name)]
-        utils.resource_file_add_pre_process(resource=self.resTimeSeries, files=files, user=self.user,
-                                            extract_metadata=False)
+        utils.resource_file_add_pre_process(resource=self.resTimeSeries, files=files,
+                                            user=self.user, extract_metadata=False)
 
         utils.resource_file_add_process(resource=self.resTimeSeries, files=files, user=self.user,
                                         extract_metadata=False)
@@ -103,15 +105,15 @@ class TestTimeSeriesMetaData(MockIRODSTestCaseMixin, TransactionTestCase):
         # there should one content file
         self.assertEquals(self.resTimeSeries.files.all().count(), 1)
 
-        # file pre add process should raise validation error if we try to add a 2nd file when the resource has
-        # already has one content file
+        # file pre add process should raise validation error if we try to add a 2nd file when the
+        # resource has already has one content file
         with self.assertRaises(utils.ResourceFileValidationException):
-            utils.resource_file_add_pre_process(resource=self.resTimeSeries, files=files, user=self.user,
-                                                extract_metadata=False)
+            utils.resource_file_add_pre_process(resource=self.resTimeSeries, files=files,
+                                                user=self.user, extract_metadata=False)
 
     def test_metadata_extraction_on_resource_creation(self):
-        # passing the file object that points to the temp dir doesn't work - create_resource throws error
-        # open the file from the fixed file location
+        # passing the file object that points to the temp dir doesn't work - create_resource
+        # throws error open the file from the fixed file location
         self.odm2_sqlite_file_obj = open(self.odm2_sqlite_file, 'r')
 
         self.resTimeSeries = hydroshare.create_resource(
@@ -150,10 +152,11 @@ class TestTimeSeriesMetaData(MockIRODSTestCaseMixin, TransactionTestCase):
         self.assertEquals(self.resTimeSeries.metadata.processing_levels.all().count(), 0)
         self.assertEquals(self.resTimeSeries.metadata.time_series_results.all().count(), 0)
 
-        # adding a valid ODM2 sqlite file should generate some core metadata and all extended metadata
+        # adding a valid ODM2 sqlite file should generate some core metadata and all extended
+        # metadata
         files = [UploadedFile(file=self.odm2_sqlite_file_obj, name=self.odm2_sqlite_file_name)]
-        utils.resource_file_add_pre_process(resource=self.resTimeSeries, files=files, user=self.user,
-                                            extract_metadata=False)
+        utils.resource_file_add_pre_process(resource=self.resTimeSeries, files=files,
+                                            user=self.user, extract_metadata=False)
 
         utils.resource_file_add_process(resource=self.resTimeSeries, files=files, user=self.user,
                                         extract_metadata=True)
@@ -163,10 +166,11 @@ class TestTimeSeriesMetaData(MockIRODSTestCaseMixin, TransactionTestCase):
     def test_metadata_on_content_file_delete(self):
         # test that metadata is NOT deleted (except format element) on content file deletion
 
-        # adding a valid ODM2 sqlite file should generate some core metadata and all extended metadata
+        # adding a valid ODM2 sqlite file should generate some core metadata and all extended
+        # metadata
         files = [UploadedFile(file=self.odm2_sqlite_file_obj, name=self.odm2_sqlite_file_name)]
-        utils.resource_file_add_pre_process(resource=self.resTimeSeries, files=files, user=self.user,
-                                            extract_metadata=False)
+        utils.resource_file_add_pre_process(resource=self.resTimeSeries, files=files,
+                                            user=self.user, extract_metadata=False)
 
         utils.resource_file_add_process(resource=self.resTimeSeries, files=files, user=self.user,
                                         extract_metadata=True)
@@ -178,7 +182,8 @@ class TestTimeSeriesMetaData(MockIRODSTestCaseMixin, TransactionTestCase):
         self.assertEquals(self.resTimeSeries.metadata.formats.all().count(), 1)
 
         # delete content file that we added above
-        hydroshare.delete_resource_file(self.resTimeSeries.short_id, self.odm2_sqlite_file_name, self.user)
+        hydroshare.delete_resource_file(self.resTimeSeries.short_id, self.odm2_sqlite_file_name,
+                                        self.user)
         # there should no content file
         self.assertEquals(self.resTimeSeries.files.all().count(), 0)
 
@@ -197,7 +202,8 @@ class TestTimeSeriesMetaData(MockIRODSTestCaseMixin, TransactionTestCase):
         # there should be 2 coverage element -  point type and period type
         self.assertEquals(self.resTimeSeries.metadata.coverages.all().count(), 2)
         self.assertEquals(self.resTimeSeries.metadata.coverages.all().filter(type='box').count(), 1)
-        self.assertEquals(self.resTimeSeries.metadata.coverages.all().filter(type='period').count(), 1)
+        self.assertEquals(self.resTimeSeries.metadata.coverages.all().filter(
+            type='period').count(), 1)
         # there should be no format element
         self.assertEquals(self.resTimeSeries.metadata.formats.all().count(), 0)
         # there should be one subject element
@@ -225,8 +231,8 @@ class TestTimeSeriesMetaData(MockIRODSTestCaseMixin, TransactionTestCase):
 
         # generate metadata by adding a valid odm2 sqlite file
         files = [UploadedFile(file=self.odm2_sqlite_file_obj, name=self.odm2_sqlite_file_name)]
-        utils.resource_file_add_pre_process(resource=self.resTimeSeries, files=files, user=self.user,
-                                            extract_metadata=False)
+        utils.resource_file_add_pre_process(resource=self.resTimeSeries, files=files,
+                                            user=self.user, extract_metadata=False)
 
         utils.resource_file_add_process(resource=self.resTimeSeries, files=files, user=self.user,
                                         extract_metadata=True)
@@ -362,16 +368,20 @@ class TestTimeSeriesMetaData(MockIRODSTestCaseMixin, TransactionTestCase):
         # create
         self.assertEquals(self.resTimeSeries.metadata.is_dirty, False)
         self.assertEquals(self.resTimeSeries.metadata.sites.all().count(), 0)
-        self.resTimeSeries.metadata.create_element('site', series_ids=['a456789-89yughys'],  site_code='LR_WaterLab_AA',
-                                                   site_name='Logan River at the Utah Water Research Laboratory '
-                                                             'west bridge', elevation_m=1414, elevation_datum='EGM96',
+        self.resTimeSeries.metadata.create_element('site', series_ids=['a456789-89yughys'],
+                                                   site_code='LR_WaterLab_AA',
+                                                   site_name='Logan River at the Utah Water '
+                                                             'Research Laboratory west bridge',
+                                                   elevation_m=1414,
+                                                   elevation_datum='EGM96',
                                                    site_type='Stream')
 
         site_element = self.resTimeSeries.metadata.sites.all().first()
         self.assertEqual(len(site_element.series_ids), 1)
         self.assertIn('a456789-89yughys', site_element.series_ids)
         self.assertEquals(site_element.site_code, 'LR_WaterLab_AA')
-        self.assertEquals(site_element.site_name, 'Logan River at the Utah Water Research Laboratory west bridge')
+        self.assertEquals(site_element.site_name, 'Logan River at the Utah Water Research '
+                                                  'Laboratory west bridge')
         self.assertEquals(site_element.elevation_m, 1414)
         self.assertEquals(site_element.elevation_datum, 'EGM96')
         self.assertEquals(site_element.site_type, 'Stream')
@@ -380,11 +390,14 @@ class TestTimeSeriesMetaData(MockIRODSTestCaseMixin, TransactionTestCase):
         self.assertEquals(self.resTimeSeries.metadata.is_dirty, False)
 
         self.assertEquals(self.resTimeSeries.metadata.variables.all().count(), 0)
-        self.resTimeSeries.metadata.create_element('variable', series_ids=['a456789-89yughys'], variable_code='ODO',
+        self.resTimeSeries.metadata.create_element('variable', series_ids=['a456789-89yughys'],
+                                                   variable_code='ODO',
                                                    variable_name='Oxygen, dissolved',
-                                                   variable_type='Concentration', no_data_value=-9999,
-                                                   variable_definition='Concentration of oxygen gas dissolved in '
-                                                                       'water.', speciation='Not Applicable')
+                                                   variable_type='Concentration',
+                                                   no_data_value=-9999,
+                                                   variable_definition='Concentration of oxygen '
+                                                                       'gas dissolved in water.',
+                                                   speciation='Not Applicable')
 
         variable_element = self.resTimeSeries.metadata.variables.all().first()
         self.assertEqual(len(variable_element.series_ids), 1)
@@ -393,18 +406,22 @@ class TestTimeSeriesMetaData(MockIRODSTestCaseMixin, TransactionTestCase):
         self.assertEquals(variable_element.variable_name, 'Oxygen, dissolved')
         self.assertEquals(variable_element.variable_type, 'Concentration')
         self.assertEquals(variable_element.no_data_value, -9999)
-        self.assertEquals(variable_element.variable_definition, 'Concentration of oxygen gas dissolved in water.')
+        self.assertEquals(variable_element.variable_definition, 'Concentration of oxygen gas '
+                                                                'dissolved in water.')
         self.assertEquals(variable_element.speciation, 'Not Applicable')
         self.assertEquals(variable_element.is_dirty, False)
 
         self.assertEquals(self.resTimeSeries.metadata.is_dirty, False)
 
         self.assertEquals(self.resTimeSeries.metadata.methods.all().count(), 0)
-        self.resTimeSeries.metadata.create_element('method', series_ids=['a456789-89yughys'], method_code='Code59',
+        self.resTimeSeries.metadata.create_element('method', series_ids=['a456789-89yughys'],
+                                                   method_code='Code59',
                                                    method_name='Optical DO',
                                                    method_type='Instrument deployment',
-                                                   method_description='Dissolved oxygen concentration measured '
-                                                                      'optically using a YSI EXO multi-parameter water '
+                                                   method_description='Dissolved oxygen '
+                                                                      'concentration measured '
+                                                                      'optically using a YSI EXO '
+                                                                      'multi-parameter water '
                                                                       'quality sonde.',
                                                    method_link='http://www.exowater.com')
 
@@ -414,8 +431,8 @@ class TestTimeSeriesMetaData(MockIRODSTestCaseMixin, TransactionTestCase):
         self.assertEquals(method_element.method_code, 'Code59')
         self.assertEquals(method_element.method_name, 'Optical DO')
         self.assertEquals(method_element.method_type, 'Instrument deployment')
-        method_desc = 'Dissolved oxygen concentration measured optically using a YSI EXO multi-parameter water ' \
-                      'quality sonde.'
+        method_desc = 'Dissolved oxygen concentration measured optically using a YSI EXO ' \
+                      'multi-parameter water quality sonde.'
         self.assertEquals(method_element.method_description, method_desc)
         self.assertEquals(method_element.method_link, 'http://www.exowater.com')
         self.assertEquals(method_element.is_dirty, False)
@@ -423,12 +440,14 @@ class TestTimeSeriesMetaData(MockIRODSTestCaseMixin, TransactionTestCase):
         self.assertEquals(self.resTimeSeries.metadata.is_dirty, False)
 
         self.assertEquals(self.resTimeSeries.metadata.processing_levels.all().count(), 0)
-        exp_text = """Raw and unprocessed data and data products that have not undergone quality control.
-        Depending on the variable, data type, and data transmission system, raw data may be available within seconds
-        or minutes after the measurements have been made. Examples include real time precipitation, streamflow and
-        water quality measurements."""
-        self.resTimeSeries.metadata.create_element('processinglevel', series_ids=['a456789-89yughys'],
-                                                   processing_level_code=0, definition='Raw data',
+        exp_text = """Raw and unprocessed data and data products that have not undergone quality
+        control. Depending on the variable, data type, and data transmission system, raw data may
+        be available within seconds or minutes after the measurements have been made. Examples
+        include real time precipitation, streamflow and water quality measurements."""
+        self.resTimeSeries.metadata.create_element('processinglevel',
+                                                   series_ids=['a456789-89yughys'],
+                                                   processing_level_code=0,
+                                                   definition='Raw data',
                                                    explanation=exp_text)
 
         proc_level_element = self.resTimeSeries.metadata.processing_levels.all().first()
@@ -442,10 +461,14 @@ class TestTimeSeriesMetaData(MockIRODSTestCaseMixin, TransactionTestCase):
         self.assertEquals(self.resTimeSeries.metadata.is_dirty, False)
 
         self.assertEquals(self.resTimeSeries.metadata.time_series_results.all().count(), 0)
-        self.resTimeSeries.metadata.create_element('timeseriesresult', series_ids=['a456789-89yughys'],
+        self.resTimeSeries.metadata.create_element('timeseriesresult',
+                                                   series_ids=['a456789-89yughys'],
                                                    units_type='Concentration',
-                                                   units_name='milligrams per liter', units_abbreviation='mg/L',
-                                                   status='Complete', sample_medium='Surface water', value_count=11283,
+                                                   units_name='milligrams per liter',
+                                                   units_abbreviation='mg/L',
+                                                   status='Complete',
+                                                   sample_medium='Surface water',
+                                                   value_count=11283,
                                                    aggregation_statistics="Average")
 
         ts_result_element = self.resTimeSeries.metadata.time_series_results.all().first()
@@ -463,11 +486,10 @@ class TestTimeSeriesMetaData(MockIRODSTestCaseMixin, TransactionTestCase):
         self.assertEquals(self.resTimeSeries.metadata.is_dirty, False)
 
         # update
-        self.resTimeSeries.metadata.update_element('site', self.resTimeSeries.metadata.sites.all().first().id,
-                                                   site_code='LR_WaterLab_BB',
-                                                   site_name='Logan River at the Utah WRL '
-                                                             'west bridge', elevation_m=1515, elevation_datum='EGM97',
-                                                   site_type='Stream flow')
+        self.resTimeSeries.metadata.update_element(
+            'site', self.resTimeSeries.metadata.sites.all().first().id,
+            site_code='LR_WaterLab_BB', site_name='Logan River at the Utah WRL west bridge',
+            elevation_m=1515, elevation_datum='EGM97', site_type='Stream flow')
 
         site_element = self.resTimeSeries.metadata.sites.all().first()
         self.assertEquals(site_element.site_code, 'LR_WaterLab_BB')
@@ -477,35 +499,37 @@ class TestTimeSeriesMetaData(MockIRODSTestCaseMixin, TransactionTestCase):
         self.assertEquals(site_element.site_type, 'Stream flow')
         self.assertEquals(site_element.is_dirty, True)
 
-        # since there is no sqlite file for the resource, the 'is_dirty' flag of metadata still be False
+        # since there is no sqlite file for the resource, the 'is_dirty' flag of metadata
+        # still be False
         self.assertEquals(self.resTimeSeries.files.all().count(), 0)
         self.assertEquals(self.resTimeSeries.metadata.is_dirty, False)
 
-        self.resTimeSeries.metadata.update_element('variable', self.resTimeSeries.metadata.variables.all().first().id,
-                                                   variable_code='ODO-1', variable_name='H2O dissolved',
-                                                   variable_type='Concentration-1', no_data_value=-999,
-                                                   variable_definition='Concentration of oxygen dissolved in '
-                                                                       'water.', speciation='Applicable')
+        self.resTimeSeries.metadata.update_element(
+            'variable', self.resTimeSeries.metadata.variables.all().first().id,
+            variable_code='ODO-1', variable_name='H2O dissolved',
+            variable_type='Concentration-1', no_data_value=-999,
+            variable_definition='Concentration of oxygen dissolved in water.',
+            speciation='Applicable')
 
         variable_element = self.resTimeSeries.metadata.variables.all().first()
         self.assertEquals(variable_element.variable_code, 'ODO-1')
         self.assertEquals(variable_element.variable_name, 'H2O dissolved')
         self.assertEquals(variable_element.variable_type, 'Concentration-1')
         self.assertEquals(variable_element.no_data_value, -999)
-        self.assertEquals(variable_element.variable_definition, 'Concentration of oxygen dissolved in water.')
+        self.assertEquals(variable_element.variable_definition,
+                          'Concentration of oxygen dissolved in water.')
         self.assertEquals(variable_element.speciation, 'Applicable')
         self.assertEquals(variable_element.is_dirty, True)
 
         self.assertEquals(self.resTimeSeries.metadata.is_dirty, False)
 
-        method_desc = 'Dissolved oxygen concentration measured optically using a YSI EXO multi-parameter water ' \
-                      'quality sonde-1.'
-        self.resTimeSeries.metadata.update_element('method', self.resTimeSeries.metadata.methods.all().first().id,
-                                                   method_code='Code 69',
-                                                   method_name='Optical DO-1',
-                                                   method_type='Instrument deployment-1',
-                                                   method_description=method_desc,
-                                                   method_link='http://www.ex-water.com')
+        method_desc = 'Dissolved oxygen concentration measured optically using a YSI EXO ' \
+                      'multi-parameter water quality sonde-1.'
+        self.resTimeSeries.metadata.update_element(
+            'method', self.resTimeSeries.metadata.methods.all().first().id,
+            method_code='Code 69', method_name='Optical DO-1',
+            method_type='Instrument deployment-1',
+            method_description=method_desc, method_link='http://www.ex-water.com')
 
         method_element = self.resTimeSeries.metadata.methods.all().first()
         self.assertEquals(method_element.method_code, 'Code 69')
@@ -518,10 +542,9 @@ class TestTimeSeriesMetaData(MockIRODSTestCaseMixin, TransactionTestCase):
 
         self.assertEquals(self.resTimeSeries.metadata.is_dirty, False)
 
-        self.resTimeSeries.metadata.update_element('processinglevel',
-                                                   self.resTimeSeries.metadata.processing_levels.all().first().id,
-                                                   processing_level_code=9, definition='data',
-                                                   explanation=exp_text + 'some more text')
+        self.resTimeSeries.metadata.update_element(
+            'processinglevel', self.resTimeSeries.metadata.processing_levels.all().first().id,
+            processing_level_code=9, definition='data', explanation=exp_text + 'some more text')
 
         proc_level_element = self.resTimeSeries.metadata.processing_levels.all().first()
         self.assertEquals(proc_level_element.processing_level_code, 9)
@@ -531,12 +554,11 @@ class TestTimeSeriesMetaData(MockIRODSTestCaseMixin, TransactionTestCase):
 
         self.assertEquals(self.resTimeSeries.metadata.is_dirty, False)
 
-        self.resTimeSeries.metadata.update_element('timeseriesresult',
-                                                   self.resTimeSeries.metadata.time_series_results.all().first().id,
-                                                   units_type='Concentration-1',
-                                                   units_name='milligrams per GL', units_abbreviation='mg/GL',
-                                                   status='Incomplete', sample_medium='Fresh water', value_count=11211,
-                                                   aggregation_statistics="Mean")
+        self.resTimeSeries.metadata.update_element(
+            'timeseriesresult', self.resTimeSeries.metadata.time_series_results.all().first().id,
+            units_type='Concentration-1',
+            units_name='milligrams per GL', units_abbreviation='mg/GL', status='Incomplete',
+            sample_medium='Fresh water', value_count=11211, aggregation_statistics="Mean")
 
         ts_result_element = self.resTimeSeries.metadata.time_series_results.all().first()
         self.assertEquals(ts_result_element.units_type, 'Concentration-1')
@@ -553,25 +575,28 @@ class TestTimeSeriesMetaData(MockIRODSTestCaseMixin, TransactionTestCase):
         # delete
         # extended metadata deletion is not allowed - should raise exception
         with self.assertRaises(ValidationError):
-            self.resTimeSeries.metadata.delete_element('site', self.resTimeSeries.metadata.sites.all().first().id)
+            self.resTimeSeries.metadata.delete_element(
+                'site', self.resTimeSeries.metadata.sites.all().first().id)
 
         with self.assertRaises(ValidationError):
-            self.resTimeSeries.metadata.delete_element('variable',
-                                                       self.resTimeSeries.metadata.variables.all().first().id)
+            self.resTimeSeries.metadata.delete_element(
+                'variable', self.resTimeSeries.metadata.variables.all().first().id)
 
         with self.assertRaises(ValidationError):
-            self.resTimeSeries.metadata.delete_element('method', self.resTimeSeries.metadata.methods.all().first().id)
+            self.resTimeSeries.metadata.delete_element(
+                'method', self.resTimeSeries.metadata.methods.all().first().id)
 
         with self.assertRaises(ValidationError):
-            self.resTimeSeries.metadata.delete_element('processinglevel',
-                                                       self.resTimeSeries.metadata.processing_levels.all().first().id)
+            self.resTimeSeries.metadata.delete_element(
+                'processinglevel', self.resTimeSeries.metadata.processing_levels.all().first().id)
         with self.assertRaises(ValidationError):
-            self.resTimeSeries.metadata.delete_element('timeseriesresult',
-                                                       self.resTimeSeries.metadata.time_series_results.all().first().id)
+            self.resTimeSeries.metadata.delete_element(
+                'timeseriesresult',
+                self.resTimeSeries.metadata.time_series_results.all().first().id)
 
     def test_metadata_is_dirty_flag(self):
-        # resource.metadata.is_dirty flag be set to True if any of the resource specific metadata elements
-        # is updated when the resource has a sqlite file
+        # resource.metadata.is_dirty flag be set to True if any of the resource specific
+        # metadata elements is updated when the resource has a sqlite file
 
         # create a resource with uploded sqlite file
         self.odm2_sqlite_file_obj = open(self.odm2_sqlite_file, 'r')
@@ -591,7 +616,8 @@ class TestTimeSeriesMetaData(MockIRODSTestCaseMixin, TransactionTestCase):
         # now update the site element
         self.resTimeSeries.metadata.update_element('site', site.id,
                                                    site_code='LR_WaterLab_BB',
-                                                   site_name='Logan River at the Utah WRL west bridge',
+                                                   site_name='Logan River at the Utah WRL west '
+                                                             'bridge',
                                                    elevation_m=1515,
                                                    elevation_datum=site.elevation_datum,
                                                    site_type=site.site_type)
@@ -689,8 +715,8 @@ class TestTimeSeriesMetaData(MockIRODSTestCaseMixin, TransactionTestCase):
         self.assertEquals(self.resTimeSeries.metadata.is_dirty, False)
 
     def test_cv_lookup_tables_for_new_terms(self):
-        # Here we will test that when new CV terms are used for updating metadata elements, there should be
-        # new records added to the corresponding CV table (Django db table)
+        # Here we will test that when new CV terms are used for updating metadata elements,
+        # there should be new records added to the corresponding CV table (Django db table)
 
         # create a resource with uploded sqlite file
         self.odm2_sqlite_file_obj = open(self.odm2_sqlite_file, 'r')
@@ -732,7 +758,6 @@ class TestTimeSeriesMetaData(MockIRODSTestCaseMixin, TransactionTestCase):
         # there should be 806 CV_VariableName records
         self.assertEqual(self.resTimeSeries.metadata.cv_variable_names.all().count(), 806)
 
-
         # there should be 145 CV_Speciation records
         self.assertEqual(self.resTimeSeries.metadata.cv_speciations.all().count(), 145)
         # now update the variable element with a new term for the speciation
@@ -740,7 +765,8 @@ class TestTimeSeriesMetaData(MockIRODSTestCaseMixin, TransactionTestCase):
                                                    speciation="Speciation name-1"
                                                    )
         # check the auto generated term
-        self.assertIn('speciationName_1', [spec.term for spec in self.resTimeSeries.metadata.cv_speciations.all()])
+        self.assertIn('speciationName_1', [spec.term for spec in
+                                           self.resTimeSeries.metadata.cv_speciations.all()])
 
         # there should be now 146 CV_Speciation records
         self.assertEqual(self.resTimeSeries.metadata.cv_speciations.all().count(), 146)
@@ -753,7 +779,8 @@ class TestTimeSeriesMetaData(MockIRODSTestCaseMixin, TransactionTestCase):
                                                    site_type="Site type-1"
                                                    )
         # check the auto generated term
-        self.assertIn('siteType_1', [site_type.term for site_type in self.resTimeSeries.metadata.cv_site_types.all()])
+        self.assertIn('siteType_1', [site_type.term for site_type in
+                                     self.resTimeSeries.metadata.cv_site_types.all()])
 
         # there should be 52 CV_SiteType records
         self.assertEqual(self.resTimeSeries.metadata.cv_site_types.all().count(), 52)
@@ -817,7 +844,8 @@ class TestTimeSeriesMetaData(MockIRODSTestCaseMixin, TransactionTestCase):
                                                    sample_medium="Sample medium-1"
                                                    )
         # check the auto generated term
-        self.assertIn('sampleMedium_1', [s_medium.term for s_medium in self.resTimeSeries.metadata.cv_mediums.all()])
+        self.assertIn('sampleMedium_1', [s_medium.term for s_medium in
+                                         self.resTimeSeries.metadata.cv_mediums.all()])
 
         # there should be 18 CV_Medium records
         self.assertEqual(self.resTimeSeries.metadata.cv_mediums.all().count(), 18)
@@ -829,16 +857,17 @@ class TestTimeSeriesMetaData(MockIRODSTestCaseMixin, TransactionTestCase):
                                                    aggregation_statistics="Aggregation statistics-1"
                                                    )
         # check the auto generated term
-        self.assertIn('aggregationStatistics_1', [agg_stat.term for agg_stat in
-                                                  self.resTimeSeries.metadata.cv_aggregation_statistics.all()])
+        self.assertIn('aggregationStatistics_1',
+                      [agg_stat.term for agg_stat in
+                       self.resTimeSeries.metadata.cv_aggregation_statistics.all()])
         # there should be 18 CV_aggregationStatistics records
         self.assertEqual(self.resTimeSeries.metadata.cv_aggregation_statistics.all().count(), 18)
 
     def test_get_xml(self):
         # add a valid odm2 sqlite file to generate metadata
         files = [UploadedFile(file=self.odm2_sqlite_file_obj, name=self.odm2_sqlite_file_name)]
-        utils.resource_file_add_pre_process(resource=self.resTimeSeries, files=files, user=self.user,
-                                            extract_metadata=False)
+        utils.resource_file_add_pre_process(resource=self.resTimeSeries, files=files,
+                                            user=self.user, extract_metadata=False)
 
         utils.resource_file_add_process(resource=self.resTimeSeries, files=files, user=self.user,
                                         extract_metadata=True)
@@ -854,10 +883,11 @@ class TestTimeSeriesMetaData(MockIRODSTestCaseMixin, TransactionTestCase):
         self.assertFalse(self.resTimeSeries.metadata.has_all_required_elements())
         self.assertFalse(self.resTimeSeries.can_be_public_or_discoverable)
 
-        # adding a valid ODM2 sqlite file should generate required core metadata and all extended metadata
+        # adding a valid ODM2 sqlite file should generate required core metadata and all
+        # extended metadata
         files = [UploadedFile(file=self.odm2_sqlite_file_obj, name=self.odm2_sqlite_file_name)]
-        utils.resource_file_add_pre_process(resource=self.resTimeSeries, files=files, user=self.user,
-                                            extract_metadata=False)
+        utils.resource_file_add_pre_process(resource=self.resTimeSeries, files=files,
+                                            user=self.user, extract_metadata=False)
 
         utils.resource_file_add_process(resource=self.resTimeSeries, files=files, user=self.user,
                                         extract_metadata=True)
@@ -879,17 +909,20 @@ class TestTimeSeriesMetaData(MockIRODSTestCaseMixin, TransactionTestCase):
 
         # there should be an abstract element
         self.assertNotEqual(self.resTimeSeries.metadata.description, None)
-        extracted_abstract = "This dataset contains time series of observations of water temperature in the Little Bear " \
-                             "River, UT. Data were recorded every 30 minutes. The values were recorded using a " \
-                             "HydroLab MS5 multi-parameter water quality sonde connected to a Campbell Scientific " \
-                             "datalogger."
+        extracted_abstract = "This dataset contains time series of observations of water " \
+                             "temperature in the Little Bear River, UT. Data were recorded every " \
+                             "30 minutes. The values were recorded using a HydroLab MS5 " \
+                             "multi-parameter water quality sonde connected to a Campbell " \
+                             "Scientific datalogger."
 
-        self.assertEquals(self.resTimeSeries.metadata.description.abstract.strip(), extracted_abstract)
+        self.assertEquals(self.resTimeSeries.metadata.description.abstract.strip(),
+                          extracted_abstract)
 
         # there should be 2 coverage element -  point type and period type
         self.assertEquals(self.resTimeSeries.metadata.coverages.all().count(), 2)
         self.assertEquals(self.resTimeSeries.metadata.coverages.all().filter(type='box').count(), 1)
-        self.assertEquals(self.resTimeSeries.metadata.coverages.all().filter(type='period').count(), 1)
+        self.assertEquals(self.resTimeSeries.metadata.coverages.all().filter(
+            type='period').count(), 1)
 
         box_coverage = self.resTimeSeries.metadata.coverages.all().filter(type='box').first()
         self.assertEquals(box_coverage.value['projection'], 'Unknown')
@@ -899,9 +932,12 @@ class TestTimeSeriesMetaData(MockIRODSTestCaseMixin, TransactionTestCase):
         self.assertEquals(box_coverage.value['southlimit'], 41.495409)
         self.assertEquals(box_coverage.value['westlimit'], -111.946402)
 
-        temporal_coverage = self.resTimeSeries.metadata.coverages.all().filter(type='period').first()
-        self.assertEquals(parser.parse(temporal_coverage.value['start']).date(), parser.parse('01/01/2008').date())
-        self.assertEquals(parser.parse(temporal_coverage.value['end']).date(), parser.parse('01/31/2008').date())
+        temporal_coverage = self.resTimeSeries.metadata.coverages.all().filter(
+            type='period').first()
+        self.assertEquals(parser.parse(temporal_coverage.value['start']).date(),
+                          parser.parse('01/01/2008').date())
+        self.assertEquals(parser.parse(temporal_coverage.value['end']).date(),
+                          parser.parse('01/31/2008').date())
 
         # there should be one format element
         self.assertEquals(self.resTimeSeries.metadata.formats.all().count(), 1)
@@ -952,10 +988,12 @@ class TestTimeSeriesMetaData(MockIRODSTestCaseMixin, TransactionTestCase):
         # there should be 7 series ids associated with this one method element
         self.assertEqual(len(method.series_ids), 7)
         self.assertEquals(method.method_code, '28')
-        method_name = 'Quality Control Level 1 Data Series created from raw QC Level 0 data using ODM Tools.'
+        method_name = 'Quality Control Level 1 Data Series created from raw QC Level 0 data ' \
+                      'using ODM Tools.'
         self.assertEquals(method.method_name, method_name)
         self.assertEquals(method.method_type, 'Instrument deployment')
-        method_des = 'Quality Control Level 1 Data Series created from raw QC Level 0 data using ODM Tools.'
+        method_des = 'Quality Control Level 1 Data Series created from raw QC Level 0 data ' \
+                     'using ODM Tools.'
         self.assertEquals(method.method_description, method_des)
         self.assertEquals(method.method_link, None)
 
@@ -966,10 +1004,11 @@ class TestTimeSeriesMetaData(MockIRODSTestCaseMixin, TransactionTestCase):
         self.assertEqual(len(proc_level.series_ids), 7)
         self.assertEquals(proc_level.processing_level_code, 1)
         self.assertEquals(proc_level.definition, 'Quality controlled data')
-        explanation = 'Quality controlled data that have passed quality assurance procedures such as ' \
-                      'routine estimation of timing and sensor calibration or visual inspection and removal ' \
-                      'of obvious errors. An example is USGS published streamflow records following parsing ' \
-                      'through USGS quality control procedures.'
+        explanation = 'Quality controlled data that have passed quality assurance procedures ' \
+                      'such as routine estimation of timing and sensor calibration or visual ' \
+                      'inspection and removal of obvious errors. An example is USGS published ' \
+                      'streamflow records following parsing through USGS quality control ' \
+                      'procedures.'
         self.assertEquals(proc_level.explanation, explanation)
 
         # test 'timeseries_result' - there should be 7 timeseries_result element
@@ -1008,5 +1047,3 @@ class TestTimeSeriesMetaData(MockIRODSTestCaseMixin, TransactionTestCase):
         self.assertEqual(self.resTimeSeries.metadata.cv_mediums.all().count(), 17)
         # there should be 17 CV_aggregationStatistics records
         self.assertEqual(self.resTimeSeries.metadata.cv_aggregation_statistics.all().count(), 17)
-
-
