@@ -4,15 +4,19 @@ import logging
 
 from django.dispatch import receiver
 
-from hs_core.signals import *
+from hs_core.signals import pre_create_resource, pre_add_files_to_resource, \
+    pre_delete_file_from_resource, post_add_files_to_resource, post_create_resource, \
+    pre_metadata_element_create, pre_metadata_element_update, pre_download_file
 from hs_core.hydroshare import utils, delete_resource_file_only
-from hs_app_timeseries.models import TimeSeriesResource, CVVariableType, CVVariableName, CVSpeciation, CVSiteType,\
-    CVElevationDatum, CVMethodType, CVUnitsType, CVStatus, CVMedium, CVAggregationStatistic
-from forms import SiteValidationForm, VariableValidationForm, MethodValidationForm, ProcessingLevelValidationForm, \
-    TimeSeriesResultValidationForm
+from hs_app_timeseries.models import TimeSeriesResource, CVVariableType, CVVariableName, \
+    CVSpeciation, CVSiteType, CVElevationDatum, CVMethodType, CVUnitsType, CVStatus, CVMedium, \
+    CVAggregationStatistic
+from forms import SiteValidationForm, VariableValidationForm, MethodValidationForm, \
+    ProcessingLevelValidationForm, TimeSeriesResultValidationForm
 
 
 FILE_UPLOAD_ERROR_MESSAGE = "(Uploaded file was not added to the resource)"
+
 
 def get_file_ext_and_obj_name(res, res_file):
     fl_ext = ''
@@ -98,7 +102,8 @@ def post_add_files_to_resource_handler(sender, **kwargs):
                     # cleanup any extracted metadata
                     _delete_extracted_metadata(resource)
                     validate_files_dict['are_files_valid'] = False
-                    validate_files_dict['message'] = extract_err_message + " " + FILE_UPLOAD_ERROR_MESSAGE
+                    extract_err_message += " " + FILE_UPLOAD_ERROR_MESSAGE
+                    validate_files_dict['message'] = extract_err_message
                 else:
                     utils.resource_modified(resource, user)
 
@@ -106,7 +111,8 @@ def post_add_files_to_resource_handler(sender, **kwargs):
                 # delete the invalid file just uploaded
                 delete_resource_file_only(resource, res_file)
                 validate_files_dict['are_files_valid'] = False
-                validate_files_dict['message'] = validate_err_message + " " + FILE_UPLOAD_ERROR_MESSAGE
+                validate_err_message += " " + FILE_UPLOAD_ERROR_MESSAGE
+                validate_files_dict['message'] = validate_err_message
 
 
 @receiver(post_create_resource, sender=TimeSeriesResource)
@@ -130,14 +136,16 @@ def post_create_resource_handler(sender, **kwargs):
                     # cleanup any extracted metadata
                     _delete_extracted_metadata(resource)
                     validate_files_dict['are_files_valid'] = False
-                    validate_files_dict['message'] = extract_err_message + " " + FILE_UPLOAD_ERROR_MESSAGE
+                    extract_err_message += " " + FILE_UPLOAD_ERROR_MESSAGE
+                    validate_files_dict['message'] = extract_err_message
                 else:
                     utils.resource_modified(resource, user)
             else:
                 # delete the invalid file
                 delete_resource_file_only(resource, res_file)
                 validate_files_dict['are_files_valid'] = False
-                validate_files_dict['message'] = validate_err_message + " " + FILE_UPLOAD_ERROR_MESSAGE
+                validate_err_message += " " + FILE_UPLOAD_ERROR_MESSAGE
+                validate_files_dict['message'] = validate_err_message
 
 
 @receiver(pre_metadata_element_create, sender=TimeSeriesResource)
@@ -155,7 +163,8 @@ def metadata_element_pre_update_handler(sender, **kwargs):
 
 """
  Since each of the timeseries metadata element is required no need to listen to any delete signal
- The timeseries landing page should not have delete UI functionality for the resource specific metadata elements
+ The timeseries landing page should not have delete UI functionality for the resource specific
+ metadata elements
 """
 
 
@@ -177,6 +186,7 @@ def _validate_metadata(request, element_name):
         return {'is_valid': True, 'element_data_dict': element_form.cleaned_data}
     else:
         return {'is_valid': False, 'element_data_dict': None}
+
 
 @receiver(pre_download_file, sender=TimeSeriesResource)
 def file_pre_download_handler(sender, **kwargs):
@@ -205,7 +215,8 @@ def _extract_metadata(resource, sqlite_file_name):
             _create_cv_lookup_models(cur, resource.metadata, 'CV_UnitsType', CVUnitsType)
             _create_cv_lookup_models(cur, resource.metadata, 'CV_Status', CVStatus)
             _create_cv_lookup_models(cur, resource.metadata, 'CV_Medium', CVMedium)
-            _create_cv_lookup_models(cur, resource.metadata, 'CV_AggregationStatistic', CVAggregationStatistic)
+            _create_cv_lookup_models(cur, resource.metadata, 'CV_AggregationStatistic',
+                                     CVAggregationStatistic)
 
             # read data from necessary tables and create metadata elements
             # extract core metadata
@@ -223,7 +234,8 @@ def _extract_metadata(resource, sqlite_file_name):
                 resource.metadata.create_element('description', abstract=dataset["DataSetAbstract"])
 
             # extract keywords/subjects
-            # these are the comma separated values in the VariableNameCV column of the Variables table
+            # these are the comma separated values in the VariableNameCV column of the Variables
+            # table
             cur.execute("SELECT VariableID, VariableNameCV FROM Variables")
             variables = cur.fetchall()
             keyword_list = []
@@ -268,7 +280,8 @@ def _extract_metadata(resource, sqlite_file_name):
                 # extract site element data
                 # Start with Results table to -> FeatureActions table -> SamplingFeatures table
                 # check if we need to create multiple site elements
-                cur.execute("SELECT * FROM FeatureActions WHERE FeatureActionID=?", (result["FeatureActionID"],))
+                cur.execute("SELECT * FROM FeatureActions WHERE FeatureActionID=?",
+                            (result["FeatureActionID"],))
                 feature_action = cur.fetchone()
                 if is_create_multiple_site_elements or len(resource.metadata.sites) == 0:
                     cur.execute("SELECT * FROM SamplingFeatures WHERE SamplingFeatureID=?",
@@ -300,7 +313,8 @@ def _extract_metadata(resource, sqlite_file_name):
                 # extract variable element data
                 # Start with Results table to -> Variables table
                 if is_create_multiple_variable_elements or len(resource.metadata.variables) == 0:
-                    cur.execute("SELECT * FROM Variables WHERE VariableID=?", (result["VariableID"],))
+                    cur.execute("SELECT * FROM Variables WHERE VariableID=?",
+                                (result["VariableID"],))
                     variable = cur.fetchone()
                     data_dict = {}
                     data_dict['series_ids'] = [result["ResultUUID"]]
@@ -320,9 +334,11 @@ def _extract_metadata(resource, sqlite_file_name):
                     _update_element_series_ids(resource.metadata.variables[0], result["ResultUUID"])
 
                 # extract method element data
-                # Start with Results table -> FeatureActions table to -> Actions table to -> Method table
+                # Start with Results table -> FeatureActions table to -> Actions table to ->
+                # Method table
                 if is_create_multiple_method_elements or len(resource.metadata.methods) == 0:
-                    cur.execute("SELECT MethodID from Actions WHERE ActionID=?", (feature_action["ActionID"],))
+                    cur.execute("SELECT MethodID from Actions WHERE ActionID=?",
+                                (feature_action["ActionID"],))
                     action = cur.fetchone()
                     cur.execute("SELECT * FROM Methods WHERE MethodID=?", (action["MethodID"],))
                     method = cur.fetchone()
@@ -345,7 +361,8 @@ def _extract_metadata(resource, sqlite_file_name):
 
                 # extract processinglevel element data
                 # Start with Results table to -> ProcessingLevels table
-                if is_create_multiple_processinglevel_elements or len(resource.metadata.processing_levels) == 0:
+                if is_create_multiple_processinglevel_elements \
+                        or len(resource.metadata.processing_levels) == 0:
                     cur.execute("SELECT * FROM ProcessingLevels WHERE ProcessingLevelID=?",
                                 (result["ProcessingLevelID"],))
                     pro_level = cur.fetchone()
@@ -361,11 +378,13 @@ def _extract_metadata(resource, sqlite_file_name):
                     # create processinglevel element
                     resource.metadata.create_element('processinglevel', **data_dict)
                 else:
-                    _update_element_series_ids(resource.metadata.processing_levels[0], result["ResultUUID"])
+                    _update_element_series_ids(resource.metadata.processing_levels[0],
+                                               result["ResultUUID"])
 
                 # extract data for TimeSeriesResult element
                 # Start with Results table
-                if is_create_multiple_timeseriesresult_elements or len(resource.metadata.time_series_results) == 0:
+                if is_create_multiple_timeseriesresult_elements \
+                        or len(resource.metadata.time_series_results) == 0:
                     data_dict = {}
                     data_dict['series_ids'] = [result["ResultUUID"]]
                     data_dict["status"] = result["StatusCV"]
@@ -378,15 +397,16 @@ def _extract_metadata(resource, sqlite_file_name):
                     data_dict['units_name'] = unit["UnitsName"]
                     data_dict['units_abbreviation'] = unit["UnitsAbbreviation"]
 
-                    cur.execute("SELECT AggregationStatisticCV FROM TimeSeriesResults WHERE ResultID=?",
-                                (result["ResultID"],))
+                    cur.execute("SELECT AggregationStatisticCV FROM TimeSeriesResults WHERE "
+                                "ResultID=?", (result["ResultID"],))
                     ts_result = cur.fetchone()
                     data_dict["aggregation_statistics"] = ts_result["AggregationStatisticCV"]
 
                     # create the TimeSeriesResult element
                     resource.metadata.create_element('timeseriesresult', **data_dict)
                 else:
-                    _update_element_series_ids(resource.metadata.time_series_results[0], result["ResultUUID"])
+                    _update_element_series_ids(resource.metadata.time_series_results[0],
+                                               result["ResultUUID"])
 
             return None
 
@@ -402,7 +422,8 @@ def _extract_metadata(resource, sqlite_file_name):
 def _extract_creators_contributors(resource, cur):
     # check if the AuthorList table exists
     authorlists_table_exists = False
-    cur.execute("SELECT COUNT(*) FROM sqlite_master WHERE type=? AND name=?", ("table", "AuthorLists"))
+    cur.execute("SELECT COUNT(*) FROM sqlite_master WHERE type=? AND name=?",
+                ("table", "AuthorLists"))
     qry_result = cur.fetchone()
     if qry_result[0] > 0:
         authorlists_table_exists = True
@@ -418,17 +439,19 @@ def _extract_creators_contributors(resource, cur):
     author_ids_already_used = []
     for result in results:
         if is_create_multiple_author_elements or (len(resource.metadata.creators.all()) == 1 and
-                                                          len(resource.metadata.contributors.all()) == 0):
+                                                  len(resource.metadata.contributors.all()) == 0):
             cur.execute("SELECT ActionID FROM FeatureActions WHERE FeatureActionID=?",
                         (result["FeatureActionID"],))
             feature_actions = cur.fetchall()
             for feature_action in feature_actions:
-                cur.execute("SELECT ActionID FROM Actions WHERE ActionID=?", (feature_action["ActionID"],))
+                cur.execute("SELECT ActionID FROM Actions WHERE ActionID=?",
+                            (feature_action["ActionID"],))
 
                 actions = cur.fetchall()
                 for action in actions:
                     # get the AffiliationID from the ActionsBy table for the matching ActionID
-                    cur.execute("SELECT AffiliationID FROM ActionBy WHERE ActionID=?", (action["ActionID"],))
+                    cur.execute("SELECT AffiliationID FROM ActionBy WHERE ActionID=?",
+                                (action["ActionID"],))
                     actionby_rows = cur.fetchall()
 
                     for actionby in actionby_rows:
@@ -440,14 +463,16 @@ def _extract_creators_contributors(resource, cur):
                             # get records from the People table
                             if affiliation['PersonID'] not in author_ids_already_used:
                                 author_ids_already_used.append(affiliation['PersonID'])
-                                cur.execute("SELECT * FROM People WHERE PersonID=?", (affiliation['PersonID'],))
+                                cur.execute("SELECT * FROM People WHERE PersonID=?",
+                                            (affiliation['PersonID'],))
                                 person = cur.fetchone()
 
                                 # get person organization name - get only one organization name
                                 organization = None
                                 if affiliation['OrganizationID']:
                                     cur.execute("SELECT OrganizationName FROM Organizations WHERE "
-                                                "OrganizationID=?", (affiliation["OrganizationID"],))
+                                                "OrganizationID=?",
+                                                (affiliation["OrganizationID"],))
                                     organization = cur.fetchone()
 
                                 # create contributor metadata elements
@@ -483,9 +508,10 @@ def _extract_creators_contributors(resource, cur):
                                     # create contributor metadata element
                                     resource.metadata.create_element('contributor', **data_dict)
 
-    # TODO: extraction of creator data has not been tested as the sample database does not have any records
-    # in the AuthorLists table
-    authors_data_dict_sorted_list = sorted(authors_data_dict, key=lambda key: authors_data_dict[key])
+    # TODO: extraction of creator data has not been tested as the sample database does not have
+    # any records in the AuthorLists table
+    authors_data_dict_sorted_list = sorted(authors_data_dict,
+                                           key=lambda key: authors_data_dict[key])
     for data_dict in authors_data_dict_sorted_list:
         # create creator metadata element
         resource.metadata.create_element('creator', **data_dict)
@@ -498,7 +524,8 @@ def _extract_coverage_metadata(resource, cur):
     if len(sites) == 1:
         site = sites[0]
         if site["Latitude"] and site["Longitude"]:
-            value_dict = {'east': site["Longitude"], 'north': site["Latitude"], 'units': "Decimal degrees"}
+            value_dict = {'east': site["Longitude"], 'north': site["Latitude"],
+                          'units': "Decimal degrees"}
             # get spatial reference
             if site["SpatialReferenceID"]:
                 cur.execute("SELECT * FROM SpatialReferences WHERE SpatialReferenceID=?",
@@ -543,7 +570,8 @@ def _extract_coverage_metadata(resource, cur):
     min_begin_date = None
     max_end_date = None
     for result in results:
-        cur.execute("SELECT ActionID FROM FeatureActions WHERE FeatureActionID=?", (result["FeatureActionID"],))
+        cur.execute("SELECT ActionID FROM FeatureActions WHERE FeatureActionID=?",
+                    (result["FeatureActionID"],))
         feature_action = cur.fetchone()
         cur.execute("SELECT BeginDateTime, EndDateTime FROM Actions WHERE ActionID=?",
                     (feature_action["ActionID"],))
@@ -610,14 +638,15 @@ def _delete_extracted_metadata(resource):
 
     # add back the resource creator as the creator in metadata
     if resource.creator.first_name:
-        first_creator_name = "{first_name} {last_name}".format(first_name=resource.creator.first_name,
-                                                               last_name=resource.creator.last_name)
+        first_creator_name = "{first_name} {last_name}".format(
+            first_name=resource.creator.first_name, last_name=resource.creator.last_name)
     else:
         first_creator_name = resource.creator.username
 
     first_creator_email = resource.creator.email
 
-    resource.metadata.create_element('creator', name=first_creator_name, email=first_creator_email, order=1)
+    resource.metadata.create_element('creator', name=first_creator_name, email=first_creator_email,
+                                     order=1)
 
 
 def _validate_odm2_db_file(uploaded_file_sqlite_file_name):
@@ -631,15 +660,18 @@ def _validate_odm2_db_file(uploaded_file_sqlite_file_name):
 
             # check that the uploaded file has all the tables from ODM2Core and the CV tables
             cur = con.cursor()
-            odm2_core_table_names = ['People', 'Affiliations', 'SamplingFeatures', 'ActionBy', 'Organizations',
-                                     'Methods', 'FeatureActions', 'Actions', 'RelatedActions', 'Results', 'Variables',
-                                     'Units', 'Datasets', 'DatasetsResults', 'ProcessingLevels', 'TaxonomicClassifiers',
-                                     'CV_VariableType', 'CV_VariableName', 'CV_Speciation', 'CV_SiteType',
-                                     'CV_ElevationDatum', 'CV_MethodType', 'CV_UnitsType', 'CV_Status', 'CV_Medium',
+            odm2_core_table_names = ['People', 'Affiliations', 'SamplingFeatures', 'ActionBy',
+                                     'Organizations', 'Methods', 'FeatureActions', 'Actions',
+                                     'RelatedActions', 'Results', 'Variables', 'Units', 'Datasets',
+                                     'DatasetsResults', 'ProcessingLevels', 'TaxonomicClassifiers',
+                                     'CV_VariableType', 'CV_VariableName', 'CV_Speciation',
+                                     'CV_SiteType', 'CV_ElevationDatum', 'CV_MethodType',
+                                     'CV_UnitsType', 'CV_Status', 'CV_Medium',
                                      'CV_AggregationStatistic']
             # check the tables exist
             for table_name in odm2_core_table_names:
-                cur.execute("SELECT COUNT(*) FROM sqlite_master WHERE type=? AND name=?", ("table", table_name))
+                cur.execute("SELECT COUNT(*) FROM sqlite_master WHERE type=? AND name=?",
+                            ("table", table_name))
                 result = cur.fetchone()
                 if result[0] <= 0:
                     err_message += " Table '{}' is missing.".format(table_name)
