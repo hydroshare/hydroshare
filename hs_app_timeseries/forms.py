@@ -2,18 +2,20 @@ import os
 
 from django.forms import ModelForm
 from django import forms
-from django.contrib.admin.widgets import *
 
-from crispy_forms.layout import *
-from crispy_forms.bootstrap import *
-from models import *
+from crispy_forms.layout import Layout, HTML
+from crispy_forms.bootstrap import Field
+
 from hs_core.forms import BaseFormHelper
+from models import Site, Variable, Method, ProcessingLevel, TimeSeriesResult
 
 
 class SiteFormHelper(BaseFormHelper):
-    def __init__(self, allow_edit=True, res_short_id=None, element_id=None, element_name=None,  *args, **kwargs):
+    def __init__(self, allow_edit=True, res_short_id=None, element_id=None, element_name=None,
+                 *args, **kwargs):
 
-        # the order in which the model fields are listed for the FieldSet is the order these fields will be displayed
+        # the order in which the model fields are listed for the FieldSet is the order these
+        # fields will be displayed
         field_width = 'form-control input-sm'
         layout = Layout(
                         Field('site_code', css_class=field_width),
@@ -24,8 +26,8 @@ class SiteFormHelper(BaseFormHelper):
                         Field('site_type', css_class=field_width),
                  )
 
-        super(SiteFormHelper, self).__init__(allow_edit, res_short_id, element_id, element_name, layout,  *args,
-                                             **kwargs)
+        super(SiteFormHelper, self).__init__(allow_edit, res_short_id, element_id, element_name,
+                                             layout,  *args, **kwargs)
 
 
 class SiteForm(ModelForm):
@@ -41,7 +43,8 @@ class SiteForm(ModelForm):
         cv_site_type_choices = _get_cv_dropdown_widget_items(self.cv_site_types, site_type)
         self.fields['site_type'].widget = forms.Select(choices=cv_site_type_choices)
 
-        cv_e_datum_choices = _get_cv_dropdown_widget_items(self.cv_elevation_datums, elevation_datum)
+        cv_e_datum_choices = _get_cv_dropdown_widget_items(self.cv_elevation_datums,
+                                                           elevation_datum)
         self.fields['elevation_datum'].widget = forms.Select(choices=cv_e_datum_choices)
 
     @property
@@ -70,7 +73,8 @@ class SiteValidationForm(forms.Form):
 
 
 class VariableFormHelper(BaseFormHelper):
-    def __init__(self, allow_edit=True, res_short_id=None, element_id=None, element_name=None, *args, **kwargs):
+    def __init__(self, allow_edit=True, res_short_id=None, element_id=None, element_name=None,
+                 *args, **kwargs):
         field_width = 'form-control input-sm'
         layout = Layout(
                      Field('variable_code', css_class=field_width),
@@ -81,8 +85,8 @@ class VariableFormHelper(BaseFormHelper):
                      Field('speciation', css_class=field_width),
                 )
 
-        super(VariableFormHelper, self).__init__(allow_edit, res_short_id, element_id, element_name, layout,  *args,
-                                                 **kwargs)
+        super(VariableFormHelper, self).__init__(allow_edit, res_short_id, element_id,
+                                                 element_name, layout,  *args, **kwargs)
 
 
 class VariableForm(ModelForm):
@@ -94,7 +98,8 @@ class VariableForm(ModelForm):
         kwargs.pop('cv_variable_names')
         kwargs.pop('cv_speciations')
         super(VariableForm, self).__init__(*args, **kwargs)
-        self.helper = VariableFormHelper(allow_edit, res_short_id, element_id, element_name='Variable')
+        self.helper = VariableFormHelper(allow_edit, res_short_id, element_id,
+                                         element_name='Variable')
 
     def set_dropdown_widgets(self, variable_type, variable_name, speciation):
         cv_var_type_choices = _get_cv_dropdown_widget_items(self.cv_variable_types, variable_type)
@@ -118,8 +123,8 @@ class VariableForm(ModelForm):
 
     class Meta:
         model = Variable
-        fields = ['variable_code', 'variable_name', 'variable_type', 'no_data_value', 'variable_definition',
-                  'speciation']
+        fields = ['variable_code', 'variable_name', 'variable_type', 'no_data_value',
+                  'variable_definition', 'speciation']
         exclude = ['content_object']
         widgets = {'no_data_value': forms.TextInput()}
 
@@ -134,8 +139,10 @@ class VariableValidationForm(forms.Form):
 
 
 class MethodFormHelper(BaseFormHelper):
-    def __init__(self,allow_edit=True, res_short_id=None, element_id=None, element_name=None, *args, **kwargs):
-        # the order in which the model fields are listed for the FieldSet is the order these fields will be displayed
+    def __init__(self, allow_edit=True, res_short_id=None, element_id=None, element_name=None,
+                 *args, **kwargs):
+        # the order in which the model fields are listed for the FieldSet is the order these
+        # fields will be displayed
         field_width = 'form-control input-sm'
         layout = Layout(
                          Field('method_code', css_class=field_width),
@@ -145,8 +152,8 @@ class MethodFormHelper(BaseFormHelper):
                          Field('method_link', css_class=field_width),
                          )
 
-        super(MethodFormHelper, self).__init__(allow_edit, res_short_id, element_id, element_name, layout,  *args,
-                                               **kwargs)
+        super(MethodFormHelper, self).__init__(allow_edit, res_short_id, element_id, element_name,
+                                               layout,  *args, **kwargs)
 
 
 class MethodForm(ModelForm):
@@ -157,7 +164,8 @@ class MethodForm(ModelForm):
         self.helper = MethodFormHelper(allow_edit, res_short_id, element_id, element_name='Method')
 
     def set_dropdown_widgets(self, current_method_type):
-        cv_method_type_choices = _get_cv_dropdown_widget_items(self.cv_method_types, current_method_type)
+        cv_method_type_choices = _get_cv_dropdown_widget_items(self.cv_method_types,
+                                                               current_method_type)
         self.fields['method_type'].widget = forms.Select(choices=cv_method_type_choices)
 
     @property
@@ -186,8 +194,10 @@ class MethodValidationForm(forms.Form):
 
 
 class ProcessingLevelFormHelper(BaseFormHelper):
-    def __init__(self, allow_edit=True, res_short_id=None, element_id=None, element_name=None, *args, **kwargs):
-        # the order in which the model fields are listed for the FieldSet is the order these fields will be displayed
+    def __init__(self, allow_edit=True, res_short_id=None, element_id=None, element_name=None,
+                 *args, **kwargs):
+        # the order in which the model fields are listed for the FieldSet is the order these
+        # fields will be displayed
         field_width = 'form-control input-sm'
         layout = Layout(
                      Field('processing_level_code', css_class=field_width),
@@ -195,14 +205,15 @@ class ProcessingLevelFormHelper(BaseFormHelper):
                      Field('explanation', css_class=field_width),
                      )
         kwargs['element_name_label'] = 'Processing Level'
-        super(ProcessingLevelFormHelper, self).__init__(allow_edit, res_short_id, element_id, element_name, layout,
-                                                        *args, **kwargs)
+        super(ProcessingLevelFormHelper, self).__init__(allow_edit, res_short_id, element_id,
+                                                        element_name, layout, *args, **kwargs)
 
 
 class ProcessingLevelForm(ModelForm):
     def __init__(self, allow_edit=True, res_short_id=None, element_id=None, *args, **kwargs):
         super(ProcessingLevelForm, self).__init__(*args, **kwargs)
-        self.helper = ProcessingLevelFormHelper(allow_edit, res_short_id, element_id, element_name='ProcessingLevel')
+        self.helper = ProcessingLevelFormHelper(allow_edit, res_short_id, element_id,
+                                                element_name='ProcessingLevel')
 
     @property
     def form_id(self):
@@ -228,8 +239,10 @@ class ProcessingLevelValidationForm(forms.Form):
 
 
 class TimeSeriesResultFormHelper(BaseFormHelper):
-    def __init__(self, allow_edit=True, res_short_id=None, element_id=None, element_name=None, *args, **kwargs):
-        # the order in which the model fields are listed for the FieldSet is the order these fields will be displayed
+    def __init__(self, allow_edit=True, res_short_id=None, element_id=None, element_name=None,
+                 *args, **kwargs):
+        # the order in which the model fields are listed for the FieldSet is the order these
+        # fields will be displayed
         field_width = 'form-control input-sm'
         layout = Layout(
                      Field('units_type', css_class=field_width),
@@ -241,8 +254,8 @@ class TimeSeriesResultFormHelper(BaseFormHelper):
                      Field('aggregation_statistics', css_class=field_width),
                      )
         kwargs['element_name_label'] = 'Time Series Result'
-        super(TimeSeriesResultFormHelper, self).__init__(allow_edit, res_short_id, element_id, element_name, layout,
-                                                         *args, **kwargs)
+        super(TimeSeriesResultFormHelper, self).__init__(allow_edit, res_short_id, element_id,
+                                                         element_name, layout, *args, **kwargs)
 
 
 class TimeSeriesResultForm(ModelForm):
@@ -257,17 +270,23 @@ class TimeSeriesResultForm(ModelForm):
         kwargs.pop('cv_statuses')
 
         super(TimeSeriesResultForm, self).__init__(*args, **kwargs)
-        self.helper = TimeSeriesResultFormHelper(allow_edit, res_short_id, element_id, element_name='TimeSeriesResult')
+        self.helper = TimeSeriesResultFormHelper(allow_edit, res_short_id, element_id,
+                                                 element_name='TimeSeriesResult')
 
-    def set_dropdown_widgets(self, current_sample_medium, current_units_type, current_agg_statistics, current_status):
-        cv_sample_medium_choices = _get_cv_dropdown_widget_items(self.cv_sample_mediums, current_sample_medium)
+    def set_dropdown_widgets(self, current_sample_medium, current_units_type,
+                             current_agg_statistics, current_status):
+        cv_sample_medium_choices = _get_cv_dropdown_widget_items(self.cv_sample_mediums,
+                                                                 current_sample_medium)
         self.fields['sample_medium'].widget = forms.Select(choices=cv_sample_medium_choices)
-        cv_units_type_choices = _get_cv_dropdown_widget_items(self.cv_units_types, current_units_type)
+        cv_units_type_choices = _get_cv_dropdown_widget_items(self.cv_units_types,
+                                                              current_units_type)
         self.fields['units_type'].widget = forms.Select(choices=cv_units_type_choices)
         cv_status_choices = _get_cv_dropdown_widget_items(self.cv_statuses, current_status)
         self.fields['status'].widget = forms.Select(choices=cv_status_choices)
-        cv_agg_statistics_choices = _get_cv_dropdown_widget_items(self.cv_aggregation_statistics, current_agg_statistics)
-        self.fields['aggregation_statistics'].widget = forms.Select(choices=cv_agg_statistics_choices)
+        cv_agg_statistics_choices = _get_cv_dropdown_widget_items(self.cv_aggregation_statistics,
+                                                                  current_agg_statistics)
+        self.fields['aggregation_statistics'].widget = forms.Select(
+            choices=cv_agg_statistics_choices)
 
     @property
     def form_id(self):
@@ -281,8 +300,8 @@ class TimeSeriesResultForm(ModelForm):
 
     class Meta:
         model = TimeSeriesResult
-        fields = ['units_type', 'units_name', 'units_abbreviation', 'status', 'sample_medium', 'value_count',
-                  'aggregation_statistics']
+        fields = ['units_type', 'units_name', 'units_abbreviation', 'status', 'sample_medium',
+                  'value_count', 'aggregation_statistics']
         widgets = {'value_count': forms.TextInput()}
 
 
@@ -317,5 +336,3 @@ def _get_html_snippet(html_snippet_file_name):
 UpdateSQLiteLayout = Layout(HTML(_get_html_snippet('update_sqlite_file.html')))
 SeriesSelectionLayout = Layout(HTML(_get_html_snippet('series_selection.html')))
 TimeSeriesMetaDataLayout = HTML(_get_html_snippet('timeseries_metadata_edit.html'))
-
-
