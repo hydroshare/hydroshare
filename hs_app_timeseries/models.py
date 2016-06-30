@@ -5,19 +5,14 @@ import shutil
 import logging
 
 from django.contrib.contenttypes.fields import GenericRelation
-from django.contrib.auth.models import User, Group
-from django.contrib.contenttypes.models import ContentType
 from django.contrib.postgres.fields import ArrayField
-
 from django.core.exceptions import ValidationError
 from django.db import models
 
-from mezzanine.pages.models import Page, RichText
-from mezzanine.core.models import Ownable
 from mezzanine.pages.page_processors import processor_for
 
-from hs_core.models import BaseResource, ResourceManager, resource_processor, CoreMetaData, AbstractMetaDataElement, \
-    Coverage, Subject
+from hs_core.models import BaseResource, ResourceManager, resource_processor, CoreMetaData, \
+    AbstractMetaDataElement
 
 from django_irods.storage import IrodsStorage
 
@@ -82,8 +77,8 @@ class Site(TimeSeriesAbstractMetaDataElement):
                     # generate term for the new name
                     kwargs[elevation_datum_str] = kwargs[elevation_datum_str].strip()
                     term = _generate_term_from_name(kwargs[elevation_datum_str])
-                    elevation_datum = CVElevationDatum.objects.create(metadata=element.metadata, term=term,
-                                                                      name=kwargs[elevation_datum_str])
+                    elevation_datum = CVElevationDatum.objects.create(
+                        metadata=element.metadata, term=term, name=kwargs[elevation_datum_str])
                     elevation_datum.is_dirty = True
                     elevation_datum.save()
 
@@ -92,7 +87,8 @@ class Site(TimeSeriesAbstractMetaDataElement):
         if site_type_str in kwargs:
             if element.site_type != kwargs[site_type_str]:
                 # check if the user has entered a new name for site type
-                if kwargs[site_type_str] not in [item.name for item in element.metadata.cv_site_types.all()]:
+                if kwargs[site_type_str] not in [item.name for item in
+                                                 element.metadata.cv_site_types.all()]:
                     # generate term for the new name
                     kwargs[site_type_str] = kwargs[site_type_str].strip()
                     term = _generate_term_from_name(kwargs[site_type_str])
@@ -129,12 +125,13 @@ class Variable(TimeSeriesAbstractMetaDataElement):
         if variable_name_str in kwargs:
             if element.variable_name != kwargs[variable_name_str]:
                 # check if the user has entered a new name
-                if kwargs[variable_name_str] not in [item.name for item in element.metadata.cv_variable_names.all()]:
+                if kwargs[variable_name_str] not in [item.name for item in
+                                                     element.metadata.cv_variable_names.all()]:
                     # generate term for the new name
                     kwargs[variable_name_str] = kwargs[variable_name_str].strip()
                     term = _generate_term_from_name(kwargs[variable_name_str])
-                    variable_name = CVVariableName.objects.create(metadata=element.metadata, term=term,
-                                                                  name=kwargs[variable_name_str])
+                    variable_name = CVVariableName.objects.create(
+                        metadata=element.metadata, term=term, name=kwargs[variable_name_str])
                     variable_name.is_dirty = True
                     variable_name.save()
 
@@ -143,12 +140,13 @@ class Variable(TimeSeriesAbstractMetaDataElement):
         if variable_type_str in kwargs:
             if element.variable_type != kwargs[variable_type_str]:
                 # check if the user has entered a new type
-                if kwargs[variable_type_str] not in [item.name for item in element.metadata.cv_variable_types.all()]:
+                if kwargs[variable_type_str] not in [item.name for item in
+                                                     element.metadata.cv_variable_types.all()]:
                     # generate term for the new name
                     kwargs[variable_type_str] = kwargs[variable_type_str].strip()
                     term = _generate_term_from_name(kwargs[variable_type_str])
-                    variable_type = CVVariableType.objects.create(metadata=element.metadata, term=term,
-                                                                  name=kwargs[variable_type_str])
+                    variable_type = CVVariableType.objects.create(
+                        metadata=element.metadata, term=term, name=kwargs[variable_type_str])
                     variable_type.is_dirty = True
                     variable_type.save()
 
@@ -157,7 +155,8 @@ class Variable(TimeSeriesAbstractMetaDataElement):
         if speciation_str in kwargs:
             if element.speciation != kwargs[speciation_str]:
                 # check if the user has entered a new speciation
-                if kwargs[speciation_str] not in [item.name for item in element.metadata.cv_speciations.all()]:
+                if kwargs[speciation_str] not in [item.name for item in
+                                                  element.metadata.cv_speciations.all()]:
                     # generate term for the new name
                     kwargs[speciation_str] = kwargs[speciation_str].strip()
                     term = _generate_term_from_name(kwargs[speciation_str])
@@ -193,7 +192,8 @@ class Method(TimeSeriesAbstractMetaDataElement):
         if method_type_str in kwargs:
             if element.method_type != kwargs[method_type_str]:
                 # check if the user has entered a new name for method type
-                if kwargs[method_type_str] not in [item.name for item in element.metadata.cv_method_types.all()]:
+                if kwargs[method_type_str] not in [item.name for item in
+                                                   element.metadata.cv_method_types.all()]:
                     # generate term for the new name
                     kwargs[method_type_str] = kwargs[method_type_str].strip()
                     term = _generate_term_from_name(kwargs[method_type_str])
@@ -244,7 +244,8 @@ class TimeSeriesResult(TimeSeriesAbstractMetaDataElement):
         if sample_medium_str in kwargs:
             if element.sample_medium != kwargs[sample_medium_str]:
                 # check if the user has entered a new name for sample medium
-                if kwargs[sample_medium_str] not in [item.name for item in element.metadata.cv_mediums.all()]:
+                if kwargs[sample_medium_str] not in [item.name for item in
+                                                     element.metadata.cv_mediums.all()]:
                     # generate term for the new name
                     kwargs[sample_medium_str] = kwargs[sample_medium_str].strip()
                     term = _generate_term_from_name(kwargs[sample_medium_str])
@@ -258,7 +259,8 @@ class TimeSeriesResult(TimeSeriesAbstractMetaDataElement):
         if units_type_str in kwargs:
             if element.units_type != kwargs[units_type_str]:
                 # check if the user has entered a new name for units type
-                if kwargs[units_type_str] not in [item.name for item in element.metadata.cv_units_types.all()]:
+                if kwargs[units_type_str] not in [item.name for item in
+                                                  element.metadata.cv_units_types.all()]:
                     # generate term for the new name
                     kwargs[units_type_str] = kwargs[units_type_str].strip()
                     term = _generate_term_from_name(kwargs[units_type_str])
@@ -272,11 +274,13 @@ class TimeSeriesResult(TimeSeriesAbstractMetaDataElement):
         if status_str in kwargs:
             if element.status != kwargs[status_str]:
                 # check if the user has entered a new name for status
-                if kwargs[status_str] not in [item.name for item in element.metadata.cv_statuses.all()]:
+                if kwargs[status_str] not in [item.name for item in
+                                              element.metadata.cv_statuses.all()]:
                     # generate term for the new name
                     kwargs[status_str] = kwargs[status_str].strip()
                     term = _generate_term_from_name(kwargs[status_str])
-                    status = CVStatus.objects.create(metadata=element.metadata, term=term, name=kwargs[status_str])
+                    status = CVStatus.objects.create(metadata=element.metadata, term=term,
+                                                     name=kwargs[status_str])
                     status.is_dirty = True
                     status.save()
 
@@ -285,13 +289,13 @@ class TimeSeriesResult(TimeSeriesAbstractMetaDataElement):
         if agg_statistics_str in kwargs:
             if element.aggregation_statistics != kwargs[agg_statistics_str]:
                 # check if the user has entered a new name for aggregation statistics
-                if kwargs[agg_statistics_str] not in [item.name for item in
-                                                      element.metadata.cv_aggregation_statistics.all()]:
+                if kwargs[agg_statistics_str] not in \
+                        [item.name for item in element.metadata.cv_aggregation_statistics.all()]:
                     # generate term for the new name
                     kwargs[agg_statistics_str] = kwargs[agg_statistics_str].strip()
                     term = _generate_term_from_name(kwargs[agg_statistics_str])
-                    agg_statistics = CVAggregationStatistic.objects.create(metadata=element.metadata, term=term,
-                                                                           name=kwargs[agg_statistics_str])
+                    agg_statistics = CVAggregationStatistic.objects.create(
+                        metadata=element.metadata, term=term, name=kwargs[agg_statistics_str])
                     agg_statistics.is_dirty = True
                     agg_statistics.save()
 
@@ -366,7 +370,7 @@ class TimeSeriesResource(BaseResource):
     @classmethod
     def get_supported_upload_file_types(cls):
         # final phase of this resource type implementation will support 3 file types
-        #return (".csv", ".xml", ".sqlite")
+        # return (".csv", ".xml", ".sqlite")
         # phase-1 of implementation supports only sqlite file
         return (".sqlite",)
 
@@ -376,7 +380,8 @@ class TimeSeriesResource(BaseResource):
         return False
 
 
-# this would allow us to pick up additional form elements for the template before the template is displayed
+# this would allow us to pick up additional form elements for the template before the template
+# is displayed
 processor_for(TimeSeriesResource)(resource_processor)
 
 
@@ -394,21 +399,29 @@ class TimeSeriesMetaData(CoreMetaData):
         if self.resource.files.first() is None:
             # the SQLite file is missing - so nothing to update
             return False
-        dirty = any(site.is_dirty for site in self.sites) or \
-                any(variable.is_dirty for variable in self.variables) or \
-                any(method.is_dirty for method in self.methods) or \
-                any(processing_level.is_dirty for processing_level in self.processing_levels) or \
-                any(ts_result.is_dirty for ts_result in self.time_series_results) or \
-                any(cv_variable_name.is_dirty for cv_variable_name in CVVariableName.objects.filter(metadata=self)) or \
-                any(cv_variable_type.is_dirty for cv_variable_type in CVVariableType.objects.filter(metadata=self)) or \
-                any(cv_speciation.is_dirty for cv_speciation in CVSpeciation.objects.filter(metadata=self)) or \
-                any(cv_site_type.is_dirty for cv_site_type in CVSiteType.objects.filter(metadata=self)) or \
-                any(cv_elev_datum.is_dirty for cv_elev_datum in CVElevationDatum.objects.filter(metadata=self)) or \
-                any(cv_method_type.is_dirty for cv_method_type in CVMethodType.objects.filter(metadata=self)) or \
-                any(cv_units_type.is_dirty for cv_units_type in CVUnitsType.objects.filter(metadata=self)) or \
-                any(cv_status.is_dirty for cv_status in CVStatus.objects.filter(metadata=self)) or \
-                any(cv_medium.is_dirty for cv_medium in CVMedium.objects.filter(metadata=self)) or \
-                any(cv_agg_stat.is_dirty for cv_agg_stat in CVAggregationStatistic.objects.filter(metadata=self))
+        dirty = any(site.is_dirty for site in self.sites) or any(
+            variable.is_dirty for variable in self.variables) or any(
+            method.is_dirty for method in self.methods) or any(
+            processing_level.is_dirty for processing_level in self.processing_levels) or any(
+            ts_result.is_dirty for ts_result in self.time_series_results) or any(
+            cv_variable_name.is_dirty for cv_variable_name in
+            CVVariableName.objects.filter(metadata=self)) or any(
+            cv_variable_type.is_dirty for cv_variable_type in
+            CVVariableType.objects.filter(metadata=self)) or any(
+            cv_speciation.is_dirty for cv_speciation in
+            CVSpeciation.objects.filter(metadata=self)) or any(
+            cv_site_type.is_dirty for cv_site_type in
+            CVSiteType.objects.filter(metadata=self)) or any(
+            cv_elev_datum.is_dirty for cv_elev_datum in
+            CVElevationDatum.objects.filter(metadata=self)) or any(
+            cv_method_type.is_dirty for cv_method_type in
+            CVMethodType.objects.filter(metadata=self)) or any(
+            cv_units_type.is_dirty for cv_units_type in
+            CVUnitsType.objects.filter(metadata=self)) or any(
+            cv_status.is_dirty for cv_status in CVStatus.objects.filter(metadata=self)) or any(
+            cv_medium.is_dirty for cv_medium in CVMedium.objects.filter(metadata=self)) or any(
+            cv_agg_stat.is_dirty for cv_agg_stat in
+            CVAggregationStatistic.objects.filter(metadata=self))
 
         return dirty
 
@@ -488,16 +501,18 @@ class TimeSeriesMetaData(CoreMetaData):
         for time_series_result in self.time_series_results:
             # since 2nd level nesting of elements exists here, can't use the helper function
             # add_metadata_element_to_xml()
-            hsterms_time_series_result = etree.SubElement(container,
-                                                          '{%s}timeSeriesResult' % self.NAMESPACES['hsterms'])
-            hsterms_time_series_result_rdf_Description = etree.SubElement(hsterms_time_series_result,
-                                                                          '{%s}Description' % self.NAMESPACES['rdf'])
-            hsterms_result_UUID = etree.SubElement(hsterms_time_series_result_rdf_Description,
-                                                   '{%s}timeSeriesResultUUID' % self.NAMESPACES['hsterms'])
+            hsterms_time_series_result = etree.SubElement(
+                container, '{%s}timeSeriesResult' % self.NAMESPACES['hsterms'])
+            hsterms_time_series_result_rdf_Description = etree.SubElement(
+                hsterms_time_series_result, '{%s}Description' % self.NAMESPACES['rdf'])
+            hsterms_result_UUID = etree.SubElement(
+                hsterms_time_series_result_rdf_Description, '{%s}timeSeriesResultUUID' %
+                                                            self.NAMESPACES['hsterms'])
             hsterms_result_UUID.text = str(time_series_result.series_ids[0])
             hsterms_units = etree.SubElement(hsterms_time_series_result_rdf_Description,
                                              '{%s}units' % self.NAMESPACES['hsterms'])
-            hsterms_units_rdf_Description = etree.SubElement(hsterms_units, '{%s}Description' % self.NAMESPACES['rdf'])
+            hsterms_units_rdf_Description = etree.SubElement(hsterms_units, '{%s}Description' %
+                                                             self.NAMESPACES['rdf'])
             hsterms_units_type = etree.SubElement(hsterms_units_rdf_Description,
                                                   '{%s}UnitsType' % self.NAMESPACES['hsterms'])
             hsterms_units_type.text = time_series_result.units_type
@@ -506,16 +521,17 @@ class TimeSeriesMetaData(CoreMetaData):
                                                   '{%s}UnitsName' % self.NAMESPACES['hsterms'])
             hsterms_units_name.text = time_series_result.units_name
 
-            hsterms_units_abbv = etree.SubElement(hsterms_units_rdf_Description,
-                                                  '{%s}UnitsAbbreviation' % self.NAMESPACES['hsterms'])
+            hsterms_units_abbv = etree.SubElement(
+                hsterms_units_rdf_Description, '{%s}UnitsAbbreviation' % self.NAMESPACES['hsterms'])
             hsterms_units_abbv.text = time_series_result.units_abbreviation
 
             hsterms_status = etree.SubElement(hsterms_time_series_result_rdf_Description,
                                               '{%s}Status' % self.NAMESPACES['hsterms'])
             hsterms_status.text = time_series_result.status
 
-            hsterms_sample_medium = etree.SubElement(hsterms_time_series_result_rdf_Description,
-                                                     '{%s}SampleMedium' % self.NAMESPACES['hsterms'])
+            hsterms_sample_medium = etree.SubElement(
+                hsterms_time_series_result_rdf_Description, '{%s}SampleMedium' %
+                                                            self.NAMESPACES['hsterms'])
             hsterms_sample_medium.text = time_series_result.sample_medium
 
             hsterms_value_count = etree.SubElement(hsterms_time_series_result_rdf_Description,
@@ -523,11 +539,13 @@ class TimeSeriesMetaData(CoreMetaData):
             hsterms_value_count.text = str(time_series_result.value_count)
 
             hsterms_statistics = etree.SubElement(hsterms_time_series_result_rdf_Description,
-                                                  '{%s}AggregationStatistic' % self.NAMESPACES['hsterms'])
+                                                  '{%s}AggregationStatistic' %
+                                                  self.NAMESPACES['hsterms'])
             hsterms_statistics.text = time_series_result.aggregation_statistics
 
             # generate xml for 'site' element
-            site = [site for site in self.sites if time_series_result.series_ids[0] in site.series_ids][0]
+            site = [site for site in self.sites if time_series_result.series_ids[0] in
+                    site.series_ids][0]
             element_fields = [('site_code', 'SiteCode'), ('site_name', 'SiteName')]
 
             if site.elevation_m:
@@ -539,11 +557,12 @@ class TimeSeriesMetaData(CoreMetaData):
             if site.site_type:
                 element_fields.append(('site_type', 'SiteType'))
 
-            self.add_metadata_element_to_xml(hsterms_time_series_result_rdf_Description, (site, 'site'), element_fields)
+            self.add_metadata_element_to_xml(hsterms_time_series_result_rdf_Description,
+                                             (site, 'site'), element_fields)
 
             # generate xml for 'variable' element
-            variable = [variable for variable in self.variables if time_series_result.series_ids[0] in
-                        variable.series_ids][0]
+            variable = [variable for variable in self.variables if
+                        time_series_result.series_ids[0] in variable.series_ids][0]
             element_fields = [('variable_code', 'VariableCode'), ('variable_name', 'VariableName'),
                               ('variable_type', 'VariableType'), ('no_data_value', 'NoDataValue')]
 
@@ -553,10 +572,12 @@ class TimeSeriesMetaData(CoreMetaData):
             if variable.speciation:
                 element_fields.append(('speciation', 'Speciation'))
 
-            self.add_metadata_element_to_xml(hsterms_time_series_result_rdf_Description, (variable, 'variable'), element_fields)
+            self.add_metadata_element_to_xml(hsterms_time_series_result_rdf_Description,
+                                             (variable, 'variable'), element_fields)
 
             # generate xml for 'method' element
-            method = [method for method in self.methods if time_series_result.series_ids[0] in method.series_ids][0]
+            method = [method for method in self.methods if time_series_result.series_ids[0] in
+                      method.series_ids][0]
             element_fields = [('method_code', 'MethodCode'), ('method_name', 'MethodName'),
                               ('method_type', 'MethodType')]
 
@@ -566,7 +587,8 @@ class TimeSeriesMetaData(CoreMetaData):
             if method.method_link:
                 element_fields.append(('method_link', 'MethodLink'))
 
-            self.add_metadata_element_to_xml(hsterms_time_series_result_rdf_Description, (method, 'method'), element_fields)
+            self.add_metadata_element_to_xml(hsterms_time_series_result_rdf_Description,
+                                             (method, 'method'), element_fields)
 
             # generate xml for 'processing_level' element
             processing_level = [processing_level for processing_level in self.processing_levels if
@@ -580,7 +602,8 @@ class TimeSeriesMetaData(CoreMetaData):
             if processing_level.explanation:
                 element_fields.append(('explanation', 'Explanation'))
 
-            self.add_metadata_element_to_xml(hsterms_time_series_result_rdf_Description, (processing_level, 'processingLevel'),
+            self.add_metadata_element_to_xml(hsterms_time_series_result_rdf_Description,
+                                             (processing_level, 'processingLevel'),
                                              element_fields)
 
         return etree.tostring(RDF_ROOT, pretty_print=True)
@@ -654,7 +677,8 @@ class TimeSeriesMetaData(CoreMetaData):
         def insert_cv_record(cv_elements, cv_table_name):
             for cv_element in cv_elements:
                 if cv_element.is_dirty:
-                    insert_sql = "INSERT INTO {table_name}(Term, Name) VALUES(?, ?)".format(table_name=cv_table_name)
+                    insert_sql = "INSERT INTO {table_name}(Term, Name) VALUES(?, ?)"
+                    insert_sql = insert_sql.format(table_name=cv_table_name)
                     cur.execute(insert_sql, (cv_element.term, cv_element.name))
                     con.commit()
                     cv_element.is_dirty = False
@@ -674,12 +698,14 @@ class TimeSeriesMetaData(CoreMetaData):
     def _update_variables_table(self, con, cur):
         for variable in self.variables:
             if variable.is_dirty:
-                # get the VariableID from Results table to update the corresponding row in Variables table
+                # get the VariableID from Results table to update the corresponding row in
+                # Variables table
                 series_id = variable.series_ids[0]
                 cur.execute("SELECT VariableID FROM Results WHERE ResultUUID=?", (series_id,))
                 ts_result = cur.fetchone()
-                update_sql = "UPDATE Variables SET VariableCode=?, VariableTypeCV=?, VariableNameCV=?, " \
-                             "VariableDefinition=?, SpeciationCV=?, NoDataValue=?  WHERE VariableID=?"
+                update_sql = "UPDATE Variables SET VariableCode=?, VariableTypeCV=?, " \
+                             "VariableNameCV=?, VariableDefinition=?, SpeciationCV=?, " \
+                             "NoDataValue=?  WHERE VariableID=?"
 
                 params = (variable.variable_code, variable.variable_type, variable.variable_name,
                           variable.variable_definition, variable.speciation, variable.no_data_value,
@@ -697,9 +723,11 @@ class TimeSeriesMetaData(CoreMetaData):
                 series_id = method.series_ids[0]
                 cur.execute("SELECT FeatureActionID FROM Results WHERE ResultUUID=?", (series_id,))
                 result = cur.fetchone()
-                cur.execute("SELECT ActionID FROM FeatureActions WHERE FeatureActionID=?", (result["FeatureActionID"],))
+                cur.execute("SELECT ActionID FROM FeatureActions WHERE FeatureActionID=?",
+                            (result["FeatureActionID"],))
                 feature_action = cur.fetchone()
-                cur.execute("SELECT MethodID from Actions WHERE ActionID=?", (feature_action["ActionID"],))
+                cur.execute("SELECT MethodID from Actions WHERE ActionID=?",
+                            (feature_action["ActionID"],))
                 action = cur.fetchone()
 
                 update_sql = "UPDATE Methods SET MethodCode=?, MethodName=?, MethodTypeCV=?, " \
@@ -717,13 +745,15 @@ class TimeSeriesMetaData(CoreMetaData):
         # updates the ProcessingLevels table
         for processing_level in self.processing_levels:
             if processing_level.is_dirty:
-                # get the ProcessingLevelID to update the corresponding row in ProcessingLevels table
+                # get the ProcessingLevelID to update the corresponding row in ProcessingLevels
+                # table
                 series_id = processing_level.series_ids[0]
-                cur.execute("SELECT ProcessingLevelID FROM Results WHERE ResultUUID=?", (series_id,))
+                cur.execute("SELECT ProcessingLevelID FROM Results WHERE ResultUUID=?",
+                            (series_id,))
                 result = cur.fetchone()
 
-                update_sql = "UPDATE ProcessingLevels SET ProcessingLevelCode=?, Definition=?, Explanation=? " \
-                             "WHERE ProcessingLevelID=?"
+                update_sql = "UPDATE ProcessingLevels SET ProcessingLevelCode=?, Definition=?, " \
+                             "Explanation=? WHERE ProcessingLevelID=?"
 
                 params = (processing_level.processing_level_code, processing_level.definition,
                           processing_level.explanation, result['ProcessingLevelID'])
@@ -737,7 +767,8 @@ class TimeSeriesMetaData(CoreMetaData):
         # updates 'Sites' and 'SamplingFeatures' tables
         for site in self.sites:
             if site.is_dirty:
-                # get the SamplingFeatureID to update the corresponding row in Sites and SamplingFeatures tables
+                # get the SamplingFeatureID to update the corresponding row in Sites and
+                # SamplingFeatures tables
                 series_id = site.series_ids[0]
                 cur.execute("SELECT FeatureActionID FROM Results WHERE ResultUUID=?", (series_id,))
                 result = cur.fetchone()
@@ -751,8 +782,9 @@ class TimeSeriesMetaData(CoreMetaData):
                 cur.execute(update_sql, params)
 
                 # then update the SamplingFeatures table
-                update_sql = "UPDATE SamplingFeatures SET SamplingFeatureCode=?, SamplingFeatureName=?, Elevation_m=?, " \
-                             "ElevationDatumCV=? WHERE SamplingFeatureID=?"
+                update_sql = "UPDATE SamplingFeatures SET SamplingFeatureCode=?, " \
+                             "SamplingFeatureName=?, Elevation_m=?, ElevationDatumCV=? " \
+                             "WHERE SamplingFeatureID=?"
 
                 params = (site.site_code, site.site_name, site.elevation_m,
                           site.elevation_datum, feature_action["SamplingFeatureID"])
@@ -765,19 +797,23 @@ class TimeSeriesMetaData(CoreMetaData):
         # updates 'Results', 'Units' and 'TimeSeriesResults' tables
         for ts_result in self.time_series_results:
             if ts_result.is_dirty:
-                # get the UnitsID and ResultID to update the corresponding row in Results, Units and TimeSeriesResults
-                # tables
+                # get the UnitsID and ResultID to update the corresponding row in Results,
+                # Units and TimeSeriesResults tables
                 series_id = ts_result.series_ids[0]
-                cur.execute("SELECT UnitsID, ResultID FROM Results WHERE ResultUUID=?", (series_id,))
+                cur.execute("SELECT UnitsID, ResultID FROM Results WHERE ResultUUID=?",
+                            (series_id,))
                 result = cur.fetchone()
 
                 # update Units table
-                update_sql = "UPDATE Units SET UnitsTypeCV=?, UnitsName=?, UnitsAbbreviation=? WHERE UnitsID=?"
-                params = (ts_result.units_type, ts_result.units_name, ts_result.units_abbreviation, result['UnitsID'])
+                update_sql = "UPDATE Units SET UnitsTypeCV=?, UnitsName=?, UnitsAbbreviation=? " \
+                             "WHERE UnitsID=?"
+                params = (ts_result.units_type, ts_result.units_name, ts_result.units_abbreviation,
+                          result['UnitsID'])
                 cur.execute(update_sql, params)
 
                 # update TimeSeriesResults table
-                update_sql = "UPDATE TimeSeriesResults SET AggregationStatisticCV=? WHERE ResultID=?"
+                update_sql = "UPDATE TimeSeriesResults SET AggregationStatisticCV=? " \
+                             "WHERE ResultID=?"
                 params = (ts_result.aggregation_statistics, result['ResultID'])
                 cur.execute(update_sql, params)
 
@@ -807,5 +843,3 @@ def _generate_term_from_name(name):
     # first word lowercase, subsequent words start with a uppercase
     term = name_parts[0].lower() + ''.join([item.title() for item in name_parts[1:]])
     return term
-
-import receivers
