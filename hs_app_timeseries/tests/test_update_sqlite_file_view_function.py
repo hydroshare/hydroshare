@@ -52,8 +52,7 @@ class TestUpdateSQLiteFile(MockIRODSTestCaseMixin, TestCase):
         self.genResource = hydroshare.create_resource(resource_type='GenericResource',
                                                       owner=self.john,
                                                       title='Test Resource',
-                                                      metadata=[]
-                                                     )
+                                                      metadata=[])
 
         self.factory = RequestFactory()
 
