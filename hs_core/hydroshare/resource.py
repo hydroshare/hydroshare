@@ -2,6 +2,7 @@ import os
 import zipfile
 import shutil
 import logging
+import string
 import copy
 
 import requests
@@ -12,7 +13,6 @@ from django.core.files import File
 from django.core.files.uploadedfile import UploadedFile
 from django.core.exceptions import ValidationError
 from django.db import transaction
-from django.conf import settings
 from rest_framework import status
 
 from mezzanine.generic.models import Keyword, AssignedKeyword
@@ -25,8 +25,8 @@ from hs_access_control.models import ResourceAccess, UserResourcePrivilege, Priv
 from hs_labels.models import ResourceLabels
 
 
-FILE_SIZE_LIMIT = 10*(1024 ** 3)
-FILE_SIZE_LIMIT_FOR_DISPLAY = '10G'
+FILE_SIZE_LIMIT = 1*(1024 ** 3)
+FILE_SIZE_LIMIT_FOR_DISPLAY = '1G'
 METADATA_STATUS_SUFFICIENT = 'Sufficient to publish or make public'
 METADATA_STATUS_INSUFFICIENT = 'Insufficient to publish or make public'
 
@@ -349,8 +349,9 @@ def add_zip_file_contents_to_resource_async(resource, f):
 def create_resource(
         resource_type, owner, title,
         edit_users=None, view_users=None, edit_groups=None, view_groups=None,
-        keywords=(), metadata=None, content=None,
-        files=(), create_metadata=True,
+        keywords=(), metadata=None,
+        files=(), fed_res_file_names='', fed_res_path='', fed_copy_or_move=None,
+        create_metadata=True,
         create_bag=True, unpack_file=False, **kwargs):
 
 
@@ -394,6 +395,12 @@ def create_resource(
     :param keywords: string list. list of keywords to add to the resource
     :param metadata: list of dicts containing keys (element names) and corresponding values as dicts { 'creator': {'name':'John Smith'}}.
     :param files: list of Django File or UploadedFile objects to be attached to the resource
+    :param fed_res_file_names: the file names separated by comma from a federated zone to be
+                               used to create the resource in the federated zone, default is empty string
+    :param fed_res_path: the federated zone path in the format of /federation_zone/home/localHydroProxy that
+                         indicate where the resource is stored, default is empty string
+    :param fed_copy_or_move: a string value of 'copy' or 'move' indicating whether the content files
+                             should be copied or moved to localHydroProxy space. default is None
     :param create_bag: whether to create a bag for the newly created resource or not. By default, the bag is created.
     :param unpack_file: boolean.  If files contains a single zip file, and unpack_file is True,
                         the unpacked contents of the zip file will be added to the resource instead of the zip file.
@@ -425,6 +432,16 @@ def create_resource(
         if not metadata:
             metadata = []
 
+        fed_zone_home_path = ''
+        if fed_res_path:
+            fed_zone_home_path = fed_res_path
+            resource.resource_federation_path = fed_res_path
+            resource.save()
+        elif fed_res_file_names:
+            fed_zone_home_path = utils.get_federated_zone_home_path(fed_res_file_names[0])
+            resource.resource_federation_path = fed_zone_home_path
+            resource.save()
+
         if len(files) == 1 and unpack_file and zipfile.is_zipfile(files[0]):
             # Add contents of zipfile as resource files asynchronously
             # Note: this is done asynchronously as unzipping may take
@@ -436,7 +453,8 @@ def create_resource(
             # few seconds.  We may want to add the option to do this
             # asynchronously if the file size is large and would take
             # more than ~15 seconds to complete.
-            add_resource_files(resource.short_id, *files)
+            add_resource_files(resource.short_id, *files, fed_res_file_names=fed_res_file_names,
+                               fed_copy_or_move=fed_copy_or_move, fed_zone_home_path=fed_zone_home_path)
 
         # by default resource is private
         resource_access = ResourceAccess(resource=resource)
@@ -483,9 +501,9 @@ def create_resource(
             resource.title = resource.metadata.title.value
             resource.save()
         if create_bag:
-            hs_bagit.create_bag(resource)
-
+            hs_bagit.create_bag(resource, fed_zone_home_path=fed_zone_home_path)
     return resource
+
 
 def create_new_version_empty_resource(pk, user):
     """
@@ -510,10 +528,11 @@ def create_new_version_empty_resource(pk, user):
         owner=user,
         title=res.metadata.title.value,
         create_metadata=False,
+        fed_res_path=res.resource_federation_path,
         create_bag=False
     )
-
     return new_resource
+
 
 def create_new_version_resource(ori_res, new_res, user):
     """
@@ -536,8 +555,19 @@ def create_new_version_resource(ori_res, new_res, user):
     # link copied resource files to Django resource model
     files = ResourceFile.objects.filter(object_id=ori_res.id)
     for n, f in enumerate(files):
-        ResourceFile.objects.create(content_object=new_res,
-            resource_file = os.path.join('{res_id}/data/contents/{file_name}'.format(
+        if f.fed_resource_file_name_or_path:
+            ResourceFile.objects.create(content_object=new_res,
+                                        resource_file=None,
+                                        fed_resource_file_name_or_path=f.fed_resource_file_name_or_path,
+                                        fed_resource_file_size=f.fed_resource_file_size)
+        elif f.fed_resource_file:
+            ResourceFile.objects.create(content_object=new_res,
+                                        fed_resource_file=os.path.join('{zone}/{res_id}/data/contents/{file_name}'.format(
+                                            zone=ori_res.resource_federation_path, res_id=new_res.short_id,
+                                            file_name=os.path.basename(f.fed_resource_file.name))))
+        elif f.resource_file:
+            ResourceFile.objects.create(content_object=new_res,
+                resource_file = os.path.join('{res_id}/data/contents/{file_name}'.format(
                             res_id=new_res.short_id,
                             file_name=os.path.basename(f.resource_file.name))))
 
@@ -585,7 +615,7 @@ def create_new_version_resource(ori_res, new_res, user):
     new_res.extra_metadata = copy.deepcopy(ori_res.extra_metadata)
 
     # create bag for the new resource
-    hs_bagit.create_bag(new_res)
+    hs_bagit.create_bag(new_res, ori_res.resource_federation_path)
 
     # since an isReplaceBy relation element is added to original resource, needs to call resource_modified() for original resource
     utils.resource_modified(ori_res, user)
@@ -689,7 +719,7 @@ def update_resource(
     return resource
 
 
-def add_resource_files(pk, *files):
+def add_resource_files(pk, *files, **kwargs):
     """
     Called by clients to update a resource in HydroShare by adding a single file.
 
@@ -723,9 +753,31 @@ def add_resource_files(pk, *files):
 
     """
     resource = utils.get_resource_by_shortkey(pk)
+    fed_res_file_names=kwargs.pop('fed_res_file_names', '')
     ret = []
+    fed_zone_home_path = kwargs.pop('fed_zone_home_path', '')
+    # for adding files to existing resources, the default action is copy
+    fed_copy_or_move = kwargs.pop('fed_copy_or_move', 'copy')
     for f in files:
-        ret.append(utils.add_file_to_resource(resource, f))
+        if fed_zone_home_path:
+            # user has selected files from a federated iRODS zone, so files uploaded from local disk
+            # need to be stored to the federated iRODS zone rather than HydroShare zone as well
+            ret.append(utils.add_file_to_resource(resource, f, fed_res_file_name_or_path=fed_zone_home_path))
+        elif resource.resource_federation_path:
+            # file needs to be added to a resource in a federated zone
+            ret.append(utils.add_file_to_resource(resource, f, fed_res_file_name_or_path=resource.resource_federation_path))
+        else:
+            ret.append(utils.add_file_to_resource(resource, f))
+    if fed_res_file_names:
+        if isinstance(fed_res_file_names, basestring):
+            ifnames = string.split(fed_res_file_names, ',')
+        elif isinstance(fed_res_file_names, list):
+            ifnames = fed_res_file_names
+        else:
+            return ret
+        for ifname in ifnames:
+            ret.append(utils.add_file_to_resource(resource, None, fed_res_file_name_or_path=ifname,
+                                                  fed_copy_or_move=fed_copy_or_move))
     return ret
 
 
@@ -824,6 +876,58 @@ def delete_resource(pk):
     return pk
 
 
+def get_resource_file_name(f):
+    '''
+    get the file name of a specific ResourceFile object f
+    Args:
+        f: the ResourceFile object to return name for
+    Returns:
+        the file name of the ResourceFile object f
+    '''
+    if f.resource_file:
+        # file was originally from local disk, and is currently stored in irods hydroshare zone
+        res_fname = f.resource_file.name
+    elif f.fed_resource_file:
+        # file was originally from local disk, but is currently stored in federated irods zone
+        res_fname = f.fed_resource_file.name
+    else:
+        # file was originally from federated irods zone, and is currently stored in the
+        # same federated irods zone
+        res_fname = f.fed_resource_file_name_or_path
+    return res_fname
+
+
+def delete_resource_file_only(resource, f):
+    '''
+    Delete the single resource file f from the resource without sending signals and
+    without deleting related metadata element. This function is called by delete_resource_file()
+    function as well as from pre-delete signal handler for specific resource types
+    (e.g., netCDF, raster, and feature) where when one resource file is deleted,
+    some other resource files needs to be deleted as well.
+    Args:
+        resource: the resource from which the file f is to be deleted
+        f: the ResourceFile object to be deleted
+    Returns: file name that has been deleted
+    '''
+    fed_path = resource.resource_federation_path
+    if fed_path:
+        if f.fed_resource_file:
+            # file was originally from local disk, but is currently stored in federated irods zone
+            file_name = f.fed_resource_file.name
+            f.fed_resource_file.delete()
+        elif f.fed_resource_file_name_or_path:
+            # file was originally from federated irods zone, and is currently stored in the
+            # same federated irods zone
+            file_name = os.path.join(fed_path, resource.short_id, f.fed_resource_file_name_or_path);
+            utils.delete_fed_zone_file(file_name)
+    else:
+        # file was originally from local disk, and is currently stored in main irods hydroshare zone
+        file_name = f.resource_file.name
+        f.resource_file.delete()
+    f.delete()
+    return file_name
+
+
 def delete_resource_file(pk, filename_or_id, user):
     """
     Deletes an individual file from a HydroShare resource. If the file does not exist, the Exceptions.NotFound exception
@@ -832,8 +936,9 @@ def delete_resource_file(pk, filename_or_id, user):
     REST URL:  DELETE /resource/{pid}/files/{filename}
 
     Parameters:
-    pid - The unique HydroShare identifier for the resource from which the file will be deleted
+    pk - The unique HydroShare identifier for the resource from which the file will be deleted
     filename - Name of the file to be deleted from the resource
+    user - requesting user
 
     Returns:    The pid of the resource from which the file was deleted
 
@@ -857,21 +962,22 @@ def delete_resource_file(pk, filename_or_id, user):
     """
     resource = utils.get_resource_by_shortkey(pk)
     res_cls = resource.__class__
-
+    fed_path = resource.resource_federation_path
     try:
         file_id = int(filename_or_id)
         filter_condition = lambda fl: fl.id == file_id
     except ValueError:
-        filter_condition = lambda fl: os.path.basename(fl.resource_file.name) == filename_or_id
+        if fed_path:
+            filter_condition = lambda fl: os.path.basename(fl.fed_resource_file_name_or_path) == filename_or_id \
+                                          or os.path.basename(fl.fed_resource_file.name) == filename_or_id
+        else:
+            filter_condition = lambda fl: os.path.basename(fl.resource_file.name) == filename_or_id
 
     for f in ResourceFile.objects.filter(object_id=resource.id):
         if filter_condition(f):
             # send signal
             signals.pre_delete_file_from_resource.send(sender=res_cls, file=f, resource=resource, user=user)
-
-            file_name = f.resource_file.name
-            f.resource_file.delete()
-            f.delete()
+            file_name = delete_resource_file_only(resource, f)
             delete_file_mime_type = utils.get_file_mime_type(file_name)
             delete_file_extension = os.path.splitext(file_name)[1]
 

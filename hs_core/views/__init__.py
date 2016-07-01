@@ -12,7 +12,7 @@ from django.contrib.sites.models import Site
 from django.contrib import messages
 from django.utils.decorators import method_decorator
 from django.core.exceptions import ValidationError, PermissionDenied, ObjectDoesNotExist
-from django.http import HttpResponseRedirect, HttpResponse
+from django.http import HttpResponseRedirect, HttpResponse, JsonResponse
 from django.shortcuts import get_object_or_404, render_to_response, render, redirect
 from django.template import RequestContext
 from django.core import signing
@@ -288,7 +288,7 @@ def update_metadata_element(request, shortkey, element_name, element_id, *args, 
 
 
 @api_view(['GET'])
-def file_download_url_mapper(request, shortkey, filename):
+def file_download_url_mapper(request, shortkey):
     """ maps the file URIs in resourcemap document to django_irods download view function"""
 
     authorize(request, shortkey, needed_permission=ACTION_TO_AUTHORIZE.VIEW_RESOURCE)
@@ -338,6 +338,41 @@ def delete_resource(request, shortkey, *args, **kwargs):
                                                  collection=collection_res)
 
     return HttpResponseRedirect('/my-resources/')
+
+
+def rep_res_bag_to_irods_user_zone(request, shortkey, *args, **kwargs):
+    '''
+    This function needs to be called via AJAX. The function replicates resource bag to iRODS user zone on users.hydroshare.org
+    which is federated with hydroshare zone under the iRODS user account corresponding to a HydroShare user. This function
+    should only be called or exposed to be called from web interface when a corresponding iRODS user account on hydroshare
+    user Zone exists. The purpose of this function is to allow HydroShare resource bag that a HydroShare user has access
+    to be copied to HydroShare user's iRODS space in HydroShare user zone so that users can do analysis or computations on
+    the resource
+    Args:
+        request: an AJAX request
+        shortkey: UUID of the resource to be copied to the login user's iRODS user space
+
+    Returns:
+        JSON list that indicates status of resource replication, i.e., success or error
+    '''
+    res, authorized, user = authorize(request, shortkey, needed_permission=ACTION_TO_AUTHORIZE.VIEW_RESOURCE, raises_exception=False)
+    if not authorized:
+        return HttpResponse(
+        json.dumps({"error": "You are not authorized to replicate this resource."}),
+        content_type="application/json"
+        )
+
+    try:
+        utils.replicate_resource_bag_to_user_zone(user, shortkey)
+        return HttpResponse(
+            json.dumps({"success": "This resource bag zip file has been successfully replicated to your iRODS user zone."}),
+            content_type = "application/json"
+        )
+    except SessionException as ex:
+        return HttpResponse(
+        json.dumps({"error": ex.stderr}),
+        content_type="application/json"
+        )
 
 def create_new_version_resource(request, shortkey, *args, **kwargs):
     res, authorized, user = authorize(request, shortkey, needed_permission=ACTION_TO_AUTHORIZE.CREATE_RESOURCE_VERSION)
@@ -695,13 +730,15 @@ class GroupUpdateForm(GroupForm):
 @login_required
 def my_resources(request, page):
     resource_collection = get_my_resources_list(request)
-
     context = {'collection': resource_collection}
+    
     return context
 
 
 @processor_for(GenericResource)
 def add_generic_context(request, page):
+    user = request.user
+    in_production, user_zone_account_exist = utils.get_user_zone_status_info(user)
 
     class AddUserForm(forms.Form):
         user = forms.ModelChoiceField(User.objects.filter(is_active=True).all(),
@@ -717,6 +754,7 @@ def add_generic_context(request, page):
         'add_edit_user_form': AddUserForm(),
         'add_view_group_form': AddGroupForm(),
         'add_edit_group_form': AddGroupForm(),
+        'user_zone_account_exist': user_zone_account_exist,
     }
 
 
@@ -731,30 +769,36 @@ def create_resource(request, *args, **kwargs):
     res_title = request.POST['title']
 
     resource_files = request.FILES.getlist('files')
-
+    fed_res_file_names=[]
     irods_fnames = request.POST.get('irods_file_names')
+    federated = request.POST.get("irods_federated").lower()=='true'
+    fed_copy_or_move = request.POST.get("copy-or-move")
+
     if irods_fnames:
-        user = request.POST.get('irods-username')
-        password = request.POST.get("irods-password")
-        port = request.POST.get("irods-port")
-        host = request.POST.get("irods-host")
-        zone = request.POST.get("irods-zone")
-        try:
-            upload_from_irods(username=user, password=password, host=host, port=port,
-                                  zone=zone, irods_fnames=irods_fnames, res_files=resource_files)
-        except utils.ResourceFileSizeException as ex:
-            context = {'file_size_error': ex.message}
-            return render_to_response('pages/create-resource.html', context, context_instance=RequestContext(request))
-        except SessionException as ex:
-            context = {'resource_creation_error': ex.stderr}
-            return render_to_response('pages/create-resource.html', context, context_instance=RequestContext(request))
+        if federated:
+            fed_res_file_names = irods_fnames.split(',')
+        else:
+            user = request.POST.get('irods-username')
+            password = request.POST.get("irods-password")
+            port = request.POST.get("irods-port")
+            host = request.POST.get("irods-host")
+            zone = request.POST.get("irods-zone")
+            try:
+                upload_from_irods(username=user, password=password, host=host, port=port,
+                                      zone=zone, irods_fnames=irods_fnames, res_files=resource_files)
+            except utils.ResourceFileSizeException as ex:
+                context = {'file_size_error': ex.message}
+                return render_to_response('pages/create-resource.html', context, context_instance=RequestContext(request))
+            except SessionException as ex:
+                context = {'resource_creation_error': ex.stderr}
+                return render_to_response('pages/create-resource.html', context, context_instance=RequestContext(request))
 
     url_key = "page_redirect_url"
 
     try:
-        page_url_dict, res_title, metadata = hydroshare.utils.resource_pre_create_actions(resource_type=resource_type, files=resource_files,
-                                                                    resource_title=res_title,
-                                                                    page_redirect_url_key=url_key, **kwargs)
+        page_url_dict, res_title, metadata, fed_res_path = hydroshare.utils.resource_pre_create_actions(resource_type=resource_type, files=resource_files,
+                                                                    resource_title=res_title, fed_res_file_names=fed_res_file_names,
+                                                                    page_redirect_url_key=url_key, requesting_user=request.user, **kwargs)
     except utils.ResourceFileSizeException as ex:
         context = {'file_size_error': ex.message}
         return render_to_response('pages/create-resource.html', context, context_instance=RequestContext(request))
@@ -777,6 +821,9 @@ def create_resource(request, *args, **kwargs):
             title=res_title,
             metadata=metadata,
             files=resource_files,
+            fed_res_file_names=fed_res_file_names,
+            fed_res_path = fed_res_path[0] if len(fed_res_path)==1 else '',
+            fed_copy_or_move=fed_copy_or_move,
             content=res_title
     )
     # except Exception as ex:
@@ -1025,12 +1072,52 @@ def get_file(request, *args, **kwargs):
     session.runCmd('iget', [ name, 'tempfile.' + name ])
     return HttpResponse(open(name), content_type='x-binary/octet-stream')
 
+
 processor_for(GenericResource)(resource_processor)
 
 
 def get_metadata_terms_page(request, *args, **kwargs):
     return render(request, 'pages/metadata_terms.html')
 
+
+@login_required
+def get_user_data(request, user_id, *args, **kwargs):
+    """
+    This view function must be called as an AJAX call
+
+    :param user_id: id if the user for whom data is needed
+    :return: JsonResponse() containing user data
+    """
+    user = utils.user_from_id(user_id)
+
+    if user.userprofile.middle_name:
+        user_name = "{} {} {}".format(user.first_name, user.userprofile.middle_name, user.last_name)
+    else:
+        user_name = "{} {}".format(user.first_name, user.last_name)
+
+    user_data = {'name': user_name, 'email': user.email}
+    user_data['url'] = '{domain}/user/{uid}/'.format(domain=utils.current_site_url(), uid=user.pk)
+    if user.userprofile.phone_1:
+        user_data['phone'] = user.userprofile.phone_1
+    elif user.userprofile.phone_2:
+        user_data['phone'] = user.userprofile.phone_2
+    else:
+        user_data['phone'] = ''
+
+    address = ''
+    if user.userprofile.state and user.userprofile.state.lower() != 'unspecified':
+        address = user.userprofile.state
+    if user.userprofile.country and user.userprofile.country.lower() != 'unspecified':
+        if len(address) > 0:
+            address += ', ' + user.userprofile.country
+        else:
+            address = user.userprofile.country
+
+    user_data['address'] = address
+    user_data['organization'] = user.userprofile.organization if user.userprofile.organization else ''
+    user_data['website'] = user.userprofile.website if user.userprofile.website else ''
+
+    return JsonResponse(user_data)
 
 def _send_email_on_group_membership_acceptance(membership_request):
     """
@@ -1148,8 +1235,13 @@ def _set_resource_sharing_status(request, user, resource, flag_to_set, flag_valu
 
         resource.raccess.save()
         # set isPublic metadata AVU accordingly
-        istorage = IrodsStorage()
-        istorage.setAVU(resource.short_id, "isPublic", str(resource.raccess.public))
+        if resource.resource_federation_path:
+            istorage = IrodsStorage('federated')
+            res_coll = '{}/{}'.format(resource.resource_federation_path, resource.short_id)
+        else:
+            istorage = IrodsStorage()
+            res_coll = resource.short_id
+        istorage.setAVU(res_coll, "isPublic", str(resource.raccess.public))
 
         # run script to update hyrax input files when a private netCDF resource is made public
         if flag_to_set=='public' and flag_value and settings.RUN_HYRAX_UPDATE and resource.resource_type=='NetcdfResource':
