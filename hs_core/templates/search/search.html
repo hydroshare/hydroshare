@@ -51,12 +51,8 @@
                                             {% elif key ==  'discoverable'%}
                                                 &nbsp; Filter by Discoverable
                                             {% endif %}
-                                            <span
-                                                {% if key == 'creators' or key == 'subjects' or key == 'resource_type'%}
-                                                    class="glyphicon glyphicon-minus pull-left"
-                                                {% else %}
-                                                    class="glyphicon glyphicon-plus pull-left"
-                                                {% endif %}>
+                                            <span class="glyphicon glyphicon-minus pull-left" >
+
                                             </span>
                                         </a>
                                     </h4>
@@ -84,7 +80,7 @@
                             <h4 class="panel-title">
                                 <a data-toggle="collapse" href="#availability">
                                     &nbsp; Filter by Availability
-                                    <span class="glyphicon glyphicon-plus pull-left"></span>
+                                    <span class="glyphicon glyphicon-minus pull-left"></span>
                                 </a>
                             </h4>
                         </div>
@@ -447,25 +443,19 @@
                 <div id="map-view" class="tab-pane fade">
                     <div id="resource-search">
                         <form id="covereage-search-fields" method="get" action=".">
-                            <table id="geo-filter-coordinates">
-                                <tr>
-                                    {% for field in form %}
-                                        {% if field.auto_id  == "id_NElat" or field.auto_id  == "id_NElng" or field.auto_id  == "id_SWlat" or field.auto_id  == "id_SWlng" %}
-                                            <td>
-                                                <div class="fieldWrapper">
-                                                    {{ field.label_tag }} {{ field }}
-                                                </div>
-                                            </td>
-                                        {% endif %}
-                                    {% endfor %}
-                                    <td>
-                                        <a id="manual-zoom-btn" class="btn btn-default" onclick="manualZoomMap()"
-                                           style="margin-top:20px">
-                                            <span class="glyphicon glyphicon-zoom-in"></span> Zoom In
-                                        </a>
-                                    </td>
-                                </tr>
-                            </table>
+                            {% for field in form %}
+                                {% if field.auto_id  == "id_NElat" or field.auto_id  == "id_NElng" or field.auto_id  == "id_SWlat" or field.auto_id  == "id_SWlng" %}
+                                    <div class="col-sm-3">
+                                    {{ field.label_tag }} {{ field }}
+                                     </div>
+                                {% endif %}
+                            {% endfor %}
+                            <div class="col-sm-12">
+                                <a id="manual-zoom-btn" class="btn btn-default" onclick="manualZoomMap()"
+                                   style="margin-top:20px">
+                                    <span class="glyphicon glyphicon-zoom-in"></span> Zoom In
+                                </a>
+                            </div>
                         </form>
                         <br>
                     </div>

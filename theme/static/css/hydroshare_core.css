@@ -3687,7 +3687,8 @@ div.group-add-photo {
 }
 
 #list-data-options {
-	float:right;
+	float: right;
+	margin-bottom: 10px;
 }
 
 #discover-map {
@@ -3740,4 +3741,19 @@ div.toggle.btn {
 
 #clear-dates-options:hover {
 	text-decoration: none;
+}
+
+#covereage-search-fields label {
+	width: 90px;
+}
+
+#covereage-search-fields input {
+	width: 100%;
+}
+
+form#covereage-search-fields {
+    border: 1px solid #DDD;
+    padding-top: 10px;
+    padding-bottom: 10px;
+    border-radius: 4px;
 }
