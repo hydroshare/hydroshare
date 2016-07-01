@@ -567,7 +567,7 @@
                 Calculate coverages failed.\
                 </div>';
             var res_id = "{{ collection_res_id }}";
-            var url = "/hsapi/_internal/" + res_id + "/calculate-collection-coverages/";
+            var url = "/hsapi/_internal/calculate-collection-coverages/" + res_id + "/";
             $.ajax({
                 type: "POST",
                 url: url,

@@ -8,7 +8,8 @@ from hs_core.views.utils import authorize, ACTION_TO_AUTHORIZE
 from hs_core.hydroshare.utils import get_resource_by_shortkey, resource_modified
 
 logger = logging.getLogger(__name__)
-ui_datetime_format = "%m/%d/%Y"
+UI_DATETIME_FORMAT = "%m/%d/%Y"
+
 
 # update collection
 def update_collection(request, shortkey, *args, **kwargs):
@@ -28,8 +29,9 @@ def update_collection(request, shortkey, *args, **kwargs):
     new_coverage_list = []
     try:
         with transaction.atomic():
-            collection_res_obj, is_authorized, user = authorize(request, shortkey,
-                                                                needed_permission=ACTION_TO_AUTHORIZE.EDIT_RESOURCE)
+            collection_res_obj, is_authorized, user \
+                = authorize(request, shortkey,
+                            needed_permission=ACTION_TO_AUTHORIZE.EDIT_RESOURCE)
 
             if collection_res_obj.resource_type.lower() != "collectionresource":
                 raise Exception("Resource {0} is not a collection resource.".format(shortkey))
@@ -40,7 +42,6 @@ def update_collection(request, shortkey, *args, **kwargs):
             if len(updated_contained_res_id_list) > len(set(updated_contained_res_id_list)):
                 raise Exception("Duplicate resources were found for adding to the collection")
 
-
             for updated_contained_res_id in updated_contained_res_id_list:
                 # avoid adding collection itself
                 if updated_contained_res_id == shortkey:
@@ -49,9 +50,11 @@ def update_collection(request, shortkey, *args, **kwargs):
                 # check authorization for all new resources being added to the collection
                 # the requesting user should at least have metadata view permission for each of the
                 # new resources to be added to the collection
-                if not collection_res_obj.resources.filter(short_id=updated_contained_res_id).exists():
-                    res_to_add, _, _ = authorize(request, updated_contained_res_id,
-                                                 needed_permission=ACTION_TO_AUTHORIZE.VIEW_METADATA)
+                if not collection_res_obj.\
+                        resources.filter(short_id=updated_contained_res_id).exists():
+                    res_to_add, _, _ \
+                        = authorize(request, updated_contained_res_id,
+                                    needed_permission=ACTION_TO_AUTHORIZE.VIEW_METADATA)
 
             # remove all resources from the collection
             collection_res_obj.resources.clear()
@@ -76,7 +79,10 @@ def update_collection(request, shortkey, *args, **kwargs):
         status = "error"
         msg = ex.message
     finally:
-        ajax_response_data = {'status': status, 'msg': msg, 'metadata_status': metadata_status, 'new_coverage_list': new_coverage_list}
+        ajax_response_data = \
+            {'status': status, 'msg': msg,
+             'metadata_status': metadata_status,
+             'new_coverage_list': new_coverage_list}
         return JsonResponse(ajax_response_data)
 
 
@@ -90,8 +96,9 @@ def update_collection_for_deleted_resources(request, shortkey, *args, **kwargs):
 
     ajax_response_data = {'status': "success"}
     try:
-        collection_res, is_authorized, user = authorize(request, shortkey,
-                                                        needed_permission=ACTION_TO_AUTHORIZE.EDIT_RESOURCE)
+        collection_res, is_authorized, user \
+            = authorize(request, shortkey,
+                        needed_permission=ACTION_TO_AUTHORIZE.EDIT_RESOURCE)
 
         if collection_res.resource_type.lower() != "collectionresource":
             raise Exception("Resource {0} is not a collection resource.".format(shortkey))
@@ -104,7 +111,8 @@ def update_collection_for_deleted_resources(request, shortkey, *args, **kwargs):
         collection_res.deleted_resources.all().delete()
 
     except Exception as ex:
-        logger.error("Failed to update collection for deleted resources.Collection resource ID: {}. "
+        logger.error("Failed to update collection for "
+                     "deleted resources.Collection resource ID: {}. "
                      "Error:{} ".format(shortkey, ex.message))
 
         ajax_response_data = {'status': "error", 'message': ex.message}
@@ -112,44 +120,22 @@ def update_collection_for_deleted_resources(request, shortkey, *args, **kwargs):
         return JsonResponse(ajax_response_data)
 
 
-def update_collection_coverages(request, shortkey, *args, **kwargs):
-
-    ajax_response_data = {'status': "success"}
-    try:
-        collection_res, is_authorized, user = authorize(request, shortkey,
-                                                        needed_permission=ACTION_TO_AUTHORIZE.EDIT_RESOURCE)
-
-        if collection_res.resource_type.lower() != "collectionresource":
-            raise Exception("Resource {0} is not a collection resource.".format(shortkey))
-
-        new_coverage_list = _update_collection_coverages(collection_res)
-        ajax_response_data['new_coverage_list'] = new_coverage_list
-
-        resource_modified(collection_res, user)
-
-    except Exception as ex:
-        logger.error("Failed to update collection coverages. Collection resource ID: {0}. "
-                     "Error:{1} ".format(shortkey, ex.message))
-
-        ajax_response_data = {'status': "error", 'message': ex.message}
-    finally:
-        return JsonResponse(ajax_response_data)
-
-
 def calculate_collection_coverages(request, shortkey, *args, **kwargs):
-
+    """
+    Calculate latest coverages of the specified collection resource
+    This func is a wrapper of the _calculate_collection_coverages func
+    """
     ajax_response_data = {'status': "success"}
     try:
-        collection_res, is_authorized, user = authorize(request, shortkey,
-                                                        needed_permission=ACTION_TO_AUTHORIZE.VIEW_RESOURCE)
+        collection_res, is_authorized, user \
+            = authorize(request, shortkey,
+                        needed_permission=ACTION_TO_AUTHORIZE.VIEW_RESOURCE)
 
         if collection_res.resource_type.lower() != "collectionresource":
             raise Exception("Resource {0} is not a collection resource.".format(shortkey))
 
         new_coverage_list = _calculate_collection_coverages(collection_res)
         ajax_response_data['new_coverage_list'] = new_coverage_list
-
-        resource_modified(collection_res, user)
 
     except Exception as ex:
         logger.error("Failed to calculate collection coverages. Collection resource ID: {0}. "
@@ -162,33 +148,33 @@ def calculate_collection_coverages(request, shortkey, *args, **kwargs):
 
 def _update_collection_coverages(collection_res_obj):
     """
-    update the collection coverages metadata.
-    :param collection_res_obj: collection obj
-    :return: a json response contains a list of coverage metadata dict
+    Update the collection coverages metadata records in db.
+    This func always removes all existing coverage metadata instances first,
+    and then create new ones if needed.
+    The element id of new created coverage metadata instance is stored in key "element_id_str".
+    :param collection_res_obj: instance of CollectionResource type
+    :return: a list of coverage metadata dict
     """
-    res_id = collection_res_obj.short_id
     new_coverage_list = _calculate_collection_coverages(collection_res_obj)
     try:
         with transaction.atomic():
             collection_res_obj.metadata.coverages.all().delete()
             for cvg in new_coverage_list:
-                element = collection_res_obj.metadata.create_element('Coverage',
-                                                           type=cvg['type'],
-                                                           value=cvg['value'])
+                element = collection_res_obj.\
+                    metadata.create_element('Coverage',
+                                            type=cvg['type'],
+                                            value=cvg['value'])
                 cvg["element_id_str"] = str(element.id)
 
+            return new_coverage_list
     except Exception as ex:
-        logger.exception("Failed to update collection coverages. Collection resource ID: {0}. "
-                         "Error: {1} ".format(res_id, ex.message))
-        raise Exception("Failed to update collection coverages")
-    finally:
-        return new_coverage_list
+        raise Exception("Failed to update collection coverages: {0}".format(ex.message))
 
 
 def _calculate_collection_coverages(collection_res_obj):
     """
-    calculate the overall coverages of all contained resources
-    :param collection_res_obj: collection obj
+    Calculate the overall coverages of all contained resources
+    :param collection_res_obj: instance of CollectionResource type
     :return: a list of coverage metadata dict
     """
     res_id = collection_res_obj.short_id
@@ -219,9 +205,13 @@ def _calculate_collection_coverages(collection_res_obj):
                             time_list.append(end_date)
                     except ValueError as ex:
                         # skip the res if it has invalid datetime string
-                        logger.warning("_calculate_collection_coverages: Ignore unknown datetime string. Collection resource ID: {0}. "
+                        logger.warning("_calculate_collection_coverages: "
+                                       "Ignore unknown datetime string. "
+                                       "Collection resource ID: {0}. "
                                        "Contained res ID: {1}"
-                                       "Msg: {2} ".format(res_id, contained_res_obj.short_id, ex.message))
+                                       "Msg: {2} ".
+                                       format(res_id,
+                                              contained_res_obj.short_id, ex.message))
 
         # spatial coverage
         if len(lon_list) > 0 and len(lat_list) > 0:
@@ -245,17 +235,20 @@ def _calculate_collection_coverages(collection_res_obj):
                 value_dict['units'] = output_spatial_units_str,
                 value_dict['projection'] = output_spatial_projection_str
 
-            new_coverage_list.append({'type': type_str, 'value': value_dict, 'element_id_str': "-1"})
+            new_coverage_list.append({'type': type_str,
+                                      'value': value_dict, 'element_id_str': "-1"})
 
         # temporal coverage
         if len(time_list) > 0:
             time_start = min(time_list)
             time_end = max(time_list)
-            value_dict = {'start': time_start.strftime(ui_datetime_format), 'end': time_end.strftime(ui_datetime_format)}
+            value_dict = {'start': time_start.strftime(UI_DATETIME_FORMAT),
+                          'end': time_end.strftime(UI_DATETIME_FORMAT)}
 
-            new_coverage_list.append({'type': 'period', 'value': value_dict, 'element_id_str': "-1"})
+            new_coverage_list.append({'type': 'period',
+                                      'value': value_dict, 'element_id_str': "-1"})
+
+        return new_coverage_list
 
     except Exception as ex:
-        raise Exception("Failed to calculate collection coverages")
-    finally:
-        return new_coverage_list
+        raise Exception("Failed to calculate collection coverages: {0}".format(ex.message))
