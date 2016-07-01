@@ -444,9 +444,8 @@
                         <form id="covereage-search-fields" method="get" action=".">
                             {% for field in form %}
                                 {% if field.auto_id  == "id_NElat" or field.auto_id  == "id_NElng" or field.auto_id  == "id_SWlat" or field.auto_id  == "id_SWlng" %}
-                                    <div class="col-sm-3">
-
-                                            {{ field.label_tag }}
+                                    <div class="col-md-3 height-fix">
+                                        {{ field.label_tag }}
                                         <div class="input-group">{{ field }}
                                             <span data-toggle="tooltip" data-placement="auto"
                                                   title="WGS 84 decimal degrees" class="input-group-addon">°</span>
@@ -454,8 +453,8 @@
                                     </div>
                                 {% endif %}
                             {% endfor %}
-                            <div class="col-sm-12">
-                                <div class="text-muted" style="margin-top:20px;">WGS 84 decimal degrees</div>
+                            <div class="col-sm-12 height-fix">
+                                <div class="text-muted">WGS 84 decimal degrees</div>
                                 <a id="manual-zoom-btn" class="btn btn-default" onclick="manualZoomMap()"
                                    style="margin-top:20px">
                                     <span class="glyphicon glyphicon-zoom-in"></span> Zoom In
