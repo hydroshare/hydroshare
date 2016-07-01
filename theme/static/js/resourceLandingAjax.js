@@ -24,11 +24,13 @@ function label_ajax_submit() {
                     action.val("DELETE");
                     $("#btnMyResources").removeClass("btn-resource-add");
                     $("#btnMyResources").addClass("btn-resource-remove");
+                    $("#btnMyResources").attr("title", "Remove from my resources");
                 }
                 else {
                     action.val("CREATE");
                     $("#btnMyResources").addClass("btn-resource-add");
                     $("#btnMyResources").removeClass("btn-resource-remove");
+                    $("#btnMyResources").attr("title", "Add to my resources");
                 }
             }
         },
