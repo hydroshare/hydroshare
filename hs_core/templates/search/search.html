@@ -143,7 +143,6 @@
                             </td>
                         </tr>
                     </table>
-
                 </form>
                 <br>
             </div>
@@ -446,11 +445,17 @@
                             {% for field in form %}
                                 {% if field.auto_id  == "id_NElat" or field.auto_id  == "id_NElng" or field.auto_id  == "id_SWlat" or field.auto_id  == "id_SWlng" %}
                                     <div class="col-sm-3">
-                                    {{ field.label_tag }} {{ field }}
-                                     </div>
+
+                                            {{ field.label_tag }}
+                                        <div class="input-group">{{ field }}
+                                            <span data-toggle="tooltip" data-placement="auto"
+                                                  title="WGS 84 decimal degrees" class="input-group-addon">°</span>
+                                        </div>
+                                    </div>
                                 {% endif %}
                             {% endfor %}
                             <div class="col-sm-12">
+                                <div class="text-muted" style="margin-top:20px;">WGS 84 decimal degrees</div>
                                 <a id="manual-zoom-btn" class="btn btn-default" onclick="manualZoomMap()"
                                    style="margin-top:20px">
                                     <span class="glyphicon glyphicon-zoom-in"></span> Zoom In
@@ -553,6 +558,7 @@
                 document.getElementById("id_NElat").value = ne.lat();
                 document.getElementById("id_SWlng").value = sw.lng();
                 document.getElementById("id_SWlat").value = sw.lat();
+
             });
 
             var zoom_listener = google.maps.event.addListener(map, 'zoom_changed', function(){
@@ -640,8 +646,6 @@
                         filtered_results.push(raw_results[i]);
                     }
                 }
-
-
             }
         };
 
@@ -930,7 +934,7 @@
                     console.error("Ajax call for updating list-view data failed");
                 }
             });
-        };
+        }
 
 
         var reorderDivs = function() {
@@ -1093,6 +1097,8 @@
             if (window.location.search.length == 0) {
                 clearCheckboxes();
             }
+
+            $("#covereage-search-fields input").addClass("form-control")
 
             $("title").text("Discover | HydroShare");   // Set browser tab title
 
