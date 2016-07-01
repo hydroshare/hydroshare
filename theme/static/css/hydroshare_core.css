@@ -1247,10 +1247,6 @@ a[data-toggle='tab']{
     padding: 0 4px;
 }
 
-#permission-panel .panel-body{
-    padding: 15px 0;
-}
-
 span.hilight {
 	background: #EEE;
 	margin-left: 16px;
@@ -1435,11 +1431,6 @@ body > .main-container {
 	height: 31px;
 }
 
-#permission-panel .custom-well {
-	background: #F7F7F7;
-	margin-top: 30px;
-}
-
 .info-icon {
 	color: #FFFFFF;
 	margin-top: 4px;
@@ -1451,14 +1442,6 @@ body > .main-container {
 
 .info-icon:hover{
     color: #CCC;
-}
-
-#permission-panel .form-control{
-    margin-bottom:0;
-}
-
-#permission-panel .custom-well .form-group{
-    width:100%;
 }
 
 .btn-update-list{
@@ -1538,8 +1521,12 @@ body > .main-container {
     color:#d9534f;
 }
 
-.btn-edit, .btn-share{
+.icon-blue {
     color: #428BD2;
+}
+
+#delete > span {
+	margin-left: 20px;
 }
 
 .btn-download{
@@ -1613,6 +1600,7 @@ body > .main-container {
 
 div#sharing-status {
     overflow: hidden; /* Fixes height for floating elements */
+	margin-top: 20px;
 }
 
 .tag-list {
@@ -2229,10 +2217,6 @@ button.loading {
     margin-top: -20px; margin-bottom:20px;
 }
 
-#id_name {
-    max-width: 467px;
-}
-
 .invalid-input {
 	border-color: #F00 !important;
 }
@@ -2796,6 +2780,10 @@ h4.title {
 
 #search-container {
 	margin-bottom: 10px;
+}
+
+#search-container .dropdown-toggle {
+	border-radius: 0;
 }
 
 /*Waiting on firefox support for background-clip:text*/
@@ -3670,7 +3658,60 @@ div.group-add-photo {
 	display: inline-block;
 }
 
+#discover-filter-buttons {
+	margin-bottom: 10px;
+}
+
+.discover-faceting-group {
+	height: 200px;
+	overflow-y: auto;
+}
+
+#list-data-options {
+	float:right;
+}
+
+#discover-map {
+	width:850px;
+	height:650px;
+}
+
+#discover-map-legend {
+	background: white;
+}
+
+#manual-zoom-btn {
+	margin-top:20px;
+}
+
+#resetZoom {
+	margin-right:5px;
+}
+
+.manualzoom-input {
+	color: red;
+}
+
 div.toggle.btn {
 	width: 100px !important;
 	float: right;
+}
+
+.center-radio-inline {
+    padding: 8px;
+    border-radius: 4px;
+    width: 190px;
+}
+
+.center-radio-inline input[type='radio']{
+	float: initial;
+	margin: 0;
+}
+
+.center-radio-inline label {
+	cursor: pointer;
+}
+
+.or-separator {
+	margin-top: 20px;
 }
