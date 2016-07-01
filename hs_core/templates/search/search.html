@@ -12,6 +12,7 @@
         <div class="col-sm-8 col-sm-offset-4 col-xs-12">
             <button class="btn btn-info" data-toggle="popover" data-placement="right"><i
                     class="glyphicon glyphicon-info-sign"></i></button>
+
             <div id="discover-resource-search" class="resource-search">
                 <form id="search-field" method="get" action=".">
                     {% for field in form %}
@@ -30,6 +31,7 @@
             <div id="filter-buttons">
                 <button class="btn btn-default" onclick="clearAllFaceted()">Show All</button>
             </div>
+
             <div id="filter-items">
                 {% for key, values in facets.fields.items %}
                     {% if values and key != 'public' and key != 'discoverable' %}
@@ -57,6 +59,7 @@
                                         </a>
                                     </h4>
                                 </div>
+
                                 <div id="{{ key }}" class="facet-list panel-collapse collapse in">
                                     <ul class="list-group" id="list-group-{{ key }}">
                                     {% for item in values %}
@@ -74,6 +77,7 @@
                         </div>
                     {% endif %}
                 {% endfor %}
+
                 <div id="faceting-availability">
                     <div class="panel panel-default">
                         <div class="panel-heading">
@@ -117,14 +121,10 @@
             </div>
         </div>
         <div class="col-sm-8 col-xs-12" id="items">
-            <!--
-            {% if not query %}
-                <h4>Enter a search term to find resources on HydroShare</h4>
-            {% endif %}
-            -->
             <div>
                 <form id="date-search-fields" method="get" action=".">
                     <h4 class="text-muted">Temporal Coverage</h4>
+
                     <table>
                         <tr>
                             {% for field in form %}
@@ -146,20 +146,24 @@
                 </form>
                 <br>
             </div>
+
             <ul id="switch-view" class="nav nav-tabs">
                 <li class="active"><a href="#list-view"><i class="glyphicon glyphicon-list-alt"></i> List</a></li>
                 <li><a href="#map-view"><i class="glyphicon glyphicon-map-marker"></i> Map</a></li>
             </ul>
+
             <div class="tab-content">
                 <div id="list-view" class="tab-pane fade in active">
                     <div id="list-data-options">
                         <label class="radio-inline">
                             <input type="radio" name="results-selection" id="map-results-selected" value="map-results-selected">Map Results
                         </label>
+
                         <label class="radio-inline">
                             <input type="radio" name="results-selection" id="all-results-selected" value="all-results-selected">All Results
                         </label>
                     </div>
+
                     <table class="table-hover table-striped resource-custom-table" id="items-discovered">
                         <thead>
                             <tr>
@@ -170,6 +174,7 @@
                                 <th>Last modified</th>{# Used in table sorting #}
                             </tr>
                         </thead>
+
                         <tbody>
                             {% for result in page_obj.object_list %}
                                 <tr>
@@ -285,12 +290,13 @@
                             {% endif %}Next &raquo;{% if page_obj.has_next %}</a>{% endif %}
                         </div>
                     {% endif %}
-                <br>
+                    <br>
                     <div class="panel-group" role="tablist">
                         <div class="panel panel-default">
                             <div class="panel-heading" role="tab" id="headingLegend">
                                 <h4 class="panel-title">
                                     <span class="glyphicon glyphicon-info-sign"></span>&nbsp;
+
                                     <a role="button" data-toggle="collapse" data-parent="#accordion"
                                        href="#legend-collapse"
                                        aria-expanded="true" aria-controls="legend-collapse">
@@ -455,16 +461,19 @@
                             {% endfor %}
                             <div class="col-sm-12 height-fix">
                                 <div class="text-muted">WGS 84 decimal degrees</div>
-                                <a id="manual-zoom-btn" class="btn btn-default" onclick="manualZoomMap()"
-                                   style="margin-top:20px">
+
+                                <a id="manual-zoom-btn" class="btn btn-default" onclick="manualZoomMap()">
                                     <span class="glyphicon glyphicon-zoom-in"></span> Zoom In
                                 </a>
                             </div>
                         </form>
                         <br>
                     </div>
+
                     <div id="discover-map"></div>
+
                     <div id="discover-map-legend"></div>
+
                     <div id="resetZoom">
                         <a id="reset-zoom-btn" class="btn btn-default btn-sm" onclick="resetMapZoom()">
                             <span class="glyphicon glyphicon-record"></span>
