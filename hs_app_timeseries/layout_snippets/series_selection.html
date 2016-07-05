@@ -1,18 +1,21 @@
-<div id="div-series-selection" class="row">
+<div id="div-series-selection">
     <div class="col-sm-12">
-        <strong>Select a timeseries to see corresponding metadata(Number of timeseries:{{ series_ids.items|length }}):</strong>
+        <strong>Select a timeseries to see corresponding metadata(Number of
+            timeseries:{{ series_ids.items|length }}):</strong>
         <form action="/resource/{{ cm.short_id }}/" method="get" enctype="multipart/form-data">
-        {% csrf_token %}
+            {% csrf_token %}
             <input name="resource-mode" type="hidden" value="edit">
             <select class="form-control" name="series_id" id="series_id" onchange="this.form.submit()">
                 {% for series_id, label in series_ids.items %}
                     {% if selected_series_id == series_id %}
-                        <option value="{{ series_id }}" selected="selected" title="{{ label }}">{{ label|slice:":120"|add:"..." }}</option>
+                        <option value="{{ series_id }}" selected="selected"
+                                title="{{ label }}">{{ label|slice:":120"|add:"..." }}</option>
                     {% else %}
                         <option value="{{ series_id }}" title="{{ label }}">{{ label|slice:":120"|add:"..." }}</option>
                     {% endif %}
                 {% endfor %}
             </select>
         </form>
+        <hr>
     </div>
 </div>
