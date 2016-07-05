@@ -1,15 +1,18 @@
 import json
-import unittest
+from dateutil import parser
 
 from django.test import TransactionTestCase, Client
 from django.contrib.auth.models import Group
 
 from hs_core.hydroshare import create_resource, create_account, \
-     create_new_version_empty_resource, create_new_version_resource
+     create_new_version_empty_resource, create_new_version_resource, \
+     update_science_metadata
 from hs_core.testing import MockIRODSTestCaseMixin
 from hs_access_control.models import PrivilegeCodes
 from hs_collection_resource.models import CollectionDeletedResource
 from hs_collection_resource.models import CollectionResource
+from hs_collection_resource.views import _update_collection_coverages
+
 
 class TestCollection(MockIRODSTestCaseMixin, TransactionTestCase):
 
@@ -106,8 +109,10 @@ class TestCollection(MockIRODSTestCaseMixin, TransactionTestCase):
         self.url_to_collection_member_permission = base_url + "/collection-member-permission/{1}/"
         self.url_to_set_resource_flag = base_url + "/set-resource-flag/"
         self.url_to_delete_resource = base_url + "/delete-resource/"
-        self.url_to_update_collection_for_deleted_resources = base_url + "/update-collection-for-deleted-resources/"
-
+        self.url_to_update_collection_for_deleted_resources = \
+            base_url + "/update-collection-for-deleted-resources/"
+        self.url_to_calculate_collection_coverages = \
+            "/hsapi/_internal/calculate-collection-coverages/{0}/"
 
     def test_collection_basic_functions(self):
         # test basic collection class with different res types
@@ -162,19 +167,25 @@ class TestCollection(MockIRODSTestCaseMixin, TransactionTestCase):
         self.assertEqual(self.resCollection.deleted_resources.count(), 0)
         self.assertEqual(CollectionDeletedResource.objects.count(), 0)
         # create 2 CollectionDeletedResource obj and associate with collection
-        CollectionDeletedResource.objects.create(resource_title=self.resGen1.metadata.title,
+        CollectionDeletedResource.objects.create(resource_title=self.resGen1.
+                                                 metadata.title,
                                                  deleted_by=self.user1,
                                                  collection=self.resCollection)
-        CollectionDeletedResource.objects.create(resource_title=self.resModelInstance.metadata.title,
+        CollectionDeletedResource.objects.create(resource_title=self.
+                                                 resModelInstance.metadata.title,
                                                  deleted_by=self.user1,
                                                  collection=self.resCollection)
 
         self.assertEqual(CollectionDeletedResource.objects.count(), 2)
         self.assertEqual(self.resCollection.deleted_resources.count(), 2)
-        self.assertEqual(self.resCollection.deleted_resources.filter(resource_title=
-                                                                     self.resGen1.metadata.title).count(), 1)
-        self.assertEqual(self.resCollection.deleted_resources.filter(resource_title=
-                                                                     self.resModelInstance.metadata.title).count(), 1)
+        self.assertEqual(self.resCollection.
+                         deleted_resources.
+                         filter(resource_title=self.
+                                resGen1.metadata.title).count(), 1)
+        self.assertEqual(self.resCollection.
+                         deleted_resources.
+                         filter(resource_title=self.
+                                resModelInstance.metadata.title).count(), 1)
 
         # remove CollectionDeletedResource objs
         self.resCollection.deleted_resources.all().delete()
@@ -191,9 +202,9 @@ class TestCollection(MockIRODSTestCaseMixin, TransactionTestCase):
         # anonymous user
         # should inform frontend error
         response = self.api_client.post(url_to_update_collection,
-                                        {'resource_id_list': [self.resGen1.short_id, self.resGen2.short_id,
-                                                              self.resGen3.short_id]},
-                                        )
+                                        {'resource_id_list':
+                                         [self.resGen1.short_id, self.resGen2.short_id,
+                                          self.resGen3.short_id]}, )
         resp_json = json.loads(response.content)
         self.assertEqual(resp_json["status"], "error")
         self.assertEqual(resp_json["metadata_status"], "Insufficient to make public")
@@ -205,9 +216,9 @@ class TestCollection(MockIRODSTestCaseMixin, TransactionTestCase):
         # add 3 private member resources
         # should inform frontend "sufficient to make public"
         response = self.api_client.post(url_to_update_collection,
-                                        {'resource_id_list': [self.resGen1.short_id, self.resGen2.short_id,
-                                                              self.resGen3.short_id]},
-                                        )
+                                        {'resource_id_list':
+                                         [self.resGen1.short_id, self.resGen2.short_id,
+                                          self.resGen3.short_id]}, )
         resp_json = json.loads(response.content)
         self.assertEqual(resp_json["status"], "success")
         self.assertEqual(resp_json["metadata_status"], "Sufficient to make public")
@@ -219,8 +230,8 @@ class TestCollection(MockIRODSTestCaseMixin, TransactionTestCase):
 
         # remove renGen2 (just add 1 and 3)
         response = self.api_client.post(url_to_update_collection,
-                                        {'resource_id_list': [self.resGen1.short_id, self.resGen3.short_id]},
-                                        )
+                                        {'resource_id_list':
+                                         [self.resGen1.short_id, self.resGen3.short_id]}, )
         resp_json = json.loads(response.content)
         self.assertEqual(resp_json["status"], "success")
         self.assertEqual(resp_json["metadata_status"], "Sufficient to make public")
@@ -242,17 +253,17 @@ class TestCollection(MockIRODSTestCaseMixin, TransactionTestCase):
 
         # add resGen1, resGen2, and resGen4 (no permission)
         response = self.api_client.post(url_to_update_collection,
-                                        {'resource_id_list': [self.resGen1.short_id, self.resGen2.short_id,
-                                                              self.resGen4.short_id]},
-                                        )
+                                        {'resource_id_list':
+                                         [self.resGen1.short_id, self.resGen2.short_id,
+                                          self.resGen4.short_id]}, )
         resp_json = json.loads(response.content)
         self.assertEqual(resp_json["status"], "error")
         self.assertEqual(self.resCollection.resources.count(), 0)
 
         # add resGen1 and resGen3
         response = self.api_client.post(url_to_update_collection,
-                                        {'resource_id_list': [self.resGen1.short_id, self.resGen3.short_id]},
-                                        )
+                                        {'resource_id_list':
+                                         [self.resGen1.short_id, self.resGen3.short_id]}, )
         resp_json = json.loads(response.content)
         self.assertEqual(resp_json["status"], "success")
         self.assertEqual(resp_json["metadata_status"], "Sufficient to make public")
@@ -263,8 +274,8 @@ class TestCollection(MockIRODSTestCaseMixin, TransactionTestCase):
 
         # remove resGen1 and resGen3, add resGen2 and resGen4 (no permission)
         response = self.api_client.post(url_to_update_collection,
-                                        {'resource_id_list': [self.resGen2.short_id, self.resGen4.short_id]},
-                                        )
+                                        {'resource_id_list':
+                                         [self.resGen2.short_id, self.resGen4.short_id]}, )
         resp_json = json.loads(response.content)
         self.assertEqual(resp_json["status"], "error")
         self.assertEqual(self.resCollection.resources.count(), 2)
@@ -276,8 +287,8 @@ class TestCollection(MockIRODSTestCaseMixin, TransactionTestCase):
 
         # remove resGen1 and resGen3, add resGen2 and resGen4 (having permission)
         response = self.api_client.post(url_to_update_collection,
-                                        {'resource_id_list': [self.resGen2.short_id, self.resGen4.short_id]},
-                                        )
+                                        {'resource_id_list':
+                                         [self.resGen2.short_id, self.resGen4.short_id]}, )
         resp_json = json.loads(response.content)
         self.assertEqual(resp_json["status"], "success")
         self.assertTrue(self.resCollection.can_be_public_or_discoverable)
@@ -292,8 +303,8 @@ class TestCollection(MockIRODSTestCaseMixin, TransactionTestCase):
 
         self.assertFalse(self.resCollection_with_missing_metadata.can_be_public_or_discoverable)
         response = self.api_client.post(url_to_update_collection,
-                                        {'resource_id_list': [self.resGen1.short_id, self.resGen2.short_id]},
-                                        )
+                                        {'resource_id_list':
+                                         [self.resGen1.short_id, self.resGen2.short_id]}, )
         resp_json = json.loads(response.content)
         self.assertEqual(resp_json["status"], "success")
         self.assertFalse(self.resCollection_with_missing_metadata.can_be_public_or_discoverable)
@@ -315,9 +326,11 @@ class TestCollection(MockIRODSTestCaseMixin, TransactionTestCase):
         self.assertEqual(self.resCollection.resources.count(), 0)
 
         # grants View permission to User 2 over collection
-        self.user1.uaccess.share_resource_with_user(self.resCollection, self.user2, PrivilegeCodes.VIEW)
+        self.user1.uaccess.share_resource_with_user(self.resCollection,
+                                                    self.user2, PrivilegeCodes.VIEW)
 
-        # User 2: add resGen4 in to collection (User 2 has View permission over this collection that is not enough)
+        # User 2: add resGen4 in to collection
+        # (User 2 has View permission over this collection that is not enough)
         response = self.api_client.post(url_to_update_collection,
                                         {'resource_id_list': [self.resGen4.short_id]},
                                         )
@@ -327,7 +340,8 @@ class TestCollection(MockIRODSTestCaseMixin, TransactionTestCase):
         self.assertEqual(self.resCollection.resources.count(), 0)
 
         # grants Change permission to User 2 over collection
-        self.user1.uaccess.share_resource_with_user(self.resCollection, self.user2, PrivilegeCodes.CHANGE)
+        self.user1.uaccess.share_resource_with_user(self.resCollection,
+                                                    self.user2, PrivilegeCodes.CHANGE)
 
         # User 2: add resGen4 in to collection (User 2 has Change permission over this collection)
         response = self.api_client.post(url_to_update_collection,
@@ -385,13 +399,14 @@ class TestCollection(MockIRODSTestCaseMixin, TransactionTestCase):
         # add one collection resource to another collection resource
         # json response status should be success
         response = self.api_client.post(url_to_update_collection,
-                                        {'resource_id_list': [self.resCollection_with_missing_metadata.short_id]},
-                                        )
+                                        {'resource_id_list':
+                                         [self.resCollection_with_missing_metadata.short_id]}, )
         resp_json = json.loads(response.content)
         self.assertEqual(resp_json["status"], "success")
         # collection should have 1 resource
         self.assertEquals(self.resCollection.resources.count(), 1)
-        self.assertEquals(self.resCollection.resources.all()[0].resource_type.lower(), "collectionresource")
+        self.assertEquals(self.resCollection.resources.all()[0].resource_type.lower(),
+                          "collectionresource")
 
     def test_update_collection_for_deleted_resources(self):
         self.assertEqual(self.resCollection.resources.count(), 0)
@@ -417,12 +432,14 @@ class TestCollection(MockIRODSTestCaseMixin, TransactionTestCase):
 
         # delete resGen1
         res_id_resGen1 = self.resGen1.short_id
-        url_to_delete_resource_for_resGen1 = self.url_to_delete_resource.format(self.resGen1.short_id)
+        url_to_delete_resource_for_resGen1 = \
+            self.url_to_delete_resource.format(self.resGen1.short_id)
         self.api_client.post(url_to_delete_resource_for_resGen1, HTTP_REFERER='http://foo/bar')
 
         # delete resGen2
         res_id_resGen2 = self.resGen2.short_id
-        url_to_delete_resource_for_resGen2 = self.url_to_delete_resource.format(self.resGen2.short_id)
+        url_to_delete_resource_for_resGen2 = \
+            self.url_to_delete_resource.format(self.resGen2.short_id)
         self.api_client.post(url_to_delete_resource_for_resGen2, HTTP_REFERER='http://foo/bar')
 
         # resGen1 and resGen2 should not be in collection.resources
@@ -441,8 +458,9 @@ class TestCollection(MockIRODSTestCaseMixin, TransactionTestCase):
                       self.resCollection.deleted_resources.all())
 
         # test clear deleted_resources through view
-        url_to_update_collection_for_deleted_resources = self.url_to_update_collection_for_deleted_resources.format(
-            self.resCollection.short_id)
+        url_to_update_collection_for_deleted_resources = \
+            self.url_to_update_collection_for_deleted_resources.format(
+             self.resCollection.short_id)
 
         # log out User 1
         self.api_client.logout()
@@ -499,7 +517,6 @@ class TestCollection(MockIRODSTestCaseMixin, TransactionTestCase):
         # all contained res are published now
         self.assertEqual(self.resCollection.are_all_contained_resources_published, True)
 
-
     def test_versioning(self):
         # no contained resource
         self.assertEqual(self.resCollection.resources.count(), 0)
@@ -527,3 +544,120 @@ class TestCollection(MockIRODSTestCaseMixin, TransactionTestCase):
         self.resCollection.resources.clear()
         self.assertEqual(self.resCollection.resources.count(), 0)
         self.assertEqual(new_collection.resources.count(), 3)
+
+    def test_update_collection_coverages(self):
+        # collection has no coverages metadata by default
+        self.assertEqual(self.resCollection.metadata.coverages.count(), 0)
+        # add 2 resources without coverage metadata to collection
+        self.resCollection.resources.add(self.resGen1)
+        self.resCollection.resources.add(self.resGeoFeature)
+        self.assertEqual(self.resCollection.resources.count(), 2)
+        # calculate overall coverages
+        _update_collection_coverages(self.resCollection)
+        # no collection coverage
+        self.assertEqual(self.resCollection.metadata.coverages.count(), 0)
+        # update resGen1 coverage
+        metadata_dict = [{'coverage': {'type': 'period', 'value':
+                         {'name': 'Name for period coverage',
+                          'start': '1/1/2016', 'end': '12/31/2016'}}}, ]
+        update_science_metadata(pk=self.resGen1.short_id, metadata=metadata_dict)
+        self.assertEqual(self.resGen1.metadata.coverages.count(), 1)
+        # calculate overall coverages
+        _update_collection_coverages(self.resCollection)
+        # collection should have 1 coverage metadata: period
+        self.assertEqual(self.resCollection.metadata.coverages.count(), 1)
+        period_coverage_obj = self.resCollection.metadata.coverages.all()[0]
+        self.assertEqual(period_coverage_obj.type.lower(), 'period')
+        self.assertEqual(parser.parse(period_coverage_obj.value['start'].lower()),
+                         parser.parse('1/1/2016'))
+        self.assertEqual(parser.parse(period_coverage_obj.value['end'].lower()),
+                         parser.parse('12/31/2016'))
+
+        # update resGeoFeature coverage
+        metadata_dict = [{'coverage': {'type': 'point', 'value':
+                         {'name': 'Name for point coverage', 'east': '-20',
+                          'north': '10', 'units': 'decimal deg'}}}, ]
+        update_science_metadata(pk=self.resGeoFeature.short_id, metadata=metadata_dict)
+        self.assertEqual(self.resGeoFeature.metadata.coverages.count(), 1)
+        # calculate overall coverages
+        _update_collection_coverages(self.resCollection)
+
+        # collection should have 2 coverage metadata: period and point
+        self.assertEqual(self.resCollection.metadata.coverages.count(), 2)
+        # test period
+        period_qs = self.resCollection.metadata.coverages.all().filter(type='period')
+        self.assertEqual(period_qs.count(), 1)
+        self.assertEqual(parser.parse(period_qs[0].value['start'].lower()),
+                         parser.parse('1/1/2016'))
+        self.assertEqual(parser.parse(period_qs[0].value['end'].lower()),
+                         parser.parse('12/31/2016'))
+        # test point
+        point_qs = self.resCollection.metadata.coverages.all().filter(type='point')
+        self.assertEqual(point_qs.count(), 1)
+        self.assertEqual(point_qs[0].value['east'], -20)
+        self.assertEqual(point_qs[0].value['north'], 10)
+
+        # add a 3rd res with period and box coverages into collection
+        metadata_dict = [{'coverage': {'type': 'period', 'value':
+                         {'name': 'Name for period coverage',
+                          'start': '1/1/2010', 'end': '6/1/2016'}}},
+                         {'coverage': {'type': 'point', 'value':
+                          {'name': 'Name for point coverage', 'east': '25',
+                           'north': '-35', 'units': 'decimal deg'}}}]
+        update_science_metadata(pk=self.resGen2.short_id, metadata=metadata_dict)
+        self.assertEqual(self.resGen2.metadata.coverages.count(), 2)
+        self.resCollection.resources.add(self.resGen2)
+        self.assertEqual(self.resCollection.resources.count(), 3)
+        # calculate overall coverages
+        _update_collection_coverages(self.resCollection)
+        self.assertEqual(self.resCollection.metadata.coverages.count(), 2)
+        # test period
+        period_qs = self.resCollection.metadata.coverages.all().filter(type='period')
+        self.assertEqual(period_qs.count(), 1)
+        self.assertEqual(parser.parse(period_qs[0].value['start'].lower()),
+                         parser.parse('1/1/2010'))
+        self.assertEqual(parser.parse(period_qs[0].value['end'].lower()),
+                         parser.parse('12/31/2016'))
+        # test point
+        point_qs = self.resCollection.metadata.coverages.all().filter(type='box')
+        self.assertEqual(point_qs.count(), 1)
+        self.assertEqual(point_qs[0].value['westlimit'], -20)
+        self.assertEqual(point_qs[0].value['northlimit'], 10)
+        self.assertEqual(point_qs[0].value['eastlimit'], 25)
+        self.assertEqual(point_qs[0].value['southlimit'], -35)
+
+        # test view func calculate_collection_coverages
+        # user 1 login
+        self.api_client.login(username='user1', password='mypassword1')
+        # add 2 resources into collection
+        url_to_calculate_collection_coverages = \
+            self.url_to_calculate_collection_coverages.\
+            format(self.resCollection.short_id)
+        response = self.api_client.post(url_to_calculate_collection_coverages)
+        resp_json = json.loads(response.content)
+        self.assertEqual(resp_json["status"], "success")
+        self.assertEqual(len(resp_json["new_coverage_list"]), 2)
+        found_period = False
+        found_box = False
+        for cv in resp_json["new_coverage_list"]:
+            if cv["type"] == 'period':
+                found_period = True
+                self.assertEqual(parser.parse(cv['value']['start'].lower()),
+                                 parser.parse('1/1/2010'))
+                self.assertEqual(parser.parse(cv['value']['end'].lower()),
+                                 parser.parse('12/31/2016'))
+                self.assertEqual(cv['element_id_str'], '-1')
+            elif cv["type"] == 'box':
+                found_box = True
+                self.assertEqual(cv['value']['westlimit'], -20)
+                self.assertEqual(cv['value']['northlimit'], 10)
+                self.assertEqual(cv['value']['eastlimit'], 25)
+                self.assertEqual(cv['value']['southlimit'], -35)
+                self.assertEqual(cv['element_id_str'], '-1')
+        self.assertTrue(found_period)
+        self.assertTrue(found_box)
+
+        # remove all contained res
+        self.resCollection.resources.clear()
+        _update_collection_coverages(self.resCollection)
+        self.assertEqual(self.resCollection.metadata.coverages.count(), 0)

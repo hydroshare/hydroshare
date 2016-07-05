@@ -9,7 +9,6 @@
 {# override content_block in generice.html#}
 {% block content_block %}
 
-
     <div class="col-sm-12 content-block">
         {# collection content table #}
         <div id="collection_content_div">
@@ -136,9 +135,6 @@
         </div>
     </div>
 
-
-
-
     {#    modal div: warning message  #}
     <div class="modal fade" id="save-collection-warning" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
         <div class="modal-dialog">
@@ -245,7 +241,6 @@
             </div>
         </div>
     </div>
-
 
     {#    modal div: deleted-resources-modal #}
     <div class="modal fade" id="deleted-resources-modal" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
@@ -415,6 +410,9 @@
             // Mark checkbox when row is clicked
             $("#collection-table-candidate td").click(onCollectionTableRowClick);
 
+            if (edit_mode.toLowerCase() == "true") {
+                $("#coverageTab").append($('<input value="Calculate Coverages" class="btn btn-info" type="button" onclick="collection_coverages_calculate_ajax()"/>'));
+            }
         }); // $(document).ready(function())
 
         function onCollectionTableRowClick(e) {
@@ -474,12 +472,12 @@
                 <button type="button" class="close" data-dismiss="alert">x</button> \
                 <strong>Success! </strong> \
                 Collection updated.\
-            </div>'
+            </div>';
             $alert_error = '<div class="alert alert-danger" id="error-alert"> \
                 <button type="button" class="close" data-dismiss="alert">x</button> \
                 <strong>Error! </strong> \
                 Collection failed to update.\
-            </div>'
+            </div>';
             $form=$('#' + form_id);
             var resource_id_list = [];
             $('#collection-table').DataTable().rows().every(function()
@@ -509,34 +507,20 @@
                                 }
                             }
                         }
-                        $('body > .container').append($alert_success);
-                        $('#error-alert').each(function(){
-                            this.remove();
-                        });
-                        $(".alert-success").fadeTo(2000, 500).fadeOut(1000, function(){
-                            $(document).trigger("submit-success");
-                            $(".alert-success").alert('close');
-                        });
+                        updateCoverageMetadataTabpage(json_response.new_coverage_list, true, false);
+                        customAlert($alert_success, 3000);
                     }
                     else {
-                        $('body > .container').append($alert_error);
-                        $(".alert-danger").fadeTo(3000, 500).fadeOut(1000, function(){
-                            $(document).trigger("submit-error");
-                            $(".alert-danger").alert('close');
-                        });
+                        customAlert($alert_error, 3000);
                     }
                 },
                 error: function(XMLHttpRequest, textStatus, errorThrown) {
-                    $('#' + form_id).before($alert_error);
-                    $(".alert-error").fadeTo(2000, 500).slideUp(1000, function() {
-                        $(".alert-error").alert('close');
-                    });
+                     customAlert($alert_error, 3000);
                 }
             });
             //don't submit the form
             return false;
         }
-
 
         function save_btn_callback_new() {
             collection_update_ajax_submit_new('collector-new');
@@ -560,6 +544,7 @@
                 if (json_response.status === 'success') {
                     $('#deleted-resources-table').DataTable().rows().remove().draw(false);
                     $("#clear-deleted-res-warning").hide();
+                    updateCoverageMetadataTabpage(json_response.new_coverage_list, true, false);
                 }
             },
             error: function(XMLHttpRequest, textStatus, errorThrown) {
@@ -567,6 +552,159 @@
                $('#clear-deleted-res-warning').show();
             }
             });
+        }
+
+        function collection_coverages_calculate_ajax() {
+
+            $alert_success = '<div class="alert alert-success" id="success-alert"> \
+                <button type="button" class="close" data-dismiss="alert">x</button> \
+                <strong>Success! </strong> \
+                Please click the "Save changes" button to save changes.\
+                </div>';
+            $alert_error = '<div class="alert alert-danger" id="error-alert"> \
+                <button type="button" class="close" data-dismiss="alert">x</button> \
+                <strong>Error! </strong> \
+                Calculate coverages failed.\
+                </div>';
+            var res_id = "{{ collection_res_id }}";
+            var url = "/hsapi/_internal/calculate-collection-coverages/" + res_id + "/";
+            $.ajax({
+                type: "POST",
+                url: url,
+                dataType: "json",
+                data: {},
+                success: function(result) {
+                    /* The div contains now the updated form */
+                    json_response = result;
+                    if (json_response.status === 'success') {
+                        updateCoverageMetadataTabpage(json_response.new_coverage_list, false, true);
+                        customAlert($alert_success, 3000);
+                    }
+                    else {
+                        customAlert($alert_error, 3000);
+                    }
+                },
+                error: function(XMLHttpRequest, textStatus, errorThrown) {
+                     customAlert($alert_error, 3000);
+                }
+            });
+            //don't submit the form
+            return false;
+        }
+
+        function updateCoverageMetadataTabpage(new_coverage_list, change_coverage_metadata_form_action, show_save_btn)
+        {
+            // new_coverage_list: a list contains new coverage metadata dicts; empty list means no coverage metadata
+            // change_coverage_metadata_form_action: The backend always removes all existing coverage metadata element objs and then creates new ones. So the element ids may change.
+            // If new coverage metadata has been saved to DB on backend, this parameter should be set to true, informing frontend to update element id in forms.action;
+            // show_save_btn: If new coverage metadata has been saved to DB on backend, this parameter should be set to false, informing frontend not to display save btn;
+
+            var found_spatial = false;
+            var found_temporal = false;
+            for (var i=0; i<new_coverage_list.length; i++)
+            {
+                var coverage =  new_coverage_list[i];
+                if (coverage.type == 'point')
+                {
+                    found_spatial = true;
+                    cleanSpatialCoverageUI();
+                    document.getElementById("id_east").value = coverage.value.east;
+                    document.getElementById("id_north").value = coverage.value.north;
+                    if (change_coverage_metadata_form_action) {
+                        changeMetadataFormAction2Update('id-coverage-spatial', coverage.element_id_str);
+                    }
+                    document.getElementById("id_type_2").checked = true;
+                    $("#id_type_2").trigger("change");
+
+                }
+                else if (coverage.type == 'box')
+                {
+                    found_spatial = true;
+                    cleanSpatialCoverageUI();
+                    document.getElementById('id_northlimit').value = coverage.value.northlimit;
+                    document.getElementById('id_eastlimit').value = coverage.value.eastlimit;
+                    document.getElementById('id_southlimit').value = coverage.value.southlimit;
+                    document.getElementById('id_westlimit').value = coverage.value.westlimit;
+                    if (change_coverage_metadata_form_action) {
+                        changeMetadataFormAction2Update('id-coverage-spatial', coverage.element_id_str);
+                    }
+                    document.getElementById("id_type_1").checked = true;
+                    $("#id_type_1").trigger("change");
+
+                }
+                else if (coverage.type == 'period')
+                {
+                    found_temporal = true;
+                    document.getElementById('id_start').value = coverage.value.start;
+                    document.getElementById('id_end').value = coverage.value.end;
+                    if (change_coverage_metadata_form_action) {
+                        changeMetadataFormAction2Update('id-coverage-temporal', coverage.element_id_str);
+                    }
+                }
+            } // for
+
+            if (! found_spatial) {
+                if (change_coverage_metadata_form_action) {
+                    changeMetadataFormAction2Add("id-coverage-spatial");
+                }
+                cleanSpatialCoverageUI();
+            }
+
+            if (! found_temporal)
+            {
+                if (change_coverage_metadata_form_action) {
+                    changeMetadataFormAction2Add("id-coverage-temporal");
+                }
+                cleanTemporalCoverageUI();
+            }
+
+            if (show_save_btn)
+            {
+                $("#id-coverage-temporal").find('button').show();
+                $("#id-coverage-spatial").find('button').show()
+            }
+            else {
+                $("#id-coverage-temporal").find('button').hide();
+                $("#id-coverage-spatial").find('button').hide()
+            }
+        }
+
+        var empty_value = '';
+
+        function cleanSpatialCoverageUI()
+        {
+            document.getElementById('id_northlimit').value = empty_value;
+            document.getElementById('id_eastlimit').value = empty_value;
+            document.getElementById('id_southlimit').value = empty_value;
+            document.getElementById('id_westlimit').value = empty_value;
+            document.getElementById('id_east').value = empty_value;
+            document.getElementById('id_north').value = empty_value;
+        }
+
+        function cleanTemporalCoverageUI()
+        {
+            document.getElementById('id_start').value = empty_value;
+            document.getElementById('id_end').value = empty_value;
+        }
+
+        function changeMetadataFormAction2Update(form_id, new_element_id_str)
+        {
+            if (new_element_id_str.length > 0 && new_element_id_str != "-1")
+            {
+                var url_old = $('#'+form_id).attr('action');
+                var new_part = '/coverage/' + new_element_id_str + "/update-metadata/";
+                var url_new = url_old.replace(/\/coverage\/.+\/update-metadata\//, new_part);
+                url_new = url_new.replace(/\/coverage\/add-metadata\//, new_part);
+                $('#'+form_id).attr('action', url_new);
+            }
+        }
+
+        function changeMetadataFormAction2Add(form_id)
+        {
+            var url_old = $('#'+form_id).attr('action');
+            var new_part = '/coverage/add-metadata/';
+            var url_new = url_old.replace(/\/coverage\/.+\/update-metadata\//, new_part);
+            $('#'+form_id).attr('action', url_new);
         }
 
     </script>
