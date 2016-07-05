@@ -6,19 +6,22 @@
     {% if extended_metadata_exists %}
         <div id="div-series-selection" class="row">
             <div class="col-sm-12">
-                <strong>Select a timeseries to see corresponding metadata(Number of timeseries:{{ series_ids.items|length }}):</strong>
-            <form action="/resource/{{ cm.short_id }}/" method="get" enctype="multipart/form-data">
-            {% csrf_token %}
-                <select class="form-control" name="series_id" id="series_id" onchange="this.form.submit()">
-                    {% for series_id, label in series_ids.items %}
-                        {% if selected_series_id == series_id %}
-                            <option value="{{ series_id }}" selected="selected" title="{{ label }}">{{ label|slice:":120"|add:"..." }}</option>
-                        {% else %}
-                            <option value="{{ series_id }}" title="{{ label }}" >{{ label|slice:":120"|add:"..." }}</option>
-                        {% endif %}
-                    {% endfor %}
-                </select>
-            </form>
+                <strong>Select a timeseries to see corresponding metadata(Number of
+                    timeseries:{{ series_ids.items|length }}):</strong>
+                <form action="/resource/{{ cm.short_id }}/" method="get" enctype="multipart/form-data">
+                    {% csrf_token %}
+                    <select class="form-control" name="series_id" id="series_id" onchange="this.form.submit()">
+                        {% for series_id, label in series_ids.items %}
+                            {% if selected_series_id == series_id %}
+                                <option value="{{ series_id }}" selected="selected"
+                                        title="{{ label }}">{{ label|slice:":120"|add:"..." }}</option>
+                            {% else %}
+                                <option value="{{ series_id }}"
+                                        title="{{ label }}">{{ label|slice:":120"|add:"..." }}</option>
+                            {% endif %}
+                        {% endfor %}
+                    </select>
+                </form>
             </div>
         </div>
         <div class="row">
@@ -184,6 +187,26 @@
             var el = $('#div-series-selection');
             $(window).scrollTop($(el).offset().top - 300);
 
+            $(".time-series-forms select").append('<option value="Other">Other...</option>');
+
+            $(".time-series-forms select").parent().parent().append('<div class="controls other-field" style="display:none;"> <label class="text-muted control-label">Specify: </label><input class="form-control input-sm textinput textInput" name="" type="text"> </div>')
+
+            $(".time-series-forms select").change(function(e){
+                if (e.target.value == "Other") {
+                    var name = e.target.name;
+                    $(e.target).parent().parent().find(".other-field").show();
+                    $(e.target).parent().parent().find(".other-field input").attr("name", name);
+                    $(e.target).removeAttr("name");
+                }
+                else {
+                    if (!e.target.name.length) {
+                        var name = $(e.target).parent().parent().find(".other-field input").attr("name");
+                        $(e.target).attr("name", name);
+                        $(e.target).parent().parent().find(".other-field input").removeAttr("name");
+                        $(e.target).parent().parent().find(".other-field").hide();
+                    }
+                }
+            })
         });
         function setCheckboxValue(el){
             if ($(el).is(':checked')){
@@ -192,7 +215,6 @@
             else{
                 $(el).attr('value', 'No')
             }
-            //alert($(el).attr('value'));
         }
     </script>
 

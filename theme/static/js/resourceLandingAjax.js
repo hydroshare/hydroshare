@@ -4,7 +4,7 @@
 
 function label_ajax_submit() {
     var el = $(this);
-    var dataFormID = el.attr("data-form-id")
+    var dataFormID = el.attr("data-form-id");
     var formID = $("form[data-id='" + dataFormID + "']");
     var form = $(formID);
     var datastring = form.serialize();
