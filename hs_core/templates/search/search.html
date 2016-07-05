@@ -14,7 +14,7 @@
                     class="glyphicon glyphicon-info-sign"></i></button>
 
             <div id="discover-resource-search" class="resource-search">
-                <form id="search-field" method="get" action=".">
+                <form id="search-field" method="get" action="." class="search-field">
                     {% for field in form %}
                         {% if field.auto_id  == "id_q" %}
                         <div class="fieldWrapper">
@@ -1088,7 +1088,6 @@
         }
 
         $(document).ready(function () {
-
             $("#id_start_date").datepicker({
                 dateFormat: 'mm/dd/yy',
                 changeMonth: true,
@@ -1106,12 +1105,29 @@
                 clearCheckboxes();
             }
 
-            $("#covereage-search-fields input").addClass("form-control")
+            //
+            $(".search-field").keypress(function(event) {
+                if (event.which == 13) {
+                    event.preventDefault();
+                    clearCheckboxes();
+                    var textSearch = $("#id_q").val();
+                    var searchURL = "?q=" + textSearch;
+                    var geoSearchParams = formGeoParameters();
+                    var dateSearchParams = formDateParameters();
+                    var windowPath = window.location.pathname;
+                    var requestURL =  windowPath + searchURL + geoSearchParams + dateSearchParams;
+                    if (window.location.hash) {
+                        requestURL = requestURL + window.location.hash;
+                    }
+                    window.location = requestURL;
+                }
+            });
+
+            $("#covereage-search-fields input, #date-search-fields input, #id_q").addClass("form-control");
 
             $("title").text("Discover | HydroShare");   // Set browser tab title
 
             initializeTable();
-
             popCheckboxes();
             popRadioButtons();
 
@@ -1217,9 +1233,9 @@
             });
 
             function updateResults () {
-                clearCheckboxes();
                 var textSearch = $("#id_q").val();
                 var searchURL = "?q=" + textSearch;
+                searchURL += buildURLOnCheckboxes();
                 var geoSearchParams = formGeoParameters();
                 var dateSearchParams = formDateParameters();
                 var windowPath = window.location.pathname;
