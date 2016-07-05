@@ -309,7 +309,11 @@ class BoundaryCondition(AbstractMetaDataElement):
                 cls._add_head_dependent_flux_boundary_packages(model_boundary_condition, kwargs['head_dependent_flux_boundary_packages'])
 
             model_boundary_condition.save()
-            delete_if_empty(model_boundary_condition)
+            num_sp_hd_bdy_pckgs = len(model_boundary_condition.get_specified_head_boundary_packages())
+            num_sp_fx_bdy_pckgs = len(model_boundary_condition.get_specified_flux_boundary_packages())
+            num_hd_dp_bdy_pckgs = len(model_boundary_condition.get_head_dependent_flux_boundary_packages())
+            if num_hd_dp_bdy_pckgs + num_sp_fx_bdy_pckgs + num_sp_hd_bdy_pckgs == 0:
+                delete_if_empty(model_boundary_condition)
 
         else:
             raise ObjectDoesNotExist("No BoundaryCondition element was found for the provided id:%s" % kwargs['id'])
