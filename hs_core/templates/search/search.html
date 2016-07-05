@@ -4,16 +4,39 @@
 {% block main %}
 <div class="container" id="main">
     <div class="row">
-        <div class="col-lg-3" id="filter-panel">
-            <div id="discover-filter-buttons">
-                <button class="btn btn-default" onclick="clearAllFaceted()">Show All</button>
-                <button class="btn btn-info pull-right" data-toggle="popover" data-placement="right"><i class="glyphicon glyphicon-info-sign"></i></button>
+        <div class="col-sm-12">
+            <h2 class="page-title">Discover
+                <small class="text-muted"><i>Find content shared by your colleagues and other users.</i></small>
+            </h2>
+        </div>
+        <div class="col-sm-8 col-sm-offset-4 col-xs-12">
+            <button class="btn btn-info" data-toggle="popover" data-placement="right"><i
+                    class="glyphicon glyphicon-info-sign"></i></button>
+
+            <div id="discover-resource-search" class="resource-search">
+                <form id="search-field" method="get" action="." class="search-field">
+                    {% for field in form %}
+                        {% if field.auto_id  == "id_q" %}
+                        <div class="fieldWrapper">
+                            <span class="glyphicon glyphicon-search search-icon"></span>
+                            {{ field }}
+                        </div>
+                        {% endif %}
+                    {% endfor %}
+                </form>
             </div>
+            <br>
+        </div>
+        <div class="col-sm-4 col-xs-12" id="facets">
+            <div id="filter-buttons">
+                <button class="btn btn-default" onclick="clearAllFaceted()">Show All</button>
+            </div>
+
             <div id="filter-items">
                 {% for key, values in facets.fields.items %}
                     {% if values and key != 'public' and key != 'discoverable' %}
-                        <div class="panel-group" id="faceting-{{ key }}">
-                            <div class="panel panel-primary">
+                        <div id="faceting-{{ key }}">
+                            <div class="panel panel-default">
                                 <div class="panel-heading">
                                     <h4 class="panel-title">
                                         <a data-toggle="collapse" href="#{{ key }}">
@@ -30,50 +53,21 @@
                                             {% elif key ==  'discoverable'%}
                                                 &nbsp; Filter by Discoverable
                                             {% endif %}
-                                            <span
-                                                {% if key == 'creators' or key == 'subjects' or key == 'resource_type'%}
-                                                    class="glyphicon glyphicon-minus pull-left"
-                                                {% else %}
-                                                    class="glyphicon glyphicon-plus pull-left"
-                                                {% endif %}>
+                                            <span class="glyphicon glyphicon-minus pull-left" >
+
                                             </span>
                                         </a>
                                     </h4>
                                 </div>
-                                <div id="{{ key }}"
-                                    {% if key == 'creators' or key == 'subjects' or key == 'resource_type'%}
-                                        class="panel-collapse collapse in"
-                                    {% else %}
-                                        class="panel-collapse collapse"
-                                    {% endif %}>
-                                    <ul class="list-group discover-faceting-group" id="list-group-{{ key }}">
+
+                                <div id="{{ key }}" class="facet-list panel-collapse collapse in">
+                                    <ul class="list-group" id="list-group-{{ key }}">
                                     {% for item in values %}
                                         {% if item.1 > 0 %}
-                                            <li class="list-group-item clearfix" rel="{{ key }},{{ item.0 }}">
-                                                <input class="faceted-selections" id="{{ key }}-{{ item.0 }}" value="{{ key }},{{ item.0 }}" type="checkbox" class="pull-left"> &nbsp;&nbsp;
-                                                    <a onclick="formLinkButtonURL('{{ key }}', '{{ item.0 }}')" role="button">{{ item.0 }}</a>
-                                                    {% if item.1 >= 1 and item.1 < 2 %}
-                                                        <span class="label label-default label-pill pull-right badge YellowGreenBlue-colormap-band-5">
-                                                    {% elif item.1 >= 2 and item.1 <= 4 %}
-                                                        <span class="label label-default label-pill pull-right badge YellowGreenBlue-colormap-band-5">
-                                                    {% elif item.1 > 4 and item.1 <= 6 %}
-                                                        <span class="label label-default label-pill pull-right badge YellowGreenBlue-colormap-band-5">
-                                                    {% elif item.1 > 6 and item.1 <= 10 %}
-                                                        <span class="label label-default label-pill pull-right badge YellowGreenBlue-colormap-band-5">
-                                                    {% elif item.1 > 10 and item.1 <= 18 %}
-                                                        <span class="label label-default label-pill pull-right badge YellowGreenBlue-colormap-band-5">
-                                                    {% elif item.1 > 18 and item.1 <= 32 %}
-                                                        <span class="label label-default label-pill pull-right badge YellowGreenBlue-colormap-band-5">
-                                                    {% elif item.1 > 32 and item.1 <= 57 %}
-                                                        <span class="label label-default label-pill pull-right badge YellowGreenBlue-colormap-band-5">
-                                                    {% elif item.1 > 57 and item.1 <= 100 %}
-                                                        <span class="label label-default label-pill pull-right badge YellowGreenBlue-colormap-band-5">
-                                                    {% elif item.1 > 100 and item.1 <= 178 %}
-                                                        <span class="label label-default label-pill pull-right badge YellowGreenBlue-colormap-band-5">
-                                                    {% elif item.1 > 178 %}
-                                                        <span class="label label-default label-pill pull-right badge YellowGreenBlue-colormap-band-5">
-                                                    {% endif %}{{ item.1 }}
-                                                </span>
+                                            <li class="list-group-item" rel="{{ key }},{{ item.0 }}">
+                                                <span class="badge">{{ item.1 }}</span>
+                                                <label class="checkbox noselect">
+                                                    <input type="checkbox" class="faceted-selections" id="{{ key }}-{{ item.0 }}" value="{{ key }},{{ item.0 }}">{{ item.0 }}</label>
                                             </li>
                                         {% endif %}
                                     {% endfor %}
@@ -83,25 +77,30 @@
                         </div>
                     {% endif %}
                 {% endfor %}
-                <div class="panel-group" id="faceting-availability">
-                    <div class="panel panel-primary">
+
+                <div id="faceting-availability">
+                    <div class="panel panel-default">
                         <div class="panel-heading">
                             <h4 class="panel-title">
                                 <a data-toggle="collapse" href="#availability">
                                     &nbsp; Filter by Availability
-                                    <span class="glyphicon glyphicon-plus pull-left"></span>
+                                    <span class="glyphicon glyphicon-minus pull-left"></span>
                                 </a>
                             </h4>
                         </div>
-                        <div id="availability" class="panel-collapse collapse">
-                            <ul class="list-group discover-faceting-group" id="list-group-availability">
+
+                        <div id="availability" class="facet-list panel-collapse collapse in">
+                            <ul class="list-group" id="list-group-availability">
                                 {% for key, values in facets.fields.items %}
                                     {% if key == 'public' or key == 'discoverable' %}
                                         {% for item in values %}
                                             {% if item.1 > 0 and item.0 != 'false' %}
-                                                <li class="list-group-item clearfix" rel="{{ key }},{{ item.0 }}">
-                                                <input class="faceted-selections" id="{{ key }}-{{ item.0 }}" value="{{ key }},{{ item.0 }}" type="checkbox" class="pull-left"> &nbsp;&nbsp;
-                                                    <a onclick="formLinkButtonURL('{{ key }}', '{{ item.0 }}')" role="button">
+                                                <li class="list-group-item" rel="{{ key }},{{ item.0 }}">
+                                                    <span class="badge">{{ item.1 }}</span>
+                                                    <label class="checkbox noselect">
+                                                        <input type="checkbox" class="faceted-selections"
+                                                               id="{{ key }}-{{ item.0 }}"
+                                                               value="{{ key }},{{ item.0 }}">
                                                         {% if key == 'public' and item.0 == 'true' %}
                                                             Public
                                                         {% elif key == 'public' and item.0 == 'false' %}
@@ -109,30 +108,8 @@
                                                         {% elif key == 'discoverable' %}
                                                             Discoverable
                                                         {% endif %}
-                                                    </a>
-                                                    {% if item.1 >= 1 and item.1 < 2 %}
-                                                        <span class="label label-default label-pill pull-right badge YellowGreenBlue-colormap-band-9">
-                                                    {% elif item.1 >= 2 and item.1 <= 4 %}
-                                                        <span class="label label-default label-pill pull-right badge YellowGreenBlue-colormap-band-9">
-                                                    {% elif item.1 > 4 and item.1 <= 6 %}
-                                                        <span class="label label-default label-pill pull-right badge YellowGreenBlue-colormap-band-8">
-                                                    {% elif item.1 > 6 and item.1 <= 10 %}
-                                                        <span class="label label-default label-pill pull-right badge YellowGreenBlue-colormap-band-7">
-                                                    {% elif item.1 > 10 and item.1 <= 18 %}
-                                                        <span class="label label-default label-pill pull-right badge YellowGreenBlue-colormap-band-6">
-                                                    {% elif item.1 > 18 and item.1 <= 32 %}
-                                                        <span class="label label-default label-pill pull-right badge YellowGreenBlue-colormap-band-5">
-                                                    {% elif item.1 > 32 and item.1 <= 57 %}
-                                                        <span class="label label-default label-pill pull-right badge YellowGreenBlue-colormap-band-4">
-                                                    {% elif item.1 > 57 and item.1 <= 100 %}
-                                                        <span class="label label-default label-pill pull-right badge YellowGreenBlue-colormap-band-3">
-                                                    {% elif item.1 > 100 and item.1 <= 178 %}
-                                                        <span class="label label-default label-pill pull-right badge YellowGreenBlue-colormap-band-2">
-                                                    {% elif item.1 > 178 %}
-                                                        <span class="label label-default label-pill pull-right badge YellowGreenBlue-colormap-band-1">
-                                                    {% endif %}{{ item.1 }}
-                                                </span>
-                                            </li>
+                                                    </label>
+                                                </li>
                                             {% endif %}
                                         {% endfor %}
                                     {% endif %}
@@ -143,73 +120,50 @@
                 </div>
             </div>
         </div>
-        <div class="col-lg-9" id="items">
-            <!--
-            {% if not query %}
-                <h4>Enter a search term to find resources on HydroShare</h4>
-            {% endif %}
-            -->
-            <div id="resource-search">
-                <form id="search-fields" method="get" action=".">
-                    <div class="resource-search">
-                        {% for field in form %}
-                            {% if field.auto_id  == "id_q" %}
-                                <div class="fieldWrapper">
-                                    {{ field }}
-                                </div>
-                            {% endif %}
-                        {% endfor %}
-                    </div>
-                    <table id="geo-filter-coordinates" class="table">
-                        <tr>
-                            {% for field in form %}
-                                {% if field.auto_id  == "id_NElat" or field.auto_id  == "id_NElng" or field.auto_id  == "id_SWlat" or field.auto_id  == "id_SWlng" %}
-                                        <td>
-                                            <div class="fieldWrapper">
-                                                {{ field.label_tag }}: {{ field }}
-                                            </div>
-                                        </td>
-                                {% endif %}
-                            {% endfor %}
-                            <td>
-                                <a id="manual-zoom-btn" class="btn btn-default" onclick="manualZoomMap()" style="margin-top:20px">
-                                    zoom in
-                                </a>
-                            </td>
-                        </tr>
+        <div class="col-sm-8 col-xs-12" id="items">
+            <div>
+                <form id="date-search-fields" method="get" action=".">
+                    <h4 class="text-muted">Temporal Coverage</h4>
+
+                    <table>
                         <tr>
                             {% for field in form %}
                                 {% if field.auto_id == "id_start_date" or field.auto_id == "id_end_date" %}
-                                        <td>
-                                            <div class="fieldWrapper">
-                                                {{ field.label_tag }}: {{ field }}
-                                            </div>
-                                        </td>
+                                    <td>
+                                        <div class="fieldWrapper">
+                                            <span class="glyphicon glyphicon-calendar text-muted"></span> {{ field.label_tag }} {{ field }}
+                                        </div>
+                                    </td>
                                 {% endif %}
                             {% endfor %}
                             <td>
-                                <a id="clear-dates-options" class="btn btn-default" onclick="clearDates()" style="margin-top:20px">
-                                    Clear Dates
-                                </a>
+                                <a id="clear-dates-options" data-toggle="tooltip" title="Clear Dates"
+                                   class="glyphicon glyphicon-remove-circle icon-remove"
+                                   onclick="clearDates()"></a>
                             </td>
                         </tr>
                     </table>
                 </form>
+                <br>
             </div>
+
             <ul id="switch-view" class="nav nav-tabs">
-                <li class="active"><a href="#list-view">List</a></li>
-                <li><a href="#map-view">Map</a></li>
+                <li class="active"><a href="#list-view"><i class="glyphicon glyphicon-list-alt"></i> List</a></li>
+                <li><a href="#map-view"><i class="glyphicon glyphicon-map-marker"></i> Map</a></li>
             </ul>
+
             <div class="tab-content">
                 <div id="list-view" class="tab-pane fade in active">
                     <div id="list-data-options">
                         <label class="radio-inline">
                             <input type="radio" name="results-selection" id="map-results-selected" value="map-results-selected">Map Results
                         </label>
+
                         <label class="radio-inline">
                             <input type="radio" name="results-selection" id="all-results-selected" value="all-results-selected">All Results
                         </label>
                     </div>
+
                     <table class="table-hover table-striped resource-custom-table" id="items-discovered">
                         <thead>
                             <tr>
@@ -220,6 +174,7 @@
                                 <th>Last modified</th>{# Used in table sorting #}
                             </tr>
                         </thead>
+
                         <tbody>
                             {% for result in page_obj.object_list %}
                                 <tr>
@@ -309,13 +264,13 @@
                                             {% endif %}
                                         </div>
                                     </td>
-                                    <td><a href="{{ result.object.get_absolute_url }}">{{ result.object.metadata.title.value }}</a></td>
+                                    <td><strong><a href="{{ result.object.get_absolute_url }}">{{ result.object.metadata.title.value }}</a></strong></td>
                                     {% if result.object.first_creator.description %}
                                         <td><a href="{{ result.object.first_creator.description }}">{{ result.object.first_creator.name  }}</a></td>
                                     {% else %}
                                         <td>{{ result.object.first_creator.name }}</td>
                                     {% endif %}
-                                    <td>{{ result.object.updated|date }} {{ result.object.updated|time }}</td>
+                                    <td>{{ result.object.updated|date:"m/d/Y" }}, {{ result.object.updated|time }}</td>
                                     <td>{{ result.object.updated|date:"Y/m/d H:i:s" }}</td> {# Used in table sorting #}
                                 </tr>
                             {% empty %}
@@ -335,11 +290,13 @@
                             {% endif %}Next &raquo;{% if page_obj.has_next %}</a>{% endif %}
                         </div>
                     {% endif %}
+                    <br>
                     <div class="panel-group" role="tablist">
                         <div class="panel panel-default">
                             <div class="panel-heading" role="tab" id="headingLegend">
                                 <h4 class="panel-title">
                                     <span class="glyphicon glyphicon-info-sign"></span>&nbsp;
+
                                     <a role="button" data-toggle="collapse" data-parent="#accordion"
                                        href="#legend-collapse"
                                        aria-expanded="true" aria-controls="legend-collapse">
@@ -489,8 +446,34 @@
                     </div>
                 </div>
                 <div id="map-view" class="tab-pane fade">
+                    <div id="resource-search">
+                        <form id="covereage-search-fields" method="get" action=".">
+                            {% for field in form %}
+                                {% if field.auto_id  == "id_NElat" or field.auto_id  == "id_NElng" or field.auto_id  == "id_SWlat" or field.auto_id  == "id_SWlng" %}
+                                    <div class="col-md-3 height-fix">
+                                        {{ field.label_tag }}
+                                        <div class="input-group">{{ field }}
+                                            <span data-toggle="tooltip" data-placement="auto"
+                                                  title="WGS 84 decimal degrees" class="input-group-addon">°</span>
+                                        </div>
+                                    </div>
+                                {% endif %}
+                            {% endfor %}
+                            <div class="col-sm-12 height-fix">
+                                <div class="text-muted">WGS 84 decimal degrees</div>
+
+                                <a id="manual-zoom-btn" class="btn btn-default" onclick="manualZoomMap()">
+                                    <span class="glyphicon glyphicon-zoom-in"></span> Zoom In
+                                </a>
+                            </div>
+                        </form>
+                        <br>
+                    </div>
+
                     <div id="discover-map"></div>
+
                     <div id="discover-map-legend"></div>
+
                     <div id="resetZoom">
                         <a id="reset-zoom-btn" class="btn btn-default btn-sm" onclick="resetMapZoom()">
                             <span class="glyphicon glyphicon-record"></span>
@@ -509,7 +492,6 @@
     <script src="//maps.googleapis.com/maps/api/js?v=3" type="text/javascript"></script>
     <script src="//cdn.rawgit.com/googlemaps/v3-utility-library/master/keydragzoom/src/keydragzoom.js" type="text/javascript"></script>
     <script src="//cdn.rawgit.com/googlemaps/js-marker-clusterer/gh-pages/src/markerclusterer.js" type="text/javascript"></script>
-
     <script type="text/javascript">
         var minFloatingNumber = 0.0001;
         var map = null;
@@ -523,12 +505,11 @@
         var rectangle = null;
 
         var initMap = function(json_results) {
-
             var $mapDiv = $("#discover-map");
             var mapDim = {
                 height: $mapDiv.height(),
                 width: $mapDiv.width()
-            }
+            };
 
             map = new google.maps.Map($mapDiv[0], {
                 zoom: 2,
@@ -572,7 +553,7 @@
 
             map.enableKeyDragZoom({
                 key: 'shift',
-                visualEnabled: true,
+                visualEnabled: true
             });
 
             var dz = map.getDragZoomObject();
@@ -585,6 +566,7 @@
                 document.getElementById("id_NElat").value = ne.lat();
                 document.getElementById("id_SWlng").value = sw.lng();
                 document.getElementById("id_SWlat").value = sw.lat();
+
             });
 
             var zoom_listener = google.maps.event.addListener(map, 'zoom_changed', function(){
@@ -600,18 +582,14 @@
 
 
         var setMarkers = function(json_results) {
-
             var modified_points_data = [];
             var modified_boxes_data = [];
 
-            for (var  i = 0; i < json_results.length; i++ ) {
+            for (var i = 0; i < json_results.length; i++ ) {
                 if (json_results[i].coverage_type == 'point') {
                     checkDuplicatePointResults(modified_points_data, json_results[i]);
                 } else if (json_results[i].coverage_type == 'box') {
                     checkDuplicateBoxResults(modified_boxes_data, json_results[i]);
-
-                } else {
-                    continue;
                 }
             }
 
@@ -630,7 +608,6 @@
                     west: 0
                 }
             });
-
 
             modified_points_data.forEach(function(point){
                 var info_content = point.info_link;
@@ -677,8 +654,6 @@
                         filtered_results.push(raw_results[i]);
                     }
                 }
-
-
             }
         };
 
@@ -706,13 +681,13 @@
                 var lat_diff = Math.abs(test_lat - item_lat);
                 var lng_diff = Math.abs(test_lng - item_lng);
                 if (lat_diff < minFloatingNumber && lng_diff < minFloatingNumber) {
-                    item.info_link = item.info_link + '<br />' + '"<a href="' + test.get_absolute_url + '">' + test.title + '</a>';
+                    item.info_link = item.info_link + '<br />' + '<a href="' + test.get_absolute_url + '">' + test.title +'</a>';
                     item.counter++;
                     existed = true;
                 }
             });
             if (!existed) {
-                test.info_link = '"<a href="' + test.get_absolute_url + '">' + test.title + '</a>';
+                test.info_link = '<a href="' + test.get_absolute_url + '">' + test.title + '</a>';
                 test.counter = 1;
                 modified_points_data.push(test);
             }
@@ -730,13 +705,13 @@
                 var lng_diff = Math.abs(test_lng - item_lng);
 
                 if (lat_diff < minFloatingNumber && lng_diff < minFloatingNumber) {
-                    item.info_link = item.info_link + '<br />' + '"<a href="' + test.get_absolute_url + '">' + test.title + '</a>';
+                    item.info_link = item.info_link + '<br />' + '<a href="' + test.get_absolute_url + '">' + test.title + '</a>';
                     item.counter++;
                     existed = true;
                 }
             });
             if (!existed) {
-                test.info_link = '"<a href="' + test.get_absolute_url + '">' + test.title + '</a>';
+                test.info_link = '<a href="' + test.get_absolute_url + '">' + test.title + '</a>';
                 test.counter = 1;
                 modified_boxes_data.push(test);
             }
@@ -824,9 +799,9 @@
             var map_legend = document.getElementById('discover-map-legend');
             map.controls[google.maps.ControlPosition.RIGHT_TOP].push(map_legend);
             var legend_content = [];
-            legend_content.push("<p style='margin-left:5px'><img src='//cdn.rawgit.com/googlemaps/js-marker-clusterer/gh-pages/images/m2.png'> number of sites </p>");
-            legend_content.push("<p style='margin-left:20px'><img src='//cdn.rawgit.com/Concept211/Google-Maps-Markers/master/images/marker_redN.png'> N = number of point coverage resources</p>");
-            legend_content.push("<p style='margin-left:20px'><img src='//cdn.rawgit.com/Concept211/Google-Maps-Markers/master/images/marker_blueN.png'> N = number of box coverage resources</p>");
+            // legend_content.push("<p style='margin-left:5px'><img src='//cdn.rawgit.com/googlemaps/js-marker-clusterer/gh-pages/images/m2.png'> number of sites </p>");
+            legend_content.push("<p><img src='//cdn.rawgit.com/Concept211/Google-Maps-Markers/master/images/marker_red.png'> Point Coverage Resources </p>");
+            legend_content.push("<p><img src='//cdn.rawgit.com/Concept211/Google-Maps-Markers/master/images/marker_blue.png'> Box Coverage Resources </p>");
             map_legend.innerHTML = legend_content.join('');
             var reset_zoom_button = document.getElementById('resetZoom');
             map.controls[google.maps.ControlPosition.RIGHT_BOTTOM].push(reset_zoom_button);
@@ -936,10 +911,11 @@
             }
         };
 
-        var updateListView = function(data) {
-            $('#items-discovered').empty();
+        function updateListView (data) {
+            $('#items-discovered_wrapper').empty();
             $("#discover-page-options").empty();
             var requestURL = "/search/";
+
             if (window.location.search.length == 0) {
                 requestURL += "?q=";
             } else {
@@ -956,14 +932,17 @@
                 dataType: 'html',
                 success: function (data) {
                     var tableDiv = $("#items-discovered", data);
-                    $("#items-discovered").html(tableDiv);
+                    $("#items-discovered_wrapper").html(tableDiv);
                     var pageOptionDiv = $("#discover-page-options", data);
                     $("#discover-page-options").html(pageOptionDiv);
-                } , failure: function (data) {
+
+                    initializeTable();
+                },
+                failure: function (data) {
                     console.error("Ajax call for updating list-view data failed");
                 }
             });
-        };
+        }
 
 
         var reorderDivs = function() {
@@ -1019,14 +998,12 @@
             window.location = requestURL;
         };
 
-        var buildURLOnCheckboxes = function () {
+        var buildURLOnCheckboxes = function (target) {
             var requestURL = '';
             $(".faceted-selections").each(function () {
                 var checkboxId = $(this).attr("id");
                 var sessionStorageCheckboxId = 'search-' + checkboxId;
-                var val = sessionStorage[sessionStorageCheckboxId];
-                var isChecked = val === 'true';
-                if (isChecked) {
+                if(document.getElementById(checkboxId).checked){
                     var arr = $(this).val().split(",");
                     var key = arr[0];
                     var value = arr[1];
@@ -1085,27 +1062,7 @@
             window.location = requestURL;
         };
 
-        $(document).ready(function () {
-
-            $("#id_start_date").datepicker({
-                dateFormat: 'yy-mm-dd',
-                changeMonth: true,
-                changeYear: true,
-                yearRange: '1950:'
-            });
-            $("#id_end_date").datepicker({
-                dateFormat: 'yy-mm-dd',
-                changeMonth: true,
-                changeYear: true,
-                yearRange: '1950:'
-            });
-
-            if (window.location.search.length == 0) {
-                clearCheckboxes();
-            }
-
-            $("title").text("Discover | HydroShare");   // Set browser tab title
-
+        function initializeTable() {
             var colDefs = [
                 {
                     "targets": [0],     // Resource type
@@ -1122,13 +1079,55 @@
             ];
 
             $('#items-discovered').DataTable({
-                "paging":   false,
+                "paging": false,
                 "searching": false,
                 "info": false,
-                "order": [[ 0, "asc" ]],
+                "order": [[0, "asc"]],
                 "columnDefs": colDefs
             });
+        }
 
+        $(document).ready(function () {
+            $("#id_start_date").datepicker({
+                dateFormat: 'mm/dd/yy',
+                changeMonth: true,
+                changeYear: true,
+                yearRange: '1950:'
+            });
+            $("#id_end_date").datepicker({
+                dateFormat: 'mm/dd/yy',
+                changeMonth: true,
+                changeYear: true,
+                yearRange: '1950:'
+            });
+
+            if (window.location.search.length == 0) {
+                clearCheckboxes();
+            }
+
+            //
+            $(".search-field").keypress(function(event) {
+                if (event.which == 13) {
+                    event.preventDefault();
+                    clearCheckboxes();
+                    var textSearch = $("#id_q").val();
+                    var searchURL = "?q=" + textSearch;
+                    var geoSearchParams = formGeoParameters();
+                    var dateSearchParams = formDateParameters();
+                    var windowPath = window.location.pathname;
+                    var requestURL =  windowPath + searchURL + geoSearchParams + dateSearchParams;
+                    if (window.location.hash) {
+                        requestURL = requestURL + window.location.hash;
+                    }
+                    window.location = requestURL;
+                }
+            });
+
+            $("#covereage-search-fields input, #date-search-fields input, #id_q").addClass("form-control");
+
+            $("title").text("Discover | HydroShare");   // Set browser tab title
+
+            initializeTable();
             popCheckboxes();
             popRadioButtons();
 
@@ -1164,16 +1163,16 @@
                             end_date: end_date
                         },
                         dataType: 'json',
-                        success: function(data) {
+                        success: function (data) {
                             var json_results = [];
-                            raw_results = [];
-                            for(var j = 0; j < data.length; j++){
+                            for (var j = 0; j < data.length; j++) {
                                 var item = $.parseJSON(data[j]);
                                 json_results.push(item);
                                 raw_results.push(item);
                             }
                             initMap(json_results);
-                        } , failure: function(data) {
+                        },
+                        failure: function(data) {
                             console.error("Ajax call for getting map data failed");
                         }
                     });
@@ -1184,6 +1183,7 @@
                 var data;
                 var start_date = $("#id_start_date").val();
                 var end_date = $("#id_end_date").val();
+
                 if (this.value == 'map-results-selected') {
                     var ne_lat = document.getElementById("id_NElat").value;
                     var ne_lng = document.getElementById("id_NElng").value;
@@ -1199,7 +1199,8 @@
                     };
                     sessionStorage['map-results-selected'] = 'true';
                     sessionStorage['all-results-selected'] = 'false';
-                } else {
+                }
+                else {
                     data = {
                         NElat: '',
                         NElng: '',
@@ -1231,27 +1232,25 @@
                 $(this).parent().find(".glyphicon-minus").removeClass("glyphicon-minus").addClass("glyphicon-plus");
             });
 
-            $("#search-fields").keypress(function(event) {
-                if (event.which == 13) {
-                    event.preventDefault();
-                    clearCheckboxes();
-                    var textSearch = $("#id_q").val();
-                    var searchURL = "?q=" + textSearch;
-                    var geoSearchParams = formGeoParameters();
-                    var dateSearchParams = formDateParameters();
-                    var windowPath = window.location.pathname;
-                    var requestURL =  windowPath + searchURL + geoSearchParams + dateSearchParams;
-                    if (window.location.hash) {
-                        requestURL = requestURL + window.location.hash;
-                    }
-                    window.location = requestURL;
+            function updateResults () {
+                var textSearch = $("#id_q").val();
+                var searchURL = "?q=" + textSearch;
+                searchURL += buildURLOnCheckboxes();
+                var geoSearchParams = formGeoParameters();
+                var dateSearchParams = formDateParameters();
+                var windowPath = window.location.pathname;
+                var requestURL = windowPath + searchURL + geoSearchParams + dateSearchParams;
+                if (window.location.hash) {
+                    requestURL = requestURL + window.location.hash;
                 }
+                window.location = requestURL;
+            }
+
+            $("#date-search-fields input").change(function () {
+                updateResults();
             });
 
             $(".faceted-selections").click(function () {
-                var tokens = $(this).val().split(",");
-                var key = tokens[0];
-                var value = tokens[1];
                 var textSearch = $("#id_q").val();
                 var searchURL = "?q=" + textSearch;
                 var geoSearchParams = formGeoParameters();
@@ -1259,8 +1258,7 @@
                 var windowPath = window.location.pathname;
                 var requestURL =  windowPath + searchURL + geoSearchParams + dateSearchParams;
 
-                if ($(this).is(":checked")) {
-                    requestURL = requestURL + "&selected_facets="+key+"_exact:"+value;
+                if($(this).is(":checked")) {
                     requestURL += buildURLOnCheckboxes();
                     var checkboxId = $(this).attr("id");
                     var sessionStorageCheckboxId = 'search-' + checkboxId;
@@ -1269,7 +1267,8 @@
                         requestURL = requestURL + window.location.hash;
                     }
                     window.location = requestURL;
-                } else {
+                }
+                else {
 
                     var checkboxId = $(this).attr("id");
                     var sessionStorageCheckboxId = 'search-' + checkboxId;
