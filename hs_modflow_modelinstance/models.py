@@ -423,7 +423,7 @@ class GeneralElements(AbstractMetaDataElement):
     def create(cls, **kwargs):
         kwargs = cls._validate_params(**kwargs)
         general_elements = super(GeneralElements, cls).create(content_object=kwargs['content_object'],
-                                                            modelParameter=kwargs['modelParameter'],
+                                                              modelParameter=kwargs['modelParameter'],
                                                               modelSolver=kwargs['modelSolver'],
                                                               subsidencePackage=kwargs['subsidencePackage'])
         cls._add_output_control_package(general_elements, kwargs['output_control_package'])
@@ -436,12 +436,18 @@ class GeneralElements(AbstractMetaDataElement):
         kwargs = cls._validate_params(**kwargs)
         if general_elements:
             if 'output_control_package' in kwargs:
+                general_elements = super(GeneralElements, cls).update(general_elements.id,
+                                                                      content_object=kwargs['content_object'],
+                                                                      modelParameter=kwargs['modelParameter'],
+                                                                      modelSolver=kwargs['modelSolver'],
+                                                                      subsidencePackage=kwargs['subsidencePackage'])
+
                 general_elements.output_control_package.clear()
                 cls._add_output_control_package(general_elements, kwargs['output_control_package'])
 
-
             general_elements.save()
-            delete_if_empty(general_elements)
+            if len(general_elements.get_output_control_package()) == 0:
+                delete_if_empty(general_elements)
 
 
     @classmethod
