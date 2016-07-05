@@ -454,6 +454,8 @@ def resource_pre_create_actions(resource_type, resource_title, page_redirect_url
                                 files=(), fed_res_file_names='', metadata=None,
                                 requesting_user=None, **kwargs):
     from.resource import check_resource_type
+    from hs_core.views.utils import validate_metadata
+
     if not resource_title:
         resource_title = 'Untitled resource'
     else:
@@ -469,6 +471,9 @@ def resource_pre_create_actions(resource_type, resource_title, page_redirect_url
 
     if not metadata:
         metadata = []
+    else:
+        validate_metadata(metadata, resource_type)
+
     page_url_dict = {}
     # this is needed since raster and feature resource types allows to upload a zip file,
     # then replace zip file with exploded files. If the zip file is loaded from hydroshare

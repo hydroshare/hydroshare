@@ -328,6 +328,7 @@ class ResourceCreate(generics.CreateAPIView):
         res_title = validated_request_data.get('title', 'Untitled resource')
         keywords = validated_request_data.get('keywords', None)
         abstract = validated_request_data.get('abstract', None)
+        metadata = validated_request_data.get('metadata', None)
 
         num_files = len(request.FILES)
         if num_files > 0:
@@ -339,11 +340,18 @@ class ResourceCreate(generics.CreateAPIView):
         else:
             files = []
 
-        _, res_title, metadata, _ = hydroshare.utils.resource_pre_create_actions(resource_type=resource_type,
-                                                                              resource_title=res_title,
-                                                                              page_redirect_url_key=None,
-                                                                              files=files,
-                                                                              metadata=None,  **kwargs)
+        # check that metadata elements 'title', or 'abstract' or 'keywords' are also not passed
+        # as part of the metadata list
+        _validate_metadata(res_title, abstract, keywords, metadata)
+
+        try:
+            _, res_title, metadata, _ = hydroshare.utils.resource_pre_create_actions(
+                resource_type=resource_type, resource_title=res_title, page_redirect_url_key=None,
+                files=files, metadata=metadata,  **kwargs)
+        except Exception as ex:
+            error_msg = {'resource': "Resource creation failed. %s" % ex.message}
+            raise ValidationError(detail=error_msg)
+
         try:
             resource = hydroshare.create_resource(
                     resource_type=resource_type,
@@ -757,3 +765,28 @@ class ResourceFileList(ResourceFileToListItemMixin, generics.ListAPIView):
 
     def get_serializer_class(self):
         return serializers.ResourceFileSerializer
+
+
+def _validate_metadata(title, keywords, abstract, metadata_list):
+    err_message = "Metadata validation failed. "
+    for element in metadata_list:
+        # here k is the name of the element
+        # v is a dict of all element attributes/field names and field values
+        k, v = element.items()[0]
+        if title is not None:
+            if k.lower() == 'title':
+                err_message += "Metadata element 'title' was found in value passed for " \
+                               "parameter 'metadata."
+                raise ValidationError(detail=err_message)
+
+        if keywords is not None:
+            if k.lower() == 'subject':
+                err_message += "Metadata element 'subject' was found in value passed " \
+                               "for parameter 'metadata."
+                raise ValidationError(detail=err_message)
+
+        if abstract is not None:
+            if k.lower() == 'description':
+                err_message += "Metadata element 'description' was found in value passed for " \
+                               "parameter 'metadata."
+                raise ValidationError(detail=err_message)

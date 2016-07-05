@@ -34,9 +34,14 @@ def metadata_element_pre_create_handler(sender, **kwargs):
         element_form = FundingAgencyValidationForm(request.POST)
     elif element_name == 'coverage':
         if 'type' in request.POST:
-            element_form = CoverageSpatialForm(data=request.POST)
+            if request.POST['type'].lower() == 'point' or  request.POST['type'].lower() == 'box':
+                element_form = CoverageSpatialForm(data=request.POST)
+            else:
+                element_form = CoverageTemporalForm(data=request.POST)
         else:
             element_form = CoverageTemporalForm(data=request.POST)
+    else:
+        raise Exception("Invalid metadata element name:{}".format(element_name))
 
     if element_form.is_valid():
         return {'is_valid': True, 'element_data_dict': element_form.cleaned_data}

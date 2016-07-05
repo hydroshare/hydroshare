@@ -10,12 +10,14 @@ from .utils import validate_json, validate_user_name,  validate_group_name
 
 RESOURCE_TYPES = [rtype.__name__ for rtype in utils.get_resource_types()]
 
+
 class StringListField(serializers.ListField):
     child = serializers.CharField()
 
+
 class ResourceUpdateRequestValidator(serializers.Serializer):
     title = serializers.CharField(required=False)
-    #metadata = serializers.CharField(validators=[validate_json], required=False)
+    metadata = serializers.CharField(validators=[validate_json], required=False)
     edit_users = serializers.CharField(required=False)
     edit_groups = serializers.CharField(required=False)
     view_users = serializers.CharField(required=False)

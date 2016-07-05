@@ -186,6 +186,20 @@ def validate_group_name(group_name):
 
 
 def validate_metadata(metadata, resource_type):
+    """
+    Validate metadata including validation of resource type specific metadata.
+    If validation fails, ValidationError exception is raised
+
+    :param metadata: a list of dicts where each dict defines data for a specific metadata
+    element.
+    Example: the following list contains 2 dict elements - one for 'Description' element
+     and the other one for "Coverage' element.
+    [{'description':{'abstract': 'This is a great resource'}},
+    {'coverage': {'value':{'type': 'period', 'start': 01/01/2010', 'end': '12/12/2015'}}}]
+    :param resource_type: resource type name (e.g., "GenericResource" or "TimeSeriesResource")
+    :return:
+
+    """
     resource_class = check_resource_type(resource_type)
 
     validation_errors = {'metadata': []}
@@ -211,8 +225,14 @@ def validate_metadata(metadata, resource_type):
             element_attribute_names_valid = True
             for attribute_name in v:
                 element_class = model_type.model_class()
-                element_attribute = getattr(element_class(), attribute_name, None)
-                if element_attribute is None or callable(element_attribute):
+                if k.lower() == 'coverage' or k.lower() == 'originalcoverage':
+                    if attribute_name == 'value':
+                        attribute_name = '_value'
+                if hasattr(element_class(), attribute_name):
+                    if callable(getattr(element_class(), attribute_name)):
+                        element_attribute_names_valid = False
+                        validation_errors['metadata'].append("Invalid attribute name:%s found for metadata element name:%s." % (attribute_name, k))
+                else:
                     element_attribute_names_valid = False
                     validation_errors['metadata'].append("Invalid attribute name:%s found for metadata element name:%s." % (attribute_name, k))
 
@@ -222,21 +242,30 @@ def validate_metadata(metadata, resource_type):
                 else:
                     element_resource_class = resource_class
 
-                handler_response = pre_metadata_element_create.send(sender=element_resource_class, element_name=k,
-                                                                request=MetadataElementRequest(**v))
+                # here we expect element form validation to happen as part of the signal handler
+                # in each resource type
+                handler_response = pre_metadata_element_create.send(
+                    sender=element_resource_class, element_name=k,
+                    request=MetadataElementRequest(k, **v))
+
                 for receiver, response in handler_response:
                     if 'is_valid' in response:
                         if not response['is_valid']:
-                            validation_errors['metadata'].append("Invalid data found for metadata element name:%s." % k)
+                            validation_errors['metadata'].append(
+                                "Invalid data found for metadata element name:%s." % k)
                     else:
-                        validation_errors['metadata'].append("Invalid data found for metadata element name:%s." % k)
+                        validation_errors['metadata'].append(
+                            "Invalid data found for metadata element name:%s." % k)
 
     if len(validation_errors['metadata']) > 0:
         raise ValidationError(detail=validation_errors)
 
 
 class MetadataElementRequest(object):
-    def __init__(self, **element_data_dict):
+    def __init__(self,element_name, **element_data_dict):
+        if element_name.lower() == 'coverage' or element_name.lower() == 'originalcoverage':
+            if 'value' in element_data_dict:
+                element_data_dict = element_data_dict['value']
         self.POST = element_data_dict
 
 
