@@ -481,12 +481,12 @@ class MODFLOWModelInstanceResource(BaseResource):
 
     def has_required_content_files(self):
         if self.files.all().count() >= 1:
-            files = self.find_content_files()
-            if files[0] != 1:
+            nam_files, reqd_files, existing_files = self.find_content_files()
+            if nam_files != 1:
                 return False
             else:
-                for f in files[1]:
-                    if f not in files[2]:
+                for f in reqd_files:
+                    if f not in existing_files:
                         return False
                 else:
                     return True
@@ -496,15 +496,15 @@ class MODFLOWModelInstanceResource(BaseResource):
     def check_content_files(self):
         missing_files = []
         if self.files.all().count() >= 1:
-            files = self.find_content_files()
-            if not files[0]:
+            nam_files, reqd_files, existing_files = self.find_content_files()
+            if not nam_files:
                 return ['.nam']
             else:
-                if files[0] > 1:
+                if nam_files > 1:
                     return 'multiple_nam'
                 else:
-                    for f in files[1]:
-                        if f not in files[2]:
+                    for f in reqd_files:
+                        if f not in existing_files:
                             missing_files.append(f)
                     return missing_files
         else:
