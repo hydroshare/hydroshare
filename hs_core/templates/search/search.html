@@ -446,29 +446,51 @@
                     </div>
                 </div>
                 <div id="map-view" class="tab-pane fade">
-                    <div id="resource-search">
+
                         <form id="covereage-search-fields" method="get" action=".">
                             {% for field in form %}
                                 {% if field.auto_id  == "id_NElat" or field.auto_id  == "id_NElng" or field.auto_id  == "id_SWlat" or field.auto_id  == "id_SWlng" %}
-                                    <div class="col-md-3 height-fix">
-                                        {{ field.label_tag }}
-                                        <div class="input-group">{{ field }}
-                                            <span data-toggle="tooltip" data-placement="auto"
-                                                  title="WGS 84 decimal degrees" class="input-group-addon">°</span>
-                                        </div>
-                                    </div>
+{#                                    <div class="col-md-3 height-fix">#}
+{#                                        <div class="input-group">{{ field }}#}
+{#                                            <span data-toggle="tooltip" data-placement="auto"#}
+{#                                                  title="WGS 84 decimal degrees" class="input-group-addon">°</span>#}
+{#                                        </div>#}
+{#                                    </div>#}
+                                    {{ field }}
                                 {% endif %}
                             {% endfor %}
-                            <div class="col-sm-12 height-fix">
-                                <div class="text-muted">WGS 84 decimal degrees</div>
-
-                                <a id="manual-zoom-btn" class="btn btn-default" onclick="manualZoomMap()">
-                                    <span class="glyphicon glyphicon-zoom-in"></span> Zoom In
-                                </a>
-                            </div>
+{#                            <div class="col-sm-12 height-fix">#}
+{#                                <div class="text-muted">WGS 84 decimal degrees</div>#}
+{##}
+{#                                <a id="manual-zoom-btn" class="btn btn-default" onclick="manualZoomMap()">#}
+{#                                    <span class="glyphicon glyphicon-zoom-in"></span> Zoom In#}
+{#                                </a>#}
+{#                            </div>#}
                         </form>
                         <br>
+
+                    <div id="resource-search">
+                        <table id="lat-lng-labels" style="display:none">
+                            <tr>
+                                <td>
+                                    NE Latitude: <label for="ne-lat-value"></label>
+                                </td>
+                                <td>
+                                    NE Longitude: <label for="ne-lng-value"></label>
+                                </td>
+                                <td>
+                                    SW Latitude: <label for="sw-lat-value"></label>
+                                </td>
+                                <td>
+                                    SW Longitude: <label for="sw-lng-value"></label>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td class="text-muted">WGS 84 decimal degrees</td>
+                            </tr>
+                        </table>
                     </div>
+                    <div id="floating-panel"></div>
 
                     <div id="discover-map"></div>
 
@@ -577,7 +599,17 @@
                 updateMapView();
             });
 
+            var bounds_listener = google.maps.event.addListener(map, 'bounds_changed', function(){
+                setLatLngLabels();
+            })
+
             generateLegend();
+
+            var geocoder = new google.maps.Geocoder();
+            document.getElementById('geocoder-submit').addEventListener('click', function() {
+                geocodeAddress(geocoder, map, mapDim);
+                updateMapView();
+            });
         };
 
 
@@ -797,14 +829,36 @@
 
         var generateLegend = function() {
             var map_legend = document.getElementById('discover-map-legend');
+            var geo_coder = document.getElementById('floating-panel');
+            var reset_zoom_button = document.getElementById('resetZoom');
             map.controls[google.maps.ControlPosition.RIGHT_TOP].push(map_legend);
+            map.controls[google.maps.ControlPosition.TOP].push(geo_coder);
+            map.controls[google.maps.ControlPosition.RIGHT_BOTTOM].push(reset_zoom_button);
             var legend_content = [];
+            var geocoder_content = [];
+            var resetButton_content = [];
             // legend_content.push("<p style='margin-left:5px'><img src='//cdn.rawgit.com/googlemaps/js-marker-clusterer/gh-pages/images/m2.png'> number of sites </p>");
             legend_content.push("<p><img src='//cdn.rawgit.com/Concept211/Google-Maps-Markers/master/images/marker_red.png'> Point Coverage Resources </p>");
             legend_content.push("<p><img src='//cdn.rawgit.com/Concept211/Google-Maps-Markers/master/images/marker_blue.png'> Box Coverage Resources </p>");
+            geocoder_content.push("<input id='address' type='textbox' placeholder='Search Locations...'>");
+            geocoder_content.push("<a id='geocoder-submit' style='margin-left:10px' class='btn btn-default'><span class='glyphicon glyphicon-zoom-in'></span> Zoom In </a>");
+            resetButton_content.push("<a id='reset-zoom-btn' class='btn btn-default btn-sm' onclick='resetMapZoom()'>");
+            resetButton_content.push("<span class='glyphicon glyphicon-record'></span></a>");
             map_legend.innerHTML = legend_content.join('');
-            var reset_zoom_button = document.getElementById('resetZoom');
-            map.controls[google.maps.ControlPosition.RIGHT_BOTTOM].push(reset_zoom_button);
+            geo_coder.innerHTML = geocoder_content.join('');
+            reset_zoom_button.innerHTML = resetButton_content.join('');
+        };
+
+        var geocodeAddress = function(geocoder, resultsMap, mapDim) {
+            var address = document.getElementById('address').value;
+            geocoder.geocode({'address': address}, function(results, status) {
+                if (status === google.maps.GeocoderStatus.OK) {
+                    resultsMap.setCenter(results[0].geometry.location);
+                    resultsMap.setZoom(getBoundsZoomLevel(results[0].geometry.bounds, mapDim));
+                } else {
+                    alert('Geocode was not successful for the following reason: ' + status);
+                }
+            });
         };
 
         var resetMapZoom = function() {
@@ -944,6 +998,16 @@
             });
         }
 
+        var setLatLngLabels = function() {
+            var ne_lat = document.getElementById("id_NElat").value + '°';
+            var ne_lng = document.getElementById("id_NElng").value + '°';
+            var sw_lat = document.getElementById("id_SWlat").value + '°';
+            var sw_lng = document.getElementById("id_SWlng").value + '°';
+            jQuery("label[for='ne-lat-value']").html(ne_lat);
+            jQuery("label[for='ne-lng-value']").html(ne_lng);
+            jQuery("label[for='sw-lat-value']").html(sw_lat);
+            jQuery("label[for='sw-lng-value']").html(sw_lng);
+        };
 
         var reorderDivs = function() {
             var faceted_fields = ['creators', 'subjects', 'resource_type', 'owners_names', 'availability'];
@@ -998,7 +1062,7 @@
             window.location = requestURL;
         };
 
-        var buildURLOnCheckboxes = function (target) {
+        var buildURLOnCheckboxes = function () {
             var requestURL = '';
             $(".faceted-selections").each(function () {
                 var checkboxId = $(this).attr("id");
@@ -1104,8 +1168,6 @@
             if (window.location.search.length == 0) {
                 clearCheckboxes();
             }
-
-            //
             $(".search-field").keypress(function(event) {
                 if (event.which == 13) {
                     event.preventDefault();
@@ -1171,6 +1233,7 @@
                                 raw_results.push(item);
                             }
                             initMap(json_results);
+                            $("#lat-lng-labels").show();
                         },
                         failure: function(data) {
                             console.error("Ajax call for getting map data failed");
