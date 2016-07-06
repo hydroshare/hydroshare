@@ -4,7 +4,7 @@ from django.forms import ModelForm
 from django import forms
 
 from crispy_forms.layout import Layout, HTML
-from crispy_forms.bootstrap import Field
+from crispy_forms.bootstrap import Field, Div
 
 from hs_core.forms import BaseFormHelper
 from models import Site, Variable, Method, ProcessingLevel, TimeSeriesResult
@@ -22,8 +22,10 @@ class SiteFormHelper(BaseFormHelper):
                         Field('site_name', css_class=field_width),
                         Field('organization', css_class=field_width),
                         Field('elevation_m', css_class=field_width),
-                        Field('elevation_datum', css_class=field_width),
-                        Field('site_type', css_class=field_width),
+                        Field('elevation_datum', css_class=field_width,
+                              title="Select 'Other...' to specify a new elevation datum term"),
+                        Field('site_type', css_class=field_width,
+                              title="Select 'Other...' to specify a new site type term"),
                  )
 
         super(SiteFormHelper, self).__init__(allow_edit, res_short_id, element_id, element_name,
@@ -78,11 +80,14 @@ class VariableFormHelper(BaseFormHelper):
         field_width = 'form-control input-sm'
         layout = Layout(
                      Field('variable_code', css_class=field_width),
-                     Field('variable_name', css_class=field_width),
-                     Field('variable_type', css_class=field_width),
+                     Field('variable_name', css_class=field_width,
+                           title="Select 'Other...' to specify a new variable name term"),
+                     Field('variable_type', css_class=field_width,
+                           title="Select 'Other...' to specify a new variable type term"),
                      Field('no_data_value', css_class=field_width),
                      Field('variable_definition', css_class=field_width),
-                     Field('speciation', css_class=field_width),
+                     Field('speciation', css_class=field_width,
+                           title="Select 'Other...' to specify a new speciation term"),
                 )
 
         super(VariableFormHelper, self).__init__(allow_edit, res_short_id, element_id,
@@ -147,7 +152,8 @@ class MethodFormHelper(BaseFormHelper):
         layout = Layout(
                          Field('method_code', css_class=field_width),
                          Field('method_name', css_class=field_width),
-                         Field('method_type', css_class=field_width),
+                         Field('method_type', css_class=field_width,
+                               title="Select 'Other...' to specify a new method type term"),
                          Field('method_description', css_class=field_width),
                          Field('method_link', css_class=field_width),
                          )
@@ -245,13 +251,17 @@ class TimeSeriesResultFormHelper(BaseFormHelper):
         # fields will be displayed
         field_width = 'form-control input-sm'
         layout = Layout(
-                     Field('units_type', css_class=field_width),
+                     Field('units_type', css_class=field_width,
+                           title="Select 'Other...' to specify a new units type term"),
                      Field('units_name', css_class=field_width),
                      Field('units_abbreviation', css_class=field_width),
-                     Field('status', css_class=field_width),
-                     Field('sample_medium', css_class=field_width),
+                     Field('status', css_class=field_width,
+                           title="Select 'Other...' to specify a new status term"),
+                     Field('sample_medium', css_class=field_width,
+                           title="Select 'Other...' to specify a new sample medium term"),
                      Field('value_count', css_class=field_width),
-                     Field('aggregation_statistics', css_class=field_width),
+                     Field('aggregation_statistics', css_class=field_width,
+                           title="Select 'Other...' to specify a new aggregation statistics term"),
                      )
         kwargs['element_name_label'] = 'Time Series Result'
         super(TimeSeriesResultFormHelper, self).__init__(allow_edit, res_short_id, element_id,
