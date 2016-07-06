@@ -17,6 +17,8 @@ from hs_core.models import CoreMetaData, Creator, Contributor, Coverage, Rights,
 from hs_core.testing import MockIRODSTestCaseMixin
 from hs_modflow_modelinstance.models import *
 
+# cmd to run tests: ./hsctl managepy test --keepdb hs_modflow_modelinstance/tests
+
 
 class TestMODFLOWModelInstanceMetaData(MockIRODSTestCaseMixin, TransactionTestCase):
     def setUp(self):
@@ -319,34 +321,51 @@ class TestMODFLOWModelInstanceMetaData(MockIRODSTestCaseMixin, TransactionTestCa
         # try with wrong boundarycondition types - raises exception
         with self.assertRaises(ValidationError):
             self.resMODFLOWModelInstance.metadata.create_element('BoundaryCondition',
-                                                                 boundaryConditionType=['Specified Head Boundaries'],
-                                                                 boundaryConditionPackage=['mmm'])
+                                                                 specified_head_boundary_packages=['BFH'],
+                                                                 specified_flux_boundary_packages=['FHB'],
+                                                                 head_dependent_flux_boundary_packages=['mmm'])
         with self.assertRaises(ValidationError):
             self.resMODFLOWModelInstance.metadata.create_element('BoundaryCondition',
-                                                                 boundaryConditionType=['lll'],
-                                                                 boundaryConditionPackage=['BFH'])
+                                                                 specified_head_boundary_packages=['BFH'],
+                                                                 specified_flux_boundary_packages=['mmm'],
+                                                                 head_dependent_flux_boundary_packages=['SFR'])
+        with self.assertRaises(ValidationError):
+            self.resMODFLOWModelInstance.metadata.create_element('BoundaryCondition',
+                                                                 specified_head_boundary_packages=['mmm'],
+                                                                 specified_flux_boundary_packages=['FHB'],
+                                                                 head_dependent_flux_boundary_packages=['SFR'])
 
-        boundary_condition_types = ['Specified Head Boundaries']
-        boundary_condition_packages = ['BFH']
+        spec_hd_bd_pkgs = ['CHD', 'FHB']
+        spec_fx_bd_pkgs = ['RCH', 'WEL']
+        hd_dep_fx_pkgs = ['MNW2', 'GHB', 'LAK']
         self.resMODFLOWModelInstance.metadata.create_element('BoundaryCondition',
-                                                             boundaryConditionType=boundary_condition_types,
-                                                             boundaryConditionPackage=boundary_condition_packages)
+                                                             specified_head_boundary_packages=spec_hd_bd_pkgs,
+                                                             specified_flux_boundary_packages=spec_fx_bd_pkgs,
+                                                             head_dependent_flux_boundary_packages=hd_dep_fx_pkgs)
         modelparam_element = self.resMODFLOWModelInstance.metadata.boundary_condition
         self.assertNotEqual(modelparam_element, None)
-        v = modelparam_element.get_boundary_condition_type()
-        for p in boundary_condition_types:
-            self.assertEquals(p in v, True)
-        v = modelparam_element.get_boundary_condition_package()
-        for p in boundary_condition_packages:
-            self.assertEquals(p in v, True)
+
+        # check specified_head_boundary_packages
+        added_packages = modelparam_element.get_specified_head_boundary_packages()
+        for intended_package in spec_hd_bd_pkgs:
+            self.assertEquals(intended_package in added_packages, True)
+
+        # check specified_flux_boundary_packages
+        added_packages = modelparam_element.get_specified_flux_boundary_packages()
+        for intended_package in spec_fx_bd_pkgs:
+            self.assertEquals(intended_package in added_packages, True)
+
+        # check head_dependent_flux_boundary_packages
+        added_packages = modelparam_element.get_head_dependent_flux_boundary_packages()
+        for intended_package in hd_dep_fx_pkgs:
+            self.assertEquals(intended_package in added_packages, True)
 
         # try to create another boundarycondition - it would raise an exception
         with self.assertRaises(IntegrityError):
             self.resMODFLOWModelInstance.metadata.create_element('BoundaryCondition',
-                                                                 boundaryConditionType=['Specified Head Boundaries'],
-                                                                 boundaryConditionPackage=['BFH'])
-
-
+                                                                 specified_head_boundary_packages=spec_hd_bd_pkgs,
+                                                                 specified_flux_boundary_packages=spec_fx_bd_pkgs,
+                                                                 head_dependent_flux_boundary_packages=hd_dep_fx_pkgs)
 
         # create modelcalibration
         self.resMODFLOWModelInstance.metadata.create_element('ModelCalibration',
@@ -408,31 +427,36 @@ class TestMODFLOWModelInstanceMetaData(MockIRODSTestCaseMixin, TransactionTestCa
             self.resMODFLOWModelInstance.metadata.create_element('GeneralElements',
                                                                  modelParameter='BCF6',
                                                                  modelSolver='DsE4',
-                                                                 outputControlPackage='LMT6',
+                                                                 output_control_package=['LMT6'],
                                                                  subsidencePackage='SUB')
         with self.assertRaises(ValidationError):
             self.resMODFLOWModelInstance.metadata.create_element('GeneralElements',
                                                                  modelParameter='BCF6',
                                                                  modelSolver='DE4',
-                                                                 outputControlPackage='LMTd6',
+                                                                 output_control_package=['LMt6'],
                                                                  subsidencePackage='SUB')
         with self.assertRaises(ValidationError):
             self.resMODFLOWModelInstance.metadata.create_element('GeneralElements',
                                                                  modelParameter='BCF6',
                                                                  modelSolver='DE4',
-                                                                 outputControlPackage='LMT6',
+                                                                 output_control_package=['LMT6'],
                                                                  subsidencePackage='SaUB')
-
+        ot_ctl_pkgs = ['LMT6', 'OC']
         self.resMODFLOWModelInstance.metadata.create_element('GeneralElements',
                                                              modelParameter='BCF6',
                                                              modelSolver='DE4',
-                                                             outputControlPackage='LMT6',
+                                                             output_control_package=ot_ctl_pkgs,
                                                              subsidencePackage='SUB')
         modelparam_element = self.resMODFLOWModelInstance.metadata.general_elements
         self.assertNotEqual(modelparam_element, None)
         self.assertEquals(modelparam_element.modelParameter, 'BCF6')
         self.assertEquals(modelparam_element.modelSolver, 'DE4')
-        self.assertEquals(modelparam_element.outputControlPackage, 'LMT6')
+
+        # check outputControlPackage
+        added_packages = modelparam_element.get_output_control_package()
+        for intended_package in ot_ctl_pkgs:
+            self.assertEquals(intended_package in added_packages, True)
+
         self.assertEquals(modelparam_element.subsidencePackage, 'SUB')
 
         # try to create another generalelements - it would raise an exception
@@ -440,7 +464,7 @@ class TestMODFLOWModelInstanceMetaData(MockIRODSTestCaseMixin, TransactionTestCa
             self.resMODFLOWModelInstance.metadata.create_element('GeneralElements',
                                                                  modelParameter='BCF6',
                                                                  modelSolver='DE4',
-                                                                 outputControlPackage='LMT6',
+                                                                 output_control_package=['LMT6'],
                                                                  subsidencePackage='SUB')
 
 
@@ -572,28 +596,47 @@ class TestMODFLOWModelInstanceMetaData(MockIRODSTestCaseMixin, TransactionTestCa
         with self.assertRaises(ValidationError):
             self.resMODFLOWModelInstance.metadata.update_element('BoundaryCondition',
                                                                  self.resMODFLOWModelInstance.metadata.boundary_condition.id,
-                                                                 boundaryConditionType=['Specified Head Boundaries'],
-                                                                 boundaryConditionPackage=['mmm'])
+                                                                 specified_head_boundary_packages=['BFH'],
+                                                                 specified_flux_boundary_packages=['FHB'],
+                                                                 head_dependent_flux_boundary_packages=['mmm'])
         with self.assertRaises(ValidationError):
             self.resMODFLOWModelInstance.metadata.update_element('BoundaryCondition',
                                                                  self.resMODFLOWModelInstance.metadata.boundary_condition.id,
-                                                                 boundaryConditionType=['lll'],
-                                                                 boundaryConditionPackage=['BFH'])
+                                                                 specified_head_boundary_packages=['BFH'],
+                                                                 specified_flux_boundary_packages=['mmm'],
+                                                                 head_dependent_flux_boundary_packages=['SFR'])
+        with self.assertRaises(ValidationError):
+            self.resMODFLOWModelInstance.metadata.update_element('BoundaryCondition',
+                                                                 self.resMODFLOWModelInstance.metadata.boundary_condition.id,
+                                                                 specified_head_boundary_packages=['mmm'],
+                                                                 specified_flux_boundary_packages=['FHB'],
+                                                                 head_dependent_flux_boundary_packages=['SFR'])
 
-        boundary_condition_types = ['Specified Head Boundaries', 'Specified Flux Boundaries']
-        boundary_condition_packages = ['BFH', 'WEL', 'STR']
+        spec_hd_bd_pkgs = ['BFH']
+        spec_fx_bd_pkgs = ['FHB']
+        hd_dep_fx_pkgs = ['RIV', 'DAFG', 'DRT']
         self.resMODFLOWModelInstance.metadata.update_element('BoundaryCondition',
                                                              self.resMODFLOWModelInstance.metadata.boundary_condition.id,
-                                                             boundaryConditionType=boundary_condition_types,
-                                                             boundaryConditionPackage=boundary_condition_packages)
+                                                             specified_head_boundary_packages=spec_hd_bd_pkgs,
+                                                             specified_flux_boundary_packages=spec_fx_bd_pkgs,
+                                                             head_dependent_flux_boundary_packages=hd_dep_fx_pkgs)
         modelparam_element = self.resMODFLOWModelInstance.metadata.boundary_condition
         self.assertNotEqual(modelparam_element, None)
-        v = modelparam_element.get_boundary_condition_type()
-        for p in boundary_condition_types:
-            self.assertEquals(p in v, True)
-        v = modelparam_element.get_boundary_condition_package()
-        for p in boundary_condition_packages:
-            self.assertEquals(p in v, True)
+
+        # check specified_head_boundary_packages
+        added_packages = modelparam_element.get_specified_head_boundary_packages()
+        for intended_package in spec_hd_bd_pkgs:
+            self.assertEquals(intended_package in added_packages, True)
+
+        # check specified_flux_boundary_packages
+        added_packages = modelparam_element.get_specified_flux_boundary_packages()
+        for intended_package in spec_fx_bd_pkgs:
+            self.assertEquals(intended_package in added_packages, True)
+
+        # check head_dependent_flux_boundary_packages
+        added_packages = modelparam_element.get_head_dependent_flux_boundary_packages()
+        for intended_package in hd_dep_fx_pkgs:
+            self.assertEquals(intended_package in added_packages, True)
 
         # update modelcalibration
         self.resMODFLOWModelInstance.metadata.update_element('ModelCalibration',
@@ -653,34 +696,40 @@ class TestMODFLOWModelInstanceMetaData(MockIRODSTestCaseMixin, TransactionTestCa
                                                                  self.resMODFLOWModelInstance.metadata.general_elements.id,
                                                                  modelParameter='BCF6',
                                                                  modelSolver='DsE4',
-                                                                 outputControlPackage='LMT6',
+                                                                 output_control_package=['LMT6'],
                                                                  subsidencePackage='SUB')
         with self.assertRaises(ValidationError):
             self.resMODFLOWModelInstance.metadata.update_element('GeneralElements',
                                                                  self.resMODFLOWModelInstance.metadata.general_elements.id,
                                                                  modelParameter='BCF6',
                                                                  modelSolver='DE4',
-                                                                 outputControlPackage='LMTd6',
+                                                                 output_control_package=['LMTd6'],
                                                                  subsidencePackage='SUB')
         with self.assertRaises(ValidationError):
             self.resMODFLOWModelInstance.metadata.update_element('GeneralElements',
                                                                  self.resMODFLOWModelInstance.metadata.general_elements.id,
                                                                  modelParameter='BCF6',
                                                                  modelSolver='DE4',
-                                                                 outputControlPackage='LMT6',
+                                                                 output_control_package=['LMT6'],
                                                                  subsidencePackage='SaUB')
+        ot_ctl_pkgs = ['GAGE', 'MNWI']
 
         self.resMODFLOWModelInstance.metadata.update_element('GeneralElements',
                                                              self.resMODFLOWModelInstance.metadata.general_elements.id,
                                                              modelParameter='hydraulic conductivity',
                                                              modelSolver='PCGN',
-                                                             outputControlPackage='GAGE',
+                                                             output_control_package=ot_ctl_pkgs,
                                                              subsidencePackage='SWT')
         modelparam_element = self.resMODFLOWModelInstance.metadata.general_elements
         self.assertNotEqual(modelparam_element, None)
         self.assertEquals(modelparam_element.modelParameter, 'hydraulic conductivity')
         self.assertEquals(modelparam_element.modelSolver, 'PCGN')
-        self.assertEquals(modelparam_element.outputControlPackage, 'GAGE')
+
+        # check outputControlPackage
+        added_packages = modelparam_element.get_output_control_package()
+        for intended_package in ot_ctl_pkgs:
+            self.assertEquals(intended_package in added_packages, True)
+
         self.assertEquals(modelparam_element.subsidencePackage, 'SWT')
 
 
@@ -781,16 +830,14 @@ class TestMODFLOWModelInstanceMetaData(MockIRODSTestCaseMixin, TransactionTestCa
         self.assertTrue(self.resMODFLOWModelInstance.has_required_content_files())
         self.assertFalse(self.resMODFLOWModelInstance.can_be_public_or_discoverable)
 
-
-
-        # add generically required elements; still should not be made public
+        # add generically required elements; should be made public
         self.resMODFLOWModelInstance.metadata.create_element('Description', abstract="test abstract")
         self.assertFalse(self.resMODFLOWModelInstance.can_be_public_or_discoverable)
 
         self.resMODFLOWModelInstance.metadata.create_element('Subject', value="test subject")
         self.assertTrue(self.resMODFLOWModelInstance.can_be_public_or_discoverable)
 
-        # add another .nam file
+        # add another .nam file; should not be able to be public
         files = [UploadedFile(file=self.sample_nam_obj2, name=self.sample_nam_obj2.name)]
         utils.resource_file_add_pre_process(resource=self.resMODFLOWModelInstance, files=files, user=self.user,
                                             extract_metadata=False)
@@ -799,297 +846,374 @@ class TestMODFLOWModelInstanceMetaData(MockIRODSTestCaseMixin, TransactionTestCa
         self.assertFalse(self.resMODFLOWModelInstance.has_required_content_files())
         self.assertFalse(self.resMODFLOWModelInstance.can_be_public_or_discoverable)
 
-        # delete extra .nam file
+        # delete extra .nam file; should be able to be public again
         hydroshare.delete_resource_file(self.resMODFLOWModelInstance.short_id, self.sample_nam_name2, self.user)
         self.assertTrue(self.resMODFLOWModelInstance.has_required_content_files())
         self.assertTrue(self.resMODFLOWModelInstance.can_be_public_or_discoverable)
 
-
+        # delete one reqd file; should not be able to be public again
+        hydroshare.delete_resource_file(self.resMODFLOWModelInstance.short_id, self.file_names[2], self.user)
+        self.assertFalse(self.resMODFLOWModelInstance.has_required_content_files())
+        self.assertFalse(self.resMODFLOWModelInstance.can_be_public_or_discoverable)
 
     def test_multiple_content_files(self):
         self.assertTrue(self.resMODFLOWModelInstance.can_have_multiple_files())
-    #
-    # def test_get_xml(self):
-    #     self.resMODFLOWModelInstance.metadata.create_element('Description', abstract="test abstract")
-    #     self.resMODFLOWModelInstance.metadata.create_element('Subject', value="test subject")
-    #     self.resMODFLOWModelInstance.metadata.create_element('ModelOutput', includes_output=True)
-    #     self.resMODFLOWModelInstance.metadata.create_element('ExecutedBy', model_name=self.resGenModelProgram.short_id)
-    #     s_objs = ["BMPs", "Hydrology", "Water quality"]
-    #     o_objs = "elon musk"
-    #     self.resMODFLOWModelInstance.metadata.create_element('ModelObjective',
-    #                                                          swat_model_objectives=s_objs,
-    #                                                          other_objectives=o_objs)
-    #     self.resMODFLOWModelInstance.metadata.create_element('SimulationType',
-    #                                                          simulation_type_name='Normal Simulation')
-    #     self.resMODFLOWModelInstance.metadata.create_element('ModelMethod',
-    #                                                          runoffCalculationMethod='aaa',
-    #                                                          flowRoutingMethod='bbb',
-    #                                                          petEstimationMethod='ccc')
-    #     s_params = ["Crop rotation", "Tillage operation"]
-    #     o_params = "spongebob"
-    #     self.resMODFLOWModelInstance.metadata.create_element('ModelParameter',
-    #                                                          model_parameters=s_params,
-    #                                                          other_parameters=o_params)
-    #
-    #     self.resMODFLOWModelInstance.metadata.create_element('ModelInput',
-    #                                                          warmupPeriodValue='a',
-    #                                                          rainfallTimeStepType='Daily',
-    #                                                          rainfallTimeStepValue='c',
-    #                                                          routingTimeStepType='Daily',
-    #                                                          routingTimeStepValue='e',
-    #                                                          simulationTimeStepType='Hourly',
-    #                                                          simulationTimeStepValue='g',
-    #                                                          watershedArea='h',
-    #                                                          numberOfSubbasins='i',
-    #                                                          numberOfHRUs='j',
-    #                                                          demResolution='k',
-    #                                                          demSourceName='l',
-    #                                                          demSourceURL='m',
-    #                                                          landUseDataSourceName='n',
-    #                                                          landUseDataSourceURL='o',
-    #                                                          soilDataSourceName='p',
-    #                                                          soilDataSourceURL='q',
-    #                                                          )
-    #
-    #     # test if xml from get_xml() is well formed
-    #     ET.fromstring(self.resMODFLOWModelInstance.metadata.get_xml())  # todo check actual xml content
-    #
-    # def test_metadata_on_content_file_delete(self):
-    #     # Metadata should remain after content file deletion
-    #
-    #     # upload files
-    #     files = [UploadedFile(file=self.text_file_obj, name=self.text_file_obj.name)]
-    #     utils.resource_file_add_pre_process(resource=self.resMODFLOWModelInstance, files=files, user=self.user,
-    #                                         extract_metadata=False)
-    #
-    #     utils.resource_file_add_process(resource=self.resMODFLOWModelInstance, files=files, user=self.user,
-    #                                     extract_metadata=False)
-    #
-    #     # create metadata elements
-    #     self.resMODFLOWModelInstance.metadata.create_element('Description', abstract="test abstract")
-    #     self.resMODFLOWModelInstance.metadata.create_element('Subject', value="test subject")
-    #     self.resMODFLOWModelInstance.metadata.create_element('ModelOutput', includes_output=True)
-    #     self.resMODFLOWModelInstance.metadata.create_element('ExecutedBy', model_name=self.resGenModelProgram.short_id)
-    #     s_objs = ["BMPs", "Hydrology", "Water quality"]
-    #     o_objs = "elon musk"
-    #     self.resMODFLOWModelInstance.metadata.create_element('ModelObjective',
-    #                                                          swat_model_objectives=s_objs,
-    #                                                          other_objectives=o_objs)
-    #     self.resMODFLOWModelInstance.metadata.create_element('SimulationType',
-    #                                                          simulation_type_name='Normal Simulation')
-    #     self.resMODFLOWModelInstance.metadata.create_element('ModelMethod',
-    #                                                          runoffCalculationMethod='aaa',
-    #                                                          flowRoutingMethod='bbb',
-    #                                                          petEstimationMethod='ccc')
-    #     s_params = ["Crop rotation", "Tillage operation"]
-    #     o_params = "spongebob"
-    #     self.resMODFLOWModelInstance.metadata.create_element('ModelParameter',
-    #                                                          model_parameters=s_params,
-    #                                                          other_parameters=o_params)
-    #
-    #     self.resMODFLOWModelInstance.metadata.create_element('ModelInput',
-    #                                                          warmupPeriodValue='a',
-    #                                                          rainfallTimeStepType='Daily',
-    #                                                          rainfallTimeStepValue='c',
-    #                                                          routingTimeStepType='Daily',
-    #                                                          routingTimeStepValue='e',
-    #                                                          simulationTimeStepType='Hourly',
-    #                                                          simulationTimeStepValue='g',
-    #                                                          watershedArea='h',
-    #                                                          numberOfSubbasins='i',
-    #                                                          numberOfHRUs='j',
-    #                                                          demResolution='k',
-    #                                                          demSourceName='l',
-    #                                                          demSourceURL='m',
-    #                                                          landUseDataSourceName='n',
-    #                                                          landUseDataSourceURL='o',
-    #                                                          soilDataSourceName='p',
-    #                                                          soilDataSourceURL='q',
-    #                                                          )
-    #
-    #     # there should one content file
-    #     self.assertEquals(self.resMODFLOWModelInstance.files.all().count(), 1)
-    #
-    #     # there should be one format element
-    #     self.assertEquals(self.resMODFLOWModelInstance.metadata.formats.all().count(), 1)
-    #
-    #     # delete content file that we added above
-    #     hydroshare.delete_resource_file(self.resMODFLOWModelInstance.short_id, self.file_name, self.user)
-    #
-    #     # there should no content file
-    #     self.assertEquals(self.resMODFLOWModelInstance.files.all().count(), 0)
-    #
-    #     # there should be no format element
-    #     self.assertEquals(self.resMODFLOWModelInstance.metadata.formats.all().count(), 0)
-    #
-    #     # test the core metadata at this point
-    #     self.assertNotEquals(self.resMODFLOWModelInstance.metadata.title, None)
-    #
-    #     # there should be an abstract element
-    #     self.assertNotEquals(self.resMODFLOWModelInstance.metadata.description, None)
-    #
-    #     # there should be one creator element
-    #     self.assertEquals(self.resMODFLOWModelInstance.metadata.creators.all().count(), 1)
-    #
-    #     # testing extended metadata elements
-    #     self.assertNotEqual(self.resMODFLOWModelInstance.metadata.model_output, None)
-    #     self.assertNotEqual(self.resMODFLOWModelInstance.metadata.executed_by, None)
-    #     self.assertNotEqual(self.resMODFLOWModelInstance.metadata.model_input, None)
-    #     self.assertNotEqual(self.resMODFLOWModelInstance.metadata.model_parameter, None)
-    #     self.assertNotEqual(self.resMODFLOWModelInstance.metadata.model_method, None)
-    #     self.assertNotEqual(self.resMODFLOWModelInstance.metadata.simulation_type, None)
-    #     self.assertNotEqual(self.resMODFLOWModelInstance.metadata.model_objective, None)
-    #
-    # def test_metadata_delete_on_resource_delete(self):
-    #     files = [UploadedFile(file=self.text_file_obj, name=self.text_file_obj.name)]
-    #     utils.resource_file_add_pre_process(resource=self.resMODFLOWModelInstance, files=files, user=self.user,
-    #                                         extract_metadata=False)
-    #
-    #     utils.resource_file_add_process(resource=self.resMODFLOWModelInstance, files=files, user=self.user,
-    #                                     extract_metadata=False)
-    #
-    #     # create metadata elements
-    #     self.resMODFLOWModelInstance.metadata.create_element('Description', abstract="test abstract")
-    #     self.resMODFLOWModelInstance.metadata.create_element('Subject', value="test subject")
-    #     self.resMODFLOWModelInstance.metadata.create_element('ModelOutput', includes_output=True)
-    #     self.resMODFLOWModelInstance.metadata.create_element('ExecutedBy', model_name=self.resGenModelProgram.short_id)
-    #     s_objs = ["BMPs", "Hydrology", "Water quality"]
-    #     o_objs = "elon musk"
-    #     self.resMODFLOWModelInstance.metadata.create_element('ModelObjective',
-    #                                                          swat_model_objectives=s_objs,
-    #                                                          other_objectives=o_objs)
-    #     self.resMODFLOWModelInstance.metadata.create_element('SimulationType',
-    #                                                          simulation_type_name='Normal Simulation')
-    #     self.resMODFLOWModelInstance.metadata.create_element('ModelMethod',
-    #                                                          runoffCalculationMethod='aaa',
-    #                                                          flowRoutingMethod='bbb',
-    #                                                          petEstimationMethod='ccc')
-    #     s_params = ["Crop rotation", "Tillage operation"]
-    #     o_params = "spongebob"
-    #     self.resMODFLOWModelInstance.metadata.create_element('ModelParameter',
-    #                                                          model_parameters=s_params,
-    #                                                          other_parameters=o_params)
-    #
-    #     self.resMODFLOWModelInstance.metadata.create_element('ModelInput',
-    #                                                          warmupPeriodValue='a',
-    #                                                          rainfallTimeStepType='Daily',
-    #                                                          rainfallTimeStepValue='c',
-    #                                                          routingTimeStepType='Daily',
-    #                                                          routingTimeStepValue='e',
-    #                                                          simulationTimeStepType='Hourly',
-    #                                                          simulationTimeStepValue='g',
-    #                                                          watershedArea='h',
-    #                                                          numberOfSubbasins='i',
-    #                                                          numberOfHRUs='j',
-    #                                                          demResolution='k',
-    #                                                          demSourceName='l',
-    #                                                          demSourceURL='m',
-    #                                                          landUseDataSourceName='n',
-    #                                                          landUseDataSourceURL='o',
-    #                                                          soilDataSourceName='p',
-    #                                                          soilDataSourceURL='q',
-    #                                                          )
-    #     self.resMODFLOWModelInstance.metadata.create_element('Contributor', name="user2")
-    #
-    #     # before resource delete
-    #     core_metadata_obj = self.resMODFLOWModelInstance.metadata
-    #     self.assertEquals(CoreMetaData.objects.all().count(), 3)
-    #     # there should be Creator metadata objects
-    #     self.assertTrue(Creator.objects.filter(object_id=core_metadata_obj.id).exists())
-    #     # there should be no Contributor metadata objects
-    #     self.assertTrue(Contributor.objects.filter(object_id=core_metadata_obj.id).exists())
-    #     # there should be Identifier metadata objects
-    #     self.assertTrue(Identifier.objects.filter(object_id=core_metadata_obj.id).exists())
-    #     # there should be Type metadata objects
-    #     self.assertTrue(Type.objects.filter(object_id=core_metadata_obj.id).exists())
-    #     # there should be no Source metadata objects
-    #     self.assertFalse(Source.objects.filter(object_id=core_metadata_obj.id).exists())
-    #     # there should be no Relation metadata objects
-    #     self.assertFalse(Relation.objects.filter(object_id=core_metadata_obj.id).exists())
-    #     # there should be no Publisher metadata objects
-    #     self.assertFalse(Publisher.objects.filter(object_id=core_metadata_obj.id).exists())
-    #     # there should be Title metadata objects
-    #     self.assertTrue(Title.objects.filter(object_id=core_metadata_obj.id).exists())
-    #     # there should be Description (Abstract) metadata objects
-    #     self.assertTrue(Description.objects.filter(object_id=core_metadata_obj.id).exists())
-    #     # there should be Date metadata objects
-    #     self.assertTrue(Date.objects.filter(object_id=core_metadata_obj.id).exists())
-    #     # there should be Subject metadata objects
-    #     self.assertTrue(Subject.objects.filter(object_id=core_metadata_obj.id).exists())
-    #     # there should be no Coverage metadata objects
-    #     self.assertFalse(Coverage.objects.filter(object_id=core_metadata_obj.id).exists())
-    #     # there should be Format metadata objects
-    #     self.assertTrue(Format.objects.filter(object_id=core_metadata_obj.id).exists())
-    #     # there should be Language metadata objects
-    #     self.assertTrue(Language.objects.filter(object_id=core_metadata_obj.id).exists())
-    #     # there should be Rights metadata objects
-    #     self.assertTrue(Rights.objects.filter(object_id=core_metadata_obj.id).exists())
-    #
-    #     # resource specific metadata
-    #     self.assertEquals(SWATModelInstanceMetaData.objects.all().count(), 1)
-    #     # there should be Model Output metadata objects
-    #     self.assertTrue(ModelOutput.objects.filter(object_id=core_metadata_obj.id).exists())
-    #     # there should be ExecutedBy metadata objects
-    #     self.assertTrue(ExecutedBy.objects.filter(object_id=core_metadata_obj.id).exists())
-    #     # there should be ModelObjective metadata objects
-    #     self.assertTrue(ModelObjective.objects.filter(object_id=core_metadata_obj.id).exists())
-    #     # there should be SimulationType metadata objects
-    #     self.assertTrue(SimulationType.objects.filter(object_id=core_metadata_obj.id).exists())
-    #     # there should be ModelMethod metadata objects
-    #     self.assertTrue(ModelMethod.objects.filter(object_id=core_metadata_obj.id).exists())
-    #     # there should be ModelParameter metadata objects
-    #     self.assertTrue(ModelParameter.objects.filter(object_id=core_metadata_obj.id).exists())
-    #     # there should be ModelInput metadata objects
-    #     self.assertTrue(ModelInput.objects.filter(object_id=core_metadata_obj.id).exists())
-    #
-    #     # delete resource
-    #     hydroshare.delete_resource(self.resMODFLOWModelInstance.short_id)
-    #     self.assertEquals(CoreMetaData.objects.all().count(), 2)
-    #     self.assertEquals(SWATModelInstanceMetaData.objects.all().count(), 0)
-    #
-    #     # there should be no Creator metadata objects
-    #     self.assertFalse(Creator.objects.filter(object_id=core_metadata_obj.id).exists())
-    #     # there should be no Contributor metadata objects
-    #     self.assertFalse(Contributor.objects.filter(object_id=core_metadata_obj.id).exists())
-    #     # there should be no Identifier metadata objects
-    #     self.assertFalse(Identifier.objects.filter(object_id=core_metadata_obj.id).exists())
-    #     # there should be no Type metadata objects
-    #     self.assertFalse(Type.objects.filter(object_id=core_metadata_obj.id).exists())
-    #     # there should be no Source metadata objects
-    #     self.assertFalse(Source.objects.filter(object_id=core_metadata_obj.id).exists())
-    #     # there should be no Relation metadata objects
-    #     self.assertFalse(Relation.objects.filter(object_id=core_metadata_obj.id).exists())
-    #     # there should be no Publisher metadata objects
-    #     self.assertFalse(Publisher.objects.filter(object_id=core_metadata_obj.id).exists())
-    #     # there should be no Title metadata objects
-    #     self.assertFalse(Title.objects.filter(object_id=core_metadata_obj.id).exists())
-    #     # there should be no Description (Abstract) metadata objects
-    #     self.assertFalse(Description.objects.filter(object_id=core_metadata_obj.id).exists())
-    #     # there should be no Date metadata objects
-    #     self.assertFalse(Date.objects.filter(object_id=core_metadata_obj.id).exists())
-    #     # there should be no Subject metadata objects
-    #     self.assertFalse(Subject.objects.filter(object_id=core_metadata_obj.id).exists())
-    #     # there should be no Coverage metadata objects
-    #     self.assertFalse(Coverage.objects.filter(object_id=core_metadata_obj.id).exists())
-    #     # there should be no Format metadata objects
-    #     self.assertFalse(Format.objects.filter(object_id=core_metadata_obj.id).exists())
-    #     # there should be no Language metadata objects
-    #     self.assertFalse(Language.objects.filter(object_id=core_metadata_obj.id).exists())
-    #     # there should be no Rights metadata objects
-    #     self.assertFalse(Rights.objects.filter(object_id=core_metadata_obj.id).exists())
-    #
-    #     # resource specific metadata
-    #     # there should be no Model Output metadata objects
-    #     self.assertFalse(ModelOutput.objects.filter(object_id=core_metadata_obj.id).exists())
-    #     # there should be no ExecutedBy metadata objects
-    #     self.assertFalse(ExecutedBy.objects.filter(object_id=core_metadata_obj.id).exists())
-    #     # there should be no ModelObjective metadata objects
-    #     self.assertFalse(ModelObjective.objects.filter(object_id=core_metadata_obj.id).exists())
-    #     # there should be no SimulationType metadata objects
-    #     self.assertFalse(SimulationType.objects.filter(object_id=core_metadata_obj.id).exists())
-    #     # there should be no ModelMethod metadata objects
-    #     self.assertFalse(ModelMethod.objects.filter(object_id=core_metadata_obj.id).exists())
-    #     # there should be no ModelParameter metadata objects
-    #     self.assertFalse(ModelParameter.objects.filter(object_id=core_metadata_obj.id).exists())
-    #     # there should be no ModelInput metadata objects
-    #     self.assertFalse(ModelInput.objects.filter(object_id=core_metadata_obj.id).exists())
+
+    def test_get_xml(self):
+        self.resMODFLOWModelInstance.metadata.create_element('Description', abstract="test abstract")
+        self.resMODFLOWModelInstance.metadata.create_element('Subject', value="test subject")
+        self.resMODFLOWModelInstance.metadata.create_element('ModelOutput', includes_output=True)
+        self.resMODFLOWModelInstance.metadata.create_element('ExecutedBy', model_name=self.resGenModelProgram.short_id)
+        self.resMODFLOWModelInstance.metadata.create_element('StudyArea',
+                                                             totalLength=1111,
+                                                             totalWidth=2222,
+                                                             maximumElevation=3333,
+                                                             minimumElevation=4444)
+        self.resMODFLOWModelInstance.metadata.create_element('GridDimensions',
+                                                             numberOfLayers=5555,
+                                                             typeOfRows='Irregular',
+                                                             numberOfRows=6666,
+                                                             typeOfColumns='Regular',
+                                                             numberOfColumns=7777)
+        self.resMODFLOWModelInstance.metadata.create_element('StressPeriod',
+                                                             stressPeriodType='Steady and Transient',
+                                                             steadyStateValue=8888,
+                                                             transientStateValueType='Monthly',
+                                                             transientStateValue=9999)
+        self.resMODFLOWModelInstance.metadata.create_element('GroundwaterFlow',
+                                                             flowPackage='LPF',
+                                                             flowParameter='Hydraulic Conductivity')
+        self.resMODFLOWModelInstance.metadata.create_element('BoundaryCondition',
+                                                             specified_head_boundary_packages=['CHD', 'FHB'],
+                                                             specified_flux_boundary_packages=['FHB', 'WEL'],
+                                                             head_dependent_flux_boundary_packages=['RIV', 'MNW1'])
+        self.resMODFLOWModelInstance.metadata.create_element('ModelCalibration',
+                                                             calibratedParameter='test parameter',
+                                                             observationType='test observation type',
+                                                             observationProcessPackage='GBOB',
+                                                             calibrationMethod='test calibration method')
+        self.resMODFLOWModelInstance.metadata.create_element('ModelInput',
+                                                             inputType='test input type',
+                                                             inputSourceName='test source name',
+                                                             inputSourceURL='http://www.test.com')
+        self.resMODFLOWModelInstance.metadata.create_element('GeneralElements',
+                                                             modelParameter='test model parameter',
+                                                             modelSolver='SIP',
+                                                             output_control_package=['HYD', 'OC'],
+                                                             subsidencePackage='SWT')
+        xml_doc = self.resMODFLOWModelInstance.metadata.get_xml()
+        # check to see if the specific metadata are in the xml doc
+        self.assertTrue('1111' in xml_doc)
+        self.assertTrue('2222' in xml_doc)
+        self.assertTrue('3333' in xml_doc)
+        self.assertTrue('4444' in xml_doc)
+        self.assertTrue('5555' in xml_doc)
+        self.assertTrue('Irregular' in xml_doc)
+        self.assertTrue('6666' in xml_doc)
+        self.assertTrue('Regular' in xml_doc)
+        self.assertTrue('7777' in xml_doc)
+        self.assertTrue('Steady and Transient' in xml_doc)
+        self.assertTrue('8888' in xml_doc)
+        self.assertTrue('Monthly' in xml_doc)
+        self.assertTrue('9999' in xml_doc)
+        self.assertTrue('LPF' in xml_doc)
+        self.assertTrue('Hydraulic Conductivity' in xml_doc)
+        self.assertTrue('CHD' in xml_doc)
+        self.assertTrue('FHB' in xml_doc)
+        self.assertTrue('FHB' in xml_doc)
+        self.assertTrue('WEL' in xml_doc)
+        self.assertTrue('RIV' in xml_doc)
+        self.assertTrue('MNW1' in xml_doc)
+        self.assertTrue('test parameter' in xml_doc)
+        self.assertTrue('test observation type' in xml_doc)
+        self.assertTrue('GBOB' in xml_doc)
+        self.assertTrue('test calibration method' in xml_doc)
+        self.assertTrue('test input type' in xml_doc)
+        self.assertTrue('test source name' in xml_doc)
+        self.assertTrue('http://www.test.com' in xml_doc)
+        self.assertTrue('test model parameter' in xml_doc)
+        self.assertTrue('SIP' in xml_doc)
+        self.assertTrue('HYD' in xml_doc)
+        self.assertTrue('OC' in xml_doc)
+        self.assertTrue('SWT' in xml_doc)
+
+    def test_metadata_on_content_file_delete(self):
+        # Metadata should remain after content file deletion
+
+        # upload files
+        files = [UploadedFile(file=self.sample_nam_obj, name=self.sample_nam_obj.name)]
+        utils.resource_file_add_pre_process(resource=self.resMODFLOWModelInstance, files=files, user=self.user,
+                                            extract_metadata=False)
+        utils.resource_file_add_process(resource=self.resMODFLOWModelInstance, files=files, user=self.user,
+                                        extract_metadata=False)
+        files = [UploadedFile(file=self.sample_nam_obj2, name=self.sample_nam_obj2.name)]
+        utils.resource_file_add_pre_process(resource=self.resMODFLOWModelInstance, files=files, user=self.user,
+                                            extract_metadata=False)
+        utils.resource_file_add_process(resource=self.resMODFLOWModelInstance, files=files, user=self.user,
+                                        extract_metadata=False)
+        for f in self.file_list:
+            f_obj = open(f, 'r')
+            files = [UploadedFile(file=f_obj, name=f_obj.name)]
+            utils.resource_file_add_pre_process(resource=self.resMODFLOWModelInstance, files=files, user=self.user,
+                                                extract_metadata=False)
+            utils.resource_file_add_process(resource=self.resMODFLOWModelInstance, files=files, user=self.user,
+                                            extract_metadata=False)
+
+        # create metadata elements
+        self.resMODFLOWModelInstance.metadata.create_element('Description', abstract="test abstract")
+        self.resMODFLOWModelInstance.metadata.create_element('Subject', value="test subject")
+        self.resMODFLOWModelInstance.metadata.create_element('ModelOutput', includes_output=True)
+        self.resMODFLOWModelInstance.metadata.create_element('ExecutedBy', model_name=self.resGenModelProgram.short_id)
+        self.resMODFLOWModelInstance.metadata.create_element('StudyArea',
+                                                             totalLength=1111,
+                                                             totalWidth=2222,
+                                                             maximumElevation=3333,
+                                                             minimumElevation=4444)
+        self.resMODFLOWModelInstance.metadata.create_element('GridDimensions',
+                                                             numberOfLayers=5555,
+                                                             typeOfRows='Irregular',
+                                                             numberOfRows=6666,
+                                                             typeOfColumns='Regular',
+                                                             numberOfColumns=7777)
+        self.resMODFLOWModelInstance.metadata.create_element('StressPeriod',
+                                                             stressPeriodType='Steady and Transient',
+                                                             steadyStateValue=8888,
+                                                             transientStateValueType='Monthly',
+                                                             transientStateValue=9999)
+        self.resMODFLOWModelInstance.metadata.create_element('GroundwaterFlow',
+                                                             flowPackage='LPF',
+                                                             flowParameter='Hydraulic Conductivity')
+        self.resMODFLOWModelInstance.metadata.create_element('BoundaryCondition',
+                                                             specified_head_boundary_packages=['CHD', 'FHB'],
+                                                             specified_flux_boundary_packages=['FHB', 'WEL'],
+                                                             head_dependent_flux_boundary_packages=['RIV', 'MNW1'])
+        self.resMODFLOWModelInstance.metadata.create_element('ModelCalibration',
+                                                             calibratedParameter='test parameter',
+                                                             observationType='test observation type',
+                                                             observationProcessPackage='GBOB',
+                                                             calibrationMethod='test calibration method')
+        self.resMODFLOWModelInstance.metadata.create_element('ModelInput',
+                                                             inputType='test input type',
+                                                             inputSourceName='test source name',
+                                                             inputSourceURL='http://www.test.com')
+        self.resMODFLOWModelInstance.metadata.create_element('GeneralElements',
+                                                             modelParameter='test model parameter',
+                                                             modelSolver='SIP',
+                                                             output_control_package=['HYD', 'OC'],
+                                                             subsidencePackage='SWT')
+
+        # there should 12 content file
+        self.assertEquals(self.resMODFLOWModelInstance.files.all().count(), 12)
+
+        # there should be 11 format elements (2 nam)
+        self.assertEquals(self.resMODFLOWModelInstance.metadata.formats.all().count(), 11)
+
+        # delete content files that we added above
+        for f in self.file_names:
+            hydroshare.delete_resource_file(self.resMODFLOWModelInstance.short_id, f, self.user)
+
+        # there should no content file
+        self.assertEquals(self.resMODFLOWModelInstance.files.all().count(), 0)
+
+        # there should be no format element
+        self.assertEquals(self.resMODFLOWModelInstance.metadata.formats.all().count(), 0)
+
+        # test the core metadata at this point
+        self.assertNotEquals(self.resMODFLOWModelInstance.metadata.title, None)
+
+        # there should be an abstract element
+        self.assertNotEquals(self.resMODFLOWModelInstance.metadata.description, None)
+
+        # there should be one creator element
+        self.assertEquals(self.resMODFLOWModelInstance.metadata.creators.all().count(), 1)
+
+        # testing extended metadata elements
+        self.assertNotEqual(self.resMODFLOWModelInstance.metadata.model_output, None)
+        self.assertNotEqual(self.resMODFLOWModelInstance.metadata.executed_by, None)
+        self.assertNotEqual(self.resMODFLOWModelInstance.metadata.study_area, None)
+        self.assertNotEqual(self.resMODFLOWModelInstance.metadata.grid_dimensions, None)
+        self.assertNotEqual(self.resMODFLOWModelInstance.metadata.stress_period, None)
+        self.assertNotEqual(self.resMODFLOWModelInstance.metadata.ground_water_flow, None)
+        self.assertNotEqual(self.resMODFLOWModelInstance.metadata.boundary_condition, None)
+        self.assertNotEqual(self.resMODFLOWModelInstance.metadata.model_calibration, None)
+        self.assertNotEqual(self.resMODFLOWModelInstance.metadata.model_inputs, None)
+        self.assertNotEqual(self.resMODFLOWModelInstance.metadata.general_elements, None)
+
+    def test_metadata_delete_on_resource_delete(self):
+        # upload files
+        files = [UploadedFile(file=self.sample_nam_obj, name=self.sample_nam_obj.name)]
+        utils.resource_file_add_pre_process(resource=self.resMODFLOWModelInstance, files=files, user=self.user,
+                                            extract_metadata=False)
+        utils.resource_file_add_process(resource=self.resMODFLOWModelInstance, files=files, user=self.user,
+                                        extract_metadata=False)
+        files = [UploadedFile(file=self.sample_nam_obj2, name=self.sample_nam_obj2.name)]
+        utils.resource_file_add_pre_process(resource=self.resMODFLOWModelInstance, files=files, user=self.user,
+                                            extract_metadata=False)
+        utils.resource_file_add_process(resource=self.resMODFLOWModelInstance, files=files, user=self.user,
+                                        extract_metadata=False)
+        for f in self.file_list:
+            f_obj = open(f, 'r')
+            files = [UploadedFile(file=f_obj, name=f_obj.name)]
+            utils.resource_file_add_pre_process(resource=self.resMODFLOWModelInstance, files=files, user=self.user,
+                                                extract_metadata=False)
+            utils.resource_file_add_process(resource=self.resMODFLOWModelInstance, files=files, user=self.user,
+                                            extract_metadata=False)
+
+        # create metadata elements
+        self.resMODFLOWModelInstance.metadata.create_element('Description', abstract="test abstract")
+        self.resMODFLOWModelInstance.metadata.create_element('Subject', value="test subject")
+        self.resMODFLOWModelInstance.metadata.create_element('ModelOutput', includes_output=True)
+        self.resMODFLOWModelInstance.metadata.create_element('ExecutedBy', model_name=self.resGenModelProgram.short_id)
+        self.resMODFLOWModelInstance.metadata.create_element('StudyArea',
+                                                             totalLength=1111,
+                                                             totalWidth=2222,
+                                                             maximumElevation=3333,
+                                                             minimumElevation=4444)
+        self.resMODFLOWModelInstance.metadata.create_element('GridDimensions',
+                                                             numberOfLayers=5555,
+                                                             typeOfRows='Irregular',
+                                                             numberOfRows=6666,
+                                                             typeOfColumns='Regular',
+                                                             numberOfColumns=7777)
+        self.resMODFLOWModelInstance.metadata.create_element('StressPeriod',
+                                                             stressPeriodType='Steady and Transient',
+                                                             steadyStateValue=8888,
+                                                             transientStateValueType='Monthly',
+                                                             transientStateValue=9999)
+        self.resMODFLOWModelInstance.metadata.create_element('GroundwaterFlow',
+                                                             flowPackage='LPF',
+                                                             flowParameter='Hydraulic Conductivity')
+        self.resMODFLOWModelInstance.metadata.create_element('BoundaryCondition',
+                                                             specified_head_boundary_packages=['CHD', 'FHB'],
+                                                             specified_flux_boundary_packages=['FHB', 'WEL'],
+                                                             head_dependent_flux_boundary_packages=['RIV', 'MNW1'])
+        self.resMODFLOWModelInstance.metadata.create_element('ModelCalibration',
+                                                             calibratedParameter='test parameter',
+                                                             observationType='test observation type',
+                                                             observationProcessPackage='GBOB',
+                                                             calibrationMethod='test calibration method')
+        self.resMODFLOWModelInstance.metadata.create_element('ModelInput',
+                                                             inputType='test input type',
+                                                             inputSourceName='test source name',
+                                                             inputSourceURL='http://www.test.com')
+        self.resMODFLOWModelInstance.metadata.create_element('GeneralElements',
+                                                             modelParameter='test model parameter',
+                                                             modelSolver='SIP',
+                                                             output_control_package=['HYD', 'OC'],
+                                                             subsidencePackage='SWT')
+        self.resMODFLOWModelInstance.metadata.create_element('Contributor', name="user2")
+
+        # before resource delete
+        core_metadata_obj = self.resMODFLOWModelInstance.metadata
+        self.assertEquals(CoreMetaData.objects.all().count(), 3)
+        # there should be Creator metadata objects
+        self.assertTrue(Creator.objects.filter(object_id=core_metadata_obj.id).exists())
+        # there should be no Contributor metadata objects
+        self.assertTrue(Contributor.objects.filter(object_id=core_metadata_obj.id).exists())
+        # there should be Identifier metadata objects
+        self.assertTrue(Identifier.objects.filter(object_id=core_metadata_obj.id).exists())
+        # there should be Type metadata objects
+        self.assertTrue(Type.objects.filter(object_id=core_metadata_obj.id).exists())
+        # there should be no Source metadata objects
+        self.assertFalse(Source.objects.filter(object_id=core_metadata_obj.id).exists())
+        # there should be no Relation metadata objects
+        self.assertFalse(Relation.objects.filter(object_id=core_metadata_obj.id).exists())
+        # there should be no Publisher metadata objects
+        self.assertFalse(Publisher.objects.filter(object_id=core_metadata_obj.id).exists())
+        # there should be Title metadata objects
+        self.assertTrue(Title.objects.filter(object_id=core_metadata_obj.id).exists())
+        # there should be Description (Abstract) metadata objects
+        self.assertTrue(Description.objects.filter(object_id=core_metadata_obj.id).exists())
+        # there should be Date metadata objects
+        self.assertTrue(Date.objects.filter(object_id=core_metadata_obj.id).exists())
+        # there should be Subject metadata objects
+        self.assertTrue(Subject.objects.filter(object_id=core_metadata_obj.id).exists())
+        # there should be no Coverage metadata objects
+        self.assertFalse(Coverage.objects.filter(object_id=core_metadata_obj.id).exists())
+        # there should be Format metadata objects
+        self.assertTrue(Format.objects.filter(object_id=core_metadata_obj.id).exists())
+        # there should be Language metadata objects
+        self.assertTrue(Language.objects.filter(object_id=core_metadata_obj.id).exists())
+        # there should be Rights metadata objects
+        self.assertTrue(Rights.objects.filter(object_id=core_metadata_obj.id).exists())
+
+        # resource specific metadata
+        self.assertEquals(MODFLOWModelInstanceMetaData.objects.all().count(), 1)
+        # there should be Model Output metadata objects
+        self.assertTrue(ModelOutput.objects.filter(object_id=core_metadata_obj.id).exists())
+        # there should be ExecutedBy metadata objects
+        self.assertTrue(ExecutedBy.objects.filter(object_id=core_metadata_obj.id).exists())
+        # there should be StudyArea metadata objects
+        self.assertTrue(StudyArea.objects.filter(object_id=core_metadata_obj.id).exists())
+        # there should be GridDimensions metadata objects
+        self.assertTrue(GridDimensions.objects.filter(object_id=core_metadata_obj.id).exists())
+        # there should be StressPeriod metadata objects
+        self.assertTrue(StressPeriod.objects.filter(object_id=core_metadata_obj.id).exists())
+        # there should be GroundWaterFlow metadata objects
+        self.assertTrue(GroundWaterFlow.objects.filter(object_id=core_metadata_obj.id).exists())
+        # there should be BoundaryCondition metadata objects
+        self.assertTrue(BoundaryCondition.objects.filter(object_id=core_metadata_obj.id).exists())
+        # there should be ModelCalibration metadata objects
+        self.assertTrue(ModelCalibration.objects.filter(object_id=core_metadata_obj.id).exists())
+        # there should be ModelInput metadata objects
+        self.assertTrue(ModelInput.objects.filter(object_id=core_metadata_obj.id).exists())
+        # there should be GeneralElements metadata objects
+        self.assertTrue(GeneralElements.objects.filter(object_id=core_metadata_obj.id).exists())
+
+        # delete resource
+        hydroshare.delete_resource(self.resMODFLOWModelInstance.short_id)
+        self.assertEquals(CoreMetaData.objects.all().count(), 2)
+        self.assertEquals(MODFLOWModelInstanceMetaData.objects.all().count(), 0)
+
+        # there should be no Creator metadata objects
+        self.assertFalse(Creator.objects.filter(object_id=core_metadata_obj.id).exists())
+        # there should be no Contributor metadata objects
+        self.assertFalse(Contributor.objects.filter(object_id=core_metadata_obj.id).exists())
+        # there should be no Identifier metadata objects
+        self.assertFalse(Identifier.objects.filter(object_id=core_metadata_obj.id).exists())
+        # there should be no Type metadata objects
+        self.assertFalse(Type.objects.filter(object_id=core_metadata_obj.id).exists())
+        # there should be no Source metadata objects
+        self.assertFalse(Source.objects.filter(object_id=core_metadata_obj.id).exists())
+        # there should be no Relation metadata objects
+        self.assertFalse(Relation.objects.filter(object_id=core_metadata_obj.id).exists())
+        # there should be no Publisher metadata objects
+        self.assertFalse(Publisher.objects.filter(object_id=core_metadata_obj.id).exists())
+        # there should be no Title metadata objects
+        self.assertFalse(Title.objects.filter(object_id=core_metadata_obj.id).exists())
+        # there should be no Description (Abstract) metadata objects
+        self.assertFalse(Description.objects.filter(object_id=core_metadata_obj.id).exists())
+        # there should be no Date metadata objects
+        self.assertFalse(Date.objects.filter(object_id=core_metadata_obj.id).exists())
+        # there should be no Subject metadata objects
+        self.assertFalse(Subject.objects.filter(object_id=core_metadata_obj.id).exists())
+        # there should be no Coverage metadata objects
+        self.assertFalse(Coverage.objects.filter(object_id=core_metadata_obj.id).exists())
+        # there should be no Format metadata objects
+        self.assertFalse(Format.objects.filter(object_id=core_metadata_obj.id).exists())
+        # there should be no Language metadata objects
+        self.assertFalse(Language.objects.filter(object_id=core_metadata_obj.id).exists())
+        # there should be no Rights metadata objects
+        self.assertFalse(Rights.objects.filter(object_id=core_metadata_obj.id).exists())
+
+        # resource specific metadata
+        # there should be Model Output metadata objects
+        self.assertFalse(ModelOutput.objects.filter(object_id=core_metadata_obj.id).exists())
+        # there should be ExecutedBy metadata objects
+        self.assertFalse(ExecutedBy.objects.filter(object_id=core_metadata_obj.id).exists())
+        # there should be StudyArea metadata objects
+        self.assertFalse(StudyArea.objects.filter(object_id=core_metadata_obj.id).exists())
+        # there should be GridDimensions metadata objects
+        self.assertFalse(GridDimensions.objects.filter(object_id=core_metadata_obj.id).exists())
+        # there should be StressPeriod metadata objects
+        self.assertFalse(StressPeriod.objects.filter(object_id=core_metadata_obj.id).exists())
+        # there should be GroundWaterFlow metadata objects
+        self.assertFalse(GroundWaterFlow.objects.filter(object_id=core_metadata_obj.id).exists())
+        # there should be BoundaryCondition metadata objects
+        self.assertFalse(BoundaryCondition.objects.filter(object_id=core_metadata_obj.id).exists())
+        # there should be ModelCalibration metadata objects
+        self.assertFalse(ModelCalibration.objects.filter(object_id=core_metadata_obj.id).exists())
+        # there should be ModelInput metadata objects
+        self.assertFalse(ModelInput.objects.filter(object_id=core_metadata_obj.id).exists())
+        # there should be GeneralElements metadata objects
+        self.assertFalse(GeneralElements.objects.filter(object_id=core_metadata_obj.id).exists())
