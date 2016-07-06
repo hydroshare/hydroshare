@@ -114,13 +114,12 @@ def _get_resource_edit_context(page, request, content_model, selected_series_id,
 
         variable = content_model.metadata.variables.filter(
             series_ids__contains=[selected_series_id]).first()
-        variable_form = VariableForm(instance=variable, res_short_id=content_model.short_id,
-                                     element_id=variable.id if variable else None,
-                                     cv_variable_types=
-                                     content_model.metadata.cv_variable_types.all(),
-                                     cv_variable_names=
-                                     content_model.metadata.cv_variable_names.all(),
-                                     cv_speciations=content_model.metadata.cv_speciations.all())
+        variable_form = VariableForm(
+            instance=variable, res_short_id=content_model.short_id,
+            element_id=variable.id if variable else None,
+            cv_variable_types=content_model.metadata.cv_variable_types.all(),
+            cv_variable_names=content_model.metadata.cv_variable_names.all(),
+            cv_speciations=content_model.metadata.cv_speciations.all())
 
         variable_form.action = _get_element_update_form_action('variable',
                                                                content_model.short_id, site.id)
