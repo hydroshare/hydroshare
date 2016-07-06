@@ -1,5 +1,6 @@
 import os
 import sqlite3
+import shutil
 import logging
 
 from django.dispatch import receiver
@@ -113,7 +114,8 @@ def post_add_files_to_resource_handler(sender, **kwargs):
                 validate_files_dict['are_files_valid'] = False
                 validate_err_message += " " + FILE_UPLOAD_ERROR_MESSAGE
                 validate_files_dict['message'] = validate_err_message
-
+        if res_file.fed_resource_file_name_or_path and fl_obj_name:
+            shutil.rmtree(os.path.dirname(fl_obj_name))
 
 @receiver(post_create_resource, sender=TimeSeriesResource)
 def post_create_resource_handler(sender, **kwargs):
@@ -146,6 +148,9 @@ def post_create_resource_handler(sender, **kwargs):
                 validate_files_dict['are_files_valid'] = False
                 validate_err_message += " " + FILE_UPLOAD_ERROR_MESSAGE
                 validate_files_dict['message'] = validate_err_message
+
+        if res_file.fed_resource_file_name_or_path and fl_obj_name:
+            shutil.rmtree(os.path.dirname(fl_obj_name))
 
 
 @receiver(pre_metadata_element_create, sender=TimeSeriesResource)

@@ -211,8 +211,7 @@ def create_bag_files(resource, fed_zone_home_path=''):
 
     istorage.saveFile(from_file_name, to_file_name, False)
 
-    shutil.rmtree(bagit_path)
-
+    shutil.rmtree(dest_prefix)
     return istorage
 
 

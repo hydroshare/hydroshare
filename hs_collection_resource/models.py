@@ -1,9 +1,10 @@
 from django.contrib.auth.models import User
-from django.db import models, transaction
+from django.db import models
 
 from mezzanine.pages.page_processors import processor_for
 
 from hs_core.models import BaseResource, ResourceManager, resource_processor
+
 
 class CollectionResource(BaseResource):
     objects = ResourceManager('CollectionResource')
@@ -51,6 +52,3 @@ class CollectionDeletedResource(models.Model):
     collection = models.ForeignKey(BaseResource)
     resource_id = models.CharField(max_length=32)
     resource_type = models.CharField(max_length=50)
-
-
-import receivers

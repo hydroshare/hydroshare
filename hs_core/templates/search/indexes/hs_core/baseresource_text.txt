@@ -34,6 +34,27 @@
 {% for coverage in object.metadata.coverages.all %}
     {{ coverage.value }}
 {% endfor %}
+{% for coverage in object.metadata.coverages.all %}
+    {{ coverage.type }}
+{% endfor %}
+{% for coverage in object.metadata.coverages.all %}
+    {{ coverage.value.east }}
+{% endfor %}
+{% for coverage in object.metadata.coverages.all %}
+    {{ coverage.value.north }}
+{% endfor %}
+{% for coverage in object.metadata.coverages.all %}
+    {{ coverage.value.eastlimit }}
+{% endfor %}
+{% for coverage in object.metadata.coverages.all %}
+    {{ coverage.value.northlimit }}
+{% endfor %}
+{% for coverage in object.metadata.coverages.all %}
+    {{ coverage.value.southlimit }}
+{% endfor %}
+{% for coverage in object.metadata.coverages.all %}
+    {{ coverage.value.westlimit }}
+{% endfor %}
 {% for format in object.metadata.formats.all %}
     {{ format.value }}
 {% endfor %}

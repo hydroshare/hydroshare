@@ -12,7 +12,7 @@ from django.contrib.sites.models import Site
 from django.contrib import messages
 from django.utils.decorators import method_decorator
 from django.core.exceptions import ValidationError, PermissionDenied, ObjectDoesNotExist
-from django.http import HttpResponseRedirect, HttpResponse
+from django.http import HttpResponseRedirect, HttpResponse, JsonResponse
 from django.shortcuts import get_object_or_404, render_to_response, render, redirect
 from django.template import RequestContext
 from django.core import signing
@@ -1079,6 +1079,45 @@ processor_for(GenericResource)(resource_processor)
 def get_metadata_terms_page(request, *args, **kwargs):
     return render(request, 'pages/metadata_terms.html')
 
+
+@login_required
+def get_user_data(request, user_id, *args, **kwargs):
+    """
+    This view function must be called as an AJAX call
+
+    :param user_id: id if the user for whom data is needed
+    :return: JsonResponse() containing user data
+    """
+    user = utils.user_from_id(user_id)
+
+    if user.userprofile.middle_name:
+        user_name = "{} {} {}".format(user.first_name, user.userprofile.middle_name, user.last_name)
+    else:
+        user_name = "{} {}".format(user.first_name, user.last_name)
+
+    user_data = {'name': user_name, 'email': user.email}
+    user_data['url'] = '{domain}/user/{uid}/'.format(domain=utils.current_site_url(), uid=user.pk)
+    if user.userprofile.phone_1:
+        user_data['phone'] = user.userprofile.phone_1
+    elif user.userprofile.phone_2:
+        user_data['phone'] = user.userprofile.phone_2
+    else:
+        user_data['phone'] = ''
+
+    address = ''
+    if user.userprofile.state and user.userprofile.state.lower() != 'unspecified':
+        address = user.userprofile.state
+    if user.userprofile.country and user.userprofile.country.lower() != 'unspecified':
+        if len(address) > 0:
+            address += ', ' + user.userprofile.country
+        else:
+            address = user.userprofile.country
+
+    user_data['address'] = address
+    user_data['organization'] = user.userprofile.organization if user.userprofile.organization else ''
+    user_data['website'] = user.userprofile.website if user.userprofile.website else ''
+
+    return JsonResponse(user_data)
 
 def _send_email_on_group_membership_acceptance(membership_request):
     """
