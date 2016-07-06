@@ -100,7 +100,8 @@ def _get_resource_edit_context(page, request, content_model, selected_series_id,
 
     if extended_metadata_exists:
         # create timeseries sepecific metadata element forms
-        site = content_model.metadata.sites.filter(series_ids__contains=[selected_series_id]).first()
+        site = content_model.metadata.sites.filter(
+            series_ids__contains=[selected_series_id]).first()
         site_form = SiteForm(instance=site, res_short_id=content_model.short_id,
                              element_id=site.id if site else None,
                              cv_site_types=content_model.metadata.cv_site_types.all(),
@@ -115,8 +116,10 @@ def _get_resource_edit_context(page, request, content_model, selected_series_id,
             series_ids__contains=[selected_series_id]).first()
         variable_form = VariableForm(instance=variable, res_short_id=content_model.short_id,
                                      element_id=variable.id if variable else None,
-                                     cv_variable_types=content_model.metadata.cv_variable_types.all(),
-                                     cv_variable_names=content_model.metadata.cv_variable_names.all(),
+                                     cv_variable_types=
+                                     content_model.metadata.cv_variable_types.all(),
+                                     cv_variable_names=
+                                     content_model.metadata.cv_variable_names.all(),
                                      cv_speciations=content_model.metadata.cv_speciations.all())
 
         variable_form.action = _get_element_update_form_action('variable',
@@ -132,7 +135,8 @@ def _get_resource_edit_context(page, request, content_model, selected_series_id,
                                  element_id=method.id if method else None,
                                  cv_method_types=content_model.metadata.cv_method_types.all())
 
-        method_form.action = _get_element_update_form_action('method', content_model.short_id, site.id)
+        method_form.action = _get_element_update_form_action('method',
+                                                             content_model.short_id, site.id)
         method_form.number = method.id
         method_form.set_dropdown_widgets(method_form.initial['method_type'])
 
@@ -144,7 +148,8 @@ def _get_resource_edit_context(page, request, content_model, selected_series_id,
                                                     processing_level else None)
 
         processing_level_form.action = _get_element_update_form_action('pocessinglevel',
-                                                                       content_model.short_id, site.id)
+                                                                       content_model.short_id,
+                                                                       site.id)
         processing_level.number = processing_level.id
 
         time_series_result = content_model.metadata.time_series_results.filter(

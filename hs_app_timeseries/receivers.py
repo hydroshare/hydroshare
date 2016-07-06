@@ -117,6 +117,7 @@ def post_add_files_to_resource_handler(sender, **kwargs):
         if res_file.fed_resource_file_name_or_path and fl_obj_name:
             shutil.rmtree(os.path.dirname(fl_obj_name))
 
+
 @receiver(post_create_resource, sender=TimeSeriesResource)
 def post_create_resource_handler(sender, **kwargs):
     resource = kwargs['resource']

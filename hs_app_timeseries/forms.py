@@ -4,7 +4,7 @@ from django.forms import ModelForm
 from django import forms
 
 from crispy_forms.layout import Layout, HTML
-from crispy_forms.bootstrap import Field, Div
+from crispy_forms.bootstrap import Field
 
 from hs_core.forms import BaseFormHelper
 from models import Site, Variable, Method, ProcessingLevel, TimeSeriesResult
