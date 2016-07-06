@@ -445,20 +445,18 @@
                         </div>
                     </div>
                 </div>
-                <div id="map-view" class="tab-pane fade">
-
-                        <form id="covereage-search-fields" method="get" action=".">
-                            {% for field in form %}
-                                {% if field.auto_id  == "id_NElat" or field.auto_id  == "id_NElng" or field.auto_id  == "id_SWlat" or field.auto_id  == "id_SWlng" %}
+                <form id="covereage-search-fields" method="get" action=".">
+                    {% for field in form %}
+                        {% if field.auto_id  == "id_NElat" or field.auto_id  == "id_NElng" or field.auto_id  == "id_SWlat" or field.auto_id  == "id_SWlng" %}
 {#                                    <div class="col-md-3 height-fix">#}
 {#                                        <div class="input-group">{{ field }}#}
 {#                                            <span data-toggle="tooltip" data-placement="auto"#}
 {#                                                  title="WGS 84 decimal degrees" class="input-group-addon">°</span>#}
 {#                                        </div>#}
 {#                                    </div>#}
-                                    {{ field }}
-                                {% endif %}
-                            {% endfor %}
+                            {{ field }}
+                        {% endif %}
+                    {% endfor %}
 {#                            <div class="col-sm-12 height-fix">#}
 {#                                <div class="text-muted">WGS 84 decimal degrees</div>#}
 {##}
@@ -466,9 +464,8 @@
 {#                                    <span class="glyphicon glyphicon-zoom-in"></span> Zoom In#}
 {#                                </a>#}
 {#                            </div>#}
-                        </form>
-                        <br>
-
+                </form>
+                <div id="map-view" class="tab-pane fade">
                     <div id="resource-search">
                         <table id="lat-lng-labels" style="display:none">
                             <tr>
@@ -540,7 +537,6 @@
 
             setMarkers(json_results);
 
-
             var bounds = (markers.length > 0) ? createBoundsForMarkers(markers) : null;
             if (bounds) {
                 var ne = bounds.getNorthEast();
@@ -599,7 +595,7 @@
                 updateMapView();
             });
 
-            var bounds_listener = google.maps.event.addListener(map, 'bounds_changed', function(){
+            var latlng_listener = google.maps.event.addListener(map, 'bounds_changed', function(){
                 setLatLngLabels();
             })
 
@@ -1319,24 +1315,23 @@
                 var geoSearchParams = formGeoParameters();
                 var dateSearchParams = formDateParameters();
                 var windowPath = window.location.pathname;
-                var requestURL =  windowPath + searchURL + geoSearchParams + dateSearchParams;
-
+                var requestURL =  windowPath + searchURL;
                 if($(this).is(":checked")) {
                     requestURL += buildURLOnCheckboxes();
                     var checkboxId = $(this).attr("id");
                     var sessionStorageCheckboxId = 'search-' + checkboxId;
                     sessionStorage[sessionStorageCheckboxId] = 'true';
+                    requestURL = requestURL + geoSearchParams + dateSearchParams;
                     if (window.location.hash) {
                         requestURL = requestURL + window.location.hash;
                     }
                     window.location = requestURL;
                 }
                 else {
-
                     var checkboxId = $(this).attr("id");
                     var sessionStorageCheckboxId = 'search-' + checkboxId;
                     sessionStorage.removeItem(sessionStorageCheckboxId);
-                    var updateURL =  windowPath + searchURL + geoSearchParams + dateSearchParams;
+                    var updateURL =  windowPath + searchURL + buildURLOnCheckboxes() + geoSearchParams + dateSearchParams;
                     updateURL += buildURLOnCheckboxes();
                     if (window.location.hash) {
                         updateURL = updateURL + window.location.hash;
