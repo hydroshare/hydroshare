@@ -3703,7 +3703,7 @@ div.group-add-photo {
 	border-radius: 4px;
 }
 
-#floating-panel {
+#geocoder-panel {
 	z-index: 5;
 	background-color: #fff;
 	padding: 5px;
