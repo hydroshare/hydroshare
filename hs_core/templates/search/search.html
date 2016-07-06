@@ -485,10 +485,8 @@
                                     SW Longitude: <label for="sw-lng-value"></label>
                                 </td>
                             </tr>
-                            <tr>
-                                <td class="text-muted">WGS 84 decimal degrees</td>
-                            </tr>
                         </table>
+                        <div class="text-muted">WGS 84 decimal degrees</div>
                     </div>
                     <br />
 
@@ -996,10 +994,10 @@
         }
 
         var setLatLngLabels = function() {
-            var ne_lat = document.getElementById("id_NElat").value + '°';
-            var ne_lng = document.getElementById("id_NElng").value + '°';
-            var sw_lat = document.getElementById("id_SWlat").value + '°';
-            var sw_lng = document.getElementById("id_SWlng").value + '°';
+            var ne_lat = parseFloat(document.getElementById("id_NElat").value).toFixed(3) + '°';
+            var ne_lng = parseFloat(document.getElementById("id_NElng").value).toFixed(3) + '°';
+            var sw_lat = parseFloat(document.getElementById("id_SWlat").value).toFixed(3) + '°';
+            var sw_lng = parseFloat(document.getElementById("id_SWlng").value).toFixed(3) + '°';
             jQuery("label[for='ne-lat-value']").html(ne_lat);
             jQuery("label[for='ne-lng-value']").html(ne_lng);
             jQuery("label[for='sw-lat-value']").html(sw_lat);
