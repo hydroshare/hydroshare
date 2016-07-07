@@ -451,7 +451,6 @@ class GeneralElements(AbstractMetaDataElement):
             if len(general_elements.get_output_control_package()) == 0:
                 delete_if_empty(general_elements)
 
-
     @classmethod
     def _validate_params(cls, **kwargs):
         for key, val in kwargs.iteritems():

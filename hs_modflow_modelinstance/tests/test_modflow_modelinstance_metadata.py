@@ -467,9 +467,7 @@ class TestMODFLOWModelInstanceMetaData(MockIRODSTestCaseMixin, TransactionTestCa
                                                                  output_control_package=['LMT6'],
                                                                  subsidencePackage='SUB')
 
-
         # update
-
         # update ModelOutput
         self.resMODFLOWModelInstance.metadata.update_element('ModelOutput',
                                                              self.resMODFLOWModelInstance.metadata.model_output.id,
@@ -502,8 +500,6 @@ class TestMODFLOWModelInstanceMetaData(MockIRODSTestCaseMixin, TransactionTestCa
         self.assertEquals(modelparam_element.maximumElevation, '12')
         self.assertEquals(modelparam_element.minimumElevation, '-148')
 
-
-
         # update GridDimensions
         self.resMODFLOWModelInstance.metadata.update_element('GridDimensions',
                                                              self.resMODFLOWModelInstance.metadata.grid_dimensions.id,
@@ -522,21 +518,23 @@ class TestMODFLOWModelInstanceMetaData(MockIRODSTestCaseMixin, TransactionTestCa
 
         # try with wrong dimension types - raises exception
         with self.assertRaises(ValidationError):
-            self.resMODFLOWModelInstance.metadata.update_element('GridDimensions',
-                                                                 self.resMODFLOWModelInstance.metadata.grid_dimensions.id,
-                                                                 numberOfLayers='b',
-                                                                 typeOfRows='catspajamas',
-                                                                 numberOfRows='c',
-                                                                 typeOfColumns='Regular',
-                                                                 numberOfColumns='z')
+            self.resMODFLOWModelInstance.metadata.\
+                update_element('GridDimensions',
+                               self.resMODFLOWModelInstance.metadata.grid_dimensions.id,
+                               numberOfLayers='b',
+                               typeOfRows='catspajamas',
+                               numberOfRows='c',
+                               typeOfColumns='Regular',
+                               numberOfColumns='z')
         with self.assertRaises(ValidationError):
-            self.resMODFLOWModelInstance.metadata.update_element('GridDimensions',
-                                                                 self.resMODFLOWModelInstance.metadata.grid_dimensions.id,
-                                                                 numberOfLayers='b',
-                                                                 typeOfRows='Irregular',
-                                                                 numberOfRows='c',
-                                                                 typeOfColumns='beach',
-                                                                 numberOfColumns='z')
+            self.resMODFLOWModelInstance.metadata.\
+                update_element('GridDimensions',
+                               self.resMODFLOWModelInstance.metadata.grid_dimensions.id,
+                               numberOfLayers='b',
+                               typeOfRows='Irregular',
+                               numberOfRows='c',
+                               typeOfColumns='beach',
+                               numberOfColumns='z')
 
         # update stressperiod
         self.resMODFLOWModelInstance.metadata.update_element('StressPeriod',
@@ -568,7 +566,6 @@ class TestMODFLOWModelInstanceMetaData(MockIRODSTestCaseMixin, TransactionTestCa
                                                                  transientStateValueType='Annfadsfually',
                                                                  transientStateValue='123')
 
-
         # update groundwaterflow
         self.resMODFLOWModelInstance.metadata.update_element('GroundWaterFlow',
                                                              self.resMODFLOWModelInstance.metadata.ground_water_flow.id,
@@ -581,45 +578,51 @@ class TestMODFLOWModelInstanceMetaData(MockIRODSTestCaseMixin, TransactionTestCa
 
         # try with wrong groundwaterflow types - raises exception
         with self.assertRaises(ValidationError):
-            self.resMODFLOWModelInstance.metadata.update_element('GroundWaterFlow',
-                                                                 self.resMODFLOWModelInstance.metadata.ground_water_flow.id,
-                                                                 flowPackage='UPsW',
-                                                                 flowParameter='Hydraulic Conductivity')
+            self.resMODFLOWModelInstance.metadata.\
+                update_element('GroundWaterFlow',
+                               self.resMODFLOWModelInstance.metadata.ground_water_flow.id,
+                               flowPackage='UPsW',
+                               flowParameter='Hydraulic Conductivity')
         with self.assertRaises(ValidationError):
-            self.resMODFLOWModelInstance.metadata.update_element('GroundWaterFlow',
-                                                                 self.resMODFLOWModelInstance.metadata.ground_water_flow.id,
-                                                                 flowPackage='UPW',
-                                                                 flowParameter='Hydraalic Conductivity')
+            self.resMODFLOWModelInstance.metadata.\
+                update_element('GroundWaterFlow',
+                               self.resMODFLOWModelInstance.metadata.ground_water_flow.id,
+                               flowPackage='UPW',
+                               flowParameter='Hydraalic Conductivity')
 
         # update boundary condition
         # try with wrong boundarycondition types - raises exception
         with self.assertRaises(ValidationError):
-            self.resMODFLOWModelInstance.metadata.update_element('BoundaryCondition',
-                                                                 self.resMODFLOWModelInstance.metadata.boundary_condition.id,
-                                                                 specified_head_boundary_packages=['BFH'],
-                                                                 specified_flux_boundary_packages=['FHB'],
-                                                                 head_dependent_flux_boundary_packages=['mmm'])
+            self.resMODFLOWModelInstance.metadata.\
+                update_element('BoundaryCondition',
+                               self.resMODFLOWModelInstance.metadata.boundary_condition.id,
+                               specified_head_boundary_packages=['BFH'],
+                               specified_flux_boundary_packages=['FHB'],
+                               head_dependent_flux_boundary_packages=['mmm'])
         with self.assertRaises(ValidationError):
-            self.resMODFLOWModelInstance.metadata.update_element('BoundaryCondition',
-                                                                 self.resMODFLOWModelInstance.metadata.boundary_condition.id,
-                                                                 specified_head_boundary_packages=['BFH'],
-                                                                 specified_flux_boundary_packages=['mmm'],
-                                                                 head_dependent_flux_boundary_packages=['SFR'])
+            self.resMODFLOWModelInstance.metadata.\
+                update_element('BoundaryCondition',
+                               self.resMODFLOWModelInstance.metadata.boundary_condition.id,
+                               specified_head_boundary_packages=['BFH'],
+                               specified_flux_boundary_packages=['mmm'],
+                               head_dependent_flux_boundary_packages=['SFR'])
         with self.assertRaises(ValidationError):
-            self.resMODFLOWModelInstance.metadata.update_element('BoundaryCondition',
-                                                                 self.resMODFLOWModelInstance.metadata.boundary_condition.id,
-                                                                 specified_head_boundary_packages=['mmm'],
-                                                                 specified_flux_boundary_packages=['FHB'],
-                                                                 head_dependent_flux_boundary_packages=['SFR'])
+            self.resMODFLOWModelInstance.metadata.\
+                update_element('BoundaryCondition',
+                               self.resMODFLOWModelInstance.metadata.boundary_condition.id,
+                               specified_head_boundary_packages=['mmm'],
+                               specified_flux_boundary_packages=['FHB'],
+                               head_dependent_flux_boundary_packages=['SFR'])
 
         spec_hd_bd_pkgs = ['BFH']
         spec_fx_bd_pkgs = ['FHB']
         hd_dep_fx_pkgs = ['RIV', 'DAFG', 'DRT']
-        self.resMODFLOWModelInstance.metadata.update_element('BoundaryCondition',
-                                                             self.resMODFLOWModelInstance.metadata.boundary_condition.id,
-                                                             specified_head_boundary_packages=spec_hd_bd_pkgs,
-                                                             specified_flux_boundary_packages=spec_fx_bd_pkgs,
-                                                             head_dependent_flux_boundary_packages=hd_dep_fx_pkgs)
+        self.resMODFLOWModelInstance.metadata.\
+            update_element('BoundaryCondition',
+                           self.resMODFLOWModelInstance.metadata.boundary_condition.id,
+                           specified_head_boundary_packages=spec_hd_bd_pkgs,
+                           specified_flux_boundary_packages=spec_fx_bd_pkgs,
+                           head_dependent_flux_boundary_packages=hd_dep_fx_pkgs)
         modelparam_element = self.resMODFLOWModelInstance.metadata.boundary_condition
         self.assertNotEqual(modelparam_element, None)
 
@@ -654,12 +657,13 @@ class TestMODFLOWModelInstanceMetaData(MockIRODSTestCaseMixin, TransactionTestCa
 
         # try with wrong modelcalibration types - raises exception
         with self.assertRaises(ValidationError):
-            self.resMODFLOWModelInstance.metadata.update_element('ModelCalibration',
-                                                                 self.resMODFLOWModelInstance.metadata.model_calibration.id,
-                                                                 calibratedParameter='a',
-                                                                 observationType='b',
-                                                                 observationProcessPackage='dtarb',
-                                                                 calibrationMethod='c')
+            self.resMODFLOWModelInstance.metadata.\
+                update_element('ModelCalibration',
+                               self.resMODFLOWModelInstance.metadata.model_calibration.id,
+                               calibratedParameter='a',
+                               observationType='b',
+                               observationProcessPackage='dtarb',
+                               calibrationMethod='c')
 
         # update ModelInput
         self.resMODFLOWModelInstance.metadata.update_element('ModelInput',
@@ -692,26 +696,29 @@ class TestMODFLOWModelInstanceMetaData(MockIRODSTestCaseMixin, TransactionTestCa
         # update generalelements
         # try with wrong generalelements types - raises exception
         with self.assertRaises(ValidationError):
-            self.resMODFLOWModelInstance.metadata.update_element('GeneralElements',
-                                                                 self.resMODFLOWModelInstance.metadata.general_elements.id,
-                                                                 modelParameter='BCF6',
-                                                                 modelSolver='DsE4',
-                                                                 output_control_package=['LMT6'],
-                                                                 subsidencePackage='SUB')
+            self.resMODFLOWModelInstance.metadata.\
+                update_element('GeneralElements',
+                               self.resMODFLOWModelInstance.metadata.general_elements.id,
+                               modelParameter='BCF6',
+                               modelSolver='DsE4',
+                               output_control_package=['LMT6'],
+                               subsidencePackage='SUB')
         with self.assertRaises(ValidationError):
-            self.resMODFLOWModelInstance.metadata.update_element('GeneralElements',
-                                                                 self.resMODFLOWModelInstance.metadata.general_elements.id,
-                                                                 modelParameter='BCF6',
-                                                                 modelSolver='DE4',
-                                                                 output_control_package=['LMTd6'],
-                                                                 subsidencePackage='SUB')
+            self.resMODFLOWModelInstance.metadata.\
+                update_element('GeneralElements',
+                               self.resMODFLOWModelInstance.metadata.general_elements.id,
+                               modelParameter='BCF6',
+                               modelSolver='DE4',
+                               output_control_package=['LMTd6'],
+                               subsidencePackage='SUB')
         with self.assertRaises(ValidationError):
-            self.resMODFLOWModelInstance.metadata.update_element('GeneralElements',
-                                                                 self.resMODFLOWModelInstance.metadata.general_elements.id,
-                                                                 modelParameter='BCF6',
-                                                                 modelSolver='DE4',
-                                                                 output_control_package=['LMT6'],
-                                                                 subsidencePackage='SaUB')
+            self.resMODFLOWModelInstance.metadata.\
+                update_element('GeneralElements',
+                               self.resMODFLOWModelInstance.metadata.general_elements.id,
+                               modelParameter='BCF6',
+                               modelSolver='DE4',
+                               output_control_package=['LMT6'],
+                               subsidencePackage='SaUB')
         ot_ctl_pkgs = ['GAGE', 'MNWI']
 
         self.resMODFLOWModelInstance.metadata.update_element('GeneralElements',
@@ -732,9 +739,7 @@ class TestMODFLOWModelInstanceMetaData(MockIRODSTestCaseMixin, TransactionTestCa
 
         self.assertEquals(modelparam_element.subsidencePackage, 'SWT')
 
-
         # delete
-
         # check that there are all extended metadata elements at this point
         self.assertNotEqual(self.resMODFLOWModelInstance.metadata.model_output, None)
         self.assertNotEqual(self.resMODFLOWModelInstance.metadata.executed_by, None)
@@ -760,12 +765,13 @@ class TestMODFLOWModelInstanceMetaData(MockIRODSTestCaseMixin, TransactionTestCa
                                                              self.resMODFLOWModelInstance.metadata.stress_period.id)
         self.resMODFLOWModelInstance.metadata.delete_element('GroundWaterFlow',
                                                              self.resMODFLOWModelInstance.metadata.ground_water_flow.id)
-        self.resMODFLOWModelInstance.metadata.delete_element('BoundaryCondition',
-                                                             self.resMODFLOWModelInstance.metadata.boundary_condition.id)
+        self.resMODFLOWModelInstance.metadata.\
+            delete_element('BoundaryCondition', self.resMODFLOWModelInstance.metadata.boundary_condition.id)
         self.resMODFLOWModelInstance.metadata.delete_element('ModelCalibration',
                                                              self.resMODFLOWModelInstance.metadata.model_calibration.id)
         for items in range(len(self.resMODFLOWModelInstance.metadata.model_inputs)):
-            self.resMODFLOWModelInstance.metadata.delete_element('ModelInput', self.resMODFLOWModelInstance.metadata.model_inputs[0].id)
+            self.resMODFLOWModelInstance.metadata.\
+                delete_element('ModelInput', self.resMODFLOWModelInstance.metadata.model_inputs[0].id)
         self.resMODFLOWModelInstance.metadata.delete_element('GeneralElements',
                                                              self.resMODFLOWModelInstance.metadata.general_elements.id)
 
