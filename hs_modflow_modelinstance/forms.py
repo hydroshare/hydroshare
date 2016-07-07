@@ -1,4 +1,3 @@
-__author__ = 'Mohamed Morsy'
 from django.forms import ModelForm
 from django import forms
 from crispy_forms import layout
@@ -8,8 +7,8 @@ from hs_core.forms import BaseFormHelper, Helper
 from hs_core.hydroshare import users
 
 from hs_modelinstance.models import ModelOutput, ExecutedBy
-from hs_modflow_modelinstance.models import MODFLOWModelInstanceResource, StudyArea, GridDimensions,\
-    StressPeriod, GroundWaterFlow, BoundaryCondition, ModelCalibration, ModelInput, GeneralElements
+from hs_modflow_modelinstance.models import StudyArea, GridDimensions, StressPeriod, GroundWaterFlow,\
+    BoundaryCondition, ModelCalibration, ModelInput, GeneralElements
 
 
 gridTypeChoices = (('Choose a type', 'Choose a type'), ('Regular', 'Regular'), ('Irregular', 'Irregular'),)
@@ -93,8 +92,7 @@ class ExecutedByFormHelper(BaseFormHelper):
         options = '\n'.join(['<option value=%s>%s</option>' % (r.short_id, r.title) for r in mp_resource])
         options = '<option value=Unspecified>Unspecified</option>' + options
         selectbox = HTML('<div class="div-selectbox">'
-                         ' <select class="selectbox" id="selectbox_'+mp_id+'">'
-                         + options +
+                         ' <select class="selectbox" id="selectbox_'+mp_id+'">' + options +
                          '</select>'
                          '</div><br>')
 
@@ -292,7 +290,6 @@ class GroundWaterFlowValidationForm(forms.Form):
 # BoundaryCondition element forms
 class BoundaryConditionFormHelper(BaseFormHelper):
     def __init__(self, allow_edit=True, res_short_id=None, element_id=None, element_name=None,  *args, **kwargs):
-
         # the order in which the model fields are listed for the FieldSet is the order these fields will be displayed
         layout = Layout(
                         MetadataField('specified_head_boundary_packages'),
@@ -306,26 +303,27 @@ class BoundaryConditionFormHelper(BaseFormHelper):
 
 class BoundaryConditionForm(ModelForm):
     specified_head_boundary_packages = forms.MultipleChoiceField(choices=specifiedHeadBoundaryPackageChoices,
-                                                       widget=forms.CheckboxSelectMultiple(
-                                                          attrs={'style': 'width:auto;margin-top:-5px'}))
+                                                                 widget=forms.CheckboxSelectMultiple
+                                                                 (attrs={'style': 'width:auto;margin-top:-5px'}))
     specified_flux_boundary_packages = forms.MultipleChoiceField(choices=specifiedFluxBoundaryPackageChoices,
-                                                          widget=forms.CheckboxSelectMultiple(
-                                                              attrs={'style': 'width:auto;margin-top:-5px'}))
+                                                                 widget=forms.CheckboxSelectMultiple
+                                                                 (attrs={'style': 'width:auto;margin-top:-5px'}))
     head_dependent_flux_boundary_packages = forms.MultipleChoiceField(choices=headDependentFluxBoundaryPackageChoices,
-                                                          widget=forms.CheckboxSelectMultiple(
-                                                              attrs={'style': 'width:auto;margin-top:-5px'}))
+                                                                      widget=forms.CheckboxSelectMultiple
+                                                                      (attrs={'style': 'width:auto;margin-top:-5px'}))
 
     def __init__(self, allow_edit=True, res_short_id=None, element_id=None, *args, **kwargs):
         super(BoundaryConditionForm, self).__init__(*args, **kwargs)
-        self.helper = BoundaryConditionFormHelper(allow_edit, res_short_id, element_id, element_name='BoundaryCondition')
+        self.helper = BoundaryConditionFormHelper(allow_edit, res_short_id, element_id,
+                                                  element_name='BoundaryCondition')
         if self.instance:
             if self.instance.id:
-                self.fields['specified_head_boundary_packages'].initial = [types.description for types in
-                                                                self.instance.specified_head_boundary_packages.all()]
-                self.fields['specified_flux_boundary_packages'].initial = [packages.description for packages in
-                                                                   self.instance.specified_flux_boundary_packages.all()]
-                self.fields['head_dependent_flux_boundary_packages'].initial = [packages.description for packages in
-                                                                   self.instance.head_dependent_flux_boundary_packages.all()]
+                self.fields['specified_head_boundary_packages'].initial = \
+                    [types.description for types in self.instance.specified_head_boundary_packages.all()]
+                self.fields['specified_flux_boundary_packages'].initial = \
+                    [packages.description for packages in self.instance.specified_flux_boundary_packages.all()]
+                self.fields['head_dependent_flux_boundary_packages'].initial = \
+                    [packages.description for packages in self.instance.head_dependent_flux_boundary_packages.all()]
 
     class Meta:
         model = BoundaryCondition
@@ -336,9 +334,12 @@ class BoundaryConditionForm(ModelForm):
 
 
 class BoundaryConditionValidationForm(forms.Form):
-    specified_head_boundary_packages = forms.MultipleChoiceField(choices=specifiedHeadBoundaryPackageChoices, required=False)
-    specified_flux_boundary_packages = forms.MultipleChoiceField(choices=specifiedFluxBoundaryPackageChoices, required=False)
-    head_dependent_flux_boundary_packages = forms.MultipleChoiceField(choices=headDependentFluxBoundaryPackageChoices, required=False)
+    specified_head_boundary_packages = forms.MultipleChoiceField(choices=specifiedHeadBoundaryPackageChoices,
+                                                                 required=False)
+    specified_flux_boundary_packages = forms.MultipleChoiceField(choices=specifiedFluxBoundaryPackageChoices,
+                                                                 required=False)
+    head_dependent_flux_boundary_packages = forms.MultipleChoiceField(choices=headDependentFluxBoundaryPackageChoices,
+                                                                      required=False)
 
 
 # ModelCalibration element forms
@@ -444,15 +445,16 @@ class GeneralElementsForm(ModelForm):
     output_control_package = forms.MultipleChoiceField(choices=outputControlPackageChoices,
                                                        widget=forms.CheckboxSelectMultiple(
                                                           attrs={'style': 'width:auto;margin-top:-5px'}))
+
     def __init__(self, allow_edit=True, res_short_id=None, element_id=None, *args, **kwargs):
         super(GeneralElementsForm, self).__init__(*args, **kwargs)
         self.helper = GeneralElementsFormHelper(allow_edit, res_short_id, element_id, element_name='GeneralElements')
         self.fields['modelSolver'].choices = modelSolverChoices
         self.fields['subsidencePackage'].choices = subsidencePackageChoices
         if self.instance:
-           if self.instance.id:
-               self.fields['output_control_package'].initial = [types.description for types in
-                                                                self.instance.output_control_package.all()]
+            if self.instance.id:
+                self.fields['output_control_package'].initial = \
+                    [types.description for types in self.instance.output_control_package.all()]
 
     class Meta:
         model = GeneralElements
@@ -474,26 +476,32 @@ ModelInputLayoutEdit = Layout(
                                  '<div class="form-group" id="modelinput"> '
                                  '{% load crispy_forms_tags %} '
                                  '{% for form in model_input_formset.forms %} '
-                                     '<form id="{{form.form_id}}" action="{{ form.action }}" method="POST" enctype="multipart/form-data"> '
-                                     '{% crispy form %} '
-                                         '<div class="row" style="margin-top:10px">'
-                                            '<div class="col-md-12">'
-                                                '<span class="glyphicon glyphicon-trash icon-button btn-remove" data-toggle="modal" data-placement="auto" title="Delete Model Input" data-target="#delete-modelinput-element-dialog_{{ form.number }}"></span>'
-                                            '</div>'
-                                            '<div class="col-md-3">'
-                                                '<button type="button" class="btn btn-primary pull-right" onclick="metadata_update_ajax_submit({{ form.form_id_button }}); return false;">Save changes</button>'
-                                            '</div>'
-                                        '</div>'
-                                        '{% crispy form.delete_modal_form %} '
-                                     '</form> '
+                                 '<form id="{{form.form_id}}" action="{{ form.action }}" '
+                                 'method="POST" enctype="multipart/form-data"> '
+                                 '{% crispy form %} '
+                                 '<div class="row" style="margin-top:10px">'
+                                 '<div class="col-md-12">'
+                                 '<span class="glyphicon glyphicon-trash icon-button btn-remove" data-toggle="modal" '
+                                 'data-placement="auto" title="Delete Model Input" '
+                                 'data-target="#delete-modelinput-element-dialog_{{ form.number }}"></span>'
+                                 '</div>'
+                                 '<div class="col-md-3">'
+                                 '<button type="button" class="btn btn-primary pull-right" '
+                                 'onclick="metadata_update_ajax_submit({{ form.form_id_button }});'
+                                 ' return false;">Save changes</button>'
+                                 '</div>'
+                                 '</div>'
+                                 '{% crispy form.delete_modal_form %} '
+                                 '</form> '
                                  '{% endfor %}</div>'
                                  '</div> '
-                            ),
+                                 ),
                             HTML('<div style="margin-top:10px" class="col-md-2">'
-                                 '<p><a id="add-modelinput" class="btn btn-success" data-toggle="modal" data-target="#add-modelinput-dialog">'
+                                 '<p><a id="add-modelinput" class="btn btn-success" data-toggle="modal" '
+                                 'data-target="#add-modelinput-dialog">'
                                  '<i class="fa fa-plus"></i>Add Model Input</a>'
                                  '</div>'
-                            ),
+                                 ),
                     )
 
 

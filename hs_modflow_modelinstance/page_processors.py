@@ -1,4 +1,3 @@
-__author__ = 'Mohamed Morsy'
 from functools import partial, wraps
 from django.forms import formset_factory
 from crispy_forms.bootstrap import AccordionGroup
@@ -23,7 +22,8 @@ def landing_page(request, page):
 
     if not edit_resource:
         # get the context from hs_core
-        context = page_processors.get_page_context(page, request.user, request=request, resource_edit=edit_resource, extended_metadata_layout=None)
+        context = page_processors.get_page_context(page, request.user, request=request, resource_edit=edit_resource,
+                                                   extended_metadata_layout=None)
         extended_metadata_exists = False
         if content_model.metadata.model_output or \
                 content_model.metadata.executed_by or \
@@ -51,46 +51,69 @@ def landing_page(request, page):
 
     # add MODFLOW Model parameters context
     else:
-        model_output_form = ModelOutputForm(instance=content_model.metadata.model_output, res_short_id=content_model.short_id,
-                                            element_id=content_model.metadata.model_output.id if content_model.metadata.model_output else None)
+        model_output_form = ModelOutputForm(instance=content_model.metadata.model_output,
+                                            res_short_id=content_model.short_id,
+                                            element_id=content_model.metadata.model_output.id
+                                            if content_model.metadata.model_output else None)
 
-        executed_by_form = ExecutedByForm(instance=content_model.metadata.executed_by, res_short_id=content_model.short_id,
-                                          element_id=content_model.metadata.executed_by.id if content_model.metadata.executed_by else None)
+        executed_by_form = ExecutedByForm(instance=content_model.metadata.executed_by,
+                                          res_short_id=content_model.short_id,
+                                          element_id=content_model.metadata.executed_by.id
+                                          if content_model.metadata.executed_by else None)
 
-        study_area_form = StudyAreaForm(instance=content_model.metadata.study_area, res_short_id=content_model.short_id,
-                                        element_id=content_model.metadata.study_area.id if content_model.metadata.study_area else None)
+        study_area_form = StudyAreaForm(instance=content_model.metadata.study_area,
+                                        res_short_id=content_model.short_id,
+                                        element_id=content_model.metadata.study_area.id
+                                        if content_model.metadata.study_area else None)
 
-        grid_dimensions_form = GridDimensionsForm(instance=content_model.metadata.grid_dimensions, res_short_id=content_model.short_id,
-                                                  element_id=content_model.metadata.grid_dimensions.id if content_model.metadata.grid_dimensions else None)
+        grid_dimensions_form = GridDimensionsForm(instance=content_model.metadata.grid_dimensions,
+                                                  res_short_id=content_model.short_id,
+                                                  element_id=content_model.metadata.grid_dimensions.id
+                                                  if content_model.metadata.grid_dimensions else None)
 
-        stress_period_form = StressPeriodForm(instance=content_model.metadata.stress_period, res_short_id=content_model.short_id,
-                                              element_id=content_model.metadata.stress_period.id if content_model.metadata.stress_period else None)
+        stress_period_form = StressPeriodForm(instance=content_model.metadata.stress_period,
+                                              res_short_id=content_model.short_id,
+                                              element_id=content_model.metadata.stress_period.id
+                                              if content_model.metadata.stress_period else None)
 
-        ground_water_flow_form = GroundWaterFlowForm(instance=content_model.metadata.ground_water_flow, res_short_id=content_model.short_id,
-                                                     element_id=content_model.metadata.ground_water_flow.id if content_model.metadata.ground_water_flow else None)
+        ground_water_flow_form = GroundWaterFlowForm(instance=content_model.metadata.ground_water_flow,
+                                                     res_short_id=content_model.short_id,
+                                                     element_id=content_model.metadata.ground_water_flow.id
+                                                     if content_model.metadata.ground_water_flow else None)
 
-        boundary_condition_form = BoundaryConditionForm(instance=content_model.metadata.boundary_condition, res_short_id=content_model.short_id,
-                                                        element_id=content_model.metadata.boundary_condition.id if content_model.metadata.boundary_condition else None)
+        boundary_condition_form = BoundaryConditionForm(instance=content_model.metadata.boundary_condition,
+                                                        res_short_id=content_model.short_id,
+                                                        element_id=content_model.metadata.boundary_condition.id
+                                                        if content_model.metadata.boundary_condition else None)
 
-        model_calibration_form = ModelCalibrationForm(instance=content_model.metadata.model_calibration, res_short_id=content_model.short_id,
-                                                      element_id=content_model.metadata.model_calibration.id if content_model.metadata.model_calibration else None)
+        model_calibration_form = ModelCalibrationForm(instance=content_model.metadata.model_calibration,
+                                                      res_short_id=content_model.short_id,
+                                                      element_id=content_model.metadata.model_calibration.id
+                                                      if content_model.metadata.model_calibration else None)
 
-        ModelInputFormSetEdit = formset_factory(wraps(ModelInputForm)(partial(ModelInputForm, allow_edit=True)), formset=BaseFormSet, extra=0)
-        model_input_formset = ModelInputFormSetEdit(initial=content_model.metadata.model_inputs.values(), prefix='modelinput')
+        ModelInputFormSetEdit = formset_factory(wraps(ModelInputForm)(partial(ModelInputForm, allow_edit=True)),
+                                                formset=BaseFormSet, extra=0)
+        model_input_formset = ModelInputFormSetEdit(initial=content_model.metadata.model_inputs.values(),
+                                                    prefix='modelinput')
         for model_input_form in model_input_formset.forms:
             if len(model_input_form.initial) > 0:
-                model_input_form.action = "/hsapi/_internal/%s/modelinput/%s/update-metadata/" % (content_model.short_id, model_input_form.initial['id'])
-                model_input_form.delete_modal_form = MetaDataElementDeleteForm(content_model.short_id, 'modelinput', model_input_form.initial['id'])
+                model_input_form.action = "/hsapi/_internal/%s/modelinput/%s/update-metadata/" % \
+                                          (content_model.short_id, model_input_form.initial['id'])
+                model_input_form.delete_modal_form = MetaDataElementDeleteForm(content_model.short_id, 'modelinput',
+                                                                               model_input_form.initial['id'])
                 model_input_form.number = model_input_form.initial['id']
             else:
                 model_input_form.action = "/hsapi/_internal/%s/modelinput/add-metadata/" % content_model.short_id
 
         add_modelinput_modal_form = ModelInputForm(allow_edit=False, res_short_id=content_model.short_id)
 
-        general_elements_form = GeneralElementsForm(instance=content_model.metadata.general_elements, res_short_id=content_model.short_id,
-                                                    element_id=content_model.metadata.general_elements.id if content_model.metadata.general_elements else None)
+        general_elements_form = GeneralElementsForm(instance=content_model.metadata.general_elements,
+                                                    res_short_id=content_model.short_id,
+                                                    element_id=content_model.metadata.general_elements.id
+                                                    if content_model.metadata.general_elements else None)
 
-        ext_md_layout = Layout(HTML("<div class='row'><div class='col-xs-12 col-sm-6'><div class='form-group' id='modeloutput'> "
+        ext_md_layout = Layout(HTML("<div class='row'><div class='col-xs-12 col-sm-6'>"
+                                    "<div class='form-group' id='modeloutput'> "
                                     '{% load crispy_forms_tags %} '
                                     '{% crispy model_output_form %} '
                                     '</div>'),
@@ -141,9 +164,9 @@ def landing_page(request, page):
                                     '</div></div></div>')
                                )
 
-
         # get the context from hs_core
-        context = page_processors.get_page_context(page, request.user, resource_edit=edit_resource, extended_metadata_layout=ext_md_layout, request=request)
+        context = page_processors.get_page_context(page, request.user, resource_edit=edit_resource,
+                                                   extended_metadata_layout=ext_md_layout, request=request)
 
         context['resource_type'] = 'MODFLOW Model Instance Resource'
         context['model_output_form'] = model_output_form

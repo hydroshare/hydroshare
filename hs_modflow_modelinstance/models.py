@@ -1,4 +1,3 @@
-__author__ = 'Mohamed Morsy'
 from lxml import etree
 
 from django.contrib.contenttypes.fields import GenericRelation
@@ -9,10 +8,8 @@ from mezzanine.pages.page_processors import processor_for
 
 import os
 
-from hs_core.models import BaseResource, ResourceManager, resource_processor, CoreMetaData, AbstractMetaDataElement
-from hs_core.hydroshare import utils
+from hs_core.models import BaseResource, ResourceManager, resource_processor, AbstractMetaDataElement
 
-from hs_model_program.models import ModelProgramResource
 from hs_modelinstance.models import ModelInstanceMetaData, ModelOutput, ExecutedBy
 
 
@@ -106,7 +103,6 @@ class GridDimensions(AbstractMetaDataElement):
         grid_dimensions = super(GridDimensions, cls).update(element_id, **kwargs)
         delete_if_empty(grid_dimensions)
 
-
     @classmethod
     def _validate_params(cls, **kwargs):
         for key, val in kwargs.iteritems():
@@ -150,7 +146,6 @@ class StressPeriod(AbstractMetaDataElement):
         stress_period = super(StressPeriod, cls).update(element_id, **kwargs)
         delete_if_empty(stress_period)
 
-
     @classmethod
     def _validate_params(cls, **kwargs):
         for key, val in kwargs.iteritems():
@@ -191,7 +186,6 @@ class GroundWaterFlow(AbstractMetaDataElement):
         kwargs = cls._validate_params(**kwargs)
         gw_flow = super(GroundWaterFlow, cls).update(element_id, **kwargs)
         delete_if_empty(gw_flow)
-
 
     @classmethod
     def _validate_params(cls, **kwargs):
@@ -287,7 +281,8 @@ class BoundaryCondition(AbstractMetaDataElement):
         model_boundary_condition = super(BoundaryCondition, cls).create(content_object=kwargs['content_object'])
         cls._add_specified_head_boundary_packages(model_boundary_condition, kwargs['specified_head_boundary_packages'])
         cls._add_specified_flux_boundary_packages(model_boundary_condition, kwargs['specified_flux_boundary_packages'])
-        cls._add_head_dependent_flux_boundary_packages(model_boundary_condition, kwargs['head_dependent_flux_boundary_packages'])
+        cls._add_head_dependent_flux_boundary_packages(model_boundary_condition,
+                                                       kwargs['head_dependent_flux_boundary_packages'])
 
         return model_boundary_condition
 
@@ -298,15 +293,18 @@ class BoundaryCondition(AbstractMetaDataElement):
         if model_boundary_condition:
             if 'specified_head_boundary_packages' in kwargs:
                 model_boundary_condition.specified_head_boundary_packages.clear()
-                cls._add_specified_head_boundary_packages(model_boundary_condition, kwargs['specified_head_boundary_packages'])
+                cls._add_specified_head_boundary_packages(model_boundary_condition,
+                                                          kwargs['specified_head_boundary_packages'])
 
             if 'specified_flux_boundary_packages' in kwargs:
                 model_boundary_condition.specified_flux_boundary_packages.clear()
-                cls._add_specified_flux_boundary_packages(model_boundary_condition, kwargs['specified_flux_boundary_packages'])
+                cls._add_specified_flux_boundary_packages(model_boundary_condition,
+                                                          kwargs['specified_flux_boundary_packages'])
 
             if 'head_dependent_flux_boundary_packages' in kwargs:
                 model_boundary_condition.head_dependent_flux_boundary_packages.clear()
-                cls._add_head_dependent_flux_boundary_packages(model_boundary_condition, kwargs['head_dependent_flux_boundary_packages'])
+                cls._add_head_dependent_flux_boundary_packages(model_boundary_condition,
+                                                               kwargs['head_dependent_flux_boundary_packages'])
 
             model_boundary_condition.save()
             num_sp_hd_bdy_pckgs = len(model_boundary_condition.get_specified_head_boundary_packages())
@@ -322,11 +320,14 @@ class BoundaryCondition(AbstractMetaDataElement):
     def _validate_params(cls, **kwargs):
         for key, val in kwargs.iteritems():
             if key == 'specified_head_boundary_packages':
-                kwargs[key] = [validate_choice(package, cls.specifiedHeadBoundaryPackageChoices) for package in kwargs[key]]
+                kwargs[key] = [validate_choice(package, cls.specifiedHeadBoundaryPackageChoices)
+                               for package in kwargs[key]]
             elif key == 'specified_flux_boundary_packages':
-                kwargs[key] = [validate_choice(package, cls.specifiedFluxBoundaryPackageChoices) for package in kwargs[key]]
+                kwargs[key] = [validate_choice(package, cls.specifiedFluxBoundaryPackageChoices)
+                               for package in kwargs[key]]
             elif key == 'head_dependent_flux_boundary_packages':
-                kwargs[key] = [validate_choice(package, cls.headDependentFluxBoundaryPackageChoices) for package in kwargs[key]]
+                kwargs[key] = [validate_choice(package, cls.headDependentFluxBoundaryPackageChoices)
+                               for package in kwargs[key]]
         return kwargs
 
 
@@ -350,20 +351,17 @@ class ModelCalibration(AbstractMetaDataElement):
         # ModelCalibration element is not repeatable
         unique_together = ("content_type", "object_id")
 
-
     @classmethod
     def create(cls, **kwargs):
         kwargs = cls._validate_params(**kwargs)
         model_calibration = super(ModelCalibration, cls).create(**kwargs)
         return model_calibration
 
-
     @classmethod
     def update(cls, element_id, **kwargs):
         kwargs = cls._validate_params(**kwargs)
         model_calibration = super(ModelCalibration, cls).update(element_id, **kwargs)
         delete_if_empty(model_calibration)
-
 
     @classmethod
     def _validate_params(cls, **kwargs):
@@ -625,18 +623,25 @@ class MODFLOWModelInstanceMetaData(ModelInstanceMetaData):
 
         if self.boundary_condition:
             hsterms_boundary = etree.SubElement(container, '{%s}BoundaryCondition' % self.NAMESPACES['hsterms'])
-            hsterms_boundary_rdf_Description = etree.SubElement(hsterms_boundary, '{%s}Description' % self.NAMESPACES['rdf'])
+            hsterms_boundary_rdf_Description = \
+                etree.SubElement(hsterms_boundary, '{%s}Description' % self.NAMESPACES['rdf'])
 
             if self.boundary_condition.specified_head_boundary_packages:
-                hsterms_boundary_type = etree.SubElement(hsterms_boundary_rdf_Description, '{%s}specifiedHeadBoundaryPackages' % self.NAMESPACES['hsterms'])
+                hsterms_boundary_type = \
+                    etree.SubElement(hsterms_boundary_rdf_Description,
+                                     '{%s}specifiedHeadBoundaryPackages' % self.NAMESPACES['hsterms'])
                 hsterms_boundary_type.text = self.boundary_condition.get_specified_head_boundary_packages()
 
             if self.boundary_condition.specified_flux_boundary_packages:
-                hsterms_boundary_package = etree.SubElement(hsterms_boundary_rdf_Description, '{%s}specifiedFluxBoundaryPackages' % self.NAMESPACES['hsterms'])
+                hsterms_boundary_package = \
+                    etree.SubElement(hsterms_boundary_rdf_Description,
+                                     '{%s}specifiedFluxBoundaryPackages' % self.NAMESPACES['hsterms'])
                 hsterms_boundary_package.text = self.boundary_condition.get_specified_flux_boundary_packages()
 
             if self.boundary_condition.head_dependent_flux_boundary_packages:
-                hsterms_boundary_package = etree.SubElement(hsterms_boundary_rdf_Description, '{%s}headDependentFluxBoundaryPackages' % self.NAMESPACES['hsterms'])
+                hsterms_boundary_package = \
+                    etree.SubElement(hsterms_boundary_rdf_Description,
+                                     '{%s}headDependentFluxBoundaryPackages' % self.NAMESPACES['hsterms'])
                 hsterms_boundary_package.text = self.boundary_condition.get_head_dependent_flux_boundary_packages()
 
         if self.model_calibration:
