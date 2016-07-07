@@ -40,6 +40,8 @@ def metadata_element_pre_create_handler(sender, **kwargs):
                 element_form = CoverageTemporalForm(data=request.POST)
         else:
             element_form = CoverageTemporalForm(data=request.POST)
+    elif element_name == 'identifier':
+        element_form = IdentifierForm(data=request.POST)
     else:
         raise Exception("Invalid metadata element name:{}".format(element_name))
 
@@ -100,6 +102,10 @@ def metadata_element_pre_update_handler(sender, **kwargs):
             element_form = CoverageSpatialForm(data=request.POST)
         else:
             element_form = CoverageTemporalForm(data=request.POST)
+    elif element_name == 'identifier':
+        element_form = IdentifierForm(data=request.POST)
+    else:
+        raise Exception("Invalid metadata element name:{}".format(element_name))
 
     if element_form.is_valid():
         return {'is_valid': True, 'element_data_dict': element_form.cleaned_data}

@@ -4,6 +4,7 @@ import copy
 import tempfile
 import shutil
 import logging
+import json
 
 from django.core.urlresolvers import reverse
 from django.core.exceptions import ObjectDoesNotExist
@@ -342,7 +343,9 @@ class ResourceCreate(generics.CreateAPIView):
 
         # check that metadata elements 'title', or 'abstract' or 'keywords' are also not passed
         # as part of the metadata list
-        _validate_metadata(res_title, abstract, keywords, metadata)
+        if metadata is not None:
+            metadata = json.loads(metadata)
+            _validate_metadata(res_title, abstract, keywords, metadata)
 
         try:
             _, res_title, metadata, _ = hydroshare.utils.resource_pre_create_actions(
@@ -768,25 +771,28 @@ class ResourceFileList(ResourceFileToListItemMixin, generics.ListAPIView):
 
 
 def _validate_metadata(title, keywords, abstract, metadata_list):
-    err_message = "Metadata validation failed. "
+    err_message = "Metadata validation failed. Metadata element '{}' was found in value passed " \
+                  "for parameter 'metadata. Though it's a valid element it can't be passed " \
+                  "as part of 'metadata' parameter."
     for element in metadata_list:
         # here k is the name of the element
         # v is a dict of all element attributes/field names and field values
         k, v = element.items()[0]
         if title is not None:
             if k.lower() == 'title':
-                err_message += "Metadata element 'title' was found in value passed for " \
-                               "parameter 'metadata."
+                err_message = err_message.format('title')
                 raise ValidationError(detail=err_message)
 
         if keywords is not None:
             if k.lower() == 'subject':
-                err_message += "Metadata element 'subject' was found in value passed " \
-                               "for parameter 'metadata."
+                err_message = err_message.format('subject')
                 raise ValidationError(detail=err_message)
 
         if abstract is not None:
             if k.lower() == 'description':
-                err_message += "Metadata element 'description' was found in value passed for " \
-                               "parameter 'metadata."
+                err_message = err_message.format('description')
                 raise ValidationError(detail=err_message)
+
+        if k.lower() in ('publisher', 'format', 'date', 'type'):
+            err_message = err_message.format(k.lower())
+            raise ValidationError(detail=err_message)
