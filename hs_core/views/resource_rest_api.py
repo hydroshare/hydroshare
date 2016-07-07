@@ -341,11 +341,9 @@ class ResourceCreate(generics.CreateAPIView):
         else:
             files = []
 
-        # check that metadata elements 'title', or 'abstract' or 'keywords' are also not passed
-        # as part of the metadata list
         if metadata is not None:
             metadata = json.loads(metadata)
-            _validate_metadata(res_title, abstract, keywords, metadata)
+            _validate_metadata(metadata)
 
         try:
             _, res_title, metadata, _ = hydroshare.utils.resource_pre_create_actions(
@@ -770,7 +768,26 @@ class ResourceFileList(ResourceFileToListItemMixin, generics.ListAPIView):
         return serializers.ResourceFileSerializer
 
 
-def _validate_metadata(title, keywords, abstract, metadata_list):
+def _validate_metadata(metadata_list):
+    """
+    Make sure the metadata_list does not have data for the following
+    core metadata elements. Exception is raised if any of the following elements is present
+    in metadata_list:
+
+    title - (endpoint has a title parameter which should be used for specifying resource title)
+    subject (keyword) - (endpoint has a keywords parameter which should be used for specifying
+    resource keywords)
+    description (abstract)- (endpoint has a abstract parameter which should be used for specifying
+    resource abstract)
+    publisher - this element is created upon resource publication
+    format - this element is created by the system based on the resource content files
+    date - this element is created by the system
+    type - this element is created by the system
+
+    :param metadata_list: list of dicts each representing data for a specific metadata element
+    :return:
+    """
+
     err_message = "Metadata validation failed. Metadata element '{}' was found in value passed " \
                   "for parameter 'metadata. Though it's a valid element it can't be passed " \
                   "as part of 'metadata' parameter."
@@ -778,21 +795,6 @@ def _validate_metadata(title, keywords, abstract, metadata_list):
         # here k is the name of the element
         # v is a dict of all element attributes/field names and field values
         k, v = element.items()[0]
-        if title is not None:
-            if k.lower() == 'title':
-                err_message = err_message.format('title')
-                raise ValidationError(detail=err_message)
-
-        if keywords is not None:
-            if k.lower() == 'subject':
-                err_message = err_message.format('subject')
-                raise ValidationError(detail=err_message)
-
-        if abstract is not None:
-            if k.lower() == 'description':
-                err_message = err_message.format('description')
-                raise ValidationError(detail=err_message)
-
-        if k.lower() in ('publisher', 'format', 'date', 'type'):
+        if k.lower() in ('title', 'subject', 'description', 'publisher', 'format', 'date', 'type'):
             err_message = err_message.format(k.lower())
             raise ValidationError(detail=err_message)

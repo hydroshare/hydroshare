@@ -188,7 +188,11 @@ def validate_group_name(group_name):
 def validate_metadata(metadata, resource_type):
     """
     Validate metadata including validation of resource type specific metadata.
-    If validation fails, ValidationError exception is raised
+    If validation fails, ValidationError exception is raised.
+
+    Note: This validation does not check if a specific element is repeatable or not. If an element
+    is not repeatable and the metadata list contains more than one dict for the same element type,
+    then exception will be raised when that element is created the 2nd time.
 
     :param metadata: a list of dicts where each dict defines data for a specific metadata
     element.

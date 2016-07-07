@@ -171,7 +171,7 @@ class TestCreateResource(HSRESTTestCase):
 
         originalcoverage
         variable
-        
+
         """
         rtype = 'NetcdfResource'
         title = 'My Test resource'
@@ -230,3 +230,84 @@ class TestCreateResource(HSRESTTestCase):
         self.assertEqual(variable.method, var_method)
 
         self.resources_to_delete.append(res_id)
+
+    def test_create_resource_not_allowed_valid_metadata_elements(self):
+        """
+        This is to test that the following core valid metadata elements can't be passed using the
+        'metadata' parameter
+
+        title
+        description (abstract)
+        subject (keyword)
+        format
+        date
+        publisher
+        type
+
+        :return:
+        """
+
+        rtype = 'GenericResource'
+        title = 'My Test resource'
+        # test title
+        metadata = []
+        metadata.append({'title': {'value': "This is a generic resource"}})
+        params = self._get_params(rtype, title, metadata)
+        self._test_not_allowed_element(params)
+
+        # test description
+        metadata = []
+        metadata.append({'description': {'abstract': "This is a great resource"}})
+        params = self._get_params(rtype, title, metadata)
+        self._test_not_allowed_element(params)
+
+        # test subject
+        metadata = []
+        metadata.append({'subject': {'value': "sample"}})
+        params = self._get_params(rtype, title, metadata)
+        self._test_not_allowed_element(params)
+
+        # test format
+        metadata = []
+        metadata.append({'format': {'value': 'text/csv'}})
+        params = self._get_params(rtype, title, metadata)
+        self._test_not_allowed_element(params)
+
+        # test date
+        metadata = []
+        metadata.append({'date': {'type': 'created', 'start_date': '01/01/2016'}})
+        params = self._get_params(rtype, title, metadata)
+        self._test_not_allowed_element(params)
+
+        metadata = []
+        metadata.append({'date': {'type': 'modified', 'start_date': '01/01/2016'}})
+        params = self._get_params(rtype, title, metadata)
+        self._test_not_allowed_element(params)
+
+        # test publisher
+        metadata = []
+        metadata.append({'publisher': {'name': 'USGS', 'url': 'http://usgs.gov'}})
+        params = self._get_params(rtype, title, metadata)
+        self._test_not_allowed_element(params)
+
+        # test type
+        metadata = []
+        metadata.append({'type': {'url': "http://hydroshare.org/generic"}})
+        params = self._get_params(rtype, title, metadata)
+        self._test_not_allowed_element(params)
+
+
+    def _get_params(self, rtype, title, metadata):
+        params = {'resource_type': rtype,
+                  'title': title,
+                  'metadata': json.dumps(metadata),
+                  'file': ('cea.tif',
+                           open('hs_core/tests/data/cea.tif'),
+                           'image/tiff')}
+        return params
+
+    def _test_not_allowed_element(self, params):
+        rest_url = '/hsapi/resource/'
+        response = self.client.post(rest_url, params)
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
