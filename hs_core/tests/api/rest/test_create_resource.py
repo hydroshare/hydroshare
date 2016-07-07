@@ -164,3 +164,69 @@ class TestCreateResource(HSRESTTestCase):
 
         self.resources_to_delete.append(res_id)
 
+    def test_resource_create_with_extended_metadata(self):
+        """
+        The followings are the extended metadata elements for the NetCDF resource that can be
+        passed as part of the 'metadata' parameter when creating a resource:
+
+        originalcoverage
+        variable
+        
+        """
+        rtype = 'NetcdfResource'
+        title = 'My Test resource'
+        metadata = []
+        # originalcover
+        value = {"northlimit": '12', "projection": "transverse_mercator", "units": "meter",
+                 "southlimit": '10', "eastlimit": '23', "westlimit": '2'}
+
+        metadata.append({'originalcoverage': {'value': value,
+                                              'projection_string_text': '+proj=tmerc +lon_0=-111.0 '
+                                                                        '+lat_0=0.0 +x_0=500000.0 '
+                                                                        '+y_0=0.0 +k_0=0.9996',
+                                              'projection_string_type': 'Proj4 String'}})
+
+        # variable (this element is defined in multiple resource types including
+        # NetcdfResource type)
+        var_name = 'SWE'
+        var_type = 'Float'
+        var_shape = 'y,x,time'
+        var_unit = 'm'
+        var_missing_value = '-9999'
+        var_des_name = 'Snow water equivalent'
+        var_method = 'model simulation of UEB'
+        metadata.append({'variable': {'name': var_name, 'type': var_type, 'shape': var_shape,
+                                      'unit': var_unit, 'missing_value': var_missing_value,
+                                      'descriptive_name': var_des_name, 'method': var_method}})
+        params = {'resource_type': rtype,
+                  'title': title,
+                  'metadata': json.dumps(metadata),
+                  }
+        rest_url = '/hsapi/resource/'
+        response = self.client.post(rest_url, params)
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        content = json.loads(response.content)
+        res_id = content['resource_id']
+        resource = get_resource_by_shortkey(res_id)
+
+        # there should be 1 originalcoverage element
+        self.assertEqual(resource.metadata.ori_coverage.all().count(), 1)
+        ori_coverage = resource.metadata.ori_coverage.all().first()
+        self.assertEquals(ori_coverage.value, value)
+        self.assertEquals(ori_coverage.projection_string_text, '+proj=tmerc +lon_0=-111.0 '
+                                                               '+lat_0=0.0 +x_0=500000.0 '
+                                                               '+y_0=0.0 +k_0=0.9996')
+        self.assertEquals(ori_coverage.projection_string_type, 'Proj4 String')
+
+        # there should be 1 variable element
+        self.assertEqual(resource.metadata.variables.all().count(), 1)
+        variable = resource.metadata.variables.all().first()
+        self.assertEqual(variable.name, var_name)
+        self.assertEqual(variable.type, var_type)
+        self.assertEqual(variable.shape, var_shape)
+        self.assertEqual(variable.unit, var_unit)
+        self.assertEqual(variable.missing_value, var_missing_value)
+        self.assertEqual(variable.descriptive_name, var_des_name)
+        self.assertEqual(variable.method, var_method)
+
+        self.resources_to_delete.append(res_id)
