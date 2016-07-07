@@ -469,20 +469,20 @@
     {#                            </div>#}
                     </form>
 
-                    <div id="resource-search">
-                        <table id="lat-lng-labels" style="display:none">
+                    <div id="resource-search" style="display:none">
+                        <table id="lat-lng-labels">
                             <tr>
                                 <td>
-                                    NE Latitude: <label for="ne-lat-value"></label>
+                                    North Latitude: <label for="ne-lat-value"></label>
                                 </td>
                                 <td>
-                                    NE Longitude: <label for="ne-lng-value"></label>
+                                    East Longitude: <label for="ne-lng-value"></label>
                                 </td>
                                 <td>
-                                    SW Latitude: <label for="sw-lat-value"></label>
+                                    South Latitude: <label for="sw-lat-value"></label>
                                 </td>
                                 <td>
-                                    SW Longitude: <label for="sw-lng-value"></label>
+                                    West Longitude: <label for="sw-lng-value"></label>
                                 </td>
                             </tr>
                         </table>
@@ -1228,7 +1228,7 @@
                                 raw_results.push(item);
                             }
                             initMap(json_results);
-                            $("#lat-lng-labels").show();
+                            $("#resource-search").show();
                         },
                         failure: function(data) {
                             console.error("Ajax call for getting map data failed");
