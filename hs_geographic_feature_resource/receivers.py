@@ -170,7 +170,18 @@ def parse_shp_zshp(uploadedFileType, baseFilename, uploadedFileCount, uploadedFi
         # wgs84 extent
         parsed_md_dict = parse_shp(shpFullPath)
         if parsed_md_dict["wgs84_extent_dict"]["westlimit"] != UNKNOWN_STR:
-            coverage_dict = {"Coverage": {"type": "box", "value": parsed_md_dict["wgs84_extent_dict"]}}
+            wgs84_dict = parsed_md_dict["wgs84_extent_dict"]
+            # if extent is a point, create point type coverage
+            if wgs84_dict["westlimit"] == wgs84_dict["eastlimit"] \
+               and wgs84_dict["northlimit"] == wgs84_dict["southlimit"]:
+                coverage_dict = {"Coverage": {"type": "point",
+                                 "value": {"east": wgs84_dict["eastlimit"],
+                                           "north": wgs84_dict["northlimit"],
+                                           "units": wgs84_dict["units"],
+                                           "projection": wgs84_dict["projection"]}
+                                }}
+            else:  # otherwise, create box type coverage
+                coverage_dict = {"Coverage": {"type": "box", "value": parsed_md_dict["wgs84_extent_dict"]}}
             metadata_array.append(coverage_dict)
             metadata_dict["coverage"] = coverage_dict
 
