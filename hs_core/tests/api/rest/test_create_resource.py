@@ -95,9 +95,9 @@ class TestCreateResource(HSRESTTestCase):
 
         # fundingagency
         agency_name = 'NSF'
-        award_title="Cyber Infrastructure"
-        award_number="NSF-101-20-6789"
-        agency_url="http://www.nsf.gov"
+        award_title = "Cyber Infrastructure"
+        award_number = "NSF-101-20-6789"
+        agency_url = "http://www.nsf.gov"
         metadata.append({'fundingagency': {'agency_name': agency_name, 'award_title': award_title,
                                            'award_number': award_number, 'agency_url': agency_url}})
         params = {'resource_type': rtype,
@@ -296,7 +296,6 @@ class TestCreateResource(HSRESTTestCase):
         params = self._get_params(rtype, title, metadata)
         self._test_not_allowed_element(params)
 
-
     def _get_params(self, rtype, title, metadata):
         params = {'resource_type': rtype,
                   'title': title,
@@ -310,4 +309,3 @@ class TestCreateResource(HSRESTTestCase):
         rest_url = '/hsapi/resource/'
         response = self.client.post(rest_url, params)
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-
