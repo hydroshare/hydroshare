@@ -13,9 +13,8 @@ from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import ObjectDoesNotExist
 from django.core.files.uploadedfile import UploadedFile
 from django.utils.http import int_to_base36
-from django.conf import settings
 
-from rest_framework.exceptions import *
+from rest_framework.exceptions import NotFound, PermissionDenied, ValidationError
 
 from mezzanine.utils.email import subject_template, default_token_generator, send_mail_template
 from mezzanine.utils.urls import next_url
@@ -42,8 +41,8 @@ ActionToAuthorize = namedtuple('ActionToAuthorize',
 ACTION_TO_AUTHORIZE = ActionToAuthorize(0, 1, 2, 3, 4, 5)
 
 
-# Since an SessionException will be raised for all irods-related operations from django_irods module,
-# there is no need to raise iRODS SessionException from within this function
+# Since an SessionException will be raised for all irods-related operations from django_irods
+# module, there is no need to raise iRODS SessionException from within this function
 def upload_from_irods(username, password, host, port, zone, irods_fnames, res_files):
     """
     use iget to transfer selected data object from irods zone to local as a NamedTemporaryFile
@@ -57,10 +56,12 @@ def upload_from_irods(username, password, host, port, zone, irods_fnames, res_fi
     :raises SessionException(proc.returncode, stdout, stderr) defined in django_irods/icommands.py
             to capture iRODS exceptions raised from iRODS icommand subprocess run triggered from
             any method calls from IrodsStorage() if an error or exception ever occurs
-    :return: None, but the downloaded file from the iRODS will be appended to res_files list for uploading
+    :return: None, but the downloaded file from the iRODS will be appended to res_files list for
+    uploading
     """
     irods_storage = IrodsStorage()
-    irods_storage.set_user_session(username=username, password=password, host=host, port=port, zone=zone)
+    irods_storage.set_user_session(username=username, password=password, host=host, port=port,
+                                   zone=zone)
     ifnames = string.split(irods_fnames, ',')
     for ifname in ifnames:
         size = irods_storage.size(ifname)
@@ -109,31 +110,40 @@ def run_ssh_command(host, uname, pwd, exec_cmd):
 # when private netCDF resources are made public so that all links of data services
 # provided by Hyrax service are instantaneously available on demand
 def run_script_to_update_hyrax_input_files():
-    run_ssh_command(host=settings.HYRAX_SSH_HOST, uname=settings.HYRAX_SSH_PROXY_USER, pwd=settings.HYRAX_SSH_PROXY_USER_PWD, exec_cmd=settings.HYRAX_SCRIPT_RUN_COMMAND)
+    run_ssh_command(host=settings.HYRAX_SSH_HOST, uname=settings.HYRAX_SSH_PROXY_USER,
+                    pwd=settings.HYRAX_SSH_PROXY_USER_PWD,
+                    exec_cmd=settings.HYRAX_SCRIPT_RUN_COMMAND)
 
 
-def authorize(request, res_id, needed_permission=ACTION_TO_AUTHORIZE.VIEW_RESOURCE, raises_exception=True):
+def authorize(request, res_id, needed_permission=ACTION_TO_AUTHORIZE.VIEW_RESOURCE,
+              raises_exception=True):
     """
-    This function checks if a user has authorization for resource related actions as outlined below. This
-    function doesn't check authorization for user sharing resource with another user.
+    This function checks if a user has authorization for resource related actions as outlined
+    below. This function doesn't check authorization for user sharing resource with another user.
 
     How this function should be called for different actions on a resource by a specific user?
     1. User wants to view a resource (both metadata and content files) which includes
        downloading resource bag or resource content files:
-       authorize(request, res_id=id_of_resource, needed_permission=ACTION_TO_AUTHORIZE.VIEW_RESOURCE)
+       authorize(request, res_id=id_of_resource,
+       needed_permission=ACTION_TO_AUTHORIZE.VIEW_RESOURCE)
     2. User wants to view resource metadata only:
-       authorize(request, res_id=id_of_resource, needed_permission=ACTION_TO_AUTHORIZE.VIEW_METADATA)
+       authorize(request, res_id=id_of_resource,
+       needed_permission=ACTION_TO_AUTHORIZE.VIEW_METADATA)
     3. User wants to edit a resource which includes:
        a. edit metadata
        b. add file to resource
        c. delete a file from the resource
-       authorize(request, res_id=id_of_resource, needed_permission=ACTION_TO_AUTHORIZE.EDIT_RESOURCE)
+       authorize(request, res_id=id_of_resource,
+       needed_permission=ACTION_TO_AUTHORIZE.EDIT_RESOURCE)
     4. User wants to set resource flag (public, published, shareable etc):
-       authorize(request, res_id=id_of_resource, needed_permission=ACTION_TO_AUTHORIZE.SET_RESOURCE_FLAG)
+       authorize(request, res_id=id_of_resource,
+       needed_permission=ACTION_TO_AUTHORIZE.SET_RESOURCE_FLAG)
     5. User wants to delete a resource:
-       authorize(request, res_id=id_of_resource, needed_permission=ACTION_TO_AUTHORIZE.DELETE_RESOURCE)
+       authorize(request, res_id=id_of_resource,
+       needed_permission=ACTION_TO_AUTHORIZE.DELETE_RESOURCE)
     6. User wants to create new version of a resource:
-       authorize(request, res_id=id_of_resource, needed_permission=ACTION_TO_AUTHORIZE.CREATE_RESOURCE_VERSION)
+       authorize(request, res_id=id_of_resource,
+       needed_permission=ACTION_TO_AUTHORIZE.CREATE_RESOURCE_VERSION)
 
     Note: resource 'shareable' status has no effect on authorization
     """
@@ -169,6 +179,7 @@ def authorize(request, res_id, needed_permission=ACTION_TO_AUTHORIZE.VIEW_RESOUR
     else:
         return res, authorized, user
 
+
 def validate_json(js):
     try:
         json.loads(js)
@@ -179,6 +190,7 @@ def validate_json(js):
 def validate_user_name(user_name):
     if not User.objects.filter(username=user_name).exists():
         raise ValidationError(detail='No user found for user name:%s' % user_name)
+
 
 def validate_group_name(group_name):
     if not Group.objects.filter(name=group_name).exists():
@@ -235,10 +247,14 @@ def validate_metadata(metadata, resource_type):
                 if hasattr(element_class(), attribute_name):
                     if callable(getattr(element_class(), attribute_name)):
                         element_attribute_names_valid = False
-                        validation_errors['metadata'].append("Invalid attribute name:%s found for metadata element name:%s." % (attribute_name, k))
+                        validation_errors['metadata'].append(
+                            "Invalid attribute name:%s found for metadata element name:%s."
+                            % (attribute_name, k))
                 else:
                     element_attribute_names_valid = False
-                    validation_errors['metadata'].append("Invalid attribute name:%s found for metadata element name:%s." % (attribute_name, k))
+                    validation_errors['metadata'].append(
+                        "Invalid attribute name:%s found for metadata element name:%s."
+                        % (attribute_name, k))
 
             if element_attribute_names_valid:
                 if is_core_element:
@@ -266,7 +282,7 @@ def validate_metadata(metadata, resource_type):
 
 
 class MetadataElementRequest(object):
-    def __init__(self,element_name, **element_data_dict):
+    def __init__(self, element_name, **element_data_dict):
         if element_name.lower() == 'coverage' or element_name.lower() == 'originalcoverage':
             if 'value' in element_data_dict:
                 element_data_dict = element_data_dict['value']
@@ -281,20 +297,24 @@ def create_form(formclass, request):
 
     return params
 
+
 def get_my_resources_list(request):
     user = request.user
     # get a list of resources with effective OWNER privilege
     owned_resources = user.uaccess.get_resources_with_explicit_access(PrivilegeCodes.OWNER)
     # remove obsoleted resources from the owned_resources
-    owned_resources = owned_resources.exclude(object_id__in=Relation.objects.filter(type='isReplacedBy').values('object_id'))
+    owned_resources = owned_resources.exclude(object_id__in=Relation.objects.filter(
+        type='isReplacedBy').values('object_id'))
     # get a list of resources with effective CHANGE privilege
     editable_resources = user.uaccess.get_resources_with_explicit_access(PrivilegeCodes.CHANGE)
     # remove obsoleted resources from the editable_resources
-    editable_resources = editable_resources.exclude(object_id__in=Relation.objects.filter(type='isReplacedBy').values('object_id'))
+    editable_resources = editable_resources.exclude(object_id__in=Relation.objects.filter(
+        type='isReplacedBy').values('object_id'))
     # get a list of resources with effective VIEW privilege
     viewable_resources = user.uaccess.get_resources_with_explicit_access(PrivilegeCodes.VIEW)
     # remove obsoleted resources from the viewable_resources
-    viewable_resources = viewable_resources.exclude(object_id__in=Relation.objects.filter(type='isReplacedBy').values('object_id'))
+    viewable_resources = viewable_resources.exclude(object_id__in=Relation.objects.filter(
+        type='isReplacedBy').values('object_id'))
 
     owned_resources = list(owned_resources)
     editable_resources = list(editable_resources)
@@ -319,8 +339,10 @@ def get_my_resources_list(request):
         if res in labeled_resources:
             res.labels = res.rlabels.get_labels(user)
 
-    resource_collection = (owned_resources + editable_resources + viewable_resources + discovered_resources)
+    resource_collection = (owned_resources + editable_resources + viewable_resources +
+                           discovered_resources)
     return resource_collection
+
 
 def send_action_to_take_email(request, user, action_type, **kwargs):
     """
@@ -332,11 +354,12 @@ def send_action_to_take_email(request, user, action_type, **kwargs):
     to use. Additional context variable needed in the email template can be
     passed using the kwargs
 
-    for action_type == 'group_membership', an instance of GroupMembershipRequest and instance of Group are expected to
+    for action_type == 'group_membership', an instance of GroupMembershipRequest and
+    instance of Group are expected to
     be passed into this function
     """
     email_to = kwargs.get('group_owner', user)
-    context = {'request': request, 'user':user}
+    context = {'request': request, 'user': user}
     if action_type == 'group_membership':
         membership_request = kwargs['membership_request']
         action_url = reverse(action_type, kwargs={
