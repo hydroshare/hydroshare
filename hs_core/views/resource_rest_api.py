@@ -301,6 +301,13 @@ class ResourceCreate(generics.CreateAPIView):
     permission for the resource
     :param  view_groups: (optional) list of comma separated group names that should have view
     permission for the resource
+    :param  metadata: (optional) data for any valid metadata element including resource specific
+    metadata elements can be passed as json string:
+    example (passing data for the 'Coverage' element):
+    [{'coverage':{'type': 'period', 'start': '01/01/2000', 'end': '12/12/2010'}}, ...]
+    Note: the parameter 'metadata' can't be used for passing data for the following core metadata
+    elements:
+    Title, Description (abstract), Subject (keyword), Date, Publisher, Type, Format
     :return: id and type of the resource created
     :rtype: json string of the format: {'resource-id':id, 'resource_type': resource type}
     :raises:
