@@ -20,15 +20,16 @@
     <div class="container">
         <div class="row">
             <div class="col-sm-12">
+                <h2 class="page-title">Find Groups</h2>
                 <a class="btn btn-success" data-toggle="modal" data-target="#create-group-dialog"><i class="fa fa-plus"></i> Create Group</a>
-                <h3>Find Groups</h3>
-                <hr class="solid">
+                <br><br>
                 <div class="group-search input-group">
                     <span class="glyphicon glyphicon-search search-icon"></span>
                     <input id="txt-search-groups" type="text" class="form-control" placeholder="Search by group name...">
                 </div>
             </div>
         </div>
+
         <div class="row group-thumbnails">
             {% if groups %}
             {% for group in groups %}

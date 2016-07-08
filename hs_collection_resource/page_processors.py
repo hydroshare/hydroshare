@@ -6,6 +6,7 @@ from hs_core.views.utils import get_my_resources_list
 from hs_core.models import BaseResource
 from .models import CollectionResource
 
+
 @processor_for(CollectionResource)
 def landing_page(request, page):
     content_model = page.get_content_model()
@@ -14,7 +15,7 @@ def landing_page(request, page):
     user = request.user
     if user.is_authenticated():
         user_all_accessible_resource_list = get_my_resources_list(request)
-    else: # anonymous user
+    else:  # anonymous user
         user_all_accessible_resource_list = list(BaseResource.discoverable_resources.all())
 
     collection_items_list = list(content_model.resources.all())
@@ -28,9 +29,9 @@ def landing_page(request, page):
         candidate_resources_list = []
         for res in user_all_accessible_resource_list:
             if content_model.short_id == res.short_id:
-                continue # skip current collection resource object
+                continue  # skip current collection resource object
             elif res in content_model.resources.all():
-                continue # skip resources that are already in current collection
+                continue  # skip resources that are already in current collection
 
             candidate_resources_list.append(res)
 

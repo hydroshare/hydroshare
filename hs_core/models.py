@@ -267,6 +267,13 @@ class Party(AbstractMetaDataElement):
     def update(cls, element_id, **kwargs):
         element_name = cls.__name__
         creator_order = None
+        if 'description' in kwargs:
+            party = cls.objects.get(id=element_id)
+            if party.description is not None and kwargs['description'] is not None:
+                if len(party.description.strip()) > 0 and len(kwargs['description'].strip()) > 0:
+                    if party.description != kwargs['description']:
+                        raise ValidationError("HydroShare user identifier can't be changed.")
+
         if 'order' in kwargs and element_name == 'Creator':
             creator_order = kwargs['order']
             if creator_order <= 0:
@@ -971,8 +978,9 @@ class Coverage(AbstractMetaDataElement):
                         except TypeError:
                             raise ValidationError("Value for '{}' must be numeric".format(value_item))
 
-            if value_dict['northlimit'] <= value_dict['southlimit']:
-                raise ValidationError("Value for North latitude must be greater than that of South latitude.")
+            if value_dict['northlimit'] < value_dict['southlimit']:
+                raise ValidationError("Value for North latitude must be greater than or equal to "
+                                      "that of South latitude.")
 
             if value_dict['northlimit'] < -90 or value_dict['northlimit'] > 90:
                 raise ValidationError("Value for North latitude should be in the range of -90 to 90")
@@ -980,8 +988,9 @@ class Coverage(AbstractMetaDataElement):
             if value_dict['southlimit'] < -90 or value_dict['southlimit'] > 90:
                 raise ValidationError("Value for South latitude should be in the range of -90 to 90")
 
-            if value_dict['eastlimit'] <= value_dict['westlimit']:
-                raise ValidationError("Value for East longitude must be greater than that of West longitude.")
+            if value_dict['eastlimit'] < value_dict['westlimit']:
+                raise ValidationError("Value for East longitude must be greater than or equal to "
+                                      "that of West longitude.")
 
             if value_dict['eastlimit'] < -180 or value_dict['eastlimit'] > 180:
                 raise ValidationError("Value for East longitude should be in the range of -180 to 180")

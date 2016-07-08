@@ -2,9 +2,6 @@
 {% load geoanalytics_tags pages_tags mezzanine_tags keyword_tags comment_tags hydroshare_tags %}
 
 {% block main %}
-
-
-
     <div class="collaborate-header">
         <div class="container">
             <div class="row">
@@ -64,7 +61,7 @@
                 <div class="col-sm-2">
                     {% if profile_user.is_group_owner or profile_user.is_group_editor %}
                         <a href="#" id="btn-edit-group" data-toggle="modal" data-target="#edit-group-dialog">
-                            <span class="glyphicon glyphicon-pencil btn-edit icon-button" data-toggle="tooltip" data-placement="auto" title="Edit Group"></span></a>
+                            <span class="glyphicon glyphicon-pencil icon-blue icon-button" data-toggle="tooltip" data-placement="auto" title="Edit Group"></span></a>
                     {% endif %}
 
                     <a href="#" id="btn-leave-group" data-toggle="modal" data-target="#leave-group-dialog">
@@ -641,7 +638,7 @@
                                                   {% if forloop.counter0 > 0 %} · {% endif %}
                                                 <span>{{ owner|contact|safe }}</span>
                                             {% endfor %}</td>
-                                            <td>{{ res.updated|date }}, {{ res.updated|time }}</td>
+                                            <td>{{ res.updated|date:"m/d/Y" }}, {{ res.updated|time }}</td>
                                             <td>
                                                 {% for kw in res.metadata.subjects.all %}
                                                    {% if forloop.counter0 > 0 %},{% endif %}{{ kw.value}}

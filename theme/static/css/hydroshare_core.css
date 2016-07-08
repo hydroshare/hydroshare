@@ -1334,7 +1334,8 @@ table.table-plain td{
     font-weight: 500;
     margin: 30px 0;
     margin-top: 10px;
-    width: calc(100% - 100px);
+    padding-bottom: 5px;
+    border-bottom: 1px solid #DDD;
 }
 
 .label-file-name{
@@ -1371,10 +1372,18 @@ body > .main-container {
 }
 
 #btnMyResources.btn-resource-add {
-	color: #84B85C;;
+	color: #D9534F;
+}
+
+#btnMyResources.btn-resource-add:hover {
+	color: #84B85C;
 }
 
 #btnMyResources.btn-resource-remove {
+	color: #84B85C;
+}
+
+#btnMyResources.btn-resource-remove:hover {
 	color: #D9534F;
 }
 
@@ -1451,14 +1460,6 @@ body > .main-container {
 
 .info-icon:hover{
     color: #CCC;
-}
-
-#permission-panel .form-control{
-    margin-bottom:0;
-}
-
-#permission-panel .custom-well .form-group{
-    width:100%;
 }
 
 .btn-update-list{
@@ -1538,8 +1539,12 @@ body > .main-container {
     color:#d9534f;
 }
 
-.btn-edit, .btn-share{
+.icon-blue {
     color: #428BD2;
+}
+
+#delete > span {
+	margin-left: 20px;
 }
 
 .btn-download{
@@ -1613,6 +1618,7 @@ body > .main-container {
 
 div#sharing-status {
     overflow: hidden; /* Fixes height for floating elements */
+	margin-top: 20px;
 }
 
 .tag-list {
@@ -1841,12 +1847,20 @@ a.tag:hover {
   }
 }}
 
+
+
 .resource-search {
-	width: 100%;
 	position: relative;
-	height: 43px;
-	border: 1px solid lightgrey;
+	height: 34px;
+	border: 1px solid #DDD;
 	margin-bottom: 3px;
+}
+
+#discover-resource-search {
+	width: calc(100% - 50px);
+	margin-bottom: 20px;
+	margin-left: 10px;
+	float: right;
 }
 
 .resource-search input {
@@ -2229,10 +2243,6 @@ button.loading {
     margin-top: -20px; margin-bottom:20px;
 }
 
-#id_name {
-    max-width: 467px;
-}
-
 .invalid-input {
 	border-color: #F00 !important;
 }
@@ -2333,7 +2343,7 @@ button.loading {
     text-shadow: 0 1px 0 #fff;
 }
 
-.full-width-tabs-container .nav-tabs > li > a {
+.nav-tabs > li > a {
     background: #FFF;
     color:#757575;
     -webkit-border-top-left-radius: 5px;
@@ -2680,13 +2690,18 @@ h4.title {
 
 #item-selectors {
     display: none;
+}
+
+#items-discovered, #item-selectors {
 	width: 100% !important;
 }
 
 .resource-custom-table {
-    font-size: 14px;
-    border: 1px solid #ddd !important;
-    margin-bottom: 10px !important;
+	font-size: 14px;
+	border: 1px solid #ddd !important;
+	margin-bottom: 10px !important;
+	border-top-right-radius: 4px;
+	border-top-left-radius: 4px;
 }
 
 #item-selectors.group-resource-list {
@@ -2756,7 +2771,7 @@ h4.title {
 	padding-right: 25px;
 }
 
-#resource-search-input {
+#resource-search-input, #id_q {
 	padding-left: 25px;
 	padding-right: 30px;
 }
@@ -2796,6 +2811,10 @@ h4.title {
 
 #search-container {
 	margin-bottom: 10px;
+}
+
+#search-container .dropdown-toggle {
+	border-radius: 0;
 }
 
 /*Waiting on firefox support for background-clip:text*/
@@ -2845,6 +2864,11 @@ h4.title {
 	background: #DDD;
 }
 
+.facet-list .list-group {
+	max-height: 200px;
+	overflow-y: auto;
+}
+
 .facet-list .panel-body {
 	padding: 0;
 }
@@ -2877,10 +2901,6 @@ h4.title {
 
 #facets .panel {
 	margin-top: 20px;
-}
-
-#facets {
-	text-align: center;
 }
 
 #facets h4.panel-title, #headingLegend h4.panel-title {
@@ -3670,7 +3690,78 @@ div.group-add-photo {
 	display: inline-block;
 }
 
+#discover-filter-buttons {
+	margin-bottom: 10px;
+}
+
+#list-data-options {
+	float: right;
+	margin-bottom: 10px;
+}
+
+#discover-map {
+	height:650px;
+	border: 1px solid #DDD;
+}
+
+#discover-map-legend {
+	background: rgba(255, 255, 255, 0.75);
+	padding: 10px;
+	margin: 5px;
+	border-radius: 4px;
+}
+
+#manual-zoom-btn {
+	margin-top:20px;
+}
+
+#resetZoom {
+	margin-right:5px;
+}
+
+.manualzoom-input {
+	color: red;
+}
+
 div.toggle.btn {
 	width: 100px !important;
 	float: right;
+}
+
+.center-radio-inline {
+    padding: 8px;
+    border-radius: 4px;
+    width: 190px;
+}
+
+.center-radio-inline input[type='radio']{
+	float: initial;
+	margin: 0;
+}
+
+.center-radio-inline label {
+	cursor: pointer;
+}
+
+.or-separator {
+	margin-top: 20px;
+}
+
+#clear-dates-options:hover {
+	text-decoration: none;
+}
+
+#covereage-search-fields label {
+	width: 90px;
+}
+
+#covereage-search-fields input {
+	width: 100%;
+}
+
+form#covereage-search-fields {
+    border: 1px solid #DDD;
+    padding-top: 10px;
+    padding-bottom: 10px;
+    border-radius: 4px;
 }

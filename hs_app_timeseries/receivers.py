@@ -1,5 +1,6 @@
 import os
 import sqlite3
+import shutil
 
 from django.core.exceptions import ValidationError
 from django.dispatch import receiver
@@ -77,7 +78,8 @@ def post_add_files_to_resource_handler(sender, **kwargs):
                 if extract_metadata:
                     validate_err_message += " (Metadata was not extracted)"
                 validate_files_dict['message'] = validate_err_message
-
+        if res_file.fed_resource_file_name_or_path and fl_obj_name:
+            shutil.rmtree(os.path.dirname(fl_obj_name))
 
 @receiver(post_create_resource, sender=TimeSeriesResource)
 def post_create_resource_handler(sender, **kwargs):
@@ -102,6 +104,8 @@ def post_create_resource_handler(sender, **kwargs):
                 validate_files_dict['are_files_valid'] = False
                 validate_files_dict['message'] = validate_err_message + " (Metadata was not extracted)"
 
+        if res_file.fed_resource_file_name_or_path and fl_obj_name:
+            shutil.rmtree(os.path.dirname(fl_obj_name))
 
 @receiver(pre_metadata_element_create, sender=TimeSeriesResource)
 def metadata_element_pre_create_handler(sender, **kwargs):

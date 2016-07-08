@@ -17,7 +17,8 @@ from hs_geographic_feature_resource.models import GeographicFeatureResource, Ori
 from hs_geographic_feature_resource.receivers import geofeature_post_add_files_to_resource_handler,\
                                                      metadata_element_pre_create_handler,\
                                                      metadata_element_pre_update_handler,\
-                                                     UNKNOWN_STR
+                                                     UNKNOWN_STR,\
+                                                     parse_shp_zshp
 
 class TestGeoFeature(TransactionTestCase):
 
@@ -515,3 +516,13 @@ class TestGeoFeature(TransactionTestCase):
                                                    element_name="geometryinformation",
                                                    request=request)
         self.assertTrue(data["is_valid"])
+
+    def test_single_point_shp(self):
+
+        shp_full_path = "hs_geographic_feature_resource/tests/single_point_shp/logan_Outletmv.shp"
+        _, meta_dict = parse_shp_zshp("", "", "", "", shp_full_path)
+        coverage_dict = meta_dict.get("coverage", None)
+        self.assertNotEqual(coverage_dict, None)
+        self.assertEqual(coverage_dict["Coverage"]["type"].lower(), "point")
+        self.assertTrue(abs(coverage_dict["Coverage"]["value"]["east"] + 111.790377929) < self.allowance)
+        self.assertTrue(abs(coverage_dict["Coverage"]["value"]["north"] - 41.7422180799) < self.allowance)

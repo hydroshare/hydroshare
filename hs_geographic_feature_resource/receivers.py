@@ -3,6 +3,7 @@ import tempfile
 import shutil
 import zipfile
 import json
+import logging
 
 from django.dispatch import receiver
 from django.core.files.uploadedfile import UploadedFile
@@ -20,6 +21,8 @@ from hs_geographic_feature_resource.forms import OriginalCoverageValidationForm,
                                                  GeometryInformationValidationForm,\
                                                  FieldInformationValidationForm
 from hs_geographic_feature_resource.models import GeographicFeatureResource
+
+logger = logging.getLogger(__name__)
 
 def is_shapefiles(file_info_list):
     # check if uploaded files are valid shapefiles (shp, shx, dbf)
@@ -167,7 +170,18 @@ def parse_shp_zshp(uploadedFileType, baseFilename, uploadedFileCount, uploadedFi
         # wgs84 extent
         parsed_md_dict = parse_shp(shpFullPath)
         if parsed_md_dict["wgs84_extent_dict"]["westlimit"] != UNKNOWN_STR:
-            coverage_dict = {"Coverage": {"type": "box", "value": parsed_md_dict["wgs84_extent_dict"]}}
+            wgs84_dict = parsed_md_dict["wgs84_extent_dict"]
+            # if extent is a point, create point type coverage
+            if wgs84_dict["westlimit"] == wgs84_dict["eastlimit"] \
+               and wgs84_dict["northlimit"] == wgs84_dict["southlimit"]:
+                coverage_dict = {"Coverage": {"type": "point",
+                                 "value": {"east": wgs84_dict["eastlimit"],
+                                           "north": wgs84_dict["northlimit"],
+                                           "units": wgs84_dict["units"],
+                                           "projection": wgs84_dict["projection"]}
+                                }}
+            else:  # otherwise, create box type coverage
+                coverage_dict = {"Coverage": {"type": "box", "value": parsed_md_dict["wgs84_extent_dict"]}}
             metadata_array.append(coverage_dict)
             metadata_dict["coverage"] = coverage_dict
 
@@ -229,7 +243,9 @@ def geofeature_pre_create_resource(sender, **kwargs):
             if fed_res_fnames:
                 # copy all irods files to django server to extract metadata
                 irods_file_path_list = utils.get_fed_zone_files(fed_res_fnames)
+                fed_tmpfile_name_list = []
                 for file_path in irods_file_path_list:
+                    fed_tmpfile_name_list.append(file_path)
                     file_full_name = file_path[file_path.rfind('/')+1:]
                     f_info = [file_full_name, file_path]
                     file_info_list.append(f_info)
@@ -260,6 +276,9 @@ def geofeature_pre_create_resource(sender, **kwargs):
 
                     if uploaded_file_type == "zipped_shp":
                         if fed_res_fnames:
+                            # remove the temp zip file retrieved from federated zone
+                            if fed_tmpfile_name_list:
+                                shutil.rmtree(os.path.dirname(fed_tmpfile_name_list[0]))
                             # zip file from fed'd irods zone should be extracted on django sever
                             # the original zip file should NOT be stored in res
                             # instead, those unzipped files should be stored
@@ -273,12 +292,17 @@ def geofeature_pre_create_resource(sender, **kwargs):
         else:
             validate_files_dict['are_files_valid'] = False
             validate_files_dict['message'] = "Invalid files uploaded. Please note the three mandatory files (.shp, .shx, .dbf) of ESRI Shapefiles should be uploaded at the same time (or in a zip file)."
-    except:
+    except Exception as ex:
         validate_files_dict['are_files_valid'] = False
         validate_files_dict['message'] = 'Uploaded files are invalid or corrupt.'
+        logger.exception("geofeature_pre_create_resource: {0} ".format(ex.message))
     finally:
         if tmp_dir is not None:
             shutil.rmtree(tmp_dir)
+        # remove all temp files retrieved from federated zone
+        if fed_res_fnames and fed_tmpfile_name_list:
+            for file_path in fed_tmpfile_name_list:
+                shutil.rmtree(os.path.dirname(file_path))
 
 # This handler is executed only when a metadata element is added as part of editing a resource
 @receiver(pre_metadata_element_create, sender=GeographicFeatureResource)
@@ -313,7 +337,6 @@ def geofeature_pre_delete_file_from_resource(sender, **kwargs):
 
     res_obj = kwargs['resource']
     del_file = kwargs['file']
-    one_file_removed = True
     all_file_removed = False
     del_res_fname = get_resource_file_name(del_file)
 
@@ -324,7 +347,6 @@ def geofeature_pre_delete_file_from_resource(sender, **kwargs):
         if del_f_ext in [".shp", ".shx", ".dbf"]:
             # The shp, shx or dbf files cannot be removed.
             all_file_removed = True
-            one_file_removed = False
 
             # remove all files in this res right now except for the file user just clicked to remove (hs_core will remove it later)
             for f in ResourceFile.objects.filter(object_id=res_obj.id):
@@ -339,23 +361,25 @@ def geofeature_pre_delete_file_from_resource(sender, **kwargs):
                                             datum=UNKNOWN_STR, unit=UNKNOWN_STR)
             res_obj.metadata.coverages.all().delete()
 
-        if one_file_removed:
+        if not all_file_removed:
             ori_fn_dict = json.loads(ori_file_info.filenameString)
             if del_f_fullname in ori_fn_dict:
                 del ori_fn_dict[del_f_fullname]
                 res_obj.metadata.update_element('OriginalFileInfo', element_id=ori_file_info.id,
                                                 filenameString=json.dumps(ori_fn_dict))
-        elif all_file_removed:
+        else:
             res_obj.metadata.originalfileinfo.all().delete()
             res_obj.metadata.geometryinformation.all().delete()
             res_obj.metadata.fieldinformation.all().delete()
             res_obj.metadata.originalcoverage.all().delete()
             res_obj.metadata.coverages.all().delete()
 
+
 @receiver(pre_add_files_to_resource, sender=GeographicFeatureResource)
 def geofeature_pre_add_files_to_resource(sender, **kwargs):
 
     res_obj = kwargs['resource']
+    res_id = res_obj.short_id
     files = kwargs['files']
     fed_res_fnames = kwargs['fed_res_file_names']
 
@@ -375,7 +399,9 @@ def geofeature_pre_add_files_to_resource(sender, **kwargs):
     if fed_res_fnames:
         # copy all irods files to django server to extract metadata
         irods_file_path_list = utils.get_fed_zone_files(fed_res_fnames)
+        fed_tmpfile_name_list = []
         for file_path in irods_file_path_list:
+            fed_tmpfile_name_list.append(file_path)
             file_full_name = file_path[file_path.rfind('/')+1:]
             f_info = [file_full_name, file_path]
             file_info_list.append(f_info)
@@ -487,6 +513,9 @@ def geofeature_pre_add_files_to_resource(sender, **kwargs):
                                                 )
                 if uploaded_file_type == "zipped_shp":
                         if fed_res_fnames:
+                            # remove the temp zip file retrieved from federated zone
+                            if fed_tmpfile_name_list:
+                                shutil.rmtree(os.path.dirname(fed_tmpfile_name_list[0]))
                             del kwargs['fed_res_file_names'][:]
                         del kwargs['files'][:]
                         kwargs['files'].extend(files_type["files_new"])
@@ -496,16 +525,22 @@ def geofeature_pre_add_files_to_resource(sender, **kwargs):
                 validate_files_dict['message'] = "Invalid files uploaded. Please note the three mandatory files (.shp, .shx, .dbf) of ESRI Shapefiles should be uploaded at the same time (or in a zip file)."
             if tmp_dir is not None:
                 shutil.rmtree(tmp_dir)
-    except:
+            # remove all temp files retrieved from federated zone
+            if fed_res_fnames and fed_tmpfile_name_list:
+                for file_path in fed_tmpfile_name_list:
+                    shutil.rmtree(os.path.dirname(file_path))
+    except Exception as ex:
+        logger.exception("geofeature_pre_add_files_to_resource: {0}. Error:{1} ".format(res_id, ex.message))
         validate_files_dict['are_files_valid'] = False
         validate_files_dict['message'] = "Invalid files uploaded. Please note the three mandatory files (.shp, .shx, .dbf) of ESRI Shapefiles should be uploaded at the same time (or in a zip file)."
 
 @receiver(post_add_files_to_resource, sender=GeographicFeatureResource)
 def geofeature_post_add_files_to_resource_handler(sender, **kwargs):
     tmp_dir = None
+    resource = kwargs['resource']
+    res_id = resource.short_id
     validate_files_dict = kwargs['validate_files']
     try:
-        resource = kwargs['resource']
         files = kwargs['files']
         fed_res_fnames = kwargs.get('fed_res_file_names', [])
         found_shp = False
@@ -531,7 +566,6 @@ def geofeature_post_add_files_to_resource_handler(sender, **kwargs):
             if res_file_list:
                 tmp_dir = tempfile.mkdtemp()
                 for res_f in res_file_list:
-
                     if res_f.resource_file:
                         # file is stored on hs irods
                         source = res_f.resource_file.file.name
@@ -550,6 +584,9 @@ def geofeature_post_add_files_to_resource_handler(sender, **kwargs):
                     fileName, fileExtension = os.path.splitext(f_fullname.lower())
                     target = tmp_dir + "/" + fileName + fileExtension
                     shutil.copy(source, target)
+                    # for temp file retrieved from federation zone, it should be deleted after it is copied
+                    if res_f.fed_resource_file_name_or_path:
+                        shutil.rmtree(source)
                 ori_file_info = resource.metadata.originalfileinfo.all().first()
                 shp_full_path = tmp_dir + "/" + ori_file_info.baseFilename + ".shp"
                 parsed_md_dict = parse_shp(shp_full_path)
@@ -572,6 +609,7 @@ def geofeature_post_add_files_to_resource_handler(sender, **kwargs):
                     resource.metadata.create_element('Coverage', type='box', value=parsed_md_dict["wgs84_extent_dict"])
 
     except Exception as ex:
+        logger.exception("geofeature_post_add_files_to_resource_handler: {0}. Error:{1} ".format(res_id, ex.message))
         validate_files_dict['are_files_valid'] = False
         validate_files_dict['message'] = "Invalid files uploaded."
     finally:
