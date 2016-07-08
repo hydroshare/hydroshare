@@ -61,7 +61,8 @@ class ResourceCreateRequestValidator(ResourceUpdateRequestValidator):
 
 
 class ResourceTypesSerializer(serializers.Serializer):
-    resource_type = serializers.CharField(max_length=100, required=True, validators=[lambda x: x in RESOURCE_TYPES])
+    resource_type = serializers.CharField(max_length=100, required=True,
+                                          validators=[lambda x: x in RESOURCE_TYPES])
 
 
 class ResourceListRequestValidator(serializers.Serializer):
@@ -137,4 +138,3 @@ class UserAuthenticateRequestValidator(serializers.Serializer):
 
 class AccessRulesRequestValidator(serializers.Serializer):
     public = serializers.BooleanField(default=False)
-
