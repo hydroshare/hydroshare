@@ -23,7 +23,8 @@ from django.core.files.storage import DefaultStorage
 
 from mezzanine.conf import settings
 
-from hs_core.signals import *
+from hs_core.signals import pre_create_resource, post_create_resource, pre_add_files_to_resource, \
+    post_add_files_to_resource
 from hs_core.models import AbstractResource, BaseResource, ResourceFile
 from hs_core.hydroshare.hs_bagit import create_bag_files, create_bag_by_irods
 
@@ -128,27 +129,27 @@ def group_from_id(grp):
 
 def get_user_zone_status_info(user):
     """
-    This function should be called to determine whether the site is in production and whether user zone
-    functionality should be enabled or not on the web site front end
+    This function should be called to determine whether the site is in production and whether user
+    zone functionality should be enabled or not on the web site front end
     Args:
         user: the requesting user
     Returns:
         in_production, enable_user_zone where both are boolean indicating whether the site is
-        in production and whether user zone functionality should be enabled or not on the web site front end
+        in production and whether user zone functionality should be enabled or not on the web site
+        front end
     """
     if user is None:
         return None, None
     if not hasattr(user, 'userprofile') or user.userprofile is None:
         return None, None
 
-
     in_production = True if settings.IRODS_USERNAME == settings.HS_WWW_IRODS_PROXY_USER else False
     enable_user_zone = user.userprofile.create_irods_user_account
     if not in_production and enable_user_zone:
         # if these settings are not empty, for example, in users' local
         # development environment for testing, user_zone selection is shown
-        if (not settings.HS_WWW_IRODS_PROXY_USER_PWD or \
-            not settings.HS_WWW_IRODS_HOST or not settings.HS_WWW_IRODS_ZONE):
+        if (not settings.HS_WWW_IRODS_PROXY_USER_PWD or
+                not settings.HS_WWW_IRODS_HOST or not settings.HS_WWW_IRODS_ZONE):
             enable_user_zone = False
     return in_production, enable_user_zone
 
@@ -164,14 +165,16 @@ def is_federated(homepath):
     True is the selected file indicated by homepath is from a federated zone, False if otherwise
     """
     irods_storage = IrodsStorage('federated')
-    # if HS WWW iRODS proxy user can list homepath, homepath is federated; otherwise, it is not federated
+    # if HS WWW iRODS proxy user can list homepath, homepath is federated; otherwise, it is not
+    # federated
     return irods_storage.exists(homepath)
 
 
 def get_federated_zone_home_path(filepath):
     """
     Args:
-        filepath: the iRODS data object file path that included zone name in the format of /zone_name/home/user_name/file_path
+        filepath: the iRODS data object file path that included zone name in the format of
+        /zone_name/home/user_name/file_path
 
     Returns:
         the zone name extracted from filepath
@@ -180,7 +183,8 @@ def get_federated_zone_home_path(filepath):
         split_path_strs = filepath.split('/')
         # the Zone name should follow the first slash
         zone = split_path_strs[1]
-        return '/{zone}/home/{local_proxy_user}'.format(zone=zone, local_proxy_user=settings.HS_LOCAL_PROXY_USER_IN_FED_ZONE)
+        return '/{zone}/home/{local_proxy_user}'.format(
+            zone=zone, local_proxy_user=settings.HS_LOCAL_PROXY_USER_IN_FED_ZONE)
     else:
         return ''
 
@@ -201,7 +205,8 @@ def get_fed_zone_file_size(fname):
 
 def get_fed_zone_files(irods_fnames):
     """
-    Get the files from iRODS federated zone to Django server for metadata extraction on-demand for specific resource types
+    Get the files from iRODS federated zone to Django server for metadata extraction on-demand
+    for specific resource types
     Args:
         irods_fnames: the logical iRODS file names with full logical path separated by comma
 
@@ -265,8 +270,9 @@ def replicate_resource_bag_to_user_zone(user, res_id):
         istorage = IrodsStorage()
 
     bag_modified = "false"
-    # needs to check whether res_id collection exists before getting/setting AVU on it to accommodate the case
-    # where the very same resource gets deleted by another request when it is getting downloaded
+    # needs to check whether res_id collection exists before getting/setting AVU on it to
+    # accommodate the case where the very same resource gets deleted by another request when
+    # it is getting downloaded
     if istorage.exists(res_coll):
         bag_modified = istorage.getAVU(res_coll, 'bag_modified')
     if bag_modified == "true":
@@ -280,7 +286,8 @@ def replicate_resource_bag_to_user_zone(user, res_id):
     src_file = 'bags/{resid}.zip'.format(resid=res_id)
     if res.resource_federation_path:
         src_file = os.path.join(res.resource_federation_path, src_file)
-    tgt_file = '/{userzone}/home/{username}/{resid}.zip'.format(userzone=settings.HS_USER_IRODS_ZONE, username=user.username, resid=res_id)
+    tgt_file = '/{userzone}/home/{username}/{resid}.zip'.format(
+        userzone=settings.HS_USER_IRODS_ZONE, username=user.username, resid=res_id)
     istorage.copyFiles(src_file, tgt_file)
 
 
@@ -294,10 +301,12 @@ def serialize_science_metadata(res):
     resd['resource_uri'] = resd['short_id']
     resd['user']['resource_uri'] = '/u/' + resd['user']['username']
     # TODO: serialize metadata from the res.metadata object
-    #resd['dublin_metadata'] = [dc['fields'] for dc in json.loads(js.serialize(res.dublin_metadata.all()))]
+    # resd['dublin_metadata'] = [dc['fields'] for dc in json.loads(js.serialize(
+    # res.dublin_metadata.all()))]
     resd['bags'] = [dc['fields'] for dc in json.loads(js.serialize(res.bags.all()))]
     resd['files'] = [dc['fields'] for dc in json.loads(js.serialize(res.files.all()))]
     return json.dumps(resd)
+
 
 # TODO: Tastypie left over. This needs to be deleted
 def serialize_system_metadata(res):
@@ -309,10 +318,12 @@ def serialize_system_metadata(res):
     resd['resource_uri'] = resd['short_id']
     resd['user']['resource_uri'] = '/u/' + resd['user']['username']
     # TODO: serialize metadata from the res.metadata object
-    #resd['dublin_metadata'] = [dc['fields'] for dc in json.loads(js.serialize(res.dublin_metadata.all()))]
+    # resd['dublin_metadata'] = [dc['fields'] for dc in json.loads(js.serialize(
+    # res.dublin_metadata.all()))]
     resd['bags'] = [dc['fields'] for dc in json.loads(js.serialize(res.bags.all()))]
     resd['files'] = [dc['fields'] for dc in json.loads(js.serialize(res.files.all()))]
     return json.dumps(resd)
+
 
 def copy_resource_files_and_AVUs(src_res_id, dest_res_id, set_to_private=False):
     avu_list = ['bag_modified', 'isPublic', 'resourceType']
@@ -400,13 +411,15 @@ def get_file_mime_type(file_name):
 def check_file_dict_for_error(file_validation_dict):
     if 'are_files_valid' in file_validation_dict:
         if not file_validation_dict['are_files_valid']:
-            error_message = file_validation_dict.get('message', "Uploaded file(s) failed validation.")
+            error_message = file_validation_dict.get('message',
+                                                     "Uploaded file(s) failed validation.")
             raise ResourceFileValidationException(error_message)
 
 
 def raise_file_size_exception():
     from .resource import FILE_SIZE_LIMIT_FOR_DISPLAY
-    error_msg = 'The resource file is larger than the supported size limit: %s.' % FILE_SIZE_LIMIT_FOR_DISPLAY
+    error_msg = 'The resource file is larger than the supported size limit: %s.' \
+                % FILE_SIZE_LIMIT_FOR_DISPLAY
     raise ResourceFileSizeException(error_msg)
 
 
@@ -436,7 +449,8 @@ def validate_resource_file_type(resource_cls, files):
 def validate_resource_file_count(resource_cls, files, resource=None):
     if len(files) > 0:
         if len(resource_cls.get_supported_upload_file_types()) == 0:
-            err_msg = "Content files are not allowed in {res_type} resource".format(res_type=resource_cls)
+            err_msg = "Content files are not allowed in {res_type} resource"
+            err_msg = err_msg.format(res_type=resource_cls)
             raise ResourceFileValidationException(err_msg)
 
         err_msg = "Multiple content files are not supported in {res_type} resource"
@@ -485,11 +499,14 @@ def resource_pre_create_actions(resource_type, resource_title, page_redirect_url
     file_validation_dict = {'are_files_valid': True, 'message': 'Files are valid'}
 
     # Send pre-create resource signal - let any other app populate the empty metadata list object
-    # also pass title to other apps, and give other apps a chance to populate page_redirect_url if they want
-    # to redirect to their own page for resource creation rather than use core resource creation code
-    pre_create_resource.send(sender=resource_cls, metadata=metadata, files=files, title=resource_title,
+    # also pass title to other apps, and give other apps a chance to populate page_redirect_url
+    # if they want to redirect to their own page for resource creation rather than use core
+    # resource creation code
+    pre_create_resource.send(sender=resource_cls, metadata=metadata, files=files,
+                             title=resource_title,
                              url_key=page_redirect_url_key, page_url_dict=page_url_dict,
-                             validate_files=file_validation_dict, fed_res_file_names=fed_res_file_names,
+                             validate_files=file_validation_dict,
+                             fed_res_file_names=fed_res_file_names,
                              user=requesting_user, fed_res_path=fed_res_path, **kwargs)
 
     if len(files) > 0:
@@ -502,7 +519,8 @@ def resource_post_create_actions(resource, user, metadata,  **kwargs):
     # receivers need to change the values of this dict if file validation fails
     file_validation_dict = {'are_files_valid': True, 'message': 'Files are valid'}
     # Send post-create resource signal
-    post_create_resource.send(sender=type(resource), resource=resource, user=user,  metadata=metadata,
+    post_create_resource.send(sender=type(resource), resource=resource, user=user,
+                              metadata=metadata,
                               validate_files=file_validation_dict, **kwargs)
 
     check_file_dict_for_error(file_validation_dict)
@@ -545,19 +563,19 @@ def prepare_resource_default_metadata(resource, metadata, res_title):
 
     if add_rights:
         # add the default rights/license element
-        metadata.append({'rights':
-                             {'statement': 'This resource is shared under the Creative Commons Attribution CC BY.',
-                              'url': 'http://creativecommons.org/licenses/by/4.0/'
-                             }
-                        })
+        statement = 'This resource is shared under the Creative Commons Attribution CC BY.'
+        url = 'http://creativecommons.org/licenses/by/4.0/'
+        metadata.append({'rights': {'statement': statement, 'url': url}})
 
     metadata.append({'identifier': {'name': 'hydroShareIdentifier',
-                                    'url': '{0}/resource{1}{2}'.format(current_site_url(), '/', resource.short_id)}})
+                                    'url': '{0}/resource{1}{2}'.format(current_site_url(), '/',
+                                                                       resource.short_id)}})
 
     # remove if there exists the 'type' element as system generates this element
     # remove if there exists 'format' elements - since format elements are system generated based
     # on resource content files
-    # remove any 'date' element which is not of type 'valid'. All other date elements are system generated
+    # remove any 'date' element which is not of type 'valid'. All other date elements are
+    # system generated
     for element in list(metadata):
         if 'type' in element or 'format' in element:
             metadata.remove(element)
@@ -566,7 +584,8 @@ def prepare_resource_default_metadata(resource, metadata, res_title):
                 if element['date']['type'] != 'valid':
                     metadata.remove(element)
 
-    metadata.append({'type': {'url': '{0}/terms/{1}'.format(current_site_url(), resource.__class__.__name__)}})
+    metadata.append({'type': {'url': '{0}/terms/{1}'.format(current_site_url(),
+                                                            resource.__class__.__name__)}})
 
     metadata.append({'date': {'type': 'created', 'start_date': resource.created}})
     metadata.append({'date': {'type': 'modified', 'start_date': resource.updated}})
@@ -592,7 +611,8 @@ def get_party_data_from_user(user):
     return party_data
 
 
-def resource_file_add_pre_process(resource, files, user, extract_metadata=False, fed_res_file_names='', **kwargs):
+def resource_file_add_pre_process(resource, files, user, extract_metadata=False,
+                                  fed_res_file_names='', **kwargs):
     resource_cls = resource.__class__
     validate_resource_file_size(files)
     validate_resource_file_type(resource_cls, files)
@@ -600,23 +620,28 @@ def resource_file_add_pre_process(resource, files, user, extract_metadata=False,
 
     file_validation_dict = {'are_files_valid': True, 'message': 'Files are valid'}
     pre_add_files_to_resource.send(sender=resource_cls, files=files, resource=resource, user=user,
-                                   fed_res_file_names=fed_res_file_names, validate_files=file_validation_dict,
+                                   fed_res_file_names=fed_res_file_names,
+                                   validate_files=file_validation_dict,
                                    extract_metadata=extract_metadata, **kwargs)
 
     check_file_dict_for_error(file_validation_dict)
 
 
-def resource_file_add_process(resource, files, user, extract_metadata=False, fed_res_file_names='', **kwargs):
+def resource_file_add_process(resource, files, user, extract_metadata=False,
+                              fed_res_file_names='', **kwargs):
     from .resource import add_resource_files
-    resource_file_objects = add_resource_files(resource.short_id, *files, fed_res_file_names=fed_res_file_names,
+    resource_file_objects = add_resource_files(resource.short_id, *files,
+                                               fed_res_file_names=fed_res_file_names,
                                                fed_zone_home_path=resource.resource_federation_path)
 
     # receivers need to change the values of this dict if file validation fails
     # in case of file validation failure it is assumed the resource type also deleted the file
     file_validation_dict = {'are_files_valid': True, 'message': 'Files are valid'}
-    post_add_files_to_resource.send(sender=resource.__class__, files=files, fed_res_file_names=fed_res_file_names,
+    post_add_files_to_resource.send(sender=resource.__class__, files=files,
+                                    fed_res_file_names=fed_res_file_names,
                                     resource=resource, user=user,
-                                    validate_files=file_validation_dict, extract_metadata=extract_metadata, **kwargs)
+                                    validate_files=file_validation_dict,
+                                    extract_metadata=extract_metadata, **kwargs)
 
     check_file_dict_for_error(file_validation_dict)
 
@@ -629,17 +654,21 @@ def add_file_to_resource(resource, f, fed_res_file_name_or_path='', fed_copy_or_
     Add a ResourceFile to a Resource.  Adds the 'format' metadata element to the resource.
     :param resource: Resource to which file should be added
     :param f: File-like object to add to a resource
-    :param fed_res_file_name_or_path: the logical file name of the resource content file for federated iRODS resource
-                                      or the federated zone name; By default, it is empty. A non-empty value indicates
-                                      the file needs to be added into the federated zone, either from local disk where
-                                      f holds the uploaded file from local disk, or from the federated zone directly
-                                      where f is empty but fed_res_file_name_or_path has the whole data object iRODS path
-                                      in the federated zone
-    :param fed_copy_or_move: indicate whether the file should be copied or moved from private user account to proxy user
-                             account in federated zone; A value of 'copy' indicates copy is needed, a value of 'move'
-                             indicates no copy, but the file will be moved from private user account to proxy user account.
-                             The default value is None, which indicates N/A, or not applicable, since the files do not come
-                             from a federated zone, and this copy or move operation is not applicable, but any value other
+    :param fed_res_file_name_or_path: the logical file name of the resource content file for
+                                      federated iRODS resource or the federated zone name;
+                                      By default, it is empty. A non-empty value indicates
+                                      the file needs to be added into the federated zone, either
+                                      from local disk where f holds the uploaded file from local
+                                      disk, or from the federated zone directly where f is empty
+                                      but fed_res_file_name_or_path has the whole data object
+                                      iRODS path in the federated zone
+    :param fed_copy_or_move: indicate whether the file should be copied or moved from private user
+                             account to proxy user account in federated zone; A value of 'copy'
+                             indicates copy is needed, a value of 'move' indicates no copy, but
+                             the file will be moved from private user account to proxy user account.
+                             The default value is None, which indicates N/A, or not applicable,
+                             since the files do not come from a federated zone, and this copy or
+                             move operation is not applicable, but any value other
                              than 'copy' or 'move' is regarded as N/A.
 
     :return: The identifier of the ResourceFile added.
@@ -647,36 +676,43 @@ def add_file_to_resource(resource, f, fed_res_file_name_or_path='', fed_copy_or_
     if f:
         if fed_res_file_name_or_path:
             ret = ResourceFile.objects.create(content_object=resource,
-                                          resource_file=None,
-                                          fed_resource_file=File(f) if not isinstance(f, UploadedFile) else f)
+                                              resource_file=None,
+                                              fed_resource_file=File(f) if not isinstance(
+                                                  f, UploadedFile) else f)
         else:
             ret = ResourceFile.objects.create(content_object=resource,
-                                              resource_file=File(f) if not isinstance(f, UploadedFile) else f,
+                                              resource_file=File(f) if not isinstance(
+                                                  f, UploadedFile) else f,
                                               fed_resource_file=None)
         # add format metadata element if necessary
         file_format_type = get_file_mime_type(f.name)
     elif fed_res_file_name_or_path and (fed_copy_or_move == 'copy' or fed_copy_or_move == 'move'):
         size = get_fed_zone_file_size(fed_res_file_name_or_path)
-        ret = ResourceFile.objects.create(content_object=resource, resource_file=None, fed_resource_file=None,
-                                          fed_resource_file_name_or_path=fed_res_file_name_or_path, fed_resource_file_size=size)
+        ret = ResourceFile.objects.create(content_object=resource, resource_file=None,
+                                          fed_resource_file=None,
+                                          fed_resource_file_name_or_path=fed_res_file_name_or_path,
+                                          fed_resource_file_size=size)
         try:
             from_fname = fed_res_file_name_or_path
             filename = from_fname.rsplit('/')[-1]
 
             if resource.resource_federation_path:
-                to_fname = '{base_path}/{res_id}/data/contents/{file_name}'.format(base_path=resource.resource_federation_path,
-                                                                               res_id=resource.short_id,
-                                                                               file_name=filename)
+                to_fname = '{base_path}/{res_id}/data/contents/{file_name}'
+                to_fname = to_fname.format(base_path=resource.resource_federation_path,
+                                           res_id=resource.short_id, file_name=filename)
                 istorage = IrodsStorage('federated')
             else:
-                to_fname = '{res_id}/data/contents/{file_name}'.format(res_id=resource.short_id, file_name=filename)
+                to_fname = '{res_id}/data/contents/{file_name}'.format(res_id=resource.short_id,
+                                                                       file_name=filename)
                 istorage = IrodsStorage()
             if fed_copy_or_move == 'copy':
                 istorage.copyFiles(from_fname, to_fname)
             else:
                 istorage.moveFile(from_fname, to_fname)
-            # update file path now that file has been copied or moved to HydroShare proxy account space
-            ret.fed_resource_file_name_or_path = 'data/contents/{file_name}'.format(file_name=filename)
+            # update file path now that file has been copied or moved to HydroShare proxy
+            # account space
+            ret.fed_resource_file_name_or_path = 'data/contents/{file_name}'.format(
+                file_name=filename)
             ret.save()
         except SessionException as ex:
             # delete the file added if there is any exception
@@ -686,7 +722,8 @@ def add_file_to_resource(resource, f, fed_res_file_name_or_path='', fed_copy_or_
 
         file_format_type = get_file_mime_type(fed_res_file_name_or_path)
     else:
-        raise ValueError('Invalid input parameter is passed into this add_file_to_resource() function')
+        raise ValueError('Invalid input parameter is passed into this add_file_to_resource() '
+                         'function')
 
     if file_format_type not in [mime.value for mime in resource.metadata.formats.all()]:
         resource.metadata.create_element('format', value=file_format_type)
@@ -719,7 +756,8 @@ class ZipContents(object):
                         if not self.black_list_name(name):
                             self.zip_file.extract(name_path, temp_dir)
                             file_path = os.path.join(temp_dir, name_path)
-                            logger.debug("Opening {0} as File with name {1}".format(file_path, name_path))
+                            logger.debug("Opening {0} as File with name {1}".format(file_path,
+                                                                                    name_path))
                             f = File(file=open(file_path, 'rb'),
                                      name=name_path)
                             f.size = os.stat(file_path).st_size
