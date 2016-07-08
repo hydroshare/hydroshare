@@ -196,20 +196,44 @@
                 <tbody>
                 <tr>
                     {% if boundary_condition.specified_head_boundary_packages %}
-                        <th class="text-muted">Specified head boundary package(s)</th>
-                        <td>{{ boundary_condition.get_specified_head_boundary_packages }}</td>
+                    <th class="text-muted">Specified head boundary package(s)</th>
+                    <td>
+                        {% if boundary_condition.other_specified_head_boundary_packages and boundary_condition.get_specified_head_boundary_packages %}
+                        {{ boundary_condition.get_specified_head_boundary_packages }}, {{ boundary_condition.other_specified_head_boundary_packages }}
+                        {% elif not boundary_condition.get_specified_head_boundary_packages %}
+                        {{ boundary_condition.other_specified_head_boundary_packages }}
+                        {% else %}
+                        {{ boundary_condition.get_specified_head_boundary_packages }}
+                        {% endif %}
+                    </td>
                     {% endif %}
                 </tr>
                 <tr>
                     {% if boundary_condition.specified_flux_boundary_packages %}
                         <th class="text-muted">Specified flux boundary package(s)</th>
-                        <td>{{ boundary_condition.get_specified_flux_boundary_packages }}</td>
+                    <td>
+                        {% if boundary_condition.other_specified_flux_boundary_packages and boundary_condition.get_specified_flux_boundary_packages %}
+                        {{ boundary_condition.get_specified_flux_boundary_packages }}, {{ boundary_condition.other_specified_flux_boundary_packages }}
+                        {% elif not boundary_condition.get_specified_flux_boundary_packages %}
+                        {{ boundary_condition.other_specified_flux_boundary_packages }}
+                        {% else %}
+                        {{ boundary_condition.get_specified_flux_boundary_packages }}
+                        {% endif %}
+                    </td>
                     {% endif %}
                 </tr>
                 <tr>
                     {% if boundary_condition.head_dependent_flux_boundary_packages %}
                         <th class="text-muted">Head-dependent flux boundary package(s)</th>
-                        <td>{{ boundary_condition.get_head_dependent_flux_boundary_packages }}</td>
+                    <td>
+                        {% if boundary_condition.other_head_dependent_flux_boundary_packages and boundary_condition.get_head_dependent_flux_boundary_packages %}
+                        {{ boundary_condition.get_head_dependent_flux_boundary_packages }}, {{ boundary_condition.other_head_dependent_flux_boundary_packages }}
+                        {% elif not boundary_condition.get_head_dependent_flux_boundary_packages %}
+                        {{ boundary_condition.other_head_dependent_flux_boundary_packages }}
+                        {% else %}
+                        {{ boundary_condition.get_head_dependent_flux_boundary_packages }}
+                        {% endif %}
+                    </td>
                     {% endif %}
                 </tr>
                 </tbody>

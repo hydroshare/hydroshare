@@ -227,8 +227,14 @@ class BoundaryCondition(AbstractMetaDataElement):
                                                ('MNW1', 'MNW1'), ('MNW2', 'MNW2'), ('RES', 'RES'), ('RIP', 'RIP'),
                                                ('RIV', 'RIV'), ('SFR', 'SFR'), ('STR', 'STR'), ('UZF', 'UZF'),)
     specified_head_boundary_packages = models.ManyToManyField(SpecifiedHeadBoundaryPackageChoices, blank=True)
+    other_specified_head_boundary_packages = models.CharField(max_length=200, null=True, blank=True,
+                                                              verbose_name='Other packages')
     specified_flux_boundary_packages = models.ManyToManyField(SpecifiedFluxBoundaryPackageChoices, blank=True)
+    other_specified_flux_boundary_packages = models.CharField(max_length=200, null=True, blank=True,
+                                                              verbose_name='Other packages')
     head_dependent_flux_boundary_packages = models.ManyToManyField(HeadDependentFluxBoundaryPackageChoices, blank=True)
+    other_head_dependent_flux_boundary_packages = models.CharField(max_length=200, null=True, blank=True,
+                                                                   verbose_name='Other packages')
 
     # may be this could cause a problem
     def __unicode__(self):
@@ -278,7 +284,11 @@ class BoundaryCondition(AbstractMetaDataElement):
     @classmethod
     def create(cls, **kwargs):
         kwargs = cls._validate_params(**kwargs)
-        model_boundary_condition = super(BoundaryCondition, cls).create(content_object=kwargs['content_object'])
+        model_boundary_condition = super(BoundaryCondition, cls)\
+            .create(content_object=kwargs['content_object'],
+                    other_specified_head_boundary_packages=kwargs['other_specified_head_boundary_packages'],
+                    other_specified_flux_boundary_packages=kwargs['other_specified_flux_boundary_packages'],
+                    other_head_dependent_flux_boundary_packages=kwargs['other_head_dependent_flux_boundary_packages'])
         cls._add_specified_head_boundary_packages(model_boundary_condition, kwargs['specified_head_boundary_packages'])
         cls._add_specified_flux_boundary_packages(model_boundary_condition, kwargs['specified_flux_boundary_packages'])
         cls._add_head_dependent_flux_boundary_packages(model_boundary_condition,
@@ -305,6 +315,15 @@ class BoundaryCondition(AbstractMetaDataElement):
                 model_boundary_condition.head_dependent_flux_boundary_packages.clear()
                 cls._add_head_dependent_flux_boundary_packages(model_boundary_condition,
                                                                kwargs['head_dependent_flux_boundary_packages'])
+            if 'other_specified_head_boundary_packages' in kwargs:
+                model_boundary_condition.other_specified_head_boundary_packages = \
+                    kwargs['other_specified_head_boundary_packages']
+            if 'other_specified_flux_boundary_packages' in kwargs:
+                model_boundary_condition.other_specified_flux_boundary_packages = \
+                    kwargs['other_specified_flux_boundary_packages']
+            if 'other_head_dependent_flux_boundary_packages' in kwargs:
+                model_boundary_condition.other_head_dependent_flux_boundary_packages = \
+                    kwargs['other_head_dependent_flux_boundary_packages']
 
             model_boundary_condition.save()
             num_sp_hd_bdy_pckgs = len(model_boundary_condition.get_specified_head_boundary_packages())
@@ -626,22 +645,54 @@ class MODFLOWModelInstanceMetaData(ModelInstanceMetaData):
                 etree.SubElement(hsterms_boundary, '{%s}Description' % self.NAMESPACES['rdf'])
 
             if self.boundary_condition.specified_head_boundary_packages:
-                hsterms_boundary_type = \
+                hsterms_boundary_package = \
                     etree.SubElement(hsterms_boundary_rdf_Description,
                                      '{%s}specifiedHeadBoundaryPackages' % self.NAMESPACES['hsterms'])
-                hsterms_boundary_type.text = self.boundary_condition.get_specified_head_boundary_packages()
-
+                if len(self.boundary_condition.get_specified_head_boundary_packages()) == 0 and \
+                    self.boundary_condition.other_specified_head_boundary_packages:
+                        hsterms_boundary_package.text = \
+                            self.boundary_condition.other_specified_head_boundary_packages
+                elif len(self.boundary_condition.get_specified_head_boundary_packages()) != 0 and \
+                     not self.boundary_condition.other_specified_head_boundary_packages:
+                        hsterms_boundary_package.text = \
+                            self.boundary_condition.get_specified_head_boundary_packages()
+                else:    
+                        hsterms_boundary_package.text = \
+                            self.boundary_condition.get_specified_head_boundary_packages() + ', ' + \
+                            self.boundary_condition.other_specified_head_boundary_packages
             if self.boundary_condition.specified_flux_boundary_packages:
                 hsterms_boundary_package = \
                     etree.SubElement(hsterms_boundary_rdf_Description,
                                      '{%s}specifiedFluxBoundaryPackages' % self.NAMESPACES['hsterms'])
-                hsterms_boundary_package.text = self.boundary_condition.get_specified_flux_boundary_packages()
+                if len(self.boundary_condition.get_specified_flux_boundary_packages()) == 0 and \
+                        self.boundary_condition.other_specified_flux_boundary_packages:
+                    hsterms_boundary_package.text = \
+                        self.boundary_condition.other_specified_flux_boundary_packages
+                elif len(self.boundary_condition.get_specified_flux_boundary_packages()) != 0 and \
+                        not self.boundary_condition.other_specified_flux_boundary_packages:
+                    hsterms_boundary_package.text = \
+                        self.boundary_condition.get_specified_flux_boundary_packages()
+                else:
+                    hsterms_boundary_package.text = \
+                        self.boundary_condition.get_specified_flux_boundary_packages() + ', ' + \
+                        self.boundary_condition.other_specified_flux_boundary_packages
 
             if self.boundary_condition.head_dependent_flux_boundary_packages:
                 hsterms_boundary_package = \
                     etree.SubElement(hsterms_boundary_rdf_Description,
                                      '{%s}headDependentFluxBoundaryPackages' % self.NAMESPACES['hsterms'])
-                hsterms_boundary_package.text = self.boundary_condition.get_head_dependent_flux_boundary_packages()
+                if len(self.boundary_condition.get_head_dependent_flux_boundary_packages()) == 0 and \
+                    self.boundary_condition.other_head_dependent_flux_boundary_packages:
+                        hsterms_boundary_package.text = \
+                            self.boundary_condition.other_head_dependent_flux_boundary_packages
+                elif len(self.boundary_condition.get_head_dependent_flux_boundary_packages()) != 0 and \
+                     not self.boundary_condition.other_head_dependent_flux_boundary_packages:
+                        hsterms_boundary_package.text = \
+                            self.boundary_condition.get_head_dependent_flux_boundary_packages()
+                else:    
+                        hsterms_boundary_package.text = \
+                            self.boundary_condition.get_head_dependent_flux_boundary_packages() + ', ' + \
+                            self.boundary_condition.other_head_dependent_flux_boundary_packages
 
         if self.model_calibration:
             modelCalibrationFields = ['calibratedParameter', 'observationType',

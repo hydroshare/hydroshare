@@ -293,8 +293,11 @@ class BoundaryConditionFormHelper(BaseFormHelper):
         # the order in which the model fields are listed for the FieldSet is the order these fields will be displayed
         layout = Layout(
                         MetadataField('specified_head_boundary_packages'),
+                        MetadataField('other_specified_head_boundary_packages'),
                         MetadataField('specified_flux_boundary_packages'),
+                        MetadataField('other_specified_flux_boundary_packages'),
                         MetadataField('head_dependent_flux_boundary_packages'),
+                        MetadataField('other_head_dependent_flux_boundary_packages'),
                  )
         kwargs['element_name_label'] = 'Boundary Condition'
         super(BoundaryConditionFormHelper, self).__init__(allow_edit, res_short_id, element_id, element_name, layout,
@@ -331,7 +334,10 @@ class BoundaryConditionForm(ModelForm):
                    'specified_flux_boundary_packages',
                    'head_dependent_flux_boundary_packages',
                    )
-
+        fields = ('other_specified_head_boundary_packages',
+                  'other_specified_flux_boundary_packages',
+                  'other_head_dependent_flux_boundary_packages',
+                  )
 
 class BoundaryConditionValidationForm(forms.Form):
     specified_head_boundary_packages = forms.MultipleChoiceField(choices=specifiedHeadBoundaryPackageChoices,
@@ -340,6 +346,9 @@ class BoundaryConditionValidationForm(forms.Form):
                                                                  required=False)
     head_dependent_flux_boundary_packages = forms.MultipleChoiceField(choices=headDependentFluxBoundaryPackageChoices,
                                                                       required=False)
+    other_specified_head_boundary_packages = forms.CharField(max_length=200, required=False)
+    other_specified_flux_boundary_packages = forms.CharField(max_length=200, required=False)
+    other_head_dependent_flux_boundary_packages = forms.CharField(max_length=200, required=False)
 
 
 # ModelCalibration element forms

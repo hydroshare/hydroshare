@@ -341,7 +341,10 @@ class TestMODFLOWModelInstanceMetaData(MockIRODSTestCaseMixin, TransactionTestCa
         self.resMODFLOWModelInstance.metadata.create_element('BoundaryCondition',
                                                              specified_head_boundary_packages=spec_hd_bd_pkgs,
                                                              specified_flux_boundary_packages=spec_fx_bd_pkgs,
-                                                             head_dependent_flux_boundary_packages=hd_dep_fx_pkgs)
+                                                             head_dependent_flux_boundary_packages=hd_dep_fx_pkgs,
+                                                             other_specified_head_boundary_packages='JMS',
+                                                             other_specified_flux_boundary_packages='MMM',
+                                                             other_head_dependent_flux_boundary_packages='JLG')
         modelparam_element = self.resMODFLOWModelInstance.metadata.boundary_condition
         self.assertNotEqual(modelparam_element, None)
 
@@ -359,6 +362,11 @@ class TestMODFLOWModelInstanceMetaData(MockIRODSTestCaseMixin, TransactionTestCa
         added_packages = modelparam_element.get_head_dependent_flux_boundary_packages()
         for intended_package in hd_dep_fx_pkgs:
             self.assertEquals(intended_package in added_packages, True)
+
+        # check other packages
+        self.assetEquals(modeloutput_element.other_specified_head_boundary_packages, 'JMS')
+        self.assetEquals(modeloutput_element.other_specified_flux_boundary_packages, 'MMM')
+        self.assetEquals(modeloutput_element.other_head_dependent_flux_boundary_packages, 'MMM')
 
         # try to create another boundarycondition - it would raise an exception
         with self.assertRaises(IntegrityError):
@@ -622,7 +630,10 @@ class TestMODFLOWModelInstanceMetaData(MockIRODSTestCaseMixin, TransactionTestCa
                            self.resMODFLOWModelInstance.metadata.boundary_condition.id,
                            specified_head_boundary_packages=spec_hd_bd_pkgs,
                            specified_flux_boundary_packages=spec_fx_bd_pkgs,
-                           head_dependent_flux_boundary_packages=hd_dep_fx_pkgs)
+                           head_dependent_flux_boundary_packages=hd_dep_fx_pkgs,
+                           other_specified_head_boundary_packages="AAA",
+                           other_specified_flux_boundary_packages="BBB",
+                           other_head_dependent_flux_boundary_packages="CCC")
         modelparam_element = self.resMODFLOWModelInstance.metadata.boundary_condition
         self.assertNotEqual(modelparam_element, None)
 
@@ -640,6 +651,12 @@ class TestMODFLOWModelInstanceMetaData(MockIRODSTestCaseMixin, TransactionTestCa
         added_packages = modelparam_element.get_head_dependent_flux_boundary_packages()
         for intended_package in hd_dep_fx_pkgs:
             self.assertEquals(intended_package in added_packages, True)
+
+        # check other packages
+        self.assetEquals(modeloutput_element.other_specified_head_boundary_packages, 'AAA')
+        self.assetEquals(modeloutput_element.other_specified_flux_boundary_packages, 'BBB')
+        self.assetEquals(modeloutput_element.other_head_dependent_flux_boundary_packages, 'CCC')
+
 
         # update modelcalibration
         self.resMODFLOWModelInstance.metadata.update_element('ModelCalibration',
