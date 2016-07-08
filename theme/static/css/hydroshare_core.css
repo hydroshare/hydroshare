@@ -3682,6 +3682,11 @@ div.group-add-photo {
 	display: inline-block;
 }
 
+#discovery-main {
+	margin-left: 250px;
+	margin-right:250px;
+}
+
 #discover-filter-buttons {
 	margin-bottom: 10px;
 }

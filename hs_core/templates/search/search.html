@@ -2,14 +2,14 @@
 {% load geoanalytics_tags pages_tags mezzanine_tags keyword_tags comment_tags hydroshare_tags %}
 {% block title %}Discovery{% endblock %}
 {% block main %}
-<div class="container" id="main">
+<div id="discovery-main">
     <div class="row">
         <div class="col-sm-12">
             <h2 class="page-title">Discover
                 <small class="text-muted"><i>Find content shared by your colleagues and other users.</i></small>
             </h2>
         </div>
-        <div class="col-sm-8 col-sm-offset-4 col-xs-12">
+        <div class="col-sm-9 col-sm-offset-3 col-xs-12">
             <button class="btn btn-info" data-toggle="popover" data-placement="right"><i
                     class="glyphicon glyphicon-info-sign"></i></button>
 
@@ -27,7 +27,7 @@
             </div>
             <br>
         </div>
-        <div class="col-sm-4 col-xs-12" id="facets">
+        <div class="col-sm-3 col-xs-12" id="facets">
             <div id="filter-buttons">
                 <button class="btn btn-default" onclick="clearAllFaceted()">Show All</button>
             </div>
@@ -120,7 +120,7 @@
                 </div>
             </div>
         </div>
-        <div class="col-sm-8 col-xs-12" id="items">
+        <div class="col-sm-9 col-xs-12" id="items">
             <div>
                 <form id="date-search-fields" method="get" action=".">
                     <h4 class="text-muted">Temporal Coverage</h4>
@@ -574,6 +574,7 @@
             });
 
             var dz = map.getDragZoomObject();
+
             google.maps.event.addListener(dz, 'dragend', function (bnds) {
                 map.setCenter(bnds.getCenter());
                 map.setZoom(getBoundsZoomLevel(bnds, mapDim));
