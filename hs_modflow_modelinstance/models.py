@@ -116,7 +116,7 @@ class StressPeriod(AbstractMetaDataElement):
     stressPeriodTypeChoices = (('Steady', 'Steady'), ('Transient', 'Transient'),
                                ('Steady and Transient', 'Steady and Transient'),)
     transientStateValueTypeChoices = (('Annually', 'Annually'), ('Monthly', 'Monthly'),
-                                      ('Daily', 'Daily'), ('Hourly', 'Hourly'),)
+                                      ('Daily', 'Daily'), ('Hourly', 'Hourly'),('Other', 'Other'),)
 
     stressPeriodType = models.CharField(max_length=100, choices=stressPeriodTypeChoices, null=True, blank=True,
                                         verbose_name='Type')

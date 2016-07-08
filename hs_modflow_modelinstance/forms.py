@@ -15,7 +15,7 @@ gridTypeChoices = (('Choose a type', 'Choose a type'), ('Regular', 'Regular'), (
 stressPeriodTypeChoices = (('Choose a type', 'Choose a type'), ('Steady', 'Steady'), ('Transient', 'Transient'),
                            ('Steady and Transient', 'Steady and Transient'),)
 transientStateValueTypeChoices = (('Choose a type', 'Choose a type'), ('Annually', 'Annually'), ('Monthly', 'Monthly'),
-                                  ('Daily', 'Daily'), ('Hourly', 'Hourly'),)
+                                  ('Daily', 'Daily'), ('Hourly', 'Hourly'), ('Other', 'Other'))
 flowPackageChoices = (('Choose a package', 'Choose a package'), ('BCF6', 'BCF6'), ('LPF', 'LPF'), ('HUF2', 'HUF2'),
                       ('UPW', 'UPW'), ('HFB6', 'HFB6'), ('UZF', 'UZF'), ('SWI2', 'SWI2'),)
 flowParameterChoices = (('Choose a parameter', 'Choose a parameter'),
