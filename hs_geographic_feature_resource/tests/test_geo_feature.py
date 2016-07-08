@@ -520,7 +520,7 @@ class TestGeoFeature(TransactionTestCase):
     def test_single_point_shp(self):
 
         shp_full_path = "hs_geographic_feature_resource/tests/single_point_shp/logan_Outletmv.shp"
-        meta_array, meta_dict = parsed_md_dict=parse_shp_zshp("", "", "", "", shp_full_path)
+        _, meta_dict = parse_shp_zshp("", "", "", "", shp_full_path)
         coverage_dict = meta_dict.get("coverage", None)
         self.assertNotEqual(coverage_dict, None)
         self.assertEqual(coverage_dict["Coverage"]["type"].lower(), "point")
