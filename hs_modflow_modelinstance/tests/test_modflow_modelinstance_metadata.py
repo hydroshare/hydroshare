@@ -364,9 +364,9 @@ class TestMODFLOWModelInstanceMetaData(MockIRODSTestCaseMixin, TransactionTestCa
             self.assertEquals(intended_package in added_packages, True)
 
         # check other packages
-        self.assetEquals(modeloutput_element.other_specified_head_boundary_packages, 'JMS')
-        self.assetEquals(modeloutput_element.other_specified_flux_boundary_packages, 'MMM')
-        self.assetEquals(modeloutput_element.other_head_dependent_flux_boundary_packages, 'MMM')
+        self.assertEquals(modelparam_element.other_specified_head_boundary_packages, 'JMS')
+        self.assertEquals(modelparam_element.other_specified_flux_boundary_packages, 'MMM')
+        self.assertEquals(modelparam_element.other_head_dependent_flux_boundary_packages, 'JLG')
 
         # try to create another boundarycondition - it would raise an exception
         with self.assertRaises(IntegrityError):
@@ -653,9 +653,9 @@ class TestMODFLOWModelInstanceMetaData(MockIRODSTestCaseMixin, TransactionTestCa
             self.assertEquals(intended_package in added_packages, True)
 
         # check other packages
-        self.assetEquals(modeloutput_element.other_specified_head_boundary_packages, 'AAA')
-        self.assetEquals(modeloutput_element.other_specified_flux_boundary_packages, 'BBB')
-        self.assetEquals(modeloutput_element.other_head_dependent_flux_boundary_packages, 'CCC')
+        self.assertEquals(modelparam_element.other_specified_head_boundary_packages, 'AAA')
+        self.assertEquals(modelparam_element.other_specified_flux_boundary_packages, 'BBB')
+        self.assertEquals(modelparam_element.other_head_dependent_flux_boundary_packages, 'CCC')
 
 
         # update modelcalibration

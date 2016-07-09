@@ -286,9 +286,11 @@ class BoundaryCondition(AbstractMetaDataElement):
         kwargs = cls._validate_params(**kwargs)
         model_boundary_condition = super(BoundaryCondition, cls)\
             .create(content_object=kwargs['content_object'],
-                    other_specified_head_boundary_packages=kwargs['other_specified_head_boundary_packages'],
-                    other_specified_flux_boundary_packages=kwargs['other_specified_flux_boundary_packages'],
-                    other_head_dependent_flux_boundary_packages=kwargs['other_head_dependent_flux_boundary_packages'])
+                    other_specified_head_boundary_packages=kwargs.get('other_specified_head_boundary_packages', ''),
+                    other_specified_flux_boundary_packages=kwargs.get('other_specified_flux_boundary_packages', ''),
+                    other_head_dependent_flux_boundary_packages=
+                                                       kwargs.get('other_head_dependent_flux_boundary_packages', '')
+                    )
         cls._add_specified_head_boundary_packages(model_boundary_condition, kwargs['specified_head_boundary_packages'])
         cls._add_specified_flux_boundary_packages(model_boundary_condition, kwargs['specified_flux_boundary_packages'])
         cls._add_head_dependent_flux_boundary_packages(model_boundary_condition,
