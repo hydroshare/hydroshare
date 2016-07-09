@@ -129,7 +129,10 @@
 
         $(document).ready(function () {
 
-            $('.label-file-name').each(function () {
+            var edit_mode = "{{edit_mode}}";
+            if (edit_mode.toLowerCase() == "true")
+            {
+                $('.label-file-name').each(function () {
                         var filename = $(this).text().trim().toLowerCase();
                         var extension = filename.substring(filename.length - 4, filename.length);
                         if (extension == ".shp" || extension == ".shx" || extension == ".dbf") {
@@ -143,7 +146,9 @@
                             $("#" + tag_id2).children().find("div[class='modal-body']").html(del_msg_prj);
                         } // else
                     } // function
-            ); //each
+                ); //each
+            }
+
         })
     </script>
 
