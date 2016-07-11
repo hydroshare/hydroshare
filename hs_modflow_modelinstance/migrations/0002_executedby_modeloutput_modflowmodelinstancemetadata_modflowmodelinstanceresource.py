@@ -1,14 +1,14 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 
-from django.db import models, migrations
+from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('hs_core', '0016_merge'),
         ('hs_modelinstance', '0006_auto_20151216_1511'),
+        ('hs_core', '0026_merge'),
         ('hs_modflow_modelinstance', '0001_initial'),
     ]
 
@@ -18,8 +18,6 @@ class Migration(migrations.Migration):
             fields=[
                 ('modelinstancemetadata_ptr', models.OneToOneField(parent_link=True, auto_created=True, primary_key=True, serialize=False, to='hs_modelinstance.ModelInstanceMetaData')),
             ],
-            options={
-            },
             bases=('hs_modelinstance.modelinstancemetadata',),
         ),
         migrations.CreateModel(
