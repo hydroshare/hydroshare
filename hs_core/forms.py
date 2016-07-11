@@ -827,6 +827,13 @@ class IdentifierForm(ModelForm):
         # fields that will be displayed are specified here - but not necessarily in the same order
         fields = ['name', 'url']
 
+    def clean(self):
+        data = self.cleaned_data
+        if data['name'].lower() == 'hydroshareidentifier':
+            raise forms.ValidationError("Identifier name attribute can't have a value "
+                                        "of '{}'.".format(data['name']))
+        return data
+
 
 class FormatFormSetHelper(FormHelper):
     def __init__(self, *args, **kwargs):
