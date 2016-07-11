@@ -114,7 +114,7 @@ def time_series_from_service(request):
             noDataValue = ts['noDataValue']
 
             tempdir = tempfile.mkdtemp()
-            ts_utils.create_vis_2(path=tempdir, site_name=site, data=data, xlabel='Date',
+            ts_utils.create_vis_2(path=tempdir, data=data, xlabel='Date',
                                 variable_name=variable_name, units=units, noDataValue=noDataValue,
                                 predefined_name=PREVIEW_NAME)
             tempdir_last_six_chars = tempdir[-6:]
