@@ -1,6 +1,7 @@
 from django.dispatch import receiver
 
-from hs_core.signals import pre_metadata_element_create, pre_metadata_element_update, pre_create_resource
+from hs_core.signals import pre_metadata_element_create, pre_metadata_element_update, \
+    pre_create_resource
 
 from hs_modflow_modelinstance.models import MODFLOWModelInstanceResource
 from hs_modflow_modelinstance.forms import ModelOutputValidationForm, ExecutedByValidationForm,\
@@ -23,7 +24,7 @@ def metadata_element_pre_create_handler(sender, **kwargs):
 
 @receiver(pre_metadata_element_update, sender=MODFLOWModelInstanceResource)
 def metadata_element_pre_update_handler(sender, **kwargs):
-    return _process_metadata_update_create(update_or_create='update',**kwargs)
+    return _process_metadata_update_create(update_or_create='update', **kwargs)
 
 
 def _process_metadata_update_create(update_or_create, **kwargs):
@@ -48,9 +49,9 @@ def _process_metadata_update_create(update_or_create, **kwargs):
         element_form = ModelCalibrationValidationForm(request.POST)
     elif element_name == 'modelinput':
         if update_or_create == 'update':
-            # since modelinput is a repeatable element and modelinput data is displayed on the landing page
-            # using formset, the data coming from a single modelinput form in the request for update
-            # needs to be parsed to match with modelinput field names
+            # since modelinput is a repeatable element and modelinput data is displayed on the
+            # landing page using formset, the data coming from a single modelinput form in the
+            # request for update needs to be parsed to match with modelinput field names
             form_data = {}
             for field_name in ModelInputValidationForm().fields:
                 matching_key = [key for key in request.POST if '-'+field_name in key][0]

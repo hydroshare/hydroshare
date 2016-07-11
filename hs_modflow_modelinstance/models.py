@@ -8,15 +8,16 @@ from mezzanine.pages.page_processors import processor_for
 
 import os
 
-from hs_core.models import BaseResource, ResourceManager, resource_processor, AbstractMetaDataElement
+from hs_core.models import BaseResource, ResourceManager, resource_processor, \
+    AbstractMetaDataElement
 
 from hs_modelinstance.models import ModelInstanceMetaData, ModelOutput, ExecutedBy
 
 
 def delete_if_empty(term_obj):
     all_blank = True
-    standard_elements = ['content_type_id', '_state', 'object_id', 'content_type_id', 'id', '_content_type_cache',
-                         '_content_object_cache']
+    standard_elements = ['content_type_id', '_state', 'object_id', 'content_type_id', 'id',
+                         '_content_type_cache', '_content_object_cache']
     for attr, val in vars(term_obj).iteritems():
         if attr not in standard_elements and val != '' and val != []:
             all_blank = False
@@ -116,16 +117,23 @@ class StressPeriod(AbstractMetaDataElement):
     stressPeriodTypeChoices = (('Steady', 'Steady'), ('Transient', 'Transient'),
                                ('Steady and Transient', 'Steady and Transient'),)
     transientStateValueTypeChoices = (('Annually', 'Annually'), ('Monthly', 'Monthly'),
-                                      ('Daily', 'Daily'), ('Hourly', 'Hourly'),('Other', 'Other'),)
+                                      ('Daily', 'Daily'), ('Hourly', 'Hourly'), ('Other', 'Other'),)
 
-    stressPeriodType = models.CharField(max_length=100, choices=stressPeriodTypeChoices, null=True, blank=True,
+    stressPeriodType = models.CharField(max_length=100,
+                                        choices=stressPeriodTypeChoices, null=True, blank=True,
                                         verbose_name='Type')
     steadyStateValue = models.CharField(max_length=100, null=True, blank=True,
                                         verbose_name='Length of steady state stress period(s)')
-    transientStateValueType = models.CharField(max_length=100, choices=transientStateValueTypeChoices, null=True,
-                                               verbose_name='Type of transient state stress period(s)')
-    transientStateValue = models.CharField(max_length=100, null=True, blank=True,
-                                           verbose_name='Length of transient state stress period(s)')
+    transientStateValueType = \
+        models.CharField(max_length=100,
+                         choices=transientStateValueTypeChoices,
+                         null=True,
+                         verbose_name='Type of transient state stress period(s)')
+    transientStateValue = \
+        models.CharField(max_length=100,
+                         null=True,
+                         blank=True,
+                         verbose_name='Length of transient state stress period(s)')
 
     def __unicode__(self):
         return self.stressPeriodType
@@ -163,10 +171,10 @@ class GroundWaterFlow(AbstractMetaDataElement):
     flowParameterChoices = (('Hydraulic Conductivity', 'Hydraulic Conductivity'),
                             ('Transmissivity', 'Transmissivity'),)
 
-    flowPackage = models.CharField(max_length=100, choices=flowPackageChoices, null=True, blank=True,
-                                   verbose_name='Flow package')
-    flowParameter = models.CharField(max_length=100, choices=flowParameterChoices, null=True, blank=True,
-                                     verbose_name='Flow parameter')
+    flowPackage = models.CharField(max_length=100, choices=flowPackageChoices, null=True,
+                                   blank=True, verbose_name='Flow package')
+    flowParameter = models.CharField(max_length=100, choices=flowParameterChoices, null=True,
+                                     blank=True, verbose_name='Flow parameter')
 
     def __unicode__(self):
         return self.flowPackage
@@ -222,18 +230,24 @@ class BoundaryCondition(AbstractMetaDataElement):
     term = 'BoundaryCondition'
     specifiedHeadBoundaryPackageChoices = (('BFH', 'BFH'), ('CHD', 'CHD'), ('FHB', 'FHB'),)
     specifiedFluxBoundaryPackageChoices = (('FHB', 'FHB'), ('RCH', 'RCH'), ('WEL', 'WEL'),)
-    headDependentFluxBoundaryPackageChoices = (('DAF', 'DAF'), ('DAFG', 'DAFG'), ('DRN', 'DRN'), ('DRT', 'DRT'),
-                                               ('ETS', 'ETS'), ('EVT', 'EVT'), ('GHB', 'GHB'), ('LAK', 'LAK'),
-                                               ('MNW1', 'MNW1'), ('MNW2', 'MNW2'), ('RES', 'RES'), ('RIP', 'RIP'),
-                                               ('RIV', 'RIV'), ('SFR', 'SFR'), ('STR', 'STR'), ('UZF', 'UZF'),)
-    specified_head_boundary_packages = models.ManyToManyField(SpecifiedHeadBoundaryPackageChoices, blank=True)
+    headDependentFluxBoundaryPackageChoices = (('DAF', 'DAF'), ('DAFG', 'DAFG'), ('DRN', 'DRN'),
+                                               ('DRT', 'DRT'), ('ETS', 'ETS'), ('EVT', 'EVT'),
+                                               ('GHB', 'GHB'), ('LAK', 'LAK'), ('MNW1', 'MNW1'),
+                                               ('MNW2', 'MNW2'), ('RES', 'RES'), ('RIP', 'RIP'),
+                                               ('RIV', 'RIV'), ('SFR', 'SFR'), ('STR', 'STR'),
+                                               ('UZF', 'UZF'),)
+    specified_head_boundary_packages = models.ManyToManyField(SpecifiedHeadBoundaryPackageChoices,
+                                                              blank=True)
     other_specified_head_boundary_packages = models.CharField(max_length=200, null=True, blank=True,
                                                               verbose_name='Other packages')
-    specified_flux_boundary_packages = models.ManyToManyField(SpecifiedFluxBoundaryPackageChoices, blank=True)
+    specified_flux_boundary_packages = models.ManyToManyField(SpecifiedFluxBoundaryPackageChoices,
+                                                              blank=True)
     other_specified_flux_boundary_packages = models.CharField(max_length=200, null=True, blank=True,
                                                               verbose_name='Other packages')
-    head_dependent_flux_boundary_packages = models.ManyToManyField(HeadDependentFluxBoundaryPackageChoices, blank=True)
-    other_head_dependent_flux_boundary_packages = models.CharField(max_length=200, null=True, blank=True,
+    head_dependent_flux_boundary_packages = \
+        models.ManyToManyField(HeadDependentFluxBoundaryPackageChoices, blank=True)
+    other_head_dependent_flux_boundary_packages = models.CharField(max_length=200, null=True,
+                                                                   blank=True,
                                                                    verbose_name='Other packages')
 
     # may be this could cause a problem
@@ -245,13 +259,16 @@ class BoundaryCondition(AbstractMetaDataElement):
         unique_together = ("content_type", "object_id")
 
     def get_specified_head_boundary_packages(self):
-        return ', '.join([types.description for types in self.specified_head_boundary_packages.all()])
+        return ', '.join([types.description for types in
+                          self.specified_head_boundary_packages.all()])
 
     def get_specified_flux_boundary_packages(self):
-        return ', '.join([packages.description for packages in self.specified_flux_boundary_packages.all()])
+        return ', '.join([packages.description for packages in
+                          self.specified_flux_boundary_packages.all()])
 
     def get_head_dependent_flux_boundary_packages(self):
-        return ', '.join([packages.description for packages in self.head_dependent_flux_boundary_packages.all()])
+        return ', '.join([packages.description for packages in
+                          self.head_dependent_flux_boundary_packages.all()])
 
     @classmethod
     def _add_specified_head_boundary_packages(cls, boundary_packages, packages):
@@ -284,17 +301,23 @@ class BoundaryCondition(AbstractMetaDataElement):
     @classmethod
     def create(cls, **kwargs):
         kwargs = cls._validate_params(**kwargs)
-        model_boundary_condition = super(BoundaryCondition, cls)\
-            .create(content_object=kwargs['content_object'],
-                    other_specified_head_boundary_packages=kwargs.get('other_specified_head_boundary_packages', ''),
-                    other_specified_flux_boundary_packages=kwargs.get('other_specified_flux_boundary_packages', ''),
-                    other_head_dependent_flux_boundary_packages=
-                                                       kwargs.get('other_head_dependent_flux_boundary_packages', '')
+        model_boundary_condition = super(BoundaryCondition, cls).create(
+            content_object=kwargs['content_object'],
+            other_specified_head_boundary_packages=kwargs.get(
+                'other_specified_head_boundary_packages', ''),
+            other_specified_flux_boundary_packages=kwargs.get(
+                'other_specified_flux_boundary_packages', ''),
+            other_head_dependent_flux_boundary_packages=kwargs.get(
+                'other_head_dependent_flux_boundary_packages', '')
                     )
-        cls._add_specified_head_boundary_packages(model_boundary_condition, kwargs['specified_head_boundary_packages'])
-        cls._add_specified_flux_boundary_packages(model_boundary_condition, kwargs['specified_flux_boundary_packages'])
+        cls._add_specified_head_boundary_packages(model_boundary_condition,
+                                                  kwargs['specified_head_boundary_packages'])
+        cls._add_specified_flux_boundary_packages(model_boundary_condition,
+                                                  kwargs['specified_flux_boundary_packages'])
         cls._add_head_dependent_flux_boundary_packages(model_boundary_condition,
-                                                       kwargs['head_dependent_flux_boundary_packages'])
+                                                       kwargs[
+                                                           'head_dependent_flux_boundary_packages'
+                                                       ])
 
         return model_boundary_condition
 
@@ -306,17 +329,22 @@ class BoundaryCondition(AbstractMetaDataElement):
             if 'specified_head_boundary_packages' in kwargs:
                 model_boundary_condition.specified_head_boundary_packages.clear()
                 cls._add_specified_head_boundary_packages(model_boundary_condition,
-                                                          kwargs['specified_head_boundary_packages'])
+                                                          kwargs[
+                                                              'specified_head_boundary_packages'
+                                                          ])
 
             if 'specified_flux_boundary_packages' in kwargs:
                 model_boundary_condition.specified_flux_boundary_packages.clear()
                 cls._add_specified_flux_boundary_packages(model_boundary_condition,
-                                                          kwargs['specified_flux_boundary_packages'])
+                                                          kwargs[
+                                                              'specified_flux_boundary_packages'
+                                                          ])
 
             if 'head_dependent_flux_boundary_packages' in kwargs:
                 model_boundary_condition.head_dependent_flux_boundary_packages.clear()
-                cls._add_head_dependent_flux_boundary_packages(model_boundary_condition,
-                                                               kwargs['head_dependent_flux_boundary_packages'])
+                cls._add_head_dependent_flux_boundary_packages(
+                    model_boundary_condition,
+                    kwargs['head_dependent_flux_boundary_packages'])
             if 'other_specified_head_boundary_packages' in kwargs:
                 model_boundary_condition.other_specified_head_boundary_packages = \
                     kwargs['other_specified_head_boundary_packages']
@@ -328,14 +356,19 @@ class BoundaryCondition(AbstractMetaDataElement):
                     kwargs['other_head_dependent_flux_boundary_packages']
 
             model_boundary_condition.save()
-            num_sp_hd_bdy_pckgs = len(model_boundary_condition.get_specified_head_boundary_packages())
-            num_sp_fx_bdy_pckgs = len(model_boundary_condition.get_specified_flux_boundary_packages())
-            num_hd_dp_bdy_pckgs = len(model_boundary_condition.get_head_dependent_flux_boundary_packages())
+            num_sp_hd_bdy_pckgs = \
+                len(model_boundary_condition.get_specified_head_boundary_packages())
+            num_sp_fx_bdy_pckgs = \
+                len(model_boundary_condition.get_specified_flux_boundary_packages())
+            num_hd_dp_bdy_pckgs = \
+                len(model_boundary_condition.get_head_dependent_flux_boundary_packages())
             if num_hd_dp_bdy_pckgs + num_sp_fx_bdy_pckgs + num_sp_hd_bdy_pckgs == 0:
                 delete_if_empty(model_boundary_condition)
 
         else:
-            raise ObjectDoesNotExist("No BoundaryCondition element was found for the provided id:%s" % kwargs['id'])
+            raise ObjectDoesNotExist(
+                "No BoundaryCondition element was found for the provided id:%s" % kwargs['id']
+            )
 
     @classmethod
     def _validate_params(cls, **kwargs):
@@ -360,10 +393,14 @@ class ModelCalibration(AbstractMetaDataElement):
 
     calibratedParameter = models.CharField(max_length=200, null=True, blank=True,
                                            verbose_name='Calibrated parameter(s)')
-    observationType = models.CharField(max_length=200, null=True, blank=True, verbose_name='Observation type(s)')
-    observationProcessPackage = models.CharField(max_length=100, choices=observationProcessPackageChoices, null=True,
-                                                 blank=True, verbose_name='Observation process package')
-    calibrationMethod = models.CharField(max_length=200, null=True, blank=True, verbose_name='Calibration method(s)')
+    observationType = models.CharField(max_length=200, null=True, blank=True,
+                                       verbose_name='Observation type(s)')
+    observationProcessPackage = models.CharField(max_length=100,
+                                                 choices=observationProcessPackageChoices,
+                                                 null=True, blank=True,
+                                                 verbose_name='Observation process package')
+    calibrationMethod = models.CharField(max_length=200, null=True, blank=True,
+                                         verbose_name='Calibration method(s)')
 
     def __unicode__(self):
         return self.calibratedParameter
@@ -395,7 +432,8 @@ class ModelCalibration(AbstractMetaDataElement):
 class ModelInput(AbstractMetaDataElement):
     term = 'ModelInput'
     inputType = models.CharField(max_length=200, null=True, blank=True, verbose_name='Type')
-    inputSourceName = models.CharField(max_length=200, null=True, blank=True, verbose_name='Source name')
+    inputSourceName = models.CharField(max_length=200, null=True, blank=True,
+                                       verbose_name='Source name')
     inputSourceURL = models.URLField(null=True, blank=True, verbose_name='Source URL')
 
     def __unicode__(self):
@@ -413,15 +451,17 @@ class GeneralElements(AbstractMetaDataElement):
     term = 'GeneralElements'
     modelSolverChoices = (('DE4', 'DE4'), ('GMG', 'GMG'), ('LMG', 'LMG'), ('PCG', 'PCG'),
                           ('PCGN', 'PCGN'), ('SIP', 'SIP'), ('SOR', 'SOR'), ('NWT', 'NWT'),)
-    outputControlPackageChoices = (('GAGE', 'GAGE'), ('HYD', 'HYD'), ('LMT6', 'LMT6'), ('MNWI', 'MNWI'), ('OC', 'OC'),)
+    outputControlPackageChoices = (('GAGE', 'GAGE'), ('HYD', 'HYD'), ('LMT6', 'LMT6'),
+                                   ('MNWI', 'MNWI'), ('OC', 'OC'),)
     subsidencePackageChoices = (('IBS', 'IBS'), ('SUB', 'SUB'), ('SWT', 'SWT'),)
 
-    modelParameter = models.CharField(max_length=200, null=True, blank=True, verbose_name='Model parameter(s)')
-    modelSolver = models.CharField(max_length=100, choices=modelSolverChoices, null=True, blank=True,
-                                   verbose_name='Model solver')
+    modelParameter = models.CharField(max_length=200, null=True, blank=True,
+                                      verbose_name='Model parameter(s)')
+    modelSolver = models.CharField(max_length=100, choices=modelSolverChoices, null=True,
+                                   blank=True, verbose_name='Model solver')
     output_control_package = models.ManyToManyField(OutputControlPackageChoices, blank=True)
-    subsidencePackage = models.CharField(max_length=100, choices=subsidencePackageChoices, null=True, blank=True,
-                                         verbose_name='Subsidence package')
+    subsidencePackage = models.CharField(max_length=100, choices=subsidencePackageChoices,
+                                         null=True, blank=True, verbose_name='Subsidence package')
 
     def __unicode__(self):
         return self.modelParameter
@@ -445,10 +485,14 @@ class GeneralElements(AbstractMetaDataElement):
     @classmethod
     def create(cls, **kwargs):
         kwargs = cls._validate_params(**kwargs)
-        general_elements = super(GeneralElements, cls).create(content_object=kwargs['content_object'],
-                                                              modelParameter=kwargs['modelParameter'],
-                                                              modelSolver=kwargs['modelSolver'],
-                                                              subsidencePackage=kwargs['subsidencePackage'])
+        general_elements = super(GeneralElements, cls).create(content_object=kwargs[
+                                                                  'content_object'],
+                                                              modelParameter=kwargs[
+                                                                  'modelParameter'],
+                                                              modelSolver=kwargs[
+                                                                  'modelSolver'],
+                                                              subsidencePackage=kwargs[
+                                                                  'subsidencePackage'])
         cls._add_output_control_package(general_elements, kwargs['output_control_package'])
 
         return general_elements
@@ -460,10 +504,14 @@ class GeneralElements(AbstractMetaDataElement):
         if general_elements:
             if 'output_control_package' in kwargs:
                 general_elements = super(GeneralElements, cls).update(general_elements.id,
-                                                                      content_object=kwargs['content_object'],
-                                                                      modelParameter=kwargs['modelParameter'],
-                                                                      modelSolver=kwargs['modelSolver'],
-                                                                      subsidencePackage=kwargs['subsidencePackage'])
+                                                                      content_object=kwargs[
+                                                                          'content_object'],
+                                                                      modelParameter=kwargs[
+                                                                          'modelParameter'],
+                                                                      modelSolver=kwargs[
+                                                                          'modelSolver'],
+                                                                      subsidencePackage=kwargs[
+                                                                          'subsidencePackage'])
 
                 general_elements.output_control_package.clear()
                 cls._add_output_control_package(general_elements, kwargs['output_control_package'])
@@ -478,7 +526,8 @@ class GeneralElements(AbstractMetaDataElement):
             if key == 'modelSolver':
                 kwargs[key] = validate_choice(val, cls.modelSolverChoices)
             elif key == 'output_control_package':
-                kwargs[key] = [validate_choice(package, cls.outputControlPackageChoices) for package in kwargs[key]]
+                kwargs[key] = [validate_choice(package, cls.outputControlPackageChoices) for package
+                               in kwargs[key]]
             elif key == 'subsidencePackage':
                 kwargs[key] = validate_choice(val, cls.subsidencePackageChoices)
         return kwargs
@@ -542,8 +591,8 @@ class MODFLOWModelInstanceResource(BaseResource):
                         rows = rows.strip()
                         rows = rows.split(" ")
                         r = rows[0].strip()
-                        if not r.startswith('#') and r != '' and r.lower() != 'list' and r.lower() != 'data' \
-                                and r.lower() != 'data(binary)':
+                        if not r.startswith('#') and r != '' and r.lower() != 'list' \
+                                and r.lower() != 'data' and r.lower() != 'data(binary)':
                             reqd_files.append(rows[-1].strip())
         return nam_file_count, reqd_files, existing_files
 
@@ -629,7 +678,8 @@ class MODFLOWModelInstanceMetaData(ModelInstanceMetaData):
             self.add_metadata_element_to_xml(container, self.study_area, studyAreaFields)
 
         if self.grid_dimensions:
-            gridDimensionsFields = ['numberOfLayers', 'typeOfRows', 'numberOfRows', 'typeOfColumns', 'numberOfColumns']
+            gridDimensionsFields = ['numberOfLayers', 'typeOfRows', 'numberOfRows', 'typeOfColumns',
+                                    'numberOfColumns']
             self.add_metadata_element_to_xml(container, self.grid_dimensions, gridDimensionsFields)
 
         if self.stress_period:
@@ -639,33 +689,38 @@ class MODFLOWModelInstanceMetaData(ModelInstanceMetaData):
 
         if self.ground_water_flow:
             groundWaterFlowFields = ['flowPackage', 'flowParameter']
-            self.add_metadata_element_to_xml(container, self.ground_water_flow, groundWaterFlowFields)
+            self.add_metadata_element_to_xml(container, self.ground_water_flow,
+                                             groundWaterFlowFields)
 
         if self.boundary_condition:
-            hsterms_boundary = etree.SubElement(container, '{%s}BoundaryCondition' % self.NAMESPACES['hsterms'])
+            hsterms_boundary = etree.SubElement(container,
+                                                '{%s}BoundaryCondition' %
+                                                self.NAMESPACES['hsterms'])
             hsterms_boundary_rdf_Description = \
                 etree.SubElement(hsterms_boundary, '{%s}Description' % self.NAMESPACES['rdf'])
 
             if self.boundary_condition.specified_head_boundary_packages:
                 hsterms_boundary_package = \
                     etree.SubElement(hsterms_boundary_rdf_Description,
-                                     '{%s}specifiedHeadBoundaryPackages' % self.NAMESPACES['hsterms'])
+                                     '{%s}specifiedHeadBoundaryPackages' %
+                                     self.NAMESPACES['hsterms'])
                 if len(self.boundary_condition.get_specified_head_boundary_packages()) == 0 and \
-                    self.boundary_condition.other_specified_head_boundary_packages:
+                        self.boundary_condition.other_specified_head_boundary_packages:
                         hsterms_boundary_package.text = \
                             self.boundary_condition.other_specified_head_boundary_packages
                 elif len(self.boundary_condition.get_specified_head_boundary_packages()) != 0 and \
-                     not self.boundary_condition.other_specified_head_boundary_packages:
+                        not self.boundary_condition.other_specified_head_boundary_packages:
                         hsterms_boundary_package.text = \
                             self.boundary_condition.get_specified_head_boundary_packages()
                 else:    
                         hsterms_boundary_package.text = \
-                            self.boundary_condition.get_specified_head_boundary_packages() + ', ' + \
+                            self.boundary_condition.get_specified_head_boundary_packages() + ', ' +\
                             self.boundary_condition.other_specified_head_boundary_packages
             if self.boundary_condition.specified_flux_boundary_packages:
                 hsterms_boundary_package = \
                     etree.SubElement(hsterms_boundary_rdf_Description,
-                                     '{%s}specifiedFluxBoundaryPackages' % self.NAMESPACES['hsterms'])
+                                     '{%s}specifiedFluxBoundaryPackages' %
+                                     self.NAMESPACES['hsterms'])
                 if len(self.boundary_condition.get_specified_flux_boundary_packages()) == 0 and \
                         self.boundary_condition.other_specified_flux_boundary_packages:
                     hsterms_boundary_package.text = \
@@ -682,24 +737,27 @@ class MODFLOWModelInstanceMetaData(ModelInstanceMetaData):
             if self.boundary_condition.head_dependent_flux_boundary_packages:
                 hsterms_boundary_package = \
                     etree.SubElement(hsterms_boundary_rdf_Description,
-                                     '{%s}headDependentFluxBoundaryPackages' % self.NAMESPACES['hsterms'])
-                if len(self.boundary_condition.get_head_dependent_flux_boundary_packages()) == 0 and \
-                    self.boundary_condition.other_head_dependent_flux_boundary_packages:
+                                     '{%s}headDependentFluxBoundaryPackages' %
+                                     self.NAMESPACES['hsterms'])
+                if len(self.boundary_condition.get_head_dependent_flux_boundary_packages()) == 0 \
+                        and self.boundary_condition.other_head_dependent_flux_boundary_packages:
                         hsterms_boundary_package.text = \
                             self.boundary_condition.other_head_dependent_flux_boundary_packages
-                elif len(self.boundary_condition.get_head_dependent_flux_boundary_packages()) != 0 and \
-                     not self.boundary_condition.other_head_dependent_flux_boundary_packages:
+                elif len(self.boundary_condition.get_head_dependent_flux_boundary_packages()) != 0 \
+                        and not self.boundary_condition.other_head_dependent_flux_boundary_packages:
                         hsterms_boundary_package.text = \
                             self.boundary_condition.get_head_dependent_flux_boundary_packages()
                 else:    
                         hsterms_boundary_package.text = \
-                            self.boundary_condition.get_head_dependent_flux_boundary_packages() + ', ' + \
+                            self.boundary_condition.get_head_dependent_flux_boundary_packages() + \
+                            ', ' + \
                             self.boundary_condition.other_head_dependent_flux_boundary_packages
 
         if self.model_calibration:
             modelCalibrationFields = ['calibratedParameter', 'observationType',
                                       'observationProcessPackage', 'calibrationMethod']
-            self.add_metadata_element_to_xml(container, self.model_calibration, modelCalibrationFields)
+            self.add_metadata_element_to_xml(container, self.model_calibration,
+                                             modelCalibrationFields)
 
         if self.model_inputs:
             modelInputFields = ['inputType', 'inputSourceName', 'inputSourceURL']
@@ -708,19 +766,23 @@ class MODFLOWModelInstanceMetaData(ModelInstanceMetaData):
         if self.general_elements:
 
             if self.general_elements.modelParameter:
-                model_parameter = etree.SubElement(container, '{%s}modelParameter' % self.NAMESPACES['hsterms'])
+                model_parameter = etree.SubElement(container, '{%s}modelParameter' %
+                                                   self.NAMESPACES['hsterms'])
                 model_parameter.text = self.general_elements.modelParameter
 
             if self.general_elements.modelSolver:
-                model_solver = etree.SubElement(container, '{%s}modelSolver' % self.NAMESPACES['hsterms'])
+                model_solver = etree.SubElement(container, '{%s}modelSolver' %
+                                                self.NAMESPACES['hsterms'])
                 model_solver.text = self.general_elements.modelSolver
 
             if self.general_elements.output_control_package:
-                output_package = etree.SubElement(container, '{%s}outputControlPackage' % self.NAMESPACES['hsterms'])
+                output_package = etree.SubElement(container, '{%s}outputControlPackage' %
+                                                  self.NAMESPACES['hsterms'])
                 output_package.text = self.general_elements.get_output_control_package()
 
             if self.general_elements.subsidencePackage:
-                subsidence_package = etree.SubElement(container, '{%s}subsidencePackage' % self.NAMESPACES['hsterms'])
+                subsidence_package = etree.SubElement(container, '{%s}subsidencePackage' %
+                                                      self.NAMESPACES['hsterms'])
                 subsidence_package.text = self.general_elements.subsidencePackage
 
         return etree.tostring(RDF_ROOT, pretty_print=True)
