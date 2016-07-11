@@ -18,6 +18,7 @@ from mezzanine.utils.cache import add_cache_bypass
 from mezzanine.conf import settings
 
 from localflavor.us.forms import USStateField
+import autocomplete_light
 
 from .models import UserProfile
 from hs_core.hydroshare.users import create_account
@@ -328,15 +329,10 @@ class UserForm(forms.ModelForm):
         return data
 
 
-class UserProfileForm(forms.ModelForm):
+class UserProfileForm(autocomplete_light.ModelForm):
     state = USStateField(required=False)
+    organization = autocomplete_light.ModelChoiceField('OrganizationAutocomplete')
 
     class Meta:
         model = UserProfile
         exclude = ['user', 'public', 'create_irods_user_account']
-
-    def clean_organization(self):
-        data = self.cleaned_data['organization']
-        if len(data.strip()) == 0:
-            raise forms.ValidationError("Organization is a required field.")
-        return data

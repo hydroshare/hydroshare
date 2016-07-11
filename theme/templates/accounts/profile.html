@@ -114,7 +114,7 @@
                                 {#        Organization and Title       #}
                                 {% if profile.organization or profile.title %}
                                     <h4 class="text-muted">
-                                        {% if profile.organization %}{{ profile.organization }}{% endif %}
+                                        {% if profile.organization %}{{ profile.organization.name }}{% endif %}
                                         {% if profile.organization and profile.title %} | {% endif %}
                                         {% if profile.title %}{{ profile.title }}{% endif %}
                                     </h4>
@@ -168,8 +168,8 @@
                                 <div class="row">
                                     {# Organization #}
                                     <fieldset class="col-sm-6">
-                                        <label>Organization *</label>
-                                        <input class="form-control form-required" {% if profile.organization %}value="{{ profile.organization }}"{% endif %} name="organization">
+                                        <label>Organization</label>
+                                        <input id="id_organization" class="form-control autocomplete" {% if profile.organization %}data-value="{{ profile.organization.name }}"{% endif %} name="organization">
                                         <small class="text-muted">The name of the organization you work for.</small>
                                     </fieldset>
 
@@ -873,7 +873,6 @@
 {% block extra_js %}
     <script type="text/javascript" src="{{ STATIC_URL }}js/bootstrap-formhelpers.js"></script>
     <script type="text/javascript">
-
         // Preview profile picture
         function readURL(input) {
             if (input.files && input.files[0]) {
@@ -1197,7 +1196,10 @@
             }
 
             $("tr[data-type='all']").find(".badge").text(collection["total"]);
+
+            var autocomplete = $('#id_organization').yourlabsAutocomplete({
+                url: '{% url "autocomplete_light_autocomplete" autocomplete="OrganizationAutocomplete" %}',
+            });
         });
     </script>
 {% endblock %}
-
