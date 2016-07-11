@@ -841,7 +841,7 @@ def _validate_metadata(metadata_list):
     """
 
     err_message = "Metadata validation failed. Metadata element '{}' was found in value passed " \
-                  "for parameter 'metadata. Though it's a valid element it can't be passed " \
+                  "for parameter 'metadata'. Though it's a valid element it can't be passed " \
                   "as part of 'metadata' parameter."
     for element in metadata_list:
         # here k is the name of the element

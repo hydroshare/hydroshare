@@ -1,4 +1,5 @@
 import json
+from dateutil import parser
 
 from rest_framework import status
 
@@ -114,6 +115,11 @@ class TestCreateResource(HSRESTTestCase):
         resource = get_resource_by_shortkey(res_id)
         self.assertEqual(resource.metadata.coverages.all().count(), 1)
         self.assertEqual(resource.metadata.coverages.filter(type='period').count(), 1)
+        coverage = resource.metadata.coverages.all().first()
+        self.assertEqual(parser.parse(coverage.value['start']).date(),
+                         parser.parse('01/01/2000').date())
+        self.assertEqual(parser.parse(coverage.value['end']).date(),
+                         parser.parse('12/12/2010').date())
         self.assertEqual(resource.metadata.rights.statement, statement)
         self.assertEqual(resource.metadata.rights.url, url)
         self.assertEqual(resource.metadata.language.code, 'fre')

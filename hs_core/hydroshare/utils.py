@@ -568,8 +568,8 @@ def prepare_resource_default_metadata(resource, metadata, res_title):
         metadata.append({'rights': {'statement': statement, 'url': url}})
 
     metadata.append({'identifier': {'name': 'hydroShareIdentifier',
-                                    'url': '{0}/resource{1}{2}'.format(current_site_url(), '/',
-                                                                       resource.short_id)}})
+                                    'url': '{0}/resource/{1}'.format(current_site_url(),
+                                                                     resource.short_id)}})
 
     # remove if there exists the 'type' element as system generates this element
     # remove if there exists 'format' elements - since format elements are system generated based
