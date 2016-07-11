@@ -1,8 +1,5 @@
-import os
 import tempfile
 import shutil
-
-from xml.etree import ElementTree as ET
 
 from django.test import TransactionTestCase
 from django.core.files.uploadedfile import UploadedFile
@@ -15,7 +12,9 @@ from hs_core.hydroshare import utils
 from hs_core.models import CoreMetaData, Creator, Contributor, Coverage, Rights, Title, Language, \
     Publisher, Identifier, Type, Subject, Description, Date, Format, Relation, Source
 from hs_core.testing import MockIRODSTestCaseMixin
-from hs_modflow_modelinstance.models import *
+from hs_modflow_modelinstance.models import MODFLOWModelInstanceResource, \
+    MODFLOWModelInstanceMetaData, ModelOutput, ExecutedBy, StudyArea, GridDimensions, StressPeriod, \
+    GroundWaterFlow, BoundaryCondition, ModelCalibration, ModelInput, GeneralElements
 
 # cmd to run tests: ./hsctl managepy test --keepdb hs_modflow_modelinstance/tests
 
@@ -74,7 +73,6 @@ class TestMODFLOWModelInstanceMetaData(MockIRODSTestCaseMixin, TransactionTestCa
         text_file = open(temp_text_file, 'w')
         text_file.write("Model Instance resource files")
         self.text_file_obj = open(temp_text_file, 'r')
-
 
     def tearDown(self):
         super(TestMODFLOWModelInstanceMetaData, self).tearDown()

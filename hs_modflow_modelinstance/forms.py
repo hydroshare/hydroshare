@@ -1,14 +1,14 @@
 from django.forms import ModelForm
 from django import forms
 from crispy_forms import layout
-from crispy_forms.layout import Layout, Field, HTML
+from crispy_forms.layout import Layout, HTML
 
 from hs_core.forms import BaseFormHelper, Helper
 from hs_core.hydroshare import users
 
 from hs_modelinstance.models import ModelOutput, ExecutedBy
-from hs_modflow_modelinstance.models import StudyArea, GridDimensions, StressPeriod, GroundWaterFlow,\
-    BoundaryCondition, ModelCalibration, ModelInput, GeneralElements
+from hs_modflow_modelinstance.models import StudyArea, GridDimensions, StressPeriod, \
+    GroundWaterFlow, BoundaryCondition, ModelCalibration, ModelInput, GeneralElements
 
 
 gridTypeChoices = (('Choose a type', 'Choose a type'), ('Regular', 'Regular'),

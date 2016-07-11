@@ -1,6 +1,5 @@
 from functools import partial, wraps
 from django.forms import formset_factory
-from crispy_forms.bootstrap import AccordionGroup
 from crispy_forms.layout import Layout, HTML
 
 from hs_core import page_processors
@@ -8,9 +7,10 @@ from hs_core.views import add_generic_context
 from hs_core.forms import BaseFormSet, MetaDataElementDeleteForm
 
 from hs_modflow_modelinstance.models import MODFLOWModelInstanceResource
-from hs_modflow_modelinstance.forms import ModelOutputForm, ExecutedByForm, StudyAreaForm, GridDimensionsForm,\
-    StressPeriodForm, GroundWaterFlowForm, BoundaryConditionForm, ModelCalibrationForm, ModelInputForm,\
-    GeneralElementsForm, ModelInputLayoutEdit, ModalDialogLayoutAddModelInput
+from hs_modflow_modelinstance.forms import ModelOutputForm, ExecutedByForm, StudyAreaForm, \
+    GridDimensionsForm,StressPeriodForm, GroundWaterFlowForm, BoundaryConditionForm, \
+    ModelCalibrationForm, ModelInputForm, GeneralElementsForm, ModelInputLayoutEdit, \
+    ModalDialogLayoutAddModelInput
 
 from mezzanine.pages.page_processors import processor_for
 
@@ -131,50 +131,51 @@ def landing_page(request, page):
                                     '{% crispy model_output_form %} '
                                     '</div>'),
 
-                   HTML('<div class="form-group" id="executedby"> '
-                        '{% load crispy_forms_tags %} '
-                        '{% crispy executed_by_form %} '
-                        '</div> '),
+                               HTML('<div class="form-group" id="executedby"> '
+                                    '{% load crispy_forms_tags %} '
+                                    '{% crispy executed_by_form %} '
+                                    '</div> '),
 
-                   HTML('<div class="form-group" id="boundarycondition"> '
-                        '{% load crispy_forms_tags %} '
-                        '{% crispy boundary_condition_form %} '
-                        '</div>'),
+                               HTML('<div class="form-group" id="boundarycondition"> '
+                                    '{% load crispy_forms_tags %} '
+                                    '{% crispy boundary_condition_form %} '
+                                    '</div>'),
 
-                   HTML('<div class="form-group" id="generalelements"> '
-                        '{% load crispy_forms_tags %} '
-                        '{% crispy general_elements_form %} '
-                        '</div>'),
-                   HTML("</div>"),
+                               HTML('<div class="form-group" id="generalelements"> '
+                                    '{% load crispy_forms_tags %} '
+                                    '{% crispy general_elements_form %} '
+                                    '</div>'),
+                               HTML("</div>"),
 
-                   ModelInputLayoutEdit,
+                               ModelInputLayoutEdit,
 
-                   ModalDialogLayoutAddModelInput,
+                               ModalDialogLayoutAddModelInput,
 
-                   HTML('<div class="col-xs-12 col-sm-6"><div class="form-group" id="studyarea"> '
-                        '{% load crispy_forms_tags %} '
-                        '{% crispy study_area_form %} '
-                        '</div> '),
+                               HTML('<div class="col-xs-12 col-sm-6">'
+                                    '<div class="form-group" id="studyarea"> '
+                                    '{% load crispy_forms_tags %} '
+                                    '{% crispy study_area_form %} '
+                                    '</div> '),
 
-                   HTML('<div class="form-group" id="griddimensions"> '
-                        '{% load crispy_forms_tags %} '
-                        '{% crispy grid_dimensions_form %} '
-                        '</div>'),
+                               HTML('<div class="form-group" id="griddimensions"> '
+                                    '{% load crispy_forms_tags %} '
+                                    '{% crispy grid_dimensions_form %} '
+                                    '</div>'),
 
-                   HTML('<div class="form-group" id="stressperiod"> '
-                        '{% load crispy_forms_tags %} '
-                        '{% crispy stress_period_form %} '
-                        '</div>'),
+                               HTML('<div class="form-group" id="stressperiod"> '
+                                    '{% load crispy_forms_tags %} '
+                                    '{% crispy stress_period_form %} '
+                                    '</div>'),
 
-                   HTML('<div class="form-group" id="groundwaterflow"> '
-                        '{% load crispy_forms_tags %} '
-                        '{% crispy ground_water_flow_form %} '
-                        '</div>'),
+                               HTML('<div class="form-group" id="groundwaterflow"> '
+                                    '{% load crispy_forms_tags %} '
+                                    '{% crispy ground_water_flow_form %} '
+                                    '</div>'),
 
-                   HTML('<div class="form-group" id="modelcalibration"> '
-                        '{% load crispy_forms_tags %} '
-                        '{% crispy model_calibration_form %} '
-                        '</div></div></div>')
+                               HTML('<div class="form-group" id="modelcalibration"> '
+                                    '{% load crispy_forms_tags %} '
+                                    '{% crispy model_calibration_form %} '
+                                    '</div></div></div>')
                                )
 
         # get the context from hs_core

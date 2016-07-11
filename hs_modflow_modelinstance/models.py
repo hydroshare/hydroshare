@@ -712,7 +712,7 @@ class MODFLOWModelInstanceMetaData(ModelInstanceMetaData):
                         not self.boundary_condition.other_specified_head_boundary_packages:
                         hsterms_boundary_package.text = \
                             self.boundary_condition.get_specified_head_boundary_packages()
-                else:    
+                else:
                         hsterms_boundary_package.text = \
                             self.boundary_condition.get_specified_head_boundary_packages() + ', ' +\
                             self.boundary_condition.other_specified_head_boundary_packages
@@ -747,7 +747,7 @@ class MODFLOWModelInstanceMetaData(ModelInstanceMetaData):
                         and not self.boundary_condition.other_head_dependent_flux_boundary_packages:
                         hsterms_boundary_package.text = \
                             self.boundary_condition.get_head_dependent_flux_boundary_packages()
-                else:    
+                else:
                         hsterms_boundary_package.text = \
                             self.boundary_condition.get_head_dependent_flux_boundary_packages() + \
                             ', ' + \
@@ -798,4 +798,3 @@ class MODFLOWModelInstanceMetaData(ModelInstanceMetaData):
         self._model_input.all().delete()
         self._general_elements.all().delete()
 
-import receivers
