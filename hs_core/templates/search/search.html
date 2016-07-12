@@ -447,56 +447,73 @@
                 </div>
 
                 <div id="map-view" class="tab-pane fade">
+                    <div class="row">
+                        <div class="col-xs-12 col-sm-9">
+                            <form id="covereage-search-fields" method="get" action="." style="display: none">
+                                {% for field in form %}
+                                    {% if field.auto_id  == "id_NElat" or field.auto_id  == "id_NElng" or field.auto_id  == "id_SWlat" or field.auto_id  == "id_SWlng" %}
+            {#                                    <div class="col-md-3 height-fix">#}
+            {#                                        <div class="input-group">{{ field }}#}
+            {#                                            <span data-toggle="tooltip" data-placement="auto"#}
+            {#                                                  title="WGS 84 decimal degrees" class="input-group-addon">°</span>#}
+            {#                                        </div>#}
+            {#                                    </div>#}
+                                        {{ field }}
+                                    {% endif %}
+                                {% endfor %}
+            {#                            <div class="col-sm-12 height-fix">#}
+            {#                                <div class="text-muted">WGS 84 decimal degrees</div>#}
+            {##}
+            {#                                <a id="manual-zoom-btn" class="btn btn-default" onclick="manualZoomMap()">#}
+            {#                                    <span class="glyphicon glyphicon-zoom-in"></span> Zoom In#}
+            {#                                </a>#}
+            {#                            </div>#}
+                            </form>
 
-                    <form id="covereage-search-fields" method="get" action="." style="display: none">
-                        {% for field in form %}
-                            {% if field.auto_id  == "id_NElat" or field.auto_id  == "id_NElng" or field.auto_id  == "id_SWlat" or field.auto_id  == "id_SWlng" %}
-    {#                                    <div class="col-md-3 height-fix">#}
-    {#                                        <div class="input-group">{{ field }}#}
-    {#                                            <span data-toggle="tooltip" data-placement="auto"#}
-    {#                                                  title="WGS 84 decimal degrees" class="input-group-addon">°</span>#}
-    {#                                        </div>#}
-    {#                                    </div>#}
-                                {{ field }}
-                            {% endif %}
-                        {% endfor %}
-    {#                            <div class="col-sm-12 height-fix">#}
-    {#                                <div class="text-muted">WGS 84 decimal degrees</div>#}
-    {##}
-    {#                                <a id="manual-zoom-btn" class="btn btn-default" onclick="manualZoomMap()">#}
-    {#                                    <span class="glyphicon glyphicon-zoom-in"></span> Zoom In#}
-    {#                                </a>#}
-    {#                            </div>#}
-                    </form>
+                            <div id="resource-search" style="display:none">
+                                <table id="lat-lng-labels">
+                                    <tr>
+                                        <td>
+                                            North Latitude: <label for="ne-lat-value"></label>
+                                        </td>
+                                        <td>
+                                            East Longitude: <label for="ne-lng-value"></label>
+                                        </td>
+                                        <td>
+                                            South Latitude: <label for="sw-lat-value"></label>
+                                        </td>
+                                        <td>
+                                            West Longitude: <label for="sw-lng-value"></label>
+                                        </td>
+                                    </tr>
+                                </table>
+                                <div class="text-muted">WGS 84 decimal degrees</div>
+                            </div>
+                            <br />
 
-                    <div id="resource-search" style="display:none">
-                        <table id="lat-lng-labels">
-                            <tr>
-                                <td>
-                                    North Latitude: <label for="ne-lat-value"></label>
-                                </td>
-                                <td>
-                                    East Longitude: <label for="ne-lng-value"></label>
-                                </td>
-                                <td>
-                                    South Latitude: <label for="sw-lat-value"></label>
-                                </td>
-                                <td>
-                                    West Longitude: <label for="sw-lng-value"></label>
-                                </td>
-                            </tr>
-                        </table>
-                        <div class="text-muted">WGS 84 decimal degrees</div>
+                            <div id="geocoder-panel"></div>
+
+                            <div id="discover-map"></div>
+
+                            <div id="discover-map-legend"></div>
+
+                            <div id="resetZoom"></div>
+                        </div>
+                        <div class="col-xs-12 col-sm-3">
+                              <div class="panel panel-default">
+                                  <div class="panel-heading">
+                                      <h3 class="panel-title">Box Coverages Resources</h3>
+                                  </div>
+                                  <ul class="list-group" id="box-coverages-list"  style="height:600px; overflow-y: auto; text-align: left;">
+                                      <!--<li class="list-group-item clearfix"><button type="button" class="list-group-item" onclick="alert('hi')">Cras justo odio</button></li>
+                                      <li class="list-group-item clearfix"><button type="button" class="list-group-item">Dapibus ac facilisis in</button></li>
+                                      <li class="list-group-item clearfix"><button type="button" class="list-group-item">Morbi leo risus</button></li>
+                                      <li class="list-group-item clearfix"><button type="button" class="list-group-item">Porta ac consectetur ac</button></li>
+                                      <li class="list-group-item clearfix"><button type="button" class="list-group-item">Vestibulum at eros</button></li>-->
+                                  </ul>
+                              </div>
+                        </div>
                     </div>
-                    <br />
-
-                    <div id="geocoder-panel"></div>
-
-                    <div id="discover-map"></div>
-
-                    <div id="discover-map-legend"></div>
-
-                    <div id="resetZoom"></div>
                 </div>
             </div>
         </div>
@@ -520,7 +537,7 @@
         var raw_results = [];
         var markerCluster = null;
         var info_window = null;
-        var rectangle = null;
+        //var rectangle = null;
 
         var initMap = function(json_results) {
             var $mapDiv = $("#discover-map");
@@ -612,16 +629,81 @@
         var setMarkers = function(json_results) {
             var modified_points_data = [];
             var modified_boxes_data = [];
+            var box_resources = [];
 
             for (var i = 0; i < json_results.length; i++ ) {
                 if (json_results[i].coverage_type == 'point') {
                     checkDuplicatePointResults(modified_points_data, json_results[i]);
                 } else if (json_results[i].coverage_type == 'box') {
+                    box_resources.push(json_results[i]);
                     checkDuplicateBoxResults(modified_boxes_data, json_results[i]);
                 }
             }
 
             info_window = new google.maps.InfoWindow();
+{#            rectangle = new google.maps.Rectangle({#}
+{#                strokeColor: '#FF0000',#}
+{#                strokeOpacity: 0.8,#}
+{#                strokeWeight: 2,#}
+{#                fillColor: '#FF0000',#}
+{#                fillOpacity: 0.35,#}
+{#                map: map,#}
+{#                bounds: {#}
+{#                    north: 0,#}
+{#                    south: 0,#}
+{#                    east: 0,#}
+{#                    west: 0#}
+{#                }#}
+{#            });#}
+
+            modified_points_data.forEach(function(point){
+                var info_content = point.info_link;
+                var lat = parseFloat(point.north);
+                var lng = parseFloat(point.east);
+                var counter = point.counter.toString();
+                createPointResourceMarker(lat, lng, info_content, counter, info_window);
+            });
+
+
+{#            modified_boxes_data.forEach(function(box){#}
+{#                var info_content = box.info_link;#}
+{#                var northlimit = parseFloat(box.northlimit);#}
+{#                var southlimit = parseFloat(box.southlimit);#}
+{#                var eastlimit = parseFloat(box.eastlimit);#}
+{#                var westlimit = parseFloat(box.westlimit);#}
+{#                var counter = box.counter.toString();#}
+{#                createBoxResourceMarker (northlimit, southlimit, eastlimit, westlimit, info_content, info_window, counter, rectangle);#}
+{#            });#}
+
+            $("#box-coverages-list").empty();
+            box_resources.forEach(function(box){
+                var $listItem = $('<li><button type="button" class="list-group-item">' + box.title + '</button></li>');
+
+                $listItem.find('button').click(function() {
+                    showBoxMarker(box);
+                });
+                $('#box-coverages-list').append($listItem);
+            });
+
+            markerCluster = new MarkerClusterer(map, markers, {
+                imagePath: '//cdn.rawgit.com/googlemaps/js-marker-clusterer/gh-pages/images/m'
+            });
+        };
+
+        var showBoxMarker = function(box) {
+            console.log(box.title);
+            var northlimit = parseFloat(box.northlimit);
+            var southlimit = parseFloat(box.southlimit);
+            var eastlimit = parseFloat(box.eastlimit);
+            var westlimit = parseFloat(box.westlimit);
+            var lat = (parseFloat(northlimit) + parseFloat(southlimit)) / 2;
+            var lng = (parseFloat(eastlimit) + parseFloat(westlimit)) / 2;
+            var latlng = new google.maps.LatLng(lat, lng);
+{#            var marker = new google.maps.Marker({#}
+{#                map: map,#}
+{#                icon: '//cdn.rawgit.com/Concept211/Google-Maps-Markers/master/images/marker_blue.png',#}
+{#                position: latlng#}
+{#            });#}
             rectangle = new google.maps.Rectangle({
                 strokeColor: '#FF0000',
                 strokeOpacity: 0.8,
@@ -636,30 +718,18 @@
                     west: 0
                 }
             });
-
-            modified_points_data.forEach(function(point){
-                var info_content = point.info_link;
-                var lat = parseFloat(point.north);
-                var lng = parseFloat(point.east);
-                var counter = point.counter.toString();
-                createPointResourceMarker(lat, lng, info_content, counter, info_window, rectangle);
-            });
-
-
-            modified_boxes_data.forEach(function(box){
-                var info_content = box.info_link;
-                var northlimit = parseFloat(box.northlimit);
-                var southlimit = parseFloat(box.southlimit);
-                var eastlimit = parseFloat(box.eastlimit);
-                var westlimit = parseFloat(box.westlimit);
-                var counter = box.counter.toString();
-                createBoxResourceMarker (northlimit, southlimit, eastlimit, westlimit, info_content, info_window, counter, rectangle);
-            });
-
-            markerCluster = new MarkerClusterer(map, markers, {
-                imagePath: '//cdn.rawgit.com/googlemaps/js-marker-clusterer/gh-pages/images/m'
-            });
-        };
+            var rectBounds = new google.maps.LatLngBounds(
+                        new google.maps.LatLng(northlimit, westlimit),
+                        new google.maps.LatLng(southlimit, eastlimit)
+            );
+            var info_content = box.title;
+            rectangle.set('bounds', rectBounds);
+            map.fitBounds(rectBounds);
+{#            google.maps.event.addListener(rectangle, 'click', function() {#}
+{#                info_window.setContent(info_content);#}
+{#                info_window.open(map, rectangle);#}
+{#            });#}
+        }
 
         var clientUpdateMarkers = function(filtered_results) {
             removeMarkers();
@@ -686,7 +756,9 @@
         };
 
         var removeMarkers = function() {
-            rectangle.setMap(null);
+{#            if (rectangle != null) {#}
+{#                rectangle.setMap(null);#}
+{#            }#}
             if (markerCluster) {
                 markerCluster.clearMarkers(markers);
             }
@@ -745,7 +817,7 @@
             }
         };
 
-        var createPointResourceMarker = function (lat, lng, info_content, counter, info_window, rectangle) {
+        var createPointResourceMarker = function (lat, lng, info_content, counter, info_window) {
             var latlng = new google.maps.LatLng(lat, lng);
             var marker = new google.maps.Marker({
                 map: map,
@@ -756,11 +828,11 @@
             google.maps.event.addListener(marker, 'click', function() {
                 info_window.setContent(info_content);
                 info_window.open(map, marker);
-                var rectBounds = new google.maps.LatLngBounds(
-                        new google.maps.LatLng(0, 0),
-                        new google.maps.LatLng(0, 0)
-                );
-                rectangle.set('bounds', rectBounds);
+{#                var rectBounds = new google.maps.LatLngBounds(#}
+{#                        new google.maps.LatLng(0, 0),#}
+{#                        new google.maps.LatLng(0, 0)#}
+{#                );#}
+{#                rectangle.set('bounds', rectBounds);#}
 
             });
         };
