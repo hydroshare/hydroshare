@@ -541,6 +541,7 @@
 
         var initMap = function(json_results) {
             var $mapDiv = $("#discover-map");
+            console.log($mapDiv);
             var mapDim = {
                 height: $mapDiv.height(),
                 width: $mapDiv.width()
@@ -582,6 +583,7 @@
                     document.getElementById("id_NElat").value = ne.lat();
                     document.getElementById("id_SWlng").value = sw.lng();
                     document.getElementById("id_SWlat").value = sw.lat();
+                    setLatLngLabels();
                 }
             });
 
@@ -605,16 +607,14 @@
             });
 
             var zoom_listener = google.maps.event.addListener(map, 'zoom_changed', function(){
+                console.log("zoom changed");
                 updateMapView();
+                console.log("update map after zoom changed");
             });
 
             var drag_listener = google.maps.event.addListener(map, 'dragend', function(){
                 updateMapView();
             });
-
-            var latlng_listener = google.maps.event.addListener(map, 'bounds_changed', function(){
-                setLatLngLabels();
-            })
 
             generateLegend();
 
@@ -629,12 +629,10 @@
         var setMarkers = function(json_results) {
             var modified_points_data = [];
             var modified_boxes_data = [];
-            var box_resources = [];
             for (var i = 0; i < json_results.length; i++ ) {
                 if (json_results[i].coverage_type == 'point') {
                     checkDuplicatePointResults(modified_points_data, json_results[i]);
                 } else if (json_results[i].coverage_type == 'box') {
-                    box_resources.push(json_results[i]);
                     checkDuplicateBoxResults(modified_boxes_data, json_results[i]);
                 }
             }
@@ -674,8 +672,23 @@
 {#                createBoxResourceMarker (northlimit, southlimit, eastlimit, westlimit, info_content, info_window, counter, rectangle);#}
 {#            });#}
 
-            $("#box-coverages-list").empty();
 
+
+            markerCluster = new MarkerClusterer(map, markers, {
+                imagePath: '//cdn.rawgit.com/googlemaps/js-marker-clusterer/gh-pages/images/m'
+            });
+        };
+
+        var setBoxResourcesList = function(json_results) {
+            var box_resources = [];
+
+            for (var i = 0; i < json_results.length; i++ ) {
+                if (json_results[i].coverage_type == 'box') {
+                    box_resources.push(json_results[i]);
+                }
+            }
+
+            $("#box-coverages-list").empty();
             box_resources.forEach(function(box){
                 var $listItem = $('<li><button type="button" class="list-group-item">' + box.title + '</button></li>');
 
@@ -687,11 +700,7 @@
                 });
                 $('#box-coverages-list').append($listItem);
             });
-
-            markerCluster = new MarkerClusterer(map, markers, {
-                imagePath: '//cdn.rawgit.com/googlemaps/js-marker-clusterer/gh-pages/images/m'
-            });
-        };
+        }
 
         var showBoxMarker = function(box) {
             console.log(box.title);
@@ -744,15 +753,18 @@
                     if (raw_results[i].coverage_type == 'point') {
                         data_lat = parseFloat(raw_results[i].north);
                         data_lng = parseFloat(raw_results[i].east);
+                        var latlng = new google.maps.LatLng(data_lat, data_lng);
+                        if (map.getBounds().contains(latlng)) {
+                            filtered_results.push(raw_results[i]);
+                        }
                     } else if (raw_results[i].coverage_type == 'box') {
-                        data_lat = (parseFloat(raw_results[i].northlimit) + parseFloat(raw_results[i].southlimit)) / 2;
-                        data_lng = (parseFloat(raw_results[i].eastlimit) + parseFloat(raw_results[i].westlimit)) / 2;
-                    } else {
-                        continue;
-                    }
-                    var latlng = new google.maps.LatLng(data_lat, data_lng);
-                    if (map.getBounds().contains(latlng)) {
-                        filtered_results.push(raw_results[i]);
+                        var ne_point = new google.maps.LatLng(parseFloat(raw_results[i].northlimit), (parseFloat(raw_results[i].eastlimit)));
+                        var sw_point = new google.maps.LatLng(parseFloat(raw_results[i].southlimit), (parseFloat(raw_results[i].westlimit)));
+{#                        data_lat = (parseFloat(raw_results[i].northlimit) + parseFloat(raw_results[i].southlimit)) / 2;#}
+{#                        data_lng = (parseFloat(raw_results[i].eastlimit) + parseFloat(raw_results[i].westlimit)) / 2;#}
+                        if (map.getBounds().contains(ne_point) && map.getBounds().contains(sw_point)) {
+                            filtered_results.push(raw_results[i]);
+                        }
                     }
                 }
             }
@@ -1009,6 +1021,7 @@
             var filtered_results = [];
             clientUpdateMarkers(filtered_results);
             setMarkers(filtered_results);
+            setBoxResourcesList(filtered_results);
             var results_selection = $('input:radio[name=results-selection]:checked').val();
             if (results_selection == 'map-results-selected') {
                 var bnds = map.getBounds();
