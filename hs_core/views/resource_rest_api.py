@@ -258,10 +258,13 @@ class ResourceReadUpdateDelete(ResourceToListItemMixin, generics.RetrieveUpdateD
         """
         view_utils.authorize(request, pk, needed_permission=ACTION_TO_AUTHORIZE.VIEW_RESOURCE)
         res = hydroshare.utils.get_resource_by_shortkey(pk, or_404=False)
+        site_url = hydroshare.utils.current_site_url()
         if res.resource_type.lower() == "reftimeseriesresource":
-            bag_url = hydroshare.utils.current_site_url() + reverse('ref_ts.views.download_refts_resource_files', kwargs={'shortkey': pk})
+            # if res is RefTimeSeriesResource
+            bag_url = site_url + reverse('ref_ts.views.download_refts_resource_files',
+                                         kwargs={'shortkey': pk})
         else:
-            bag_url = hydroshare.utils.current_site_url() + AbstractResource.bag_url(pk)
+            bag_url = site_url + AbstractResource.bag_url(pk)
         return HttpResponseRedirect(bag_url)
 
     def put(self, request, pk):
