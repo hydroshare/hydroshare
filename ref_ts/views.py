@@ -201,7 +201,8 @@ def create_ref_time_series(request, *args, **kwargs):
 
             request.session['just_created'] = True
             return HttpResponseRedirect(res.get_absolute_url())
-
+        else:
+            raise Exception("Parameters validation error")
     except Exception as ex:
         logger.exception("create_ref_time_series: %s" % (ex.message))
         context = {'resource_creation_error': "Error: failed to create resource." }
