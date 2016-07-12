@@ -24,11 +24,13 @@ class SessionManager(models.Manager):
             tracking_id = signing.loads(signed_id)
             cut_off = datetime.now() - timedelta(seconds=SESSION_TIMEOUT)
             session = None
+
             try:
                 session = Session.objects.filter(
                     variable__timestamp__gte=cut_off).filter(id=tracking_id['id']).first()
             except Session.DoesNotExist:
                 pass
+
             if session is not None:
                 if session.visitor.user is None and request.user.is_authenticated():
                     try:
@@ -38,11 +40,13 @@ class SessionManager(models.Manager):
                         session.visitor.user = request.user
                         session.visitor.save()
                 return session
+
         # No session found, create one
         if request.user.is_authenticated():
             visitor, _ = Visitor.objects.get_or_create(user=request.user)
         else:
             visitor = Visitor.objects.create()
+
         session = Session.objects.create(visitor=visitor)
         session.record('begin_session')
         request.session['hs_tracking_id'] = signing.dumps({'id': session.id})
