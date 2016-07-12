@@ -1,5 +1,6 @@
 import tempfile
 import shutil
+import os
 
 from django.test import TransactionTestCase
 from django.core.files.uploadedfile import UploadedFile
@@ -12,9 +13,9 @@ from hs_core.hydroshare import utils
 from hs_core.models import CoreMetaData, Creator, Contributor, Coverage, Rights, Title, Language, \
     Publisher, Identifier, Type, Subject, Description, Date, Format, Relation, Source
 from hs_core.testing import MockIRODSTestCaseMixin
-from hs_modflow_modelinstance.models import MODFLOWModelInstanceResource, \
-    MODFLOWModelInstanceMetaData, ModelOutput, ExecutedBy, StudyArea, GridDimensions, StressPeriod, \
-    GroundWaterFlow, BoundaryCondition, ModelCalibration, ModelInput, GeneralElements
+from hs_modflow_modelinstance.models import MODFLOWModelInstanceMetaData, ModelOutput, ExecutedBy, \
+    StudyArea, GridDimensions, StressPeriod, GroundWaterFlow, BoundaryCondition, ModelCalibration, \
+    ModelInput, GeneralElements
 
 # cmd to run tests: ./hsctl managepy test --keepdb hs_modflow_modelinstance/tests
 
@@ -80,7 +81,7 @@ class TestMODFLOWModelInstanceMetaData(MockIRODSTestCaseMixin, TransactionTestCa
             shutil.rmtree(self.temp_dir)
 
     def test_allowed_file_types(self):
-        # test allowed file type is '.*'        
+        # test allowed file type is '.*'
         self.assertEquals(self.res.get_supported_upload_file_types(), '.*')
 
         # there should not be any content file
