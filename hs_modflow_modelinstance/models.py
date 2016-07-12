@@ -797,4 +797,3 @@ class MODFLOWModelInstanceMetaData(ModelInstanceMetaData):
         self._model_calibration.all().delete()
         self._model_input.all().delete()
         self._general_elements.all().delete()
-
