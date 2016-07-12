@@ -500,11 +500,11 @@
                             <div id="resetZoom"></div>
                         </div>
                         <div class="col-xs-12 col-sm-3">
-                              <div class="panel panel-default">
+                              <div class="panel panel-default facet-list">
                                   <div class="panel-heading">
                                       <h3 class="panel-title">Box Coverages Resources</h3>
                                   </div>
-                                  <ul class="list-group" id="box-coverages-list"  style="height:600px; overflow-y: auto; text-align: left;">
+                                  <ul class="list-group" id="box-coverages-list"  style="height:600px; overflow-y: auto;">
                                       <!--<li class="list-group-item clearfix"><button type="button" class="list-group-item" onclick="alert('hi')">Cras justo odio</button></li>
                                       <li class="list-group-item clearfix"><button type="button" class="list-group-item">Dapibus ac facilisis in</button></li>
                                       <li class="list-group-item clearfix"><button type="button" class="list-group-item">Morbi leo risus</button></li>
@@ -537,7 +537,7 @@
         var raw_results = [];
         var markerCluster = null;
         var info_window = null;
-        //var rectangle = null;
+        var rectangle = null;
 
         var initMap = function(json_results) {
             var $mapDiv = $("#discover-map");
@@ -630,7 +630,6 @@
             var modified_points_data = [];
             var modified_boxes_data = [];
             var box_resources = [];
-
             for (var i = 0; i < json_results.length; i++ ) {
                 if (json_results[i].coverage_type == 'point') {
                     checkDuplicatePointResults(modified_points_data, json_results[i]);
@@ -676,10 +675,14 @@
 {#            });#}
 
             $("#box-coverages-list").empty();
+
             box_resources.forEach(function(box){
                 var $listItem = $('<li><button type="button" class="list-group-item">' + box.title + '</button></li>');
 
                 $listItem.find('button').click(function() {
+                    if (rectangle != null) {
+                        rectangle.setMap(null);
+                    }
                     showBoxMarker(box);
                 });
                 $('#box-coverages-list').append($listItem);
@@ -756,9 +759,7 @@
         };
 
         var removeMarkers = function() {
-{#            if (rectangle != null) {#}
-{#                rectangle.setMap(null);#}
-{#            }#}
+
             if (markerCluster) {
                 markerCluster.clearMarkers(markers);
             }
