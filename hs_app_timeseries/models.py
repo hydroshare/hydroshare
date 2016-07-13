@@ -45,6 +45,8 @@ class TimeSeriesAbstractMetaDataElement(AbstractMetaDataElement):
         element = cls.objects.get(id=element_id)
         element.is_dirty = True
         element.save()
+        element.metadata.is_dirty = True
+        element.metadata.save()
 
     class Meta:
         abstract = True
@@ -391,39 +393,7 @@ class TimeSeriesMetaData(CoreMetaData):
     _methods = GenericRelation(Method)
     _processing_levels = GenericRelation(ProcessingLevel)
     _time_series_results = GenericRelation(TimeSeriesResult)
-
-    @property
-    def is_dirty(self):
-        # this property is used to determine if the SQLite file needs
-        # to be synced with metadata in database
-        if self.resource.files.first() is None:
-            # the SQLite file is missing - so nothing to update
-            return False
-        dirty = any(site.is_dirty for site in self.sites) or any(
-            variable.is_dirty for variable in self.variables) or any(
-            method.is_dirty for method in self.methods) or any(
-            processing_level.is_dirty for processing_level in self.processing_levels) or any(
-            ts_result.is_dirty for ts_result in self.time_series_results) or any(
-            cv_variable_name.is_dirty for cv_variable_name in
-            CVVariableName.objects.filter(metadata=self)) or any(
-            cv_variable_type.is_dirty for cv_variable_type in
-            CVVariableType.objects.filter(metadata=self)) or any(
-            cv_speciation.is_dirty for cv_speciation in
-            CVSpeciation.objects.filter(metadata=self)) or any(
-            cv_site_type.is_dirty for cv_site_type in
-            CVSiteType.objects.filter(metadata=self)) or any(
-            cv_elev_datum.is_dirty for cv_elev_datum in
-            CVElevationDatum.objects.filter(metadata=self)) or any(
-            cv_method_type.is_dirty for cv_method_type in
-            CVMethodType.objects.filter(metadata=self)) or any(
-            cv_units_type.is_dirty for cv_units_type in
-            CVUnitsType.objects.filter(metadata=self)) or any(
-            cv_status.is_dirty for cv_status in CVStatus.objects.filter(metadata=self)) or any(
-            cv_medium.is_dirty for cv_medium in CVMedium.objects.filter(metadata=self)) or any(
-            cv_agg_stat.is_dirty for cv_agg_stat in
-            CVAggregationStatistic.objects.filter(metadata=self))
-
-        return dirty
+    is_dirty = models.BooleanField(default=False)
 
     @property
     def sites(self):
@@ -660,6 +630,8 @@ class TimeSeriesMetaData(CoreMetaData):
                     to_file_name = sqlite_file_original.resource_file.name
                     from_file_name = temp_sqlite_file_destination
                     istorage.saveFile(from_file_name, to_file_name, True)
+                    self.is_dirty = False
+                    self.save()
             except sqlite3.Error, ex:
                 sqlite_err_msg = str(ex.args[0])
                 log.error("Failed to update SQLite file. Error:" + sqlite_err_msg)
