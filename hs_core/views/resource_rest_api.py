@@ -256,8 +256,7 @@ class ResourceReadUpdateDelete(ResourceToListItemMixin, generics.RetrieveUpdateD
     def get(self, request, pk):
         """ Get resource in zipped BagIt format
         """
-        view_utils.authorize(request, pk, needed_permission=ACTION_TO_AUTHORIZE.VIEW_RESOURCE)
-        res = hydroshare.utils.get_resource_by_shortkey(pk, or_404=False)
+        res, _, _ = view_utils.authorize(request, pk, needed_permission=ACTION_TO_AUTHORIZE.VIEW_RESOURCE)
         site_url = hydroshare.utils.current_site_url()
         if res.resource_type.lower() == "reftimeseriesresource":
             # if res is RefTimeSeriesResource
