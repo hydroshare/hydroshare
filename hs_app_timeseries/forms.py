@@ -330,14 +330,84 @@ def _get_cv_dropdown_widget_items(dropdown_items, selected_item_name):
     cv_item_choices = tuple(cv_items)
     return cv_item_choices
 
+UpdateSQLiteLayout = Layout(HTML("""
+<div id="sql-file-update" class="row" {% if not cm.metadata.is_dirty  %}style="display:none;
+  "{% endif %} style="margin-bottom:10px">
+    <div class="col-sm-12">
+        <div class="alert alert-warning alert-dismissible" role="alert">
+        <strong>SQLite file needs to be synced with metadata changes:</strong>
 
-def _get_html_snippet(html_snippet_file_name):
-    cur_dir = os.path.dirname(os.path.realpath(__file__))
-    html_file = os.path.join(cur_dir, 'layout_snippets', html_snippet_file_name)
-    with open(html_file, 'r') as fobj:
-        html_snippet = fobj.read()
-    return html_snippet
+        <form action="/timeseries/sqlite/update/{{ cm.short_id }}/" method="post"
+        enctype="multipart/form-data">
+            {% csrf_token %}
+            <input name="resource-mode" type="hidden" value="edit">
+            <button type="button" class="btn btn-primary" onclick="this.form.submit();
+            return false;">Update SQLite File</button>
+        </form>
+            </div>
+    </div>
+</div>
+"""
+                                 )
+                            )
 
-UpdateSQLiteLayout = Layout(HTML(_get_html_snippet('update_sqlite_file.html')))
-SeriesSelectionLayout = Layout(HTML(_get_html_snippet('series_selection.html')))
-TimeSeriesMetaDataLayout = HTML(_get_html_snippet('timeseries_metadata_edit.html'))
+SeriesSelectionLayout = Layout(HTML("""
+<div id="div-series-selection">
+    <div class="col-sm-12">
+        <strong>Select a timeseries to see corresponding metadata(Number of
+            timeseries:{{ series_ids.items|length }}):</strong>
+        <form action="/resource/{{ cm.short_id }}/" method="get" enctype="multipart/form-data">
+            {% csrf_token %}
+            <input name="resource-mode" type="hidden" value="edit">
+            <select class="form-control" name="series_id" id="series_id"
+            onchange="this.form.submit()">
+                {% for series_id, label in series_ids.items %}
+                    {% if selected_series_id == series_id %}
+                        <option value="{{ series_id }}" selected="selected"
+                                title="{{ label }}">{{ label|slice:":120"|add:"..." }}</option>
+                    {% else %}
+                        <option value="{{ series_id }}" title="{{ label }}">
+                        {{ label|slice:":120"|add:"..." }}</option>
+                    {% endif %}
+                {% endfor %}
+            </select>
+        </form>
+        <hr>
+    </div>
+</div>
+"""
+                                    )
+                               )
+
+TimeSeriesMetaDataLayout = HTML("""
+<div class="form-group col-sm-6 col-xs-12 time-series-forms">
+     <div id="site">
+         {% load crispy_forms_tags %}
+         {% crispy site_form %}
+         <hr style="border:0">
+     </div>
+     <div id="variable">
+         {% load crispy_forms_tags %}
+         {% crispy variable_form %}
+         <hr style="border:0">
+     </div>
+     <div id="method">
+         {% load crispy_forms_tags %}
+         {% crispy method_form %}
+         <hr style="border:0">
+     </div>
+ </div>
+
+ <div class="form-group col-sm-6 col-xs-12 time-series-forms">
+     <div id="processinglevel">
+         {% load crispy_forms_tags %}
+         {% crispy processing_level_form %}
+         <hr style="border:0">
+     </div>
+     <div id="timeseriesresult">
+         {% load crispy_forms_tags %}
+         {% crispy timeseries_result_form %}
+     </div>
+ </div>
+"""
+                                )
