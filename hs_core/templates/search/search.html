@@ -448,7 +448,7 @@
 
                 <div id="map-view" class="tab-pane fade">
                     <div class="row">
-                        <div class="col-xs-12 col-sm-9">
+                        <div class="col-xs-12 col-sm-8">
                             <form id="covereage-search-fields" method="get" action="." style="display: none">
                                 {% for field in form %}
                                     {% if field.auto_id  == "id_NElat" or field.auto_id  == "id_NElng" or field.auto_id  == "id_SWlat" or field.auto_id  == "id_SWlng" %}
@@ -499,18 +499,18 @@
 
                             <div id="resetZoom"></div>
                         </div>
-                        <div class="col-xs-12 col-sm-3">
+                        <div class="col-xs-12 col-sm-4">
                               <div class="panel panel-default facet-list">
                                   <div class="panel-heading">
                                       <h3 class="panel-title">Box Coverages Resources</h3>
                                   </div>
-                                  <ul class="list-group" id="box-coverages-list"  style="height:600px; overflow-y: auto;">
+                                  <div class="list-group" id="box-coverages-list"  style="height:600px; overflow-y: auto;">
                                       <!--<li class="list-group-item clearfix"><button type="button" class="list-group-item" onclick="alert('hi')">Cras justo odio</button></li>
                                       <li class="list-group-item clearfix"><button type="button" class="list-group-item">Dapibus ac facilisis in</button></li>
                                       <li class="list-group-item clearfix"><button type="button" class="list-group-item">Morbi leo risus</button></li>
                                       <li class="list-group-item clearfix"><button type="button" class="list-group-item">Porta ac consectetur ac</button></li>
                                       <li class="list-group-item clearfix"><button type="button" class="list-group-item">Vestibulum at eros</button></li>-->
-                                  </ul>
+                                  </div>
                               </div>
                         </div>
                     </div>
@@ -690,7 +690,10 @@
 
             $("#box-coverages-list").empty();
             box_resources.forEach(function(box){
-                var $listItem = $('<li><button type="button" class="list-group-item">' + box.title + '</button></li>');
+                var item_content = '<li><button type="button" class="list-group-item">' + box.title + '</button>';
+                item_content += '<a href="' + box.get_absolute_url + '"><span class="glyphicon glyphicon-link pull-right"></span>'
+                item_content += '</li>';
+                var $listItem = $(item_content);
 
                 $listItem.find('button').click(function() {
                     if (rectangle != null) {
