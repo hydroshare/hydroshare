@@ -34,10 +34,8 @@ class SiteFormHelper(BaseFormHelper):
 
 class SiteForm(ModelForm):
     def __init__(self, allow_edit=True, res_short_id=None, element_id=None, *args, **kwargs):
-        self.cv_site_types = list(kwargs['cv_site_types'])
-        self.cv_elevation_datums = list(kwargs['cv_elevation_datums'])
-        kwargs.pop('cv_site_types')
-        kwargs.pop('cv_elevation_datums')
+        self.cv_site_types = list(kwargs.pop('cv_site_types'))
+        self.cv_elevation_datums = list(kwargs.pop('cv_elevation_datums'))
         super(SiteForm, self).__init__(*args, **kwargs)
         self.helper = SiteFormHelper(allow_edit, res_short_id, element_id, element_name='Site')
 
@@ -96,12 +94,10 @@ class VariableFormHelper(BaseFormHelper):
 
 class VariableForm(ModelForm):
     def __init__(self, allow_edit=True, res_short_id=None, element_id=None, *args, **kwargs):
-        self.cv_variable_types = list(kwargs['cv_variable_types'])
-        self.cv_variable_names = list(kwargs['cv_variable_names'])
-        self.cv_speciations = list(kwargs['cv_speciations'])
-        kwargs.pop('cv_variable_types')
-        kwargs.pop('cv_variable_names')
-        kwargs.pop('cv_speciations')
+        self.cv_variable_types = list(kwargs.pop('cv_variable_types'))
+        self.cv_variable_names = list(kwargs.pop('cv_variable_names'))
+        self.cv_speciations = list(kwargs.pop('cv_speciations'))
+
         super(VariableForm, self).__init__(*args, **kwargs)
         self.helper = VariableFormHelper(allow_edit, res_short_id, element_id,
                                          element_name='Variable')
@@ -164,8 +160,7 @@ class MethodFormHelper(BaseFormHelper):
 
 class MethodForm(ModelForm):
     def __init__(self, allow_edit=True, res_short_id=None, element_id=None, *args, **kwargs):
-        self.cv_method_types = list(kwargs['cv_method_types'])
-        kwargs.pop('cv_method_types')
+        self.cv_method_types = list(kwargs.pop('cv_method_types'))
         super(MethodForm, self).__init__(*args, **kwargs)
         self.helper = MethodFormHelper(allow_edit, res_short_id, element_id, element_name='Method')
 
@@ -270,14 +265,10 @@ class TimeSeriesResultFormHelper(BaseFormHelper):
 
 class TimeSeriesResultForm(ModelForm):
     def __init__(self, allow_edit=True, res_short_id=None, element_id=None, *args, **kwargs):
-        self.cv_sample_mediums = list(kwargs['cv_sample_mediums'])
-        self.cv_units_types = list(kwargs['cv_units_types'])
-        self.cv_aggregation_statistics = list(kwargs['cv_aggregation_statistics'])
-        self.cv_statuses = list(kwargs['cv_statuses'])
-        kwargs.pop('cv_sample_mediums')
-        kwargs.pop('cv_units_types')
-        kwargs.pop('cv_aggregation_statistics')
-        kwargs.pop('cv_statuses')
+        self.cv_sample_mediums = list(kwargs.pop('cv_sample_mediums'))
+        self.cv_units_types = list(kwargs.pop('cv_units_types'))
+        self.cv_aggregation_statistics = list(kwargs.pop('cv_aggregation_statistics'))
+        self.cv_statuses = list(kwargs.pop('cv_statuses'))
 
         super(TimeSeriesResultForm, self).__init__(*args, **kwargs)
         self.helper = TimeSeriesResultFormHelper(allow_edit, res_short_id, element_id,
@@ -326,11 +317,15 @@ class TimeSeriesResultValidationForm(forms.Form):
 
 
 def _get_cv_dropdown_widget_items(dropdown_items, selected_item_name):
-    for item in dropdown_items:
-        if item.name == selected_item_name:
-            dropdown_items.remove(item)
+    # filter out the item that needs to shown as the currently selected item
+    # in the dropdown list
+    dropdown_items = [item for item in dropdown_items if item.name != selected_item_name]
 
+    # create a list of tuples
     cv_items = [(item.name, item.name) for item in dropdown_items]
+
+    # add the selected item as a tuple to the beginning of the list of items
+    # so that it will be displayed as the currently selected item
     cv_items = [(selected_item_name, selected_item_name)] + cv_items
     cv_item_choices = tuple(cv_items)
     return cv_item_choices
