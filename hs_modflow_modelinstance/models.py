@@ -14,13 +14,12 @@ from hs_core.models import BaseResource, ResourceManager, resource_processor, \
 from hs_modelinstance.models import ModelInstanceMetaData, ModelOutput, ExecutedBy
 
 
-def delete_if_empty(term_obj):
+def delete_if_empty(term_obj, non_standard_elements):
     all_blank = True
-    standard_elements = ['content_type_id', '_state', 'object_id', 'content_type_id', 'id',
-                         '_content_type_cache', '_content_object_cache']
     for attr, val in vars(term_obj).iteritems():
-        if attr not in standard_elements and val != '' and val != []:
+        if attr in non_standard_elements and val != '':
             all_blank = False
+            break
     if all_blank:
         term_obj.delete()
 
@@ -102,7 +101,10 @@ class GridDimensions(AbstractMetaDataElement):
     def update(cls, element_id, **kwargs):
         kwargs = cls._validate_params(**kwargs)
         grid_dimensions = super(GridDimensions, cls).update(element_id, **kwargs)
-        delete_if_empty(grid_dimensions)
+        delete_if_empty(grid_dimensions,
+                        ['numberOfLayers', 'typeOfRows', 'numberOfRows', 'typeOfColumns',
+                         'numberOfColumns',
+                         ])
 
     @classmethod
     def _validate_params(cls, **kwargs):
@@ -152,7 +154,9 @@ class StressPeriod(AbstractMetaDataElement):
     def update(cls, element_id, **kwargs):
         kwargs = cls._validate_params(**kwargs)
         stress_period = super(StressPeriod, cls).update(element_id, **kwargs)
-        delete_if_empty(stress_period)
+        delete_if_empty(stress_period,
+                        ['stressPeriodType', 'steadyStateValue']
+                        )
 
     @classmethod
     def _validate_params(cls, **kwargs):
@@ -193,7 +197,8 @@ class GroundWaterFlow(AbstractMetaDataElement):
     def update(cls, element_id, **kwargs):
         kwargs = cls._validate_params(**kwargs)
         gw_flow = super(GroundWaterFlow, cls).update(element_id, **kwargs)
-        delete_if_empty(gw_flow)
+        delete_if_empty(gw_flow,
+                        ['flowPackage', 'flowParameter'])
 
     @classmethod
     def _validate_params(cls, **kwargs):
@@ -215,8 +220,6 @@ class SpecifiedHeadBoundaryPackageChoices(models.Model):
 class SpecifiedFluxBoundaryPackageChoices(models.Model):
     description = models.CharField(max_length=300)
 
-    def __unicode__(self):
-        return self.description
 
 
 class HeadDependentFluxBoundaryPackageChoices(models.Model):
@@ -345,6 +348,7 @@ class BoundaryCondition(AbstractMetaDataElement):
                 cls._add_head_dependent_flux_boundary_packages(
                     model_boundary_condition,
                     kwargs['head_dependent_flux_boundary_packages'])
+
             if 'other_specified_head_boundary_packages' in kwargs:
                 model_boundary_condition.other_specified_head_boundary_packages = \
                     kwargs['other_specified_head_boundary_packages']
@@ -363,7 +367,14 @@ class BoundaryCondition(AbstractMetaDataElement):
             num_hd_dp_bdy_pckgs = \
                 len(model_boundary_condition.get_head_dependent_flux_boundary_packages())
             if num_hd_dp_bdy_pckgs + num_sp_fx_bdy_pckgs + num_sp_hd_bdy_pckgs == 0:
-                delete_if_empty(model_boundary_condition)
+                delete_if_empty(model_boundary_condition,
+                                ['specified_head_boundary_packages',
+                                 'specified_flux_boundary_packages',
+                                 'head_dependent_flux_boundary_packages',
+                                 'other_specified_head_boundary_packages',
+                                 'other_specified_flux_boundary_packages',
+                                 'other_head_dependent_flux_boundary_packages'
+                                 ])
 
         else:
             raise ObjectDoesNotExist(
@@ -419,7 +430,12 @@ class ModelCalibration(AbstractMetaDataElement):
     def update(cls, element_id, **kwargs):
         kwargs = cls._validate_params(**kwargs)
         model_calibration = super(ModelCalibration, cls).update(element_id, **kwargs)
-        delete_if_empty(model_calibration)
+        delete_if_empty(model_calibration,
+                        ['calibratedParameter',
+                         'observationType',
+                         'observationProcessPackage',
+                         'calibrationMethod'
+                         ])
 
     @classmethod
     def _validate_params(cls, **kwargs):
@@ -503,22 +519,21 @@ class GeneralElements(AbstractMetaDataElement):
         kwargs = cls._validate_params(**kwargs)
         if general_elements:
             if 'output_control_package' in kwargs:
-                general_elements = super(GeneralElements, cls).update(general_elements.id,
-                                                                      content_object=kwargs[
-                                                                          'content_object'],
-                                                                      modelParameter=kwargs[
-                                                                          'modelParameter'],
-                                                                      modelSolver=kwargs[
-                                                                          'modelSolver'],
-                                                                      subsidencePackage=kwargs[
-                                                                          'subsidencePackage'])
+                general_elements = super(GeneralElements, cls).update(
+                    general_elements.id,
+                    content_object=kwargs['content_object'],
+                    modelParameter=kwargs['modelParameter'],
+                    modelSolver=kwargs['modelSolver'],
+                    subsidencePackage=kwargs['subsidencePackage'])
 
                 general_elements.output_control_package.clear()
                 cls._add_output_control_package(general_elements, kwargs['output_control_package'])
 
             general_elements.save()
             if len(general_elements.get_output_control_package()) == 0:
-                delete_if_empty(general_elements)
+                delete_if_empty(general_elements,
+                                ['modelParameter', 'modelSolver', 'subsidencePackage',
+                                 'output_control_package'])
 
     @classmethod
     def _validate_params(cls, **kwargs):
