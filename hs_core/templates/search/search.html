@@ -724,6 +724,7 @@
             var info_content = box.title;
             rectangle.set('bounds', rectBounds);
             map.fitBounds(rectBounds);
+            updateMapView();
         }
 
         var clientUpdateMarkers = function(filtered_results) {
