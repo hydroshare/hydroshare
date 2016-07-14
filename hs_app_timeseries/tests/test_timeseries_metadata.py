@@ -381,7 +381,7 @@ class TestTimeSeriesMetaData(MockIRODSTestCaseMixin, TransactionTestCase):
         self.assertIn('a456789-89yughys', site_element.series_ids)
         self.assertEqual(site_element.site_code, 'LR_WaterLab_AA')
         self.assertEqual(site_element.site_name, 'Logan River at the Utah Water Research '
-                                                  'Laboratory west bridge')
+                                                 'Laboratory west bridge')
         self.assertEqual(site_element.elevation_m, 1414)
         self.assertEqual(site_element.elevation_datum, 'EGM96')
         self.assertEqual(site_element.site_type, 'Stream')
@@ -407,7 +407,7 @@ class TestTimeSeriesMetaData(MockIRODSTestCaseMixin, TransactionTestCase):
         self.assertEqual(variable_element.variable_type, 'Concentration')
         self.assertEqual(variable_element.no_data_value, -9999)
         self.assertEqual(variable_element.variable_definition, 'Concentration of oxygen gas '
-                                                                'dissolved in water.')
+                                                               'dissolved in water.')
         self.assertEqual(variable_element.speciation, 'Not Applicable')
         self.assertEqual(variable_element.is_dirty, False)
 
@@ -515,7 +515,7 @@ class TestTimeSeriesMetaData(MockIRODSTestCaseMixin, TransactionTestCase):
         self.assertEqual(variable_element.variable_type, 'Concentration-1')
         self.assertEqual(variable_element.no_data_value, -999)
         self.assertEqual(variable_element.variable_definition,
-                          'Concentration of oxygen dissolved in water.')
+                         'Concentration of oxygen dissolved in water.')
         self.assertEqual(variable_element.speciation, 'Applicable')
         self.assertEqual(variable_element.is_dirty, True)
 
@@ -909,7 +909,7 @@ class TestTimeSeriesMetaData(MockIRODSTestCaseMixin, TransactionTestCase):
                              "Scientific datalogger."
 
         self.assertEqual(self.resTimeSeries.metadata.description.abstract.strip(),
-                          extracted_abstract)
+                         extracted_abstract)
 
         # there should be 2 coverage element -  point type and period type
         self.assertEqual(self.resTimeSeries.metadata.coverages.all().count(), 2)
@@ -928,9 +928,9 @@ class TestTimeSeriesMetaData(MockIRODSTestCaseMixin, TransactionTestCase):
         temporal_coverage = self.resTimeSeries.metadata.coverages.all().filter(
             type='period').first()
         self.assertEqual(parser.parse(temporal_coverage.value['start']).date(),
-                          parser.parse('01/01/2008').date())
+                         parser.parse('01/01/2008').date())
         self.assertEqual(parser.parse(temporal_coverage.value['end']).date(),
-                          parser.parse('01/31/2008').date())
+                         parser.parse('01/31/2008').date())
 
         # there should be one format element
         self.assertEqual(self.resTimeSeries.metadata.formats.all().count(), 1)
