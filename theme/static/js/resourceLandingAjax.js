@@ -316,7 +316,9 @@ function metadata_update_ajax_submit(form_id){
             json_response = JSON.parse(result);
             if (json_response.status === 'success')
             {
-                if ($form.attr("id") == "id-site" || $form.attr("id") == "id-variable" || $form.attr("id") == "id-method" || $form.attr("id") == "id-processinglevel" || $form.attr("id") == "id-timeseriesresult") {
+                if ($form.attr("id") == "id-site" || $form.attr("id") == "id-variable" ||
+                    $form.attr("id") == "id-method" || $form.attr("id") == "id-processinglevel" ||
+                    $form.attr("id") == "id-timeseriesresult") {
                     $("#sql-file-update").show();
                 }
                 $(document).trigger("submit-success");
