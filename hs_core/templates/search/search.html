@@ -541,7 +541,6 @@
 
         var initMap = function(json_results) {
             var $mapDiv = $("#discover-map");
-            console.log($mapDiv);
             var mapDim = {
                 height: $mapDiv.height(),
                 width: $mapDiv.width()
@@ -607,9 +606,7 @@
             });
 
             var zoom_listener = google.maps.event.addListener(map, 'zoom_changed', function(){
-                console.log("zoom changed");
                 updateMapView();
-                console.log("update map after zoom changed");
             });
 
             var drag_listener = google.maps.event.addListener(map, 'dragend', function(){
@@ -706,7 +703,6 @@
         }
 
         var showBoxMarker = function(box) {
-            console.log(box.title);
             var northlimit = parseFloat(box.northlimit);
             var southlimit = parseFloat(box.southlimit);
             var eastlimit = parseFloat(box.eastlimit);
