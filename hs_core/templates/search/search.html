@@ -500,11 +500,11 @@
                             <div id="resetZoom"></div>
                         </div>
                         <div class="col-xs-12 col-sm-4">
-                              <div class="panel panel-default facet-list">
+                              <div class="panel panel-default" id="box-coverages-panel">
                                   <div class="panel-heading">
                                       <h3 class="panel-title">Box Coverages Resources</h3>
                                   </div>
-                                  <div class="list-group" id="box-coverages-list"  style="height:600px; overflow-y: auto;">
+                                  <div class="list-group" id="box-coverages-list">
                                       <!--<li class="list-group-item clearfix"><button type="button" class="list-group-item" onclick="alert('hi')">Cras justo odio</button></li>
                                       <li class="list-group-item clearfix"><button type="button" class="list-group-item">Dapibus ac facilisis in</button></li>
                                       <li class="list-group-item clearfix"><button type="button" class="list-group-item">Morbi leo risus</button></li>
@@ -687,12 +687,12 @@
 
             $("#box-coverages-list").empty();
             box_resources.forEach(function(box){
-                var item_content = '<li><button type="button" class="list-group-item">' + box.title + '</button>';
+                var item_content = '<li class="list-group-item clearfix"><a role="button">' + box.title + '</role>';
                 item_content += '<a href="' + box.get_absolute_url + '"><span class="glyphicon glyphicon-link pull-right"></span>'
                 item_content += '</li>';
                 var $listItem = $(item_content);
 
-                $listItem.find('button').click(function() {
+                $listItem.find('[role="button"]').click(function() {
                     if (rectangle != null) {
                         rectangle.setMap(null);
                     }
