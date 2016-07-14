@@ -1,6 +1,5 @@
 import os
 import sqlite3
-import tempfile
 import shutil
 import logging
 
@@ -13,8 +12,7 @@ from mezzanine.pages.page_processors import processor_for
 
 from hs_core.models import BaseResource, ResourceManager, resource_processor, CoreMetaData, \
     AbstractMetaDataElement
-
-from django_irods.storage import IrodsStorage
+from hs_core.hydroshare import utils
 
 
 class TimeSeriesAbstractMetaDataElement(AbstractMetaDataElement):
@@ -604,16 +602,12 @@ class TimeSeriesMetaData(CoreMetaData):
 
         sqlite_file_to_update = self.resource.files.first()
         if sqlite_file_to_update is not None:
-            istorage = IrodsStorage()
             log = logging.getLogger()
 
             # retrieve the sqlite file from iRODS and save it to temp directory
-            temp_dir = tempfile.mkdtemp()
-            sqlite_file_name = os.path.basename(sqlite_file_to_update.resource_file.name)
-            temp_sqlite_file_destination = os.path.join(temp_dir, sqlite_file_name)
-            istorage.getFile(sqlite_file_to_update.resource_file.name, temp_sqlite_file_destination)
+            temp_sqlite_file = utils.get_file_from_irods(sqlite_file_to_update)
             try:
-                con = sqlite3.connect(temp_sqlite_file_destination)
+                con = sqlite3.connect(temp_sqlite_file)
                 with con:
                     # get the records in python dictionary format
                     con.row_factory = sqlite3.Row
@@ -626,22 +620,19 @@ class TimeSeriesMetaData(CoreMetaData):
                     self._update_CV_tables(con, cur)
 
                     # push the updated sqlite file to iRODS
-                    sqlite_file_original = self.resource.files.first()
-                    to_file_name = sqlite_file_original.resource_file.name
-                    from_file_name = temp_sqlite_file_destination
-                    istorage.saveFile(from_file_name, to_file_name, True)
+                    utils.replace_resource_file_on_irods(temp_sqlite_file, sqlite_file_to_update)
                     self.is_dirty = False
                     self.save()
             except sqlite3.Error, ex:
                 sqlite_err_msg = str(ex.args[0])
-                log.error("Failed to update SQLite file. Error:" + sqlite_err_msg)
+                log.error("Failed to update SQLite file. Error:{}".format(sqlite_err_msg))
                 raise Exception(sqlite_err_msg)
             except Exception, ex:
-                log.error("Failed to update SQLite file. Error:" + ex.message)
+                log.error("Failed to update SQLite file. Error:{}".format(ex.message))
                 raise ex
             finally:
-                if os.path.exists(temp_dir):
-                    shutil.rmtree(temp_dir)
+                if os.path.exists(temp_sqlite_file):
+                    shutil.rmtree(os.path.dirname(temp_sqlite_file))
 
     def _update_CV_tables(self, con, cur):
         # here 'is_dirty' true means a new term has been added
