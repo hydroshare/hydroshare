@@ -11,29 +11,12 @@ from hs_core.signals import pre_create_resource, pre_add_files_to_resource, \
 from hs_core.hydroshare import utils, delete_resource_file_only
 from hs_app_timeseries.models import TimeSeriesResource, CVVariableType, CVVariableName, \
     CVSpeciation, CVSiteType, CVElevationDatum, CVMethodType, CVUnitsType, CVStatus, CVMedium, \
-    CVAggregationStatistic
+    CVAggregationStatistic, TimeSeriesMetaData
 from forms import SiteValidationForm, VariableValidationForm, MethodValidationForm, \
     ProcessingLevelValidationForm, TimeSeriesResultValidationForm
 
 
 FILE_UPLOAD_ERROR_MESSAGE = "(Uploaded file was not added to the resource)"
-
-
-def get_file_ext_and_obj_name(res, res_file):
-    fl_ext = ''
-    fl_obj_name = ''
-    if res_file.resource_file:
-        fl_ext = os.path.splitext(res_file.resource_file.name)[1]
-        fl_obj_name = res_file.resource_file.file.name
-    elif res_file.fed_resource_file:
-        fl_ext = os.path.splitext(res_file.fed_resource_file.name)[1]
-        fl_obj_name = res_file.fed_resource_file.file.name
-    elif res_file.fed_resource_file_name_or_path:
-        fl_ext = os.path.splitext(res_file.fed_resource_file_name_or_path)[1]
-        fl_obj_name = utils.get_fed_zone_files(
-            os.path.join(res.resource_federation_path, res.short_id,
-                         res_file.fed_resource_file_name_or_path))[0]
-    return fl_ext, fl_obj_name
 
 
 @receiver(pre_create_resource, sender=TimeSeriesResource)
@@ -56,13 +39,21 @@ def pre_delete_file_from_resource_handler(sender, **kwargs):
     del_file = kwargs['file']
 
     def reset_metadata_elements_is_dirty(elements):
+        # filter out any non-dirty element
+        elements = [element for element in elements if element.is_dirty]
         for element in elements:
             element.is_dirty = False
             element.save()
 
-    # check if it a sqlite file
-    fl_ext, fl_obj_name = get_file_ext_and_obj_name(resource, del_file)
+    # check if it is a sqlite file
+    fl_ext = utils.get_resource_file_extension(del_file)
     if fl_ext == '.sqlite':
+        TimeSeriesMetaData.objects.filter(id=resource.metadata.id).update(is_dirty=False)
+        # metadata object is_dirty attribute for some reason can't be set using the following
+        # 2 lines of code
+        # resource.metadata.is_dirty=False
+        # resource.metadata.save()
+
         reset_metadata_elements_is_dirty(resource.metadata.sites.all())
         reset_metadata_elements_is_dirty(resource.metadata.variables.all())
         reset_metadata_elements_is_dirty(resource.metadata.methods.all())
@@ -86,36 +77,10 @@ def post_add_files_to_resource_handler(sender, **kwargs):
     user = kwargs['user']
 
     # extract metadata from the just uploaded file
-    res_file = resource.files.all()[0] if resource.files.all() else None
+    res_file = resource.files.all().first()
     if res_file:
-        # check if it a sqlite file
-        fl_ext, fl_obj_name = get_file_ext_and_obj_name(resource, res_file)
-
-        if fl_ext == '.sqlite':
-            validate_err_message = _validate_odm2_db_file(fl_obj_name)
-            if not validate_err_message:
-                # first delete relevant metadata elements
-                _delete_extracted_metadata(resource)
-                extract_err_message = _extract_metadata(resource, fl_obj_name)
-                if extract_err_message:
-                    # delete the invalid file
-                    delete_resource_file_only(resource, res_file)
-                    # cleanup any extracted metadata
-                    _delete_extracted_metadata(resource)
-                    validate_files_dict['are_files_valid'] = False
-                    extract_err_message += " " + FILE_UPLOAD_ERROR_MESSAGE
-                    validate_files_dict['message'] = extract_err_message
-                else:
-                    utils.resource_modified(resource, user)
-
-            else:   # file validation failed
-                # delete the invalid file just uploaded
-                delete_resource_file_only(resource, res_file)
-                validate_files_dict['are_files_valid'] = False
-                validate_err_message += " " + FILE_UPLOAD_ERROR_MESSAGE
-                validate_files_dict['message'] = validate_err_message
-        if res_file.fed_resource_file_name_or_path and fl_obj_name:
-            shutil.rmtree(os.path.dirname(fl_obj_name))
+        _process_uploaded_sqlite_file(user, resource, res_file, validate_files_dict,
+                                      delete_existing_metadata=True)
 
 
 @receiver(post_create_resource, sender=TimeSeriesResource)
@@ -124,34 +89,55 @@ def post_create_resource_handler(sender, **kwargs):
     validate_files_dict = kwargs['validate_files']
     user = kwargs['user']
 
-    res_file = resource.files.all()[0] if resource.files.all() else None
+    # extract metadata from the just uploaded file
+    res_file = resource.files.all().first()
     if res_file:
-        # check if it a sqlite file
-        fl_ext, fl_obj_name = get_file_ext_and_obj_name(resource, res_file)
+        _process_uploaded_sqlite_file(user, resource, res_file, validate_files_dict,
+                                      delete_existing_metadata=False)
 
-        if fl_ext == '.sqlite':
-            validate_err_message = _validate_odm2_db_file(fl_obj_name)
-            if not validate_err_message:
-                extract_err_message = _extract_metadata(resource, fl_obj_name)
-                if extract_err_message:
-                    # delete the invalid file
-                    delete_resource_file_only(resource, res_file)
-                    # cleanup any extracted metadata
-                    _delete_extracted_metadata(resource)
-                    validate_files_dict['are_files_valid'] = False
-                    extract_err_message += " " + FILE_UPLOAD_ERROR_MESSAGE
-                    validate_files_dict['message'] = extract_err_message
-                else:
-                    utils.resource_modified(resource, user)
-            else:
+
+def _process_uploaded_sqlite_file(user, resource, res_file, validate_files_dict,
+                                  delete_existing_metadata=True):
+    # check if it a sqlite file
+    fl_ext = utils.get_resource_file_extension(res_file)
+
+    if fl_ext == '.sqlite':
+        # get the file from iRODS to a temp directory
+        fl_obj_name = utils.get_file_from_irods(res_file)
+        validate_err_message = _validate_odm2_db_file(fl_obj_name)
+        if not validate_err_message:
+            # first delete relevant existing metadata elements
+            if delete_existing_metadata:
+                _delete_extracted_metadata(resource)
+            extract_err_message = _extract_metadata(resource, fl_obj_name)
+            if extract_err_message:
                 # delete the invalid file
                 delete_resource_file_only(resource, res_file)
+                # cleanup any extracted metadata
+                _delete_extracted_metadata(resource)
                 validate_files_dict['are_files_valid'] = False
-                validate_err_message += " " + FILE_UPLOAD_ERROR_MESSAGE
-                validate_files_dict['message'] = validate_err_message
+                extract_err_message += "{}".format(FILE_UPLOAD_ERROR_MESSAGE)
+                validate_files_dict['message'] = extract_err_message
+            else:
+                utils.resource_modified(resource, user)
 
-        if res_file.fed_resource_file_name_or_path and fl_obj_name:
+        else:   # file validation failed
+            # delete the invalid file just uploaded
+            delete_resource_file_only(resource, res_file)
+            validate_files_dict['are_files_valid'] = False
+            validate_err_message += "{}".format(FILE_UPLOAD_ERROR_MESSAGE)
+            validate_files_dict['message'] = validate_err_message
+
+        # cleanup the temp file
+        if os.path.exists(fl_obj_name):
             shutil.rmtree(os.path.dirname(fl_obj_name))
+    else:
+        # delete the invalid file
+        delete_resource_file_only(resource, res_file)
+        validate_files_dict['are_files_valid'] = False
+        err_message = "The uploaded file not a sqlite file. {}"
+        err_message += err_message.format(FILE_UPLOAD_ERROR_MESSAGE)
+        validate_files_dict['message'] = err_message
 
 
 @receiver(pre_metadata_element_create, sender=TimeSeriesResource)
@@ -166,12 +152,6 @@ def metadata_element_pre_update_handler(sender, **kwargs):
     element_name = kwargs['element_name'].lower()
     request = kwargs['request']
     return _validate_metadata(request, element_name)
-
-"""
- Since each of the timeseries metadata element is required no need to listen to any delete signal
- The timeseries landing page should not have delete UI functionality for the resource specific
- metadata elements
-"""
 
 
 def _validate_metadata(request, element_name):
