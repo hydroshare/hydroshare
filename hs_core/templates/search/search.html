@@ -505,11 +505,6 @@
                                       <h3 class="panel-title">Box Coverages Resources</h3>
                                   </div>
                                   <div class="list-group" id="box-coverages-list">
-                                      <!--<li class="list-group-item clearfix"><button type="button" class="list-group-item" onclick="alert('hi')">Cras justo odio</button></li>
-                                      <li class="list-group-item clearfix"><button type="button" class="list-group-item">Dapibus ac facilisis in</button></li>
-                                      <li class="list-group-item clearfix"><button type="button" class="list-group-item">Morbi leo risus</button></li>
-                                      <li class="list-group-item clearfix"><button type="button" class="list-group-item">Porta ac consectetur ac</button></li>
-                                      <li class="list-group-item clearfix"><button type="button" class="list-group-item">Vestibulum at eros</button></li>-->
                                   </div>
                               </div>
                         </div>
@@ -707,14 +702,7 @@
             var southlimit = parseFloat(box.southlimit);
             var eastlimit = parseFloat(box.eastlimit);
             var westlimit = parseFloat(box.westlimit);
-            var lat = (parseFloat(northlimit) + parseFloat(southlimit)) / 2;
-            var lng = (parseFloat(eastlimit) + parseFloat(westlimit)) / 2;
-            var latlng = new google.maps.LatLng(lat, lng);
-{#            var marker = new google.maps.Marker({#}
-{#                map: map,#}
-{#                icon: '//cdn.rawgit.com/Concept211/Google-Maps-Markers/master/images/marker_blue.png',#}
-{#                position: latlng#}
-{#            });#}
+
             rectangle = new google.maps.Rectangle({
                 strokeColor: '#FF0000',
                 strokeOpacity: 0.8,
@@ -736,10 +724,6 @@
             var info_content = box.title;
             rectangle.set('bounds', rectBounds);
             map.fitBounds(rectBounds);
-{#            google.maps.event.addListener(rectangle, 'click', function() {#}
-{#                info_window.setContent(info_content);#}
-{#                info_window.open(map, rectangle);#}
-{#            });#}
         }
 
         var clientUpdateMarkers = function(filtered_results) {
@@ -919,7 +903,7 @@
             var resetButton_content = [];
             // legend_content.push("<p style='margin-left:5px'><img src='//cdn.rawgit.com/googlemaps/js-marker-clusterer/gh-pages/images/m2.png'> number of sites </p>");
             legend_content.push("<p><img src='//cdn.rawgit.com/Concept211/Google-Maps-Markers/master/images/marker_red.png'> Point Coverage Resources </p>");
-            legend_content.push("<p><img src='//cdn.rawgit.com/Concept211/Google-Maps-Markers/master/images/marker_blue.png'> Box Coverage Resources </p>");
+            //legend_content.push("<p><img src='//cdn.rawgit.com/Concept211/Google-Maps-Markers/master/images/marker_blue.png'> Box Coverage Resources </p>");
             geocoder_content.push("<input id='address' type='textbox' placeholder='Search Locations...'>");
             geocoder_content.push("<a id='geocoder-submit' style='margin-left:10px' class='btn btn-default'><span class='glyphicon glyphicon-zoom-in'></span> Zoom In </a>");
             resetButton_content.push("<a id='reset-zoom-btn' class='btn btn-default btn-sm' onclick='resetMapZoom()'>");
