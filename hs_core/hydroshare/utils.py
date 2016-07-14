@@ -234,6 +234,82 @@ def get_fed_zone_files(irods_fnames):
     return ret_file_list
 
 
+def get_file_from_irods(res_file):
+    """
+    Copy the file (res_file) from iRODS (local or federated zone)
+    over to django (temp directory) which is
+    necessary for manipulating the file (e.g. metadata extraction).
+    Note: The caller is responsible for cleaning the temp directory
+
+    :param res_file: an instance of ResourceFile
+    :return: location of the copied file
+    """
+    res = res_file.resource
+    if res_file.resource_file or res_file.fed_resource_file:
+        istorage = IrodsStorage()
+        if res_file.resource_file:
+            file_name = os.path.basename(res_file.resource_file.name)
+        else:
+            file_name = os.path.basename(res_file.fed_resource_file.name)
+
+        tmpdir = os.path.join(settings.TEMP_FILE_DIR, uuid4().hex)
+        tmpfile = os.path.join(tmpdir, file_name)
+        try:
+            os.makedirs(tmpdir)
+        except OSError as ex:
+            if ex.errno == errno.EEXIST:
+                shutil.rmtree(tmpdir)
+                os.makedirs(tmpdir)
+            else:
+                raise Exception(ex.message)
+        istorage.getFile(res_file.resource_file.name, tmpfile)
+        copied_file = tmpfile
+    else:
+        copied_file = get_fed_zone_files(
+            os.path.join(res.resource_federation_path, res.short_id,
+                         res_file.fed_resource_file_name_or_path))[0]
+    return copied_file
+
+
+def replace_resource_file_on_irods(new_file, original_resource_file):
+    """
+    Replaces the specified resource file with file (new_file) by copying to iRODS
+    (local or federated zone)
+    :param new_file: file path for the file to be copied to iRODS
+    :param original_resource_file: an instance of ResourceFile that is to be replaced
+    :return:
+    """
+
+    if original_resource_file.resource_file or original_resource_file.fed_resource_file:
+        istorage = IrodsStorage()
+        if original_resource_file.resource_file:
+            destination_file = original_resource_file.resource_file.name
+        else:
+            destination_file = original_resource_file.fed_resource_file.name
+    else:
+        istorage = IrodsStorage('federated')
+        destination_file = original_resource_file.fed_resource_file_name_or_path
+
+    istorage.saveFile(new_file, destination_file, True)
+
+
+def get_resource_file_extension(res_file):
+    """
+    Gets the file extension of the specified resource file
+    :param res_file: an instance of ResourceFile for which file extension to be retrieved
+    :return: file extension
+    """
+    fl_ext = None
+    if res_file.resource_file:
+        fl_ext = os.path.splitext(res_file.resource_file.name)[1]
+    elif res_file.fed_resource_file:
+        fl_ext = os.path.splitext(res_file.fed_resource_file.name)[1]
+    elif res_file.fed_resource_file_name_or_path:
+        fl_ext = os.path.splitext(res_file.fed_resource_file_name_or_path)[1]
+
+    return fl_ext
+
+
 def delete_fed_zone_file(file_name_with_full_path):
     '''
     Args:
