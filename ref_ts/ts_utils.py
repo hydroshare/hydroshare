@@ -14,6 +14,7 @@ from owslib.waterml.wml11 import WaterML_1_1 as wml11
 from owslib.waterml.wml10 import WaterML_1_0 as wml10
 
 logger = logging.getLogger("django")
+BLANK_FIELD_STRING = ""
 
 def wmlParse(response, ver=11):
     if ver == 11:
@@ -476,7 +477,7 @@ def QueryHydroServerGetParsedWML(service_url, soap_or_rest, site_code=None, vari
         logger.exception("QueryHydroServerGetParsedWML: %s" % (e.message))
         raise e
 
-def create_vis_2(path, site_name, data, xlabel, variable_name, units, noDataValue, predefined_name=None):
+def create_vis_2(path, data, xlabel, variable_name, units, noDataValue, predefined_name=None):
     try:
         x_list = data["x"]
         y_list = data["y"]
@@ -538,9 +539,6 @@ def generate_resource_files(shortkey, tempdir):
 def save_ts_to_files(res, tempdir, ts):
     res_file_info_array = []
 
-    site_name = res.metadata.sites.all()[0].name
-    title = res.metadata.title.value
-
     # save preview figure
     data = ts['data']
     units = ts['unit_abbr']
@@ -551,7 +549,7 @@ def save_ts_to_files(res, tempdir, ts):
     variable_name = ts['variable_name']
     noDataValue = ts['noDataValue']
 
-    preview_file_info = create_vis_2(path=tempdir, site_name=site_name, data=data, xlabel='Date',
+    preview_file_info = create_vis_2(path=tempdir, data=data, xlabel='Date',
                                       variable_name=variable_name, units=units, noDataValue=noDataValue)
     res_file_info_array.append(preview_file_info)
 
@@ -612,3 +610,46 @@ def save_ts_to_files(res, tempdir, ts):
         res_file_info_array.append({"fname": wml_2_0_name, "fullpath": wml_2_0_full_path})
 
     return res_file_info_array
+
+
+def prepare_metadata_list(metadata, ts_dict, url, reference_type):
+
+    if ts_dict["longitude"] is not None and ts_dict["latitude"] is not None:
+        coverage_point = {"Coverage": {"type": "point",
+                          "value": {"east": ts_dict["longitude"],
+                                    "north": ts_dict["latitude"],
+                                    "units": "WGS 84 EPSG:4326"}
+                                    }
+                          }
+        metadata.append(coverage_point)
+
+    if ts_dict["start_date"] is not None and ts_dict["end_date"] is not None:
+        coverage_period ={"Coverage": {"type": "period",
+                              "value": {"start": ts_dict["start_date"],
+                                        "end": ts_dict["end_date"]}
+                             }
+                }
+        metadata.append(coverage_period)
+
+    metadata += [{"ReferenceURL": {"value": url, "type": reference_type}},
+                {"Site": {"name": ts_dict['site_name'] if ts_dict['site_name'] is not None else BLANK_FIELD_STRING,
+                          "code": ts_dict['site_code'] if ts_dict['site_code'] is not None else BLANK_FIELD_STRING,
+                          "net_work": ts_dict['net_work'] if ts_dict['net_work'] is not None else BLANK_FIELD_STRING,
+                          "latitude": ts_dict['latitude'],
+                          "longitude": ts_dict['longitude']
+                          }
+                },
+                {"Variable": {"name": ts_dict['variable_name'] if ts_dict['variable_name'] is not None else BLANK_FIELD_STRING,
+                              "code": ts_dict['variable_code'] if ts_dict['variable_code'] is not None else BLANK_FIELD_STRING
+                              }
+                },
+                {"DataSource": {"code": ts_dict['source_code'] if ts_dict['source_code'] is not None else BLANK_FIELD_STRING}},
+                {"Method": {"code": ts_dict['method_code'] if ts_dict['method_code'] is not None else BLANK_FIELD_STRING,
+                            "description": ts_dict['method_description'] if ts_dict['method_description'] is not None else BLANK_FIELD_STRING
+                           }
+                },
+                {"QualityControlLevel": {
+                    "code": ts_dict['quality_control_level_code'] if ts_dict['quality_control_level_code'] is not None else BLANK_FIELD_STRING,
+                    "definition": ts_dict['quality_control_level_definition'] if ts_dict['quality_control_level_definition'] is not None else BLANK_FIELD_STRING
+                                         }
+                }]

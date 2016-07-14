@@ -1,4 +1,5 @@
 import json
+import requests
 from dateutil import parser
 
 from rest_framework import status
@@ -315,3 +316,62 @@ class TestCreateResource(HSRESTTestCase):
         rest_url = '/hsapi/resource/'
         response = self.client.post(rest_url, params)
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_refts_creation_via_rest_api(self):
+
+        rtype = 'RefTimeSeriesResource'
+        title = 'My Test RefTS res'
+
+        ref_url = "http://data.iutahepscor.org/LoganRiverWOF/REST/waterml_1_1.svc/datavalues?" \
+                  "location=iutah:LR_WaterLab_AA&variable=iutah:WaterTemp_EXO&" \
+                  "startDate=2014-12-02T19:45:00Z&endDate=2014-12-05T19:45:00Z"
+        ref_type = "rest"
+
+        # test the "ref_url" rest endpoint is up
+        response = requests.get(ref_url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        metadata = []
+        # add core metadata
+        metadata.append({'relation': {'type': 'isPartOf',
+                                      'value': 'http://hydroshare.org/resource/001'}})
+        # add refts-specific metadata
+        metadata.append({"referenceurl":
+                        {"value": ref_url,
+                         "type": ref_type}})
+
+        # post to rest api
+        params = {'resource_type': rtype,
+                  'title': title,
+                  'metadata': json.dumps(metadata),
+                  }
+        rest_url = '/hsapi/resource/'
+        response = self.client.post(rest_url, params)
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        content = json.loads(response.content)
+        res_id = content['resource_id']
+        resource = get_resource_by_shortkey(res_id)
+
+        # test core metadata
+        self.assertEqual(resource.metadata.relations.all().count(), 1)
+        relation = resource.metadata.relations.all().first()
+        self.assertEqual(relation.type, 'isPartOf')
+        self.assertEqual(relation.value, 'http://hydroshare.org/resource/001')
+
+        # test resource-specific metadata
+        self.assertEqual(resource.resource_type.lower(), "reftimeseriesresource")
+
+        self.assertEqual(resource.metadata.referenceURLs.all().count(), 1)
+        referenceURLs = resource.metadata.referenceURLs.all().first()
+        self.assertEquals(referenceURLs.value, ref_url)
+        self.assertEquals(referenceURLs.type, ref_type)
+
+        self.assertEqual(resource.metadata.sites.all().count(), 1)
+        sites = resource.metadata.sites.all().first()
+        self.assertEquals(sites.code, "LR_WaterLab_AA")
+
+        self.assertEqual(resource.metadata.variables.all().count(), 1)
+        variables = resource.metadata.variables.all().first()
+        self.assertEquals(variables.code, "WaterTemp_EXO")
+
+        self.resources_to_delete.append(res_id)
