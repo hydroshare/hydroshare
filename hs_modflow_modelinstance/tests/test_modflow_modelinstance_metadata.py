@@ -192,7 +192,7 @@ class TestMODFLOWModelInstanceMetaData(MockIRODSTestCaseMixin, TransactionTestCa
         self.res.metadata.create_element('ExecutedBy', model_name=self.resGenModelProgram.short_id)
         modelparam_element = self.res.metadata.executed_by
         self.assertEqual(modelparam_element.model_name,
-                          self.resGenModelProgram.metadata.title.value)
+                         self.resGenModelProgram.metadata.title.value)
         self.assertEqual(modelparam_element.model_program_fk, self.resGenModelProgram)
         # multiple ExecutedBy elements are not allowed - it would raise an exception
         with self.assertRaises(IntegrityError):
@@ -492,7 +492,7 @@ class TestMODFLOWModelInstanceMetaData(MockIRODSTestCaseMixin, TransactionTestCa
                                          model_name=self.resMODFLOWModelProgram.short_id)
         modelparam_element = self.res.metadata.executed_by
         self.assertEqual(modelparam_element.model_name,
-                          self.resMODFLOWModelProgram.metadata.title.value)
+                         self.resMODFLOWModelProgram.metadata.title.value)
         self.assertEqual(modelparam_element.model_program_fk, self.resMODFLOWModelProgram)
 
         # update StudyArea
