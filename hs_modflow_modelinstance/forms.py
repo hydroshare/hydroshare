@@ -11,22 +11,6 @@ from hs_modflow_modelinstance.models import StudyArea, GridDimensions, StressPer
     GroundWaterFlow, BoundaryCondition, ModelCalibration, ModelInput, GeneralElements
 
 
-gridTypeChoices = (('Choose a type', 'Choose a type'),)+GridDimensions.gridTypeChoices
-stressPeriodTypeChoices = (('Choose a type', 'Choose a type'),) + \
-                          StressPeriod.stressPeriodTypeChoices
-transientStateValueTypeChoices = (('Choose a type', 'Choose a type'),) + \
-                                 StressPeriod.transientStateValueTypeChoices
-flowPackageChoices = (('Choose a package', 'Choose a package'),) + \
-                     GroundWaterFlow.flowPackageChoices
-flowParameterChoices = (('Choose a parameter', 'Choose a parameter'),) + \
-                       GroundWaterFlow.flowParameterChoices
-observationProcessPackageChoices = (('Choose a package', 'Choose a package'),) + \
-                                   ModelCalibration.observationProcessPackageChoices
-modelSolverChoices = (('Choose a solver', 'Choose a solver'),) + GeneralElements.modelSolverChoices
-subsidencePackageChoices = (('Choose a package', 'Choose a package'),) + \
-                           GeneralElements.subsidencePackageChoices
-
-
 class MetadataField(layout.Field):
     def __init__(self, *args, **kwargs):
         kwargs['css_class'] = 'form-control input-sm'
@@ -199,12 +183,14 @@ class GridDimensionsFormHelper(BaseFormHelper):
 
 
 class GridDimensionsForm(ModelForm):
+    grid_type_choices = (('Choose a type', 'Choose a type'),) + GridDimensions.gridTypeChoices
+
     def __init__(self, allow_edit=True, res_short_id=None, element_id=None, *args, **kwargs):
         super(GridDimensionsForm, self).__init__(*args, **kwargs)
         self.helper = GridDimensionsFormHelper(allow_edit, res_short_id, element_id,
                                                element_name='GridDimensions')
-        self.fields['typeOfRows'].choices = gridTypeChoices
-        self.fields['typeOfColumns'].choices = gridTypeChoices
+        self.fields['typeOfRows'].choices = self.grid_type_choices
+        self.fields['typeOfColumns'].choices = self.grid_type_choices
 
     class Meta:
         model = GridDimensions
@@ -242,12 +228,17 @@ class StressPeriodFormHelper(BaseFormHelper):
 
 
 class StressPeriodForm(ModelForm):
+    stress_period_type_choices = \
+        (('Choose a type', 'Choose a type'),) + StressPeriod.stressPeriodTypeChoices
+    transient_state_value_type_choices = \
+        (('Choose a type', 'Choose a type'),) + StressPeriod.transientStateValueTypeChoices
+
     def __init__(self, allow_edit=True, res_short_id=None, element_id=None, *args, **kwargs):
         super(StressPeriodForm, self).__init__(*args, **kwargs)
         self.helper = StressPeriodFormHelper(allow_edit, res_short_id, element_id,
                                              element_name='StressPeriod')
-        self.fields['stressPeriodType'].choices = stressPeriodTypeChoices
-        self.fields['transientStateValueType'].choices = transientStateValueTypeChoices
+        self.fields['stressPeriodType'].choices = self.stress_period_type_choices
+        self.fields['transientStateValueType'].choices = self.transient_state_value_type_choices
 
     class Meta:
         model = StressPeriod
@@ -281,12 +272,17 @@ class GroundWaterFlowFormHelper(BaseFormHelper):
 
 
 class GroundWaterFlowForm(ModelForm):
+    flow_package_choices = \
+        (('Choose a package', 'Choose a package'),) + GroundWaterFlow.flowPackageChoices
+    flow_parameter_choices = \
+        (('Choose a parameter', 'Choose a parameter'),) + GroundWaterFlow.flowParameterChoices
+
     def __init__(self, allow_edit=True, res_short_id=None, element_id=None, *args, **kwargs):
         super(GroundWaterFlowForm, self).__init__(*args, **kwargs)
         self.helper = GroundWaterFlowFormHelper(allow_edit, res_short_id, element_id,
                                                 element_name='GroundWaterFlow')
-        self.fields['flowPackage'].choices = flowPackageChoices
-        self.fields['flowParameter'].choices = flowParameterChoices
+        self.fields['flowPackage'].choices = self.flow_package_choices
+        self.fields['flowParameter'].choices = self.flow_parameter_choices
 
     class Meta:
         model = GroundWaterFlow
@@ -388,11 +384,14 @@ class ModelCalibrationFormHelper(BaseFormHelper):
 
 
 class ModelCalibrationForm(ModelForm):
+    observation_process_package_choices = (('Choose a package', 'Choose a package'),) + \
+                                          ModelCalibration.observationProcessPackageChoices
+
     def __init__(self, allow_edit=True, res_short_id=None, element_id=None, *args, **kwargs):
         super(ModelCalibrationForm, self).__init__(*args, **kwargs)
         self.helper = ModelCalibrationFormHelper(allow_edit, res_short_id, element_id,
                                                  element_name='ModelCalibration')
-        self.fields['observationProcessPackage'].choices = observationProcessPackageChoices
+        self.fields['observationProcessPackage'].choices = self.observation_process_package_choices
 
     class Meta:
         model = ModelCalibration
@@ -478,16 +477,20 @@ class GeneralElementsFormHelper(BaseFormHelper):
 
 
 class GeneralElementsForm(ModelForm):
+    model_solver_choices = \
+        (('Choose a solver', 'Choose a solver'),) + GeneralElements.modelSolverChoices
     output_control_package = forms.MultipleChoiceField(
         choices=GeneralElements.outputControlPackageChoices,
         widget=forms.CheckboxSelectMultiple(attrs={'style': 'width:auto;margin-top:-5px'}))
+    subsidence_package_choices = \
+        (('Choose a package', 'Choose a package'),) + GeneralElements.subsidencePackageChoices
 
     def __init__(self, allow_edit=True, res_short_id=None, element_id=None, *args, **kwargs):
         super(GeneralElementsForm, self).__init__(*args, **kwargs)
         self.helper = GeneralElementsFormHelper(allow_edit, res_short_id, element_id,
                                                 element_name='GeneralElements')
-        self.fields['modelSolver'].choices = modelSolverChoices
-        self.fields['subsidencePackage'].choices = subsidencePackageChoices
+        self.fields['modelSolver'].choices = self.model_solver_choices
+        self.fields['subsidencePackage'].choices = self.subsidence_package_choices
         if self.instance:
             if self.instance.id:
                 self.fields['output_control_package'].initial = \
