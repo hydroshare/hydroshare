@@ -11,39 +11,20 @@ from hs_modflow_modelinstance.models import StudyArea, GridDimensions, StressPer
     GroundWaterFlow, BoundaryCondition, ModelCalibration, ModelInput, GeneralElements
 
 
-gridTypeChoices = (('Choose a type', 'Choose a type'), ('Regular', 'Regular'),
-                   ('Irregular', 'Irregular'),)
-stressPeriodTypeChoices = (('Choose a type', 'Choose a type'), ('Steady', 'Steady'),
-                           ('Transient', 'Transient'),
-                           ('Steady and Transient', 'Steady and Transient'),)
-transientStateValueTypeChoices = (('Choose a type', 'Choose a type'), ('Annually', 'Annually'),
-                                  ('Monthly', 'Monthly'),
-                                  ('Daily', 'Daily'), ('Hourly', 'Hourly'), ('Other', 'Other'))
-flowPackageChoices = (('Choose a package', 'Choose a package'), ('BCF6', 'BCF6'), ('LPF', 'LPF'),
-                      ('HUF2', 'HUF2'),
-                      ('UPW', 'UPW'), ('HFB6', 'HFB6'), ('UZF', 'UZF'), ('SWI2', 'SWI2'),)
-flowParameterChoices = (('Choose a parameter', 'Choose a parameter'),
-                        ('Hydraulic Conductivity', 'Hydraulic Conductivity'),
-                        ('Transmissivity', 'Transmissivity'),)
-specifiedHeadBoundaryPackageChoices = (('BFH', 'BFH'), ('CHD', 'CHD'), ('FHB', 'FHB'),)
-specifiedFluxBoundaryPackageChoices = (('FHB', 'FHB'), ('RCH', 'RCH'), ('WEL', 'WEL'),)
-headDependentFluxBoundaryPackageChoices = (('DAF', 'DAF'), ('DAFG', 'DAFG'), ('DRN', 'DRN'),
-                                           ('DRT', 'DRT'), ('ETS', 'ETS'), ('EVT', 'EVT'),
-                                           ('GHB', 'GHB'), ('LAK', 'LAK'), ('MNW1', 'MNW1'),
-                                           ('MNW2', 'MNW2'), ('RES', 'RES'), ('RIP', 'RIP'),
-                                           ('RIV', 'RIV'), ('SFR', 'SFR'), ('STR', 'STR'),
-                                           ('UZF', 'UZF'),)
-observationProcessPackageChoices = (('Choose a package', 'Choose a package'), ('ADV2', 'ADV2'),
-                                    ('CHOB', 'CHOB'), ('DROB', 'DROB'), ('DTOB', 'DTOB'),
-                                    ('GBOB', 'GBOB'), ('HOB', 'HOB'), ('OBS', 'OBS'),
-                                    ('RVOB', 'RVOB'), ('STOB', 'STOB'),)
-modelSolverChoices = (('Choose a solver', 'Choose a solver'), ('DE4', 'DE4'), ('GMG', 'GMG'),
-                      ('LMG', 'LMG'), ('PCG', 'PCG'), ('PCGN', 'PCGN'), ('SIP', 'SIP'),
-                      ('SOR', 'SOR'), ('NWT', 'NWT'),)
-outputControlPackageChoices = (('GAGE', 'GAGE'), ('HYD', 'HYD'), ('LMT6', 'LMT6'), ('MNWI', 'MNWI'),
-                               ('OC', 'OC'),)
-subsidencePackageChoices = (('Choose a package', 'Choose a package'), ('IBS', 'IBS'),
-                            ('SUB', 'SUB'), ('SWT', 'SWT'),)
+gridTypeChoices = (('Choose a type', 'Choose a type'),)+GridDimensions.gridTypeChoices
+stressPeriodTypeChoices = (('Choose a type', 'Choose a type'),) + \
+                          StressPeriod.stressPeriodTypeChoices
+transientStateValueTypeChoices = (('Choose a type', 'Choose a type'),) + \
+                                 StressPeriod.transientStateValueTypeChoices
+flowPackageChoices = (('Choose a package', 'Choose a package'),) + \
+                     GroundWaterFlow.flowPackageChoices
+flowParameterChoices = (('Choose a parameter', 'Choose a parameter'),) + \
+                       GroundWaterFlow.flowParameterChoices
+observationProcessPackageChoices = (('Choose a package', 'Choose a package'),) + \
+                                   ModelCalibration.observationProcessPackageChoices
+modelSolverChoices = (('Choose a solver', 'Choose a solver'),) + GeneralElements.modelSolverChoices
+subsidencePackageChoices = (('Choose a package', 'Choose a package'),) + \
+                           GeneralElements.subsidencePackageChoices
 
 
 class MetadataField(layout.Field):
@@ -340,13 +321,13 @@ class BoundaryConditionFormHelper(BaseFormHelper):
 
 class BoundaryConditionForm(ModelForm):
     specified_head_boundary_packages = forms.MultipleChoiceField(
-        choices=specifiedHeadBoundaryPackageChoices,
+        choices=BoundaryCondition.specifiedHeadBoundaryPackageChoices,
         widget=forms.CheckboxSelectMultiple(attrs={'style': 'width:auto;margin-top:-5px'}))
     specified_flux_boundary_packages = forms.MultipleChoiceField(
-        choices=specifiedFluxBoundaryPackageChoices,
+        choices=BoundaryCondition.specifiedFluxBoundaryPackageChoices,
         widget=forms.CheckboxSelectMultiple(attrs={'style': 'width:auto;margin-top:-5px'}))
     head_dependent_flux_boundary_packages = forms.MultipleChoiceField(
-        choices=headDependentFluxBoundaryPackageChoices,
+        choices=BoundaryCondition.headDependentFluxBoundaryPackageChoices,
         widget=forms.CheckboxSelectMultiple(attrs={'style': 'width:auto;margin-top:-5px'}))
 
     def __init__(self, allow_edit=True, res_short_id=None, element_id=None, *args, **kwargs):
@@ -379,11 +360,11 @@ class BoundaryConditionForm(ModelForm):
 
 class BoundaryConditionValidationForm(forms.Form):
     specified_head_boundary_packages = forms.MultipleChoiceField(
-        choices=specifiedHeadBoundaryPackageChoices, required=False)
+        choices=BoundaryCondition.specifiedHeadBoundaryPackageChoices, required=False)
     specified_flux_boundary_packages = forms.MultipleChoiceField(
-        choices=specifiedFluxBoundaryPackageChoices, required=False)
+        choices=BoundaryCondition.specifiedFluxBoundaryPackageChoices, required=False)
     head_dependent_flux_boundary_packages = forms.MultipleChoiceField(
-        choices=headDependentFluxBoundaryPackageChoices, required=False)
+        choices=BoundaryCondition.headDependentFluxBoundaryPackageChoices, required=False)
     other_specified_head_boundary_packages = forms.CharField(max_length=200, required=False)
     other_specified_flux_boundary_packages = forms.CharField(max_length=200, required=False)
     other_head_dependent_flux_boundary_packages = forms.CharField(max_length=200, required=False)
@@ -497,11 +478,9 @@ class GeneralElementsFormHelper(BaseFormHelper):
 
 
 class GeneralElementsForm(ModelForm):
-    output_control_package = forms.MultipleChoiceField(choices=outputControlPackageChoices,
-                                                       widget=forms.CheckboxSelectMultiple(
-                                                          attrs={
-                                                              'style': 'width:auto;margin-top:-5px'
-                                                          }))
+    output_control_package = forms.MultipleChoiceField(
+        choices=GeneralElements.outputControlPackageChoices,
+        widget=forms.CheckboxSelectMultiple(attrs={'style': 'width:auto;margin-top:-5px'}))
 
     def __init__(self, allow_edit=True, res_short_id=None, element_id=None, *args, **kwargs):
         super(GeneralElementsForm, self).__init__(*args, **kwargs)
@@ -526,8 +505,9 @@ class GeneralElementsForm(ModelForm):
 class GeneralElementsValidationForm(forms.Form):
     modelParameter = forms.CharField(max_length=100, required=False)
     modelSolver = forms.CharField(max_length=100, required=False)
-    output_control_package = forms.MultipleChoiceField(choices=outputControlPackageChoices,
-                                                       required=False)
+    output_control_package = forms.MultipleChoiceField(
+        choices=GeneralElements.outputControlPackageChoices,
+        required=False)
     subsidencePackage = forms.CharField(max_length=100, required=False)
 
 ModelInputLayoutEdit = Layout(
