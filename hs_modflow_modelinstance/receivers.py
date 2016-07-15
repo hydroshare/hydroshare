@@ -62,6 +62,10 @@ def _process_metadata_update_create(update_or_create, **kwargs):
             element_form = ModelInputValidationForm(request.POST)
     elif element_name == 'generalelements':
         element_form = GeneralElementsValidationForm(request.POST)
+    else:
+        raise Exception('Element name: "{}" is not supported by this resource type'.format(
+            element_name
+        ))
 
     if element_form.is_valid():
         return {'is_valid': True, 'element_data_dict': element_form.cleaned_data}
