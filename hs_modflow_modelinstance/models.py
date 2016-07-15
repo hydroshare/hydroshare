@@ -210,25 +210,26 @@ class GroundWaterFlow(AbstractMetaDataElement):
         return kwargs
 
 
-class SpecifiedHeadBoundaryPackageChoices(models.Model):
+class AbstractChoices(models.Model):
     description = models.CharField(max_length=300)
 
     def __unicode__(self):
         return self.description
 
-
-class SpecifiedFluxBoundaryPackageChoices(models.Model):
-    description = models.CharField(max_length=300)
-
-    def __unicode__(self):
-        return self.description
+    class Meta:
+        abstract = True
 
 
-class HeadDependentFluxBoundaryPackageChoices(models.Model):
-    description = models.CharField(max_length=300)
+class SpecifiedHeadBoundaryPackageChoices(AbstractChoices):
+    pass
 
-    def __unicode__(self):
-        return self.description
+
+class SpecifiedFluxBoundaryPackageChoices(AbstractChoices):
+    pass
+
+
+class HeadDependentFluxBoundaryPackageChoices(AbstractChoices):
+    pass
 
 
 class BoundaryCondition(AbstractMetaDataElement):
@@ -453,11 +454,8 @@ class ModelInput(AbstractMetaDataElement):
         return self.inputType
 
 
-class OutputControlPackageChoices(models.Model):
-    description = models.CharField(max_length=300)
-
-    def __unicode__(self):
-        return self.description
+class OutputControlPackageChoices(AbstractChoices):
+    pass
 
 
 class GeneralElements(AbstractMetaDataElement):
@@ -572,6 +570,15 @@ class MODFLOWModelInstanceResource(BaseResource):
             return False
 
     def check_content_files(self):
+        """
+        like 'has_required_content_files()' this method checks that one and only .nam exists, but
+        unlike 'has_required_content_files()' this method returns which files are missing so that
+        more information can be returned to the user via the interface
+        :return: -['nam'] if there are no files or if there are files but no .nam file
+                 -'multiple_nam' if more than one .nam file has been uploaded
+                 -missing_files, a list of file names that are included in the .nam file but have
+                 not been uploaded by the user
+        """
         missing_files = []
         if self.files.all().count() >= 1:
             nam_files, reqd_files, existing_files = self.find_content_files()
@@ -589,6 +596,15 @@ class MODFLOWModelInstanceResource(BaseResource):
             return ['.nam']
 
     def find_content_files(self):
+        """
+        loops through uploaded files to count the .nam files, creates a list of required files
+        (file names listed in the .nam file needed to run the model), and a list of existing file
+        names
+        :return: -nam_file_count, (int), the number of .nam files uploaded
+                 -reqd_files, (list of strings), the files listed in the .nam file that should be
+                 included for the model to run
+                 -existing_files, (list of strings), the names of files that have been uploaded
+        """
         nam_file_count = 0
         existing_files = []
         reqd_files = []
@@ -598,13 +614,13 @@ class MODFLOWModelInstanceResource(BaseResource):
                 if ext == '.nam':
                     nam_file_count += 1
                     name_file = res_file.resource_file.file
-                    for rows in name_file:
-                        rows = rows.strip()
-                        rows = rows.split(" ")
-                        r = rows[0].strip()
+                    for row in name_file:
+                        row = row.strip()
+                        row = row.split(" ")
+                        r = row[0].strip()
                         if not r.startswith('#') and r != '' and r.lower() != 'list' \
                                 and r.lower() != 'data' and r.lower() != 'data(binary)':
-                            reqd_files.append(rows[-1].strip())
+                            reqd_files.append(row[-1].strip())
         return nam_file_count, reqd_files, existing_files
 
 
@@ -668,11 +684,6 @@ class MODFLOWModelInstanceMetaData(ModelInstanceMetaData):
         elements.append('ModelInput')
         elements.append('GeneralElements')
         return elements
-
-    def has_all_required_elements(self):
-        if not super(MODFLOWModelInstanceMetaData, self).has_all_required_elements():
-            return False
-        return True
 
     def get_xml(self, pretty_print=True):
         # get the xml string representation of the core metadata elements
