@@ -13,10 +13,7 @@ def landing_page(request, page):
     context = page_processors.get_page_context(page, request.user, resource_edit=edit_resource,
                                                extended_metadata_layout=None, request=request)
     extended_metadata_exists = False
-    if content_model.metadata.sites.all().first() or \
-            content_model.metadata.variables.all().first() or \
-            content_model.metadata.methods.all().first() or \
-            content_model.metadata.quality_levels.all().first():
+    if content_model.metadata.referenceURLs.all().first():
         extended_metadata_exists = True
 
     context['extended_metadata_exists'] = extended_metadata_exists

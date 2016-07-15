@@ -2281,7 +2281,7 @@ class GroupMembershipRequest(models.Model):
     request_from = models.ForeignKey(User, related_name='ru2gmrequest')
 
     # when user is requesting to join a group this will be blank
-    # when a group owner sending invitation, this field will have a value
+    # when a group owner is sending an invitation, this field will represent the inviting user
     invitation_to = models.ForeignKey(User, null=True, blank=True, related_name='iu2gmrequest')
     group_to_join = models.ForeignKey(Group, related_name='g2gmrequest')
     date_requested = models.DateTimeField(editable=False, auto_now_add=True)

@@ -895,7 +895,6 @@ class Coverage(AbstractMetaDataElement):
         data for the coverage value attribute must be provided as a dictionary
         """
 
-        # TODO: validate coordinate values
         cov = Coverage.objects.get(id=element_id)
 
         changing_coverage_type = False
