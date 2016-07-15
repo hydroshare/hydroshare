@@ -106,7 +106,7 @@ class ExecutedByForm(ModelForm):
     def __init__(self, allow_edit=True, res_short_id=None, element_id=None, *args, **kwargs):
         super(ExecutedByForm, self).__init__(*args, **kwargs)
 
-        # set mpshort id to '' if a foreign key has not been established yet,
+        # set mpshort id to 'Unspecified' if a foreign key has not been established yet,
         # otherwise use mp short id
         mpshortid = 'Unspecified'
         if self.instance.model_program_fk is not None:
@@ -122,7 +122,6 @@ class ExecutedByForm(ModelForm):
 
 class ExecutedByValidationForm(forms.Form):
     model_name = forms.CharField(max_length=200)
-    model_program_fk = forms
 
 
 # StudyArea element forms
@@ -430,10 +429,6 @@ class ModelInputForm(ModelForm):
         super(ModelInputForm, self).__init__(*args, **kwargs)
         self.helper = ModelInputFormHelper(allow_edit, res_short_id, element_id,
                                            element_name='ModelInput')
-        if res_short_id:
-            self.action = "/hsapi/_internal/%s/modelinput/add-metadata/" % res_short_id
-        else:
-            self.action = ""
 
     @property
     def form_id(self):
