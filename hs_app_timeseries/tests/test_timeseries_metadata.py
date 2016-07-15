@@ -856,6 +856,54 @@ class TestTimeSeriesMetaData(MockIRODSTestCaseMixin, TransactionTestCase):
         # there should be 18 CV_aggregationStatistics records
         self.assertEqual(self.resTimeSeries.metadata.cv_aggregation_statistics.all().count(), 18)
 
+    def test_metadata_is_dirty_on_sqlfile_delete(self):
+        # upon delete of the sqlite file, the 'is_dirty' attribute of the metadata object
+        # should be set to False
+
+        # there should not be any file in the resource
+        self.assertEqual(self.resTimeSeries.files.all().count(), 0)
+        files = [UploadedFile(file=self.odm2_sqlite_file_obj, name=self.odm2_sqlite_file_name)]
+        utils.resource_file_add_pre_process(resource=self.resTimeSeries, files=files,
+                                            user=self.user, extract_metadata=False)
+
+        utils.resource_file_add_process(resource=self.resTimeSeries, files=files, user=self.user,
+                                        extract_metadata=True)
+
+        # there should be one file in the resource
+        self.assertEqual(self.resTimeSeries.files.all().count(), 1)
+        self.assertEqual(self.resTimeSeries.metadata.is_dirty, False)
+
+        # editing a resource specific metadata should set the is_dirty attribute of metadata object
+        # to True
+        site = self.resTimeSeries.metadata.sites.all().first()
+        self.assertEqual(site.is_dirty, False)
+        # now update the site element
+        self.resTimeSeries.metadata.update_element('site', site.id,
+                                                   site_code='LR_WaterLab_BB',
+                                                   site_name='Logan River at the Utah WRL west '
+                                                             'bridge',
+                                                   elevation_m=1515,
+                                                   elevation_datum=site.elevation_datum,
+                                                   site_type=site.site_type)
+
+        site = self.resTimeSeries.metadata.sites.filter(id=site.id).first()
+        self.assertEqual(site.is_dirty, True)
+        # at this point the is_dirty for metadata must be true
+        self.assertEqual(self.resTimeSeries.metadata.is_dirty, True)
+
+        # delete content file that we added above
+        hydroshare.delete_resource_file(self.resTimeSeries.short_id, self.odm2_sqlite_file_name,
+                                        self.user)
+        # there should not be any file in the resource
+        self.assertEqual(self.resTimeSeries.files.all().count(), 0)
+        # at this point the is_dirty for metadata must be false
+        self.assertEqual(self.resTimeSeries.metadata.is_dirty, False)
+
+    def test_has_sqlite_file(self):
+        # here we are testing the property has_sqlite_file
+        # the resource should not have a sqlite file at this point
+        self.assertFalse(self.resTimeSeries.has_sqlite_file)
+
     def test_get_xml(self):
         # add a valid odm2 sqlite file to generate metadata
         files = [UploadedFile(file=self.odm2_sqlite_file_obj, name=self.odm2_sqlite_file_name)]
