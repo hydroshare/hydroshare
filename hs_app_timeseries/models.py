@@ -367,6 +367,10 @@ class TimeSeriesResource(BaseResource):
         md = TimeSeriesMetaData()
         return self._get_metadata(md)
 
+    @property
+    def has_sqlite_file(self):
+        return self.files.all().count() > 0
+
     @classmethod
     def get_supported_upload_file_types(cls):
         # final phase of this resource type implementation will support 3 file types

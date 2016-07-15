@@ -47,7 +47,7 @@ def pre_delete_file_from_resource_handler(sender, **kwargs):
 
     # check if it is a sqlite file
     fl_ext = utils.get_resource_file_extension(del_file)
-    if fl_ext == '.sqlite':
+    if fl_ext == '.sqlite' and resource.metadata.is_dirty:
         TimeSeriesMetaData.objects.filter(id=resource.metadata.id).update(is_dirty=False)
         # metadata object is_dirty attribute for some reason can't be set using the following
         # 2 lines of code
@@ -108,6 +108,7 @@ def _process_uploaded_sqlite_file(user, resource, res_file, validate_files_dict,
         if not validate_err_message:
             # first delete relevant existing metadata elements
             if delete_existing_metadata:
+                TimeSeriesMetaData.objects.filter(id=resource.metadata.id).update(is_dirty=False)
                 _delete_extracted_metadata(resource)
             extract_err_message = _extract_metadata(resource, fl_obj_name)
             if extract_err_message:

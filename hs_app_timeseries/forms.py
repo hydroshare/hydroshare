@@ -330,12 +330,13 @@ def _get_cv_dropdown_widget_items(dropdown_items, selected_item_name):
     return cv_item_choices
 
 UpdateSQLiteLayout = Layout(HTML("""
-<div id="sql-file-update" class="row" {% if not cm.metadata.is_dirty  %}style="display:none;
+<div id="sql-file-update" class="row"
+{% if not cm.has_sqlite_file or not cm.metadata.is_dirty  %}style="display:none;
   "{% endif %} style="margin-bottom:10px">
     <div class="col-sm-12">
         <div class="alert alert-warning alert-dismissible" role="alert">
         <strong>SQLite file needs to be synced with metadata changes:</strong>
-
+        <input id="has-sqlite-file" type="hidden" value="{{ cm.has_sqlite_file }}">
         <form action="/timeseries/sqlite/update/{{ cm.short_id }}/" method="post"
         enctype="multipart/form-data">
             {% csrf_token %}
