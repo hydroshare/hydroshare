@@ -82,10 +82,10 @@ class TestMODFLOWModelInstanceMetaData(MockIRODSTestCaseMixin, TransactionTestCa
 
     def test_allowed_file_types(self):
         # test allowed file type is '.*'
-        self.assertEquals(self.res.get_supported_upload_file_types(), '.*')
+        self.assertEqual(self.res.get_supported_upload_file_types(), '.*')
 
         # there should not be any content file
-        self.assertEquals(self.res.files.all().count(), 0)
+        self.assertEqual(self.res.files.all().count(), 0)
 
         # Upload any file type should pass both the file pre add check post add check
         files = [UploadedFile(file=self.text_file_obj, name=self.text_file_obj.name)]
@@ -96,11 +96,11 @@ class TestMODFLOWModelInstanceMetaData(MockIRODSTestCaseMixin, TransactionTestCa
                                         extract_metadata=False)
 
         # there should one content file
-        self.assertEquals(self.res.files.all().count(), 1)
+        self.assertEqual(self.res.files.all().count(), 1)
 
         # check that there are no extended metadata elements at this point
-        self.assertEquals(self.res.metadata.model_output, None)
-        self.assertEquals(self.res.metadata.executed_by, None)
+        self.assertEqual(self.res.metadata.model_output, None)
+        self.assertEqual(self.res.metadata.executed_by, None)
 
         # Upload any other file type should pass both the file pre add check post add check
         files = [UploadedFile(file=self.text_file_obj, name=self.text_file_obj.name)]
@@ -111,67 +111,67 @@ class TestMODFLOWModelInstanceMetaData(MockIRODSTestCaseMixin, TransactionTestCa
                                         extract_metadata=True)
 
         # there should two content files
-        self.assertEquals(self.res.files.all().count(), 2)
+        self.assertEqual(self.res.files.all().count(), 2)
 
         # check that there are no extended metadata elements at this point
-        self.assertEquals(self.res.metadata.model_output, None)
-        self.assertEquals(self.res.metadata.executed_by, None)
+        self.assertEqual(self.res.metadata.model_output, None)
+        self.assertEqual(self.res.metadata.executed_by, None)
 
     def test_extended_metadata_CRUD(self):
         # test the core metadata at this point
         # there should be a title element
-        self.assertEquals(self.res.metadata.title.value, 'Test MODFLOW Model Instance Resource')
+        self.assertEqual(self.res.metadata.title.value, 'Test MODFLOW Model Instance Resource')
 
         # there should be a creator element
-        self.assertEquals(self.res.metadata.creators.count(), 1)
+        self.assertEqual(self.res.metadata.creators.count(), 1)
 
         # # there should be a type element
         self.assertNotEqual(self.res.metadata.type, None)
 
         # there should be an identifier element
-        self.assertEquals(self.res.metadata.identifiers.count(), 1)
+        self.assertEqual(self.res.metadata.identifiers.count(), 1)
 
         # there should be rights element
         self.assertNotEqual(self.res.metadata.rights, None)
 
         # there shouldn't any source element
-        self.assertEquals(self.res.metadata.sources.count(), 0)
+        self.assertEqual(self.res.metadata.sources.count(), 0)
 
         # there shouldn't any relation element
-        self.assertEquals(self.res.metadata.relations.count(), 0)
+        self.assertEqual(self.res.metadata.relations.count(), 0)
 
         # there shouldn't any abstract element
-        self.assertEquals(self.res.metadata.description, None)
+        self.assertEqual(self.res.metadata.description, None)
 
         # there shouldn't any coverage element
-        self.assertEquals(self.res.metadata.coverages.all().count(), 0)
+        self.assertEqual(self.res.metadata.coverages.all().count(), 0)
 
         # there shouldn't any format element
-        self.assertEquals(self.res.metadata.formats.all().count(), 0)
+        self.assertEqual(self.res.metadata.formats.all().count(), 0)
 
         # there shouldn't any subject element
-        self.assertEquals(self.res.metadata.subjects.all().count(), 0)
+        self.assertEqual(self.res.metadata.subjects.all().count(), 0)
 
         # there shouldn't any contributor element
-        self.assertEquals(self.res.metadata.contributors.all().count(), 0)
+        self.assertEqual(self.res.metadata.contributors.all().count(), 0)
 
         # check that there are no extended metadata elements at this point
-        self.assertEquals(self.res.metadata.model_output, None)
-        self.assertEquals(self.res.metadata.executed_by, None)
-        self.assertEquals(self.res.metadata.study_area, None)
-        self.assertEquals(self.res.metadata.grid_dimensions, None)
-        self.assertEquals(self.res.metadata.stress_period, None)
-        self.assertEquals(self.res.metadata.ground_water_flow, None)
-        self.assertEquals(self.res.metadata.boundary_condition, None)
-        self.assertEquals(self.res.metadata.model_calibration, None)
-        self.assertEquals(len(self.res.metadata.model_inputs), 0)
-        self.assertEquals(self.res.metadata.general_elements, None)
+        self.assertEqual(self.res.metadata.model_output, None)
+        self.assertEqual(self.res.metadata.executed_by, None)
+        self.assertEqual(self.res.metadata.study_area, None)
+        self.assertEqual(self.res.metadata.grid_dimensions, None)
+        self.assertEqual(self.res.metadata.stress_period, None)
+        self.assertEqual(self.res.metadata.ground_water_flow, None)
+        self.assertEqual(self.res.metadata.boundary_condition, None)
+        self.assertEqual(self.res.metadata.model_calibration, None)
+        self.assertEqual(len(self.res.metadata.model_inputs), 0)
+        self.assertEqual(self.res.metadata.general_elements, None)
 
         # create
         # create study_area
         self.res.metadata.create_element('ModelOutput', includes_output=False)
         modeloutput_element = self.res.metadata.model_output
-        self.assertEquals(modeloutput_element.includes_output, False)
+        self.assertEqual(modeloutput_element.includes_output, False)
         # multiple ModelOutput elements are not allowed - it would raise an exception
         with self.assertRaises(IntegrityError):
             self.res.metadata.create_element('ModelOutput', includes_output=True)
@@ -182,7 +182,7 @@ class TestMODFLOWModelInstanceMetaData(MockIRODSTestCaseMixin, TransactionTestCa
         self.assertEqual(self.res.metadata.model_output, None)
         self.res.metadata.create_element('ModelOutput', includes_output=True)
         modeloutput_element = self.res.metadata.model_output
-        self.assertEquals(modeloutput_element.includes_output, True)
+        self.assertEqual(modeloutput_element.includes_output, True)
         # multiple ModelOutput elements are not allowed - it would raise an exception
         with self.assertRaises(IntegrityError):
             self.res.metadata.create_element('ModelOutput', includes_output=True)
@@ -191,9 +191,9 @@ class TestMODFLOWModelInstanceMetaData(MockIRODSTestCaseMixin, TransactionTestCa
         # create ExecutedBy
         self.res.metadata.create_element('ExecutedBy', model_name=self.resGenModelProgram.short_id)
         modelparam_element = self.res.metadata.executed_by
-        self.assertEquals(modelparam_element.model_name,
+        self.assertEqual(modelparam_element.model_name,
                           self.resGenModelProgram.metadata.title.value)
-        self.assertEquals(modelparam_element.model_program_fk, self.resGenModelProgram)
+        self.assertEqual(modelparam_element.model_program_fk, self.resGenModelProgram)
         # multiple ExecutedBy elements are not allowed - it would raise an exception
         with self.assertRaises(IntegrityError):
             self.res.metadata.create_element('ExecutedBy',
@@ -207,10 +207,10 @@ class TestMODFLOWModelInstanceMetaData(MockIRODSTestCaseMixin, TransactionTestCa
                                          minimumElevation='d')
         modelparam_element = self.res.metadata.study_area
         self.assertNotEqual(modelparam_element, None)
-        self.assertEquals(modelparam_element.totalLength, 'a')
-        self.assertEquals(modelparam_element.totalWidth, 'b')
-        self.assertEquals(modelparam_element.maximumElevation, 'c')
-        self.assertEquals(modelparam_element.minimumElevation, 'd')
+        self.assertEqual(modelparam_element.totalLength, 'a')
+        self.assertEqual(modelparam_element.totalWidth, 'b')
+        self.assertEqual(modelparam_element.maximumElevation, 'c')
+        self.assertEqual(modelparam_element.minimumElevation, 'd')
 
         # try to create another studyarea - it would raise an exception
         with self.assertRaises(IntegrityError):
@@ -229,11 +229,11 @@ class TestMODFLOWModelInstanceMetaData(MockIRODSTestCaseMixin, TransactionTestCa
                                          numberOfColumns='e')
         modelparam_element = self.res.metadata.grid_dimensions
         self.assertNotEqual(modelparam_element, None)
-        self.assertEquals(modelparam_element.numberOfLayers, 'a')
-        self.assertEquals(modelparam_element.typeOfRows, 'Regular')
-        self.assertEquals(modelparam_element.numberOfRows, 'c')
-        self.assertEquals(modelparam_element.typeOfColumns, 'Irregular')
-        self.assertEquals(modelparam_element.numberOfColumns, 'e')
+        self.assertEqual(modelparam_element.numberOfLayers, 'a')
+        self.assertEqual(modelparam_element.typeOfRows, 'Regular')
+        self.assertEqual(modelparam_element.numberOfRows, 'c')
+        self.assertEqual(modelparam_element.typeOfColumns, 'Irregular')
+        self.assertEqual(modelparam_element.numberOfColumns, 'e')
 
         # try to create another griddimensions - it would raise an exception
         with self.assertRaises(IntegrityError):
@@ -267,10 +267,10 @@ class TestMODFLOWModelInstanceMetaData(MockIRODSTestCaseMixin, TransactionTestCa
                                          transientStateValue='b')
         modelparam_element = self.res.metadata.stress_period
         self.assertNotEqual(modelparam_element, None)
-        self.assertEquals(modelparam_element.stressPeriodType, 'Steady')
-        self.assertEquals(modelparam_element.steadyStateValue, 'a')
-        self.assertEquals(modelparam_element.transientStateValueType, 'Daily')
-        self.assertEquals(modelparam_element.transientStateValue, 'b')
+        self.assertEqual(modelparam_element.stressPeriodType, 'Steady')
+        self.assertEqual(modelparam_element.steadyStateValue, 'a')
+        self.assertEqual(modelparam_element.transientStateValueType, 'Daily')
+        self.assertEqual(modelparam_element.transientStateValue, 'b')
 
         # try to create another stressperiod - it would raise an exception
         with self.assertRaises(IntegrityError):
@@ -299,8 +299,8 @@ class TestMODFLOWModelInstanceMetaData(MockIRODSTestCaseMixin, TransactionTestCa
                                          flowParameter='Transmissivity')
         modelparam_element = self.res.metadata.ground_water_flow
         self.assertNotEqual(modelparam_element, None)
-        self.assertEquals(modelparam_element.flowPackage, 'BCF6')
-        self.assertEquals(modelparam_element.flowParameter, 'Transmissivity')
+        self.assertEqual(modelparam_element.flowPackage, 'BCF6')
+        self.assertEqual(modelparam_element.flowParameter, 'Transmissivity')
 
         # try to create another groundwaterflow - it would raise an exception
         with self.assertRaises(IntegrityError):
@@ -351,22 +351,22 @@ class TestMODFLOWModelInstanceMetaData(MockIRODSTestCaseMixin, TransactionTestCa
         # check specified_head_boundary_packages
         added_packages = modelparam_element.get_specified_head_boundary_packages()
         for intended_package in spec_hd_bd_pkgs:
-            self.assertEquals(intended_package in added_packages, True)
+            self.assertIn(intended_package, added_packages)
 
         # check specified_flux_boundary_packages
         added_packages = modelparam_element.get_specified_flux_boundary_packages()
         for intended_package in spec_fx_bd_pkgs:
-            self.assertEquals(intended_package in added_packages, True)
+            self.assertIn(intended_package, added_packages)
 
         # check head_dependent_flux_boundary_packages
         added_packages = modelparam_element.get_head_dependent_flux_boundary_packages()
         for intended_package in hd_dep_fx_pkgs:
-            self.assertEquals(intended_package in added_packages, True)
+            self.assertIn(intended_package, added_packages)
 
         # check other packages
-        self.assertEquals(modelparam_element.other_specified_head_boundary_packages, 'JMS')
-        self.assertEquals(modelparam_element.other_specified_flux_boundary_packages, 'MMM')
-        self.assertEquals(modelparam_element.other_head_dependent_flux_boundary_packages, 'JLG')
+        self.assertEqual(modelparam_element.other_specified_head_boundary_packages, 'JMS')
+        self.assertEqual(modelparam_element.other_specified_flux_boundary_packages, 'MMM')
+        self.assertEqual(modelparam_element.other_head_dependent_flux_boundary_packages, 'JLG')
 
         # try to create another boundarycondition - it would raise an exception
         with self.assertRaises(IntegrityError):
@@ -383,10 +383,10 @@ class TestMODFLOWModelInstanceMetaData(MockIRODSTestCaseMixin, TransactionTestCa
                                          calibrationMethod='c')
         modelparam_element = self.res.metadata.model_calibration
         self.assertNotEqual(modelparam_element, None)
-        self.assertEquals(modelparam_element.calibratedParameter, 'a')
-        self.assertEquals(modelparam_element.observationType, 'b')
-        self.assertEquals(modelparam_element.observationProcessPackage, 'RVOB')
-        self.assertEquals(modelparam_element.calibrationMethod, 'c')
+        self.assertEqual(modelparam_element.calibratedParameter, 'a')
+        self.assertEqual(modelparam_element.observationType, 'b')
+        self.assertEqual(modelparam_element.observationProcessPackage, 'RVOB')
+        self.assertEqual(modelparam_element.calibrationMethod, 'c')
 
         # try to create another modelcalibration - it would raise an exception
         with self.assertRaises(IntegrityError):
@@ -412,9 +412,9 @@ class TestMODFLOWModelInstanceMetaData(MockIRODSTestCaseMixin, TransactionTestCa
         self.assertEqual(len(modelparam_elements), 1)
         modelparam_element = modelparam_elements[0]
         self.assertNotEqual(modelparam_element, None)
-        self.assertEquals(modelparam_element.inputType, 'a')
-        self.assertEquals(modelparam_element.inputSourceName, 'b')
-        self.assertEquals(modelparam_element.inputSourceURL, 'http://www.RVOB.com')
+        self.assertEqual(modelparam_element.inputType, 'a')
+        self.assertEqual(modelparam_element.inputSourceName, 'b')
+        self.assertEqual(modelparam_element.inputSourceURL, 'http://www.RVOB.com')
 
         # create another modelinput
         self.res.metadata.create_element('ModelInput',
@@ -425,9 +425,9 @@ class TestMODFLOWModelInstanceMetaData(MockIRODSTestCaseMixin, TransactionTestCa
         self.assertEqual(len(modelparam_elements), 2)
         modelparam_element = modelparam_elements[0]
         self.assertNotEqual(modelparam_element, None)
-        self.assertEquals(modelparam_element.inputType, 'aa')
-        self.assertEquals(modelparam_element.inputSourceName, 'bd')
-        self.assertEquals(modelparam_element.inputSourceURL, 'http://www.RVOBs.com')
+        self.assertEqual(modelparam_element.inputType, 'aa')
+        self.assertEqual(modelparam_element.inputSourceName, 'bd')
+        self.assertEqual(modelparam_element.inputSourceURL, 'http://www.RVOBs.com')
 
         # create generalelements
         # try with wrong generalelements types - raises exception
@@ -457,15 +457,15 @@ class TestMODFLOWModelInstanceMetaData(MockIRODSTestCaseMixin, TransactionTestCa
                                          subsidencePackage='SUB')
         modelparam_element = self.res.metadata.general_elements
         self.assertNotEqual(modelparam_element, None)
-        self.assertEquals(modelparam_element.modelParameter, 'BCF6')
-        self.assertEquals(modelparam_element.modelSolver, 'DE4')
+        self.assertEqual(modelparam_element.modelParameter, 'BCF6')
+        self.assertEqual(modelparam_element.modelSolver, 'DE4')
 
         # check outputControlPackage
         added_packages = modelparam_element.get_output_control_package()
         for intended_package in ot_ctl_pkgs:
-            self.assertEquals(intended_package in added_packages, True)
+            self.assertIn(intended_package, added_packages)
 
-        self.assertEquals(modelparam_element.subsidencePackage, 'SUB')
+        self.assertEqual(modelparam_element.subsidencePackage, 'SUB')
 
         # try to create another generalelements - it would raise an exception
         with self.assertRaises(IntegrityError):
@@ -480,20 +480,20 @@ class TestMODFLOWModelInstanceMetaData(MockIRODSTestCaseMixin, TransactionTestCa
         self.res.metadata.update_element('ModelOutput',
                                          self.res.metadata.model_output.id,
                                          includes_output=False)
-        self.assertEquals(self.res.metadata.model_output.includes_output, False)
+        self.assertEqual(self.res.metadata.model_output.includes_output, False)
         self.res.metadata.update_element('ModelOutput',
                                          self.res.metadata.model_output.id,
                                          includes_output=True)
-        self.assertEquals(self.res.metadata.model_output.includes_output, True)
+        self.assertEqual(self.res.metadata.model_output.includes_output, True)
 
         # update ExecutedBy
         self.res.metadata.update_element('ExecutedBy',
                                          self.res.metadata.executed_by.id,
                                          model_name=self.resMODFLOWModelProgram.short_id)
         modelparam_element = self.res.metadata.executed_by
-        self.assertEquals(modelparam_element.model_name,
+        self.assertEqual(modelparam_element.model_name,
                           self.resMODFLOWModelProgram.metadata.title.value)
-        self.assertEquals(modelparam_element.model_program_fk, self.resMODFLOWModelProgram)
+        self.assertEqual(modelparam_element.model_program_fk, self.resMODFLOWModelProgram)
 
         # update StudyArea
         self.res.metadata.update_element('StudyArea',
@@ -504,10 +504,10 @@ class TestMODFLOWModelInstanceMetaData(MockIRODSTestCaseMixin, TransactionTestCa
                                          minimumElevation=-148)
         modelparam_element = self.res.metadata.study_area
         self.assertNotEqual(modelparam_element, None)
-        self.assertEquals(modelparam_element.totalLength, '33')
-        self.assertEquals(modelparam_element.totalWidth, '2533')
-        self.assertEquals(modelparam_element.maximumElevation, '12')
-        self.assertEquals(modelparam_element.minimumElevation, '-148')
+        self.assertEqual(modelparam_element.totalLength, '33')
+        self.assertEqual(modelparam_element.totalWidth, '2533')
+        self.assertEqual(modelparam_element.maximumElevation, '12')
+        self.assertEqual(modelparam_element.minimumElevation, '-148')
 
         # update GridDimensions
         self.res.metadata.update_element('GridDimensions',
@@ -519,11 +519,11 @@ class TestMODFLOWModelInstanceMetaData(MockIRODSTestCaseMixin, TransactionTestCa
                                          numberOfColumns='f')
         modelparam_element = self.res.metadata.grid_dimensions
         self.assertNotEqual(modelparam_element, None)
-        self.assertEquals(modelparam_element.numberOfLayers, 'b')
-        self.assertEquals(modelparam_element.typeOfRows, 'Irregular')
-        self.assertEquals(modelparam_element.numberOfRows, 'd')
-        self.assertEquals(modelparam_element.typeOfColumns, 'Regular')
-        self.assertEquals(modelparam_element.numberOfColumns, 'f')
+        self.assertEqual(modelparam_element.numberOfLayers, 'b')
+        self.assertEqual(modelparam_element.typeOfRows, 'Irregular')
+        self.assertEqual(modelparam_element.numberOfRows, 'd')
+        self.assertEqual(modelparam_element.typeOfColumns, 'Regular')
+        self.assertEqual(modelparam_element.numberOfColumns, 'f')
 
         # try with wrong dimension types - raises exception
         with self.assertRaises(ValidationError):
@@ -553,10 +553,10 @@ class TestMODFLOWModelInstanceMetaData(MockIRODSTestCaseMixin, TransactionTestCa
                                          transientStateValue='123')
         modelparam_element = self.res.metadata.stress_period
         self.assertNotEqual(modelparam_element, None)
-        self.assertEquals(modelparam_element.stressPeriodType, 'Transient')
-        self.assertEquals(modelparam_element.steadyStateValue, '555')
-        self.assertEquals(modelparam_element.transientStateValueType, 'Annually')
-        self.assertEquals(modelparam_element.transientStateValue, '123')
+        self.assertEqual(modelparam_element.stressPeriodType, 'Transient')
+        self.assertEqual(modelparam_element.steadyStateValue, '555')
+        self.assertEqual(modelparam_element.transientStateValueType, 'Annually')
+        self.assertEqual(modelparam_element.transientStateValue, '123')
 
         # try with wrong stressperiod types - raises exception
         with self.assertRaises(ValidationError):
@@ -581,8 +581,8 @@ class TestMODFLOWModelInstanceMetaData(MockIRODSTestCaseMixin, TransactionTestCa
                                          flowParameter='Hydraulic Conductivity')
         modelparam_element = self.res.metadata.ground_water_flow
         self.assertNotEqual(modelparam_element, None)
-        self.assertEquals(modelparam_element.flowPackage, 'UPW')
-        self.assertEquals(modelparam_element.flowParameter, 'Hydraulic Conductivity')
+        self.assertEqual(modelparam_element.flowPackage, 'UPW')
+        self.assertEqual(modelparam_element.flowParameter, 'Hydraulic Conductivity')
 
         # try with wrong groundwaterflow types - raises exception
         with self.assertRaises(ValidationError):
@@ -640,22 +640,22 @@ class TestMODFLOWModelInstanceMetaData(MockIRODSTestCaseMixin, TransactionTestCa
         # check specified_head_boundary_packages
         added_packages = modelparam_element.get_specified_head_boundary_packages()
         for intended_package in spec_hd_bd_pkgs:
-            self.assertEquals(intended_package in added_packages, True)
+            self.assertIn(intended_package, added_packages)
 
         # check specified_flux_boundary_packages
         added_packages = modelparam_element.get_specified_flux_boundary_packages()
         for intended_package in spec_fx_bd_pkgs:
-            self.assertEquals(intended_package in added_packages, True)
+            self.assertIn(intended_package, added_packages)
 
         # check head_dependent_flux_boundary_packages
         added_packages = modelparam_element.get_head_dependent_flux_boundary_packages()
         for intended_package in hd_dep_fx_pkgs:
-            self.assertEquals(intended_package in added_packages, True)
+            self.assertIn(intended_package, added_packages)
 
         # check other packages
-        self.assertEquals(modelparam_element.other_specified_head_boundary_packages, 'AAA')
-        self.assertEquals(modelparam_element.other_specified_flux_boundary_packages, 'BBB')
-        self.assertEquals(modelparam_element.other_head_dependent_flux_boundary_packages, 'CCC')
+        self.assertEqual(modelparam_element.other_specified_head_boundary_packages, 'AAA')
+        self.assertEqual(modelparam_element.other_specified_flux_boundary_packages, 'BBB')
+        self.assertEqual(modelparam_element.other_head_dependent_flux_boundary_packages, 'CCC')
 
         # update modelcalibration
         self.res.metadata.update_element('ModelCalibration',
@@ -666,10 +666,10 @@ class TestMODFLOWModelInstanceMetaData(MockIRODSTestCaseMixin, TransactionTestCa
                                          calibrationMethod='d')
         modelparam_element = self.res.metadata.model_calibration
         self.assertNotEqual(modelparam_element, None)
-        self.assertEquals(modelparam_element.calibratedParameter, 'b')
-        self.assertEquals(modelparam_element.observationType, 'c')
-        self.assertEquals(modelparam_element.observationProcessPackage, 'OBS')
-        self.assertEquals(modelparam_element.calibrationMethod, 'd')
+        self.assertEqual(modelparam_element.calibratedParameter, 'b')
+        self.assertEqual(modelparam_element.observationType, 'c')
+        self.assertEqual(modelparam_element.observationProcessPackage, 'OBS')
+        self.assertEqual(modelparam_element.calibrationMethod, 'd')
 
         # try with wrong modelcalibration types - raises exception
         with self.assertRaises(ValidationError):
@@ -691,9 +691,9 @@ class TestMODFLOWModelInstanceMetaData(MockIRODSTestCaseMixin, TransactionTestCa
         self.assertEqual(len(modelparam_elements), 2)
         modelparam_element = modelparam_elements[1]
         self.assertNotEqual(modelparam_element, None)
-        self.assertEquals(modelparam_element.inputType, 'b')
-        self.assertEquals(modelparam_element.inputSourceName, 'c')
-        self.assertEquals(modelparam_element.inputSourceURL, 'http://www.RVOB.com')
+        self.assertEqual(modelparam_element.inputType, 'b')
+        self.assertEqual(modelparam_element.inputSourceName, 'c')
+        self.assertEqual(modelparam_element.inputSourceURL, 'http://www.RVOB.com')
 
         # update another modelinput
         self.res.metadata.update_element('ModelInput',
@@ -705,9 +705,9 @@ class TestMODFLOWModelInstanceMetaData(MockIRODSTestCaseMixin, TransactionTestCa
         self.assertEqual(len(modelparam_elements), 2)
         modelparam_element = modelparam_elements[0]
         self.assertNotEqual(modelparam_element, None)
-        self.assertEquals(modelparam_element.inputType, 'bb')
-        self.assertEquals(modelparam_element.inputSourceName, 'cc')
-        self.assertEquals(modelparam_element.inputSourceURL, 'http://www.RVOBss.com')
+        self.assertEqual(modelparam_element.inputType, 'bb')
+        self.assertEqual(modelparam_element.inputSourceName, 'cc')
+        self.assertEqual(modelparam_element.inputSourceURL, 'http://www.RVOBss.com')
 
         # update generalelements
         # try with wrong generalelements types - raises exception
@@ -745,15 +745,15 @@ class TestMODFLOWModelInstanceMetaData(MockIRODSTestCaseMixin, TransactionTestCa
                                          subsidencePackage='SWT')
         modelparam_element = self.res.metadata.general_elements
         self.assertNotEqual(modelparam_element, None)
-        self.assertEquals(modelparam_element.modelParameter, 'hydraulic conductivity')
-        self.assertEquals(modelparam_element.modelSolver, 'PCGN')
+        self.assertEqual(modelparam_element.modelParameter, 'hydraulic conductivity')
+        self.assertEqual(modelparam_element.modelSolver, 'PCGN')
 
         # check outputControlPackage
         added_packages = modelparam_element.get_output_control_package()
         for intended_package in ot_ctl_pkgs:
-            self.assertEquals(intended_package in added_packages, True)
+            self.assertIn(intended_package, added_packages)
 
-        self.assertEquals(modelparam_element.subsidencePackage, 'SWT')
+        self.assertEqual(modelparam_element.subsidencePackage, 'SWT')
 
         # delete
         # check that there are all extended metadata elements at this point
@@ -801,6 +801,94 @@ class TestMODFLOWModelInstanceMetaData(MockIRODSTestCaseMixin, TransactionTestCa
         self.assertEqual(self.res.metadata.boundary_condition, None)
         self.assertEqual(self.res.metadata.model_calibration, None)
         self.assertEqual(len(self.res.metadata.model_inputs), 0)
+        self.assertEqual(self.res.metadata.general_elements, None)
+
+    def test_delete_if_empty(self):
+        # create several metadata elements make sure they exist
+        self.res.metadata.create_element('GridDimensions',
+                                         numberOfLayers=5555,
+                                         typeOfRows='Irregular',
+                                         numberOfRows=6666,
+                                         typeOfColumns='Regular',
+                                         numberOfColumns=7777)
+        self.res.metadata.create_element('StressPeriod',
+                                         stressPeriodType='Steady and Transient',
+                                         steadyStateValue=8888,
+                                         transientStateValueType='Monthly',
+                                         transientStateValue=9999)
+        self.res.metadata.create_element('GroundwaterFlow',
+                                         flowPackage='LPF',
+                                         flowParameter='Hydraulic Conductivity')
+        self.res.metadata.create_element('BoundaryCondition',
+                                         specified_head_boundary_packages=['CHD', 'FHB'],
+                                         other_specified_head_boundary_packages='something',
+                                         specified_flux_boundary_packages=['FHB', 'WEL'],
+                                         other_specified_flux_boundary_packages='something1',
+                                         head_dependent_flux_boundary_packages=['RIV', 'MNW1'],
+                                         other_head_dependent_flux_boundary_packages='something2')
+        self.res.metadata.create_element('ModelCalibration',
+                                         calibratedParameter='test parameter',
+                                         observationType='test observation type',
+                                         observationProcessPackage='GBOB',
+                                         calibrationMethod='test calibration method')
+        self.res.metadata.create_element('GeneralElements',
+                                         modelParameter='test model parameter',
+                                         modelSolver='SIP',
+                                         output_control_package=['HYD', 'OC'],
+                                         subsidencePackage='SWT')
+
+        self.assertNotEqual(self.res.metadata.grid_dimensions, None)
+        self.assertNotEqual(self.res.metadata.stress_period, None)
+        self.assertNotEqual(self.res.metadata.ground_water_flow, None)
+        self.assertNotEqual(self.res.metadata.boundary_condition, None)
+        self.assertNotEqual(self.res.metadata.model_calibration, None)
+        self.assertNotEqual(self.res.metadata.general_elements, None)
+
+        # update them all to blanks
+        self.res.metadata.update_element('GridDimensions',
+                                         self.res.metadata.grid_dimensions.id,
+                                         numberOfLayers='',
+                                         typeOfRows='Choose a type',
+                                         numberOfRows='',
+                                         typeOfColumns='Choose a type',
+                                         numberOfColumns='')
+        self.res.metadata.update_element('StressPeriod',
+                                         self.res.metadata.stress_period.id,
+                                         stressPeriodType='Choose a type',
+                                         steadyStateValue='',
+                                         transientStateValueType='Choose a type',
+                                         transientStateValue='')
+        self.res.metadata.update_element('GroundwaterFlow',
+                                         self.res.metadata.ground_water_flow.id,
+                                         flowPackage='Choose a package',
+                                         flowParameter='Choose a package')
+        self.res.metadata.update_element('BoundaryCondition',
+                                         self.res.metadata.boundary_condition.id,
+                                         specified_head_boundary_packages=[],
+                                         other_specified_head_boundary_packages='',
+                                         specified_flux_boundary_packages=[],
+                                         other_specified_flux_boundary_packages='',
+                                         head_dependent_flux_boundary_packages=[],
+                                         other_head_dependent_flux_boundary_packages='')
+        self.res.metadata.update_element('ModelCalibration',
+                                         self.res.metadata.model_calibration.id,
+                                         calibratedParameter='',
+                                         observationType='',
+                                         observationProcessPackage='Choose a package',
+                                         calibrationMethod='')
+        self.res.metadata.update_element('GeneralElements',
+                                         self.res.metadata.general_elements.id,
+                                         modelParameter='',
+                                         modelSolver='Choose a solver',
+                                         output_control_package=[],
+                                         subsidencePackage='Choose a package')
+
+        # check to see that they don't exist anymore
+        self.assertEqual(self.res.metadata.grid_dimensions, None)
+        self.assertEqual(self.res.metadata.stress_period, None)
+        self.assertEqual(self.res.metadata.ground_water_flow, None)
+        self.assertEqual(self.res.metadata.boundary_condition, None)
+        self.assertEqual(self.res.metadata.model_calibration, None)
         self.assertEqual(self.res.metadata.general_elements, None)
 
     def test_public_or_discoverable(self):
@@ -1024,21 +1112,21 @@ class TestMODFLOWModelInstanceMetaData(MockIRODSTestCaseMixin, TransactionTestCa
                                          output_control_package=['HYD', 'OC'],
                                          subsidencePackage='SWT')
 
-        # there should 12 content file
-        self.assertEquals(self.res.files.all().count(), 12)
+        # there should 12 content files
+        self.assertEqual(self.res.files.all().count(), 12)
 
         # there should be 11 format elements (2 nam)
-        self.assertEquals(self.res.metadata.formats.all().count(), 11)
+        self.assertEqual(self.res.metadata.formats.all().count(), 11)
 
         # delete content files that we added above
         for f in self.file_names:
             hydroshare.delete_resource_file(self.res.short_id, f, self.user)
 
         # there should no content file
-        self.assertEquals(self.res.files.all().count(), 0)
+        self.assertEqual(self.res.files.all().count(), 0)
 
         # there should be no format element
-        self.assertEquals(self.res.metadata.formats.all().count(), 0)
+        self.assertEqual(self.res.metadata.formats.all().count(), 0)
 
         # test the core metadata at this point
         self.assertNotEquals(self.res.metadata.title, None)
@@ -1047,7 +1135,7 @@ class TestMODFLOWModelInstanceMetaData(MockIRODSTestCaseMixin, TransactionTestCa
         self.assertNotEquals(self.res.metadata.description, None)
 
         # there should be one creator element
-        self.assertEquals(self.res.metadata.creators.all().count(), 1)
+        self.assertEqual(self.res.metadata.creators.all().count(), 1)
 
         # testing extended metadata elements
         self.assertNotEqual(self.res.metadata.model_output, None)
@@ -1127,7 +1215,7 @@ class TestMODFLOWModelInstanceMetaData(MockIRODSTestCaseMixin, TransactionTestCa
 
         # before resource delete
         core_metadata_obj = self.res.metadata
-        self.assertEquals(CoreMetaData.objects.all().count(), 3)
+        self.assertEqual(CoreMetaData.objects.all().count(), 3)
         # there should be Creator metadata objects
         self.assertTrue(Creator.objects.filter(object_id=core_metadata_obj.id).exists())
         # there should be no Contributor metadata objects
@@ -1160,7 +1248,7 @@ class TestMODFLOWModelInstanceMetaData(MockIRODSTestCaseMixin, TransactionTestCa
         self.assertTrue(Rights.objects.filter(object_id=core_metadata_obj.id).exists())
 
         # resource specific metadata
-        self.assertEquals(MODFLOWModelInstanceMetaData.objects.all().count(), 1)
+        self.assertEqual(MODFLOWModelInstanceMetaData.objects.all().count(), 1)
         # there should be Model Output metadata objects
         self.assertTrue(ModelOutput.objects.filter(object_id=core_metadata_obj.id).exists())
         # there should be ExecutedBy metadata objects
@@ -1184,8 +1272,8 @@ class TestMODFLOWModelInstanceMetaData(MockIRODSTestCaseMixin, TransactionTestCa
 
         # delete resource
         hydroshare.delete_resource(self.res.short_id)
-        self.assertEquals(CoreMetaData.objects.all().count(), 2)
-        self.assertEquals(MODFLOWModelInstanceMetaData.objects.all().count(), 0)
+        self.assertEqual(CoreMetaData.objects.all().count(), 2)
+        self.assertEqual(MODFLOWModelInstanceMetaData.objects.all().count(), 0)
 
         # there should be no Creator metadata objects
         self.assertFalse(Creator.objects.filter(object_id=core_metadata_obj.id).exists())
