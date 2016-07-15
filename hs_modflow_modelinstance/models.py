@@ -220,6 +220,8 @@ class SpecifiedHeadBoundaryPackageChoices(models.Model):
 class SpecifiedFluxBoundaryPackageChoices(models.Model):
     description = models.CharField(max_length=300)
 
+    def __unicode__(self):
+        return self.description
 
 
 class HeadDependentFluxBoundaryPackageChoices(models.Model):
@@ -247,8 +249,8 @@ class BoundaryCondition(AbstractMetaDataElement):
                                                               blank=True)
     other_specified_flux_boundary_packages = models.CharField(max_length=200, null=True, blank=True,
                                                               verbose_name='Other packages')
-    head_dependent_flux_boundary_packages = \
-        models.ManyToManyField(HeadDependentFluxBoundaryPackageChoices, blank=True)
+    head_dependent_flux_boundary_packages = models.ManyToManyField(
+        HeadDependentFluxBoundaryPackageChoices, blank=True)
     other_head_dependent_flux_boundary_packages = models.CharField(max_length=200, null=True,
                                                                    blank=True,
                                                                    verbose_name='Other packages')
@@ -273,32 +275,29 @@ class BoundaryCondition(AbstractMetaDataElement):
         return ', '.join([packages.description for packages in
                           self.head_dependent_flux_boundary_packages.all()])
 
-    @classmethod
-    def _add_specified_head_boundary_packages(cls, boundary_packages, packages):
+    def _add_specified_head_boundary_packages(self, packages):
         for package in packages:
             qs = SpecifiedHeadBoundaryPackageChoices.objects.filter(description__exact=package)
             if qs.exists():
-                boundary_packages.specified_head_boundary_packages.add(qs[0])
+                self.specified_head_boundary_packages.add(qs[0])
             else:
-                boundary_packages.specified_head_boundary_packages.create(description=package)
+                self.specified_head_boundary_packages.create(description=package)
 
-    @classmethod
-    def _add_specified_flux_boundary_packages(cls, boundary_packages, packages):
+    def _add_specified_flux_boundary_packages(self, packages):
         for package in packages:
             qs = SpecifiedFluxBoundaryPackageChoices.objects.filter(description__exact=package)
             if qs.exists():
-                boundary_packages.specified_flux_boundary_packages.add(qs[0])
+                self.specified_flux_boundary_packages.add(qs[0])
             else:
-                boundary_packages.specified_flux_boundary_packages.create(description=package)
+                self.specified_flux_boundary_packages.create(description=package)
 
-    @classmethod
-    def _add_head_dependent_flux_boundary_packages(cls, boundary_packages, packages):
+    def _add_head_dependent_flux_boundary_packages(self, packages):
         for package in packages:
             qs = HeadDependentFluxBoundaryPackageChoices.objects.filter(description__exact=package)
             if qs.exists():
-                boundary_packages.head_dependent_flux_boundary_packages.add(qs[0])
+                self.head_dependent_flux_boundary_packages.add(qs[0])
             else:
-                boundary_packages.head_dependent_flux_boundary_packages.create(description=package)
+                self.head_dependent_flux_boundary_packages.create(description=package)
 
     # need to define create and update methods
     @classmethod
@@ -313,14 +312,12 @@ class BoundaryCondition(AbstractMetaDataElement):
             other_head_dependent_flux_boundary_packages=kwargs.get(
                 'other_head_dependent_flux_boundary_packages', '')
                     )
-        cls._add_specified_head_boundary_packages(model_boundary_condition,
-                                                  kwargs['specified_head_boundary_packages'])
-        cls._add_specified_flux_boundary_packages(model_boundary_condition,
-                                                  kwargs['specified_flux_boundary_packages'])
-        cls._add_head_dependent_flux_boundary_packages(model_boundary_condition,
-                                                       kwargs[
-                                                           'head_dependent_flux_boundary_packages'
-                                                       ])
+        model_boundary_condition._add_specified_head_boundary_packages(
+            kwargs['specified_head_boundary_packages'])
+        model_boundary_condition._add_specified_flux_boundary_packages(
+            kwargs['specified_flux_boundary_packages'])
+        model_boundary_condition._add_head_dependent_flux_boundary_packages(
+            kwargs['head_dependent_flux_boundary_packages'])
 
         return model_boundary_condition
 
@@ -489,14 +486,13 @@ class GeneralElements(AbstractMetaDataElement):
     def get_output_control_package(self):
         return ', '.join([packages.description for packages in self.output_control_package.all()])
 
-    @classmethod
-    def _add_output_control_package(cls, package_choices, choices):
+    def _add_output_control_package(self, choices):
         for type_choices in choices:
             qs = OutputControlPackageChoices.objects.filter(description__exact=type_choices)
             if qs.exists():
-                package_choices.output_control_package.add(qs[0])
+                self.output_control_package.add(qs[0])
             else:
-                package_choices.output_control_package.create(description=type_choices)
+                self.output_control_package.create(description=type_choices)
 
     @classmethod
     def create(cls, **kwargs):
@@ -509,7 +505,7 @@ class GeneralElements(AbstractMetaDataElement):
                                                                   'modelSolver'],
                                                               subsidencePackage=kwargs[
                                                                   'subsidencePackage'])
-        cls._add_output_control_package(general_elements, kwargs['output_control_package'])
+        general_elements._add_output_control_package(kwargs['output_control_package'])
 
         return general_elements
 
@@ -527,7 +523,7 @@ class GeneralElements(AbstractMetaDataElement):
                     subsidencePackage=kwargs['subsidencePackage'])
 
                 general_elements.output_control_package.clear()
-                cls._add_output_control_package(general_elements, kwargs['output_control_package'])
+                general_elements._add_output_control_package(kwargs['output_control_package'])
 
             general_elements.save()
             if len(general_elements.get_output_control_package()) == 0:
@@ -812,3 +808,5 @@ class MODFLOWModelInstanceMetaData(ModelInstanceMetaData):
         self._model_calibration.all().delete()
         self._model_input.all().delete()
         self._general_elements.all().delete()
+
+import receivers
