@@ -304,7 +304,7 @@ def replace_resource_file_on_irods(new_file, original_resource_file):
                                             original_resource_file.fed_resource_file_name_or_path)
     istorage.saveFile(new_file, destination_file, True)
 
-    
+
 def get_resource_file_extension(res_file):
     """
     Gets the file extension of the specified resource file
