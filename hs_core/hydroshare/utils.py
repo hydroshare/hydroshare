@@ -250,29 +250,35 @@ def get_file_from_irods(res_file):
     :return: location of the copied file
     """
     res = res_file.resource
-    if res_file.resource_file or res_file.fed_resource_file:
-        istorage = IrodsStorage()
-        if res_file.resource_file:
-            file_name = os.path.basename(res_file.resource_file.name)
-        else:
-            file_name = os.path.basename(res_file.fed_resource_file.name)
-
-        tmpdir = os.path.join(settings.TEMP_FILE_DIR, uuid4().hex)
-        tmpfile = os.path.join(tmpdir, file_name)
-        try:
-            os.makedirs(tmpdir)
-        except OSError as ex:
-            if ex.errno == errno.EEXIST:
-                shutil.rmtree(tmpdir)
-                os.makedirs(tmpdir)
-            else:
-                raise Exception(ex.message)
-        istorage.getFile(res_file.resource_file.name, tmpfile)
-        copied_file = tmpfile
+    if res_file.fed_resource_file or res_file.fed_resource_file_name_or_path:
+        istorage = IrodsStorage('federated')
     else:
-        copied_file = get_fed_zone_files(
-            os.path.join(res.resource_federation_path, res.short_id,
-                         res_file.fed_resource_file_name_or_path))[0]
+        istorage = IrodsStorage()
+    if res_file.resource_file:
+        res_file_path = res_file.resource_file.name
+        file_name = os.path.basename(res_file.resource_file.name)
+    elif res_file.fed_resource_file:
+        res_file_path = res_file.fed_resource_file.name
+        file_name = os.path.basename(res_file.fed_resource_file.name)
+    else:
+        res_file_path = os.path.join(res.resource_federation_path, res.short_id,
+                                     res_file.fed_resource_file_name_or_path)
+        file_name = os.path.basename(res_file.fed_resource_file_name_or_path)
+
+    tmpdir = os.path.join(settings.TEMP_FILE_DIR, uuid4().hex)
+    tmpfile = os.path.join(tmpdir, file_name)
+
+    try:
+        os.makedirs(tmpdir)
+    except OSError as ex:
+        if ex.errno == errno.EEXIST:
+            shutil.rmtree(tmpdir)
+            os.makedirs(tmpdir)
+        else:
+            raise Exception(ex.message)
+
+    istorage.getFile(res_file_path, tmpfile)
+    copied_file = tmpfile
     return copied_file
 
 
@@ -285,19 +291,20 @@ def replace_resource_file_on_irods(new_file, original_resource_file):
     :return:
     """
 
-    if original_resource_file.resource_file or original_resource_file.fed_resource_file:
+    ori_res = original_resource_file.resource
+    if original_resource_file.resource_file:
         istorage = IrodsStorage()
-        if original_resource_file.resource_file:
-            destination_file = original_resource_file.resource_file.name
-        else:
-            destination_file = original_resource_file.fed_resource_file.name
+        destination_file = original_resource_file.resource_file.name
     else:
         istorage = IrodsStorage('federated')
-        destination_file = original_resource_file.fed_resource_file_name_or_path
-
+        if original_resource_file.fed_resource_file:
+            destination_file = original_resource_file.fed_resource_file.name
+        else:
+            destination_file = os.path.join(ori_res.resource_federation_path, ori_res.short_id,
+                                            original_resource_file.fed_resource_file_name_or_path)
     istorage.saveFile(new_file, destination_file, True)
 
-
+    
 def get_resource_file_extension(res_file):
     """
     Gets the file extension of the specified resource file
