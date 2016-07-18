@@ -676,12 +676,15 @@
 
             for (var i = 0; i < json_results.length; i++ ) {
                 if (json_results[i].coverage_type == 'box') {
+                    var area = calcArea(json_results[i]);
+                    json_results[i].area = area;
                     box_resources.push(json_results[i]);
                 }
             }
 
             $("#box-coverages-list").empty();
             box_resources.forEach(function(box){
+                console.log(box.area);
                 var item_content = '<li class="list-group-item clearfix"><a role="button">' + box.title + '</role>';
                 item_content += '<a href="' + box.get_absolute_url + '"><span class="glyphicon glyphicon-link pull-right"></span>'
                 item_content += '</li>';
@@ -697,10 +700,6 @@
             });
         }
 
-{#        var rad = function(degree) {#}
-{#            return degree * (Math.PI / 180);#}
-{#        }#}
-
         var calcArea = function(box) {
             var northlimit = parseFloat(box.northlimit);
             var southlimit = parseFloat(box.southlimit);
@@ -715,36 +714,16 @@
             return (area * 3.8610216e-07).toFixed(2);
         }
 
-{#        var calcAreaFunc = function(box) {#}
-{#            var x1 = parseFloat(box.southlimit);#}
-{#            var y1 = parseFloat(box.eastlimit);#}
-{#            var x2 = parseFloat(box.northlimit);#}
-{#            var y2 = parseFloat(box.eastlimit);#}
-{#            var x3 = parseFloat(box.northlimit);#}
-{#            var y3 = parseFloat(box.westlimit);#}
-{#            var x4 = parseFloat(box.southlimit);#}
-{#            var y4 = parseFloat(box.westlimit);#}
-{#            var x5 = parseFloat(box.southlimit);#}
-{#            var y5 = parseFloat(box.eastlimit);#}
-{##}
-{#            var area = rad(y2 - y1) * (2 + Math.sin(rad(x1)) + Math.sin(rad(x2)));#}
-{#            area += rad(y3 - y2) * (2 + Math.sin(rad(x2)) + Math.sin(rad(x3)));#}
-{#            area += rad(y4 - y3) * (2 + Math.sin(rad(x3)) + Math.sin(rad(x4)));#}
-{#            area += rad(y5 - y4) * (2 + Math.sin(rad(x4)) + Math.sin(rad(x5)));#}
-{##}
-{#            area = Math.abs(area * 6378137.0 * 6378137.0 / 2.0);#}
-{#            return area;#}
-{#        }#}
-
         var showBoxMarker = function(box) {
             var northlimit = parseFloat(box.northlimit);
             var southlimit = parseFloat(box.southlimit);
             var eastlimit = parseFloat(box.eastlimit);
             var westlimit = parseFloat(box.westlimit);
             var area = calcArea(box);
-            var area2 = calcAreaFunc(box);
+            //var area2 = calcAreaFunc(box);
             console.log("area is " + area);
-            console.log("area func is " + area2);
+            console.log("area attribute: " + box.area);
+            //console.log("area func is " + area2);
             rectangle = new google.maps.Rectangle({
                 strokeColor: '#FF0000',
                 strokeOpacity: 0.8,
