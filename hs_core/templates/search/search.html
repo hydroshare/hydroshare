@@ -711,12 +711,30 @@
             var northEast = new google.maps.LatLng(northlimit, eastlimit);
             var southEast = new google.maps.LatLng(southlimit, eastlimit);
             var northWest = new google.maps.LatLng(northlimit, westlimit);
-            return google.maps.geometry.spherical.computeArea([northEast, northWest, southWest, southEast]);
+            var area = google.maps.geometry.spherical.computeArea([northEast, northWest, southWest, southEast]);
+            return (area * 3.8610216e-07).toFixed(2);
         }
 
-        var calcAreaFunc = function(box) {
-
-        }
+{#        var calcAreaFunc = function(box) {#}
+{#            var x1 = parseFloat(box.southlimit);#}
+{#            var y1 = parseFloat(box.eastlimit);#}
+{#            var x2 = parseFloat(box.northlimit);#}
+{#            var y2 = parseFloat(box.eastlimit);#}
+{#            var x3 = parseFloat(box.northlimit);#}
+{#            var y3 = parseFloat(box.westlimit);#}
+{#            var x4 = parseFloat(box.southlimit);#}
+{#            var y4 = parseFloat(box.westlimit);#}
+{#            var x5 = parseFloat(box.southlimit);#}
+{#            var y5 = parseFloat(box.eastlimit);#}
+{##}
+{#            var area = rad(y2 - y1) * (2 + Math.sin(rad(x1)) + Math.sin(rad(x2)));#}
+{#            area += rad(y3 - y2) * (2 + Math.sin(rad(x2)) + Math.sin(rad(x3)));#}
+{#            area += rad(y4 - y3) * (2 + Math.sin(rad(x3)) + Math.sin(rad(x4)));#}
+{#            area += rad(y5 - y4) * (2 + Math.sin(rad(x4)) + Math.sin(rad(x5)));#}
+{##}
+{#            area = Math.abs(area * 6378137.0 * 6378137.0 / 2.0);#}
+{#            return area;#}
+{#        }#}
 
         var showBoxMarker = function(box) {
             var northlimit = parseFloat(box.northlimit);
@@ -724,7 +742,9 @@
             var eastlimit = parseFloat(box.eastlimit);
             var westlimit = parseFloat(box.westlimit);
             var area = calcArea(box);
+            var area2 = calcAreaFunc(box);
             console.log("area is " + area);
+            console.log("area func is " + area2);
             rectangle = new google.maps.Rectangle({
                 strokeColor: '#FF0000',
                 strokeOpacity: 0.8,
