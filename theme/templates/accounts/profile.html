@@ -354,11 +354,13 @@
                                                 </tr>
                                                 </tbody>
                                             </table>
-                                            {% if profile.create_irods_user_account %}
-                                                <div class="text-muted">You have created an associated iRODS account (username: <strong>{{ profile_user.username }}</strong>) in HydroShare user zone (<strong>users.hydroshare.org</strong>). </div>
-                                            {% else %}
-                                                <div class="text-muted">You have not created an associated iRODS account in HydroShare user zone (<strong>users.hydroshare.org</strong>). </div>
-                                            {% endif %}
+                                            {% if profile_user.id == user.id %}
+                                                {% if profile.create_irods_user_account %}
+                                                    <div class="text-muted">You have created an associated iRODS account (username: <strong>{{ profile_user.username }}</strong>) in HydroShare user zone (<strong>users.hydroshare.org</strong>). </div>
+                                                {% else %}
+                                                    <div class="text-muted">You have not created an associated iRODS account in HydroShare user zone (<strong>users.hydroshare.org</strong>). </div>
+                                                {% endif %}
+                                            {% endif %}    
                                         </div>
 
                                         {% if profile_user.id == user.id %}
