@@ -519,7 +519,7 @@
 {% block extra_js %}
     <link rel="stylesheet" type="text/css" href="//cdn.datatables.net/1.10.11/css/jquery.dataTables.min.css">
     <script type="text/javascript" src="//cdn.datatables.net/1.10.11/js/jquery.dataTables.min.js"></script>
-    <script src="//maps.googleapis.com/maps/api/js?v=3" type="text/javascript"></script>
+    <script src="//maps.googleapis.com/maps/api/js?v=3&libraries=geometry" type="text/javascript"></script>
     <script src="//cdn.rawgit.com/googlemaps/v3-utility-library/master/keydragzoom/src/keydragzoom.js" type="text/javascript"></script>
     <script src="//cdn.rawgit.com/googlemaps/js-marker-clusterer/gh-pages/src/markerclusterer.js" type="text/javascript"></script>
     <script type="text/javascript">
@@ -697,12 +697,34 @@
             });
         }
 
-        var showBoxMarker = function(box) {
+{#        var rad = function(degree) {#}
+{#            return degree * (Math.PI / 180);#}
+{#        }#}
+
+        var calcArea = function(box) {
             var northlimit = parseFloat(box.northlimit);
             var southlimit = parseFloat(box.southlimit);
             var eastlimit = parseFloat(box.eastlimit);
             var westlimit = parseFloat(box.westlimit);
 
+            var southWest = new google.maps.LatLng(southlimit, westlimit);
+            var northEast = new google.maps.LatLng(northlimit, eastlimit);
+            var southEast = new google.maps.LatLng(southlimit, eastlimit);
+            var northWest = new google.maps.LatLng(northlimit, westlimit);
+            return google.maps.geometry.spherical.computeArea([northEast, northWest, southWest, southEast]);
+        }
+
+        var calcAreaFunc = function(box) {
+
+        }
+
+        var showBoxMarker = function(box) {
+            var northlimit = parseFloat(box.northlimit);
+            var southlimit = parseFloat(box.southlimit);
+            var eastlimit = parseFloat(box.eastlimit);
+            var westlimit = parseFloat(box.westlimit);
+            var area = calcArea(box);
+            console.log("area is " + area);
             rectangle = new google.maps.Rectangle({
                 strokeColor: '#FF0000',
                 strokeOpacity: 0.8,
