@@ -499,7 +499,7 @@
 
                             <div id="resetZoom"></div>
                         </div>
-                        <div class="col-xs-12 col-sm-4">
+                        <div class="col-xs-12 col-sm-4" id="box-coverages-container" style="display:none">
                             <h4 class="text-muted">Box Coverages Resources</h4>
                             <div class="panel panel-default" id="box-coverages-panel">
                                 <div class="panel-heading">
@@ -693,7 +693,9 @@
                 }
             }
 
-            $("#box-coverages-list").empty();
+            $("#box-coverages-list-1").empty();
+            $("#box-coverages-list-100").empty();
+            $("#box-coverages-list-1000").empty();
             box_resources.forEach(function(box){
                 var item_content = '<li class="list-group-item clearfix"><a role="button">' + box.title + '</role>';
                 item_content += '<a href="' + box.get_absolute_url + '"><span class="glyphicon glyphicon-link pull-right"></span>'
@@ -714,6 +716,7 @@
                     $('#box-coverages-list-1000').append($listItem);
                 }
             });
+            $("#box-coverages-container").show();
         }
 
         var calcArea = function(box) {
@@ -735,11 +738,6 @@
             var southlimit = parseFloat(box.southlimit);
             var eastlimit = parseFloat(box.eastlimit);
             var westlimit = parseFloat(box.westlimit);
-            var area = calcArea(box);
-            //var area2 = calcAreaFunc(box);
-            console.log("area is " + area);
-            console.log("area attribute: " + box.area);
-            //console.log("area func is " + area2);
             rectangle = new google.maps.Rectangle({
                 strokeColor: '#FF0000',
                 strokeOpacity: 0.8,
