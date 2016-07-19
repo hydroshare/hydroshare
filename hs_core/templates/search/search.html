@@ -697,9 +697,8 @@
             $("#box-coverages-list-100").empty();
             $("#box-coverages-list-1000").empty();
             box_resources.forEach(function(box){
-
                 var item_content = '<li class="list-group-item clearfix"><a style="color:balck" role="button"><span class="glyphicon glyphicon-hand-left pull-left"></span></a>';
-                item_content += '<a style="margin-left:10px" href="' + box.get_absolute_url + '">' + box.title + '</a>';
+                item_content += '<a style="margin-left:10px;" href="' + box.get_absolute_url + '">' + box.title + '</a>';
                 item_content += '</li>';
                 var $listItem = $(item_content);
 
@@ -757,7 +756,6 @@
                         new google.maps.LatLng(northlimit, westlimit),
                         new google.maps.LatLng(southlimit, eastlimit)
             );
-            var info_content = box.title;
             rectangle.set('bounds', rectBounds);
             map.fitBounds(rectBounds);
             updateMapView();
