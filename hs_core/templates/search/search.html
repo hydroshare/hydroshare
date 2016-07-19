@@ -697,8 +697,9 @@
             $("#box-coverages-list-100").empty();
             $("#box-coverages-list-1000").empty();
             box_resources.forEach(function(box){
-                var item_content = '<li class="list-group-item clearfix"><a role="button">' + box.title + '</role>';
-                item_content += '<a href="' + box.get_absolute_url + '"><span class="glyphicon glyphicon-link pull-right"></span>'
+
+                var item_content = '<li class="list-group-item clearfix"><a style="color:balck" role="button"><span class="glyphicon glyphicon-hand-left pull-left"></span></a>';
+                item_content += '<a style="margin-left:10px" href="' + box.get_absolute_url + '">' + box.title + '</a>';
                 item_content += '</li>';
                 var $listItem = $(item_content);
 
@@ -860,11 +861,6 @@
             google.maps.event.addListener(marker, 'click', function() {
                 info_window.setContent(info_content);
                 info_window.open(map, marker);
-{#                var rectBounds = new google.maps.LatLngBounds(#}
-{#                        new google.maps.LatLng(0, 0),#}
-{#                        new google.maps.LatLng(0, 0)#}
-{#                );#}
-{#                rectangle.set('bounds', rectBounds);#}
 
             });
         };
