@@ -500,13 +500,24 @@
                             <div id="resetZoom"></div>
                         </div>
                         <div class="col-xs-12 col-sm-4">
-                              <div class="panel panel-default" id="box-coverages-panel">
-                                  <div class="panel-heading">
-                                      <h3 class="panel-title">Box Coverages Resources</h3>
-                                  </div>
-                                  <div class="list-group" id="box-coverages-list">
-                                  </div>
-                              </div>
+                            <h4 class="text-muted">Box Coverages Resources</h4>
+                            <div class="panel panel-default" id="box-coverages-panel">
+                                <div class="panel-heading">
+                                    <h3 class="panel-title">area &le; 100 sq mi</h3>
+                                </div>
+                                <div class="list-group box-coverages-list" id="box-coverages-list-1">
+                                </div>
+                                <div class="panel-heading">
+                                    <h3 class="panel-title">&gt;100 sq mi area &le; 1000</h3>
+                                </div>
+                                <div class="list-group box-coverages-list" id="box-coverages-list-100">
+                                </div>
+                                <div class="panel-heading">
+                                    <h3 class="panel-title">area &gt;1000 sq mi</h3>
+                                </div>
+                                <div class="list-group box-coverages-list" id="box-coverages-list-1000">
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -684,19 +695,24 @@
 
             $("#box-coverages-list").empty();
             box_resources.forEach(function(box){
-                console.log(box.area);
                 var item_content = '<li class="list-group-item clearfix"><a role="button">' + box.title + '</role>';
                 item_content += '<a href="' + box.get_absolute_url + '"><span class="glyphicon glyphicon-link pull-right"></span>'
                 item_content += '</li>';
                 var $listItem = $(item_content);
 
-                $listItem.find('[role="button"]').click(function() {
+                $listItem.find('[role="button"]').click(function () {
                     if (rectangle != null) {
                         rectangle.setMap(null);
                     }
                     showBoxMarker(box);
                 });
-                $('#box-coverages-list').append($listItem);
+                if(box.area <= 100) {
+                    $('#box-coverages-list-1').append($listItem);
+                } else if (box.area > 100 && box.area <= 1000) {
+                    $('#box-coverages-list-100').append($listItem);
+                } else {
+                    $('#box-coverages-list-1000').append($listItem);
+                }
             });
         }
 

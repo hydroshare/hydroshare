@@ -3703,12 +3703,12 @@ div.group-add-photo {
 	padding: 0;
 }
 
-#box-coverages-list {
-	max-height: 400px;
+.box-coverages-list {
+	max-height: 200px;
 	overflow-y: auto;
 }
 
-#box-coverages-list [role="button"]{
+.box-coverages-list [role="button"]{
 	cursor: pointer;
 }
 
