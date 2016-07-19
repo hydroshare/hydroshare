@@ -67,35 +67,17 @@ class Site(TimeSeriesAbstractMetaDataElement):
     def update(cls, element_id, **kwargs):
         element = cls.objects.get(id=element_id)
 
-        # if the user has entered a new elevation datum
-        elevation_datum_str = 'elevation_datum'
-        if elevation_datum_str in kwargs:
-            if element.elevation_datum != kwargs[elevation_datum_str]:
-                # check if the user has entered a new name for elevation datum
-                if kwargs[elevation_datum_str] not in [item.name for item in
-                                                       element.metadata.cv_elevation_datums.all()]:
-                    # generate term for the new name
-                    kwargs[elevation_datum_str] = kwargs[elevation_datum_str].strip()
-                    term = _generate_term_from_name(kwargs[elevation_datum_str])
-                    elevation_datum = CVElevationDatum.objects.create(
-                        metadata=element.metadata, term=term, name=kwargs[elevation_datum_str])
-                    elevation_datum.is_dirty = True
-                    elevation_datum.save()
+        # if the user has entered a new elevation datum, then create a corresponding new cv term
+        _create_cv_term(element=element, cv_term_class=CVElevationDatum,
+                        cv_term_str='elevation_datum', element_cv_term=element.elevation_datum,
+                        element_metadata_cv_terms=element.metadata.cv_elevation_datums.all(),
+                        data_dict=kwargs)
 
-        # if the user has entered a new site type
-        site_type_str = 'site_type'
-        if site_type_str in kwargs:
-            if element.site_type != kwargs[site_type_str]:
-                # check if the user has entered a new name for site type
-                if kwargs[site_type_str] not in [item.name for item in
-                                                 element.metadata.cv_site_types.all()]:
-                    # generate term for the new name
-                    kwargs[site_type_str] = kwargs[site_type_str].strip()
-                    term = _generate_term_from_name(kwargs[site_type_str])
-                    site_type = CVSiteType.objects.create(metadata=element.metadata, term=term,
-                                                          name=kwargs[site_type_str])
-                    site_type.is_dirty = True
-                    site_type.save()
+        # if the user has entered a new site type, then create a corresponding new cv term
+        _create_cv_term(element=element, cv_term_class=CVSiteType,
+                        cv_term_str='site_type', element_cv_term=element.site_type,
+                        element_metadata_cv_terms=element.metadata.cv_site_types.all(),
+                        data_dict=kwargs)
 
         super(Site, cls).update(element_id, **kwargs)
 
@@ -120,50 +102,23 @@ class Variable(TimeSeriesAbstractMetaDataElement):
     def update(cls, element_id, **kwargs):
         element = cls.objects.get(id=element_id)
 
-        # if the user has entered a new variable name
-        variable_name_str = 'variable_name'
-        if variable_name_str in kwargs:
-            if element.variable_name != kwargs[variable_name_str]:
-                # check if the user has entered a new name
-                if kwargs[variable_name_str] not in [item.name for item in
-                                                     element.metadata.cv_variable_names.all()]:
-                    # generate term for the new name
-                    kwargs[variable_name_str] = kwargs[variable_name_str].strip()
-                    term = _generate_term_from_name(kwargs[variable_name_str])
-                    variable_name = CVVariableName.objects.create(
-                        metadata=element.metadata, term=term, name=kwargs[variable_name_str])
-                    variable_name.is_dirty = True
-                    variable_name.save()
+        # if the user has entered a new variable name, then create a corresponding new cv term
+        _create_cv_term(element=element, cv_term_class=CVVariableName,
+                        cv_term_str='variable_name', element_cv_term=element.variable_name,
+                        element_metadata_cv_terms=element.metadata.cv_variable_names.all(),
+                        data_dict=kwargs)
 
-        # if the user has entered a new variable type
-        variable_type_str = 'variable_type'
-        if variable_type_str in kwargs:
-            if element.variable_type != kwargs[variable_type_str]:
-                # check if the user has entered a new type
-                if kwargs[variable_type_str] not in [item.name for item in
-                                                     element.metadata.cv_variable_types.all()]:
-                    # generate term for the new name
-                    kwargs[variable_type_str] = kwargs[variable_type_str].strip()
-                    term = _generate_term_from_name(kwargs[variable_type_str])
-                    variable_type = CVVariableType.objects.create(
-                        metadata=element.metadata, term=term, name=kwargs[variable_type_str])
-                    variable_type.is_dirty = True
-                    variable_type.save()
+        # if the user has entered a new variable type, then create a corresponding new cv term
+        _create_cv_term(element=element, cv_term_class=CVVariableType,
+                        cv_term_str='variable_type', element_cv_term=element.variable_type,
+                        element_metadata_cv_terms=element.metadata.cv_variable_types.all(),
+                        data_dict=kwargs)
 
-        # if the user has entered a new speciation
-        speciation_str = 'speciation'
-        if speciation_str in kwargs:
-            if element.speciation != kwargs[speciation_str]:
-                # check if the user has entered a new speciation
-                if kwargs[speciation_str] not in [item.name for item in
-                                                  element.metadata.cv_speciations.all()]:
-                    # generate term for the new name
-                    kwargs[speciation_str] = kwargs[speciation_str].strip()
-                    term = _generate_term_from_name(kwargs[speciation_str])
-                    speciation = CVSpeciation.objects.create(metadata=element.metadata, term=term,
-                                                             name=kwargs[speciation_str])
-                    speciation.is_dirty = True
-                    speciation.save()
+        # if the user has entered a new speciation, then create a corresponding new cv term
+        _create_cv_term(element=element, cv_term_class=CVSpeciation,
+                        cv_term_str='speciation', element_cv_term=element.speciation,
+                        element_metadata_cv_terms=element.metadata.cv_speciations.all(),
+                        data_dict=kwargs)
 
         super(Variable, cls).update(element_id, **kwargs)
 
@@ -187,20 +142,11 @@ class Method(TimeSeriesAbstractMetaDataElement):
     def update(cls, element_id, **kwargs):
         element = cls.objects.get(id=element_id)
 
-        # if the user has entered a new method type
-        method_type_str = 'method_type'
-        if method_type_str in kwargs:
-            if element.method_type != kwargs[method_type_str]:
-                # check if the user has entered a new name for method type
-                if kwargs[method_type_str] not in [item.name for item in
-                                                   element.metadata.cv_method_types.all()]:
-                    # generate term for the new name
-                    kwargs[method_type_str] = kwargs[method_type_str].strip()
-                    term = _generate_term_from_name(kwargs[method_type_str])
-                    method_type = CVMethodType.objects.create(metadata=element.metadata, term=term,
-                                                              name=kwargs[method_type_str])
-                    method_type.is_dirty = True
-                    method_type.save()
+        # if the user has entered a new method type, then create a corresponding new cv term
+        _create_cv_term(element=element, cv_term_class=CVMethodType,
+                        cv_term_str='method_type', element_cv_term=element.method_type,
+                        element_metadata_cv_terms=element.metadata.cv_method_types.all(),
+                        data_dict=kwargs)
 
         super(Method, cls).update(element_id, **kwargs)
 
@@ -239,65 +185,31 @@ class TimeSeriesResult(TimeSeriesAbstractMetaDataElement):
     @classmethod
     def update(cls, element_id, **kwargs):
         element = cls.objects.get(id=element_id)
-        # if the user has entered a new sample medium
-        sample_medium_str = 'sample_medium'
-        if sample_medium_str in kwargs:
-            if element.sample_medium != kwargs[sample_medium_str]:
-                # check if the user has entered a new name for sample medium
-                if kwargs[sample_medium_str] not in [item.name for item in
-                                                     element.metadata.cv_mediums.all()]:
-                    # generate term for the new name
-                    kwargs[sample_medium_str] = kwargs[sample_medium_str].strip()
-                    term = _generate_term_from_name(kwargs[sample_medium_str])
-                    sample_medium = CVMedium.objects.create(metadata=element.metadata, term=term,
-                                                            name=kwargs[sample_medium_str])
-                    sample_medium.is_dirty = True
-                    sample_medium.save()
+        # if the user has entered a new sample medium, then create a corresponding new cv term
+        _create_cv_term(element=element, cv_term_class=CVMedium,
+                        cv_term_str='sample_medium', element_cv_term=element.sample_medium,
+                        element_metadata_cv_terms=element.metadata.cv_mediums.all(),
+                        data_dict=kwargs)
 
-        # if the user has entered a new units type
-        units_type_str = 'units_type'
-        if units_type_str in kwargs:
-            if element.units_type != kwargs[units_type_str]:
-                # check if the user has entered a new name for units type
-                if kwargs[units_type_str] not in [item.name for item in
-                                                  element.metadata.cv_units_types.all()]:
-                    # generate term for the new name
-                    kwargs[units_type_str] = kwargs[units_type_str].strip()
-                    term = _generate_term_from_name(kwargs[units_type_str])
-                    units_type = CVUnitsType.objects.create(metadata=element.metadata, term=term,
-                                                            name=kwargs[units_type_str])
-                    units_type.is_dirty = True
-                    units_type.save()
+        # if the user has entered a new units type, then create a corresponding new cv term
+        _create_cv_term(element=element, cv_term_class=CVUnitsType,
+                        cv_term_str='units_type', element_cv_term=element.units_type,
+                        element_metadata_cv_terms=element.metadata.cv_units_types.all(),
+                        data_dict=kwargs)
 
-        # if the user has entered a new status
-        status_str = 'status'
-        if status_str in kwargs:
-            if element.status != kwargs[status_str]:
-                # check if the user has entered a new name for status
-                if kwargs[status_str] not in [item.name for item in
-                                              element.metadata.cv_statuses.all()]:
-                    # generate term for the new name
-                    kwargs[status_str] = kwargs[status_str].strip()
-                    term = _generate_term_from_name(kwargs[status_str])
-                    status = CVStatus.objects.create(metadata=element.metadata, term=term,
-                                                     name=kwargs[status_str])
-                    status.is_dirty = True
-                    status.save()
+        # if the user has entered a new status, then create a corresponding new cv term
+        _create_cv_term(element=element, cv_term_class=CVStatus,
+                        cv_term_str='status', element_cv_term=element.status,
+                        element_metadata_cv_terms=element.metadata.cv_statuses.all(),
+                        data_dict=kwargs)
 
-        # if the user has entered a new aggregation statistics
-        agg_statistics_str = 'aggregation_statistics'
-        if agg_statistics_str in kwargs:
-            if element.aggregation_statistics != kwargs[agg_statistics_str]:
-                # check if the user has entered a new name for aggregation statistics
-                if kwargs[agg_statistics_str] not in \
-                        [item.name for item in element.metadata.cv_aggregation_statistics.all()]:
-                    # generate term for the new name
-                    kwargs[agg_statistics_str] = kwargs[agg_statistics_str].strip()
-                    term = _generate_term_from_name(kwargs[agg_statistics_str])
-                    agg_statistics = CVAggregationStatistic.objects.create(
-                        metadata=element.metadata, term=term, name=kwargs[agg_statistics_str])
-                    agg_statistics.is_dirty = True
-                    agg_statistics.save()
+        # if the user has entered a new aggregation statistics, then create a corresponding new
+        # cv term
+        _create_cv_term(element=element, cv_term_class=CVAggregationStatistic,
+                        cv_term_str='aggregation_statistics',
+                        element_cv_term=element.aggregation_statistics,
+                        element_metadata_cv_terms=element.metadata.cv_aggregation_statistics.all(),
+                        data_dict=kwargs)
 
         super(TimeSeriesResult, cls).update(element_id, **kwargs)
 
@@ -627,7 +539,7 @@ class TimeSeriesMetaData(CoreMetaData):
                     utils.replace_resource_file_on_irods(temp_sqlite_file, sqlite_file_to_update)
                     self.is_dirty = False
                     self.save()
-            except sqlite3.Error, ex:
+            except sqlite3.Error as ex:
                 sqlite_err_msg = str(ex.args[0])
                 log.error("Failed to update SQLite file. Error:{}".format(sqlite_err_msg))
                 raise Exception(sqlite_err_msg)
@@ -794,6 +706,34 @@ class TimeSeriesMetaData(CoreMetaData):
                 con.commit()
                 ts_result.is_dirty = False
                 ts_result.save()
+
+
+def _create_cv_term(element, cv_term_class, cv_term_str, element_cv_term,
+                    element_metadata_cv_terms, data_dict):
+    """
+    Helper function for creating a new CV term if needed
+    :param element: the metadata element object being updated
+    :param cv_term_class: CV term model class based on which an object to be created
+    :param cv_term_str: cv term field name being updated
+    :param element_cv_term: specific cv term object (an instance of cv_term_class) associated with
+    the 'element' object
+    :param element_metadata_cv_terms: list of all cv term objects
+    (instances of cv_term_class) associated with the 'metadata' object
+    :param data_dict: dict that has the data for updating the 'element'
+    :return:
+    """
+    if cv_term_str in data_dict:
+        if element_cv_term != data_dict[cv_term_str]:
+            # check if the user has entered a new name for the cv term
+            if not any(data_dict[cv_term_str] == item.name
+                       for item in element_metadata_cv_terms):
+                # generate term for the new name
+                data_dict[cv_term_str] = data_dict[cv_term_str].strip()
+                term = _generate_term_from_name(data_dict[cv_term_str])
+                cv_term = cv_term_class.objects.create(
+                        metadata=element.metadata, term=term, name=data_dict[cv_term_str])
+                cv_term.is_dirty = True
+                cv_term.save()
 
 
 def _generate_term_from_name(name):

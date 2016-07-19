@@ -397,8 +397,8 @@ def _extract_metadata(resource, sqlite_file_name):
 
             return None
 
-    except sqlite3.Error, e:
-        sqlite_err_msg = str(e.args[0])
+    except sqlite3.Error as ex:
+        sqlite_err_msg = str(ex.args[0])
         log.error((sqlite_err_msg))
         return sqlite_err_msg
     except Exception, ex:

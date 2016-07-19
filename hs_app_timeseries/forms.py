@@ -53,8 +53,7 @@ class SiteForm(ModelForm):
 
     @property
     def form_id_button(self):
-        form_id = 'id_site_%s' % self.number
-        return "'" + form_id + "'"
+        return "'" + self.form_id + "'"
 
     class Meta:
         model = Site
@@ -118,8 +117,7 @@ class VariableForm(ModelForm):
 
     @property
     def form_id_button(self):
-        form_id = 'id_variable_%s' % self.number
-        return "'" + form_id + "'"
+        return "'" + self.form_id + "'"
 
     class Meta:
         model = Variable
@@ -175,8 +173,7 @@ class MethodForm(ModelForm):
 
     @property
     def form_id_button(self):
-        form_id = 'id_method_%s' % self.number
-        return "'" + form_id + "'"
+        return "'" + self.form_id + "'"
 
     class Meta:
         model = Method
@@ -222,8 +219,7 @@ class ProcessingLevelForm(ModelForm):
 
     @property
     def form_id_button(self):
-        form_id = 'id_processinglevel_%s' % self.number
-        return "'" + form_id + "'"
+        return "'" + self.form_id + "'"
 
     class Meta:
         model = ProcessingLevel
@@ -295,8 +291,7 @@ class TimeSeriesResultForm(ModelForm):
 
     @property
     def form_id_button(self):
-        form_id = 'id_timeseriesresult_%s' % self.number
-        return "'" + form_id + "'"
+        return "'" + self.form_id + "'"
 
     class Meta:
         model = TimeSeriesResult
