@@ -3,7 +3,6 @@ import logging
 from django.db import migrations
 
 from hs_core.hydroshare.utils import resource_modified
-from hs_app_timeseries.models import TimeSeriesResource
 
 
 def delete_extracted_metadata(apps, schema_editor):
@@ -12,6 +11,7 @@ def delete_extracted_metadata(apps, schema_editor):
     # delete the existing SQlite file and then add a new SQlite file to regenerate
     # resource specific metadata
     log = logging.getLogger()
+    TimeSeriesResource = apps.get_model('hs_app_timeseries', 'TimeSeriesResource')
     for res in TimeSeriesResource.objects.all():
         # delete all extracted metadata
         res.metadata.sites.delete()
