@@ -758,7 +758,7 @@
             );
             rectangle.set('bounds', rectBounds);
             map.fitBounds(rectBounds);
-            updateMapView();
+            //updateMapView();
         }
 
         var clientUpdateMarkers = function(filtered_results) {
@@ -1034,7 +1034,6 @@
             var filtered_results = [];
             clientUpdateMarkers(filtered_results);
             setMarkers(filtered_results);
-            setBoxResourcesList(filtered_results);
             var results_selection = $('input:radio[name=results-selection]:checked').val();
             if (results_selection == 'map-results-selected') {
                 var bnds = map.getBounds();
@@ -1328,6 +1327,7 @@
                                 raw_results.push(item);
                             }
                             initMap(json_results);
+                            setBoxResourcesList(json_results);
                             $("#resource-search").show();
                         },
                         failure: function(data) {
