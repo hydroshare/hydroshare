@@ -641,20 +641,20 @@
             }
 
             info_window = new google.maps.InfoWindow();
-{#            rectangle = new google.maps.Rectangle({#}
-{#                strokeColor: '#FF0000',#}
-{#                strokeOpacity: 0.8,#}
-{#                strokeWeight: 2,#}
-{#                fillColor: '#FF0000',#}
-{#                fillOpacity: 0.35,#}
-{#                map: map,#}
-{#                bounds: {#}
-{#                    north: 0,#}
-{#                    south: 0,#}
-{#                    east: 0,#}
-{#                    west: 0#}
-{#                }#}
-{#            });#}
+            rectangle = new google.maps.Rectangle({
+                strokeColor: '#FF0000',
+                strokeOpacity: 0.8,
+                strokeWeight: 2,
+                fillColor: '#FF0000',
+                fillOpacity: 0.35,
+                map: map,
+                bounds: {
+                    north: 0,
+                    south: 0,
+                    east: 0,
+                    west: 0
+                }
+            });
 
             modified_points_data.forEach(function(point){
                 var info_content = point.info_link;
@@ -665,17 +665,15 @@
             });
 
 
-{#            modified_boxes_data.forEach(function(box){#}
-{#                var info_content = box.info_link;#}
-{#                var northlimit = parseFloat(box.northlimit);#}
-{#                var southlimit = parseFloat(box.southlimit);#}
-{#                var eastlimit = parseFloat(box.eastlimit);#}
-{#                var westlimit = parseFloat(box.westlimit);#}
-{#                var counter = box.counter.toString();#}
-{#                createBoxResourceMarker (northlimit, southlimit, eastlimit, westlimit, info_content, info_window, counter, rectangle);#}
-{#            });#}
-
-
+            modified_boxes_data.forEach(function(box){
+                var info_content = box.info_link;
+                var northlimit = parseFloat(box.northlimit);
+                var southlimit = parseFloat(box.southlimit);
+                var eastlimit = parseFloat(box.eastlimit);
+                var westlimit = parseFloat(box.westlimit);
+                var counter = box.counter.toString();
+                createBoxResourceMarker (northlimit, southlimit, eastlimit, westlimit, info_content, info_window, counter, rectangle);
+            });
 
             markerCluster = new MarkerClusterer(map, markers, {
                 imagePath: '//cdn.rawgit.com/googlemaps/js-marker-clusterer/gh-pages/images/m'
@@ -874,6 +872,7 @@
             });
             markers.push(marker);
             google.maps.event.addListener(marker, 'click', function() {
+                //rectangle.setMap(null);
                 info_window.setContent(info_content);
                 info_window.open(map, marker);
                 var rectBounds = new google.maps.LatLngBounds(
@@ -881,7 +880,7 @@
                         new google.maps.LatLng(southlimit, eastlimit)
                 );
                 rectangle.set('bounds', rectBounds);
-
+                map.fitBounds(rectBounds);
             });
         };
 
