@@ -437,8 +437,7 @@ class ModelInputForm(ModelForm):
 
     @property
     def form_id_button(self):
-        form_id = 'id_modelinput_%s' % self.number
-        return "'" + form_id + "'"
+        return "'" + self.form_id + "'"
 
     class Meta:
         model = ModelInput
