@@ -966,6 +966,20 @@
             if (rectangle != null) {
                 rectangle.setMap(null);
             }
+            rectangle = new google.maps.Rectangle({
+                strokeColor: '#FF0000',
+                strokeOpacity: 0.8,
+                strokeWeight: 2,
+                fillColor: '#FF0000',
+                fillOpacity: 0.35,
+                map: map,
+                bounds: {
+                    north: 0,
+                    south: 0,
+                    east: 0,
+                    west: 0
+                }
+            });
         };
 
         var manualZoomMap = function(){
