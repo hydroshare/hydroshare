@@ -452,22 +452,9 @@
                             <form id="covereage-search-fields" method="get" action="." style="display: none">
                                 {% for field in form %}
                                     {% if field.auto_id  == "id_NElat" or field.auto_id  == "id_NElng" or field.auto_id  == "id_SWlat" or field.auto_id  == "id_SWlng" %}
-            {#                                    <div class="col-md-3 height-fix">#}
-            {#                                        <div class="input-group">{{ field }}#}
-            {#                                            <span data-toggle="tooltip" data-placement="auto"#}
-            {#                                                  title="WGS 84 decimal degrees" class="input-group-addon">°</span>#}
-            {#                                        </div>#}
-            {#                                    </div>#}
                                         {{ field }}
                                     {% endif %}
                                 {% endfor %}
-            {#                            <div class="col-sm-12 height-fix">#}
-            {#                                <div class="text-muted">WGS 84 decimal degrees</div>#}
-            {##}
-            {#                                <a id="manual-zoom-btn" class="btn btn-default" onclick="manualZoomMap()">#}
-            {#                                    <span class="glyphicon glyphicon-zoom-in"></span> Zoom In#}
-            {#                                </a>#}
-            {#                            </div>#}
                             </form>
 
                             <div id="resource-search" style="display:none">
@@ -733,20 +720,6 @@
             var southlimit = parseFloat(box.southlimit);
             var eastlimit = parseFloat(box.eastlimit);
             var westlimit = parseFloat(box.westlimit);
-{#            var rectangle = new google.maps.Rectangle({#}
-{#                strokeColor: '#FF0000',#}
-{#                strokeOpacity: 0.8,#}
-{#                strokeWeight: 2,#}
-{#                fillColor: '#FF0000',#}
-{#                fillOpacity: 0.35,#}
-{#                map: map,#}
-{#                bounds: {#}
-{#                    north: 0,#}
-{#                    south: 0,#}
-{#                    east: 0,#}
-{#                    west: 0#}
-{#                }#}
-{#            });#}
             var rectBounds = new google.maps.LatLngBounds(
                         new google.maps.LatLng(northlimit, westlimit),
                         new google.maps.LatLng(southlimit, eastlimit)
@@ -771,8 +744,6 @@
                             filtered_results.push(raw_results[i]);
                         }
                     } else if (raw_results[i].coverage_type == 'box') {
-{#                        var ne_point = new google.maps.LatLng(parseFloat(raw_results[i].northlimit), (parseFloat(raw_results[i].eastlimit)));#}
-{#                        var sw_point = new google.maps.LatLng(parseFloat(raw_results[i].southlimit), (parseFloat(raw_results[i].westlimit)));#}
                         data_lat = (parseFloat(raw_results[i].northlimit) + parseFloat(raw_results[i].southlimit)) / 2;
                         data_lng = (parseFloat(raw_results[i].eastlimit) + parseFloat(raw_results[i].westlimit)) / 2;
                         var latlng = new google.maps.LatLng(data_lat, data_lng);
