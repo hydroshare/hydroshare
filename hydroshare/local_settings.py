@@ -107,7 +107,7 @@ DATABASES = {
 }
 POSTGIS_VERSION=(2,1,1)
 
-# iRODS proxy user configuration
+# Local resource iRODS configuration
 USE_IRODS = True
 IRODS_ROOT = '/tmp'
 IRODS_ICOMMANDS_PATH = '/usr/bin'
@@ -120,6 +120,9 @@ IRODS_ZONE = 'hydrotest41Zone'
 IRODS_USERNAME = 'hsproxy'
 IRODS_AUTH = 'proxywater1'
 IRODS_GLOBAL_SESSION = True
+
+# Remote user zone iRODS configuration
+REMOTE_USE_IRODS = False
 
 # iRODS customized bagit rule path
 IRODS_BAGIT_RULE='hydroshare/irods/ruleGenerateBagIt_HS.r'
