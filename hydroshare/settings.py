@@ -303,6 +303,7 @@ INSTALLED_APPS = (
     "hs_script_resource",
     "hs_sitemap",
     "hs_collection_resource",
+    "hs_modflow_modelinstance",
     "hs_tracking",
 )
 

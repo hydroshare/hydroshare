@@ -1045,8 +1045,278 @@
             <li><strong>Term: </strong>modelParameter</li>
             <li><strong>URI: </strong><a href="#modelParameter">http://www.hydroshare.org/terms/modelParameter</a></li>
             <li><strong>Label: </strong>Model Parameter</li>
-            <li><strong>Description: </strong>The parameters used in the model (e.g. Crop rotation, Title drainage , Point source, Fertilizer,
-                Tilage operation, Inlet of draining watershed, Irrigation operation, etc.)</li>
+            <li><strong>Description: </strong>The parameters used in the model</li>
+        </ul>
+
+    <h3>MODFLOW Model Instance Resource Type Description</h3>
+    <p> This MODFLOW Model Instance resource is a specific case of the Model Instance resource that applies to USGS MODFLOW 2000 and later versions.
+        This resource extends the more generic Model Instance metadata terms to accommodate additional MODFLOW specific terms which have been derived
+        from simulation input files. These specific metadata elements are as follows:
+    </p>
+    <br/>
+    <a name="StudyArea"></a>
+        <ul >
+            <li><strong>Term: </strong>StudyArea</li>
+            <li><strong>URI: </strong><a href="#StudyArea">http://www.hydroshare.org/terms/StudyArea</a></li>
+            <li><strong>Label: </strong>Study Area</li>
+            <li><strong>Description: </strong>HydroShare class to describe the main properties of the study area</li>
+        </ul>
+    <a name="totalLength"></a>
+        <ul >
+            <li><strong>Term: </strong>totalLength</li>
+            <li><strong>URI: </strong><a href="#totalLength">http://www.hydroshare.org/terms/totalLength</a></li>
+            <li><strong>Label: </strong>Total length</li>
+            <li><strong>Description: </strong>The total length of the study area</li>
+        </ul>
+    <a name="totalWidth"></a>
+        <ul >
+            <li><strong>Term: </strong>totalWidth</li>
+            <li><strong>URI: </strong><a href="#totalWidth">http://www.hydroshare.org/terms/totalWidth</a></li>
+            <li><strong>Label: </strong>Total width</li>
+            <li><strong>Description: </strong>The total width of the study area</li>
+        </ul>
+    <a name="maximumElevation"></a>
+        <ul >
+            <li><strong>Term: </strong>maximumElevation</li>
+            <li><strong>URI: </strong><a href="#maximumElevation">http://www.hydroshare.org/terms/maximumElevation</a></li>
+            <li><strong>Label: </strong>Maximum elevation</li>
+            <li><strong>Description: </strong>The maximum elevation of the study area</li>
+        </ul>
+    <a name="minimumElevation"></a>
+        <ul >
+            <li><strong>Term: </strong>minimumElevation</li>
+            <li><strong>URI: </strong><a href="#minimumElevation">http://www.hydroshare.org/terms/minimumElevation</a></li>
+            <li><strong>Label: </strong>Minimum elevation</li>
+            <li><strong>Description: </strong>The minimum elevation of the study area</li>
+        </ul>
+    <br/>
+    <a name="GridDimensions"></a>
+        <ul >
+            <li><strong>Term: </strong>GridDimensions</li>
+            <li><strong>URI: </strong><a href="#GridDimensions">http://www.hydroshare.org/terms/GridDimensions</a></li>
+            <li><strong>Label: </strong>Grid Dimensions</li>
+            <li><strong>Description: </strong>HydroShare class that includes the properties of the model grid</li>
+        </ul>
+    <a name="numberOfLayers"></a>
+        <ul >
+            <li><strong>Term: </strong>numberOfLayers</li>
+            <li><strong>URI: </strong><a href="#numberOfLayers">http://www.hydroshare.org/terms/numberOfLayers</a></li>
+            <li><strong>Label: </strong>Number of layers</li>
+            <li><strong>Description: </strong>The number of model grid layers</li>
+        </ul>
+    <a name="typeOfRows"></a>
+        <ul >
+            <li><strong>Term: </strong>typeOfRows</li>
+            <li><strong>URI: </strong><a href="#typeOfRows">http://www.hydroshare.org/terms/typeOfRows</a></li>
+            <li><strong>Label: </strong>Type of rows</li>
+            <li><strong>Description: </strong>If the rows are regular or irregular</li>
+        </ul>
+    <a name="numberOfRows"></a>
+        <ul >
+            <li><strong>Term: </strong>numberOfRows</li>
+            <li><strong>URI: </strong><a href="#numberOfRows">http://www.hydroshare.org/terms/numberOfRows</a></li>
+            <li><strong>Label: </strong>Number of rows</li>
+            <li><strong>Description: </strong>The number of model grid rows</li>
+        </ul>
+    <a name="typeOfColumns"></a>
+        <ul >
+            <li><strong>Term: </strong>typeOfColumns</li>
+            <li><strong>URI: </strong><a href="#typeOfColumns">http://www.hydroshare.org/terms/typeOfColumns</a></li>
+            <li><strong>Label: </strong>Type of columns</li>
+            <li><strong>Description: </strong>If the columns are regular or irregular</li>
+        </ul>
+    <a name="numberOfColumns"></a>
+        <ul >
+            <li><strong>Term: </strong>numberOfColumns</li>
+            <li><strong>URI: </strong><a href="#numberOfColumns">http://www.hydroshare.org/terms/numberOfColumns</a></li>
+            <li><strong>Label: </strong>Number of columns</li>
+            <li><strong>Description: </strong>The number of model grid columns</li>
+        </ul>
+    <br/>
+    <a name="StressPeriod"></a>
+        <ul >
+            <li><strong>Term: </strong>StressPeriod</li>
+            <li><strong>URI: </strong><a href="#StressPeriod">http://www.hydroshare.org/terms/StressPeriod</a></li>
+            <li><strong>Label: </strong>Stress Period</li>
+            <li><strong>Description: </strong>HydroShare class that includes the information about the stress period</li>
+        </ul>
+    <a name="stressPeriodType"></a>
+        <ul >
+            <li><strong>Term: </strong>stressPeriodType</li>
+            <li><strong>URI: </strong><a href="#stressPeriodType">http://www.hydroshare.org/terms/stressPeriodType</a></li>
+            <li><strong>Label: </strong>Stress period type</li>
+            <li><strong>Description: </strong>Stress period type (Steady, Transient, steady and Transient)</li>
+        </ul>
+    <a name="steadyStateValue"></a>
+        <ul >
+            <li><strong>Term: </strong>steadyStateValue</li>
+            <li><strong>URI: </strong><a href="#steadyStateValue">http://www.hydroshare.org/terms/steadyStateValue</a></li>
+            <li><strong>Label: </strong>Steady state value</li>
+            <li><strong>Description: </strong>If stress period = steady, length of steady state stress period(s)</li>
+        </ul>
+    <a name="transientStateValueType"></a>
+        <ul >
+            <li><strong>Term: </strong>transientStateValueType</li>
+            <li><strong>URI: </strong><a href="#transientStateValueType">http://www.hydroshare.org/terms/transientStateValueType</a></li>
+            <li><strong>Label: </strong>Transient state value type</li>
+            <li><strong>Description: </strong>Value type if stress period type is Transient or steady and transient
+                (hourly, daily, monthly, yearly, other)</li>
+        </ul>
+    <a name="transientStateValue"></a>
+        <ul >
+            <li><strong>Term: </strong>transientStateValue</li>
+            <li><strong>URI: </strong><a href="#transientStateValue">http://www.hydroshare.org/terms/transientStateValue</a></li>
+            <li><strong>Label: </strong>Transient state value</li>
+            <li><strong>Description: </strong>If stress period type is transient or steady and transient, length of transient stress period(s)</li>
+        </ul>
+    <br/>
+    <a name="GroundWaterFlow"></a>
+        <ul >
+            <li><strong>Term: </strong>GroundWaterFlow</li>
+            <li><strong>URI: </strong><a href="#GroundWaterFlow">http://www.hydroshare.org/terms/GroundWaterFlow</a></li>
+            <li><strong>Label: </strong>GroundWater Flow</li>
+            <li><strong>Description: </strong>HydroShare class that includes the information about groundwater flow</li>
+        </ul>
+    <a name="flowPackage"></a>
+        <ul >
+            <li><strong>Term: </strong>flowPackage</li>
+            <li><strong>URI: </strong><a href="#flowPackage">http://www.hydroshare.org/terms/flowPackage</a></li>
+            <li><strong>Label: </strong>Flow package</li>
+            <li><strong>Description: </strong>Groundwater flow package used in the model</li>
+        </ul>
+    <a name="groundwaterFlowParameter"></a>
+        <ul >
+            <li><strong>Term: </strong>groundwaterFlowParameter</li>
+            <li><strong>URI: </strong><a href="#groundwaterFlowParameter">http://www.hydroshare.org/terms/groundwaterFlowParameter</a></li>
+            <li><strong>Label: </strong>Groundwater flow parameter</li>
+            <li><strong>Description: </strong>Indicate which of the following parameter is used in the simulation
+                (Hydraulic Conductivity or Transmissivity)</li>
+        </ul>
+    <br/>
+    <a name="BoundaryCondition"></a>
+        <ul >
+            <li><strong>Term: </strong>BoundaryCondition</li>
+            <li><strong>URI: </strong><a href="#BoundaryCondition">http://www.hydroshare.org/terms/BoundaryCondition</a></li>
+            <li><strong>Label: </strong>Boundary Condition</li>
+            <li><strong>Description: </strong>HydroShare class that includes the information about the boundary condition</li>
+        </ul>
+    <a name="specifiedHeadBoundaryPackages"></a>
+        <ul >
+            <li><strong>Term: </strong>specifiedHeadBoundaryPackages</li>
+            <li><strong>URI: </strong><a href="#specifiedHeadBoundaryPackages">http://www.hydroshare.org/terms/specifiedHeadBoundaryPackages</a></li>
+            <li><strong>Label: </strong>Specified head boundary packages</li>
+            <li><strong>Description: </strong>Specified head boundary package/s used in the simulation</li>
+        </ul>
+    <a name="specifiedFluxBoundaryPackages"></a>
+        <ul >
+            <li><strong>Term: </strong>specifiedFluxBoundaryPackages</li>
+            <li><strong>URI: </strong><a href="#specifiedFluxBoundaryPackages">http://www.hydroshare.org/terms/specifiedFluxBoundaryPackages</a></li>
+            <li><strong>Label: </strong>Specified flux boundary packages</li>
+            <li><strong>Description: </strong>specified flux boundary package/s used in the simulation</li>
+        </ul>
+    <a name="headDependentFluxBoundaryPackages"></a>
+        <ul >
+            <li><strong>Term: </strong>headDependentFluxBoundaryPackages</li>
+            <li><strong>URI: </strong><a href="#headDependentFluxBoundaryPackages">http://www.hydroshare.org/terms/headDependentFluxBoundaryPackages</a></li>
+            <li><strong>Label: </strong>Head dependent flux boundary packages</li>
+            <li><strong>Description: </strong>Head dependent flux boundary package/s used in the simulation</li>
+        </ul>
+     <br/>
+    <a name="ModelCalibration"></a>
+        <ul >
+            <li><strong>Term: </strong>ModelCalibration</li>
+            <li><strong>URI: </strong><a href="#ModelCalibration">http://www.hydroshare.org/terms/ModelCalibration</a></li>
+            <li><strong>Label: </strong>Model Calibration</li>
+            <li><strong>Description: </strong>HydroShare class to include the main aspects of the model calibration</li>
+        </ul>
+    <a name="calibratedParameter"></a>
+        <ul >
+            <li><strong>Term: </strong>calibratedParameter</li>
+            <li><strong>URI: </strong><a href="#calibratedParameter">http://www.hydroshare.org/terms/calibratedParameter</a></li>
+            <li><strong>Label: </strong>Calibrated parameter</li>
+            <li><strong>Description: </strong>Parameters estimated during model calibration</li>
+        </ul>
+    <a name="observationType"></a>
+        <ul >
+            <li><strong>Term: </strong>observationType</li>
+            <li><strong>URI: </strong><a href="#observationType">http://www.hydroshare.org/terms/observationType</a></li>
+            <li><strong>Label: </strong>Observation type</li>
+            <li><strong>Description: </strong>Data used to constrain the model calibration (heads, stream flow, drawdown)</li>
+        </ul>
+    <a name="observationProcessPackage"></a>
+        <ul >
+            <li><strong>Term: </strong>observationProcessPackage</li>
+            <li><strong>URI: </strong><a href="#observationProcessPackage">http://www.hydroshare.org/terms/observationProcessPackage</a></li>
+            <li><strong>Label: </strong>Observation process package</li>
+            <li><strong>Description: </strong>Observation process package used in the simulation</li>
+        </ul>
+    <a name="calibrationMethod"></a>
+        <ul >
+            <li><strong>Term: </strong>calibrationMethod</li>
+            <li><strong>URI: </strong><a href="#calibrationMethod">http://www.hydroshare.org/terms/calibrationMethod</a></li>
+            <li><strong>Label: </strong>Calibration method</li>
+            <li><strong>Description: </strong>Methods used for calibration (software, manual calibration..etc.)</li>
+        </ul>
+    <br/>
+    <a name="ModelInput"></a>
+        <ul >
+            <li><strong>Term: </strong>ModelInput</li>
+            <li><strong>URI: </strong><a href="#ModelInput">http://www.hydroshare.org/terms/ModelInput</a></li>
+            <li><strong>Label: </strong>Model Input</li>
+            <li><strong>Description: </strong>HydroShare class that includes all the metadata elements related to Model Instance resource input files</li>
+        </ul>
+    <a name="inputType"></a>
+        <ul >
+            <li><strong>Term: </strong>inputType</li>
+            <li><strong>URI: </strong><a href="#inputType">http://www.hydroshare.org/terms/inputType</a></li>
+            <li><strong>Label: </strong>Input type</li>
+            <li><strong>Description: </strong>The type of the input data</li>
+        </ul>
+    <a name="inputSourceName"></a>
+        <ul >
+            <li><strong>Term: </strong>inputSourceName</li>
+            <li><strong>URI: </strong><a href="#inputSourceName">http://www.hydroshare.org/terms/inputSourceName</a></li>
+            <li><strong>Label: </strong>Input source name</li>
+            <li><strong>Description: </strong>The input data source name</li>
+        </ul>
+    <a name="inputSourceURL"></a>
+        <ul >
+            <li><strong>Term: </strong>inputSourceURL</li>
+            <li><strong>URI: </strong><a href="#inputSourceURL">http://www.hydroshare.org/terms/inputSourceURL</a></li>
+            <li><strong>Label: </strong>Input source URL</li>
+            <li><strong>Description: </strong>The input data source website</li>
+        </ul>
+    <br/>
+    <a name="modelParameter"></a>
+        <ul >
+            <li><strong>Term: </strong>modelParameter</li>
+            <li><strong>URI: </strong><a href="#modelParameter">http://www.hydroshare.org/terms/modelParameter</a></li>
+            <li><strong>Label: </strong>Model parameter</li>
+            <li><strong>Description: </strong>The parameters used in the model</li>
+        </ul>
+    <br/>
+    <a name="modelSolver"></a>
+        <ul >
+            <li><strong>Term: </strong>modelSolver</li>
+            <li><strong>URI: </strong><a href="#modelSolver">http://www.hydroshare.org/terms/modelSolver</a></li>
+            <li><strong>Label: </strong>Model solver</li>
+            <li><strong>Description: </strong>Used solver for the simulation</li>
+        </ul>
+    <br/>
+    <a name="outputControlPackage"></a>
+        <ul >
+            <li><strong>Term: </strong>outputControlPackage</li>
+            <li><strong>URI: </strong><a href="#outputControlPackage">http://www.hydroshare.org/terms/outputControlPackage</a></li>
+            <li><strong>Label: </strong>Output control package</li>
+            <li><strong>Description: </strong>Output control package used in the simulation</li>
+        </ul>
+    <br/>
+    <a name="subsidencePackage"></a>
+        <ul >
+            <li><strong>Term: </strong>subsidencePackage</li>
+            <li><strong>URI: </strong><a href="#subsidencePackage">http://www.hydroshare.org/terms/subsidencePackage</a></li>
+            <li><strong>Label: </strong>Subsidence package</li>
+            <li><strong>Description: </strong>Subsidence package used in the simulation</li>
         </ul>
 
     <h3>Web App Resource Type Description</h3>
