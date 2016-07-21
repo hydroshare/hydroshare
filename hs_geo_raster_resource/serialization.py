@@ -1,4 +1,4 @@
-import xml.sax
+import defusedxml.sax
 
 import rdflib
 
@@ -28,7 +28,7 @@ class RasterResourceMeta(GenericResourceMeta):
         # Also parse using SAX so that we can capture certain metadata elements
         # in the same order in which they appear in the RDF+XML serialization.
         SAX_parse_results = RasterResourceSAXHandler()
-        xml.sax.parse(self.rmeta_path, SAX_parse_results)
+        defusedxml.sax.parse(self.rmeta_path, SAX_parse_results)
 
         hsterms = rdflib.namespace.Namespace('http://hydroshare.org/terms/')
 
@@ -273,9 +273,9 @@ class RasterResourceMeta(GenericResourceMeta):
                 elif key == 'projection':
                     self.projection = value
 
-class RasterResourceSAXHandler(xml.sax.ContentHandler):
+class RasterResourceSAXHandler(defusedxml.sax.ContentHandler):
     def __init__(self):
-        xml.sax.ContentHandler.__init__(self)
+        defusedxml.sax.ContentHandler.__init__(self)
 
         # Content
         self.band_info = []
@@ -299,48 +299,48 @@ class RasterResourceSAXHandler(xml.sax.ContentHandler):
             if len(self.band_info) < 1:
                 msg = "Error: haven't yet encountered band information, "
                 msg += "yet trying to store band information name."
-                raise xml.sax.SAXException(msg)
+                raise defusedxml.sax.SAXException(msg)
             self._bandinfo_name.append(content)
 
         elif self._get_bandinfo_var_name:
             if len(self.band_info) < 1:
                 msg = "Error: haven't yet encountered band information, "
                 msg += "yet trying to store band information variable name."
-                raise xml.sax.SAXException(msg)
+                raise defusedxml.sax.SAXException(msg)
             self._bandinfo_var_name.append(content)
 
         elif self._get_bandinfo_var_unit:
             if len(self.band_info) < 1:
                 msg = "Error: haven't yet encountered band information, "
                 msg += "yet trying to store band information variable unit."
-                raise xml.sax.SAXException(msg)
+                raise defusedxml.sax.SAXException(msg)
             self._bandinfo_var_unit.append(content)
 
         elif self._get_bandinfo_method:
             if len(self.band_info) < 1:
                 msg = "Error: haven't yet encountered band information, "
                 msg += "yet trying to store band information method."
-                raise xml.sax.SAXException(msg)
+                raise defusedxml.sax.SAXException(msg)
             self._bandinfo_method.append(content)
 
         elif self._get_bandinfo_comment:
             if len(self.band_info) < 1:
                 msg = "Error: haven't yet encountered band information, "
                 msg += "yet trying to store band information comment."
-                raise xml.sax.SAXException(msg)
+                raise defusedxml.sax.SAXException(msg)
             self._bandinfo_comment.append(content)
 
     def startElement(self, name, attrs):
         if name == 'hsterms:BandInformation':
             if self._get_bandinfo:
-                raise xml.sax.SAXException("Error: nested hsterms:BandInformation elements.")
+                raise defusedxml.sax.SAXException("Error: nested hsterms:BandInformation elements.")
             self._get_bandinfo = True
 
         elif name == 'rdf:Description':
             if self._get_bandinfo:
                 if self._get_bandinfo_details:
                     msg = "Error: nested rdf:Description elements within hsterms:BandInformation element."
-                    raise xml.sax.SAXException(msg)
+                    raise defusedxml.sax.SAXException(msg)
                 # Create new band info
                 self.band_info.append(RasterResourceMeta.BandInformation())
                 self._get_bandinfo_details = True
@@ -348,35 +348,35 @@ class RasterResourceSAXHandler(xml.sax.ContentHandler):
         elif name == 'hsterms:name':
             if self._get_bandinfo_details:
                 if self._get_bandinfo_name:
-                    raise xml.sax.SAXException("Error: nested hsterms:name elements within hsterms:BandInformation.")
+                    raise defusedxml.sax.SAXException("Error: nested hsterms:name elements within hsterms:BandInformation.")
                 self._get_bandinfo_name = True
                 self._bandinfo_name = []
 
         elif name == 'hsterms:variableName':
             if self._get_bandinfo_details:
                 if self._get_bandinfo_var_name:
-                    raise xml.sax.SAXException("Error: nested hsterms:variableName elements within hsterms:BandInformation.")
+                    raise defusedxml.sax.SAXException("Error: nested hsterms:variableName elements within hsterms:BandInformation.")
                 self._get_bandinfo_var_name = True
                 self._bandinfo_var_name = []
 
         elif name == 'hsterms:variableUnit':
             if self._get_bandinfo_details:
                 if self._get_bandinfo_var_unit:
-                    raise xml.sax.SAXException("Error: nested hsterms:variableUnit elements within hsterms:BandInformation.")
+                    raise defusedxml.sax.SAXException("Error: nested hsterms:variableUnit elements within hsterms:BandInformation.")
                 self._get_bandinfo_var_unit = True
                 self._bandinfo_var_unit = []
 
         elif name == 'hsterms:method':
             if self._get_bandinfo_details:
                 if self._get_bandinfo_method:
-                    raise xml.sax.SAXException("Error: nested hsterms:method elements within hsterms:BandInformation.")
+                    raise defusedxml.sax.SAXException("Error: nested hsterms:method elements within hsterms:BandInformation.")
                 self._get_bandinfo_method = True
                 self._bandinfo_method = []
 
         elif name == 'hsterms:comment':
             if self._get_bandinfo_details:
                 if self._get_bandinfo_comment:
-                    raise xml.sax.SAXException("Error: nested hsterms:comment elements within hsterms:BandInformation.")
+                    raise defusedxml.sax.SAXException("Error: nested hsterms:comment elements within hsterms:BandInformation.")
                 self._get_bandinfo_comment = True
                 self._bandinfo_comment = []
 
@@ -384,7 +384,7 @@ class RasterResourceSAXHandler(xml.sax.ContentHandler):
         if name == 'hsterms:BandInformation':
             if not self._get_bandinfo:
                 msg = "Error: close hsterms:BandInformation tag without corresponding open tag."
-                raise xml.sax.SAXException(msg)
+                raise defusedxml.sax.SAXException(msg)
             self._get_bandinfo = False
 
         elif name == 'rdf:Description':
@@ -392,7 +392,7 @@ class RasterResourceSAXHandler(xml.sax.ContentHandler):
                 if not self._get_bandinfo_details:
                     msg = "Error: close rdf:Description tag without corresponding open tag "
                     msg += "within hsterms:BandInformation."
-                    raise xml.sax.SAXException(msg)
+                    raise defusedxml.sax.SAXException(msg)
                 self._get_bandinfo_details = False
 
         elif name == 'hsterms:name':
@@ -400,7 +400,7 @@ class RasterResourceSAXHandler(xml.sax.ContentHandler):
                 if not self._get_bandinfo_name:
                     msg = "Error: close hsterms:name tag without corresponding open tag "
                     msg += "within hsterms:BandInformation."
-                    raise xml.sax.SAXException(msg)
+                    raise defusedxml.sax.SAXException(msg)
                 self.band_info[-1].name = "".join(self._bandinfo_name)
                 self._bandinfo_name = None
                 self._get_bandinfo_name = False
@@ -410,7 +410,7 @@ class RasterResourceSAXHandler(xml.sax.ContentHandler):
                 if not self._get_bandinfo_var_name:
                     msg = "Error: close hsterms:variableName tag without corresponding open tag "
                     msg += "within hsterms:BandInformation."
-                    raise xml.sax.SAXException(msg)
+                    raise defusedxml.sax.SAXException(msg)
                 self.band_info[-1].variableName = "".join(self._bandinfo_var_name)
                 self._bandinfo_var_name = None
                 self._get_bandinfo_var_name = False
@@ -420,7 +420,7 @@ class RasterResourceSAXHandler(xml.sax.ContentHandler):
                 if not self._get_bandinfo_var_unit:
                     msg = "Error: close hsterms:variableUnit tag without corresponding open tag "
                     msg += "within hsterms:BandInformation."
-                    raise xml.sax.SAXException(msg)
+                    raise defusedxml.sax.SAXException(msg)
                 self.band_info[-1].variableUnit = "".join(self._bandinfo_var_unit)
                 self._bandinfo_var_unit = None
                 self._get_bandinfo_var_unit = False
@@ -430,7 +430,7 @@ class RasterResourceSAXHandler(xml.sax.ContentHandler):
                 if not self._get_bandinfo_method:
                     msg = "Error: close hsterms:method tag without corresponding open tag "
                     msg += "within hsterms:BandInformation."
-                    raise xml.sax.SAXException(msg)
+                    raise defusedxml.sax.SAXException(msg)
                 self.band_info[-1].method = "".join(self._bandinfo_method)
                 self._bandinfo_method = None
                 self._get_bandinfo_method = False
@@ -440,7 +440,7 @@ class RasterResourceSAXHandler(xml.sax.ContentHandler):
                 if not self._get_bandinfo_comment:
                     msg = "Error: close hsterms:comment tag without corresponding open tag "
                     msg += "within hsterms:BandInformation."
-                    raise xml.sax.SAXException(msg)
+                    raise defusedxml.sax.SAXException(msg)
                 self.band_info[-1].comment = "".join(self._bandinfo_comment)
                 self._bandinfo_comment = None
                 self._get_bandinfo_comment = False

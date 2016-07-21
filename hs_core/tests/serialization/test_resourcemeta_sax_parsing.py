@@ -1,6 +1,6 @@
 # run with: python manage.py test hs_core.tests.serialization.test_resourcemeta_sax_parsing
 import unittest
-import xml.sax
+import defusedxml.sax
 
 from hs_core.serialization import GenericResourceSAXHandler
 from hs_geo_raster_resource.serialization import RasterResourceSAXHandler
@@ -48,7 +48,7 @@ class TestGenericResourceMetaSax(unittest.TestCase):
 
     def test_sax_parsing(self):
         handler = GenericResourceSAXHandler()
-        xml.sax.parseString(self.parse_sample, handler)
+        defusedxml.sax.parseString(self.parse_sample, handler)
 
         self.assertTrue(len(handler.subjects) == 4)
         self.assertEqual(handler.subjects[0], 'HydroShare')
@@ -115,7 +115,7 @@ class TestRasterResourceMetaSax(unittest.TestCase):
 
     def test_sax_parsing(self):
         handler = RasterResourceSAXHandler()
-        xml.sax.parseString(self.parse_sample, handler)
+        defusedxml.sax.parseString(self.parse_sample, handler)
 
         self.assertTrue(len(handler.band_info) == 3)
         self.assertEqual(handler.band_info[0].name, 'Band_1')
@@ -186,7 +186,7 @@ class TestNetcdfResourceMetaSax(unittest.TestCase):
 
     def test_sax_parsing(self):
         handler = NetcdfResourceSAXHandler()
-        xml.sax.parseString(self.parse_sample, handler)
+        defusedxml.sax.parseString(self.parse_sample, handler)
 
         self.assertTrue(len(handler.variables) == 3)
         self.assertEqual(handler.variables[0].name, 'ACLWDNB')
