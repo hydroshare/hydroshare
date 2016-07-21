@@ -290,9 +290,15 @@ def netcdf_pre_add_files_to_resource(sender, **kwargs):
                 name = res_dublin_core_meta.get('creator_name')
                 email = res_dublin_core_meta.get('creator_email', '')
                 url = res_dublin_core_meta.get('creator_url', '')
+                arguments = dict(name=name, email=email, homepage=url)
                 if nc_res.metadata.creators.all().filter(name=name).first():
-                    nc_res.metadata.creators.all().filter(name=name).first().delete()
-                nc_res.metadata.create_element('creator', name=name, email=email, homepage=url)
+                    order = nc_res.metadata.creators.all().filter(name=name).first().order
+                    if order != 1:
+                        nc_res.metadata.creators.all().filter(name=name).first().delete()
+                        arguments['order'] = order
+                        nc_res.metadata.create_element('creator', **arguments)
+                else:
+                    nc_res.metadata.create_element('creator', **arguments)
 
             # update contributor info
             if res_dublin_core_meta.get('contributor_name'):
