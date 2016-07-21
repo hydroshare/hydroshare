@@ -16,6 +16,7 @@ from hs_core.views.discovery_json_view import DiscoveryJsonView
 from theme import views as theme
 from hs_tracking import views as tracking
 from hs_core import views as hs_core_views
+from hs_app_timeseries import views as hs_ts_views
 
 
 autocomplete_light.autodiscover()
@@ -59,6 +60,8 @@ urlpatterns = i18n_patterns("",
     url(r'^collaborate/$', hs_core_views.CollaborateView.as_view(), name='collaborate'),
     url(r'^my-groups/$', hs_core_views.MyGroupsView.as_view(), name='my_groups'),
     url(r'^group/(?P<group_id>[0-9]+)', hs_core_views.GroupView.as_view(), name='group'),
+    url(r'^timeseries/sqlite/update/(?P<resource_id>[A-z0-9\-_]+)', hs_ts_views.update_sqlite_file,
+        name='update_sqlite_file'),
 )
 
 # Filebrowser admin media library.

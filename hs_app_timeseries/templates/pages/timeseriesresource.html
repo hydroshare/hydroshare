@@ -4,11 +4,36 @@
 
 {% block extended_metadata %}
     {% if extended_metadata_exists %}
+        <div id="div-series-selection" class="row">
+            <div class="col-sm-12">
+                <strong>Select a timeseries to see corresponding metadata(Number of
+                    timeseries:{{ series_ids.items|length }}):</strong>
+                <form action="/resource/{{ cm.short_id }}/" method="get" enctype="multipart/form-data">
+                    {% csrf_token %}
+                    <select class="form-control" name="series_id" id="series_id" onchange="this.form.submit()">
+                        {% for series_id, label in series_ids.items %}
+                            {% if selected_series_id == series_id %}
+                                <option value="{{ series_id }}" selected="selected"
+                                        title="{{ label }}">{{ label|slice:":120"|add:"..." }}</option>
+                            {% else %}
+                                <option value="{{ series_id }}"
+                                        title="{{ label }}">{{ label|slice:":120"|add:"..." }}</option>
+                            {% endif %}
+                        {% endfor %}
+                    </select>
+                </form>
+                <hr>
+            </div>
+        </div>
         <div class="row">
-            {% if site or variable or method %}
-                <div {% if not processing_level and not timeseries_result %}class="col-md-12 col-xs-12" {% else %}class="col-md-6 col-xs-12"{% endif %}>
-                    {% if site %}
-                        <legend>Site</legend>
+            {% if sites or variables or methods %}
+                <div {% if not processing_levels and not timeseries_results %}class="col-md-12 col-xs-12" {% else %}class="col-md-6 col-xs-12"{% endif %}>
+                    {% if sites %}
+                         <legend>Site</legend>
+                        {% for site in sites %}
+                             {% if not forloop.first %}
+                                <legend></legend>
+                            {% endif %}
                         <table class="custom-table">
                             <tbody>
                                 <tr><th class="text-muted">Code </th><td>{{ site.site_code }}</td></tr>
@@ -19,25 +44,35 @@
                             </tbody>
                         </table>
                         <hr style="border:0">
+                        {% endfor %}
                     {%  endif %}
 
-                    {% if variable %}
+                    {% if variables %}
                         <legend>Variable</legend>
-                        <table class="custom-table">
-                            <tbody>
-                                <tr><th class="text-muted">Code </th><td>{{ variable.variable_code }}</td></tr>
-                                <tr><th class="text-muted">Name </th><td>{{ variable.variable_name }}</td></tr>
-                                <tr><th class="text-muted">Type </th><td>{{ variable.variable_type }}</td></tr>
-                                <tr><th class="text-muted">No Data Value </th><td>{{ variable.no_data_value }}</td></tr>
-                                <tr><th class="text-muted">Definition </th><td>{{ variable.variable_definition }}</td></tr>
-                                <tr><th class="text-muted">Speciation </th><td>{{ variable.speciation }}</td></tr>
-                            </tbody>
-                        </table>
-                        <hr style="border:0">
+                        {% for variable in variables %}
+                            {% if not forloop.first %}
+                                <legend></legend>
+                            {% endif %}
+                            <table class="custom-table">
+                                <tbody>
+                                    <tr><th class="text-muted">Code </th><td>{{ variable.variable_code }}</td></tr>
+                                    <tr><th class="text-muted">Name </th><td>{{ variable.variable_name }}</td></tr>
+                                    <tr><th class="text-muted">Type </th><td>{{ variable.variable_type }}</td></tr>
+                                    <tr><th class="text-muted">No Data Value </th><td>{{ variable.no_data_value }}</td></tr>
+                                    <tr><th class="text-muted">Definition </th><td>{{ variable.variable_definition }}</td></tr>
+                                    <tr><th class="text-muted">Speciation </th><td>{{ variable.speciation }}</td></tr>
+                                </tbody>
+                            </table>
+                            <hr style="border:0">
+                        {% endfor %}
                     {% endif %}
 
-                    {% if method %}
+                    {% if methods %}
                         <legend>Method</legend>
+                        {% for method in methods %}
+                            {% if not forloop.first %}
+                                <legend></legend>
+                            {% endif %}
                         <table class="custom-table">
                             <tbody>
                                 <tr><th class="text-muted">Code </th><td>{{ method.method_code }}</td></tr>
@@ -52,14 +87,19 @@
                             </tbody>
                         </table>
                         <hr style="border:0">
+                        {% endfor %}
                     {% endif %}
                 </div>
             {% endif %}
 
-            {% if processing_level or timeseries_result %}
-                <div {% if not site and not variable and not method %}class="col-md-12 col-xs-12" {% else %}class="col-md-6 col-xs-12"{% endif %}>
-                {% if processing_level %}
+            {% if processing_levels or timeseries_results %}
+                <div {% if not sites and not variables and not methods %}class="col-md-12 col-xs-12" {% else %}class="col-md-6 col-xs-12"{% endif %}>
+                {% if processing_levels %}
                     <legend>Processing Level</legend>
+                    {% for processing_level in processing_levels %}
+                        {% if not forloop.first %}
+                            <legend></legend>
+                        {% endif %}
                     <table class="custom-table">
                         <tbody>
                             <tr><th class="text-muted">Code </th><td>{{ processing_level.processing_level_code }}</td></tr>
@@ -69,14 +109,18 @@
                             {% if processing_level.explanation %}
                                 <tr><th class="text-muted">Explanation </th><td>{{ processing_level.explanation }}</td></tr>
                             {% endif %}
-
                         </tbody>
                     </table>
                     <hr style="border:0">
+                    {% endfor %}
                 {% endif %}
 
-                {% if timeseries_result %}
+                {% if timeseries_results %}
                     <legend>Time Series Result</legend>
+                    {% for timeseries_result in timeseries_results %}
+                        {% if not forloop.first %}
+                            <legend></legend>
+                        {% endif %}
                     <table class="custom-table">
                         <tbody>
                             <tr><th class="text-muted">Units Type </th><td>{{ timeseries_result.units_type }}</td></tr>
@@ -88,6 +132,8 @@
                             <tr><th class="text-muted">Aggregation Statistics </th><td>{{ timeseries_result.aggregation_statistics }}</td></tr>
                         </tbody>
                     </table>
+                    <hr style="border:0">
+                    {% endfor %}
                 {% endif %}
                 </div>
             {% endif %}
@@ -118,17 +164,9 @@
                         <h3 style="color: red" id="file-type-error"></h3>
                         <hr>
                         <div>
-                            <div class="checkbox">
-                                <label>
-                                    <input type="checkbox" name="extract-metadata" value="No"
-                                           onclick="setCheckboxValue(this)">
-                                    Check to extract metadata from this uploaded file
-                                </label>
-                            </div>
-
                             <div class="alert alert-warning" role="alert">
                                 <span class="glyphicon glyphicon-info-sign" aria-hidden="true"></span>
-                                If metadata is extracted, existing metadata will be replaced with the extracted ones.
+                                Metadata will be extracted from the uploaded SQLite file. Any existing metadata will be replaced with the extracted ones.
                             </div>
                         </div>
                     </div>
@@ -146,6 +184,31 @@
 
     {# resource specific js can go here #}
     <script>
+        $(document).ready(function(){
+            var el = $('#div-series-selection');
+            $(window).scrollTop($(el).offset().top - 300);
+
+            $(".time-series-forms select").append('<option value="Other">Other...</option>');
+
+            $(".time-series-forms select").parent().parent().append('<div class="controls other-field" style="display:none;"> <label class="text-muted control-label">Specify: </label><input class="form-control input-sm textinput textInput" name="" type="text"> </div>')
+
+            $(".time-series-forms select").change(function(e){
+                if (e.target.value == "Other") {
+                    var name = e.target.name;
+                    $(e.target).parent().parent().find(".other-field").show();
+                    $(e.target).parent().parent().find(".other-field input").attr("name", name);
+                    $(e.target).removeAttr("name");
+                }
+                else {
+                    if (!e.target.name.length) {
+                        var name = $(e.target).parent().parent().find(".other-field input").attr("name");
+                        $(e.target).attr("name", name);
+                        $(e.target).parent().parent().find(".other-field input").removeAttr("name");
+                        $(e.target).parent().parent().find(".other-field").hide();
+                    }
+                }
+            })
+        });
         function setCheckboxValue(el){
             if ($(el).is(':checked')){
                 $(el).attr('value', 'Yes')
@@ -153,7 +216,6 @@
             else{
                 $(el).attr('value', 'No')
             }
-            //alert($(el).attr('value'));
         }
     </script>
 

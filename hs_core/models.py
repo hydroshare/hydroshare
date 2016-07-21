@@ -1394,6 +1394,9 @@ class ResourceFile(models.Model):
     fed_resource_file_name_or_path = models.CharField(max_length=255, null=True, blank=True)
     fed_resource_file_size = models.CharField(max_length=15, null=True, blank=True)
 
+    @property
+    def resource(self):
+        return self.content_object
 
 class Bags(models.Model):
     object_id = models.PositiveIntegerField()
@@ -1584,6 +1587,10 @@ class CoreMetaData(models.Model):
     _type = GenericRelation(Type)
     _publisher = GenericRelation(Publisher)
     funding_agencies = GenericRelation(FundingAgency)
+
+    @property
+    def resource(self):
+        return BaseResource.objects.filter(object_id=self.id).first()
 
     @property
     def title(self):
