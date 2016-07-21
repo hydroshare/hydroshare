@@ -6,11 +6,11 @@ from .models import Session
 
 @receiver(user_logged_in, dispatch_uid='id_capture_login')
 def capture_login(sender, **kwargs):
-    session = Session.objects.for_request(kwargs['request'])
+    session = Session.objects.for_request(kwargs['request'], kwargs['user'])
     session.record('login')
 
 
 @receiver(user_logged_out, dispatch_uid='id_capture_logout')
 def capture_logout(sender, **kwargs):
-    session = Session.objects.for_request(kwargs['request'])
+    session = Session.objects.for_request(kwargs['request'], kwargs['user'])
     session.record('logout')

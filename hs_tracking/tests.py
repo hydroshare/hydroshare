@@ -109,9 +109,6 @@ class TrackingTests(TestCase):
         client = Client()
         client.login(username=self.user.username, password='password')
 
-        self.visitor.user = self.user
-        self.visitor.save()
-
         response = client.get('/tracking/reports/profiles/')
         reader = csv.reader(StringIO(response.content))
         rows = list(reader)
