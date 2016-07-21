@@ -141,7 +141,7 @@ def netcdf_pre_create_resource(sender, **kwargs):
 
             if dump_str:
                 # refine dump_str first line
-                nc_file_name = files[0].name[:-3]  #'.'.join(os.path.basename(in_file_name).split('.')[:-1])
+                nc_file_name = files[0].name[:-3]
                 first_line = list('netcdf {0} '.format(nc_file_name))
                 first_line_index = dump_str.index('{')
                 dump_str_list = first_line + list(dump_str)[first_line_index:]
@@ -240,6 +240,7 @@ def netcdf_pre_add_files_to_resource(sender, **kwargs):
         validate_files_dict['message'] = 'Only one file can be uploaded.'
 
     file_selected = False
+    in_file_name = ''
     if files:
         file_selected = True
         in_file_name = files[0].file.name
@@ -249,7 +250,7 @@ def netcdf_pre_add_files_to_resource(sender, **kwargs):
             in_file_name = ref_tmpfiles[0]
             file_selected = True
 
-    if file_selected:
+    if file_selected and in_file_name:
         # file type validation and existing metadata update and create new ncdump text file
         nc_dataset = nc_utils.get_nc_dataset(in_file_name)
         if isinstance(nc_dataset, netCDF4.Dataset):
@@ -371,7 +372,7 @@ def netcdf_pre_add_files_to_resource(sender, **kwargs):
 
             if dump_str:
                 # refine dump_str first line
-                nc_file_name = '.'.join(os.path.basename(in_file_name).split('.')[:-1])
+                nc_file_name = files[0].name[:-3]
                 first_line = list('netcdf {0} '.format(nc_file_name))
                 first_line_index = dump_str.index('{')
                 dump_str_list = first_line + list(dump_str)[first_line_index:]
