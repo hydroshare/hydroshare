@@ -4,7 +4,7 @@
 
 function label_ajax_submit() {
     var el = $(this);
-    var dataFormID = el.attr("data-form-id")
+    var dataFormID = el.attr("data-form-id");
     var formID = $("form[data-id='" + dataFormID + "']");
     var form = $(formID);
     var datastring = form.serialize();
@@ -316,6 +316,11 @@ function metadata_update_ajax_submit(form_id){
             json_response = JSON.parse(result);
             if (json_response.status === 'success')
             {
+                if (($form.attr("id") == "id-site" || $form.attr("id") == "id-variable" ||
+                    $form.attr("id") == "id-method" || $form.attr("id") == "id-processinglevel" ||
+                    $form.attr("id") == "id-timeseriesresult") && ($("#has-sqlite-file").val()) === "True") {
+                    $("#sql-file-update").show();
+                }
                 $(document).trigger("submit-success");
                 $form.find("button.btn-primary").hide();
                 if (json_response.hasOwnProperty('element_id')){

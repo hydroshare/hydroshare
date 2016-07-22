@@ -979,6 +979,7 @@ class BaseFormHelper(FormHelper):
                             ),
                          )
         else:
+            self.form_tag = False
             self.layout = Layout(
                             Fieldset(element_name,
                                      element_layout,

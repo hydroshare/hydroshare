@@ -8,7 +8,7 @@ var mp_old_id = '';
 $(document).ready(function(){
 
     // proceed only if selectbox_ exists (i.e. edit page)
-    if($('[id^=selectbox_]').length > 0) {
+    if ($('[id^=selectbox_]').length > 0) {
 
         // set the initial value of the mp_old_id
         mp_old_id = $('[id^=selectbox_]').attr('id').split('_').pop();
@@ -22,8 +22,17 @@ $(document).ready(function(){
         // build metadata table (ajax query)
         show_model_details();
 
-
     }
+
+    $("#btn-add-model-input").click(function(){
+        var template = $("#model-input-template").clone();
+        $("this").removeAttr("id");
+        template.css("display", "initial");
+        template.attr("id", "modelinput");
+        template.find(".btn-primary").css("display", "initial");
+
+        $("#model-inputs-container").append(template);
+    });
 
 });
 
