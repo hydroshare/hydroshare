@@ -16,6 +16,7 @@ from osgeo import osr
 from collections import OrderedDict
 import re
 import logging
+import pycrs
 
 
 def get_raster_meta_dict(raster_file_name):
@@ -157,7 +158,7 @@ def get_wgs84_coverage_info(raster_dataset):
     original_coverage_info = get_original_coverage_info(raster_dataset)
 
     if proj and (None not in original_coverage_info.values()):
-        import pycrs
+
         original_cs = osr.SpatialReference()
 
         try:
