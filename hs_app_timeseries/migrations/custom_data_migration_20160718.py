@@ -11,19 +11,24 @@ def delete_extracted_metadata(apps, schema_editor):
     # delete the existing SQlite file and then add a new SQlite file to regenerate
     # resource specific metadata
     log = logging.getLogger()
-    TimeSeriesResource = apps.get_model('hs_app_timeseries', 'TimeSeriesResource')
-    for res in TimeSeriesResource.objects.all():
-        # delete all extracted metadata
-        res.metadata.sites.delete()
-        res.metadata.variables.delete()
-        res.metadata.methods.delete()
-        res.metadata.processing_levels.delete()
-        res.metadata.time_series_results.delete()
-        message = "Deleted all resource specific metadata from TimeSeries Resource ID:{}"
-        message = message.format(res.short_id)
-        log.info(message)
-        print(message)
-        resource_modified(res, res.creator)
+
+    # Trying to delete resource specific metadata by accessing these objects
+    # from a resource object (e.g res.metadata.sites.delete() randomly raises attribute
+    # error for 'metadata' property of resource object. Need to delete the objects directly.
+    Site = apps.get_model('hs_app_timeseries', 'Site')
+    Variable = apps.get_model('hs_app_timeseries', 'Variable')
+    Method = apps.get_model('hs_app_timeseries', 'Method')
+    ProcessingLevel = apps.get_model('hs_app_timeseries', 'ProcessingLevel')
+    TimeSeriesResult = apps.get_model('hs_app_timeseries', 'TimeSeriesResult')
+
+    # delete timeseries specific metadata elements
+    Site.objects.all().delete()
+    Variable.objects.all().delete()
+    Method.objects.all().delete()
+    ProcessingLevel.objects.all().delete()
+    TimeSeriesResult.objects.all().delete()
+    log.info("Deleted all resource specific metadata for all timeseries resources.")
+    print("Deleted all resource specific metadata for all timeseries resources.")
 
 
 class Migration(migrations.Migration):
