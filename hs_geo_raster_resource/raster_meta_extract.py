@@ -16,6 +16,7 @@ from osgeo import osr
 from collections import OrderedDict
 import re
 import logging
+import numpy
 
 
 def get_raster_meta_dict(raster_file_name):
@@ -230,7 +231,7 @@ def get_cell_info(raster_file_name):
 
 def get_band_info(raster_file_name):
 
-    raster_dataset = gdal.Open(raster_file_name, GA_ReadOnly)
+    raster_dataset = gdal.Open(raster_file_name, GA_Update)
 
     import os
     ori_dir = os.getcwd()
@@ -243,7 +244,18 @@ def get_band_info(raster_file_name):
 
         for i in range(0, band_count):
             band = raster_dataset.GetRasterBand(i+1)
-            minimum, maximum, _, _ = band.GetStatistics(0, 1)
+            minimum, maximum, _, _ = band.ComputeStatistics(False)
+            no_data = band.GetNoDataValue()
+            new_no_data = None
+
+            if numpy.allclose(minimum, no_data):
+                new_no_data = minimum
+            elif numpy.allclose(maximum, no_data):
+                new_no_data = maximum
+
+            if new_no_data:
+                band.SetNoDataValue(new_no_data)
+                minimum, maximum, _, _ = band.ComputeStatistics(False)
 
             band_info[i+1] = {
                 'name': 'Band_'+str(i+1),
@@ -264,6 +276,7 @@ def get_band_info(raster_file_name):
         }
 
     raster_dataset = None
+
     os.chdir(ori_dir)
 
     return band_info
