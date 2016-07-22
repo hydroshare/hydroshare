@@ -141,7 +141,7 @@ def netcdf_pre_create_resource(sender, **kwargs):
 
             if dump_str:
                 # refine dump_str first line
-                nc_file_name = files[0].name[:-3]
+                nc_file_name = os.path.splitext(files[0].name)[0]
                 first_line = list('netcdf {0} '.format(nc_file_name))
                 first_line_index = dump_str.index('{')
                 dump_str_list = first_line + list(dump_str)[first_line_index:]
@@ -199,8 +199,7 @@ def netcdf_pre_create_resource(sender, **kwargs):
 def netcdf_pre_delete_file_from_resource(sender, **kwargs):
     nc_res = kwargs['resource']
     del_file = kwargs['file']
-    res_fname = get_resource_file_name(del_file)
-    del_file_ext = os.path.splitext(res_fname)[-1]
+    del_file_ext = utils.get_resource_file_extension(del_file)
 
     # update resource modification info
     user = nc_res.creator
@@ -213,7 +212,7 @@ def netcdf_pre_delete_file_from_resource(sender, **kwargs):
     if del_file_ext in file_ext:
         del file_ext[del_file_ext]
         for f in ResourceFile.objects.filter(object_id=nc_res.id):
-            ext = os.path.splitext(get_resource_file_name(f))[-1]
+            ext = utils.get_resource_file_extension(f)
             if ext in file_ext:
                 delete_resource_file_only(nc_res, f)
                 nc_res.metadata.formats.filter(value=file_ext[ext]).delete()
@@ -291,10 +290,11 @@ def netcdf_pre_add_files_to_resource(sender, **kwargs):
                 email = res_dublin_core_meta.get('creator_email', '')
                 url = res_dublin_core_meta.get('creator_url', '')
                 arguments = dict(name=name, email=email, homepage=url)
-                if nc_res.metadata.creators.all().filter(name=name).first():
-                    order = nc_res.metadata.creators.all().filter(name=name).first().order
+                creator = nc_res.metadata.creators.all().filter(name=name).first()
+                if creator:
+                    order = creator.order
                     if order != 1:
-                        nc_res.metadata.creators.all().filter(name=name).first().delete()
+                        creator.delete()
                         arguments['order'] = order
                         nc_res.metadata.create_element('creator', **arguments)
                 else:
