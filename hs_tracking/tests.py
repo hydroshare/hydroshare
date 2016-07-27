@@ -116,7 +116,10 @@ class TrackingTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertEqual(rows[0], VISITOR_FIELDS)
         i = VISITOR_FIELDS.index('username')
-        self.assertEqual(rows[1][i], self.user.username)
+        # Row 1 is the original unauthenticated session created in setUp()
+        self.assertEqual(rows[1][i], '')
+        # Row 2 is the user we just authenticated
+        self.assertEqual(rows[2][i], self.user.username)
 
     def test_history_empty(self):
         self.user.is_staff = True
