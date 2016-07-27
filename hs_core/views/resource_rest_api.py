@@ -261,7 +261,7 @@ class ResourceReadUpdateDelete(ResourceToListItemMixin, generics.RetrieveUpdateD
         site_url = hydroshare.utils.current_site_url()
         if res.resource_type.lower() == "reftimeseriesresource":
             # if res is RefTimeSeriesResource
-            bag_url = site_url + reverse('ref_ts.views.download_refts_resource_files',
+            bag_url = reverse('ref_ts.views.download_refts_resource_files',
                                          kwargs={'shortkey': pk})
         else:
             bag_url = site_url + AbstractResource.bag_url(pk)
