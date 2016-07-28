@@ -262,8 +262,9 @@ class ResourceReadUpdateDelete(ResourceToListItemMixin, generics.RetrieveUpdateD
         if res.resource_type.lower() == "reftimeseriesresource":
 
             # if res is RefTimeSeriesResource
-            bag_url = site_url + reverse('ref_ts.views.download_refts_resource_files',
-                                         kwargs={'shortkey': pk})
+            # bag_url = site_url + reverse('ref_ts.views.download_refts_resource_files',
+            #                              kwargs={'shortkey': pk})
+            bag_url = site_url + '/hsapi/_internal/{0}/download-refts-bag/'.format(pk)
         else:
             bag_url = site_url + AbstractResource.bag_url(pk)
 
