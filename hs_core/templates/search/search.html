@@ -458,6 +458,8 @@
                             </form>
 
                             <div id="resource-search" style="display:none">
+                                <div id="coverages-master-list" style="display:inline-block; height:150px; overflow-y: auto"></div>
+                                <br />
                                 <table id="lat-lng-labels">
                                     <tr>
                                         <td>
@@ -681,9 +683,11 @@
             $("#box-coverages-list-1").empty();
             $("#box-coverages-list-100").empty();
             $("#box-coverages-list-1000").empty();
+            console.log(box_resources.length);
             box_resources.forEach(function(box){
+                var title = truncateTitle(box.title);
                 var item_content = '<li class="list-group-item clearfix"><a style="color:balck" role="button"><span class="glyphicon glyphicon-hand-left pull-left"></span></a>';
-                item_content += '<a style="margin-left:10px;" href="' + box.get_absolute_url + '">' + box.title + '</a>';
+                item_content += '<a style="margin-left:10px;" href="' + box.get_absolute_url + '">' + title + '</a>';
                 item_content += '</li>';
                 var $listItem = $(item_content);
 
@@ -697,6 +701,8 @@
                 } else {
                     $('#box-coverages-list-1000').append($listItem);
                 }
+                var title_button = '<a class="btn btn-primary btn-xs" style="margin:5px">' + title + '</a>';
+                $("#coverages-master-list").append(title_button);
             });
             $("#box-coverages-container").show();
         }
@@ -1085,6 +1091,17 @@
             jQuery("label[for='ne-lng-value']").html(ne_lng);
             jQuery("label[for='sw-lat-value']").html(sw_lat);
             jQuery("label[for='sw-lng-value']").html(sw_lng);
+        };
+
+        var truncateTitle = function(title){
+            var tokens = title.split(" ");
+            var trunc_title = "";
+            if (tokens.length > 3){
+                trunc_title = tokens[0] + " " + tokens[1] + " " + tokens[2] + "...";
+                return trunc_title;
+            } else {
+                return title;
+            }
         };
 
         var reorderDivs = function() {
