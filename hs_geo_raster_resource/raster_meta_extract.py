@@ -166,7 +166,7 @@ def get_wgs84_coverage_info(raster_dataset):
             original_cs.ImportFromWkt(ogc_wkt)
 
         except Exception:
-            original_cs.ImportFromEPSG(proj)
+            original_cs.ImportFromWkt(proj)
 
         # create wgs84 geographic coordinate system
         wgs84_cs = osr.SpatialReference()
