@@ -16,7 +16,7 @@ class UrlBaseFormHelper(BaseFormHelper):
         layout = Layout(
             Field('value', css_class=field_width)
         )
-        kwargs['element_name_label'] = "App URL <a href='/terms#AppURL' target='_blank'><font size='3'>Help</font></a>"
+        kwargs['element_name_label'] = "App URL Pattern <a href='/terms#AppURL' target='_blank'><font size='3'>Help</font></a>"
 
         super(UrlBaseFormHelper, self).__init__(allow_edit, res_short_id, element_id, element_name, layout,  *args, **kwargs)
 

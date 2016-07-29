@@ -156,6 +156,19 @@ class NetcdfResource(BaseResource):
         # can have only 1 file
         return False
 
+    # add resource-specific HS terms
+    def get_hs_term_dict(self):
+        # get existing hs_term_dict from base class
+        hs_term_dict = super(NetcdfResource, self).get_hs_term_dict()
+        # add new terms for NetCDF res
+        hs_term_dict["HS_NETCDF_FILE_NAME"] = ""
+        for res_file in self.files.all():
+            fn = res_file.resource_file.name
+            if fn.lower().endswith('.nc'):
+                hs_term_dict["HS_NETCDF_FILE_NAME"] = fn[fn.rfind('/')+1:]
+                break
+        return hs_term_dict
+
     class Meta:
         verbose_name = 'Multidimensional (NetCDF)'
         proxy = True
