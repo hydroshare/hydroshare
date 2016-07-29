@@ -2,6 +2,9 @@ import os
 import sqlite3
 import shutil
 import logging
+import csv
+from dateutil import parser
+import tempfile
 
 from django.dispatch import receiver
 
@@ -92,9 +95,70 @@ def post_create_resource_handler(sender, **kwargs):
     # extract metadata from the just uploaded file
     res_file = resource.files.all().first()
     if res_file:
-        _process_uploaded_sqlite_file(user, resource, res_file, validate_files_dict,
-                                      delete_existing_metadata=False)
+        # check if the uploaded file is a sqlite file or csv file
+        file_ext = utils.get_resource_file_extension(res_file)
+        if file_ext == '.sqlite':
+            _process_uploaded_sqlite_file(user, resource, res_file, validate_files_dict,
+                                          delete_existing_metadata=False)
+        elif file_ext == '.csv':
+            _process_uploaded_csv_file(resource, res_file, validate_files_dict,
+                                       delete_existing_metadata=False)
 
+
+def _process_uploaded_csv_file(resource, res_file, validate_files_dict,
+                               delete_existing_metadata=True):
+    # get the csv file from iRODS to a temp directory
+    fl_obj_name = utils.get_file_from_irods(res_file)
+    validate_err_message = _validate_csv_file(resource, fl_obj_name)
+    if not validate_err_message:
+        # first delete relevant existing metadata elements
+        if delete_existing_metadata:
+            TimeSeriesMetaData.objects.filter(id=resource.metadata.id).update(is_dirty=False)
+            _delete_extracted_metadata(resource)
+
+        # populate CV metadata django models from the blank sqlite file
+
+        # copy the blank sqlite file to a temp directory
+        temp_dir = tempfile.mkdtemp()
+        odm2_sqlite_file_name = 'ODM2.sqlite'
+        odm2_sqlite_file = 'hs_app_timeseries/files/{}'.format(odm2_sqlite_file_name)
+        target_temp_sqlite_file = os.path.join(temp_dir, odm2_sqlite_file_name)
+        shutil.copy(odm2_sqlite_file, target_temp_sqlite_file)
+
+        con = sqlite3.connect(target_temp_sqlite_file)
+        with con:
+            # get the records in python dictionary format
+            con.row_factory = sqlite3.Row
+            cur = con.cursor()
+
+            # populate the lookup CV tables that are needed later for metadata editing
+            _create_cv_lookup_models(cur, resource.metadata, 'CV_VariableType', CVVariableType)
+            _create_cv_lookup_models(cur, resource.metadata, 'CV_VariableName', CVVariableName)
+            _create_cv_lookup_models(cur, resource.metadata, 'CV_Speciation', CVSpeciation)
+            _create_cv_lookup_models(cur, resource.metadata, 'CV_SiteType', CVSiteType)
+            _create_cv_lookup_models(cur, resource.metadata, 'CV_ElevationDatum',
+                                     CVElevationDatum)
+            _create_cv_lookup_models(cur, resource.metadata, 'CV_MethodType', CVMethodType)
+            _create_cv_lookup_models(cur, resource.metadata, 'CV_UnitsType', CVUnitsType)
+            _create_cv_lookup_models(cur, resource.metadata, 'CV_Status', CVStatus)
+            _create_cv_lookup_models(cur, resource.metadata, 'CV_Medium', CVMedium)
+            _create_cv_lookup_models(cur, resource.metadata, 'CV_AggregationStatistic',
+                                     CVAggregationStatistic)
+
+        # cleanup the temp sqlite file directory
+        if os.path.exists(temp_dir):
+            shutil.rmtree(temp_dir)
+
+    else:  # file validation failed
+        # delete the invalid file just uploaded
+        delete_resource_file_only(resource, res_file)
+        validate_files_dict['are_files_valid'] = False
+        validate_err_message += "{}".format(FILE_UPLOAD_ERROR_MESSAGE)
+        validate_files_dict['message'] = validate_err_message
+
+    # cleanup the temp csv file
+    if os.path.exists(fl_obj_name):
+        shutil.rmtree(os.path.dirname(fl_obj_name))
 
 def _process_uploaded_sqlite_file(user, resource, res_file, validate_files_dict,
                                   delete_existing_metadata=True):
@@ -636,11 +700,68 @@ def _delete_extracted_metadata(resource):
                                      order=1)
 
 
-def _validate_odm2_db_file(uploaded_file_sqlite_file_name):
+def _validate_csv_file(resource, uploaded_csv_file_name):
+    err_message = "Uploaded file is not a valid timeseries csv file."
+    log = logging.getLogger()
+    with open(uploaded_csv_file_name, 'r') as fl_obj:
+        csv_reader = csv.reader(fl_obj, delimiter=',')
+        # read the first row
+        header = csv_reader.next()
+        header = [el.strip() for el in header]
+        # check that there are at least 2 headings
+        if len(header) < 2:
+            err_message += " There needs to be at least 2 columns of data."
+            log.error(err_message)
+            return err_message
+
+        # check the header has only string values
+        if any(not isinstance(el, str) for el in header):
+            err_message += " One or more column heading found not to be of type string."
+            log.error(err_message)
+            return err_message
+        # check the first column heading is 'valuedatetime'
+        if header[0].lower() != "valuedatetime":
+            err_message += " First column heading must be 'DateTime'."
+            log.error(err_message)
+            return err_message
+        # check that there are no duplicate column headings
+        if len(header) != len(set(header)):
+            err_message += " There are duplicate column headings."
+            log.error(err_message)
+            return err_message
+
+        # process data rows
+        for row in csv_reader:
+            # check that data row has the same number of columns as the header
+            if len(row) != len(header):
+                err_message += " Number of columns in the header is not same as the data columns."
+                log.error(err_message)
+                return err_message
+            # check that the first column data is of type datetime
+            try:
+                parser.parse(row[0])
+            except Exception:
+                err_message += " Data for the first column must be a date value."
+                log.error(err_message)
+                return err_message
+
+            # check that the data values (2nd column onwards) are of numeric
+            for data_value in row[1:]:
+                try:
+                    float(data_value)
+                except ValueError:
+                    err_message += " Data values must be numeric."
+                    log.error(err_message)
+                    return err_message
+
+    resource.metadata.series_names = header[1:]
+    return None
+
+def _validate_odm2_db_file(uploaded_sqlite_file_name):
     err_message = "Uploaded file is not a valid ODM2 SQLite file."
     log = logging.getLogger()
     try:
-        con = sqlite3.connect(uploaded_file_sqlite_file_name)
+        con = sqlite3.connect(uploaded_sqlite_file_name)
         with con:
 
             # TODO: check that each of the core tables has the necessary columns

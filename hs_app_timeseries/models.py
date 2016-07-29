@@ -285,14 +285,22 @@ class TimeSeriesResource(BaseResource):
 
     @classmethod
     def get_supported_upload_file_types(cls):
-        # final phase of this resource type implementation will support 3 file types
-        # return (".csv", ".xml", ".sqlite")
-        # phase-1 of implementation supports only sqlite file
-        return (".sqlite",)
+        # either a csv or a sqlite file can be uploaded
+        # the internal storage format will always be sqlite
+        # if a csv file is uploaded, a sqlite file will be generated using data
+        # from the uploaded csv file.
+        # the original uploaded csv file will also be kept as part of the resource
+        return ".sqlite", ".csv"
 
     @classmethod
     def can_have_multiple_files(cls):
-        # can have only 1 file
+        # can upload only 1 file
+        # however, the resource can have a sqlite file and a csv file
+        # if the user uploads a sqlite file, then the resource will have
+        # only one file (the uploaded sqlite file).
+        # if the user uploads a csv file, a sqlite file will be created and
+        # both the uploaded csv file and the generated sqlite file will be part
+        # of the resource.
         return False
 
 
@@ -308,6 +316,8 @@ class TimeSeriesMetaData(CoreMetaData):
     _processing_levels = GenericRelation(ProcessingLevel)
     _time_series_results = GenericRelation(TimeSeriesResult)
     is_dirty = models.BooleanField(default=False)
+    # temporarily store the series names from the csv file
+    series_names = ArrayField(models.CharField(max_length=200, null=True, blank=True), default=[])
 
     @property
     def sites(self):

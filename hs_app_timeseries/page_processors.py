@@ -6,6 +6,7 @@ from forms import SiteForm, VariableForm, MethodForm, ProcessingLevelForm, TimeS
     UpdateSQLiteLayout, SeriesSelectionLayout, TimeSeriesMetaDataLayout
 from hs_core import page_processors
 from hs_core.views import add_generic_context
+from hs_core.hydroshare import utils
 from hs_app_timeseries.models import TimeSeriesResource
 
 
@@ -27,9 +28,18 @@ def landing_page(request, page):
         extended_metadata_exists = True
 
     series_ids = {}
-    for result in content_model.metadata.time_series_results:
-        series_id = result.series_ids[0]
-        series_ids[series_id] = _get_series_label(series_id, content_model)
+    if not extended_metadata_exists:
+        res_file = content_model.files.all().first()
+        if res_file:
+            # check if the file is a csv file
+            file_ext = utils.get_resource_file_extension(res_file)
+            if file_ext == ".csv":
+                for index, series_name in enumerate(content_model.metadata.series_names):
+                    series_ids[index] = series_name
+    else:
+        for result in content_model.metadata.time_series_results:
+            series_id = result.series_ids[0]
+            series_ids[series_id] = _get_series_label(series_id, content_model)
 
     if 'series_id' in request.GET:
         selected_series_id = request.GET['series_id']
@@ -99,7 +109,7 @@ def _get_resource_edit_context(page, request, content_model, selected_series_id,
     timeseries_result_form = None
 
     if extended_metadata_exists:
-        # create timeseries sepecific metadata element forms
+        # create timeseries specific metadata element forms
         site = content_model.metadata.sites.filter(
             series_ids__contains=[selected_series_id]).first()
         site_form = SiteForm(instance=site, res_short_id=content_model.short_id,
