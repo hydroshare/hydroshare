@@ -1,10 +1,10 @@
 $(document).ready(function() {
-    var checked_res_str=$("#checked_res_div").text();
-    var checked_res_array=checked_res_str.split(",");
-    for (var i = 0; i < checked_res_array.length; i++) {
-        var checked_res_item=checked_res_array[i];
-        $("input[value='"+checked_res_item+"']").attr("checked","true");
-    }
+    //var checked_res_str=$("#checked_res_div").text();
+    //var checked_res_array=checked_res_str.split(",");
+    //for (var i = 0; i < checked_res_array.length; i++) {
+    //    var checked_res_item=checked_res_array[i];
+    //    $("input[value='"+checked_res_item+"']").attr("checked","true");
+    //}
     // Getter for icon_url input element
     var get_icon_input_element = function() {
         return $('#resourceSpecificTab #div_id_url');

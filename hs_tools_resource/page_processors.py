@@ -4,7 +4,7 @@ from crispy_forms.layout import Layout, HTML
 from hs_core import page_processors
 from hs_core.views import add_generic_context
 
-from forms import UrlBaseForm, VersionForm, SupportedResTypesForm, ToolIconForm, parameters_choices
+from forms import UrlBaseForm, VersionForm, SupportedResTypesForm, ToolIconForm, SupportedResTypes_choices
 from models import ToolResource, RequestUrlBase
 
 
@@ -29,7 +29,7 @@ def landing_page(request, page):
             supported_res_types_str = content_model.metadata.supported_res_types.first().get_supported_res_types_str()
             supported_res_types_array = supported_res_types_str.split(',')
             for type_name in supported_res_types_array:
-                for display_name_tuple in parameters_choices:
+                for display_name_tuple in SupportedResTypes_choices:
                     if type_name.lower() == display_name_tuple[0].lower():
                         new_supported_res_types_array += [display_name_tuple[1]]
                         break
@@ -98,15 +98,15 @@ def landing_page(request, page):
         context['supported_res_types_form'] = supported_res_types_form
         context['tool_icon_form'] = tool_icon_form
 
-        if supported_res_types_obj:
-            supported_res_types = supported_res_types_obj.supported_res_types.all()
-            checked_res_str = ""
-            if len(supported_res_types) > 0:
-                for parameter in supported_res_types:
-                    checked_res_str += str(parameter.description)
-                    checked_res_str += ","
-
-            context['checked_res'] = checked_res_str
+        # if supported_res_types_obj:
+        #     supported_res_types = supported_res_types_obj.supported_res_types.all()
+        #     checked_res_str = ""
+        #     if len(supported_res_types) > 0:
+        #         for parameter in supported_res_types:
+        #             checked_res_str += str(parameter.description)
+        #             checked_res_str += ","
+        #
+        #     context['checked_res'] = checked_res_str
 
     hs_core_dublin_context = add_generic_context(request, page)
     context.update(hs_core_dublin_context)

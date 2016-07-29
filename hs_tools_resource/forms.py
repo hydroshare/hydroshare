@@ -91,17 +91,30 @@ class ToolIconForm(ModelForm):
 class ToolIconValidationForm(forms.Form):
     url = forms.CharField(max_length=1024)
 
-parameters_choices = (
-    ('GenericResource', 'Generic Resource'),
-    ('RasterResource', 'Raster Resource'),
-    ('RefTimeSeriesResource', 'HIS Referenced Time Series Resource'),
-    ('TimeSeriesResource', 'Time Series Resource'),
-    ('NetcdfResource', 'NetCDF Resource'),
-    ('ModelProgramResource', 'Model Program Resource'),
-    ('ModelInstanceResource', 'Model Instance Resource'),
-    ('SWATModelInstanceResource', 'SWAT Model Instance Resource'),
-    ('GeographicFeatureResource', 'Geographic Feature Resource'),
-    ('ScriptResource', 'Script Resource')
+# SupportedResTypes_choices = (
+#     ('GenericResource', 'Generic Resource'),
+#     ('RasterResource', 'Raster Resource'),
+#     ('RefTimeSeriesResource', 'HIS Referenced Time Series Resource'),
+#     ('TimeSeriesResource', 'Time Series Resource'),
+#     ('NetcdfResource', 'NetCDF Resource'),
+#     ('ModelProgramResource', 'Model Program Resource'),
+#     ('ModelInstanceResource', 'Model Instance Resource'),
+#     ('SWATModelInstanceResource', 'SWAT Model Instance Resource'),
+#     ('GeographicFeatureResource', 'Geographic Feature Resource'),
+#     ('ScriptResource', 'Script Resource'),
+# )
+
+SupportedResTypes_choices = (
+    ('GenericResource', 'GenericResource'),
+    ('RasterResource', 'RasterResource'),
+    ('RefTimeSeriesResource', 'RefTimeSeriesResource'),
+    ('TimeSeriesResource', 'TimeSeriesResource'),
+    ('NetcdfResource', 'NetcdfResource'),
+    ('ModelProgramResource', 'ModelProgramResource'),
+    ('ModelInstanceResource', 'ModelInstanceResource'),
+    ('SWATModelInstanceResource', 'SWATModelInstanceResource'),
+    ('GeographicFeatureResource', 'GeographicFeatureResource'),
+    ('ScriptResource', 'ScriptResource'),
 )
 
 
@@ -122,7 +135,7 @@ class SupportedResTypeFormHelper(BaseFormHelper):
 
 
 class SupportedResTypesForm(ModelForm):
-    supported_res_types = forms.MultipleChoiceField(choices=parameters_choices,
+    supported_res_types = forms.MultipleChoiceField(choices=SupportedResTypes_choices,
                                                     widget=forms.CheckboxSelectMultiple(
                                                             attrs={'style': 'width:auto;margin-top:-5px'}))
 
@@ -134,21 +147,18 @@ class SupportedResTypesForm(ModelForm):
             try:
                 supported_res_types = self.instance.supported_res_types.all()
                 if len(supported_res_types) > 0:
-                    checked_item_list = []
-                    for parameter in supported_res_types:
-                        checked_item_list.append(parameter.description)
-
-                    self.fields['supported_res_types'].initial = checked_item_list
+                    self.initial['supported_res_types'] = \
+                        [parameter.description for parameter in supported_res_types]
                 else:
-                    self.fields['supported_res_types'].initial = []
+                    self.initial['supported_res_types'] = []
             except:
-                self.fields['supported_res_types'].initial = []
+                self.initial['supported_res_types'] = []
 
     class Meta:
         model = SupportedResTypes
-        fields = '__all__'
+        fields = ('supported_res_types',)
 
 
 class SupportedResTypesValidationForm(forms.Form):
-    supported_res_types = forms.MultipleChoiceField(choices=parameters_choices, required=False)
+    supported_res_types = forms.MultipleChoiceField(choices=SupportedResTypes_choices, required=False)
 
