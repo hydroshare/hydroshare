@@ -3,7 +3,7 @@ from django import forms
 
 from crispy_forms.layout import Layout, Field
 
-from models import RequestUrlBase, ToolVersion, SupportedResTypes, ToolIcon
+from models import RequestUrlBase, ToolVersion, SupportedResTypes, ToolIcon, SupportedSharingStatus
 from hs_core.forms import BaseFormHelper
 
 
@@ -91,30 +91,17 @@ class ToolIconForm(ModelForm):
 class ToolIconValidationForm(forms.Form):
     url = forms.CharField(max_length=1024)
 
-# SupportedResTypes_choices = (
-#     ('GenericResource', 'Generic Resource'),
-#     ('RasterResource', 'Raster Resource'),
-#     ('RefTimeSeriesResource', 'HIS Referenced Time Series Resource'),
-#     ('TimeSeriesResource', 'Time Series Resource'),
-#     ('NetcdfResource', 'NetCDF Resource'),
-#     ('ModelProgramResource', 'Model Program Resource'),
-#     ('ModelInstanceResource', 'Model Instance Resource'),
-#     ('SWATModelInstanceResource', 'SWAT Model Instance Resource'),
-#     ('GeographicFeatureResource', 'Geographic Feature Resource'),
-#     ('ScriptResource', 'Script Resource'),
-# )
-
 SupportedResTypes_choices = (
-    ('GenericResource', 'GenericResource'),
-    ('RasterResource', 'RasterResource'),
-    ('RefTimeSeriesResource', 'RefTimeSeriesResource'),
-    ('TimeSeriesResource', 'TimeSeriesResource'),
-    ('NetcdfResource', 'NetcdfResource'),
-    ('ModelProgramResource', 'ModelProgramResource'),
-    ('ModelInstanceResource', 'ModelInstanceResource'),
-    ('SWATModelInstanceResource', 'SWATModelInstanceResource'),
-    ('GeographicFeatureResource', 'GeographicFeatureResource'),
-    ('ScriptResource', 'ScriptResource'),
+    ('GenericResource', 'Generic Resource'),
+    ('RasterResource', 'Raster Resource'),
+    ('RefTimeSeriesResource', 'HIS Referenced Time Series Resource'),
+    ('TimeSeriesResource', 'Time Series Resource'),
+    ('NetcdfResource', 'NetCDF Resource'),
+    ('ModelProgramResource', 'Model Program Resource'),
+    ('ModelInstanceResource', 'Model Instance Resource'),
+    ('SWATModelInstanceResource', 'SWAT Model Instance Resource'),
+    ('GeographicFeatureResource', 'Geographic Feature Resource'),
+    ('ScriptResource', 'Script Resource'),
 )
 
 
@@ -147,6 +134,10 @@ class SupportedResTypesForm(ModelForm):
             try:
                 supported_res_types = self.instance.supported_res_types.all()
                 if len(supported_res_types) > 0:
+                    # NOTE: The following code works for SWAT res type but does not work here!!!
+                    # self.fields['supported_res_types'].initial =
+                    #   [parameter.description for parameter in supported_res_types]
+
                     self.initial['supported_res_types'] = \
                         [parameter.description for parameter in supported_res_types]
                 else:
@@ -162,3 +153,54 @@ class SupportedResTypesForm(ModelForm):
 class SupportedResTypesValidationForm(forms.Form):
     supported_res_types = forms.MultipleChoiceField(choices=SupportedResTypes_choices, required=False)
 
+
+SupportedSharingStatus_choices = (
+    ('Published', 'Published'),
+    ('Public', 'Public'),
+    ('Discoverable', 'Discoverable'),
+    ('Private', 'Private'),
+)
+
+
+class SupportedSharingStatusFormHelper(BaseFormHelper):
+    def __init__(self, allow_edit=True, res_short_id=None,
+                 element_id=None, element_name=None,  *args, **kwargs):
+
+        # the order in which the model fields are listed for
+        # the FieldSet is the order these fields will be displayed
+        layout = Layout(MetadataField('sharing_status'))
+        kwargs['element_name_label'] = 'Supported Resource Sharing Status'
+        super(SupportedSharingStatusFormHelper, self).\
+            __init__(allow_edit, res_short_id, element_id,
+                     element_name, layout,  *args, **kwargs)
+
+
+class SupportedSharingStatusForm(ModelForm):
+    sharing_status = forms.MultipleChoiceField(choices=SupportedSharingStatus_choices,
+                                               widget=forms.CheckboxSelectMultiple(
+                                                attrs={'style': 'width:auto;margin-top:-5px'}))
+
+    def __init__(self, allow_edit=True, res_short_id=None, element_id=None, *args, **kwargs):
+        super(SupportedSharingStatusForm, self).__init__(*args, **kwargs)
+        self.fields['sharing_status'].label = "Choose Sharing Status:"
+        self.helper = SupportedSharingStatusFormHelper(allow_edit, res_short_id, element_id,
+                                                       element_name='SupportedSharingStatus')
+        if self.instance:
+            try:
+                supported_sharing_status = self.instance.sharing_status.all()
+                if len(supported_sharing_status) > 0:
+                    self.initial['sharing_status'] = \
+                        [parameter.description for parameter in supported_sharing_status]
+                else:
+                    self.initial['sharing_status'] = []
+            except:
+                self.initial['sharing_status'] = []
+
+    class Meta:
+        model = SupportedSharingStatus
+        fields = ('sharing_status',)
+
+
+class SupportedSharingStatusValidationForm(forms.Form):
+    sharing_status = forms.MultipleChoiceField(choices=SupportedSharingStatus_choices,
+                                               required=False)

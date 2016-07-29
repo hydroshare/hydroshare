@@ -40,6 +40,16 @@
                     {% endif %}
                 </div>
                 <div>
+                    {% if supported_sharing_status %}
+                        <h4><strong>Supported Resource Sharing Status:</strong></h4>
+                        <hr style="margin-top: 0px;margin-bottom: 2px">
+                        <div class="row">
+                            <div class="col-sm-8">{{ supported_sharing_status }}</div>
+                        </div>
+                        <hr style="border:0">
+                    {% endif %}
+                </div>
+                <div>
                     {% if tool_icon_url %}
                         <h4><strong>App Icon:</strong></h4>
                         <hr style="margin-top: 0px;margin-bottom: 2px">

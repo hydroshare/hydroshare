@@ -7,8 +7,6 @@ from mezzanine.pages.page_processors import processor_for
 from hs_core.models import BaseResource, ResourceManager, resource_processor, \
     CoreMetaData, AbstractMetaDataElement
 
-from lxml import etree
-
 
 class ToolResource(BaseResource):
     objects = ResourceManager('ToolResource')
@@ -95,8 +93,8 @@ class SupportedResTypes(AbstractMetaDataElement):
                     else:
                         meta_instance.supported_res_types.create(description=res_type_str)
                 meta_instance.save()
-                if meta_instance.supported_res_types.all().count() == 0:
-                    meta_instance.delete()
+                # if meta_instance.supported_res_types.all().count() == 0:
+                #     meta_instance.delete()
             else:
                 raise ObjectDoesNotExist("No supported_res_types parameter was found in the **kwargs list")
         else:
@@ -105,6 +103,63 @@ class SupportedResTypes(AbstractMetaDataElement):
     @classmethod
     def remove(cls, element_id):
         raise ValidationError("SupportedResTypes element can't be deleted.")
+
+
+class SupportedSharingStatusChoices(models.Model):
+    description = models.CharField(max_length=128)
+
+    def __unicode__(self):
+        return self.description
+
+
+class SupportedSharingStatus(AbstractMetaDataElement):
+    term = 'SupportedSharingStatus'
+    sharing_status = models.ManyToManyField(SupportedSharingStatusChoices, null=True, blank=True)
+
+    def get_sharing_status_str(self):
+        return ', '.join([parameter.description for parameter in self.sharing_status.all()])
+
+    @classmethod
+    def create(cls, **kwargs):
+        if 'sharing_status' in kwargs:
+            metadata_obj = kwargs['content_object']
+            new_meta_instance = SupportedSharingStatus.objects.create(content_object=metadata_obj)
+            for sharing_status in kwargs['sharing_status']:
+                qs = SupportedSharingStatusChoices.objects.filter(description__iexact=sharing_status)
+                if qs.exists():
+                    new_meta_instance.sharing_status.add(qs[0])
+                else:
+                    new_meta_instance.sharing_status.create(description=sharing_status)
+            return new_meta_instance
+        else:
+            raise ObjectDoesNotExist("No sharing_status parameter was found in the **kwargs list")
+
+    @classmethod
+    def update(cls, element_id, **kwargs):
+        meta_instance = SupportedSharingStatus.objects.get(id=element_id)
+        if meta_instance:
+            if 'sharing_status' in kwargs:
+                meta_instance.sharing_status.clear()
+                for sharing_status in kwargs['sharing_status']:
+                    qs = SupportedSharingStatusChoices.objects.filter\
+                        (description__iexact=sharing_status)
+                    if qs.exists():
+                        meta_instance.sharing_status.add(qs[0])
+                    else:
+                        meta_instance.sharing_status.create(description=sharing_status)
+                meta_instance.save()
+                # if meta_instance.sharing_status.all().count() == 0:
+                #     meta_instance.delete()
+            else:
+                raise ObjectDoesNotExist("No sharing_status parameter "
+                                         "was found in the **kwargs list")
+        else:
+            raise ObjectDoesNotExist("No SupportedSharingStatus object was "
+                                     "found with the provided id: %s" % kwargs['id'])
+
+    @classmethod
+    def remove(cls, element_id):
+        raise ValidationError("SupportedSharingStatus element can't be deleted.")
 
 
 class ToolIcon(AbstractMetaDataElement):
@@ -121,6 +176,7 @@ class ToolMetaData(CoreMetaData):
     versions = GenericRelation(ToolVersion)
     supported_res_types = GenericRelation(SupportedResTypes)
     tool_icon = GenericRelation(ToolIcon)
+    sharing_status = GenericRelation(SupportedSharingStatus)
 
     @classmethod
     def get_supported_element_names(cls):
@@ -129,6 +185,7 @@ class ToolMetaData(CoreMetaData):
         elements.append('ToolVersion')
         elements.append('SupportedResTypes')
         elements.append('ToolIcon')
+        elements.append('SupportedSharingStatus')
         return elements
 
     def has_all_required_elements(self):
@@ -142,9 +199,24 @@ class ToolMetaData(CoreMetaData):
             missing_required_elements.append('App Url')
         elif not self.url_bases.all().first().value:
             missing_required_elements.append('App Url')
+
         if not self.supported_res_types.all().first():
             missing_required_elements.append('Supported Resource Types')
+        elif not self.supported_res_types.all().first().supported_res_types.count() > 0:
+            missing_required_elements.append('Supported Resource Types')
+
+        if self.sharing_status.all().first():
+            if not self.sharing_status.all().first().sharing_status.count() > 0:
+                missing_required_elements.append('Supported Sharing Status')
 
         return missing_required_elements
+
+    def delete_all_elements(self):
+        super(ToolMetaData, self).delete_all_elements()
+        self.url_bases.all().delete()
+        self.versions.all().delete()
+        self.supported_res_types.all().delete()
+        self.tool_icon.all().delete()
+        self.sharing_status.all().delete()
 
 import receivers # never delete this otherwise non of the receiver function will work

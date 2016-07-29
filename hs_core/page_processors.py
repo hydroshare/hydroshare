@@ -64,22 +64,43 @@ def get_page_context(page, user, resource_edit=False, extended_metadata_layout=N
                 # reverse lookup: metadata obj --> res obj
                 tool_res_obj = ToolResource.objects.get(object_id=res_type.object_id)
                 if tool_res_obj:
-                    is_authorized = authorize(request, tool_res_obj.short_id,
-                                              needed_permission=ACTION_TO_AUTHORIZE.VIEW_RESOURCE,
-                                              raises_exception=False)[1]
-                    if is_authorized:
-                        tool_url = tool_res_obj.metadata.url_bases.first().value \
-                            if tool_res_obj.metadata.url_bases.first() else None
-                        tool_icon_url = tool_res_obj.metadata.tool_icon.first().url \
-                            if tool_res_obj.metadata.tool_icon.first() else "raise-img-error"
-                        hs_term_dict_user = {}
-                        hs_term_dict_user["HS_USR_NAME"] = request.user.username if request.user.is_authenticated() else "anonymous"
-                        tool_url_new = parse_app_url_template(tool_url, [content_model.get_hs_term_dict(), hs_term_dict_user])
-                        if tool_url_new is not None:
-                            tl = {'title': str(tool_res_obj.metadata.title.value),
-                                  'icon_url': tool_icon_url,
-                                  'url': tool_url_new}
-                            relevant_tools.append(tl)
+                    sharing_status_supported = False
+
+                    supported_sharing_status_obj = tool_res_obj.metadata.sharing_status.first()
+                    if supported_sharing_status_obj is not None:
+                        suppored_sharing_status_str = supported_sharing_status_obj.\
+                                                      get_sharing_status_str()
+                        if len(suppored_sharing_status_str) > 0:
+                            res_sharing_status = content_model.raccess.sharing_status
+                            if suppored_sharing_status_str.lower().\
+                                    find(res_sharing_status.lower()) != -1:
+                                sharing_status_supported = True
+                        else:
+                            #  webapp with an empty sharing status metadata does not support
+                            #  any sharing status
+                            pass
+                    else:
+                        # webapp without sharing_status metadata
+                        # is considered to support all sharing status
+                        sharing_status_supported = True
+
+                    if sharing_status_supported:
+                        is_authorized = authorize(request, tool_res_obj.short_id,
+                                                  needed_permission=ACTION_TO_AUTHORIZE.VIEW_RESOURCE,
+                                                  raises_exception=False)[1]
+                        if is_authorized:
+                            tool_url = tool_res_obj.metadata.url_bases.first().value \
+                                if tool_res_obj.metadata.url_bases.first() else None
+                            tool_icon_url = tool_res_obj.metadata.tool_icon.first().url \
+                                if tool_res_obj.metadata.tool_icon.first() else "raise-img-error"
+                            hs_term_dict_user = {}
+                            hs_term_dict_user["HS_USR_NAME"] = request.user.username if request.user.is_authenticated() else "anonymous"
+                            tool_url_new = parse_app_url_template(tool_url, [content_model.get_hs_term_dict(), hs_term_dict_user])
+                            if tool_url_new is not None:
+                                tl = {'title': str(tool_res_obj.metadata.title.value),
+                                      'icon_url': tool_icon_url,
+                                      'url': tool_url_new}
+                                relevant_tools.append(tl)
 
     just_created = False
     new_version_create_resource_error = None
