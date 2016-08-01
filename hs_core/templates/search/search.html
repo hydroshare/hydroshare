@@ -694,12 +694,24 @@
                     content: '<p class="pop-content">' + resource_link + '</p>',
                     trigger: 'click'
                 });
+
+                $list_item.hover(
+                    function() {
+                        showBoxMarker(box);
+                    }, function() {
+                        var rectBounds = new google.maps.LatLngBounds(
+                            new google.maps.LatLng(0, 0),
+                            new google.maps.LatLng(0, 0)
+                        );
+                        rectangle.set('bounds', rectBounds);
+                    }
+                );
+
             });
 
             $(".box-title-item").on('click', function (e) {
                 $(".box-title-item").not(this).popover('hide');
             });
-            //$("#box-coverages-container").show();
         }
 
         var calcArea = function(box) {
@@ -721,13 +733,24 @@
             var southlimit = parseFloat(box.southlimit);
             var eastlimit = parseFloat(box.eastlimit);
             var westlimit = parseFloat(box.westlimit);
-            var rectBounds = new google.maps.LatLngBounds(
+
+            var ne_latlng = new google.maps.LatLng(northlimit, eastlimit);
+            var sw_latlng = new google.maps.LatLng(southlimit, westlimit);
+            if (map.getBounds().contains(ne_latlng) && map.getBounds().contains(sw_latlng)) {
+                var rectBounds = new google.maps.LatLngBounds(
                         new google.maps.LatLng(northlimit, westlimit),
                         new google.maps.LatLng(southlimit, eastlimit)
-            );
+                );
+
+            } else {
+                var rectBounds = new google.maps.LatLngBounds(
+                        new google.maps.LatLng(0, 0),
+                        new google.maps.LatLng(0, 0)
+                );
+            }
             rectangle.set('bounds', rectBounds);
-            map.fitBounds(rectBounds);
-            updateMapView();
+            //map.fitBounds(rectBounds);
+            //updateMapView();
         }
 
         var clientUpdateMarkers = function(filtered_results) {
