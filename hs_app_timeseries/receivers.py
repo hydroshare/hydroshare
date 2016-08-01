@@ -754,7 +754,9 @@ def _validate_csv_file(resource, uploaded_csv_file_name):
                     log.error(err_message)
                     return err_message
 
-    resource.metadata.series_names = header[1:]
+    # columns starting with the 2nd column are data series names
+    TimeSeriesMetaData.objects.filter(id=resource.metadata.id).update(series_names=header[1:])
+
     return None
 
 def _validate_odm2_db_file(uploaded_sqlite_file_name):

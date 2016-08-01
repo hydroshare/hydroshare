@@ -11,32 +11,51 @@ from models import Site, Variable, Method, ProcessingLevel, TimeSeriesResult
 
 class SiteFormHelper(BaseFormHelper):
     def __init__(self, allow_edit=True, res_short_id=None, element_id=None, element_name=None,
-                 *args, **kwargs):
+                 show_multiple_sites=False, *args, **kwargs):
 
         # the order in which the model fields are listed for the FieldSet is the order these
         # fields will be displayed
         field_width = 'form-control input-sm'
-        layout = Layout(
-                        Field('site_code', css_class=field_width),
-                        Field('site_name', css_class=field_width),
-                        Field('organization', css_class=field_width),
-                        Field('elevation_m', css_class=field_width),
-                        Field('elevation_datum', css_class=field_width,
-                              title="Select 'Other...' to specify a new elevation datum term"),
-                        Field('site_type', css_class=field_width,
-                              title="Select 'Other...' to specify a new site type term"),
-                 )
+        common_layout = Layout(
+                            Field('selected_series_id', css_class=field_width, type="hidden"),
+                            Field('site_code', css_class=field_width),
+                            Field('site_name', css_class=field_width),
+                            Field('organization', css_class=field_width),
+                            Field('elevation_m', css_class=field_width),
+                            Field('elevation_datum', css_class=field_width,
+                                  title="Select 'Other...' to specify a new elevation datum term"),
+                            Field('site_type', css_class=field_width,
+                                  title="Select 'Other...' to specify a new site type term"),
+                     )
+        if show_multiple_sites:
+            layout = Layout(
+                            Field('multiple_sites', css_class=field_width),
+                            common_layout,
+                     )
+        else:
+            layout = Layout(
+                Field('multiple_sites', css_class=field_width, type="hidden"),
+                common_layout,
+            )
 
         super(SiteFormHelper, self).__init__(allow_edit, res_short_id, element_id, element_name,
                                              layout,  *args, **kwargs)
 
 
 class SiteForm(ModelForm):
+    multiple_sites = forms.BooleanField(required=False)
+    selected_series_id = forms.CharField(max_length=50, required=False)
+
     def __init__(self, allow_edit=True, res_short_id=None, element_id=None, *args, **kwargs):
         self.cv_site_types = list(kwargs.pop('cv_site_types'))
         self.cv_elevation_datums = list(kwargs.pop('cv_elevation_datums'))
+        show_multiple_sites = kwargs.pop('show_multiple_sites')
+        selected_series_id = kwargs.pop('selected_series_id', None)
         super(SiteForm, self).__init__(*args, **kwargs)
-        self.helper = SiteFormHelper(allow_edit, res_short_id, element_id, element_name='Site')
+        self.selected_series_id = selected_series_id
+        self.helper = SiteFormHelper(allow_edit, res_short_id, element_id, element_name='Site',
+                                     show_multiple_sites=show_multiple_sites)
+        self.fields['selected_series_id'].initial = selected_series_id
 
     def set_dropdown_widgets(self, site_type, elevation_datum):
         cv_site_type_choices = _get_cv_dropdown_widget_items(self.cv_site_types, site_type)
@@ -57,7 +76,8 @@ class SiteForm(ModelForm):
 
     class Meta:
         model = Site
-        fields = ['site_code', 'site_name', 'elevation_m', 'elevation_datum', 'site_type']
+        fields = ['site_code', 'site_name', 'elevation_m', 'elevation_datum', 'site_type',
+                  'multiple_sites']
         exclude = ['content_object']
         widgets = {'elevation_m': forms.TextInput()}
 
@@ -68,13 +88,16 @@ class SiteValidationForm(forms.Form):
     elevation_m = forms.IntegerField(required=False)
     elevation_datum = forms.CharField(max_length=50, required=False)
     site_type = forms.CharField(max_length=100, required=False)
+    multiple_sites = forms.BooleanField(required=False)
+    selected_series_id = forms.CharField(max_length=50, required=False)
 
 
 class VariableFormHelper(BaseFormHelper):
     def __init__(self, allow_edit=True, res_short_id=None, element_id=None, element_name=None,
-                 *args, **kwargs):
+                 show_multiple_variable_chkbox=False, *args, **kwargs):
         field_width = 'form-control input-sm'
-        layout = Layout(
+        common_layout = Layout(
+                     Field('selected_series_id', css_class=field_width, type="hidden"),
                      Field('variable_code', css_class=field_width),
                      Field('variable_name', css_class=field_width,
                            title="Select 'Other...' to specify a new variable name term"),
@@ -86,19 +109,36 @@ class VariableFormHelper(BaseFormHelper):
                            title="Select 'Other...' to specify a new speciation term"),
                 )
 
+        if show_multiple_variable_chkbox:
+            layout = Layout(
+                Field('multiple_variables', css_class=field_width),
+                common_layout,
+            )
+        else:
+            layout = Layout(
+                Field('multiple_variables', css_class=field_width, type="hidden"),
+                common_layout,
+            )
         super(VariableFormHelper, self).__init__(allow_edit, res_short_id, element_id,
                                                  element_name, layout,  *args, **kwargs)
 
 
 class VariableForm(ModelForm):
+    multiple_variables = forms.BooleanField(required=False)
+    selected_series_id = forms.CharField(max_length=50, required=False)
+
     def __init__(self, allow_edit=True, res_short_id=None, element_id=None, *args, **kwargs):
         self.cv_variable_types = list(kwargs.pop('cv_variable_types'))
         self.cv_variable_names = list(kwargs.pop('cv_variable_names'))
         self.cv_speciations = list(kwargs.pop('cv_speciations'))
-
+        show_multiple_variable_chkbox = kwargs.pop('show_multiple_variable_chkbox')
+        selected_series_id = kwargs.pop('selected_series_id', None)
         super(VariableForm, self).__init__(*args, **kwargs)
         self.helper = VariableFormHelper(allow_edit, res_short_id, element_id,
-                                         element_name='Variable')
+                                         element_name='Variable',
+                                         show_multiple_variable_chkbox=
+                                         show_multiple_variable_chkbox)
+        self.fields['selected_series_id'].initial = selected_series_id
 
     def set_dropdown_widgets(self, variable_type, variable_name, speciation):
         cv_var_type_choices = _get_cv_dropdown_widget_items(self.cv_variable_types, variable_type)
@@ -122,7 +162,7 @@ class VariableForm(ModelForm):
     class Meta:
         model = Variable
         fields = ['variable_code', 'variable_name', 'variable_type', 'no_data_value',
-                  'variable_definition', 'speciation']
+                  'variable_definition', 'speciation', 'multiple_variables']
         exclude = ['content_object']
         widgets = {'no_data_value': forms.TextInput()}
 

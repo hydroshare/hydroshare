@@ -33,7 +33,7 @@ class TimeSeriesAbstractMetaDataElement(AbstractMetaDataElement):
             if len(set_series_ids) != len(kwargs['series_ids']):
                 raise ValidationError("Duplicate series IDs are found")
 
-        super(TimeSeriesAbstractMetaDataElement, cls).create(**kwargs)
+        return super(TimeSeriesAbstractMetaDataElement, cls).create(**kwargs)
 
     @classmethod
     def update(cls, element_id, **kwargs):
@@ -64,9 +64,22 @@ class Site(TimeSeriesAbstractMetaDataElement):
         return self.site_name
 
     @classmethod
+    def create(cls, **kwargs):
+        metadata = kwargs['content_object']
+        multiple_sites = kwargs.pop('multiple_sites', False)
+        selected_series_id = kwargs.pop('selected_series_id', None)
+        if len(metadata.series_names) > 0:
+            if not multiple_sites:
+                kwargs['series_ids'] = range(len(metadata.series_names))
+            else:
+                kwargs['series_ids'] = [selected_series_id]
+
+        return super(Site, cls).create(**kwargs)
+
+    @classmethod
     def update(cls, element_id, **kwargs):
         element = cls.objects.get(id=element_id)
-
+        kwargs.pop('multiple_sites', None)
         # if the user has entered a new elevation datum, then create a corresponding new cv term
         _create_cv_term(element=element, cv_term_class=CVElevationDatum,
                         cv_term_str='elevation_datum', element_cv_term=element.elevation_datum,
@@ -99,9 +112,22 @@ class Variable(TimeSeriesAbstractMetaDataElement):
         return self.variable_name
 
     @classmethod
+    def create(cls, **kwargs):
+        metadata = kwargs['content_object']
+        multiple_variables = kwargs.pop('multiple_variables', False)
+        selected_series_id = kwargs.pop('selected_series_id', None)
+        if len(metadata.series_names) > 0:
+            if not multiple_variables:
+                kwargs['series_ids'] = range(len(metadata.series_names))
+            else:
+                kwargs['series_ids'] = [selected_series_id]
+
+        return super(Variable, cls).create(**kwargs)
+
+    @classmethod
     def update(cls, element_id, **kwargs):
         element = cls.objects.get(id=element_id)
-
+        kwargs.pop('multiple_variables', None)
         # if the user has entered a new variable name, then create a corresponding new cv term
         _create_cv_term(element=element, cv_term_class=CVVariableName,
                         cv_term_str='variable_name', element_cv_term=element.variable_name,
@@ -281,8 +307,11 @@ class TimeSeriesResource(BaseResource):
 
     @property
     def has_sqlite_file(self):
-        return self.files.all().count() > 0
-
+        for res_file in self.files.all():
+            fl_ext = utils.get_resource_file_extension(res_file)
+            if fl_ext == '.sqlite':
+                return True
+        return False
     @classmethod
     def get_supported_upload_file_types(cls):
         # either a csv or a sqlite file can be uploaded
