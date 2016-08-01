@@ -10,7 +10,7 @@
             </h2>
         </div>
         <div class="col-sm-9 col-sm-offset-3 col-xs-12">
-            <button class="btn btn-info" data-toggle="popover" data-placement="right"><i
+            <button id="solr-help-info" class="btn btn-info" data-toggle="popover" data-placement="right"><i
                     class="glyphicon glyphicon-info-sign"></i></button>
 
             <div id="discover-resource-search" class="resource-search">
@@ -448,7 +448,7 @@
 
                 <div id="map-view" class="tab-pane fade">
                     <div class="row">
-                        <div class="col-xs-12 col-sm-8">
+                        <div class="col-xs-12">
                             <form id="covereage-search-fields" method="get" action="." style="display: none">
                                 {% for field in form %}
                                     {% if field.auto_id  == "id_NElat" or field.auto_id  == "id_NElng" or field.auto_id  == "id_SWlat" or field.auto_id  == "id_SWlng" %}
@@ -488,26 +488,26 @@
 
                             <div id="resetZoom"></div>
                         </div>
-                        <div class="col-xs-12 col-sm-4" id="box-coverages-container" style="display:none">
-                            <h4 class="text-muted">Box Coverages Resources</h4>
-                            <div class="panel panel-default" id="box-coverages-panel">
-                                <div class="panel-heading">
-                                    <h3 class="panel-title">0 to 100 mi<sup>2</sup></h3>
-                                </div>
-                                <div class="list-group box-coverages-list" id="box-coverages-list-1">
-                                </div>
-                                <div class="panel-heading">
-                                    <h3 class="panel-title">100 to 1000 mi<sup>2</sup></h3>
-                                </div>
-                                <div class="list-group box-coverages-list" id="box-coverages-list-100">
-                                </div>
-                                <div class="panel-heading">
-                                    <h3 class="panel-title">over 1000 mi<sup>2</sup></h3>
-                                </div>
-                                <div class="list-group box-coverages-list" id="box-coverages-list-1000">
-                                </div>
-                            </div>
-                        </div>
+{#                        <div class="col-xs-12 col-sm-4" id="box-coverages-container" style="display:none">#}
+{#                            <h4 class="text-muted">Box Coverages Resources</h4>#}
+{#                            <div class="panel panel-default" id="box-coverages-panel">#}
+{#                                <div class="panel-heading">#}
+{#                                    <h3 class="panel-title">0 to 100 mi<sup>2</sup></h3>#}
+{#                                </div>#}
+{#                                <div class="list-group box-coverages-list" id="box-coverages-list-1">#}
+{#                                </div>#}
+{#                                <div class="panel-heading">#}
+{#                                    <h3 class="panel-title">100 to 1000 mi<sup>2</sup></h3>#}
+{#                                </div>#}
+{#                                <div class="list-group box-coverages-list" id="box-coverages-list-100">#}
+{#                                </div>#}
+{#                                <div class="panel-heading">#}
+{#                                    <h3 class="panel-title">over 1000 mi<sup>2</sup></h3>#}
+{#                                </div>#}
+{#                                <div class="list-group box-coverages-list" id="box-coverages-list-1000">#}
+{#                                </div>#}
+{#                            </div>#}
+{#                        </div>#}
                     </div>
                 </div>
             </div>
@@ -679,32 +679,51 @@
                     box_resources.push(json_results[i]);
                 }
             }
-
-            $("#box-coverages-list-1").empty();
-            $("#box-coverages-list-100").empty();
-            $("#box-coverages-list-1000").empty();
-            console.log(box_resources.length);
+{##}
+{#            $("#box-coverages-list-1").empty();#}
+{#            $("#box-coverages-list-100").empty();#}
+{#            $("#box-coverages-list-1000").empty();#}
+{#            console.log(box_resources.length);#}
             box_resources.forEach(function(box){
                 var title = truncateTitle(box.title);
-                var item_content = '<li class="list-group-item clearfix"><a style="color:balck" role="button"><span class="glyphicon glyphicon-hand-left pull-left"></span></a>';
-                item_content += '<a style="margin-left:10px;" href="' + box.get_absolute_url + '">' + title + '</a>';
-                item_content += '</li>';
-                var $listItem = $(item_content);
+{#                var item_content = '<li class="list-group-item clearfix"><a style="color:balck" role="button"><span class="glyphicon glyphicon-hand-left pull-left"></span></a>';#}
+{#                item_content += '<a style="margin-left:10px;" href="' + box.get_absolute_url + '">' + title + '</a>';#}
+{#                item_content += '</li>';#}
+{#                var $listItem = $(item_content);#}
+{##}
+{#                $listItem.find('[role="button"]').click(function () {#}
+{#                    showBoxMarker(box);#}
+{#                });#}
+{#                if(box.area <= 100) {#}
+{#                    $('#box-coverages-list-1').append($listItem);#}
+{#                } else if (box.area > 100 && box.area <= 1000) {#}
+{#                    $('#box-coverages-list-100').append($listItem);#}
+{#                } else {#}
+{#                    $('#box-coverages-list-1000').append($listItem);#}
+{#                }#}
+                var title_button = '<a class="box-title-item btn btn-primary btn-xs" style="margin:5px" data-toggle="popover" data-placement="top">' + title + '</a>';
+                var $list_item = $(title_button);
 
-                $listItem.find('[role="button"]').click(function () {
-                    showBoxMarker(box);
+                $list_item.popover({
+                    html: true,
+                    //container: '#body',
+                    content: '<p>' + title + '</p>',
+                    trigger: 'click'
                 });
-                if(box.area <= 100) {
-                    $('#box-coverages-list-1').append($listItem);
-                } else if (box.area > 100 && box.area <= 1000) {
-                    $('#box-coverages-list-100').append($listItem);
-                } else {
-                    $('#box-coverages-list-1000').append($listItem);
-                }
-                var title_button = '<a class="btn btn-primary btn-xs" style="margin:5px">' + title + '</a>';
-                $("#coverages-master-list").append(title_button);
+
+                $list_item.on({
+                    hover: function() {
+                        console.log("hover");
+                    }
+                });
+                $("#coverages-master-list").append($list_item);
+                
             });
-            $("#box-coverages-container").show();
+
+            $(".box-title-item").on('click', function (e) {
+                $(".box-title-item").not(this).popover('hide');
+            });
+            //$("#box-coverages-container").show();
         }
 
         var calcArea = function(box) {
@@ -1441,7 +1460,7 @@
             });
 
 
-            $('[data-toggle="popover"]').popover({
+            $("#solr-help-info").popover({
                 html: true,
                 container: '#body',
                 content: '<p>This search box supports <a href="https://cwiki.apache.org/confluence/display/solr/Searching" target="_blank">SOLR Query syntax</a>.</p>',
