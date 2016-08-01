@@ -37,7 +37,7 @@
                 {% include "resource-landing-page/title-section.html" %}
 
                 {# ======= Top-right buttons ======= #}
-                {% include "resource-landing-page/top-right-buttons.html" with show_manage_access=show_manage_access %}
+                {% include "resource-landing-page/top-right-buttons.html" with resource_is_mine=resource_is_mine show_manage_access=show_manage_access %}
 
                 {# ======= Title and header content ======= #}
                 {% include "resource-landing-page/resource-header.html" %}
@@ -237,7 +237,11 @@
                     <div class="tab-elements">
                         <div class="panel-tabs">
                             <ul class="nav nav-tabs">
-                                <li class="active col-xs-2 col-md-2">
+                                {% if not is_resource_specific_tab_active %}
+                                    <li class="active col-xs-2 col-md-2">
+                                {% else %}
+                                   <li class="col-xs-2 col-md-2">
+                                {%  endif %}
                                     <a href="#contactTab" data-toggle="tab" title="Contact">
                                         <span class="glyphicon glyphicon-user"> </span>
                                         &nbspContact
@@ -264,7 +268,11 @@
                                     {% if cm|resource_type != "HIS Referenced Time Series" or not metadata_form %}
                                         {% if  cm|resource_type != "Generic" %}
                                             {% if  cm|resource_type|lower != "collection resource" %}
-                                                <li class="col-xs-2 col-md-2">
+                                                {% if is_resource_specific_tab_active %}
+                                                    <li class="active col-xs-2 col-md-2">
+                                                {% else %}
+                                                    <li class="col-xs-2 col-md-2">
+                                                {% endif %}
                                                     <a href="#resourceSpecificTab" data-toggle="tab" title="Resource specific">
                                                         <span class="glyphicon glyphicon-folder-close"></span>
                                                         &nbspResource Specific
@@ -296,7 +304,11 @@
                             <!-- Tab panes -->
                             <div class="tab-content">
                                 <!-- ========= CONTACT TAB ========= -->
-                                <div class="tab-pane active" id="contactTab">
+                                {% if not is_resource_specific_tab_active %}
+                                    <div class="tab-pane active" id="contactTab">
+                                {% else %}
+                                    <div class="tab-pane" id="contactTab">
+                                {% endif %}
                                     {% if not metadata_form %}
                                         <table class="table table-striped">
                                             <tbody>
@@ -864,7 +876,11 @@
                                     {% if cm|resource_type != "HIS Referenced Time Series" or not metadata_form %}
                                         {% if  cm|resource_type != "Generic" %}
                                             {% if  cm|resource_type|lower != "collection resource" %}
-                                                <div class="tab-pane" id="resourceSpecificTab">
+                                                {% if not is_resource_specific_tab_active %}
+                                                    <div class="tab-pane" id="resourceSpecificTab">
+                                                {% else %}
+                                                    <div class="tab-pane active" id="resourceSpecificTab">
+                                                {%  endif %}
                                                     {% if not metadata_form %}
 
                                                         {% block extended_metadata %}

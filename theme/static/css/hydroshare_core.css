@@ -1372,10 +1372,18 @@ body > .main-container {
 }
 
 #btnMyResources.btn-resource-add {
-	color: #84B85C;;
+	color: #D9534F;
+}
+
+#btnMyResources.btn-resource-add:hover {
+	color: #84B85C;
 }
 
 #btnMyResources.btn-resource-remove {
+	color: #84B85C;
+}
+
+#btnMyResources.btn-resource-remove:hover {
 	color: #D9534F;
 }
 

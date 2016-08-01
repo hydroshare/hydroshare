@@ -16,6 +16,7 @@ from osgeo import osr
 from collections import OrderedDict
 import re
 import logging
+import pycrs
 
 
 def get_raster_meta_dict(raster_file_name):
@@ -157,8 +158,15 @@ def get_wgs84_coverage_info(raster_dataset):
     original_coverage_info = get_original_coverage_info(raster_dataset)
 
     if proj and (None not in original_coverage_info.values()):
+
         original_cs = osr.SpatialReference()
-        original_cs.ImportFromWkt(proj)
+
+        try:
+            ogc_wkt = pycrs.parser.from_unknown_wkt(proj).to_ogc_wkt()
+            original_cs.ImportFromWkt(ogc_wkt)
+
+        except Exception:
+            original_cs.ImportFromEPSG(proj)
 
         # create wgs84 geographic coordinate system
         wgs84_cs = osr.SpatialReference()
