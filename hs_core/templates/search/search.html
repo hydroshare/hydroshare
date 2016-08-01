@@ -679,25 +679,21 @@
                     box_resources.push(json_results[i]);
                 }
             }
-{##}
-{#            $("#box-coverages-list-1").empty();#}
-{#            $("#box-coverages-list-100").empty();#}
-{#            $("#box-coverages-list-1000").empty();#}
-{#            console.log(box_resources.length);#}
-            box_resources.forEach(function(box){
+
+            box_resources.forEach(function(box) {
                 var title = truncateTitle(box.title);
                 var title_button = '<a class="box-title-item btn btn-primary btn-xs" style="margin:5px" data-toggle="popover" data-placement="top">' + title + '</a>';
                 var $list_item = $(title_button);
-
                 $("#coverages-master-list").append($list_item);
+
+                var resource_link = '<a target="_blank" href="' + box.get_absolute_url + '">' + box.title + '</a>';
 
                 $list_item.popover({
                     html: true,
                     title: box.title,
-                    content: '<p>' + box.title + '</p>',
+                    content: '<p class="pop-content">' + resource_link + '</p>',
                     trigger: 'click'
                 });
-
             });
 
             $(".box-title-item").on('click', function (e) {
