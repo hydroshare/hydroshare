@@ -654,15 +654,15 @@
             });
 
 
-            modified_boxes_data.forEach(function(box){
-                var info_content = box.info_link;
-                var northlimit = parseFloat(box.northlimit);
-                var southlimit = parseFloat(box.southlimit);
-                var eastlimit = parseFloat(box.eastlimit);
-                var westlimit = parseFloat(box.westlimit);
-                var counter = box.counter.toString();
-                createBoxResourceMarker (northlimit, southlimit, eastlimit, westlimit, info_content, counter);
-            });
+{#            modified_boxes_data.forEach(function(box){#}
+{#                var info_content = box.info_link;#}
+{#                var northlimit = parseFloat(box.northlimit);#}
+{#                var southlimit = parseFloat(box.southlimit);#}
+{#                var eastlimit = parseFloat(box.eastlimit);#}
+{#                var westlimit = parseFloat(box.westlimit);#}
+{#                var counter = box.counter.toString();#}
+{#                createBoxResourceMarker (northlimit, southlimit, eastlimit, westlimit, info_content, counter);#}
+{#            });#}
 
             markerCluster = new MarkerClusterer(map, markers, {
                 imagePath: '//cdn.rawgit.com/googlemaps/js-marker-clusterer/gh-pages/images/m'
