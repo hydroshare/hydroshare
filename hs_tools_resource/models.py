@@ -93,8 +93,6 @@ class SupportedResTypes(AbstractMetaDataElement):
                     else:
                         meta_instance.supported_res_types.create(description=res_type_str)
                 meta_instance.save()
-                # if meta_instance.supported_res_types.all().count() == 0:
-                #     meta_instance.delete()
             else:
                 raise ObjectDoesNotExist("No supported_res_types parameter was found in the **kwargs list")
         else:
