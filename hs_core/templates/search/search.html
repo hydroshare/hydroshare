@@ -2,7 +2,7 @@
 {% load geoanalytics_tags pages_tags mezzanine_tags keyword_tags comment_tags hydroshare_tags %}
 {% block title %}Discovery{% endblock %}
 {% block main %}
-<div id="discovery-main">
+<div class="container" id="main">
     <div class="row">
         <div class="col-sm-12">
             <h2 class="page-title">Discover
@@ -689,14 +689,14 @@
                 var title_button = '<a class="box-title-item btn btn-primary btn-xs" style="margin:5px" data-toggle="popover" data-placement="top">' + title + '</a>';
                 var $list_item = $(title_button);
 
+                $("#coverages-master-list").append($list_item);
+
                 $list_item.popover({
                     html: true,
                     title: box.title,
                     content: '<p>' + box.title + '</p>',
                     trigger: 'click'
                 });
-
-                $("#coverages-master-list").append($list_item);
 
             });
 
