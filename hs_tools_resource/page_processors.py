@@ -105,7 +105,6 @@ def landing_page(request, page):
                      '{% load crispy_forms_tags %} '
                      '{% crispy tool_icon_form %} '
                      '</div> '),
-                # HTML('<div id="checked_res_div" hidden="true">{{ checked_res }}</div>')
         )
 
         # get the context from hs_core
@@ -118,16 +117,6 @@ def landing_page(request, page):
         context['supported_res_types_form'] = supported_res_types_form
         context['tool_icon_form'] = tool_icon_form
         context['sharing_status_obj_form'] = sharing_status_obj_form
-
-        # if supported_res_types_obj:
-        #     supported_res_types = supported_res_types_obj.supported_res_types.all()
-        #     checked_res_str = ""
-        #     if len(supported_res_types) > 0:
-        #         for parameter in supported_res_types:
-        #             checked_res_str += str(parameter.description)
-        #             checked_res_str += ","
-        #
-        #     context['checked_res'] = checked_res_str
 
     hs_core_dublin_context = add_generic_context(request, page)
     context.update(hs_core_dublin_context)
