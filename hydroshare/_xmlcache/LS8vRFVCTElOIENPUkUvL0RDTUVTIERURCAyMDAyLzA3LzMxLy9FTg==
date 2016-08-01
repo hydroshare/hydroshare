@@ -1,0 +1,126 @@
+<!--
+
+  DTD 2002-04-22 for
+    Expressing Simple Dublin Core in RDF/XML
+    http://dublincore.org/documents/2002/07/31/dcmes-xml/
+
+  Public ID: "-//DUBLIN CORE//DCMES DTD 2002/07/31//EN"
+
+  Authors:
+    Dave Beckett <dave.beckett@bristol.ac.uk>
+    Eric Miller <emiller@w3.org>
+    Dan Brickley <danbri@w3.org>
+
+  Based on
+    Dublin Core Metadata Element Set, Version 1.1: Reference Description
+    http://dublincore.org/documents/1999/07/02/dces/
+
+  This DTD is for information only and NON-NORMATIVE.
+
+-->
+
+<!-- The namespaces for RDF and DCMES 1.1 respectively -->
+<!ENTITY rdfns 'http://www.w3.org/1999/02/22-rdf-syntax-ns#' >
+<!ENTITY dcns 'http://purl.org/dc/elements/1.1/' >
+
+<!-- Declare convenience entities for XML namespace declarations -->
+<!ENTITY % rdfnsdecl 'xmlns:rdf CDATA #FIXED "&rdfns;"' >
+<!ENTITY % dcnsdecl 'xmlns:dc CDATA #FIXED "&dcns;"' >
+
+
+<!-- The wrapper element -->
+<!ELEMENT rdf:RDF (rdf:Description)* >
+
+<!ATTLIST rdf:RDF %rdfnsdecl; %dcnsdecl; >
+
+
+<!ENTITY % dcmes "dc:title | dc:creator | dc:subject | dc:description |
+dc:publisher | dc:contributor | dc:date | dc:type | dc:format |
+dc:identifier | dc:source | dc:language | dc:relation | dc:coverage |
+dc:rights" >
+
+
+<!-- The resource description container element -->
+<!ELEMENT rdf:Description (%dcmes;)* >
+
+<!ATTLIST rdf:Description rdf:about CDATA #IMPLIED>
+
+
+<!-- The elements from DCMES 1.1 -->
+
+<!-- The name given to the resource. -->
+<!ELEMENT dc:title (#PCDATA)>
+<!ATTLIST dc:title xml:lang CDATA #IMPLIED>
+<!ATTLIST dc:title rdf:resource CDATA #IMPLIED>
+
+<!-- An entity primarily responsible for making the content of the
+resource. -->
+<!ELEMENT dc:creator (#PCDATA)>
+<!ATTLIST dc:creator xml:lang CDATA #IMPLIED>
+<!ATTLIST dc:creator rdf:resource CDATA #IMPLIED>
+
+<!-- The topic of the content of the resource. -->
+<!ELEMENT dc:subject (#PCDATA)>
+<!ATTLIST dc:subject xml:lang CDATA #IMPLIED>
+<!ATTLIST dc:subject rdf:resource CDATA #IMPLIED>
+
+<!-- An account of the content of the resource. -->
+<!ELEMENT dc:description (#PCDATA)>
+<!ATTLIST dc:description xml:lang CDATA #IMPLIED>
+<!ATTLIST dc:description rdf:resource CDATA #IMPLIED>
+
+<!-- The entity responsible for making the resource available. -->
+<!ELEMENT dc:publisher (#PCDATA)>
+<!ATTLIST dc:publisher xml:lang CDATA #IMPLIED>
+<!ATTLIST dc:publisher rdf:resource CDATA #IMPLIED>
+
+<!-- An entity responsible for making contributions to the content of
+the resource. -->
+<!ELEMENT dc:contributor (#PCDATA)>
+<!ATTLIST dc:contributor xml:lang CDATA #IMPLIED>
+<!ATTLIST dc:contributor rdf:resource CDATA #IMPLIED>
+
+<!-- A date associated with an event in the life cycle of the resource. -->
+<!ELEMENT dc:date (#PCDATA)>
+<!ATTLIST dc:date xml:lang CDATA #IMPLIED>
+<!ATTLIST dc:date rdf:resource CDATA #IMPLIED>
+
+<!-- The nature or genre of the content of the resource. -->
+<!ELEMENT dc:type (#PCDATA)>
+<!ATTLIST dc:type xml:lang CDATA #IMPLIED>
+<!ATTLIST dc:type rdf:resource CDATA #IMPLIED>
+
+<!-- The physical or digital manifestation of the resource. -->
+<!ELEMENT dc:format (#PCDATA)>
+<!ATTLIST dc:format xml:lang CDATA #IMPLIED>
+<!ATTLIST dc:format rdf:resource CDATA #IMPLIED>
+
+<!-- An unambiguous reference to the resource within a given context. -->
+<!ELEMENT dc:identifier (#PCDATA)>
+<!ATTLIST dc:identifier xml:lang CDATA #IMPLIED>
+<!ATTLIST dc:identifier rdf:resource CDATA #IMPLIED>
+
+<!-- A Reference to a resource from which the present resource is derived. -->
+<!ELEMENT dc:source (#PCDATA)>
+<!ATTLIST dc:source xml:lang CDATA #IMPLIED>
+<!ATTLIST dc:source rdf:resource CDATA #IMPLIED>
+
+<!-- A language of the intellectual content of the resource. -->
+<!ELEMENT dc:language (#PCDATA)>
+<!ATTLIST dc:language xml:lang CDATA #IMPLIED>
+<!ATTLIST dc:language rdf:resource CDATA #IMPLIED>
+
+<!-- A reference to a related resource. -->
+<!ELEMENT dc:relation (#PCDATA)>
+<!ATTLIST dc:relation xml:lang CDATA #IMPLIED>
+<!ATTLIST dc:relation rdf:resource CDATA #IMPLIED>
+
+<!-- The extent or scope of the content of the resource. -->
+<!ELEMENT dc:coverage (#PCDATA)>
+<!ATTLIST dc:coverage xml:lang CDATA #IMPLIED>
+<!ATTLIST dc:coverage rdf:resource CDATA #IMPLIED>
+
+<!-- Information about rights held in and over the resource. -->
+<!ELEMENT dc:rights (#PCDATA)>
+<!ATTLIST dc:rights xml:lang CDATA #IMPLIED>
+<!ATTLIST dc:rights rdf:resource CDATA #IMPLIED>
