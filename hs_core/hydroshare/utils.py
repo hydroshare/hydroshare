@@ -322,6 +322,26 @@ def get_resource_file_extension(res_file):
     return fl_ext
 
 
+def get_resource_file_name_and_extension(res_file):
+    """
+    Gets the file extension of the specified resource file
+    :param res_file: an instance of ResourceFile for which file extension to be retrieved
+    :return: (file name, file extension)
+    """
+    f_fullname = None
+    if res_file.resource_file:
+        f_fullname = res_file.resource_file.name
+    elif res_file.fed_resource_file:
+        f_fullname = res_file.fed_resource_file.name
+    elif res_file.fed_resource_file_name_or_path:
+        f_fullname = res_file.fed_resource_file_name_or_path
+
+    f_fullname = f_fullname[f_fullname.rfind('/')+1:]
+    file_name, file_ext = os.path.splitext(f_fullname.lower())
+
+    return file_name, file_ext
+
+
 def delete_fed_zone_file(file_name_with_full_path):
     '''
     Args:

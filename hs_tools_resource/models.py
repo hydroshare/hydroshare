@@ -78,25 +78,23 @@ class SupportedResTypes(AbstractMetaDataElement):
                     new_meta_instance.supported_res_types.create(description=res_type_str)
             return new_meta_instance
         else:
-            raise ObjectDoesNotExist("No supported_res_types parameter was found in the **kwargs list")
+            raise ValidationError("No supported_res_types parameter was found in the **kwargs list")
 
     @classmethod
     def update(cls, element_id, **kwargs):
         meta_instance = SupportedResTypes.objects.get(id=element_id)
-        if meta_instance:
-            if 'supported_res_types' in kwargs:
-                meta_instance.supported_res_types.clear()
-                for res_type_str in kwargs['supported_res_types']:
-                    qs = SupportedResTypeChoices.objects.filter(description__iexact=res_type_str)
-                    if qs.exists():
-                        meta_instance.supported_res_types.add(qs[0])
-                    else:
-                        meta_instance.supported_res_types.create(description=res_type_str)
-                meta_instance.save()
-            else:
-                raise ObjectDoesNotExist("No supported_res_types parameter was found in the **kwargs list")
+
+        if 'supported_res_types' in kwargs:
+            meta_instance.supported_res_types.clear()
+            for res_type_str in kwargs['supported_res_types']:
+                qs = SupportedResTypeChoices.objects.filter(description__iexact=res_type_str)
+                if qs.exists():
+                    meta_instance.supported_res_types.add(qs[0])
+                else:
+                    meta_instance.supported_res_types.create(description=res_type_str)
+            meta_instance.save()
         else:
-            raise ObjectDoesNotExist("No SupportedResTypes object was found with the provided id: %s" % kwargs['id'])
+            raise ValidationError("No supported_res_types parameter was found in the **kwargs list")
 
     @classmethod
     def remove(cls, element_id):
@@ -130,30 +128,25 @@ class SupportedSharingStatus(AbstractMetaDataElement):
                     new_meta_instance.sharing_status.create(description=sharing_status)
             return new_meta_instance
         else:
-            raise ObjectDoesNotExist("No sharing_status parameter was found in the **kwargs list")
+            raise ValidationError("No sharing_status parameter was found in the **kwargs list")
 
     @classmethod
     def update(cls, element_id, **kwargs):
         meta_instance = SupportedSharingStatus.objects.get(id=element_id)
-        if meta_instance:
-            if 'sharing_status' in kwargs:
-                meta_instance.sharing_status.clear()
-                for sharing_status in kwargs['sharing_status']:
-                    qs = SupportedSharingStatusChoices.objects.filter\
-                        (description__iexact=sharing_status)
-                    if qs.exists():
-                        meta_instance.sharing_status.add(qs[0])
-                    else:
-                        meta_instance.sharing_status.create(description=sharing_status)
-                meta_instance.save()
-                # if meta_instance.sharing_status.all().count() == 0:
-                #     meta_instance.delete()
-            else:
-                raise ObjectDoesNotExist("No sharing_status parameter "
-                                         "was found in the **kwargs list")
+        if 'sharing_status' in kwargs:
+            meta_instance.sharing_status.clear()
+            for sharing_status in kwargs['sharing_status']:
+                qs = SupportedSharingStatusChoices.objects.filter\
+                    (description__iexact=sharing_status)
+                if qs.exists():
+                    meta_instance.sharing_status.add(qs[0])
+                else:
+                    meta_instance.sharing_status.create(description=sharing_status)
+            meta_instance.save()
         else:
-            raise ObjectDoesNotExist("No SupportedSharingStatus object was "
-                                     "found with the provided id: %s" % kwargs['id'])
+            raise ValidationError("No sharing_status parameter "
+                                  "was found in the **kwargs list")
+
 
     @classmethod
     def remove(cls, element_id):

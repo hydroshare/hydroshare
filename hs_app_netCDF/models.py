@@ -10,7 +10,7 @@ from mezzanine.pages.page_processors import processor_for
 
 from hs_core.models import BaseResource, ResourceManager
 from hs_core.models import resource_processor, CoreMetaData, AbstractMetaDataElement
-
+from hs_core.hydroshare.utils import get_resource_file_name_and_extension
 
 # Define original spatial coverage metadata info
 class OriginalCoverage(AbstractMetaDataElement):
@@ -163,9 +163,9 @@ class NetcdfResource(BaseResource):
         # add new terms for NetCDF res
         hs_term_dict["HS_NETCDF_FILE_NAME"] = ""
         for res_file in self.files.all():
-            fn = res_file.resource_file.name
-            if fn.lower().endswith('.nc'):
-                hs_term_dict["HS_NETCDF_FILE_NAME"] = fn[fn.rfind('/')+1:]
+            f_name, f_ext = get_resource_file_name_and_extension(res_file)
+            if f_ext.lower() == '.nc':
+                hs_term_dict["HS_NETCDF_FILE_NAME"] = f_name + f_ext
                 break
         return hs_term_dict
 
