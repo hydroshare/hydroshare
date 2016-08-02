@@ -261,7 +261,7 @@ def get_band_info(raster_file_name):
             elif no_data and numpy.allclose(maximum, no_data):
                 new_no_data = maximum
 
-            if new_no_data:
+            if new_no_data is not None:
                 band.SetNoDataValue(new_no_data)
                 minimum, maximum, _, _ = band.ComputeStatistics(False)
 

@@ -93,7 +93,7 @@ def raster_file_validation(files, ref_tmp_file_names=[]):
                 if vrt_ref_raster_name in files_names \
                         or (os.path.split(vrt_ref_raster_name)[0] == '.' and
                             os.path.split(vrt_ref_raster_name)[1] in files_names):
-                    pass
+                    continue
                 elif os.path.basename(vrt_ref_raster_name) in files_names:
                     error_info.append('Please specify {} as {} in the .vrt file, '
                                       'because it will be saved in the same folder with .vrt file in HydroShare'.
