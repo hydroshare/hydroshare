@@ -3,6 +3,8 @@ MAINTAINER Michael J. Stealey <stealey@renci.org>
 
 ### Begin - HydroShare Development Image Additions ###
 RUN sudo pip install pycrs
+
+ENV PY_SAX_PARSER=hs_core.xmlparser
 ### End - HydroShare Development Image Additions ###
 
 USER root
