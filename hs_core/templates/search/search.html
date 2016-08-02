@@ -679,11 +679,12 @@
                     box_resources.push(json_results[i]);
                 }
             }
-
+            var tabindex = 0;
             box_resources.forEach(function(box) {
                 var title = truncateTitle(box.title);
-                var title_button = '<a class="box-title-item btn btn-primary btn-xs" style="margin:5px" data-toggle="popover" data-placement="top">' + title + '</a>';
+                var title_button = '<a tabindex="' + tabindex + '" class="box-title-item btn btn-primary btn-xs" role="button" data-trigger="focus" style="margin:5px" data-toggle="popover" data-placement="top">' + title + '</a>';
                 var $list_item = $(title_button);
+
                 $("#coverages-master-list").append($list_item);
 
                 var resource_link = '<a target="_blank" href="' + box.get_absolute_url + '">' + box.title + '</a>';
@@ -691,8 +692,8 @@
                 $list_item.popover({
                     html: true,
                     title: box.title,
-                    content: '<p class="pop-content">' + resource_link + '</p>',
-                    trigger: 'click'
+                    content: '<p>' + resource_link + '</p>',
+                    trigger: 'focus'
                 });
 
                 $list_item.hover(
@@ -706,11 +707,8 @@
                         rectangle.set('bounds', rectBounds);
                     }
                 );
+                tabindex++;
 
-            });
-
-            $(".box-title-item").on('click', function (e) {
-                $(".box-title-item").not(this).popover('hide');
             });
         }
 
@@ -1349,6 +1347,7 @@
                             initMap(json_results);
                             setBoxResourcesList(json_results);
                             $("#resource-search").show();
+
                         },
                         failure: function(data) {
                             console.error("Ajax call for getting map data failed");
@@ -1465,16 +1464,6 @@
                 container: '#body',
                 content: '<p>This search box supports <a href="https://cwiki.apache.org/confluence/display/solr/Searching" target="_blank">SOLR Query syntax</a>.</p>',
                 trigger: 'click'
-            });
-
-            $('body').on('click', function (e) {
-                $('[data-toggle="popover"]').each(function () {
-                    //the 'is' for buttons that trigger popups
-                    //the 'has' for icons within a button that triggers a popup
-                    if (!$(this).is(e.target) && $(this).has(e.target).length === 0 && $('.popover').has(e.target).length === 0) {
-                        $(this).popover('hide');
-                    }
-                });
             });
         });
     </script>
