@@ -682,7 +682,7 @@
             var tabindex = 0;
             box_resources.forEach(function(box) {
                 var title = truncateTitle(box.title);
-                var title_button = '<a tabindex="' + tabindex + '" class="box-title-item btn btn-primary btn-xs" role="button" data-trigger="focus" style="margin:5px" data-toggle="popover" data-placement="top">' + title + '</a>';
+                var title_button = '<a tabindex="' + tabindex + '" class="box-title-item btn btn-primary btn-xs" role="button" data-trigger="focus" style="margin:5px" data-toggle="popover">' + title + '</a>';
                 var $list_item = $(title_button);
 
                 $("#coverages-master-list").append($list_item);
@@ -691,6 +691,7 @@
 
                 $list_item.popover({
                     html: true,
+                    placement: 'top',
                     title: box.title,
                     content: '<p>' + resource_link + '</p>',
                     trigger: 'focus'
