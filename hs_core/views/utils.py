@@ -71,6 +71,9 @@ def upload_from_irods(username, password, host, port, zone, irods_fnames, res_fi
         fname = os.path.basename(ifname.rstrip(os.sep))
         res_files.append(UploadedFile(file=tmpFile, name=fname, size=size))
 
+    # delete the user session after iRODS file operations are done
+    irods_storage.delete_user_session()
+
 
 def run_ssh_command(host, uname, pwd, exec_cmd):
     """
