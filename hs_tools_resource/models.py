@@ -167,7 +167,7 @@ class ToolMetaData(CoreMetaData):
     versions = GenericRelation(ToolVersion)
     supported_res_types = GenericRelation(SupportedResTypes)
     tool_icon = GenericRelation(ToolIcon)
-    sharing_status = GenericRelation(SupportedSharingStatus)
+    supported_sharing_status = GenericRelation(SupportedSharingStatus)
 
     @classmethod
     def get_supported_element_names(cls):
@@ -196,8 +196,8 @@ class ToolMetaData(CoreMetaData):
         elif not self.supported_res_types.all().first().supported_res_types.count() > 0:
             missing_required_elements.append('Supported Resource Types')
 
-        if self.sharing_status.all().first():
-            if not self.sharing_status.all().first().sharing_status.count() > 0:
+        if self.supported_sharing_status.all().first():
+            if not self.supported_sharing_status.all().first().sharing_status.count() > 0:
                 missing_required_elements.append('Supported Sharing Status')
 
         return missing_required_elements
@@ -208,6 +208,6 @@ class ToolMetaData(CoreMetaData):
         self.versions.all().delete()
         self.supported_res_types.all().delete()
         self.tool_icon.all().delete()
-        self.sharing_status.all().delete()
+        self.supported_sharing_status.all().delete()
 
 import receivers # never delete this otherwise non of the receiver function will work

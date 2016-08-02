@@ -66,7 +66,8 @@ def get_page_context(page, user, resource_edit=False, extended_metadata_layout=N
                 if tool_res_obj:
                     sharing_status_supported = False
 
-                    supported_sharing_status_obj = tool_res_obj.metadata.sharing_status.first()
+                    supported_sharing_status_obj = tool_res_obj.metadata.\
+                        supported_sharing_status.first()
                     if supported_sharing_status_obj is not None:
                         suppored_sharing_status_str = supported_sharing_status_obj.\
                                                       get_sharing_status_str()
@@ -75,12 +76,8 @@ def get_page_context(page, user, resource_edit=False, extended_metadata_layout=N
                             if suppored_sharing_status_str.lower().\
                                     find(res_sharing_status.lower()) != -1:
                                 sharing_status_supported = True
-                        else:
-                            #  webapp with an empty sharing status metadata does not support
-                            #  any sharing status
-                            pass
                     else:
-                        # webapp without sharing_status metadata
+                        # backward compatible: webapp without supported_sharing_status metadata
                         # is considered to support all sharing status
                         sharing_status_supported = True
 

@@ -14,7 +14,7 @@ def landing_page(request, page):
     content_model = page.get_content_model()
     edit_resource = page_processors.check_resource_mode(request)
 
-    if content_model.metadata.sharing_status.first() is None:
+    if content_model.metadata.supported_sharing_status.first() is None:
         content_model.metadata.create_element('SupportedSharingStatus',
                                               sharing_status=
                                               ['Published', 'Public', 'Discoverable', 'Private'],)
@@ -41,9 +41,10 @@ def landing_page(request, page):
 
             context['supported_res_types'] = ", ".join(new_supported_res_types_array)
 
-        if content_model.metadata.sharing_status.first():
+        if content_model.metadata.supported_sharing_status.first() is not None:
             extended_metadata_exists = True
-            sharing_status_str = content_model.metadata.sharing_status.first().get_sharing_status_str()
+            sharing_status_str = content_model.metadata.supported_sharing_status.first()\
+                .get_sharing_status_str()
             context['supported_sharing_status'] = sharing_status_str
 
         if content_model.metadata.tool_icon.first():
@@ -72,7 +73,7 @@ def landing_page(request, page):
                                                          element_id=supported_res_types_obj.id
                                                          if supported_res_types_obj else None)
 
-        sharing_status_obj = content_model.metadata.sharing_status.first()
+        sharing_status_obj = content_model.metadata.supported_sharing_status.first()
         sharing_status_obj_form = SupportedSharingStatusForm(instance=sharing_status_obj,
                                                          res_short_id=content_model.short_id,
                                                          element_id=sharing_status_obj.id
