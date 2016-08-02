@@ -13,6 +13,9 @@ RUN ./configure -with-python -with-geos=yes
 RUN make
 RUN sudo make install
 RUN sudo ldconfig
+
+ENV PY_SAX_PARSER=hs_core.xmlparser
+
 ### End - HydroShare Development Image Additions ###
 
 USER root
