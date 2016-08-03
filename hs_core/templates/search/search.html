@@ -671,7 +671,7 @@
 
         var setBoxResourcesList = function(json_results) {
             var box_resources = [];
-
+            $("#coverages-master-list").empty();
             for (var i = 0; i < json_results.length; i++ ) {
                 if (json_results[i].coverage_type == 'box') {
                     var area = calcArea(json_results[i]);
@@ -703,7 +703,6 @@
                     var $crntPopOverBtn = $crntPopOver.find('[role="button"]');
                     $crntPopOverBtn.one('click', function() {
                         showBoxMarker(box_resources[boxIndex], true);
-                        //console.log(box_resources[boxIndex]);
                     })
                 });
                 $list_item.hover(
@@ -991,71 +990,12 @@
             });
         };
 
-        var manualZoomMap = function(){
-            var ne_lat = parseFloat(document.getElementById("id_NElat").value);
-            var ne_lng = parseFloat(document.getElementById("id_NElng").value);
-            var sw_lat = parseFloat(document.getElementById("id_SWlat").value);
-            var sw_lng = parseFloat(document.getElementById("id_SWlng").value);
-
-            if (verifyZoomInput(ne_lat, ne_lng, sw_lat, sw_lng)) {
-                var ne = new google.maps.LatLng(ne_lat, ne_lng);
-                var sw = new google.maps.LatLng(sw_lat, sw_lng);
-
-                var customized_bounds = new google.maps.LatLngBounds(sw, ne);
-                map.fitBounds(customized_bounds);
-                var $mapDiv = $("#discover-map");
-
-                var mapDim = {
-                    height: $mapDiv.height(),
-                    width: $mapDiv.width()
-                }
-                var listener = google.maps.event.addListener(map, "idle", function () {
-                    map.setCenter(customized_bounds.getCenter());
-                    map.setZoom(getBoundsZoomLevel(customized_bounds, mapDim));
-                    google.maps.event.removeListener(listener);
-                });
-            } else {
-                document.getElementById("id_NElat").value = "";
-                document.getElementById("id_NElng").value = "";
-                document.getElementById("id_SWlat").value = "";
-                document.getElementById("id_SWlng").value = "";
-            }
-
-        };
-
-        var verifyZoomInput = function (ne_lat, ne_lng, sw_lat, sw_lng) {
-            if (!isNaN(ne_lat) && !isNaN(ne_lng) && !isNaN(sw_lat) && !isNaN(sw_lng)) {
-                if (ne_lat >= -90 &&  ne_lat <= 90 && sw_lat >= -90 &&  sw_lat <= 90) {
-                    if (ne_lng >= -180 &&  ne_lng <= 180 && sw_lng >= -180 &&  sw_lng <= 180) {
-                        if (ne_lat >= sw_lat) {
-                            $(".manualzoom-input").empty();
-                            return true;
-                        } else {
-                            $(".manualzoom-input").empty();
-                            $("#resource-search").append("<p class='manualzoom-input'> Northeastern latitude should be greater than southwestern latitude. </p>");
-                            return false;
-                        }
-                    } else {
-                        $(".manualzoom-input").empty();
-                        $("#resource-search").append("<p class='manualzoom-input'> Longitudes shoule be in range from -180 to 180. </p>");
-                        return false;
-                    }
-                } else {
-                    $(".manualzoom-input").empty();
-                    $("#resource-search").append("<p class='manualzoom-input'> Latitudes shoule be in range from -90 to 90. </p>");
-                    return false;
-                }
-            } else {
-                $(".manualzoom-input").empty();
-                $("#resource-search").append("<p class='manualzoom-input'> Latitudes and longitudes should be numbers. </p>");
-                return false;
-            }
-        };
 
         var updateMapView = function() {
             var filtered_results = [];
             clientUpdateMarkers(filtered_results);
             setMarkers(filtered_results);
+            setBoxResourcesList(filtered_results);
             var results_selection = $('input:radio[name=results-selection]:checked').val();
             if (results_selection == 'map-results-selected') {
                 var bnds = map.getBounds();
@@ -1361,7 +1301,7 @@
                                 raw_results.push(item);
                             }
                             initMap(json_results);
-                            setBoxResourcesList(json_results);
+                            //setBoxResourcesList(json_results);
                             $("#resource-search").show();
 
                         },
