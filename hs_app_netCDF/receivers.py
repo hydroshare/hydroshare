@@ -199,7 +199,7 @@ def netcdf_pre_create_resource(sender, **kwargs):
 def netcdf_pre_delete_file_from_resource(sender, **kwargs):
     nc_res = kwargs['resource']
     del_file = kwargs['file']
-    del_file_ext = utils.get_resource_file_extension(del_file)
+    del_file_ext = utils.get_resource_file_name_and_extension(del_file)[1]
 
     # update resource modification info
     user = nc_res.creator
@@ -212,7 +212,7 @@ def netcdf_pre_delete_file_from_resource(sender, **kwargs):
     if del_file_ext in file_ext:
         del file_ext[del_file_ext]
         for f in ResourceFile.objects.filter(object_id=nc_res.id):
-            ext = utils.get_resource_file_extension(f)
+            ext = utils.get_resource_file_name_and_extension(f)[1]
             if ext in file_ext:
                 delete_resource_file_only(nc_res, f)
                 nc_res.metadata.formats.filter(value=file_ext[ext]).delete()

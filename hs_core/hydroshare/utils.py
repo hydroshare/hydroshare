@@ -305,26 +305,9 @@ def replace_resource_file_on_irods(new_file, original_resource_file):
     istorage.saveFile(new_file, destination_file, True)
 
 
-def get_resource_file_extension(res_file):
-    """
-    Gets the file extension of the specified resource file
-    :param res_file: an instance of ResourceFile for which file extension to be retrieved
-    :return: file extension
-    """
-    fl_ext = None
-    if res_file.resource_file:
-        fl_ext = os.path.splitext(res_file.resource_file.name)[1]
-    elif res_file.fed_resource_file:
-        fl_ext = os.path.splitext(res_file.fed_resource_file.name)[1]
-    elif res_file.fed_resource_file_name_or_path:
-        fl_ext = os.path.splitext(res_file.fed_resource_file_name_or_path)[1]
-
-    return fl_ext
-
-
 def get_resource_file_name_and_extension(res_file):
     """
-    Gets the file extension of the specified resource file
+    Gets the file name and extension of the specified resource file
     :param res_file: an instance of ResourceFile for which file extension to be retrieved
     :return: (file name, file extension)
     """
@@ -336,8 +319,8 @@ def get_resource_file_name_and_extension(res_file):
     elif res_file.fed_resource_file_name_or_path:
         f_fullname = res_file.fed_resource_file_name_or_path
 
-    f_fullname = f_fullname[f_fullname.rfind('/')+1:]
-    file_name, file_ext = os.path.splitext(f_fullname.lower())
+    f_fullname = os.path.basename(f_fullname)
+    file_name, file_ext = os.path.splitext(f_fullname)
 
     return file_name, file_ext
 
