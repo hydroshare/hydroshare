@@ -309,7 +309,7 @@ def get_resource_file_name_and_extension(res_file):
     """
     Gets the file name and extension of the specified resource file
     :param res_file: an instance of ResourceFile for which file extension to be retrieved
-    :return: (file name, file extension)
+    :return: (full filename, file extension) ex: "/my_path_to/ABC.nc" --> ("ABC.nc", ".nc")
     """
     f_fullname = None
     if res_file.resource_file:
@@ -320,9 +320,9 @@ def get_resource_file_name_and_extension(res_file):
         f_fullname = res_file.fed_resource_file_name_or_path
 
     f_fullname = os.path.basename(f_fullname)
-    file_name, file_ext = os.path.splitext(f_fullname)
+    _, file_ext = os.path.splitext(f_fullname)
 
-    return file_name, file_ext
+    return f_fullname, file_ext
 
 
 def delete_fed_zone_file(file_name_with_full_path):

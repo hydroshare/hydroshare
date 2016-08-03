@@ -163,9 +163,9 @@ class NetcdfResource(BaseResource):
         # add new terms for NetCDF res
         hs_term_dict["HS_NETCDF_FILE_NAME"] = ""
         for res_file in self.files.all():
-            f_name, f_ext = get_resource_file_name_and_extension(res_file)
+            f_fullname, f_ext = get_resource_file_name_and_extension(res_file)
             if f_ext.lower() == '.nc':
-                hs_term_dict["HS_NETCDF_FILE_NAME"] = f_name + f_ext
+                hs_term_dict["HS_NETCDF_FILE_NAME"] = f_fullname
                 break
         return hs_term_dict
 
