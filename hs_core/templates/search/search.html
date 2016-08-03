@@ -757,13 +757,6 @@
                     updateMapView();
                 }
             }
-{#            } else {#}
-{#                var rectBounds = new google.maps.LatLngBounds(#}
-{#                        new google.maps.LatLng(0, 0),#}
-{#                        new google.maps.LatLng(0, 0)#}
-{#                );#}
-{#                rectangle.set('bounds', rectBounds);#}
-{#            }#}
         }
 
         var clientUpdateMarkers = function(filtered_results) {
@@ -937,7 +930,7 @@
             var resetButton_content = [];
             // legend_content.push("<p style='margin-left:5px'><img src='//cdn.rawgit.com/googlemaps/js-marker-clusterer/gh-pages/images/m2.png'> number of sites </p>");
             legend_content.push("<p><img src='//cdn.rawgit.com/Concept211/Google-Maps-Markers/master/images/marker_red.png'> Point Coverage Resources </p>");
-            legend_content.push("<p><img src='//cdn.rawgit.com/Concept211/Google-Maps-Markers/master/images/marker_blue.png'> Box Coverage Resources </p>");
+            //legend_content.push("<p><img src='//cdn.rawgit.com/Concept211/Google-Maps-Markers/master/images/marker_blue.png'> Box Coverage Resources </p>");
             geocoder_content.push("<input id='address' type='textbox' placeholder='Search Locations...'>");
             geocoder_content.push("<a id='geocoder-submit' style='margin-left:10px' class='btn btn-default' role='button'><span class='glyphicon glyphicon-zoom-in'></span> Zoom In </a>");
             resetButton_content.push("<a id='reset-zoom-btn' class='btn btn-default btn-sm' onclick='resetMapZoom()'>");
@@ -1301,7 +1294,6 @@
                                 raw_results.push(item);
                             }
                             initMap(json_results);
-                            //setBoxResourcesList(json_results);
                             $("#resource-search").show();
 
                         },
