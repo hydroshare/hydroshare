@@ -687,19 +687,28 @@
 
                 $("#coverages-master-list").append($list_item);
 
-                var resource_link = '<a target="_blank" href="' + box.get_absolute_url + '">' + box.title + '</a>';
+                var resource_link = '<a target="_blank" href="' + box.get_absolute_url + '"> Resource Details  <span class="glyphicon glyphicon-link"></span></a>';
+                var show_box_button = '<a class="show-box-button btn btn-default" role="button"> Zoom on Map </a>';
 
                 $list_item.popover({
                     html: true,
                     placement: 'top',
                     title: box.title,
-                    content: '<p>' + resource_link + '</p>',
+                    content: '<p>' + resource_link + '<br /><br />' + show_box_button + '</p>',
                     trigger: 'focus'
                 });
-
+                $list_item.on('shown.bs.popover', function () {
+                    var boxIndex = $(this).attr('tabindex');
+                    var $crntPopOver = $(this).next();
+                    var $crntPopOverBtn = $crntPopOver.find('.show-box-button');
+                    $crntPopOverBtn.one('click', function() {
+                        showBoxMarker(box, true);
+                        //console.log(box_resources[boxIndex]);
+                    })
+                });
                 $list_item.hover(
                     function() {
-                        showBoxMarker(box);
+                        showBoxMarker(box, false);
                     }, function() {
                         var rectBounds = new google.maps.LatLngBounds(
                             new google.maps.LatLng(0, 0),
@@ -727,7 +736,7 @@
             return (area * 3.8610216e-07).toFixed(2);
         }
 
-        var showBoxMarker = function(box) {
+        var showBoxMarker = function(box, zoom_on_map) {
             var northlimit = parseFloat(box.northlimit);
             var southlimit = parseFloat(box.southlimit);
             var eastlimit = parseFloat(box.eastlimit);
@@ -735,21 +744,29 @@
 
             var ne_latlng = new google.maps.LatLng(northlimit, eastlimit);
             var sw_latlng = new google.maps.LatLng(southlimit, westlimit);
-            if (map.getBounds().contains(ne_latlng) && map.getBounds().contains(sw_latlng)) {
+            if (zoom_on_map) {
                 var rectBounds = new google.maps.LatLngBounds(
                         new google.maps.LatLng(northlimit, westlimit),
                         new google.maps.LatLng(southlimit, eastlimit)
                 );
-
+                rectangle.set('bounds', rectBounds);
+                map.fitBounds(rectBounds);
+                updateMapView();
             } else {
-                var rectBounds = new google.maps.LatLngBounds(
-                        new google.maps.LatLng(0, 0),
-                        new google.maps.LatLng(0, 0)
-                );
+                if (map.getBounds().contains(ne_latlng) && map.getBounds().contains(sw_latlng)) {
+                    var rectBounds = new google.maps.LatLngBounds(
+                            new google.maps.LatLng(northlimit, westlimit),
+                            new google.maps.LatLng(southlimit, eastlimit)
+                    );
+
+                } else {
+                    var rectBounds = new google.maps.LatLngBounds(
+                            new google.maps.LatLng(0, 0),
+                            new google.maps.LatLng(0, 0)
+                    );
+                }
+                rectangle.set('bounds', rectBounds);
             }
-            rectangle.set('bounds', rectBounds);
-            //map.fitBounds(rectBounds);
-            //updateMapView();
         }
 
         var clientUpdateMarkers = function(filtered_results) {
@@ -925,7 +942,7 @@
             legend_content.push("<p><img src='//cdn.rawgit.com/Concept211/Google-Maps-Markers/master/images/marker_red.png'> Point Coverage Resources </p>");
             legend_content.push("<p><img src='//cdn.rawgit.com/Concept211/Google-Maps-Markers/master/images/marker_blue.png'> Box Coverage Resources </p>");
             geocoder_content.push("<input id='address' type='textbox' placeholder='Search Locations...'>");
-            geocoder_content.push("<a id='geocoder-submit' style='margin-left:10px' class='btn btn-default'><span class='glyphicon glyphicon-zoom-in'></span> Zoom In </a>");
+            geocoder_content.push("<a id='geocoder-submit' style='margin-left:10px' class='btn btn-default' role='button'><span class='glyphicon glyphicon-zoom-in'></span> Zoom In </a>");
             resetButton_content.push("<a id='reset-zoom-btn' class='btn btn-default btn-sm' onclick='resetMapZoom()'>");
             resetButton_content.push("<span class='glyphicon glyphicon-record'></span></a>");
             map_legend.innerHTML = legend_content.join('');
