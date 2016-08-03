@@ -5,10 +5,10 @@ MAINTAINER Michael J. Stealey <stealey@renci.org>
 RUN sudo pip install pycrs
 
 WORKDIR /home/docker/
-RUN wget http://download.osgeo.org/gdal/2.0.2/gdal-2.0.2.tar.gz
-RUN tar xvfz gdal-2.0.2.tar.gz
+RUN wget http://download.osgeo.org/gdal/2.1.0/gdal-2.1.0.tar.gz
+RUN tar xvfz gdal-2.1.0.tar.gz
 
-WORKDIR /home/docker/gdal-2.0.2
+WORKDIR /home/docker/gdal-2.1.0
 RUN ./configure -with-python -with-geos=yes
 RUN make
 RUN sudo make install
