@@ -744,29 +744,25 @@
 
             var ne_latlng = new google.maps.LatLng(northlimit, eastlimit);
             var sw_latlng = new google.maps.LatLng(southlimit, westlimit);
-            if (zoom_on_map) {
+
+            if (map.getBounds().contains(ne_latlng) && map.getBounds().contains(sw_latlng)) {
                 var rectBounds = new google.maps.LatLngBounds(
                         new google.maps.LatLng(northlimit, westlimit),
                         new google.maps.LatLng(southlimit, eastlimit)
                 );
                 rectangle.set('bounds', rectBounds);
-                map.fitBounds(rectBounds);
-                updateMapView();
-            } else {
-                if (map.getBounds().contains(ne_latlng) && map.getBounds().contains(sw_latlng)) {
-                    var rectBounds = new google.maps.LatLngBounds(
-                            new google.maps.LatLng(northlimit, westlimit),
-                            new google.maps.LatLng(southlimit, eastlimit)
-                    );
-
-                } else {
-                    var rectBounds = new google.maps.LatLngBounds(
-                            new google.maps.LatLng(0, 0),
-                            new google.maps.LatLng(0, 0)
-                    );
+                if (zoom_on_map) {
+                    map.fitBounds(rectBounds);
+                    updateMapView();
                 }
-                rectangle.set('bounds', rectBounds);
             }
+{#            } else {#}
+{#                var rectBounds = new google.maps.LatLngBounds(#}
+{#                        new google.maps.LatLng(0, 0),#}
+{#                        new google.maps.LatLng(0, 0)#}
+{#                );#}
+{#                rectangle.set('bounds', rectBounds);#}
+{#            }#}
         }
 
         var clientUpdateMarkers = function(filtered_results) {
