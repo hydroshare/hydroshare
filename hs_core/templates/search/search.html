@@ -937,7 +937,7 @@
         var resetMapZoom = function() {
             removeMarkers();
             setMarkers(raw_results);
-            var bounds = (markers.length > 0) ? createBoundsForMarkers(markers) : null;
+            var bounds = (markers.length > 0) ? createBoundsForMarkers(markers) : map.setZoom(2);
             if (bounds) {
                 map.fitBounds(bounds);
                 var listener = google.maps.event.addListener(map, "idle", function () {
