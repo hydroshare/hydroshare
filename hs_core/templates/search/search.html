@@ -458,7 +458,7 @@
                             </form>
 
                             <div id="resource-search" style="display:none">
-                                <div id="coverages-master-list" style="display:inline-block; height:150px; overflow-y: auto"></div>
+                                <div id="coverages-master-list"></div>
                                 <br />
                                 <table id="lat-lng-labels">
                                     <tr>
@@ -488,26 +488,6 @@
 
                             <div id="resetZoom"></div>
                         </div>
-{#                        <div class="col-xs-12 col-sm-4" id="box-coverages-container" style="display:none">#}
-{#                            <h4 class="text-muted">Box Coverages Resources</h4>#}
-{#                            <div class="panel panel-default" id="box-coverages-panel">#}
-{#                                <div class="panel-heading">#}
-{#                                    <h3 class="panel-title">0 to 100 mi<sup>2</sup></h3>#}
-{#                                </div>#}
-{#                                <div class="list-group box-coverages-list" id="box-coverages-list-1">#}
-{#                                </div>#}
-{#                                <div class="panel-heading">#}
-{#                                    <h3 class="panel-title">100 to 1000 mi<sup>2</sup></h3>#}
-{#                                </div>#}
-{#                                <div class="list-group box-coverages-list" id="box-coverages-list-100">#}
-{#                                </div>#}
-{#                                <div class="panel-heading">#}
-{#                                    <h3 class="panel-title">over 1000 mi<sup>2</sup></h3>#}
-{#                                </div>#}
-{#                                <div class="list-group box-coverages-list" id="box-coverages-list-1000">#}
-{#                                </div>#}
-{#                            </div>#}
-{#                        </div>#}
                     </div>
                 </div>
             </div>
@@ -697,6 +677,7 @@
                     content: '<p>' + resource_link + '<br /><br />' + show_box_button + '</p>',
                     trigger: 'focus'
                 });
+
                 $list_item.on('shown.bs.popover', function () {
                     var boxIndex = $(this).attr('tabindex');
                     var $crntPopOver = $(this).next();
@@ -705,6 +686,7 @@
                         showBoxMarker(box_resources[boxIndex], true);
                     })
                 });
+
                 $list_item.hover(
                     function() {
                         showBoxMarker(box, false);
