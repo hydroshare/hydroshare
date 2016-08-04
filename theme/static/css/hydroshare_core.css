@@ -3690,29 +3690,11 @@ div.group-add-photo {
 	display: inline-block;
 }
 
-#box-coverages-panel .list-group-item {
-	border: 0;
-	border-radius: 0;
-	padding: 0 15px;
-	padding-top: 10px;
-	text-align: left;
-}
-
-#box-coverages-panel .list-group-item:hover {
-	background: #DDD;
-}
-
-#box-coverages-panel .panel-body {
-	padding: 0;
-}
-
-.box-coverages-list {
-	max-height: 200px;
+#coverages-master-list {
+	display:inline-block;
+	max-height:150px;
 	overflow-y: auto;
-}
-
-.box-coverages-list [role="button"]{
-	cursor: pointer;
+	border: 1px solid #DDD;
 }
 
 #discover-filter-buttons {
