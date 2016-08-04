@@ -34,7 +34,7 @@ def landing_page(request, page):
             # check if the file is a csv file
             file_ext = utils.get_resource_file_extension(res_file)
             if file_ext == ".csv":
-                for index, series_name in enumerate(content_model.metadata.series_names):
+                for index, series_name in enumerate(sorted(content_model.metadata.series_names)):
                     series_ids[str(index)] = series_name
     else:
         for result in content_model.metadata.time_series_results:
@@ -102,8 +102,6 @@ def _get_resource_view_context(page, request, content_model, selected_series_id,
 
 def _get_resource_edit_context(page, request, content_model, selected_series_id, series_ids,
                                extended_metadata_exists):
-    site_form = None
-    variable_form = None
     processing_level_form = None
     method_form = None
     timeseries_result_form = None
@@ -118,7 +116,9 @@ def _get_resource_edit_context(page, request, content_model, selected_series_id,
                              element_id=site.id if site else None,
                              cv_site_types=content_model.metadata.cv_site_types.all(),
                              cv_elevation_datums=content_model.metadata.cv_elevation_datums.all(),
-                             show_multiple_sites=False, selected_series_id=selected_series_id)
+                             show_site_code_selection=not content_model.has_sqlite_file,
+                             available_sites=content_model.metadata.sites,
+                             selected_series_id=selected_series_id)
 
         if site is not None:
             site_form.action = _get_element_update_form_action('site', content_model.short_id,
@@ -128,17 +128,18 @@ def _get_resource_edit_context(page, request, content_model, selected_series_id,
             site_form.set_dropdown_widgets(site_form.initial['site_type'],
                                            site_form.initial['elevation_datum'])
         else:
+            # this case can only happen in case of csv upload
             site_form.set_dropdown_widgets(content_model.metadata.cv_site_types.all().first().name,
                                            content_model.metadata.cv_elevation_datums.all().
                                            first().name)
 
     else:
+        # this case can happen only in case of CSV upload
         site_form = SiteForm(instance=None, res_short_id=content_model.short_id,
                              element_id=None,
                              cv_site_types=content_model.metadata.cv_site_types.all(),
                              cv_elevation_datums=content_model.metadata.cv_elevation_datums.all(),
-                             show_multiple_sites=True,
-                             selected_series_id=min(series_ids.keys()))
+                             selected_series_id=selected_series_id)
 
         site_form.set_dropdown_widgets(content_model.metadata.cv_site_types.all().first().name,
                                        content_model.metadata.cv_elevation_datums.all().first().name)

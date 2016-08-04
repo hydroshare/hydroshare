@@ -207,6 +207,56 @@
                         $(e.target).parent().parent().find(".other-field").hide();
                     }
                 }
+            });
+            var sites_text = $('#id_available_sites').val();
+            var sites_json = $.parseJSON(sites_text);
+            $('#id_site_code_choices').change(function () {
+                var selectedSiteCode = this.value;
+                if(selectedSiteCode === "----"){
+                    $('#id_site_code').val("");
+                    $('#id_site_code').attr('readonly', false);
+                    $('#id_site_name').val("");
+                    $('#id_site_name').attr('readonly', false);
+                    $('#id_elevation_m').val("");
+                    $('#id_elevation_m').attr('readonly', false);
+                    $('#id_elevation_datum').val("");
+                    $('#id_elevation_datum').attr('readonly', false);
+                    $('#id_site_type').val("");
+                    $('#id_site_type').attr('readonly', false);
+                    var form_action = $('#id-site').attr('action');
+                    if(form_action.includes("update-metadata")) {
+                        var slice_end_index = form_action.toLowerCase().indexOf("site") + 5;
+                        form_action = form_action.slice(0, slice_end_index) + "add-metadata/";
+                        $('#id-site').attr('action', form_action);
+                    }
+                    return;
+                }
+
+                $(sites_json).each(function (i, site) {
+                    if (site.site_code === selectedSiteCode){
+                        $('#id_site_code').val(site.site_code);
+                        $('#id_site_code').attr('readonly', true);
+                        $('#id_site_name').val(site.site_name);
+                        $('#id_site_name').attr('readonly', true);
+                        $('#id_elevation_m').val(site.elevation_m);
+                        $('#id_elevation_m').attr('readonly', true);
+                        $('#id_elevation_datum').val(site.elevation_datum);
+                        $('#id_elevation_datum').attr('readonly', true);
+                        $('#id_site_type').val(site.site_type);
+                        $('#id_site_type').attr('readonly', true);
+                        // change the site form action
+                        var form_action = $('#id-site').attr('action');
+                        if(form_action.includes("add-metadata")){
+                            form_action = form_action.replace("add-metadata", site.id + "/update-metadata");
+                        }
+                        else {
+                            var slice_end_index = form_action.toLowerCase().indexOf("site") + 5;
+                            form_action = form_action.slice(0, slice_end_index) + site.id + "/update-metadata/";
+                        }
+
+                        $('#id-site').attr('action', form_action);
+                    }
+                });
             })
         });
         function setCheckboxValue(el){

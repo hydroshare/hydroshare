@@ -66,20 +66,34 @@ class Site(TimeSeriesAbstractMetaDataElement):
     @classmethod
     def create(cls, **kwargs):
         metadata = kwargs['content_object']
-        multiple_sites = kwargs.pop('multiple_sites', False)
-        selected_series_id = kwargs.pop('selected_series_id', None)
+        # check that we are not creating site elements with duplicate site_code value
+        if any(kwargs['site_code'].lower() == site.site_code.lower()
+                for site in metadata.sites):
+            raise ValidationError("There is already a site element "
+                                  "with site_code:{}".format(kwargs['site_code']))
+
         if len(metadata.series_names) > 0:
-            if not multiple_sites:
-                kwargs['series_ids'] = range(len(metadata.series_names))
-            else:
-                kwargs['series_ids'] = [selected_series_id]
+            # this case applies only in case of CSV upload
+            selected_series_id = kwargs.pop('selected_series_id', None)
+            if selected_series_id is None:
+                raise ValueError("Series id is missing")
+            kwargs['series_ids'] = [selected_series_id]
+            element = super(Site, cls).create(**kwargs)
+            # update any other site element that has the selected_series_id
+            update_related_elements(element=element, related_elements=element.metadata.sites,
+                                    selected_series_id=selected_series_id)
+            return element
 
         return super(Site, cls).create(**kwargs)
 
     @classmethod
     def update(cls, element_id, **kwargs):
         element = cls.objects.get(id=element_id)
-        kwargs.pop('multiple_sites', None)
+        # check that we are not updating site elements with duplicate site_code value
+        if any(kwargs['site_code'].lower() == site.site_code.lower() and site.id != element.id
+                for site in element.metadata.sites):
+            raise ValidationError("There is already a site element "
+                                  "with site_code:{}".format(kwargs['site_code']))
         # if the user has entered a new elevation datum, then create a corresponding new cv term
         _create_cv_term(element=element, cv_term_class=CVElevationDatum,
                         cv_term_str='elevation_datum', element_cv_term=element.elevation_datum,
@@ -93,6 +107,16 @@ class Site(TimeSeriesAbstractMetaDataElement):
                         data_dict=kwargs)
 
         super(Site, cls).update(element_id, **kwargs)
+        if len(element.metadata.series_names) > 0:
+            # this case applies only in case of CSV upload
+            selected_series_id = kwargs.pop('selected_series_id', None)
+            if selected_series_id is not None:
+                if selected_series_id not in element.series_ids:
+                    element.series_ids = element.series_ids + [selected_series_id]
+                    element.save()
+                    update_related_elements(element=element,
+                                            related_elements=element.metadata.sites,
+                                            selected_series_id=selected_series_id)
 
     @classmethod
     def remove(cls, element_id):
@@ -773,6 +797,18 @@ def _create_cv_term(element, cv_term_class, cv_term_str, element_cv_term,
                         metadata=element.metadata, term=term, name=data_dict[cv_term_str])
                 cv_term.is_dirty = True
                 cv_term.save()
+
+
+def update_related_elements(element, related_elements, selected_series_id):
+    # update any other elements of type element that has the selected_series_id
+    other_elements = related_elements.filter(
+        series_ids__contains=[selected_series_id]).exclude(id=element.id).all()
+    for el in other_elements:
+        el.series_ids.remove(selected_series_id)
+        if len(el.series_ids) == 0:
+            el.delete()
+        else:
+            el.save()
 
 
 def _generate_term_from_name(name):

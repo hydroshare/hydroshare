@@ -1,6 +1,8 @@
+import json
 
 from django.forms import ModelForm
 from django import forms
+from django.forms.models import model_to_dict
 
 from crispy_forms.layout import Layout, HTML
 from crispy_forms.bootstrap import Field
@@ -11,13 +13,14 @@ from models import Site, Variable, Method, ProcessingLevel, TimeSeriesResult
 
 class SiteFormHelper(BaseFormHelper):
     def __init__(self, allow_edit=True, res_short_id=None, element_id=None, element_name=None,
-                 show_multiple_sites=False, *args, **kwargs):
+                 show_site_code_selection=False, *args, **kwargs):
 
         # the order in which the model fields are listed for the FieldSet is the order these
         # fields will be displayed
         field_width = 'form-control input-sm'
         common_layout = Layout(
                             Field('selected_series_id', css_class=field_width, type="hidden"),
+                            Field('available_sites', css_class=field_width, type="hidden"),
                             Field('site_code', css_class=field_width),
                             Field('site_name', css_class=field_width),
                             Field('organization', css_class=field_width),
@@ -27,35 +30,56 @@ class SiteFormHelper(BaseFormHelper):
                             Field('site_type', css_class=field_width,
                                   title="Select 'Other...' to specify a new site type term"),
                      )
-        if show_multiple_sites:
+        if show_site_code_selection:
             layout = Layout(
-                            Field('multiple_sites', css_class=field_width),
+                            Field('site_code_choices', css_class=field_width),
                             common_layout,
                      )
         else:
             layout = Layout(
-                Field('multiple_sites', css_class=field_width, type="hidden"),
+                Field('site_code_choices', css_class=field_width, type="hidden"),
                 common_layout,
             )
-
         super(SiteFormHelper, self).__init__(allow_edit, res_short_id, element_id, element_name,
                                              layout,  *args, **kwargs)
 
 
 class SiteForm(ModelForm):
-    multiple_sites = forms.BooleanField(required=False)
     selected_series_id = forms.CharField(max_length=50, required=False)
+    site_code_choices = forms.ChoiceField(choices=(), required=False)
+    available_sites = forms.CharField(max_length=1000, required=False)
 
     def __init__(self, allow_edit=True, res_short_id=None, element_id=None, *args, **kwargs):
         self.cv_site_types = list(kwargs.pop('cv_site_types'))
         self.cv_elevation_datums = list(kwargs.pop('cv_elevation_datums'))
-        show_multiple_sites = kwargs.pop('show_multiple_sites')
         selected_series_id = kwargs.pop('selected_series_id', None)
+        available_sites = kwargs.pop('available_sites', [])
+        show_site_code_selection = kwargs.pop('show_site_code_selection', False)
         super(SiteForm, self).__init__(*args, **kwargs)
         self.selected_series_id = selected_series_id
+        show_site_code_selection = len(available_sites) > 0 and show_site_code_selection
         self.helper = SiteFormHelper(allow_edit, res_short_id, element_id, element_name='Site',
-                                     show_multiple_sites=show_multiple_sites)
+                                     show_site_code_selection=show_site_code_selection)
         self.fields['selected_series_id'].initial = selected_series_id
+        sites_data = []
+        for site in available_sites:
+            site_data = model_to_dict(site, exclude=["object_id", "series_ids", "content_type"])
+            sites_data.append(site_data)
+        sites_data_str = ""
+        if len(sites_data) > 0:
+            sites_data_str = json.dumps(sites_data)
+        self.fields['available_sites'].initial = sites_data_str
+        if len(available_sites) > 0:
+            if self.instance:
+                site_code_choices = [(s.site_code, s.site_code) for s in available_sites
+                                     if s.id != self.instance.id]
+                site_code_choices = tuple([(self.instance.site_code, self.instance.site_code)] +
+                                          site_code_choices + [("----", "----")])
+            else:
+                site_code_choices = [(s.site_code, s.site_code) for s in available_sites]
+                site_code_choices = tuple([("----", "----")] + site_code_choices)
+            self.fields['site_code_choices'].widget = forms.Select(choices=site_code_choices)
+            self.fields['site_code_choices'].label = "Select a site code to use an existing site"
 
     def set_dropdown_widgets(self, site_type, elevation_datum):
         cv_site_type_choices = _get_cv_dropdown_widget_items(self.cv_site_types, site_type)
@@ -77,7 +101,8 @@ class SiteForm(ModelForm):
     class Meta:
         model = Site
         fields = ['site_code', 'site_name', 'elevation_m', 'elevation_datum', 'site_type',
-                  'multiple_sites']
+                  'site_code_choices'
+                  ]
         exclude = ['content_object']
         widgets = {'elevation_m': forms.TextInput()}
 
@@ -88,7 +113,6 @@ class SiteValidationForm(forms.Form):
     elevation_m = forms.IntegerField(required=False)
     elevation_datum = forms.CharField(max_length=50, required=False)
     site_type = forms.CharField(max_length=100, required=False)
-    multiple_sites = forms.BooleanField(required=False)
     selected_series_id = forms.CharField(max_length=50, required=False)
 
 
