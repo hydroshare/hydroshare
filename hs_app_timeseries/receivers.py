@@ -96,7 +96,7 @@ def post_create_resource_handler(sender, **kwargs):
     res_file = resource.files.all().first()
     if res_file:
         # check if the uploaded file is a sqlite file or csv file
-        file_ext = utils.get_resource_file_extension(res_file)
+        file_ext = utils.get_resource_file_name_and_extension(res_file)[1]
         if file_ext == '.sqlite':
             _process_uploaded_sqlite_file(user, resource, res_file, validate_files_dict,
                                           delete_existing_metadata=False)

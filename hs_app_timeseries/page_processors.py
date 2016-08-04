@@ -32,7 +32,7 @@ def landing_page(request, page):
         res_file = content_model.files.all().first()
         if res_file:
             # check if the file is a csv file
-            file_ext = utils.get_resource_file_extension(res_file)
+            file_ext = utils.get_resource_file_name_and_extension(res_file)[1]
             if file_ext == ".csv":
                 for index, series_name in enumerate(sorted(content_model.metadata.series_names)):
                     series_ids[str(index)] = series_name
