@@ -633,17 +633,6 @@
                 createPointResourceMarker(lat, lng, info_content, counter);
             });
 
-
-{#            modified_boxes_data.forEach(function(box){#}
-{#                var info_content = box.info_link;#}
-{#                var northlimit = parseFloat(box.northlimit);#}
-{#                var southlimit = parseFloat(box.southlimit);#}
-{#                var eastlimit = parseFloat(box.eastlimit);#}
-{#                var westlimit = parseFloat(box.westlimit);#}
-{#                var counter = box.counter.toString();#}
-{#                createBoxResourceMarker (northlimit, southlimit, eastlimit, westlimit, info_content, counter);#}
-{#            });#}
-
             markerCluster = new MarkerClusterer(map, markers, {
                 imagePath: '//cdn.rawgit.com/googlemaps/js-marker-clusterer/gh-pages/images/m'
             });
@@ -756,10 +745,14 @@
                             filtered_results.push(raw_results[i]);
                         }
                     } else if (raw_results[i].coverage_type == 'box') {
-                        data_lat = (parseFloat(raw_results[i].northlimit) + parseFloat(raw_results[i].southlimit)) / 2;
-                        data_lng = (parseFloat(raw_results[i].eastlimit) + parseFloat(raw_results[i].westlimit)) / 2;
+                        var northlimit = parseFloat(raw_results[i].northlimit);
+                        var southlimit =  parseFloat(raw_results[i].southlimit);
+                        var eastlimit = parseFloat(raw_results[i].eastlimit);
+                        var westlimit = parseFloat(raw_results[i].westlimit);
+                        var ne_latlng = new google.maps.LatLng(northlimit, eastlimit);
+                        var sw_latlng = new google.maps.LatLng(southlimit, westlimit);
                         var latlng = new google.maps.LatLng(data_lat, data_lng);
-                        if (map.getBounds().contains(latlng)) {
+                        if (map.getBounds().contains(ne_latlng) && map.getBounds().contains(sw_latlng)) {
                             filtered_results.push(raw_results[i]);
                         }
                     }
@@ -853,7 +846,6 @@
             });
             markers.push(marker);
             google.maps.event.addListener(marker, 'click', function() {
-                //rectangle.setMap(null);
                 info_window.setContent(info_content);
                 info_window.open(map, marker);
                 var rectBounds = new google.maps.LatLngBounds(
