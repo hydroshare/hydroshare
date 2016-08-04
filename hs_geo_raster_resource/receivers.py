@@ -83,11 +83,27 @@ def raster_file_validation(files, ref_tmp_file_names=[]):
         with open(vrt_file_path, 'r') as vrt_file:
             vrt_string = vrt_file.read()
             root = ET.fromstring(vrt_string)
-            raster_file_names = {file_name.text for file_name in root.iter('SourceFilename')}
+            raster_file_names = [file_name.text for file_name in root.iter('SourceFilename')]
         files_names.pop(files_ext.index('.vrt'))
-        if raster_file_names != set(files_names):
-            error_info.append('The .tif files provided are inconsistent (e.g. missing or extra)'\
-                             ' with the references in the .vrt file.')
+
+        if len(files_names) > len(raster_file_names):
+            error_info.append('Please remove the extra raster files which are not specified in the .vrt file.')
+        else:
+            for vrt_ref_raster_name in raster_file_names:
+                if vrt_ref_raster_name in files_names \
+                        or (os.path.split(vrt_ref_raster_name)[0] == '.' and
+                            os.path.split(vrt_ref_raster_name)[1] in files_names):
+                    continue
+                elif os.path.basename(vrt_ref_raster_name) in files_names:
+                    error_info.append('Please specify {} as {} in the .vrt file, '
+                                      'because it will be saved in the same folder with .vrt file in HydroShare'.
+                                      format(vrt_ref_raster_name, os.path.basename(vrt_ref_raster_name)))
+                    break
+                else:
+                    error_info.append('Pleas provide the missing raster file {} which is specified in the .vrt file'.
+                                      format(os.path.basename(vrt_ref_raster_name)))
+                    break
+
     elif files_ext.count('.tif') == 1 and files_ext.count('.vrt') == 0:
         error_info.append('Please define the .tif file with raster size, band, and georeference information.')
     else:

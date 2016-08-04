@@ -305,21 +305,24 @@ def replace_resource_file_on_irods(new_file, original_resource_file):
     istorage.saveFile(new_file, destination_file, True)
 
 
-def get_resource_file_extension(res_file):
+def get_resource_file_name_and_extension(res_file):
     """
-    Gets the file extension of the specified resource file
+    Gets the file name and extension of the specified resource file
     :param res_file: an instance of ResourceFile for which file extension to be retrieved
-    :return: file extension
+    :return: (full filename, file extension) ex: "/my_path_to/ABC.nc" --> ("ABC.nc", ".nc")
     """
-    fl_ext = None
+    f_fullname = None
     if res_file.resource_file:
-        fl_ext = os.path.splitext(res_file.resource_file.name)[1]
+        f_fullname = res_file.resource_file.name
     elif res_file.fed_resource_file:
-        fl_ext = os.path.splitext(res_file.fed_resource_file.name)[1]
+        f_fullname = res_file.fed_resource_file.name
     elif res_file.fed_resource_file_name_or_path:
-        fl_ext = os.path.splitext(res_file.fed_resource_file_name_or_path)[1]
+        f_fullname = res_file.fed_resource_file_name_or_path
 
-    return fl_ext
+    f_fullname = os.path.basename(f_fullname)
+    _, file_ext = os.path.splitext(f_fullname)
+
+    return f_fullname, file_ext
 
 
 def delete_fed_zone_file(file_name_with_full_path):

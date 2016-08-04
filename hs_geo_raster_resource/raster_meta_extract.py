@@ -17,6 +17,7 @@ from collections import OrderedDict
 import re
 import logging
 import pycrs
+import numpy
 
 
 def get_raster_meta_dict(raster_file_name):
@@ -166,7 +167,7 @@ def get_wgs84_coverage_info(raster_dataset):
             original_cs.ImportFromWkt(ogc_wkt)
 
         except Exception:
-            original_cs.ImportFromEPSG(proj)
+            original_cs.ImportFromWkt(proj)
 
         # create wgs84 geographic coordinate system
         wgs84_cs = osr.SpatialReference()
@@ -251,7 +252,18 @@ def get_band_info(raster_file_name):
 
         for i in range(0, band_count):
             band = raster_dataset.GetRasterBand(i+1)
-            minimum, maximum, _, _ = band.GetStatistics(0, 1)
+            minimum, maximum, _, _ = band.ComputeStatistics(False)
+            no_data = band.GetNoDataValue()
+            new_no_data = None
+
+            if no_data and numpy.allclose(minimum, no_data):
+                new_no_data = minimum
+            elif no_data and numpy.allclose(maximum, no_data):
+                new_no_data = maximum
+
+            if new_no_data is not None:
+                band.SetNoDataValue(new_no_data)
+                minimum, maximum, _, _ = band.ComputeStatistics(False)
 
             band_info[i+1] = {
                 'name': 'Band_'+str(i+1),

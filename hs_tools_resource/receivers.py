@@ -1,10 +1,19 @@
 from django.dispatch import receiver
 
-from hs_core.signals import pre_metadata_element_create, pre_metadata_element_update
+from hs_core.signals import pre_metadata_element_create, pre_metadata_element_update, \
+                            pre_create_resource
 
 from hs_tools_resource.models import ToolResource
-from hs_tools_resource.forms import SupportedResTypesValidationForm, UrlBaseForm, VersionForm, \
-                                    ToolIconForm, UrlBaseValidationForm
+from hs_tools_resource.forms import SupportedResTypesValidationForm,  VersionForm, \
+                                    ToolIconForm, UrlBaseValidationForm, \
+                                    SupportedSharingStatusValidationForm
+
+@receiver(pre_create_resource, sender=ToolResource)
+def webapp_pre_create_resource(sender, **kwargs):
+    metadata = kwargs['metadata']
+    all_sharing_status = {'SupportedSharingStatus': {'sharing_status':
+                          ["Published", "Public", "Discoverable", "Private"]}}
+    metadata.append(all_sharing_status)
 
 
 @receiver(pre_metadata_element_create, sender=ToolResource)
@@ -30,6 +39,10 @@ def validate_form(request, element_name):
         element_form = SupportedResTypesValidationForm(data=request.POST)
     elif element_name == 'toolicon':
         element_form = ToolIconForm(data=request.POST)
+    elif element_name == 'supportedsharingstatus':
+        element_form = SupportedSharingStatusValidationForm(data=request.POST)
+    else:
+        return {'is_valid': False, 'element_data_dict': None}
 
     if element_form.is_valid():
         return {'is_valid': True, 'element_data_dict': element_form.cleaned_data}
