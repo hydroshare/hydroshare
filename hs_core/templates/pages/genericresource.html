@@ -146,9 +146,12 @@
                                                                                                   title="Download"
                                                                                                   class="glyphicon glyphicon-download icon-button btn-download"></span></a>
                                                         {% else %}
-                                                            <span data-toggle="tooltip" data-placement="auto"
-                                                                  title="File larger than 1GB cannot be downloaded directly via HTTP. Please download the large file via iRODS clients."
-                                                                  class="glyphicon glyphicon-download icon-button btn-download"></span>
+                                                            <a data-toggle="modal" data-target="#large-file-download-alert">
+                                                                <span data-toggle="tooltip" data-placement="auto"
+                                                                    title="Download"
+                                                                    class="glyphicon glyphicon-download icon-button btn-download">
+                                                                </span>
+                                                            </a>
                                                         {% endif %}
                                                         {% if preview %}
                                                             <a href="{{ preview }}"><span data-toggle="tooltip"
