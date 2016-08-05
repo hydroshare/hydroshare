@@ -108,79 +108,9 @@ def _get_resource_edit_context(page, request, content_model, selected_series_id,
 
     # create timeseries specific metadata element forms
 
-    # create form for the "Site" element
-    if content_model.metadata.sites:
-        site = content_model.metadata.sites.filter(
-            series_ids__contains=[selected_series_id]).first()
-        site_form = SiteForm(instance=site, res_short_id=content_model.short_id,
-                             element_id=site.id if site else None,
-                             cv_site_types=content_model.metadata.cv_site_types.all(),
-                             cv_elevation_datums=content_model.metadata.cv_elevation_datums.all(),
-                             show_site_code_selection=not content_model.has_sqlite_file,
-                             available_sites=content_model.metadata.sites,
-                             selected_series_id=selected_series_id)
-
-        if site is not None:
-            site_form.action = _get_element_update_form_action('site', content_model.short_id,
-                                                               site.id)
-            site_form.number = site.id
-
-            site_form.set_dropdown_widgets(site_form.initial['site_type'],
-                                           site_form.initial['elevation_datum'])
-        else:
-            # this case can only happen in case of csv upload
-            site_form.set_dropdown_widgets(content_model.metadata.cv_site_types.all().first().name,
-                                           content_model.metadata.cv_elevation_datums.all().
-                                           first().name)
-
-    else:
-        # this case can happen only in case of CSV upload
-        site_form = SiteForm(instance=None, res_short_id=content_model.short_id,
-                             element_id=None,
-                             cv_site_types=content_model.metadata.cv_site_types.all(),
-                             cv_elevation_datums=content_model.metadata.cv_elevation_datums.all(),
-                             selected_series_id=selected_series_id)
-
-        site_form.set_dropdown_widgets(content_model.metadata.cv_site_types.all().first().name,
-                                       content_model.metadata.cv_elevation_datums.all().first().name)
-
-    # create form for the "Variable" element
-    if content_model.metadata.variables:
-        variable = content_model.metadata.variables.filter(
-            series_ids__contains=[selected_series_id]).first()
-        variable_form = VariableForm(
-            instance=variable, res_short_id=content_model.short_id,
-            element_id=variable.id if variable else None,
-            cv_variable_types=content_model.metadata.cv_variable_types.all(),
-            cv_variable_names=content_model.metadata.cv_variable_names.all(),
-            cv_speciations=content_model.metadata.cv_speciations.all(),
-            show_multiple_variable_chkbox=False, selected_series_id=selected_series_id)
-        if variable is not None:
-            variable_form.action = _get_element_update_form_action('variable',
-                                                                   content_model.short_id,
-                                                                   variable.id)
-            variable_form.number = variable.id
-            variable_form.set_dropdown_widgets(variable_form.initial['variable_type'],
-                                               variable_form.initial['variable_name'],
-                                               variable_form.initial['speciation'])
-        else:
-            variable_form.set_dropdown_widgets(
-                variable_type=content_model.metadata.cv_variable_types.all().first().name,
-                variable_name=content_model.metadata.cv_variable_names.all().first().name,
-                speciation=content_model.metadata.cv_speciations.all().first().name)
-    else:
-        variable_form = VariableForm(
-            instance=None, res_short_id=content_model.short_id,
-            element_id=None,
-            cv_variable_types=content_model.metadata.cv_variable_types.all(),
-            cv_variable_names=content_model.metadata.cv_variable_names.all(),
-            cv_speciations=content_model.metadata.cv_speciations.all(),
-            show_multiple_variable_chkbox=True, selected_series_id=min(series_ids.keys()))
-
-        variable_form.set_dropdown_widgets(
-            variable_type=content_model.metadata.cv_variable_types.all().first().name,
-            variable_name=content_model.metadata.cv_variable_names.all().first().name,
-            speciation=content_model.metadata.cv_speciations.all().first().name)
+    site_form = _create_site_form(resource=content_model, selected_series_id=selected_series_id)
+    variable_form = _create_variable_form(resource=content_model,
+                                          selected_series_id=selected_series_id)
 
     # TODO: The forms for the following elements need to be created based on the 2 elements above.
     method = content_model.metadata.methods.filter(
@@ -256,6 +186,88 @@ def _get_resource_edit_context(page, request, content_model, selected_series_id,
     context['timeseries_result_form'] = timeseries_result_form
     return context
 
+def _create_site_form(resource, selected_series_id):
+    if resource.metadata.sites:
+        site = resource.metadata.sites.filter(
+            series_ids__contains=[selected_series_id]).first()
+        site_form = SiteForm(instance=site, res_short_id=resource.short_id,
+                             element_id=site.id if site else None,
+                             cv_site_types=resource.metadata.cv_site_types.all(),
+                             cv_elevation_datums=resource.metadata.cv_elevation_datums.all(),
+                             show_site_code_selection=not resource.has_sqlite_file,
+                             available_sites=resource.metadata.sites,
+                             selected_series_id=selected_series_id)
+
+        if site is not None:
+            site_form.action = _get_element_update_form_action('site', resource.short_id,
+                                                               site.id)
+            site_form.number = site.id
+
+            site_form.set_dropdown_widgets(site_form.initial['site_type'],
+                                           site_form.initial['elevation_datum'])
+        else:
+            # this case can only happen in case of csv upload
+            site_form.set_dropdown_widgets(resource.metadata.cv_site_types.all().first().name,
+                                           resource.metadata.cv_elevation_datums.all().
+                                           first().name)
+
+    else:
+        # this case can happen only in case of CSV upload
+        site_form = SiteForm(instance=None, res_short_id=resource.short_id,
+                             element_id=None,
+                             cv_site_types=resource.metadata.cv_site_types.all(),
+                             cv_elevation_datums=resource.metadata.cv_elevation_datums.all(),
+                             selected_series_id=selected_series_id)
+
+        site_form.set_dropdown_widgets(resource.metadata.cv_site_types.all().first().name,
+                                       resource.metadata.cv_elevation_datums.all().first().name)
+    return site_form
+
+
+def _create_variable_form(resource, selected_series_id):
+    if resource.metadata.variables:
+        variable = resource.metadata.variables.filter(
+            series_ids__contains=[selected_series_id]).first()
+        variable_form = VariableForm(instance=variable, res_short_id=resource.short_id,
+                                     element_id=variable.id if variable else None,
+                                     cv_variable_types=resource.metadata.cv_variable_types.all(),
+                                     cv_variable_names=resource.metadata.cv_variable_names.all(),
+                                     cv_speciations=resource.metadata.cv_speciations.all(),
+                                     show_variable_code_selection=not resource.has_sqlite_file,
+                                     available_variables=resource.metadata.variables,
+                                     selected_series_id=selected_series_id)
+
+        if variable is not None:
+            variable_form.action = _get_element_update_form_action('variable', resource.short_id,
+                                                                   variable.id)
+            variable_form.number = variable.id
+
+            variable_form.set_dropdown_widgets(variable_form.initial['variable_type'],
+                                               variable_form.initial['variable_name'],
+                                               variable_form.initial['speciation'])
+        else:
+            # this case can only happen in case of csv upload
+            variable_form.set_dropdown_widgets(
+                variable_type=resource.metadata.cv_variable_types.all().first().name,
+                variable_name=resource.metadata.cv_variable_names.all().first().name,
+                speciation=resource.metadata.cv_speciations.all().first().name)
+
+    else:
+        # this case can happen only in case of CSV upload
+        variable_form = VariableForm(instance=None, res_short_id=resource.short_id,
+                                     element_id=None,
+                                     cv_variable_types=resource.metadata.cv_variable_types.all(),
+                                     cv_variable_names=resource.metadata.cv_variable_names.all(),
+                                     cv_speciations=resource.metadata.cv_speciations.all(),
+                                     available_variables=resource.metadata.variables,
+                                     selected_series_id=selected_series_id)
+
+        variable_form.set_dropdown_widgets(
+            variable_type=resource.metadata.cv_variable_types.all().first().name,
+            variable_name=resource.metadata.cv_variable_names.all().first().name,
+            speciation=resource.metadata.cv_speciations.all().first().name)
+
+    return variable_form
 
 def _get_series_label(series_id, resource):
     label = "{site_code}:{site_name}, {variable_code}:{variable_name}, {units_name}, " \

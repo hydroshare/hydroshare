@@ -209,6 +209,7 @@
                 }
             });
               processSiteMetadataElement();
+              processVariableMetadataElement();
         });
         function setCheckboxValue(el){
             if ($(el).is(':checked')){
@@ -281,6 +282,79 @@
                             $('#id_elevation_m').attr('readonly', false);
                             $('#id_elevation_datum').attr('readonly', false);
                             $('#id_site_type').attr('readonly', false);
+                        }
+                    }
+                });
+            })
+        }
+        function processVariableMetadataElement(){
+            var variable_text = $('#id_available_variables').val();
+            var variables_json = $.parseJSON(variable_text);
+            var original_variable_code = $('#id_variable_code').val();
+            // remove the select option "Other.." from variable code selection dropdown
+            $("#id_variable_code_choices option[value='Other']").remove();
+            $('#id_variable_code_choices').change(function () {
+                var selectedVariableCode = this.value;
+                if(selectedVariableCode === "----"){
+                    $('#id-variable').find("button.btn-primary").hide();
+                    $('#id_variable_code').val("");
+                    $('#id_variable_code').attr('readonly', false);
+                    $('#id_variable_name').val("");
+                    $('#id_variable_name').attr('readonly', false);
+                    $('#id_variable_type').val("");
+                    $('#id_variable_type').attr('readonly', false);
+                    $('#id_no_data_value').val("");
+                    $('#id_no_data_value').attr('readonly', false);
+                    $('#id_variable_definition').val("");
+                    $('#id_variable_definition').attr('readonly', false);
+                    $('#id_speciation').val("");
+                    $('#id_speciation').attr('readonly', false);
+                    var form_action = $('#id-variable').attr('action');
+                    if(form_action.includes("update-metadata")) {
+                        var slice_end_index = form_action.toLowerCase().indexOf("variable") + 9;
+                        form_action = form_action.slice(0, slice_end_index) + "add-metadata/";
+                        $('#id-variable').attr('action', form_action);
+                    }
+                    return;
+                }
+
+                $(variables_json).each(function (i, variable) {
+                    if (variable.variable_code === selectedVariableCode){
+                        $('#id_variable_code').val(variable.variable_code);
+                        $('#id_varaible_name').val(variable.variable_name);
+                        $('#id_variable_type').val(variable.variable_type);
+                        $('#id_no_data_value').val(variable.no_data_value);
+                        $('#id_variable_definition').val(variable.variable_definition);
+                        $('#id_speciation').val(variable.speciation);
+                        // change the variable form action
+                        var form_action = $('#id-variable').attr('action');
+                        if(form_action.includes("add-metadata")){
+                            form_action = form_action.replace("add-metadata", variable.id + "/update-metadata");
+                        }
+                        else {
+                            var slice_end_index = form_action.toLowerCase().indexOf("variable") + 9;
+                            form_action = form_action.slice(0, slice_end_index) + variable.id + "/update-metadata/";
+                        }
+
+                        $('#id-variable').attr('action', form_action);
+
+                        if (selectedVariableCode !== original_variable_code){
+                            $('#id-variable').find("button.btn-primary").show();
+                            $('#id_variable_code').attr('readonly', true);
+                            $('#id_variable_name').attr('readonly', true);
+                            $('#id_variable_type').attr('readonly', true);
+                            $('#id_no_data_value').attr('readonly', true);
+                            $('#id_variable_definition').attr('readonly', true);
+                            $('#id_speciation').attr('readonly', true);
+                        }
+                        else {
+                            $('#id-variable').find("button.btn-primary").hide();
+                            $('#id_variable_code').attr('readonly', false);
+                            $('#id_variable_name').attr('readonly', false);
+                            $('#id_variable_type').attr('readonly', false);
+                            $('#id_no_data_value').attr('readonly', false);
+                            $('#id_variable_definition').attr('readonly', false);
+                            $('#id_speciation').attr('readonly', false);
                         }
                     }
                 });

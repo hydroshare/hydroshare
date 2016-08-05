@@ -107,8 +107,7 @@ class SiteForm(ModelForm):
     class Meta:
         model = Site
         fields = ['site_code', 'site_name', 'elevation_m', 'elevation_datum', 'site_type',
-                  'site_code_choices'
-                  ]
+                  'site_code_choices']
         exclude = ['content_object']
         widgets = {'elevation_m': forms.TextInput()}
 
@@ -124,10 +123,11 @@ class SiteValidationForm(forms.Form):
 
 class VariableFormHelper(BaseFormHelper):
     def __init__(self, allow_edit=True, res_short_id=None, element_id=None, element_name=None,
-                 show_multiple_variable_chkbox=False, *args, **kwargs):
+                 show_variable_code_selection=False, *args, **kwargs):
         field_width = 'form-control input-sm'
         common_layout = Layout(
                      Field('selected_series_id', css_class=field_width, type="hidden"),
+                     Field('available_variables', css_class=field_width, type="hidden"),
                      Field('variable_code', css_class=field_width),
                      Field('variable_name', css_class=field_width,
                            title="Select 'Other...' to specify a new variable name term"),
@@ -139,14 +139,16 @@ class VariableFormHelper(BaseFormHelper):
                            title="Select 'Other...' to specify a new speciation term"),
                 )
 
-        if show_multiple_variable_chkbox:
+        if show_variable_code_selection:
+            variable_help = "Select '----' for a new site or any other option to use an " \
+                            "existing site for this series"
             layout = Layout(
-                Field('multiple_variables', css_class=field_width),
+                Field('variable_code_choices', css_class=field_width, title=variable_help),
                 common_layout,
             )
         else:
             layout = Layout(
-                Field('multiple_variables', css_class=field_width, type="hidden"),
+                Field('variable_code_choices', css_class=field_width, type="hidden"),
                 common_layout,
             )
         super(VariableFormHelper, self).__init__(allow_edit, res_short_id, element_id,
@@ -154,21 +156,50 @@ class VariableFormHelper(BaseFormHelper):
 
 
 class VariableForm(ModelForm):
-    multiple_variables = forms.BooleanField(required=False)
     selected_series_id = forms.CharField(max_length=50, required=False)
+    variable_code_choices = forms.ChoiceField(choices=(), required=False)
+    available_variables = forms.CharField(max_length=1000, required=False)
 
     def __init__(self, allow_edit=True, res_short_id=None, element_id=None, *args, **kwargs):
         self.cv_variable_types = list(kwargs.pop('cv_variable_types'))
         self.cv_variable_names = list(kwargs.pop('cv_variable_names'))
         self.cv_speciations = list(kwargs.pop('cv_speciations'))
-        show_multiple_variable_chkbox = kwargs.pop('show_multiple_variable_chkbox')
         selected_series_id = kwargs.pop('selected_series_id', None)
+        available_variables = kwargs.pop('available_variables', [])
+        show_variable_code_selection = kwargs.pop('show_variable_code_selection', False)
         super(VariableForm, self).__init__(*args, **kwargs)
+        self.selected_series_id = selected_series_id
+        show_variable_code_selection = len(available_variables) > 0 and show_variable_code_selection
         self.helper = VariableFormHelper(allow_edit, res_short_id, element_id,
                                          element_name='Variable',
-                                         show_multiple_variable_chkbox=
-                                         show_multiple_variable_chkbox)
+                                         show_variable_code_selection=show_variable_code_selection)
         self.fields['selected_series_id'].initial = selected_series_id
+        variables_data = []
+        for variable in available_variables:
+            variable_data = model_to_dict(variable, exclude=["object_id", "series_ids",
+                                                             "content_type"])
+            variables_data.append(variable_data)
+        variables_data_str = ""
+        if len(variables_data) > 0:
+            variables_data_str = json.dumps(variables_data)
+        self.fields['available_variables'].initial = variables_data_str
+        if len(available_variables) > 0:
+            if len(self.initial) > 0:
+                variable_code_choices = [(v.variable_code, v.variable_code + ":" +
+                                          v.variable_name) for v in available_variables
+                                         if v.id != element_id]
+                variable_code_choices = tuple([(self.initial['variable_code'],
+                                            self.initial['variable_code'] + ":" +
+                                            self.initial['variable_name'])] +
+                                          variable_code_choices + [("----", "----")])
+            else:
+                variable_code_choices = [(v.variable_code, v.variable_code + ":" +
+                                          v.variable_name) for v in available_variables]
+                variable_code_choices = tuple([("----", "----")] + variable_code_choices)
+            self.fields['variable_code_choices'].widget = forms.Select(
+                choices=variable_code_choices)
+            self.fields['variable_code_choices'].label = "Select any existing variable to " \
+                                                         "use for this series"
 
     def set_dropdown_widgets(self, variable_type, variable_name, speciation):
         cv_var_type_choices = _get_cv_dropdown_widget_items(self.cv_variable_types, variable_type)
@@ -192,7 +223,7 @@ class VariableForm(ModelForm):
     class Meta:
         model = Variable
         fields = ['variable_code', 'variable_name', 'variable_type', 'no_data_value',
-                  'variable_definition', 'speciation', 'multiple_variables']
+                  'variable_definition', 'speciation', 'variable_code_choices']
         exclude = ['content_object']
         widgets = {'no_data_value': forms.TextInput()}
 
@@ -204,6 +235,7 @@ class VariableValidationForm(forms.Form):
     no_data_value = forms.IntegerField()
     variable_definition = forms.CharField(max_length=255, required=False)
     speciation = forms.CharField(max_length=255, required=False)
+    selected_series_id = forms.CharField(max_length=50, required=False)
 
 
 class MethodFormHelper(BaseFormHelper):

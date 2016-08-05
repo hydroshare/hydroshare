@@ -107,6 +107,7 @@ class Site(TimeSeriesAbstractMetaDataElement):
                         data_dict=kwargs)
 
         super(Site, cls).update(element_id, **kwargs)
+
         if len(element.metadata.series_names) > 0:
             # this case applies only in case of CSV upload
             selected_series_id = kwargs.pop('selected_series_id', None)
@@ -138,20 +139,35 @@ class Variable(TimeSeriesAbstractMetaDataElement):
     @classmethod
     def create(cls, **kwargs):
         metadata = kwargs['content_object']
-        multiple_variables = kwargs.pop('multiple_variables', False)
-        selected_series_id = kwargs.pop('selected_series_id', None)
+        # check that we are not creating variable elements with duplicate variable_code value
+        if any(kwargs['variable_code'].lower() == variable.variable_code.lower()
+               for variable in metadata.variables):
+            raise ValidationError("There is already a variable element "
+                                  "with variable_code:{}".format(kwargs['variable_code']))
+
         if len(metadata.series_names) > 0:
-            if not multiple_variables:
-                kwargs['series_ids'] = range(len(metadata.series_names))
-            else:
-                kwargs['series_ids'] = [selected_series_id]
+            # this case applies only in case of CSV upload
+            selected_series_id = kwargs.pop('selected_series_id', None)
+            if selected_series_id is None:
+                raise ValueError("Series id is missing")
+            kwargs['series_ids'] = [selected_series_id]
+            element = super(Variable, cls).create(**kwargs)
+            # update any other variable element that has the selected_series_id
+            update_related_elements(element=element, related_elements=element.metadata.variables,
+                                    selected_series_id=selected_series_id)
+            return element
 
         return super(Variable, cls).create(**kwargs)
 
     @classmethod
     def update(cls, element_id, **kwargs):
         element = cls.objects.get(id=element_id)
-        kwargs.pop('multiple_variables', None)
+        # check that we are not creating variable elements with duplicate variable_code value
+        if any(kwargs['variable_code'].lower() ==
+               variable.variable_code.lower() and variable.id != element.id for variable in
+               element.metadata.variables):
+            raise ValidationError("There is already a variable element "
+                                  "with variable_code:{}".format(kwargs['variable_code']))
         # if the user has entered a new variable name, then create a corresponding new cv term
         _create_cv_term(element=element, cv_term_class=CVVariableName,
                         cv_term_str='variable_name', element_cv_term=element.variable_name,
@@ -171,6 +187,17 @@ class Variable(TimeSeriesAbstractMetaDataElement):
                         data_dict=kwargs)
 
         super(Variable, cls).update(element_id, **kwargs)
+
+        if len(element.metadata.series_names) > 0:
+            # this case applies only in case of CSV upload
+            selected_series_id = kwargs.pop('selected_series_id', None)
+            if selected_series_id is not None:
+                if selected_series_id not in element.series_ids:
+                    element.series_ids = element.series_ids + [selected_series_id]
+                    element.save()
+                    update_related_elements(element=element,
+                                            related_elements=element.metadata.variables,
+                                            selected_series_id=selected_series_id)
 
     @classmethod
     def remove(cls, element_id):
@@ -801,6 +828,11 @@ def _create_cv_term(element, cv_term_class, cv_term_str, element_cv_term,
 
 def update_related_elements(element, related_elements, selected_series_id):
     # update any other elements of type element that has the selected_series_id
+    # if an element is associated with a new series id as part of updating an element,
+    # we have to update other elements of the same type in terms of dis-associating any other
+    # elements with that series id. If any other element is found to be not associated with a series
+    # that element needs to be deleted.
+
     other_elements = related_elements.filter(
         series_ids__contains=[selected_series_id]).exclude(id=element.id).all()
     for el in other_elements:

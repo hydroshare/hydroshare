@@ -328,6 +328,12 @@ function metadata_update_ajax_submit(form_id){
                         $('#' + form_id + ' :input').attr('readonly', 'readonly');
                     }
                 }
+                if (($form.attr("id") == "id-variable")){
+                    $variable_selection_dropdown = $('#id_variable_code_choices');
+                    if ($variable_selection_dropdown.length && $variable_selection_dropdown.attr('type') !== "hidden"){
+                        $('#' + form_id + ' :input').attr('readonly', 'readonly');
+                    }
+                }
                 // end of timeseries specific DOM manipulation
                 $(document).trigger("submit-success");
                 $form.find("button.btn-primary").hide();
