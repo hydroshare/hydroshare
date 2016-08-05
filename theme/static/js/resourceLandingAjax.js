@@ -316,11 +316,19 @@ function metadata_update_ajax_submit(form_id){
             json_response = JSON.parse(result);
             if (json_response.status === 'success')
             {
+                // start timeseries resource specific DOM manipulation
                 if (($form.attr("id") == "id-site" || $form.attr("id") == "id-variable" ||
                     $form.attr("id") == "id-method" || $form.attr("id") == "id-processinglevel" ||
                     $form.attr("id") == "id-timeseriesresult") && ($("#has-sqlite-file").val()) === "True") {
                     $("#sql-file-update").show();
                 }
+                if (($form.attr("id") == "id-site")){
+                    $site_selection_dropdown = $('#id_site_code_choices');
+                    if ($site_selection_dropdown.length && $site_selection_dropdown.attr('type') !== "hidden"){
+                        $('#' + form_id + ' :input').attr('readonly', 'readonly');
+                    }
+                }
+                // end of timeseries specific DOM manipulation
                 $(document).trigger("submit-success");
                 $form.find("button.btn-primary").hide();
                 if (json_response.hasOwnProperty('element_id')){

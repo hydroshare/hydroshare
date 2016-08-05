@@ -31,8 +31,10 @@ class SiteFormHelper(BaseFormHelper):
                                   title="Select 'Other...' to specify a new site type term"),
                      )
         if show_site_code_selection:
+            site_help = "Select '----' for a new site or any other option to use an " \
+                        "existing site for this series"
             layout = Layout(
-                            Field('site_code_choices', css_class=field_width),
+                            Field('site_code_choices', css_class=field_width, title=site_help),
                             common_layout,
                      )
         else:
@@ -70,16 +72,20 @@ class SiteForm(ModelForm):
             sites_data_str = json.dumps(sites_data)
         self.fields['available_sites'].initial = sites_data_str
         if len(available_sites) > 0:
-            if self.instance:
-                site_code_choices = [(s.site_code, s.site_code) for s in available_sites
-                                     if s.id != self.instance.id]
-                site_code_choices = tuple([(self.instance.site_code, self.instance.site_code)] +
+            if len(self.initial) > 0:
+                site_code_choices = [(s.site_code, s.site_code + ":" + s.site_name) for s
+                                     in available_sites if s.id != element_id]
+                site_code_choices = tuple([(self.initial['site_code'],
+                                            self.initial['site_code'] + ":" +
+                                            self.initial['site_name'])] +
                                           site_code_choices + [("----", "----")])
             else:
-                site_code_choices = [(s.site_code, s.site_code) for s in available_sites]
+                site_code_choices = [(s.site_code, s.site_code + ":" + s.site_name) for s
+                                     in available_sites]
                 site_code_choices = tuple([("----", "----")] + site_code_choices)
             self.fields['site_code_choices'].widget = forms.Select(choices=site_code_choices)
-            self.fields['site_code_choices'].label = "Select a site code to use an existing site"
+            self.fields['site_code_choices'].label = "Select any existing site to use for " \
+                                                     "this series"
 
     def set_dropdown_widgets(self, site_type, elevation_datum):
         cv_site_type_choices = _get_cv_dropdown_widget_items(self.cv_site_types, site_type)

@@ -210,9 +210,11 @@
             });
             var sites_text = $('#id_available_sites').val();
             var sites_json = $.parseJSON(sites_text);
+
             $('#id_site_code_choices').change(function () {
                 var selectedSiteCode = this.value;
                 if(selectedSiteCode === "----"){
+                    $('#id-site').find("button.btn-primary").hide();
                     $('#id_site_code').val("");
                     $('#id_site_code').attr('readonly', false);
                     $('#id_site_name').val("");
