@@ -151,3 +151,23 @@ class TrackingTests(TestCase):
         self.assertEqual(int(data['visitor']), self.visitor.id)
         self.assertEqual(data['variable'], "testvar")
         self.assertEqual(data['value'], "abcdef")
+
+    def test_capture_logins_and_logouts(self):
+        self.assertEqual(Variable.objects.count(), 0)
+
+        client = Client()
+        client.login(username=self.user.username, password='password')
+
+        self.assertEqual(Variable.objects.count(), 2)
+        var1, var2 = Variable.objects.all()
+        self.assertEqual(var1.name, 'begin_session')
+        self.assertEqual(var1.value, 'none')
+        self.assertEqual(var2.name, 'login')
+        self.assertEqual(var2.value, 'none')
+
+        client.logout()
+
+        self.assertEqual(Variable.objects.count(), 3)
+        var = Variable.objects.latest('timestamp')
+        self.assertEqual(var.name, 'logout')
+        self.assertEqual(var.value, 'none')
