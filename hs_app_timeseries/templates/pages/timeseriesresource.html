@@ -208,9 +208,22 @@
                     }
                 }
             });
+              processSiteMetadataElement();
+        });
+        function setCheckboxValue(el){
+            if ($(el).is(':checked')){
+                $(el).attr('value', 'Yes')
+            }
+            else{
+                $(el).attr('value', 'No')
+            }
+        }
+        function processSiteMetadataElement(){
             var sites_text = $('#id_available_sites').val();
             var sites_json = $.parseJSON(sites_text);
-
+            var original_site_code = $('#id_site_code').val();
+            // remove the select option "Other.." from site code selection dropdown
+            $("#id_site_code_choices option[value='Other']").remove();
             $('#id_site_code_choices').change(function () {
                 var selectedSiteCode = this.value;
                 if(selectedSiteCode === "----"){
@@ -237,15 +250,10 @@
                 $(sites_json).each(function (i, site) {
                     if (site.site_code === selectedSiteCode){
                         $('#id_site_code').val(site.site_code);
-                        $('#id_site_code').attr('readonly', true);
                         $('#id_site_name').val(site.site_name);
-                        $('#id_site_name').attr('readonly', true);
                         $('#id_elevation_m').val(site.elevation_m);
-                        $('#id_elevation_m').attr('readonly', true);
                         $('#id_elevation_datum').val(site.elevation_datum);
-                        $('#id_elevation_datum').attr('readonly', true);
                         $('#id_site_type').val(site.site_type);
-                        $('#id_site_type').attr('readonly', true);
                         // change the site form action
                         var form_action = $('#id-site').attr('action');
                         if(form_action.includes("add-metadata")){
@@ -257,17 +265,26 @@
                         }
 
                         $('#id-site').attr('action', form_action);
+
+                        if (selectedSiteCode !== original_site_code){
+                            $('#id-site').find("button.btn-primary").show();
+                            $('#id_site_code').attr('readonly', true);
+                            $('#id_site_name').attr('readonly', true);
+                            $('#id_elevation_m').attr('readonly', true);
+                            $('#id_elevation_datum').attr('readonly', true);
+                            $('#id_site_type').attr('readonly', true);
+                        }
+                        else {
+                            $('#id-site').find("button.btn-primary").hide();
+                            $('#id_site_code').attr('readonly', false);
+                            $('#id_site_name').attr('readonly', false);
+                            $('#id_elevation_m').attr('readonly', false);
+                            $('#id_elevation_datum').attr('readonly', false);
+                            $('#id_site_type').attr('readonly', false);
+                        }
                     }
                 });
             })
-        });
-        function setCheckboxValue(el){
-            if ($(el).is(':checked')){
-                $(el).attr('value', 'Yes')
-            }
-            else{
-                $(el).attr('value', 'No')
-            }
         }
     </script>
 
