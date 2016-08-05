@@ -3697,6 +3697,11 @@ div.group-add-photo {
 	border: 1px solid #DDD;
 }
 
+.resource-popover-option {
+	display: inline-block;
+	margin: 5px;
+}
+
 #discover-filter-buttons {
 	margin-bottom: 10px;
 }

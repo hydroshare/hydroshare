@@ -656,14 +656,14 @@
 
                 $("#coverages-master-list").append($list_item);
 
-                var resource_link = '<a target="_blank" href="' + box.get_absolute_url + '"> Resource Details  <span class="glyphicon glyphicon-link"></span></a>';
-                var show_box_button = '<a class="show-box-button btn btn-default" role="button"> Zoom on Map </a>';
+                var show_box_button = '<a class="show-box-button resource-popover-option btn btn-default" role="button">Zoom on map </a>';
+                var resource_link = '<a class="resource-popover-option" target="_blank" href="' + box.get_absolute_url + '"> More Details  <span class="glyphicon glyphicon-link"></span></a>';
 
                 $list_item.popover({
                     html: true,
                     placement: 'top',
                     title: box.title,
-                    content: '<p>' + resource_link + '<br /><br />' + show_box_button + '</p>',
+                    content: '<p>' + show_box_button + resource_link  + '</p>',
                     trigger: 'focus'
                 });
 
@@ -692,7 +692,7 @@
                 tabindex++;
 
             });
-        }
+        };
 
         var calcArea = function(box) {
             var northlimit = parseFloat(box.northlimit);
@@ -706,7 +706,7 @@
             var northWest = new google.maps.LatLng(northlimit, westlimit);
             var area = google.maps.geometry.spherical.computeArea([northEast, northWest, southWest, southEast]);
             return (area * 3.8610216e-07).toFixed(2);
-        }
+        };
 
         var showBoxMarker = function(box, zoom_on_map) {
             var northlimit = parseFloat(box.northlimit);
@@ -728,7 +728,7 @@
                     updateMapView();
                 }
             }
-        }
+        };
 
         var clientUpdateMarkers = function(filtered_results) {
             removeMarkers();
