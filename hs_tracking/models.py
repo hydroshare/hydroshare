@@ -34,7 +34,7 @@ class SessionManager(models.Manager):
             except Session.DoesNotExist:
                 pass
 
-            if session is not None:
+            if session is not None and user is not None:
                 if session.visitor.user is None and user.is_authenticated():
                     try:
                         session.visitor = Visitor.objects.get(user=user)
