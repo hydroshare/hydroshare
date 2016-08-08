@@ -2923,6 +2923,13 @@ h4.title {
     border-radius: 0;
 }
 
+.no-items-found {
+    font-style: italic;
+    font-size: 14px;
+    pointer-events: none;
+	border: 0;
+}
+
 .list-labels li:hover {
 	background:#DDD;
 }
@@ -2936,11 +2943,6 @@ h4.title {
 	margin-bottom: 0;
 }
 
-.no-labels-found {
-    font-style: italic;
-    font-size: 14px;
-    pointer-events: none;
-}
 
 #toolbar-labels-dropdown {
 	font-size: 14px;
