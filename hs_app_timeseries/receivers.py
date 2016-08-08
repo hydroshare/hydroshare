@@ -236,7 +236,7 @@ def _validate_metadata(request, element_name):
     if element_form.is_valid():
         return {'is_valid': True, 'element_data_dict': element_form.cleaned_data}
     else:
-        return {'is_valid': False, 'element_data_dict': None}
+        return {'is_valid': False, 'element_data_dict': None, "errors": element_form.errors}
 
 
 @receiver(pre_download_file, sender=TimeSeriesResource)

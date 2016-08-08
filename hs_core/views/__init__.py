@@ -272,6 +272,8 @@ def update_metadata_element(request, shortkey, element_name, element_id, *args, 
 
                 if is_update_success:
                     resource_modified(res, request.user)
+            elif "errors" in response:
+                err_msg = err_msg.format(element_name, response['errors'])
 
     if request.is_ajax():
         if is_update_success:
