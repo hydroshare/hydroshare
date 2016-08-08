@@ -130,17 +130,20 @@ class SupportedResTypesForm(ModelForm):
         super(SupportedResTypesForm, self).__init__(*args, **kwargs)
         self.fields['supported_res_types'].label = "Choose Resource Types:"
         self.helper = SupportedResTypeFormHelper(allow_edit, res_short_id, element_id, element_name='SupportedResTypes')
-        if self.instance:
-            supported_res_types = self.instance.supported_res_types.all()
-            if len(supported_res_types) > 0:
-                # NOTE: The following code works for SWAT res type but does not work here!!!
-                # self.fields['supported_res_types'].initial =
-                #   [parameter.description for parameter in supported_res_types]
+        try:
+            if self.instance:
+                supported_res_types = self.instance.supported_res_types.all()
+                if len(supported_res_types) > 0:
+                    # NOTE: The following code works for SWAT res type but does not work here!!!
+                    # self.fields['supported_res_types'].initial =
+                    #   [parameter.description for parameter in supported_res_types]
 
-                self.initial['supported_res_types'] = \
-                    [parameter.description for parameter in supported_res_types]
-            else:
-                self.initial['supported_res_types'] = []
+                    self.initial['supported_res_types'] = \
+                        [parameter.description for parameter in supported_res_types]
+                else:
+                    self.initial['supported_res_types'] = []
+        except:
+            self.initial['supported_res_types'] = []
 
     class Meta:
         model = SupportedResTypes
@@ -182,13 +185,16 @@ class SupportedSharingStatusForm(ModelForm):
         self.fields['sharing_status'].label = "Choose Sharing Status:"
         self.helper = SupportedSharingStatusFormHelper(allow_edit, res_short_id, element_id,
                                                        element_name='SupportedSharingStatus')
-        if self.instance:
-            supported_sharing_status = self.instance.sharing_status.all()
-            if len(supported_sharing_status) > 0:
-                self.initial['sharing_status'] = \
-                    [parameter.description for parameter in supported_sharing_status]
-            else:
-                self.initial['sharing_status'] = []
+        try:
+            if self.instance:
+                supported_sharing_status = self.instance.sharing_status.all()
+                if len(supported_sharing_status) > 0:
+                    self.initial['sharing_status'] = \
+                        [parameter.description for parameter in supported_sharing_status]
+                else:
+                    self.initial['sharing_status'] = []
+        except:
+            self.initial['sharing_status'] = []
 
     class Meta:
         model = SupportedSharingStatus
