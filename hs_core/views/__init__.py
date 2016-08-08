@@ -210,9 +210,15 @@ def add_metadata_element(request, shortkey, element_name, *args, **kwargs):
                         # some database error occurred
                         err_msg = err_msg.format(element_name, exp.message)
                         request.session['validation_error'] = err_msg
+                    except Exception as exp:
+                        # some other error occurred
+                        err_msg = err_msg.format(element_name, exp.message)
+                        request.session['validation_error'] = err_msg
 
                 if is_add_success:
                     resource_modified(res, request.user)
+            elif "errors" in response:
+                err_msg = err_msg.format(element_name, response['errors'])
 
     if request.is_ajax():
         if is_add_success:
@@ -226,11 +232,10 @@ def add_metadata_element(request, shortkey, element_name, *args, **kwargs):
             else:
                 ajax_response_data = {'status': 'success', 'element_id': element.id, 'element_name': element_name, 'metadata_status': metadata_status}
 
-            return HttpResponse(json.dumps(ajax_response_data))
-
+            return JsonResponse(ajax_response_data)
         else:
             ajax_response_data = {'status': 'error', 'message': err_msg}
-            return HttpResponse (json.dumps(ajax_response_data))
+            return JsonResponse(ajax_response_data)
 
     if 'resource-mode' in request.POST:
         request.session['resource-mode'] = 'edit'
@@ -276,10 +281,10 @@ def update_metadata_element(request, shortkey, element_name, element_id, *args, 
                 metadata_status = METADATA_STATUS_INSUFFICIENT
 
             ajax_response_data = {'status': 'success', 'element_name': element_name, 'metadata_status': metadata_status}
-            return HttpResponse(json.dumps(ajax_response_data))
+            return JsonResponse(ajax_response_data)
         else:
             ajax_response_data = {'status': 'error', 'message': err_msg}
-            return HttpResponse(json.dumps(ajax_response_data))
+            return JsonResponse(ajax_response_data)
 
     if 'resource-mode' in request.POST:
         request.session['resource-mode'] = 'edit'

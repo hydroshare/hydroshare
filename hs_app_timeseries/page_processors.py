@@ -111,22 +111,12 @@ def _get_resource_edit_context(page, request, content_model, selected_series_id,
     site_form = _create_site_form(resource=content_model, selected_series_id=selected_series_id)
     variable_form = _create_variable_form(resource=content_model,
                                           selected_series_id=selected_series_id)
+    method_form = _create_method_form(resource=content_model, selected_series_id=selected_series_id)
 
     # TODO: The forms for the following elements need to be created based on the 2 elements above.
-    method = content_model.metadata.methods.filter(
-        series_ids__contains=[selected_series_id]).first()
-    if method is not None:
-        method_form = MethodForm(instance=method, res_short_id=content_model.short_id,
-                                 element_id=method.id if method else None,
-                                 cv_method_types=content_model.metadata.cv_method_types.all())
-
-        method_form.action = _get_element_update_form_action('method',
-                                                             content_model.short_id, method.id)
-        method_form.number = method.id
-        method_form.set_dropdown_widgets(method_form.initial['method_type'])
-
     processing_level = content_model.metadata.processing_levels.filter(
         series_ids__contains=[selected_series_id]).first()
+
     if processing_level is not None:
         processing_level_form = ProcessingLevelForm(instance=processing_level,
                                                     res_short_id=content_model.short_id,
@@ -185,6 +175,7 @@ def _get_resource_edit_context(page, request, content_model, selected_series_id,
     context['processing_level_form'] = processing_level_form
     context['timeseries_result_form'] = timeseries_result_form
     return context
+
 
 def _create_site_form(resource, selected_series_id):
     if resource.metadata.sites:
@@ -268,6 +259,37 @@ def _create_variable_form(resource, selected_series_id):
             speciation=resource.metadata.cv_speciations.all().first().name)
 
     return variable_form
+
+
+def _create_method_form(resource, selected_series_id):
+    if resource.metadata.methods:
+        method = resource.metadata.methods.filter(
+            series_ids__contains=[selected_series_id]).first()
+        method_form = MethodForm(instance=method, res_short_id=resource.short_id,
+                                 element_id=method.id if method else None,
+                                 cv_method_types=resource.metadata.cv_method_types.all(),
+                                 show_method_code_selection=not resource.has_sqlite_file,
+                                 available_methods=resource.metadata.methods,
+                                 selected_series_id=selected_series_id)
+
+        if method is not None:
+            method_form.action = _get_element_update_form_action('method', resource.short_id,
+                                                                 method.id)
+            method_form.number = method.id
+            method_form.set_dropdown_widgets(method_form.initial['method_type'])
+        else:
+            # this case can only happen in case of csv upload
+            method_form.set_dropdown_widgets(resource.metadata.cv_method_types.all().first().name)
+
+    else:
+        # this case can happen only in case of CSV upload
+        method_form = MethodForm(instance=None, res_short_id=resource.short_id,
+                                 element_id=None,
+                                 cv_method_types=resource.metadata.cv_method_types.all(),
+                                 selected_series_id=selected_series_id)
+
+        method_form.set_dropdown_widgets(resource.metadata.cv_method_types.all().first().name)
+    return method_form
 
 def _get_series_label(series_id, resource):
     label = "{site_code}:{site_name}, {variable_code}:{variable_name}, {units_name}, " \

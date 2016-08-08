@@ -79,9 +79,10 @@ class Site(TimeSeriesAbstractMetaDataElement):
                 raise ValueError("Series id is missing")
             kwargs['series_ids'] = [selected_series_id]
             element = super(Site, cls).create(**kwargs)
-            # update any other site element that has the selected_series_id
-            update_related_elements(element=element, related_elements=element.metadata.sites,
-                                    selected_series_id=selected_series_id)
+            # update any other site element that is associated with the selected_series_id
+            update_related_elements_on_create(element=element,
+                                              related_elements=element.metadata.sites,
+                                              selected_series_id=selected_series_id)
             return element
 
         return super(Site, cls).create(**kwargs)
@@ -107,17 +108,10 @@ class Site(TimeSeriesAbstractMetaDataElement):
                         data_dict=kwargs)
 
         super(Site, cls).update(element_id, **kwargs)
-
-        if len(element.metadata.series_names) > 0:
-            # this case applies only in case of CSV upload
-            selected_series_id = kwargs.pop('selected_series_id', None)
-            if selected_series_id is not None:
-                if selected_series_id not in element.series_ids:
-                    element.series_ids = element.series_ids + [selected_series_id]
-                    element.save()
-                    update_related_elements(element=element,
-                                            related_elements=element.metadata.sites,
-                                            selected_series_id=selected_series_id)
+        selected_series_id = kwargs.pop('selected_series_id', None)
+        update_related_elements_on_update(element=element,
+                                          related_elements=element.metadata.sites,
+                                          selected_series_id=selected_series_id)
 
     @classmethod
     def remove(cls, element_id):
@@ -152,9 +146,10 @@ class Variable(TimeSeriesAbstractMetaDataElement):
                 raise ValueError("Series id is missing")
             kwargs['series_ids'] = [selected_series_id]
             element = super(Variable, cls).create(**kwargs)
-            # update any other variable element that has the selected_series_id
-            update_related_elements(element=element, related_elements=element.metadata.variables,
-                                    selected_series_id=selected_series_id)
+            # update any other variable element that is associated with the selected_series_id
+            update_related_elements_on_create(element=element,
+                                              related_elements=element.metadata.variables,
+                                              selected_series_id=selected_series_id)
             return element
 
         return super(Variable, cls).create(**kwargs)
@@ -187,17 +182,10 @@ class Variable(TimeSeriesAbstractMetaDataElement):
                         data_dict=kwargs)
 
         super(Variable, cls).update(element_id, **kwargs)
-
-        if len(element.metadata.series_names) > 0:
-            # this case applies only in case of CSV upload
-            selected_series_id = kwargs.pop('selected_series_id', None)
-            if selected_series_id is not None:
-                if selected_series_id not in element.series_ids:
-                    element.series_ids = element.series_ids + [selected_series_id]
-                    element.save()
-                    update_related_elements(element=element,
-                                            related_elements=element.metadata.variables,
-                                            selected_series_id=selected_series_id)
+        selected_series_id = kwargs.pop('selected_series_id', None)
+        update_related_elements_on_update(element=element,
+                                          related_elements=element.metadata.variables,
+                                          selected_series_id=selected_series_id)
 
     @classmethod
     def remove(cls, element_id):
@@ -216,8 +204,38 @@ class Method(TimeSeriesAbstractMetaDataElement):
         return self.method_name
 
     @classmethod
+    def create(cls, **kwargs):
+        metadata = kwargs['content_object']
+        # check that we are not creating method elements with duplicate method_code value
+        if any(kwargs['method_code'].lower() == method.method_code.lower()
+               for method in metadata.methods):
+            raise ValidationError("There is already a method element "
+                                  "with method_code:{}".format(kwargs['method_code']))
+
+        if len(metadata.series_names) > 0:
+            # this case applies only in case of CSV upload
+            selected_series_id = kwargs.pop('selected_series_id', None)
+            if selected_series_id is None:
+                raise ValueError("Series id is missing")
+            kwargs['series_ids'] = [selected_series_id]
+            element = super(Method, cls).create(**kwargs)
+            # update any other method element that is associated with the selected_series_id
+            update_related_elements_on_create(element=element,
+                                              related_elements=element.metadata.methods,
+                                              selected_series_id=selected_series_id)
+            return element
+
+        return super(Method, cls).create(**kwargs)
+
+    @classmethod
     def update(cls, element_id, **kwargs):
         element = cls.objects.get(id=element_id)
+        # check that we are not creating method elements with duplicate method_code value
+        if any(kwargs['method_code'].lower() ==
+                method.method_code.lower() and method.id != element.id for method in
+                element.metadata.methods):
+            raise ValidationError("There is already a method element "
+                                  "with method_code:{}".format(kwargs['method_code']))
 
         # if the user has entered a new method type, then create a corresponding new cv term
         _create_cv_term(element=element, cv_term_class=CVMethodType,
@@ -226,6 +244,10 @@ class Method(TimeSeriesAbstractMetaDataElement):
                         data_dict=kwargs)
 
         super(Method, cls).update(element_id, **kwargs)
+        selected_series_id = kwargs.pop('selected_series_id', None)
+        update_related_elements_on_update(element=element,
+                                          related_elements=element.metadata.methods,
+                                          selected_series_id=selected_series_id)
 
     @classmethod
     def remove(cls, element_id):
@@ -826,12 +848,13 @@ def _create_cv_term(element, cv_term_class, cv_term_str, element_cv_term,
                 cv_term.save()
 
 
-def update_related_elements(element, related_elements, selected_series_id):
-    # update any other elements of type element that has the selected_series_id
-    # if an element is associated with a new series id as part of updating an element,
-    # we have to update other elements of the same type in terms of dis-associating any other
-    # elements with that series id. If any other element is found to be not associated with a series
-    # that element needs to be deleted.
+def update_related_elements_on_create(element, related_elements, selected_series_id):
+    # update any other elements of type element (on creation of element) that has
+    # the selected_series_id. if an element is associated with a new series id as part
+    # of updating an element, we have to update other elements of the same type
+    # in terms of dis-associating any other elements with that series id.
+    # If any other element is found not to be associated with a series
+    # then that element needs to be deleted.
 
     other_elements = related_elements.filter(
         series_ids__contains=[selected_series_id]).exclude(id=element.id).all()
@@ -842,6 +865,29 @@ def update_related_elements(element, related_elements, selected_series_id):
         else:
             el.save()
 
+
+def update_related_elements_on_update(element, related_elements, selected_series_id):
+    # update any other elements of type element (on update of element) that has the
+    # selected_series_id. if an element is associated with a new series id as part of
+    # updating an element, we have to update other elements of the same type in
+    # terms of dis-associating any other elements with that series id.
+    # If any other element is found to be not associated with a series
+    # then that element needs to be deleted.
+
+    if len(element.metadata.series_names) > 0:
+        # this case applies only in case of CSV upload
+        if selected_series_id is not None:
+            if selected_series_id not in element.series_ids:
+                element.series_ids = element.series_ids + [selected_series_id]
+                element.save()
+                other_elements = related_elements.filter(
+                    series_ids__contains=[selected_series_id]).exclude(id=element.id).all()
+                for el in other_elements:
+                    el.series_ids.remove(selected_series_id)
+                    if len(el.series_ids) == 0:
+                        el.delete()
+                    else:
+                        el.save()
 
 def _generate_term_from_name(name):
     name = name.strip()

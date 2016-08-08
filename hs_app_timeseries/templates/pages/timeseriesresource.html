@@ -210,6 +210,7 @@
             });
               processSiteMetadataElement();
               processVariableMetadataElement();
+              processMethodMetadataElement();
         });
         function setCheckboxValue(el){
             if ($(el).is(':checked')){
@@ -269,20 +270,16 @@
 
                         if (selectedSiteCode !== original_site_code){
                             $('#id-site').find("button.btn-primary").show();
-                            $('#id_site_code').attr('readonly', true);
-                            $('#id_site_name').attr('readonly', true);
-                            $('#id_elevation_m').attr('readonly', true);
-                            $('#id_elevation_datum').attr('readonly', true);
-                            $('#id_site_type').attr('readonly', true);
                         }
                         else {
                             $('#id-site').find("button.btn-primary").hide();
-                            $('#id_site_code').attr('readonly', false);
-                            $('#id_site_name').attr('readonly', false);
-                            $('#id_elevation_m').attr('readonly', false);
-                            $('#id_elevation_datum').attr('readonly', false);
-                            $('#id_site_type').attr('readonly', false);
                         }
+                         $('#id_site_code').attr('readonly', selectedSiteCode !== original_site_code);
+                         $('#id_site_name').attr('readonly', selectedSiteCode !== original_site_code);
+                         $('#id_elevation_m').attr('readonly', selectedSiteCode !== original_site_code);
+                         $('#id_elevation_datum').attr('readonly', selectedSiteCode !== original_site_code);
+                         $('#id_site_type').attr('readonly', selectedSiteCode !== original_site_code);
+                        return false;
                     }
                 });
             })
@@ -340,22 +337,83 @@
 
                         if (selectedVariableCode !== original_variable_code){
                             $('#id-variable').find("button.btn-primary").show();
-                            $('#id_variable_code').attr('readonly', true);
-                            $('#id_variable_name').attr('readonly', true);
-                            $('#id_variable_type').attr('readonly', true);
-                            $('#id_no_data_value').attr('readonly', true);
-                            $('#id_variable_definition').attr('readonly', true);
-                            $('#id_speciation').attr('readonly', true);
                         }
                         else {
                             $('#id-variable').find("button.btn-primary").hide();
-                            $('#id_variable_code').attr('readonly', false);
-                            $('#id_variable_name').attr('readonly', false);
-                            $('#id_variable_type').attr('readonly', false);
-                            $('#id_no_data_value').attr('readonly', false);
-                            $('#id_variable_definition').attr('readonly', false);
-                            $('#id_speciation').attr('readonly', false);
                         }
+                        $('#id_variable_code').attr('readonly', selectedVariableCode !== original_variable_code);
+                        $('#id_variable_name').attr('readonly', selectedVariableCode !== original_variable_code);
+                        $('#id_variable_type').attr('readonly', selectedVariableCode !== original_variable_code);
+                        $('#id_no_data_value').attr('readonly', selectedVariableCode !== original_variable_code);
+                        $('#id_variable_definition').attr('readonly', selectedVariableCode !== original_variable_code);
+                        $('#id_speciation').attr('readonly', selectedVariableCode !== original_variable_code);
+                        return false;
+                    }
+                });
+            })
+        }
+        function processMethodMetadataElement(){
+            var method_text = $('#id_available_methods').val();
+            var methods_json = $.parseJSON(method_text);
+            var original_method_code = $('#id_method_code').val();
+            // remove the select option "Other.." from method code selection dropdown
+            $("#id_method_code_choices option[value='Other']").remove();
+            $('#id_method_code_choices').change(function () {
+                var selectedMethodCode = this.value;
+                if(selectedMethodCode === "----"){
+                    $('#id-method').find("button.btn-primary").hide();
+                    $('#id_method_code').val("");
+                    $('#id_method_code').attr('readonly', false);
+                    $('#id_method_name').val("");
+                    $('#id_method_name').attr('readonly', false);
+                    $('#id_method_type').val("");
+                    $('#id_method_type').attr('readonly', false);
+                    $('#id_method_description').val("");
+                    $('#id_method_description').attr('readonly', false);
+                    $('#id_method_link').val("");
+                    $('#id_method_link').attr('readonly', false);
+
+                    var form_action = $('#id-method').attr('action');
+                    if(form_action.includes("update-metadata")) {
+                        var slice_end_index = form_action.toLowerCase().indexOf("method") + 7;
+                        form_action = form_action.slice(0, slice_end_index) + "add-metadata/";
+                        $('#id-method').attr('action', form_action);
+                    }
+                    return;
+                }
+
+                $(methods_json).each(function (i, method) {
+                    if (method.method_code === selectedMethodCode){
+                        $('#id_method_code').val(method.method_code);
+                        $('#id_method_name').val(method.method_name);
+                        $('#id_method_type').val(method.method_type);
+                        $('#id_method_description').val(method.method_description);
+                        $('#id_method_link').val(method.method_link);
+
+                        // change the method form action
+                        var form_action = $('#id-method').attr('action');
+                        if(form_action.includes("add-metadata")){
+                            form_action = form_action.replace("add-metadata", method.id + "/update-metadata");
+                        }
+                        else {
+                            var slice_end_index = form_action.toLowerCase().indexOf("method") + 7;
+                            form_action = form_action.slice(0, slice_end_index) + method.id + "/update-metadata/";
+                        }
+
+                        $('#id-method').attr('action', form_action);
+
+                        if (selectedMethodCode !== original_method_code){
+                            $('#id-method').find("button.btn-primary").show();
+                        }
+                        else {
+                            $('#id-method').find("button.btn-primary").hide();
+                        }
+                        $('#id_method_code').attr('readonly', selectedMethodCode !== original_method_code);
+                        $('#id_method_name').attr('readonly', selectedMethodCode !== original_method_code);
+                        $('#id_method_type').attr('readonly', selectedMethodCode !== original_method_code);
+                        $('#id_method_description').attr('readonly', selectedMethodCode !== original_method_code);
+                        $('#id_method_link').attr('readonly', selectedMethodCode !== original_method_code);
+                        return false;
                     }
                 });
             })

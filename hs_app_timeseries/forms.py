@@ -30,18 +30,11 @@ class SiteFormHelper(BaseFormHelper):
                             Field('site_type', css_class=field_width,
                                   title="Select 'Other...' to specify a new site type term"),
                      )
-        if show_site_code_selection:
-            site_help = "Select '----' for a new site or any other option to use an " \
-                        "existing site for this series"
-            layout = Layout(
-                            Field('site_code_choices', css_class=field_width, title=site_help),
-                            common_layout,
-                     )
-        else:
-            layout = Layout(
-                Field('site_code_choices', css_class=field_width, type="hidden"),
-                common_layout,
-            )
+        layout = _set_form_helper_layout(common_layout=common_layout, element_name="site",
+                                         is_show_element_code_selection=
+                                         show_site_code_selection,
+                                         field_css=field_width)
+
         super(SiteFormHelper, self).__init__(allow_edit, res_short_id, element_id, element_name,
                                              layout,  *args, **kwargs)
 
@@ -63,29 +56,14 @@ class SiteForm(ModelForm):
         self.helper = SiteFormHelper(allow_edit, res_short_id, element_id, element_name='Site',
                                      show_site_code_selection=show_site_code_selection)
         self.fields['selected_series_id'].initial = selected_series_id
-        sites_data = []
-        for site in available_sites:
-            site_data = model_to_dict(site, exclude=["object_id", "series_ids", "content_type"])
-            sites_data.append(site_data)
-        sites_data_str = ""
-        if len(sites_data) > 0:
-            sites_data_str = json.dumps(sites_data)
-        self.fields['available_sites'].initial = sites_data_str
-        if len(available_sites) > 0:
-            if len(self.initial) > 0:
-                site_code_choices = [(s.site_code, s.site_code + ":" + s.site_name) for s
-                                     in available_sites if s.id != element_id]
-                site_code_choices = tuple([(self.initial['site_code'],
-                                            self.initial['site_code'] + ":" +
-                                            self.initial['site_name'])] +
-                                          site_code_choices + [("----", "----")])
-            else:
-                site_code_choices = [(s.site_code, s.site_code + ":" + s.site_name) for s
-                                     in available_sites]
-                site_code_choices = tuple([("----", "----")] + site_code_choices)
-            self.fields['site_code_choices'].widget = forms.Select(choices=site_code_choices)
-            self.fields['site_code_choices'].label = "Select any existing site to use for " \
-                                                     "this series"
+        _set_available_elements_form_field(form=self, elements=available_sites,
+                                           element_name="site")
+        code_selection_label = "Select any existing sites to use for this series"
+        _set_element_code_selection_form_field(form=self, form_field_name="site_code_choices",
+                                               form_field_label=code_selection_label,
+                                               element_id=element_id, elements=available_sites,
+                                               element_code_att_name="site_code",
+                                               element_name_att_name="site_name")
 
     def set_dropdown_widgets(self, site_type, elevation_datum):
         cv_site_type_choices = _get_cv_dropdown_widget_items(self.cv_site_types, site_type)
@@ -139,18 +117,11 @@ class VariableFormHelper(BaseFormHelper):
                            title="Select 'Other...' to specify a new speciation term"),
                 )
 
-        if show_variable_code_selection:
-            variable_help = "Select '----' for a new site or any other option to use an " \
-                            "existing site for this series"
-            layout = Layout(
-                Field('variable_code_choices', css_class=field_width, title=variable_help),
-                common_layout,
-            )
-        else:
-            layout = Layout(
-                Field('variable_code_choices', css_class=field_width, type="hidden"),
-                common_layout,
-            )
+        layout = _set_form_helper_layout(common_layout=common_layout, element_name="variable",
+                                         is_show_element_code_selection=
+                                         show_variable_code_selection,
+                                         field_css=field_width)
+
         super(VariableFormHelper, self).__init__(allow_edit, res_short_id, element_id,
                                                  element_name, layout,  *args, **kwargs)
 
@@ -174,32 +145,14 @@ class VariableForm(ModelForm):
                                          element_name='Variable',
                                          show_variable_code_selection=show_variable_code_selection)
         self.fields['selected_series_id'].initial = selected_series_id
-        variables_data = []
-        for variable in available_variables:
-            variable_data = model_to_dict(variable, exclude=["object_id", "series_ids",
-                                                             "content_type"])
-            variables_data.append(variable_data)
-        variables_data_str = ""
-        if len(variables_data) > 0:
-            variables_data_str = json.dumps(variables_data)
-        self.fields['available_variables'].initial = variables_data_str
-        if len(available_variables) > 0:
-            if len(self.initial) > 0:
-                variable_code_choices = [(v.variable_code, v.variable_code + ":" +
-                                          v.variable_name) for v in available_variables
-                                         if v.id != element_id]
-                variable_code_choices = tuple([(self.initial['variable_code'],
-                                            self.initial['variable_code'] + ":" +
-                                            self.initial['variable_name'])] +
-                                          variable_code_choices + [("----", "----")])
-            else:
-                variable_code_choices = [(v.variable_code, v.variable_code + ":" +
-                                          v.variable_name) for v in available_variables]
-                variable_code_choices = tuple([("----", "----")] + variable_code_choices)
-            self.fields['variable_code_choices'].widget = forms.Select(
-                choices=variable_code_choices)
-            self.fields['variable_code_choices'].label = "Select any existing variable to " \
-                                                         "use for this series"
+        _set_available_elements_form_field(form=self, elements=available_variables,
+                                           element_name="variable")
+        code_selection_label = "Select any existing variables to use for this series"
+        _set_element_code_selection_form_field(form=self, form_field_name="variable_code_choices",
+                                               form_field_label=code_selection_label,
+                                               element_id=element_id, elements=available_variables,
+                                               element_code_att_name="variable_code",
+                                               element_name_att_name="variable_name")
 
     def set_dropdown_widgets(self, variable_type, variable_name, speciation):
         cv_var_type_choices = _get_cv_dropdown_widget_items(self.cv_variable_types, variable_type)
@@ -240,11 +193,13 @@ class VariableValidationForm(forms.Form):
 
 class MethodFormHelper(BaseFormHelper):
     def __init__(self, allow_edit=True, res_short_id=None, element_id=None, element_name=None,
-                 *args, **kwargs):
+                 show_method_code_selection=False, *args, **kwargs):
         # the order in which the model fields are listed for the FieldSet is the order these
         # fields will be displayed
         field_width = 'form-control input-sm'
-        layout = Layout(
+        common_layout = Layout(
+                         Field('selected_series_id', css_class=field_width, type="hidden"),
+                         Field('available_methods', css_class=field_width, type="hidden"),
                          Field('method_code', css_class=field_width),
                          Field('method_name', css_class=field_width),
                          Field('method_type', css_class=field_width,
@@ -253,15 +208,38 @@ class MethodFormHelper(BaseFormHelper):
                          Field('method_link', css_class=field_width),
                          )
 
+        layout = _set_form_helper_layout(common_layout=common_layout, element_name="method",
+                                         is_show_element_code_selection=show_method_code_selection,
+                                         field_css=field_width)
+
         super(MethodFormHelper, self).__init__(allow_edit, res_short_id, element_id, element_name,
                                                layout,  *args, **kwargs)
 
 
 class MethodForm(ModelForm):
+    selected_series_id = forms.CharField(max_length=50, required=False)
+    method_code_choices = forms.ChoiceField(choices=(), required=False)
+    available_methods = forms.CharField(max_length=1000, required=False)
+
     def __init__(self, allow_edit=True, res_short_id=None, element_id=None, *args, **kwargs):
         self.cv_method_types = list(kwargs.pop('cv_method_types'))
+        selected_series_id = kwargs.pop('selected_series_id', None)
+        available_methods = kwargs.pop('available_methods', [])
+        show_method_code_selection = kwargs.pop('show_method_code_selection', False)
         super(MethodForm, self).__init__(*args, **kwargs)
-        self.helper = MethodFormHelper(allow_edit, res_short_id, element_id, element_name='Method')
+        self.selected_series_id = selected_series_id
+        show_method_code_selection = len(available_methods) > 0 and show_method_code_selection
+        self.helper = MethodFormHelper(allow_edit, res_short_id, element_id, element_name='Method',
+                                       show_method_code_selection=show_method_code_selection)
+
+        self.fields['selected_series_id'].initial = selected_series_id
+        _set_available_elements_form_field(self, available_methods, "method")
+        code_selection_label = "Select any existing methods to use for this series"
+        _set_element_code_selection_form_field(form=self, form_field_name="method_code_choices",
+                                               form_field_label=code_selection_label,
+                                               element_id=element_id, elements=available_methods,
+                                               element_code_att_name="method_code",
+                                               element_name_att_name="method_name")
 
     def set_dropdown_widgets(self, current_method_type):
         cv_method_type_choices = _get_cv_dropdown_widget_items(self.cv_method_types,
@@ -279,7 +257,8 @@ class MethodForm(ModelForm):
 
     class Meta:
         model = Method
-        fields = ['method_code', 'method_name', 'method_type', 'method_description', 'method_link']
+        fields = ['method_code', 'method_name', 'method_type', 'method_description',
+                  'method_link', 'method_code_choices']
         exclude = ['content_object']
         widgets = {'method_code': forms.TextInput()}
 
@@ -290,7 +269,7 @@ class MethodValidationForm(forms.Form):
     method_type = forms.CharField(max_length=200)
     method_description = forms.CharField(required=False)
     method_link = forms.URLField(required=False)
-
+    selected_series_id = forms.CharField(max_length=50, required=False)
 
 class ProcessingLevelFormHelper(BaseFormHelper):
     def __init__(self, allow_edit=True, res_short_id=None, element_id=None, element_name=None,
@@ -425,6 +404,60 @@ def _get_cv_dropdown_widget_items(dropdown_items, selected_item_name):
     cv_items = [(selected_item_name, selected_item_name)] + cv_items
     cv_item_choices = tuple(cv_items)
     return cv_item_choices
+
+
+def _set_available_elements_form_field(form, elements, element_name):
+    elements_data = []
+    for element in elements:
+        element_data = model_to_dict(element, exclude=["object_id", "series_ids", "content_type"])
+        elements_data.append(element_data)
+    element_data_str = ""
+    if len(elements_data) > 0:
+        element_data_str = json.dumps(elements_data)
+    form_field_name = "available_{}s".format(element_name)
+    form.fields[form_field_name].initial = element_data_str
+
+
+def _set_element_code_selection_form_field(form, form_field_name, form_field_label, element_id,
+                                           elements, element_code_att_name, element_name_att_name):
+    if len(elements) > 0:
+        if len(form.initial) > 0:
+            element_code_choices = [(getattr(element, element_code_att_name),
+                                     getattr(element, element_code_att_name) + ":" +
+                                     getattr(element, element_name_att_name)) for
+                                    element in elements if element.id != element_id]
+            element_code_choices = tuple([(form.initial[element_code_att_name],
+                                           form.initial[element_code_att_name] + ":" +
+                                           form.initial[element_name_att_name])] +
+                                         element_code_choices + [("----", "----")])
+        else:
+            element_code_choices = [(getattr(element, element_code_att_name),
+                                     getattr(element, element_code_att_name) + ":" +
+                                     getattr(element, element_name_att_name)) for
+                                    element in elements]
+            element_code_choices = tuple([("----", "----")] + element_code_choices)
+
+        form.fields[form_field_name].widget = forms.Select(
+            choices=element_code_choices)
+        form.fields[form_field_name].label = form_field_label
+
+
+def _set_form_helper_layout(common_layout, element_name, is_show_element_code_selection, field_css):
+    form_field_name = "{}_code_choices".format(element_name)
+    if is_show_element_code_selection:
+        variable_help = "Select '----' for a new {} or any other option to use an " \
+                        "existing {} for this series".format(element_name, element_name)
+
+        layout = Layout(
+            Field(form_field_name, css_class=field_css, title=variable_help),
+            common_layout,
+        )
+    else:
+        layout = Layout(
+            Field(form_field_name, css_class=field_css, type="hidden"),
+            common_layout,
+        )
+    return layout
 
 UpdateSQLiteLayout = Layout(HTML("""
 <div id="sql-file-update" class="row"

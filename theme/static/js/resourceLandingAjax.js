@@ -323,18 +323,16 @@ function metadata_update_ajax_submit(form_id){
                     $("#sql-file-update").show();
                 }
                 if (($form.attr("id") == "id-site")){
-                    $site_selection_dropdown = $('#id_site_code_choices');
-                    if ($site_selection_dropdown.length && $site_selection_dropdown.attr('type') !== "hidden"){
-                        $('#' + form_id + ' :input').attr('readonly', 'readonly');
-                    }
+                    makeTimeSeriesMetaDataElementFormReadOnly(form_id, "id_site");
                 }
-                if (($form.attr("id") == "id-variable")){
-                    $variable_selection_dropdown = $('#id_variable_code_choices');
-                    if ($variable_selection_dropdown.length && $variable_selection_dropdown.attr('type') !== "hidden"){
-                        $('#' + form_id + ' :input').attr('readonly', 'readonly');
-                    }
+                else if (($form.attr("id") == "id-variable")){
+                    makeTimeSeriesMetaDataElementFormReadOnly(form_id, "id_variable");
+                }
+                else if (($form.attr("id") == "id-method")){
+                    makeTimeSeriesMetaDataElementFormReadOnly(form_id, "id_method");
                 }
                 // end of timeseries specific DOM manipulation
+
                 $(document).trigger("submit-success");
                 $form.find("button.btn-primary").hide();
                 if (json_response.hasOwnProperty('element_id')){
@@ -371,10 +369,10 @@ function metadata_update_ajax_submit(form_id){
                 });
             }
             else{
-                $('body > .container').append($alert_error);
-                $(".alert-danger").fadeTo(3000, 500).fadeOut(1000, function(){
-                    $(document).trigger("submit-error");
-                    $(".alert-danger").alert('close');
+                $alert_error = $alert_error.replace("Metadata failed to update.", json_response.message);
+                $('#' + form_id).before($alert_error);
+                $(".alert-error").fadeTo(2000, 500).slideUp(1000, function(){
+                    $(".alert-error").alert('close');
                 });
             }
         },
@@ -390,6 +388,12 @@ function metadata_update_ajax_submit(form_id){
     return false;
 }
 
+function makeTimeSeriesMetaDataElementFormReadOnly(form_id, element_id){
+    $element_selection_dropdown = $('#' + element_id + '_code_choices');
+    if ($element_selection_dropdown.length && $element_selection_dropdown.attr('type') !== "hidden"){
+        $('#' + form_id + ' :input').attr('readonly', 'readonly');
+    }
+}
 function get_user_info_ajax_submit(url, obj) {
     var entry = $(obj).parent().parent().parent().parent().find("#id_user-deck > .hilight");
     if (entry.length < 1) {
