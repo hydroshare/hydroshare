@@ -433,7 +433,7 @@ def _get_cv_dropdown_widget_items(dropdown_items, selected_item_name):
 
     # alphabetize the terms
     cv_items.sort(key=lambda tup: tup[0])
-    
+
     # add the selected item as a tuple to the beginning of the list of items
     # so that it will be displayed as the currently selected item
     cv_items = [(selected_item_name, selected_item_name)] + cv_items
@@ -519,8 +519,8 @@ UpdateSQLiteLayout = Layout(HTML("""
 SeriesSelectionLayout = Layout(HTML("""
 <div id="div-series-selection">
     <div class="col-sm-12">
-        <strong>Select a timeseries to see corresponding metadata(Number of
-            timeseries:{{ series_ids.items|length }}):</strong>
+        <strong>Select a timeseries to see corresponding metadata (Number of
+            timeseries: {{ series_ids.items|length }}):</strong>
         <form action="/resource/{{ cm.short_id }}/" method="get" enctype="multipart/form-data">
             {% csrf_token %}
             <input name="resource-mode" type="hidden" value="edit">
