@@ -3730,6 +3730,12 @@ div.group-add-photo {
 	font-family: 'Roboto','sans-serif';
 	line-height: 30px;
 	padding-left: 10px;
+	width: 45%;
+}
+
+#geocoder-address {
+	width:60%;
+	float:left;
 }
 
 #manual-zoom-btn {
