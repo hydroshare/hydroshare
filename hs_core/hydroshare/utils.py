@@ -26,7 +26,8 @@ from mezzanine.conf import settings
 from hs_core.signals import pre_create_resource, post_create_resource, pre_add_files_to_resource, \
     post_add_files_to_resource
 from hs_core.models import AbstractResource, BaseResource, ResourceFile
-from hs_core.hydroshare.hs_bagit import create_bag_files, create_bag_by_irods
+from hs_core.hydroshare.hs_bagit import create_bag_files
+from hs_core.tasks import create_bag_by_irods
 
 from django_irods.icommands import SessionException
 from django_irods.storage import IrodsStorage
@@ -344,7 +345,9 @@ def replicate_resource_bag_to_user_zone(user, res_id):
         res_id: the resource id with its bag to be replicated to iRODS user zone
 
     Returns:
-    None, but exceptions will be raised if there is an issue with iRODS operation
+    None if no bag needs to be created,
+    the asynchronous task_id if the resource bag needs to be created first.
+    exceptions will be raised if there is an issue with iRODS operation
     """
     # do on-demand bag creation
     res = get_resource_by_shortkey(res_id)
@@ -362,9 +365,9 @@ def replicate_resource_bag_to_user_zone(user, res_id):
     if istorage.exists(res_coll):
         bag_modified = istorage.getAVU(res_coll, 'bag_modified')
     if bag_modified == "true":
-        create_bag_by_irods(res_id, istorage)
-        if istorage.exists(res_coll):
-            istorage.setAVU(res_coll, 'bag_modified', "false")
+        task = create_bag_by_irods.apply_async((res_id, istorage),
+                 countdown=3)
+        return task.task_id
 
     # do replication of the resource bag to irods user zone
     if not res.resource_federation_path:
@@ -375,6 +378,7 @@ def replicate_resource_bag_to_user_zone(user, res_id):
     tgt_file = '/{userzone}/home/{username}/{resid}.zip'.format(
         userzone=settings.HS_USER_IRODS_ZONE, username=user.username, resid=res_id)
     istorage.copyFiles(src_file, tgt_file)
+    return None
 
 
 # TODO: Tastypie left over. This needs to be deleted

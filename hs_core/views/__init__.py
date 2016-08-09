@@ -32,7 +32,6 @@ from inplaceeditform.commons import get_dict_from_obj, apply_filters
 from inplaceeditform.views import _get_http_response, _get_adaptor
 from django_irods.storage import IrodsStorage
 
-
 from django_irods.icommands import SessionException
 from hs_core import hydroshare
 from hs_core.hydroshare.utils import get_resource_by_shortkey, resource_modified
@@ -40,6 +39,7 @@ from .utils import authorize, upload_from_irods, ACTION_TO_AUTHORIZE, run_script
     get_my_resources_list, send_action_to_take_email
 from hs_core.models import GenericResource, resource_processor, CoreMetaData, Relation
 from hs_core.hydroshare.resource import METADATA_STATUS_SUFFICIENT, METADATA_STATUS_INSUFFICIENT
+from hs_core.tasks import create_bag_by_irods
 
 from . import resource_rest_api
 from . import user_rest_api
@@ -363,7 +363,14 @@ def rep_res_bag_to_irods_user_zone(request, shortkey, *args, **kwargs):
         )
 
     try:
-        utils.replicate_resource_bag_to_user_zone(user, shortkey)
+        task_id = utils.replicate_resource_bag_to_user_zone(user, shortkey)
+        if task_id:
+            result = create_bag_by_irods.AsyncResult(task_id)
+            result_output = result.wait(timeout=None, interval=0.5)
+            if result_output:
+                # replicate resource bag now that the bag is created
+                utils.replicate_resource_bag_to_user_zone(user, shortkey)
+
         return HttpResponse(
             json.dumps({"success": "This resource bag zip file has been successfully replicated to your iRODS user zone."}),
             content_type = "application/json"
