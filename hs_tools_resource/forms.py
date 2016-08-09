@@ -127,23 +127,24 @@ class SupportedResTypesForm(ModelForm):
                                                             attrs={'style': 'width:auto;margin-top:-5px'}))
 
     def __init__(self, allow_edit=True, res_short_id=None, element_id=None, *args, **kwargs):
+        model_instance = kwargs.get('instance')
         super(SupportedResTypesForm, self).__init__(*args, **kwargs)
         self.fields['supported_res_types'].label = "Choose Resource Types:"
-        self.helper = SupportedResTypeFormHelper(allow_edit, res_short_id, element_id, element_name='SupportedResTypes')
-        try:
-            if self.instance:
-                supported_res_types = self.instance.supported_res_types.all()
-                if len(supported_res_types) > 0:
-                    # NOTE: The following code works for SWAT res type but does not work here!!!
-                    # self.fields['supported_res_types'].initial =
-                    #   [parameter.description for parameter in supported_res_types]
+        self.helper = SupportedResTypeFormHelper(allow_edit, res_short_id, element_id,
+                                                 element_name='SupportedResTypes')
 
-                    self.initial['supported_res_types'] = \
-                        [parameter.description for parameter in supported_res_types]
-                else:
-                    self.initial['supported_res_types'] = []
-        except:
-            self.initial['supported_res_types'] = []
+        if model_instance:
+            supported_res_types = self.instance.supported_res_types.all()
+            if len(supported_res_types) > 0:
+                # NOTE: The following code works for SWAT res type but does not work here!!!
+                # self.fields['supported_res_types'].initial =
+                #   [parameter.description for parameter in supported_res_types]
+
+                self.initial['supported_res_types'] = \
+                    [parameter.description for parameter in supported_res_types]
+            else:
+                self.initial['supported_res_types'] = []
+
 
     class Meta:
         model = SupportedResTypes
@@ -181,20 +182,19 @@ class SupportedSharingStatusForm(ModelForm):
                                                 attrs={'style': 'width:auto;margin-top:-5px'}))
 
     def __init__(self, allow_edit=True, res_short_id=None, element_id=None, *args, **kwargs):
+        model_instance = kwargs.get('instance')
         super(SupportedSharingStatusForm, self).__init__(*args, **kwargs)
         self.fields['sharing_status'].label = "Choose Sharing Status:"
         self.helper = SupportedSharingStatusFormHelper(allow_edit, res_short_id, element_id,
                                                        element_name='SupportedSharingStatus')
-        try:
-            if self.instance:
-                supported_sharing_status = self.instance.sharing_status.all()
-                if len(supported_sharing_status) > 0:
-                    self.initial['sharing_status'] = \
-                        [parameter.description for parameter in supported_sharing_status]
-                else:
-                    self.initial['sharing_status'] = []
-        except:
-            self.initial['sharing_status'] = []
+        if model_instance:
+            supported_sharing_status = self.instance.sharing_status.all()
+            if len(supported_sharing_status) > 0:
+                self.initial['sharing_status'] = \
+                    [parameter.description for parameter in supported_sharing_status]
+            else:
+                self.initial['sharing_status'] = []
+
 
     class Meta:
         model = SupportedSharingStatus
