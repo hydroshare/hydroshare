@@ -499,7 +499,7 @@
 {% block extra_js %}
     <link rel="stylesheet" type="text/css" href="//cdn.datatables.net/1.10.11/css/jquery.dataTables.min.css">
     <script type="text/javascript" src="//cdn.datatables.net/1.10.11/js/jquery.dataTables.min.js"></script>
-    <script src="//maps.googleapis.com/maps/api/js?v=3&libraries=geometry" type="text/javascript"></script>
+    <script src="//maps.googleapis.com/maps/api/js?v=3&libraries=geometry,places" type="text/javascript"></script>
     <script src="//cdn.rawgit.com/googlemaps/v3-utility-library/master/keydragzoom/src/keydragzoom.js" type="text/javascript"></script>
     <script src="//cdn.rawgit.com/googlemaps/js-marker-clusterer/gh-pages/src/markerclusterer.js" type="text/javascript"></script>
     <script type="text/javascript">
@@ -606,10 +606,12 @@
 
             generateLegend();
 
+            var input_address = document.getElementById('geocoder-address');
+            var autocomplete = new google.maps.places.Autocomplete(input_address);
+
             var geocoder = new google.maps.Geocoder();
             document.getElementById('geocoder-submit').addEventListener('click', function() {
                 geocodeAddress(geocoder, map, mapDim);
-                updateMapView();
             });
         };
 
@@ -905,7 +907,7 @@
             // legend_content.push("<p style='margin-left:5px'><img src='//cdn.rawgit.com/googlemaps/js-marker-clusterer/gh-pages/images/m2.png'> number of sites </p>");
             legend_content.push("<p><img src='//cdn.rawgit.com/Concept211/Google-Maps-Markers/master/images/marker_red.png'> Point Coverage Resources </p>");
             //legend_content.push("<p><img src='//cdn.rawgit.com/Concept211/Google-Maps-Markers/master/images/marker_blue.png'> Box Coverage Resources </p>");
-            geocoder_content.push("<input id='address' type='textbox' placeholder='Search Locations...'>");
+            geocoder_content.push("<input id='geocoder-address' type='textbox' placeholder='Search Locations...'>");
             geocoder_content.push("<a id='geocoder-submit' style='margin-left:10px' class='btn btn-default' role='button'><span class='glyphicon glyphicon-zoom-in'></span> Zoom In </a>");
             resetButton_content.push("<a id='reset-zoom-btn' class='btn btn-default btn-sm' onclick='resetMapZoom()'>");
             resetButton_content.push("<span class='glyphicon glyphicon-record'></span></a>");
@@ -915,11 +917,12 @@
         };
 
         var geocodeAddress = function(geocoder, resultsMap, mapDim) {
-            var address = document.getElementById('address').value;
+            var address = document.getElementById('geocoder-address').value;
             geocoder.geocode({'address': address}, function(results, status) {
                 if (status === google.maps.GeocoderStatus.OK) {
                     resultsMap.setCenter(results[0].geometry.location);
                     resultsMap.setZoom(getBoundsZoomLevel(results[0].geometry.bounds, mapDim));
+                    updateMapView();
                 } else {
                     alert('Geocode was not successful for the following reason: ' + status);
                 }
