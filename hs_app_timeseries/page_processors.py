@@ -112,21 +112,9 @@ def _get_resource_edit_context(page, request, content_model, selected_series_id,
     variable_form = _create_variable_form(resource=content_model,
                                           selected_series_id=selected_series_id)
     method_form = _create_method_form(resource=content_model, selected_series_id=selected_series_id)
-
-    # TODO: The forms for the following elements need to be created based on the 2 elements above.
-    processing_level = content_model.metadata.processing_levels.filter(
-        series_ids__contains=[selected_series_id]).first()
-
-    if processing_level is not None:
-        processing_level_form = ProcessingLevelForm(instance=processing_level,
-                                                    res_short_id=content_model.short_id,
-                                                    element_id=processing_level.id if
-                                                    processing_level else None)
-
-        processing_level_form.action = _get_element_update_form_action('pocessinglevel',
-                                                                       content_model.short_id,
-                                                                       site.id)
-        processing_level.number = processing_level.id
+    processing_level_form = _create_processing_level_form(resource=content_model,
+                                                          selected_series_id=selected_series_id)
+    # TODO: The forms for the following elements need to be created based on the above elements.
 
     time_series_result = content_model.metadata.time_series_results.filter(
         series_ids__contains=[selected_series_id]).first()
@@ -290,6 +278,34 @@ def _create_method_form(resource, selected_series_id):
 
         method_form.set_dropdown_widgets(resource.metadata.cv_method_types.all().first().name)
     return method_form
+
+
+def _create_processing_level_form(resource, selected_series_id):
+    if resource.metadata.processing_levels:
+        pro_level = resource.metadata.processing_levels.filter(
+            series_ids__contains=[selected_series_id]).first()
+        processing_level_form = ProcessingLevelForm(instance=pro_level,
+                                                    res_short_id=resource.short_id,
+                                                    element_id=pro_level.id if pro_level else None,
+                                                    show_processing_level_code_selection=
+                                                    not resource.has_sqlite_file,
+                                                    available_processinglevels=
+                                                    resource.metadata.processing_levels,
+                                                    selected_series_id=selected_series_id)
+
+        if pro_level is not None:
+            processing_level_form.action = _get_element_update_form_action('processinglevel',
+                                                                           resource.short_id,
+                                                                           pro_level.id)
+            processing_level_form.number = pro_level.id
+    else:
+        # this case can happen only in case of CSV upload
+        processing_level_form = ProcessingLevelForm(instance=None, res_short_id=resource.short_id,
+                                                    element_id=None,
+                                                    selected_series_id=selected_series_id)
+
+    return processing_level_form
+
 
 def _get_series_label(series_id, resource):
     label = "{site_code}:{site_name}, {variable_code}:{variable_name}, {units_name}, " \

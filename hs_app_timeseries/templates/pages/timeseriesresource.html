@@ -211,6 +211,7 @@
               processSiteMetadataElement();
               processVariableMetadataElement();
               processMethodMetadataElement();
+              processProcessingLevelMetadataElement();
         });
         function setCheckboxValue(el){
             if ($(el).is(':checked')){
@@ -413,6 +414,66 @@
                         $('#id_method_type').attr('readonly', selectedMethodCode !== original_method_code);
                         $('#id_method_description').attr('readonly', selectedMethodCode !== original_method_code);
                         $('#id_method_link').attr('readonly', selectedMethodCode !== original_method_code);
+                        return false;
+                    }
+                });
+            })
+        }
+
+        function processProcessingLevelMetadataElement(){
+            var pro_level_text = $('#id_available_processinglevels').val();
+            var pro_levels_json = $.parseJSON(pro_level_text);
+            var original_pro_level_code = $('#id_processing_level_code').val();
+            // remove the select option "Other.." from processinglevel code selection dropdown
+            $("#id_processinglevel_code_choices option[value='Other']").remove();
+            $('#id_processinglevel_code_choices').change(function () {
+                var selectedProLevelCode = this.value;
+                if(selectedProLevelCode === "----"){
+                    $('#id-processinglevel').find("button.btn-primary").hide();
+                    $('#id_processing_level_code').val("");
+                    $('#id_processing_level_code').attr('readonly', false);
+                    $('#id_definition').val("");
+                    $('#id_definition').attr('readonly', false);
+                    $('#id_explanation').val("");
+                    $('#id_explanation').attr('readonly', false);
+
+                    var form_action = $('#id-processinglevel').attr('action');
+                    if(form_action.includes("update-metadata")) {
+                        var slice_end_index = form_action.toLowerCase().indexOf("processinglevel") + 16;
+                        form_action = form_action.slice(0, slice_end_index) + "add-metadata/";
+                        $('#id-processinglevel').attr('action', form_action);
+                    }
+                    return;
+                }
+
+                $(pro_levels_json).each(function (i, pro_level) {
+                    if (pro_level.processing_level_code.toString() === selectedProLevelCode){
+                        $('#id_processing_level_code').val(pro_level.processing_level_code);
+                        $('#id_definition').val(pro_level.definition);
+                        $('#id_explanation').val(pro_level.explanation);
+
+                        // change the processinglevel form action
+                        var form_action = $('#id-processinglevel').attr('action');
+                        if(form_action.includes("add-metadata")){
+                            form_action = form_action.replace("add-metadata", pro_level.id + "/update-metadata");
+                        }
+                        else {
+                            var slice_end_index = form_action.toLowerCase().indexOf("processinglevel") + 16;
+                            form_action = form_action.slice(0, slice_end_index) + pro_level.id + "/update-metadata/";
+                        }
+
+                        $('#id-processinglevel').attr('action', form_action);
+
+                        if (selectedProLevelCode !== original_pro_level_code){
+                            $('#id-processinglevel').find("button.btn-primary").show();
+                        }
+                        else {
+                            $('#id-processinglevel').find("button.btn-primary").hide();
+                        }
+                        $('#id_processing_level_code').attr('readonly', selectedProLevelCode !== original_pro_level_code);
+                        $('#id_definition').attr('readonly', selectedProLevelCode !== original_pro_level_code);
+                        $('#id_explanation').attr('readonly', selectedProLevelCode !== original_pro_level_code);
+
                         return false;
                     }
                 });

@@ -264,6 +264,51 @@ class ProcessingLevel(TimeSeriesAbstractMetaDataElement):
         return self.processing_level_code
 
     @classmethod
+    def create(cls, **kwargs):
+        metadata = kwargs['content_object']
+        # check that we are not creating processinglevel elements with duplicate
+        # processing_level_code value
+        if any(kwargs['processing_level_code'] == pro_level.processing_level_code
+               for pro_level in metadata.processing_levels):
+            err_msg = "There is already a processinglevel element with processing_level_code:{}"
+            err_msg = err_msg.format(kwargs['processing_level_code'])
+            raise ValidationError(err_msg)
+
+        if len(metadata.series_names) > 0:
+            # this case applies only in case of CSV upload
+            selected_series_id = kwargs.pop('selected_series_id', None)
+            if selected_series_id is None:
+                raise ValueError("Series id is missing")
+            kwargs['series_ids'] = [selected_series_id]
+            element = super(ProcessingLevel, cls).create(**kwargs)
+            # update any other method element that is associated with the selected_series_id
+            update_related_elements_on_create(element=element,
+                                              related_elements=element.metadata.processing_levels,
+                                              selected_series_id=selected_series_id)
+            return element
+
+        return super(ProcessingLevel, cls).create(**kwargs)
+
+    @classmethod
+    def update(cls, element_id, **kwargs):
+        element = cls.objects.get(id=element_id)
+        # check that we are not creating processinglevel elements with duplicate
+        # processing_level_code value
+        if any(kwargs['processing_level_code'] ==
+                pro_level.processing_level_code and
+                pro_level.id != element.id for pro_level in
+               element.metadata.processing_levels):
+            err_msg = "There is already a processinglevel element with processing_level_code:{}"
+            err_msg = err_msg.format(kwargs['processing_level_code'])
+            raise ValidationError(err_msg)
+
+        super(ProcessingLevel, cls).update(element_id, **kwargs)
+        selected_series_id = kwargs.pop('selected_series_id', None)
+        update_related_elements_on_update(element=element,
+                                          related_elements=element.metadata.processing_levels,
+                                          selected_series_id=selected_series_id)
+
+    @classmethod
     def remove(cls, element_id):
         raise ValidationError("ProcessingLevel element of a resource can't be deleted.")
 

@@ -271,27 +271,57 @@ class MethodValidationForm(forms.Form):
     method_link = forms.URLField(required=False)
     selected_series_id = forms.CharField(max_length=50, required=False)
 
+
 class ProcessingLevelFormHelper(BaseFormHelper):
     def __init__(self, allow_edit=True, res_short_id=None, element_id=None, element_name=None,
-                 *args, **kwargs):
+                 show_processing_level_code_selection=False, *args, **kwargs):
         # the order in which the model fields are listed for the FieldSet is the order these
         # fields will be displayed
         field_width = 'form-control input-sm'
-        layout = Layout(
+        common_layout = Layout(
+                     Field('selected_series_id', css_class=field_width, type="hidden"),
+                     Field('available_processinglevels', css_class=field_width, type="hidden"),
                      Field('processing_level_code', css_class=field_width),
                      Field('definition', css_class=field_width),
                      Field('explanation', css_class=field_width),
                      )
+
+        layout = _set_form_helper_layout(common_layout=common_layout,
+                                         element_name="processinglevel",
+                                         is_show_element_code_selection=
+                                         show_processing_level_code_selection,
+                                         field_css=field_width)
+
         kwargs['element_name_label'] = 'Processing Level'
         super(ProcessingLevelFormHelper, self).__init__(allow_edit, res_short_id, element_id,
                                                         element_name, layout, *args, **kwargs)
 
 
 class ProcessingLevelForm(ModelForm):
+    selected_series_id = forms.CharField(max_length=50, required=False)
+    processinglevel_code_choices = forms.ChoiceField(choices=(), required=False)
+    available_processinglevels = forms.CharField(max_length=1000, required=False)
+
     def __init__(self, allow_edit=True, res_short_id=None, element_id=None, *args, **kwargs):
+        selected_series_id = kwargs.pop('selected_series_id', None)
+        available_processinglevels = kwargs.pop('available_processinglevels', [])
+        show_processing_level_code_selection = kwargs.pop('show_processing_level_code_selection',
+                                                          False)
         super(ProcessingLevelForm, self).__init__(*args, **kwargs)
         self.helper = ProcessingLevelFormHelper(allow_edit, res_short_id, element_id,
-                                                element_name='ProcessingLevel')
+                                                element_name='ProcessingLevel',
+                                                show_processing_level_code_selection=
+                                                show_processing_level_code_selection)
+        self.fields['selected_series_id'].initial = selected_series_id
+        _set_available_elements_form_field(self, available_processinglevels, "processinglevel")
+        code_selection_label = "Select any existing processing level to use for this series"
+        _set_element_code_selection_form_field(form=self,
+                                               form_field_name="processinglevel_code_choices",
+                                               form_field_label=code_selection_label,
+                                               element_id=element_id,
+                                               elements=available_processinglevels,
+                                               element_code_att_name="processing_level_code",
+                                               element_name_att_name="definition")
 
     @property
     def form_id(self):
@@ -304,7 +334,8 @@ class ProcessingLevelForm(ModelForm):
 
     class Meta:
         model = ProcessingLevel
-        fields = ['processing_level_code', 'definition', 'explanation']
+        fields = ['processing_level_code', 'definition', 'explanation',
+                  'processinglevel_code_choices']
         exclude = ['content_object']
         widgets = {'processing_level_code': forms.TextInput()}
 
@@ -313,6 +344,7 @@ class ProcessingLevelValidationForm(forms.Form):
     processing_level_code = forms.IntegerField()
     definition = forms.CharField(max_length=200, required=False)
     explanation = forms.CharField(required=False)
+    selected_series_id = forms.CharField(max_length=50, required=False)
 
 
 class TimeSeriesResultFormHelper(BaseFormHelper):
@@ -423,16 +455,16 @@ def _set_element_code_selection_form_field(form, form_field_name, form_field_lab
     if len(elements) > 0:
         if len(form.initial) > 0:
             element_code_choices = [(getattr(element, element_code_att_name),
-                                     getattr(element, element_code_att_name) + ":" +
+                                     str(getattr(element, element_code_att_name)) + ":" +
                                      getattr(element, element_name_att_name)) for
                                     element in elements if element.id != element_id]
             element_code_choices = tuple([(form.initial[element_code_att_name],
-                                           form.initial[element_code_att_name] + ":" +
+                                           str(form.initial[element_code_att_name]) + ":" +
                                            form.initial[element_name_att_name])] +
                                          element_code_choices + [("----", "----")])
         else:
             element_code_choices = [(getattr(element, element_code_att_name),
-                                     getattr(element, element_code_att_name) + ":" +
+                                     str(getattr(element, element_code_att_name)) + ":" +
                                      getattr(element, element_name_att_name)) for
                                     element in elements]
             element_code_choices = tuple([("----", "----")] + element_code_choices)
@@ -445,11 +477,11 @@ def _set_element_code_selection_form_field(form, form_field_name, form_field_lab
 def _set_form_helper_layout(common_layout, element_name, is_show_element_code_selection, field_css):
     form_field_name = "{}_code_choices".format(element_name)
     if is_show_element_code_selection:
-        variable_help = "Select '----' for a new {} or any other option to use an " \
+        element_choice_help = "Select '----' for a new {} or any other option to use an " \
                         "existing {} for this series".format(element_name, element_name)
 
         layout = Layout(
-            Field(form_field_name, css_class=field_css, title=variable_help),
+            Field(form_field_name, css_class=field_css, title=element_choice_help),
             common_layout,
         )
     else:

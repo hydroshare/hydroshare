@@ -331,6 +331,9 @@ function metadata_update_ajax_submit(form_id){
                 else if (($form.attr("id") == "id-method")){
                     makeTimeSeriesMetaDataElementFormReadOnly(form_id, "id_method");
                 }
+                else if (($form.attr("id") == "id-processinglevel")){
+                    makeTimeSeriesMetaDataElementFormReadOnly(form_id, "id_processinglevel");
+                }
                 // end of timeseries specific DOM manipulation
 
                 $(document).trigger("submit-success");
