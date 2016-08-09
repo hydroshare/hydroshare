@@ -431,6 +431,9 @@ def _get_cv_dropdown_widget_items(dropdown_items, selected_item_name):
     # create a list of tuples
     cv_items = [(item.name, item.name) for item in dropdown_items]
 
+    # alphabetize the terms
+    cv_items.sort(key=lambda tup: tup[0])
+    
     # add the selected item as a tuple to the beginning of the list of items
     # so that it will be displayed as the currently selected item
     cv_items = [(selected_item_name, selected_item_name)] + cv_items
