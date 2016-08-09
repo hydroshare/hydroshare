@@ -134,7 +134,7 @@ class SupportedResTypesForm(ModelForm):
                                                  element_name='SupportedResTypes')
 
         if model_instance:
-            supported_res_types = self.instance.supported_res_types.all()
+            supported_res_types = model_instance.supported_res_types.all()
             if len(supported_res_types) > 0:
                 # NOTE: The following code works for SWAT res type but does not work here!!!
                 # self.fields['supported_res_types'].initial =
@@ -188,7 +188,7 @@ class SupportedSharingStatusForm(ModelForm):
         self.helper = SupportedSharingStatusFormHelper(allow_edit, res_short_id, element_id,
                                                        element_name='SupportedSharingStatus')
         if model_instance:
-            supported_sharing_status = self.instance.sharing_status.all()
+            supported_sharing_status = model_instance.sharing_status.all()
             if len(supported_sharing_status) > 0:
                 self.initial['sharing_status'] = \
                     [parameter.description for parameter in supported_sharing_status]
