@@ -3,7 +3,7 @@
 # gunicorn_start
 # Author: Michael Stealey <michael.j.stealey@gmail.com>
 
-NAME="hydroshare"                                   # Name of the application
+NAME="hydroshare_app"                               # Name of the application
 DJANGODIR=/home/docker/hydroshare                   # Django project directory
 SOCKFILE=/var/run/gunicorn.sock                     # we will communicte using this unix socket
 USER=root                                           # the user to run as
