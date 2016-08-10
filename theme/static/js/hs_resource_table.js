@@ -42,18 +42,15 @@ $(document).ready(function () {
         }
     });
 
-    // Disable default form submission when pressing enter
-    $(document).ready(function () {
-        $(window).keydown(function (event) {
-            if (event.keyCode == 13) {
-                event.preventDefault();
-                return false;
-            }
-        });
+    // Disable default form submission when pressing enter for textarea inputs
+    $(window).keydown(function (event) {
+        if (event.keyCode == 13 && event.target.tagName != "TEXTAREA") {
+            event.preventDefault();
+        }
     });
 
     // Autofocus input when modal appears
-    $("#modalCreateLabel").on('shown.bs.modal', function() {
+    $("#modalCreateLabel").on('shown.bs.modal', function () {
         $("#txtLabelName").focus();
     });
 
@@ -175,9 +172,9 @@ function label_ajax_submit() {
                 else if (formType == "delete-label") {
                     var deletedLabel = el.attr("data-label");
                     $("#table-user-labels td[data-label='" + deletedLabel + "']").parent().remove();
-                    if ($("#table-user-labels .user-label").length == 0 && $("#table-user-labels .no-labels-found").length == 0) {
+                    if ($("#table-user-labels .user-label").length == 0 && $("#table-user-labels .no-items-found").length == 0) {
                         $("#table-user-labels tbody").append(
-                                '<tr class="no-labels-found"><td>No labels found.</td></tr>'
+                                '<tr class="no-items-found"><td>No labels found.</td></tr>'
                         )
                     }
                     updateLabelLists();
@@ -343,11 +340,11 @@ function updateLabelLists() {
 
     if (labels.length == 0) {
         $("#user-labels-left").append(
-                '<h5><i>No labels found.</i></h5>'
+                '<i class="list-group-item no-items-found"><h5>No labels found.</h5></i>'
         );
 
         $("#toolbar-labels-dropdown ul").prepend(
-                '<li class="no-labels-found">No labels found.</li>'
+                 '<i class="no-items-found list-group-item"><h5>No labels found.</h5></i>'
         );
 
         $(".btn-inline-label").attr("data-toggle", "");
@@ -435,7 +432,7 @@ function createLabel () {
                     '</td>'+
                 '</tr>');
 
-        userLabelsTable.find(".no-labels-found").remove();
+        userLabelsTable.find(".no-items-found").remove();
 
         $(".btn-label-remove").click(label_ajax_submit);
         $("#modalCreateLabel").modal('hide');
