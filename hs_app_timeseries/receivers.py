@@ -76,14 +76,27 @@ def pre_delete_file_from_resource_handler(sender, **kwargs):
 @receiver(post_add_files_to_resource, sender=TimeSeriesResource)
 def post_add_files_to_resource_handler(sender, **kwargs):
     resource = kwargs['resource']
+    uploaded_file = kwargs['files'][0]
     validate_files_dict = kwargs['validate_files']
     user = kwargs['user']
 
     # extract metadata from the just uploaded file
-    res_file = resource.files.all().first()
-    if res_file:
-        _process_uploaded_sqlite_file(user, resource, res_file, validate_files_dict,
-                                      delete_existing_metadata=True)
+    uploaded_file_to_process = None
+    uploaded_file_ext = ''
+    for res_file in resource.files.all():
+        res_file_name, uploaded_file_ext = utils.get_resource_file_name_and_extension(res_file)
+        if res_file_name == uploaded_file.name:
+            uploaded_file_to_process = res_file
+            break
+
+    if uploaded_file_to_process:
+        if uploaded_file_ext == ".sqlite":
+            _process_uploaded_sqlite_file(user, resource, uploaded_file_to_process,
+                                          validate_files_dict,
+                                          delete_existing_metadata=True)
+        elif uploaded_file_ext == ".csv":
+            _process_uploaded_csv_file(resource, uploaded_file_to_process, validate_files_dict,
+                                       delete_existing_metadata=True)
 
 
 @receiver(post_create_resource, sender=TimeSeriesResource)
@@ -115,6 +128,9 @@ def _process_uploaded_csv_file(resource, res_file, validate_files_dict,
         if delete_existing_metadata:
             TimeSeriesMetaData.objects.filter(id=resource.metadata.id).update(is_dirty=False)
             _delete_extracted_metadata(resource)
+
+        # delete the sqlite file if it exists
+        _delete_resource_file(resource, ".sqlite")
 
         # populate CV metadata django models from the blank sqlite file
 
@@ -184,6 +200,8 @@ def _process_uploaded_sqlite_file(user, resource, res_file, validate_files_dict,
                 extract_err_message += "{}".format(FILE_UPLOAD_ERROR_MESSAGE)
                 validate_files_dict['message'] = extract_err_message
             else:
+                # delete the csv file if it exists
+                _delete_resource_file(resource, ".csv")
                 utils.resource_modified(resource, user)
 
         else:   # file validation failed
@@ -806,3 +824,11 @@ def _validate_odm2_db_file(uploaded_sqlite_file_name):
     except Exception, e:
         log.error(e.message)
         return e.message
+
+
+def _delete_resource_file(resource, file_ext):
+    for res_file in resource.files.all():
+        _, res_file_ext = utils.get_resource_file_name_and_extension(res_file)
+        if res_file_ext == file_ext:
+            delete_resource_file_only(resource, res_file)
+

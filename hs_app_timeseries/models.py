@@ -2,9 +2,11 @@ import os
 import sqlite3
 import shutil
 import logging
+import tempfile
 
 from django.contrib.contenttypes.fields import GenericRelation
 from django.contrib.postgres.fields import ArrayField
+from django.core.files.uploadedfile import UploadedFile
 from django.core.exceptions import ValidationError
 from django.db import models
 
@@ -13,6 +15,7 @@ from mezzanine.pages.page_processors import processor_for
 from hs_core.models import BaseResource, ResourceManager, resource_processor, CoreMetaData, \
     AbstractMetaDataElement
 from hs_core.hydroshare import utils
+from hs_core.hydroshare import add_resource_files
 
 
 class TimeSeriesAbstractMetaDataElement(AbstractMetaDataElement):
@@ -117,6 +120,10 @@ class Site(TimeSeriesAbstractMetaDataElement):
     def remove(cls, element_id):
         raise ValidationError("Site element of a resource can't be deleted.")
 
+    @classmethod
+    def get_series_ids(cls, metadata_obj):
+        return _get_series_ids(element_class=cls, metadata_obj=metadata_obj)
+
 
 class Variable(TimeSeriesAbstractMetaDataElement):
     term = 'Variable'
@@ -191,6 +198,10 @@ class Variable(TimeSeriesAbstractMetaDataElement):
     def remove(cls, element_id):
         raise ValidationError("Variable element of a resource can't be deleted.")
 
+    @classmethod
+    def get_series_ids(cls, metadata_obj):
+        return _get_series_ids(element_class=cls, metadata_obj=metadata_obj)
+
 
 class Method(TimeSeriesAbstractMetaDataElement):
     term = 'Method'
@@ -253,6 +264,10 @@ class Method(TimeSeriesAbstractMetaDataElement):
     def remove(cls, element_id):
         raise ValidationError("Method element of a resource can't be deleted.")
 
+    @classmethod
+    def get_series_ids(cls, metadata_obj):
+        return _get_series_ids(element_class=cls, metadata_obj=metadata_obj)
+
 
 class ProcessingLevel(TimeSeriesAbstractMetaDataElement):
     term = 'ProcessingLevel'
@@ -312,6 +327,10 @@ class ProcessingLevel(TimeSeriesAbstractMetaDataElement):
     def remove(cls, element_id):
         raise ValidationError("ProcessingLevel element of a resource can't be deleted.")
 
+    @classmethod
+    def get_series_ids(cls, metadata_obj):
+        return _get_series_ids(element_class=cls, metadata_obj=metadata_obj)
+
 
 class TimeSeriesResult(TimeSeriesAbstractMetaDataElement):
     term = 'TimeSeriesResult'
@@ -360,6 +379,10 @@ class TimeSeriesResult(TimeSeriesAbstractMetaDataElement):
     @classmethod
     def remove(cls, element_id):
         raise ValidationError("ProcessingLevel element of a resource can't be deleted.")
+
+    @classmethod
+    def get_series_ids(cls, metadata_obj):
+        return _get_series_ids(element_class=cls, metadata_obj=metadata_obj)
 
 
 class AbstractCVLookupTable(models.Model):
@@ -430,6 +453,30 @@ class TimeSeriesResource(BaseResource):
             if fl_ext == '.sqlite':
                 return True
         return False
+
+    @property
+    def has_csv_file(self):
+        for res_file in self.files.all():
+            fl_ext = utils.get_resource_file_name_and_extension(res_file)[1]
+            if fl_ext == '.csv':
+                return True
+        return False
+
+    @property
+    def can_add_blank_sqlite_file(self):
+        # use this property as a guard to decide when to add a blank SQLIte file
+        # to the resource
+        if self.has_sqlite_file:
+            return False
+        if not self.has_csv_file:
+            return False
+
+        return self.metadata.has_all_required_elements()
+
+    @property
+    def can_update_sqlite_file(self):
+        return self.has_sqlite_file and self.metadata.has_all_required_elements()
+
     @classmethod
     def get_supported_upload_file_types(cls):
         # either a csv or a sqlite file can be uploaded
@@ -450,6 +497,32 @@ class TimeSeriesResource(BaseResource):
         # of the resource.
         return False
 
+    def add_blank_sqlite_file(self):
+        # add the blank SQLite file to this resource (self)
+        if not self.can_add_blank_sqlite_file:
+            err_msg = """Can't add blank ODM2 SQLite file to the resource.
+             Resource may already have a SQLite file or there may not be enough metadata
+             for the resource."""
+            raise Exception(err_msg)
+
+        # copy the blank sqlite file to a temp directory
+        temp_dir = tempfile.mkdtemp()
+        odm2_sqlite_file_name = 'ODM2.sqlite'
+        odm2_sqlite_file = 'hs_app_timeseries/files/{}'.format(odm2_sqlite_file_name)
+        target_temp_sqlite_file = os.path.join(temp_dir, odm2_sqlite_file_name)
+        shutil.copy(odm2_sqlite_file, target_temp_sqlite_file)
+
+        # add the sqlite file to the resource
+        files = [UploadedFile(file=open(target_temp_sqlite_file, 'rb'),
+                              name=odm2_sqlite_file_name)]
+        try:
+            add_resource_files(self.short_id, *files)
+        except Exception as ex:
+            raise ex
+        finally:
+            # cleanup the temp sqlite file directory
+            if os.path.exists(temp_dir):
+                shutil.rmtree(temp_dir)
 
 # this would allow us to pick up additional form elements for the template before the template
 # is displayed
@@ -512,6 +585,21 @@ class TimeSeriesMetaData(CoreMetaData):
         if not self.time_series_results:
             return False
 
+        if len(self.series_names) > 0:
+            # applies to the case of csv file upload
+            # check that we have each type of metadata element for each of the series ids
+            series_ids = range(0, len(self.series_names))
+            series_ids = set([str(n) for n in series_ids])
+            if series_ids != set(Site.get_series_ids(metadata_obj=self)):
+                return False
+            if series_ids != set(Variable.get_series_ids(metadata_obj=self)):
+                return False
+            if series_ids != set(Method.get_series_ids(metadata_obj=self)):
+                return False
+            if series_ids != set(ProcessingLevel.get_series_ids(metadata_obj=self)):
+                return False
+            if series_ids != set(TimeSeriesResult.get_series_ids(metadata_obj=self)):
+                return False
         return True
 
     def get_required_missing_elements(self):
@@ -526,6 +614,25 @@ class TimeSeriesMetaData(CoreMetaData):
             missing_required_elements.append('Processing Level')
         if not self.time_series_results:
             missing_required_elements.append('Time Series Result')
+
+        if len(self.series_names) > 0:
+            # applies only in the case of csv file upload
+            # check that we have each type of metadata element for each of the series ids
+            series_ids = range(0, len(self.series_names))
+            series_ids = set([str(n) for n in series_ids])
+            if self.sites and series_ids != set(Site.get_series_ids(metadata_obj=self)):
+                missing_required_elements.append('Site')
+            if self.variables and series_ids != set(Variable.get_series_ids(metadata_obj=self)):
+                missing_required_elements.append('Variable')
+            if self.methods and series_ids != set(Method.get_series_ids(metadata_obj=self)):
+                missing_required_elements.append('Method')
+            if self.processing_levels and series_ids != \
+                    set(ProcessingLevel.get_series_ids(metadata_obj=self)):
+                missing_required_elements.append('Processing Level')
+            if self.time_series_results and series_ids != \
+                    set(TimeSeriesResult.get_series_ids(metadata_obj=self)):
+                missing_required_elements.append('Time Series Result')
+
         return missing_required_elements
 
     def get_xml(self, pretty_print=True):
@@ -948,3 +1055,11 @@ def _generate_term_from_name(name):
     # first word lowercase, subsequent words start with a uppercase
     term = name_parts[0].lower() + ''.join([item.title() for item in name_parts[1:]])
     return term
+
+
+def _get_series_ids(element_class, metadata_obj):
+    series_ids = []
+    elements = element_class.objects.filter(object_id=metadata_obj.id).all()
+    for element in elements:
+        series_ids += element.series_ids
+    return series_ids

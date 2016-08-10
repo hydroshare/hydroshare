@@ -102,12 +102,11 @@ def _get_resource_view_context(page, request, content_model, selected_series_id,
 
 def _get_resource_edit_context(page, request, content_model, selected_series_id, series_ids,
                                extended_metadata_exists):
-    processing_level_form = None
-    method_form = None
-    timeseries_result_form = None
+
+    if content_model.can_add_blank_sqlite_file:
+        content_model.add_blank_sqlite_file()
 
     # create timeseries specific metadata element forms
-
     site_form = _create_site_form(resource=content_model, selected_series_id=selected_series_id)
     variable_form = _create_variable_form(resource=content_model,
                                           selected_series_id=selected_series_id)
@@ -116,6 +115,7 @@ def _get_resource_edit_context(page, request, content_model, selected_series_id,
                                                           selected_series_id=selected_series_id)
     # TODO: The forms for the following elements need to be created based on the above elements.
 
+    timeseries_result_form = None
     time_series_result = content_model.metadata.time_series_results.filter(
         series_ids__contains=[selected_series_id]).first()
     if time_series_result is not None:
