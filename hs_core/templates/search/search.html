@@ -719,7 +719,7 @@
             var ne_latlng = new google.maps.LatLng(northlimit, eastlimit);
             var sw_latlng = new google.maps.LatLng(southlimit, westlimit);
 
-            if (map.getBounds().contains(ne_latlng) && map.getBounds().contains(sw_latlng)) {
+            if (map.getBounds().contains(ne_latlng) || map.getBounds().contains(sw_latlng)) {
                 var rectBounds = new google.maps.LatLngBounds(
                         new google.maps.LatLng(northlimit, westlimit),
                         new google.maps.LatLng(southlimit, eastlimit)
@@ -754,7 +754,7 @@
                         var ne_latlng = new google.maps.LatLng(northlimit, eastlimit);
                         var sw_latlng = new google.maps.LatLng(southlimit, westlimit);
                         var latlng = new google.maps.LatLng(data_lat, data_lng);
-                        if (map.getBounds().contains(ne_latlng) && map.getBounds().contains(sw_latlng)) {
+                        if (map.getBounds().contains(ne_latlng) || map.getBounds().contains(sw_latlng)) {
                             filtered_results.push(raw_results[i]);
                         }
                     }
