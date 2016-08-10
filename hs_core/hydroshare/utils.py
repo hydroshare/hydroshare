@@ -27,7 +27,6 @@ from hs_core.signals import pre_create_resource, post_create_resource, pre_add_f
     post_add_files_to_resource
 from hs_core.models import AbstractResource, BaseResource, ResourceFile
 from hs_core.hydroshare.hs_bagit import create_bag_files
-from hs_core.tasks import create_bag_by_irods
 
 from django_irods.icommands import SessionException
 from django_irods.storage import IrodsStorage
@@ -365,6 +364,7 @@ def replicate_resource_bag_to_user_zone(user, res_id):
     if istorage.exists(res_coll):
         bag_modified = istorage.getAVU(res_coll, 'bag_modified')
     if bag_modified == "true":
+        from hs_core.tasks import create_bag_by_irods
         task = create_bag_by_irods.apply_async((res_id, istorage),
                  countdown=3)
         return task.task_id

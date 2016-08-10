@@ -36,8 +36,8 @@
                 {%  if task_id and download_path %}
                     <input type="hidden" id="task_id" name="task_id" value="{{ task_id }}">
                     <input type="hidden" id="download_path" name="download_path" value="{{ download_path }}">
-                    <div id='download-status-info'>
-                        Please wait for the resource bag to be created.<span id="loading"></span>
+                    <div id='download-status-info' class="alert alert-success">
+                        Please wait for the resource bag to be created<span id="loading">.</span>
                     </div>
                 {% endif %}
 
@@ -1318,6 +1318,7 @@
             }
 
             function update_download_status(task_id, download_path) {
+                download_status_timeout_id=-1;
                 $.ajax({
                     dataType: "json",
                     cache: false,
@@ -1329,14 +1330,22 @@
                     },
                     success: function(data) {
                         if(data.status) {
-                            $("#download-status-info").html("If your download does not start automatically, " +
+                            $("#loading").html('');
+                            if(download_status_timeout_id > -1)
+                                clearTimeout(download_status_timeout_id);
+                            $("#download-status-info").html(
+                                    "If your download does not start automatically, " +
                                     "please click <a href='" + download_path + "'>here</a>.");
                             window.location.href = download_path;
                         }
-                        else
-                            setTimeout(function() {
+                        // only check status again in 3 seconds when $("#loading") is not
+                        // cleared up by success status above
+                        else if($("#loading").html()) {
+                            $("#loading").html($("#loading").html() + ".");
+                            download_status_timeout_id = setTimeout(function () {
                                 update_download_status(task_id, download_path);
-                            }, 5000);
+                            }, 3000);
+                        }
                     },
                     error: function (xhr, errmsg, err) {
                         console.log(errmsg);
