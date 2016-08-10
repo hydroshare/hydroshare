@@ -6,7 +6,7 @@ from dateutil import parser
 from lxml import etree
 from suds.transport import TransportError
 from suds.client import Client
-from xml.sax._exceptions import SAXParseException
+from defusedxml.sax._exceptions import SAXParseException
 import matplotlib.pyplot as plt
 
 from hs_core import hydroshare
