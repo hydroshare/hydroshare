@@ -361,14 +361,7 @@ def rep_res_bag_to_irods_user_zone(request, shortkey, *args, **kwargs):
         )
 
     try:
-        task_id = utils.replicate_resource_bag_to_user_zone(user, shortkey)
-        if task_id:
-            result = create_bag_by_irods.AsyncResult(task_id)
-            result_output = result.wait(timeout=None, interval=0.5)
-            if result_output:
-                # replicate resource bag now that the bag is created
-                utils.replicate_resource_bag_to_user_zone(user, shortkey)
-
+        utils.replicate_resource_bag_to_user_zone(user, shortkey)
         return HttpResponse(
             json.dumps({"success": "This resource bag zip file has been successfully replicated to your iRODS user zone."}),
             content_type = "application/json"

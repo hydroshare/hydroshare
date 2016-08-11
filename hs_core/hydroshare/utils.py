@@ -344,9 +344,7 @@ def replicate_resource_bag_to_user_zone(user, res_id):
         res_id: the resource id with its bag to be replicated to iRODS user zone
 
     Returns:
-    None if no bag needs to be created,
-    the asynchronous task_id if the resource bag needs to be created first.
-    exceptions will be raised if there is an issue with iRODS operation
+    None, but exceptions will be raised if there is an issue with iRODS operation
     """
     # do on-demand bag creation
     res = get_resource_by_shortkey(res_id)
@@ -364,10 +362,9 @@ def replicate_resource_bag_to_user_zone(user, res_id):
     if istorage.exists(res_coll):
         bag_modified = istorage.getAVU(res_coll, 'bag_modified')
     if bag_modified == "true":
+        # import here to avoid circular import issue
         from hs_core.tasks import create_bag_by_irods
-        task = create_bag_by_irods.apply_async((res_id, istorage),
-                 countdown=3)
-        return task.task_id
+        create_bag_by_irods(res_id, istorage)
 
     # do replication of the resource bag to irods user zone
     if not res.resource_federation_path:
@@ -378,7 +375,6 @@ def replicate_resource_bag_to_user_zone(user, res_id):
     tgt_file = '/{userzone}/home/{username}/{resid}.zip'.format(
         userzone=settings.HS_USER_IRODS_ZONE, username=user.username, resid=res_id)
     istorage.copyFiles(src_file, tgt_file)
-    return None
 
 
 # TODO: Tastypie left over. This needs to be deleted
