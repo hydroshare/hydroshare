@@ -161,8 +161,8 @@
                                 <div class="row">
                                     {# Organization #}
                                     <fieldset class="col-sm-6">
-                                        <label>Organization *</label>
-                                        <input class="form-control form-required" {% if profile.organization %}value="{{ profile.organization }}"{% endif %} name="organization">
+                                        <label>Organization</label>
+                                        <input id="id_organization" class="form-control autocomplete" {% if profile.organization %} value="{{ profile.organization.name }}" {% endif %} name="organization" data-autocomplete-choice-selector="[data-value]">
                                         <small class="text-muted">The name of the organization you work for.</small>
                                     </fieldset>
 

@@ -295,11 +295,23 @@ class UserForm(forms.ModelForm):
             raise forms.ValidationError("Email is a required field.")
         return data
 
+    def clean_username(self):
+        data = self.cleaned_data['username']
+        if len(data.strip()) == 0:
+            raise forms.ValidationError("Username is a required field.")
+        return data
+
+
+class UserProfileForm(autocomplete_light.ModelForm):
+    state = USStateField(required=False)
+    # organization = autocomplete_light.ModelChoiceField('OrganizationAutocomplete')
+    organization = forms.CharField()
+
 
 class UserProfileForm(forms.ModelForm):
     class Meta:
         model = UserProfile
-        exclude = ['user', 'public', 'create_irods_user_account']
+        exclude = ['user', 'public', 'create_irods_user_account', 'organization']
 
     def clean_organization(self):
         data = self.cleaned_data['organization']
