@@ -4,5 +4,6 @@
 # Specific to running in PyCharm on local machine (due to sshd)
 
 sleep 3s
+cp /home/docker/hydroshare/hydroshare.conf /etc/supervisor/conf.d/hydroshare.conf
 /usr/sbin/sshd
 python manage.py runserver 0.0.0.0:8000

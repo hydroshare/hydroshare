@@ -29,6 +29,7 @@ def netcdf_pre_create_resource(sender, **kwargs):
     fed_res_fnames = kwargs['fed_res_file_names']
 
     file_selected = False
+    in_file_name = ''
 
     if files:
         file_selected = True
@@ -39,7 +40,7 @@ def netcdf_pre_create_resource(sender, **kwargs):
             in_file_name = ref_tmpfiles[0]
             file_selected = True
 
-    if file_selected:
+    if file_selected and in_file_name:
         # file validation and metadata extraction
         nc_dataset = nc_utils.get_nc_dataset(in_file_name)
 
@@ -140,7 +141,7 @@ def netcdf_pre_create_resource(sender, **kwargs):
 
             if dump_str:
                 # refine dump_str first line
-                nc_file_name = '.'.join(os.path.basename(in_file_name).split('.')[:-1])
+                nc_file_name = os.path.splitext(files[0].name)[0]
                 first_line = list('netcdf {0} '.format(nc_file_name))
                 first_line_index = dump_str.index('{')
                 dump_str_list = first_line + list(dump_str)[first_line_index:]
@@ -198,8 +199,7 @@ def netcdf_pre_create_resource(sender, **kwargs):
 def netcdf_pre_delete_file_from_resource(sender, **kwargs):
     nc_res = kwargs['resource']
     del_file = kwargs['file']
-    res_fname = get_resource_file_name(del_file)
-    del_file_ext = os.path.splitext(res_fname)[-1]
+    del_file_ext = utils.get_resource_file_name_and_extension(del_file)[1]
 
     # update resource modification info
     user = nc_res.creator
@@ -212,7 +212,7 @@ def netcdf_pre_delete_file_from_resource(sender, **kwargs):
     if del_file_ext in file_ext:
         del file_ext[del_file_ext]
         for f in ResourceFile.objects.filter(object_id=nc_res.id):
-            ext = os.path.splitext(utils.get_resource_file_name(f))[-1]
+            ext = utils.get_resource_file_name_and_extension(f)[1]
             if ext in file_ext:
                 delete_resource_file_only(nc_res, f)
                 nc_res.metadata.formats.filter(value=file_ext[ext]).delete()
@@ -239,6 +239,7 @@ def netcdf_pre_add_files_to_resource(sender, **kwargs):
         validate_files_dict['message'] = 'Only one file can be uploaded.'
 
     file_selected = False
+    in_file_name = ''
     if files:
         file_selected = True
         in_file_name = files[0].file.name
@@ -248,7 +249,7 @@ def netcdf_pre_add_files_to_resource(sender, **kwargs):
             in_file_name = ref_tmpfiles[0]
             file_selected = True
 
-    if file_selected:
+    if file_selected and in_file_name:
         # file type validation and existing metadata update and create new ncdump text file
         nc_dataset = nc_utils.get_nc_dataset(in_file_name)
         if isinstance(nc_dataset, netCDF4.Dataset):
@@ -288,9 +289,16 @@ def netcdf_pre_add_files_to_resource(sender, **kwargs):
                 name = res_dublin_core_meta.get('creator_name')
                 email = res_dublin_core_meta.get('creator_email', '')
                 url = res_dublin_core_meta.get('creator_url', '')
-                if nc_res.metadata.creators.all().filter(name=name).first():
-                    nc_res.metadata.creators.all().filter(name=name).first().delete()
-                nc_res.metadata.create_element('creator', name=name, email=email, homepage=url)
+                arguments = dict(name=name, email=email, homepage=url)
+                creator = nc_res.metadata.creators.all().filter(name=name).first()
+                if creator:
+                    order = creator.order
+                    if order != 1:
+                        creator.delete()
+                        arguments['order'] = order
+                        nc_res.metadata.create_element('creator', **arguments)
+                else:
+                    nc_res.metadata.create_element('creator', **arguments)
 
             # update contributor info
             if res_dublin_core_meta.get('contributor_name'):
@@ -370,7 +378,7 @@ def netcdf_pre_add_files_to_resource(sender, **kwargs):
 
             if dump_str:
                 # refine dump_str first line
-                nc_file_name = '.'.join(os.path.basename(in_file_name).split('.')[:-1])
+                nc_file_name = files[0].name[:-3]
                 first_line = list('netcdf {0} '.format(nc_file_name))
                 first_line_index = dump_str.index('{')
                 dump_str_list = first_line + list(dump_str)[first_line_index:]

@@ -2716,3 +2716,15 @@ class ResourceAccess(models.Model):
             return PrivilegeCodes.VIEW
         else:
             return user_priv
+
+    @property
+    def sharing_status(self):
+
+        if self.published:
+            return "published"
+        elif self.public:
+            return "public"
+        elif self.discoverable:
+            return "discoverable"
+        else:
+            return "private"

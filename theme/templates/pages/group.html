@@ -51,9 +51,9 @@
 
             <div class="col-sm-7">
                 <h2 class="group-title">{{ group.name }}</h2>
-                <h4 class="text-muted">{{ group.gaccess.purpose }}</h4>
+                <h4 class="text-muted">{{ group.gaccess.purpose|linebreaks }}</h4>
 
-                <p>{{ group.gaccess.description }}</p>
+                <p>{{ group.gaccess.description|linebreaks }}</p>
             </div>
 
 
@@ -467,7 +467,7 @@
                                     <div class="panel-body">
                                         <div class="list-group">
                                             <ul class="list-group inputs-group">
-                                                <h5><i>No resources have been shared with this group yet.</i></h5>
+                                                <i class="list-group-item no-items-found">No resources have been shared with this group yet.</i>
                                             </ul>
                                         </div>
 

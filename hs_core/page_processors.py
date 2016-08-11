@@ -12,16 +12,7 @@ from hs_tools_resource.utils import parse_app_url_template
 
 @processor_for(GenericResource)
 def landing_page(request, page):
-    # TODO: this if/else is an exact copy of the function 'check_resource_mode', defined below
-    if request.method == "GET":
-        resource_mode = request.session.get('resource-mode', None)
-        if resource_mode == 'edit':
-            edit_resource = True
-            del request.session['resource-mode']
-        else:
-            edit_resource = False
-    else:
-        edit_resource = True
+    edit_resource = check_resource_mode(request)
 
     return get_page_context(page, request.user, resource_edit=edit_resource, request=request)
 
@@ -73,22 +64,40 @@ def get_page_context(page, user, resource_edit=False, extended_metadata_layout=N
                 # reverse lookup: metadata obj --> res obj
                 tool_res_obj = ToolResource.objects.get(object_id=res_type.object_id)
                 if tool_res_obj:
-                    is_authorized = authorize(request, tool_res_obj.short_id,
-                                              needed_permission=ACTION_TO_AUTHORIZE.VIEW_RESOURCE,
-                                              raises_exception=False)[1]
-                    if is_authorized:
-                        tool_url = tool_res_obj.metadata.url_bases.first().value \
-                            if tool_res_obj.metadata.url_bases.first() else None
-                        tool_icon_url = tool_res_obj.metadata.tool_icon.first().url \
-                            if tool_res_obj.metadata.tool_icon.first() else "raise-img-error"
-                        hs_term_dict_user = {}
-                        hs_term_dict_user["HS_USR_NAME"] = request.user.username if request.user.is_authenticated() else "anonymous"
-                        tool_url_new = parse_app_url_template(tool_url, [content_model.get_hs_term_dict(), hs_term_dict_user])
-                        if tool_url_new is not None:
-                            tl = {'title': str(tool_res_obj.metadata.title.value),
-                                  'icon_url': tool_icon_url,
-                                  'url': tool_url_new}
-                            relevant_tools.append(tl)
+                    sharing_status_supported = False
+
+                    supported_sharing_status_obj = tool_res_obj.metadata.\
+                        supported_sharing_status.first()
+                    if supported_sharing_status_obj is not None:
+                        suppored_sharing_status_str = supported_sharing_status_obj.\
+                                                      get_sharing_status_str()
+                        if len(suppored_sharing_status_str) > 0:
+                            res_sharing_status = content_model.raccess.sharing_status
+                            if suppored_sharing_status_str.lower().\
+                                    find(res_sharing_status.lower()) != -1:
+                                sharing_status_supported = True
+                    else:
+                        # backward compatible: webapp without supported_sharing_status metadata
+                        # is considered to support all sharing status
+                        sharing_status_supported = True
+
+                    if sharing_status_supported:
+                        is_authorized = authorize(request, tool_res_obj.short_id,
+                                                  needed_permission=ACTION_TO_AUTHORIZE.VIEW_RESOURCE,
+                                                  raises_exception=False)[1]
+                        if is_authorized:
+                            tool_url = tool_res_obj.metadata.url_bases.first().value \
+                                if tool_res_obj.metadata.url_bases.first() else None
+                            tool_icon_url = tool_res_obj.metadata.tool_icon.first().url \
+                                if tool_res_obj.metadata.tool_icon.first() else "raise-img-error"
+                            hs_term_dict_user = {}
+                            hs_term_dict_user["HS_USR_NAME"] = request.user.username if request.user.is_authenticated() else "anonymous"
+                            tool_url_new = parse_app_url_template(tool_url, [content_model.get_hs_term_dict(), hs_term_dict_user])
+                            if tool_url_new is not None:
+                                tl = {'title': str(tool_res_obj.metadata.title.value),
+                                      'icon_url': tool_icon_url,
+                                      'url': tool_url_new}
+                                relevant_tools.append(tl)
 
     just_created = False
     new_version_create_resource_error = None
@@ -186,7 +195,8 @@ def get_page_context(page, user, resource_edit=False, extended_metadata_layout=N
                    'bag_url': bag_url,
                    'show_content_files': show_content_files,
                    'discoverable': discoverable,
-                   'resource_is_mine': resource_is_mine
+                   'resource_is_mine': resource_is_mine,
+                   'is_resource_specific_tab_active': False
 
         }
         return context
@@ -371,6 +381,7 @@ def get_page_context(page, user, resource_edit=False, extended_metadata_layout=N
                'coverage_spatial_form': coverage_spatial_form,
                'subjects_form': subjects_form,
                'metadata_status': metadata_status,
+               'missing_metadata_elements': content_model.metadata.get_required_missing_elements(),
                'citation': content_model.get_citation(),
                'extended_metadata_layout': extended_metadata_layout,
                'bag_url': bag_url,
@@ -381,7 +392,8 @@ def get_page_context(page, user, resource_edit=False, extended_metadata_layout=N
                'resource_is_mine': resource_is_mine,
                'relation_source_types': tuple((type_value, type_display)
                                               for type_value, type_display in Relation.SOURCE_TYPES
-                                              if type_value != 'isReplacedBy' and type_value != 'isVersionOf')
+                                              if type_value != 'isReplacedBy' and type_value != 'isVersionOf'),
+               'is_resource_specific_tab_active': False
 
     }
 
@@ -397,28 +409,20 @@ def check_resource_mode(request):
 
     This function erases the 'resource-mode' property of `request.session` if it exists.
 
-    TODO:
-        1. simplify this function by:
-            a) no side effects (dont remove 'resource-mode')
-            b) the 2 conditions can be expressed in one line:
-                    return request.method != "GET" :keyword or request.session.get('resource-mode', None) == 'edit'
-        2. rename this function to better express its return value:
-            - perhaps requests_edit_mode(request)
-
     :param request: the `request` for a resource
     :return: True if the request represents an attempt to edit a resource, and False otherwise.
     """
     if request.method == "GET":
-        resource_mode = request.session.get('resource-mode', None)
-        if resource_mode == 'edit':
-            edit_resource = True
+        edit_resource = request.session.get('resource-mode', None) == 'edit'
+        if edit_resource:
             del request.session['resource-mode']
         else:
-            edit_resource = False
+            edit_resource = request.GET.get('resource-mode', None) == 'edit'
     else:
         edit_resource = True
 
     return edit_resource
+
 
 def check_for_validation(request):
     if request.method == "GET":
@@ -428,6 +432,7 @@ def check_for_validation(request):
             return validation_error
 
     return None
+
 
 def _get_metadata_status(resource):
     if resource.metadata.has_all_required_elements():

@@ -25,7 +25,7 @@
 {% endif %}
 
 {# ======= Missing fields notification =======#}
-{% if not metadata_form and page.perms.change and not is_replaced_by %}
+{% if page.perms.change and not is_replaced_by %}
     {% if missing_metadata_elements or title|stringformat:"s" == "Untitled resource" or not cm.has_required_content_files %}
         <div class="col-sm-12">
             <div class="alert {% if just_created %}alert-success{% else %}alert-warning{% endif %} alert-dismissible" role="alert">
