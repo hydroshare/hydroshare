@@ -460,7 +460,7 @@
                             <div id="resource-search" style="display:none">
                                 <div id="coverages-master-list"></div>
                                 <br />
-                                <table id="lat-lng-labels">
+                                <table id="lat-lng-labels" style="display:none">
                                     <tr>
                                         <td>
                                             North Latitude: <label for="ne-lat-value"></label>
@@ -476,7 +476,6 @@
                                         </td>
                                     </tr>
                                 </table>
-                                <div class="text-muted">WGS 84 decimal degrees</div>
                             </div>
                             <br />
 
@@ -899,7 +898,7 @@
             var geo_coder = document.getElementById('geocoder-panel');
             var reset_zoom_button = document.getElementById('resetZoom');
             map.controls[google.maps.ControlPosition.RIGHT_TOP].push(map_legend);
-            map.controls[google.maps.ControlPosition.TOP].push(geo_coder);
+            map.controls[google.maps.ControlPosition.LEFT_BOTTOM].push(geo_coder);
             map.controls[google.maps.ControlPosition.RIGHT_BOTTOM].push(reset_zoom_button);
             var legend_content = [];
             var geocoder_content = [];

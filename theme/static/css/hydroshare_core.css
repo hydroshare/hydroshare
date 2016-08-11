@@ -3692,7 +3692,7 @@ div.group-add-photo {
 
 #coverages-master-list {
 	display:inline-block;
-	max-height:150px;
+	max-height:190px;
 	overflow-y: auto;
 	border: 1px solid #DDD;
 }
@@ -3713,6 +3713,7 @@ div.group-add-photo {
 
 #discover-map {
 	height:650px;
+	border: 1px solid #DDD;
 }
 
 #discover-map-legend {
@@ -3720,17 +3721,20 @@ div.group-add-photo {
 	padding: 10px;
 	margin: 5px;
 	border-radius: 4px;
+	border: 1px solid #DDD;
 }
 
 #geocoder-panel {
 	z-index: 5;
-	background-color: #fff;
 	padding: 5px;
 	text-align: center;
 	font-family: 'Roboto','sans-serif';
 	line-height: 30px;
 	padding-left: 10px;
 	width: 45%;
+	background-color: rgba(255,255,255,0.75);
+	border: 1px solid #DDD;
+	border-radius: 4px;
 }
 
 #geocoder-address {
