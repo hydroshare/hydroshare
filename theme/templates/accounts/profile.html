@@ -169,7 +169,7 @@
                                     {# Organization #}
                                     <fieldset class="col-sm-6">
                                         <label>Organization</label>
-                                        <input id="id_organization" class="form-control autocomplete" {% if profile.organization %}data-value="{{ profile.organization.name }}"{% endif %} name="organization">
+                                        <input id="id_organization" class="form-control autocomplete" {% if profile.organization %} value="{{ profile.organization.name }}" {% endif %} name="organization" data-autocomplete-choice-selector="[data-value]">
                                         <small class="text-muted">The name of the organization you work for.</small>
                                     </fieldset>
 
@@ -1199,6 +1199,13 @@
 
             var autocomplete = $('#id_organization').yourlabsAutocomplete({
                 url: '{% url "autocomplete_light_autocomplete" autocomplete="OrganizationAutocomplete" %}',
+            });
+
+            autocomplete.input.bind('selectChoice', function(e, choice) {
+                var autocompleteInfo = $(this).yourlabsAutocomplete();
+                var chosenValue = autocompleteInfo.box.children('.hilight').text();
+                $(this).val(chosenValue);
+
             });
         });
     </script>

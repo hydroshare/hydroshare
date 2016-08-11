@@ -331,8 +331,9 @@ class UserForm(forms.ModelForm):
 
 class UserProfileForm(autocomplete_light.ModelForm):
     state = USStateField(required=False)
-    organization = autocomplete_light.ModelChoiceField('OrganizationAutocomplete')
+    # organization = autocomplete_light.ModelChoiceField('OrganizationAutocomplete')
+    organization = forms.CharField()
 
     class Meta:
         model = UserProfile
-        exclude = ['user', 'public', 'create_irods_user_account']
+        exclude = ['user', 'public', 'create_irods_user_account', 'organization']

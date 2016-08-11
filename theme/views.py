@@ -30,7 +30,7 @@ from hs_core.views.utils import run_ssh_command
 from hs_access_control.models import GroupMembershipRequest
 from theme.forms import ThreadedCommentForm
 from theme.forms import RatingForm, UserProfileForm, UserForm
-from theme.models import UserProfile
+from theme.models import UserProfile, Organization
 
 from .forms import SignupForm
 
@@ -196,6 +196,11 @@ def update_user_profile(request):
                         raise ValidationError("Passwords do not match.")
 
                 profile = profile_form.save(commit=False)
+                organization_name = request.POST['organization']
+                organization = Organization.objects.filter(name=organization_name).first()
+                if organization is None:
+                    organization = Organization.objects.create(name=organization_name)
+                profile.organization = organization
                 profile.user = request.user
                 profile.save()
                 messages.success(request, "Your profile has been successfully updated.")
