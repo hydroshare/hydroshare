@@ -65,7 +65,7 @@ class SiteForm(ModelForm):
                                                element_code_att_name="site_code",
                                                element_name_att_name="site_name")
 
-    def set_dropdown_widgets(self, site_type, elevation_datum):
+    def set_dropdown_widgets(self, site_type=None, elevation_datum=None):
         cv_site_type_choices = _get_cv_dropdown_widget_items(self.cv_site_types, site_type)
         self.fields['site_type'].widget = forms.Select(choices=cv_site_type_choices)
 
@@ -154,7 +154,7 @@ class VariableForm(ModelForm):
                                                element_code_att_name="variable_code",
                                                element_name_att_name="variable_name")
 
-    def set_dropdown_widgets(self, variable_type, variable_name, speciation):
+    def set_dropdown_widgets(self, variable_type=None, variable_name=None, speciation=None):
         cv_var_type_choices = _get_cv_dropdown_widget_items(self.cv_variable_types, variable_type)
         self.fields['variable_type'].widget = forms.Select(choices=cv_var_type_choices)
 
@@ -241,7 +241,7 @@ class MethodForm(ModelForm):
                                                element_code_att_name="method_code",
                                                element_name_att_name="method_name")
 
-    def set_dropdown_widgets(self, current_method_type):
+    def set_dropdown_widgets(self, current_method_type=None):
         cv_method_type_choices = _get_cv_dropdown_widget_items(self.cv_method_types,
                                                                current_method_type)
         self.fields['method_type'].widget = forms.Select(choices=cv_method_type_choices)
@@ -354,6 +354,7 @@ class TimeSeriesResultFormHelper(BaseFormHelper):
         # fields will be displayed
         field_width = 'form-control input-sm'
         layout = Layout(
+                     Field('selected_series_id', css_class=field_width, type="hidden"),
                      Field('units_type', css_class=field_width,
                            title="Select 'Other...' to specify a new units type term"),
                      Field('units_name', css_class=field_width),
@@ -372,7 +373,10 @@ class TimeSeriesResultFormHelper(BaseFormHelper):
 
 
 class TimeSeriesResultForm(ModelForm):
+    selected_series_id = forms.CharField(max_length=50, required=False)
+
     def __init__(self, allow_edit=True, res_short_id=None, element_id=None, *args, **kwargs):
+        selected_series_id = kwargs.pop('selected_series_id', None)
         self.cv_sample_mediums = list(kwargs.pop('cv_sample_mediums'))
         self.cv_units_types = list(kwargs.pop('cv_units_types'))
         self.cv_aggregation_statistics = list(kwargs.pop('cv_aggregation_statistics'))
@@ -381,9 +385,10 @@ class TimeSeriesResultForm(ModelForm):
         super(TimeSeriesResultForm, self).__init__(*args, **kwargs)
         self.helper = TimeSeriesResultFormHelper(allow_edit, res_short_id, element_id,
                                                  element_name='TimeSeriesResult')
+        self.fields['selected_series_id'].initial = selected_series_id
 
-    def set_dropdown_widgets(self, current_sample_medium, current_units_type,
-                             current_agg_statistics, current_status):
+    def set_dropdown_widgets(self, current_sample_medium=None, current_units_type=None,
+                             current_agg_statistics=None, current_status=None):
         cv_sample_medium_choices = _get_cv_dropdown_widget_items(self.cv_sample_mediums,
                                                                  current_sample_medium)
         self.fields['sample_medium'].widget = forms.Select(choices=cv_sample_medium_choices)
@@ -421,6 +426,7 @@ class TimeSeriesResultValidationForm(forms.Form):
     sample_medium = forms.CharField(max_length=255)
     value_count = forms.IntegerField()
     aggregation_statistics = forms.CharField(max_length=255)
+    selected_series_id = forms.CharField(max_length=50, required=False)
 
 
 def _get_cv_dropdown_widget_items(dropdown_items, selected_item_name):
@@ -434,9 +440,10 @@ def _get_cv_dropdown_widget_items(dropdown_items, selected_item_name):
     # alphabetize the terms
     cv_items.sort(key=lambda tup: tup[0])
 
-    # add the selected item as a tuple to the beginning of the list of items
-    # so that it will be displayed as the currently selected item
-    cv_items = [(selected_item_name, selected_item_name)] + cv_items
+    if selected_item_name is not None:
+        # add the selected item as a tuple to the beginning of the list of items
+        # so that it will be displayed as the currently selected item
+        cv_items = [(selected_item_name, selected_item_name)] + cv_items
     cv_item_choices = tuple(cv_items)
     return cv_item_choices
 

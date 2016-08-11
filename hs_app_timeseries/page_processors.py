@@ -28,7 +28,7 @@ def landing_page(request, page):
         extended_metadata_exists = True
 
     series_ids = {}
-    if not content_model.metadata.time_series_results:
+    if not content_model.has_sqlite_file and len(content_model.metadata.series_names) > 0:
         res_file = content_model.files.all().first()
         if res_file:
             # check if the file is a csv file
@@ -113,21 +113,20 @@ def _get_resource_edit_context(page, request, content_model, selected_series_id,
     method_form = _create_method_form(resource=content_model, selected_series_id=selected_series_id)
     processing_level_form = _create_processing_level_form(resource=content_model,
                                                           selected_series_id=selected_series_id)
-    # TODO: The forms for the following elements need to be created based on the above elements.
 
-    timeseries_result_form = None
     time_series_result = content_model.metadata.time_series_results.filter(
         series_ids__contains=[selected_series_id]).first()
-    if time_series_result is not None:
-        timeseries_result_form = TimeSeriesResultForm(
-            instance=time_series_result,
-            res_short_id=content_model.short_id,
-            element_id=time_series_result.id if time_series_result else None,
-            cv_sample_mediums=content_model.metadata.cv_mediums.all(),
-            cv_units_types=content_model.metadata.cv_units_types.all(),
-            cv_aggregation_statistics=content_model.metadata.cv_aggregation_statistics.all(),
-            cv_statuses=content_model.metadata.cv_statuses.all())
+    timeseries_result_form = TimeSeriesResultForm(
+        instance=time_series_result,
+        res_short_id=content_model.short_id,
+        element_id=time_series_result.id if time_series_result else None,
+        cv_sample_mediums=content_model.metadata.cv_mediums.all(),
+        cv_units_types=content_model.metadata.cv_units_types.all(),
+        cv_aggregation_statistics=content_model.metadata.cv_aggregation_statistics.all(),
+        cv_statuses=content_model.metadata.cv_statuses.all(),
+        selected_series_id=selected_series_id)
 
+    if time_series_result is not None:
         timeseries_result_form.action = _get_element_update_form_action('timeseriesresult',
                                                                         content_model.short_id,
                                                                         time_series_result.id)
@@ -137,6 +136,8 @@ def _get_resource_edit_context(page, request, content_model, selected_series_id,
                                                     timeseries_result_form.initial[
                                                         'aggregation_statistics'],
                                                     timeseries_result_form.initial['status'])
+    else:
+        timeseries_result_form.set_dropdown_widgets()
 
     ext_md_layout = Layout(UpdateSQLiteLayout,
                            SeriesSelectionLayout,
@@ -185,10 +186,7 @@ def _create_site_form(resource, selected_series_id):
             site_form.set_dropdown_widgets(site_form.initial['site_type'],
                                            site_form.initial['elevation_datum'])
         else:
-            # this case can only happen in case of csv upload
-            site_form.set_dropdown_widgets(resource.metadata.cv_site_types.all().first().name,
-                                           resource.metadata.cv_elevation_datums.all().
-                                           first().name)
+            site_form.set_dropdown_widgets()
 
     else:
         # this case can happen only in case of CSV upload
@@ -198,8 +196,7 @@ def _create_site_form(resource, selected_series_id):
                              cv_elevation_datums=resource.metadata.cv_elevation_datums.all(),
                              selected_series_id=selected_series_id)
 
-        site_form.set_dropdown_widgets(resource.metadata.cv_site_types.all().first().name,
-                                       resource.metadata.cv_elevation_datums.all().first().name)
+        site_form.set_dropdown_widgets()
     return site_form
 
 
@@ -226,11 +223,7 @@ def _create_variable_form(resource, selected_series_id):
                                                variable_form.initial['speciation'])
         else:
             # this case can only happen in case of csv upload
-            variable_form.set_dropdown_widgets(
-                variable_type=resource.metadata.cv_variable_types.all().first().name,
-                variable_name=resource.metadata.cv_variable_names.all().first().name,
-                speciation=resource.metadata.cv_speciations.all().first().name)
-
+            variable_form.set_dropdown_widgets()
     else:
         # this case can happen only in case of CSV upload
         variable_form = VariableForm(instance=None, res_short_id=resource.short_id,
@@ -241,10 +234,7 @@ def _create_variable_form(resource, selected_series_id):
                                      available_variables=resource.metadata.variables,
                                      selected_series_id=selected_series_id)
 
-        variable_form.set_dropdown_widgets(
-            variable_type=resource.metadata.cv_variable_types.all().first().name,
-            variable_name=resource.metadata.cv_variable_names.all().first().name,
-            speciation=resource.metadata.cv_speciations.all().first().name)
+        variable_form.set_dropdown_widgets()
 
     return variable_form
 
@@ -267,8 +257,7 @@ def _create_method_form(resource, selected_series_id):
             method_form.set_dropdown_widgets(method_form.initial['method_type'])
         else:
             # this case can only happen in case of csv upload
-            method_form.set_dropdown_widgets(resource.metadata.cv_method_types.all().first().name)
-
+            method_form.set_dropdown_widgets()
     else:
         # this case can happen only in case of CSV upload
         method_form = MethodForm(instance=None, res_short_id=resource.short_id,
@@ -276,7 +265,7 @@ def _create_method_form(resource, selected_series_id):
                                  cv_method_types=resource.metadata.cv_method_types.all(),
                                  selected_series_id=selected_series_id)
 
-        method_form.set_dropdown_widgets(resource.metadata.cv_method_types.all().first().name)
+        method_form.set_dropdown_widgets()
     return method_form
 
 

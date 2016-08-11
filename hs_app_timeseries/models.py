@@ -346,6 +346,20 @@ class TimeSeriesResult(TimeSeriesAbstractMetaDataElement):
         return self.units_type
 
     @classmethod
+    def create(cls, **kwargs):
+        metadata = kwargs['content_object']
+        if len(metadata.series_names) > 0:
+            # this case applies only in case of CSV upload
+            selected_series_id = kwargs.pop('selected_series_id', None)
+            if selected_series_id is None:
+                raise ValueError("Series id is missing")
+            kwargs['series_ids'] = [selected_series_id]
+            element = super(TimeSeriesResult, cls).create(**kwargs)
+            return element
+
+        return super(TimeSeriesResult, cls).create(**kwargs)
+
+    @classmethod
     def update(cls, element_id, **kwargs):
         element = cls.objects.get(id=element_id)
         # if the user has entered a new sample medium, then create a corresponding new cv term
@@ -692,67 +706,78 @@ class TimeSeriesMetaData(CoreMetaData):
             hsterms_statistics.text = time_series_result.aggregation_statistics
 
             # generate xml for 'site' element
-            site = [site for site in self.sites if time_series_result.series_ids[0] in
-                    site.series_ids][0]
-            element_fields = [('site_code', 'SiteCode'), ('site_name', 'SiteName')]
+            sites = [site for site in self.sites if time_series_result.series_ids[0] in
+                     site.series_ids]
+            if sites:
+                site = sites[0]
+                element_fields = [('site_code', 'SiteCode'), ('site_name', 'SiteName')]
 
-            if site.elevation_m:
-                element_fields.append(('elevation_m', 'Elevation_m'))
+                if site.elevation_m:
+                    element_fields.append(('elevation_m', 'Elevation_m'))
 
-            if site.elevation_datum:
-                element_fields.append(('elevation_datum', 'ElevationDatum'))
+                if site.elevation_datum:
+                    element_fields.append(('elevation_datum', 'ElevationDatum'))
 
-            if site.site_type:
-                element_fields.append(('site_type', 'SiteType'))
+                if site.site_type:
+                    element_fields.append(('site_type', 'SiteType'))
 
-            self.add_metadata_element_to_xml(hsterms_time_series_result_rdf_Description,
-                                             (site, 'site'), element_fields)
+                self.add_metadata_element_to_xml(hsterms_time_series_result_rdf_Description,
+                                                 (site, 'site'), element_fields)
 
             # generate xml for 'variable' element
-            variable = [variable for variable in self.variables if
-                        time_series_result.series_ids[0] in variable.series_ids][0]
-            element_fields = [('variable_code', 'VariableCode'), ('variable_name', 'VariableName'),
-                              ('variable_type', 'VariableType'), ('no_data_value', 'NoDataValue')]
+            variables = [variable for variable in self.variables if
+                         time_series_result.series_ids[0] in variable.series_ids]
+            if variables:
+                variable = variables[0]
+                element_fields = [('variable_code', 'VariableCode'),
+                                  ('variable_name', 'VariableName'),
+                                  ('variable_type', 'VariableType'),
+                                  ('no_data_value', 'NoDataValue')
+                                  ]
 
-            if variable.variable_definition:
-                element_fields.append(('variable_definition', 'VariableDefinition'))
+                if variable.variable_definition:
+                    element_fields.append(('variable_definition', 'VariableDefinition'))
 
-            if variable.speciation:
-                element_fields.append(('speciation', 'Speciation'))
+                if variable.speciation:
+                    element_fields.append(('speciation', 'Speciation'))
 
-            self.add_metadata_element_to_xml(hsterms_time_series_result_rdf_Description,
-                                             (variable, 'variable'), element_fields)
+                self.add_metadata_element_to_xml(hsterms_time_series_result_rdf_Description,
+                                                 (variable, 'variable'), element_fields)
 
             # generate xml for 'method' element
-            method = [method for method in self.methods if time_series_result.series_ids[0] in
-                      method.series_ids][0]
-            element_fields = [('method_code', 'MethodCode'), ('method_name', 'MethodName'),
-                              ('method_type', 'MethodType')]
+            methods = [method for method in self.methods if time_series_result.series_ids[0] in
+                       method.series_ids]
+            if methods:
+                method = methods[0]
+                element_fields = [('method_code', 'MethodCode'), ('method_name', 'MethodName'),
+                                  ('method_type', 'MethodType')]
 
-            if method.method_description:
-                element_fields.append(('method_description', 'MethodDescription'))
+                if method.method_description:
+                    element_fields.append(('method_description', 'MethodDescription'))
 
-            if method.method_link:
-                element_fields.append(('method_link', 'MethodLink'))
+                if method.method_link:
+                    element_fields.append(('method_link', 'MethodLink'))
 
-            self.add_metadata_element_to_xml(hsterms_time_series_result_rdf_Description,
-                                             (method, 'method'), element_fields)
+                self.add_metadata_element_to_xml(hsterms_time_series_result_rdf_Description,
+                                                 (method, 'method'), element_fields)
 
             # generate xml for 'processing_level' element
-            processing_level = [processing_level for processing_level in self.processing_levels if
-                                time_series_result.series_ids[0] in processing_level.series_ids][0]
+            processing_levels = [processing_level for processing_level in self.processing_levels if
+                                 time_series_result.series_ids[0] in processing_level.series_ids]
 
-            element_fields = [('processing_level_code', 'ProcessingLevelCode')]
+            if processing_levels:
+                processing_level = processing_levels[0]
+                element_fields = [('processing_level_code', 'ProcessingLevelCode')]
 
-            if processing_level.definition:
-                element_fields.append(('definition', 'Definition'))
+                if processing_level.definition:
+                    element_fields.append(('definition', 'Definition'))
 
-            if processing_level.explanation:
-                element_fields.append(('explanation', 'Explanation'))
+                if processing_level.explanation:
+                    element_fields.append(('explanation', 'Explanation'))
 
-            self.add_metadata_element_to_xml(hsterms_time_series_result_rdf_Description,
-                                             (processing_level, 'processingLevel'),
-                                             element_fields)
+                self.add_metadata_element_to_xml(hsterms_time_series_result_rdf_Description,
+                                                 (processing_level, 'processingLevel'),
+                                                 element_fields)
 
         return etree.tostring(RDF_ROOT, pretty_print=True)
 
