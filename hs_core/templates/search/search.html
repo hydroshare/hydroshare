@@ -2,14 +2,14 @@
 {% load geoanalytics_tags pages_tags mezzanine_tags keyword_tags comment_tags hydroshare_tags %}
 {% block title %}Discovery{% endblock %}
 {% block main %}
-<div class="container" id="main">
+<div id="discovery-main">
     <div class="row">
         <div class="col-sm-12">
             <h2 class="page-title">Discover
                 <small class="text-muted"><i>Find content shared by your colleagues and other users.</i></small>
             </h2>
         </div>
-        <div class="col-sm-8 col-sm-offset-4 col-xs-12">
+        <div class="col-sm-9 col-sm-offset-3 col-xs-12">
             <button class="btn btn-info" data-toggle="popover" data-placement="right"><i
                     class="glyphicon glyphicon-info-sign"></i></button>
 
@@ -27,7 +27,7 @@
             </div>
             <br>
         </div>
-        <div class="col-sm-4 col-xs-12" id="facets">
+        <div class="col-sm-3 col-xs-12" id="facets">
             <div id="filter-buttons">
                 <button class="btn btn-default" onclick="clearAllFaceted()">Show All</button>
             </div>
@@ -120,7 +120,7 @@
                 </div>
             </div>
         </div>
-        <div class="col-sm-8 col-xs-12" id="items">
+        <div class="col-sm-9 col-xs-12" id="items">
             <div>
                 <form id="date-search-fields" method="get" action=".">
                     <h4 class="text-muted">Temporal Coverage</h4>
@@ -445,39 +445,69 @@
                         </div>
                     </div>
                 </div>
+
                 <div id="map-view" class="tab-pane fade">
-                    <div id="resource-search">
-                        <form id="covereage-search-fields" method="get" action=".">
-                            {% for field in form %}
-                                {% if field.auto_id  == "id_NElat" or field.auto_id  == "id_NElng" or field.auto_id  == "id_SWlat" or field.auto_id  == "id_SWlng" %}
-                                    <div class="col-md-3 height-fix">
-                                        {{ field.label_tag }}
-                                        <div class="input-group">{{ field }}
-                                            <span data-toggle="tooltip" data-placement="auto"
-                                                  title="WGS 84 decimal degrees" class="input-group-addon">°</span>
-                                        </div>
-                                    </div>
-                                {% endif %}
-                            {% endfor %}
-                            <div class="col-sm-12 height-fix">
+                    <div class="row">
+                        <div class="col-xs-12 col-sm-8">
+                            <form id="covereage-search-fields" method="get" action="." style="display: none">
+                                {% for field in form %}
+                                    {% if field.auto_id  == "id_NElat" or field.auto_id  == "id_NElng" or field.auto_id  == "id_SWlat" or field.auto_id  == "id_SWlng" %}
+                                        {{ field }}
+                                    {% endif %}
+                                {% endfor %}
+                            </form>
+
+                            <div id="resource-search" style="display:none">
+                                <div id="coverages-master-list" style="display:inline-block; height:150px; overflow-y: auto"></div>
+                                <br />
+                                <table id="lat-lng-labels">
+                                    <tr>
+                                        <td>
+                                            North Latitude: <label for="ne-lat-value"></label>
+                                        </td>
+                                        <td>
+                                            East Longitude: <label for="ne-lng-value"></label>
+                                        </td>
+                                        <td>
+                                            South Latitude: <label for="sw-lat-value"></label>
+                                        </td>
+                                        <td>
+                                            West Longitude: <label for="sw-lng-value"></label>
+                                        </td>
+                                    </tr>
+                                </table>
                                 <div class="text-muted">WGS 84 decimal degrees</div>
-
-                                <a id="manual-zoom-btn" class="btn btn-default" onclick="manualZoomMap()">
-                                    <span class="glyphicon glyphicon-zoom-in"></span> Zoom In
-                                </a>
                             </div>
-                        </form>
-                        <br>
-                    </div>
+                            <br />
 
-                    <div id="discover-map"></div>
+                            <div id="geocoder-panel"></div>
 
-                    <div id="discover-map-legend"></div>
+                            <div id="discover-map"></div>
 
-                    <div id="resetZoom">
-                        <a id="reset-zoom-btn" class="btn btn-default btn-sm" onclick="resetMapZoom()">
-                            <span class="glyphicon glyphicon-record"></span>
-                        </a>
+                            <div id="discover-map-legend"></div>
+
+                            <div id="resetZoom"></div>
+                        </div>
+                        <div class="col-xs-12 col-sm-4" id="box-coverages-container" style="display:none">
+                            <h4 class="text-muted">Box Coverages Resources</h4>
+                            <div class="panel panel-default" id="box-coverages-panel">
+                                <div class="panel-heading">
+                                    <h3 class="panel-title">0 to 100 mi<sup>2</sup></h3>
+                                </div>
+                                <div class="list-group box-coverages-list" id="box-coverages-list-1">
+                                </div>
+                                <div class="panel-heading">
+                                    <h3 class="panel-title">100 to 1000 mi<sup>2</sup></h3>
+                                </div>
+                                <div class="list-group box-coverages-list" id="box-coverages-list-100">
+                                </div>
+                                <div class="panel-heading">
+                                    <h3 class="panel-title">over 1000 mi<sup>2</sup></h3>
+                                </div>
+                                <div class="list-group box-coverages-list" id="box-coverages-list-1000">
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -489,7 +519,7 @@
 {% block extra_js %}
     <link rel="stylesheet" type="text/css" href="//cdn.datatables.net/1.10.11/css/jquery.dataTables.min.css">
     <script type="text/javascript" src="//cdn.datatables.net/1.10.11/js/jquery.dataTables.min.js"></script>
-    <script src="//maps.googleapis.com/maps/api/js?v=3" type="text/javascript"></script>
+    <script src="//maps.googleapis.com/maps/api/js?v=3&libraries=geometry" type="text/javascript"></script>
     <script src="//cdn.rawgit.com/googlemaps/v3-utility-library/master/keydragzoom/src/keydragzoom.js" type="text/javascript"></script>
     <script src="//cdn.rawgit.com/googlemaps/js-marker-clusterer/gh-pages/src/markerclusterer.js" type="text/javascript"></script>
     <script type="text/javascript">
@@ -516,8 +546,23 @@
                 mapTypeId: google.maps.MapTypeId.TERRAIN
             });
 
-            setMarkers(json_results);
+            info_window = new google.maps.InfoWindow();
+            rectangle = new google.maps.Rectangle({
+                strokeColor: '#FF0000',
+                strokeOpacity: 0.8,
+                strokeWeight: 2,
+                fillColor: '#FF0000',
+                fillOpacity: 0.35,
+                map: map,
+                bounds: {
+                    north: 0,
+                    south: 0,
+                    east: 0,
+                    west: 0
+                }
+            });
 
+            setMarkers(json_results);
 
             var bounds = (markers.length > 0) ? createBoundsForMarkers(markers) : null;
             if (bounds) {
@@ -548,6 +593,7 @@
                     document.getElementById("id_NElat").value = ne.lat();
                     document.getElementById("id_SWlng").value = sw.lng();
                     document.getElementById("id_SWlat").value = sw.lat();
+                    setLatLngLabels();
                 }
             });
 
@@ -557,6 +603,7 @@
             });
 
             var dz = map.getDragZoomObject();
+
             google.maps.event.addListener(dz, 'dragend', function (bnds) {
                 map.setCenter(bnds.getCenter());
                 map.setZoom(getBoundsZoomLevel(bnds, mapDim));
@@ -578,13 +625,18 @@
             });
 
             generateLegend();
+
+            var geocoder = new google.maps.Geocoder();
+            document.getElementById('geocoder-submit').addEventListener('click', function() {
+                geocodeAddress(geocoder, map, mapDim);
+                updateMapView();
+            });
         };
 
 
         var setMarkers = function(json_results) {
             var modified_points_data = [];
             var modified_boxes_data = [];
-
             for (var i = 0; i < json_results.length; i++ ) {
                 if (json_results[i].coverage_type == 'point') {
                     checkDuplicatePointResults(modified_points_data, json_results[i]);
@@ -593,28 +645,12 @@
                 }
             }
 
-            info_window = new google.maps.InfoWindow();
-            rectangle = new google.maps.Rectangle({
-                strokeColor: '#FF0000',
-                strokeOpacity: 0.8,
-                strokeWeight: 2,
-                fillColor: '#FF0000',
-                fillOpacity: 0.35,
-                map: map,
-                bounds: {
-                    north: 0,
-                    south: 0,
-                    east: 0,
-                    west: 0
-                }
-            });
-
             modified_points_data.forEach(function(point){
                 var info_content = point.info_link;
                 var lat = parseFloat(point.north);
                 var lng = parseFloat(point.east);
                 var counter = point.counter.toString();
-                createPointResourceMarker(lat, lng, info_content, counter, info_window, rectangle);
+                createPointResourceMarker(lat, lng, info_content, counter);
             });
 
 
@@ -625,13 +661,79 @@
                 var eastlimit = parseFloat(box.eastlimit);
                 var westlimit = parseFloat(box.westlimit);
                 var counter = box.counter.toString();
-                createBoxResourceMarker (northlimit, southlimit, eastlimit, westlimit, info_content, info_window, counter, rectangle);
+                createBoxResourceMarker (northlimit, southlimit, eastlimit, westlimit, info_content, counter);
             });
 
             markerCluster = new MarkerClusterer(map, markers, {
                 imagePath: '//cdn.rawgit.com/googlemaps/js-marker-clusterer/gh-pages/images/m'
             });
         };
+
+        var setBoxResourcesList = function(json_results) {
+            var box_resources = [];
+
+            for (var i = 0; i < json_results.length; i++ ) {
+                if (json_results[i].coverage_type == 'box') {
+                    var area = calcArea(json_results[i]);
+                    json_results[i].area = area;
+                    box_resources.push(json_results[i]);
+                }
+            }
+
+            $("#box-coverages-list-1").empty();
+            $("#box-coverages-list-100").empty();
+            $("#box-coverages-list-1000").empty();
+            console.log(box_resources.length);
+            box_resources.forEach(function(box){
+                var title = truncateTitle(box.title);
+                var item_content = '<li class="list-group-item clearfix"><a style="color:balck" role="button"><span class="glyphicon glyphicon-hand-left pull-left"></span></a>';
+                item_content += '<a style="margin-left:10px;" href="' + box.get_absolute_url + '">' + title + '</a>';
+                item_content += '</li>';
+                var $listItem = $(item_content);
+
+                $listItem.find('[role="button"]').click(function () {
+                    showBoxMarker(box);
+                });
+                if(box.area <= 100) {
+                    $('#box-coverages-list-1').append($listItem);
+                } else if (box.area > 100 && box.area <= 1000) {
+                    $('#box-coverages-list-100').append($listItem);
+                } else {
+                    $('#box-coverages-list-1000').append($listItem);
+                }
+                var title_button = '<a class="btn btn-primary btn-xs" style="margin:5px">' + title + '</a>';
+                $("#coverages-master-list").append(title_button);
+            });
+            $("#box-coverages-container").show();
+        }
+
+        var calcArea = function(box) {
+            var northlimit = parseFloat(box.northlimit);
+            var southlimit = parseFloat(box.southlimit);
+            var eastlimit = parseFloat(box.eastlimit);
+            var westlimit = parseFloat(box.westlimit);
+
+            var southWest = new google.maps.LatLng(southlimit, westlimit);
+            var northEast = new google.maps.LatLng(northlimit, eastlimit);
+            var southEast = new google.maps.LatLng(southlimit, eastlimit);
+            var northWest = new google.maps.LatLng(northlimit, westlimit);
+            var area = google.maps.geometry.spherical.computeArea([northEast, northWest, southWest, southEast]);
+            return (area * 3.8610216e-07).toFixed(2);
+        }
+
+        var showBoxMarker = function(box) {
+            var northlimit = parseFloat(box.northlimit);
+            var southlimit = parseFloat(box.southlimit);
+            var eastlimit = parseFloat(box.eastlimit);
+            var westlimit = parseFloat(box.westlimit);
+            var rectBounds = new google.maps.LatLngBounds(
+                        new google.maps.LatLng(northlimit, westlimit),
+                        new google.maps.LatLng(southlimit, eastlimit)
+            );
+            rectangle.set('bounds', rectBounds);
+            map.fitBounds(rectBounds);
+            updateMapView();
+        }
 
         var clientUpdateMarkers = function(filtered_results) {
             removeMarkers();
@@ -643,22 +745,24 @@
                     if (raw_results[i].coverage_type == 'point') {
                         data_lat = parseFloat(raw_results[i].north);
                         data_lng = parseFloat(raw_results[i].east);
+                        var latlng = new google.maps.LatLng(data_lat, data_lng);
+                        if (map.getBounds().contains(latlng)) {
+                            filtered_results.push(raw_results[i]);
+                        }
                     } else if (raw_results[i].coverage_type == 'box') {
                         data_lat = (parseFloat(raw_results[i].northlimit) + parseFloat(raw_results[i].southlimit)) / 2;
                         data_lng = (parseFloat(raw_results[i].eastlimit) + parseFloat(raw_results[i].westlimit)) / 2;
-                    } else {
-                        continue;
-                    }
-                    var latlng = new google.maps.LatLng(data_lat, data_lng);
-                    if (map.getBounds().contains(latlng)) {
-                        filtered_results.push(raw_results[i]);
+                        var latlng = new google.maps.LatLng(data_lat, data_lng);
+                        if (map.getBounds().contains(latlng)) {
+                            filtered_results.push(raw_results[i]);
+                        }
                     }
                 }
             }
         };
 
         var removeMarkers = function() {
-            rectangle.setMap(null);
+
             if (markerCluster) {
                 markerCluster.clearMarkers(markers);
             }
@@ -717,7 +821,7 @@
             }
         };
 
-        var createPointResourceMarker = function (lat, lng, info_content, counter, info_window, rectangle) {
+        var createPointResourceMarker = function (lat, lng, info_content, counter) {
             var latlng = new google.maps.LatLng(lat, lng);
             var marker = new google.maps.Marker({
                 map: map,
@@ -728,16 +832,11 @@
             google.maps.event.addListener(marker, 'click', function() {
                 info_window.setContent(info_content);
                 info_window.open(map, marker);
-                var rectBounds = new google.maps.LatLngBounds(
-                        new google.maps.LatLng(0, 0),
-                        new google.maps.LatLng(0, 0)
-                );
-                rectangle.set('bounds', rectBounds);
 
             });
         };
 
-        var createBoxResourceMarker = function (northlimit, southlimit, eastlimit, westlimit, info_content, info_window, counter, rectangle) {
+        var createBoxResourceMarker = function (northlimit, southlimit, eastlimit, westlimit, info_content, counter) {
             var lat = (parseFloat(northlimit) + parseFloat(southlimit)) / 2;
             var lng = (parseFloat(eastlimit) + parseFloat(westlimit)) / 2;
             var latlng = new google.maps.LatLng(lat, lng);
@@ -748,6 +847,7 @@
             });
             markers.push(marker);
             google.maps.event.addListener(marker, 'click', function() {
+                //rectangle.setMap(null);
                 info_window.setContent(info_content);
                 info_window.open(map, marker);
                 var rectBounds = new google.maps.LatLngBounds(
@@ -755,7 +855,6 @@
                         new google.maps.LatLng(southlimit, eastlimit)
                 );
                 rectangle.set('bounds', rectBounds);
-
             });
         };
 
@@ -797,14 +896,36 @@
 
         var generateLegend = function() {
             var map_legend = document.getElementById('discover-map-legend');
+            var geo_coder = document.getElementById('geocoder-panel');
+            var reset_zoom_button = document.getElementById('resetZoom');
             map.controls[google.maps.ControlPosition.RIGHT_TOP].push(map_legend);
+            map.controls[google.maps.ControlPosition.TOP].push(geo_coder);
+            map.controls[google.maps.ControlPosition.RIGHT_BOTTOM].push(reset_zoom_button);
             var legend_content = [];
+            var geocoder_content = [];
+            var resetButton_content = [];
             // legend_content.push("<p style='margin-left:5px'><img src='//cdn.rawgit.com/googlemaps/js-marker-clusterer/gh-pages/images/m2.png'> number of sites </p>");
             legend_content.push("<p><img src='//cdn.rawgit.com/Concept211/Google-Maps-Markers/master/images/marker_red.png'> Point Coverage Resources </p>");
             legend_content.push("<p><img src='//cdn.rawgit.com/Concept211/Google-Maps-Markers/master/images/marker_blue.png'> Box Coverage Resources </p>");
+            geocoder_content.push("<input id='address' type='textbox' placeholder='Search Locations...'>");
+            geocoder_content.push("<a id='geocoder-submit' style='margin-left:10px' class='btn btn-default'><span class='glyphicon glyphicon-zoom-in'></span> Zoom In </a>");
+            resetButton_content.push("<a id='reset-zoom-btn' class='btn btn-default btn-sm' onclick='resetMapZoom()'>");
+            resetButton_content.push("<span class='glyphicon glyphicon-record'></span></a>");
             map_legend.innerHTML = legend_content.join('');
-            var reset_zoom_button = document.getElementById('resetZoom');
-            map.controls[google.maps.ControlPosition.RIGHT_BOTTOM].push(reset_zoom_button);
+            geo_coder.innerHTML = geocoder_content.join('');
+            reset_zoom_button.innerHTML = resetButton_content.join('');
+        };
+
+        var geocodeAddress = function(geocoder, resultsMap, mapDim) {
+            var address = document.getElementById('address').value;
+            geocoder.geocode({'address': address}, function(results, status) {
+                if (status === google.maps.GeocoderStatus.OK) {
+                    resultsMap.setCenter(results[0].geometry.location);
+                    resultsMap.setZoom(getBoundsZoomLevel(results[0].geometry.bounds, mapDim));
+                } else {
+                    alert('Geocode was not successful for the following reason: ' + status);
+                }
+            });
         };
 
         var resetMapZoom = function() {
@@ -819,6 +940,23 @@
                     google.maps.event.removeListener(listener);
                 });
             }
+            if (rectangle != null) {
+                rectangle.setMap(null);
+            }
+            rectangle = new google.maps.Rectangle({
+                strokeColor: '#FF0000',
+                strokeOpacity: 0.8,
+                strokeWeight: 2,
+                fillColor: '#FF0000',
+                fillOpacity: 0.35,
+                map: map,
+                bounds: {
+                    north: 0,
+                    south: 0,
+                    east: 0,
+                    west: 0
+                }
+            });
         };
 
         var manualZoomMap = function(){
@@ -944,6 +1082,27 @@
             });
         }
 
+        var setLatLngLabels = function() {
+            var ne_lat = parseFloat(document.getElementById("id_NElat").value).toFixed(3) + '°';
+            var ne_lng = parseFloat(document.getElementById("id_NElng").value).toFixed(3) + '°';
+            var sw_lat = parseFloat(document.getElementById("id_SWlat").value).toFixed(3) + '°';
+            var sw_lng = parseFloat(document.getElementById("id_SWlng").value).toFixed(3) + '°';
+            jQuery("label[for='ne-lat-value']").html(ne_lat);
+            jQuery("label[for='ne-lng-value']").html(ne_lng);
+            jQuery("label[for='sw-lat-value']").html(sw_lat);
+            jQuery("label[for='sw-lng-value']").html(sw_lng);
+        };
+
+        var truncateTitle = function(title){
+            var tokens = title.split(" ");
+            var trunc_title = "";
+            if (tokens.length > 3){
+                trunc_title = tokens[0] + " " + tokens[1] + " " + tokens[2] + "...";
+                return trunc_title;
+            } else {
+                return title;
+            }
+        };
 
         var reorderDivs = function() {
             var faceted_fields = ['creators', 'subjects', 'resource_type', 'owners_names', 'availability'];
@@ -998,7 +1157,7 @@
             window.location = requestURL;
         };
 
-        var buildURLOnCheckboxes = function (target) {
+        var buildURLOnCheckboxes = function () {
             var requestURL = '';
             $(".faceted-selections").each(function () {
                 var checkboxId = $(this).attr("id");
@@ -1104,8 +1263,6 @@
             if (window.location.search.length == 0) {
                 clearCheckboxes();
             }
-
-            //
             $(".search-field").keypress(function(event) {
                 if (event.which == 13) {
                     event.preventDefault();
@@ -1171,6 +1328,8 @@
                                 raw_results.push(item);
                             }
                             initMap(json_results);
+                            setBoxResourcesList(json_results);
+                            $("#resource-search").show();
                         },
                         failure: function(data) {
                             console.error("Ajax call for getting map data failed");
@@ -1256,24 +1415,23 @@
                 var geoSearchParams = formGeoParameters();
                 var dateSearchParams = formDateParameters();
                 var windowPath = window.location.pathname;
-                var requestURL =  windowPath + searchURL + geoSearchParams + dateSearchParams;
-
+                var requestURL =  windowPath + searchURL;
                 if($(this).is(":checked")) {
                     requestURL += buildURLOnCheckboxes();
                     var checkboxId = $(this).attr("id");
                     var sessionStorageCheckboxId = 'search-' + checkboxId;
                     sessionStorage[sessionStorageCheckboxId] = 'true';
+                    requestURL = requestURL + geoSearchParams + dateSearchParams;
                     if (window.location.hash) {
                         requestURL = requestURL + window.location.hash;
                     }
                     window.location = requestURL;
                 }
                 else {
-
                     var checkboxId = $(this).attr("id");
                     var sessionStorageCheckboxId = 'search-' + checkboxId;
                     sessionStorage.removeItem(sessionStorageCheckboxId);
-                    var updateURL =  windowPath + searchURL + geoSearchParams + dateSearchParams;
+                    var updateURL =  windowPath + searchURL + buildURLOnCheckboxes() + geoSearchParams + dateSearchParams;
                     updateURL += buildURLOnCheckboxes();
                     if (window.location.hash) {
                         updateURL = updateURL + window.location.hash;

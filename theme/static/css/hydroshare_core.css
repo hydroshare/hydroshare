@@ -3688,6 +3688,36 @@ div.group-add-photo {
 	display: inline-block;
 }
 
+#discovery-main {
+	margin-left: 150px;
+	margin-right:150px;
+}
+
+#box-coverages-panel .list-group-item {
+	border: 0;
+	border-radius: 0;
+	padding: 0 15px;
+	padding-top: 10px;
+	text-align: left;
+}
+
+#box-coverages-panel .list-group-item:hover {
+	background: #DDD;
+}
+
+#box-coverages-panel .panel-body {
+	padding: 0;
+}
+
+.box-coverages-list {
+	max-height: 200px;
+	overflow-y: auto;
+}
+
+.box-coverages-list [role="button"]{
+	cursor: pointer;
+}
+
 #discover-filter-buttons {
 	margin-bottom: 10px;
 }
@@ -3699,7 +3729,6 @@ div.group-add-photo {
 
 #discover-map {
 	height:650px;
-	border: 1px solid #DDD;
 }
 
 #discover-map-legend {
@@ -3707,6 +3736,16 @@ div.group-add-photo {
 	padding: 10px;
 	margin: 5px;
 	border-radius: 4px;
+}
+
+#geocoder-panel {
+	z-index: 5;
+	background-color: #fff;
+	padding: 5px;
+	text-align: center;
+	font-family: 'Roboto','sans-serif';
+	line-height: 30px;
+	padding-left: 10px;
 }
 
 #manual-zoom-btn {
