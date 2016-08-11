@@ -37,7 +37,6 @@ from .utils import authorize, upload_from_irods, ACTION_TO_AUTHORIZE, run_script
     get_my_resources_list, send_action_to_take_email
 from hs_core.models import GenericResource, resource_processor, CoreMetaData, Relation
 from hs_core.hydroshare.resource import METADATA_STATUS_SUFFICIENT, METADATA_STATUS_INSUFFICIENT
-from hs_core.tasks import create_bag_by_irods
 
 from . import resource_rest_api
 from . import user_rest_api
