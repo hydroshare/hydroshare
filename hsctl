@@ -23,6 +23,7 @@ OTHER_DOCKER_CONTAINERS=(postgis rabbitmq redis solr)
 ### Pre-flight Variables ###
 DEV_SERVER='python manage.py runserver 0.0.0.0:8000'
 PROD_SERVER='/usr/bin/supervisord -n'
+DEV_SSH_COMMAND="runuser -l hydro-service -c '/usr/sbin/sshd'"
 
 display_usage() {
 	echo "*** HydroShare Control script ***"
@@ -133,9 +134,12 @@ stop_hs() {
 }
 
 preflight_hs() {
-    yes | cp -rf ${HS_PATH}/docker-compose.template ${HS_PATH}/docker-compose.yml
+    cp -rf ${HS_PATH}/docker-compose.template ${HS_PATH}/docker-compose.yml
     sed -i 's!HS_PATH!'${HS_PATH}'!g' ${HS_PATH}/docker-compose.yml
     sed -i 's!HS_LOG_FILES!'${HS_LOG_FILES}'!g' ${HS_PATH}/docker-compose.yml
+    cp -rf ${HS_PATH}/init.template ${HS_PATH}/init
+    sed -i 's!HS_SERVICE_UID!'${HS_SERVICE_UID}'!g' ${HS_PATH}/init
+    sed -i 's!HS_SERVICE_GID!'${HS_SERVICE_GID}'!g' ${HS_PATH}/init
     if [[ ! -f celery/readme.txt ]]; then
         echo "*** creating placeholder file: celery/readme.txt ***"
         mkdir -p celery
@@ -159,18 +163,20 @@ preflight_hs() {
             yes | cp -rf ${SSL_CERT_DIR}/${SSL_CERT_FILE} ${HOST_SSL_DIR}
             yes | cp -rf ${SSL_CERT_DIR}/${SSL_KEY_FILE} ${HOST_SSL_DIR}
             # disable SSH server from running
-            sed -i 's!'"/usr/sbin/sshd"'!'"# REMOVED SSH COMPONENT"'!g' ${HS_PATH}/init;
+            sed -i 's!HS_SSH_SERVER!'"# REMOVED SSH COMPONENT"'!g' ${HS_PATH}/init;
         else
             echo "*** Not using SSL: USE_SSL = ${USE_SSL} ***"
+            # enable SSH server for debugging purposes
+            sed -i 's!HS_SSH_SERVER!'"${DEV_SSH_COMMAND}"'!g' ${HS_PATH}/init;
         fi
         # use production server to run HydroShare
-        sed -i 's!'"${DEV_SERVER}"'!'"${PROD_SERVER}"'!g' ${HS_PATH}/init;
+        sed -i 's!HS_DJANGO_SERVER!'"${PROD_SERVER}"'!g' ${HS_PATH}/init;
     else
         echo "*** Not using nginx: USE_NGINX = ${USE_NGINX} ***"
         # use development server to run HydroShare
-        sed -i 's!'"${PROD_SERVER}"'!'"${DEV_SERVER}"'!g' ${HS_PATH}/init;
+        sed -i 's!HS_DJANGO_SERVER!'"${DEV_SERVER}"'!g' ${HS_PATH}/init;
         # enable SSH server for debugging purposes
-        sed -i 's!'"# REMOVED SSH COMPONENT"'!'"/usr/sbin/sshd"'!g' ${HS_PATH}/init;
+        sed -i 's!HS_SSH_SERVER!'"${DEV_SSH_COMMAND}"'!g' ${HS_PATH}/init;
     fi
 }
 

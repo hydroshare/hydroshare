@@ -516,7 +516,7 @@ LOGGING = {
         'syslog': {
             'level': 'WARNING',
             'class': 'logging.handlers.RotatingFileHandler',
-            'filename': '/var/log/hydroshare/system.log',
+            'filename': '/hydroshare/log/system.log',
             'formatter': 'simple',
             'maxBytes': 1024*1024*15, # 15MB
             'backupCount': 10,
@@ -524,7 +524,7 @@ LOGGING = {
         'djangolog': {
             'level': 'DEBUG',
             'class': 'logging.handlers.RotatingFileHandler',
-            'filename': '/var/log/hydroshare/django.log',
+            'filename': '/hydroshare/log/django.log',
             'formatter': 'verbose',
             'maxBytes': 1024*1024*15, # 15MB
             'backupCount': 10,
@@ -532,7 +532,7 @@ LOGGING = {
         'hydrosharelog': {
             'level': 'DEBUG',
             'class': 'logging.handlers.RotatingFileHandler',
-            'filename': '/var/log/hydroshare/hydroshare.log',
+            'filename': '/hydroshare/log/hydroshare.log',
             'formatter': 'verbose',
             'maxBytes': 1024*1024*15, # 15MB
             'backupCount': 10,
