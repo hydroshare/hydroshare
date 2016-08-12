@@ -737,11 +737,7 @@ def _validate_csv_file(resource, uploaded_csv_file_name):
             err_message += " One or more column heading found not to be of type string."
             log.error(err_message)
             return err_message
-        # check the first column heading is 'valuedatetime'
-        if header[0].lower() != "valuedatetime":
-            err_message += " First column heading must be 'DateTime'."
-            log.error(err_message)
-            return err_message
+
         # check that there are no duplicate column headings
         if len(header) != len(set(header)):
             err_message += " There are duplicate column headings."
