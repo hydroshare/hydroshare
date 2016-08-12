@@ -1319,10 +1319,12 @@
 
             function update_download_status(task_id, download_path) {
                 download_status_timeout_id=-1;
+                // disable download button to prevent it from being clicked again
+                $('#btn-download-all').attr('disabled', 'disabled');
                 $.ajax({
                     dataType: "json",
                     cache: false,
-                    timeout: 300000,
+                    timeout: 60000,
                     type: "POST",
                     url: '/django_irods/poll_for_download/',
                     data: {
@@ -1333,6 +1335,7 @@
                             $("#loading").html('');
                             if(download_status_timeout_id > -1)
                                 clearTimeout(download_status_timeout_id);
+                            $("#btn-download-all").removeAttr('disabled');
                             $("#download-status-info").html(
                                     "If your download does not start automatically, " +
                                     "please click <a href='" + download_path + "'>here</a>.");
@@ -1348,8 +1351,11 @@
                         }
                     },
                     error: function (xhr, errmsg, err) {
+                        if(download_status_timeout_id > -1)
+                            clearTimeout(download_status_timeout_id);
+                        $("#btn-download-all").removeAttr('disabled');
                         console.log(errmsg);
-                        alert("Timeout error: resource bag cannot be generated within 5 minute");
+                        alert("Resource bag cannot be generated due to download poll errors: " + errmsg);
                     }
                 });
             }
