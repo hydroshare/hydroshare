@@ -313,7 +313,7 @@ rebuild_db_hs() {
         echo -ne "$pc ...\033[0K\r"
         sleep 1
     done
-
+    docker exec hydroshare /usr/bin/env bash scripts/chown-files
     restart_hs
     echo
     loaddb_hs LOADDB
