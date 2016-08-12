@@ -325,6 +325,14 @@ def get_resource_file_name_and_extension(res_file):
     return f_fullname, file_ext
 
 
+def get_resource_files_by_extension(resource, file_extension):
+    matching_files = []
+    for res_file in resource.files.all():
+        _, file_ext = get_resource_file_name_and_extension(res_file)
+        if file_ext == file_extension:
+            matching_files.append(res_file)
+    return matching_files
+
 def delete_fed_zone_file(file_name_with_full_path):
     '''
     Args:

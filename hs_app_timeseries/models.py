@@ -3,6 +3,7 @@ import sqlite3
 import shutil
 import logging
 import tempfile
+from uuid import uuid4
 
 from django.contrib.contenttypes.fields import GenericRelation
 from django.contrib.postgres.fields import ArrayField
@@ -533,6 +534,10 @@ class TimeSeriesMetaData(CoreMetaData):
     series_names = ArrayField(models.CharField(max_length=200, null=True, blank=True), default=[])
 
     @property
+    def resource(self):
+        return TimeSeriesResource.objects.filter(object_id=self.id).first()
+
+    @property
     def sites(self):
         return self._sites.all()
 
@@ -583,6 +588,10 @@ class TimeSeriesMetaData(CoreMetaData):
             # check that we have each type of metadata element for each of the series ids
             series_ids = range(0, len(self.series_names))
             series_ids = set([str(n) for n in series_ids])
+        else:
+            series_ids = set(TimeSeriesResult.get_series_ids(metadata_obj=self))
+
+        if series_ids:
             if series_ids != set(Site.get_series_ids(metadata_obj=self)):
                 return False
             if series_ids != set(Variable.get_series_ids(metadata_obj=self)):
@@ -781,11 +790,13 @@ class TimeSeriesMetaData(CoreMetaData):
         self.cv_aggregation_statistics.all().delete()
 
     def update_sqlite_file(self):
-        if not self.is_dirty:
+        if not self.is_dirty or not self.resource.has_sqlite_file:
             return
 
-        sqlite_file_to_update = self.resource.files.first()
-        if sqlite_file_to_update is not None:
+        if self.resource.has_csv_file:
+            self.populate_blank_sqlite_file()
+        else:
+            sqlite_file_to_update = utils.get_resource_files_by_extension(self.resource, ".sqlite")[0]
             log = logging.getLogger()
 
             # retrieve the sqlite file from iRODS and save it to temp directory
@@ -817,6 +828,171 @@ class TimeSeriesMetaData(CoreMetaData):
             finally:
                 if os.path.exists(temp_sqlite_file):
                     shutil.rmtree(os.path.dirname(temp_sqlite_file))
+
+    def populate_blank_sqlite_file(self):
+        if not self.resource.has_sqlite_file or not self.resource.has_csv_file:
+            return
+
+        # update resource specific metadata element series ids with generated GUID
+        self._update_metadata_element_series_ids_with_guids()
+        blank_sqlite_file = utils.get_resource_files_by_extension(self.resource, ".sqlite")[0]
+        log = logging.getLogger()
+
+        # retrieve the sqlite file from iRODS and save it to temp directory
+        temp_sqlite_file = utils.get_file_from_irods(blank_sqlite_file)
+        try:
+            con = sqlite3.connect(temp_sqlite_file)
+            with con:
+                # get the records in python dictionary format
+                con.row_factory = sqlite3.Row
+                cur = con.cursor()
+                # insert records to SamplingFeatures table - first delete any existing records
+                cur.execute("DELETE FROM SamplingFeatures")
+                con.commit()
+                for index, site in enumerate(self.sites):
+                    sampling_feature_id = index + 1
+                    insert_sql = "INSERT INTO SamplingFeatures(SamplingFeatureID, " \
+                                 "SamplingFeatureUUID, SamplingFeatureTypeCV, " \
+                                 "SamplingFeatureCode, SamplingFeatureName, " \
+                                 "Elevation_m, ElevationDatumCV) VALUES(?,?,?,?,?,?,?)"
+                    cur.execute(insert_sql, (sampling_feature_id, uuid4().hex, site.site_type,
+                                site.site_code, site.site_name, site.elevation_m,
+                                site.elevation_datum),)
+                # con.commit()
+                # insert record to SpatialReferences table - first delete any existing records
+                cur.execute("DELETE FROM SpatialReferences")
+                con.commit()
+                coverage = None
+                if self.coverages.all():
+                    # NOTE: It looks like there will be always maximum of only one record created
+                    # for SpatialReferences table
+                    coverage = self.coverages.all().exclude(type='period').first()
+                    if coverage:
+                        spatial_ref_id = 1
+                        srs_name = coverage.value.get("projection", '')
+                        insert_sql = "INSERT INTO SpatialReferences (SpatialReferenceID, " \
+                                     "SRSName) VALUES(?,?)"
+                        cur.execute(insert_sql, (spatial_ref_id, srs_name),)
+
+                # insert record to Sites table - first delete any existing records
+                cur.execute("DELETE FROM Sites")
+                con.commit()
+                for index, site in enumerate(self.sites):
+                    sampling_feature_id = index + 1
+                    spatial_ref_id = 1
+                    lat = ''
+                    lon = ''
+                    # since we have maximum of one Coverage element of spatial type
+                    # we will populate the latitude and longitude columns of the Sites table for the
+                    # first record
+                    if coverage and index == 0:
+                        if coverage.type == 'point':
+                            lat = coverage.value.get('north')
+                            lon = coverage.value.get('east')
+                        else:
+                            lat = (coverage.value.get('northlimit') +
+                                   coverage.value.get('southlimit'))/2
+                            lon = (coverage.value.get('eastlimit') +
+                                   coverage.value.get('westlimit'))/2
+                    insert_sql = "INSERT INTO Sites (SamplingFeatureID, SiteTypeCV, Latitude, " \
+                                 "Longitude, SpatialReferenceID) VALUES(?,?,?,?,?)"
+                    cur.execute(insert_sql, (sampling_feature_id, site.site_type, lat, lon,
+                                             spatial_ref_id), )
+
+                # insert record to Methods table - first delete any existing records
+                cur.execute("DELETE FROM Methods")
+                con.commit()
+                for index, method in enumerate(self.methods):
+                    method_id = index + 1
+                    insert_sql = "INSERT INTO Methods (MethodID, MethodTypeCV, MethodCode, " \
+                                 "MethodName, MethodDescription, MethodLink) VALUES(?,?,?,?,?,?)"
+                    cur.execute(insert_sql, (method_id, method.method_type, method.method_code,
+                                             method.method_name, method.method_description,
+                                             method.method_link),)
+                # insert record to Variables table - first delete any existing records
+                cur.execute("DELETE FROM Variables")
+                con.commit()
+                for index, variable in enumerate(self.variables):
+                    variable_id = index + 1
+                    insert_sql = "INSERT INTO Variables (VariableID, VariableTypeCV, " \
+                                 "VariableCode, VariableNameCV, VariableDefinition, " \
+                                 "SpeciationCV, NoDataValue) VALUES(?,?,?,?,?,?,?)"
+                    cur.execute(insert_sql, (variable_id, variable.variable_type,
+                                             variable.variable_code, variable.variable_name,
+                                             variable.variable_definition, variable.speciation,
+                                             variable.no_data_value),)
+
+                # insert record to Units table - first delete any existing records
+                cur.execute("DELETE FROM Units")
+                con.commit()
+                for index, ts_result in enumerate(self.time_series_results):
+                    units_id = index + 1
+                    insert_sql = "INSERT INTO Units (UnitsID, UnitsTypeCV, UnitsAbbreviation, " \
+                                 "UnitsName) VALUES(?,?,?,?)"
+                    cur.execute(insert_sql, (units_id, ts_result.units_type,
+                                             ts_result.units_abbreviation, ts_result.units_name),)
+                # insert record to ProcessingLevels table - first delete any existing records
+                cur.execute("DELETE FROM ProcessingLevels")
+                con.commit()
+                for index, pro_level in enumerate(self.processing_levels):
+                    pro_level_id = index + 1
+                    insert_sql = "INSERT INTO ProcessingLevels (ProcessingLevelID, " \
+                                 "ProcessingLevelCode, Definition, Explanation) VALUES(?,?,?,?)"
+                    cur.execute(insert_sql, (pro_level_id, pro_level.processing_level_code,
+                                             pro_level.definition, pro_level.explanation),)
+                # self._update_variables_table(con, cur)
+                # self._update_methods_table(con, cur)
+                # self._update_processinglevels_table(con, cur)
+                # self._update_sites_related_tables(con, cur)
+                # self._update_results_related_tables(con, cur)
+                # self._update_CV_tables(con, cur)
+
+                con.commit()
+                # push the updated sqlite file to iRODS
+                utils.replace_resource_file_on_irods(temp_sqlite_file, blank_sqlite_file)
+                self.is_dirty = False
+                self.save()
+
+        except sqlite3.Error as ex:
+            sqlite_err_msg = str(ex.args[0])
+            log.error("Failed to update SQLite file. Error:{}".format(sqlite_err_msg))
+            raise Exception(sqlite_err_msg)
+        except Exception as ex:
+            log.error("Failed to update SQLite file. Error:{}".format(ex.message))
+            raise ex
+        finally:
+            con.close()
+            if os.path.exists(temp_sqlite_file):
+                shutil.rmtree(os.path.dirname(temp_sqlite_file))
+
+    def _update_metadata_element_series_ids_with_guids(self):
+        if len(self.series_names) > 0:
+            series_ids = {}
+            # generate GUID for for each of the series ids
+            for ts_result in self.time_series_results:
+                guid = uuid4().hex
+                if ts_result.series_ids[0] not in series_ids:
+                    series_ids[ts_result.series_ids[0]] = guid
+
+            for ts_result in self.time_series_results:
+                ts_result.series_ids = [series_ids[ts_result.series_ids[0]]]
+                ts_result.save()
+
+            def update_to_guids(elements):
+                for element in elements:
+                    guids = []
+                    for series_id in element.series_ids:
+                        guids.append(series_ids[series_id])
+                    element.series_ids = guids
+                    element.save()
+
+            update_to_guids(self.sites)
+            update_to_guids(self.variables)
+            update_to_guids(self.methods)
+            update_to_guids(self.processing_levels)
+            # delete all series name
+            self.series_names = []
+            self.save()
 
     def _update_CV_tables(self, con, cur):
         # here 'is_dirty' true means a new term has been added
@@ -1037,7 +1213,7 @@ def _create_timeseriesresult_related_cv_terms(element, data_dict):
                     element_metadata_cv_terms=element.metadata.cv_aggregation_statistics.all(),
                     data_dict=data_dict)
 
-    
+
 def _create_cv_term(element, cv_term_class, cv_term_str, element_cv_term,
                     element_metadata_cv_terms, data_dict):
     """
