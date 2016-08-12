@@ -313,8 +313,11 @@ rebuild_db_hs() {
         echo -ne "$pc ...\033[0K\r"
         sleep 1
     done
+
+    restart_hs
     echo
     loaddb_hs LOADDB
+    docker exec hydroshare /usr/bin/env bash scripts/chown-files
     if [ "${USE_NGINX,,}" = true ]; then
         start_nginx
     fi
