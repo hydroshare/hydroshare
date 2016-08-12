@@ -40,13 +40,13 @@ hydroshare:
     # hydroshare repository
     - "HS_PATH:/hydroshare"
     # pycharm debugging
-    # - "/home/hydro/pycharm-debug:/home/docker/pycharm-debug"
+    # - "/home/hydro/pycharm-debug:/pycharm-debug"
     # log files
     - "HS_LOG_FILES:/hydroshare/log"
     # shared location for uwsgi.sock between containers
     - "/hs_tmp"
     # temp directory shared with celery workers
-    - "/shared_temp"
+    - "/shared_tmp"
   ports:
     - "1338:2022"
     - "8000:8000"

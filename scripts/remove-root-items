@@ -3,7 +3,7 @@
 # remove-root-items
 # Author: Michael Stealey <michael.j.stealey@gmail.com>
 
-find /home/docker/hydroshare -user root -ls | rev | cut -d ' ' -f 1 | rev > root-items.txt
+find /hydroshare -user root -ls | rev | cut -d ' ' -f 1 | rev > root-items.txt
 
 while read line ; do
     echo "*** REMOVE: ${line} ***"
