@@ -3729,17 +3729,18 @@ div.group-add-photo {
 	padding: 5px;
 	text-align: center;
 	font-family: 'Roboto','sans-serif';
-	line-height: 30px;
 	padding-left: 10px;
-	width: 45%;
 	background-color: rgba(255,255,255,0.75);
 	border: 1px solid #DDD;
 	border-radius: 4px;
+	width: 300px;
+    margin-left: 10px;
+    line-height: 30px;
+    font-size: 16px;
 }
 
 #geocoder-address {
-	width:60%;
-	float:left;
+    width: 210px;
 }
 
 #manual-zoom-btn {

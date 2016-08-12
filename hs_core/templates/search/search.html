@@ -907,8 +907,8 @@
             legend_content.push("<p><img src='//cdn.rawgit.com/Concept211/Google-Maps-Markers/master/images/marker_red.png'> Point Coverage Resources </p>");
             //legend_content.push("<p><img src='//cdn.rawgit.com/Concept211/Google-Maps-Markers/master/images/marker_blue.png'> Box Coverage Resources </p>");
             geocoder_content.push("<input id='geocoder-address' type='textbox' placeholder='Search Locations...'>");
-            geocoder_content.push("<a id='geocoder-submit' style='margin-left:10px' class='btn btn-default' role='button'><span class='glyphicon glyphicon-zoom-in'></span> Zoom In </a>");
-            resetButton_content.push("<a id='reset-zoom-btn' class='btn btn-default btn-sm' onclick='resetMapZoom()'>");
+            geocoder_content.push("<a id='geocoder-submit' style='margin-left:10px' class='btn btn-default' role='button'><span class='glyphicon glyphicon-zoom-in'></span> Go </a>");
+            resetButton_content.push("<a id='reset-zoom-btn' data-toggle='tooltip' title='Reset Zoom' class='btn btn-default btn-sm' onclick='resetMapZoom()'>");
             resetButton_content.push("<span class='glyphicon glyphicon-record'></span></a>");
             map_legend.innerHTML = legend_content.join('');
             geo_coder.innerHTML = geocoder_content.join('');
