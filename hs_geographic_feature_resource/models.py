@@ -113,6 +113,10 @@ class GeographicFeatureMetaData(CoreMetaData):
     originalcoverage = GenericRelation(OriginalCoverage)
     originalfileinfo = GenericRelation(OriginalFileInfo)
 
+    @property
+    def resource(self):
+        return GeographicFeatureResource.objects.filter(object_id=self.id).first()
+
     @classmethod
     def get_supported_element_names(cls):
         # get the names of all core metadata elements

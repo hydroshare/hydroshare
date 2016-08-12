@@ -76,6 +76,10 @@ class RefTSMetadata(CoreMetaData):
     quality_levels = GenericRelation(QualityControlLevel)
     datasources = GenericRelation(DataSource)
 
+    @property
+    def resource(self):
+        return RefTimeSeriesResource.objects.filter(object_id=self.id).first()
+
     @classmethod
     def get_supported_element_names(cls):
         # get the names of all core metadata elements

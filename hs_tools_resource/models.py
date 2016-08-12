@@ -169,6 +169,10 @@ class ToolMetaData(CoreMetaData):
     tool_icon = GenericRelation(ToolIcon)
     supported_sharing_status = GenericRelation(SupportedSharingStatus)
 
+    @property
+    def resource(self):
+        return ToolResource.objects.filter(object_id=self.id).first()
+
     @classmethod
     def get_supported_element_names(cls):
         elements = super(ToolMetaData, cls).get_supported_element_names()

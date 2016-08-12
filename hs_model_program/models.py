@@ -101,6 +101,10 @@ class ModelProgramMetaData(CoreMetaData):
     _mpmetadata = GenericRelation(MpMetadata)
 
     @property
+    def resource(self):
+        return ModelProgramResource.objects.filter(object_id=self.id).first()
+
+    @property
     def program(self):
         return self._mpmetadata.all().first()
 

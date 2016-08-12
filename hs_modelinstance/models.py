@@ -94,6 +94,10 @@ class ModelInstanceMetaData(CoreMetaData):
     _executed_by = GenericRelation(ExecutedBy)
 
     @property
+    def resource(self):
+        return ModelInstanceResource.objects.filter(object_id=self.id).first()
+
+    @property
     def model_output(self):
         return self._model_output.all().first()
 

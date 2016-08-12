@@ -343,6 +343,10 @@ class SWATModelInstanceMetaData(ModelInstanceMetaData):
     _model_input = GenericRelation(ModelInput)
 
     @property
+    def resource(self):
+        return SWATModelInstanceResource.objects.filter(object_id=self.id).first()
+
+    @property
     def model_objective(self):
         return self._model_objective.all().first()
 

@@ -68,6 +68,10 @@ class ScriptMetaData(CoreMetaData):
     scriptspecificmetadata = GenericRelation(ScriptSpecificMetadata)
 
     @property
+    def resource(self):
+        return ScriptResource.objects.filter(object_id=self.id).first()
+
+    @property
     def program(self):
         return self.scriptspecificmetadata.all().first()
 

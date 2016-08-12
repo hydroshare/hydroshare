@@ -180,6 +180,10 @@ class RasterMetaData(CoreMetaData):
     _ori_coverage = GenericRelation(OriginalCoverage)
 
     @property
+    def resource(self):
+        return RasterResource.objects.filter(object_id=self.id).first()
+
+    @property
     def cellInformation(self):
         return self._cell_information.all().first()
 
