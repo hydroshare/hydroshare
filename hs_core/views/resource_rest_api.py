@@ -6,7 +6,7 @@ import shutil
 import logging
 import json
 
-from django.core.urlresolvers import reverse
+from django.core.urlresolvers import reverse, resolve
 from django.core.exceptions import ObjectDoesNotExist
 from django.http import HttpResponseRedirect
 from django.shortcuts import redirect
@@ -270,7 +270,9 @@ class ResourceReadUpdateDelete(ResourceToListItemMixin, generics.RetrieveUpdateD
             bag_url = site_url + reverse('download_refts_resource_bag',
                                          kwargs={'shortkey': pk})
         else:
-            bag_url = site_url + AbstractResource.bag_url(pk) + '/true'
+            match = resolve(AbstractResource.bag_url(pk))
+            match.kwargs['rest_call'] = 'true'
+            bag_url = site_url + reverse(match.url_name, kwargs=match.kwargs)
 
         return HttpResponseRedirect(bag_url)
 
