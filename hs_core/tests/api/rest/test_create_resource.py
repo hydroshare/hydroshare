@@ -1,4 +1,5 @@
 import json
+import time
 import requests
 from dateutil import parser
 
@@ -36,6 +37,23 @@ class TestCreateResource(HSRESTTestCase):
 
         # Get resource bag
         response = self.getResourceBag(res_id)
+        if response['Content-Type'] == 'application/json':
+            content = json.loads(response.content)
+            if content['bag_status'] == "Not ready":
+                task_id = content['task_id']
+                task_status_url = "/taskstatus/{task_id}/".format(task_id=task_id)
+                status_response = self.client.get(task_status_url)
+                i = 0
+                # query task status every 3 seconds until 5 minute is up
+                while not status_response.status and i < 100:
+                    time.sleep(3)
+                    status_response = self.client.get(task_status_url)
+                    i = i+1
+                if status_response.status:
+                    # bag creation task succeeds, get bag again
+                    response = self.getResourceBag(res_id)
+                else:
+                    self.assertRaise(Exception, "Test bag cannot be created within 5 minutes")
         self.assertEqual(response['Content-Type'], 'application/zip')
         self.assertTrue(int(response['Content-Length']) > 0)
 

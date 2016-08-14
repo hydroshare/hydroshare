@@ -219,7 +219,7 @@ class ResourceList(ResourceToListItemMixin, generics.ListAPIView):
 
 
 class CheckTaskStatus(generics.RetrieveAPIView):
-    def get(selfself, request, task_id):
+    def get(self, request, task_id):
         return HttpResponseRedirect(reverse('check_task_status', kwargs={'task_id': task_id}))
 
 

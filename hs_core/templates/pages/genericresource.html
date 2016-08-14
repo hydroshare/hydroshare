@@ -1325,9 +1325,11 @@
                     dataType: "json",
                     cache: false,
                     timeout: 60000,
-                    type: "GET",
+                    type: "POST",
                     url: '/django_irods/check_task_status/',
-                    data: 'task_id='+task_id,
+                    data: {
+                        task_id: task_id
+                    },
                     success: function(data) {
                         if(data.status) {
                             $("#loading").html('');
