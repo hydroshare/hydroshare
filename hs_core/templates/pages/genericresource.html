@@ -1325,11 +1325,9 @@
                     dataType: "json",
                     cache: false,
                     timeout: 60000,
-                    type: "POST",
-                    url: '/django_irods/poll_for_download/',
-                    data: {
-                      task_id: task_id
-                    },
+                    type: "GET",
+                    url: '/django_irods/check_task_status/',
+                    data: 'task_id='+task_id,
                     success: function(data) {
                         if(data.status) {
                             $("#loading").html('');
