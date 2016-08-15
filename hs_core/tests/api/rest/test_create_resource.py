@@ -38,7 +38,7 @@ class TestCreateResource(HSRESTTestCase):
 
         # Get resource bag
         response = self.getResourceBag(res_id)
-        self.assertEqual(response['Content-Type'], 'application/zip' or 'application/json')
+
         if response['Content-Type'] == 'application/json':
             content = json.loads(response.content)
             if content['bag_status'] == "Not ready":
