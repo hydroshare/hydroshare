@@ -6,7 +6,7 @@ import shutil
 import logging
 import json
 
-from django.core.urlresolvers import reverse, resolve
+from django.core.urlresolvers import reverse
 from django.core.exceptions import ObjectDoesNotExist
 from django.http import HttpResponseRedirect
 from django.shortcuts import redirect
