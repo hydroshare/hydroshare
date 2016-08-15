@@ -10,6 +10,7 @@ from django.contrib.postgres.fields import ArrayField
 from django.core.files.uploadedfile import UploadedFile
 from django.core.exceptions import ValidationError
 from django.db import models
+from django.utils.timezone import now
 
 from mezzanine.pages.page_processors import processor_for
 
@@ -849,12 +850,12 @@ class TimeSeriesMetaData(CoreMetaData):
                 # insert records to SamplingFeatures table - first delete any existing records
                 cur.execute("DELETE FROM SamplingFeatures")
                 con.commit()
+                insert_sql = "INSERT INTO SamplingFeatures(SamplingFeatureID, " \
+                             "SamplingFeatureUUID, SamplingFeatureTypeCV, " \
+                             "SamplingFeatureCode, SamplingFeatureName, " \
+                             "Elevation_m, ElevationDatumCV) VALUES(?,?,?,?,?,?,?)"
                 for index, site in enumerate(self.sites):
                     sampling_feature_id = index + 1
-                    insert_sql = "INSERT INTO SamplingFeatures(SamplingFeatureID, " \
-                                 "SamplingFeatureUUID, SamplingFeatureTypeCV, " \
-                                 "SamplingFeatureCode, SamplingFeatureName, " \
-                                 "Elevation_m, ElevationDatumCV) VALUES(?,?,?,?,?,?,?)"
                     cur.execute(insert_sql, (sampling_feature_id, uuid4().hex, site.site_type,
                                 site.site_code, site.site_name, site.elevation_m,
                                 site.elevation_datum),)
@@ -863,6 +864,8 @@ class TimeSeriesMetaData(CoreMetaData):
                 cur.execute("DELETE FROM SpatialReferences")
                 con.commit()
                 coverage = None
+                insert_sql = "INSERT INTO SpatialReferences (SpatialReferenceID, " \
+                             "SRSName) VALUES(?,?)"
                 if self.coverages.all():
                     # NOTE: It looks like there will be always maximum of only one record created
                     # for SpatialReferences table
@@ -870,18 +873,20 @@ class TimeSeriesMetaData(CoreMetaData):
                     if coverage:
                         spatial_ref_id = 1
                         srs_name = coverage.value.get("projection", '')
-                        insert_sql = "INSERT INTO SpatialReferences (SpatialReferenceID, " \
-                                     "SRSName) VALUES(?,?)"
                         cur.execute(insert_sql, (spatial_ref_id, srs_name),)
 
                 # insert record to Sites table - first delete any existing records
                 cur.execute("DELETE FROM Sites")
                 con.commit()
+                insert_sql = "INSERT INTO Sites (SamplingFeatureID, SiteTypeCV, Latitude, " \
+                             "Longitude, SpatialReferenceID) VALUES(?,?,?,?,?)"
                 for index, site in enumerate(self.sites):
                     sampling_feature_id = index + 1
                     spatial_ref_id = 1
                     lat = ''
                     lon = ''
+                    # TODO: the following code needs to change once we add 'lat' and 'lon'
+                    # attribute to Site element
                     # since we have maximum of one Coverage element of spatial type
                     # we will populate the latitude and longitude columns of the Sites table for the
                     # first record
@@ -894,29 +899,28 @@ class TimeSeriesMetaData(CoreMetaData):
                                    coverage.value.get('southlimit'))/2
                             lon = (coverage.value.get('eastlimit') +
                                    coverage.value.get('westlimit'))/2
-                    insert_sql = "INSERT INTO Sites (SamplingFeatureID, SiteTypeCV, Latitude, " \
-                                 "Longitude, SpatialReferenceID) VALUES(?,?,?,?,?)"
+
                     cur.execute(insert_sql, (sampling_feature_id, site.site_type, lat, lon,
                                              spatial_ref_id), )
 
                 # insert record to Methods table - first delete any existing records
                 cur.execute("DELETE FROM Methods")
                 con.commit()
+                insert_sql = "INSERT INTO Methods (MethodID, MethodTypeCV, MethodCode, " \
+                             "MethodName, MethodDescription, MethodLink) VALUES(?,?,?,?,?,?)"
                 for index, method in enumerate(self.methods):
                     method_id = index + 1
-                    insert_sql = "INSERT INTO Methods (MethodID, MethodTypeCV, MethodCode, " \
-                                 "MethodName, MethodDescription, MethodLink) VALUES(?,?,?,?,?,?)"
                     cur.execute(insert_sql, (method_id, method.method_type, method.method_code,
                                              method.method_name, method.method_description,
                                              method.method_link),)
                 # insert record to Variables table - first delete any existing records
                 cur.execute("DELETE FROM Variables")
                 con.commit()
+                insert_sql = "INSERT INTO Variables (VariableID, VariableTypeCV, " \
+                             "VariableCode, VariableNameCV, VariableDefinition, " \
+                             "SpeciationCV, NoDataValue) VALUES(?,?,?,?,?,?,?)"
                 for index, variable in enumerate(self.variables):
                     variable_id = index + 1
-                    insert_sql = "INSERT INTO Variables (VariableID, VariableTypeCV, " \
-                                 "VariableCode, VariableNameCV, VariableDefinition, " \
-                                 "SpeciationCV, NoDataValue) VALUES(?,?,?,?,?,?,?)"
                     cur.execute(insert_sql, (variable_id, variable.variable_type,
                                              variable.variable_code, variable.variable_name,
                                              variable.variable_definition, variable.speciation,
@@ -925,21 +929,87 @@ class TimeSeriesMetaData(CoreMetaData):
                 # insert record to Units table - first delete any existing records
                 cur.execute("DELETE FROM Units")
                 con.commit()
+                insert_sql = "INSERT INTO Units (UnitsID, UnitsTypeCV, UnitsAbbreviation, " \
+                             "UnitsName) VALUES(?,?,?,?)"
                 for index, ts_result in enumerate(self.time_series_results):
                     units_id = index + 1
-                    insert_sql = "INSERT INTO Units (UnitsID, UnitsTypeCV, UnitsAbbreviation, " \
-                                 "UnitsName) VALUES(?,?,?,?)"
                     cur.execute(insert_sql, (units_id, ts_result.units_type,
                                              ts_result.units_abbreviation, ts_result.units_name),)
                 # insert record to ProcessingLevels table - first delete any existing records
                 cur.execute("DELETE FROM ProcessingLevels")
                 con.commit()
+                insert_sql = "INSERT INTO ProcessingLevels (ProcessingLevelID, " \
+                             "ProcessingLevelCode, Definition, Explanation) VALUES(?,?,?,?)"
                 for index, pro_level in enumerate(self.processing_levels):
                     pro_level_id = index + 1
-                    insert_sql = "INSERT INTO ProcessingLevels (ProcessingLevelID, " \
-                                 "ProcessingLevelCode, Definition, Explanation) VALUES(?,?,?,?)"
                     cur.execute(insert_sql, (pro_level_id, pro_level.processing_level_code,
                                              pro_level.definition, pro_level.explanation),)
+
+                # insert record to People table - first delete any existing records
+                cur.execute("DELETE FROM People")
+                con.commit()
+                insert_sql = "INSERT INTO People (PersonID, PersonFirstName, " \
+                             "PersonMiddleName, PersonLastName) VALUES(?,?,?,?)"
+                people_data = []
+                for index, person in enumerate(list(self.creators.all()) +
+                                               list(self.contributors.all())):
+                    person_id = index + 1
+                    name_parts = person.name.split()
+                    first_name = name_parts[0]
+                    mid_name = ''
+                    last_name = ''
+                    if len(name_parts) > 2:
+                        mid_name = name_parts[1]
+                        last_name = name_parts[2]
+                    elif len(name_parts) == 2:
+                        last_name = name_parts[1]
+                    cur.execute(insert_sql, (person_id, first_name, mid_name, last_name), )
+                    people_data.append({'person_id': person_id,
+                                        'organization': person.organization,
+                                        'email': person.email,
+                                        'phone': person.phone,
+                                        'address': person.address})
+                # insert record to Organizations table - first delete any existing records
+                cur.execute("DELETE FROM Organizations")
+                con.commit()
+                organizations = []
+                org_id = 1
+                insert_sql = "INSERT INTO Organizations (OrganizationID, OrganizationTypeCV, " \
+                             "OrganizationCode, 'OrganizationName') VALUES(?,?,?,?)"
+                for person in (list(self.creators.all()) + list(self.contributors.all())):
+                    if person.organization and person.organization not in organizations:
+                        organizations.append(person.organization)
+                        cur.execute(insert_sql, (org_id, 'Unknown', str(org_id),
+                                                 person.organization),)
+                        org_id += 1
+
+                # insert record to Affiliations table - first delete any existing records
+                cur.execute("DELETE FROM Affiliations")
+                con.commit()
+                insert_sql = "INSERT INTO Affiliations (AffiliationID, PersonID, OrganizationID, " \
+                             "AffiliationStartDate, PrimaryPhone, PrimaryEmail, " \
+                             "PrimaryAddress) VALUES(?,?,?,?,?,?,?)"
+
+                select_sql = "SELECT * FROM People"
+                cur.execute(select_sql)
+                people = cur.fetchall()
+                affiliation_id = 0
+                for person in people:
+                    affiliation_id += 1
+                    person_data = [p for p in people_data if p['person_id'] ==
+                                   person['PersonID']][0]
+                    org = None
+                    if person_data['organization']:
+                        cur.execute("SELECT * FROM Organizations WHERE OrganizationName=?",
+                                    (person_data['organization'],))
+                        org = cur.fetchone()
+                    org_id = org['OrganizationID'] if org else None
+                    cur.execute(insert_sql, (affiliation_id, person['PersonID'], org_id,
+                                             now(), person_data['phone'], person_data['email'],
+                                             person_data['address']), )
+
+                # TODO: start populating the Actions table
+
                 # self._update_variables_table(con, cur)
                 # self._update_methods_table(con, cur)
                 # self._update_processinglevels_table(con, cur)
