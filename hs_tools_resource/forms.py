@@ -3,7 +3,7 @@ from django import forms
 
 from crispy_forms.layout import Layout, Field
 
-from models import RequestUrlBase, ToolVersion, SupportedResTypes, ToolIcon
+from models import RequestUrlBase, ToolVersion, SupportedResTypes, ToolIcon, SupportedSharingStatus
 from hs_core.forms import BaseFormHelper
 
 
@@ -16,7 +16,7 @@ class UrlBaseFormHelper(BaseFormHelper):
         layout = Layout(
             Field('value', css_class=field_width)
         )
-        kwargs['element_name_label'] = 'App URL'
+        kwargs['element_name_label'] = "App URL Pattern <a href='/terms#AppURL' target='_blank'><font size='3'>Help</font></a>"
 
         super(UrlBaseFormHelper, self).__init__(allow_edit, res_short_id, element_id, element_name, layout,  *args, **kwargs)
 
@@ -25,6 +25,7 @@ class UrlBaseForm(ModelForm):
     def __init__(self, allow_edit=True, res_short_id=None, element_id=None, *args, **kwargs):
         super(UrlBaseForm, self).__init__(*args, **kwargs)
         self.helper = UrlBaseFormHelper(allow_edit, res_short_id, element_id, element_name='RequestUrlBase')
+        self.fields['value'].label = ''
 
     class Meta:
         model = RequestUrlBase
@@ -52,6 +53,7 @@ class VersionForm(ModelForm):
     def __init__(self, allow_edit=True, res_short_id=None, element_id=None, *args, **kwargs):
         super(VersionForm, self).__init__(*args, **kwargs)
         self.helper = VersionFormHelper(allow_edit, res_short_id, element_id, element_name='ToolVersion')
+        self.fields['value'].label = ""
 
     class Meta:
         model = ToolVersion
@@ -70,7 +72,7 @@ class ToolIconFormHelper(BaseFormHelper):
         layout = Layout(
                 Field('url', css_class=field_width)
         )
-        kwargs['element_name_label'] = 'Tool Icon'
+        kwargs['element_name_label'] = 'Icon URL'
         super(ToolIconFormHelper, self).__init__(allow_edit, res_short_id, element_id, element_name, layout,  *args, **kwargs)
 
 
@@ -78,7 +80,7 @@ class ToolIconForm(ModelForm):
     def __init__(self, allow_edit=True, res_short_id=None, element_id=None, *args, **kwargs):
         super(ToolIconForm, self).__init__(*args, **kwargs)
         self.helper = ToolIconFormHelper(allow_edit, res_short_id, element_id, element_name='ToolIcon')
-        self.fields['url'].label = "URL"
+        self.fields['url'].label = ""
 
     class Meta:
         model = ToolIcon
@@ -89,7 +91,7 @@ class ToolIconForm(ModelForm):
 class ToolIconValidationForm(forms.Form):
     url = forms.CharField(max_length=1024)
 
-parameters_choices = (
+SupportedResTypes_choices = (
     ('GenericResource', 'Generic Resource'),
     ('RasterResource', 'Raster Resource'),
     ('RefTimeSeriesResource', 'HIS Referenced Time Series Resource'),
@@ -99,7 +101,7 @@ parameters_choices = (
     ('ModelInstanceResource', 'Model Instance Resource'),
     ('SWATModelInstanceResource', 'SWAT Model Instance Resource'),
     ('GeographicFeatureResource', 'Geographic Feature Resource'),
-    ('ScriptResource', 'Script Resource')
+    ('ScriptResource', 'Script Resource'),
 )
 
 
@@ -120,33 +122,85 @@ class SupportedResTypeFormHelper(BaseFormHelper):
 
 
 class SupportedResTypesForm(ModelForm):
-    supported_res_types = forms.MultipleChoiceField(choices=parameters_choices,
+    supported_res_types = forms.MultipleChoiceField(choices=SupportedResTypes_choices,
                                                     widget=forms.CheckboxSelectMultiple(
                                                             attrs={'style': 'width:auto;margin-top:-5px'}))
 
     def __init__(self, allow_edit=True, res_short_id=None, element_id=None, *args, **kwargs):
+        model_instance = kwargs.get('instance')
         super(SupportedResTypesForm, self).__init__(*args, **kwargs)
-        self.fields['supported_res_types'].label = "Choices: "
-        self.helper = SupportedResTypeFormHelper(allow_edit, res_short_id, element_id, element_name='SupportedResTypes')
-        if self.instance:
-            try:
-                supported_res_types = self.instance.supported_res_types.all()
-                if len(supported_res_types) > 0:
-                    checked_item_list = []
-                    for parameter in supported_res_types:
-                        checked_item_list.append(parameter.description)
+        self.fields['supported_res_types'].label = "Choose Resource Types:"
+        self.helper = SupportedResTypeFormHelper(allow_edit, res_short_id, element_id,
+                                                 element_name='SupportedResTypes')
 
-                    self.fields['supported_res_types'].initial = checked_item_list
-                else:
-                    self.fields['supported_res_types'].initial = []
-            except:
-                self.fields['supported_res_types'].initial = []
+        if model_instance:
+            supported_res_types = model_instance.supported_res_types.all()
+            if len(supported_res_types) > 0:
+                # NOTE: The following code works for SWAT res type but does not work here!!!
+                # self.fields['supported_res_types'].initial =
+                #   [parameter.description for parameter in supported_res_types]
+
+                self.initial['supported_res_types'] = \
+                    [parameter.description for parameter in supported_res_types]
+            else:
+                self.initial['supported_res_types'] = []
+
 
     class Meta:
         model = SupportedResTypes
-        fields = '__all__'
+        fields = ('supported_res_types',)
 
 
 class SupportedResTypesValidationForm(forms.Form):
-    supported_res_types = forms.MultipleChoiceField(choices=parameters_choices, required=False)
+    supported_res_types = forms.MultipleChoiceField(choices=SupportedResTypes_choices, required=False)
 
+
+SupportedSharingStatus_choices = (
+    ('Published', 'Published'),
+    ('Public', 'Public'),
+    ('Discoverable', 'Discoverable'),
+    ('Private', 'Private'),
+)
+
+
+class SupportedSharingStatusFormHelper(BaseFormHelper):
+    def __init__(self, allow_edit=True, res_short_id=None,
+                 element_id=None, element_name=None,  *args, **kwargs):
+
+        # the order in which the model fields are listed for
+        # the FieldSet is the order these fields will be displayed
+        layout = Layout(MetadataField('sharing_status'))
+        kwargs['element_name_label'] = 'Supported Resource Sharing Status'
+        super(SupportedSharingStatusFormHelper, self).\
+            __init__(allow_edit, res_short_id, element_id,
+                     element_name, layout,  *args, **kwargs)
+
+
+class SupportedSharingStatusForm(ModelForm):
+    sharing_status = forms.MultipleChoiceField(choices=SupportedSharingStatus_choices,
+                                               widget=forms.CheckboxSelectMultiple(
+                                                attrs={'style': 'width:auto;margin-top:-5px'}))
+
+    def __init__(self, allow_edit=True, res_short_id=None, element_id=None, *args, **kwargs):
+        model_instance = kwargs.get('instance')
+        super(SupportedSharingStatusForm, self).__init__(*args, **kwargs)
+        self.fields['sharing_status'].label = "Choose Sharing Status:"
+        self.helper = SupportedSharingStatusFormHelper(allow_edit, res_short_id, element_id,
+                                                       element_name='SupportedSharingStatus')
+        if model_instance:
+            supported_sharing_status = model_instance.sharing_status.all()
+            if len(supported_sharing_status) > 0:
+                self.initial['sharing_status'] = \
+                    [parameter.description for parameter in supported_sharing_status]
+            else:
+                self.initial['sharing_status'] = []
+
+
+    class Meta:
+        model = SupportedSharingStatus
+        fields = ('sharing_status',)
+
+
+class SupportedSharingStatusValidationForm(forms.Form):
+    sharing_status = forms.MultipleChoiceField(choices=SupportedSharingStatus_choices,
+                                               required=False)

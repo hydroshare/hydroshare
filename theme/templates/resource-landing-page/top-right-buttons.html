@@ -1,10 +1,11 @@
 {#        ======= Top right buttons =======#}
-<div class="col-sm-12">
+<div class="col-sm-12 height-fix">
     <div class="lined-wrapper"></div>
-    {% if not metadata_form %}
-        <div class="custom-btn-toolbar">
+
+    <div class="custom-btn-toolbar">
+        {% if not metadata_form %}
             {% if not is_owner_user and not is_edit_user and not is_view_user %}
-                {% if is_mine %}
+                {% if resource_is_mine %}
                     <form class="pull-right" data-id="form-add-to-my-resources"
                           action="/hsapi/_internal/{{ cm.short_id }}/label-resource-action/"
                           method="post">
@@ -16,16 +17,18 @@
                                 class="glyphicon glyphicon-inbox icon-button btn-resource-remove"></button>
                     </form>
                 {% else %}
-                    <form class="pull-right" data-id="form-add-to-my-resources"
-                          action="/hsapi/_internal/{{ cm.short_id }}/label-resource-action/"
-                          method="post">
-                        {% csrf_token %}
-                        <input type="hidden" name="label_type" value="MINE">
-                        <input type="hidden" name="action" value="CREATE">
-                        <button id="btnMyResources" data-toggle="tooltip" data-placement="auto"
-                                title="Add to my resources" data-form-id="form-add-to-my-resources"
-                                class="glyphicon glyphicon-inbox icon-button btn-resource-add"></button>
-                    </form>
+                    {% if user.is_authenticated %}
+                        <form class="pull-right" data-id="form-add-to-my-resources"
+                              action="/hsapi/_internal/{{ cm.short_id }}/label-resource-action/"
+                              method="post">
+                            {% csrf_token %}
+                            <input type="hidden" name="label_type" value="MINE">
+                            <input type="hidden" name="action" value="CREATE">
+                            <button id="btnMyResources" data-toggle="tooltip" data-placement="auto"
+                                    title="Add to my resources" data-form-id="form-add-to-my-resources"
+                                    class="glyphicon glyphicon-inbox icon-button btn-resource-add"></button>
+                        </form>
+                    {% endif %}
                 {% endif %}
             {% endif %}
 
@@ -33,20 +36,6 @@
                 {% if page.perms.change or is_owner_user and cm.raccess.published %}
                     <form class="inline pull-right" action="{{ cm.get_absolute_url }}" method="post">
                         {% csrf_token %}
-                        {% if page.perms.delete and cm.can_be_public_or_discoverable %}
-                            <a id="publish" data-toggle="modal" data-target="#submit-for-publication-dialog">
-                                <span data-toggle="tooltip" data-placement="auto" title="Publish this resource"
-                                      class="glyphicon glyphicon-book icon-button btn-edit"></span>
-                            </a>
-                        {% endif %}
-
-                        {% if page.perms.delete or cm.raccess.published %}
-                            <a id="new-version" data-toggle="modal" data-target="#new-version-resource-dialog">
-                                <span data-toggle="tooltip" data-placement="auto" title="Create a new version of this resource"
-                                      class="glyphicon glyphicon-new-window icon-button btn-edit"></span>
-                            </a>
-                        {% endif %}
-
                         {% if page.perms.delete %}
                             <a id="delete" data-toggle="modal" data-target="#delete-resource-dialog">
                                 <span data-toggle="tooltip" data-placement="auto" title="Delete this resource"
@@ -54,22 +43,44 @@
                             </a>
                         {% endif %}
 
-                        {% if page.perms.change  %}
-                        <input name="resource-mode" type="hidden" value="edit"/>
+                        {% if page.perms.change %}
+                            <input name="resource-mode" type="hidden" value="edit"/>
                             <button id="edit-metadata" type="submit" data-toggle="tooltip" data-placement="auto"
                                     title="Edit this resource"
-                                    class="glyphicon glyphicon-pencil icon-button btn-edit"></button>
+                                    class="glyphicon glyphicon-pencil icon-button icon-blue"></button>
+                        {% endif %}
+
+                        {% if page.perms.delete and cm.can_be_public_or_discoverable %}
+                            {% if cm.resource_type|lower == "collectionresource" and cm.are_all_contained_resources_published or cm.resource_type|lower != "collectionresource" %}
+                                <a id="publish" data-toggle="modal" data-target="#submit-for-publication-dialog">
+                                    <span data-toggle="tooltip" data-placement="auto" title="Publish this resource"
+                                          class="glyphicon glyphicon-globe icon-button icon-blue"></span>
+                                </a>
+                            {% endif %}
+                        {% endif %}
+
+                        {% if page.perms.delete or cm.raccess.published %}
+                            <a id="new-version" data-toggle="modal" data-target="#new-version-resource-dialog">
+                                <span data-toggle="tooltip" data-placement="auto"
+                                      title="Create a new version of this resource"
+                                      class="glyphicon glyphicon-plus-sign icon-button icon-blue"></span>
+                            </a>
                         {% endif %}
                     </form>
                 {% endif %}
             {% endif %}
-        </div>
-    {% else %}
-        <div class="custom-btn-toolbar">
+        {% else %}
             <a href="{{ cm.get_absolute_url }}">
                     <span data-toggle="tooltip" data-placement="auto" title="View resource"
-                          class="glyphicon glyphicon-circle-arrow-left icon-button btn-edit"></span>
+                          class="glyphicon glyphicon-circle-arrow-left icon-button icon-blue"></span>
             </a>
-        </div>
-    {% endif %}
+        {% endif %}
+
+        {% if show_manage_access %}
+        <a data-toggle="modal" data-target="#manage-access">
+            <span data-toggle="tooltip" data-placement="auto" title="Manage who has access. Use this button to share your resource with specific HydroShare users. You can give other users the ability to view or edit this resource. You can also add additional owners who will have full permissions."
+                  class="glyphicon glyphicon-share icon-button icon-blue"></span>
+        </a>
+        {% endif %}
+    </div>
 </div>

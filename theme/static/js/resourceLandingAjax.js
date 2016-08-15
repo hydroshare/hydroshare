@@ -4,7 +4,7 @@
 
 function label_ajax_submit() {
     var el = $(this);
-    var dataFormID = el.attr("data-form-id")
+    var dataFormID = el.attr("data-form-id");
     var formID = $("form[data-id='" + dataFormID + "']");
     var form = $(formID);
     var datastring = form.serialize();
@@ -24,11 +24,13 @@ function label_ajax_submit() {
                     action.val("DELETE");
                     $("#btnMyResources").removeClass("btn-resource-add");
                     $("#btnMyResources").addClass("btn-resource-remove");
+                    $("#btnMyResources").attr("title", "Remove from my resources");
                 }
                 else {
                     action.val("CREATE");
                     $("#btnMyResources").addClass("btn-resource-add");
                     $("#btnMyResources").removeClass("btn-resource-remove");
+                    $("#btnMyResources").attr("title", "Add to my resources");
                 }
             }
         },
@@ -143,13 +145,30 @@ function change_share_permission_ajax_submit(form_id) {
 }
 
 function share_resource_ajax_submit(form_id) {
-    if (!$("#id_user-deck > .hilight").length) {
-        return false; // If no user selected, ignore the request
-    }
     $form = $('#' + form_id);
-
     var datastring = $form.serialize();
-    var share_with = $("#id_user-deck > .hilight")[0].getAttribute("data-value");
+    var share_with;
+    var shareType;
+
+    if ($("#div-invite-people button[data-value='users']").hasClass("btn-primary")) {
+        if ($("#id_user-deck > .hilight").length > 0) {
+            share_with = $("#id_user-deck > .hilight")[0].getAttribute("data-value");
+            shareType = "user";
+        }
+        else {
+            return false;
+        }
+    }
+    else {
+        if ($("#id_group-deck > .hilight").length > 0) {
+            share_with = $("#id_group-deck > .hilight")[0].getAttribute("data-value");
+            shareType = "group";
+        }
+        else {
+            return false;
+        }
+    }
+
     var access_type = $("#selected_role")[0].getAttribute("data-role");
     var url = $form.attr('action') + access_type + "/" + share_with + "/";
     setPointerEvents(false);
@@ -169,10 +188,19 @@ function share_resource_ajax_submit(form_id) {
                 var rowTemplate = $("#templateRow").clone();
 
                 // Form actions
-                var unshareUrl = $form.attr('action').replace("share-resource-with-user", "unshare-resource-with-user") + share_with + "/";
+                var unshareUrl;
+                if (shareType == "user"){
+                    unshareUrl = $form.attr('action').replace("share-resource-with-user", "unshare-resource-with-user") + share_with + "/";
+                }
+                else {
+                    unshareUrl = $form.attr('action').replace("share-resource-with-group", "unshare-resource-with-group") + share_with + "/";
+                }
+
                 var viewUrl = $form.attr('action') + "view" + "/" + share_with + "/";
                 var changeUrl = $form.attr('action') + "edit" + "/" + share_with + "/";
                 var ownerUrl = $form.attr('action') + "owner" + "/" + share_with + "/";
+
+
                 rowTemplate.find(".remove-user-form").attr('action', unshareUrl);
                 rowTemplate.find(".remove-user-form").attr('id', 'form-remove-user-' + share_with);
                 rowTemplate.find(".remove-user-form .btn-remove-row").attr("onclick", "unshare_resource_ajax_submit('form-remove-user-" + share_with + "')")
@@ -185,10 +213,16 @@ function share_resource_ajax_submit(form_id) {
                 rowTemplate.find(".share-form-edit").attr("id", "share-edit-" + share_with);
                 rowTemplate.find(".share-form-edit").attr("data-access-type", "Can edit");
                 rowTemplate.find(".share-form-edit a").attr("onclick", "change_share_permission_ajax_submit('share-edit-" + share_with + "')");
-                rowTemplate.find(".share-form-owner").attr('action', ownerUrl);
-                rowTemplate.find(".share-form-owner").attr("id", "share-owner-" + share_with);
-                rowTemplate.find(".share-form-owner").attr("data-access-type", "Is owner");
-                rowTemplate.find(".share-form-owner a").attr("onclick", "change_share_permission_ajax_submit('share-owner-" + share_with + "')");
+                if (shareType == "user") {
+                    rowTemplate.find(".share-form-owner").attr('action', ownerUrl);
+                    rowTemplate.find(".share-form-owner").attr("id", "share-owner-" + share_with);
+                    rowTemplate.find(".share-form-owner").attr("data-access-type", "Is owner");
+                    rowTemplate.find(".share-form-owner a").attr("onclick", "change_share_permission_ajax_submit('share-owner-" + share_with + "')");
+                }
+                else {
+                    rowTemplate.find(".share-form-owner").parent().remove();
+                }
+
                 if (json_response.name) {
                     rowTemplate.find("span[data-col='name']").text(json_response.name);
                 }
@@ -199,11 +233,23 @@ function share_resource_ajax_submit(form_id) {
                 if (!json_response.is_current_user) {
                     rowTemplate.find(".you-flag").hide();
                 }
-                rowTemplate.find("span[data-col='user-name']").text(json_response.username);
+                if (shareType == "user") {
+                    rowTemplate.find("span[data-col='user-name']").text(json_response.username);
+                }
+                else {
+                    rowTemplate.find("span[data-col='user-name']").text("(Group)");
+                }
 
-                if (json_response.profile_pic != "No picture provided") {
-                    rowTemplate.find(".profile-pic-thumbnail").attr("style", "background-image: url('" + json_response.profile_pic + "')");
-                    rowTemplate.find(".profile-pic-thumbnail").removeClass("user-icon");
+                if (shareType == "user") {
+                    rowTemplate.find(".group-image-wrapper").remove();
+                    if (json_response.profile_pic != "No picture provided") {
+                        rowTemplate.find(".profile-pic-thumbnail").attr("style", "background-image: url('" + json_response.profile_pic + "')");
+                        rowTemplate.find(".profile-pic-thumbnail").removeClass("user-icon");
+                    }
+                }
+                else {
+                    rowTemplate.find(".profile-pic-thumbnail").remove();
+                    rowTemplate.find(".group-image-wrapper .group-image-extra-small").attr("style", "background-image: url('" + json_response.group_pic + "')");
                 }
 
                 if (access_type == "view") {
@@ -246,19 +292,23 @@ function metadata_update_ajax_submit(form_id){
         <button type="button" class="close" data-dismiss="alert">x</button> \
         <strong>Success! </strong> \
         Metadata updated.\
-    </div>'
+    </div>';
     $alert_error = '<div class="alert alert-danger" id="error-alert"> \
         <button type="button" class="close" data-dismiss="alert">x</button> \
         <strong>Error! </strong> \
         Metadata failed to update.\
-    </div>'
-    $form=$('#' + form_id);
+    </div>';
+
+    var flagAsync = (form_id == "id-subject" ? false : true);   // Run keyword related changes synchronously to prevent integrity error
+
+    $form = $('#' + form_id);
     var datastring = $form.serialize();
     $.ajax({
         type: "POST",
         url: $form.attr('action'),
         dataType: 'html',
         data: datastring,
+        async: flagAsync,
         success: function(result)
         {
             /* The div contains now the updated form */
@@ -266,6 +316,11 @@ function metadata_update_ajax_submit(form_id){
             json_response = JSON.parse(result);
             if (json_response.status === 'success')
             {
+                if (($form.attr("id") == "id-site" || $form.attr("id") == "id-variable" ||
+                    $form.attr("id") == "id-method" || $form.attr("id") == "id-processinglevel" ||
+                    $form.attr("id") == "id-timeseriesresult") && ($("#has-sqlite-file").val()) === "True") {
+                    $("#sql-file-update").show();
+                }
                 $(document).trigger("submit-success");
                 $form.find("button.btn-primary").hide();
                 if (json_response.hasOwnProperty('element_id')){
@@ -319,4 +374,36 @@ function metadata_update_ajax_submit(form_id){
     });
     //don't submit the form
     return false;
+}
+
+function get_user_info_ajax_submit(url, obj) {
+    var entry = $(obj).parent().parent().parent().parent().find("#id_user-deck > .hilight");
+    if (entry.length < 1) {
+        return;
+    }
+
+    var userID = entry[0].getAttribute("data-value");
+    url = url + userID;
+
+    $.ajax({
+        type: "POST",
+        url: url,
+        dataType: 'html',
+        success: function (result) {
+            var formContainer = $(obj).parent().parent();
+            var json_response = JSON.parse(result);
+
+            formContainer.find("input[name='name']").val(json_response.name);
+            formContainer.find("input[name='description']").val(json_response.url);
+            formContainer.find("input[name='organization']").val(json_response.organization);
+            formContainer.find("input[name='email']").val(json_response.email);
+            formContainer.find("input[name='address']").val(json_response.address);
+            formContainer.find("input[name='phone']").val(json_response.phone);
+            formContainer.find("input[name='homepage']").val(json_response.website);
+            formContainer.submit();
+        },
+        error: function(XMLHttpRequest, textStatus, errorThrown){
+
+        }
+    });
 }

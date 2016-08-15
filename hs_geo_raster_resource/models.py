@@ -105,9 +105,13 @@ class BandInformation(AbstractMetaDataElement):
     name = models.CharField(max_length=500, null=True)
     variableName = models.TextField(max_length=100, null=True)
     variableUnit = models.CharField(max_length=50, null=True)
+
     # optional fields
     method = models.TextField(null=True, blank=True)
     comment = models.TextField(null=True, blank=True)
+    noDataValue = models.TextField(null=True, blank=True)
+    maximumValue = models.TextField(null=True, blank=True)
+    minimumValue = models.TextField(null=True, blank=True)
 
     def __unicode__(self):
         return self.name
@@ -126,9 +130,6 @@ class CellInformation(AbstractMetaDataElement):
     cellSizeXValue = models.FloatField(null=True)
     cellSizeYValue = models.FloatField(null=True)
     cellDataType = models.CharField(max_length=50, null=True)
-
-    # optional fields
-    noDataValue = models.FloatField(null=True, blank=True)
 
     def __unicode__(self):
         return self.name
@@ -160,7 +161,7 @@ class RasterResource(BaseResource):
     @classmethod
     def get_supported_upload_file_types(cls):
         # only tif file type is supported
-        return (".tif",)
+        return (".tif",".zip")
 
     @classmethod
     def can_have_multiple_files(cls):
@@ -235,12 +236,12 @@ class RasterMetaData(CoreMetaData):
 
         # inject raster resource specific metadata elements to container element
         if self.cellInformation:
-            cellinfo_fields = ['name', 'rows', 'columns', 'cellSizeXValue', 'cellSizeYValue',
-                           'cellDataType', 'noDataValue']
+            cellinfo_fields = ['rows', 'columns', 'cellSizeXValue', 'cellSizeYValue', 'cellDataType']
             self.add_metadata_element_to_xml(container, self.cellInformation, cellinfo_fields)
 
         for band_info in self.bandInformation:
-            bandinfo_fields = ['name', 'variableName', 'variableUnit', 'method', 'comment']
+            bandinfo_fields = ['name', 'variableName', 'variableUnit', 'noDataValue', 'maximumValue', 'minimumValue',
+                               'method', 'comment']
             self.add_metadata_element_to_xml(container, band_info, bandinfo_fields)
 
         if self.originalCoverage:

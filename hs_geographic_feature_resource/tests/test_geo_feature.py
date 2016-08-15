@@ -1,4 +1,3 @@
-__author__ = 'drew'
 
 import os
 from dateutil import parser
@@ -18,7 +17,8 @@ from hs_geographic_feature_resource.models import GeographicFeatureResource, Ori
 from hs_geographic_feature_resource.receivers import geofeature_post_add_files_to_resource_handler,\
                                                      metadata_element_pre_create_handler,\
                                                      metadata_element_pre_update_handler,\
-                                                     UNKNOWN_STR
+                                                     UNKNOWN_STR,\
+                                                     parse_shp_zshp
 
 class TestGeoFeature(TransactionTestCase):
 
@@ -98,8 +98,8 @@ class TestGeoFeature(TransactionTestCase):
 
         # add a point type coverage
         value_dict = {'name': 'Name for box coverage',
-                      'northlimit': '1', 'eastlimit': '2',
-                      'southlimit': '3', 'westlimit': '4'}
+                      'northlimit': '80', 'eastlimit': '130',
+                      'southlimit': '70', 'westlimit': '120'}
 
         value_dict["projection"] = "WGS 84 EPSG:4326"
         value_dict["units"] = "Decimal degrees"
@@ -296,7 +296,7 @@ class TestGeoFeature(TransactionTestCase):
         self.assertEqual(len(files), 1)
         res_title = "test title"
         url_key = "page_redirect_url"
-        page_url_dict, res_title, metadata = \
+        page_url_dict, res_title, metadata, _ = \
             hydroshare.utils.resource_pre_create_actions(resource_type=resource_type, files=files,
                                                          resource_title=res_title, page_redirect_url_key=url_key)
         self.assertEqual(len(files), 7)
@@ -466,7 +466,8 @@ class TestGeoFeature(TransactionTestCase):
         hydroshare.add_resource_files(self.resGeoFeature.short_id, *add_files)
         self.assertEqual(ResourceFile.objects.filter(object_id=self.resGeoFeature.id).count(), 5)
         geofeature_post_add_files_to_resource_handler(sender=GeographicFeatureResource,
-                                                      resource=self.resGeoFeature, files=add_files)
+                                                      resource=self.resGeoFeature, files=add_files,
+                                                      validate_files={'are_files_valid': True, 'message': ''})
         originalcoverage_obj = self.resGeoFeature.metadata.originalcoverage.all().first()
         self.assertNotEqual(originalcoverage_obj.projection_string, UNKNOWN_STR)
 
@@ -515,3 +516,13 @@ class TestGeoFeature(TransactionTestCase):
                                                    element_name="geometryinformation",
                                                    request=request)
         self.assertTrue(data["is_valid"])
+
+    def test_single_point_shp(self):
+
+        shp_full_path = "hs_geographic_feature_resource/tests/single_point_shp/logan_Outletmv.shp"
+        _, meta_dict = parse_shp_zshp("", "", "", "", shp_full_path)
+        coverage_dict = meta_dict.get("coverage", None)
+        self.assertNotEqual(coverage_dict, None)
+        self.assertEqual(coverage_dict["Coverage"]["type"].lower(), "point")
+        self.assertTrue(abs(coverage_dict["Coverage"]["value"]["east"] + 111.790377929) < self.allowance)
+        self.assertTrue(abs(coverage_dict["Coverage"]["value"]["north"] - 41.7422180799) < self.allowance)

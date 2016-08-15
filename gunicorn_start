@@ -3,7 +3,7 @@
 # gunicorn_start
 # Author: Michael Stealey <michael.j.stealey@gmail.com>
 
-NAME="hydroshare"                                   # Name of the application
+NAME="hydroshare_app"                               # Name of the application
 DJANGODIR=/home/docker/hydroshare                   # Django project directory
 SOCKFILE=/var/run/gunicorn.sock                     # we will communicte using this unix socket
 USER=root                                           # the user to run as
@@ -14,6 +14,7 @@ DJANGO_SETTINGS_MODULE=hydroshare.settings          # which settings file should
 DJANGO_WSGI_MODULE=hydroshare.wsgi                  # WSGI module name
 GUNICORN_LOG=/var/log/hydroshare/gunicorn.log       # path to logfile
 TIMEOUT_PERIOD=300                                  # timeout period in seconds
+MAX_REQUESTS=1000                                   # maximum number of requests a worker will process before restarting
 
 ### Do not edit below this line ###
 echo "Starting $NAME as `whoami`"
@@ -28,8 +29,10 @@ test -d $RUNDIR || mkdir -p $RUNDIR
 exec gunicorn ${DJANGO_WSGI_MODULE}:application \
   --name $NAME \
   --workers $NUM_WORKERS \
-  --user=$USER --group=$GROUP \
-  --bind=unix:$SOCKFILE \
-  --log-level=debug \
-  --log-file=$GUNICORN_LOG \
-  --timeout=$TIMEOUT_PERIOD
+  --user $USER \
+  --group $GROUP \
+  --bind unix:$SOCKFILE \
+  --log-level debug \
+  --log-file $GUNICORN_LOG \
+  --timeout $TIMEOUT_PERIOD \
+  --max-requests $MAX_REQUESTS

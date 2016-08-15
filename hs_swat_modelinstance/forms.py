@@ -1,4 +1,3 @@
-__author__ = 'Mohamed Morsy'
 from django.forms import ModelForm
 from django import forms
 

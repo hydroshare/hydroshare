@@ -52,7 +52,7 @@ class TestNewVersionResource(TestCase):
         shutil.copy(raster_file, temp_raster_file)
         self.raster_obj = open(temp_raster_file, 'r')
         files = [UploadedFile(file=self.raster_obj, name='cea.tif')]
-        _, _, metadata = utils.resource_pre_create_actions(resource_type='RasterResource',
+        _, _, metadata, _ = utils.resource_pre_create_actions(resource_type='RasterResource',
                                                           resource_title='Test Raster Resource',
                                                           page_redirect_url_key=None,
                                                           files=files,
@@ -78,12 +78,18 @@ class TestNewVersionResource(TestCase):
         with self.assertRaises(ValidationError):
             hydroshare.create_new_version_empty_resource(self.res_generic.short_id, self.nonowner)
 
+        # add key/value metadata to original resource
+        self.res_generic.extra_metadata = {'variable': 'temp', 'units': 'deg F'}
+        self.res_generic.save()
+
         new_res_generic = hydroshare.create_new_version_empty_resource(self.res_generic.short_id, self.owner)
         new_res_generic = hydroshare.create_new_version_resource(self.res_generic, new_res_generic, self.owner)
 
         # test the new versioned resource has the same resource type as the original resource
         self.assertTrue(isinstance(new_res_generic, GenericResource))
 
+        # test key/value metadata copied over
+        self.assertEquals(new_res_generic.extra_metadata, self.res_generic.extra_metadata)
         # test science metadata elements are copied from the original resource to the new versioned resource
         self.assertTrue(new_res_generic.metadata.title.value == self.res_generic.metadata.title.value)
         self.assertTrue(new_res_generic.creator == self.owner)

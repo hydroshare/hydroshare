@@ -1,4 +1,3 @@
-__author__ = 'tonycastronova'
 
 from django.forms import ModelForm, BaseFormSet
 from django import forms
@@ -19,7 +18,7 @@ class mp_form_helper(BaseFormHelper):
             name = short_url.split('/')[-1]
             file_data[name] = short_url
 
-        options = '\n'.join(['<option value=%s>%s</option>'%(value, key) for key, value in file_data.iteritems() ])
+        options = '\n'.join(['<option value="%s">%s</option>'%(value, key) for key, value in file_data.iteritems() ])
 
         multiselect_elements = ['modelSoftware', 'modelDocumentation', 'modelReleaseNotes', 'modelEngine']
         multiselect = {}

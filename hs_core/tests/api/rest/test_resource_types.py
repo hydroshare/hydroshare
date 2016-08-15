@@ -22,7 +22,9 @@ class TestResourceTypes(APITestCase):
                                'ToolResource',
                                'SWATModelInstanceResource',
                                'GeographicFeatureResource',
-                               'ScriptResource'}
+                               'ScriptResource',
+                               'CollectionResource',
+                               'MODFLOWModelInstanceResource'}
 
     def test_resource_typelist(self):
         response = self.client.get('/hsapi/resourceTypes/', format='json')

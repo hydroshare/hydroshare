@@ -1,4 +1,3 @@
-__author__ = 'shawn'
 
 from django.test import TestCase, TransactionTestCase
 from django.contrib.auth.models import Group, User
@@ -88,7 +87,7 @@ class TestScriptResource(TransactionTestCase):
         self.assertFalse(data["is_valid"])
 
         data = script_pre_create(sender=ScriptResource,
-                                 metadata=[],
+                                 metadata=[], fed_res_file_names=[],
                                  files=None)
 
         self.assertEqual(data[0]['scriptspecificmetadata'], {})

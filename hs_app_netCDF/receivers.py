@@ -1,6 +1,7 @@
 import re
 import os
 import StringIO
+import shutil
 
 import netCDF4
 
@@ -8,7 +9,9 @@ from django.dispatch import receiver
 from django.core.files.uploadedfile import InMemoryUploadedFile
 
 from hs_core.signals import *
-from hs_core.hydroshare.resource import ResourceFile
+from hs_core.hydroshare.resource import ResourceFile, \
+    get_resource_file_name, delete_resource_file_only
+from hs_core.hydroshare import utils
 from hs_app_netCDF.forms import *
 import nc_functions.nc_utils as nc_utils
 import nc_functions.nc_dump as nc_dump
@@ -23,17 +26,28 @@ def netcdf_pre_create_resource(sender, **kwargs):
     metadata = kwargs['metadata']
     validate_files_dict = kwargs['validate_files']
     res_title = kwargs['title']
+    fed_res_fnames = kwargs['fed_res_file_names']
+
+    file_selected = False
+    in_file_name = ''
 
     if files:
-        infile = files[0]
+        file_selected = True
+        in_file_name = files[0].file.name
+    elif fed_res_fnames:
+        ref_tmpfiles = utils.get_fed_zone_files(fed_res_fnames)
+        if ref_tmpfiles:
+            in_file_name = ref_tmpfiles[0]
+            file_selected = True
 
+    if file_selected and in_file_name:
         # file validation and metadata extraction
-        nc_dataset = nc_utils.get_nc_dataset(infile.file.name)
+        nc_dataset = nc_utils.get_nc_dataset(in_file_name)
 
         if isinstance(nc_dataset, netCDF4.Dataset):
             # Extract the metadata from netcdf file
             try:
-                res_md_dict = nc_meta.get_nc_meta_dict(infile.file.name)
+                res_md_dict = nc_meta.get_nc_meta_dict(in_file_name)
                 res_dublin_core_meta = res_md_dict['dublin_core_meta']
                 res_type_specific_meta = res_md_dict['type_specific_meta']
             except:
@@ -57,9 +71,9 @@ def netcdf_pre_create_resource(sender, **kwargs):
 
             # add title
             if res_dublin_core_meta.get('title'):
-                if res_title == 'Untitled resource':
-                    title = {'title': {'value': res_dublin_core_meta['title']}}
-                    metadata.append(title)
+                res_title = {'title': {'value': res_dublin_core_meta['title']}}
+                metadata.append(res_title)
+
             # add description
             if res_dublin_core_meta.get('description'):
                 description = {'description': {'abstract': res_dublin_core_meta['description']}}
@@ -120,14 +134,14 @@ def netcdf_pre_create_resource(sender, **kwargs):
                 metadata.append(ori_cov)
 
             # create the ncdump text file
-            if nc_dump.get_nc_dump_string_by_ncdump(infile.file.name):
-                dump_str = nc_dump.get_nc_dump_string_by_ncdump(infile.file.name)
+            if nc_dump.get_nc_dump_string_by_ncdump(in_file_name):
+                dump_str = nc_dump.get_nc_dump_string_by_ncdump(in_file_name)
             else:
-                dump_str = nc_dump.get_nc_dump_string(infile.file.name)
+                dump_str = nc_dump.get_nc_dump_string(in_file_name)
 
             if dump_str:
                 # refine dump_str first line
-                nc_file_name = '.'.join(os.path.basename(infile.name).split('.')[:-1])
+                nc_file_name = os.path.splitext(files[0].name)[0]
                 first_line = list('netcdf {0} '.format(nc_file_name))
                 first_line_index = dump_str.index('{')
                 dump_str_list = first_line + list(dump_str)[first_line_index:]
@@ -143,6 +157,9 @@ def netcdf_pre_create_resource(sender, **kwargs):
         else:
             validate_files_dict['are_files_valid'] = False
             validate_files_dict['message'] = 'Please check if the uploaded file is in valid NetCDF format.'
+
+        if fed_res_fnames and in_file_name:
+            shutil.rmtree(os.path.dirname(in_file_name))
 
 
 # # receiver used to create netcdf header text after user click on "create resource"
@@ -182,21 +199,23 @@ def netcdf_pre_create_resource(sender, **kwargs):
 def netcdf_pre_delete_file_from_resource(sender, **kwargs):
     nc_res = kwargs['resource']
     del_file = kwargs['file']
-    del_file_ext = os.path.splitext(del_file.resource_file.name)[-1]
+    del_file_ext = utils.get_resource_file_name_and_extension(del_file)[1]
 
-    # TODO: update resource modification info
-    # user = kwargs['user']
-    # resource_modified(resource, user)
+    # update resource modification info
+    user = nc_res.creator
+    utils.resource_modified(nc_res, user)
 
     # delete the netcdf header file or .nc file
-    file_ext = ['.nc', '.txt']
+    file_ext = {'.nc': 'application/x-netcdf',
+                '.txt': 'text/plain'}
+
     if del_file_ext in file_ext:
-        file_ext.remove(del_file_ext)
+        del file_ext[del_file_ext]
         for f in ResourceFile.objects.filter(object_id=nc_res.id):
-            ext = os.path.splitext(f.resource_file.name)[-1]
+            ext = utils.get_resource_file_name_and_extension(f)[1]
             if ext in file_ext:
-                f.resource_file.delete()
-                f.delete()
+                delete_resource_file_only(nc_res, f)
+                nc_res.metadata.formats.filter(value=file_ext[ext]).delete()
                 break
 
     # delete all the coverage info
@@ -212,35 +231,112 @@ def netcdf_pre_add_files_to_resource(sender, **kwargs):
     nc_res = kwargs['resource']
     files = kwargs['files']
     validate_files_dict = kwargs['validate_files']
+    fed_res_fnames = kwargs['fed_res_file_names']
 
-    if len(files) >1:
+    if len(files) > 1:
         # file number validation
         validate_files_dict['are_files_valid'] = False
         validate_files_dict['message'] = 'Only one file can be uploaded.'
-    elif len(files) == 1:
+
+    file_selected = False
+    in_file_name = ''
+    if files:
+        file_selected = True
+        in_file_name = files[0].file.name
+    elif fed_res_fnames:
+        ref_tmpfiles = utils.get_fed_zone_files(fed_res_fnames)
+        if ref_tmpfiles:
+            in_file_name = ref_tmpfiles[0]
+            file_selected = True
+
+    if file_selected and in_file_name:
         # file type validation and existing metadata update and create new ncdump text file
-        infile = files[0]
-        nc_dataset = nc_utils.get_nc_dataset(infile.file.name)
+        nc_dataset = nc_utils.get_nc_dataset(in_file_name)
         if isinstance(nc_dataset, netCDF4.Dataset):
             # delete all existing resource files and metadata related
             for f in ResourceFile.objects.filter(object_id=nc_res.id):
-                    f.resource_file.delete()
-                    f.delete()
+                delete_resource_file_only(nc_res, f)
 
-            # TODO: update resource modification info
-            # user = kwargs['user']
-            # resource_modified(resource, user)
+            # update resource modification info
+            user = kwargs['user']
+            utils.resource_modified(nc_res, user)
 
             # extract metadata
             try:
                 res_dublin_core_meta = nc_meta.get_dublin_core_meta(nc_dataset)
-            except:
+            except Exception:
                 res_dublin_core_meta = {}
 
             try:
                 res_type_specific_meta = nc_meta.get_type_specific_meta(nc_dataset)
-            except:
+            except Exception:
                 res_type_specific_meta = {}
+
+            # update title info
+            if res_dublin_core_meta.get('title'):
+                if nc_res.metadata.title:
+                    nc_res.metadata.title.delete()
+                nc_res.metadata.create_element('title', value=res_dublin_core_meta['title'])
+
+            # update description info
+            if res_dublin_core_meta.get('description'):
+                if nc_res.metadata.description:
+                    nc_res.metadata.description.delete()
+                nc_res.metadata.create_element('description', abstract=res_dublin_core_meta.get('description'))
+
+            # update creator info
+            if res_dublin_core_meta.get('creator_name'):
+                name = res_dublin_core_meta.get('creator_name')
+                email = res_dublin_core_meta.get('creator_email', '')
+                url = res_dublin_core_meta.get('creator_url', '')
+                arguments = dict(name=name, email=email, homepage=url)
+                creator = nc_res.metadata.creators.all().filter(name=name).first()
+                if creator:
+                    order = creator.order
+                    if order != 1:
+                        creator.delete()
+                        arguments['order'] = order
+                        nc_res.metadata.create_element('creator', **arguments)
+                else:
+                    nc_res.metadata.create_element('creator', **arguments)
+
+            # update contributor info
+            if res_dublin_core_meta.get('contributor_name'):
+                name_list = res_dublin_core_meta['contributor_name'].split(',')
+                existing_contributor_names = [contributor.name for contributor in nc_res.metadata.contributors.all()]
+                for name in name_list:
+                    if name not in existing_contributor_names:
+                        nc_res.metadata.create_element('contributor', name=name)
+
+            # update subject info
+            if res_dublin_core_meta.get('subject'):
+                keywords = res_dublin_core_meta['subject'].split(',')
+                existing_keywords = [subject.value for subject in nc_res.metadata.subjects.all()]
+                for keyword in keywords:
+                    if keyword not in existing_keywords:
+                        nc_res.metadata.create_element('subject', value=keyword)
+
+            # update source
+            if res_dublin_core_meta.get('source'):
+                for source in nc_res.metadata.sources.all():
+                    source.delete()
+                nc_res.metadata.create_element('source', derived_from=res_dublin_core_meta.get('source'))
+
+            # update license element:
+            if res_dublin_core_meta.get('rights'):
+                raw_info = res_dublin_core_meta.get('rights')
+                b = re.search("(?P<url>https?://[^\s]+)", raw_info)
+                url = b.group('url') if b else ''
+                statement = raw_info.replace(url, '') if url else raw_info
+                if nc_res.metadata.rights:
+                    nc_res.metadata.rights.delete()
+                nc_res.metadata.create_element('rights', statement=statement, url=url)
+
+            # update relation
+            if res_dublin_core_meta.get('references'):
+                for cite in nc_res.metadata.relations.all().filter(type='cites'):
+                    cite.delete()
+                nc_res.metadata.create_element('relation', type='cites', value=res_dublin_core_meta['references'])
 
             # update box info
             nc_res.metadata.coverages.all().delete()
@@ -275,14 +371,14 @@ def netcdf_pre_add_files_to_resource(sender, **kwargs):
                     nc_res.metadata.create_element('originalcoverage', value=res_dublin_core_meta['original-box'])
 
             # create the ncdump text file
-            if nc_dump.get_nc_dump_string_by_ncdump(infile.file.name):
-                dump_str = nc_dump.get_nc_dump_string_by_ncdump(infile.file.name)
+            if nc_dump.get_nc_dump_string_by_ncdump(in_file_name):
+                dump_str = nc_dump.get_nc_dump_string_by_ncdump(in_file_name)
             else:
-                dump_str = nc_dump.get_nc_dump_string(infile.file.name)
+                dump_str = nc_dump.get_nc_dump_string(in_file_name)
 
             if dump_str:
                 # refine dump_str first line
-                nc_file_name = '.'.join(os.path.basename(infile.name).split('.')[:-1])
+                nc_file_name = files[0].name[:-3]
                 first_line = list('netcdf {0} '.format(nc_file_name))
                 first_line_index = dump_str.index('{')
                 dump_str_list = first_line + list(dump_str)[first_line_index:]
@@ -298,6 +394,9 @@ def netcdf_pre_add_files_to_resource(sender, **kwargs):
         else:
             validate_files_dict['are_files_valid'] = False
             validate_files_dict['message'] = 'Please check if the uploaded file is in valid NetCDF format.'
+
+        if fed_res_fnames and in_file_name:
+            shutil.rmtree(os.path.dirname(in_file_name))
 
 # @receiver(post_add_files_to_resource, sender=NetcdfResource)
 # def netcdf_post_add_files_to_resource(sender, **kwargs):

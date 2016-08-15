@@ -33,9 +33,7 @@
     }
 </style>
 {% endif %}
-{% block extra_css %}
-    <link href='https://fonts.googleapis.com/css?family=Open+Sans' rel='stylesheet' type='text/css'>
-{% endblock %}
+{% block extra_css %}{% endblock %}
 {% endcompress %}
 
 {% compress js %}
@@ -73,96 +71,90 @@
     ============= -->
     <div id="hs-nav-bar" class="navbar navbar-inverse navbar-fixed-top">
         <div class="container">
-            <div class="row">
-                <div class="col-sm-12">
-                    <div class="navbar-header">
-                        <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
-                            <span class="icon-bar"></span>
-                            <span class="icon-bar"></span>
-                            <span class="icon-bar"></span>
-                        </button>
-                        <h1 class="logo" alt="{{ settings.SITE_TITLE }}">
-                            <a href="/"><img class="logo-badge" src="{{ STATIC_URL }}img/logo-only-lg.png"/><span class="highlight">Hydro</span>Share</a>
-                        </h1>
+            <div class="navbar-header">
+                <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                </button>
+                <a class="navbar-brand" href="/"><img src="{{ STATIC_URL }}img/logo-sm.png" alt="{{ settings.SITE_TITLE }}"/></a>
+            </div>
+            <div class="collapse navbar-collapse">
+                {% page_menu "pages/menus/dropdown.html" %}
+                {% comment %}
+                <!-- Search form for extra small screens -->
+                <form class="navbar-form navbar-left visible-xs" role="search" action="{% url 'search' %}">
+                    <div class="input-group">
+                        <input type="text" class="form-control" placeholder="Search" name="q">
+                        <span class="input-group-btn">
+                            <button class="hl-btn hl-btn-blue" type="button">Go!</button>
+                        </span>
                     </div>
-                    <div class="collapse navbar-collapse">
-                        {% page_menu "pages/menus/dropdown.html" %}
-                        {% comment %}
-                        <!-- Search form for extra small screens -->
-                        <form class="navbar-form navbar-left visible-xs" role="search" action="{% url 'search' %}">
-                            <div class="input-group">
+                </form>
+                {% endcomment %}
+                <ul class="nav navbar-nav navbar-right hidden-xs">
+                    {% ifinstalled mezzanine.accounts %}
+                    {% if request.user.is_authenticated %}
+                        <li id="profile-menu" class="display-block">
+                            {% if request.user.userprofile.picture and request.user.userprofile.picture.url %}
+                                <a href="#" class="dropdown-toggle" data-toggle="dropdown">
+                                    <div style="background-image: url('{{ request.user.userprofile.picture.url }}');"
+                                         class="round-image profile-pic-thumbnail pull-left">
+                                    </div>
+                                </a>
+                            {% else %}
+                                <a href="#" class="dropdown-toggle" data-toggle="dropdown">
+                                    <div class="profile-pic-thumbnail-small round-image pull-left"></div>
+                                </a>
+                            {% endif %}
+                            <ul class="dropdown-menu arrow_box">
+                                <li class="account">
+                                    <div class="row">
+                                        <div class="col-sm-4">
+                                            {% if request.user.userprofile.picture and request.user.userprofile.picture.url %}
+                                                <div style="background-image: url('{{ request.user.userprofile.picture.url }}');"
+                                                     class="round-image dropdown-profile-pic-thumbnail pull-left">
+                                                </div>
+                                            {% else %}
+                                                <div class="dropdown-profile-pic-thumbnail round-image dropdown-user-icon pull-left"></div>
+                                            {% endif %}
+                                        </div>
+                                        <div class="col-sm-8">
+                                            <div><strong>{{ request.user.first_name }} {% if request.user.userprofile.middle_name %}{{ request.user.userprofile.middle_name }} {% endif %}{{ request.user.last_name }}</strong></div>
+                                            {% if request.user.email %}
+                                                <div class="text-muted">{{ request.user.email }}</div>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+
+                                    <div class="dropdown-footer">
+                                        <a href="/user/{{ user.id }}/" class="btn btn-primary">Profile</a>
+                                        <a href="{% url 'logout' %}" id="signout-menu" class="btn btn-default">
+                                            <span class="glyphicon glyphicon-log-out"></span> Sign out</a></span>
+                                    </div>
+                                </li>
+                            </ul>
+                        </li>
+                    {% else %}
+                    <!-- <li id="signup-menu"><a href="{% url 'signup' %}">Sign Up</a></li> -->
+                    <li id="signin-menu"><a href="{% url 'login' %}"><span class="glyphicon glyphicon-log-in"></span> Sign In</a></li>
+                    {% endif %}
+                    {% endifinstalled %}
+                    {% comment %}
+                    <!-- Search Button -->
+                    <li id="search">
+                        <a href="#" id="search-btn" onclick="return false;"><i class="fa fa-search" id="search-icon"></i> Search</a>
+                        <div class="search-box" id="search-box">
+                            <form class="input-group"role="search" action="{% url 'search' %}">
                                 <input type="text" class="form-control" placeholder="Search" name="q">
                                 <span class="input-group-btn">
-                                    <button class="hl-btn hl-btn-blue" type="button">Go!</button>
+                                    <button class="hl-btn hl-btn-default" type="button">Go!</button>
                                 </span>
-                            </div>
-                        </form>
-                        {% endcomment %}
-                        <ul class="nav navbar-nav navbar-right hidden-xs">
-                            {% ifinstalled mezzanine.accounts %}
-                            {% if request.user.is_authenticated %}
-                                <li id="profile-menu" class="display-block">
-                                    {% if request.user.userprofile.picture and request.user.userprofile.picture.url %}
-                                        <a href="#" class="dropdown-toggle" data-toggle="dropdown">
-                                            <div style="background-image: url('{{ request.user.userprofile.picture.url }}');"
-                                                 class="round-image profile-pic-thumbnail pull-left">
-                                            </div>
-                                        </a>
-                                    {% else %}
-                                        <a href="#" class="dropdown-toggle" data-toggle="dropdown">
-                                            <div class="nav-bar-profile-pic-thumbnail round-image pull-left"></div>
-                                        </a>
-                                    {% endif %}
-                                    <ul class="dropdown-menu arrow_box arrow_box_top_right">
-                                        <li class="account">
-                                            <div class="row">
-                                                <div class="col-sm-4">
-                                                    {% if request.user.userprofile.picture and request.user.userprofile.picture.url %}
-                                                        <div style="background-image: url('{{ request.user.userprofile.picture.url }}');"
-                                                             class="round-image dropdown-profile-pic-thumbnail pull-left">
-                                                        </div>
-                                                    {% else %}
-                                                        <div class="dropdown-profile-pic-thumbnail round-image dropdown-user-icon pull-left"></div>
-                                                    {% endif %}
-                                                </div>
-                                                <div class="col-sm-8">
-                                                    <div><strong>{{ request.user.first_name }} {% if request.user.userprofile.middle_name %}{{ request.user.userprofile.middle_name }} {% endif %}{{ request.user.last_name }}</strong></div>
-                                                    {% if request.user.email %}
-                                                        <div class="text-muted">{{ request.user.email }}</div>
-                                                    {% endif %}
-                                                </div>
-                                            </div>
-
-                                            <div class="dropdown-footer">
-                                                <a href="/user/{{ user.id }}/" class="btn btn-primary">Profile</a>
-                                                <a href="{% url 'logout' %}" id="signout-menu" class="btn btn-default">
-                                                    <span class="glyphicon glyphicon-log-out"></span> Sign out</a></span>
-                                            </div>
-                                        </li>
-                                    </ul>
-                                </li>
-                            {% else %}
-                            <!-- <li id="signup-menu"><a href="{% url 'signup' %}">Sign Up</a></li> -->
-                            <li id="signin-menu"><a href="{% url 'login' %}"><span class="glyphicon glyphicon-log-in"></span> Sign In</a></li>
-                            {% endif %}
-                            {% endifinstalled %}
-                            {% comment %}
-                            <!-- Search Button -->
-                            <li id="search">
-                                <a href="#" id="search-btn" onclick="return false;"><i class="fa fa-search" id="search-icon"></i> Search</a>
-                                <div class="search-box" id="search-box">
-                                    <form class="input-group"role="search" action="{% url 'search' %}">
-                                        <input type="text" class="form-control" placeholder="Search" name="q">
-                                        <span class="input-group-btn">
-                                            <button class="hl-btn hl-btn-default" type="button">Go!</button>
-                                        </span>
-                                    </form>
-                                </div>
-                            </li>
-                            {% endcomment %}
-                        </ul>
-                    </div>
-                </div>
+                            </form>
+                        </div>
+                    </li>
+                    {% endcomment %}
+                </ul>
             </div>
         </div>
     </div>
@@ -183,24 +175,13 @@
     {% endif %}
     {% endnevercache %}
 
-
     {% block all_content %}
-{#    <div class="section-header">#}
-{#        <div class="container">#}
-{#            <div class="row">#}
-{#                <div class="col-md-12">#}
-{#                    <h1><span>{% block title %}{% endblock %}</span></h1>#}
-{#                </div>#}
-{#            </div>#}
-{#        </div>#}
-{#    </div>#}
-    <div class="container">
-        <div class="row">
-                {% block main %}{% endblock %}
+        <div class="main-container">
+            {% block main %}{% endblock %}
             {% block after_main %}{% endblock %}
-        </div>
-    </div>
+                </div>
     {% endblock %}
+
     <!-- Foooter
     ================== -->
     <footer>
@@ -300,6 +281,7 @@
             </div>
         </div>
     </footer>
+
 
 </body>
 </html>

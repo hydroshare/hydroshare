@@ -1,4 +1,3 @@
-__author__ = 'drew'
 
 from mezzanine.pages.page_processors import processor_for
 
@@ -104,6 +103,7 @@ def landing_page(request, page):
         context['ori_coverage_form'] = ori_coverage_form
         context['geom_information_form'] = geom_information_form
 
+    context['edit_mode'] = edit_resource
     hs_core_context = add_generic_context(request, page)
     context.update(hs_core_context)
 

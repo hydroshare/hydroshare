@@ -260,11 +260,13 @@ INSTALLED_APPS = (
     "django.contrib.sitemaps",
     "django.contrib.staticfiles",
     "django.contrib.gis",
+    "django.contrib.postgres",
     "inplaceeditform",
     "django_nose",
     "django_irods",
     "theme",
     "theme.blog_mods",
+    "heartbeat",
     "mezzanine.boot",
     "mezzanine.conf",
     "mezzanine.core",
@@ -300,6 +302,9 @@ INSTALLED_APPS = (
     "hs_geographic_feature_resource",
     "hs_script_resource",
     "hs_sitemap",
+    "hs_collection_resource",
+    "hs_modflow_modelinstance",
+    "hs_tracking",
 )
 
 # These apps are excluded by hs_core.tests.runner.CustomTestSuiteRunner
@@ -360,6 +365,7 @@ MIDDLEWARE_CLASSES = (
     "mezzanine.pages.middleware.PageMiddleware",
     "mezzanine.core.middleware.FetchFromCacheMiddleware",
     "ga_resources.middleware.PagePermissionsViewableMiddleware",
+    "hs_tracking.middleware.Tracking",
 )
 
 # Store these package names here as they may change in the future since
@@ -448,7 +454,7 @@ AUTH_PROFILE_MODULE = "theme.UserProfile"
 CRISPY_TEMPLATE_PACK = 'bootstrap'
 REST_FRAMEWORK = {
     'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
-    'PAGE_SIZE': 5,
+    'PAGE_SIZE': 100,
     'PAGE_SIZE_QUERY_PARAM': 'PAGE_SIZE',
     'EXCEPTION_HANDLER': 'rest_framework.views.exception_handler',
     'DEFAULT_AUTHENTICATION_CLASSES': (
@@ -468,12 +474,17 @@ HAYSTACK_CONNECTIONS = {
         # 'URL': 'http://127.0.0.1:8983/solr/mysite',
     },
 }
+HAYSTACK_SIGNAL_PROCESSOR = "hs_core.hydro_realtime_signal_processor.HydroRealtimeSignalProcessor"
+
 
 # customized value for password reset token and email verification link token to expire in 1 day
 PASSWORD_RESET_TIMEOUT_DAYS = 1
 
 #
 RESOURCE_LOCK_TIMEOUT_SECONDS = 300 # in seconds
+
+# customized temporary file path for large files retrieved from iRODS user zone for metadata extraction
+TEMP_FILE_DIR = '/tmp'
 
 ####################
 # OAUTH TOKEN SETTINGS #
@@ -546,3 +557,8 @@ LOGGING = {
         },
     }
 }
+
+# hs_tracking settings
+TRACKING_SESSION_TIMEOUT = 60 * 15
+TRACKING_PROFILE_FIELDS = ["title", "user_type", "subject_areas", "public", "state", "country"]
+TRACKING_USER_FIELDS = ["username", "email", "first_name", "last_name"]

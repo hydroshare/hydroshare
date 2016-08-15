@@ -31,6 +31,9 @@ ALTER TABLE ONLY public.oauth2_provider_refreshtoken DROP CONSTRAINT oauth2_prov
 ALTER TABLE ONLY public.oauth2_provider_grant DROP CONSTRAINT oauth2_provider_grant_user_id_3111344894d452da_fk_auth_user_id;
 ALTER TABLE ONLY public.oauth2_provider_application DROP CONSTRAINT oauth2_provider_applic_user_id_7fa13387c260b798_fk_auth_user_id;
 ALTER TABLE ONLY public.oauth2_provider_accesstoken DROP CONSTRAINT oauth2_provider_access_user_id_5e2f004fdebea22d_fk_auth_user_id;
+ALTER TABLE ONLY public.hs_tracking_visitor DROP CONSTRAINT hs_tracking_visitor_user_id_e219697e1ed13ee_fk_auth_user_id;
+ALTER TABLE ONLY public.hs_tracking_variable DROP CONSTRAINT hs_trackin_session_id_5e9600c451e08ab_fk_hs_tracking_session_id;
+ALTER TABLE ONLY public.hs_tracking_session DROP CONSTRAINT hs_tracki_visitor_id_23a186d92be70070_fk_hs_tracking_visitor_id;
 ALTER TABLE ONLY public.hs_tools_resource_supportedrestypes DROP CONSTRAINT hs_t_content_type_id_767d162d9152deeb_fk_django_content_type_id;
 ALTER TABLE ONLY public.hs_tools_resource_requesturlbase DROP CONSTRAINT hs_t_content_type_id_62b8f4790407354c_fk_django_content_type_id;
 ALTER TABLE ONLY public.hs_tools_resource_toolversion DROP CONSTRAINT hs_t_content_type_id_51e17884abf9eddc_fk_django_content_type_id;
@@ -62,6 +65,7 @@ ALTER TABLE ONLY public.hs_core_genericresource DROP CONSTRAINT hs_core_basereso
 ALTER TABLE ONLY public.hs_core_genericresource DROP CONSTRAINT hs_core_baseresourc_creator_id_306123f66b8ed448_fk_auth_user_id;
 ALTER TABLE ONLY public.hs_core_genericresource DROP CONSTRAINT hs_core_bas_last_changed_by_id_55b9ad9c3719f949_fk_auth_user_id;
 ALTER TABLE ONLY public.hs_core_externalprofilelink DROP CONSTRAINT hs_cor_content_type_id_8887e3729580c7_fk_django_content_type_id;
+ALTER TABLE ONLY public.hs_collection_resource_collectiondeletedresource DROP CONSTRAINT hs_collection_re_deleted_by_id_14f506bd7f16121a_fk_auth_user_id;
 ALTER TABLE ONLY public.hs_core_date DROP CONSTRAINT hs_co_content_type_id_9c7365e54949ce2_fk_django_content_type_id;
 ALTER TABLE ONLY public.hs_core_source DROP CONSTRAINT hs_co_content_type_id_47f60695a5eda03_fk_django_content_type_id;
 ALTER TABLE ONLY public.hs_core_relation DROP CONSTRAINT hs_c_content_type_id_775b5304ceb81cfe_fk_django_content_type_id;
@@ -72,6 +76,7 @@ ALTER TABLE ONLY public.hs_core_rights DROP CONSTRAINT hs_c_content_type_id_6b57
 ALTER TABLE ONLY public.hs_core_subject DROP CONSTRAINT hs_c_content_type_id_5a61162ae031c50f_fk_django_content_type_id;
 ALTER TABLE ONLY public.hs_core_format DROP CONSTRAINT hs_c_content_type_id_52f2f9c2122dcd99_fk_django_content_type_id;
 ALTER TABLE ONLY public.hs_core_genericresource DROP CONSTRAINT hs_c_content_type_id_425582f505cae13e_fk_django_content_type_id;
+ALTER TABLE ONLY public.hs_core_fundingagency DROP CONSTRAINT hs_c_content_type_id_393df80b6039f971_fk_django_content_type_id;
 ALTER TABLE ONLY public.hs_core_type DROP CONSTRAINT hs_c_content_type_id_387c72dac133e70a_fk_django_content_type_id;
 ALTER TABLE ONLY public.hs_core_publisher DROP CONSTRAINT hs_c_content_type_id_2ebca0f0d370a961_fk_django_content_type_id;
 ALTER TABLE ONLY public.hs_core_identifier DROP CONSTRAINT hs_c_content_type_id_2e3e6f5f1647294b_fk_django_content_type_id;
@@ -90,6 +95,9 @@ ALTER TABLE ONLY public.hs_access_control_userresourceprivilege DROP CONSTRAINT 
 ALTER TABLE ONLY public.hs_access_control_groupresourceprivilege DROP CONSTRAINT hs_access_control_gr_group_id_3d9dbfade29a5ab5_fk_auth_group_id;
 ALTER TABLE ONLY public.hs_access_control_groupaccess DROP CONSTRAINT hs_access_control_gr_group_id_1bd0754af26faaf7_fk_auth_group_id;
 ALTER TABLE ONLY public.hs_access_control_groupresourceprivilege DROP CONSTRAINT hs_access_control_g_grantor_id_1e68e0395847f2b3_fk_auth_user_id;
+ALTER TABLE ONLY public.hs_access_control_groupmembershiprequest DROP CONSTRAINT hs_access_cont_request_from_id_3447b6ef4a91ce7d_fk_auth_user_id;
+ALTER TABLE ONLY public.hs_access_control_groupmembershiprequest DROP CONSTRAINT hs_access_con_invitation_to_id_5cdd6acd6d11df75_fk_auth_user_id;
+ALTER TABLE ONLY public.hs_access_control_groupmembershiprequest DROP CONSTRAINT hs_access_co_group_to_join_id_5cf445aa01ee1f48_fk_auth_group_id;
 ALTER TABLE ONLY public.hs_app_timeseries_site DROP CONSTRAINT hs_a_content_type_id_6c3a0d31ca8f2ee2_fk_django_content_type_id;
 ALTER TABLE ONLY public.hs_app_timeseries_variable DROP CONSTRAINT hs_a_content_type_id_6bea7582e11ffdc9_fk_django_content_type_id;
 ALTER TABLE ONLY public.hs_app_timeseries_timeseriesresult DROP CONSTRAINT hs_a_content_type_id_5883e361b4531c3c_fk_django_content_type_id;
@@ -152,11 +160,13 @@ ALTER TABLE ONLY public.hs_swat_modelinstance_modelparameter_model_parameters DR
 ALTER TABLE ONLY public.hs_access_control_groupresourceprivilege DROP CONSTRAINT a7a04a83e3272ec48b241a40cc3fe88d;
 ALTER TABLE ONLY public.oauth2_provider_accesstoken DROP CONSTRAINT a17250f96ea449de36002be9c6c6acfb;
 ALTER TABLE ONLY public.oauth2_provider_refreshtoken DROP CONSTRAINT "D9aead397b25d8154e554023da34d33b";
+ALTER TABLE ONLY public.hs_collection_resource_collectiondeletedresource DROP CONSTRAINT "D939acd71ef4c768cad03ae2dffa0298";
 ALTER TABLE ONLY public.ga_resources_renderedlayer DROP CONSTRAINT "D7e7cede746315ab9e08ce902995fd0e";
 ALTER TABLE ONLY public.hs_tools_resource_supportedrestypes_supported_res_types DROP CONSTRAINT "D792bbec64dddad2dfcdc3c0be032f83";
 ALTER TABLE ONLY public.django_docker_processes_dockerenvvar DROP CONSTRAINT "D6f5f0817512c0e51eb157b953080433";
 ALTER TABLE ONLY public.ga_resources_renderedlayer_styles DROP CONSTRAINT "D6b8a9e44c81b6ef0edc08ba3acdf181";
 ALTER TABLE ONLY public.ga_ows_ogrdataset DROP CONSTRAINT "D66abd734664aa960007027384fa6de8";
+ALTER TABLE ONLY public.hs_core_genericresource_collections DROP CONSTRAINT "D66495776709e8754037f4f18d4258ac";
 ALTER TABLE ONLY public.django_docker_processes_containeroverrides DROP CONSTRAINT "D608e8d602265386bd6d7afacb14cc09";
 ALTER TABLE ONLY public.django_docker_processes_overridelink DROP CONSTRAINT "D5b97bbd43dc74b22e279a355699342b";
 ALTER TABLE ONLY public.hs_app_timeseries_timeseriesmetadata DROP CONSTRAINT "D59977fad305f0130e8e94d0cf611f50";
@@ -168,6 +178,7 @@ ALTER TABLE ONLY public.ga_resources_relatedresource DROP CONSTRAINT "D3ddf29327
 ALTER TABLE ONLY public.ga_resources_orderedresource DROP CONSTRAINT "D3774497fc72c82be6a35a3e9797e2da";
 ALTER TABLE ONLY public.django_docker_processes_dockerport DROP CONSTRAINT "D33ece86ac4d6b9f723a21fc5ee52956";
 ALTER TABLE ONLY public.django_docker_processes_dockerlink DROP CONSTRAINT "D31c29d49b8f7ec3acaeadd6d03d4a4f";
+ALTER TABLE ONLY public.hs_core_genericresource_collections DROP CONSTRAINT "D31151cd560fcd8a9d7eac2bbb5b84c9";
 ALTER TABLE ONLY public.hs_swat_modelinstance_modelparameter_model_parameters DROP CONSTRAINT "D298685713846fce4c3b8f825f6971fc";
 ALTER TABLE ONLY public.hs_model_program_modelprogrammetadata DROP CONSTRAINT "D28d4ec87c18a4f707acafb3b265fe0b";
 ALTER TABLE ONLY public.hs_labels_userresourcelabels DROP CONSTRAINT "D2339626414192982538d20c2f5e41c1";
@@ -190,6 +201,7 @@ DROP INDEX public.ref_ts_qualitycontrollevel_417f1b1c;
 DROP INDEX public.ref_ts_method_417f1b1c;
 DROP INDEX public.ref_ts_datasource_417f1b1c;
 DROP INDEX public.pages_page_site_id;
+DROP INDEX public.pages_page_publish_date_4b581dded15f4cdf_uniq;
 DROP INDEX public.pages_page_parent_id;
 DROP INDEX public.oauth2_provider_refreshtoken_token_1e4e9388e6a22527_like;
 DROP INDEX public.oauth2_provider_refreshtoken_e8701ad4;
@@ -207,6 +219,9 @@ DROP INDEX public.oauth2_provider_accesstoken_token_3f77f86fb4ecbe0f_like;
 DROP INDEX public.oauth2_provider_accesstoken_e8701ad4;
 DROP INDEX public.oauth2_provider_accesstoken_94a08da1;
 DROP INDEX public.oauth2_provider_accesstoken_6bc0a4eb;
+DROP INDEX public.hs_tracking_visitor_e8701ad4;
+DROP INDEX public.hs_tracking_variable_7fc8ef54;
+DROP INDEX public.hs_tracking_session_bfc2f125;
 DROP INDEX public.hs_tools_resource_toolversion_417f1b1c;
 DROP INDEX public.hs_tools_resource_toolicon_417f1b1c;
 DROP INDEX public.hs_tools_resource_supportedrestypes_supported_res_types_ae94a0b;
@@ -255,11 +270,14 @@ DROP INDEX public.hs_core_groupownership_0e939a4f;
 DROP INDEX public.hs_core_genericresource_short_id_1ccf03b27239c9d9_like;
 DROP INDEX public.hs_core_genericresource_e8701ad4;
 DROP INDEX public.hs_core_genericresource_doi_1fd041a54c9b75f0_like;
+DROP INDEX public.hs_core_genericresource_collections_91410dc4;
+DROP INDEX public.hs_core_genericresource_collections_169f7fce;
 DROP INDEX public.hs_core_genericresource_7258c37c;
 DROP INDEX public.hs_core_genericresource_6e3c2cc2;
 DROP INDEX public.hs_core_genericresource_44cc026e;
 DROP INDEX public.hs_core_genericresource_417f1b1c;
 DROP INDEX public.hs_core_genericresource_3700153c;
+DROP INDEX public.hs_core_fundingagency_417f1b1c;
 DROP INDEX public.hs_core_format_417f1b1c;
 DROP INDEX public.hs_core_externalprofilelink_417f1b1c;
 DROP INDEX public.hs_core_description_417f1b1c;
@@ -269,6 +287,8 @@ DROP INDEX public.hs_core_coverage_417f1b1c;
 DROP INDEX public.hs_core_contributor_417f1b1c;
 DROP INDEX public.hs_core_bags_d7e6d55b;
 DROP INDEX public.hs_core_bags_417f1b1c;
+DROP INDEX public.hs_collection_resource_collectiondeletedresource_d19ec81d;
+DROP INDEX public.hs_collection_resource_collectiondeletedresource_0a1a4dd8;
 DROP INDEX public.hs_app_timeseries_variable_417f1b1c;
 DROP INDEX public.hs_app_timeseries_timeseriesresult_417f1b1c;
 DROP INDEX public.hs_app_timeseries_site_417f1b1c;
@@ -285,6 +305,9 @@ DROP INDEX public.hs_access_control_usergroupprivilege_80b9f3ef;
 DROP INDEX public.hs_access_control_groupresourceprivilege_dc2a4728;
 DROP INDEX public.hs_access_control_groupresourceprivilege_9e767b7c;
 DROP INDEX public.hs_access_control_groupresourceprivilege_82c60f9f;
+DROP INDEX public.hs_access_control_groupmembershiprequest_a3f20815;
+DROP INDEX public.hs_access_control_groupmembershiprequest_4561f31b;
+DROP INDEX public.hs_access_control_groupmembershiprequest_0c4f5cd1;
 DROP INDEX public.generic_threadedcomment_replied_to_id;
 DROP INDEX public.generic_rating_user_id;
 DROP INDEX public.generic_rating_content_type_id;
@@ -376,6 +399,7 @@ DROP INDEX public.blog_blogpost_user_id;
 DROP INDEX public.blog_blogpost_site_id;
 DROP INDEX public.blog_blogpost_related_posts_to_blogpost_id;
 DROP INDEX public.blog_blogpost_related_posts_from_blogpost_id;
+DROP INDEX public.blog_blogpost_publish_date_1015da2554a8e97f_uniq;
 DROP INDEX public.blog_blogpost_categories_blogpost_id;
 DROP INDEX public.blog_blogpost_categories_blogcategory_id;
 DROP INDEX public.blog_blogcategory_site_id;
@@ -409,6 +433,10 @@ ALTER TABLE ONLY public.oauth2_provider_grant DROP CONSTRAINT oauth2_provider_gr
 ALTER TABLE ONLY public.oauth2_provider_application DROP CONSTRAINT oauth2_provider_application_pkey;
 ALTER TABLE ONLY public.oauth2_provider_application DROP CONSTRAINT oauth2_provider_application_client_id_key;
 ALTER TABLE ONLY public.oauth2_provider_accesstoken DROP CONSTRAINT oauth2_provider_accesstoken_pkey;
+ALTER TABLE ONLY public.hs_tracking_visitor DROP CONSTRAINT hs_tracking_visitor_user_id_e219697e1ed13ee_uniq;
+ALTER TABLE ONLY public.hs_tracking_visitor DROP CONSTRAINT hs_tracking_visitor_pkey;
+ALTER TABLE ONLY public.hs_tracking_variable DROP CONSTRAINT hs_tracking_variable_pkey;
+ALTER TABLE ONLY public.hs_tracking_session DROP CONSTRAINT hs_tracking_session_pkey;
 ALTER TABLE ONLY public.hs_tools_resource_toolversion DROP CONSTRAINT hs_tools_resource_toolversion_pkey;
 ALTER TABLE ONLY public.hs_tools_resource_toolversion DROP CONSTRAINT hs_tools_resource_toolver_content_type_id_2a1bdb955c1a5eb5_uniq;
 ALTER TABLE ONLY public.hs_tools_resource_toolmetadata DROP CONSTRAINT hs_tools_resource_toolmetadata_pkey;
@@ -492,6 +520,9 @@ ALTER TABLE ONLY public.hs_core_identifier DROP CONSTRAINT hs_core_identifier_ur
 ALTER TABLE ONLY public.hs_core_identifier DROP CONSTRAINT hs_core_identifier_pkey;
 ALTER TABLE ONLY public.hs_core_groupownership DROP CONSTRAINT hs_core_groupownership_pkey;
 ALTER TABLE ONLY public.hs_core_genericresource DROP CONSTRAINT hs_core_genericresource_pkey;
+ALTER TABLE ONLY public.hs_core_genericresource_collections DROP CONSTRAINT hs_core_genericresource_collections_pkey;
+ALTER TABLE ONLY public.hs_core_genericresource_collections DROP CONSTRAINT hs_core_genericresource_colle_from_baseresource_id_to_baser_key;
+ALTER TABLE ONLY public.hs_core_fundingagency DROP CONSTRAINT hs_core_fundingagency_pkey;
 ALTER TABLE ONLY public.hs_core_format DROP CONSTRAINT hs_core_format_value_8b10e84db4524d5_uniq;
 ALTER TABLE ONLY public.hs_core_format DROP CONSTRAINT hs_core_format_pkey;
 ALTER TABLE ONLY public.hs_core_externalprofilelink DROP CONSTRAINT hs_core_externalprofilelink_type_46054d89a4834f60_uniq;
@@ -506,6 +537,7 @@ ALTER TABLE ONLY public.hs_core_coverage DROP CONSTRAINT hs_core_coverage_pkey;
 ALTER TABLE ONLY public.hs_core_coremetadata DROP CONSTRAINT hs_core_coremetadata_pkey;
 ALTER TABLE ONLY public.hs_core_contributor DROP CONSTRAINT hs_core_contributor_pkey;
 ALTER TABLE ONLY public.hs_core_bags DROP CONSTRAINT hs_core_bags_pkey;
+ALTER TABLE ONLY public.hs_collection_resource_collectiondeletedresource DROP CONSTRAINT hs_collection_resource_collectiondeletedresource_pkey;
 ALTER TABLE ONLY public.hs_app_timeseries_variable DROP CONSTRAINT hs_app_timeseries_variable_pkey;
 ALTER TABLE ONLY public.hs_app_timeseries_variable DROP CONSTRAINT hs_app_timeseries_variable_content_type_id_d64248bdcf21a98_uniq;
 ALTER TABLE ONLY public.hs_app_timeseries_timeseriesresult DROP CONSTRAINT hs_app_timeseries_timeseriesresult_pkey;
@@ -531,6 +563,7 @@ ALTER TABLE ONLY public.hs_access_control_resourceaccess DROP CONSTRAINT hs_acce
 ALTER TABLE ONLY public.hs_access_control_resourceaccess DROP CONSTRAINT hs_access_control_resourceaccess_pkey;
 ALTER TABLE ONLY public.hs_access_control_groupresourceprivilege DROP CONSTRAINT hs_access_control_groupresourceprivilege_pkey;
 ALTER TABLE ONLY public.hs_access_control_groupresourceprivilege DROP CONSTRAINT hs_access_control_groupresourcep_group_id_3ac8c9eb2c0445ff_uniq;
+ALTER TABLE ONLY public.hs_access_control_groupmembershiprequest DROP CONSTRAINT hs_access_control_groupmembershiprequest_pkey;
 ALTER TABLE ONLY public.hs_access_control_groupaccess DROP CONSTRAINT hs_access_control_groupaccess_pkey;
 ALTER TABLE ONLY public.hs_access_control_groupaccess DROP CONSTRAINT hs_access_control_groupaccess_group_id_key;
 ALTER TABLE ONLY public.generic_threadedcomment DROP CONSTRAINT generic_threadedcomment_pkey;
@@ -631,6 +664,9 @@ ALTER TABLE public.oauth2_provider_refreshtoken ALTER COLUMN id DROP DEFAULT;
 ALTER TABLE public.oauth2_provider_grant ALTER COLUMN id DROP DEFAULT;
 ALTER TABLE public.oauth2_provider_application ALTER COLUMN id DROP DEFAULT;
 ALTER TABLE public.oauth2_provider_accesstoken ALTER COLUMN id DROP DEFAULT;
+ALTER TABLE public.hs_tracking_visitor ALTER COLUMN id DROP DEFAULT;
+ALTER TABLE public.hs_tracking_variable ALTER COLUMN id DROP DEFAULT;
+ALTER TABLE public.hs_tracking_session ALTER COLUMN id DROP DEFAULT;
 ALTER TABLE public.hs_tools_resource_toolversion ALTER COLUMN id DROP DEFAULT;
 ALTER TABLE public.hs_tools_resource_toolicon ALTER COLUMN id DROP DEFAULT;
 ALTER TABLE public.hs_tools_resource_supportedrestypes_supported_res_types ALTER COLUMN id DROP DEFAULT;
@@ -673,6 +709,8 @@ ALTER TABLE public.hs_core_publisher ALTER COLUMN id DROP DEFAULT;
 ALTER TABLE public.hs_core_language ALTER COLUMN id DROP DEFAULT;
 ALTER TABLE public.hs_core_identifier ALTER COLUMN id DROP DEFAULT;
 ALTER TABLE public.hs_core_groupownership ALTER COLUMN id DROP DEFAULT;
+ALTER TABLE public.hs_core_genericresource_collections ALTER COLUMN id DROP DEFAULT;
+ALTER TABLE public.hs_core_fundingagency ALTER COLUMN id DROP DEFAULT;
 ALTER TABLE public.hs_core_format ALTER COLUMN id DROP DEFAULT;
 ALTER TABLE public.hs_core_externalprofilelink ALTER COLUMN id DROP DEFAULT;
 ALTER TABLE public.hs_core_description ALTER COLUMN id DROP DEFAULT;
@@ -682,6 +720,7 @@ ALTER TABLE public.hs_core_coverage ALTER COLUMN id DROP DEFAULT;
 ALTER TABLE public.hs_core_coremetadata ALTER COLUMN id DROP DEFAULT;
 ALTER TABLE public.hs_core_contributor ALTER COLUMN id DROP DEFAULT;
 ALTER TABLE public.hs_core_bags ALTER COLUMN id DROP DEFAULT;
+ALTER TABLE public.hs_collection_resource_collectiondeletedresource ALTER COLUMN id DROP DEFAULT;
 ALTER TABLE public.hs_app_timeseries_variable ALTER COLUMN id DROP DEFAULT;
 ALTER TABLE public.hs_app_timeseries_timeseriesresult ALTER COLUMN id DROP DEFAULT;
 ALTER TABLE public.hs_app_timeseries_site ALTER COLUMN id DROP DEFAULT;
@@ -694,6 +733,7 @@ ALTER TABLE public.hs_access_control_usergroupprivilege ALTER COLUMN id DROP DEF
 ALTER TABLE public.hs_access_control_useraccess ALTER COLUMN id DROP DEFAULT;
 ALTER TABLE public.hs_access_control_resourceaccess ALTER COLUMN id DROP DEFAULT;
 ALTER TABLE public.hs_access_control_groupresourceprivilege ALTER COLUMN id DROP DEFAULT;
+ALTER TABLE public.hs_access_control_groupmembershiprequest ALTER COLUMN id DROP DEFAULT;
 ALTER TABLE public.hs_access_control_groupaccess ALTER COLUMN id DROP DEFAULT;
 ALTER TABLE public.generic_rating ALTER COLUMN id DROP DEFAULT;
 ALTER TABLE public.generic_keyword ALTER COLUMN id DROP DEFAULT;
@@ -779,6 +819,12 @@ DROP SEQUENCE public.oauth2_provider_application_id_seq;
 DROP TABLE public.oauth2_provider_application;
 DROP SEQUENCE public.oauth2_provider_accesstoken_id_seq;
 DROP TABLE public.oauth2_provider_accesstoken;
+DROP SEQUENCE public.hs_tracking_visitor_id_seq;
+DROP TABLE public.hs_tracking_visitor;
+DROP SEQUENCE public.hs_tracking_variable_id_seq;
+DROP TABLE public.hs_tracking_variable;
+DROP SEQUENCE public.hs_tracking_session_id_seq;
+DROP TABLE public.hs_tracking_session;
 DROP SEQUENCE public.hs_tools_resource_toolversion_id_seq;
 DROP TABLE public.hs_tools_resource_toolversion;
 DROP TABLE public.hs_tools_resource_toolmetadata;
@@ -870,7 +916,11 @@ DROP SEQUENCE public.hs_core_identifier_id_seq;
 DROP TABLE public.hs_core_identifier;
 DROP SEQUENCE public.hs_core_groupownership_id_seq;
 DROP TABLE public.hs_core_groupownership;
+DROP SEQUENCE public.hs_core_genericresource_collections_id_seq;
+DROP TABLE public.hs_core_genericresource_collections;
 DROP TABLE public.hs_core_genericresource;
+DROP SEQUENCE public.hs_core_fundingagency_id_seq;
+DROP TABLE public.hs_core_fundingagency;
 DROP SEQUENCE public.hs_core_format_id_seq;
 DROP TABLE public.hs_core_format;
 DROP SEQUENCE public.hs_core_externalprofilelink_id_seq;
@@ -889,6 +939,8 @@ DROP SEQUENCE public.hs_core_contributor_id_seq;
 DROP TABLE public.hs_core_contributor;
 DROP SEQUENCE public.hs_core_bags_id_seq;
 DROP TABLE public.hs_core_bags;
+DROP SEQUENCE public.hs_collection_resource_collectiondeletedresource_id_seq;
+DROP TABLE public.hs_collection_resource_collectiondeletedresource;
 DROP SEQUENCE public.hs_app_timeseries_variable_id_seq;
 DROP TABLE public.hs_app_timeseries_variable;
 DROP SEQUENCE public.hs_app_timeseries_timeseriesresult_id_seq;
@@ -915,6 +967,8 @@ DROP SEQUENCE public.hs_access_control_resourceaccess_id_seq;
 DROP TABLE public.hs_access_control_resourceaccess;
 DROP SEQUENCE public.hs_access_control_groupresourceprivilege_id_seq;
 DROP TABLE public.hs_access_control_groupresourceprivilege;
+DROP SEQUENCE public.hs_access_control_groupmembershiprequest_id_seq;
+DROP TABLE public.hs_access_control_groupmembershiprequest;
 DROP SEQUENCE public.hs_access_control_groupaccess_id_seq;
 DROP TABLE public.hs_access_control_groupaccess;
 DROP TABLE public.generic_threadedcomment;
@@ -1033,8 +1087,16 @@ DROP TABLE public.auth_group_permissions;
 DROP SEQUENCE public.auth_group_id_seq;
 DROP TABLE public.auth_group;
 DROP EXTENSION postgis;
+DROP EXTENSION hstore;
 DROP EXTENSION plpgsql;
 DROP SCHEMA public;
+--
+-- Name: postgres; Type: COMMENT; Schema: -; Owner: postgres
+--
+
+COMMENT ON DATABASE postgres IS 'default administrative connection database';
+
+
 --
 -- Name: public; Type: SCHEMA; Schema: -; Owner: postgres
 --
@@ -1063,6 +1125,20 @@ CREATE EXTENSION IF NOT EXISTS plpgsql WITH SCHEMA pg_catalog;
 --
 
 COMMENT ON EXTENSION plpgsql IS 'PL/pgSQL procedural language';
+
+
+--
+-- Name: hstore; Type: EXTENSION; Schema: -; Owner: 
+--
+
+CREATE EXTENSION IF NOT EXISTS hstore WITH SCHEMA public;
+
+
+--
+-- Name: EXTENSION hstore; Type: COMMENT; Schema: -; Owner: 
+--
+
+COMMENT ON EXTENSION hstore IS 'data type for storing sets of (key, value) pairs';
 
 
 --
@@ -1095,7 +1171,7 @@ CREATE TABLE auth_group (
 );
 
 
-ALTER TABLE public.auth_group OWNER TO postgres;
+ALTER TABLE auth_group OWNER TO postgres;
 
 --
 -- Name: auth_group_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
@@ -1109,7 +1185,7 @@ CREATE SEQUENCE auth_group_id_seq
     CACHE 1;
 
 
-ALTER TABLE public.auth_group_id_seq OWNER TO postgres;
+ALTER TABLE auth_group_id_seq OWNER TO postgres;
 
 --
 -- Name: auth_group_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
@@ -1129,7 +1205,7 @@ CREATE TABLE auth_group_permissions (
 );
 
 
-ALTER TABLE public.auth_group_permissions OWNER TO postgres;
+ALTER TABLE auth_group_permissions OWNER TO postgres;
 
 --
 -- Name: auth_group_permissions_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
@@ -1143,7 +1219,7 @@ CREATE SEQUENCE auth_group_permissions_id_seq
     CACHE 1;
 
 
-ALTER TABLE public.auth_group_permissions_id_seq OWNER TO postgres;
+ALTER TABLE auth_group_permissions_id_seq OWNER TO postgres;
 
 --
 -- Name: auth_group_permissions_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
@@ -1158,13 +1234,13 @@ ALTER SEQUENCE auth_group_permissions_id_seq OWNED BY auth_group_permissions.id;
 
 CREATE TABLE auth_permission (
     id integer NOT NULL,
-    name character varying(50) NOT NULL,
+    name character varying(255) NOT NULL,
     content_type_id integer NOT NULL,
     codename character varying(100) NOT NULL
 );
 
 
-ALTER TABLE public.auth_permission OWNER TO postgres;
+ALTER TABLE auth_permission OWNER TO postgres;
 
 --
 -- Name: auth_permission_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
@@ -1178,7 +1254,7 @@ CREATE SEQUENCE auth_permission_id_seq
     CACHE 1;
 
 
-ALTER TABLE public.auth_permission_id_seq OWNER TO postgres;
+ALTER TABLE auth_permission_id_seq OWNER TO postgres;
 
 --
 -- Name: auth_permission_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
@@ -1194,19 +1270,19 @@ ALTER SEQUENCE auth_permission_id_seq OWNED BY auth_permission.id;
 CREATE TABLE auth_user (
     id integer NOT NULL,
     password character varying(128) NOT NULL,
-    last_login timestamp with time zone NOT NULL,
+    last_login timestamp with time zone,
     is_superuser boolean NOT NULL,
     username character varying(30) NOT NULL,
     first_name character varying(30) NOT NULL,
     last_name character varying(30) NOT NULL,
-    email character varying(75) NOT NULL,
+    email character varying(254) NOT NULL,
     is_staff boolean NOT NULL,
     is_active boolean NOT NULL,
     date_joined timestamp with time zone NOT NULL
 );
 
 
-ALTER TABLE public.auth_user OWNER TO postgres;
+ALTER TABLE auth_user OWNER TO postgres;
 
 --
 -- Name: auth_user_groups; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
@@ -1219,7 +1295,7 @@ CREATE TABLE auth_user_groups (
 );
 
 
-ALTER TABLE public.auth_user_groups OWNER TO postgres;
+ALTER TABLE auth_user_groups OWNER TO postgres;
 
 --
 -- Name: auth_user_groups_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
@@ -1233,7 +1309,7 @@ CREATE SEQUENCE auth_user_groups_id_seq
     CACHE 1;
 
 
-ALTER TABLE public.auth_user_groups_id_seq OWNER TO postgres;
+ALTER TABLE auth_user_groups_id_seq OWNER TO postgres;
 
 --
 -- Name: auth_user_groups_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
@@ -1254,7 +1330,7 @@ CREATE SEQUENCE auth_user_id_seq
     CACHE 1;
 
 
-ALTER TABLE public.auth_user_id_seq OWNER TO postgres;
+ALTER TABLE auth_user_id_seq OWNER TO postgres;
 
 --
 -- Name: auth_user_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
@@ -1274,7 +1350,7 @@ CREATE TABLE auth_user_user_permissions (
 );
 
 
-ALTER TABLE public.auth_user_user_permissions OWNER TO postgres;
+ALTER TABLE auth_user_user_permissions OWNER TO postgres;
 
 --
 -- Name: auth_user_user_permissions_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
@@ -1288,7 +1364,7 @@ CREATE SEQUENCE auth_user_user_permissions_id_seq
     CACHE 1;
 
 
-ALTER TABLE public.auth_user_user_permissions_id_seq OWNER TO postgres;
+ALTER TABLE auth_user_user_permissions_id_seq OWNER TO postgres;
 
 --
 -- Name: auth_user_user_permissions_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
@@ -1309,7 +1385,7 @@ CREATE TABLE blog_blogcategory (
 );
 
 
-ALTER TABLE public.blog_blogcategory OWNER TO postgres;
+ALTER TABLE blog_blogcategory OWNER TO postgres;
 
 --
 -- Name: blog_blogcategory_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
@@ -1323,7 +1399,7 @@ CREATE SEQUENCE blog_blogcategory_id_seq
     CACHE 1;
 
 
-ALTER TABLE public.blog_blogcategory_id_seq OWNER TO postgres;
+ALTER TABLE blog_blogcategory_id_seq OWNER TO postgres;
 
 --
 -- Name: blog_blogcategory_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
@@ -1363,7 +1439,7 @@ CREATE TABLE blog_blogpost (
 );
 
 
-ALTER TABLE public.blog_blogpost OWNER TO postgres;
+ALTER TABLE blog_blogpost OWNER TO postgres;
 
 --
 -- Name: blog_blogpost_categories; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
@@ -1376,7 +1452,7 @@ CREATE TABLE blog_blogpost_categories (
 );
 
 
-ALTER TABLE public.blog_blogpost_categories OWNER TO postgres;
+ALTER TABLE blog_blogpost_categories OWNER TO postgres;
 
 --
 -- Name: blog_blogpost_categories_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
@@ -1390,7 +1466,7 @@ CREATE SEQUENCE blog_blogpost_categories_id_seq
     CACHE 1;
 
 
-ALTER TABLE public.blog_blogpost_categories_id_seq OWNER TO postgres;
+ALTER TABLE blog_blogpost_categories_id_seq OWNER TO postgres;
 
 --
 -- Name: blog_blogpost_categories_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
@@ -1411,7 +1487,7 @@ CREATE SEQUENCE blog_blogpost_id_seq
     CACHE 1;
 
 
-ALTER TABLE public.blog_blogpost_id_seq OWNER TO postgres;
+ALTER TABLE blog_blogpost_id_seq OWNER TO postgres;
 
 --
 -- Name: blog_blogpost_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
@@ -1431,7 +1507,7 @@ CREATE TABLE blog_blogpost_related_posts (
 );
 
 
-ALTER TABLE public.blog_blogpost_related_posts OWNER TO postgres;
+ALTER TABLE blog_blogpost_related_posts OWNER TO postgres;
 
 --
 -- Name: blog_blogpost_related_posts_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
@@ -1445,7 +1521,7 @@ CREATE SEQUENCE blog_blogpost_related_posts_id_seq
     CACHE 1;
 
 
-ALTER TABLE public.blog_blogpost_related_posts_id_seq OWNER TO postgres;
+ALTER TABLE blog_blogpost_related_posts_id_seq OWNER TO postgres;
 
 --
 -- Name: blog_blogpost_related_posts_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
@@ -1470,7 +1546,7 @@ CREATE TABLE celery_taskmeta (
 );
 
 
-ALTER TABLE public.celery_taskmeta OWNER TO postgres;
+ALTER TABLE celery_taskmeta OWNER TO postgres;
 
 --
 -- Name: celery_taskmeta_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
@@ -1484,7 +1560,7 @@ CREATE SEQUENCE celery_taskmeta_id_seq
     CACHE 1;
 
 
-ALTER TABLE public.celery_taskmeta_id_seq OWNER TO postgres;
+ALTER TABLE celery_taskmeta_id_seq OWNER TO postgres;
 
 --
 -- Name: celery_taskmeta_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
@@ -1506,7 +1582,7 @@ CREATE TABLE celery_tasksetmeta (
 );
 
 
-ALTER TABLE public.celery_tasksetmeta OWNER TO postgres;
+ALTER TABLE celery_tasksetmeta OWNER TO postgres;
 
 --
 -- Name: celery_tasksetmeta_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
@@ -1520,7 +1596,7 @@ CREATE SEQUENCE celery_tasksetmeta_id_seq
     CACHE 1;
 
 
-ALTER TABLE public.celery_tasksetmeta_id_seq OWNER TO postgres;
+ALTER TABLE celery_tasksetmeta_id_seq OWNER TO postgres;
 
 --
 -- Name: celery_tasksetmeta_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
@@ -1541,7 +1617,7 @@ CREATE TABLE conf_setting (
 );
 
 
-ALTER TABLE public.conf_setting OWNER TO postgres;
+ALTER TABLE conf_setting OWNER TO postgres;
 
 --
 -- Name: conf_setting_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
@@ -1555,7 +1631,7 @@ CREATE SEQUENCE conf_setting_id_seq
     CACHE 1;
 
 
-ALTER TABLE public.conf_setting_id_seq OWNER TO postgres;
+ALTER TABLE conf_setting_id_seq OWNER TO postgres;
 
 --
 -- Name: conf_setting_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
@@ -1574,7 +1650,7 @@ CREATE TABLE core_sitepermission (
 );
 
 
-ALTER TABLE public.core_sitepermission OWNER TO postgres;
+ALTER TABLE core_sitepermission OWNER TO postgres;
 
 --
 -- Name: core_sitepermission_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
@@ -1588,7 +1664,7 @@ CREATE SEQUENCE core_sitepermission_id_seq
     CACHE 1;
 
 
-ALTER TABLE public.core_sitepermission_id_seq OWNER TO postgres;
+ALTER TABLE core_sitepermission_id_seq OWNER TO postgres;
 
 --
 -- Name: core_sitepermission_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
@@ -1608,7 +1684,7 @@ CREATE TABLE core_sitepermission_sites (
 );
 
 
-ALTER TABLE public.core_sitepermission_sites OWNER TO postgres;
+ALTER TABLE core_sitepermission_sites OWNER TO postgres;
 
 --
 -- Name: core_sitepermission_sites_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
@@ -1622,7 +1698,7 @@ CREATE SEQUENCE core_sitepermission_sites_id_seq
     CACHE 1;
 
 
-ALTER TABLE public.core_sitepermission_sites_id_seq OWNER TO postgres;
+ALTER TABLE core_sitepermission_sites_id_seq OWNER TO postgres;
 
 --
 -- Name: core_sitepermission_sites_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
@@ -1641,7 +1717,7 @@ CREATE TABLE corsheaders_corsmodel (
 );
 
 
-ALTER TABLE public.corsheaders_corsmodel OWNER TO postgres;
+ALTER TABLE corsheaders_corsmodel OWNER TO postgres;
 
 --
 -- Name: corsheaders_corsmodel_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
@@ -1655,7 +1731,7 @@ CREATE SEQUENCE corsheaders_corsmodel_id_seq
     CACHE 1;
 
 
-ALTER TABLE public.corsheaders_corsmodel_id_seq OWNER TO postgres;
+ALTER TABLE corsheaders_corsmodel_id_seq OWNER TO postgres;
 
 --
 -- Name: corsheaders_corsmodel_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
@@ -1681,7 +1757,7 @@ CREATE TABLE django_admin_log (
 );
 
 
-ALTER TABLE public.django_admin_log OWNER TO postgres;
+ALTER TABLE django_admin_log OWNER TO postgres;
 
 --
 -- Name: django_admin_log_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
@@ -1695,7 +1771,7 @@ CREATE SEQUENCE django_admin_log_id_seq
     CACHE 1;
 
 
-ALTER TABLE public.django_admin_log_id_seq OWNER TO postgres;
+ALTER TABLE django_admin_log_id_seq OWNER TO postgres;
 
 --
 -- Name: django_admin_log_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
@@ -1717,7 +1793,7 @@ CREATE TABLE django_comment_flags (
 );
 
 
-ALTER TABLE public.django_comment_flags OWNER TO postgres;
+ALTER TABLE django_comment_flags OWNER TO postgres;
 
 --
 -- Name: django_comment_flags_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
@@ -1731,7 +1807,7 @@ CREATE SEQUENCE django_comment_flags_id_seq
     CACHE 1;
 
 
-ALTER TABLE public.django_comment_flags_id_seq OWNER TO postgres;
+ALTER TABLE django_comment_flags_id_seq OWNER TO postgres;
 
 --
 -- Name: django_comment_flags_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
@@ -1751,7 +1827,7 @@ CREATE TABLE django_comments (
     site_id integer NOT NULL,
     user_id integer,
     user_name character varying(50) NOT NULL,
-    user_email character varying(75) NOT NULL,
+    user_email character varying(254) NOT NULL,
     user_url character varying(200) NOT NULL,
     comment text NOT NULL,
     submit_date timestamp with time zone NOT NULL,
@@ -1761,7 +1837,7 @@ CREATE TABLE django_comments (
 );
 
 
-ALTER TABLE public.django_comments OWNER TO postgres;
+ALTER TABLE django_comments OWNER TO postgres;
 
 --
 -- Name: django_comments_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
@@ -1775,7 +1851,7 @@ CREATE SEQUENCE django_comments_id_seq
     CACHE 1;
 
 
-ALTER TABLE public.django_comments_id_seq OWNER TO postgres;
+ALTER TABLE django_comments_id_seq OWNER TO postgres;
 
 --
 -- Name: django_comments_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
@@ -1790,13 +1866,12 @@ ALTER SEQUENCE django_comments_id_seq OWNED BY django_comments.id;
 
 CREATE TABLE django_content_type (
     id integer NOT NULL,
-    name character varying(100) NOT NULL,
     app_label character varying(100) NOT NULL,
     model character varying(100) NOT NULL
 );
 
 
-ALTER TABLE public.django_content_type OWNER TO postgres;
+ALTER TABLE django_content_type OWNER TO postgres;
 
 --
 -- Name: django_content_type_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
@@ -1810,7 +1885,7 @@ CREATE SEQUENCE django_content_type_id_seq
     CACHE 1;
 
 
-ALTER TABLE public.django_content_type_id_seq OWNER TO postgres;
+ALTER TABLE django_content_type_id_seq OWNER TO postgres;
 
 --
 -- Name: django_content_type_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
@@ -1840,7 +1915,7 @@ CREATE TABLE django_docker_processes_containeroverrides (
 );
 
 
-ALTER TABLE public.django_docker_processes_containeroverrides OWNER TO postgres;
+ALTER TABLE django_docker_processes_containeroverrides OWNER TO postgres;
 
 --
 -- Name: django_docker_processes_containeroverrides_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
@@ -1854,7 +1929,7 @@ CREATE SEQUENCE django_docker_processes_containeroverrides_id_seq
     CACHE 1;
 
 
-ALTER TABLE public.django_docker_processes_containeroverrides_id_seq OWNER TO postgres;
+ALTER TABLE django_docker_processes_containeroverrides_id_seq OWNER TO postgres;
 
 --
 -- Name: django_docker_processes_containeroverrides_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
@@ -1875,7 +1950,7 @@ CREATE TABLE django_docker_processes_dockerenvvar (
 );
 
 
-ALTER TABLE public.django_docker_processes_dockerenvvar OWNER TO postgres;
+ALTER TABLE django_docker_processes_dockerenvvar OWNER TO postgres;
 
 --
 -- Name: django_docker_processes_dockerenvvar_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
@@ -1889,7 +1964,7 @@ CREATE SEQUENCE django_docker_processes_dockerenvvar_id_seq
     CACHE 1;
 
 
-ALTER TABLE public.django_docker_processes_dockerenvvar_id_seq OWNER TO postgres;
+ALTER TABLE django_docker_processes_dockerenvvar_id_seq OWNER TO postgres;
 
 --
 -- Name: django_docker_processes_dockerenvvar_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
@@ -1911,7 +1986,7 @@ CREATE TABLE django_docker_processes_dockerlink (
 );
 
 
-ALTER TABLE public.django_docker_processes_dockerlink OWNER TO postgres;
+ALTER TABLE django_docker_processes_dockerlink OWNER TO postgres;
 
 --
 -- Name: django_docker_processes_dockerlink_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
@@ -1925,7 +2000,7 @@ CREATE SEQUENCE django_docker_processes_dockerlink_id_seq
     CACHE 1;
 
 
-ALTER TABLE public.django_docker_processes_dockerlink_id_seq OWNER TO postgres;
+ALTER TABLE django_docker_processes_dockerlink_id_seq OWNER TO postgres;
 
 --
 -- Name: django_docker_processes_dockerlink_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
@@ -1946,7 +2021,7 @@ CREATE TABLE django_docker_processes_dockerport (
 );
 
 
-ALTER TABLE public.django_docker_processes_dockerport OWNER TO postgres;
+ALTER TABLE django_docker_processes_dockerport OWNER TO postgres;
 
 --
 -- Name: django_docker_processes_dockerport_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
@@ -1960,7 +2035,7 @@ CREATE SEQUENCE django_docker_processes_dockerport_id_seq
     CACHE 1;
 
 
-ALTER TABLE public.django_docker_processes_dockerport_id_seq OWNER TO postgres;
+ALTER TABLE django_docker_processes_dockerport_id_seq OWNER TO postgres;
 
 --
 -- Name: django_docker_processes_dockerport_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
@@ -1985,7 +2060,7 @@ CREATE TABLE django_docker_processes_dockerprocess (
 );
 
 
-ALTER TABLE public.django_docker_processes_dockerprocess OWNER TO postgres;
+ALTER TABLE django_docker_processes_dockerprocess OWNER TO postgres;
 
 --
 -- Name: django_docker_processes_dockerprocess_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
@@ -1999,7 +2074,7 @@ CREATE SEQUENCE django_docker_processes_dockerprocess_id_seq
     CACHE 1;
 
 
-ALTER TABLE public.django_docker_processes_dockerprocess_id_seq OWNER TO postgres;
+ALTER TABLE django_docker_processes_dockerprocess_id_seq OWNER TO postgres;
 
 --
 -- Name: django_docker_processes_dockerprocess_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
@@ -2024,7 +2099,7 @@ CREATE TABLE django_docker_processes_dockerprofile (
 );
 
 
-ALTER TABLE public.django_docker_processes_dockerprofile OWNER TO postgres;
+ALTER TABLE django_docker_processes_dockerprofile OWNER TO postgres;
 
 --
 -- Name: django_docker_processes_dockerprofile_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
@@ -2038,7 +2113,7 @@ CREATE SEQUENCE django_docker_processes_dockerprofile_id_seq
     CACHE 1;
 
 
-ALTER TABLE public.django_docker_processes_dockerprofile_id_seq OWNER TO postgres;
+ALTER TABLE django_docker_processes_dockerprofile_id_seq OWNER TO postgres;
 
 --
 -- Name: django_docker_processes_dockerprofile_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
@@ -2060,7 +2135,7 @@ CREATE TABLE django_docker_processes_dockervolume (
 );
 
 
-ALTER TABLE public.django_docker_processes_dockervolume OWNER TO postgres;
+ALTER TABLE django_docker_processes_dockervolume OWNER TO postgres;
 
 --
 -- Name: django_docker_processes_dockervolume_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
@@ -2074,7 +2149,7 @@ CREATE SEQUENCE django_docker_processes_dockervolume_id_seq
     CACHE 1;
 
 
-ALTER TABLE public.django_docker_processes_dockervolume_id_seq OWNER TO postgres;
+ALTER TABLE django_docker_processes_dockervolume_id_seq OWNER TO postgres;
 
 --
 -- Name: django_docker_processes_dockervolume_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
@@ -2095,7 +2170,7 @@ CREATE TABLE django_docker_processes_overrideenvvar (
 );
 
 
-ALTER TABLE public.django_docker_processes_overrideenvvar OWNER TO postgres;
+ALTER TABLE django_docker_processes_overrideenvvar OWNER TO postgres;
 
 --
 -- Name: django_docker_processes_overrideenvvar_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
@@ -2109,7 +2184,7 @@ CREATE SEQUENCE django_docker_processes_overrideenvvar_id_seq
     CACHE 1;
 
 
-ALTER TABLE public.django_docker_processes_overrideenvvar_id_seq OWNER TO postgres;
+ALTER TABLE django_docker_processes_overrideenvvar_id_seq OWNER TO postgres;
 
 --
 -- Name: django_docker_processes_overrideenvvar_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
@@ -2130,7 +2205,7 @@ CREATE TABLE django_docker_processes_overridelink (
 );
 
 
-ALTER TABLE public.django_docker_processes_overridelink OWNER TO postgres;
+ALTER TABLE django_docker_processes_overridelink OWNER TO postgres;
 
 --
 -- Name: django_docker_processes_overridelink_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
@@ -2144,7 +2219,7 @@ CREATE SEQUENCE django_docker_processes_overridelink_id_seq
     CACHE 1;
 
 
-ALTER TABLE public.django_docker_processes_overridelink_id_seq OWNER TO postgres;
+ALTER TABLE django_docker_processes_overridelink_id_seq OWNER TO postgres;
 
 --
 -- Name: django_docker_processes_overridelink_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
@@ -2165,7 +2240,7 @@ CREATE TABLE django_docker_processes_overrideport (
 );
 
 
-ALTER TABLE public.django_docker_processes_overrideport OWNER TO postgres;
+ALTER TABLE django_docker_processes_overrideport OWNER TO postgres;
 
 --
 -- Name: django_docker_processes_overrideport_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
@@ -2179,7 +2254,7 @@ CREATE SEQUENCE django_docker_processes_overrideport_id_seq
     CACHE 1;
 
 
-ALTER TABLE public.django_docker_processes_overrideport_id_seq OWNER TO postgres;
+ALTER TABLE django_docker_processes_overrideport_id_seq OWNER TO postgres;
 
 --
 -- Name: django_docker_processes_overrideport_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
@@ -2200,7 +2275,7 @@ CREATE TABLE django_docker_processes_overridevolume (
 );
 
 
-ALTER TABLE public.django_docker_processes_overridevolume OWNER TO postgres;
+ALTER TABLE django_docker_processes_overridevolume OWNER TO postgres;
 
 --
 -- Name: django_docker_processes_overridevolume_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
@@ -2214,7 +2289,7 @@ CREATE SEQUENCE django_docker_processes_overridevolume_id_seq
     CACHE 1;
 
 
-ALTER TABLE public.django_docker_processes_overridevolume_id_seq OWNER TO postgres;
+ALTER TABLE django_docker_processes_overridevolume_id_seq OWNER TO postgres;
 
 --
 -- Name: django_docker_processes_overridevolume_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
@@ -2241,7 +2316,7 @@ CREATE TABLE django_irods_rodsenvironment (
 );
 
 
-ALTER TABLE public.django_irods_rodsenvironment OWNER TO postgres;
+ALTER TABLE django_irods_rodsenvironment OWNER TO postgres;
 
 --
 -- Name: django_irods_rodsenvironment_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
@@ -2255,7 +2330,7 @@ CREATE SEQUENCE django_irods_rodsenvironment_id_seq
     CACHE 1;
 
 
-ALTER TABLE public.django_irods_rodsenvironment_id_seq OWNER TO postgres;
+ALTER TABLE django_irods_rodsenvironment_id_seq OWNER TO postgres;
 
 --
 -- Name: django_irods_rodsenvironment_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
@@ -2276,7 +2351,7 @@ CREATE TABLE django_migrations (
 );
 
 
-ALTER TABLE public.django_migrations OWNER TO postgres;
+ALTER TABLE django_migrations OWNER TO postgres;
 
 --
 -- Name: django_migrations_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
@@ -2290,7 +2365,7 @@ CREATE SEQUENCE django_migrations_id_seq
     CACHE 1;
 
 
-ALTER TABLE public.django_migrations_id_seq OWNER TO postgres;
+ALTER TABLE django_migrations_id_seq OWNER TO postgres;
 
 --
 -- Name: django_migrations_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
@@ -2311,7 +2386,7 @@ CREATE TABLE django_redirect (
 );
 
 
-ALTER TABLE public.django_redirect OWNER TO postgres;
+ALTER TABLE django_redirect OWNER TO postgres;
 
 --
 -- Name: django_redirect_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
@@ -2325,7 +2400,7 @@ CREATE SEQUENCE django_redirect_id_seq
     CACHE 1;
 
 
-ALTER TABLE public.django_redirect_id_seq OWNER TO postgres;
+ALTER TABLE django_redirect_id_seq OWNER TO postgres;
 
 --
 -- Name: django_redirect_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
@@ -2345,7 +2420,7 @@ CREATE TABLE django_session (
 );
 
 
-ALTER TABLE public.django_session OWNER TO postgres;
+ALTER TABLE django_session OWNER TO postgres;
 
 --
 -- Name: django_site; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
@@ -2358,7 +2433,7 @@ CREATE TABLE django_site (
 );
 
 
-ALTER TABLE public.django_site OWNER TO postgres;
+ALTER TABLE django_site OWNER TO postgres;
 
 --
 -- Name: django_site_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
@@ -2372,7 +2447,7 @@ CREATE SEQUENCE django_site_id_seq
     CACHE 1;
 
 
-ALTER TABLE public.django_site_id_seq OWNER TO postgres;
+ALTER TABLE django_site_id_seq OWNER TO postgres;
 
 --
 -- Name: django_site_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
@@ -2395,7 +2470,7 @@ CREATE TABLE djcelery_crontabschedule (
 );
 
 
-ALTER TABLE public.djcelery_crontabschedule OWNER TO postgres;
+ALTER TABLE djcelery_crontabschedule OWNER TO postgres;
 
 --
 -- Name: djcelery_crontabschedule_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
@@ -2409,7 +2484,7 @@ CREATE SEQUENCE djcelery_crontabschedule_id_seq
     CACHE 1;
 
 
-ALTER TABLE public.djcelery_crontabschedule_id_seq OWNER TO postgres;
+ALTER TABLE djcelery_crontabschedule_id_seq OWNER TO postgres;
 
 --
 -- Name: djcelery_crontabschedule_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
@@ -2429,7 +2504,7 @@ CREATE TABLE djcelery_intervalschedule (
 );
 
 
-ALTER TABLE public.djcelery_intervalschedule OWNER TO postgres;
+ALTER TABLE djcelery_intervalschedule OWNER TO postgres;
 
 --
 -- Name: djcelery_intervalschedule_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
@@ -2443,7 +2518,7 @@ CREATE SEQUENCE djcelery_intervalschedule_id_seq
     CACHE 1;
 
 
-ALTER TABLE public.djcelery_intervalschedule_id_seq OWNER TO postgres;
+ALTER TABLE djcelery_intervalschedule_id_seq OWNER TO postgres;
 
 --
 -- Name: djcelery_intervalschedule_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
@@ -2477,7 +2552,7 @@ CREATE TABLE djcelery_periodictask (
 );
 
 
-ALTER TABLE public.djcelery_periodictask OWNER TO postgres;
+ALTER TABLE djcelery_periodictask OWNER TO postgres;
 
 --
 -- Name: djcelery_periodictask_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
@@ -2491,7 +2566,7 @@ CREATE SEQUENCE djcelery_periodictask_id_seq
     CACHE 1;
 
 
-ALTER TABLE public.djcelery_periodictask_id_seq OWNER TO postgres;
+ALTER TABLE djcelery_periodictask_id_seq OWNER TO postgres;
 
 --
 -- Name: djcelery_periodictask_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
@@ -2510,7 +2585,7 @@ CREATE TABLE djcelery_periodictasks (
 );
 
 
-ALTER TABLE public.djcelery_periodictasks OWNER TO postgres;
+ALTER TABLE djcelery_periodictasks OWNER TO postgres;
 
 --
 -- Name: djcelery_taskstate; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
@@ -2535,7 +2610,7 @@ CREATE TABLE djcelery_taskstate (
 );
 
 
-ALTER TABLE public.djcelery_taskstate OWNER TO postgres;
+ALTER TABLE djcelery_taskstate OWNER TO postgres;
 
 --
 -- Name: djcelery_taskstate_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
@@ -2549,7 +2624,7 @@ CREATE SEQUENCE djcelery_taskstate_id_seq
     CACHE 1;
 
 
-ALTER TABLE public.djcelery_taskstate_id_seq OWNER TO postgres;
+ALTER TABLE djcelery_taskstate_id_seq OWNER TO postgres;
 
 --
 -- Name: djcelery_taskstate_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
@@ -2569,7 +2644,7 @@ CREATE TABLE djcelery_workerstate (
 );
 
 
-ALTER TABLE public.djcelery_workerstate OWNER TO postgres;
+ALTER TABLE djcelery_workerstate OWNER TO postgres;
 
 --
 -- Name: djcelery_workerstate_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
@@ -2583,7 +2658,7 @@ CREATE SEQUENCE djcelery_workerstate_id_seq
     CACHE 1;
 
 
-ALTER TABLE public.djcelery_workerstate_id_seq OWNER TO postgres;
+ALTER TABLE djcelery_workerstate_id_seq OWNER TO postgres;
 
 --
 -- Name: djcelery_workerstate_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
@@ -2611,7 +2686,7 @@ CREATE TABLE forms_field (
 );
 
 
-ALTER TABLE public.forms_field OWNER TO postgres;
+ALTER TABLE forms_field OWNER TO postgres;
 
 --
 -- Name: forms_field_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
@@ -2625,7 +2700,7 @@ CREATE SEQUENCE forms_field_id_seq
     CACHE 1;
 
 
-ALTER TABLE public.forms_field_id_seq OWNER TO postgres;
+ALTER TABLE forms_field_id_seq OWNER TO postgres;
 
 --
 -- Name: forms_field_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
@@ -2646,7 +2721,7 @@ CREATE TABLE forms_fieldentry (
 );
 
 
-ALTER TABLE public.forms_fieldentry OWNER TO postgres;
+ALTER TABLE forms_fieldentry OWNER TO postgres;
 
 --
 -- Name: forms_fieldentry_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
@@ -2660,7 +2735,7 @@ CREATE SEQUENCE forms_fieldentry_id_seq
     CACHE 1;
 
 
-ALTER TABLE public.forms_fieldentry_id_seq OWNER TO postgres;
+ALTER TABLE forms_fieldentry_id_seq OWNER TO postgres;
 
 --
 -- Name: forms_fieldentry_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
@@ -2679,14 +2754,14 @@ CREATE TABLE forms_form (
     button_text character varying(50) NOT NULL,
     response text NOT NULL,
     send_email boolean NOT NULL,
-    email_from character varying(75) NOT NULL,
+    email_from character varying(254) NOT NULL,
     email_copies character varying(200) NOT NULL,
     email_subject character varying(200) NOT NULL,
     email_message text NOT NULL
 );
 
 
-ALTER TABLE public.forms_form OWNER TO postgres;
+ALTER TABLE forms_form OWNER TO postgres;
 
 --
 -- Name: forms_formentry; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
@@ -2699,7 +2774,7 @@ CREATE TABLE forms_formentry (
 );
 
 
-ALTER TABLE public.forms_formentry OWNER TO postgres;
+ALTER TABLE forms_formentry OWNER TO postgres;
 
 --
 -- Name: forms_formentry_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
@@ -2713,7 +2788,7 @@ CREATE SEQUENCE forms_formentry_id_seq
     CACHE 1;
 
 
-ALTER TABLE public.forms_formentry_id_seq OWNER TO postgres;
+ALTER TABLE forms_formentry_id_seq OWNER TO postgres;
 
 --
 -- Name: forms_formentry_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
@@ -2737,7 +2812,7 @@ CREATE TABLE ga_ows_ogrdataset (
 );
 
 
-ALTER TABLE public.ga_ows_ogrdataset OWNER TO postgres;
+ALTER TABLE ga_ows_ogrdataset OWNER TO postgres;
 
 --
 -- Name: ga_ows_ogrdataset_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
@@ -2751,7 +2826,7 @@ CREATE SEQUENCE ga_ows_ogrdataset_id_seq
     CACHE 1;
 
 
-ALTER TABLE public.ga_ows_ogrdataset_id_seq OWNER TO postgres;
+ALTER TABLE ga_ows_ogrdataset_id_seq OWNER TO postgres;
 
 --
 -- Name: ga_ows_ogrdataset_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
@@ -2770,7 +2845,7 @@ CREATE TABLE ga_ows_ogrdatasetcollection (
 );
 
 
-ALTER TABLE public.ga_ows_ogrdatasetcollection OWNER TO postgres;
+ALTER TABLE ga_ows_ogrdatasetcollection OWNER TO postgres;
 
 --
 -- Name: ga_ows_ogrdatasetcollection_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
@@ -2784,7 +2859,7 @@ CREATE SEQUENCE ga_ows_ogrdatasetcollection_id_seq
     CACHE 1;
 
 
-ALTER TABLE public.ga_ows_ogrdatasetcollection_id_seq OWNER TO postgres;
+ALTER TABLE ga_ows_ogrdatasetcollection_id_seq OWNER TO postgres;
 
 --
 -- Name: ga_ows_ogrdatasetcollection_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
@@ -2806,7 +2881,7 @@ CREATE TABLE ga_ows_ogrlayer (
 );
 
 
-ALTER TABLE public.ga_ows_ogrlayer OWNER TO postgres;
+ALTER TABLE ga_ows_ogrlayer OWNER TO postgres;
 
 --
 -- Name: ga_ows_ogrlayer_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
@@ -2820,7 +2895,7 @@ CREATE SEQUENCE ga_ows_ogrlayer_id_seq
     CACHE 1;
 
 
-ALTER TABLE public.ga_ows_ogrlayer_id_seq OWNER TO postgres;
+ALTER TABLE ga_ows_ogrlayer_id_seq OWNER TO postgres;
 
 --
 -- Name: ga_ows_ogrlayer_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
@@ -2840,7 +2915,7 @@ CREATE TABLE ga_resources_catalogpage (
 );
 
 
-ALTER TABLE public.ga_resources_catalogpage OWNER TO postgres;
+ALTER TABLE ga_resources_catalogpage OWNER TO postgres;
 
 --
 -- Name: ga_resources_dataresource; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
@@ -2870,7 +2945,7 @@ CREATE TABLE ga_resources_dataresource (
 );
 
 
-ALTER TABLE public.ga_resources_dataresource OWNER TO postgres;
+ALTER TABLE ga_resources_dataresource OWNER TO postgres;
 
 --
 -- Name: ga_resources_orderedresource; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
@@ -2884,7 +2959,7 @@ CREATE TABLE ga_resources_orderedresource (
 );
 
 
-ALTER TABLE public.ga_resources_orderedresource OWNER TO postgres;
+ALTER TABLE ga_resources_orderedresource OWNER TO postgres;
 
 --
 -- Name: ga_resources_orderedresource_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
@@ -2898,7 +2973,7 @@ CREATE SEQUENCE ga_resources_orderedresource_id_seq
     CACHE 1;
 
 
-ALTER TABLE public.ga_resources_orderedresource_id_seq OWNER TO postgres;
+ALTER TABLE ga_resources_orderedresource_id_seq OWNER TO postgres;
 
 --
 -- Name: ga_resources_orderedresource_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
@@ -2926,7 +3001,7 @@ CREATE TABLE ga_resources_relatedresource (
 );
 
 
-ALTER TABLE public.ga_resources_relatedresource OWNER TO postgres;
+ALTER TABLE ga_resources_relatedresource OWNER TO postgres;
 
 --
 -- Name: ga_resources_renderedlayer; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
@@ -2943,7 +3018,7 @@ CREATE TABLE ga_resources_renderedlayer (
 );
 
 
-ALTER TABLE public.ga_resources_renderedlayer OWNER TO postgres;
+ALTER TABLE ga_resources_renderedlayer OWNER TO postgres;
 
 --
 -- Name: ga_resources_renderedlayer_styles; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
@@ -2956,7 +3031,7 @@ CREATE TABLE ga_resources_renderedlayer_styles (
 );
 
 
-ALTER TABLE public.ga_resources_renderedlayer_styles OWNER TO postgres;
+ALTER TABLE ga_resources_renderedlayer_styles OWNER TO postgres;
 
 --
 -- Name: ga_resources_renderedlayer_styles_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
@@ -2970,7 +3045,7 @@ CREATE SEQUENCE ga_resources_renderedlayer_styles_id_seq
     CACHE 1;
 
 
-ALTER TABLE public.ga_resources_renderedlayer_styles_id_seq OWNER TO postgres;
+ALTER TABLE ga_resources_renderedlayer_styles_id_seq OWNER TO postgres;
 
 --
 -- Name: ga_resources_renderedlayer_styles_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
@@ -2991,7 +3066,7 @@ CREATE TABLE ga_resources_resourcegroup (
 );
 
 
-ALTER TABLE public.ga_resources_resourcegroup OWNER TO postgres;
+ALTER TABLE ga_resources_resourcegroup OWNER TO postgres;
 
 --
 -- Name: ga_resources_style; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
@@ -3008,7 +3083,7 @@ CREATE TABLE ga_resources_style (
 );
 
 
-ALTER TABLE public.ga_resources_style OWNER TO postgres;
+ALTER TABLE ga_resources_style OWNER TO postgres;
 
 --
 -- Name: galleries_gallery; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
@@ -3021,7 +3096,7 @@ CREATE TABLE galleries_gallery (
 );
 
 
-ALTER TABLE public.galleries_gallery OWNER TO postgres;
+ALTER TABLE galleries_gallery OWNER TO postgres;
 
 --
 -- Name: galleries_galleryimage; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
@@ -3036,7 +3111,7 @@ CREATE TABLE galleries_galleryimage (
 );
 
 
-ALTER TABLE public.galleries_galleryimage OWNER TO postgres;
+ALTER TABLE galleries_galleryimage OWNER TO postgres;
 
 --
 -- Name: galleries_galleryimage_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
@@ -3050,7 +3125,7 @@ CREATE SEQUENCE galleries_galleryimage_id_seq
     CACHE 1;
 
 
-ALTER TABLE public.galleries_galleryimage_id_seq OWNER TO postgres;
+ALTER TABLE galleries_galleryimage_id_seq OWNER TO postgres;
 
 --
 -- Name: galleries_galleryimage_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
@@ -3072,7 +3147,7 @@ CREATE TABLE generic_assignedkeyword (
 );
 
 
-ALTER TABLE public.generic_assignedkeyword OWNER TO postgres;
+ALTER TABLE generic_assignedkeyword OWNER TO postgres;
 
 --
 -- Name: generic_assignedkeyword_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
@@ -3086,7 +3161,7 @@ CREATE SEQUENCE generic_assignedkeyword_id_seq
     CACHE 1;
 
 
-ALTER TABLE public.generic_assignedkeyword_id_seq OWNER TO postgres;
+ALTER TABLE generic_assignedkeyword_id_seq OWNER TO postgres;
 
 --
 -- Name: generic_assignedkeyword_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
@@ -3107,7 +3182,7 @@ CREATE TABLE generic_keyword (
 );
 
 
-ALTER TABLE public.generic_keyword OWNER TO postgres;
+ALTER TABLE generic_keyword OWNER TO postgres;
 
 --
 -- Name: generic_keyword_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
@@ -3121,7 +3196,7 @@ CREATE SEQUENCE generic_keyword_id_seq
     CACHE 1;
 
 
-ALTER TABLE public.generic_keyword_id_seq OWNER TO postgres;
+ALTER TABLE generic_keyword_id_seq OWNER TO postgres;
 
 --
 -- Name: generic_keyword_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
@@ -3144,7 +3219,7 @@ CREATE TABLE generic_rating (
 );
 
 
-ALTER TABLE public.generic_rating OWNER TO postgres;
+ALTER TABLE generic_rating OWNER TO postgres;
 
 --
 -- Name: generic_rating_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
@@ -3158,7 +3233,7 @@ CREATE SEQUENCE generic_rating_id_seq
     CACHE 1;
 
 
-ALTER TABLE public.generic_rating_id_seq OWNER TO postgres;
+ALTER TABLE generic_rating_id_seq OWNER TO postgres;
 
 --
 -- Name: generic_rating_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
@@ -3181,7 +3256,7 @@ CREATE TABLE generic_threadedcomment (
 );
 
 
-ALTER TABLE public.generic_threadedcomment OWNER TO postgres;
+ALTER TABLE generic_threadedcomment OWNER TO postgres;
 
 --
 -- Name: hs_access_control_groupaccess; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
@@ -3193,11 +3268,15 @@ CREATE TABLE hs_access_control_groupaccess (
     discoverable boolean NOT NULL,
     public boolean NOT NULL,
     shareable boolean NOT NULL,
-    group_id integer NOT NULL
+    group_id integer NOT NULL,
+    date_created timestamp with time zone NOT NULL,
+    description text NOT NULL,
+    picture character varying(100),
+    purpose text
 );
 
 
-ALTER TABLE public.hs_access_control_groupaccess OWNER TO postgres;
+ALTER TABLE hs_access_control_groupaccess OWNER TO postgres;
 
 --
 -- Name: hs_access_control_groupaccess_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
@@ -3211,13 +3290,49 @@ CREATE SEQUENCE hs_access_control_groupaccess_id_seq
     CACHE 1;
 
 
-ALTER TABLE public.hs_access_control_groupaccess_id_seq OWNER TO postgres;
+ALTER TABLE hs_access_control_groupaccess_id_seq OWNER TO postgres;
 
 --
 -- Name: hs_access_control_groupaccess_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
 --
 
 ALTER SEQUENCE hs_access_control_groupaccess_id_seq OWNED BY hs_access_control_groupaccess.id;
+
+
+--
+-- Name: hs_access_control_groupmembershiprequest; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
+--
+
+CREATE TABLE hs_access_control_groupmembershiprequest (
+    id integer NOT NULL,
+    date_requested timestamp with time zone NOT NULL,
+    group_to_join_id integer NOT NULL,
+    invitation_to_id integer,
+    request_from_id integer NOT NULL
+);
+
+
+ALTER TABLE hs_access_control_groupmembershiprequest OWNER TO postgres;
+
+--
+-- Name: hs_access_control_groupmembershiprequest_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+--
+
+CREATE SEQUENCE hs_access_control_groupmembershiprequest_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER TABLE hs_access_control_groupmembershiprequest_id_seq OWNER TO postgres;
+
+--
+-- Name: hs_access_control_groupmembershiprequest_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
+--
+
+ALTER SEQUENCE hs_access_control_groupmembershiprequest_id_seq OWNED BY hs_access_control_groupmembershiprequest.id;
 
 
 --
@@ -3234,7 +3349,7 @@ CREATE TABLE hs_access_control_groupresourceprivilege (
 );
 
 
-ALTER TABLE public.hs_access_control_groupresourceprivilege OWNER TO postgres;
+ALTER TABLE hs_access_control_groupresourceprivilege OWNER TO postgres;
 
 --
 -- Name: hs_access_control_groupresourceprivilege_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
@@ -3248,7 +3363,7 @@ CREATE SEQUENCE hs_access_control_groupresourceprivilege_id_seq
     CACHE 1;
 
 
-ALTER TABLE public.hs_access_control_groupresourceprivilege_id_seq OWNER TO postgres;
+ALTER TABLE hs_access_control_groupresourceprivilege_id_seq OWNER TO postgres;
 
 --
 -- Name: hs_access_control_groupresourceprivilege_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
@@ -3273,7 +3388,7 @@ CREATE TABLE hs_access_control_resourceaccess (
 );
 
 
-ALTER TABLE public.hs_access_control_resourceaccess OWNER TO postgres;
+ALTER TABLE hs_access_control_resourceaccess OWNER TO postgres;
 
 --
 -- Name: hs_access_control_resourceaccess_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
@@ -3287,7 +3402,7 @@ CREATE SEQUENCE hs_access_control_resourceaccess_id_seq
     CACHE 1;
 
 
-ALTER TABLE public.hs_access_control_resourceaccess_id_seq OWNER TO postgres;
+ALTER TABLE hs_access_control_resourceaccess_id_seq OWNER TO postgres;
 
 --
 -- Name: hs_access_control_resourceaccess_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
@@ -3306,7 +3421,7 @@ CREATE TABLE hs_access_control_useraccess (
 );
 
 
-ALTER TABLE public.hs_access_control_useraccess OWNER TO postgres;
+ALTER TABLE hs_access_control_useraccess OWNER TO postgres;
 
 --
 -- Name: hs_access_control_useraccess_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
@@ -3320,7 +3435,7 @@ CREATE SEQUENCE hs_access_control_useraccess_id_seq
     CACHE 1;
 
 
-ALTER TABLE public.hs_access_control_useraccess_id_seq OWNER TO postgres;
+ALTER TABLE hs_access_control_useraccess_id_seq OWNER TO postgres;
 
 --
 -- Name: hs_access_control_useraccess_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
@@ -3343,7 +3458,7 @@ CREATE TABLE hs_access_control_usergroupprivilege (
 );
 
 
-ALTER TABLE public.hs_access_control_usergroupprivilege OWNER TO postgres;
+ALTER TABLE hs_access_control_usergroupprivilege OWNER TO postgres;
 
 --
 -- Name: hs_access_control_usergroupprivilege_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
@@ -3357,7 +3472,7 @@ CREATE SEQUENCE hs_access_control_usergroupprivilege_id_seq
     CACHE 1;
 
 
-ALTER TABLE public.hs_access_control_usergroupprivilege_id_seq OWNER TO postgres;
+ALTER TABLE hs_access_control_usergroupprivilege_id_seq OWNER TO postgres;
 
 --
 -- Name: hs_access_control_usergroupprivilege_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
@@ -3380,7 +3495,7 @@ CREATE TABLE hs_access_control_userresourceprivilege (
 );
 
 
-ALTER TABLE public.hs_access_control_userresourceprivilege OWNER TO postgres;
+ALTER TABLE hs_access_control_userresourceprivilege OWNER TO postgres;
 
 --
 -- Name: hs_access_control_userresourceprivilege_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
@@ -3394,7 +3509,7 @@ CREATE SEQUENCE hs_access_control_userresourceprivilege_id_seq
     CACHE 1;
 
 
-ALTER TABLE public.hs_access_control_userresourceprivilege_id_seq OWNER TO postgres;
+ALTER TABLE hs_access_control_userresourceprivilege_id_seq OWNER TO postgres;
 
 --
 -- Name: hs_access_control_userresourceprivilege_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
@@ -3412,7 +3527,7 @@ CREATE TABLE "hs_app_netCDF_netcdfmetadata" (
 );
 
 
-ALTER TABLE public."hs_app_netCDF_netcdfmetadata" OWNER TO postgres;
+ALTER TABLE "hs_app_netCDF_netcdfmetadata" OWNER TO postgres;
 
 --
 -- Name: hs_app_netCDF_originalcoverage; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
@@ -3429,7 +3544,7 @@ CREATE TABLE "hs_app_netCDF_originalcoverage" (
 );
 
 
-ALTER TABLE public."hs_app_netCDF_originalcoverage" OWNER TO postgres;
+ALTER TABLE "hs_app_netCDF_originalcoverage" OWNER TO postgres;
 
 --
 -- Name: hs_app_netCDF_originalcoverage_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
@@ -3443,7 +3558,7 @@ CREATE SEQUENCE "hs_app_netCDF_originalcoverage_id_seq"
     CACHE 1;
 
 
-ALTER TABLE public."hs_app_netCDF_originalcoverage_id_seq" OWNER TO postgres;
+ALTER TABLE "hs_app_netCDF_originalcoverage_id_seq" OWNER TO postgres;
 
 --
 -- Name: hs_app_netCDF_originalcoverage_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
@@ -3471,7 +3586,7 @@ CREATE TABLE "hs_app_netCDF_variable" (
 );
 
 
-ALTER TABLE public."hs_app_netCDF_variable" OWNER TO postgres;
+ALTER TABLE "hs_app_netCDF_variable" OWNER TO postgres;
 
 --
 -- Name: hs_app_netCDF_variable_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
@@ -3485,7 +3600,7 @@ CREATE SEQUENCE "hs_app_netCDF_variable_id_seq"
     CACHE 1;
 
 
-ALTER TABLE public."hs_app_netCDF_variable_id_seq" OWNER TO postgres;
+ALTER TABLE "hs_app_netCDF_variable_id_seq" OWNER TO postgres;
 
 --
 -- Name: hs_app_netCDF_variable_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
@@ -3501,7 +3616,7 @@ ALTER SEQUENCE "hs_app_netCDF_variable_id_seq" OWNED BY "hs_app_netCDF_variable"
 CREATE TABLE hs_app_timeseries_method (
     id integer NOT NULL,
     object_id integer NOT NULL,
-    method_code integer NOT NULL,
+    method_code character varying(50) NOT NULL,
     method_name character varying(200) NOT NULL,
     method_type character varying(200) NOT NULL,
     method_description text,
@@ -3511,7 +3626,7 @@ CREATE TABLE hs_app_timeseries_method (
 );
 
 
-ALTER TABLE public.hs_app_timeseries_method OWNER TO postgres;
+ALTER TABLE hs_app_timeseries_method OWNER TO postgres;
 
 --
 -- Name: hs_app_timeseries_method_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
@@ -3525,7 +3640,7 @@ CREATE SEQUENCE hs_app_timeseries_method_id_seq
     CACHE 1;
 
 
-ALTER TABLE public.hs_app_timeseries_method_id_seq OWNER TO postgres;
+ALTER TABLE hs_app_timeseries_method_id_seq OWNER TO postgres;
 
 --
 -- Name: hs_app_timeseries_method_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
@@ -3549,7 +3664,7 @@ CREATE TABLE hs_app_timeseries_processinglevel (
 );
 
 
-ALTER TABLE public.hs_app_timeseries_processinglevel OWNER TO postgres;
+ALTER TABLE hs_app_timeseries_processinglevel OWNER TO postgres;
 
 --
 -- Name: hs_app_timeseries_processinglevel_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
@@ -3563,7 +3678,7 @@ CREATE SEQUENCE hs_app_timeseries_processinglevel_id_seq
     CACHE 1;
 
 
-ALTER TABLE public.hs_app_timeseries_processinglevel_id_seq OWNER TO postgres;
+ALTER TABLE hs_app_timeseries_processinglevel_id_seq OWNER TO postgres;
 
 --
 -- Name: hs_app_timeseries_processinglevel_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
@@ -3589,7 +3704,7 @@ CREATE TABLE hs_app_timeseries_site (
 );
 
 
-ALTER TABLE public.hs_app_timeseries_site OWNER TO postgres;
+ALTER TABLE hs_app_timeseries_site OWNER TO postgres;
 
 --
 -- Name: hs_app_timeseries_site_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
@@ -3603,7 +3718,7 @@ CREATE SEQUENCE hs_app_timeseries_site_id_seq
     CACHE 1;
 
 
-ALTER TABLE public.hs_app_timeseries_site_id_seq OWNER TO postgres;
+ALTER TABLE hs_app_timeseries_site_id_seq OWNER TO postgres;
 
 --
 -- Name: hs_app_timeseries_site_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
@@ -3621,7 +3736,7 @@ CREATE TABLE hs_app_timeseries_timeseriesmetadata (
 );
 
 
-ALTER TABLE public.hs_app_timeseries_timeseriesmetadata OWNER TO postgres;
+ALTER TABLE hs_app_timeseries_timeseriesmetadata OWNER TO postgres;
 
 --
 -- Name: hs_app_timeseries_timeseriesresult; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
@@ -3642,7 +3757,7 @@ CREATE TABLE hs_app_timeseries_timeseriesresult (
 );
 
 
-ALTER TABLE public.hs_app_timeseries_timeseriesresult OWNER TO postgres;
+ALTER TABLE hs_app_timeseries_timeseriesresult OWNER TO postgres;
 
 --
 -- Name: hs_app_timeseries_timeseriesresult_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
@@ -3656,7 +3771,7 @@ CREATE SEQUENCE hs_app_timeseries_timeseriesresult_id_seq
     CACHE 1;
 
 
-ALTER TABLE public.hs_app_timeseries_timeseriesresult_id_seq OWNER TO postgres;
+ALTER TABLE hs_app_timeseries_timeseriesresult_id_seq OWNER TO postgres;
 
 --
 -- Name: hs_app_timeseries_timeseriesresult_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
@@ -3683,7 +3798,7 @@ CREATE TABLE hs_app_timeseries_variable (
 );
 
 
-ALTER TABLE public.hs_app_timeseries_variable OWNER TO postgres;
+ALTER TABLE hs_app_timeseries_variable OWNER TO postgres;
 
 --
 -- Name: hs_app_timeseries_variable_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
@@ -3697,13 +3812,51 @@ CREATE SEQUENCE hs_app_timeseries_variable_id_seq
     CACHE 1;
 
 
-ALTER TABLE public.hs_app_timeseries_variable_id_seq OWNER TO postgres;
+ALTER TABLE hs_app_timeseries_variable_id_seq OWNER TO postgres;
 
 --
 -- Name: hs_app_timeseries_variable_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
 --
 
 ALTER SEQUENCE hs_app_timeseries_variable_id_seq OWNED BY hs_app_timeseries_variable.id;
+
+
+--
+-- Name: hs_collection_resource_collectiondeletedresource; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
+--
+
+CREATE TABLE hs_collection_resource_collectiondeletedresource (
+    id integer NOT NULL,
+    resource_title text NOT NULL,
+    date_deleted timestamp with time zone NOT NULL,
+    resource_id character varying(32) NOT NULL,
+    resource_type character varying(50) NOT NULL,
+    collection_id integer NOT NULL,
+    deleted_by_id integer NOT NULL
+);
+
+
+ALTER TABLE hs_collection_resource_collectiondeletedresource OWNER TO postgres;
+
+--
+-- Name: hs_collection_resource_collectiondeletedresource_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+--
+
+CREATE SEQUENCE hs_collection_resource_collectiondeletedresource_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER TABLE hs_collection_resource_collectiondeletedresource_id_seq OWNER TO postgres;
+
+--
+-- Name: hs_collection_resource_collectiondeletedresource_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
+--
+
+ALTER SEQUENCE hs_collection_resource_collectiondeletedresource_id_seq OWNED BY hs_collection_resource_collectiondeletedresource.id;
 
 
 --
@@ -3719,7 +3872,7 @@ CREATE TABLE hs_core_bags (
 );
 
 
-ALTER TABLE public.hs_core_bags OWNER TO postgres;
+ALTER TABLE hs_core_bags OWNER TO postgres;
 
 --
 -- Name: hs_core_bags_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
@@ -3733,7 +3886,7 @@ CREATE SEQUENCE hs_core_bags_id_seq
     CACHE 1;
 
 
-ALTER TABLE public.hs_core_bags_id_seq OWNER TO postgres;
+ALTER TABLE hs_core_bags_id_seq OWNER TO postgres;
 
 --
 -- Name: hs_core_bags_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
@@ -3752,7 +3905,7 @@ CREATE TABLE hs_core_contributor (
     description character varying(200),
     name character varying(100) NOT NULL,
     organization character varying(200),
-    email character varying(75),
+    email character varying(254),
     address character varying(250),
     phone character varying(25),
     homepage character varying(200),
@@ -3761,7 +3914,7 @@ CREATE TABLE hs_core_contributor (
 );
 
 
-ALTER TABLE public.hs_core_contributor OWNER TO postgres;
+ALTER TABLE hs_core_contributor OWNER TO postgres;
 
 --
 -- Name: hs_core_contributor_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
@@ -3775,7 +3928,7 @@ CREATE SEQUENCE hs_core_contributor_id_seq
     CACHE 1;
 
 
-ALTER TABLE public.hs_core_contributor_id_seq OWNER TO postgres;
+ALTER TABLE hs_core_contributor_id_seq OWNER TO postgres;
 
 --
 -- Name: hs_core_contributor_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
@@ -3793,7 +3946,7 @@ CREATE TABLE hs_core_coremetadata (
 );
 
 
-ALTER TABLE public.hs_core_coremetadata OWNER TO postgres;
+ALTER TABLE hs_core_coremetadata OWNER TO postgres;
 
 --
 -- Name: hs_core_coremetadata_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
@@ -3807,7 +3960,7 @@ CREATE SEQUENCE hs_core_coremetadata_id_seq
     CACHE 1;
 
 
-ALTER TABLE public.hs_core_coremetadata_id_seq OWNER TO postgres;
+ALTER TABLE hs_core_coremetadata_id_seq OWNER TO postgres;
 
 --
 -- Name: hs_core_coremetadata_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
@@ -3830,7 +3983,7 @@ CREATE TABLE hs_core_coverage (
 );
 
 
-ALTER TABLE public.hs_core_coverage OWNER TO postgres;
+ALTER TABLE hs_core_coverage OWNER TO postgres;
 
 --
 -- Name: hs_core_coverage_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
@@ -3844,7 +3997,7 @@ CREATE SEQUENCE hs_core_coverage_id_seq
     CACHE 1;
 
 
-ALTER TABLE public.hs_core_coverage_id_seq OWNER TO postgres;
+ALTER TABLE hs_core_coverage_id_seq OWNER TO postgres;
 
 --
 -- Name: hs_core_coverage_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
@@ -3863,7 +4016,7 @@ CREATE TABLE hs_core_creator (
     description character varying(200),
     name character varying(100) NOT NULL,
     organization character varying(200),
-    email character varying(75),
+    email character varying(254),
     address character varying(250),
     phone character varying(25),
     homepage character varying(200),
@@ -3874,7 +4027,7 @@ CREATE TABLE hs_core_creator (
 );
 
 
-ALTER TABLE public.hs_core_creator OWNER TO postgres;
+ALTER TABLE hs_core_creator OWNER TO postgres;
 
 --
 -- Name: hs_core_creator_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
@@ -3888,7 +4041,7 @@ CREATE SEQUENCE hs_core_creator_id_seq
     CACHE 1;
 
 
-ALTER TABLE public.hs_core_creator_id_seq OWNER TO postgres;
+ALTER TABLE hs_core_creator_id_seq OWNER TO postgres;
 
 --
 -- Name: hs_core_creator_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
@@ -3912,7 +4065,7 @@ CREATE TABLE hs_core_date (
 );
 
 
-ALTER TABLE public.hs_core_date OWNER TO postgres;
+ALTER TABLE hs_core_date OWNER TO postgres;
 
 --
 -- Name: hs_core_date_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
@@ -3926,7 +4079,7 @@ CREATE SEQUENCE hs_core_date_id_seq
     CACHE 1;
 
 
-ALTER TABLE public.hs_core_date_id_seq OWNER TO postgres;
+ALTER TABLE hs_core_date_id_seq OWNER TO postgres;
 
 --
 -- Name: hs_core_date_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
@@ -3948,7 +4101,7 @@ CREATE TABLE hs_core_description (
 );
 
 
-ALTER TABLE public.hs_core_description OWNER TO postgres;
+ALTER TABLE hs_core_description OWNER TO postgres;
 
 --
 -- Name: hs_core_description_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
@@ -3962,7 +4115,7 @@ CREATE SEQUENCE hs_core_description_id_seq
     CACHE 1;
 
 
-ALTER TABLE public.hs_core_description_id_seq OWNER TO postgres;
+ALTER TABLE hs_core_description_id_seq OWNER TO postgres;
 
 --
 -- Name: hs_core_description_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
@@ -3985,7 +4138,7 @@ CREATE TABLE hs_core_externalprofilelink (
 );
 
 
-ALTER TABLE public.hs_core_externalprofilelink OWNER TO postgres;
+ALTER TABLE hs_core_externalprofilelink OWNER TO postgres;
 
 --
 -- Name: hs_core_externalprofilelink_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
@@ -3999,7 +4152,7 @@ CREATE SEQUENCE hs_core_externalprofilelink_id_seq
     CACHE 1;
 
 
-ALTER TABLE public.hs_core_externalprofilelink_id_seq OWNER TO postgres;
+ALTER TABLE hs_core_externalprofilelink_id_seq OWNER TO postgres;
 
 --
 -- Name: hs_core_externalprofilelink_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
@@ -4021,7 +4174,7 @@ CREATE TABLE hs_core_format (
 );
 
 
-ALTER TABLE public.hs_core_format OWNER TO postgres;
+ALTER TABLE hs_core_format OWNER TO postgres;
 
 --
 -- Name: hs_core_format_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
@@ -4035,13 +4188,52 @@ CREATE SEQUENCE hs_core_format_id_seq
     CACHE 1;
 
 
-ALTER TABLE public.hs_core_format_id_seq OWNER TO postgres;
+ALTER TABLE hs_core_format_id_seq OWNER TO postgres;
 
 --
 -- Name: hs_core_format_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
 --
 
 ALTER SEQUENCE hs_core_format_id_seq OWNED BY hs_core_format.id;
+
+
+--
+-- Name: hs_core_fundingagency; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
+--
+
+CREATE TABLE hs_core_fundingagency (
+    id integer NOT NULL,
+    object_id integer NOT NULL,
+    agency_name text NOT NULL,
+    award_title text,
+    award_number text,
+    agency_url character varying(200),
+    content_type_id integer NOT NULL,
+    CONSTRAINT hs_core_fundingagency_object_id_check CHECK ((object_id >= 0))
+);
+
+
+ALTER TABLE hs_core_fundingagency OWNER TO postgres;
+
+--
+-- Name: hs_core_fundingagency_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+--
+
+CREATE SEQUENCE hs_core_fundingagency_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER TABLE hs_core_fundingagency_id_seq OWNER TO postgres;
+
+--
+-- Name: hs_core_fundingagency_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
+--
+
+ALTER SEQUENCE hs_core_fundingagency_id_seq OWNED BY hs_core_fundingagency.id;
 
 
 --
@@ -4065,11 +4257,48 @@ CREATE TABLE hs_core_genericresource (
     resource_type character varying(50) NOT NULL,
     file_unpack_message text,
     file_unpack_status character varying(7),
+    locked_time timestamp with time zone,
+    extra_metadata hstore NOT NULL,
+    resource_federation_path character varying(100) NOT NULL,
     CONSTRAINT hs_core_genericresource_object_id_check CHECK ((object_id >= 0))
 );
 
 
-ALTER TABLE public.hs_core_genericresource OWNER TO postgres;
+ALTER TABLE hs_core_genericresource OWNER TO postgres;
+
+--
+-- Name: hs_core_genericresource_collections; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
+--
+
+CREATE TABLE hs_core_genericresource_collections (
+    id integer NOT NULL,
+    from_baseresource_id integer NOT NULL,
+    to_baseresource_id integer NOT NULL
+);
+
+
+ALTER TABLE hs_core_genericresource_collections OWNER TO postgres;
+
+--
+-- Name: hs_core_genericresource_collections_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+--
+
+CREATE SEQUENCE hs_core_genericresource_collections_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER TABLE hs_core_genericresource_collections_id_seq OWNER TO postgres;
+
+--
+-- Name: hs_core_genericresource_collections_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
+--
+
+ALTER SEQUENCE hs_core_genericresource_collections_id_seq OWNED BY hs_core_genericresource_collections.id;
+
 
 --
 -- Name: hs_core_groupownership; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
@@ -4082,7 +4311,7 @@ CREATE TABLE hs_core_groupownership (
 );
 
 
-ALTER TABLE public.hs_core_groupownership OWNER TO postgres;
+ALTER TABLE hs_core_groupownership OWNER TO postgres;
 
 --
 -- Name: hs_core_groupownership_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
@@ -4096,7 +4325,7 @@ CREATE SEQUENCE hs_core_groupownership_id_seq
     CACHE 1;
 
 
-ALTER TABLE public.hs_core_groupownership_id_seq OWNER TO postgres;
+ALTER TABLE hs_core_groupownership_id_seq OWNER TO postgres;
 
 --
 -- Name: hs_core_groupownership_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
@@ -4119,7 +4348,7 @@ CREATE TABLE hs_core_identifier (
 );
 
 
-ALTER TABLE public.hs_core_identifier OWNER TO postgres;
+ALTER TABLE hs_core_identifier OWNER TO postgres;
 
 --
 -- Name: hs_core_identifier_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
@@ -4133,7 +4362,7 @@ CREATE SEQUENCE hs_core_identifier_id_seq
     CACHE 1;
 
 
-ALTER TABLE public.hs_core_identifier_id_seq OWNER TO postgres;
+ALTER TABLE hs_core_identifier_id_seq OWNER TO postgres;
 
 --
 -- Name: hs_core_identifier_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
@@ -4155,7 +4384,7 @@ CREATE TABLE hs_core_language (
 );
 
 
-ALTER TABLE public.hs_core_language OWNER TO postgres;
+ALTER TABLE hs_core_language OWNER TO postgres;
 
 --
 -- Name: hs_core_language_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
@@ -4169,7 +4398,7 @@ CREATE SEQUENCE hs_core_language_id_seq
     CACHE 1;
 
 
-ALTER TABLE public.hs_core_language_id_seq OWNER TO postgres;
+ALTER TABLE hs_core_language_id_seq OWNER TO postgres;
 
 --
 -- Name: hs_core_language_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
@@ -4192,7 +4421,7 @@ CREATE TABLE hs_core_publisher (
 );
 
 
-ALTER TABLE public.hs_core_publisher OWNER TO postgres;
+ALTER TABLE hs_core_publisher OWNER TO postgres;
 
 --
 -- Name: hs_core_publisher_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
@@ -4206,7 +4435,7 @@ CREATE SEQUENCE hs_core_publisher_id_seq
     CACHE 1;
 
 
-ALTER TABLE public.hs_core_publisher_id_seq OWNER TO postgres;
+ALTER TABLE hs_core_publisher_id_seq OWNER TO postgres;
 
 --
 -- Name: hs_core_publisher_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
@@ -4229,7 +4458,7 @@ CREATE TABLE hs_core_relation (
 );
 
 
-ALTER TABLE public.hs_core_relation OWNER TO postgres;
+ALTER TABLE hs_core_relation OWNER TO postgres;
 
 --
 -- Name: hs_core_relation_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
@@ -4243,7 +4472,7 @@ CREATE SEQUENCE hs_core_relation_id_seq
     CACHE 1;
 
 
-ALTER TABLE public.hs_core_relation_id_seq OWNER TO postgres;
+ALTER TABLE hs_core_relation_id_seq OWNER TO postgres;
 
 --
 -- Name: hs_core_relation_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
@@ -4259,13 +4488,16 @@ ALTER SEQUENCE hs_core_relation_id_seq OWNED BY hs_core_relation.id;
 CREATE TABLE hs_core_resourcefile (
     id integer NOT NULL,
     object_id integer NOT NULL,
-    resource_file character varying(500) NOT NULL,
+    resource_file character varying(500),
     content_type_id integer NOT NULL,
+    fed_resource_file_name_or_path character varying(255),
+    fed_resource_file_size character varying(15),
+    fed_resource_file character varying(500),
     CONSTRAINT hs_core_resourcefile_object_id_check CHECK ((object_id >= 0))
 );
 
 
-ALTER TABLE public.hs_core_resourcefile OWNER TO postgres;
+ALTER TABLE hs_core_resourcefile OWNER TO postgres;
 
 --
 -- Name: hs_core_resourcefile_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
@@ -4279,7 +4511,7 @@ CREATE SEQUENCE hs_core_resourcefile_id_seq
     CACHE 1;
 
 
-ALTER TABLE public.hs_core_resourcefile_id_seq OWNER TO postgres;
+ALTER TABLE hs_core_resourcefile_id_seq OWNER TO postgres;
 
 --
 -- Name: hs_core_resourcefile_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
@@ -4302,7 +4534,7 @@ CREATE TABLE hs_core_rights (
 );
 
 
-ALTER TABLE public.hs_core_rights OWNER TO postgres;
+ALTER TABLE hs_core_rights OWNER TO postgres;
 
 --
 -- Name: hs_core_rights_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
@@ -4316,7 +4548,7 @@ CREATE SEQUENCE hs_core_rights_id_seq
     CACHE 1;
 
 
-ALTER TABLE public.hs_core_rights_id_seq OWNER TO postgres;
+ALTER TABLE hs_core_rights_id_seq OWNER TO postgres;
 
 --
 -- Name: hs_core_rights_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
@@ -4338,7 +4570,7 @@ CREATE TABLE hs_core_source (
 );
 
 
-ALTER TABLE public.hs_core_source OWNER TO postgres;
+ALTER TABLE hs_core_source OWNER TO postgres;
 
 --
 -- Name: hs_core_source_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
@@ -4352,7 +4584,7 @@ CREATE SEQUENCE hs_core_source_id_seq
     CACHE 1;
 
 
-ALTER TABLE public.hs_core_source_id_seq OWNER TO postgres;
+ALTER TABLE hs_core_source_id_seq OWNER TO postgres;
 
 --
 -- Name: hs_core_source_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
@@ -4374,7 +4606,7 @@ CREATE TABLE hs_core_subject (
 );
 
 
-ALTER TABLE public.hs_core_subject OWNER TO postgres;
+ALTER TABLE hs_core_subject OWNER TO postgres;
 
 --
 -- Name: hs_core_subject_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
@@ -4388,7 +4620,7 @@ CREATE SEQUENCE hs_core_subject_id_seq
     CACHE 1;
 
 
-ALTER TABLE public.hs_core_subject_id_seq OWNER TO postgres;
+ALTER TABLE hs_core_subject_id_seq OWNER TO postgres;
 
 --
 -- Name: hs_core_subject_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
@@ -4410,7 +4642,7 @@ CREATE TABLE hs_core_title (
 );
 
 
-ALTER TABLE public.hs_core_title OWNER TO postgres;
+ALTER TABLE hs_core_title OWNER TO postgres;
 
 --
 -- Name: hs_core_title_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
@@ -4424,7 +4656,7 @@ CREATE SEQUENCE hs_core_title_id_seq
     CACHE 1;
 
 
-ALTER TABLE public.hs_core_title_id_seq OWNER TO postgres;
+ALTER TABLE hs_core_title_id_seq OWNER TO postgres;
 
 --
 -- Name: hs_core_title_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
@@ -4446,7 +4678,7 @@ CREATE TABLE hs_core_type (
 );
 
 
-ALTER TABLE public.hs_core_type OWNER TO postgres;
+ALTER TABLE hs_core_type OWNER TO postgres;
 
 --
 -- Name: hs_core_type_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
@@ -4460,7 +4692,7 @@ CREATE SEQUENCE hs_core_type_id_seq
     CACHE 1;
 
 
-ALTER TABLE public.hs_core_type_id_seq OWNER TO postgres;
+ALTER TABLE hs_core_type_id_seq OWNER TO postgres;
 
 --
 -- Name: hs_core_type_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
@@ -4482,11 +4714,14 @@ CREATE TABLE hs_geo_raster_resource_bandinformation (
     method text,
     comment text,
     content_type_id integer NOT NULL,
+    "maximumValue" text,
+    "minimumValue" text,
+    "noDataValue" text,
     CONSTRAINT hs_geo_raster_resource_bandinformation_object_id_check CHECK ((object_id >= 0))
 );
 
 
-ALTER TABLE public.hs_geo_raster_resource_bandinformation OWNER TO postgres;
+ALTER TABLE hs_geo_raster_resource_bandinformation OWNER TO postgres;
 
 --
 -- Name: hs_geo_raster_resource_bandinformation_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
@@ -4500,7 +4735,7 @@ CREATE SEQUENCE hs_geo_raster_resource_bandinformation_id_seq
     CACHE 1;
 
 
-ALTER TABLE public.hs_geo_raster_resource_bandinformation_id_seq OWNER TO postgres;
+ALTER TABLE hs_geo_raster_resource_bandinformation_id_seq OWNER TO postgres;
 
 --
 -- Name: hs_geo_raster_resource_bandinformation_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
@@ -4522,13 +4757,12 @@ CREATE TABLE hs_geo_raster_resource_cellinformation (
     "cellSizeXValue" double precision,
     "cellSizeYValue" double precision,
     "cellDataType" character varying(50),
-    "noDataValue" double precision,
     content_type_id integer NOT NULL,
     CONSTRAINT hs_geo_raster_resource_cellinformation_object_id_check CHECK ((object_id >= 0))
 );
 
 
-ALTER TABLE public.hs_geo_raster_resource_cellinformation OWNER TO postgres;
+ALTER TABLE hs_geo_raster_resource_cellinformation OWNER TO postgres;
 
 --
 -- Name: hs_geo_raster_resource_cellinformation_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
@@ -4542,7 +4776,7 @@ CREATE SEQUENCE hs_geo_raster_resource_cellinformation_id_seq
     CACHE 1;
 
 
-ALTER TABLE public.hs_geo_raster_resource_cellinformation_id_seq OWNER TO postgres;
+ALTER TABLE hs_geo_raster_resource_cellinformation_id_seq OWNER TO postgres;
 
 --
 -- Name: hs_geo_raster_resource_cellinformation_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
@@ -4564,7 +4798,7 @@ CREATE TABLE hs_geo_raster_resource_originalcoverage (
 );
 
 
-ALTER TABLE public.hs_geo_raster_resource_originalcoverage OWNER TO postgres;
+ALTER TABLE hs_geo_raster_resource_originalcoverage OWNER TO postgres;
 
 --
 -- Name: hs_geo_raster_resource_originalcoverage_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
@@ -4578,7 +4812,7 @@ CREATE SEQUENCE hs_geo_raster_resource_originalcoverage_id_seq
     CACHE 1;
 
 
-ALTER TABLE public.hs_geo_raster_resource_originalcoverage_id_seq OWNER TO postgres;
+ALTER TABLE hs_geo_raster_resource_originalcoverage_id_seq OWNER TO postgres;
 
 --
 -- Name: hs_geo_raster_resource_originalcoverage_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
@@ -4596,7 +4830,7 @@ CREATE TABLE hs_geo_raster_resource_rastermetadata (
 );
 
 
-ALTER TABLE public.hs_geo_raster_resource_rastermetadata OWNER TO postgres;
+ALTER TABLE hs_geo_raster_resource_rastermetadata OWNER TO postgres;
 
 --
 -- Name: hs_geographic_feature_resource_fieldinformation; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
@@ -4615,7 +4849,7 @@ CREATE TABLE hs_geographic_feature_resource_fieldinformation (
 );
 
 
-ALTER TABLE public.hs_geographic_feature_resource_fieldinformation OWNER TO postgres;
+ALTER TABLE hs_geographic_feature_resource_fieldinformation OWNER TO postgres;
 
 --
 -- Name: hs_geographic_feature_resource_fieldinformation_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
@@ -4629,7 +4863,7 @@ CREATE SEQUENCE hs_geographic_feature_resource_fieldinformation_id_seq
     CACHE 1;
 
 
-ALTER TABLE public.hs_geographic_feature_resource_fieldinformation_id_seq OWNER TO postgres;
+ALTER TABLE hs_geographic_feature_resource_fieldinformation_id_seq OWNER TO postgres;
 
 --
 -- Name: hs_geographic_feature_resource_fieldinformation_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
@@ -4647,7 +4881,7 @@ CREATE TABLE hs_geographic_feature_resource_geographicfeaturemetadata (
 );
 
 
-ALTER TABLE public.hs_geographic_feature_resource_geographicfeaturemetadata OWNER TO postgres;
+ALTER TABLE hs_geographic_feature_resource_geographicfeaturemetadata OWNER TO postgres;
 
 --
 -- Name: hs_geographic_feature_resource_geometryinformation; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
@@ -4663,7 +4897,7 @@ CREATE TABLE hs_geographic_feature_resource_geometryinformation (
 );
 
 
-ALTER TABLE public.hs_geographic_feature_resource_geometryinformation OWNER TO postgres;
+ALTER TABLE hs_geographic_feature_resource_geometryinformation OWNER TO postgres;
 
 --
 -- Name: hs_geographic_feature_resource_geometryinformation_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
@@ -4677,7 +4911,7 @@ CREATE SEQUENCE hs_geographic_feature_resource_geometryinformation_id_seq
     CACHE 1;
 
 
-ALTER TABLE public.hs_geographic_feature_resource_geometryinformation_id_seq OWNER TO postgres;
+ALTER TABLE hs_geographic_feature_resource_geometryinformation_id_seq OWNER TO postgres;
 
 --
 -- Name: hs_geographic_feature_resource_geometryinformation_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
@@ -4706,7 +4940,7 @@ CREATE TABLE hs_geographic_feature_resource_originalcoverage (
 );
 
 
-ALTER TABLE public.hs_geographic_feature_resource_originalcoverage OWNER TO postgres;
+ALTER TABLE hs_geographic_feature_resource_originalcoverage OWNER TO postgres;
 
 --
 -- Name: hs_geographic_feature_resource_originalcoverage_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
@@ -4720,7 +4954,7 @@ CREATE SEQUENCE hs_geographic_feature_resource_originalcoverage_id_seq
     CACHE 1;
 
 
-ALTER TABLE public.hs_geographic_feature_resource_originalcoverage_id_seq OWNER TO postgres;
+ALTER TABLE hs_geographic_feature_resource_originalcoverage_id_seq OWNER TO postgres;
 
 --
 -- Name: hs_geographic_feature_resource_originalcoverage_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
@@ -4745,7 +4979,7 @@ CREATE TABLE hs_geographic_feature_resource_originalfileinfo (
 );
 
 
-ALTER TABLE public.hs_geographic_feature_resource_originalfileinfo OWNER TO postgres;
+ALTER TABLE hs_geographic_feature_resource_originalfileinfo OWNER TO postgres;
 
 --
 -- Name: hs_geographic_feature_resource_originalfileinfo_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
@@ -4759,7 +4993,7 @@ CREATE SEQUENCE hs_geographic_feature_resource_originalfileinfo_id_seq
     CACHE 1;
 
 
-ALTER TABLE public.hs_geographic_feature_resource_originalfileinfo_id_seq OWNER TO postgres;
+ALTER TABLE hs_geographic_feature_resource_originalfileinfo_id_seq OWNER TO postgres;
 
 --
 -- Name: hs_geographic_feature_resource_originalfileinfo_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
@@ -4778,7 +5012,7 @@ CREATE TABLE hs_labels_resourcelabels (
 );
 
 
-ALTER TABLE public.hs_labels_resourcelabels OWNER TO postgres;
+ALTER TABLE hs_labels_resourcelabels OWNER TO postgres;
 
 --
 -- Name: hs_labels_resourcelabels_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
@@ -4792,7 +5026,7 @@ CREATE SEQUENCE hs_labels_resourcelabels_id_seq
     CACHE 1;
 
 
-ALTER TABLE public.hs_labels_resourcelabels_id_seq OWNER TO postgres;
+ALTER TABLE hs_labels_resourcelabels_id_seq OWNER TO postgres;
 
 --
 -- Name: hs_labels_resourcelabels_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
@@ -4811,7 +5045,7 @@ CREATE TABLE hs_labels_userlabels (
 );
 
 
-ALTER TABLE public.hs_labels_userlabels OWNER TO postgres;
+ALTER TABLE hs_labels_userlabels OWNER TO postgres;
 
 --
 -- Name: hs_labels_userlabels_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
@@ -4825,7 +5059,7 @@ CREATE SEQUENCE hs_labels_userlabels_id_seq
     CACHE 1;
 
 
-ALTER TABLE public.hs_labels_userlabels_id_seq OWNER TO postgres;
+ALTER TABLE hs_labels_userlabels_id_seq OWNER TO postgres;
 
 --
 -- Name: hs_labels_userlabels_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
@@ -4847,7 +5081,7 @@ CREATE TABLE hs_labels_userresourceflags (
 );
 
 
-ALTER TABLE public.hs_labels_userresourceflags OWNER TO postgres;
+ALTER TABLE hs_labels_userresourceflags OWNER TO postgres;
 
 --
 -- Name: hs_labels_userresourceflags_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
@@ -4861,7 +5095,7 @@ CREATE SEQUENCE hs_labels_userresourceflags_id_seq
     CACHE 1;
 
 
-ALTER TABLE public.hs_labels_userresourceflags_id_seq OWNER TO postgres;
+ALTER TABLE hs_labels_userresourceflags_id_seq OWNER TO postgres;
 
 --
 -- Name: hs_labels_userresourceflags_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
@@ -4883,7 +5117,7 @@ CREATE TABLE hs_labels_userresourcelabels (
 );
 
 
-ALTER TABLE public.hs_labels_userresourcelabels OWNER TO postgres;
+ALTER TABLE hs_labels_userresourcelabels OWNER TO postgres;
 
 --
 -- Name: hs_labels_userresourcelabels_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
@@ -4897,7 +5131,7 @@ CREATE SEQUENCE hs_labels_userresourcelabels_id_seq
     CACHE 1;
 
 
-ALTER TABLE public.hs_labels_userresourcelabels_id_seq OWNER TO postgres;
+ALTER TABLE hs_labels_userresourcelabels_id_seq OWNER TO postgres;
 
 --
 -- Name: hs_labels_userresourcelabels_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
@@ -4917,7 +5151,7 @@ CREATE TABLE hs_labels_userstoredlabels (
 );
 
 
-ALTER TABLE public.hs_labels_userstoredlabels OWNER TO postgres;
+ALTER TABLE hs_labels_userstoredlabels OWNER TO postgres;
 
 --
 -- Name: hs_labels_userstoredlabels_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
@@ -4931,7 +5165,7 @@ CREATE SEQUENCE hs_labels_userstoredlabels_id_seq
     CACHE 1;
 
 
-ALTER TABLE public.hs_labels_userstoredlabels_id_seq OWNER TO postgres;
+ALTER TABLE hs_labels_userstoredlabels_id_seq OWNER TO postgres;
 
 --
 -- Name: hs_labels_userstoredlabels_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
@@ -4949,7 +5183,7 @@ CREATE TABLE hs_model_program_modelprogrammetadata (
 );
 
 
-ALTER TABLE public.hs_model_program_modelprogrammetadata OWNER TO postgres;
+ALTER TABLE hs_model_program_modelprogrammetadata OWNER TO postgres;
 
 --
 -- Name: hs_model_program_mpmetadata; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
@@ -4973,7 +5207,7 @@ CREATE TABLE hs_model_program_mpmetadata (
 );
 
 
-ALTER TABLE public.hs_model_program_mpmetadata OWNER TO postgres;
+ALTER TABLE hs_model_program_mpmetadata OWNER TO postgres;
 
 --
 -- Name: hs_model_program_mpmetadata_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
@@ -4987,7 +5221,7 @@ CREATE SEQUENCE hs_model_program_mpmetadata_id_seq
     CACHE 1;
 
 
-ALTER TABLE public.hs_model_program_mpmetadata_id_seq OWNER TO postgres;
+ALTER TABLE hs_model_program_mpmetadata_id_seq OWNER TO postgres;
 
 --
 -- Name: hs_model_program_mpmetadata_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
@@ -5010,7 +5244,7 @@ CREATE TABLE hs_modelinstance_executedby (
 );
 
 
-ALTER TABLE public.hs_modelinstance_executedby OWNER TO postgres;
+ALTER TABLE hs_modelinstance_executedby OWNER TO postgres;
 
 --
 -- Name: hs_modelinstance_executedby_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
@@ -5024,7 +5258,7 @@ CREATE SEQUENCE hs_modelinstance_executedby_id_seq
     CACHE 1;
 
 
-ALTER TABLE public.hs_modelinstance_executedby_id_seq OWNER TO postgres;
+ALTER TABLE hs_modelinstance_executedby_id_seq OWNER TO postgres;
 
 --
 -- Name: hs_modelinstance_executedby_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
@@ -5042,7 +5276,7 @@ CREATE TABLE hs_modelinstance_modelinstancemetadata (
 );
 
 
-ALTER TABLE public.hs_modelinstance_modelinstancemetadata OWNER TO postgres;
+ALTER TABLE hs_modelinstance_modelinstancemetadata OWNER TO postgres;
 
 --
 -- Name: hs_modelinstance_modeloutput; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
@@ -5057,7 +5291,7 @@ CREATE TABLE hs_modelinstance_modeloutput (
 );
 
 
-ALTER TABLE public.hs_modelinstance_modeloutput OWNER TO postgres;
+ALTER TABLE hs_modelinstance_modeloutput OWNER TO postgres;
 
 --
 -- Name: hs_modelinstance_modeloutput_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
@@ -5071,7 +5305,7 @@ CREATE SEQUENCE hs_modelinstance_modeloutput_id_seq
     CACHE 1;
 
 
-ALTER TABLE public.hs_modelinstance_modeloutput_id_seq OWNER TO postgres;
+ALTER TABLE hs_modelinstance_modeloutput_id_seq OWNER TO postgres;
 
 --
 -- Name: hs_modelinstance_modeloutput_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
@@ -5089,7 +5323,7 @@ CREATE TABLE hs_script_resource_scriptmetadata (
 );
 
 
-ALTER TABLE public.hs_script_resource_scriptmetadata OWNER TO postgres;
+ALTER TABLE hs_script_resource_scriptmetadata OWNER TO postgres;
 
 --
 -- Name: hs_script_resource_scriptspecificmetadata; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
@@ -5109,7 +5343,7 @@ CREATE TABLE hs_script_resource_scriptspecificmetadata (
 );
 
 
-ALTER TABLE public.hs_script_resource_scriptspecificmetadata OWNER TO postgres;
+ALTER TABLE hs_script_resource_scriptspecificmetadata OWNER TO postgres;
 
 --
 -- Name: hs_script_resource_scriptspecificmetadata_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
@@ -5123,7 +5357,7 @@ CREATE SEQUENCE hs_script_resource_scriptspecificmetadata_id_seq
     CACHE 1;
 
 
-ALTER TABLE public.hs_script_resource_scriptspecificmetadata_id_seq OWNER TO postgres;
+ALTER TABLE hs_script_resource_scriptspecificmetadata_id_seq OWNER TO postgres;
 
 --
 -- Name: hs_script_resource_scriptspecificmetadata_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
@@ -5161,7 +5395,7 @@ CREATE TABLE hs_swat_modelinstance_modelinput (
 );
 
 
-ALTER TABLE public.hs_swat_modelinstance_modelinput OWNER TO postgres;
+ALTER TABLE hs_swat_modelinstance_modelinput OWNER TO postgres;
 
 --
 -- Name: hs_swat_modelinstance_modelinput_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
@@ -5175,7 +5409,7 @@ CREATE SEQUENCE hs_swat_modelinstance_modelinput_id_seq
     CACHE 1;
 
 
-ALTER TABLE public.hs_swat_modelinstance_modelinput_id_seq OWNER TO postgres;
+ALTER TABLE hs_swat_modelinstance_modelinput_id_seq OWNER TO postgres;
 
 --
 -- Name: hs_swat_modelinstance_modelinput_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
@@ -5199,7 +5433,7 @@ CREATE TABLE hs_swat_modelinstance_modelmethod (
 );
 
 
-ALTER TABLE public.hs_swat_modelinstance_modelmethod OWNER TO postgres;
+ALTER TABLE hs_swat_modelinstance_modelmethod OWNER TO postgres;
 
 --
 -- Name: hs_swat_modelinstance_modelmethod_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
@@ -5213,7 +5447,7 @@ CREATE SEQUENCE hs_swat_modelinstance_modelmethod_id_seq
     CACHE 1;
 
 
-ALTER TABLE public.hs_swat_modelinstance_modelmethod_id_seq OWNER TO postgres;
+ALTER TABLE hs_swat_modelinstance_modelmethod_id_seq OWNER TO postgres;
 
 --
 -- Name: hs_swat_modelinstance_modelmethod_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
@@ -5235,7 +5469,7 @@ CREATE TABLE hs_swat_modelinstance_modelobjective (
 );
 
 
-ALTER TABLE public.hs_swat_modelinstance_modelobjective OWNER TO postgres;
+ALTER TABLE hs_swat_modelinstance_modelobjective OWNER TO postgres;
 
 --
 -- Name: hs_swat_modelinstance_modelobjective_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
@@ -5249,7 +5483,7 @@ CREATE SEQUENCE hs_swat_modelinstance_modelobjective_id_seq
     CACHE 1;
 
 
-ALTER TABLE public.hs_swat_modelinstance_modelobjective_id_seq OWNER TO postgres;
+ALTER TABLE hs_swat_modelinstance_modelobjective_id_seq OWNER TO postgres;
 
 --
 -- Name: hs_swat_modelinstance_modelobjective_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
@@ -5269,7 +5503,7 @@ CREATE TABLE hs_swat_modelinstance_modelobjective_swat_model_objectives (
 );
 
 
-ALTER TABLE public.hs_swat_modelinstance_modelobjective_swat_model_objectives OWNER TO postgres;
+ALTER TABLE hs_swat_modelinstance_modelobjective_swat_model_objectives OWNER TO postgres;
 
 --
 -- Name: hs_swat_modelinstance_modelobjective_swat_model_objectiv_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
@@ -5283,7 +5517,7 @@ CREATE SEQUENCE hs_swat_modelinstance_modelobjective_swat_model_objectiv_id_seq
     CACHE 1;
 
 
-ALTER TABLE public.hs_swat_modelinstance_modelobjective_swat_model_objectiv_id_seq OWNER TO postgres;
+ALTER TABLE hs_swat_modelinstance_modelobjective_swat_model_objectiv_id_seq OWNER TO postgres;
 
 --
 -- Name: hs_swat_modelinstance_modelobjective_swat_model_objectiv_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
@@ -5302,7 +5536,7 @@ CREATE TABLE hs_swat_modelinstance_modelobjectivechoices (
 );
 
 
-ALTER TABLE public.hs_swat_modelinstance_modelobjectivechoices OWNER TO postgres;
+ALTER TABLE hs_swat_modelinstance_modelobjectivechoices OWNER TO postgres;
 
 --
 -- Name: hs_swat_modelinstance_modelobjectivechoices_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
@@ -5316,7 +5550,7 @@ CREATE SEQUENCE hs_swat_modelinstance_modelobjectivechoices_id_seq
     CACHE 1;
 
 
-ALTER TABLE public.hs_swat_modelinstance_modelobjectivechoices_id_seq OWNER TO postgres;
+ALTER TABLE hs_swat_modelinstance_modelobjectivechoices_id_seq OWNER TO postgres;
 
 --
 -- Name: hs_swat_modelinstance_modelobjectivechoices_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
@@ -5338,7 +5572,7 @@ CREATE TABLE hs_swat_modelinstance_modelparameter (
 );
 
 
-ALTER TABLE public.hs_swat_modelinstance_modelparameter OWNER TO postgres;
+ALTER TABLE hs_swat_modelinstance_modelparameter OWNER TO postgres;
 
 --
 -- Name: hs_swat_modelinstance_modelparameter_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
@@ -5352,7 +5586,7 @@ CREATE SEQUENCE hs_swat_modelinstance_modelparameter_id_seq
     CACHE 1;
 
 
-ALTER TABLE public.hs_swat_modelinstance_modelparameter_id_seq OWNER TO postgres;
+ALTER TABLE hs_swat_modelinstance_modelparameter_id_seq OWNER TO postgres;
 
 --
 -- Name: hs_swat_modelinstance_modelparameter_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
@@ -5372,7 +5606,7 @@ CREATE TABLE hs_swat_modelinstance_modelparameter_model_parameters (
 );
 
 
-ALTER TABLE public.hs_swat_modelinstance_modelparameter_model_parameters OWNER TO postgres;
+ALTER TABLE hs_swat_modelinstance_modelparameter_model_parameters OWNER TO postgres;
 
 --
 -- Name: hs_swat_modelinstance_modelparameter_model_parameters_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
@@ -5386,7 +5620,7 @@ CREATE SEQUENCE hs_swat_modelinstance_modelparameter_model_parameters_id_seq
     CACHE 1;
 
 
-ALTER TABLE public.hs_swat_modelinstance_modelparameter_model_parameters_id_seq OWNER TO postgres;
+ALTER TABLE hs_swat_modelinstance_modelparameter_model_parameters_id_seq OWNER TO postgres;
 
 --
 -- Name: hs_swat_modelinstance_modelparameter_model_parameters_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
@@ -5405,7 +5639,7 @@ CREATE TABLE hs_swat_modelinstance_modelparameterschoices (
 );
 
 
-ALTER TABLE public.hs_swat_modelinstance_modelparameterschoices OWNER TO postgres;
+ALTER TABLE hs_swat_modelinstance_modelparameterschoices OWNER TO postgres;
 
 --
 -- Name: hs_swat_modelinstance_modelparameterschoices_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
@@ -5419,7 +5653,7 @@ CREATE SEQUENCE hs_swat_modelinstance_modelparameterschoices_id_seq
     CACHE 1;
 
 
-ALTER TABLE public.hs_swat_modelinstance_modelparameterschoices_id_seq OWNER TO postgres;
+ALTER TABLE hs_swat_modelinstance_modelparameterschoices_id_seq OWNER TO postgres;
 
 --
 -- Name: hs_swat_modelinstance_modelparameterschoices_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
@@ -5441,7 +5675,7 @@ CREATE TABLE hs_swat_modelinstance_simulationtype (
 );
 
 
-ALTER TABLE public.hs_swat_modelinstance_simulationtype OWNER TO postgres;
+ALTER TABLE hs_swat_modelinstance_simulationtype OWNER TO postgres;
 
 --
 -- Name: hs_swat_modelinstance_simulationtype_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
@@ -5455,7 +5689,7 @@ CREATE SEQUENCE hs_swat_modelinstance_simulationtype_id_seq
     CACHE 1;
 
 
-ALTER TABLE public.hs_swat_modelinstance_simulationtype_id_seq OWNER TO postgres;
+ALTER TABLE hs_swat_modelinstance_simulationtype_id_seq OWNER TO postgres;
 
 --
 -- Name: hs_swat_modelinstance_simulationtype_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
@@ -5473,7 +5707,7 @@ CREATE TABLE hs_swat_modelinstance_swatmodelinstancemetadata (
 );
 
 
-ALTER TABLE public.hs_swat_modelinstance_swatmodelinstancemetadata OWNER TO postgres;
+ALTER TABLE hs_swat_modelinstance_swatmodelinstancemetadata OWNER TO postgres;
 
 --
 -- Name: hs_tools_resource_requesturlbase; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
@@ -5488,7 +5722,7 @@ CREATE TABLE hs_tools_resource_requesturlbase (
 );
 
 
-ALTER TABLE public.hs_tools_resource_requesturlbase OWNER TO postgres;
+ALTER TABLE hs_tools_resource_requesturlbase OWNER TO postgres;
 
 --
 -- Name: hs_tools_resource_requesturlbase_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
@@ -5502,7 +5736,7 @@ CREATE SEQUENCE hs_tools_resource_requesturlbase_id_seq
     CACHE 1;
 
 
-ALTER TABLE public.hs_tools_resource_requesturlbase_id_seq OWNER TO postgres;
+ALTER TABLE hs_tools_resource_requesturlbase_id_seq OWNER TO postgres;
 
 --
 -- Name: hs_tools_resource_requesturlbase_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
@@ -5521,7 +5755,7 @@ CREATE TABLE hs_tools_resource_supportedrestypechoices (
 );
 
 
-ALTER TABLE public.hs_tools_resource_supportedrestypechoices OWNER TO postgres;
+ALTER TABLE hs_tools_resource_supportedrestypechoices OWNER TO postgres;
 
 --
 -- Name: hs_tools_resource_supportedrestypechoices_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
@@ -5535,7 +5769,7 @@ CREATE SEQUENCE hs_tools_resource_supportedrestypechoices_id_seq
     CACHE 1;
 
 
-ALTER TABLE public.hs_tools_resource_supportedrestypechoices_id_seq OWNER TO postgres;
+ALTER TABLE hs_tools_resource_supportedrestypechoices_id_seq OWNER TO postgres;
 
 --
 -- Name: hs_tools_resource_supportedrestypechoices_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
@@ -5556,7 +5790,7 @@ CREATE TABLE hs_tools_resource_supportedrestypes (
 );
 
 
-ALTER TABLE public.hs_tools_resource_supportedrestypes OWNER TO postgres;
+ALTER TABLE hs_tools_resource_supportedrestypes OWNER TO postgres;
 
 --
 -- Name: hs_tools_resource_supportedrestypes_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
@@ -5570,7 +5804,7 @@ CREATE SEQUENCE hs_tools_resource_supportedrestypes_id_seq
     CACHE 1;
 
 
-ALTER TABLE public.hs_tools_resource_supportedrestypes_id_seq OWNER TO postgres;
+ALTER TABLE hs_tools_resource_supportedrestypes_id_seq OWNER TO postgres;
 
 --
 -- Name: hs_tools_resource_supportedrestypes_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
@@ -5590,7 +5824,7 @@ CREATE TABLE hs_tools_resource_supportedrestypes_supported_res_types (
 );
 
 
-ALTER TABLE public.hs_tools_resource_supportedrestypes_supported_res_types OWNER TO postgres;
+ALTER TABLE hs_tools_resource_supportedrestypes_supported_res_types OWNER TO postgres;
 
 --
 -- Name: hs_tools_resource_supportedrestypes_supported_res_types_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
@@ -5604,7 +5838,7 @@ CREATE SEQUENCE hs_tools_resource_supportedrestypes_supported_res_types_id_seq
     CACHE 1;
 
 
-ALTER TABLE public.hs_tools_resource_supportedrestypes_supported_res_types_id_seq OWNER TO postgres;
+ALTER TABLE hs_tools_resource_supportedrestypes_supported_res_types_id_seq OWNER TO postgres;
 
 --
 -- Name: hs_tools_resource_supportedrestypes_supported_res_types_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
@@ -5626,7 +5860,7 @@ CREATE TABLE hs_tools_resource_toolicon (
 );
 
 
-ALTER TABLE public.hs_tools_resource_toolicon OWNER TO postgres;
+ALTER TABLE hs_tools_resource_toolicon OWNER TO postgres;
 
 --
 -- Name: hs_tools_resource_toolicon_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
@@ -5640,7 +5874,7 @@ CREATE SEQUENCE hs_tools_resource_toolicon_id_seq
     CACHE 1;
 
 
-ALTER TABLE public.hs_tools_resource_toolicon_id_seq OWNER TO postgres;
+ALTER TABLE hs_tools_resource_toolicon_id_seq OWNER TO postgres;
 
 --
 -- Name: hs_tools_resource_toolicon_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
@@ -5658,7 +5892,7 @@ CREATE TABLE hs_tools_resource_toolmetadata (
 );
 
 
-ALTER TABLE public.hs_tools_resource_toolmetadata OWNER TO postgres;
+ALTER TABLE hs_tools_resource_toolmetadata OWNER TO postgres;
 
 --
 -- Name: hs_tools_resource_toolversion; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
@@ -5673,7 +5907,7 @@ CREATE TABLE hs_tools_resource_toolversion (
 );
 
 
-ALTER TABLE public.hs_tools_resource_toolversion OWNER TO postgres;
+ALTER TABLE hs_tools_resource_toolversion OWNER TO postgres;
 
 --
 -- Name: hs_tools_resource_toolversion_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
@@ -5687,13 +5921,118 @@ CREATE SEQUENCE hs_tools_resource_toolversion_id_seq
     CACHE 1;
 
 
-ALTER TABLE public.hs_tools_resource_toolversion_id_seq OWNER TO postgres;
+ALTER TABLE hs_tools_resource_toolversion_id_seq OWNER TO postgres;
 
 --
 -- Name: hs_tools_resource_toolversion_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
 --
 
 ALTER SEQUENCE hs_tools_resource_toolversion_id_seq OWNED BY hs_tools_resource_toolversion.id;
+
+
+--
+-- Name: hs_tracking_session; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
+--
+
+CREATE TABLE hs_tracking_session (
+    id integer NOT NULL,
+    begin timestamp with time zone NOT NULL,
+    visitor_id integer NOT NULL
+);
+
+
+ALTER TABLE hs_tracking_session OWNER TO postgres;
+
+--
+-- Name: hs_tracking_session_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+--
+
+CREATE SEQUENCE hs_tracking_session_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER TABLE hs_tracking_session_id_seq OWNER TO postgres;
+
+--
+-- Name: hs_tracking_session_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
+--
+
+ALTER SEQUENCE hs_tracking_session_id_seq OWNED BY hs_tracking_session.id;
+
+
+--
+-- Name: hs_tracking_variable; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
+--
+
+CREATE TABLE hs_tracking_variable (
+    id integer NOT NULL,
+    "timestamp" timestamp with time zone NOT NULL,
+    name character varying(32) NOT NULL,
+    type integer NOT NULL,
+    value character varying(130) NOT NULL,
+    session_id integer NOT NULL
+);
+
+
+ALTER TABLE hs_tracking_variable OWNER TO postgres;
+
+--
+-- Name: hs_tracking_variable_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+--
+
+CREATE SEQUENCE hs_tracking_variable_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER TABLE hs_tracking_variable_id_seq OWNER TO postgres;
+
+--
+-- Name: hs_tracking_variable_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
+--
+
+ALTER SEQUENCE hs_tracking_variable_id_seq OWNED BY hs_tracking_variable.id;
+
+
+--
+-- Name: hs_tracking_visitor; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
+--
+
+CREATE TABLE hs_tracking_visitor (
+    id integer NOT NULL,
+    first_seen timestamp with time zone NOT NULL,
+    user_id integer
+);
+
+
+ALTER TABLE hs_tracking_visitor OWNER TO postgres;
+
+--
+-- Name: hs_tracking_visitor_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+--
+
+CREATE SEQUENCE hs_tracking_visitor_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER TABLE hs_tracking_visitor_id_seq OWNER TO postgres;
+
+--
+-- Name: hs_tracking_visitor_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
+--
+
+ALTER SEQUENCE hs_tracking_visitor_id_seq OWNED BY hs_tracking_visitor.id;
 
 
 --
@@ -5710,7 +6049,7 @@ CREATE TABLE oauth2_provider_accesstoken (
 );
 
 
-ALTER TABLE public.oauth2_provider_accesstoken OWNER TO postgres;
+ALTER TABLE oauth2_provider_accesstoken OWNER TO postgres;
 
 --
 -- Name: oauth2_provider_accesstoken_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
@@ -5724,7 +6063,7 @@ CREATE SEQUENCE oauth2_provider_accesstoken_id_seq
     CACHE 1;
 
 
-ALTER TABLE public.oauth2_provider_accesstoken_id_seq OWNER TO postgres;
+ALTER TABLE oauth2_provider_accesstoken_id_seq OWNER TO postgres;
 
 --
 -- Name: oauth2_provider_accesstoken_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
@@ -5750,7 +6089,7 @@ CREATE TABLE oauth2_provider_application (
 );
 
 
-ALTER TABLE public.oauth2_provider_application OWNER TO postgres;
+ALTER TABLE oauth2_provider_application OWNER TO postgres;
 
 --
 -- Name: oauth2_provider_application_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
@@ -5764,7 +6103,7 @@ CREATE SEQUENCE oauth2_provider_application_id_seq
     CACHE 1;
 
 
-ALTER TABLE public.oauth2_provider_application_id_seq OWNER TO postgres;
+ALTER TABLE oauth2_provider_application_id_seq OWNER TO postgres;
 
 --
 -- Name: oauth2_provider_application_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
@@ -5788,7 +6127,7 @@ CREATE TABLE oauth2_provider_grant (
 );
 
 
-ALTER TABLE public.oauth2_provider_grant OWNER TO postgres;
+ALTER TABLE oauth2_provider_grant OWNER TO postgres;
 
 --
 -- Name: oauth2_provider_grant_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
@@ -5802,7 +6141,7 @@ CREATE SEQUENCE oauth2_provider_grant_id_seq
     CACHE 1;
 
 
-ALTER TABLE public.oauth2_provider_grant_id_seq OWNER TO postgres;
+ALTER TABLE oauth2_provider_grant_id_seq OWNER TO postgres;
 
 --
 -- Name: oauth2_provider_grant_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
@@ -5824,7 +6163,7 @@ CREATE TABLE oauth2_provider_refreshtoken (
 );
 
 
-ALTER TABLE public.oauth2_provider_refreshtoken OWNER TO postgres;
+ALTER TABLE oauth2_provider_refreshtoken OWNER TO postgres;
 
 --
 -- Name: oauth2_provider_refreshtoken_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
@@ -5838,7 +6177,7 @@ CREATE SEQUENCE oauth2_provider_refreshtoken_id_seq
     CACHE 1;
 
 
-ALTER TABLE public.oauth2_provider_refreshtoken_id_seq OWNER TO postgres;
+ALTER TABLE oauth2_provider_refreshtoken_id_seq OWNER TO postgres;
 
 --
 -- Name: oauth2_provider_refreshtoken_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
@@ -5856,7 +6195,7 @@ CREATE TABLE pages_link (
 );
 
 
-ALTER TABLE public.pages_link OWNER TO postgres;
+ALTER TABLE pages_link OWNER TO postgres;
 
 --
 -- Name: pages_page; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
@@ -5887,7 +6226,7 @@ CREATE TABLE pages_page (
 );
 
 
-ALTER TABLE public.pages_page OWNER TO postgres;
+ALTER TABLE pages_page OWNER TO postgres;
 
 --
 -- Name: pages_page_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
@@ -5901,7 +6240,7 @@ CREATE SEQUENCE pages_page_id_seq
     CACHE 1;
 
 
-ALTER TABLE public.pages_page_id_seq OWNER TO postgres;
+ALTER TABLE pages_page_id_seq OWNER TO postgres;
 
 --
 -- Name: pages_page_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
@@ -5920,7 +6259,7 @@ CREATE TABLE pages_richtextpage (
 );
 
 
-ALTER TABLE public.pages_richtextpage OWNER TO postgres;
+ALTER TABLE pages_richtextpage OWNER TO postgres;
 
 --
 -- Name: ref_ts_datasource; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
@@ -5935,7 +6274,7 @@ CREATE TABLE ref_ts_datasource (
 );
 
 
-ALTER TABLE public.ref_ts_datasource OWNER TO postgres;
+ALTER TABLE ref_ts_datasource OWNER TO postgres;
 
 --
 -- Name: ref_ts_datasource_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
@@ -5949,7 +6288,7 @@ CREATE SEQUENCE ref_ts_datasource_id_seq
     CACHE 1;
 
 
-ALTER TABLE public.ref_ts_datasource_id_seq OWNER TO postgres;
+ALTER TABLE ref_ts_datasource_id_seq OWNER TO postgres;
 
 --
 -- Name: ref_ts_datasource_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
@@ -5972,7 +6311,7 @@ CREATE TABLE ref_ts_method (
 );
 
 
-ALTER TABLE public.ref_ts_method OWNER TO postgres;
+ALTER TABLE ref_ts_method OWNER TO postgres;
 
 --
 -- Name: ref_ts_method_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
@@ -5986,7 +6325,7 @@ CREATE SEQUENCE ref_ts_method_id_seq
     CACHE 1;
 
 
-ALTER TABLE public.ref_ts_method_id_seq OWNER TO postgres;
+ALTER TABLE ref_ts_method_id_seq OWNER TO postgres;
 
 --
 -- Name: ref_ts_method_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
@@ -6009,7 +6348,7 @@ CREATE TABLE ref_ts_qualitycontrollevel (
 );
 
 
-ALTER TABLE public.ref_ts_qualitycontrollevel OWNER TO postgres;
+ALTER TABLE ref_ts_qualitycontrollevel OWNER TO postgres;
 
 --
 -- Name: ref_ts_qualitycontrollevel_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
@@ -6023,7 +6362,7 @@ CREATE SEQUENCE ref_ts_qualitycontrollevel_id_seq
     CACHE 1;
 
 
-ALTER TABLE public.ref_ts_qualitycontrollevel_id_seq OWNER TO postgres;
+ALTER TABLE ref_ts_qualitycontrollevel_id_seq OWNER TO postgres;
 
 --
 -- Name: ref_ts_qualitycontrollevel_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
@@ -6046,7 +6385,7 @@ CREATE TABLE ref_ts_referenceurl (
 );
 
 
-ALTER TABLE public.ref_ts_referenceurl OWNER TO postgres;
+ALTER TABLE ref_ts_referenceurl OWNER TO postgres;
 
 --
 -- Name: ref_ts_referenceurl_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
@@ -6060,7 +6399,7 @@ CREATE SEQUENCE ref_ts_referenceurl_id_seq
     CACHE 1;
 
 
-ALTER TABLE public.ref_ts_referenceurl_id_seq OWNER TO postgres;
+ALTER TABLE ref_ts_referenceurl_id_seq OWNER TO postgres;
 
 --
 -- Name: ref_ts_referenceurl_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
@@ -6078,7 +6417,7 @@ CREATE TABLE ref_ts_reftsmetadata (
 );
 
 
-ALTER TABLE public.ref_ts_reftsmetadata OWNER TO postgres;
+ALTER TABLE ref_ts_reftsmetadata OWNER TO postgres;
 
 --
 -- Name: ref_ts_site; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
@@ -6097,7 +6436,7 @@ CREATE TABLE ref_ts_site (
 );
 
 
-ALTER TABLE public.ref_ts_site OWNER TO postgres;
+ALTER TABLE ref_ts_site OWNER TO postgres;
 
 --
 -- Name: ref_ts_site_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
@@ -6111,7 +6450,7 @@ CREATE SEQUENCE ref_ts_site_id_seq
     CACHE 1;
 
 
-ALTER TABLE public.ref_ts_site_id_seq OWNER TO postgres;
+ALTER TABLE ref_ts_site_id_seq OWNER TO postgres;
 
 --
 -- Name: ref_ts_site_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
@@ -6136,7 +6475,7 @@ CREATE TABLE ref_ts_variable (
 );
 
 
-ALTER TABLE public.ref_ts_variable OWNER TO postgres;
+ALTER TABLE ref_ts_variable OWNER TO postgres;
 
 --
 -- Name: ref_ts_variable_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
@@ -6150,7 +6489,7 @@ CREATE SEQUENCE ref_ts_variable_id_seq
     CACHE 1;
 
 
-ALTER TABLE public.ref_ts_variable_id_seq OWNER TO postgres;
+ALTER TABLE ref_ts_variable_id_seq OWNER TO postgres;
 
 --
 -- Name: ref_ts_variable_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
@@ -6182,7 +6521,7 @@ CREATE TABLE theme_homepage (
 );
 
 
-ALTER TABLE public.theme_homepage OWNER TO postgres;
+ALTER TABLE theme_homepage OWNER TO postgres;
 
 --
 -- Name: theme_iconbox; Type: TABLE; Schema: public; Owner: postgres; Tablespace: 
@@ -6199,7 +6538,7 @@ CREATE TABLE theme_iconbox (
 );
 
 
-ALTER TABLE public.theme_iconbox OWNER TO postgres;
+ALTER TABLE theme_iconbox OWNER TO postgres;
 
 --
 -- Name: theme_iconbox_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
@@ -6213,7 +6552,7 @@ CREATE SEQUENCE theme_iconbox_id_seq
     CACHE 1;
 
 
-ALTER TABLE public.theme_iconbox_id_seq OWNER TO postgres;
+ALTER TABLE theme_iconbox_id_seq OWNER TO postgres;
 
 --
 -- Name: theme_iconbox_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
@@ -6248,7 +6587,7 @@ CREATE TABLE theme_siteconfiguration (
 );
 
 
-ALTER TABLE public.theme_siteconfiguration OWNER TO postgres;
+ALTER TABLE theme_siteconfiguration OWNER TO postgres;
 
 --
 -- Name: theme_siteconfiguration_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
@@ -6262,7 +6601,7 @@ CREATE SEQUENCE theme_siteconfiguration_id_seq
     CACHE 1;
 
 
-ALTER TABLE public.theme_siteconfiguration_id_seq OWNER TO postgres;
+ALTER TABLE theme_siteconfiguration_id_seq OWNER TO postgres;
 
 --
 -- Name: theme_siteconfiguration_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
@@ -6279,10 +6618,8 @@ CREATE TABLE theme_userprofile (
     id integer NOT NULL,
     picture character varying(100),
     title character varying(1024),
-    profession character varying(1024),
     subject_areas character varying(1024),
     organization character varying(1024),
-    organization_type character varying(1024),
     phone_1 character varying(1024),
     phone_1_type character varying(1024),
     phone_2 character varying(1024),
@@ -6290,11 +6627,17 @@ CREATE TABLE theme_userprofile (
     public boolean NOT NULL,
     cv character varying(100),
     details text,
-    user_id integer NOT NULL
+    user_id integer NOT NULL,
+    country character varying(1024),
+    middle_name character varying(1024),
+    state character varying(1024),
+    user_type character varying(1024),
+    website character varying(200),
+    create_irods_user_account boolean NOT NULL
 );
 
 
-ALTER TABLE public.theme_userprofile OWNER TO postgres;
+ALTER TABLE theme_userprofile OWNER TO postgres;
 
 --
 -- Name: theme_userprofile_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
@@ -6308,7 +6651,7 @@ CREATE SEQUENCE theme_userprofile_id_seq
     CACHE 1;
 
 
-ALTER TABLE public.theme_userprofile_id_seq OWNER TO postgres;
+ALTER TABLE theme_userprofile_id_seq OWNER TO postgres;
 
 --
 -- Name: theme_userprofile_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
@@ -6692,6 +7035,13 @@ ALTER TABLE ONLY hs_access_control_groupaccess ALTER COLUMN id SET DEFAULT nextv
 -- Name: id; Type: DEFAULT; Schema: public; Owner: postgres
 --
 
+ALTER TABLE ONLY hs_access_control_groupmembershiprequest ALTER COLUMN id SET DEFAULT nextval('hs_access_control_groupmembershiprequest_id_seq'::regclass);
+
+
+--
+-- Name: id; Type: DEFAULT; Schema: public; Owner: postgres
+--
+
 ALTER TABLE ONLY hs_access_control_groupresourceprivilege ALTER COLUMN id SET DEFAULT nextval('hs_access_control_groupresourceprivilege_id_seq'::regclass);
 
 
@@ -6776,6 +7126,13 @@ ALTER TABLE ONLY hs_app_timeseries_variable ALTER COLUMN id SET DEFAULT nextval(
 -- Name: id; Type: DEFAULT; Schema: public; Owner: postgres
 --
 
+ALTER TABLE ONLY hs_collection_resource_collectiondeletedresource ALTER COLUMN id SET DEFAULT nextval('hs_collection_resource_collectiondeletedresource_id_seq'::regclass);
+
+
+--
+-- Name: id; Type: DEFAULT; Schema: public; Owner: postgres
+--
+
 ALTER TABLE ONLY hs_core_bags ALTER COLUMN id SET DEFAULT nextval('hs_core_bags_id_seq'::regclass);
 
 
@@ -6833,6 +7190,20 @@ ALTER TABLE ONLY hs_core_externalprofilelink ALTER COLUMN id SET DEFAULT nextval
 --
 
 ALTER TABLE ONLY hs_core_format ALTER COLUMN id SET DEFAULT nextval('hs_core_format_id_seq'::regclass);
+
+
+--
+-- Name: id; Type: DEFAULT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY hs_core_fundingagency ALTER COLUMN id SET DEFAULT nextval('hs_core_fundingagency_id_seq'::regclass);
+
+
+--
+-- Name: id; Type: DEFAULT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY hs_core_genericresource_collections ALTER COLUMN id SET DEFAULT nextval('hs_core_genericresource_collections_id_seq'::regclass);
 
 
 --
@@ -7127,6 +7498,27 @@ ALTER TABLE ONLY hs_tools_resource_toolicon ALTER COLUMN id SET DEFAULT nextval(
 --
 
 ALTER TABLE ONLY hs_tools_resource_toolversion ALTER COLUMN id SET DEFAULT nextval('hs_tools_resource_toolversion_id_seq'::regclass);
+
+
+--
+-- Name: id; Type: DEFAULT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY hs_tracking_session ALTER COLUMN id SET DEFAULT nextval('hs_tracking_session_id_seq'::regclass);
+
+
+--
+-- Name: id; Type: DEFAULT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY hs_tracking_variable ALTER COLUMN id SET DEFAULT nextval('hs_tracking_variable_id_seq'::regclass);
+
+
+--
+-- Name: id; Type: DEFAULT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY hs_tracking_visitor ALTER COLUMN id SET DEFAULT nextval('hs_tracking_visitor_id_seq'::regclass);
 
 
 --
@@ -8047,6 +8439,37 @@ COPY auth_permission (id, name, content_type_id, codename) FROM stdin;
 512	Can add HIS Referenced Time Series	160	add_reftimeseriesresource
 513	Can change HIS Referenced Time Series	160	change_reftimeseriesresource
 514	Can delete HIS Referenced Time Series	160	delete_reftimeseriesresource
+515	Can add comment	161	add_comment
+516	Can change comment	161	change_comment
+517	Can delete comment	161	delete_comment
+518	Can moderate comments	161	can_moderate
+519	Can add comment flag	162	add_commentflag
+520	Can change comment flag	162	change_commentflag
+521	Can delete comment flag	162	delete_commentflag
+522	Can add funding agency	163	add_fundingagency
+523	Can change funding agency	163	change_fundingagency
+524	Can delete funding agency	163	delete_fundingagency
+525	Can add group membership request	164	add_groupmembershiprequest
+526	Can change group membership request	164	change_groupmembershiprequest
+527	Can delete group membership request	164	delete_groupmembershiprequest
+528	Can add Collection Resource	66	add_collectionresource
+529	Can change Collection Resource	66	change_collectionresource
+530	Can delete Collection Resource	66	delete_collectionresource
+531	Can add collection deleted resource	165	add_collectiondeletedresource
+532	Can change collection deleted resource	165	change_collectiondeletedresource
+533	Can delete collection deleted resource	165	delete_collectiondeletedresource
+534	Can add visitor	167	add_visitor
+535	Can change visitor	167	change_visitor
+536	Can delete visitor	167	delete_visitor
+537	Can add session	168	add_session
+538	Can change session	168	change_session
+539	Can delete session	168	delete_session
+540	Can add variable	169	add_variable
+541	Can change variable	169	change_variable
+542	Can delete variable	169	delete_variable
+543	Can add Collection Resource	166	add_collectionresource
+544	Can change Collection Resource	166	change_collectionresource
+545	Can delete Collection Resource	166	delete_collectionresource
 \.
 
 
@@ -8054,7 +8477,7 @@ COPY auth_permission (id, name, content_type_id, codename) FROM stdin;
 -- Name: auth_permission_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('auth_permission_id_seq', 514, true);
+SELECT pg_catalog.setval('auth_permission_id_seq', 545, true);
 
 
 --
@@ -8062,7 +8485,7 @@ SELECT pg_catalog.setval('auth_permission_id_seq', 514, true);
 --
 
 COPY auth_user (id, password, last_login, is_superuser, username, first_name, last_name, email, is_staff, is_active, date_joined) FROM stdin;
-4	pbkdf2_sha256$15000$TspKDYXwKiVD$W/kxbibVrpsVzxVl9A2ZhtK5MDmgjaih2KAUBfdtBgY=	2016-02-24 17:40:31.565918+00	t	admin	HydroShare	Administrator	admin@example.com	t	t	2016-01-25 19:47:54+00
+4	pbkdf2_sha256$20000$zWpscL2LEyIq$lU5ALtHtJIeE+GKzxE1g3/y5ING28gAzY0S2CJdUn54=	2016-06-23 17:06:35.568094+00	t	admin	HydroShare	Administrator	admin@example.com	t	t	2016-01-25 19:47:54+00
 \.
 
 
@@ -8264,6 +8687,7 @@ COPY django_admin_log (id, action_time, object_id, object_repr, action_flag, cha
 33	2016-01-25 19:52:37.395438+00	4	Discover	2	Changed _meta_title and keywords.	33	4
 34	2016-01-25 19:54:21.104577+00	2	root	3		3	4
 35	2016-02-24 17:41:41.504891+00	1	Hydroshare Author	2	Changed permissions.	2	4
+36	2016-06-23 17:07:04.049586+00	13	Collaborate	1		33	4
 \.
 
 
@@ -8271,7 +8695,7 @@ COPY django_admin_log (id, action_time, object_id, object_repr, action_flag, cha
 -- Name: django_admin_log_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('django_admin_log_id_seq', 35, true);
+SELECT pg_catalog.setval('django_admin_log_id_seq', 36, true);
 
 
 --
@@ -8308,166 +8732,175 @@ SELECT pg_catalog.setval('django_comments_id_seq', 1, false);
 -- Data for Name: django_content_type; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
-COPY django_content_type (id, name, app_label, model) FROM stdin;
-1	permission	auth	permission
-2	group	auth	group
-3	user	auth	user
-4	application	oauth2_provider	application
-5	grant	oauth2_provider	grant
-6	access token	oauth2_provider	accesstoken
-7	refresh token	oauth2_provider	refreshtoken
-8	cors model	corsheaders	corsmodel
-9	content type	contenttypes	contenttype
-10	redirect	redirects	redirect
-11	session	sessions	session
-12	site	sites	site
-13	post gis geometry columns	gis	postgisgeometrycolumns
-14	post gis spatial ref sys	gis	postgisspatialrefsys
-15	iRODS Environment	django_irods	rodsenvironment
-16	Site Configuration	theme	siteconfiguration
-17	Home page	theme	homepage
-18	icon box	theme	iconbox
-19	user profile	theme	userprofile
-20	Setting	conf	setting
-21	Site permission	core	sitepermission
-22	Comment	generic	threadedcomment
-23	Keyword	generic	keyword
-24	assigned keyword	generic	assignedkeyword
-25	Rating	generic	rating
-26	Blog post	blog	blogpost
-27	Blog Category	blog	blogcategory
-28	Form	forms	form
-29	Field	forms	field
-30	Form entry	forms	formentry
-31	Form field entry	forms	fieldentry
-32	Page	pages	page
-33	Rich text page	pages	richtextpage
-34	Link	pages	link
-35	Gallery	galleries	gallery
-36	Image	galleries	galleryimage
-37	ogr dataset collection	ga_ows	ogrdatasetcollection
-38	ogr dataset	ga_ows	ogrdataset
-39	ogr layer	ga_ows	ogrlayer
-40	catalog page	ga_resources	catalogpage
-41	data resource	ga_resources	dataresource
-42	ordered resource	ga_resources	orderedresource
-43	resource group	ga_resources	resourcegroup
-44	related resource	ga_resources	relatedresource
-45	style	ga_resources	style
-46	rendered layer	ga_resources	renderedlayer
-47	group ownership	hs_core	groupownership
-48	external profile link	hs_core	externalprofilelink
-49	contributor	hs_core	contributor
-50	creator	hs_core	creator
-51	description	hs_core	description
-52	title	hs_core	title
-53	type	hs_core	type
-54	date	hs_core	date
-55	relation	hs_core	relation
-56	identifier	hs_core	identifier
-57	publisher	hs_core	publisher
-58	language	hs_core	language
-59	coverage	hs_core	coverage
-60	format	hs_core	format
-61	subject	hs_core	subject
-62	source	hs_core	source
-63	rights	hs_core	rights
-64	resource file	hs_core	resourcefile
-65	bags	hs_core	bags
-66	Generic	hs_core	baseresource
-67	Generic	hs_core	genericresource
-68	core meta data	hs_core	coremetadata
-69	user group privilege	hs_access_control	usergroupprivilege
-70	user resource privilege	hs_access_control	userresourceprivilege
-71	group resource privilege	hs_access_control	groupresourceprivilege
-72	user access	hs_access_control	useraccess
-73	group access	hs_access_control	groupaccess
-74	resource access	hs_access_control	resourceaccess
-75	user resource labels	hs_labels	userresourcelabels
-76	user resource flags	hs_labels	userresourceflags
-77	user stored labels	hs_labels	userstoredlabels
-78	user labels	hs_labels	userlabels
-79	resource labels	hs_labels	resourcelabels
-80	docker profile	django_docker_processes	dockerprofile
-81	container overrides	django_docker_processes	containeroverrides
-82	override env var	django_docker_processes	overrideenvvar
-83	override volume	django_docker_processes	overridevolume
-84	override link	django_docker_processes	overridelink
-85	override port	django_docker_processes	overrideport
-86	docker link	django_docker_processes	dockerlink
-87	docker env var	django_docker_processes	dockerenvvar
-88	docker volume	django_docker_processes	dockervolume
-89	docker port	django_docker_processes	dockerport
-90	docker process	django_docker_processes	dockerprocess
-91	original coverage	hs_geo_raster_resource	originalcoverage
-92	band information	hs_geo_raster_resource	bandinformation
-93	cell information	hs_geo_raster_resource	cellinformation
-94	Geographic Raster	hs_geo_raster_resource	rasterresource
-95	raster meta data	hs_geo_raster_resource	rastermetadata
-96	task state	djcelery	taskmeta
-97	saved group result	djcelery	tasksetmeta
-98	interval	djcelery	intervalschedule
-99	crontab	djcelery	crontabschedule
-100	periodic tasks	djcelery	periodictasks
-101	periodic task	djcelery	periodictask
-102	worker	djcelery	workerstate
-103	task	djcelery	taskstate
-105	reference url	ref_ts	referenceurl
-106	method	ref_ts	method
-107	quality control level	ref_ts	qualitycontrollevel
-108	variable	ref_ts	variable
-109	site	ref_ts	site
-110	ref ts metadata	ref_ts	reftsmetadata
-111	site	hs_app_timeseries	site
-112	variable	hs_app_timeseries	variable
-113	method	hs_app_timeseries	method
-114	processing level	hs_app_timeseries	processinglevel
-115	time series result	hs_app_timeseries	timeseriesresult
-116	Time Series	hs_app_timeseries	timeseriesresource
-117	time series meta data	hs_app_timeseries	timeseriesmetadata
-118	original coverage	hs_app_netCDF	originalcoverage
-119	variable	hs_app_netCDF	variable
-120	Multidimensional (NetCDF)	hs_app_netCDF	netcdfresource
-121	netcdf meta data	hs_app_netCDF	netcdfmetadata
-122	mp metadata	hs_model_program	mpmetadata
-123	Model Program Resource	hs_model_program	modelprogramresource
-124	model program meta data	hs_model_program	modelprogrammetadata
-125	model output	hs_modelinstance	modeloutput
-126	executed by	hs_modelinstance	executedby
-127	Model Instance Resource	hs_modelinstance	modelinstanceresource
-128	model instance meta data	hs_modelinstance	modelinstancemetadata
-129	Web App Resource	hs_tools_resource	toolresource
-130	request url base	hs_tools_resource	requesturlbase
-131	tool version	hs_tools_resource	toolversion
-132	supported res type choices	hs_tools_resource	supportedrestypechoices
-133	supported res types	hs_tools_resource	supportedrestypes
-134	tool icon	hs_tools_resource	toolicon
-135	tool meta data	hs_tools_resource	toolmetadata
-136	model output	hs_swat_modelinstance	modeloutput
-137	executed by	hs_swat_modelinstance	executedby
-138	model objective choices	hs_swat_modelinstance	modelobjectivechoices
-139	model objective	hs_swat_modelinstance	modelobjective
-140	simulation type	hs_swat_modelinstance	simulationtype
-141	model method	hs_swat_modelinstance	modelmethod
-142	model parameters choices	hs_swat_modelinstance	modelparameterschoices
-143	model parameter	hs_swat_modelinstance	modelparameter
-144	model input	hs_swat_modelinstance	modelinput
-145	SWAT Model Instance Resource	hs_swat_modelinstance	swatmodelinstanceresource
-146	swat model instance meta data	hs_swat_modelinstance	swatmodelinstancemetadata
-147	original file info	hs_geographic_feature_resource	originalfileinfo
-148	original coverage	hs_geographic_feature_resource	originalcoverage
-149	field information	hs_geographic_feature_resource	fieldinformation
-150	geometry information	hs_geographic_feature_resource	geometryinformation
-151	Geographic Feature (ESRI Shapefiles)	hs_geographic_feature_resource	geographicfeatureresource
-152	geographic feature meta data	hs_geographic_feature_resource	geographicfeaturemetadata
-153	Script Resource	hs_script_resource	scriptresource
-154	script specific metadata	hs_script_resource	scriptspecificmetadata
-155	script meta data	hs_script_resource	scriptmetadata
-156	log entry	admin	logentry
-157	comment	comments	comment
-158	comment flag	comments	commentflag
-159	data source	ref_ts	datasource
-160	HIS Referenced Time Series	ref_ts	reftimeseriesresource
+COPY django_content_type (id, app_label, model) FROM stdin;
+1	auth	permission
+2	auth	group
+3	auth	user
+4	oauth2_provider	application
+5	oauth2_provider	grant
+6	oauth2_provider	accesstoken
+7	oauth2_provider	refreshtoken
+8	corsheaders	corsmodel
+9	contenttypes	contenttype
+10	redirects	redirect
+11	sessions	session
+12	sites	site
+13	gis	postgisgeometrycolumns
+14	gis	postgisspatialrefsys
+15	django_irods	rodsenvironment
+16	theme	siteconfiguration
+17	theme	homepage
+18	theme	iconbox
+19	theme	userprofile
+20	conf	setting
+21	core	sitepermission
+22	generic	threadedcomment
+23	generic	keyword
+24	generic	assignedkeyword
+25	generic	rating
+26	blog	blogpost
+27	blog	blogcategory
+28	forms	form
+29	forms	field
+30	forms	formentry
+31	forms	fieldentry
+32	pages	page
+33	pages	richtextpage
+34	pages	link
+35	galleries	gallery
+36	galleries	galleryimage
+37	ga_ows	ogrdatasetcollection
+38	ga_ows	ogrdataset
+39	ga_ows	ogrlayer
+40	ga_resources	catalogpage
+41	ga_resources	dataresource
+42	ga_resources	orderedresource
+43	ga_resources	resourcegroup
+44	ga_resources	relatedresource
+45	ga_resources	style
+46	ga_resources	renderedlayer
+47	hs_core	groupownership
+48	hs_core	externalprofilelink
+49	hs_core	contributor
+50	hs_core	creator
+51	hs_core	description
+52	hs_core	title
+53	hs_core	type
+54	hs_core	date
+55	hs_core	relation
+56	hs_core	identifier
+57	hs_core	publisher
+58	hs_core	language
+59	hs_core	coverage
+60	hs_core	format
+61	hs_core	subject
+62	hs_core	source
+63	hs_core	rights
+64	hs_core	resourcefile
+65	hs_core	bags
+66	hs_core	baseresource
+67	hs_core	genericresource
+68	hs_core	coremetadata
+69	hs_access_control	usergroupprivilege
+70	hs_access_control	userresourceprivilege
+71	hs_access_control	groupresourceprivilege
+72	hs_access_control	useraccess
+73	hs_access_control	groupaccess
+74	hs_access_control	resourceaccess
+75	hs_labels	userresourcelabels
+76	hs_labels	userresourceflags
+77	hs_labels	userstoredlabels
+78	hs_labels	userlabels
+79	hs_labels	resourcelabels
+80	django_docker_processes	dockerprofile
+81	django_docker_processes	containeroverrides
+82	django_docker_processes	overrideenvvar
+83	django_docker_processes	overridevolume
+84	django_docker_processes	overridelink
+85	django_docker_processes	overrideport
+86	django_docker_processes	dockerlink
+87	django_docker_processes	dockerenvvar
+88	django_docker_processes	dockervolume
+89	django_docker_processes	dockerport
+90	django_docker_processes	dockerprocess
+91	hs_geo_raster_resource	originalcoverage
+92	hs_geo_raster_resource	bandinformation
+93	hs_geo_raster_resource	cellinformation
+94	hs_geo_raster_resource	rasterresource
+95	hs_geo_raster_resource	rastermetadata
+96	djcelery	taskmeta
+97	djcelery	tasksetmeta
+98	djcelery	intervalschedule
+99	djcelery	crontabschedule
+100	djcelery	periodictasks
+101	djcelery	periodictask
+102	djcelery	workerstate
+103	djcelery	taskstate
+105	ref_ts	referenceurl
+106	ref_ts	method
+107	ref_ts	qualitycontrollevel
+108	ref_ts	variable
+109	ref_ts	site
+110	ref_ts	reftsmetadata
+111	hs_app_timeseries	site
+112	hs_app_timeseries	variable
+113	hs_app_timeseries	method
+114	hs_app_timeseries	processinglevel
+115	hs_app_timeseries	timeseriesresult
+116	hs_app_timeseries	timeseriesresource
+117	hs_app_timeseries	timeseriesmetadata
+118	hs_app_netCDF	originalcoverage
+119	hs_app_netCDF	variable
+120	hs_app_netCDF	netcdfresource
+121	hs_app_netCDF	netcdfmetadata
+122	hs_model_program	mpmetadata
+123	hs_model_program	modelprogramresource
+124	hs_model_program	modelprogrammetadata
+125	hs_modelinstance	modeloutput
+126	hs_modelinstance	executedby
+127	hs_modelinstance	modelinstanceresource
+128	hs_modelinstance	modelinstancemetadata
+129	hs_tools_resource	toolresource
+130	hs_tools_resource	requesturlbase
+131	hs_tools_resource	toolversion
+132	hs_tools_resource	supportedrestypechoices
+133	hs_tools_resource	supportedrestypes
+134	hs_tools_resource	toolicon
+135	hs_tools_resource	toolmetadata
+136	hs_swat_modelinstance	modeloutput
+137	hs_swat_modelinstance	executedby
+138	hs_swat_modelinstance	modelobjectivechoices
+139	hs_swat_modelinstance	modelobjective
+140	hs_swat_modelinstance	simulationtype
+141	hs_swat_modelinstance	modelmethod
+142	hs_swat_modelinstance	modelparameterschoices
+143	hs_swat_modelinstance	modelparameter
+144	hs_swat_modelinstance	modelinput
+145	hs_swat_modelinstance	swatmodelinstanceresource
+146	hs_swat_modelinstance	swatmodelinstancemetadata
+147	hs_geographic_feature_resource	originalfileinfo
+148	hs_geographic_feature_resource	originalcoverage
+149	hs_geographic_feature_resource	fieldinformation
+150	hs_geographic_feature_resource	geometryinformation
+151	hs_geographic_feature_resource	geographicfeatureresource
+152	hs_geographic_feature_resource	geographicfeaturemetadata
+153	hs_script_resource	scriptresource
+154	hs_script_resource	scriptspecificmetadata
+155	hs_script_resource	scriptmetadata
+156	admin	logentry
+157	comments	comment
+158	comments	commentflag
+159	ref_ts	datasource
+160	ref_ts	reftimeseriesresource
+161	django_comments	comment
+162	django_comments	commentflag
+163	hs_core	fundingagency
+164	hs_access_control	groupmembershiprequest
+165	hs_collection_resource	collectiondeletedresource
+166	hs_collection_resource	collectionresource
+167	hs_tracking	visitor
+168	hs_tracking	session
+169	hs_tracking	variable
 \.
 
 
@@ -8475,7 +8908,7 @@ COPY django_content_type (id, name, app_label, model) FROM stdin;
 -- Name: django_content_type_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('django_content_type_id_seq', 160, true);
+SELECT pg_catalog.setval('django_content_type_id_seq', 169, true);
 
 
 --
@@ -8752,6 +9185,59 @@ COPY django_migrations (id, app, name, applied) FROM stdin;
 87	ref_ts	0004_auto_20160114_0252	2016-02-10 17:25:44.189374+00
 88	hs_core	0015_auto_20160122_1939	2016-02-24 16:49:13.981508+00
 89	hs_core	0016_merge	2016-02-24 16:49:14.629004+00
+90	contenttypes	0002_remove_content_type_name	2016-04-05 15:52:48.840448+00
+91	auth	0002_alter_permission_name_max_length	2016-04-05 15:52:48.861207+00
+92	auth	0003_alter_user_email_max_length	2016-04-05 15:52:48.882309+00
+93	auth	0004_alter_user_username_opts	2016-04-05 15:52:48.902771+00
+94	auth	0005_alter_user_last_login_null	2016-04-05 15:52:48.924684+00
+95	auth	0006_require_contenttypes_0002	2016-04-05 15:52:48.928046+00
+96	blog	0001_initial	2016-04-05 15:52:48.96178+00
+97	blog	0002_auto_20150527_1555	2016-04-05 15:52:48.995833+00
+98	conf	0001_initial	2016-04-05 15:52:49.030144+00
+99	core	0001_initial	2016-04-05 15:52:49.069188+00
+100	core	0002_auto_20150414_2140	2016-04-05 15:52:49.123848+00
+101	django_comments	0001_initial	2016-04-05 15:52:49.232336+00
+102	django_comments	0002_update_user_email_field_length	2016-04-05 15:52:49.274936+00
+103	pages	0001_initial	2016-04-05 15:52:49.381683+00
+104	forms	0001_initial	2016-04-05 15:52:49.704962+00
+105	forms	0002_auto_20141227_0224	2016-04-05 15:52:49.791646+00
+106	forms	0003_emailfield	2016-04-05 15:52:49.882541+00
+107	forms	0004_auto_20150517_0510	2016-04-05 15:52:50.202042+00
+108	forms	0005_auto_20151026_1600	2016-04-05 15:52:50.279381+00
+109	galleries	0001_initial	2016-04-05 15:52:50.490778+00
+110	galleries	0002_auto_20141227_0224	2016-04-05 15:52:50.601395+00
+111	generic	0001_initial	2016-04-05 15:52:51.13465+00
+112	generic	0002_auto_20141227_0224	2016-04-05 15:52:51.2577+00
+113	hs_core	0017_auto_20160219_2039	2016-04-05 15:52:51.697456+00
+114	hs_core	0017_auto_20160217_1629	2016-04-05 15:52:52.108399+00
+115	hs_core	0018_merge	2016-04-05 15:52:52.111171+00
+116	hs_core	0019_baseresource_locked_time	2016-04-05 15:52:52.318958+00
+117	hs_geo_raster_resource	custom_migration_for_tif_to_vrt_20160223	2016-04-05 15:52:52.337656+00
+118	pages	0002_auto_20141227_0224	2016-04-05 15:52:53.062688+00
+119	pages	0003_auto_20150527_1555	2016-04-05 15:52:53.439151+00
+120	theme	0002_auto_20160219_2039	2016-04-05 15:52:53.861018+00
+121	theme	0003_auto_20160302_0453	2016-04-05 15:52:57.426205+00
+122	hs_access_control	0014_auto_20160424_1628	2016-06-23 17:05:42.044535+00
+123	hs_app_timeseries	0004_auto_20160526_2026	2016-06-23 17:05:42.29096+00
+124	hs_core	0020_baseresource_collections	2016-06-23 17:05:42.53999+00
+125	hs_collection_resource	0001_initial	2016-06-23 17:05:43.761938+00
+126	hs_core	0021_auto_20160427_1807	2016-06-23 17:05:44.237364+00
+127	hs_core	0022_resourcefile_resource_file_size	2016-06-23 17:05:44.493421+00
+128	hs_core	0021_hstore_extension	2016-06-23 17:05:44.529228+00
+129	hs_core	0022_baseresource_extra_metadata	2016-06-23 17:05:44.825073+00
+130	hs_core	0021_fundingagency	2016-06-23 17:05:45.254751+00
+131	hs_core	0023_merge	2016-06-23 17:05:45.259316+00
+132	hs_core	0024_baseresource_resource_federation_path	2016-06-23 17:05:45.599503+00
+133	hs_core	0025_resourcefile_fed_resource_file	2016-06-23 17:05:46.122748+00
+134	hs_core	0024_custom_migration_metadata_namespace_20160527	2016-06-23 17:05:46.14658+00
+135	hs_core	0026_merge	2016-06-23 17:05:46.150181+00
+136	hs_geo_raster_resource	0005_auto_20160509_2116	2016-06-23 17:05:47.213331+00
+137	hs_geo_raster_resource	custom_migration_for_raster_meta_update_20160512	2016-06-23 17:05:47.239339+00
+138	hs_swat_modelinstance	0007_auto_20160428_1843	2016-06-23 17:05:48.065251+00
+139	hs_tracking	0001_initial	2016-06-23 17:05:50.044085+00
+140	hs_tracking	0002_auto_20160406_1244	2016-06-23 17:05:50.486671+00
+141	theme	0004_userprofile_create_irods_user_account	2016-06-23 17:05:51.001845+00
+142	hs_tracking	0003_auto_20160623_1718	2016-06-23 17:23:54.498282+00
 \.
 
 
@@ -8759,7 +9245,7 @@ COPY django_migrations (id, app, name, applied) FROM stdin;
 -- Name: django_migrations_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('django_migrations_id_seq', 89, true);
+SELECT pg_catalog.setval('django_migrations_id_seq', 142, true);
 
 
 --
@@ -8785,6 +9271,7 @@ COPY django_session (session_key, session_data, expire_date) FROM stdin;
 iuq13wh2xtsrestc3ixty7cy7pcutc3b	ZTIwZWRiZTQzZjI5ODhkYTE0NDQxYzFmZmQzMTRjZDc3MWUxNGUzYTp7Il9hdXRoX3VzZXJfaGFzaCI6IjBkNTY4M2MyYWVkNjA4OWNhMDc5YTE4ZmFlZTNjNjdlMjExNTRmZDciLCJfYXV0aF91c2VyX2JhY2tlbmQiOiJtZXp6YW5pbmUuY29yZS5hdXRoX2JhY2tlbmRzLk1lenphbmluZUJhY2tlbmQiLCJfYXV0aF91c2VyX2lkIjo0fQ==	2016-02-08 19:50:52.911919+00
 r95gvslruo55bqar11kco2o9ynh41mrq	NmM0MTZkOGYzNTBkNDEwMTBiZTc3NTFmODg5ZDU4N2VkNmVkZDJlZTp7fQ==	2016-02-08 19:55:45.734662+00
 yq96gavkvlu0skywfwgvdock65xnq3tc	ZTIwZWRiZTQzZjI5ODhkYTE0NDQxYzFmZmQzMTRjZDc3MWUxNGUzYTp7Il9hdXRoX3VzZXJfaGFzaCI6IjBkNTY4M2MyYWVkNjA4OWNhMDc5YTE4ZmFlZTNjNjdlMjExNTRmZDciLCJfYXV0aF91c2VyX2JhY2tlbmQiOiJtZXp6YW5pbmUuY29yZS5hdXRoX2JhY2tlbmRzLk1lenphbmluZUJhY2tlbmQiLCJfYXV0aF91c2VyX2lkIjo0fQ==	2016-03-09 17:40:31.568514+00
+5eflr6q0pn7qgkuu6mbo84kuqoxk5plt	ZjZmMTlkMThkOGJmNWIzY2IxODNjODM5ZTA2MmFjNTRmNTlmYTRkOTp7InF1ZXJ5X2NoYW5nZWQiOmZhbHNlLCJoc190cmFja2luZ19pZCI6ImV5SnBaQ0k2TW4wOjFiRzg2ZDpGNWs4M3pGcnQ2Mzg5WWMyZUhRc3BNRGVBR2siLCJmYWNldHNfaXRlbXMiOnsiZmllbGRzIjp7ImF1dGhvciI6W10sIm93bmVyc19uYW1lcyI6W10sInN1YmplY3RzIjpbXSwiZGlzY292ZXJhYmxlIjpbXSwicHVibGljIjpbXSwicmVzb3VyY2VfdHlwZSI6W119LCJkYXRlcyI6e30sInF1ZXJpZXMiOnt9fSwidG90YWxfcmVzdWx0cyI6MH0=	2016-07-07 17:17:57.67608+00
 \.
 
 
@@ -9144,7 +9631,7 @@ COPY generic_threadedcomment (comment_ptr_id, rating_count, rating_sum, rating_a
 -- Data for Name: hs_access_control_groupaccess; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
-COPY hs_access_control_groupaccess (id, active, discoverable, public, shareable, group_id) FROM stdin;
+COPY hs_access_control_groupaccess (id, active, discoverable, public, shareable, group_id, date_created, description, picture, purpose) FROM stdin;
 \.
 
 
@@ -9153,6 +9640,21 @@ COPY hs_access_control_groupaccess (id, active, discoverable, public, shareable,
 --
 
 SELECT pg_catalog.setval('hs_access_control_groupaccess_id_seq', 1, false);
+
+
+--
+-- Data for Name: hs_access_control_groupmembershiprequest; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+
+COPY hs_access_control_groupmembershiprequest (id, date_requested, group_to_join_id, invitation_to_id, request_from_id) FROM stdin;
+\.
+
+
+--
+-- Name: hs_access_control_groupmembershiprequest_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('hs_access_control_groupmembershiprequest_id_seq', 1, false);
 
 
 --
@@ -9353,6 +9855,21 @@ SELECT pg_catalog.setval('hs_app_timeseries_variable_id_seq', 1, false);
 
 
 --
+-- Data for Name: hs_collection_resource_collectiondeletedresource; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+
+COPY hs_collection_resource_collectiondeletedresource (id, resource_title, date_deleted, resource_id, resource_type, collection_id, deleted_by_id) FROM stdin;
+\.
+
+
+--
+-- Name: hs_collection_resource_collectiondeletedresource_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('hs_collection_resource_collectiondeletedresource_id_seq', 1, false);
+
+
+--
 -- Data for Name: hs_core_bags; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
@@ -9488,11 +10005,41 @@ SELECT pg_catalog.setval('hs_core_format_id_seq', 1, false);
 
 
 --
+-- Data for Name: hs_core_fundingagency; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+
+COPY hs_core_fundingagency (id, object_id, agency_name, award_title, award_number, agency_url, content_type_id) FROM stdin;
+\.
+
+
+--
+-- Name: hs_core_fundingagency_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('hs_core_fundingagency_id_seq', 1, false);
+
+
+--
 -- Data for Name: hs_core_genericresource; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
-COPY hs_core_genericresource (page_ptr_id, comments_count, rating_count, rating_sum, rating_average, content, short_id, doi, object_id, content_type_id, creator_id, last_changed_by_id, user_id, resource_type, file_unpack_message, file_unpack_status) FROM stdin;
+COPY hs_core_genericresource (page_ptr_id, comments_count, rating_count, rating_sum, rating_average, content, short_id, doi, object_id, content_type_id, creator_id, last_changed_by_id, user_id, resource_type, file_unpack_message, file_unpack_status, locked_time, extra_metadata, resource_federation_path) FROM stdin;
 \.
+
+
+--
+-- Data for Name: hs_core_genericresource_collections; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+
+COPY hs_core_genericresource_collections (id, from_baseresource_id, to_baseresource_id) FROM stdin;
+\.
+
+
+--
+-- Name: hs_core_genericresource_collections_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('hs_core_genericresource_collections_id_seq', 1, false);
 
 
 --
@@ -9574,7 +10121,7 @@ SELECT pg_catalog.setval('hs_core_relation_id_seq', 1, false);
 -- Data for Name: hs_core_resourcefile; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
-COPY hs_core_resourcefile (id, object_id, resource_file, content_type_id) FROM stdin;
+COPY hs_core_resourcefile (id, object_id, resource_file, content_type_id, fed_resource_file_name_or_path, fed_resource_file_size, fed_resource_file) FROM stdin;
 \.
 
 
@@ -9664,7 +10211,7 @@ SELECT pg_catalog.setval('hs_core_type_id_seq', 1, false);
 -- Data for Name: hs_geo_raster_resource_bandinformation; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
-COPY hs_geo_raster_resource_bandinformation (id, object_id, name, "variableName", "variableUnit", method, comment, content_type_id) FROM stdin;
+COPY hs_geo_raster_resource_bandinformation (id, object_id, name, "variableName", "variableUnit", method, comment, content_type_id, "maximumValue", "minimumValue", "noDataValue") FROM stdin;
 \.
 
 
@@ -9679,7 +10226,7 @@ SELECT pg_catalog.setval('hs_geo_raster_resource_bandinformation_id_seq', 1, fal
 -- Data for Name: hs_geo_raster_resource_cellinformation; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
-COPY hs_geo_raster_resource_cellinformation (id, object_id, name, rows, columns, "cellSizeXValue", "cellSizeYValue", "cellDataType", "noDataValue", content_type_id) FROM stdin;
+COPY hs_geo_raster_resource_cellinformation (id, object_id, name, rows, columns, "cellSizeXValue", "cellSizeYValue", "cellDataType", content_type_id) FROM stdin;
 \.
 
 
@@ -10183,6 +10730,76 @@ SELECT pg_catalog.setval('hs_tools_resource_toolversion_id_seq', 1, false);
 
 
 --
+-- Data for Name: hs_tracking_session; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+
+COPY hs_tracking_session (id, begin, visitor_id) FROM stdin;
+1	2016-06-23 17:06:32.174288+00	1
+2	2016-06-23 17:07:55.65815+00	2
+\.
+
+
+--
+-- Name: hs_tracking_session_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('hs_tracking_session_id_seq', 2, true);
+
+
+--
+-- Data for Name: hs_tracking_variable; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+
+COPY hs_tracking_variable (id, "timestamp", name, type, value, session_id) FROM stdin;
+1	2016-06-23 17:06:32.176345+00	begin_session	4	none	1
+2	2016-06-23 17:06:32.178545+00	visit	2	/admin/login/	1
+3	2016-06-23 17:06:35.724699+00	visit	2	/admin/	1
+4	2016-06-23 17:06:39.943401+00	visit	2	/admin/pages/page/	1
+5	2016-06-23 17:06:40.044229+00	visit	2	/admin/jsi18n/	1
+6	2016-06-23 17:06:42.609026+00	visit	2	/admin/pages/richtextpage/add/	1
+7	2016-06-23 17:06:42.678194+00	visit	2	/admin/jsi18n/	1
+8	2016-06-23 17:07:03.948786+00	visit	2	/admin_keywords_submit/	1
+9	2016-06-23 17:07:04.469555+00	visit	2	/admin/pages/page/	1
+10	2016-06-23 17:07:04.503762+00	visit	2	/admin/jsi18n/	1
+11	2016-06-23 17:07:12.764509+00	visit	2	/admin_page_ordering/	1
+12	2016-06-23 17:07:31.574614+00	visit	2	/admin_page_ordering/	1
+13	2016-06-23 17:07:40.236028+00	visit	2	/	1
+14	2016-06-23 17:07:55.65976+00	begin_session	4	none	2
+15	2016-06-23 17:07:55.661515+00	visit	2	/	2
+16	2016-06-23 17:17:35.201336+00	visit	2	/	2
+17	2016-06-23 17:17:37.904373+00	visit	2	/accounts/login/	2
+18	2016-06-23 17:17:48.822462+00	visit	2	/help/	2
+19	2016-06-23 17:17:53.399003+00	visit	2	/accounts/login/	2
+20	2016-06-23 17:17:57.673472+00	visit	2	/search/	2
+21	2016-06-23 17:17:59.819554+00	visit	2	/	2
+\.
+
+
+--
+-- Name: hs_tracking_variable_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('hs_tracking_variable_id_seq', 21, true);
+
+
+--
+-- Data for Name: hs_tracking_visitor; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+
+COPY hs_tracking_visitor (id, first_seen, user_id) FROM stdin;
+1	2016-06-23 17:06:32.171224+00	4
+2	2016-06-23 17:07:55.656084+00	\N
+\.
+
+
+--
+-- Name: hs_tracking_visitor_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('hs_tracking_visitor_id_seq', 2, true);
+
+
+--
 -- Data for Name: oauth2_provider_accesstoken; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
@@ -10256,17 +10873,18 @@ COPY pages_link (page_ptr_id) FROM stdin;
 --
 
 COPY pages_page (id, keywords_string, site_id, title, slug, _meta_title, description, gen_description, created, updated, status, publish_date, expiry_date, short_url, in_sitemap, _order, parent_id, in_menus, titles, content_model, login_required) FROM stdin;
+11		1	Create Resource	create-resource	Create Resource	create resource	t	2016-01-25 19:35:15.10115+00	2016-01-25 19:35:15.10115+00	2	2016-01-25 19:35:15.100153+00	\N	\N	t	10	\N		Create Resource	richtextpage	f
+12		1	Sign Up	sign-up	Sign Up	sign up	t	2016-01-25 19:40:35.894321+00	2016-01-25 19:40:35.894321+00	2	2016-01-25 19:40:35.893206+00	\N	\N	t	11	\N		Sign Up	richtextpage	f
 2		1	Home	/		HydroShare is an online collaboration environment for sharing data, models, and code.  Join the community to start sharing.	t	2016-01-25 19:17:47.144396+00	2016-01-25 19:17:47.144396+00	2	2016-01-25 19:17:47.143386+00	\N	\N	t	0	\N		Home	homepage	f
-6		1	Apps	https://appsdev.hydroshare.org/apps	\N	Apps	t	2016-01-25 19:26:44.887463+00	2016-01-25 19:26:44.887463+00	2	2016-01-25 19:26:44.886468+00	\N	\N	f	3	\N	1,2,3	Apps	link	f
-5		1	Help	help	Help	help	t	2016-01-25 19:25:35.644671+00	2016-01-25 19:25:35.644671+00	2	2016-01-25 19:25:35.643697+00	\N	\N	t	4	\N	1,2,3	Help	richtextpage	f
-7		1	Verify Account	verify-account	Verify Account	Thank you for signing up for HydroShare! We have sent you an email from hydroshare.org to verify your account.  Please click on the link within the email and verify your account with us and you can get started sharing data and models with HydroShare.	t	2016-01-25 19:28:12.867432+00	2016-01-25 19:28:12.867432+00	2	2016-01-25 19:28:12.866419+00	\N	\N	t	5	\N		Verify Account	richtextpage	f
 3		1	My Resources	my-resources	My Resources	my-resources	t	2016-01-25 19:22:48.667099+00	2016-01-25 19:29:50.956511+00	2	2016-01-25 19:22:48+00	\N	\N	t	1	\N	1,2,3	My Resources	richtextpage	f
-8		1	Resend Verification Email	resend-verification-email	Resend Email Verification	Please give us your email address and we will resend the confirmation	t	2016-01-25 19:32:20.248488+00	2016-01-25 19:32:20.248488+00	2	2016-01-25 19:32:20.247193+00	\N	\N	t	6	\N		Resend Verification Email	form	f
-11		1	Create Resource	create-resource	Create Resource	create resource	t	2016-01-25 19:35:15.10115+00	2016-01-25 19:35:15.10115+00	2	2016-01-25 19:35:15.100153+00	\N	\N	t	9	\N		Create Resource	richtextpage	f
-10		1	Statement of Privacy	privacy	Statement of Privacy	HydroShare Statement of Privacy\nLast modified July 7, 2013	t	2016-01-25 19:34:22.084583+00	2016-01-25 19:36:36.646829+00	2	2016-01-25 19:34:22+00	\N	\N	t	8	\N		Statement of Privacy	richtextpage	f
-9		1	Terms of Use	terms-of-use	Terms of Use	HydroShare Terms of Use\nLast modified July 7, 2013	t	2016-01-25 19:33:24.439209+00	2016-01-25 19:37:08.21102+00	2	2016-01-25 19:33:24+00	\N	\N	t	7	\N		Terms of Use	richtextpage	f
-12		1	Sign Up	sign-up	Sign Up	sign up	t	2016-01-25 19:40:35.894321+00	2016-01-25 19:40:35.894321+00	2	2016-01-25 19:40:35.893206+00	\N	\N	t	10	\N		Sign Up	richtextpage	f
 4		1	Discover	search	Discover	Discover	t	2016-01-25 19:23:52.174668+00	2016-01-25 19:52:37.387455+00	2	2016-01-25 19:23:52+00	\N	\N	t	2	\N	1,2,3	Discover	richtextpage	f
+13		1	Collaborate	collaborate		collaborate	t	2016-06-23 17:07:04.042277+00	2016-06-23 17:07:04.042277+00	2	2016-06-23 17:07:04.008329+00	\N	\N	t	3	\N	1	Collaborate	richtextpage	f
+6		1	Apps	https://appsdev.hydroshare.org/apps	\N	Apps	t	2016-01-25 19:26:44.887463+00	2016-01-25 19:26:44.887463+00	2	2016-01-25 19:26:44.886468+00	\N	\N	f	4	\N	1,2,3	Apps	link	f
+5		1	Help	help	Help	help	t	2016-01-25 19:25:35.644671+00	2016-01-25 19:25:35.644671+00	2	2016-01-25 19:25:35.643697+00	\N	\N	t	5	\N	1,2,3	Help	richtextpage	f
+7		1	Verify Account	verify-account	Verify Account	Thank you for signing up for HydroShare! We have sent you an email from hydroshare.org to verify your account.  Please click on the link within the email and verify your account with us and you can get started sharing data and models with HydroShare.	t	2016-01-25 19:28:12.867432+00	2016-01-25 19:28:12.867432+00	2	2016-01-25 19:28:12.866419+00	\N	\N	t	6	\N		Verify Account	richtextpage	f
+8		1	Resend Verification Email	resend-verification-email	Resend Email Verification	Please give us your email address and we will resend the confirmation	t	2016-01-25 19:32:20.248488+00	2016-01-25 19:32:20.248488+00	2	2016-01-25 19:32:20.247193+00	\N	\N	t	7	\N		Resend Verification Email	form	f
+9		1	Terms of Use	terms-of-use	Terms of Use	HydroShare Terms of Use\nLast modified July 7, 2013	t	2016-01-25 19:33:24.439209+00	2016-01-25 19:37:08.21102+00	2	2016-01-25 19:33:24+00	\N	\N	t	8	\N		Terms of Use	richtextpage	f
+10		1	Statement of Privacy	privacy	Statement of Privacy	HydroShare Statement of Privacy\nLast modified July 7, 2013	t	2016-01-25 19:34:22.084583+00	2016-01-25 19:36:36.646829+00	2	2016-01-25 19:34:22+00	\N	\N	t	9	\N		Statement of Privacy	richtextpage	f
 \.
 
 
@@ -10274,7 +10892,7 @@ COPY pages_page (id, keywords_string, site_id, title, slug, _meta_title, descrip
 -- Name: pages_page_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('pages_page_id_seq', 12, true);
+SELECT pg_catalog.setval('pages_page_id_seq', 13, true);
 
 
 --
@@ -10290,6 +10908,7 @@ COPY pages_richtextpage (page_ptr_id, content) FROM stdin;
 9	<h2 class="p1"><b>HydroShare Terms of Use</b></h2>\n<p class="p2"><i>Last modified July 7, 2013</i></p>\n<p class="p2">Thank you for using the HydroShare hydrologic data sharing system hosted at hydroshare.org.  HydroShare services are provided by a team of researchers associated with the Consortium of Universities for the Advancement of Hydrologic Science, Inc. and funded by the National Science Foundation.  The services are hosted at participating institutions including the Renaissance Computing Institute at University of North Carolina, Utah State University, Brigham Young University, Tufts, University of Virginia, University of California at San Diego, University of Texas, Purdue and CUAHSI. Your access to hydroshare.org is subject to your agreement to these Terms of Use. By using our services at hydroshare.org, you are agreeing to these terms.  Please read them carefully.</p>\n<h2 class="p3"><b>Modification of the Agreement</b></h2>\n<p class="p2">We maintain the right to modify these Terms of Use and may do so by posting modifications on this page. Any modification is effective immediately upon posting the modification unless otherwise stated. Your continued use of hydroshare.org following the posting of any modification signifies your acceptance of that modification. You should regularly visit this page to review the current Terms of Use.</p>\n<h2 class="p3"><b>Conduct Using our Services</b></h2>\n<p class="p2">The hydroshare.org site is intended to support data and model sharing in hydrology.  This is broadly interpreted to include any discipline or endeavor that has something to do with water.  You are responsible at all times for using hydroshare.org in a manner that is legal, ethical, and not to the detriment of others and for purposes related to hydrology. You agree that you will not in your use of hydroshare.org:</p>\n<ul class="ul1">\n<li class="li2">Violate any applicable law, commit a criminal offense or perform actions that might encourage others to commit a criminal offense or give rise to a civil liability;</li>\n<li class="li2">Post or transmit any unlawful, threatening, libelous, harassing, defamatory, vulgar, obscene, pornographic, profane, or otherwise objectionable content;</li>\n<li class="li2">Use hydroshare.org to impersonate other parties or entities;</li>\n<li class="li2">Use hydroshare.org to upload any content that contains a software virus, "Trojan Horse" or any other computer code, files, or programs that may alter, damage, or interrupt the functionality of hydroshare.org or the hardware or software of any other person who accesses hydroshare.org;</li>\n<li class="li2">Upload, post, email, or otherwise transmit any materials that you do not have a right to transmit under any law or under a contractual relationship;</li>\n<li class="li2">Alter, damage, or delete any content posted on hydroshare.org, except where such alterations or deletions are consistent with the access control settings of that content in hydroshare.org;</li>\n<li class="li2">Disrupt the normal flow of communication in any way;</li>\n<li class="li2">Claim a relationship with or speak for any business, association, or other organization for which you are not authorized to claim such a relationship;</li>\n<li class="li2">Post or transmit any unsolicited advertising, promotional materials, or other forms of solicitation;</li>\n<li class="li2">Post any material that infringes or violates the intellectual property rights of another.</li>\n</ul>\n<p class="p2">Certain portions of hydroshare.org are limited to registered users and/or allow a user to participate in online services by entering personal information. You agree that any information provided to hydroshare.org in these areas will be complete and accurate, and that you will neither register under the name of nor attempt to enter hydroshare.org under the name of another person or entity.</p>\n<p class="p2">You are responsible for maintaining the confidentiality of your user ID and password, if any, and for restricting access to your computer, and you agree to accept responsibility for all activities that occur under your account or password. Hydroshare.org does not authorize use of your User ID by third-parties.</p>\n<p class="p2">We may, in our sole discretion, terminate or suspend your access to and use of hydroshare.org without notice and for any reason, including for violation of these Terms of Use or for other conduct that we, in our sole discretion, believe to be unlawful or harmful to others. In the event of termination, you are no longer authorized to access hydroshare.org.</p>\n<h2 class="p3"><b>Disclaimers</b></h2>\n<p class="p2">HYDROSHARE AND ANY INFORMATION, PRODUCTS OR SERVICES ON IT ARE PROVIDED "AS IS" WITHOUT WARRANTY OF ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING WITHOUT LIMITATION, THE IMPLIED WARRANTIES OF MERCHANTABILITY OR FITNESS FOR A PARTICULAR PURPOSE. Hydroshare.org and its participating institutions do not warrant, and hereby disclaim any warranties, either express or implied, with respect to the accuracy, adequacy or completeness of any good, service, or information obtained from hydroshare.org. Hydroshare.org and its participating institutions do not warrant that Hydroshare.org will operate in an uninterrupted or error-free manner or that hydroshare.org is free of viruses or other harmful components. Use of hydroshare.org is at your own risk.</p>\n<p class="p2">You agree that hydroshare.org and its participating institutions shall have no liability for any consequential, indirect, punitive, special or incidental damages, whether foreseeable or unforeseeable (including, but not limited to, claims for defamation, errors, loss of data, or interruption in availability of data), arising out of or relating to your use of water-hub.org or any resource that you access through hydroshare.org.</p>\n<p class="p2">The hydroshare.org site hosts content from a number of authors. The statements and views of these authors are theirs alone, and do not reflect the stances or policies of the HydroShare research team or their sponsors, nor does their posting imply the endorsement of HydroShare or their sponsors.</p>\n<h2 class="p3"><b>Choice of Law/Forum Selection/Attorney Fees</b></h2>\n<p class="p2">You agree that any dispute arising out of or relating to hydroshare.org, whether based in contract, tort, statutory or other law, will be governed by federal law and by the laws of North Carolina, excluding its conflicts of law provisions. You further consent to the personal jurisdiction of and exclusive venue in the federal and state courts located in and serving the United States of America, North Carolina as the exclusive legal forums for any such dispute.</p>
 12	<p>sign up</p>
 4	<p>Discover</p>
+13	<p>collaborate</p>
 \.
 
 
@@ -10443,8 +11062,8 @@ SELECT pg_catalog.setval('theme_siteconfiguration_id_seq', 1, true);
 -- Data for Name: theme_userprofile; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
-COPY theme_userprofile (id, picture, title, profession, subject_areas, organization, organization_type, phone_1, phone_1_type, phone_2, phone_2_type, public, cv, details, user_id) FROM stdin;
-4		\N	Student	\N	\N	\N	\N	\N	\N	\N	t		\N	4
+COPY theme_userprofile (id, picture, title, subject_areas, organization, phone_1, phone_1_type, phone_2, phone_2_type, public, cv, details, user_id, country, middle_name, state, user_type, website, create_irods_user_account) FROM stdin;
+4		\N	\N	\N	\N	\N	\N	\N	t		\N	4	\N	\N	\N	Unspecified	\N	f
 \.
 
 
@@ -11144,6 +11763,14 @@ ALTER TABLE ONLY hs_access_control_groupaccess
 
 
 --
+-- Name: hs_access_control_groupmembershiprequest_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+--
+
+ALTER TABLE ONLY hs_access_control_groupmembershiprequest
+    ADD CONSTRAINT hs_access_control_groupmembershiprequest_pkey PRIMARY KEY (id);
+
+
+--
 -- Name: hs_access_control_groupresourcep_group_id_3ac8c9eb2c0445ff_uniq; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
 --
 
@@ -11344,6 +11971,14 @@ ALTER TABLE ONLY hs_app_timeseries_variable
 
 
 --
+-- Name: hs_collection_resource_collectiondeletedresource_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+--
+
+ALTER TABLE ONLY hs_collection_resource_collectiondeletedresource
+    ADD CONSTRAINT hs_collection_resource_collectiondeletedresource_pkey PRIMARY KEY (id);
+
+
+--
 -- Name: hs_core_bags_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
 --
 
@@ -11453,6 +12088,30 @@ ALTER TABLE ONLY hs_core_format
 
 ALTER TABLE ONLY hs_core_format
     ADD CONSTRAINT hs_core_format_value_8b10e84db4524d5_uniq UNIQUE (value, content_type_id, object_id);
+
+
+--
+-- Name: hs_core_fundingagency_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+--
+
+ALTER TABLE ONLY hs_core_fundingagency
+    ADD CONSTRAINT hs_core_fundingagency_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: hs_core_genericresource_colle_from_baseresource_id_to_baser_key; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+--
+
+ALTER TABLE ONLY hs_core_genericresource_collections
+    ADD CONSTRAINT hs_core_genericresource_colle_from_baseresource_id_to_baser_key UNIQUE (from_baseresource_id, to_baseresource_id);
+
+
+--
+-- Name: hs_core_genericresource_collections_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+--
+
+ALTER TABLE ONLY hs_core_genericresource_collections
+    ADD CONSTRAINT hs_core_genericresource_collections_pkey PRIMARY KEY (id);
 
 
 --
@@ -12120,6 +12779,38 @@ ALTER TABLE ONLY hs_tools_resource_toolversion
 
 
 --
+-- Name: hs_tracking_session_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+--
+
+ALTER TABLE ONLY hs_tracking_session
+    ADD CONSTRAINT hs_tracking_session_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: hs_tracking_variable_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+--
+
+ALTER TABLE ONLY hs_tracking_variable
+    ADD CONSTRAINT hs_tracking_variable_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: hs_tracking_visitor_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+--
+
+ALTER TABLE ONLY hs_tracking_visitor
+    ADD CONSTRAINT hs_tracking_visitor_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: hs_tracking_visitor_user_id_e219697e1ed13ee_uniq; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
+--
+
+ALTER TABLE ONLY hs_tracking_visitor
+    ADD CONSTRAINT hs_tracking_visitor_user_id_e219697e1ed13ee_uniq UNIQUE (user_id);
+
+
+--
 -- Name: oauth2_provider_accesstoken_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres; Tablespace: 
 --
 
@@ -12369,6 +13060,13 @@ CREATE INDEX blog_blogpost_categories_blogcategory_id ON blog_blogpost_categorie
 --
 
 CREATE INDEX blog_blogpost_categories_blogpost_id ON blog_blogpost_categories USING btree (blogpost_id);
+
+
+--
+-- Name: blog_blogpost_publish_date_1015da2554a8e97f_uniq; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+--
+
+CREATE INDEX blog_blogpost_publish_date_1015da2554a8e97f_uniq ON blog_blogpost USING btree (publish_date);
 
 
 --
@@ -13009,6 +13707,27 @@ CREATE INDEX generic_threadedcomment_replied_to_id ON generic_threadedcomment US
 
 
 --
+-- Name: hs_access_control_groupmembershiprequest_0c4f5cd1; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+--
+
+CREATE INDEX hs_access_control_groupmembershiprequest_0c4f5cd1 ON hs_access_control_groupmembershiprequest USING btree (request_from_id);
+
+
+--
+-- Name: hs_access_control_groupmembershiprequest_4561f31b; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+--
+
+CREATE INDEX hs_access_control_groupmembershiprequest_4561f31b ON hs_access_control_groupmembershiprequest USING btree (group_to_join_id);
+
+
+--
+-- Name: hs_access_control_groupmembershiprequest_a3f20815; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+--
+
+CREATE INDEX hs_access_control_groupmembershiprequest_a3f20815 ON hs_access_control_groupmembershiprequest USING btree (invitation_to_id);
+
+
+--
 -- Name: hs_access_control_groupresourceprivilege_82c60f9f; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
 --
 
@@ -13121,6 +13840,20 @@ CREATE INDEX hs_app_timeseries_variable_417f1b1c ON hs_app_timeseries_variable U
 
 
 --
+-- Name: hs_collection_resource_collectiondeletedresource_0a1a4dd8; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+--
+
+CREATE INDEX hs_collection_resource_collectiondeletedresource_0a1a4dd8 ON hs_collection_resource_collectiondeletedresource USING btree (collection_id);
+
+
+--
+-- Name: hs_collection_resource_collectiondeletedresource_d19ec81d; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+--
+
+CREATE INDEX hs_collection_resource_collectiondeletedresource_d19ec81d ON hs_collection_resource_collectiondeletedresource USING btree (deleted_by_id);
+
+
+--
 -- Name: hs_core_bags_417f1b1c; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
 --
 
@@ -13184,6 +13917,13 @@ CREATE INDEX hs_core_format_417f1b1c ON hs_core_format USING btree (content_type
 
 
 --
+-- Name: hs_core_fundingagency_417f1b1c; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+--
+
+CREATE INDEX hs_core_fundingagency_417f1b1c ON hs_core_fundingagency USING btree (content_type_id);
+
+
+--
 -- Name: hs_core_genericresource_3700153c; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
 --
 
@@ -13216,6 +13956,20 @@ CREATE INDEX hs_core_genericresource_6e3c2cc2 ON hs_core_genericresource USING b
 --
 
 CREATE INDEX hs_core_genericresource_7258c37c ON hs_core_genericresource USING btree (short_id);
+
+
+--
+-- Name: hs_core_genericresource_collections_169f7fce; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+--
+
+CREATE INDEX hs_core_genericresource_collections_169f7fce ON hs_core_genericresource_collections USING btree (from_baseresource_id);
+
+
+--
+-- Name: hs_core_genericresource_collections_91410dc4; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+--
+
+CREATE INDEX hs_core_genericresource_collections_91410dc4 ON hs_core_genericresource_collections USING btree (to_baseresource_id);
 
 
 --
@@ -13555,6 +14309,27 @@ CREATE INDEX hs_tools_resource_toolversion_417f1b1c ON hs_tools_resource_toolver
 
 
 --
+-- Name: hs_tracking_session_bfc2f125; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+--
+
+CREATE INDEX hs_tracking_session_bfc2f125 ON hs_tracking_session USING btree (visitor_id);
+
+
+--
+-- Name: hs_tracking_variable_7fc8ef54; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+--
+
+CREATE INDEX hs_tracking_variable_7fc8ef54 ON hs_tracking_variable USING btree (session_id);
+
+
+--
+-- Name: hs_tracking_visitor_e8701ad4; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+--
+
+CREATE INDEX hs_tracking_visitor_e8701ad4 ON hs_tracking_visitor USING btree (user_id);
+
+
+--
 -- Name: oauth2_provider_accesstoken_6bc0a4eb; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
 --
 
@@ -13671,6 +14446,13 @@ CREATE INDEX oauth2_provider_refreshtoken_token_1e4e9388e6a22527_like ON oauth2_
 --
 
 CREATE INDEX pages_page_parent_id ON pages_page USING btree (parent_id);
+
+
+--
+-- Name: pages_page_publish_date_4b581dded15f4cdf_uniq; Type: INDEX; Schema: public; Owner: postgres; Tablespace: 
+--
+
+CREATE INDEX pages_page_publish_date_4b581dded15f4cdf_uniq ON pages_page USING btree (publish_date);
 
 
 --
@@ -13841,6 +14623,14 @@ ALTER TABLE ONLY hs_swat_modelinstance_modelparameter_model_parameters
 
 
 --
+-- Name: D31151cd560fcd8a9d7eac2bbb5b84c9; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY hs_core_genericresource_collections
+    ADD CONSTRAINT "D31151cd560fcd8a9d7eac2bbb5b84c9" FOREIGN KEY (to_baseresource_id) REFERENCES hs_core_genericresource(page_ptr_id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
 -- Name: D31c29d49b8f7ec3acaeadd6d03d4a4f; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -13929,6 +14719,14 @@ ALTER TABLE ONLY django_docker_processes_containeroverrides
 
 
 --
+-- Name: D66495776709e8754037f4f18d4258ac; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY hs_core_genericresource_collections
+    ADD CONSTRAINT "D66495776709e8754037f4f18d4258ac" FOREIGN KEY (from_baseresource_id) REFERENCES hs_core_genericresource(page_ptr_id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
 -- Name: D66abd734664aa960007027384fa6de8; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -13966,6 +14764,14 @@ ALTER TABLE ONLY hs_tools_resource_supportedrestypes_supported_res_types
 
 ALTER TABLE ONLY ga_resources_renderedlayer
     ADD CONSTRAINT "D7e7cede746315ab9e08ce902995fd0e" FOREIGN KEY (data_resource_id) REFERENCES ga_resources_dataresource(page_ptr_id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
+-- Name: D939acd71ef4c768cad03ae2dffa0298; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY hs_collection_resource_collectiondeletedresource
+    ADD CONSTRAINT "D939acd71ef4c768cad03ae2dffa0298" FOREIGN KEY (collection_id) REFERENCES hs_core_genericresource(page_ptr_id) DEFERRABLE INITIALLY DEFERRED;
 
 
 --
@@ -14465,6 +15271,30 @@ ALTER TABLE ONLY hs_app_timeseries_site
 
 
 --
+-- Name: hs_access_co_group_to_join_id_5cf445aa01ee1f48_fk_auth_group_id; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY hs_access_control_groupmembershiprequest
+    ADD CONSTRAINT hs_access_co_group_to_join_id_5cf445aa01ee1f48_fk_auth_group_id FOREIGN KEY (group_to_join_id) REFERENCES auth_group(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
+-- Name: hs_access_con_invitation_to_id_5cdd6acd6d11df75_fk_auth_user_id; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY hs_access_control_groupmembershiprequest
+    ADD CONSTRAINT hs_access_con_invitation_to_id_5cdd6acd6d11df75_fk_auth_user_id FOREIGN KEY (invitation_to_id) REFERENCES auth_user(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
+-- Name: hs_access_cont_request_from_id_3447b6ef4a91ce7d_fk_auth_user_id; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY hs_access_control_groupmembershiprequest
+    ADD CONSTRAINT hs_access_cont_request_from_id_3447b6ef4a91ce7d_fk_auth_user_id FOREIGN KEY (request_from_id) REFERENCES auth_user(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
 -- Name: hs_access_control_g_grantor_id_1e68e0395847f2b3_fk_auth_user_id; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -14609,6 +15439,14 @@ ALTER TABLE ONLY hs_core_type
 
 
 --
+-- Name: hs_c_content_type_id_393df80b6039f971_fk_django_content_type_id; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY hs_core_fundingagency
+    ADD CONSTRAINT hs_c_content_type_id_393df80b6039f971_fk_django_content_type_id FOREIGN KEY (content_type_id) REFERENCES django_content_type(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
 -- Name: hs_c_content_type_id_425582f505cae13e_fk_django_content_type_id; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -14686,6 +15524,14 @@ ALTER TABLE ONLY hs_core_source
 
 ALTER TABLE ONLY hs_core_date
     ADD CONSTRAINT hs_co_content_type_id_9c7365e54949ce2_fk_django_content_type_id FOREIGN KEY (content_type_id) REFERENCES django_content_type(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
+-- Name: hs_collection_re_deleted_by_id_14f506bd7f16121a_fk_auth_user_id; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY hs_collection_resource_collectiondeletedresource
+    ADD CONSTRAINT hs_collection_re_deleted_by_id_14f506bd7f16121a_fk_auth_user_id FOREIGN KEY (deleted_by_id) REFERENCES auth_user(id) DEFERRABLE INITIALLY DEFERRED;
 
 
 --
@@ -14934,6 +15780,30 @@ ALTER TABLE ONLY hs_tools_resource_requesturlbase
 
 ALTER TABLE ONLY hs_tools_resource_supportedrestypes
     ADD CONSTRAINT hs_t_content_type_id_767d162d9152deeb_fk_django_content_type_id FOREIGN KEY (content_type_id) REFERENCES django_content_type(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
+-- Name: hs_tracki_visitor_id_23a186d92be70070_fk_hs_tracking_visitor_id; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY hs_tracking_session
+    ADD CONSTRAINT hs_tracki_visitor_id_23a186d92be70070_fk_hs_tracking_visitor_id FOREIGN KEY (visitor_id) REFERENCES hs_tracking_visitor(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
+-- Name: hs_trackin_session_id_5e9600c451e08ab_fk_hs_tracking_session_id; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY hs_tracking_variable
+    ADD CONSTRAINT hs_trackin_session_id_5e9600c451e08ab_fk_hs_tracking_session_id FOREIGN KEY (session_id) REFERENCES hs_tracking_session(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
+-- Name: hs_tracking_visitor_user_id_e219697e1ed13ee_fk_auth_user_id; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY hs_tracking_visitor
+    ADD CONSTRAINT hs_tracking_visitor_user_id_e219697e1ed13ee_fk_auth_user_id FOREIGN KEY (user_id) REFERENCES auth_user(id) DEFERRABLE INITIALLY DEFERRED;
 
 
 --

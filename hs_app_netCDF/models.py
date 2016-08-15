@@ -10,7 +10,7 @@ from mezzanine.pages.page_processors import processor_for
 
 from hs_core.models import BaseResource, ResourceManager
 from hs_core.models import resource_processor, CoreMetaData, AbstractMetaDataElement
-
+from hs_core.hydroshare.utils import get_resource_file_name_and_extension
 
 # Define original spatial coverage metadata info
 class OriginalCoverage(AbstractMetaDataElement):
@@ -134,10 +134,7 @@ class Variable(AbstractMetaDataElement):
 
     @classmethod
     def remove(cls, element_id):
-        variable = Variable.objects.get(id=element_id)
-        if Variable.objects.filter(object_id=variable.object_id, content_type__pk=variable.content_type.id).count()== 1:
-            raise ValidationError("The only variable of the resource can't be deleted.")
-        variable.delete()
+        raise ValidationError("The variable of the resource can't be deleted.")
 
 
 # Define the netCDF resource
@@ -158,6 +155,19 @@ class NetcdfResource(BaseResource):
     def can_have_multiple_files(cls):
         # can have only 1 file
         return False
+
+    # add resource-specific HS terms
+    def get_hs_term_dict(self):
+        # get existing hs_term_dict from base class
+        hs_term_dict = super(NetcdfResource, self).get_hs_term_dict()
+        # add new terms for NetCDF res
+        hs_term_dict["HS_NETCDF_FILE_NAME"] = ""
+        for res_file in self.files.all():
+            f_fullname, f_ext = get_resource_file_name_and_extension(res_file)
+            if f_ext.lower() == '.nc':
+                hs_term_dict["HS_NETCDF_FILE_NAME"] = f_fullname
+                break
+        return hs_term_dict
 
     class Meta:
         verbose_name = 'Multidimensional (NetCDF)'

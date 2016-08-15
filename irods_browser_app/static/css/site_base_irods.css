@@ -80,6 +80,7 @@
 
 #irodsContent .ajax-loader, #irodsContent .modal-backdrop.up-load {
     display: none;
+    opacity:0.5;
 }
 
 .selected {
@@ -92,4 +93,17 @@
     -ms-user-select: none;
     -moz-user-select: none;
     -webkit-user-select: none;
+}
+
+#sign-in-info {
+   margin-right: 10px;
+}
+
+#irods-sel-file, #btn-signout-irods {
+    margin-left: 10px;
+    margin-right: 10px;
+}
+
+#irods-browse {
+    margin-top: 6px;
 }

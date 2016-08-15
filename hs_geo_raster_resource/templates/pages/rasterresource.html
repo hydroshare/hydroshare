@@ -13,18 +13,16 @@
                 <table class="custom-table">
                     <tbody>
 
-                    {% if originalCoverage.projection %}
                         <tr>
                             <th class="text-muted">Coordinate Reference System</th>
                             <td>{{ originalCoverage.projection }}</td>
                         </tr>
-                    {% endif %}
-                    {% if originalCoverage.units %}
+
                         <tr>
                             <th class="text-muted">Coordinate Reference System Unit</th>
                             <td>{{ originalCoverage.units }}</td>
                         </tr>
-                    {% endif %}
+
                     </tbody>
                 </table>
 
@@ -32,30 +30,27 @@
 
                 <table class="custom-table">
                     <tbody>
-                    {% if originalCoverage.northlimit %}
+
                         <tr>
                             <th class="text-muted">North</th>
                             <td>{{ originalCoverage.northlimit }}</td>
                         </tr>
-                    {% endif %}
-                    {% if originalCoverage.westlimit %}
+
                         <tr>
                             <th class="text-muted">West</th>
                             <td>{{ originalCoverage.westlimit }}</td>
                         </tr>
-                    {% endif %}
-                    {% if originalCoverage.southlimit %}
+
                         <tr>
                             <th class="text-muted">South</th>
                             <td>{{ originalCoverage.southlimit }}</td>
                         </tr>
-                    {% endif %}
-                    {% if originalCoverage.eastlimit %}
+
                         <tr>
                             <th class="text-muted">East</th>
                             <td>{{ originalCoverage.eastlimit }}</td>
                         </tr>
-                    {% endif %}
+
                     </tbody>
                 </table>
             </div>
@@ -78,7 +73,7 @@
 
                     <tr>
                         <th class="text-muted">CellSizeXValue</th>
-                        <td{{ cellInformation.cellSizeXValue }}></td>
+                        <td>{{ cellInformation.cellSizeXValue }}</td>
                     </tr>
 
                     <tr>
@@ -91,12 +86,6 @@
                         <td>{{ cellInformation.cellDataType }}</td>
                     </tr>
 
-                    {% if cellInformation.noDataValue %}
-                        <tr>
-                            <th class="text-muted">NoDataValue</th>
-                            <td>{{ cellInformation.noDataValue }}</td>
-                        </tr>
-                    {% endif %}
                     </tbody>
                 </table>
             </div>
@@ -113,9 +102,22 @@
                                     <strong>{{ band.name }}</strong>
                                     <table class="custom-table">
                                         <tbody>
+
                                             <tr><th class="text-muted">VariableName</th><td>{{ band.variableName }}</td></tr>
 
                                             <tr><th class="text-muted">VariableUnit</th><td>{{ band.variableUnit }}</td></tr>
+
+                                            {% if band.noDataValue != None%}
+                                                <tr><th class="text-muted">NoDataValue</th><td>{{ band.noDataValue }}</td></tr>
+                                            {% endif %}
+
+                                            {% if band.maximumValue != None%}
+                                                <tr><th class="text-muted">MaximumValue</th><td>{{ band.maximumValue }}</td></tr>
+                                            {% endif %}
+
+                                            {% if band.minimumValue != None%}
+                                                <tr><th class="text-muted">MinimumValue</th><td>{{ band.minimumValue }}</td></tr>
+                                            {% endif %}
 
                                             {% if band.method %}
                                                 <tr><th class="text-muted">Method</th><td>{{ band.method }}</td></tr>

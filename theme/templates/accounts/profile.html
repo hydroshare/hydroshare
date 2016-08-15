@@ -4,779 +4,870 @@
 {% block meta_title %}User profile for {{ profile_user|best_name }}{% endblock %}
 
 {% block main %}
-
-    {% with profile_user.userprofile as profile %}
-        {% if profile_user.id == user.id %}
-            <form id="profile-form" action="{% url 'update_profile' %}" class="account-form" method="post"
-                  enctype="multipart/form-data" onsubmit="return validateForm()">
-        {% csrf_token %}
-        {% endif %}
-        <div class="row">
+    <div class="container">
+        {% with profile_user.userprofile as profile %}
             {% if profile_user.id == user.id %}
-            <div data-page-mode="edit" class="alert alert-info" role="alert">Information entered here may be publicly visible. Do not enter information that you want to keep private.</div>
+                <form id="profile-form" action="{% url 'update_profile' %}" class="account-form" method="post"
+                      enctype="multipart/form-data" onsubmit="return validateForm()">
+            {% csrf_token %}
             {% endif %}
+            <div class="row">
+                {% if profile_user.id == user.id %}
+                <div data-page-mode="edit" class="alert alert-info" role="alert">Information entered here may be publicly visible. Do not enter information that you want to keep private.</div>
+                {% endif %}
 
-            <div class="col-sm-12">
-                <div class="row">
-                    {% if profile_user.id == user.id %}
-                        <div class="col-xs-12 col-sm-3 height-fix pull-right">
-                            <span data-page-mode="view" id="btn-edit-profile" class="glyphicon glyphicon-pencil pull-right icon-button btn-edit" title="Edit profile"></span>
-                            <button type="submit" data-page-mode="edit" id="btn-save-profile" class="btn btn-primary pull-right">Save changes</button>
-                            <span data-page-mode="edit" id="btn-cancel-profile-edit" class="btn btn-default pull-right">Cancel</span>
-                        </div>
-                    {% endif %}
-
-                    {#        Profile picture       #}
-                    <div class="col-sm-3 height-fix">
-                        <div id="profile-pic-container">
-                        {% if profile.picture and profile.picture.url %}
-                            <div style="background-image: url('{{ profile.picture.url }}')"
-                                 class="profile-pic round-image">
-                            </div>
-                        {% else %}
-                            <div class="profile-pic round-image user-icon"></div>
-                        {% endif %}
-                        </div>
-
-                        {#        Profile picture upload controls       #}
+                <div class="col-sm-12">
+                    <div class="row">
                         {% if profile_user.id == user.id %}
-                            <div data-page-mode="edit" class="text-center">
+                            <div class="col-xs-12 col-sm-3 height-fix pull-right">
+                                <span data-page-mode="view" id="btn-edit-profile" class="glyphicon glyphicon-pencil pull-right icon-button icon-blue" title="Edit profile"></span>
+                                <button type="submit" data-page-mode="edit" id="btn-save-profile" class="btn btn-primary pull-right">Save changes</button>
+                                <span data-page-mode="edit" id="btn-cancel-profile-edit" class="btn btn-default pull-right">Cancel</span>
+                            </div>
+                        {% endif %}
+
+                        {#        Profile picture       #}
+                        <div class="col-sm-3 height-fix">
+                            <div id="profile-pic-container">
                             {% if profile.picture and profile.picture.url %}
-                                <div class="btn-file btn-update-picture">
-                                    <span class="glyphicon glyphicon-camera"></span>
-                                    <span>&nbsp;&nbsp;Update profile picture</span>
-                                    <input class="upload-picture" type="file" name="picture"></div>
-                                <button id="btn-delete-profile-pic" class="no-style icon-button btn-remove" data-toggle="modal"
-                                        data-target="#delete-picture" title="Delete profile picture"><span
-                                        class="glyphicon glyphicon-trash"></span>
-                                </button>
+                                <div style="background-image: url('{{ profile.picture.url }}')"
+                                     class="profile-pic round-image">
+                                </div>
                             {% else %}
-                                <fieldset>
-                                    <div class="btn-file btn-update-picture upload-picture"><span class="glyphicon glyphicon-camera"></span>
-                                        <span>&nbsp;&nbsp;Add a photo</span>
+                                <div class="profile-pic round-image user-icon"></div>
+                            {% endif %}
+                            </div>
+
+                            {#        Profile picture upload controls       #}
+                            {% if profile_user.id == user.id %}
+                                <div data-page-mode="edit" class="text-center">
+                                {% if profile.picture and profile.picture.url %}
+                                    <div class="btn-file btn-update-picture">
+                                        <span class="glyphicon glyphicon-camera"></span>
+                                        <span>&nbsp;&nbsp;Update profile picture</span>
                                         <input class="upload-picture" type="file" name="picture"></div>
-                                </fieldset>
-                            {% endif %}
-                            </div>
-                        {% endif %}
-
-                        {#        Password      #}
-                        {% if profile_user.id == user.id %}
-                        <div data-page-mode="edit">
-                            <hr>
-                            <div class="profile-picture-controls text-center">
-                                <div><a data-toggle="collapse" data-target="#change_password">Change password</a></div>
-
-                                <div id="change_password" class="collapse text-left">
+                                    <button id="btn-delete-profile-pic" class="no-style icon-button btn-remove" data-toggle="modal"
+                                            data-target="#delete-picture" title="Delete profile picture"><span
+                                            class="glyphicon glyphicon-trash"></span>
+                                    </button>
+                                {% else %}
                                     <fieldset>
-                                        <label>Password</label>
-                                        <input class="form-control" autocomplete="off" id="id_password1" name="password1"
-                                               placeholder="Password"
-                                               type="password">
-
-                                        <small class="text-muted">Leave blank unless you want to change your password</small>
+                                        <div class="btn-file btn-update-picture upload-picture"><span class="glyphicon glyphicon-camera"></span>
+                                            <span>&nbsp;&nbsp;Add a photo</span>
+                                            <input class="upload-picture" type="file" name="picture"></div>
                                     </fieldset>
-                                    <fieldset>
-                                        <label>Password (again)</label>
-                                        <input class="form-control" autocomplete="off" id="id_password2" name="password2"
-                                               placeholder="Password (again)" type="password">
-                                    </fieldset>
-                                    <hr>
+                                {% endif %}
                                 </div>
-
-                                {#        Account deactivation       #}
-                                <div><a data-toggle="modal" data-target="#deactivate-account-dialog">Deactivate account</a></div>
-                            </div>
-                        </div>
-                        {% endif %}
-                    </div>
-
-                    <div class="col-xs-12 col-sm-6">
-                        <div data-page-mode="view">
-                            {#        Name       #}
-                            {% if profile_user.first_name or profile_user.last_name %}
-                                <h2 class="page-title">{{ profile_user.first_name }} {% if profile.middle_name %}{{ profile.middle_name }}{% endif %} {{ profile_user.last_name }}</h2>
-                            {% else %}
-                                <h2 class="page-title">{{ profile_user.username }}</h2>
                             {% endif %}
 
-                            {#        Organization and Title       #}
-                            {% if profile.organization or profile.title %}
-                                <h4 class="text-muted">
-                                    {% if profile.organization %}{{ profile.organization }}{% endif %}
-                                    {% if profile.organization and profile.title %} | {% endif %}
-                                    {% if profile.title %}{{ profile.title }}{% endif %}
-                                </h4>
-                            {% endif %}
-
-                            {#        Subject areas       #}
-                            {% if profile.subject_areas or profile.profession %}
-                                <table class="overview">
-                                    <tbody>
-                                    {% if profile.subject_areas %}
-                                        <tr>
-                                            <td><span class="text-muted">Subject Areas: </span></td>
-                                            <td>{{ profile.subject_areas }}</td>
-                                        </tr>
-                                    {% endif %}
-                                    </tbody>
-                                </table>
-                            {% endif %}
-                        </div>
-                        {% if profile_user.id == user.id %}
-                        <div data-page-mode="edit">
-                            <div class="row">
-                                {# First name #}
-                                <fieldset class="col-sm-4">
-                                    <label>First name *</label>
-                                    <input class="form-control form-required" value="{{ profile_user.first_name }}" name="first_name">
-                                </fieldset>
-
-                                {# Middle name #}
-                                <fieldset class="col-sm-4">
-                                    <label>Middle name</label>
-                                    <input class="form-control" {% if profile.middle_name %}value="{{ profile.middle_name }}"{% endif %} name="middle_name">
-                                </fieldset>
-
-                                {# Last name #}
-                                <fieldset class="col-sm-4">
-                                    <label>Last name *</label>
-                                    <input class="form-control form-required" value="{{ profile_user.last_name }}" name="last_name">
-                                </fieldset>
-                            </div>
-
-                            <div class="row">
-                                {# Username #}
-                                <fieldset class="col-sm-4">
-                                    <label>Username *</label>
-                                    <input id="id_username" class="form-control form-required" value="{{ profile_user.username }}" name="username">
-                                    <small class="text-muted">Only letters, numbers, dashes or underscores.</small>
-                                </fieldset>
-                            </div>
-
-                            <div class="row">
-                                {# Organization #}
-                                <fieldset class="col-sm-6">
-                                    <label>Organization *</label>
-                                    <input class="form-control form-required" {% if profile.organization %}value="{{ profile.organization }}"{% endif %} name="organization">
-                                    <small class="text-muted">The name of the organization you work for.</small>
-                                </fieldset>
-
-                                {# Title #}
-                                <fieldset class="col-sm-6">
-                                    <label>Title</label>
-                                    <input class="form-control" {% if profile.title %}value="{{ profile.title }}"{% endif %} name="title">
-                                    <small class="text-muted">e.g. Assistant Professor, Program Director, Adjunct
-                                        Professor, Software Developer.
-                                    </small>
-                                </fieldset>
-                            </div>
-
-                            <div class="row">
-                                {# Subject areas #}
-                                <fieldset class="col-sm-12">
-                                    <label>Subject areas</label>
-                                    <input class="form-control" {% if profile.subject_areas %}value="{{ profile.subject_areas }}"{% endif %} name="subject_areas">
-                                    <small class="text-muted">A comma-separated list of subject areas you are interested
-                                        in researching. e.g. "Computer Science, Hydrology, Water Management"
-                                    </small>
-                                </fieldset>
-                            </div>
-                        </div>
-                        {% endif %}
-
-                        {#        CV       #}
-                        {% if profile_user.id == user.id %}
+                            {#        Password      #}
+                            {% if profile_user.id == user.id %}
                             <div data-page-mode="edit">
-                                <div>
-                                    {% if profile.cv and profile.cv.url %}
-                                        <hr>
-                                        <span><a href="{{ profile.cv.url }}" class="btn btn-default"
-                                                target="_blank"><span
-                                                class="glyphicon glyphicon-file"></span>View CV</a></span>
+                                <hr>
+                                <div class="profile-picture-controls text-center">
+                                    <div><a data-toggle="collapse" data-target="#change_password">Change password</a></div>
 
-                                        <div id="group-cv" class="btn-group text-center" role="group"
-                                             aria-label="CV">
-
-                                        <span class="btn-file icon-button btn-edit" title="Update CV">
-                                            <span class="glyphicon glyphicon-refresh"></span>
-                                            <input type="file" name="cv">
-                                        </span>
-                                            <button id="btn-delete-cv" class="no-style icon-button btn-remove" data-toggle="modal"
-                                                    data-target="#delete-cv" title="Delete CV"><span
-                                                    class="glyphicon glyphicon-trash"></span>
-                                            </button>
-                                        </div>
-                                    {% else %}
-                                        <hr>
+                                    <div id="change_password" class="collapse text-left">
                                         <fieldset>
-                                        <label>Add a CV</label>
-                                        <div class="input-group">
-                                            <span class="input-group-btn">
-                                                <span id="cv-custom-upload" class="btn btn-primary btn-file">
-                                                    Browse&hellip; <input type="file" name="cv">
-                                                </span>
-                                            </span>
-                                            <input type="text" class="form-control" readonly>
-                                        </div>
+                                            <label>Password</label>
+                                            <input class="form-control" autocomplete="off" id="id_password1" name="password1"
+                                                   placeholder="Password"
+                                                   type="password">
+
+                                            <small class="text-muted">Leave blank unless you want to change your password</small>
                                         </fieldset>
-                                    {% endif %}
+                                        <fieldset>
+                                            <label>Password (again)</label>
+                                            <input class="form-control" autocomplete="off" id="id_password2" name="password2"
+                                                   placeholder="Password (again)" type="password">
+                                        </fieldset>
+                                        <hr>
+                                    </div>
+
+                                    {#        Account deactivation       #}
+                                    <div><a data-toggle="modal" data-target="#deactivate-account-dialog">Deactivate account</a></div>
+
+                                    {# Account creation/deletion in iRODS user zone #}
+                                    <div id="irods-account-container">
+                                        {% if profile.create_irods_user_account %}
+                                            {# an iRODS account already exists #}
+                                            <a data-toggle="modal" data-target="#delete-irods-account-dialog">Delete your iRODS user account</a>
+                                        {% else %}
+                                            {# an iRODS account does not exist #}
+                                            <a data-toggle="modal" data-target="#create-irods-account-dialog">Create your iRODS user account</a>
+                                        {% endif %}
+                                    </div>
                                 </div>
                             </div>
-                        {% endif %}
+                            {% endif %}
+                        </div>
 
-                        {% if profile.cv and profile.cv.url %}
+                        <div class="col-xs-12 col-sm-6">
                             <div data-page-mode="view">
-                                <hr>
-                                <div><a href="{{ profile.cv.url }}" class="btn btn-default"
-                                                            target="_blank"><span
-                                        class="glyphicon glyphicon-file"></span>View CV</a></div>
+                                {#        Name       #}
+                                {% if profile_user.first_name or profile_user.last_name %}
+                                    <h2>{{ profile_user.first_name }} {% if profile.middle_name %}{{ profile.middle_name }}{% endif %} {{ profile_user.last_name }}</h2>
+                                {% else %}
+                                    <h2>{{ profile_user.username }}</h2>
+                                {% endif %}
+
+                                {#        Organization and Title       #}
+                                {% if profile.organization or profile.title %}
+                                    <h4 class="text-muted">
+                                        {% if profile.organization %}{{ profile.organization }}{% endif %}
+                                        {% if profile.organization and profile.title %} | {% endif %}
+                                        {% if profile.title %}{{ profile.title }}{% endif %}
+                                    </h4>
+                                {% endif %}
+
+                                {#        Subject areas       #}
+                                {% if profile.subject_areas or profile.profession %}
+                                    <table class="overview">
+                                        <tbody>
+                                        {% if profile.subject_areas %}
+                                            <tr>
+                                                <td><span class="text-muted">Subject Areas: </span></td>
+                                                <td>{{ profile.subject_areas }}</td>
+                                            </tr>
+                                        {% endif %}
+                                        </tbody>
+                                    </table>
+                                {% endif %}
                             </div>
-                        {% endif %}
+                            {% if profile_user.id == user.id %}
+                            <div data-page-mode="edit">
+                                <div class="row">
+                                    {# First name #}
+                                    <fieldset class="col-sm-4">
+                                        <label>First name *</label>
+                                        <input class="form-control form-required" value="{{ profile_user.first_name }}" name="first_name">
+                                    </fieldset>
+
+                                    {# Middle name #}
+                                    <fieldset class="col-sm-4">
+                                        <label>Middle name</label>
+                                        <input class="form-control" {% if profile.middle_name %}value="{{ profile.middle_name }}"{% endif %} name="middle_name">
+                                    </fieldset>
+
+                                    {# Last name #}
+                                    <fieldset class="col-sm-4">
+                                        <label>Last name *</label>
+                                        <input class="form-control form-required" value="{{ profile_user.last_name }}" name="last_name">
+                                    </fieldset>
+                                </div>
+
+                                <div class="row">
+                                    {# Username #}
+                                    <fieldset class="col-sm-4">
+                                        <label>Username *</label>
+                                        <input id="id_username" class="form-control form-required" value="{{ profile_user.username }}" name="username">
+                                        <small class="text-muted">Only letters, numbers, dashes or underscores.</small>
+                                    </fieldset>
+                                </div>
+
+                                <div class="row">
+                                    {# Organization #}
+                                    <fieldset class="col-sm-6">
+                                        <label>Organization *</label>
+                                        <input class="form-control form-required" {% if profile.organization %}value="{{ profile.organization }}"{% endif %} name="organization">
+                                        <small class="text-muted">The name of the organization you work for.</small>
+                                    </fieldset>
+
+                                    {# Title #}
+                                    <fieldset class="col-sm-6">
+                                        <label>Title</label>
+                                        <input class="form-control" {% if profile.title %}value="{{ profile.title }}"{% endif %} name="title">
+                                        <small class="text-muted">e.g. Assistant Professor, Program Director, Adjunct
+                                            Professor, Software Developer.
+                                        </small>
+                                    </fieldset>
+                                </div>
+
+                                <div class="row">
+                                    {# Subject areas #}
+                                    <fieldset class="col-sm-12">
+                                        <label>Subject areas</label>
+                                        <input class="form-control" {% if profile.subject_areas %}value="{{ profile.subject_areas }}"{% endif %} name="subject_areas">
+                                        <small class="text-muted">A comma-separated list of subject areas you are interested
+                                            in researching. e.g. "Computer Science, Hydrology, Water Management"
+                                        </small>
+                                    </fieldset>
+                                </div>
+                            </div>
+                            {% endif %}
+
+                            {#        CV       #}
+                            {% if profile_user.id == user.id %}
+                                <div data-page-mode="edit">
+                                    <div>
+                                        {% if profile.cv and profile.cv.url %}
+                                            <hr>
+                                            <span><a href="{{ profile.cv.url }}" class="btn btn-default"
+                                                    target="_blank"><span
+                                                    class="glyphicon glyphicon-file"></span>View CV</a></span>
+
+                                            <div id="group-cv" class="btn-group text-center" role="group"
+                                                 aria-label="CV">
+
+                                            <span class="btn-file icon-button icon-blue" title="Update CV">
+                                                <span class="glyphicon glyphicon-refresh"></span>
+                                                <input type="file" name="cv">
+                                            </span>
+                                                <button id="btn-delete-cv" class="no-style icon-button btn-remove" data-toggle="modal"
+                                                        data-target="#delete-cv" title="Delete CV"><span
+                                                        class="glyphicon glyphicon-trash"></span>
+                                                </button>
+                                            </div>
+                                        {% else %}
+                                            <hr>
+                                            <fieldset>
+                                            <label>Add a CV</label>
+                                            <div class="input-group">
+                                                <span class="input-group-btn">
+                                                    <span id="cv-custom-upload" class="btn btn-primary btn-file">
+                                                        Browse&hellip; <input type="file" name="cv">
+                                                    </span>
+                                                </span>
+                                                <input type="text" class="form-control" readonly>
+                                            </div>
+                                            </fieldset>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            {% endif %}
+
+                            {% if profile.cv and profile.cv.url %}
+                                <div data-page-mode="view">
+                                    <hr>
+                                    <div><a href="{{ profile.cv.url }}" class="btn btn-default"
+                                                                target="_blank"><span
+                                            class="glyphicon glyphicon-file"></span>View CV</a></div>
+                                </div>
+                            {% endif %}
+                        </div>
                     </div>
                 </div>
             </div>
 
-        </div>
+            <div class="full-width-tabs-container" id="user-profile-tabs">
+                <!-- Nav tabs -->
+                <ul class="nav nav-tabs full-width-tabs" role="tablist">
+                    <li role="presentation" class="active">
+                        <a href="#overview" aria-controls="home" role="tab"
+                           data-toggle="tab"><i class="glyphicon glyphicon-list-alt"></i> OVERVIEW</a></li>
+                    <li role="presentation">
+                        <a href="#contributions" aria-controls="profile" role="tab" data-toggle="tab">
+                            <i class="glyphicon glyphicon-file"></i> CONTRIBUTIONS</a>
+                    </li>
+                </ul>
 
-        <div class="full-width-tabs-container" id="user-profile-tabs">
-            <!-- Nav tabs -->
-            <ul class="nav nav-tabs full-width-tabs" role="tablist">
-                <li role="presentation" class="active">
-                    <a href="#overview" aria-controls="home" role="tab"
-                       data-toggle="tab"><i class="glyphicon glyphicon-list-alt"></i> OVERVIEW</a></li>
-                <li role="presentation">
-                    <a href="#contributions" aria-controls="profile" role="tab" data-toggle="tab">
-                        <i class="glyphicon glyphicon-file"></i> CONTRIBUTIONS</a>
-                </li>
-            </ul>
+                <!-- Tab panes -->
+                <div class="tab-content">
+                    <div role="tabpanel" class="tab-pane fade in active" id="overview">
+                        <div class="row">
+                            <div class="col-md-7">
+                                <div data-page-mode="on-edit-blur" class="panel panel-default">
+                                    <div class="panel-heading">
+                                        <h3 class="panel-title"><span class="glyphicon glyphicon-time">&nbsp;</span>Recent activity</h3>
+                                   </div>
+                                    <div class="panel-body">
+                                        {% if resources %}
 
-            <!-- Tab panes -->
-            <div class="tab-content">
-                <div role="tabpanel" class="tab-pane fade in active" id="overview">
-                    <div class="row">
-                        <div class="col-md-7">
-                            <div data-page-mode="on-edit-blur" class="panel panel-default">
-                                <div class="panel-heading">
-                                    <h3 class="panel-title"><span class="glyphicon glyphicon-time">&nbsp;</span>Recent activity</h3>
-                                </div>
-                                <div class="panel-body">
-                                    {% if resources %}
+                                        {% for res in resources reversed %}
+                                            {# Show only the last five #}
+                                            {% if forloop.counter0 < 5 %}
+                                            <div class="activity-block">
+                                                {% if profile.picture and profile.picture.url %}
+                                                    <div style="background-image: url('{{ profile.picture.url }}');"
+                                                         class="profile-pic-thumbnail round-image pull-left">
+                                                    </div>
+                                                {% else %}
+                                                    <div class="profile-pic-thumbnail round-image user-icon"></div>
+                                                {% endif %}
 
-                                    {% for res in resources reversed %}
-                                        {# Show only the last five #}
-                                        {% if forloop.counter0 < 5 %}
-                                        <div class="activity-block">
-                                            {% if profile.picture and profile.picture.url %}
-                                                <div style="background-image: url('{{ profile.picture.url }}');"
-                                                     class="profile-pic-thumbnail round-image pull-left">
+                                                <div class="metadata-wrapper">
+                                                    <div class="shared-resource-info">
+                                                        <strong>{{ profile_user|contact|safe }}</strong>
+                                                        <span class="text-muted"> shared </span>
+                                                        <span><a href="{{ res.get_absolute_url }}">{{ res.metadata.title }}</a></span>
+                                                    </div>
+                                                    <h5><span class="text-muted">Resource type: </span>{{ res|resource_type }}</h5>
+                                                    <h5><span class="text-muted">Date: </span>{{ res.created }}</h5>
                                                 </div>
-                                            {% else %}
-                                                <div class="profile-pic-thumbnail round-image user-icon"></div>
+
+                                                {% if res.metadata.description %}
+                                                    <div class="activity-description col-sm-12">
+                                                        <p class="description">
+                                                            <strong>ABSTRACT: </strong>{{ res.metadata.description|linebreaks }}
+                                                        </p>
+                                                    </div>
+                                                    <div class="show-more-btn btn-default" title="Show abstract">···</div>
+                                                {% endif %}
+                                            </div>
+                                            {% endif %}
+                                        {% endfor %}
+
+                                        {% else %}
+                                            <span class="text-muted">This user has no recent activity.</span>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="col-md-5">
+                                {#        DESCRIPTION       #}
+                                {% if not user.is_anonymous %}
+                                <div class="panel panel-default">
+                                    <div class="panel-heading">
+                                        <h3 class="panel-title">
+                                            <span class="glyphicon glyphicon-user">&nbsp;</span>About {{ profile_user.first_name }}
+                                        </h3>
+                                    </div>
+
+                                    <div class="panel-body">
+                                        <div data-page-mode="view">
+                                            {% if profile.details %}<div id="profile-description">{{ profile.details }}</div><hr>{% endif %}
+
+                                            <table class="overview" data-page-mode="view">
+                                                <tbody>
+                                                {% if profile.user_type and profile.user_type != "Unspecified"%}
+                                                    <tr>
+                                                        <td><span class="text-muted">User type</span></td>
+                                                        <td id="db-user-type">{{ profile.user_type }}</td>
+                                                    </tr>
+                                                {% endif %}
+                                                {% if profile.country and profile.country != "Unspecified" %}
+                                                    <tr>
+                                                        <td><span class="text-muted">Country</span></td>
+                                                        <td>{{ profile.country }}</td>
+                                                    </tr>
+                                                {% endif %}
+                                                {% if profile.state and profile.state != "Unspecified"%}
+                                                    <tr>
+                                                        <td><span class="text-muted">State/Province</span></td>
+                                                        <td>{{ profile.state }}</td>
+                                                    </tr>
+                                                {% endif %}
+                                                <tr>
+                                                    <td><span class="text-muted">User since</span></td>
+                                                    <td>{{ profile_user.date_joined }}</td>
+                                                </tr>
+                                                </tbody>
+                                            </table>
+                                            {% if profile_user.id == user.id %}
+                                                {% if profile.create_irods_user_account %}
+                                                    <div class="text-muted">You have created an associated iRODS account (username: <strong>{{ profile_user.username }}</strong>) in HydroShare user zone (<strong>users.hydroshare.org</strong>). </div>
+                                                {% else %}
+                                                    <div class="text-muted">You have not created an associated iRODS account in HydroShare user zone (<strong>users.hydroshare.org</strong>). </div>
+                                                {% endif %}
+                                            {% endif %}    
+                                        </div>
+
+                                        {% if profile_user.id == user.id %}
+                                        <div data-page-mode="edit">
+                                            {#        Description       #}
+                                            <fieldset>
+                                                <label>Description</label>
+                                                <textarea class="form-control"
+                                                          name="details" rows="4" >{% if profile.details %}{{ profile.details }}{% endif %}</textarea>
+                                            </fieldset>
+
+                                            <hr>
+
+                                            {#        User Type       #}
+                                            <fieldset>
+                                                <label for="selectUserType">User type *</label>
+                                                <select name="user_type" class="form-control form-required" id="selectUserType">
+                                                    <option value="Unspecified">Unspecified</option>
+                                                    <option value="University Faculty">University Faculty</option>
+                                                    <option value="University Professional or Research Staff">University Professional or Research Staff</option>
+                                                    <option value="Post-Doctoral Fellow">Post-Doctoral Fellow</option>
+                                                    <option value="University Graduate Student">University Graduate Student</option>
+                                                    <option value="University Undergraduate Student">University Undergraduate Student</option>
+                                                    <option value="Commercial/Professional">Commercial/Professional</option>
+                                                    <option value="Government Official">Government Official</option>
+                                                    <option value="School Student Kindergarten to 12th Grade">School Student Kindergarten to 12th Grade</option>
+                                                    <option value="School Teacher Kindergarten to 12th Grade">School Teacher Kindergarten to 12th Grade</option>
+                                                    <option value="Other">Other</option>
+                                                </select>
+                                            </fieldset>
+
+                                            {#        User Type - Other       #}
+                                            <fieldset id="user-type-other">
+                                                <label>Specify: *</label>
+                                                <input name="user_type" class="form-control">
+                                            </fieldset>
+
+                                            {#        Country       #}
+                                            <fieldset>
+                                                <label>Country *</label>
+                                                <select name="country" class="form-control form-required input-medium bfh-countries" data-country="{{ profile.country }}"></select>
+                                            </fieldset>
+
+                                            {#        State       #}
+                                            <fieldset>
+                                                <label>State/Province *</label>
+                                                <input name="state" class="form-control form-required" {% if  profile.state %}value="{{ profile.state }}"{% else %}value="Unspecified"{% endif %}>
+                                            </fieldset>
+
+                                            {#        Date Joined       #}
+                                            <fieldset>
+                                                <label>User since</label>
+                                                <input readonly class="form-control" value='{{ profile_user.date_joined }}'>
+                                            </fieldset>
+                                        </div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                {% endif %}
+
+                                {#  CONTACT #}
+                                {% if profile.public or profile_user.id == user.id and not user.is_anonymous %} {# Show only if profile is public and user is logged in #}
+                                    <div class="panel panel-default">
+                                        <div class="panel-heading">
+                                            <h3 class="panel-title"><span
+                                                    class="glyphicon glyphicon-phone-alt">&nbsp;</span>Contact</h3>
+                                        </div>
+
+                                        <div class="panel-body">
+                                            <table class="overview" data-page-mode="view">
+                                                <tbody>
+                                                {#        Phone 1       #}
+                                                {% if profile.phone_1 %}
+                                                    <tr>
+                                                        <td><span class="text-muted">{% if profile.phone_1_type %}
+                                                            {{ profile.phone_1_type }}{% else %}Phone{% endif %}</span></td>
+                                                        <td>{{ profile.phone_1 }}</td>
+                                                    </tr>
+                                                {% endif %}
+
+                                                {#        Phone 2       #}
+                                                {% if profile.phone_2 %}
+                                                    <tr>
+                                                        <td><span class="text-muted">{{ profile.phone_2_type }}</span></td>
+                                                        <td>{{ profile.phone_2 }}</td>
+                                                    </tr>
+                                                {% endif %}
+
+                                                {#        Email       #}
+                                                {% if profile_user.email %}
+                                                    {% if not user.is_anonymous %}
+                                                        <tr>
+                                                            <td><span class="text-muted">Email</span></td>
+                                                            <td>
+                                                                <a href="mailto:{{ profile_user.email }}" target="_blank">send email to
+                                                                    {% if profile_user.first_name or profile_user.last_name %}
+                                                                        {{ profile_user.first_name }}
+                                                                        {{ profile_user.last_name }}
+                                                                    {% else %}
+                                                                        {{ profile_user.username }}
+                                                                    {% endif %}
+                                                                </a>
+                                                            </td>
+                                                        </tr>
+                                                    {% else %}
+                                                        <tr>
+                                                            <td><span class="text-muted">Email</span></td>
+                                                            <td>(<a href="/accounts/login/">Log in to send email</a>)</td>
+                                                        </tr>
+                                                    {% endif %}
+                                                {% endif %}
+
+                                                {#        Website       #}
+                                                {% if profile.website %}
+                                                        <tr>
+                                                            <td><span class="text-muted">Website</span></td>
+                                                            <td><a href="{{ profile.website }}" target="_blank">{{ profile.website }}</a></td>
+                                                        </tr>
+                                                {% endif %}
+                                                </tbody>
+                                            </table>
+
+                                            {% if profile_user.id == user.id %}
+                                            <div class="row" data-page-mode="edit">
+                                                <fieldset>
+                                                    <div class="col-sm-12"><label>Phone 1</label></div>
+
+                                                    <div class="col-sm-6">
+                                                        <select name="phone_1_type" class="form-control">
+                                                            <option {% if profile.phone_1_type == "Mobile" %}selected{% endif %}
+                                                                    value="Mobile">Mobile
+                                                            </option>
+                                                            <option {% if profile.phone_1_type == "Home" %}selected{% endif %} value="Home">
+                                                                Home
+                                                            </option>
+                                                            <option {% if profile.phone_1_type == "Work" %}selected{% endif %} value="Work">
+                                                                Work
+                                                            </option>
+                                                        </select>
+                                                    </div>
+                                                    <div class="col-sm-6">
+                                                        <input id="phone1" name="phone_1" class="form-control phone" {% if profile.phone_1 %}value="{{ profile.phone_1 }}"{% endif %}>
+                                                    </div>
+                                                </fieldset>
+
+                                                <fieldset>
+                                                    <div class="col-sm-12"><label>Phone 2</label></div>
+
+                                                    <div class="col-sm-6">
+                                                        <select name="phone_2_type" class="form-control">
+                                                            <option {% if profile.phone_2_type == "Mobile" %}selected{% endif %}
+                                                                    value="Mobile">Mobile
+                                                            </option>
+                                                            <option {% if profile.phone_2_type == "Home" %}selected{% endif %} value="Home">
+                                                                Home
+                                                            </option>
+                                                            <option {% if profile.phone_2_type == "Work" %}selected{% endif %} value="Work">
+                                                                Work
+                                                            </option>
+                                                        </select>
+                                                    </div>
+                                                    <div class="col-sm-6">
+                                                        <input id="phone2" name="phone_2" class="form-control phone" {% if profile.phone_2 %}value="{{ profile.phone_2 }}"{% endif %}>
+                                                    </div>
+                                                </fieldset>
+                                                <fieldset class="col-sm-12">
+                                                    <label>Email address *</label>
+                                                    <input class="form-control form-required" id="id_email"
+                                                           value="{{ profile_user.email }}" name="email">
+                                                </fieldset>
+
+                                                <fieldset class="col-sm-12">
+                                                    <label>Website</label>
+                                                    <input class="form-control"
+                                                           {% if profile.website %}value="{{ profile.website }}"{% endif %} name="website">
+                                                </fieldset>
+                                            </div>
+                                            {% endif %}
+                                    </div>
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+
+                    <div role="tabpanel" class="tab-pane fade" id="contributions">
+                        <div class="row" data-page-mode='on-edit-blur'>
+                            <div class="col-sm-12"><legend>Resources</legend></div>
+                            <div class="col-sm-12 col-md-3">
+                                <table class="table-user-contributions table table-hover">
+                                    <tbody>
+                                        <tr id="badge-all" class="active" data-type="all">
+                                            <td><span>All</span></td>
+                                            <td><span class="badge">0</span></td>
+                                        </tr>
+                                        <tr id="badge-generic" data-type="type-Generic">
+                                            <td><span>Generic</span></td>
+                                            <td><span class="badge">0</span></td>
+                                        </tr>
+                                         <tr id="badge-geographic-feature" data-type="type-Geographic Feature (ESRI Shapefiles)">
+                                            <td><span>Geographic Feature</span></td>
+                                            <td><span class="badge">0</span></td>
+                                        </tr>
+                                        <tr id="badge-geographic" data-type="type-Geographic Raster">
+                                            <td><span>Geographic Raster</span></td>
+                                            <td><span class="badge">0</span></td>
+                                        </tr>
+                                        <tr id="badge-his" data-type="type-HIS Referenced Time Series">
+                                            <td><span>HIS Referenced Time Series</span></td>
+                                            <td><span class="badge">0</span></td>
+                                        </tr>
+                                        <tr id="badge-model-instance" data-type="type-Model Instance Resource">
+                                            <td><span>Model Instance</span></td>
+                                            <td><span class="badge">0</span></td>
+                                        </tr>
+                                        <tr id="badge-model-program" data-type="type-Model Program Resource">
+                                            <td><span>Model Program</span></td>
+                                            <td><span class="badge">0</span></td>
+                                        </tr>
+                                        <tr id="badge-multidimensional" data-type="type-Multidimensional (NetCDF)">
+                                            <td><span>Multidimensional (NetCDF)</span></td>
+                                            <td><span class="badge">0</span></td>
+                                        </tr>
+                                        <tr id="badge-script" data-type="type-Script Resource">
+                                            <td><span>Script Resource</span></td>
+                                            <td><span class="badge">0</span></td>
+                                        </tr>
+                                        <tr id="badge-swat" data-type="type-SWAT Model Instance Resource">
+                                            <td><span>SWAT Model Instance</span></td>
+                                            <td><span class="badge">0</span></td>
+                                        </tr>
+                                        <tr id="badge-time-series" data-type="type-Time Series">
+                                            <td><span>Time Series</span></td>
+                                            <td><span class="badge">0</span></td>
+                                        </tr>
+                                        <tr id="badge-web-app" data-type="type-Web App Resource">
+                                            <td><span>Web App</span></td>
+                                            <td><span class="badge">0</span></td>
+                                        </tr>
+                                        <tr id="badge-collection" data-type="type-Collection Resource">
+                                            <td><span>Collection</span></td>
+                                            <td><span class="badge">0</span></td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                            <div class="col-sm-12 col-md-9">
+                                {% if resources %}
+                                {% for res in resources %}
+                                    <div data-type="type-{{ res|resource_type }}" class="contribution">
+                                        <div class="icon-resource-type-wrapper">
+                                        <span class="icon-resource-type">
+                                            <span><strong>{{ res|resource_type }}</strong></span>
+                                            {% if res|resource_type == "Generic" %}
+                                                <img src="{{ STATIC_URL }}img/resource-icons/generic48x48.png"
+                                                     alt="{{ res|resource_type }}"
+                                                     title="{{ res|resource_type }}"/>
+                                            {% elif res|resource_type == "Geographic Raster" %}
+                                                <img src="{{ STATIC_URL }}img/resource-icons/geographicraster48x48.png"
+                                                     alt="{{ res|resource_type }}"
+                                                     title="{{ res|resource_type }}"/>
+                                            {% elif res|resource_type == "HIS Referenced Time Series" %}
+                                                <img src="{{ STATIC_URL }}img/resource-icons/his48x48.png"
+                                                     alt="{{ res|resource_type }}"
+                                                     title="{{ res|resource_type }}"/>
+                                            {% elif res|resource_type == "Script Resource" %}
+                                                <img src="{{ STATIC_URL }}img/resource-icons/script48x48.png"
+                                                     alt="{{ res|resource_type }}"
+                                                     title="{{ res|resource_type }}"/>
+                                            {% elif res|resource_type == "Model Program Resource" %}
+                                                <img src="{{ STATIC_URL }}img/resource-icons/modelprogram48x48.png"
+                                                     alt="{{ res|resource_type }}"
+                                                     title="{{ res|resource_type }}"/>
+                                            {% elif res|resource_type == "Model Instance Resource" %}
+                                                <img src="{{ STATIC_URL }}img/resource-icons/modelinstance48x48.png"
+                                                     alt="{{ res|resource_type }}"
+                                                     title="{{ res|resource_type }}"/>
+                                            {% elif res|resource_type == "SWAT Model Instance Resource" %}
+                                                <img src="{{ STATIC_URL }}img/resource-icons/swat48x48.png"
+                                                     alt="{{ res|resource_type }}"
+                                                     title="{{ res|resource_type }}"/>
+                                            {% elif res|resource_type == "Multidimensional (NetCDF)" %}
+                                                <img src="{{ STATIC_URL }}img/resource-icons/multidimensional48x48.png"
+                                                     alt="{{ res|resource_type }}"
+                                                     title="{{ res|resource_type }}"/>
+                                            {% elif res|resource_type == "Time Series" %}
+                                                <img src="{{ STATIC_URL }}img/resource-icons/timeseries48x48.png"
+                                                     alt="{{ res|resource_type }}"
+                                                     title="{{ res|resource_type }}"/>
+                                            {% elif res|resource_type == "Geographic Feature (ESRI Shapefiles)" %}
+                                                <img src="{{ STATIC_URL }}img/resource-icons/geographicfeature48x48.png"
+                                                     alt="{{ res|resource_type }}"
+                                                     title="{{ res|resource_type }}"/>
+                                            {% elif res|resource_type == "Web App Resource" %}
+                                                <img src="{{ STATIC_URL }}img/resource-icons/webapp48x48.png"
+                                                     alt="{{ res|resource_type }}"
+                                                     title="{{ res|resource_type }}"/>
+
+                                            {% elif res|resource_type == "Collection Resource" %}
+                                                <img src="{{ STATIC_URL }}img/resource-icons/collection48x48.png"
+                                                     alt="{{ res|resource_type }}"
+                                                     title="{{ res|resource_type }}"/>
                                             {% endif %}
 
-                                            <div class="metadata-wrapper">
-                                                <div class="shared-resource-info">
-                                                    {% if profile_user.first_name or profile.middle_name or profile_user.last_name %}
-                                                        <strong>{% if profile_user.first_name %} {{ profile_user.first_name }}{% endif %} {% if profile.middle_name %} {{ profile.middle_name }} {% endif %} {% if profile_user.last_name %} {{ profile_user.last_name }}{% endif %}</strong>
-                                                    {% else %}
-                                                        <strong>{{ profile_user.username }}</strong>
-                                                    {% endif %}
-
-                                                    <span class="text-muted"> shared </span>
-                                                    <span><a href="{{ res.get_absolute_url }}">{{ res.metadata.title }}</a></span>
-                                                </div>
-                                                <h5><span class="text-muted">Resource type: </span>{{ res|resource_type }}</h5>
-                                                <h5><span class="text-muted">Date: </span>{{ res.created }}</h5>
+                                        </span>
+                                        </div>
+                                        <div class="activity-block row">
+                                            <div class="activity-info col-sm-12">
+                                                <span class="title"><a href="{{ res.get_absolute_url }}">{{ res.metadata.title }}</a></span>
+                                                <h5><span class="text-muted">Created: </span>{{ res.created }}</h5>
+                                                <h5><span class="text-muted">Authors: </span>
+                                                    {% for creator in res.metadata.creators.all %}
+                                                        {% if forloop.counter0 != 0 %}<span> · </span>{% endif %}
+                                                        {% if creator.description %}
+                                                            <a href="{{ creator.description }}">{{ creator.name }}</a>
+                                                        {% else %}
+                                                            <span>{{ creator.name }}</span>
+                                                        {% endif %}
+                                                    {% endfor %}
+                                                </h5>
                                             </div>
 
                                             {% if res.metadata.description %}
                                                 <div class="activity-description col-sm-12">
-                                                    <p class="description">
+                                                    <p>
                                                         <strong>ABSTRACT: </strong>{{ res.metadata.description|linebreaks }}
                                                     </p>
                                                 </div>
-                                                <div class="show-more-btn btn-default" title="Show abstract">···</div>
+                                                <div class="show-more-btn btn-default" title="Show more">···</div>
                                             {% endif %}
+
                                         </div>
-                                        {% endif %}
-                                    {% endfor %}
-
-                                    {% else %}
-                                        <span class="text-muted">This user has no recent activity.</span>
-                                    {% endif %}
-                                </div>
+                                    </div>
+                                {% endfor %}
+                                {% else %}
+                                    <span class="text-muted">This user has not shared any resources.</span>
+                                {% endif %}
                             </div>
                         </div>
+                    </div>
+                </div>
+            </div>
 
-                        <div class="col-md-5">
-                            {#        DESCRIPTION       #}
-                            {% if not user.is_anonymous %}
-                            <div class="panel panel-default">
-                                <div class="panel-heading">
-                                    <h3 class="panel-title">
-                                        <span class="glyphicon glyphicon-user">&nbsp;</span>About {{ profile_user.first_name }}
-                                    </h3>
+            {% if profile_user.id == user.id %}
+            <!-- Deactivate Account Modal -->
+            <div class="modal fade" id="deactivate-account-dialog" tabindex="-1" role="dialog"
+                 aria-labelledby="Deactivate account">
+                <div class="modal-dialog" role="document">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <button type="button" class="close" data-dismiss="modal"
+                                    aria-label="Close"><span aria-hidden="true">&times;</span>
+                            </button>
+                            <h4 class="modal-title" id="myModalLabel">Deactivate Account</h4>
+                        </div>
+                        <div class="modal-body">
+                            <div class="row">
+                                <div class="col-sm-2 col-xs-12 text-center">
+                                    <span id="icon-warning" class="glyphicon glyphicon-warning-sign"></span>
                                 </div>
-
-                                <div class="panel-body">
-                                    <div data-page-mode="view">
-                                        {% if profile.details %}<div id="profile-description">{{ profile.details }}</div><hr>{% endif %}
-
-                                        <table class="overview" data-page-mode="view">
-                                            <tbody>
-                                            {% if profile.user_type and profile.user_type != "Unspecified"%}
-                                                <tr>
-                                                    <td><span class="text-muted">User type</span></td>
-                                                    <td id="db-user-type">{{ profile.user_type }}</td>
-                                                </tr>
-                                            {% endif %}
-                                            {% if profile.country and profile.country != "Unspecified" %}
-                                                <tr>
-                                                    <td><span class="text-muted">Country</span></td>
-                                                    <td>{{ profile.country }}</td>
-                                                </tr>
-                                            {% endif %}
-                                            {% if profile.state and profile.state != "Unspecified"%}
-                                                <tr>
-                                                    <td><span class="text-muted">State/Province</span></td>
-                                                    <td>{{ profile.state }}</td>
-                                                </tr>
-                                            {% endif %}
-                                            <tr>
-                                                <td><span class="text-muted">User since</span></td>
-                                                <td>{{ profile_user.date_joined }}</td>
-                                            </tr>
-                                            </tbody>
-                                        </table>
+                                <div class="col-sm-10 col-xs-12">
+                                    <div><strong>WARNING</strong>: This will <strong><u>permanently</u></strong> disable your account. You cannot undo
+                                        this action. Please note that if you do choose to disable your account, your Resources
+                                        will remain in HydroShare and will be accessible to anyone who currently has access. If
+                                        you wish to remove your resources from HydroShare, you should do so <u>before</u> disabling
+                                        your account.
                                     </div>
 
-                                    {% if profile_user.id == user.id %}
-                                    <div data-page-mode="edit">
-                                        {#        Description       #}
-                                        <fieldset>
-                                            <label>Description</label>
-                                            <textarea class="form-control"
-                                                      name="details" rows="4" >{% if profile.details %}{{ profile.details }}{% endif %}</textarea>
-                                        </fieldset>
-
-                                        <hr>
-
-                                        {#        User Type       #}
-                                        <fieldset>
-                                            <label for="selectUserType">User type *</label>
-                                            <select name="user_type" class="form-control form-required" id="selectUserType">
-                                                <option value="Unspecified">Unspecified</option>
-                                                <option value="University Faculty">University Faculty</option>
-                                                <option value="University Professional or Research Staff">University Professional or Research Staff</option>
-                                                <option value="Post-Doctoral Fellow">Post-Doctoral Fellow</option>
-                                                <option value="University Graduate Student">University Graduate Student</option>
-                                                <option value="University Undergraduate Student">University Undergraduate Student</option>
-                                                <option value="Commercial/Professional">Commercial/Professional</option>
-                                                <option value="Government Official">Government Official</option>
-                                                <option value="School Student Kindergarten to 12th Grade">School Student Kindergarten to 12th Grade</option>
-                                                <option value="School Teacher Kindergarten to 12th Grade">School Teacher Kindergarten to 12th Grade</option>
-                                                <option value="Other">Other</option>
-                                            </select>
-                                        </fieldset>
-
-                                        {#        User Type - Other       #}
-                                        <fieldset id="user-type-other">
-                                            <label>Specify: *</label>
-                                            <input name="user_type" class="form-control">
-                                        </fieldset>
-
-                                        {#        Country       #}
-                                        <fieldset>
-                                            <label>Country *</label>
-                                            <select name="country" class="form-control form-required input-medium bfh-countries" data-country="{{ profile.country }}"></select>
-                                        </fieldset>
-
-                                        {#        State       #}
-                                        <fieldset>
-                                            <label>State/Province *</label>
-                                            <input name="state" class="form-control form-required" {% if  profile.state %}value="{{ profile.state }}"{% else %}value="Unspecified"{% endif %}>
-                                        </fieldset>
-
-                                        {#        Date Joined       #}
-                                        <fieldset>
-                                            <label>User since</label>
-                                            <input readonly class="form-control" value='{{ profile_user.date_joined }}'>
-                                        </fieldset>
-                                    </div>
-                                    {% endif %}
                                 </div>
                             </div>
-                            {% endif %}
 
-                            {#  CONTACT #}
-                            {% if profile.public or profile_user.id == user.id and not user.is_anonymous %} {# Show only if profile is public and user is logged in #}
-                                <div class="panel panel-default">
-                                    <div class="panel-heading">
-                                        <h3 class="panel-title"><span
-                                                class="glyphicon glyphicon-phone-alt">&nbsp;</span>Contact</h3>
-                                    </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+                            <a href="{% url 'deactivate_account' %}" class="btn btn-danger">Confirm</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
 
-                                    <div class="panel-body">
-                                        <table class="overview" data-page-mode="view">
-                                            <tbody>
-                                            {#        Phone 1       #}
-                                            {% if profile.phone_1 %}
-                                                <tr>
-                                                    <td><span class="text-muted">{% if profile.phone_1_type %}
-                                                        {{ profile.phone_1_type }}{% else %}Phone{% endif %}</span></td>
-                                                    <td>{{ profile.phone_1 }}</td>
-                                                </tr>
-                                            {% endif %}
+            <!-- Delete picture modal -->
+            <div class="modal fade" id="delete-picture" tabindex="-1" role="dialog"
+                 aria-labelledby="deleteProfilePicture">
+                <div class="modal-dialog" role="document">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <button type="button" class="close" data-dismiss="modal"
+                                    aria-label="Close"><span aria-hidden="true">&times;</span>
+                            </button>
+                            <h4 class="modal-title" id="deleteProfilePicture">Delete profile picture</h4>
+                        </div>
+                        <div class="modal-body">
+                            Are you sure you want to delete your profile picture?
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-default" data-dismiss="modal">
+                                Close
+                            </button>
+                            <button class="btn btn-primary" id="picture-clear_id" name="picture-clear"
+                                    title="Delete profile picture"
+                                    value="clear">Confirm
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
 
-                                            {#        Phone 2       #}
-                                            {% if profile.phone_2 %}
-                                                <tr>
-                                                    <td><span class="text-muted">{{ profile.phone_2_type }}</span></td>
-                                                    <td>{{ profile.phone_2 }}</td>
-                                                </tr>
-                                            {% endif %}
+            <!-- Delete CV modal -->
+            <div class="modal fade" id="delete-cv" tabindex="-1" role="dialog"
+                 aria-labelledby="deleteCV">
+                <div class="modal-dialog" role="document">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <button type="button" class="close" data-dismiss="modal"
+                                    aria-label="Close"><span aria-hidden="true">&times;</span>
+                            </button>
+                            <h4 class="modal-title" id="deleteCV">Delete CV</h4>
+                        </div>
+                        <div class="modal-body">
+                            Are you sure you want to delete your CV?
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-default" data-dismiss="modal">
+                                Close
+                            </button>
+                            <button class="btn btn-primary" id="cv-clear_id" name="cv-clear"
+                                    title="Delete CV"
+                                    value="clear">Confirm
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
 
-                                            {#        Email       #}
-                                            {% if profile_user.email %}
-                                                {% if not user.is_anonymous %}
-                                                    <tr>
-                                                        <td><span class="text-muted">Email</span></td>
-                                                        <td>
-                                                            <a href="mailto:{{ profile_user.email }}" target="_blank">send email to
-                                                                {% if profile_user.first_name or profile_user.last_name %}
-                                                                    {{ profile_user.first_name }}
-                                                                    {{ profile_user.last_name }}
-                                                                {% else %}
-                                                                    {{ profile_user.username }}
-                                                                {% endif %}
-                                                            </a>
-                                                        </td>
-                                                    </tr>
-                                                {% else %}
-                                                    <tr>
-                                                        <td><span class="text-muted">Email</span></td>
-                                                        <td>(<a href="/accounts/login/">Log in to send email</a>)</td>
-                                                    </tr>
-                                                {% endif %}
-                                            {% endif %}
-
-                                            {#        Website       #}
-                                            {% if profile.website %}
-                                                    <tr>
-                                                        <td><span class="text-muted">Website</span></td>
-                                                        <td><a href="{{ profile.website }}" target="_blank">{{ profile.website }}</a></td>
-                                                    </tr>
-                                            {% endif %}
-                                            </tbody>
-                                        </table>
-
-                                        {% if profile_user.id == user.id %}
-                                        <div class="row" data-page-mode="edit">
-                                            <fieldset>
-                                                <div class="col-sm-12"><label>Phone 1</label></div>
-
-                                                <div class="col-sm-6">
-                                                    <select name="phone_1_type" class="form-control">
-                                                        <option {% if profile.phone_1_type == "Mobile" %}selected{% endif %}
-                                                                value="Mobile">Mobile
-                                                        </option>
-                                                        <option {% if profile.phone_1_type == "Home" %}selected{% endif %} value="Home">
-                                                            Home
-                                                        </option>
-                                                        <option {% if profile.phone_1_type == "Work" %}selected{% endif %} value="Work">
-                                                            Work
-                                                        </option>
-                                                    </select>
-                                                </div>
-                                                <div class="col-sm-6">
-                                                    <input id="phone1" name="phone_1" class="form-control phone" {% if profile.phone_1 %}value="{{ profile.phone_1 }}"{% endif %}>
-                                                </div>
-                                            </fieldset>
-
-                                            <fieldset>
-                                                <div class="col-sm-12"><label>Phone 2</label></div>
-
-                                                <div class="col-sm-6">
-                                                    <select name="phone_2_type" class="form-control">
-                                                        <option {% if profile.phone_2_type == "Mobile" %}selected{% endif %}
-                                                                value="Mobile">Mobile
-                                                        </option>
-                                                        <option {% if profile.phone_2_type == "Home" %}selected{% endif %} value="Home">
-                                                            Home
-                                                        </option>
-                                                        <option {% if profile.phone_2_type == "Work" %}selected{% endif %} value="Work">
-                                                            Work
-                                                        </option>
-                                                    </select>
-                                                </div>
-                                                <div class="col-sm-6">
-                                                    <input id="phone2" name="phone_2" class="form-control phone" {% if profile.phone_2 %}value="{{ profile.phone_2 }}"{% endif %}>
-                                                </div>
-                                            </fieldset>
-                                            <fieldset class="col-sm-12">
-                                                <label>Email address *</label>
-                                                <input class="form-control form-required" id="id_email"
-                                                       value="{{ profile_user.email }}" name="email">
-                                            </fieldset>
-
-                                            <fieldset class="col-sm-12">
-                                                <label>Website</label>
-                                                <input class="form-control"
-                                                       {% if profile.website %}value="{{ profile.website }}"{% endif %} name="website">
-                                            </fieldset>
+            <!-- Create iRODS User Account Modal -->
+            <div class="modal fade" id="create-irods-account-dialog" tabindex="-1" role="dialog"
+                 aria-labelledby="myModalLabel" aria-hidden="true">
+                <div class="modal-dialog modal-sm">
+                    <div class="modal-content">
+                        <form role="form" method="post">
+                            <div class="modal-header">
+                                <button type="button" class="close" data-dismiss="modal"
+                                        aria-label="Close"><span aria-hidden="true">&times;</span>
+                                </button>
+                                <h4 class="modal-title" id="myModalLabel">Create your iRODS user account</h4>
+                            </div>
+                            <div class="modal-body">
+                                {% csrf_token %}
+                                <div class="row">
+                                    <div class="col-sm-10 col-xs-12">
+                                        <div>A corresponding iRODS user account with the same username <strong>{{ profile_user.username }}</strong> will be created
+                                            in the HydroShare user zone when you confirm this action. You will have to input a password below for your
+                                            iRODS user account, which does not have to be the same as your current HydroShare password. <strong>The password
+                                            is required to be composed of at least 8 characters.</strong> Please keep your iRODS user account password in a
+                                            secure place and use it to access your account in the HydroShare user zone using iRODS clients such as icommands or Cyberduck.
                                         </div>
-                                        {% endif %}
-                                </div>
-                            </div>
-                            {% endif %}
-                        </div>
-                    </div>
-                </div>
-
-                <div role="tabpanel" class="tab-pane fade" id="contributions">
-                    <div class="row" data-page-mode='on-edit-blur'>
-                        <div class="col-sm-12"><legend>Resources</legend></div>
-                        <div class="col-sm-12 col-md-3">
-                            <table class="table-user-contributions table table-hover">
-                                <tbody>
-                                    <tr id="badge-all" class="active" data-type="all">
-                                        <td><span>All</span></td>
-                                        <td><span class="badge">0</span></td>
-                                    </tr>
-                                    <tr id="badge-generic" data-type="type-Generic">
-                                        <td><span>Generic</span></td>
-                                        <td><span class="badge">0</span></td>
-                                    </tr>
-                                     <tr id="badge-geographic-feature" data-type="type-Geographic Feature (ESRI Shapefiles)">
-                                        <td><span>Geographic Feature</span></td>
-                                        <td><span class="badge">0</span></td>
-                                    </tr>
-                                    <tr id="badge-geographic" data-type="type-Geographic Raster">
-                                        <td><span>Geographic Raster</span></td>
-                                        <td><span class="badge">0</span></td>
-                                    </tr>
-                                    <tr id="badge-his" data-type="type-HIS Referenced Time Series">
-                                        <td><span>HIS Referenced Time Series</span></td>
-                                        <td><span class="badge">0</span></td>
-                                    </tr>
-                                    <tr id="badge-model-instance" data-type="type-Model Instance Resource">
-                                        <td><span>Model Instance</span></td>
-                                        <td><span class="badge">0</span></td>
-                                    </tr>
-                                    <tr id="badge-model-program" data-type="type-Model Program Resource">
-                                        <td><span>Model Program</span></td>
-                                        <td><span class="badge">0</span></td>
-                                    </tr>
-                                    <tr id="badge-multidimensional" data-type="type-Multidimensional (NetCDF)">
-                                        <td><span>Multidimensional (NetCDF)</span></td>
-                                        <td><span class="badge">0</span></td>
-                                    </tr>
-                                    <tr id="badge-script" data-type="type-Script Resource">
-                                        <td><span>Script Resource</span></td>
-                                        <td><span class="badge">0</span></td>
-                                    </tr>
-                                    <tr id="badge-swat" data-type="type-SWAT Model Instance Resource">
-                                        <td><span>SWAT Model Instance</span></td>
-                                        <td><span class="badge">0</span></td>
-                                    </tr>
-                                    <tr id="badge-time-series" data-type="type-Time Series">
-                                        <td><span>Time Series</span></td>
-                                        <td><span class="badge">0</span></td>
-                                    </tr>
-                                    <tr id="badge-web-app" data-type="type-Web App Resource">
-                                        <td><span>Web App</span></td>
-                                        <td><span class="badge">0</span></td>
-                                    </tr>
-                                </tbody>
-                            </table>
-                        </div>
-                        <div class="col-sm-12 col-md-9">
-                            {% if resources %}
-                            {% for res in resources %}
-                                <div data-type="type-{{ res|resource_type }}" class="contribution">
-                                    <div class="icon-resource-type-wrapper">
-                                    <span class="icon-resource-type">
-                                        <span><strong>{{ res|resource_type }}</strong></span>
-                                        {% if res|resource_type == "Generic" %}
-                                            <img src="{{ STATIC_URL }}img/resource-icons/generic48x48.png"
-                                                 alt="{{ res|resource_type }}"
-                                                 title="{{ res|resource_type }}"/>
-                                        {% elif res|resource_type == "Geographic Raster" %}
-                                            <img src="{{ STATIC_URL }}img/resource-icons/geographicraster48x48.png"
-                                                 alt="{{ res|resource_type }}"
-                                                 title="{{ res|resource_type }}"/>
-                                        {% elif res|resource_type == "HIS Referenced Time Series" %}
-                                            <img src="{{ STATIC_URL }}img/resource-icons/his48x48.png"
-                                                 alt="{{ res|resource_type }}"
-                                                 title="{{ res|resource_type }}"/>
-                                        {% elif res|resource_type == "Script Resource" %}
-                                            <img src="{{ STATIC_URL }}img/resource-icons/script48x48.png"
-                                                 alt="{{ res|resource_type }}"
-                                                 title="{{ res|resource_type }}"/>
-                                        {% elif res|resource_type == "Model Program Resource" %}
-                                            <img src="{{ STATIC_URL }}img/resource-icons/modelprogram48x48.png"
-                                                 alt="{{ res|resource_type }}"
-                                                 title="{{ res|resource_type }}"/>
-                                        {% elif res|resource_type == "Model Instance Resource" %}
-                                            <img src="{{ STATIC_URL }}img/resource-icons/modelinstance48x48.png"
-                                                 alt="{{ res|resource_type }}"
-                                                 title="{{ res|resource_type }}"/>
-                                        {% elif res|resource_type == "SWAT Model Instance Resource" %}
-                                            <img src="{{ STATIC_URL }}img/resource-icons/swat48x48.png"
-                                                 alt="{{ res|resource_type }}"
-                                                 title="{{ res|resource_type }}"/>
-                                        {% elif res|resource_type == "Multidimensional (NetCDF)" %}
-                                            <img src="{{ STATIC_URL }}img/resource-icons/multidimensional48x48.png"
-                                                 alt="{{ res|resource_type }}"
-                                                 title="{{ res|resource_type }}"/>
-                                        {% elif res|resource_type == "Time Series" %}
-                                            <img src="{{ STATIC_URL }}img/resource-icons/timeseries48x48.png"
-                                                 alt="{{ res|resource_type }}"
-                                                 title="{{ res|resource_type }}"/>
-                                        {% elif res|resource_type == "Geographic Feature (ESRI Shapefiles)" %}
-                                            <img src="{{ STATIC_URL }}img/resource-icons/geographicfeature48x48.png"
-                                                 alt="{{ res|resource_type }}"
-                                                 title="{{ res|resource_type }}"/>
-                                        {% elif res|resource_type == "Web App Resource" %}
-                                            <img src="{{ STATIC_URL }}img/resource-icons/webapp48x48.png"
-                                                 alt="{{ res|resource_type }}"
-                                                 title="{{ res|resource_type }}"/>
-                                        {% endif %}
-
-                                    </span>
-                                    </div>
-                                    <div class="activity-block row">
-                                        <div class="activity-info col-sm-12">
-                                            <span class="title"><a href="{{ res.get_absolute_url }}">{{ res.metadata.title }}</a></span>
-                                            <h5><span class="text-muted">Created: </span>{{ res.created }}</h5>
-                                            <h5><span class="text-muted">Authors: </span>
-                                                {% for creator in res.metadata.creators.all %}
-                                                    {% if forloop.counter0 != 0 %}<span> · </span>{% endif %}
-                                                    {% if creator.description %}
-                                                        <a href="{{ creator.description }}">{{ creator.name }}</a>
-                                                    {% else %}
-                                                        <span>{{ creator.name }}</span>
-                                                    {% endif %}
-                                                {% endfor %}
-                                            </h5>
+                                        <div class="form-group">
+                                            <label for="id_irods_password">Password: </label>
+                                            <input class="form-control" autocomplete="off" id="id_irods_password" name="irods_password" placeholder="Password" type="password">
                                         </div>
-
-                                        {% if res.metadata.description %}
-                                            <div class="activity-description col-sm-12">
-                                                <p>
-                                                    <strong>ABSTRACT: </strong>{{ res.metadata.description|linebreaks }}
-                                                </p>
-                                            </div>
-                                            <div class="show-more-btn btn-default" title="Show more">···</div>
-                                        {% endif %}
-
                                     </div>
                                 </div>
-                            {% endfor %}
-                            {% else %}
-                                <span class="text-muted">This user has not shared any resources.</span>
-                            {% endif %}
-                        </div>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+                                <button type='submit' id="create-irods-account-btn" class="btn btn-primary" onclick="create_irods_account(); return false;" disabled>Confirm</button>
+                            </div>
+                        </form>
                     </div>
                 </div>
             </div>
-        </div>
 
-        {% if profile_user.id == user.id %}
-        <!-- Deactivate Account Modal -->
-        <div class="modal fade" id="deactivate-account-dialog" tabindex="-1" role="dialog"
-             aria-labelledby="Deactivate account">
-            <div class="modal-dialog" role="document">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <button type="button" class="close" data-dismiss="modal"
-                                aria-label="Close"><span aria-hidden="true">&times;</span>
-                        </button>
-                        <h4 class="modal-title" id="myModalLabel">Deactivate Account</h4>
-                    </div>
-                    <div class="modal-body">
-                        <div class="row">
-                            <div class="col-sm-2 col-xs-12 text-center">
-                                <span id="icon-warning" class="glyphicon glyphicon-warning-sign"></span>
-                            </div>
-                            <div class="col-sm-10 col-xs-12">
-                                <div><strong>WARNING</strong>: This will <strong><u>permanently</u></strong> disable your account. You cannot undo
-                                    this action. Please note that if you do choose to disable your account, your Resources
-                                    will remain in HydroShare and will be accessible to anyone who currently has access. If
-                                    you wish to remove your resources from HydroShare, you should do so <u>before</u> disabling
-                                    your account.
+            <!-- Delete iRODS User Account Modal -->
+            <div class="modal fade" id="delete-irods-account-dialog" tabindex="-1" role="dialog"
+                 aria-labelledby="Create iRODS user account">
+                <div class="modal-dialog" role="document">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <button type="button" class="close" data-dismiss="modal"
+                                    aria-label="Close"><span aria-hidden="true">&times;</span>
+                            </button>
+                            <h4 class="modal-title" id="myModalLabel">Delete your iRODS user account</h4>
+                        </div>
+                        <div class="modal-body">
+                            <div class="row">
+                                <div class="col-sm-2 col-xs-12 text-center">
+                                    <span id="icon-warning" class="glyphicon glyphicon-warning-sign"></span>
                                 </div>
-
+                                <div class="col-sm-10 col-xs-12">
+                                    <div><strong>WARNING</strong>: This will <strong>delete</strong> your iRODS user account in the
+                                        HydroShare user zone as well as all data you have under that account. You cannot recover
+                                        your data after this action.
+                                    </div>
+                                </div>
                             </div>
                         </div>
-
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
-                        <a href="{% url 'deactivate_account' %}" class="btn btn-danger">Confirm</a>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Delete picture modal -->
-        <div class="modal fade" id="delete-picture" tabindex="-1" role="dialog"
-             aria-labelledby="deleteProfilePicture">
-            <div class="modal-dialog" role="document">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <button type="button" class="close" data-dismiss="modal"
-                                aria-label="Close"><span aria-hidden="true">&times;</span>
-                        </button>
-                        <h4 class="modal-title" id="deleteProfilePicture">Delete profile picture</h4>
-                    </div>
-                    <div class="modal-body">
-                        Are you sure you want to delete your profile picture?
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-default" data-dismiss="modal">
-                            Close
-                        </button>
-                        <button class="btn btn-primary" id="picture-clear_id" name="picture-clear"
-                                title="Delete profile picture"
-                                value="clear">Confirm
-                        </button>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+                            <button class="btn btn-danger" onclick="delete_irods_account();">Confirm</button>
+                        </div>
                     </div>
                 </div>
             </div>
-        </div>
-
-        <!-- Delete CV modal -->
-        <div class="modal fade" id="delete-cv" tabindex="-1" role="dialog"
-             aria-labelledby="deleteCV">
-            <div class="modal-dialog" role="document">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <button type="button" class="close" data-dismiss="modal"
-                                aria-label="Close"><span aria-hidden="true">&times;</span>
-                        </button>
-                        <h4 class="modal-title" id="deleteCV">Delete CV</h4>
-                    </div>
-                    <div class="modal-body">
-                        Are you sure you want to delete your CV?
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-default" data-dismiss="modal">
-                            Close
-                        </button>
-                        <button class="btn btn-primary" id="cv-clear_id" name="cv-clear"
-                                title="Delete CV"
-                                value="clear">Confirm
-                        </button>
-                    </div>
-                </div>
-            </div>
-        </div>
-        {% endif %}
-    </form>
-
-    {% endwith %}
+            {% endif %}
+        </form>
+        {% endwith %}
+    </div>
 {% endblock %}
 
 {% block extra_js %}
@@ -877,6 +968,7 @@
             return "<div class='label label-danger error-label'>" + message + "</div>";
         }
 
+
         function setEditMode() {
             $("[data-page-mode='view']").hide();
             $("[data-page-mode='edit']").fadeIn();
@@ -903,6 +995,9 @@
             $(".form-required").change(onFormRequiredChange);
             $("#id_email").change(validateEmail);
             $("#id_username").change(validateUserName);
+
+            // Switch to overview tab
+            $('.nav-tabs a[href="#overview"]').tab('show'); // Select first tab
         }
 
         function setViewMode() {
@@ -932,17 +1027,100 @@
             }
         }
 
+        function irods_account_link(data_target, text) {
+            return "<a data-toggle='modal' data-target='" + data_target + "'>" + text + "</a>";
+        }
+
+        function irods_status_info(alert_type, status, title) {
+            return "<div class=\"col-sm-12\">" +
+                    "<div class=\"alert " + alert_type + " alert-dismissible\" role=\"alert\">" +
+                    "<button type=\"button\" class=\"close\" data-dismiss=\"alert\" aria-label=\"Close\"><span aria-hidden=\"true\">&times;</span></button>" +
+                    "<strong>" + title + "</strong><div>" + status + "</div></div></div>"
+        }
+
+        function create_irods_account() {
+            $.ajax({
+                url: "{% url 'create_irods_account' %}",
+                type: "POST",
+                data: {
+                    password: $('#id_irods_password').val()
+                },
+                success: function(json) {
+                    if(json.success) {
+                        $('#create-irods-account-dialog').modal('hide');
+                        var irodsContainer = $("#irods-account-container");
+                        irodsContainer.empty();
+                        irodsContainer.append(irods_account_link("#delete-irods-account-dialog", "Delete your iRODS user account"));
+                        irodsContainer.append(irods_status_info('alert-success', json.success, 'Success'));
+                    }
+                    if(json.error) {
+                        $('#create-irods-account-dialog').modal('hide');
+                        var irodsContainer = $("#irods-account-container");
+                        irodsContainer.append(irods_status_info('alert-warning', json.error, 'Failure'));
+                    }
+                },
+                error: function(xhr, errmsg, err) {
+                    err_info = xhr.status + ": " + xhr.responseText + ". Error message: " + errmsg;
+                    $('#create-irods-account-dialog').modal('hide');
+                    var irodsContainer = $("#irods-account-container");
+                    irodsContainer.append(irods_status_info('alert-warning', err_info, 'Failure'));
+                }
+            });
+        }
+
+        function delete_irods_account() {
+            $.ajax({
+                url: "{% url 'delete_irods_account' %}",
+                type: "POST",
+                data: {},
+                success: function(json) {
+                    if(json.success) {
+                        $('#delete-irods-account-dialog').modal('hide');
+                        var irodsContainer = $("#irods-account-container");
+                        irodsContainer.empty();
+                        irodsContainer.append(irods_account_link("#create-irods-account-dialog", "Create your iRODS user account"));
+                        irodsContainer.append(irods_status_info('alert-success', json.success, 'Success'));
+                    }
+                    if(json.error) {
+                        $('#delete-irods-account-dialog').modal('hide');
+                        var irodsContainer = $("#irods-account-container");
+                        irodsContainer.append(irods_status_info('alert-warning', json.error, 'Failure'));
+                    }
+                },
+                error: function(xhr, errmsg, err) {
+                    err_info = xhr.status + ": " + xhr.responseText + ". Error message: " + errmsg;
+                    $('#delete-irods-account-dialog').modal('hide');
+                    var irodsContainer = $("#irods-account-container");
+                    irodsContainer.append(irods_status_info('alert-warning', err_info, 'Failure'));
+                }
+            });
+        }
+
         $(document).ready(function () {
             // Change country first empty option to 'Unspecified'
             var option = $("select[name='country'] option:first-child");
             option.val("Unspecified");
             option.text("Unspecified");
 
+            // Only enable Confirm button when input password is longer than 8 characters
+            $("#id_irods_password").keyup(function () {
+                pwdlen = $("input#id_irods_password").val().length;
+                if (pwdlen >= 8)
+                    $('#create-irods-account-btn').removeAttr('disabled');
+                else
+                    $('#create-irods-account-btn').attr('disabled', 'disabled');
+            });
+
             // File name preview for Add CV
             $('.btn-primary.btn-file :file').on('fileselect', function (event, numFiles, label) {
                 var input = $(this).parents('.input-group').find(':text');
                 input.val(label);
             });
+
+            // Empty password input. Necessary because some browsers (ex:Firefox) now ignore 'autocomplete=off'
+            setTimeout(function () {
+                $("input[type=password]").val('');
+            }, 500);
 
             $(".upload-picture").change(function(){
                 readURL(this);
@@ -1029,6 +1207,14 @@
 
             $("tr[data-type='all']").find(".badge").text(collection["total"]);
 
+
+            // Unspecified goes away as soon as a user clicks.
+            $("input[name='state']").click(function () {
+                    if ($(this).val() == "Unspecified") {
+                        $(this).val("");
+                    }
+                }
+            );
         });
     </script>
 {% endblock %}

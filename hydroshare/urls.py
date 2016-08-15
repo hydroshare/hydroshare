@@ -7,10 +7,16 @@ from django.contrib import admin
 from mezzanine.core.views import direct_to_template
 from mezzanine.conf import settings
 
-from haystack.views import FacetedSearchView
-from hs_core.customer_form import MyForm
-from theme import views as theme
 import autocomplete_light
+
+from haystack.views import FacetedSearchView
+from hs_core.discovery_form import DiscoveryForm
+from hs_core.views.discovery_view import DiscoveryView
+from hs_core.views.discovery_json_view import DiscoveryJsonView
+from theme import views as theme
+from hs_tracking import views as tracking
+from hs_core import views as hs_core_views
+from hs_app_timeseries import views as hs_ts_views
 
 
 autocomplete_light.autodiscover()
@@ -31,20 +37,31 @@ urlpatterns = i18n_patterns("",
     #url('^ga_interactive/', include('ga_interactive.urls')),
     url('^r/(?P<shortkey>[A-z0-9\-_]+)', 'hs_core.views.short_url'),
     # url('^party/', include('hs_scholar_profile.urls'))
+    url(r'^tracking/reports/profiles/$', tracking.VisitorProfileReport.as_view(), name='tracking-report-profiles'),
+    url(r'^tracking/reports/history/$', tracking.HistoryReport.as_view(), name='tracking-report-history'),
+    url(r'^tracking/$', tracking.UseTrackingView.as_view(), name='tracking'),
     url(r'^user/$', theme.UserProfileView.as_view()),
     url(r'^user/(?P<user>.*)/', theme.UserProfileView.as_view()),
     url(r'^comment/$', theme.comment),
     url(r'^rating/$', theme.rating),
     url(r'^profile/$', theme.update_user_profile, name='update_profile'),
     url(r'^deactivate_account/$', theme.deactivate_user, name='deactivate_account'),
+    url(r'^delete_irods_account/$', theme.delete_irods_account, name='delete_irods_account'),
+    url(r'^create_irods_account/$', theme.create_irods_account, name='create_irods_account'),
     url(r'^email_verify/(?P<new_email>.*)/(?P<token>[-\w]+)/(?P<uidb36>[-\w]+)/', theme.email_verify,
         name='email_verify'),
     url(r'^verify/(?P<token>[0-9a-zA-Z:_\-]*)/', 'hs_core.views.verify'),
     url(r'^django_irods/', include('django_irods.urls')),
     url(r'^django_docker_processes/', include('django_docker_processes.urls')),
     url(r'^autocomplete/', include('autocomplete_light.urls')),
-    url(r'^search/$', FacetedSearchView(form_class=MyForm), name='haystack_search'),
+    url(r'^search/$', DiscoveryView.as_view(), name='haystack_search'),
+    url(r'^searchjson/$', DiscoveryJsonView.as_view(), name='haystack_json_search'),
     url(r'^sitemap/$', 'hs_sitemap.views.sitemap', name='sitemap'),
+    url(r'^collaborate/$', hs_core_views.CollaborateView.as_view(), name='collaborate'),
+    url(r'^my-groups/$', hs_core_views.MyGroupsView.as_view(), name='my_groups'),
+    url(r'^group/(?P<group_id>[0-9]+)', hs_core_views.GroupView.as_view(), name='group'),
+    url(r'^timeseries/sqlite/update/(?P<resource_id>[A-z0-9\-_]+)', hs_ts_views.update_sqlite_file,
+        name='update_sqlite_file'),
 )
 
 # Filebrowser admin media library.
@@ -65,12 +82,20 @@ urlpatterns += patterns('',
     url('^hs_metrics/', include('hs_metrics.urls')),
     url('^hsapi/', include('hs_model_program.urls')),
     url('^hsapi/', include('hs_labels.urls')),
+    url('^hsapi/', include('hs_collection_resource.urls')),
 )
 
 if settings.DEBUG is False:   #if DEBUG is True it will be served automatically
   urlpatterns += patterns('',
   url(r'^static/(?P<path>.*)$', 'django.views.static.serve', {'document_root': settings.STATIC_ROOT}),
 )
+
+if 'heartbeat' in settings.INSTALLED_APPS:
+  from heartbeat.urls import urlpatterns as heartbeat_urls
+
+  urlpatterns += [
+    url(r'^heartbeat/', include(heartbeat_urls))
+  ]
 
 urlpatterns += patterns('',
 

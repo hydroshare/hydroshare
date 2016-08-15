@@ -6,6 +6,7 @@ from languages_iso import languages as iso_languages
 from dateutil import parser
 from lxml import etree
 
+from django.contrib.postgres.fields import HStoreField
 from django.contrib.contenttypes.fields import GenericForeignKey
 from django.contrib.contenttypes.fields import GenericRelation
 from django.contrib.auth.models import User, Group
@@ -15,7 +16,6 @@ from django.db.models import Q
 from django.db.models.signals import post_save
 from django.db import transaction
 from django.dispatch import receiver
-from django import forms
 from django.utils.timezone import now
 from django_irods.storage import IrodsStorage
 from django.conf import settings
@@ -24,12 +24,9 @@ from django.core.exceptions import ObjectDoesNotExist, ValidationError
 from django.forms.models import model_to_dict
 
 from mezzanine.pages.models import Page, RichText
-from mezzanine.pages.page_processors import processor_for
 from mezzanine.core.models import Ownable
 from mezzanine.generic.fields import CommentsField, RatingField
-from mezzanine.generic.fields import KeywordsField
 from mezzanine.conf import settings as s
-
 
 class GroupOwnership(models.Model):
     group = models.ForeignKey(Group)
@@ -108,6 +105,8 @@ class ResourcePermissionsMixin(Ownable):
 # this should be used as the page processor for anything with pagepermissionsmixin
 # page_processor_for(MyPage)(ga_resources.views.page_permissions_page_processor)
 def page_permissions_page_processor(request, page):
+    from hs_access_control.models import PrivilegeCodes
+
     cm = page.get_content_model()
     can_change_resource_flags = False
     is_owner_user = False
@@ -124,8 +123,10 @@ def page_permissions_page_processor(request, page):
                 is_view_user = cm.raccess.view_users.filter(pk=request.user.pk).exists()
 
     owners = cm.raccess.owners.all()
-    editors = cm.raccess.edit_users.exclude(pk__in=owners)
-    viewers = cm.raccess.view_users.exclude(pk__in=editors).exclude(pk__in=owners)
+    editors = cm.raccess.get_users_with_explicit_access(PrivilegeCodes.CHANGE, include_group_granted_access=False)
+    viewers = cm.raccess.get_users_with_explicit_access(PrivilegeCodes.VIEW, include_group_granted_access=False)
+    edit_groups = cm.raccess.edit_groups
+    view_groups = cm.raccess.view_groups.exclude(pk__in=edit_groups)
 
     if cm.metadata.relations.all().filter(type='isReplacedBy').exists():
         is_replaced_by = cm.metadata.relations.all().filter(type='isReplacedBy').first().value
@@ -148,6 +149,8 @@ def page_permissions_page_processor(request, page):
         "edit_users": editors,
         "view_users": viewers,
         "owners": owners,
+        "edit_groups": edit_groups,
+        "view_groups": view_groups,
         "is_owner_user": is_owner_user,
         "is_edit_user": is_edit_user,
         "is_view_user": is_view_user,
@@ -264,6 +267,13 @@ class Party(AbstractMetaDataElement):
     def update(cls, element_id, **kwargs):
         element_name = cls.__name__
         creator_order = None
+        if 'description' in kwargs:
+            party = cls.objects.get(id=element_id)
+            if party.description is not None and kwargs['description'] is not None:
+                if len(party.description.strip()) > 0 and len(kwargs['description'].strip()) > 0:
+                    if party.description != kwargs['description']:
+                        raise ValidationError("HydroShare user identifier can't be changed.")
+
         if 'order' in kwargs and element_name == 'Creator':
             creator_order = kwargs['order']
             if creator_order <= 0:
@@ -547,7 +557,8 @@ class Relation(AbstractMetaDataElement):
     )
 
     # HS_RELATION_TERMS contains hydroshare custom terms that are not Dublin Core terms
-    HS_RELATION_TERMS = ('isHostedBy', 'isCopiedFrom')
+    HS_RELATION_TERMS = ('isHostedBy', 'isCopiedFrom', 'isExecutedBy', 'isCreatedBy', 'isDataFor',
+                         'cites', 'isDescribedBy')
 
     term = 'Relation'
     type = models.CharField(max_length=100, choices=SOURCE_TYPES)
@@ -884,19 +895,16 @@ class Coverage(AbstractMetaDataElement):
         data for the coverage value attribute must be provided as a dictionary
         """
 
-        # TODO: validate coordinate values
         cov = Coverage.objects.get(id=element_id)
 
         changing_coverage_type = False
 
         if 'type' in kwargs:
-            if cov.type != kwargs['type']:
-                if 'value' in kwargs:
-                    cls._validate_coverage_type_value_attributes(kwargs['type'], kwargs['value'])
-                else:
-                    raise ValidationError('Coverage value is missing.')
-
-                changing_coverage_type = True
+            changing_coverage_type = cov.type != kwargs['type']
+            if 'value' in kwargs:
+                cls._validate_coverage_type_value_attributes(kwargs['type'], kwargs['value'])
+            else:
+                raise ValidationError('Coverage value is missing.')
 
         if 'value' in kwargs:
             if changing_coverage_type:
@@ -943,13 +951,51 @@ class Coverage(AbstractMetaDataElement):
             # check that all the required sub-elements exist
             if 'east' not in value_dict or 'north' not in value_dict or 'units' not in value_dict:
                 raise ValidationError("For coverage of type 'point' values for 'east', 'north' and 'units' are needed.")
+
+            for value_item in ('east', 'north'):
+                try:
+                    value_dict[value_item] = float(value_dict[value_item])
+                except TypeError:
+                    raise ValidationError("Value for '{}' must be numeric".format(value_item))
+
+            if value_dict['east'] < -180 or value_dict['east'] > 180:
+                raise ValidationError("Value for East longitude should be in the range of -180 to 180")
+
+            if value_dict['north'] < -90 or value_dict['north'] > 90:
+                raise ValidationError("Value for North latitude should be in the range of -90 to 90")
+
         elif coverage_type == 'box':
             # check that all the required sub-elements exist
             for value_item in ['units', 'northlimit', 'eastlimit', 'southlimit', 'westlimit']:
                 if value_item not in value_dict:
                     raise ValidationError("For coverage of type 'box' values for one or more bounding box limits or "
                                           "'units' is missing.")
+                else:
+                    if value_item != 'units':
+                        try:
+                            value_dict[value_item] = float(value_dict[value_item])
+                        except TypeError:
+                            raise ValidationError("Value for '{}' must be numeric".format(value_item))
 
+            if value_dict['northlimit'] < value_dict['southlimit']:
+                raise ValidationError("Value for North latitude must be greater than or equal to "
+                                      "that of South latitude.")
+
+            if value_dict['northlimit'] < -90 or value_dict['northlimit'] > 90:
+                raise ValidationError("Value for North latitude should be in the range of -90 to 90")
+
+            if value_dict['southlimit'] < -90 or value_dict['southlimit'] > 90:
+                raise ValidationError("Value for South latitude should be in the range of -90 to 90")
+
+            if value_dict['eastlimit'] < value_dict['westlimit']:
+                raise ValidationError("Value for East longitude must be greater than or equal to "
+                                      "that of West longitude.")
+
+            if value_dict['eastlimit'] < -180 or value_dict['eastlimit'] > 180:
+                raise ValidationError("Value for East longitude should be in the range of -180 to 180")
+
+            if value_dict['westlimit'] < -180 or value_dict['westlimit'] > 180:
+                raise ValidationError("Value for West longitude should be in the range of -180 to 180")
 
 class Format(AbstractMetaDataElement):
     term = 'Format'
@@ -960,6 +1006,33 @@ class Format(AbstractMetaDataElement):
 
     def __unicode__(self):
         return self.value
+
+
+class FundingAgency(AbstractMetaDataElement):
+    term = 'FundingAgency'
+    agency_name = models.TextField(null=False)
+    award_title = models.TextField(null=True, blank=True)
+    award_number = models.TextField(null=True, blank=True)
+    agency_url = models.URLField(null=True, blank=True)
+
+    def __unicode__(self):
+        return self.agency_name
+
+    @classmethod
+    def create(cls, **kwargs):
+        agency_name = kwargs.get('agency_name', None)
+        if agency_name is None or len(agency_name.strip()) == 0:
+            raise ValidationError("Agency name is missing")
+
+        return super(FundingAgency, cls).create(**kwargs)
+
+    @classmethod
+    def update(cls, element_id, **kwargs):
+        agency_name = kwargs.get('agency_name', None)
+        if agency_name and len(agency_name.strip()) == 0:
+            raise ValidationError("Agency name is missing")
+
+        super(FundingAgency, cls).update(element_id, **kwargs)
 
 
 class Subject(AbstractMetaDataElement):
@@ -1089,16 +1162,21 @@ class AbstractResource(ResourcePermissionsMixin):
     content_type = models.ForeignKey(ContentType, null=True, blank=True)
     content_object = GenericForeignKey('content_type', 'object_id')
 
-    #keywords = KeywordsField(verbose_name="Keywords", for_concrete_model=False)
+    extra_metadata = HStoreField(default={})
 
     @classmethod
     def bag_url(cls, resource_id):
+        from hs_core.hydroshare.utils import get_resource_by_shortkey
         bagit_path = getattr(settings, 'IRODS_BAGIT_PATH', 'bags')
         bagit_postfix = getattr(settings, 'IRODS_BAGIT_POSTFIX', 'zip')
-
         bag_path = "{path}/{resource_id}.{postfix}".format(path=bagit_path,
                                                            resource_id=resource_id,
                                                            postfix=bagit_postfix)
+        res = get_resource_by_shortkey(resource_id)
+        if res.resource_federation_path:
+            rel_fed_path = res.resource_federation_path[1:]
+            bag_path = os.path.join(rel_fed_path, bag_path)
+
         istorage = IrodsStorage()
         bag_url = istorage.url(bag_path)
 
@@ -1112,10 +1190,23 @@ class AbstractResource(ResourcePermissionsMixin):
 
         return scimeta_url
 
+    @classmethod
+    def sysmeta_path(cls, resource_id):
+        return "{resource_id}/data/resourcemap.xml".format(resource_id=resource_id)
+
     def delete(self, using=None):
         from hydroshare import hs_bagit
         for fl in self.files.all():
-            fl.resource_file.delete()
+            if fl.fed_resource_file_name_or_path:
+                istorage = IrodsStorage('federated')
+                if fl.fed_resource_file_name_or_path.find(self.short_id)>=0:
+                    istorage.delete('{}/{}'.format(self.resource_federation_path, fl.fed_resource_file_name_or_path))
+                else:
+                    istorage.delete('{}/{}/{}'.format(self.resource_federation_path, self.short_id, fl.fed_resource_file_name_or_path))
+            elif fl.resource_file:
+                fl.resource_file.delete()
+            elif fl.fed_resource_file:
+                fl.fed_resource_file.delete()
 
         hs_bagit.delete_bag(self)
 
@@ -1168,11 +1259,15 @@ class AbstractResource(ResourcePermissionsMixin):
             return CREATOR_NAME_ERROR
 
         if len(name_parts) > 2:
-            citation_str_lst.append("{last_name}, {first_initial}.{middle_initial}., ".format(last_name=name_parts[-1],
-                                                                              first_initial=name_parts[0][0],
-                                                                              middle_initial=name_parts[1][0]))
+            author_name = "{last_name}, {first_initial}. {middle_initial}., "
+            author_name = author_name.format(last_name=name_parts[-1], first_initial=name_parts[0][0],
+                                             middle_initial=name_parts[1][0])
+            citation_str_lst.append(author_name)
+
         else:
-            citation_str_lst.append("{last_name}, {first_initial}., ".format(last_name=name_parts[-1], first_initial=name_parts[0][0]))
+            author_name = "{last_name}, {first_initial}., "
+            author_name = author_name.format(last_name=name_parts[-1], first_initial=name_parts[0][0])
+            citation_str_lst.append(author_name)
 
         other_authors = self.metadata.creators.all().filter(order__gt=1)
         for author in other_authors:
@@ -1181,13 +1276,18 @@ class AbstractResource(ResourcePermissionsMixin):
                 return CREATOR_NAME_ERROR
 
             if len(name_parts) > 2:
-                citation_str_lst.append("{first_initial}.{middle_initial}.{last_name}, ".format(first_initial=name_parts[0][0],
-                                                                                  middle_initial=name_parts[1][0],
-                                                                                  last_name=name_parts[-1]))
-            else:
-                citation_str_lst.append("{first_initial}.{last_name}, ".format(first_initial=name_parts[0][0], last_name=name_parts[-1]))
+                author_name = "{first_initial}. {middle_initial}. {last_name}, "
+                author_name = author_name.format(first_initial=name_parts[0][0], middle_initial=name_parts[1][0],
+                                                 last_name=name_parts[-1])
+                citation_str_lst.append(author_name)
 
-        #  remove the last added comma and the space
+            else:
+                author_name = "{first_initial}. {last_name}, "
+                author_name = author_name.format(first_initial=name_parts[0][0], last_name=name_parts[-1])
+
+                citation_str_lst.append(author_name)
+
+        # remove the last added comma and the space
         if len(citation_str_lst[-1]) > 2:
             citation_str_lst[-1] = citation_str_lst[-1][:-2]
         else:
@@ -1215,7 +1315,8 @@ class AbstractResource(ResourcePermissionsMixin):
 
         ref_rel = self.metadata.relations.all().filter(type='isHostedBy').first()
         repl_rel = self.metadata.relations.all().filter(type='isCopiedFrom').first()
-        date_str = "%s/%s/%s" % (citation_date.start_date.month, citation_date.start_date.day, citation_date.start_date.year)
+        date_str = "%s/%s/%s" % (citation_date.start_date.month, citation_date.start_date.day,
+                                 citation_date.start_date.year)
         if ref_rel:
             citation_str_lst.append(", {ref_rel_value}, last accessed {creation_date}.".format(ref_rel_value=ref_rel.value,
                                                                                                creation_date=date_str))
@@ -1270,14 +1371,32 @@ class AbstractResource(ResourcePermissionsMixin):
         unique_together = ("content_type", "object_id")
 
 def get_path(instance, filename):
-    return os.path.join(instance.content_object.short_id, 'data', 'contents', filename)
+    if instance.content_object.resource_federation_path:
+        return os.path.join(instance.content_object.resource_federation_path, instance.content_object.short_id, 'data',
+                            'contents', filename)
+    else:
+        return os.path.join(instance.content_object.short_id, 'data', 'contents', filename)
 
 class ResourceFile(models.Model):
     object_id = models.PositiveIntegerField()
     content_type = models.ForeignKey(ContentType)
 
     content_object = GenericForeignKey('content_type', 'object_id')
-    resource_file = models.FileField(upload_to=get_path, max_length=500, storage=IrodsStorage() if getattr(settings,'USE_IRODS', False) else DefaultStorage())
+    resource_file = models.FileField(upload_to=get_path, max_length=500, null=True, blank=True,
+                                     storage=IrodsStorage() if getattr(settings,'USE_IRODS', False) else DefaultStorage())
+    # the following optional fields are added for use by federated iRODS resources where resources are created in the local federated
+    # zone rather than hydroshare zone, in which case resource_file is empty, and we record iRODS logical resource file name and
+    # file size for customized copy or move operations for resource creation and other operations
+    # fed_resource_file in particular is a counterpart of resource_file, but handles files uploaded from local disk and store the files
+    # to federated zone rather than hydroshare zone.
+    fed_resource_file = models.FileField(upload_to=get_path, max_length=500, null=True, blank=True,
+                                     storage=IrodsStorage('federated') if getattr(settings,'USE_IRODS', False) else DefaultStorage())
+    fed_resource_file_name_or_path = models.CharField(max_length=255, null=True, blank=True)
+    fed_resource_file_size = models.CharField(max_length=15, null=True, blank=True)
+
+    @property
+    def resource(self):
+        return self.content_object
 
 class Bags(models.Model):
     object_id = models.PositiveIntegerField()
@@ -1312,10 +1431,16 @@ class BaseResource(Page, AbstractResource):
     # the time when the resource is locked for a new version action. A value of null
     # means the resource is not locked
     locked_time = models.DateTimeField(null=True, blank=True)
-
+    #this resource_federation_path is added to record where a HydroShare resource is
+    # stored. The default is empty string meaning the resource is stored in HydroShare
+    # zone. If a resource is stored in a fedearated zone, the field should store the
+    # federated root path in the format of /federated_zone/home/localHydroProxy
+    resource_federation_path = models.CharField(max_length=100, blank=True, default='')
     objects = models.Manager()
     public_resources = PublicResourceManager()
     discoverable_resources = DiscoverableResourceManager()
+
+    collections = models.ManyToManyField('BaseResource', related_name='resources')
 
     class Meta:
         verbose_name = 'Generic'
@@ -1379,6 +1504,10 @@ class BaseResource(Page, AbstractResource):
         etree.SubElement(doi_data, 'resource').text = self.metadata.identifiers.all().filter(name='hydroShareIdentifier')[0].url
 
         return '<?xml version="1.0" encoding="UTF-8"?>\n' + etree.tostring(ROOT, pretty_print=pretty_print)
+
+    @property
+    def verbose_name(self):
+        return self.get_content_model()._meta.verbose_name
 
     @classmethod
     def get_supported_upload_file_types(cls):
@@ -1457,6 +1586,11 @@ class CoreMetaData(models.Model):
     _rights = GenericRelation(Rights)
     _type = GenericRelation(Type)
     _publisher = GenericRelation(Publisher)
+    funding_agencies = GenericRelation(FundingAgency)
+
+    @property
+    def resource(self):
+        return BaseResource.objects.filter(object_id=self.id).first()
 
     @property
     def title(self):
@@ -1498,7 +1632,8 @@ class CoreMetaData(models.Model):
                 'Subject',
                 'Source',
                 'Relation',
-                'Publisher']
+                'Publisher',
+                'FundingAgency']
 
     # this method needs to be overriden by any subclass of this class
     # if they implement additional metadata elements that are required
@@ -1520,9 +1655,6 @@ class CoreMetaData(models.Model):
             return False
         elif len(self.rights.statement.strip()) == 0:
             return False
-
-        # if self.coverages.count() == 0:
-        #     return False
 
         if self.subjects.count() == 0:
             return False
@@ -1563,6 +1695,7 @@ class CoreMetaData(models.Model):
         self.subjects.all().delete()
         self.sources.all().delete()
         self.relations.all().delete()
+        self.funding_agencies.all().delete()
 
     def copy_all_elements_from(self, src_md, exclude_elements=None):
         md_type = ContentType.objects.get_for_model(src_md)
@@ -1646,12 +1779,31 @@ class CoreMetaData(models.Model):
             dc_type = etree.SubElement(rdf_Description, '{%s}type' % self.NAMESPACES['dc'])
             dc_type.set('{%s}resource' % self.NAMESPACES['rdf'], self.type.url)
 
-        # create the Description element (we named it as Abstract to differentiate from the parent "Description" element)
+        # create the Description element (we named it as Abstract to differentiate from the parent "Description"
+        # element)
         if self.description:
             dc_description = etree.SubElement(rdf_Description, '{%s}description' % self.NAMESPACES['dc'])
             dc_des_rdf_Desciption = etree.SubElement(dc_description, '{%s}Description' % self.NAMESPACES['rdf'])
             dcterms_abstract = etree.SubElement(dc_des_rdf_Desciption, '{%s}abstract' % self.NAMESPACES['dcterms'])
             dcterms_abstract.text = self.description.abstract
+
+        for agency in self.funding_agencies.all():
+            hsterms_agency = etree.SubElement(rdf_Description, '{%s}awardInfo' % self.NAMESPACES['hsterms'])
+            hsterms_agency_rdf_Description = etree.SubElement(hsterms_agency, '{%s}Description' %
+                                                              self.NAMESPACES['rdf'])
+            hsterms_name = etree.SubElement(hsterms_agency_rdf_Description, '{%s}fundingAgencyName' %
+                                            self.NAMESPACES['hsterms'])
+            hsterms_name.text = agency.agency_name
+            if agency.agency_url:
+                hsterms_agency_rdf_Description.set('{%s}about' % self.NAMESPACES['rdf'], agency.agency_url)
+            if agency.award_title:
+                hsterms_title = etree.SubElement(hsterms_agency_rdf_Description, '{%s}awardTitle' %
+                                                 self.NAMESPACES['hsterms'])
+                hsterms_title.text = agency.award_title
+            if agency.award_number:
+                hsterms_number = etree.SubElement(hsterms_agency_rdf_Description, '{%s}awardNumber' %
+                                                  self.NAMESPACES['hsterms'])
+                hsterms_number.text = agency.award_number
 
         # use all creators associated with this metadata object to
         # generate creator xml elements
@@ -1676,7 +1828,7 @@ class CoreMetaData(models.Model):
 
             elif coverage.type == 'point':
                 cov_value = 'east=%s; north=%s; units=%s' % (coverage.value['east'], coverage.value['north'],
-                                                  coverage.value['units'])
+                                                             coverage.value['units'])
                 if 'name' in coverage.value:
                     cov_value = 'name=%s; ' % coverage.value['name'] + cov_value
                 if 'elevation' in coverage.value:
@@ -1686,7 +1838,8 @@ class CoreMetaData(models.Model):
                 if 'projection' in coverage.value:
                     cov_value = cov_value + '; projection=%s' % coverage.value['projection']
 
-            else: # this is box type
+            else:
+                # this is box type
                 cov_value = 'northlimit=%s; eastlimit=%s; southlimit=%s; westlimit=%s; units=%s' \
                             %(coverage.value['northlimit'], coverage.value['eastlimit'],
                               coverage.value['southlimit'], coverage.value['westlimit'], coverage.value['units'])
@@ -1735,7 +1888,8 @@ class CoreMetaData(models.Model):
         if self.publisher:
             dc_publisher = etree.SubElement(rdf_Description, '{%s}publisher' % self.NAMESPACES['dc'])
             dc_pub_rdf_Description = etree.SubElement(dc_publisher, '{%s}Description' % self.NAMESPACES['rdf'])
-            hsterms_pub_name = etree.SubElement(dc_pub_rdf_Description, '{%s}publisherName' % self.NAMESPACES['hsterms'])
+            hsterms_pub_name = etree.SubElement(dc_pub_rdf_Description,
+                                                '{%s}publisherName' % self.NAMESPACES['hsterms'])
             hsterms_pub_name.text = self.publisher.name
             hsterms_pub_url = etree.SubElement(dc_pub_rdf_Description, '{%s}publisherURL' % self.NAMESPACES['hsterms'])
             hsterms_pub_url.set('{%s}resource' % self.NAMESPACES['rdf'], self.publisher.url)
@@ -1758,18 +1912,20 @@ class CoreMetaData(models.Model):
         for src in self.sources.all():
             dc_source = etree.SubElement(rdf_Description, '{%s}source' % self.NAMESPACES['dc'])
             dc_source_rdf_Description = etree.SubElement(dc_source, '{%s}Description' % self.NAMESPACES['rdf'])
-            dcterms_derived_from = etree.SubElement(dc_source_rdf_Description, '{%s}isDerivedFrom' % self.NAMESPACES['dcterms'])
+            hsterms_derived_from = etree.SubElement(dc_source_rdf_Description,
+                                                    '{%s}isDerivedFrom' % self.NAMESPACES['hsterms'])
 
             # if the source value starts with 'http://' or 'https://' add value as an attribute
             if src.derived_from.lower().find('http://') == 0 or src.derived_from.lower().find('https://') == 0:
-                dcterms_derived_from.set('{%s}resource' % self.NAMESPACES['rdf'], src.derived_from)
+                hsterms_derived_from.set('{%s}resource' % self.NAMESPACES['rdf'], src.derived_from)
             else:
-                dcterms_derived_from.text = src.derived_from
+                hsterms_derived_from.text = src.derived_from
 
         if self.rights:
             dc_rights = etree.SubElement(rdf_Description, '{%s}rights' % self.NAMESPACES['dc'])
             dc_rights_rdf_Description = etree.SubElement(dc_rights, '{%s}Description' % self.NAMESPACES['rdf'])
-            hsterms_statement = etree.SubElement(dc_rights_rdf_Description, '{%s}rightsStatement' % self.NAMESPACES['hsterms'])
+            hsterms_statement = etree.SubElement(dc_rights_rdf_Description,
+                                                 '{%s}rightsStatement' % self.NAMESPACES['hsterms'])
             hsterms_statement.text = self.rights.statement
             if self.rights.url:
                 hsterms_url = etree.SubElement(dc_rights_rdf_Description, '{%s}URL' % self.NAMESPACES['hsterms'])
@@ -1789,6 +1945,18 @@ class CoreMetaData(models.Model):
         rdfs1_label.text = resource._meta.verbose_name
         rdfs1_isDefinedBy = etree.SubElement(rdf_Description_resource, '{%s}isDefinedBy' % self.NAMESPACES['rdfs1'])
         rdfs1_isDefinedBy.text = current_site_url() + "/terms"
+
+        # encode extended key/value arbitrary metadata
+        resource = BaseResource.objects.filter(object_id=self.id).first()
+        for key, value in resource.extra_metadata.items():
+            hsterms_key_value = etree.SubElement(rdf_Description, '{%s}extendedMetadata' % self.NAMESPACES['hsterms'])
+            hsterms_key_value_rdf_Description = etree.SubElement(hsterms_key_value,
+                                                                 '{%s}Description' % self.NAMESPACES['rdf'])
+            hsterms_key = etree.SubElement(hsterms_key_value_rdf_Description, '{%s}key' % self.NAMESPACES['hsterms'])
+            hsterms_key.text = key
+            hsterms_value = etree.SubElement(hsterms_key_value_rdf_Description,
+                                             '{%s}value' % self.NAMESPACES['hsterms'])
+            hsterms_value.text = value
 
         return self.XML_HEADER + '\n' + etree.tostring(RDF_ROOT, pretty_print=pretty_print)
 
