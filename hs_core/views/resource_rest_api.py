@@ -271,8 +271,8 @@ class ResourceReadUpdateDelete(ResourceToListItemMixin, generics.RetrieveUpdateD
                                          kwargs={'shortkey': pk})
         else:
             bag_url = site_url + reverse('file_download',
-                                         kwargs={'path': AbstractResource.bag_url(pk),
-                                                 'rest_call': 'True'})
+                                         kwargs={'path': '/bags/{}.zip'.format(pk),
+                                                 'rest_call': 'true'})
 
         return HttpResponseRedirect(bag_url)
 
