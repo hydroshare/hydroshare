@@ -14,5 +14,5 @@
 /static
 celeryd.pid
 docker-compose.yml
-init
+init-hydroshare
 schema.xml
