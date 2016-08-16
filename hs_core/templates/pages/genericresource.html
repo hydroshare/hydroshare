@@ -59,6 +59,213 @@
                         {% if show_content_files %}
                             <div class="custom-well">
                                 {% if cm.files.all %}
+                                    <div class="file-browser">
+                                        <div id="file-browser-controls" class="row">
+                                            <div class="col-xs-6">
+                                            <span class="btn btn-default fb-control-round"
+                                                  title="Click to go back"><span
+                                                    class="glyphicon glyphicon-arrow-left"></span></span>
+                                            <span class="btn btn-default fb-control-round"
+                                                  title="Click to go forward"><span
+                                                    class="glyphicon glyphicon-arrow-right"></span></span>
+                                            <span class="btn btn-default fb-control-round"><span
+                                                    class="glyphicon glyphicon-chevron-up"
+                                                    title="Click to go to parent directory"></span></span>
+                                            </div>
+
+                                            <div class="col-xs-6">
+                                                <div class="input-group file-browser-search">
+                                                    <span class="glyphicon glyphicon-search search-icon"></span>
+                                                    <input type="text" class="form-control fb-input-search"
+                                                           placeholder="Search current directory">
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div class="file-browser-container">
+                                            <div class="file-browser-breadcrumb">
+                                                <ol class="breadcrumb">
+                                                    <li><a href="#">Foo</a></li>
+                                                    <li><a href="#">Bar</a></li>
+                                                    <li class="active">Data</li>
+                                                </ol>
+                                            </div>
+
+                                            <div class="files-container">
+                                                <div class="fb-folder">
+                                                    <div class="text-center" data-toggle="dropdown" aria-haspopup="true"
+                                                         aria-expanded="true">
+                                                        <span class="glyphicon glyphicon-folder-close glyphicon-folder"></span>
+
+                                                        <div>
+                                                            <small class="fb-file-name">Some folder</small>
+                                                        </div>
+                                                    </div>
+
+                                                    <ul class="dropdown-menu fb-dropdown arrow_box arrow_box_top_center"
+                                                        aria-labelledby="dropdownMenu1">
+                                                        <li><a href="#"><span
+                                                                class="glyphicon glyphicon-folder-open glyphicon-folder"></span>Open</a>
+                                                        </li>
+                                                        <li><a href="#"><span
+                                                                class="glyphicon glyphicon-download btn-edit"></span>Download</a>
+                                                        </li>
+                                                        <li><a href="#" data-toggle="modal"
+                                                               data-target="#delete-resource-file"><span
+                                                                class="glyphicon glyphicon-trash icon-button btn-remove"></span>Delete</a>
+                                                        </li>
+                                                    </ul>
+                                                </div>
+
+                                                <div class="fb-folder">
+                                                    <div class="text-center" data-toggle="dropdown" aria-haspopup="true"
+                                                         aria-expanded="true">
+                                                        <span class="glyphicon glyphicon-folder-close glyphicon-folder"></span>
+
+                                                        <div>
+                                                            <small class="fb-file-name">Some folder</small>
+                                                        </div>
+                                                    </div>
+
+                                                    <ul class="dropdown-menu fb-dropdown arrow_box arrow_box_top_center"
+                                                        aria-labelledby="dropdownMenu1">
+                                                        <li><a href="#"><span
+                                                                class="glyphicon glyphicon-folder-open glyphicon-folder"></span>Open</a>
+                                                        </li>
+                                                        <li><a href="#"><span
+                                                                class="glyphicon glyphicon-download btn-edit"></span>Download</a>
+                                                        </li>
+                                                        <li><a href="#" data-toggle="modal"
+                                                               data-target="#delete-resource-file"><span
+                                                                class="glyphicon glyphicon-trash icon-button btn-remove"></span>Delete</a>
+                                                        </li>
+                                                    </ul>
+                                                </div>
+
+                                                <div class="fb-folder">
+                                                    <div class="text-center" data-toggle="dropdown" aria-haspopup="true"
+                                                         aria-expanded="true">
+                                                        <span class="glyphicon glyphicon-folder-close glyphicon-folder"></span>
+
+                                                        <div>
+                                                            <small class="fb-file-name">Some folder</small>
+                                                        </div>
+                                                    </div>
+
+                                                    <ul class="dropdown-menu fb-dropdown arrow_box arrow_box_top_center"
+                                                        aria-labelledby="dropdownMenu1">
+                                                        <li><a href="#"><span
+                                                                class="glyphicon glyphicon-folder-open glyphicon-folder"></span>Open</a>
+                                                        </li>
+                                                        <li><a href="#"><span
+                                                                class="glyphicon glyphicon-download btn-edit"></span>Download</a>
+                                                        </li>
+                                                        <li><a href="#" data-toggle="modal"
+                                                               data-target="#delete-resource-file"><span
+                                                                class="glyphicon glyphicon-trash icon-button btn-remove"></span>Delete</a>
+                                                        </li>
+                                                    </ul>
+                                                </div>
+
+                                                <div class="fb-folder">
+                                                    <div class="text-center" data-toggle="dropdown" aria-haspopup="true"
+                                                         aria-expanded="true">
+                                                        <span class="glyphicon glyphicon-folder-close glyphicon-folder"></span>
+
+                                                        <div>
+                                                            <small class="fb-file-name">Some folder</small>
+                                                        </div>
+                                                    </div>
+
+                                                    <ul class="dropdown-menu fb-dropdown arrow_box arrow_box_top_center"
+                                                        aria-labelledby="dropdownMenu1">
+                                                        <li><a href="#"><span
+                                                                class="glyphicon glyphicon-folder-open glyphicon-folder"></span>Open</a>
+                                                        </li>
+                                                        <li><a href="#"><span
+                                                                class="glyphicon glyphicon-download btn-edit"></span>Download</a>
+                                                        </li>
+                                                        <li><a href="#" data-toggle="modal"
+                                                               data-target="#delete-resource-file"><span
+                                                                class="glyphicon glyphicon-trash icon-button btn-remove"></span>Delete</a>
+                                                        </li>
+                                                    </ul>
+                                                </div>
+
+                                                <div class="fb-folder">
+                                                    <div class="text-center" data-toggle="dropdown" aria-haspopup="true"
+                                                         aria-expanded="true">
+                                                        <span class="glyphicon glyphicon-folder-close glyphicon-folder"></span>
+
+                                                        <div>
+                                                            <small class="fb-file-name">Some folder</small>
+                                                        </div>
+                                                    </div>
+
+                                                    <ul class="dropdown-menu fb-dropdown arrow_box arrow_box_top_center"
+                                                        aria-labelledby="dropdownMenu1">
+                                                        <li><a href="#"><span
+                                                                class="glyphicon glyphicon-folder-open glyphicon-folder"></span>Open</a>
+                                                        </li>
+                                                        <li><a href="#"><span
+                                                                class="glyphicon glyphicon-download btn-edit"></span>Download</a>
+                                                        </li>
+                                                        <li><a href="#" data-toggle="modal"
+                                                               data-target="#delete-resource-file"><span
+                                                                class="glyphicon glyphicon-trash icon-button btn-remove"></span>Delete</a>
+                                                        </li>
+                                                    </ul>
+                                                </div>
+
+                                                <div class="fb-folder">
+                                                    <div class="text-center" data-toggle="dropdown" aria-haspopup="true"
+                                                         aria-expanded="true">
+                                                        <span class="glyphicon glyphicon-folder-close glyphicon-folder"></span>
+
+                                                        <div>
+                                                            <small class="fb-file-name">Some folder</small>
+                                                        </div>
+                                                    </div>
+
+                                                    <ul class="dropdown-menu fb-dropdown arrow_box arrow_box_top_center"
+                                                        aria-labelledby="dropdownMenu1">
+                                                        <li><a href="#"><span
+                                                                class="glyphicon glyphicon-folder-open glyphicon-folder"></span>Open</a>
+                                                        </li>
+                                                        <li><a href="#"><span
+                                                                class="glyphicon glyphicon-download btn-edit"></span>Download</a>
+                                                        </li>
+                                                        <li><a href="#" data-toggle="modal"
+                                                               data-target="#delete-resource-file"><span
+                                                                class="glyphicon glyphicon-trash icon-button btn-remove"></span>Delete</a>
+                                                        </li>
+                                                    </ul>
+                                                </div>
+
+                                                <div class="fb-file">
+                                                    <div class="text-center" data-toggle="dropdown" aria-haspopup="true"
+                                                         aria-expanded="true">
+                                                        <span class="glyphicon glyphicon-file"></span>
+
+                                                        <div class="fb-file-name">
+                                                            <small>Some file.txt</small>
+                                                        </div>
+                                                    </div>
+
+                                                    <ul class="dropdown-menu fb-dropdown fb-dropdown arrow_box arrow_box_top_center"
+                                                        aria-labelledby="dropdownMenu1">
+                                                        <li><a href="#"><span
+                                                                class="glyphicon glyphicon-download btn-edit"></span>Download</a>
+                                                        </li>
+                                                        <li><a href="#" data-toggle="modal"
+                                                               data-target="#delete-resource-file"><span
+                                                                class="glyphicon glyphicon-trash icon-button btn-remove"></span>Delete</a>
+                                                        </li>
+                                                    </ul>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
                                 <div class="table-container">
                                     <table class="table-plain table-striped">
                                         {% for f in cm.files.all %}

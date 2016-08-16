@@ -67,13 +67,10 @@ h1.hl small, h2.hl small, h3.hl small, h4.hl small, h5.hl small, h6.hl small {
 	height: 160px;
 	padding: 0;
 	background: #FFF;
-	border: 1px solid #909090;
+	border: 1px solid #DDD;
 	-webkit-border-radius: 4px;
 	-moz-border-radius: 4px;
 	border-radius: 4px;
-	box-shadow: 1px 1px 5px rgba(0, 0, 0, 0.6);
-	-moz-box-shadow: 1px 1px 5px rgba(0, 0, 0, 0.6);
-	-webkit-box-shadow: 1px 1px 5px rgba(0, 0, 0, 0.6);
 }
 
 .navbar-inverse .navbar-nav > li > a:hover, .navbar-inverse .navbar-nav > li > a:focus {
@@ -3147,8 +3144,31 @@ h4.title {
     margin: 0 3px;
 }
 
+/*  CSS ARROW BEGINS */
 
 .arrow_box:after, .arrow_box:before {
+    bottom: 100%;
+    left: 90%;
+    border: solid transparent;
+    content: " ";
+    height: 0;
+    width: 0;
+    position: absolute;
+    pointer-events: none;
+}
+
+.arrow_box_top_center:before, .arrow_box_top_center:after {
+    bottom: 100%;
+    left: 50%;
+    border: solid transparent;
+    content: " ";
+    height: 0;
+    width: 0;
+    position: absolute;
+    pointer-events: none;
+}
+
+.arrow_box_top_right:after, .arrow_box_top_right:before {
     bottom: 100%;
     left: 90%;
     border: solid transparent;
@@ -3168,10 +3188,12 @@ h4.title {
 
 .arrow_box:before {
     border-color: rgba(194, 225, 245, 0);
-    border-bottom-color: #909090;
+    border-bottom-color: #DDD;
     border-width: 11px;
     margin-left: -11px;
 }
+
+/*  CSS ARROW ENDS */
 
 #signout-menu {
     float: right;
@@ -3762,4 +3784,129 @@ form#covereage-search-fields {
     padding-top: 10px;
     padding-bottom: 10px;
     border-radius: 4px;
+}
+
+
+/* -------------- File browser styling ---------------- */
+.file-browser {
+    margin-bottom: 20px;
+}
+
+#file-browser-controls  {
+    margin-bottom:10px;
+}
+.files-container {
+    height: 220px;
+    overflow-y: auto;
+    overflow-x: hidden;
+}
+
+.file-browser-breadcrumb .breadcrumb{
+    background: #FFF;
+    border-bottom: 1px solid #DDD;
+    border-radius: 0;
+    margin-bottom: 0;
+}
+
+.fb-folder, .fb-file {
+    width: 100px;
+    float: left;
+    margin: 10px;
+}
+
+.fb-file small, .fb-folder small {
+    color: #000;
+}
+
+.fb-file:hover, .fb-folder:hover {
+    cursor: pointer;
+    text-decoration: underline;
+}
+
+.fb-file .glyphicon-file {
+    color: #FFF;
+    text-shadow: -1px -1px 0 #006B92,
+    1px -1px 0 #006B92,
+    -1px 1px 0 #006B92,
+    1px 1px 0 #006B92;
+}
+
+.fb-folder .glyphicon-folder {
+    color: #E48E22;
+    text-shadow: -1px -1px 0 #C56E00,
+    1px -1px 0 #C56E00,
+    -1px 1px 0 #C56E00,
+    1px 1px 0 #C56E00;
+}
+
+.fb-file .glyphicon, .fb-folder .glyphicon {
+    font-size: 32px;
+}
+
+.file-browser-container {
+    border:1px solid #DDD;
+}
+
+.files-container {
+    padding: 5px 36px;
+    background-color: #FAFAFA;
+    box-shadow: inset 0 1px 2px rgba(0,0,0,0.075);
+}
+
+.file-browser-search {
+    width: 100%;
+}
+
+.fb-dropdown {
+    position: relative;
+    padding: 0;
+    margin: 0;
+    left: -30px;
+    top: 10px;
+    border: 0;
+    width: 0;
+    height: 0;
+}
+
+.fb-dropdown .glyphicon {
+    font-size: 16px;
+    margin: 0;
+    margin-right: 10px;
+    float: left;
+    padding: 0;
+}
+
+.fb-dropdown li {
+    background: #FFF;
+    border: 1px solid #DDD;
+    border-bottom: 0;
+    border-top: 0;
+}
+
+.fb-dropdown li:last-child {
+    border-bottom: 1px solid #DDD;
+}
+
+.fb-dropdown li:first-child {
+    border-top: 1px solid #DDD;
+    margin-top: -1px;
+}
+
+.fb-file-name {
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    overflow: hidden;
+}
+
+.fb-input-search {
+    padding-left: 25px;
+}
+
+span.fb-control-round {
+    border-radius: 50%;
+    width: 36px;
+    height: 36px;
+    margin-right: 10px;
+    padding-left: 10px;
+    padding-top: 8px;
 }
