@@ -34,7 +34,7 @@ urlpatterns = patterns('',
     url(r'^resource/(?P<pk>[A-z0-9]+)/file_list/$', views.resource_rest_api.ResourceFileList.as_view(),
         name='get_resource_file_list'),
 
-    url(r'^taskstatus/(?P<task_id>[A-z0-9]+)/$', views.resource_rest_api.CheckTaskStatus.as_view(),
+    url(r'^taskstatus/(?P<task_id>[A-z0-9\-]+)/$', views.resource_rest_api.CheckTaskStatus.as_view(),
         name='get_task_status'),
 
     url(r'^userInfo/$',

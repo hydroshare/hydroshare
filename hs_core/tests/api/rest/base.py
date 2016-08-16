@@ -2,6 +2,7 @@ import socket
 import json
 
 from django.contrib.auth.models import Group
+from django.core.urlresolvers import reverse
 
 from rest_framework.test import APIClient
 from rest_framework import status
@@ -51,6 +52,16 @@ class HSRESTTestCase(APITestCase):
         url = "/hsapi/resource/{res_id}".format(res_id=res_id)
         return self._get_file_irods(url, exhaust_stream)
 
+    def getDownloadTaskStatus(self, task_id):
+        """Check download celery task status.
+
+        :param task_id: ID of download celery task
+        :return: Django test client response object
+        """
+        url = reverse('get_task_status', kwargs={'task_id': task_id})
+        return self.client.get(url, follow=True)
+
+
     def getResourceFile(self, res_id, file_name, exhaust_stream=True):
         """Get resource file from iRODS, following redirects
 
@@ -69,7 +80,6 @@ class HSRESTTestCase(APITestCase):
     def _get_file_irods(self, url, exhaust_stream=True):
         response = self.client.get(url, follow=True)
         self.assertTrue(response.status_code, status.HTTP_200_OK)
-
         # Exhaust the file stream so that WSGI doesn't get upset (this causes the Docker container to exit)
         if exhaust_stream and hasattr(response, 'streaming_content'):
             for l in response.streaming_content:
