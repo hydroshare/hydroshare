@@ -22,7 +22,6 @@ OTHER_DOCKER_CONTAINERS=(postgis rabbitmq redis solr)
 
 ### Pre-flight Variables ###
 DEV_SERVER='python manage.py runserver 0.0.0.0:8000'
-#DEV_SERVER="runuser -l hydro-service -c 'python manage.py runserver 0.0.0.0:8000'"
 DEV_SSH_COMMAND="runuser -l hydro-service -c '/usr/sbin/sshd'"
 PROD_SERVER='/usr/bin/supervisord -n'
 PROD_SSH_COMMAND="# REMOVED SSH COMPONENT"
@@ -351,11 +350,11 @@ reset_all_hs() {
     if [[ -d hydroshare/static ]]; then rm -rf hydroshare/static; fi
     if [[ -d log ]]; then rm -rf log; fi
     if [[ -d celery ]]; then rm -rf celery; fi
-    if [[ -f root-items.txt ]]; then rm root-items.txt; fi
-    if [[ -f celerybeat.pid ]]; then rm celerybeat.pid; fi
-    if [[ -f init-hydroshare ]]; then rm init-hydroshare; fi
-    if [[ -f docker-compose.yml ]]; then rm docker-compose.yml; fi
-    if [[ -f schema.xml ]]; then rm schema.xml; fi
+    if [[ -f root-items.txt ]]; then rm -f root-items.txt; fi
+    if [[ -f celerybeat.pid ]]; then rm -f celerybeat.pid; fi
+    if [[ -f init-hydroshare ]]; then rm -f init-hydroshare; fi
+    if [[ -f docker-compose.yml ]]; then rm -f docker-compose.yml; fi
+    if [[ -f schema.xml ]]; then rm -f schema.xml; fi
 }
 
 ### Display usage if exactly one argument is not provided ###
