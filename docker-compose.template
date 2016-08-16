@@ -55,7 +55,7 @@ hydroshare:
     - redis:redis
     - rabbitmq:rabbitmq
     - solr:solr
-  command: /bin/bash init
+  command: /bin/bash init-hydroshare
 defaultworker:
   build: .
   container_name: defaultworker

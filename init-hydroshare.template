@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-# init
+# init-hydroshare
 # HydroShare container intiliaization script
 # Author: Michael Stealey <michael.j.stealey@gmail.com>
 
