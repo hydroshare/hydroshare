@@ -15,7 +15,7 @@ from django.utils.timezone import now
 from mezzanine.pages.page_processors import processor_for
 
 from hs_core.models import BaseResource, ResourceManager, resource_processor, CoreMetaData, \
-    AbstractMetaDataElement
+    AbstractMetaDataElement, Creator
 from hs_core.hydroshare import utils
 from hs_core.hydroshare import add_resource_files
 
@@ -908,24 +908,27 @@ class TimeSeriesMetaData(CoreMetaData):
                 con.commit()
                 insert_sql = "INSERT INTO Methods (MethodID, MethodTypeCV, MethodCode, " \
                              "MethodName, MethodDescription, MethodLink) VALUES(?,?,?,?,?,?)"
+                methods_data = []
                 for index, method in enumerate(self.methods):
                     method_id = index + 1
                     cur.execute(insert_sql, (method_id, method.method_type, method.method_code,
                                              method.method_name, method.method_description,
                                              method.method_link),)
+                    methods_data.append({'method_id': method_id, 'series_ids': method.series_ids})
                 # insert record to Variables table - first delete any existing records
                 cur.execute("DELETE FROM Variables")
                 con.commit()
                 insert_sql = "INSERT INTO Variables (VariableID, VariableTypeCV, " \
                              "VariableCode, VariableNameCV, VariableDefinition, " \
                              "SpeciationCV, NoDataValue) VALUES(?,?,?,?,?,?,?)"
+                variable_data = []
                 for index, variable in enumerate(self.variables):
                     variable_id = index + 1
                     cur.execute(insert_sql, (variable_id, variable.variable_type,
                                              variable.variable_code, variable.variable_name,
                                              variable.variable_definition, variable.speciation,
                                              variable.no_data_value),)
-
+                    variable_data.append({'variable_id': variable_id, 'object_id': variable.id})
                 # insert record to Units table - first delete any existing records
                 cur.execute("DELETE FROM Units")
                 con.commit()
@@ -940,10 +943,14 @@ class TimeSeriesMetaData(CoreMetaData):
                 con.commit()
                 insert_sql = "INSERT INTO ProcessingLevels (ProcessingLevelID, " \
                              "ProcessingLevelCode, Definition, Explanation) VALUES(?,?,?,?)"
+                pro_level_data = []
                 for index, pro_level in enumerate(self.processing_levels):
                     pro_level_id = index + 1
                     cur.execute(insert_sql, (pro_level_id, pro_level.processing_level_code,
                                              pro_level.definition, pro_level.explanation),)
+
+                    pro_level_data.append({'pro_level_id': pro_level_id,
+                                           'object_id': pro_level.id})
 
                 # insert record to People table - first delete any existing records
                 cur.execute("DELETE FROM People")
@@ -964,23 +971,27 @@ class TimeSeriesMetaData(CoreMetaData):
                     elif len(name_parts) == 2:
                         last_name = name_parts[1]
                     cur.execute(insert_sql, (person_id, first_name, mid_name, last_name), )
+                    is_creator = isinstance(person, Creator)
                     people_data.append({'person_id': person_id,
                                         'organization': person.organization,
                                         'email': person.email,
                                         'phone': person.phone,
-                                        'address': person.address})
+                                        'address': person.address,
+                                        'is_creator': is_creator,
+                                        'object_id': person.id})
                 # insert record to Organizations table - first delete any existing records
                 cur.execute("DELETE FROM Organizations")
                 con.commit()
                 organizations = []
                 org_id = 1
                 insert_sql = "INSERT INTO Organizations (OrganizationID, OrganizationTypeCV, " \
-                             "OrganizationCode, 'OrganizationName') VALUES(?,?,?,?)"
+                             "OrganizationCode, OrganizationName) VALUES(?,?,?,?)"
                 for person in (list(self.creators.all()) + list(self.contributors.all())):
-                    if person.organization and person.organization not in organizations:
-                        organizations.append(person.organization)
+                    organization_name = person.organization if person.organization else 'Unknown'
+                    if organization_name not in organizations:
+                        organizations.append(organization_name)
                         cur.execute(insert_sql, (org_id, 'Unknown', str(org_id),
-                                                 person.organization),)
+                                                 organization_name),)
                         org_id += 1
 
                 # insert record to Affiliations table - first delete any existing records
@@ -1008,7 +1019,106 @@ class TimeSeriesMetaData(CoreMetaData):
                                              now(), person_data['phone'], person_data['email'],
                                              person_data['address']), )
 
-                # TODO: start populating the Actions table
+                # insert record to Actions table - first delete any existing records
+                cur.execute("DELETE FROM Actions")
+                con.commit()
+                insert_sql = "INSERT INTO Actions (ActionID, ActionTypeCV, MethodID, " \
+                             "BeginDateTime, BeginDateTimeUTCOffset, " \
+                             "ActionDescription) VALUES(?,?,?,?,?,?)"
+                for index, ts_result in enumerate(self.time_series_results.all()):
+                    action_id = index + 1
+                    method_id = 1
+                    for method_data_item in methods_data:
+                        if ts_result.series_ids[0] in method_data_item['series_ids']:
+                            method_id = method_data_item['method_id']
+                            break
+                    cur.execute(insert_sql, (action_id, 'Observation', method_id, now(), -7,
+                                             'An observation action that generated a time '
+                                             'series result.'),)
+
+                # insert record to ActionBy table - first delete any existing records
+                cur.execute("DELETE FROM ActionBy")
+                con.commit()
+                select_sql = "SELECT * FROM People"
+                cur.execute(select_sql)
+                people = cur.fetchall()
+                insert_sql = "INSERT INTO ActionBy (BridgeID, ActionID, AffiliationID, " \
+                             "IsActionLead, RoleDescription) VALUES(?,?,?,?,?)"
+                cur.execute("SELECT * FROM Actions")
+                actions = cur.fetchall()
+                bridge_id = 1
+                found_first_author = False
+                for person in people:
+                    cur.execute("SELECT * FROM Affiliations WHERE PersonID=?",
+                                (person['PersonID'],))
+                    affiliation = cur.fetchone()
+                    affiliation_id = affiliation['AffiliationID']
+                    # check is this person is the first author
+                    is_action_lead = False
+                    role_description = 'Contributor'
+                    if not found_first_author:
+                        for p_item in people_data:
+                            if p_item['person_id'] == person['PersonID'] and p_item['is_creator']:
+                                first_author = self.creators.all().filter(order=1)[0]
+                                if first_author.id == p_item['object_id']:
+                                    is_action_lead = True
+                                    role_description = 'Creator'
+                                    found_first_author = True
+                                    break
+
+                    for action in actions:
+                        cur.execute(insert_sql, (bridge_id, action['ActionID'], affiliation_id,
+                                                 is_action_lead, role_description),)
+                        bridge_id += 1
+
+                # insert record to FeatureActions table - first delete any existing records
+                cur.execute("DELETE FROM FeatureActions")
+                con.commit()
+                insert_sql = "INSERT INTO FeatureActions (FeatureActionID, SamplingFeatureID, " \
+                             "ActionID) VALUES(?,?,?)"
+                for action in actions:
+                    cur.execute("SELECT * FROM SamplingFeatures WHERE SamplingFeatureID=?",
+                                (action['ActionID'],))
+                    sampling_feature = cur.fetchone()
+                    sampling_feature_id = sampling_feature['SamplingFeatureID'] \
+                        if sampling_feature else 1
+                    cur.execute(insert_sql, (action['ActionID'], sampling_feature_id,
+                                             action['ActionID']),)
+
+                # insert record to Results table - first delete any existing records
+                cur.execute("DELETE FROM Results")
+                con.commit()
+                insert_sql = "INSERT INTO Results (ResultID, ResultUUID, FeatureActionID, " \
+                             "ResultTypeCV, VariableID, UnitsID, ProcessingLevelID, " \
+                             "ResultDateTime, ResultDateTimeUTCOffset, StatusCV, " \
+                             "SampledMediumCV, ValueCount) VALUES(?,?,?,?,?,?,?,?,?,?,?,?)"
+
+                for index, ts_res in enumerate(self.time_series_results.all()):
+                    result_id = index + 1
+                    cur.execute("SELECT * FROM FeatureActions WHERE ActionID=?", (result_id,))
+                    feature_act = cur.fetchone()
+                    related_var = self.variables.all().filter(
+                        series_ids__contains=[ts_res.series_ids[0]]).first()
+                    variable_id = 1
+                    for var_item in variable_data:
+                        if var_item['object_id'] == related_var.id:
+                            variable_id = var_item['variable_id']
+                            break
+
+                    related_pro_level = self.processing_levels.all().filter(
+                        series_ids__contains=[ts_res.series_ids[0]]).first()
+                    pro_level_id = 1
+                    for pro_level_item in pro_level_data:
+                        if pro_level_item['object_id'] == related_pro_level.id:
+                            pro_level_id = pro_level_item['pro_level_id']
+                            break
+                    cur.execute("SELECT * FROM Units Where UnitsID=?", (result_id,))
+                    unit = cur.fetchone()
+                    cur.execute(insert_sql, (result_id, ts_res.series_ids[0],
+                                             feature_act['FeatureActionID'], 'Time series coverage',
+                                             variable_id, unit['UnitsID'], pro_level_id, now(), -7,
+                                             ts_res.status, ts_res.sample_medium,
+                                             ts_res.value_count),)
 
                 # self._update_variables_table(con, cur)
                 # self._update_methods_table(con, cur)
