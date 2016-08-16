@@ -57,20 +57,22 @@
                     <div class="col-sm-12 content-block">
                         <h3>Content</h3>
                         {% if show_content_files %}
-                            <div class="custom-well">
                                 {% if cm.files.all %}
                                     <div class="file-browser">
                                         <div id="file-browser-controls" class="row">
                                             <div class="col-xs-6">
-                                            <span class="btn btn-default fb-control-round"
-                                                  title="Click to go back"><span
-                                                    class="glyphicon glyphicon-arrow-left"></span></span>
-                                            <span class="btn btn-default fb-control-round"
-                                                  title="Click to go forward"><span
-                                                    class="glyphicon glyphicon-arrow-right"></span></span>
-                                            <span class="btn btn-default fb-control-round"><span
-                                                    class="glyphicon glyphicon-chevron-up"
-                                                    title="Click to go to parent directory"></span></span>
+                                                <span class="btn btn-default fb-control-round"
+                                                      title="Click to go back"><span
+                                                        class="glyphicon glyphicon-arrow-left"></span></span>
+                                                <span class="btn btn-default fb-control-round"
+                                                      title="Click to go forward"><span
+                                                        class="glyphicon glyphicon-arrow-right"></span></span>
+                                                <span class="btn btn-default fb-control-round"><span
+                                                        class="glyphicon glyphicon-chevron-up"
+                                                        title="Click to go to parent directory"></span></span>
+                                                <span class="btn btn-default fb-control-round"><span
+                                                        class="fa fa-folder"
+                                                        title="Create new folder"></span></span>
                                             </div>
 
                                             <div class="col-xs-6">
@@ -85,25 +87,17 @@
                                         <div class="file-browser-container">
                                             <div class="file-browser-breadcrumb">
                                                 <ol class="breadcrumb">
-                                                    <li><a href="#">Foo</a></li>
-                                                    <li><a href="#">Bar</a></li>
-                                                    <li class="active">Data</li>
+                                                    <li><a href="#"><i class="fa fa-folder-o" aria-hidden="true"></i> Foo</a></li>
+                                                    <li><a href="#"><i class="fa fa-folder-o" aria-hidden="true"></i> Bar</a></li>
+                                                    <li class="active"><i class="fa fa-folder-open-o" aria-hidden="true"></i> Data</li>
                                                 </ol>
                                             </div>
 
-                                            <div class="files-container">
-                                                <div class="fb-folder">
-                                                    <div class="text-center" data-toggle="dropdown" aria-haspopup="true"
-                                                         aria-expanded="true">
-                                                        <span class="glyphicon glyphicon-folder-close glyphicon-folder"></span>
+                                            <div id="fb-containment-wrapper" class="files-container ui-widget-content">
+                                                <ul id="fb-list" class="selectable">
 
-                                                        <div>
-                                                            <small class="fb-file-name">Some folder</small>
-                                                        </div>
-                                                    </div>
-
-                                                    <ul class="dropdown-menu fb-dropdown arrow_box arrow_box_top_center"
-                                                        aria-labelledby="dropdownMenu1">
+                                                    {# POPUP MENU #}
+                                                    <ul id="selection-menu" class="dropdown-menu fb-dropdown arrow_box arrow_box_top_center">
                                                         <li><a href="#"><span
                                                                 class="glyphicon glyphicon-folder-open glyphicon-folder"></span>Open</a>
                                                         </li>
@@ -115,259 +109,134 @@
                                                                 class="glyphicon glyphicon-trash icon-button btn-remove"></span>Delete</a>
                                                         </li>
                                                     </ul>
-                                                </div>
 
-                                                <div class="fb-folder">
-                                                    <div class="text-center" data-toggle="dropdown" aria-haspopup="true"
-                                                         aria-expanded="true">
-                                                        <span class="glyphicon glyphicon-folder-close glyphicon-folder"></span>
+                                                    {# FOLDER TEMPLATE #}
+                                                    <li class="fb-folder droppable">
+                                                        <div class="text-center">
+                                                            <span class="fa fa-folder glyphicon-folder"></span>
 
-                                                        <div>
-                                                            <small class="fb-file-name">Some folder</small>
+                                                            <div>
+                                                                <small class="fb-file-name">Some folder</small>
+                                                            </div>
                                                         </div>
-                                                    </div>
+                                                    </li>
 
-                                                    <ul class="dropdown-menu fb-dropdown arrow_box arrow_box_top_center"
-                                                        aria-labelledby="dropdownMenu1">
-                                                        <li><a href="#"><span
-                                                                class="glyphicon glyphicon-folder-open glyphicon-folder"></span>Open</a>
-                                                        </li>
-                                                        <li><a href="#"><span
-                                                                class="glyphicon glyphicon-download btn-edit"></span>Download</a>
-                                                        </li>
-                                                        <li><a href="#" data-toggle="modal"
-                                                               data-target="#delete-resource-file"><span
-                                                                class="glyphicon glyphicon-trash icon-button btn-remove"></span>Delete</a>
-                                                        </li>
-                                                    </ul>
-                                                </div>
+                                                    {# FILE TEMPLATE #}
+                                                    <li class="fb-file droppable">
+                                                        <div class="text-center">
+                                                            <span class="fa fa-file-text fb-file-icon"></span>
 
-                                                <div class="fb-folder">
-                                                    <div class="text-center" data-toggle="dropdown" aria-haspopup="true"
-                                                         aria-expanded="true">
-                                                        <span class="glyphicon glyphicon-folder-close glyphicon-folder"></span>
-
-                                                        <div>
-                                                            <small class="fb-file-name">Some folder</small>
+                                                            <div class="fb-file-name">
+                                                                <small>Some file.txt</small>
+                                                            </div>
                                                         </div>
-                                                    </div>
-
-                                                    <ul class="dropdown-menu fb-dropdown arrow_box arrow_box_top_center"
-                                                        aria-labelledby="dropdownMenu1">
-                                                        <li><a href="#"><span
-                                                                class="glyphicon glyphicon-folder-open glyphicon-folder"></span>Open</a>
-                                                        </li>
-                                                        <li><a href="#"><span
-                                                                class="glyphicon glyphicon-download btn-edit"></span>Download</a>
-                                                        </li>
-                                                        <li><a href="#" data-toggle="modal"
-                                                               data-target="#delete-resource-file"><span
-                                                                class="glyphicon glyphicon-trash icon-button btn-remove"></span>Delete</a>
-                                                        </li>
-                                                    </ul>
-                                                </div>
-
-                                                <div class="fb-folder">
-                                                    <div class="text-center" data-toggle="dropdown" aria-haspopup="true"
-                                                         aria-expanded="true">
-                                                        <span class="glyphicon glyphicon-folder-close glyphicon-folder"></span>
-
-                                                        <div>
-                                                            <small class="fb-file-name">Some folder</small>
-                                                        </div>
-                                                    </div>
-
-                                                    <ul class="dropdown-menu fb-dropdown arrow_box arrow_box_top_center"
-                                                        aria-labelledby="dropdownMenu1">
-                                                        <li><a href="#"><span
-                                                                class="glyphicon glyphicon-folder-open glyphicon-folder"></span>Open</a>
-                                                        </li>
-                                                        <li><a href="#"><span
-                                                                class="glyphicon glyphicon-download btn-edit"></span>Download</a>
-                                                        </li>
-                                                        <li><a href="#" data-toggle="modal"
-                                                               data-target="#delete-resource-file"><span
-                                                                class="glyphicon glyphicon-trash icon-button btn-remove"></span>Delete</a>
-                                                        </li>
-                                                    </ul>
-                                                </div>
-
-                                                <div class="fb-folder">
-                                                    <div class="text-center" data-toggle="dropdown" aria-haspopup="true"
-                                                         aria-expanded="true">
-                                                        <span class="glyphicon glyphicon-folder-close glyphicon-folder"></span>
-
-                                                        <div>
-                                                            <small class="fb-file-name">Some folder</small>
-                                                        </div>
-                                                    </div>
-
-                                                    <ul class="dropdown-menu fb-dropdown arrow_box arrow_box_top_center"
-                                                        aria-labelledby="dropdownMenu1">
-                                                        <li><a href="#"><span
-                                                                class="glyphicon glyphicon-folder-open glyphicon-folder"></span>Open</a>
-                                                        </li>
-                                                        <li><a href="#"><span
-                                                                class="glyphicon glyphicon-download btn-edit"></span>Download</a>
-                                                        </li>
-                                                        <li><a href="#" data-toggle="modal"
-                                                               data-target="#delete-resource-file"><span
-                                                                class="glyphicon glyphicon-trash icon-button btn-remove"></span>Delete</a>
-                                                        </li>
-                                                    </ul>
-                                                </div>
-
-                                                <div class="fb-folder">
-                                                    <div class="text-center" data-toggle="dropdown" aria-haspopup="true"
-                                                         aria-expanded="true">
-                                                        <span class="glyphicon glyphicon-folder-close glyphicon-folder"></span>
-
-                                                        <div>
-                                                            <small class="fb-file-name">Some folder</small>
-                                                        </div>
-                                                    </div>
-
-                                                    <ul class="dropdown-menu fb-dropdown arrow_box arrow_box_top_center"
-                                                        aria-labelledby="dropdownMenu1">
-                                                        <li><a href="#"><span
-                                                                class="glyphicon glyphicon-folder-open glyphicon-folder"></span>Open</a>
-                                                        </li>
-                                                        <li><a href="#"><span
-                                                                class="glyphicon glyphicon-download btn-edit"></span>Download</a>
-                                                        </li>
-                                                        <li><a href="#" data-toggle="modal"
-                                                               data-target="#delete-resource-file"><span
-                                                                class="glyphicon glyphicon-trash icon-button btn-remove"></span>Delete</a>
-                                                        </li>
-                                                    </ul>
-                                                </div>
-
-                                                <div class="fb-file">
-                                                    <div class="text-center" data-toggle="dropdown" aria-haspopup="true"
-                                                         aria-expanded="true">
-                                                        <span class="glyphicon glyphicon-file"></span>
-
-                                                        <div class="fb-file-name">
-                                                            <small>Some file.txt</small>
-                                                        </div>
-                                                    </div>
-
-                                                    <ul class="dropdown-menu fb-dropdown fb-dropdown arrow_box arrow_box_top_center"
-                                                        aria-labelledby="dropdownMenu1">
-                                                        <li><a href="#"><span
-                                                                class="glyphicon glyphicon-download btn-edit"></span>Download</a>
-                                                        </li>
-                                                        <li><a href="#" data-toggle="modal"
-                                                               data-target="#delete-resource-file"><span
-                                                                class="glyphicon glyphicon-trash icon-button btn-remove"></span>Delete</a>
-                                                        </li>
-                                                    </ul>
-                                                </div>
+                                                    </li>
+                                                </ul>
                                             </div>
                                         </div>
                                     </div>
                                 <div class="table-container">
-                                    <table class="table-plain table-striped">
-                                        {% for f in cm.files.all %}
-                                            {% if f.resource_file or f.fed_resource_file or f.fed_resource_file_name_or_path %}
+{#                                    <table class="table-plain table-striped">#}
+{#                                        {% for f in cm.files.all %}#}
+{#                                            {% if f.resource_file or f.fed_resource_file or f.fed_resource_file_name_or_path %}#}
                                                 {#======= Modal window begins =======#}
-                                                {% if page.perms.change and metadata_form %}
-                                                    <div class="modal fade" id="delete-resource-file-{{ f.pk }}" tabindex="-1"
-                                                         role="dialog"
-                                                         aria-labelledby="myModalLabel" aria-hidden="true">
-                                                        <div class="modal-dialog">
-                                                            <div class="modal-content">
-                                                                <div class="modal-header">
-                                                                    <button type="button" class="close" data-dismiss="modal"
-                                                                            aria-hidden="true">&times;</button>
-                                                                    <h4 class="modal-title">Confirm file deletion</h4>
-                                                                </div>
-                                                                <div class="modal-body">
-                                                                    Consider saving a copy of the file before you delete it if
-                                                                    it is
-                                                                    important to you.
-                                                                </div>
-                                                                <div class="modal-footer">
-                                                                    <button type="button" class="btn btn-default"
-                                                                            data-dismiss="modal">
-                                                                        Cancel
-                                                                    </button>
-                                                                    <a type="button" class="btn btn-danger"
-                                                                       href="/hsapi/_internal/{{ cm.short_id }}/delete-resource-file/{{ f.pk }}/">Delete</a>
-                                                                </div>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                {% endif %}
+{#                                                {% if page.perms.change and metadata_form %}#}
+{#                                                    <div class="modal fade" id="delete-resource-file-{{ f.pk }}" tabindex="-1"#}
+{#                                                         role="dialog"#}
+{#                                                         aria-labelledby="myModalLabel" aria-hidden="true">#}
+{#                                                        <div class="modal-dialog">#}
+{#                                                            <div class="modal-content">#}
+{#                                                                <div class="modal-header">#}
+{#                                                                    <button type="button" class="close" data-dismiss="modal"#}
+{#                                                                            aria-hidden="true">&times;</button>#}
+{#                                                                    <h4 class="modal-title">Confirm file deletion</h4>#}
+{#                                                                </div>#}
+{#                                                                <div class="modal-body">#}
+{#                                                                    Consider saving a copy of the file before you delete it if#}
+{#                                                                    it is#}
+{#                                                                    important to you.#}
+{#                                                                </div>#}
+{#                                                                <div class="modal-footer">#}
+{#                                                                    <button type="button" class="btn btn-default"#}
+{#                                                                            data-dismiss="modal">#}
+{#                                                                        Cancel#}
+{#                                                                    </button>#}
+{#                                                                    <a type="button" class="btn btn-danger"#}
+{#                                                                       href="/hsapi/_internal/{{ cm.short_id }}/delete-resource-file/{{ f.pk }}/">Delete</a>#}
+{#                                                                </div>#}
+{#                                                            </div>#}
+{#                                                        </div>#}
+{#                                                    </div>#}
+{#                                                {% endif %}#}
                                                 {#======= Modal window ends =======#}
-                                                <tr>
-                                                    <td>
-                                                        <span class="glyphicon glyphicon-file file-icon"></span>
-                                                <span>
-                                                    <span class="label-file-name">
-                                                        {{ f.resource_file.name|slice:"33:" }}
-                                                        {% if f.fed_resource_file %}
-                                                            {{ f.fed_resource_file.name|relative_irods_path }}
-                                                        {% endif %}
-                                                        {% if f.fed_resource_file_name_or_path %}
-                                                            {{ f.fed_resource_file_name_or_path }}
-                                                        {% endif %}
-                                                    </span>
-                                                    <p class="label-file-size">
-                                                        {% if f.resource_file %}
-                                                            {{ f.resource_file.size|filesizeformat }}
-                                                        {% elif f.fed_resource_file %}
-                                                            {{ f.fed_resource_file.size|filesizeformat }}
-                                                        {% else %}
-                                                            {{ f.fed_resource_file_size|filesizeformat }}
-                                                        {% endif %}
-                                                    </p>
-                                                </span>
-                                                    </td>
+{#                                                <tr>#}
+{#                                                    <td>#}
+{#                                                        <span class="glyphicon glyphicon-file file-icon"></span>#}
+{#                                                <span>#}
+{#                                                    <span class="label-file-name">#}
+{#                                                        {{ f.resource_file.name|slice:"33:" }}#}
+{#                                                        {% if f.fed_resource_file %}#}
+{#                                                            {{ f.fed_resource_file.name|relative_irods_path }}#}
+{#                                                        {% endif %}#}
+{#                                                        {% if f.fed_resource_file_name_or_path %}#}
+{#                                                            {{ f.fed_resource_file_name_or_path }}#}
+{#                                                        {% endif %}#}
+{#                                                    </span>#}
+{#                                                    <p class="label-file-size">#}
+{#                                                        {% if f.resource_file %}#}
+{#                                                            {{ f.resource_file.size|filesizeformat }}#}
+{#                                                        {% elif f.fed_resource_file %}#}
+{#                                                            {{ f.fed_resource_file.size|filesizeformat }}#}
+{#                                                        {% else %}#}
+{#                                                            {{ f.fed_resource_file_size|filesizeformat }}#}
+{#                                                        {% endif %}#}
+{#                                                    </p>#}
+{#                                                </span>#}
+{#                                                    </td>#}
                                                     {#                    <td>{% if preview %}<a class="btn btn-info btn-block" href="{{ preview }}">Preview</a>{% endif %}</td>#}
-                                                    <td>
-                                                        {% if page.perms.change and metadata_form %}
-                                                            <a href="{% if f.resource_file %} {{ f.resource_file.url }}
-                                                            {% elif f.fed_resource_file %} {{ f.fed_resource_file.url }}
-                                                            {% else %} {{ f.fed_resource_file_name_or_path }}{% endif %}"><span data-toggle="modal"
-                                                                                                      data-target="#delete-resource-file-{{ f.pk }}"
-                                                                                                      data-placement="auto"
-                                                                                                      title="Delete"
-                                                                                                      class="glyphicon glyphicon-trash icon-button btn-remove"></span></a>
-
-                                                        {% endif %}
-                                                        {% if f.resource_file and f.resource_file.size < 1000000000 %}
-                                                            <a href="{{ f.resource_file.url }}"><span data-toggle="tooltip"
-                                                                                                  data-placement="auto"
-                                                                                                  title="Download"
-                                                                                                  class="glyphicon glyphicon-download icon-button btn-download"></span></a>
-                                                        {% elif f.fed_resource_file and f.fed_resource_file.size < 1000000000 %}
-                                                            <a href="{{ f.fed_resource_file.url }}"><span data-toggle="tooltip"
-                                                                                                  data-placement="auto"
-                                                                                                  title="Download"
-                                                                                                  class="glyphicon glyphicon-download icon-button btn-download"></span></a>
+{#                                                    <td>#}
+{#                                                        {% if page.perms.change and metadata_form %}#}
+{#                                                            <a href="{% if f.resource_file %} {{ f.resource_file.url }}#}
+{#                                                            {% elif f.fed_resource_file %} {{ f.fed_resource_file.url }}#}
+{#                                                            {% else %} {{ f.fed_resource_file_name_or_path }}{% endif %}"><span data-toggle="modal"#}
+{#                                                                                                      data-target="#delete-resource-file-{{ f.pk }}"#}
+{#                                                                                                      data-placement="auto"#}
+{#                                                                                                      title="Delete"#}
+{#                                                                                                      class="glyphicon glyphicon-trash icon-button btn-remove"></span></a>#}
+{##}
+{#                                                        {% endif %}#}
+{#                                                        {% if f.resource_file and f.resource_file.size < 1000000000 %}#}
+{#                                                            <a href="{{ f.resource_file.url }}"><span data-toggle="tooltip"#}
+{#                                                                                                  data-placement="auto"#}
+{#                                                                                                  title="Download"#}
+{#                                                                                                  class="glyphicon glyphicon-download icon-button btn-download"></span></a>#}
+{#                                                        {% elif f.fed_resource_file and f.fed_resource_file.size < 1000000000 %}#}
+{#                                                            <a href="{{ f.fed_resource_file.url }}"><span data-toggle="tooltip"#}
+{#                                                                                                  data-placement="auto"#}
+{#                                                                                                  title="Download"#}
+{#                                                                                                  class="glyphicon glyphicon-download icon-button btn-download"></span></a>#}
                                                         {# only allow download from irods user zone for files smaller than 1GB #}
-                                                        {% elif f.fed_resource_file_name_or_path and f.fed_resource_file_size|to_int < 1000000000 %}
-                                                            <a href="/django_irods/download{{ cm.resource_federation_path }}/{{ cm.short_id }}/{{ f.fed_resource_file_name_or_path }}"><span data-toggle="tooltip"
-                                                                                                  data-placement="auto"
-                                                                                                  title="Download"
-                                                                                                  class="glyphicon glyphicon-download icon-button btn-download"></span></a>
-                                                        {% else %}
-                                                            <span data-toggle="tooltip" data-placement="auto"
-                                                                  title="File larger than 1GB cannot be downloaded directly via HTTP. Please download the large file via iRODS clients."
-                                                                  class="glyphicon glyphicon-download icon-button btn-download"></span>
-                                                        {% endif %}
-                                                        {% if preview %}
-                                                            <a href="{{ preview }}"><span data-toggle="tooltip"
-                                                                                          data-placement="auto"
-                                                                                          title="Preview"
-                                                                                          class="glyphicon glyphicon-eye-open icon-button"></span></a>
-                                                        {% endif %}
-                                                    </td>
-                                                </tr>
-                                            {% endif %}
-                                        {% endfor %}
-                                    </table>
+{#                                                        {% elif f.fed_resource_file_name_or_path and f.fed_resource_file_size|to_int < 1000000000 %}#}
+{#                                                            <a href="/django_irods/download{{ cm.resource_federation_path }}/{{ cm.short_id }}/{{ f.fed_resource_file_name_or_path }}"><span data-toggle="tooltip"#}
+{#                                                                                                  data-placement="auto"#}
+{#                                                                                                  title="Download"#}
+{#                                                                                                  class="glyphicon glyphicon-download icon-button btn-download"></span></a>#}
+{#                                                        {% else %}#}
+{#                                                            <span data-toggle="tooltip" data-placement="auto"#}
+{#                                                                  title="File larger than 1GB cannot be downloaded directly via HTTP. Please download the large file via iRODS clients."#}
+{#                                                                  class="glyphicon glyphicon-download icon-button btn-download"></span>#}
+{#                                                        {% endif %}#}
+{#                                                        {% if preview %}#}
+{#                                                            <a href="{{ preview }}"><span data-toggle="tooltip"#}
+{#                                                                                          data-placement="auto"#}
+{#                                                                                          title="Preview"#}
+{#                                                                                          class="glyphicon glyphicon-eye-open icon-button"></span></a>#}
+{#                                                        {% endif %}#}
+{#                                                    </td>#}
+{#                                                </tr>#}
+{#                                            {% endif %}#}
+{#                                        {% endfor %}#}
+{#                                    </table>#}
                                 </div>
                                 {% else %}
                                     <i>No files have been uploaded.</i>
@@ -398,8 +267,6 @@
                                       </div>
                                     {% endif %}
                                 {% endif %}
-
-                            </div>
                             <!-- Buttons -->
                             {% block download_bag %}
                             <div>
@@ -1233,6 +1100,7 @@
         <script type="text/javascript" src="{{ STATIC_URL }}js/coverageMap.js"></script>
         <script src="https://maps.googleapis.com/maps/api/js?libraries=drawing"></script>
         <script type="text/javascript" src="{{ STATIC_URL }}js/resourceLandingAjax.js"></script>
+        <script type="text/javascript" src="{{ STATIC_URL }}js/hs_file_browser.js"></script>
         <script type="text/javascript" src='//cdn.datatables.net/1.10.10/js/jquery.dataTables.js'></script>
         <script type="text/javascript">
             function onRoleSelect(event) {

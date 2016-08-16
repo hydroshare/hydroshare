@@ -3811,19 +3811,42 @@ form#covereage-search-fields {
 .fb-folder, .fb-file {
     width: 100px;
     float: left;
-    margin: 10px;
+    padding: 10px;
+	list-style-type: none;
+}
+
+.fb-folder:hover, .fb-file:hover, .fb-folder.ui-selected, .fb-file.ui-selected {
+	border: 1px solid #fcefa1;
+	background: rgba(252, 239, 161, 0.14);
+	color: #363636;
+	padding: 9px;
+}
+
+.handle .fa-arrows {
+	font-size: 18px !important;
+	color:#FFF;
+	cursor: pointer;
+}
+
+.fb-folder:hover > .handle .fa-arrows, .fb-file:hover > .handle .fa-arrows, .fb-file.ui-selected > .handle .fa-arrows,
+.fb-folder.ui-selected > .handle .fa-arrows, .fb-file.ui-selecting > .handle .fa-arrows,
+.fb-folder.ui-selecting > .handle .fa-arrows {
+	color: #e6a14b;
+	font-size: 18px;
+}
+
+.fb-folder.ui-selecting, .fb-file.ui-selecting {
+	border: 1px solid #fcefa1;
+	background: #fbf9ee url(images/ui-bg_glass_55_fbf9ee_1x400.png) 50% 50% repeat-x;
+	color: #363636;
+	padding: 9px;
 }
 
 .fb-file small, .fb-folder small {
     color: #000;
 }
 
-.fb-file:hover, .fb-folder:hover {
-    cursor: pointer;
-    text-decoration: underline;
-}
-
-.fb-file .glyphicon-file {
+.fb-file .fb-file-icon {
     color: #FFF;
     text-shadow: -1px -1px 0 #006B92,
     1px -1px 0 #006B92,
@@ -3839,7 +3862,7 @@ form#covereage-search-fields {
     1px 1px 0 #C56E00;
 }
 
-.fb-file .glyphicon, .fb-folder .glyphicon {
+.fb-file .fa, .fb-folder .fa {
     font-size: 32px;
 }
 
@@ -3848,7 +3871,6 @@ form#covereage-search-fields {
 }
 
 .files-container {
-    padding: 5px 36px;
     background-color: #FAFAFA;
     box-shadow: inset 0 1px 2px rgba(0,0,0,0.075);
 }
@@ -3909,4 +3931,18 @@ span.fb-control-round {
     margin-right: 10px;
     padding-left: 10px;
     padding-top: 8px;
+}
+
+.files-container ul li a {
+	padding: 10px;
+}
+
+#fb-list {
+	padding: 10px 36px;
+	width: 100%;
+	height: 100%;
+}
+
+.handle {
+	width: 20px;
 }
