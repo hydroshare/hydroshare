@@ -103,6 +103,8 @@ def _get_resource_view_context(page, request, content_model, selected_series_id,
 def _get_resource_edit_context(page, request, content_model, selected_series_id, series_ids,
                                extended_metadata_exists):
 
+    selected_series_label = series_ids[selected_series_id] if selected_series_id is not None else ''
+
     if content_model.can_add_blank_sqlite_file:
         content_model.add_blank_sqlite_file()
 
@@ -138,6 +140,7 @@ def _get_resource_edit_context(page, request, content_model, selected_series_id,
                                                     timeseries_result_form.initial['status'])
     else:
         timeseries_result_form.set_dropdown_widgets()
+        timeseries_result_form.set_series_label(selected_series_label)
 
     ext_md_layout = Layout(UpdateSQLiteLayout,
                            SeriesSelectionLayout,

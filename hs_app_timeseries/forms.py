@@ -366,6 +366,7 @@ class TimeSeriesResultFormHelper(BaseFormHelper):
                      Field('value_count', css_class=field_width),
                      Field('aggregation_statistics', css_class=field_width,
                            title="Select 'Other...' to specify a new aggregation statistics term"),
+                     Field('series_label', css_class=field_width, type="hidden"),
                      )
         kwargs['element_name_label'] = 'Time Series Result'
         super(TimeSeriesResultFormHelper, self).__init__(allow_edit, res_short_id, element_id,
@@ -402,6 +403,10 @@ class TimeSeriesResultForm(ModelForm):
         self.fields['aggregation_statistics'].widget = forms.Select(
             choices=cv_agg_statistics_choices)
 
+    def set_series_label(self, series_label):
+        self.fields['series_label'].initial = series_label
+
+
     @property
     def form_id(self):
         form_id = 'id_timeseriesresult_%s' % self.number
@@ -414,7 +419,7 @@ class TimeSeriesResultForm(ModelForm):
     class Meta:
         model = TimeSeriesResult
         fields = ['units_type', 'units_name', 'units_abbreviation', 'status', 'sample_medium',
-                  'value_count', 'aggregation_statistics']
+                  'value_count', 'aggregation_statistics', 'series_label']
         widgets = {'value_count': forms.TextInput()}
 
 
@@ -426,6 +431,7 @@ class TimeSeriesResultValidationForm(forms.Form):
     sample_medium = forms.CharField(max_length=255)
     value_count = forms.IntegerField()
     aggregation_statistics = forms.CharField(max_length=255)
+    series_label = forms.CharField(max_length=255, required=False)
     selected_series_id = forms.CharField(max_length=50, required=False)
 
 

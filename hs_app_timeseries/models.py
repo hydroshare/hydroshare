@@ -1,9 +1,11 @@
 import os
 import sqlite3
+import csv
 import shutil
 import logging
 import tempfile
 from uuid import uuid4
+from dateutil import parser
 
 from django.contrib.contenttypes.fields import GenericRelation
 from django.contrib.postgres.fields import ArrayField
@@ -338,6 +340,7 @@ class TimeSeriesResult(TimeSeriesAbstractMetaDataElement):
     sample_medium = models.CharField(max_length=255)
     value_count = models.IntegerField()
     aggregation_statistics = models.CharField(max_length=255)
+    series_label = models.CharField(max_length=255, blank=True, null=True)
 
     def __unicode__(self):
         return self.units_type
@@ -837,10 +840,12 @@ class TimeSeriesMetaData(CoreMetaData):
         # update resource specific metadata element series ids with generated GUID
         self._update_metadata_element_series_ids_with_guids()
         blank_sqlite_file = utils.get_resource_files_by_extension(self.resource, ".sqlite")[0]
+        csv_file = utils.get_resource_files_by_extension(self.resource, ".csv")[0]
         log = logging.getLogger()
 
-        # retrieve the sqlite file from iRODS and save it to temp directory
+        # retrieve the sqlite file and csv file from iRODS and save it to temp directory
         temp_sqlite_file = utils.get_file_from_irods(blank_sqlite_file)
+        temp_csv_file = utils.get_file_from_irods(csv_file)
         try:
             con = sqlite3.connect(temp_sqlite_file)
             with con:
@@ -1093,6 +1098,7 @@ class TimeSeriesMetaData(CoreMetaData):
                              "ResultDateTime, ResultDateTimeUTCOffset, StatusCV, " \
                              "SampledMediumCV, ValueCount) VALUES(?,?,?,?,?,?,?,?,?,?,?,?)"
 
+                results_data = []
                 for index, ts_res in enumerate(self.time_series_results.all()):
                     result_id = index + 1
                     cur.execute("SELECT * FROM FeatureActions WHERE ActionID=?", (result_id,))
@@ -1119,6 +1125,65 @@ class TimeSeriesMetaData(CoreMetaData):
                                              variable_id, unit['UnitsID'], pro_level_id, now(), -7,
                                              ts_res.status, ts_res.sample_medium,
                                              ts_res.value_count),)
+                    results_data.append({'result_id': result_id, 'object_id': ts_res.id})
+
+                # insert record to TimeSeriesResults table - first delete any existing records
+                cur.execute("DELETE FROM TimeSeriesResults")
+                con.commit()
+                insert_sql = "INSERT INTO TimeSeriesResults (ResultID, AggregationStatisticCV) " \
+                             "VALUES(?,?)"
+                cur.execute("SELECT * FROM Results")
+                results = cur.fetchall()
+                for result in results:
+                    res_item = [dict_item for dict_item in results_data if
+                                dict_item['result_id'] == result['ResultID']][0]
+                    ts_result = [ts_item for ts_item in self.time_series_results.all() if
+                                 ts_item.id == res_item['object_id']][0]
+                    cur.execute(insert_sql, (result['ResultID'], ts_result.aggregation_statistics),)
+
+                # insert record to TimeSeriesResultValues table - first delete any existing records
+                cur.execute("DELETE FROM TimeSeriesResultValues")
+                con.commit()
+                insert_sql = "INSERT INTO TimeSeriesResultValues (ValueID, ResultID, DataValue, " \
+                             "ValueDateTime, ValueDateTimeUTCOffset, CensorCodeCV, " \
+                             "QualityCodeCV, TimeAggregationInterval, " \
+                             "TimeAggregationIntervalUnitsID) VALUES(?,?,?,?,?,?,?,?,?)"
+
+                # read the csv file to determine time interval (in minutes) between each reading
+                # we will use the first 2 rows of data to determine this value
+                time_interval = 0
+                with open(temp_csv_file, 'r') as fl_obj:
+                    csv_reader = csv.reader(fl_obj, delimiter=',')
+                    # read the first row (header)
+                    header = csv_reader.next()
+                    first_row_data = csv_reader.next()
+                    second_row_data = csv_reader.next()
+                    time_interval = (parser.parse(second_row_data[0]) -
+                                     parser.parse(first_row_data[0])).seconds/60
+
+                # data_row_count = 0
+                with open(temp_csv_file, 'r') as fl_obj:
+                    csv_reader = csv.reader(fl_obj, delimiter=',')
+                    # read the first row (header) and skip
+                    csv_reader.next()
+                    value_id = 1
+                    data_header = header[1:]
+                    for col, value in enumerate(data_header):
+                        # get the ts_result object with matching series_label
+                        ts_result = [ts_item for ts_item in self.time_series_results if
+                                     ts_item.series_label == value][0]
+                        # get the result id associated with ts_result object
+                        result_data_item = [dict_item for dict_item in results_data if
+                                            dict_item['object_id'] == ts_result.id][0]
+                        result_id = result_data_item['result_id']
+                        data_col_index = col + 1
+                        for date_time, data_value in self._read_csv_specified_column(
+                                csv_reader, data_col_index):
+                            date_time = parser.parse(date_time)
+                            cur.execute(insert_sql, (value_id, result_id, data_value,
+                                                     date_time, -7, 'Unknown', 'Unknown',
+                                                     time_interval, 102),)
+                            value_id += 1
 
                 # self._update_variables_table(con, cur)
                 # self._update_methods_table(con, cur)
@@ -1144,6 +1209,12 @@ class TimeSeriesMetaData(CoreMetaData):
             con.close()
             if os.path.exists(temp_sqlite_file):
                 shutil.rmtree(os.path.dirname(temp_sqlite_file))
+            if os.path.exists(temp_csv_file):
+                shutil.rmtree(os.path.dirname(temp_csv_file))
+
+    def _read_csv_specified_column(self, csv_reader, data_column_index):
+        for row in csv_reader:
+            yield row[0], row[data_column_index]
 
     def _update_metadata_element_series_ids_with_guids(self):
         if len(self.series_names) > 0:
