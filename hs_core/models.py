@@ -22,6 +22,7 @@ from django.conf import settings
 from django.core.files.storage import DefaultStorage
 from django.core.exceptions import ObjectDoesNotExist, ValidationError
 from django.forms.models import model_to_dict
+from django.core.urlresolvers import reverse
 
 from mezzanine.pages.models import Page, RichText
 from mezzanine.core.models import Ownable
@@ -1185,9 +1186,8 @@ class AbstractResource(ResourcePermissionsMixin):
     @classmethod
     def scimeta_url(cls, resource_id):
         scimeta_path = "{resource_id}/data/resourcemetadata.xml".format(resource_id=resource_id)
-        istorage = IrodsStorage()
-        scimeta_url = istorage.url(scimeta_path)
-
+        scimeta_url = reverse('rest_download',
+                          kwargs={'path': scimeta_path})
         return scimeta_url
 
     @classmethod
