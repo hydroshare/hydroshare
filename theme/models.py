@@ -5,6 +5,8 @@ from django.template import RequestContext, Template, TemplateSyntaxError
 from django.utils.translation import ugettext_lazy as _
 from django.core.exceptions import ValidationError
 
+from django_countries.fields import CountryField
+from localflavor.us.models import USStateField
 from mezzanine.core.fields import FileField, RichTextField
 from mezzanine.core.models import Orderable, SiteRelated
 from mezzanine.core.request import current_request
@@ -46,9 +48,11 @@ class SiteConfiguration(SiteRelated):
         '''
         Set has_social_network_links
         '''
-        if (self.twitter_link or self.facebook_link or self.pinterest_link or
+        if (
+            self.twitter_link or self.facebook_link or self.pinterest_link or
             self.youtube_link or self.github_link or self.linkedin_link or
-            self.vk_link or self.gplus_link):
+            self.vk_link or self.gplus_link
+        ):
             self.has_social_network_links = True
         else:
             self.has_social_network_links = False
@@ -77,18 +81,20 @@ class HomePage(Page):
     slide_in_two = models.CharField(max_length=200, blank=True)
     slide_in_three_icon = models.CharField(max_length=50, blank=True)
     slide_in_three = models.CharField(max_length=200, blank=True)
-    header_background = FileField(verbose_name=_("Header Background"),
+    header_background = FileField(
+        verbose_name=_("Header Background"),
         upload_to=upload_to("theme.HomePage.header_background", "homepage"),
         format="Image", max_length=255, blank=True)
-    header_image = FileField(verbose_name=_("Header Image (optional)"),
+    header_image = FileField(
+        verbose_name=_("Header Image (optional)"),
         upload_to=upload_to("theme.HomePage.header_image", "homepage"),
         format="Image", max_length=255, blank=True, null=True)
     welcome_heading = models.CharField(max_length=100, default="Welcome")
     content = RichTextField()
     recent_blog_heading = models.CharField(max_length=100,
-        default="Latest blog posts")
-    number_recent_posts = models.PositiveIntegerField(default=3,
-        help_text="Number of recent blog posts to show")
+                                           default="Latest blog posts")
+    number_recent_posts = models.PositiveIntegerField(
+        default=3, help_text="Number of recent blog posts to show")
 
     class Meta:
         verbose_name = _("Home page")
@@ -101,37 +107,61 @@ class IconBox(Orderable):
     '''
     homepage = models.ForeignKey(HomePage, related_name="boxes")
     icon = models.CharField(max_length=50,
-        help_text="Enter the name of a font awesome icon, i.e. "
-                  "fa-eye. A list is available here "
-                  "http://fontawesome.io/")
+                            help_text=("Enter the name of a font awesome icon, i.e. "
+                                       "fa-eye. A list is available here "
+                                       "http://fontawesome.io/"))
     title = models.CharField(max_length=200)
     link_text = models.CharField(max_length=100)
     link = models.CharField(max_length=2000, blank=True,
-        help_text="Optional, if provided clicking the box will go here.")
+                            help_text="Optional, if provided clicking the box will go here.")
+
+
+class Organization(models.Model):
+    name = models.CharField(max_length=1024)
+
+    def __unicode__(self):
+        return self.name
 
 
 class UserProfile(models.Model):
+    USER_TYPE_CHOICES = (
+        ('', "(unspecified)"),
+        ("University Faculty", "University Faculty"),
+        ("University Professional or Research Staff", "University Professional or Research Staff"),
+        ("Post-Doctoral Fellow", "Post-Doctoral Fellow"),
+        ("University Graduate Student", "University Graduate Student"),
+        ("University Undergraduate Student", "University Undergraduate Student"),
+        ("Commercial/Professional", "Commercial/Professional"),
+        ("Government Official", "Government Official"),
+        ("School Student Kindergarten to 12th Grade", "School Student Kindergarten to 12th Grade"),
+        ("School Teacher Kindergarten to 12th Grade", "School Teacher Kindergarten to 12th Grade"),
+        ("Other", "Other"),
+    )
+
     user = models.OneToOneField(User)
     picture = models.ImageField(upload_to='profile', null=True, blank=True)
     middle_name = models.CharField(max_length=1024, null=True, blank=True)
     website = models.URLField(null=True, blank=True)
     title = models.CharField(
         max_length=1024, null=True, blank=True,
-        help_text='e.g. Assistant Professor, Program Director, Adjunct Professor, Software Developer.')
+        help_text=('e.g. Assistant Professor, Program Director, Adjunct Professor,'
+                   ' Software Developer.'))
     user_type = models.CharField(
         max_length=1024,
-        null=True,
-        blank=True,
+        choices=USER_TYPE_CHOICES,
         default='Unspecified'
+    )
+    user_type_other = models.CharField(
+        max_length=1024,
+        blank=True
     )
     subject_areas = models.CharField(
         max_length=1024, null=True, blank=True,
-        help_text='A comma-separated list of subject areas you are interested in researching. e.g. "Computer Science, Hydrology, Water Management"')
-    organization = models.CharField(
-        max_length=1024,
-        null=True,
-        blank=True,
-        help_text="The name of the organization you work for."
+        help_text=('A comma-separated list of subject areas you are interested in researching. '
+                   'e.g. "Computer Science, Hydrology, Water Management"'))
+    organization = models.ForeignKey(
+        Organization, null=True, blank=True,
+        help_text="The organization you work for."
     )
     phone_1 = models.CharField(max_length=1024, null=True, blank=True)
     phone_1_type = models.CharField(max_length=1024, null=True, blank=True, choices=(
@@ -145,23 +175,30 @@ class UserProfile(models.Model):
         ('Work', 'Work'),
         ('Mobile', 'Mobile'),
     ))
-    public = models.BooleanField(default=True, help_text='Uncheck to make your profile contact information and '
-                                                         'details private.')
+    public = models.BooleanField(default=True,
+                                 help_text=('Uncheck to make your profile contact information and '
+                                            'details private.'))
     cv = models.FileField(upload_to='profile',
-                          help_text='Upload your Curriculum Vitae if you wish people to be able to download it.',
+                          help_text=('Upload your Curriculum Vitae if you wish people to be able'
+                                     ' to download it.'),
                           null=True, blank=True)
-    details = models.TextField("Description", help_text='Tell the HydroShare community a little about yourself.',
+    details = models.TextField("Description",
+                               help_text='Tell the HydroShare community a little about yourself.',
                                null=True, blank=True)
 
-    state = models.CharField(max_length=1024, null=True, blank=True)
-    country = models.CharField(max_length=1024, null=True, blank=True)
+    state = USStateField(blank=True, default='')
+    country = CountryField(blank=True, default='')
 
-    create_irods_user_account = models.BooleanField(default=False,
-                                                    help_text='Check to create an iRODS user account in HydroShare user '
-                                                              'iRODS space for staging large files (>2GB) using iRODS clients such as Cyberduck '
-                                                              '(https://cyberduck.io/) and icommands (https://docs.irods.org/master/icommands/user/).'
-                                                              'Uncheck to delete your iRODS user account. Note that deletion of your iRODS user '
-                                                              'account deletes all of your files under this account as well.')
+    create_irods_user_account = models.BooleanField(
+        default=False,
+        help_text=('Check to create an iRODS user account in HydroShare user iRODS '
+                   'space for staging large files (>2GB) using iRODS clients such as Cyberduck '
+                   '(https://cyberduck.io/) and icommands '
+                   '(https://docs.irods.org/master/icommands/user/). '
+                   'Uncheck to delete your iRODS user account. Note that deletion of your iRODS '
+                   'user account deletes all of your files under this account as well.')
+    )
+
 
 def force_unique_emails(sender, instance, **kwargs):
     if instance:

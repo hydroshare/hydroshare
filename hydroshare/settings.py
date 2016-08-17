@@ -1,9 +1,9 @@
 from __future__ import absolute_import, unicode_literals
-#TEST_RUNNER='django_nose.NoseTestSuiteRunner'
-TEST_RUNNER = 'hs_core.tests.runner.CustomTestSuiteRunner'
-
 import os
-import importlib
+
+
+# TEST_RUNNER='django_nose.NoseTestSuiteRunner'
+TEST_RUNNER = 'hs_core.tests.runner.CustomTestSuiteRunner'
 
 local_settings_module = os.environ.get('LOCAL_SETTINGS', 'hydroshare.local_settings')
 
@@ -119,8 +119,11 @@ USE_TZ = True
 # http://www.i18nguy.com/unicode/language-identifiers.html
 LANGUAGE_CODE = "en"
 
+
 # Supported languages
-_ = lambda s: s
+def _(s):
+    return s
+
 LANGUAGES = (
     ('en', _('English')),
 )
@@ -165,7 +168,6 @@ AUTHENTICATION_BACKENDS = ("mezzanine.core.auth_backends.MezzanineBackend",)
 STATICFILES_FINDERS = (
     "django.contrib.staticfiles.finders.FileSystemFinder",
     "django.contrib.staticfiles.finders.AppDirectoriesFinder",
-#    'django.contrib.staticfiles.finders.DefaultStorageFinder',
 )
 
 # The numeric mode to set newly-uploaded files to. The value should be
@@ -198,8 +200,6 @@ DATABASES = {
 #########
 # PATHS #
 #########
-
-import os
 
 # Full filesystem path to the project.
 PROJECT_ROOT = os.path.dirname(os.path.abspath(__file__))
@@ -288,7 +288,6 @@ INSTALLED_APPS = (
     "hs_labels",
     "hs_metrics",
     "irods_browser_app",
-    #"hs_rhessys_inst_resource",
     "django_docker_processes",
     "hs_geo_raster_resource",
     "ref_ts",
@@ -305,6 +304,8 @@ INSTALLED_APPS = (
     "hs_collection_resource",
     "hs_modflow_modelinstance",
     "hs_tracking",
+    "django_countries",
+    "localflavor",
 )
 
 # These apps are excluded by hs_core.tests.runner.CustomTestSuiteRunner
@@ -323,6 +324,8 @@ APPS_TO_NOT_RUN = (
     'autocomplete_light',
     'widget_tweaks',
     'oauth2_provider',
+    'django_countries',
+    'localflavor',
     # etc...
 )
 
@@ -481,9 +484,9 @@ HAYSTACK_SIGNAL_PROCESSOR = "hs_core.hydro_realtime_signal_processor.HydroRealti
 PASSWORD_RESET_TIMEOUT_DAYS = 1
 
 #
-RESOURCE_LOCK_TIMEOUT_SECONDS = 300 # in seconds
+RESOURCE_LOCK_TIMEOUT_SECONDS = 300  # in seconds
 
-# customized temporary file path for large files retrieved from iRODS user zone for metadata extraction
+# customized temp file path for large files retrieved from iRODS user zone for metadata extraction
 TEMP_FILE_DIR = '/tmp'
 
 ####################
@@ -504,12 +507,12 @@ LOGGING = {
     'disable_existing_loggers': False,
     'formatters': {
         'verbose': {
-            'format' : "[%(asctime)s] %(levelname)s [%(name)s:%(lineno)s] %(message)s",
-            'datefmt' : "%d/%b/%Y %H:%M:%S"
+            'format': "[%(asctime)s] %(levelname)s [%(name)s:%(lineno)s] %(message)s",
+            'datefmt': "%d/%b/%Y %H:%M:%S"
         },
         'simple': {
             'format': '[%(asctime)s] %(levelname)s %(message)s',
-            'datefmt' : "%d/%b/%Y %H:%M:%S"
+            'datefmt': "%d/%b/%Y %H:%M:%S"
         },
     },
     'handlers': {
@@ -518,7 +521,7 @@ LOGGING = {
             'class': 'logging.handlers.RotatingFileHandler',
             'filename': '/var/log/hydroshare/system.log',
             'formatter': 'simple',
-            'maxBytes': 1024*1024*15, # 15MB
+            'maxBytes': 1024*1024*15,  # 15MB
             'backupCount': 10,
         },
         'djangolog': {
@@ -526,7 +529,7 @@ LOGGING = {
             'class': 'logging.handlers.RotatingFileHandler',
             'filename': '/var/log/hydroshare/django.log',
             'formatter': 'verbose',
-            'maxBytes': 1024*1024*15, # 15MB
+            'maxBytes': 1024*1024*15,  # 15MB
             'backupCount': 10,
         },
         'hydrosharelog': {
@@ -534,7 +537,7 @@ LOGGING = {
             'class': 'logging.handlers.RotatingFileHandler',
             'filename': '/var/log/hydroshare/hydroshare.log',
             'formatter': 'verbose',
-            'maxBytes': 1024*1024*15, # 15MB
+            'maxBytes': 1024*1024*15,  # 15MB
             'backupCount': 10,
         },
     },
