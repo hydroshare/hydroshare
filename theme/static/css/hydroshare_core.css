@@ -3947,3 +3947,6 @@ span.fb-control-round {
 	margin-left: 15px;
 }
 
+.fb-file .fa, .fb-folder .fa {
+	background: #FFF;
+}
