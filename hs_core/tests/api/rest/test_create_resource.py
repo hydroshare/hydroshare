@@ -1,5 +1,4 @@
 import json
-import time
 import requests
 from dateutil import parser
 
