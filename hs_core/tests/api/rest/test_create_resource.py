@@ -42,14 +42,7 @@ class TestCreateResource(HSRESTTestCase):
             if content['bag_status'] == "Not ready":
                 task_id = content['task_id']
                 status_response = self.getDownloadTaskStatus(task_id)
-                i = 0
-                # query task status every 3 seconds until 1 minute is up
                 status_content = json.loads(status_response.content)
-                while not status_content['status'] and i < 20:
-                    time.sleep(3)
-                    status_response = self.getDownloadTaskStatus(task_id)
-                    status_content = json.loads(status_response.content)
-                    i += 1
                 if status_content['status']:
                     # bag creation task succeeds, get bag again
                     response = self.getResourceBag(res_id)
