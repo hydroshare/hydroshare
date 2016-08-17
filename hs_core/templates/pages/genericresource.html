@@ -64,15 +64,22 @@
                                                 <span class="btn btn-default fb-control-round"
                                                       title="Click to go back"><span
                                                         class="glyphicon glyphicon-arrow-left"></span></span>
+
                                                 <span class="btn btn-default fb-control-round"
                                                       title="Click to go forward"><span
                                                         class="glyphicon glyphicon-arrow-right"></span></span>
-                                                <span class="btn btn-default fb-control-round"><span
+
+                                                <span id="fb-move-up" class="btn btn-default fb-control-round"><span
                                                         class="glyphicon glyphicon-chevron-up"
                                                         title="Click to go to parent directory"></span></span>
-                                                <span class="btn btn-default fb-control-round"><span
+
+                                                <span id="fb-create-folder" class="btn btn-default fb-control-round"><span
                                                         class="fa fa-folder"
                                                         title="Create new folder"></span></span>
+
+                                                <span id="fb-delete" class="btn btn-default fb-control-round"><span
+                                                        class="glyphicon glyphicon-trash btn-remove"
+                                                        title="Delete"></span></span>
                                             </div>
 
                                             <div class="col-xs-6">
@@ -102,10 +109,12 @@
                                                                 class="glyphicon glyphicon-folder-open glyphicon-folder"></span>Open</a>
                                                         </li>
                                                         <li><a href="#"><span
-                                                                class="glyphicon glyphicon-download btn-edit"></span>Download</a>
+                                                                class="glyphicon glyphicon-download icon-blue"></span>Download</a>
                                                         </li>
-                                                        <li><a href="#" data-toggle="modal"
-                                                               data-target="#delete-resource-file"><span
+                                                        <li><a href="#"><span
+                                                                class="glyphicon glyphicon-pencil icon-blue"></span>Rename</a>
+                                                        </li>
+                                                        <li><a href="#"><span
                                                                 class="glyphicon glyphicon-trash icon-button btn-remove"></span>Delete</a>
                                                         </li>
                                                     </ul>
@@ -127,7 +136,7 @@
                                                             <span class="fa fa-file-text fb-file-icon"></span>
 
                                                             <div class="fb-file-name">
-                                                                <small>Some file.txt</small>
+                                                                <small class="fb-file-name">Some file.txt</small>
                                                             </div>
                                                         </div>
                                                     </li>

@@ -3796,7 +3796,7 @@ form#covereage-search-fields {
     margin-bottom:10px;
 }
 .files-container {
-    height: 220px;
+    height: 260px;
     overflow-y: auto;
     overflow-x: hidden;
 }
@@ -3854,7 +3854,7 @@ form#covereage-search-fields {
     1px 1px 0 #006B92;
 }
 
-.fb-folder .glyphicon-folder {
+.glyphicon-folder {
     color: #E48E22;
     text-shadow: -1px -1px 0 #C56E00,
     1px -1px 0 #C56E00,
@@ -3945,4 +3945,8 @@ span.fb-control-round {
 
 .handle {
 	width: 20px;
+}
+
+#fb-create-folder, #fb-move-up, #fb-delete {
+	margin-left: 15px;
 }
