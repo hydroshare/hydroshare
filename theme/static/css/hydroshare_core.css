@@ -3843,15 +3843,11 @@ form#covereage-search-fields {
 }
 
 .fb-file small, .fb-folder small {
-    color: #000;
+    color: #777;
 }
 
 .fb-file .fb-file-icon {
-    color: #FFF;
-    text-shadow: -1px -1px 0 #006B92,
-    1px -1px 0 #006B92,
-    -1px 1px 0 #006B92,
-    1px 1px 0 #006B92;
+    color: #1abc9c;
 }
 
 .glyphicon-folder {
@@ -3950,3 +3946,4 @@ span.fb-control-round {
 #fb-create-folder, #fb-move-up, #fb-delete {
 	margin-left: 15px;
 }
+
