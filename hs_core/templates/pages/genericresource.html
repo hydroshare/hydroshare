@@ -3,9 +3,12 @@
 {% load ratings_tags pages_tags keyword_tags hydroshare_tags crispy_forms_tags %}
 
 {% block extra_head %}
-      <link href="{{ STATIC_URL }}css/site_base_irods.css" rel="stylesheet"/>
-      <link rel="stylesheet" href='//cdn.datatables.net/1.10.10/css/jquery.dataTables.min.css'/>
-      <link href="{{ STATIC_URL }}css/toolresource.css" rel="stylesheet"/>
+    <link href="{{ STATIC_URL }}css/site_base_irods.css" rel="stylesheet"/>
+    <link rel="stylesheet" href='//cdn.datatables.net/1.10.10/css/jquery.dataTables.min.css'/>
+    <link href="{{ STATIC_URL }}css/toolresource.css" rel="stylesheet"/>
+    <link rel="stylesheet" href='https://cdnjs.cloudflare.com/ajax/libs/dropzone/4.3.0/min/dropzone.min.css'/>
+
+
 {% endblock %}
 
 {% block main %}
@@ -70,12 +73,16 @@
                                                         class="glyphicon glyphicon-arrow-right"></span></span>
 
                                                 <span id="fb-move-up" class="btn btn-default fb-control-round"><span
-                                                        class="glyphicon glyphicon-chevron-up"
+                                                        class="fa fa-level-up"
                                                         title="Click to go to parent directory"></span></span>
 
                                                 <span id="fb-create-folder" class="btn btn-default fb-control-round"><span
                                                         class="fa fa-folder"
                                                         title="Create new folder"></span></span>
+
+                                                <span class="btn btn-default fb-control-round"><span
+                                                        class="fa fa-upload"
+                                                        title="Upload files"></span></span>
 
                                                 <span id="fb-delete" class="btn btn-default fb-control-round"><span
                                                         class="glyphicon glyphicon-trash btn-remove"
@@ -100,13 +107,24 @@
                                                 </ol>
                                             </div>
 
-                                            <div id="fb-containment-wrapper" class="files-container ui-widget-content">
+                                            <form id="fbContainmentWrapper"
+                                                  class="files-container ui-widget-content dropzone"
+                                                  action="/hsapi/_internal/{{ cm.short_id }}/add-file-to-resource/"
+                                                  method="POST">
+                                                    {% csrf_token %}
+
+                                                <div class="fb-drag-flag">
+                                                    <span class="fa fa-plus-square fa-5x"></span>
+                                                </div>
                                                 <ul id="fb-list" class="selectable">
 
                                                     {# POPUP MENU #}
-                                                    <ul id="selection-menu" class="dropdown-menu fb-dropdown arrow_box arrow_box_top_center">
+                                                    <ul id="selection-menu" class="dropdown-menu fb-dropdown">
                                                         <li><a href="#"><span
                                                                 class="glyphicon glyphicon-folder-open glyphicon-folder"></span>Open</a>
+                                                        </li>
+                                                        <li><a href="#"><span
+                                                                class="fa fa-scissors icon-blue"></span>Cut</a>
                                                         </li>
                                                         <li><a href="#"><span
                                                                 class="glyphicon glyphicon-download icon-blue"></span>Download</a>
@@ -121,6 +139,9 @@
 
                                                     {# FOLDER TEMPLATE #}
                                                     <li class="fb-folder droppable">
+                                                        <span class='fa fa-arrows fb-handle fb-help-icon'></span>
+                                                        <span class='glyphicon glyphicon-chevron-right fb-dropdown-toggle fb-help-icon'></span>
+
                                                         <div class="text-center">
                                                             <span class="fa fa-folder glyphicon-folder"></span>
 
@@ -132,6 +153,8 @@
 
                                                     {# FILE TEMPLATE #}
                                                     <li class="fb-file droppable">
+                                                        <span class='fa fa-arrows fb-handle fb-help-icon'></span>
+                                                        <span class='glyphicon glyphicon-chevron-right fb-dropdown-toggle fb-help-icon'></span>
                                                         <div class="text-center">
                                                             <span class="fa fa-file-text fb-file-icon"></span>
 
@@ -141,212 +164,113 @@
                                                         </div>
                                                     </li>
 
-                                                    <li class="fb-file droppable">
-                                                        <div class="text-center">
-                                                            <span class="fa fa-file-excel-o fb-file-icon"></span>
-
-                                                            <div class="fb-file-name">
-                                                                <small class="fb-file-name">Excel Document.xlsx</small>
-                                                            </div>
-                                                        </div>
-                                                    </li>
-
-                                                    <li class="fb-file droppable">
-                                                        <div class="text-center">
-                                                            <span class="fa fa-file-pdf-o fb-file-icon"></span>
-
-                                                            <div class="fb-file-name">
-                                                                <small class="fb-file-name">PDF Document.pdf</small>
-                                                            </div>
-                                                        </div>
-                                                    </li>
-
-                                                    <li class="fb-file droppable">
-                                                        <div class="text-center">
-                                                            <span class="fa fa-file-sound-o fb-file-icon"></span>
-
-                                                            <div class="fb-file-name">
-                                                                <small class="fb-file-name">Sound File.wav</small>
-                                                            </div>
-                                                        </div>
-                                                    </li>
-
-                                                    <li class="fb-file droppable">
-                                                        <div class="text-center">
-                                                            <span class="fa fa-file-word-o fb-file-icon"></span>
-
-                                                            <div class="fb-file-name">
-                                                                <small class="fb-file-name">Word Document.docx</small>
-                                                            </div>
-                                                        </div>
-                                                    </li>
-
-                                                    <li class="fb-file droppable">
-                                                        <div class="text-center">
-                                                            <span class="fa fa-file-archive-o fb-file-icon"></span>
-
-                                                            <div class="fb-file-name">
-                                                                <small class="fb-file-name">Some archive.zip</small>
-                                                            </div>
-                                                        </div>
-                                                    </li>
-
-                                                    <li class="fb-file droppable">
-                                                        <div class="text-center">
-                                                            <span class="fa fa-file-image-o fb-file-icon"></span>
-
-                                                            <div class="fb-file-name">
-                                                                <small class="fb-file-name">waterfall.img</small>
-                                                            </div>
-                                                        </div>
-                                                    </li>
-
-                                                    <li class="fb-file droppable">
-                                                        <div class="text-center">
-                                                            <span class="fa fa-file-movie-o fb-file-icon"></span>
-
-                                                            <div class="fb-file-name">
-                                                                <small class="fb-file-name">Movie.mp4</small>
-                                                            </div>
-                                                        </div>
-                                                    </li>
-
-                                                    <li class="fb-file droppable">
-                                                        <div class="text-center">
-                                                            <span class="fa fa-file-code-o fb-file-icon"></span>
-
-                                                            <div class="fb-file-name">
-                                                                <small class="fb-file-name">init.py</small>
-                                                            </div>
-                                                        </div>
-                                                    </li>
-
-                                                    <li class="fb-file droppable">
-                                                        <div class="text-center">
-                                                            <span class="fa fa-file-o fb-file-icon"></span>
-
-                                                            <div class="fb-file-name">
-                                                                <small class="fb-file-name">Output</small>
-                                                            </div>
-                                                        </div>
-                                                    </li>
-
-                                                    <li class="fb-file droppable">
-                                                        <div class="text-center">
-                                                            <span class="fa fa-file-powerpoint-o fb-file-icon"></span>
-
-                                                            <div class="fb-file-name">
-                                                                <small class="fb-file-name">Introduction to HydroShare.ppt</small>
-                                                            </div>
-                                                        </div>
-                                                    </li>
-
                                                 </ul>
-                                            </div>
+                                            </form>
                                         </div>
+                                        <div class="fb-upload-caption "><small class="text-muted">Upload files by dragging & dropping, or click this box to select them.</small></div>
                                     </div>
                                 <div class="table-container">
-{#                                    <table class="table-plain table-striped">#}
-{#                                        {% for f in cm.files.all %}#}
-{#                                            {% if f.resource_file or f.fed_resource_file or f.fed_resource_file_name_or_path %}#}
-                                                {#======= Modal window begins =======#}
-{#                                                {% if page.perms.change and metadata_form %}#}
-{#                                                    <div class="modal fade" id="delete-resource-file-{{ f.pk }}" tabindex="-1"#}
-{#                                                         role="dialog"#}
-{#                                                         aria-labelledby="myModalLabel" aria-hidden="true">#}
-{#                                                        <div class="modal-dialog">#}
-{#                                                            <div class="modal-content">#}
-{#                                                                <div class="modal-header">#}
-{#                                                                    <button type="button" class="close" data-dismiss="modal"#}
-{#                                                                            aria-hidden="true">&times;</button>#}
-{#                                                                    <h4 class="modal-title">Confirm file deletion</h4>#}
-{#                                                                </div>#}
-{#                                                                <div class="modal-body">#}
-{#                                                                    Consider saving a copy of the file before you delete it if#}
-{#                                                                    it is#}
-{#                                                                    important to you.#}
-{#                                                                </div>#}
-{#                                                                <div class="modal-footer">#}
-{#                                                                    <button type="button" class="btn btn-default"#}
-{#                                                                            data-dismiss="modal">#}
-{#                                                                        Cancel#}
-{#                                                                    </button>#}
-{#                                                                    <a type="button" class="btn btn-danger"#}
-{#                                                                       href="/hsapi/_internal/{{ cm.short_id }}/delete-resource-file/{{ f.pk }}/">Delete</a>#}
-{#                                                                </div>#}
-{#                                                            </div>#}
-{#                                                        </div>#}
-{#                                                    </div>#}
-{#                                                {% endif %}#}
-                                                {#======= Modal window ends =======#}
-{#                                                <tr>#}
-{#                                                    <td>#}
-{#                                                        <span class="glyphicon glyphicon-file file-icon"></span>#}
-{#                                                <span>#}
-{#                                                    <span class="label-file-name">#}
-{#                                                        {{ f.resource_file.name|slice:"33:" }}#}
-{#                                                        {% if f.fed_resource_file %}#}
-{#                                                            {{ f.fed_resource_file.name|relative_irods_path }}#}
-{#                                                        {% endif %}#}
-{#                                                        {% if f.fed_resource_file_name_or_path %}#}
-{#                                                            {{ f.fed_resource_file_name_or_path }}#}
-{#                                                        {% endif %}#}
-{#                                                    </span>#}
-{#                                                    <p class="label-file-size">#}
-{#                                                        {% if f.resource_file %}#}
-{#                                                            {{ f.resource_file.size|filesizeformat }}#}
-{#                                                        {% elif f.fed_resource_file %}#}
-{#                                                            {{ f.fed_resource_file.size|filesizeformat }}#}
-{#                                                        {% else %}#}
-{#                                                            {{ f.fed_resource_file_size|filesizeformat }}#}
-{#                                                        {% endif %}#}
-{#                                                    </p>#}
-{#                                                </span>#}
-{#                                                    </td>#}
-                                                    {#                    <td>{% if preview %}<a class="btn btn-info btn-block" href="{{ preview }}">Preview</a>{% endif %}</td>#}
-{#                                                    <td>#}
-{#                                                        {% if page.perms.change and metadata_form %}#}
-{#                                                            <a href="{% if f.resource_file %} {{ f.resource_file.url }}#}
-{#                                                            {% elif f.fed_resource_file %} {{ f.fed_resource_file.url }}#}
-{#                                                            {% else %} {{ f.fed_resource_file_name_or_path }}{% endif %}"><span data-toggle="modal"#}
-{#                                                                                                      data-target="#delete-resource-file-{{ f.pk }}"#}
-{#                                                                                                      data-placement="auto"#}
-{#                                                                                                      title="Delete"#}
-{#                                                                                                      class="glyphicon glyphicon-trash icon-button btn-remove"></span></a>#}
-{##}
-{#                                                        {% endif %}#}
-{#                                                        {% if f.resource_file and f.resource_file.size < 1000000000 %}#}
-{#                                                            <a href="{{ f.resource_file.url }}"><span data-toggle="tooltip"#}
-{#                                                                                                  data-placement="auto"#}
-{#                                                                                                  title="Download"#}
-{#                                                                                                  class="glyphicon glyphicon-download icon-button btn-download"></span></a>#}
-{#                                                        {% elif f.fed_resource_file and f.fed_resource_file.size < 1000000000 %}#}
-{#                                                            <a href="{{ f.fed_resource_file.url }}"><span data-toggle="tooltip"#}
-{#                                                                                                  data-placement="auto"#}
-{#                                                                                                  title="Download"#}
-{#                                                                                                  class="glyphicon glyphicon-download icon-button btn-download"></span></a>#}
-                                                        {# only allow download from irods user zone for files smaller than 1GB #}
-{#                                                        {% elif f.fed_resource_file_name_or_path and f.fed_resource_file_size|to_int < 1000000000 %}#}
-{#                                                            <a href="/django_irods/download{{ cm.resource_federation_path }}/{{ cm.short_id }}/{{ f.fed_resource_file_name_or_path }}"><span data-toggle="tooltip"#}
-{#                                                                                                  data-placement="auto"#}
-{#                                                                                                  title="Download"#}
-{#                                                                                                  class="glyphicon glyphicon-download icon-button btn-download"></span></a>#}
-{#                                                        {% else %}#}
-{#                                                            <span data-toggle="tooltip" data-placement="auto"#}
-{#                                                                  title="File larger than 1GB cannot be downloaded directly via HTTP. Please download the large file via iRODS clients."#}
-{#                                                                  class="glyphicon glyphicon-download icon-button btn-download"></span>#}
-{#                                                        {% endif %}#}
-{#                                                        {% if preview %}#}
-{#                                                            <a href="{{ preview }}"><span data-toggle="tooltip"#}
-{#                                                                                          data-placement="auto"#}
-{#                                                                                          title="Preview"#}
-{#                                                                                          class="glyphicon glyphicon-eye-open icon-button"></span></a>#}
-{#                                                        {% endif %}#}
-{#                                                    </td>#}
-{#                                                </tr>#}
-{#                                            {% endif %}#}
-{#                                        {% endfor %}#}
-{#                                    </table>#}
+                                    <table class="table-plain table-striped">
+                                        {% for f in cm.files.all %}
+                                            {% if f.resource_file or f.fed_resource_file or f.fed_resource_file_name_or_path %}
+{#                                                ======= Modal window begins =======#}
+                                                {% if page.perms.change and metadata_form %}
+                                                    <div class="modal fade" id="delete-resource-file-{{ f.pk }}" tabindex="-1"
+                                                         role="dialog"
+                                                         aria-labelledby="myModalLabel" aria-hidden="true">
+                                                        <div class="modal-dialog">
+                                                            <div class="modal-content">
+                                                                <div class="modal-header">
+                                                                    <button type="button" class="close" data-dismiss="modal"
+                                                                            aria-hidden="true">&times;</button>
+                                                                    <h4 class="modal-title">Confirm file deletion</h4>
+                                                                </div>
+                                                                <div class="modal-body">
+                                                                    Consider saving a copy of the file before you delete it if
+                                                                    it is
+                                                                    important to you.
+                                                                </div>
+                                                                <div class="modal-footer">
+                                                                    <button type="button" class="btn btn-default"
+                                                                            data-dismiss="modal">
+                                                                        Cancel
+                                                                    </button>
+                                                                    <a type="button" class="btn btn-danger"
+                                                                       href="/hsapi/_internal/{{ cm.short_id }}/delete-resource-file/{{ f.pk }}/">Delete</a>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                {% endif %}
+{#                                                ======= Modal window ends =======#}
+                                                <tr>
+                                                    <td>
+                                                        <span class="glyphicon glyphicon-file file-icon"></span>
+                                                <span>
+                                                    <span class="label-file-name">
+                                                        {{ f.resource_file.name|slice:"33:" }}
+                                                        {% if f.fed_resource_file %}
+                                                            {{ f.fed_resource_file.name|relative_irods_path }}
+                                                        {% endif %}
+                                                        {% if f.fed_resource_file_name_or_path %}
+                                                            {{ f.fed_resource_file_name_or_path }}
+                                                        {% endif %}
+                                                    </span>
+                                                    <p class="label-file-size">
+                                                        {% if f.resource_file %}
+                                                            {{ f.resource_file.size|filesizeformat }}
+                                                        {% elif f.fed_resource_file %}
+                                                            {{ f.fed_resource_file.size|filesizeformat }}
+                                                        {% else %}
+                                                            {{ f.fed_resource_file_size|filesizeformat }}
+                                                        {% endif %}
+                                                    </p>
+                                                </span>
+                                                    </td>
+                                                                        <td>{% if preview %}<a class="btn btn-info btn-block" href="{{ preview }}">Preview</a>{% endif %}</td>
+                                                    <td>
+                                                        {% if page.perms.change and metadata_form %}
+                                                            <a href="{% if f.resource_file %} {{ f.resource_file.url }}
+                                                            {% elif f.fed_resource_file %} {{ f.fed_resource_file.url }}
+                                                            {% else %} {{ f.fed_resource_file_name_or_path }}{% endif %}"><span data-toggle="modal"
+                                                                                                      data-target="#delete-resource-file-{{ f.pk }}"
+                                                                                                      data-placement="auto"
+                                                                                                      title="Delete"
+                                                                                                      class="glyphicon glyphicon-trash icon-button btn-remove"></span></a>
+
+                                                        {% endif %}
+                                                        {% if f.resource_file and f.resource_file.size < 1000000000 %}
+                                                            <a href="{{ f.resource_file.url }}"><span data-toggle="tooltip"
+                                                                                                  data-placement="auto"
+                                                                                                  title="Download"
+                                                                                                  class="glyphicon glyphicon-download icon-button btn-download"></span></a>
+                                                        {% elif f.fed_resource_file and f.fed_resource_file.size < 1000000000 %}
+                                                            <a href="{{ f.fed_resource_file.url }}"><span data-toggle="tooltip"
+                                                                                                  data-placement="auto"
+                                                                                                  title="Download"
+                                                                                                  class="glyphicon glyphicon-download icon-button btn-download"></span></a>
+                                                         only allow download from irods user zone for files smaller than 1GB
+                                                        {% elif f.fed_resource_file_name_or_path and f.fed_resource_file_size|to_int < 1000000000 %}
+                                                            <a href="/django_irods/download{{ cm.resource_federation_path }}/{{ cm.short_id }}/{{ f.fed_resource_file_name_or_path }}"><span data-toggle="tooltip"
+                                                                                                  data-placement="auto"
+                                                                                                  title="Download"
+                                                                                                  class="glyphicon glyphicon-download icon-button btn-download"></span></a>
+                                                        {% else %}
+                                                            <span data-toggle="tooltip" data-placement="auto"
+                                                                  title="File larger than 1GB cannot be downloaded directly via HTTP. Please download the large file via iRODS clients."
+                                                                  class="glyphicon glyphicon-download icon-button btn-download"></span>
+                                                        {% endif %}
+                                                        {% if preview %}
+                                                            <a href="{{ preview }}"><span data-toggle="tooltip"
+                                                                                          data-placement="auto"
+                                                                                          title="Preview"
+                                                                                          class="glyphicon glyphicon-eye-open icon-button"></span></a>
+                                                        {% endif %}
+                                                    </td>
+                                                </tr>
+                                            {% endif %}
+                                        {% endfor %}
+                                    </table>
                                 </div>
                                 {% else %}
                                     <i>No files have been uploaded.</i>
@@ -1169,6 +1093,8 @@
                 {%  endblock %}
             </div>
         </div>
+            </div>
+        </div>
         <!-- Modal -->
         {%  block modal_add_file %}
         <div class="modal fade" id="add-file-dialog" tabindex="-1" role="dialog" aria-labelledby="add-file"
@@ -1209,6 +1135,7 @@
     {% block extra_js %}
         <script type="text/javascript" src="{{ STATIC_URL }}js/coverageMap.js"></script>
         <script src="https://maps.googleapis.com/maps/api/js?libraries=drawing"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/dropzone/4.3.0/dropzone.js"></script>
         <script type="text/javascript" src="{{ STATIC_URL }}js/resourceLandingAjax.js"></script>
         <script type="text/javascript" src="{{ STATIC_URL }}js/hs_file_browser.js"></script>
         <script type="text/javascript" src='//cdn.datatables.net/1.10.10/js/jquery.dataTables.js'></script>
@@ -1923,6 +1850,21 @@
                         $("#invite-flag button[data-value='groups']").addClass("btn-primary");
                     }
                 });
+
+
+                Dropzone.options.fbContainmentWrapper = {
+                    paramName: "files", // The name that will be used to transfer the file
+                    clickable: ".fb-upload-caption",
+                    init: function () {
+                        this.on("dragenter", function (file) {
+                            $(".fb-drag-flag").show();
+                        });
+
+                        this.on("dragleave", function (file) {
+                            $(".fb-drag-flag").hide();
+                        });
+                    }
+                };
             });
         </script>
 

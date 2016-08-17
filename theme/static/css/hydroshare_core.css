@@ -3795,10 +3795,11 @@ form#covereage-search-fields {
 #file-browser-controls  {
     margin-bottom:10px;
 }
+
 .files-container {
-    height: 260px;
-    overflow-y: auto;
-    overflow-x: hidden;
+	height: 400px;
+	overflow-y: auto;
+	overflow-x: hidden;
 }
 
 .file-browser-breadcrumb .breadcrumb{
@@ -3822,17 +3823,21 @@ form#covereage-search-fields {
 	padding: 9px;
 }
 
-.handle .fa-arrows {
-	font-size: 18px !important;
-	color:#FFF;
+.fb-help-icon {
+	font-size: 14px !important;
+	color:#e6a14b;
 	cursor: pointer;
+	visibility: hidden;
 }
 
-.fb-folder:hover > .handle .fa-arrows, .fb-file:hover > .handle .fa-arrows, .fb-file.ui-selected > .handle .fa-arrows,
-.fb-folder.ui-selected > .handle .fa-arrows, .fb-file.ui-selecting > .handle .fa-arrows,
-.fb-folder.ui-selecting > .handle .fa-arrows {
-	color: #e6a14b;
-	font-size: 18px;
+.fb-help-icon:hover {
+	color: #d68c31;
+}
+
+.fb-folder:hover > .fb-help-icon , .fb-file:hover > .fb-help-icon, .fb-file.ui-selected > .fb-help-icon,
+.fb-folder.ui-selected > .fb-help-icon, .fb-file.ui-selecting > .fb-help-icon,
+.fb-folder.ui-selecting > .fb-help-icon {
+	visibility: visible;
 }
 
 .fb-folder.ui-selecting, .fb-file.ui-selecting {
@@ -3864,6 +3869,7 @@ form#covereage-search-fields {
 
 .file-browser-container {
     border:1px solid #DDD;
+	border-bottom: 0;
 }
 
 .files-container {
@@ -3910,6 +3916,12 @@ form#covereage-search-fields {
     margin-top: -1px;
 }
 
+.fb-dropdown-toggle {
+	float: right;
+	visibility: hidden;
+	cursor: pointer;
+}
+
 .fb-file-name {
     text-overflow: ellipsis;
     white-space: nowrap;
@@ -3939,8 +3951,15 @@ span.fb-control-round {
 	height: 100%;
 }
 
-.handle {
+.fb-handle {
 	width: 20px;
+	display: inline;
+	visibility: hidden;
+}
+
+.fb-handle > .fa {
+	color: #e6a14b !important;
+	font-size: 18px;
 }
 
 #fb-create-folder, #fb-move-up, #fb-delete {
@@ -3949,4 +3968,45 @@ span.fb-control-round {
 
 .fb-file .fa, .fb-folder .fa {
 	background: #FFF;
+}
+
+.ui-widget-content {
+	border: 0 !important;
+}
+
+#selection-menu .fa {
+	font-size: 18px;
+	margin-right: 10px;
+}
+
+.fb-dropdown-toggle {
+	float: right;
+	visibility: hidden;
+	cursor: pointer;
+}
+
+div.fb-upload-caption {
+	padding:8px;
+	border:1px solid #DDD;
+	border-top: 1px dashed #DDD;
+	cursor: pointer;
+}
+
+.dropzone {
+	padding: 0 !important;
+}
+
+.fb-drag-flag {
+	position: absolute;
+    font-size: 32px;
+    text-align: center;
+    color: rgba(66, 139, 202, 0.51);
+	left: calc(50% - 116px);
+    top: 30%;
+	display: none;
+	pointer-events: none;
+}
+
+.dz-default.dz-message {
+	display: none;
 }
