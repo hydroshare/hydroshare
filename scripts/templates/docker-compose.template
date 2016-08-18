@@ -76,7 +76,7 @@ defaultworker:
     - postgis:postgis
     - redis:redis
     - rabbitmq:rabbitmq
-  command: ./run_celery.sh
+  command: /bin/bash init-defaultworker
 dockerworker:
   build: .
   container_name: dockerworker
@@ -97,4 +97,4 @@ dockerworker:
     - postgis:postgis
     - redis:redis
     - rabbitmq:rabbitmq
-  command: celery worker -A hydroshare -E -Q docker_container_tasks,docker_broadcast_tasks
+  command: /bin/bash init-dockerworker
