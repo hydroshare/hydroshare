@@ -1,7 +1,9 @@
 import json
 import requests
 from dateutil import parser
+import time
 
+from django.test import override_settings
 from rest_framework import status
 
 from hs_core.hydroshare.utils import get_resource_by_shortkey
@@ -9,7 +11,7 @@ from .base import HSRESTTestCase
 
 
 class TestCreateResource(HSRESTTestCase):
-
+    @override_settings(CELERY_ALWAYS_EAGER=True)
     def test_post_resource_get_sysmeta(self):
         rtype = 'GenericResource'
         title = 'My Test resource'
@@ -33,12 +35,13 @@ class TestCreateResource(HSRESTTestCase):
         content = json.loads(response.content)
         self.assertEqual(content['resource_type'], rtype)
         self.assertEqual(content['resource_title'], title)
-
         # Get resource bag
         response = self.getResourceBag(res_id)
         if response['Content-Type'] == 'application/json':
             content = json.loads(response.content)
             if content['bag_status'] == "Not ready":
+                # wait for 10 seconds to give task a chance to run and finish
+                time.sleep(10)
                 task_id = content['task_id']
                 status_response = self.getDownloadTaskStatus(task_id)
                 status_content = json.loads(status_response.content)
@@ -47,6 +50,9 @@ class TestCreateResource(HSRESTTestCase):
                     response = self.getResourceBag(res_id)
                     self.assertEqual(response['Content-Type'], 'application/zip')
                     self.assertTrue(int(response['Content-Length']) > 0)
+        else:
+            self.assertEqual(response['Content-Type'], 'application/zip')
+            self.assertTrue(int(response['Content-Length']) > 0)
 
     def test_resource_create_with_core_metadata(self):
         """
