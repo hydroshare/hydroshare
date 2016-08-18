@@ -27,19 +27,19 @@ PROD_SERVER='./run-server'
 PROD_SSH_COMMAND='# REMOVED SSH COMPONENT'
 
 display_usage() {
-	echo "*** HydroShare Control script ***"
-	echo "usage: $0 loaddb          # loads database specified in hydroshare-config.yaml into running container"
-	echo "usage: $0 managepy [args] # use the arguments in a manage.py [args] call from the hydroshare container"
-	echo "usage: $0 maint_off       # removes maintenance page (only if USE_NGINX = true)"
-	echo "usage: $0 maint_on        # displays maintenance page (only if USE_NGINX = true)"
-	echo "usage: $0 rebuild         # deletes hydroshare container contents only and deploys using exsiting database"
-	echo "usage: $0 rebuild --db    # deletes all database and container contents and deploys from scratch"
-	echo "usage: $0 rebuild_index   # rebuild solr index in a non-interactive way"
-	echo "usage: $0 reset_all       # remove all data, containers and images that were previously deployed"
-	echo "usage: $0 restart         # restarts the hydroshare container without rebuilding (includes preflight)"
-	echo "usage: $0 start           # attempts to start all containers (without preflight)"
-	echo "usage: $0 stop            # stops all running containers"
-	echo "usage: $0 update_index    # update solr index in a non-interactive way to be run as a cron job"
+    echo "*** HydroShare Control script ***"
+    echo "usage: $0 loaddb          # loads database specified in hydroshare-config.yaml into running container"
+    echo "usage: $0 managepy [args] # use the arguments in a manage.py [args] call from the hydroshare container"
+    echo "usage: $0 maint_off       # removes maintenance page (only if USE_NGINX = true)"
+    echo "usage: $0 maint_on        # displays maintenance page (only if USE_NGINX = true)"
+    echo "usage: $0 rebuild         # deletes hydroshare container contents only and deploys using exsiting database"
+    echo "usage: $0 rebuild --db    # deletes all database and container contents and deploys from scratch"
+    echo "usage: $0 rebuild_index   # rebuild solr index in a non-interactive way"
+    echo "usage: $0 reset_all       # remove all data, containers and images that were previously deployed"
+    echo "usage: $0 restart         # restarts the hydroshare container without rebuilding (includes preflight)"
+    echo "usage: $0 start           # attempts to start all containers (without preflight)"
+    echo "usage: $0 stop            # stops all running containers"
+    echo "usage: $0 update_index    # update solr index in a non-interactive way to be run as a cron job"
 }
 
 start_nginx() {
@@ -158,7 +158,14 @@ preflight_hs() {
     fi
     # Create log directory if it does not exist
     if [[ ! -d ${HS_LOG_FILES} ]]; then
-        mkdir -p ${HS_LOG_FILES};
+        mkdir -p ${HS_LOG_FILES}
+        touch ${HS_LOG_FILES}/access.log
+        touch ${HS_LOG_FILES}/django.log
+        touch ${HS_LOG_FILES}/error.log
+        touch ${HS_LOG_FILES}/gunicorn.log
+        touch ${HS_LOG_FILES}/gunicorn_supervisor.log
+        touch ${HS_LOG_FILES}/hydroshare.log
+        touch ${HS_LOG_FILES}/system.log;
     fi
     # Create celery directory if it does not exist
     if [[ ! -f ${HS_PATH}/celery/readme.txt ]]; then
@@ -221,8 +228,8 @@ loaddb_hs() {
 migrate_hs() {
     echo "MIGRATE:"
     echo "  - docker exec -u hydro-service hydroshare python manage.py migrate --fake-initial"
-	docker exec -u hydro-service hydroshare python manage.py migrate --fake-initial
-	echo "  - docker exec -u hydro-service hydroshare python manage.py fix_permissions"
+    docker exec -u hydro-service hydroshare python manage.py migrate --fake-initial
+    echo "  - docker exec -u hydro-service hydroshare python manage.py fix_permissions"
     docker exec -u hydro-service hydroshare python manage.py fix_permissions
 }
 
@@ -283,16 +290,16 @@ rebuild_hs() {
     for pc in $(seq 10 -1 1); do
         echo -ne "$pc ...\033[0K\r" && sleep 1;
     done
-	if [ "$2" == "--db" ]; then
-	    loaddb_hs;
+    if [ "$2" == "--db" ]; then
+        loaddb_hs;
+    fi
+    echo "  - docker exec hydroshare chown -R hydro-service:storage-hydro /hydroshare /hs_tmp /shared_tmp"
+    docker exec hydroshare chown -R hydro-service:storage-hydro /hydroshare /hs_tmp /shared_tmp
+    if [ "${USE_NGINX,,}" = true ]; then
+        start_nginx;
     fi
     echo "  - docker exec -u hydro-service hydroshare python manage.py collectstatic -v0 --noinput"
-	docker exec -u hydro-service hydroshare python manage.py collectstatic -v0 --noinput
-	echo "  - docker exec hydroshare chown -R hydro-service:storage-hydro /hydroshare"
-	docker exec hydroshare chown -R hydro-service:storage-hydro /hydroshare
-	if [ "${USE_NGINX,,}" = true ]; then
-	    start_nginx;
-    fi
+    docker exec -u hydro-service hydroshare python manage.py collectstatic -v0 --noinput
     migrate_hs
     sleep 3s
     solr_schema_hs
@@ -374,11 +381,11 @@ reset_all_hs() {
 ### Display usage if exactly one argument is not provided ###
 if [  $# -ne 1 ]
 then
-	if [ $1 != "rebuild" ] || [ $2 != "--db" ] && [ $1 != "managepy" ]
-	then
-	    display_usage
-	    exit 1
-	fi
+    if [ $1 != "rebuild" ] || [ $2 != "--db" ] && [ $1 != "managepy" ]
+    then
+        display_usage
+        exit 1
+    fi
 fi
 
 case "$1" in
