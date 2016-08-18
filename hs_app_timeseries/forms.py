@@ -515,6 +515,7 @@ UpdateSQLiteLayout = Layout(HTML("""
         <div class="alert alert-warning alert-dismissible" role="alert">
         <strong>SQLite file needs to be synced with metadata changes:</strong>
         <input id="can-update-sqlite-file" type="hidden" value="{{ cm.can_update_sqlite_file }}">
+        <input id="metadata-dirty" type="hidden" value="{{ cm.metadata.is_dirty }}">
         <form action="/timeseries/sqlite/update/{{ cm.short_id }}/" method="post"
         enctype="multipart/form-data">
             {% csrf_token %}

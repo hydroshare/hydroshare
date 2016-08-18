@@ -187,7 +187,9 @@
         $(document).ready(function(){
             var el = $('#div-series-selection');
             $(window).scrollTop($(el).offset().top - 300);
-
+            if ($("#can-update-sqlite-file").val() === "True" && ($("#metadata-dirty").val() === "True")){
+                $("#sql-file-update").show();
+            }
             $(".time-series-forms select").append('<option value="Other">Other...</option>');
 
             $(".time-series-forms select").parent().parent().append('<div class="controls other-field" style="display:none;"> <label class="text-muted control-label">Specify: </label><input class="form-control input-sm textinput textInput" name="" type="text"> </div>')
