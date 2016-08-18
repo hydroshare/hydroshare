@@ -180,6 +180,7 @@ preflight_hs() {
         fi
         cp -rf ${SSL_CERT_DIR}/${SSL_CERT_FILE} ${HOST_SSL_DIR}
         cp -rf ${SSL_CERT_DIR}/${SSL_KEY_FILE} ${HOST_SSL_DIR}
+        cp -rf ${HS_PATH}/scripts/run-prod-server ${HS_PATH}/run-server
         sed -i 's!HS_SSH_SERVER!'"${PROD_SSH_COMMAND}"'!g' ${HS_PATH}/init-hydroshare
         sed -i 's!HS_DJANGO_SERVER!'"${PROD_SERVER}"'!g' ${HS_PATH}/init-hydroshare
     elif [ "${USE_NGINX,,}" = true ]; then
