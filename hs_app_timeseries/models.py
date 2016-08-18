@@ -796,21 +796,28 @@ class TimeSeriesMetaData(CoreMetaData):
     def update_sqlite_file(self):
         if not self.is_dirty or not self.resource.has_sqlite_file:
             return
+        log = logging.getLogger()
 
-        if self.resource.has_csv_file:
-            self.populate_blank_sqlite_file()
+        sqlite_file_to_update = utils.get_resource_files_by_extension(self.resource,
+                                                                      ".sqlite")[0]
+        # retrieve the sqlite file from iRODS and save it to temp directory
+        temp_sqlite_file = utils.get_file_from_irods(sqlite_file_to_update)
+
+        if self.resource.has_csv_file and self._is_sqlite_file_blank(temp_sqlite_file):
+            self.populate_blank_sqlite_file(temp_sqlite_file)
         else:
-            sqlite_file_to_update = utils.get_resource_files_by_extension(self.resource, ".sqlite")[0]
-            log = logging.getLogger()
-
-            # retrieve the sqlite file from iRODS and save it to temp directory
-            temp_sqlite_file = utils.get_file_from_irods(sqlite_file_to_update)
             try:
                 con = sqlite3.connect(temp_sqlite_file)
                 with con:
                     # get the records in python dictionary format
                     con.row_factory = sqlite3.Row
                     cur = con.cursor()
+                    update_sql = "UPDATE Datasets SET DatasetTitle=?, DatasetAbstract=? " \
+                                 "WHERE DatasetID=1"
+                    ds_title = self.title.value
+                    ds_abstract = self.description.abstract
+                    cur.execute(update_sql, (ds_title, ds_abstract),)
+                    con.commit()
                     self._update_variables_table(con, cur)
                     self._update_methods_table(con, cur)
                     self._update_processinglevels_table(con, cur)
@@ -826,25 +833,33 @@ class TimeSeriesMetaData(CoreMetaData):
                 sqlite_err_msg = str(ex.args[0])
                 log.error("Failed to update SQLite file. Error:{}".format(sqlite_err_msg))
                 raise Exception(sqlite_err_msg)
-            except Exception, ex:
+            except Exception as ex:
                 log.error("Failed to update SQLite file. Error:{}".format(ex.message))
                 raise ex
             finally:
                 if os.path.exists(temp_sqlite_file):
                     shutil.rmtree(os.path.dirname(temp_sqlite_file))
 
-    def populate_blank_sqlite_file(self):
+    def populate_blank_sqlite_file(self, temp_sqlite_file):
+        """
+        writes data to a blank sqlite file. This function is executed only in case
+        of CSV file upload and executed only once when resource has all required metadata.
+        :param temp_sqlite_file: this the sqlite file copied from irods to a temp location on
+         Django.
+        :return:
+        """
         if not self.resource.has_sqlite_file or not self.resource.has_csv_file:
             return
 
-        # update resource specific metadata element series ids with generated GUID
-        self._update_metadata_element_series_ids_with_guids()
-        blank_sqlite_file = utils.get_resource_files_by_extension(self.resource, ".sqlite")[0]
-        csv_file = utils.get_resource_files_by_extension(self.resource, ".csv")[0]
         log = logging.getLogger()
 
-        # retrieve the sqlite file and csv file from iRODS and save it to temp directory
-        temp_sqlite_file = utils.get_file_from_irods(blank_sqlite_file)
+        # update resource specific metadata element series ids with generated GUID
+        self._update_metadata_element_series_ids_with_guids()
+
+        blank_sqlite_file = utils.get_resource_files_by_extension(self.resource, ".sqlite")[0]
+        csv_file = utils.get_resource_files_by_extension(self.resource, ".csv")[0]
+
+        # retrieve the csv file from iRODS and save it to temp directory
         temp_csv_file = utils.get_file_from_irods(csv_file)
         try:
             con = sqlite3.connect(temp_sqlite_file)
@@ -864,7 +879,7 @@ class TimeSeriesMetaData(CoreMetaData):
                     cur.execute(insert_sql, (sampling_feature_id, uuid4().hex, site.site_type,
                                 site.site_code, site.site_name, site.elevation_m,
                                 site.elevation_datum),)
-                # con.commit()
+
                 # insert record to SpatialReferences table - first delete any existing records
                 cur.execute("DELETE FROM SpatialReferences")
                 con.commit()
@@ -1193,7 +1208,8 @@ class TimeSeriesMetaData(CoreMetaData):
 
                 ds_title = self.title.value
                 ds_abstract = self.description.abstract
-                cur.execute(insert_sql, (1, uuid4().hex, 'Unknown', 'Unknown', ds_title,
+                ds_code = self.resource.short_id
+                cur.execute(insert_sql, (1, uuid4().hex, 'Multi-time series', ds_code, ds_title,
                                          ds_abstract),)
 
                 # insert record to DatasetsResults table - first delete any existing records
@@ -1223,7 +1239,6 @@ class TimeSeriesMetaData(CoreMetaData):
             log.error("Failed to update SQLite file. Error:{}".format(ex.message))
             raise ex
         finally:
-            con.close()
             if os.path.exists(temp_sqlite_file):
                 shutil.rmtree(os.path.dirname(temp_sqlite_file))
             if os.path.exists(temp_csv_file):
@@ -1233,6 +1248,33 @@ class TimeSeriesMetaData(CoreMetaData):
         # generator function to read (one row) the datetime column and the specified data column
         for row in csv_reader:
             yield row[0], row[data_column_index]
+
+    def _is_sqlite_file_blank(self, sqlite_file):
+        # check if the existing sqlite file is blank
+        is_blank = True
+        try:
+            con = sqlite3.connect(sqlite_file)
+            with con:
+                # get the records in python dictionary format
+                con.row_factory = sqlite3.Row
+                cur = con.cursor()
+                # since we write to the DatasetsResults table the last when populating
+                # a blank sqlite file, check that table to see if there are records in that
+                # table
+                cur.execute("SELECT * FROM DatasetsResults")
+                ds_result = cur.fetchone()
+                if ds_result is not None:
+                    is_blank = False
+        except sqlite3.Error as ex:
+            sqlite_err_msg = str(ex.args[0])
+            # log.error("Failed to update SQLite file. Error:{}".format(sqlite_err_msg))
+            raise Exception(sqlite_err_msg)
+        except Exception as ex:
+            if os.path.exists(sqlite_file):
+                shutil.rmtree(os.path.dirname(sqlite_file))
+            # log.error("Failed to update SQLite file. Error:{}".format(ex.message))
+            raise ex
+        return is_blank
 
     def _update_metadata_element_series_ids_with_guids(self):
         if len(self.series_names) > 0:
