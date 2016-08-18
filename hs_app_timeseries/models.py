@@ -1185,13 +1185,30 @@ class TimeSeriesMetaData(CoreMetaData):
                                                      time_interval, 102),)
                             value_id += 1
 
-                # self._update_variables_table(con, cur)
-                # self._update_methods_table(con, cur)
-                # self._update_processinglevels_table(con, cur)
-                # self._update_sites_related_tables(con, cur)
-                # self._update_results_related_tables(con, cur)
-                # self._update_CV_tables(con, cur)
+                # insert record to Datasets table - first delete any existing records
+                cur.execute("DELETE FROM Datasets")
+                con.commit()
+                insert_sql = "INSERT INTO Datasets (DatasetID, DatasetUUID, DatasetTypeCV, " \
+                             "DatasetCode, DatasetTitle, DatasetAbstract) VALUES(?,?,?,?,?,?)"
 
+                ds_title = self.title.value
+                ds_abstract = self.description.abstract
+                cur.execute(insert_sql, (1, uuid4().hex, 'Unknown', 'Unknown', ds_title,
+                                         ds_abstract),)
+
+                # insert record to DatasetsResults table - first delete any existing records
+                cur.execute("DELETE FROM DatasetsResults")
+                con.commit()
+                insert_sql = "INSERT INTO DatasetsResults (BridgeID, DatasetID, " \
+                             "ResultID) VALUES(?,?,?)"
+
+                cur.execute("SELECT ResultID FROM Results")
+                results = cur.fetchall()
+                for index, result in enumerate(results):
+                    bridge_id = index + 1
+                    cur.execute(insert_sql, (bridge_id, 1, result['ResultID']), )
+
+                self._update_CV_tables(con, cur)
                 con.commit()
                 # push the updated sqlite file to iRODS
                 utils.replace_resource_file_on_irods(temp_sqlite_file, blank_sqlite_file)
@@ -1213,6 +1230,7 @@ class TimeSeriesMetaData(CoreMetaData):
                 shutil.rmtree(os.path.dirname(temp_csv_file))
 
     def _read_csv_specified_column(self, csv_reader, data_column_index):
+        # generator function to read (one row) the datetime column and the specified data column
         for row in csv_reader:
             yield row[0], row[data_column_index]
 
