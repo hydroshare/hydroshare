@@ -79,7 +79,7 @@ class HSRESTTestCase(APITestCase):
 
     def _get_file_irods(self, url, exhaust_stream=True):
         response = self.client.get(url, follow=True)
-        self.assertTrue(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
         # Exhaust the file stream so that WSGI doesn't get upset (this causes the Docker container to exit)
         if exhaust_stream and hasattr(response, 'streaming_content'):
             for l in response.streaming_content:

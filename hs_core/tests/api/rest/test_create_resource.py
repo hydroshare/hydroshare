@@ -49,10 +49,10 @@ class TestCreateResource(HSRESTTestCase):
                     # bag creation task succeeds, get bag again
                     response = self.getResourceBag(res_id)
                     self.assertEqual(response['Content-Type'], 'application/zip')
-                    self.assertTrue(int(response['Content-Length']) > 0)
+                    self.assertGreater(int(response['Content-Length']), 0)
         else:
             self.assertEqual(response['Content-Type'], 'application/zip')
-            self.assertTrue(int(response['Content-Length']) > 0)
+            self.assertGreater(int(response['Content-Length']), 0)
 
     def test_resource_create_with_core_metadata(self):
         """
