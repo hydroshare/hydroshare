@@ -13,7 +13,8 @@ from hs_core import hydroshare
 from owslib.waterml.wml11 import WaterML_1_1 as wml11
 from owslib.waterml.wml10 import WaterML_1_0 as wml10
 
-logger = logging.getLogger("django")
+logger = logging.getLogger(__name__)
+logging.getLogger('suds').setLevel(logging.INFO)
 BLANK_FIELD_STRING = ""
 
 def wmlParse(response, ver=11):
