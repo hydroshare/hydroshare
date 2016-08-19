@@ -72,21 +72,18 @@
                                                       title="Click to go forward"><span
                                                         class="glyphicon glyphicon-arrow-right"></span></span>
 
-                                                <span id="fb-move-up" class="btn btn-default fb-control-round"><span
-                                                        class="fa fa-level-up"
-                                                        title="Click to go to parent directory"></span></span>
+                                                <span id="fb-move-up" class="btn btn-default fb-control-squared"
+                                                      title="Click to go to parent directory"><span class="fa fa-level-up"></span></span>
 
-                                                <span id="fb-create-folder" class="btn btn-default fb-control-round"><span
-                                                        class="fa fa-folder"
-                                                        title="Create new folder"></span></span>
+                                                <span id="fb-create-folder" class="btn btn-default fb-control-squared"
+                                                      title="Create new folder">
+                                                    <span class="fa fa-folder glyphicon-folder"></span></span>
 
-                                                <span class="btn btn-default fb-control-round"><span
-                                                        class="fa fa-upload"
-                                                        title="Upload files"></span></span>
-
-                                                <span id="fb-delete" class="btn btn-default fb-control-round"><span
-                                                        class="glyphicon glyphicon-trash btn-remove"
-                                                        title="Delete"></span></span>
+                                                <span id="fb-delete" class="btn btn-default fb-control-squared"
+                                                      title="Delete"><span
+                                                        class="glyphicon glyphicon-trash btn-remove"></span></span>
+                                                <span id="toggle-list-view" class="btn btn-default fb-control-squared"
+                                                      title="">Toggle View</span>
                                             </div>
 
                                             <div class="col-xs-6">
@@ -97,6 +94,8 @@
                                                 </div>
                                             </div>
                                         </div>
+
+
 
                                         <div class="file-browser-container">
                                             <div class="file-browser-breadcrumb">
@@ -116,58 +115,71 @@
                                                 <div class="fb-drag-flag">
                                                     <span class="fa fa-plus-square fa-5x"></span>
                                                 </div>
-                                                <ul id="fb-list" class="selectable">
 
-                                                    {# POPUP MENU #}
-                                                    <ul id="selection-menu" class="dropdown-menu fb-dropdown">
-                                                        <li><a href="#"><span
-                                                                class="glyphicon glyphicon-folder-open glyphicon-folder"></span>Open</a>
-                                                        </li>
-                                                        <li><a href="#"><span
-                                                                class="fa fa-scissors icon-blue"></span>Cut</a>
-                                                        </li>
-                                                        <li><a href="#"><span
-                                                                class="glyphicon glyphicon-download icon-blue"></span>Download</a>
-                                                        </li>
-                                                        <li><a href="#"><span
-                                                                class="glyphicon glyphicon-pencil icon-blue"></span>Rename</a>
-                                                        </li>
-                                                        <li><a href="#"><span
-                                                                class="glyphicon glyphicon-trash icon-button btn-remove"></span>Delete</a>
-                                                        </li>
-                                                    </ul>
 
+                                                {# POPUP MENU #}
+                                                <ul id="selection-menu" class="dropdown-menu fb-dropdown">
+                                                    <li><a href="#"><span
+                                                            class="glyphicon glyphicon-folder-open glyphicon-folder"></span>Open</a>
+                                                    </li>
+                                                    <li><a href="#"><span
+                                                            class="fa fa-scissors icon-blue"></span>Cut</a>
+                                                    </li>
+                                                    <li><a href="#"><span
+                                                            class="glyphicon glyphicon-download icon-blue"></span>Download</a>
+                                                    </li>
+                                                    <li><a href="#"><span
+                                                            class="glyphicon glyphicon-pencil icon-blue"></span>Rename</a>
+                                                    </li>
+                                                    <li><a href="#"><span
+                                                            class="glyphicon glyphicon-trash icon-button btn-remove"></span>Delete</a>
+                                                    </li>
+                                                </ul>
+
+                                                <table id="fb-table" class="">
+
+                                                    <thead>
+                                                    <tr>
+                                                        <th></th>
+                                                        <th></th>
+                                                        <th>Name</th>
+                                                        <th>Item Type</th>
+                                                        <th>Size</th>
+                                                        <th></th>
+                                                    </tr>
+                                                    </thead>
+
+                                                    <tbody>
+
+                                                    </tbody>
+                                                </table>
+
+                                                <ul id="fb-grid" class="selectable fb-view-grid">
                                                     {# FOLDER TEMPLATE #}
                                                     <li class="fb-folder droppable">
-                                                        <span class='fa fa-arrows fb-handle fb-help-icon'></span>
                                                         <span class='glyphicon glyphicon-chevron-right fb-dropdown-toggle fb-help-icon'></span>
-
-                                                        <div class="text-center">
-                                                            <span class="fa fa-folder glyphicon-folder"></span>
-
-                                                            <div>
-                                                                <small class="fb-file-name">Some folder</small>
-                                                            </div>
-                                                        </div>
+                                                        <span class='fa fa-arrows fb-handle fb-help-icon'></span>
+                                                        <span class="fb-file-icon fa fa-folder glyphicon-folder"></span>
+                                                        <span>Some folder</span>
+                                                        <span>File Folder</span>
+                                                        <span>98 KB</span>
                                                     </li>
 
                                                     {# FILE TEMPLATE #}
                                                     <li class="fb-file droppable">
                                                         <span class='fa fa-arrows fb-handle fb-help-icon'></span>
                                                         <span class='glyphicon glyphicon-chevron-right fb-dropdown-toggle fb-help-icon'></span>
-                                                        <div class="text-center">
-                                                            <span class="fa fa-file-text fb-file-icon"></span>
-
-                                                            <div class="fb-file-name">
-                                                                <small class="fb-file-name">Some file.txt</small>
-                                                            </div>
-                                                        </div>
+                                                        <span class="fb-file-icon fa fa-file-text"></span>
+                                                        <span>Some file</span>
+                                                        <span>Text File</span>
+                                                        <span>12 KB</span>
                                                     </li>
-
                                                 </ul>
+
+
                                             </form>
                                         </div>
-                                        <div class="fb-upload-caption "><small class="text-muted">Upload files by dragging & dropping, or click this box to select them.</small></div>
+                                        <div class="fb-upload-caption "><small>Upload files by dragging & dropping, or click this box to select them.</small></div>
                                     </div>
                                 <div class="table-container">
                                     <table class="table-plain table-striped">
@@ -1851,20 +1863,6 @@
                     }
                 });
 
-
-                Dropzone.options.fbContainmentWrapper = {
-                    paramName: "files", // The name that will be used to transfer the file
-                    clickable: ".fb-upload-caption",
-                    init: function () {
-                        this.on("dragenter", function (file) {
-                            $(".fb-drag-flag").show();
-                        });
-
-                        this.on("dragleave", function (file) {
-                            $(".fb-drag-flag").hide();
-                        });
-                    }
-                };
             });
         </script>
 
