@@ -2255,10 +2255,3 @@ def resource_creation_signal_handler(sender, instance, created, **kwargs):
 
 def resource_update_signal_handler(sender, instance, created, **kwargs):
     pass
-
-
-# this import statement is necessary in models.py to receive signals
-# any hydroshare app that needs to listen to signals from hs_core also needs to
-# implement the appropriate signal handlers in receivers.py and then include this import
-# statement in the app's models.py as the last line of code
-import receivers
