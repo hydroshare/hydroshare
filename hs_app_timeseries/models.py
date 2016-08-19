@@ -819,17 +819,31 @@ class TimeSeriesMetaData(CoreMetaData):
                     # get the records in python dictionary format
                     con.row_factory = sqlite3.Row
                     cur = con.cursor()
-                    update_sql = "UPDATE Datasets SET DatasetTitle=?, DatasetAbstract=? " \
-                                 "WHERE DatasetID=1"
-                    ds_title = self.title.value
-                    ds_abstract = self.description.abstract
-                    cur.execute(update_sql, (ds_title, ds_abstract),)
-                    con.commit()
+                    self._update_datasets_table(con, cur)
+
+                    # update people related tables (People, Affiliations, Organizations, ActionBy)
+                    # using updated creators/contributors in django db
+
+                    # insert record to People table
+                    people_data = self._update_people_table_insert(con, cur)
+
+                    # insert record to Organizations table
+                    self._update_organizations_table_insert(con, cur)
+
+                    # insert record to Affiliations table
+                    self._update_affiliations_table_insert(con, cur, people_data)
+
+                    # insert record to ActionBy table
+                    self._update_actionby_table_insert(con, cur, people_data)
+
+                    # update resource specific metadata
                     self._update_variables_table(con, cur)
                     self._update_methods_table(con, cur)
                     self._update_processinglevels_table(con, cur)
                     self._update_sites_related_tables(con, cur)
                     self._update_results_related_tables(con, cur)
+
+                    # update CV terms related tables
                     self._update_CV_tables(con, cur)
 
                     # push the updated sqlite file to iRODS
@@ -1325,6 +1339,16 @@ class TimeSeriesMetaData(CoreMetaData):
         insert_cv_record(self.cv_statuses.all(), 'CV_Status')
         insert_cv_record(self.cv_mediums.all(), 'CV_Medium')
         insert_cv_record(self.cv_aggregation_statistics.all(), 'CV_AggregationStatistic')
+
+    def _update_datasets_table(self, con, cur):
+        # updates the Datasets table
+        # used for updating the sqlite file that is not blank
+        update_sql = "UPDATE Datasets SET DatasetTitle=?, DatasetAbstract=? " \
+                     "WHERE DatasetID=1"
+        ds_title = self.title.value
+        ds_abstract = self.description.abstract
+        cur.execute(update_sql, (ds_title, ds_abstract), )
+        con.commit()
 
     def _update_datasets_table_insert(self, con, cur):
         # insert record to Datasets table - first delete any existing records

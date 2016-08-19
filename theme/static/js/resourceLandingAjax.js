@@ -317,11 +317,10 @@ function metadata_update_ajax_submit(form_id){
             if (json_response.status === 'success')
             {
                 // start timeseries resource specific DOM manipulation
-                if (($form.attr("id") == "id-site" || $form.attr("id") == "id-variable" ||
-                    $form.attr("id") == "id-method" || $form.attr("id") == "id-processinglevel" ||
-                    $form.attr("id") == "id-timeseriesresult") && ($("#can-update-sqlite-file").val()) === "True") {
+                if ($("#can-update-sqlite-file").val() === "True") {
                     $("#sql-file-update").show();
                 }
+                
                 if (($form.attr("id") == "id-site")){
                     makeTimeSeriesMetaDataElementFormReadOnly(form_id, "id_site");
                 }
