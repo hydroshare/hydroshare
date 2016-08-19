@@ -40,7 +40,14 @@ class TimeSeriesAbstractMetaDataElement(AbstractMetaDataElement):
             if len(set_series_ids) != len(kwargs['series_ids']):
                 raise ValidationError("Duplicate series IDs are found")
 
-        return super(TimeSeriesAbstractMetaDataElement, cls).create(**kwargs)
+        element = super(TimeSeriesAbstractMetaDataElement, cls).create(**kwargs)
+        # set the 'is_dirty' field of metadata object to True
+        # if we are creating element when there is a csv file
+        metadata = element.metadata
+        if metadata.resource.has_csv_file:
+            metadata.is_dirty = True
+            metadata.save()
+        return element
 
     @classmethod
     def update(cls, element_id, **kwargs):
@@ -867,362 +874,61 @@ class TimeSeriesMetaData(CoreMetaData):
                 # get the records in python dictionary format
                 con.row_factory = sqlite3.Row
                 cur = con.cursor()
-                # insert records to SamplingFeatures table - first delete any existing records
-                cur.execute("DELETE FROM SamplingFeatures")
-                con.commit()
-                insert_sql = "INSERT INTO SamplingFeatures(SamplingFeatureID, " \
-                             "SamplingFeatureUUID, SamplingFeatureTypeCV, " \
-                             "SamplingFeatureCode, SamplingFeatureName, " \
-                             "Elevation_m, ElevationDatumCV) VALUES(?,?,?,?,?,?,?)"
-                for index, site in enumerate(self.sites):
-                    sampling_feature_id = index + 1
-                    cur.execute(insert_sql, (sampling_feature_id, uuid4().hex, site.site_type,
-                                site.site_code, site.site_name, site.elevation_m,
-                                site.elevation_datum),)
+                # insert records to SamplingFeatures table
+                self._update_samplingfeatures_table_insert(con, cur)
 
-                # insert record to SpatialReferences table - first delete any existing records
-                cur.execute("DELETE FROM SpatialReferences")
-                con.commit()
-                coverage = None
-                insert_sql = "INSERT INTO SpatialReferences (SpatialReferenceID, " \
-                             "SRSName) VALUES(?,?)"
-                if self.coverages.all():
-                    # NOTE: It looks like there will be always maximum of only one record created
-                    # for SpatialReferences table
-                    coverage = self.coverages.all().exclude(type='period').first()
-                    if coverage:
-                        spatial_ref_id = 1
-                        srs_name = coverage.value.get("projection", '')
-                        cur.execute(insert_sql, (spatial_ref_id, srs_name),)
+                # insert record to SpatialReferences table
+                self._update_spatialreferences_table_insert(con, cur)
 
-                # insert record to Sites table - first delete any existing records
-                cur.execute("DELETE FROM Sites")
-                con.commit()
-                insert_sql = "INSERT INTO Sites (SamplingFeatureID, SiteTypeCV, Latitude, " \
-                             "Longitude, SpatialReferenceID) VALUES(?,?,?,?,?)"
-                for index, site in enumerate(self.sites):
-                    sampling_feature_id = index + 1
-                    spatial_ref_id = 1
-                    lat = ''
-                    lon = ''
-                    # TODO: the following code needs to change once we add 'lat' and 'lon'
-                    # attribute to Site element
-                    # since we have maximum of one Coverage element of spatial type
-                    # we will populate the latitude and longitude columns of the Sites table for the
-                    # first record
-                    if coverage and index == 0:
-                        if coverage.type == 'point':
-                            lat = coverage.value.get('north')
-                            lon = coverage.value.get('east')
-                        else:
-                            lat = (coverage.value.get('northlimit') +
-                                   coverage.value.get('southlimit'))/2
-                            lon = (coverage.value.get('eastlimit') +
-                                   coverage.value.get('westlimit'))/2
+                # insert record to Sites table
+                self._update_sites_table_insert(con, cur)
 
-                    cur.execute(insert_sql, (sampling_feature_id, site.site_type, lat, lon,
-                                             spatial_ref_id), )
+                # insert record to Methods table
+                methods_data = self._update_methods_table_insert(con, cur)
 
-                # insert record to Methods table - first delete any existing records
-                cur.execute("DELETE FROM Methods")
-                con.commit()
-                insert_sql = "INSERT INTO Methods (MethodID, MethodTypeCV, MethodCode, " \
-                             "MethodName, MethodDescription, MethodLink) VALUES(?,?,?,?,?,?)"
-                methods_data = []
-                for index, method in enumerate(self.methods):
-                    method_id = index + 1
-                    cur.execute(insert_sql, (method_id, method.method_type, method.method_code,
-                                             method.method_name, method.method_description,
-                                             method.method_link),)
-                    methods_data.append({'method_id': method_id, 'series_ids': method.series_ids})
-                # insert record to Variables table - first delete any existing records
-                cur.execute("DELETE FROM Variables")
-                con.commit()
-                insert_sql = "INSERT INTO Variables (VariableID, VariableTypeCV, " \
-                             "VariableCode, VariableNameCV, VariableDefinition, " \
-                             "SpeciationCV, NoDataValue) VALUES(?,?,?,?,?,?,?)"
-                variable_data = []
-                for index, variable in enumerate(self.variables):
-                    variable_id = index + 1
-                    cur.execute(insert_sql, (variable_id, variable.variable_type,
-                                             variable.variable_code, variable.variable_name,
-                                             variable.variable_definition, variable.speciation,
-                                             variable.no_data_value),)
-                    variable_data.append({'variable_id': variable_id, 'object_id': variable.id})
-                # insert record to Units table - first delete any existing records
-                cur.execute("DELETE FROM Units")
-                con.commit()
-                insert_sql = "INSERT INTO Units (UnitsID, UnitsTypeCV, UnitsAbbreviation, " \
-                             "UnitsName) VALUES(?,?,?,?)"
-                for index, ts_result in enumerate(self.time_series_results):
-                    units_id = index + 1
-                    cur.execute(insert_sql, (units_id, ts_result.units_type,
-                                             ts_result.units_abbreviation, ts_result.units_name),)
-                # insert record to ProcessingLevels table - first delete any existing records
-                cur.execute("DELETE FROM ProcessingLevels")
-                con.commit()
-                insert_sql = "INSERT INTO ProcessingLevels (ProcessingLevelID, " \
-                             "ProcessingLevelCode, Definition, Explanation) VALUES(?,?,?,?)"
-                pro_level_data = []
-                for index, pro_level in enumerate(self.processing_levels):
-                    pro_level_id = index + 1
-                    cur.execute(insert_sql, (pro_level_id, pro_level.processing_level_code,
-                                             pro_level.definition, pro_level.explanation),)
+                # insert record to Variables table
+                variables_data = self._update_variables_table_insert(con, cur)
 
-                    pro_level_data.append({'pro_level_id': pro_level_id,
-                                           'object_id': pro_level.id})
+                # insert record to Units table
+                self._update_units_table_insert(con, cur)
 
-                # insert record to People table - first delete any existing records
-                cur.execute("DELETE FROM People")
-                con.commit()
-                insert_sql = "INSERT INTO People (PersonID, PersonFirstName, " \
-                             "PersonMiddleName, PersonLastName) VALUES(?,?,?,?)"
-                people_data = []
-                for index, person in enumerate(list(self.creators.all()) +
-                                               list(self.contributors.all())):
-                    person_id = index + 1
-                    name_parts = person.name.split()
-                    first_name = name_parts[0]
-                    mid_name = ''
-                    last_name = ''
-                    if len(name_parts) > 2:
-                        mid_name = name_parts[1]
-                        last_name = name_parts[2]
-                    elif len(name_parts) == 2:
-                        last_name = name_parts[1]
-                    cur.execute(insert_sql, (person_id, first_name, mid_name, last_name), )
-                    is_creator = isinstance(person, Creator)
-                    people_data.append({'person_id': person_id,
-                                        'organization': person.organization,
-                                        'email': person.email,
-                                        'phone': person.phone,
-                                        'address': person.address,
-                                        'is_creator': is_creator,
-                                        'object_id': person.id})
-                # insert record to Organizations table - first delete any existing records
-                cur.execute("DELETE FROM Organizations")
-                con.commit()
-                organizations = []
-                org_id = 1
-                insert_sql = "INSERT INTO Organizations (OrganizationID, OrganizationTypeCV, " \
-                             "OrganizationCode, OrganizationName) VALUES(?,?,?,?)"
-                for person in (list(self.creators.all()) + list(self.contributors.all())):
-                    organization_name = person.organization if person.organization else 'Unknown'
-                    if organization_name not in organizations:
-                        organizations.append(organization_name)
-                        cur.execute(insert_sql, (org_id, 'Unknown', str(org_id),
-                                                 organization_name),)
-                        org_id += 1
+                # insert record to ProcessingLevels table
+                pro_levels_data = self._update_processinglevels_table_insert(con, cur)
 
-                # insert record to Affiliations table - first delete any existing records
-                cur.execute("DELETE FROM Affiliations")
-                con.commit()
-                insert_sql = "INSERT INTO Affiliations (AffiliationID, PersonID, OrganizationID, " \
-                             "AffiliationStartDate, PrimaryPhone, PrimaryEmail, " \
-                             "PrimaryAddress) VALUES(?,?,?,?,?,?,?)"
+                # insert record to People table
+                people_data = self._update_people_table_insert(con, cur)
 
-                select_sql = "SELECT * FROM People"
-                cur.execute(select_sql)
-                people = cur.fetchall()
-                affiliation_id = 0
-                for person in people:
-                    affiliation_id += 1
-                    person_data = [p for p in people_data if p['person_id'] ==
-                                   person['PersonID']][0]
-                    org = None
-                    if person_data['organization']:
-                        cur.execute("SELECT * FROM Organizations WHERE OrganizationName=?",
-                                    (person_data['organization'],))
-                        org = cur.fetchone()
-                    org_id = org['OrganizationID'] if org else None
-                    cur.execute(insert_sql, (affiliation_id, person['PersonID'], org_id,
-                                             now(), person_data['phone'], person_data['email'],
-                                             person_data['address']), )
+                # insert record to Organizations table
+                self._update_organizations_table_insert(con, cur)
 
-                # insert record to Actions table - first delete any existing records
-                cur.execute("DELETE FROM Actions")
-                con.commit()
-                insert_sql = "INSERT INTO Actions (ActionID, ActionTypeCV, MethodID, " \
-                             "BeginDateTime, BeginDateTimeUTCOffset, " \
-                             "ActionDescription) VALUES(?,?,?,?,?,?)"
-                for index, ts_result in enumerate(self.time_series_results.all()):
-                    action_id = index + 1
-                    method_id = 1
-                    for method_data_item in methods_data:
-                        if ts_result.series_ids[0] in method_data_item['series_ids']:
-                            method_id = method_data_item['method_id']
-                            break
-                    cur.execute(insert_sql, (action_id, 'Observation', method_id, now(), -7,
-                                             'An observation action that generated a time '
-                                             'series result.'),)
+                # insert record to Affiliations table
+                self._update_affiliations_table_insert(con, cur, people_data)
 
-                # insert record to ActionBy table - first delete any existing records
-                cur.execute("DELETE FROM ActionBy")
-                con.commit()
-                select_sql = "SELECT * FROM People"
-                cur.execute(select_sql)
-                people = cur.fetchall()
-                insert_sql = "INSERT INTO ActionBy (BridgeID, ActionID, AffiliationID, " \
-                             "IsActionLead, RoleDescription) VALUES(?,?,?,?,?)"
-                cur.execute("SELECT * FROM Actions")
-                actions = cur.fetchall()
-                bridge_id = 1
-                found_first_author = False
-                for person in people:
-                    cur.execute("SELECT * FROM Affiliations WHERE PersonID=?",
-                                (person['PersonID'],))
-                    affiliation = cur.fetchone()
-                    affiliation_id = affiliation['AffiliationID']
-                    # check is this person is the first author
-                    is_action_lead = False
-                    role_description = 'Contributor'
-                    if not found_first_author:
-                        for p_item in people_data:
-                            if p_item['person_id'] == person['PersonID'] and p_item['is_creator']:
-                                first_author = self.creators.all().filter(order=1)[0]
-                                if first_author.id == p_item['object_id']:
-                                    is_action_lead = True
-                                    role_description = 'Creator'
-                                    found_first_author = True
-                                    break
+                # insert record to Actions table
+                self._update_actions_table_insert(con, cur, methods_data)
 
-                    for action in actions:
-                        cur.execute(insert_sql, (bridge_id, action['ActionID'], affiliation_id,
-                                                 is_action_lead, role_description),)
-                        bridge_id += 1
+                # insert record to ActionBy table
+                self._update_actionby_table_insert(con, cur, people_data)
 
-                # insert record to FeatureActions table - first delete any existing records
-                cur.execute("DELETE FROM FeatureActions")
-                con.commit()
-                insert_sql = "INSERT INTO FeatureActions (FeatureActionID, SamplingFeatureID, " \
-                             "ActionID) VALUES(?,?,?)"
-                for action in actions:
-                    cur.execute("SELECT * FROM SamplingFeatures WHERE SamplingFeatureID=?",
-                                (action['ActionID'],))
-                    sampling_feature = cur.fetchone()
-                    sampling_feature_id = sampling_feature['SamplingFeatureID'] \
-                        if sampling_feature else 1
-                    cur.execute(insert_sql, (action['ActionID'], sampling_feature_id,
-                                             action['ActionID']),)
+                # insert record to FeatureActions table
+                self._update_featureactions_table_insert(con, cur)
 
-                # insert record to Results table - first delete any existing records
-                cur.execute("DELETE FROM Results")
-                con.commit()
-                insert_sql = "INSERT INTO Results (ResultID, ResultUUID, FeatureActionID, " \
-                             "ResultTypeCV, VariableID, UnitsID, ProcessingLevelID, " \
-                             "ResultDateTime, ResultDateTimeUTCOffset, StatusCV, " \
-                             "SampledMediumCV, ValueCount) VALUES(?,?,?,?,?,?,?,?,?,?,?,?)"
+                # insert record to Results table
+                results_data = self._update_results_table_insert(con, cur, variables_data,
+                                                                 pro_levels_data)
 
-                results_data = []
-                for index, ts_res in enumerate(self.time_series_results.all()):
-                    result_id = index + 1
-                    cur.execute("SELECT * FROM FeatureActions WHERE ActionID=?", (result_id,))
-                    feature_act = cur.fetchone()
-                    related_var = self.variables.all().filter(
-                        series_ids__contains=[ts_res.series_ids[0]]).first()
-                    variable_id = 1
-                    for var_item in variable_data:
-                        if var_item['object_id'] == related_var.id:
-                            variable_id = var_item['variable_id']
-                            break
+                # insert record to TimeSeriesResults table
+                self._update_timeseriesresults_table_insert(con, cur, results_data)
 
-                    related_pro_level = self.processing_levels.all().filter(
-                        series_ids__contains=[ts_res.series_ids[0]]).first()
-                    pro_level_id = 1
-                    for pro_level_item in pro_level_data:
-                        if pro_level_item['object_id'] == related_pro_level.id:
-                            pro_level_id = pro_level_item['pro_level_id']
-                            break
-                    cur.execute("SELECT * FROM Units Where UnitsID=?", (result_id,))
-                    unit = cur.fetchone()
-                    cur.execute(insert_sql, (result_id, ts_res.series_ids[0],
-                                             feature_act['FeatureActionID'], 'Time series coverage',
-                                             variable_id, unit['UnitsID'], pro_level_id, now(), -7,
-                                             ts_res.status, ts_res.sample_medium,
-                                             ts_res.value_count),)
-                    results_data.append({'result_id': result_id, 'object_id': ts_res.id})
+                # insert record to TimeSeriesResultValues table
+                self._update_timeseriesresultvalues_table_insert(con, cur, temp_csv_file,
+                                                                 results_data)
 
-                # insert record to TimeSeriesResults table - first delete any existing records
-                cur.execute("DELETE FROM TimeSeriesResults")
-                con.commit()
-                insert_sql = "INSERT INTO TimeSeriesResults (ResultID, AggregationStatisticCV) " \
-                             "VALUES(?,?)"
-                cur.execute("SELECT * FROM Results")
-                results = cur.fetchall()
-                for result in results:
-                    res_item = [dict_item for dict_item in results_data if
-                                dict_item['result_id'] == result['ResultID']][0]
-                    ts_result = [ts_item for ts_item in self.time_series_results.all() if
-                                 ts_item.id == res_item['object_id']][0]
-                    cur.execute(insert_sql, (result['ResultID'], ts_result.aggregation_statistics),)
+                # insert record to Datasets table
+                self._update_datasets_table_insert(con, cur)
 
-                # insert record to TimeSeriesResultValues table - first delete any existing records
-                cur.execute("DELETE FROM TimeSeriesResultValues")
-                con.commit()
-                insert_sql = "INSERT INTO TimeSeriesResultValues (ValueID, ResultID, DataValue, " \
-                             "ValueDateTime, ValueDateTimeUTCOffset, CensorCodeCV, " \
-                             "QualityCodeCV, TimeAggregationInterval, " \
-                             "TimeAggregationIntervalUnitsID) VALUES(?,?,?,?,?,?,?,?,?)"
-
-                # read the csv file to determine time interval (in minutes) between each reading
-                # we will use the first 2 rows of data to determine this value
-                time_interval = 0
-                with open(temp_csv_file, 'r') as fl_obj:
-                    csv_reader = csv.reader(fl_obj, delimiter=',')
-                    # read the first row (header)
-                    header = csv_reader.next()
-                    first_row_data = csv_reader.next()
-                    second_row_data = csv_reader.next()
-                    time_interval = (parser.parse(second_row_data[0]) -
-                                     parser.parse(first_row_data[0])).seconds/60
-
-                # data_row_count = 0
-                with open(temp_csv_file, 'r') as fl_obj:
-                    csv_reader = csv.reader(fl_obj, delimiter=',')
-                    # read the first row (header) and skip
-                    csv_reader.next()
-                    value_id = 1
-                    data_header = header[1:]
-                    for col, value in enumerate(data_header):
-                        # get the ts_result object with matching series_label
-                        ts_result = [ts_item for ts_item in self.time_series_results if
-                                     ts_item.series_label == value][0]
-                        # get the result id associated with ts_result object
-                        result_data_item = [dict_item for dict_item in results_data if
-                                            dict_item['object_id'] == ts_result.id][0]
-                        result_id = result_data_item['result_id']
-                        data_col_index = col + 1
-                        for date_time, data_value in self._read_csv_specified_column(
-                                csv_reader, data_col_index):
-                            date_time = parser.parse(date_time)
-                            cur.execute(insert_sql, (value_id, result_id, data_value,
-                                                     date_time, -7, 'Unknown', 'Unknown',
-                                                     time_interval, 102),)
-                            value_id += 1
-
-                # insert record to Datasets table - first delete any existing records
-                cur.execute("DELETE FROM Datasets")
-                con.commit()
-                insert_sql = "INSERT INTO Datasets (DatasetID, DatasetUUID, DatasetTypeCV, " \
-                             "DatasetCode, DatasetTitle, DatasetAbstract) VALUES(?,?,?,?,?,?)"
-
-                ds_title = self.title.value
-                ds_abstract = self.description.abstract
-                ds_code = self.resource.short_id
-                cur.execute(insert_sql, (1, uuid4().hex, 'Multi-time series', ds_code, ds_title,
-                                         ds_abstract),)
-
-                # insert record to DatasetsResults table - first delete any existing records
-                cur.execute("DELETE FROM DatasetsResults")
-                con.commit()
-                insert_sql = "INSERT INTO DatasetsResults (BridgeID, DatasetID, " \
-                             "ResultID) VALUES(?,?,?)"
-
-                cur.execute("SELECT ResultID FROM Results")
-                results = cur.fetchall()
-                for index, result in enumerate(results):
-                    bridge_id = index + 1
-                    cur.execute(insert_sql, (bridge_id, 1, result['ResultID']), )
+                # insert record to DatasetsResults table
+                self._update_datatsetsresults_table_insert(con, cur)
 
                 self._update_CV_tables(con, cur)
                 con.commit()
@@ -1305,9 +1011,300 @@ class TimeSeriesMetaData(CoreMetaData):
             self.series_names = []
             self.save()
 
+    def _update_samplingfeatures_table_insert(self, con, cur):
+        # insert records to SamplingFeatures table - first delete any existing records
+        cur.execute("DELETE FROM SamplingFeatures")
+        con.commit()
+        insert_sql = "INSERT INTO SamplingFeatures(SamplingFeatureID, " \
+                     "SamplingFeatureUUID, SamplingFeatureTypeCV, " \
+                     "SamplingFeatureCode, SamplingFeatureName, " \
+                     "Elevation_m, ElevationDatumCV) VALUES(?,?,?,?,?,?,?)"
+        for index, site in enumerate(self.sites):
+            sampling_feature_id = index + 1
+            cur.execute(insert_sql, (sampling_feature_id, uuid4().hex, site.site_type,
+                                     site.site_code, site.site_name, site.elevation_m,
+                                     site.elevation_datum), )
+
+    def _update_spatialreferences_table_insert(self, con, cur):
+        # insert record to SpatialReferences table - first delete any existing records
+        # used for updating a sqlite file that is blank (case of CSV upload)
+
+        cur.execute("DELETE FROM SpatialReferences")
+        con.commit()
+        insert_sql = "INSERT INTO SpatialReferences (SpatialReferenceID, " \
+                     "SRSName) VALUES(?,?)"
+        if self.coverages.all():
+            # NOTE: It looks like there will be always maximum of only one record created
+            # for SpatialReferences table
+            coverage = self.coverages.all().exclude(type='period').first()
+            if coverage:
+                spatial_ref_id = 1
+                srs_name = coverage.value.get("projection", '')
+                cur.execute(insert_sql, (spatial_ref_id, srs_name), )
+
+    def _update_people_table_insert(self, con, cur):
+        # insert record to People table - first delete any existing records
+
+        cur.execute("DELETE FROM People")
+        con.commit()
+        insert_sql = "INSERT INTO People (PersonID, PersonFirstName, " \
+                     "PersonMiddleName, PersonLastName) VALUES(?,?,?,?)"
+        people_data = []
+        for index, person in enumerate(list(self.creators.all()) +
+                                            list(self.contributors.all())):
+            person_id = index + 1
+            name_parts = person.name.split()
+            first_name = name_parts[0]
+            mid_name = ''
+            last_name = ''
+            if len(name_parts) > 2:
+                mid_name = name_parts[1]
+                last_name = name_parts[2]
+            elif len(name_parts) == 2:
+                last_name = name_parts[1]
+            cur.execute(insert_sql, (person_id, first_name, mid_name, last_name), )
+            is_creator = isinstance(person, Creator)
+            people_data.append({'person_id': person_id,
+                                'organization': person.organization,
+                                'email': person.email,
+                                'phone': person.phone,
+                                'address': person.address,
+                                'is_creator': is_creator,
+                                'object_id': person.id})
+        return people_data
+
+    def _update_organizations_table_insert(self, con, cur):
+        # insert record to Organizations table - first delete any existing records
+        # used for updating a sqlite file that is blank (case of CSV upload)
+
+        cur.execute("DELETE FROM Organizations")
+        con.commit()
+        organizations = []
+        org_id = 1
+        insert_sql = "INSERT INTO Organizations (OrganizationID, OrganizationTypeCV, " \
+                     "OrganizationCode, OrganizationName) VALUES(?,?,?,?)"
+        for person in (list(self.creators.all()) + list(self.contributors.all())):
+            organization_name = person.organization if person.organization else 'Unknown'
+            if organization_name not in organizations:
+                organizations.append(organization_name)
+                cur.execute(insert_sql, (org_id, 'Unknown', str(org_id),
+                                         organization_name), )
+                org_id += 1
+
+    def _update_affiliations_table_insert(self, con, cur, people_data):
+        # insert record to Affiliations table - first delete any existing records
+        # used for updating a sqlite file that is blank (case of CSV upload)
+
+        cur.execute("DELETE FROM Affiliations")
+        con.commit()
+        insert_sql = "INSERT INTO Affiliations (AffiliationID, PersonID, OrganizationID, " \
+                     "AffiliationStartDate, PrimaryPhone, PrimaryEmail, " \
+                     "PrimaryAddress) VALUES(?,?,?,?,?,?,?)"
+
+        select_sql = "SELECT * FROM People"
+        cur.execute(select_sql)
+        people = cur.fetchall()
+        affiliation_id = 0
+        for person in people:
+            affiliation_id += 1
+            person_data = [p for p in people_data if p['person_id'] ==
+                           person['PersonID']][0]
+            org = None
+            if person_data['organization']:
+                cur.execute("SELECT * FROM Organizations WHERE OrganizationName=?",
+                            (person_data['organization'],))
+                org = cur.fetchone()
+            org_id = org['OrganizationID'] if org else None
+            cur.execute(insert_sql, (affiliation_id, person['PersonID'], org_id,
+                                     now(), person_data['phone'], person_data['email'],
+                                     person_data['address']), )
+
+    def _update_actions_table_insert(self, con, cur, methods_data):
+        # insert record to Actions table - first delete any existing records
+        # used for updating a sqlite file that is blank (case of CSV upload)
+
+        cur.execute("DELETE FROM Actions")
+        con.commit()
+        insert_sql = "INSERT INTO Actions (ActionID, ActionTypeCV, MethodID, " \
+                     "BeginDateTime, BeginDateTimeUTCOffset, " \
+                     "ActionDescription) VALUES(?,?,?,?,?,?)"
+        for index, ts_result in enumerate(self.time_series_results.all()):
+            action_id = index + 1
+            method_id = 1
+            for method_data_item in methods_data:
+                if ts_result.series_ids[0] in method_data_item['series_ids']:
+                    method_id = method_data_item['method_id']
+                    break
+            cur.execute(insert_sql, (action_id, 'Observation', method_id, now(), -7,
+                                     'An observation action that generated a time '
+                                     'series result.'), )
+
+    def _update_actionby_table_insert(self, con, cur, people_data):
+        # insert record to ActionBy table - first delete any existing records
+        # used for updating a sqlite file that is blank (case of CSV upload)
+
+        cur.execute("DELETE FROM ActionBy")
+        con.commit()
+        select_sql = "SELECT * FROM People"
+        cur.execute(select_sql)
+        people = cur.fetchall()
+        insert_sql = "INSERT INTO ActionBy (BridgeID, ActionID, AffiliationID, " \
+                     "IsActionLead, RoleDescription) VALUES(?,?,?,?,?)"
+        cur.execute("SELECT * FROM Actions")
+        actions = cur.fetchall()
+        bridge_id = 1
+        found_first_author = False
+        for person in people:
+            cur.execute("SELECT * FROM Affiliations WHERE PersonID=?",
+                        (person['PersonID'],))
+            affiliation = cur.fetchone()
+            affiliation_id = affiliation['AffiliationID']
+            # check is this person is the first author
+            is_action_lead = False
+            role_description = 'Contributor'
+            if not found_first_author:
+                for p_item in people_data:
+                    if p_item['person_id'] == person['PersonID'] and p_item['is_creator']:
+                        first_author = self.creators.all().filter(order=1)[0]
+                        if first_author.id == p_item['object_id']:
+                            is_action_lead = True
+                            role_description = 'Creator'
+                            found_first_author = True
+                            break
+
+            for action in actions:
+                cur.execute(insert_sql, (bridge_id, action['ActionID'], affiliation_id,
+                                         is_action_lead, role_description), )
+                bridge_id += 1
+
+    def _update_featureactions_table_insert(self, con, cur):
+        # insert record to FeatureActions table - first delete any existing records
+        # used for updating a sqlite file that is blank (case of CSV upload)
+
+        cur.execute("DELETE FROM FeatureActions")
+        con.commit()
+        insert_sql = "INSERT INTO FeatureActions (FeatureActionID, SamplingFeatureID, " \
+                     "ActionID) VALUES(?,?,?)"
+        cur.execute("SELECT * FROM Actions")
+        actions = cur.fetchall()
+        for action in actions:
+            cur.execute("SELECT * FROM SamplingFeatures WHERE SamplingFeatureID=?",
+                        (action['ActionID'],))
+            sampling_feature = cur.fetchone()
+            sampling_feature_id = sampling_feature['SamplingFeatureID'] \
+                if sampling_feature else 1
+            cur.execute(insert_sql, (action['ActionID'], sampling_feature_id,
+                                     action['ActionID']), )
+
+    def _update_results_table_insert(self, con, cur, variables_data, pro_levels_data):
+        # insert record to Results table - first delete any existing records
+        # used for updating a sqlite file that is blank (case of CSV upload)
+
+        cur.execute("DELETE FROM Results")
+        con.commit()
+        insert_sql = "INSERT INTO Results (ResultID, ResultUUID, FeatureActionID, " \
+                     "ResultTypeCV, VariableID, UnitsID, ProcessingLevelID, " \
+                     "ResultDateTime, ResultDateTimeUTCOffset, StatusCV, " \
+                     "SampledMediumCV, ValueCount) VALUES(?,?,?,?,?,?,?,?,?,?,?,?)"
+
+        results_data = []
+        for index, ts_res in enumerate(self.time_series_results.all()):
+            result_id = index + 1
+            cur.execute("SELECT * FROM FeatureActions WHERE ActionID=?", (result_id,))
+            feature_act = cur.fetchone()
+            related_var = self.variables.all().filter(
+                series_ids__contains=[ts_res.series_ids[0]]).first()
+            variable_id = 1
+            for var_item in variables_data:
+                if var_item['object_id'] == related_var.id:
+                    variable_id = var_item['variable_id']
+                    break
+
+            related_pro_level = self.processing_levels.all().filter(
+                series_ids__contains=[ts_res.series_ids[0]]).first()
+            pro_level_id = 1
+            for pro_level_item in pro_levels_data:
+                if pro_level_item['object_id'] == related_pro_level.id:
+                    pro_level_id = pro_level_item['pro_level_id']
+                    break
+            cur.execute("SELECT * FROM Units Where UnitsID=?", (result_id,))
+            unit = cur.fetchone()
+            cur.execute(insert_sql, (result_id, ts_res.series_ids[0],
+                                     feature_act['FeatureActionID'], 'Time series coverage',
+                                     variable_id, unit['UnitsID'], pro_level_id, now(), -7,
+                                     ts_res.status, ts_res.sample_medium,
+                                     ts_res.value_count), )
+            results_data.append({'result_id': result_id, 'object_id': ts_res.id})
+            return results_data
+
+    def _update_timeseriesresults_table_insert(self, con, cur, results_data):
+        # insert record to TimeSeriesResults table - first delete any existing records
+        # used for updating a sqlite file that is blank (case of CSV upload)
+
+        cur.execute("DELETE FROM TimeSeriesResults")
+        con.commit()
+        insert_sql = "INSERT INTO TimeSeriesResults (ResultID, AggregationStatisticCV) " \
+                     "VALUES(?,?)"
+        cur.execute("SELECT * FROM Results")
+        results = cur.fetchall()
+        for result in results:
+            res_item = [dict_item for dict_item in results_data if
+                        dict_item['result_id'] == result['ResultID']][0]
+            ts_result = [ts_item for ts_item in self.time_series_results.all() if
+                         ts_item.id == res_item['object_id']][0]
+            cur.execute(insert_sql, (result['ResultID'], ts_result.aggregation_statistics), )
+
+    def _update_timeseriesresultvalues_table_insert(self, con, cur, temp_csv_file, results_data):
+        # insert record to TimeSeriesResultValues table - first delete any existing records
+        # used for updating a sqlite file that is blank (case of CSV upload)
+
+        cur.execute("DELETE FROM TimeSeriesResultValues")
+        con.commit()
+        insert_sql = "INSERT INTO TimeSeriesResultValues (ValueID, ResultID, DataValue, " \
+                     "ValueDateTime, ValueDateTimeUTCOffset, CensorCodeCV, " \
+                     "QualityCodeCV, TimeAggregationInterval, " \
+                     "TimeAggregationIntervalUnitsID) VALUES(?,?,?,?,?,?,?,?,?)"
+
+        # read the csv file to determine time interval (in minutes) between each reading
+        # we will use the first 2 rows of data to determine this value
+        time_interval = 0
+        with open(temp_csv_file, 'r') as fl_obj:
+            csv_reader = csv.reader(fl_obj, delimiter=',')
+            # read the first row (header)
+            header = csv_reader.next()
+            first_row_data = csv_reader.next()
+            second_row_data = csv_reader.next()
+            time_interval = (parser.parse(second_row_data[0]) -
+                             parser.parse(first_row_data[0])).seconds / 60
+
+        # data_row_count = 0
+        with open(temp_csv_file, 'r') as fl_obj:
+            csv_reader = csv.reader(fl_obj, delimiter=',')
+            # read the first row (header) and skip
+            csv_reader.next()
+            value_id = 1
+            data_header = header[1:]
+            for col, value in enumerate(data_header):
+                # get the ts_result object with matching series_label
+                ts_result = [ts_item for ts_item in self.time_series_results if
+                             ts_item.series_label == value][0]
+                # get the result id associated with ts_result object
+                result_data_item = [dict_item for dict_item in results_data if
+                                    dict_item['object_id'] == ts_result.id][0]
+                result_id = result_data_item['result_id']
+                data_col_index = col + 1
+                for date_time, data_value in self._read_csv_specified_column(
+                        csv_reader, data_col_index):
+                    date_time = parser.parse(date_time)
+                    cur.execute(insert_sql, (value_id, result_id, data_value,
+                                             date_time, -7, 'Unknown', 'Unknown',
+                                             time_interval, 102), )
+                    value_id += 1
+
     def _update_CV_tables(self, con, cur):
         # here 'is_dirty' true means a new term has been added
         # so a new record needs to be added to the specific CV table
+        # used both for writing to blank sqlite file and non-blank sqlite file
         def insert_cv_record(cv_elements, cv_table_name):
             for cv_element in cv_elements:
                 if cv_element.is_dirty:
@@ -1329,7 +1326,39 @@ class TimeSeriesMetaData(CoreMetaData):
         insert_cv_record(self.cv_mediums.all(), 'CV_Medium')
         insert_cv_record(self.cv_aggregation_statistics.all(), 'CV_AggregationStatistic')
 
+    def _update_datasets_table_insert(self, con, cur):
+        # insert record to Datasets table - first delete any existing records
+        # used for updating a sqlite file that is blank (case of CSV upload)
+
+        cur.execute("DELETE FROM Datasets")
+        con.commit()
+        insert_sql = "INSERT INTO Datasets (DatasetID, DatasetUUID, DatasetTypeCV, " \
+                     "DatasetCode, DatasetTitle, DatasetAbstract) VALUES(?,?,?,?,?,?)"
+
+        ds_title = self.title.value
+        ds_abstract = self.description.abstract
+        ds_code = self.resource.short_id
+        cur.execute(insert_sql, (1, uuid4().hex, 'Multi-time series', ds_code, ds_title,
+                                 ds_abstract), )
+
+    def _update_datatsetsresults_table_insert(self, con, cur):
+        # insert record to DatasetsResults table - first delete any existing records
+        # used for updating a sqlite file that is blank (case of CSV upload)
+
+        cur.execute("DELETE FROM DatasetsResults")
+        con.commit()
+        insert_sql = "INSERT INTO DatasetsResults (BridgeID, DatasetID, " \
+                     "ResultID) VALUES(?,?,?)"
+
+        cur.execute("SELECT ResultID FROM Results")
+        results = cur.fetchall()
+        for index, result in enumerate(results):
+            bridge_id = index + 1
+            cur.execute(insert_sql, (bridge_id, 1, result['ResultID']), )
+
     def _update_variables_table(self, con, cur):
+        # updates Variables table
+        # used for updating a sqlite file that is not blank
         for variable in self.variables:
             if variable.is_dirty:
                 # get the VariableID from Results table to update the corresponding row in
@@ -1349,8 +1378,28 @@ class TimeSeriesMetaData(CoreMetaData):
                 variable.is_dirty = False
                 variable.save()
 
+    def _update_variables_table_insert(self, con, cur):
+        # insert record to Variables table - first delete any existing records
+        # used for updating a sqlite file that is blank (case of CSV upload)
+
+        cur.execute("DELETE FROM Variables")
+        con.commit()
+        insert_sql = "INSERT INTO Variables (VariableID, VariableTypeCV, " \
+                     "VariableCode, VariableNameCV, VariableDefinition, " \
+                     "SpeciationCV, NoDataValue) VALUES(?,?,?,?,?,?,?)"
+        variables_data = []
+        for index, variable in enumerate(self.variables):
+            variable_id = index + 1
+            cur.execute(insert_sql, (variable_id, variable.variable_type,
+                                     variable.variable_code, variable.variable_name,
+                                     variable.variable_definition, variable.speciation,
+                                     variable.no_data_value), )
+            variables_data.append({'variable_id': variable_id, 'object_id': variable.id})
+        return variables_data
+
     def _update_methods_table(self, con, cur):
         # updates the Methods table
+        # used for updating a sqlite file that is not blank
         for method in self.methods:
             if method.is_dirty:
                 # get the MethodID to update the corresponding row in Methods table
@@ -1375,8 +1424,27 @@ class TimeSeriesMetaData(CoreMetaData):
                 method.is_dirty = False
                 method.save()
 
+    def _update_methods_table_insert(self, con, cur):
+        # insert record to Methods table - first delete any existing records
+        # used for updating a sqlite file that is blank (case of CSV upload)
+
+        cur.execute("DELETE FROM Methods")
+        con.commit()
+        insert_sql = "INSERT INTO Methods (MethodID, MethodTypeCV, MethodCode, " \
+                     "MethodName, MethodDescription, MethodLink) VALUES(?,?,?,?,?,?)"
+        methods_data = []
+        for index, method in enumerate(self.methods):
+            method_id = index + 1
+            cur.execute(insert_sql, (method_id, method.method_type, method.method_code,
+                                     method.method_name, method.method_description,
+                                     method.method_link), )
+            methods_data.append({'method_id': method_id, 'series_ids': method.series_ids})
+
+        return methods_data
+
     def _update_processinglevels_table(self, con, cur):
         # updates the ProcessingLevels table
+        # used for updating a sqlite file that is not blank
         for processing_level in self.processing_levels:
             if processing_level.is_dirty:
                 # get the ProcessingLevelID to update the corresponding row in ProcessingLevels
@@ -1397,8 +1465,28 @@ class TimeSeriesMetaData(CoreMetaData):
                 processing_level.is_dirty = False
                 processing_level.save()
 
+    def _update_processinglevels_table_insert(self, con, cur):
+        # insert record to ProcessingLevels table - first delete any existing records
+        # this function used only in case of writing data to a blank database (case of CSV upload)
+
+        cur.execute("DELETE FROM ProcessingLevels")
+        con.commit()
+        insert_sql = "INSERT INTO ProcessingLevels (ProcessingLevelID, " \
+                     "ProcessingLevelCode, Definition, Explanation) VALUES(?,?,?,?)"
+        pro_levels_data = []
+        for index, pro_level in enumerate(self.processing_levels):
+            pro_level_id = index + 1
+            cur.execute(insert_sql, (pro_level_id, pro_level.processing_level_code,
+                                     pro_level.definition, pro_level.explanation), )
+
+            pro_levels_data.append({'pro_level_id': pro_level_id,
+                                    'object_id': pro_level.id})
+
+        return pro_levels_data
+
     def _update_sites_related_tables(self, con, cur):
         # updates 'Sites' and 'SamplingFeatures' tables
+        # used for updating a sqlite file that is not blank
         for site in self.sites:
             if site.is_dirty:
                 # get the SamplingFeatureID to update the corresponding row in Sites and
@@ -1427,8 +1515,41 @@ class TimeSeriesMetaData(CoreMetaData):
                 site.is_dirty = False
                 site.save()
 
+    def _update_sites_table_insert(self, con, cur):
+        # insert record to Sites table - first delete any existing records
+        # this function used only in case of writing data to a blank database (case of CSV upload)
+
+        cur.execute("DELETE FROM Sites")
+        con.commit()
+        coverage = self.coverages.all().exclude(type='period').first()
+        insert_sql = "INSERT INTO Sites (SamplingFeatureID, SiteTypeCV, Latitude, " \
+                     "Longitude, SpatialReferenceID) VALUES(?,?,?,?,?)"
+        for index, site in enumerate(self.sites):
+            sampling_feature_id = index + 1
+            spatial_ref_id = 1
+            lat = ''
+            lon = ''
+            # TODO: the following code needs to change once we add 'lat' and 'lon'
+            # attribute to Site element
+            # since we have maximum of one Coverage element of spatial type
+            # we will populate the latitude and longitude columns of the Sites table for the
+            # first record
+            if coverage and index == 0:
+                if coverage.type == 'point':
+                    lat = coverage.value.get('north')
+                    lon = coverage.value.get('east')
+                else:
+                    lat = (coverage.value.get('northlimit') +
+                           coverage.value.get('southlimit')) / 2
+                    lon = (coverage.value.get('eastlimit') +
+                           coverage.value.get('westlimit')) / 2
+
+            cur.execute(insert_sql, (sampling_feature_id, site.site_type, lat, lon,
+                                     spatial_ref_id), )
+
     def _update_results_related_tables(self, con, cur):
         # updates 'Results', 'Units' and 'TimeSeriesResults' tables
+        # this function is used for writing data to a sqlite file that is not blank
         for ts_result in self.time_series_results:
             if ts_result.is_dirty:
                 # get the UnitsID and ResultID to update the corresponding row in Results,
@@ -1461,6 +1582,19 @@ class TimeSeriesMetaData(CoreMetaData):
                 con.commit()
                 ts_result.is_dirty = False
                 ts_result.save()
+
+    def _update_units_table_insert(self, con, cur):
+        # insert record to Units table - first delete any existing records
+        # this function used only in case of writing data to a blank database (case of CSV upload)
+
+        cur.execute("DELETE FROM Units")
+        con.commit()
+        insert_sql = "INSERT INTO Units (UnitsID, UnitsTypeCV, UnitsAbbreviation, " \
+                     "UnitsName) VALUES(?,?,?,?)"
+        for index, ts_result in enumerate(self.time_series_results):
+            units_id = index + 1
+            cur.execute(insert_sql, (units_id, ts_result.units_type,
+                                     ts_result.units_abbreviation, ts_result.units_name), )
 
 
 def _create_site_related_cv_terms(element, data_dict):
