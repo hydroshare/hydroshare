@@ -73,6 +73,8 @@ class Site(TimeSeriesAbstractMetaDataElement):
     elevation_m = models.IntegerField(null=True, blank=True)
     elevation_datum = models.CharField(max_length=50, null=True, blank=True)
     site_type = models.CharField(max_length=100, null=True, blank=True)
+    latitude = models.FloatField(null=True, blank=True)
+    longitude = models.FloatField(null=True, blank=True)
 
     def __unicode__(self):
         return self.site_name

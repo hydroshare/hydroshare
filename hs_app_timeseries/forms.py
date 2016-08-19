@@ -29,6 +29,8 @@ class SiteFormHelper(BaseFormHelper):
                                   title="Select 'Other...' to specify a new elevation datum term"),
                             Field('site_type', css_class=field_width,
                                   title="Select 'Other...' to specify a new site type term"),
+                            Field('latitude', css_class=field_width),
+                            Field('longitude', css_class=field_width),
                      )
         layout = _set_form_helper_layout(common_layout=common_layout, element_name="site",
                                          is_show_element_code_selection=
@@ -85,7 +87,7 @@ class SiteForm(ModelForm):
     class Meta:
         model = Site
         fields = ['site_code', 'site_name', 'elevation_m', 'elevation_datum', 'site_type',
-                  'site_code_choices']
+                  'site_code_choices', 'latitude', 'longitude']
         exclude = ['content_object']
         widgets = {'elevation_m': forms.TextInput()}
 
@@ -97,7 +99,20 @@ class SiteValidationForm(forms.Form):
     elevation_datum = forms.CharField(max_length=50, required=False)
     site_type = forms.CharField(max_length=100, required=False)
     selected_series_id = forms.CharField(max_length=50, required=False)
+    latitude = forms.FloatField()
+    longitude = forms.FloatField()
 
+    def clean_latitude(self):
+        lat = self.cleaned_data['latitude']
+        if lat < -90 or lat > 90:
+            raise forms.ValidationError("Value for latitude must be in the range of -90 to 90")
+        return lat
+
+    def clean_longitude(self):
+        lon = self.cleaned_data['longitude']
+        if lon < -180 or lon > 180:
+            raise forms.ValidationError("Value for longitude must be in the range of -180 to 180")
+        return lon
 
 class VariableFormHelper(BaseFormHelper):
     def __init__(self, allow_edit=True, res_short_id=None, element_id=None, element_name=None,
