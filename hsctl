@@ -92,11 +92,11 @@ maint_off_hs() {
 
 solr_schema_hs() {
     echo "SOLR SCHEMA:"
-    echo "  - docker exec -u hydro-service hydroshare python manage.py build_solr_schema -f schema.xml"
-    docker exec -u hydro-service hydroshare python manage.py build_solr_schema -f schema.xml
+    echo "  - docker exec hydroshare python manage.py build_solr_schema -f schema.xml"
+    docker exec hydroshare python manage.py build_solr_schema -f schema.xml
     sleep 1s
-    echo "  - docker exec -u hydro-service solr cp /hydroshare/schema.xml /opt/solr/example/solr/collection1/conf/schema.xml"
-    docker exec -u hydro-service solr cp /hydroshare/schema.xml /opt/solr/example/solr/collection1/conf/schema.xml
+    echo "  - docker exec solr cp /hydroshare/schema.xml /opt/solr/example/solr/collection1/conf/schema.xml"
+    docker exec solr cp /hydroshare/schema.xml /opt/solr/example/solr/collection1/conf/schema.xml
 }
 
 delete_celerybeat_scheduler() {
@@ -233,10 +233,28 @@ migrate_hs() {
     docker exec -u hydro-service hydroshare python manage.py fix_permissions
 }
 
+manage_py_hs() {
+    echo "MANAGEPY:"
+    echo "  - docker exec -u hydro-service -ti hydroshare python manage.py ${@:2}"
+    docker exec -u hydro-service -ti hydroshare python manage.py ${@:2}
+}
+
 solr_reload_hs() {
     echo "SOLR RELOAD"
-    echo "  - docker exec -u hydro-service hydroshare curl \"solr:8983/solr/admin/cores?action=RELOAD&core=collection1\""
-    docker exec -u hydro-service hydroshare curl "solr:8983/solr/admin/cores?action=RELOAD&core=collection1"
+    echo "  - docker exec hydroshare curl \"solr:8983/solr/admin/cores?action=RELOAD&core=collection1\""
+    docker exec hydroshare curl "solr:8983/solr/admin/cores?action=RELOAD&core=collection1"
+}
+
+update_solr_index() {
+    echo "UPDATE SOLR INDEX:"
+    echo "  - docker exec hydroshare python manage.py update_index"
+    docker exec hydroshare python manage.py update_index
+}
+
+rebuild_solr_index() {
+    echo "REBUILD SOLR INDEX:"
+    echo "  - docker exec hydroshare python manage.py rebuild_index --noinput"
+    docker exec hydroshare python manage.py rebuild_index --noinput
 }
 
 remove_hs_components(){
@@ -323,24 +341,6 @@ reloaddb_hs() {
     solr_reload_hs
     sleep 2s
     rebuild_solr_index
-}
-
-manage_py_hs() {
-    echo "MANAGEPY:"
-    echo "  - docker exec -u hydro-service -ti hydroshare python manage.py ${@:2}"
-    docker exec -u hydro-service -ti hydroshare python manage.py ${@:2}
-}
-
-update_solr_index() {
-    echo "UPDATE SOLR INDEX:"
-    echo "  - docker exec -u hydro-service hydroshare python manage.py update_index"
-    docker exec -u hydro-service hydroshare python manage.py update_index
-}
-
-rebuild_solr_index() {
-    echo "REBUILD SOLR INDEX:"
-    echo "  - docker exec -u hydro-service hydroshare python manage.py rebuild_index --noinput"
-    docker exec -u hydro-service hydroshare python manage.py rebuild_index --noinput
 }
 
 reset_all_hs() {
