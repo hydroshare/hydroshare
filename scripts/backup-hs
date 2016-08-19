@@ -7,6 +7,7 @@
 ### hydrodev VM
 HS_PATH=/home/hydro/hydroshare
 BACKUP_PATH=/home/${USER}/backup
+HS_PATH_DOCKER=/hydroshare
 
 # set variables for use in script
 MEDIA_FILES=${HS_PATH}/media_files
@@ -25,8 +26,8 @@ if [ ! -d "$MEDIA_FILES" ]; then
     mkdir $MEDIA_FILES;
 fi
 # rsync hydroshare/script/media with media_files
-docker exec hydroshare rsync -avh --dry-run /home/docker/hydroshare/hydroshare/static/media /home/docker/hydroshare/media_files
-docker exec hydroshare rsync -avh /home/docker/hydroshare/hydroshare/static/media /home/docker/hydroshare/media_files
+docker exec hydroshare rsync -avh --dry-run ${HS_PATH_DOCKER}/hydroshare/static/media ${HS_PATH_DOCKER}/media_files
+docker exec hydroshare rsync -avh ${HS_PATH_DOCKER}/hydroshare/static/media ${HS_PATH_DOCKER}/media_files
 cd $HS_PATH
 tar -czvf "media-hydroshare-`date +"%m-%d-%y"`.tar.gz" media_files
 

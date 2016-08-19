@@ -48,7 +48,7 @@ PERMISSIONS_DB= redis.Redis(
 
 
 IPYTHON_SETTINGS=[]
-IPYTHON_BASE='/home/docker/hydroshare/static/media/ipython-notebook'
+IPYTHON_BASE='/hydroshare/static/media/ipython-notebook'
 IPYTHON_HOST='127.0.0.1'
 
 # celery settings
@@ -76,7 +76,7 @@ DOCKER_API_VERSION = '1.12'
 
 
 # CartoCSS
-CARTO_HOME='/home/docker/node_modules/carto'
+CARTO_HOME='/hs_tmp/node_modules/carto'
 
 
 USE_SOUTH = False
@@ -109,7 +109,7 @@ POSTGIS_VERSION=(2,1,1)
 
 # Local resource iRODS configuration
 USE_IRODS = True
-IRODS_ROOT = '/tmp'
+IRODS_ROOT = '/hs_tmp'
 IRODS_ICOMMANDS_PATH = '/usr/bin'
 IRODS_HOST = 'hydrotest41.renci.org'
 IRODS_PORT = '1247'
@@ -177,4 +177,4 @@ EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 #DEFAULT_FROM_EMAIL = ''
 #DEFAULT_SUPPORT_EMAIL=''
 
-HYDROSHARE_SHARED_TEMP = '/shared_temp'
+HYDROSHARE_SHARED_TEMP = '/shared_tmp'

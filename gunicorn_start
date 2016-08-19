@@ -4,15 +4,15 @@
 # Author: Michael Stealey <michael.j.stealey@gmail.com>
 
 NAME="hydroshare_app"                               # Name of the application
-DJANGODIR=/home/docker/hydroshare                   # Django project directory
-SOCKFILE=/var/run/gunicorn.sock                     # we will communicte using this unix socket
-USER=root                                           # the user to run as
-GROUP=root                                          # the group to run as
+DJANGODIR=/hydroshare                               # Django project directory
+SOCKFILE=/hs_tmp/gunicorn.sock              # we will communicate using this unix socket
+USER=hydro-service                                  # the user to run as
+GROUP=storage-hydro                                 # the group to run as
 NUM_WORKERS=$(python -c "exec(\"import multiprocessing\nprint( multiprocessing.cpu_count() * 2 + 1)\")")
                                                     # how many worker processes should Gunicorn spawn
 DJANGO_SETTINGS_MODULE=hydroshare.settings          # which settings file should Django use
 DJANGO_WSGI_MODULE=hydroshare.wsgi                  # WSGI module name
-GUNICORN_LOG=/var/log/hydroshare/gunicorn.log       # path to logfile
+GUNICORN_LOG=/hydroshare/log/gunicorn.log           # path to logfile
 TIMEOUT_PERIOD=300                                  # timeout period in seconds
 MAX_REQUESTS=1000                                   # maximum number of requests a worker will process before restarting
 

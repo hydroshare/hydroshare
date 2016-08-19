@@ -332,7 +332,7 @@ def add_zip_file_contents_to_resource_async(resource, f):
     # Add contents of zipfile asynchronously; wait 30 seconds to be "sure" that resource creation
     # has finished.
     uploaded_filepath = f.temporary_file_path()
-    tmp_dir = getattr(settings, 'HYDROSHARE_SHARED_TEMP', '/shared_temp')
+    tmp_dir = getattr(settings, 'HYDROSHARE_SHARED_TEMP', '/shared_tmp')
     logger.debug("Copying uploaded file from {0} to {1}".format(uploaded_filepath,
                                                                 tmp_dir))
     shutil.copy(uploaded_filepath, tmp_dir)
