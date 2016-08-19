@@ -33,8 +33,8 @@ $(document).ready(function () {
             });
         }
     };
-
-    $("#toggle-list-view").click(function () {
+    
+    $("#toggle-list-view").change(function () {
         if ($("#fb-files-container").hasClass("fb-view-list")) {
             // ------- Switch to grid view -------
             $("#fb-files-container").removeClass("fb-view-list");

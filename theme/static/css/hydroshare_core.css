@@ -3743,7 +3743,7 @@ div.group-add-photo {
 	color: red;
 }
 
-div.toggle.btn {
+#edit-group-dialog div.toggle.btn {
 	width: 100px !important;
 	float: right;
 }
@@ -4070,4 +4070,12 @@ div.fb-upload-caption {
 	margin-right: 10px;
 	margin-left: 10px;
 	font-size: 14px;
+}
+
+#file-browser-controls .toggle, #file-browser-controls .toggle-on, #file-browser-controls .toggle-off {
+	border-radius: 20px;
+}
+
+#file-browser-controls .toggle-handle {
+	border-radius: 20px;
 }

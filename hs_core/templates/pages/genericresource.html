@@ -82,8 +82,11 @@
                                                 <span id="fb-delete" class="btn btn-default fb-control-squared"
                                                       title="Delete"><span
                                                         class="glyphicon glyphicon-trash btn-remove"></span></span>
-                                                <span id="toggle-list-view" class="btn btn-default fb-control-squared"
-                                                      title="">Toggle View</span>
+
+                                                <input id="toggle-list-view" type="checkbox" checked
+                                                       data-toggle="toggle" data-onstyle="default"
+                                                       data-offstyle="default" data-on="<i class='glyphicon glyphicon-th-large' aria-hidden='true'></i>"
+                                                       data-off="<i class='fa fa-list' aria-hidden='true'></i>">
                                             </div>
 
                                             <div class="col-xs-6">
@@ -1133,6 +1136,8 @@
         <script type="text/javascript" src="{{ STATIC_URL }}js/resourceLandingAjax.js"></script>
         <script type="text/javascript" src="{{ STATIC_URL }}js/hs_file_browser.js"></script>
         <script type="text/javascript" src='//cdn.datatables.net/1.10.10/js/jquery.dataTables.js'></script>
+        <link href="https://gitcdn.github.io/bootstrap-toggle/2.2.2/css/bootstrap-toggle.min.css" rel="stylesheet">
+        <script src="https://gitcdn.github.io/bootstrap-toggle/2.2.2/js/bootstrap-toggle.min.js"></script>
         <script type="text/javascript">
             function onRoleSelect(event) {
                 var el = $(event.target);
