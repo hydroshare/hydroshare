@@ -360,22 +360,29 @@ def _extract_metadata(resource, sqlite_file_name):
                     cur.execute("SELECT * FROM Sites WHERE SamplingFeatureID=?",
                                 (feature_action["SamplingFeatureID"],))
                     site = cur.fetchone()
+                    if not any(sampling_feature["SamplingFeatureCode"] == s.site_code for s
+                               in resource.metadata.sites):
 
-                    data_dict = {}
-                    data_dict['series_ids'] = [result["ResultUUID"]]
-                    data_dict['site_code'] = sampling_feature["SamplingFeatureCode"]
-                    data_dict['site_name'] = sampling_feature["SamplingFeatureName"]
-                    if sampling_feature["Elevation_m"]:
-                        data_dict["elevation_m"] = sampling_feature["Elevation_m"]
+                        data_dict = {}
+                        data_dict['series_ids'] = [result["ResultUUID"]]
+                        data_dict['site_code'] = sampling_feature["SamplingFeatureCode"]
+                        data_dict['site_name'] = sampling_feature["SamplingFeatureName"]
+                        if sampling_feature["Elevation_m"]:
+                            data_dict["elevation_m"] = sampling_feature["Elevation_m"]
 
-                    if sampling_feature["ElevationDatumCV"]:
-                        data_dict["elevation_datum"] = sampling_feature["ElevationDatumCV"]
+                        if sampling_feature["ElevationDatumCV"]:
+                            data_dict["elevation_datum"] = sampling_feature["ElevationDatumCV"]
 
-                    if site["SiteTypeCV"]:
-                        data_dict["site_type"] = site["SiteTypeCV"]
+                        if site["SiteTypeCV"]:
+                            data_dict["site_type"] = site["SiteTypeCV"]
 
-                    # create site element
-                    resource.metadata.create_element('site', **data_dict)
+                        data_dict["latitude"] = site["Latitude"]
+                        data_dict["longitude"] = site["Longitude"]
+
+                        # create site element
+                        resource.metadata.create_element('site', **data_dict)
+                    else:
+                        _update_element_series_ids(resource.metadata.sites[0], result["ResultUUID"])
                 else:
                     _update_element_series_ids(resource.metadata.sites[0], result["ResultUUID"])
 
@@ -385,20 +392,26 @@ def _extract_metadata(resource, sqlite_file_name):
                     cur.execute("SELECT * FROM Variables WHERE VariableID=?",
                                 (result["VariableID"],))
                     variable = cur.fetchone()
-                    data_dict = {}
-                    data_dict['series_ids'] = [result["ResultUUID"]]
-                    data_dict['variable_code'] = variable["VariableCode"]
-                    data_dict["variable_name"] = variable["VariableNameCV"]
-                    data_dict['variable_type'] = variable["VariableTypeCV"]
-                    data_dict["no_data_value"] = variable["NoDataValue"]
-                    if variable["VariableDefinition"]:
-                        data_dict["variable_definition"] = variable["VariableDefinition"]
+                    if not any(variable["VariableCode"] == v.variable_code for v
+                               in resource.metadata.variables):
 
-                    if variable["SpeciationCV"]:
-                        data_dict["speciation"] = variable["SpeciationCV"]
+                        data_dict = {}
+                        data_dict['series_ids'] = [result["ResultUUID"]]
+                        data_dict['variable_code'] = variable["VariableCode"]
+                        data_dict["variable_name"] = variable["VariableNameCV"]
+                        data_dict['variable_type'] = variable["VariableTypeCV"]
+                        data_dict["no_data_value"] = variable["NoDataValue"]
+                        if variable["VariableDefinition"]:
+                            data_dict["variable_definition"] = variable["VariableDefinition"]
 
-                    # create variable element
-                    resource.metadata.create_element('variable', **data_dict)
+                        if variable["SpeciationCV"]:
+                            data_dict["speciation"] = variable["SpeciationCV"]
+
+                        # create variable element
+                        resource.metadata.create_element('variable', **data_dict)
+                    else:
+                        _update_element_series_ids(resource.metadata.variables[0],
+                                                   result["ResultUUID"])
                 else:
                     _update_element_series_ids(resource.metadata.variables[0], result["ResultUUID"])
 
@@ -411,20 +424,26 @@ def _extract_metadata(resource, sqlite_file_name):
                     action = cur.fetchone()
                     cur.execute("SELECT * FROM Methods WHERE MethodID=?", (action["MethodID"],))
                     method = cur.fetchone()
-                    data_dict = {}
-                    data_dict['series_ids'] = [result["ResultUUID"]]
-                    data_dict['method_code'] = method["MethodCode"]
-                    data_dict["method_name"] = method["MethodName"]
-                    data_dict['method_type'] = method["MethodTypeCV"]
+                    if not any(method["MethodCode"] == m.method_code for m
+                               in resource.metadata.methods):
 
-                    if method["MethodDescription"]:
-                        data_dict["method_description"] = method["MethodDescription"]
+                        data_dict = {}
+                        data_dict['series_ids'] = [result["ResultUUID"]]
+                        data_dict['method_code'] = method["MethodCode"]
+                        data_dict["method_name"] = method["MethodName"]
+                        data_dict['method_type'] = method["MethodTypeCV"]
 
-                    if method["MethodLink"]:
-                        data_dict["method_link"] = method["MethodLink"]
+                        if method["MethodDescription"]:
+                            data_dict["method_description"] = method["MethodDescription"]
 
-                    # create method element
-                    resource.metadata.create_element('method', **data_dict)
+                        if method["MethodLink"]:
+                            data_dict["method_link"] = method["MethodLink"]
+
+                        # create method element
+                        resource.metadata.create_element('method', **data_dict)
+                    else:
+                        _update_element_series_ids(resource.metadata.methods[0],
+                                                   result["ResultUUID"])
                 else:
                     _update_element_series_ids(resource.metadata.methods[0], result["ResultUUID"])
 
@@ -435,17 +454,23 @@ def _extract_metadata(resource, sqlite_file_name):
                     cur.execute("SELECT * FROM ProcessingLevels WHERE ProcessingLevelID=?",
                                 (result["ProcessingLevelID"],))
                     pro_level = cur.fetchone()
-                    data_dict = {}
-                    data_dict['series_ids'] = [result["ResultUUID"]]
-                    data_dict['processing_level_code'] = pro_level["ProcessingLevelCode"]
-                    if pro_level["Definition"]:
-                        data_dict["definition"] = pro_level["Definition"]
+                    if not any(pro_level["ProcessingLevelCode"] == p.processing_level_code for p
+                               in resource.metadata.processing_levels):
 
-                    if pro_level["Explanation"]:
-                        data_dict["explanation"] = pro_level["Explanation"]
+                        data_dict = {}
+                        data_dict['series_ids'] = [result["ResultUUID"]]
+                        data_dict['processing_level_code'] = pro_level["ProcessingLevelCode"]
+                        if pro_level["Definition"]:
+                            data_dict["definition"] = pro_level["Definition"]
 
-                    # create processinglevel element
-                    resource.metadata.create_element('processinglevel', **data_dict)
+                        if pro_level["Explanation"]:
+                            data_dict["explanation"] = pro_level["Explanation"]
+
+                        # create processinglevel element
+                        resource.metadata.create_element('processinglevel', **data_dict)
+                    else:
+                        _update_element_series_ids(resource.metadata.processing_levels[0],
+                                                   result["ResultUUID"])
                 else:
                     _update_element_series_ids(resource.metadata.processing_levels[0],
                                                result["ResultUUID"])
@@ -481,7 +506,7 @@ def _extract_metadata(resource, sqlite_file_name):
 
     except sqlite3.Error as ex:
         sqlite_err_msg = str(ex.args[0])
-        log.error((sqlite_err_msg))
+        log.error(sqlite_err_msg)
         return sqlite_err_msg
     except Exception, ex:
         log.error(ex.message)
