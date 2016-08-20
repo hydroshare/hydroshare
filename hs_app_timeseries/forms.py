@@ -89,7 +89,9 @@ class SiteForm(ModelForm):
         fields = ['site_code', 'site_name', 'elevation_m', 'elevation_datum', 'site_type',
                   'site_code_choices', 'latitude', 'longitude']
         exclude = ['content_object']
-        widgets = {'elevation_m': forms.TextInput()}
+        widgets = {'elevation_m': forms.TextInput(), 'latitude': forms.TextInput(),
+                   'longitude': forms.TextInput()}
+        labels = {'latitude': 'Latitude*', 'longitude': 'Longitude*'}
 
 
 class SiteValidationForm(forms.Form):
@@ -113,6 +115,7 @@ class SiteValidationForm(forms.Form):
         if lon < -180 or lon > 180:
             raise forms.ValidationError("Value for longitude must be in the range of -180 to 180")
         return lon
+
 
 class VariableFormHelper(BaseFormHelper):
     def __init__(self, allow_edit=True, res_short_id=None, element_id=None, element_name=None,

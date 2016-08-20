@@ -243,6 +243,10 @@
                     $('#id_elevation_datum').attr('readonly', false);
                     $('#id_site_type').val("");
                     $('#id_site_type').attr('readonly', false);
+                    $('#id_latitude').val("");
+                    $('#id_latitude').attr('readonly', false);
+                    $('#id_longitude').val("");
+                    $('#id_longitude').attr('readonly', false);
                     var form_action = $('#id-site').attr('action');
                     if(form_action.includes("update-metadata")) {
                         var slice_end_index = form_action.toLowerCase().indexOf("site") + 5;
@@ -259,6 +263,8 @@
                         $('#id_elevation_m').val(site.elevation_m);
                         $('#id_elevation_datum').val(site.elevation_datum);
                         $('#id_site_type').val(site.site_type);
+                        $('#id_latitude').val(site.latitude);
+                        $('#id_longitude').val(site.longitude);
                         // change the site form action
                         var form_action = $('#id-site').attr('action');
                         if(form_action.includes("add-metadata")){
@@ -282,6 +288,8 @@
                          $('#id_elevation_m').attr('readonly', selectedSiteCode !== original_site_code);
                          $('#id_elevation_datum').attr('readonly', selectedSiteCode !== original_site_code);
                          $('#id_site_type').attr('readonly', selectedSiteCode !== original_site_code);
+                         $('#id_latitude').attr('readonly', selectedSiteCode !== original_site_code);
+                         $('#id_longitude').attr('readonly', selectedSiteCode !== original_site_code);
                         return false;
                     }
                 });

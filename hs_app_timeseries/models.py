@@ -722,6 +722,12 @@ class TimeSeriesMetaData(CoreMetaData):
                 if site.site_type:
                     element_fields.append(('site_type', 'SiteType'))
 
+                if site.latitude:
+                    element_fields.append(('latitude', 'Latitude'))
+
+                if site.longitude:
+                    element_fields.append(('longitude', 'Longitude'))
+
                 self.add_metadata_element_to_xml(hsterms_time_series_result_rdf_Description,
                                                  (site, 'site'), element_fields)
 
@@ -1121,6 +1127,11 @@ class TimeSeriesMetaData(CoreMetaData):
         cur.execute(select_sql)
         people = cur.fetchall()
         affiliation_id = 0
+
+        cur.execute("SELECT * FROM Organizations WHERE OrganizationName=?",
+                    ('Unknown',))
+        unknown_org = cur.fetchone()
+
         for person in people:
             affiliation_id += 1
             person_data = [p for p in people_data if p['person_id'] ==
@@ -1130,7 +1141,7 @@ class TimeSeriesMetaData(CoreMetaData):
                 cur.execute("SELECT * FROM Organizations WHERE OrganizationName=?",
                             (person_data['organization'],))
                 org = cur.fetchone()
-            org_id = org['OrganizationID'] if org else None
+            org_id = org['OrganizationID'] if org else unknown_org['OrganizationID']
             cur.execute(insert_sql, (affiliation_id, person['PersonID'], org_id,
                                      now(), person_data['phone'], person_data['email'],
                                      person_data['address']), )
@@ -1251,7 +1262,7 @@ class TimeSeriesMetaData(CoreMetaData):
                                      ts_res.status, ts_res.sample_medium,
                                      ts_res.value_count), )
             results_data.append({'result_id': result_id, 'object_id': ts_res.id})
-            return results_data
+        return results_data
 
     def _update_timeseriesresults_table_insert(self, con, cur, results_data):
         # insert record to TimeSeriesResults table - first delete any existing records
@@ -1525,8 +1536,10 @@ class TimeSeriesMetaData(CoreMetaData):
                 feature_action = cur.fetchone()
 
                 # first update the sites table
-                update_sql = "UPDATE Sites SET SiteTypeCV=? WHERE SamplingFeatureID=?"
-                params = (site.site_type, feature_action["SamplingFeatureID"])
+                update_sql = "UPDATE Sites SET SiteTypeCV=?, Latitude=?, Longitude=? " \
+                             "WHERE SamplingFeatureID=?"
+                params = (site.site_type, site.latitude, site.longitude,
+                          feature_action["SamplingFeatureID"])
                 cur.execute(update_sql, params)
 
                 # then update the SamplingFeatures table
@@ -1547,31 +1560,13 @@ class TimeSeriesMetaData(CoreMetaData):
 
         cur.execute("DELETE FROM Sites")
         con.commit()
-        coverage = self.coverages.all().exclude(type='period').first()
         insert_sql = "INSERT INTO Sites (SamplingFeatureID, SiteTypeCV, Latitude, " \
                      "Longitude, SpatialReferenceID) VALUES(?,?,?,?,?)"
         for index, site in enumerate(self.sites):
             sampling_feature_id = index + 1
             spatial_ref_id = 1
-            lat = ''
-            lon = ''
-            # TODO: the following code needs to change once we add 'lat' and 'lon'
-            # attribute to Site element
-            # since we have maximum of one Coverage element of spatial type
-            # we will populate the latitude and longitude columns of the Sites table for the
-            # first record
-            if coverage and index == 0:
-                if coverage.type == 'point':
-                    lat = coverage.value.get('north')
-                    lon = coverage.value.get('east')
-                else:
-                    lat = (coverage.value.get('northlimit') +
-                           coverage.value.get('southlimit')) / 2
-                    lon = (coverage.value.get('eastlimit') +
-                           coverage.value.get('westlimit')) / 2
-
-            cur.execute(insert_sql, (sampling_feature_id, site.site_type, lat, lon,
-                                     spatial_ref_id), )
+            cur.execute(insert_sql, (sampling_feature_id, site.site_type, site.latitude,
+                                     site.longitude, spatial_ref_id), )
 
     def _update_results_related_tables(self, con, cur):
         # updates 'Results', 'Units' and 'TimeSeriesResults' tables
