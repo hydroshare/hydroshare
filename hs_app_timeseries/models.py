@@ -508,6 +508,9 @@ class TimeSeriesResource(BaseResource):
         # of the resource.
         return False
 
+    def has_required_content_files(self):
+        return self.has_sqlite_file
+
     def add_blank_sqlite_file(self):
         # add the blank SQLite file to this resource (self)
         if not self.can_add_blank_sqlite_file:
