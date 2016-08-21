@@ -6,6 +6,7 @@ import logging
 import tempfile
 from uuid import uuid4
 from dateutil import parser
+import json
 
 from django.contrib.contenttypes.fields import GenericRelation
 from django.contrib.postgres.fields import ArrayField
@@ -105,6 +106,7 @@ class Site(TimeSeriesAbstractMetaDataElement):
         # if the user has entered a new elevation datum or site type, then
         # create a corresponding new cv term
         _create_site_related_cv_terms(element=element, data_dict=kwargs)
+        _update_resource_coverage_element(site_element=element)
         return element
 
     @classmethod
@@ -124,6 +126,8 @@ class Site(TimeSeriesAbstractMetaDataElement):
         update_related_elements_on_update(element=element,
                                           related_elements=element.metadata.sites,
                                           selected_series_id=selected_series_id)
+
+        _update_resource_coverage_element(site_element=element)
 
     @classmethod
     def remove(cls, element_id):
@@ -1617,6 +1621,45 @@ class TimeSeriesMetaData(CoreMetaData):
             cur.execute(insert_sql, (units_id, ts_result.units_type,
                                      ts_result.units_abbreviation, ts_result.units_name), )
 
+
+def _update_resource_coverage_element(site_element):
+    point_value = {'east': site_element.longitude, 'north': site_element.latitude,
+                   'units': "Decimal degrees"}
+
+    cov_type = "point"
+    if len(site_element.metadata.sites) > 1:
+        cov_type = 'box'
+        bbox_value = {'northlimit': -90, 'southlimit': 90, 'eastlimit': -180, 'westlimit': 180,
+                      'projection': 'Unknown', 'units': "Decimal degrees"}
+        sites = site_element.metadata.sites.all()
+        for site in sites:
+            if site.latitude:
+                if bbox_value['northlimit'] < site.latitude:
+                    bbox_value['northlimit'] = site.latitude
+                if bbox_value['southlimit'] > site.latitude:
+                    bbox_value['southlimit'] = site.latitude
+
+            if site.longitude:
+                if bbox_value['eastlimit'] < site.longitude:
+                    bbox_value['eastlimit'] = site.longitude
+
+                if bbox_value['westlimit'] > site.longitude:
+                    bbox_value['westlimit'] = site.longitude
+
+    spatial_cov = site_element.metadata.coverages.all().exclude(type='period').first()
+    if spatial_cov:
+        spatial_cov.type = cov_type
+        if cov_type == 'point':
+            spatial_cov._value = json.dumps(point_value)
+        else:
+            spatial_cov._value = json.dumps(bbox_value)
+        spatial_cov.save()
+    else:
+        if cov_type == 'point':
+            value_dict = point_value
+        else:
+            value_dict = bbox_value
+        site_element.metadata.create_element("coverage", type=cov_type, value=value_dict)
 
 def _create_site_related_cv_terms(element, data_dict):
     # if the user has entered a new elevation datum, then create a corresponding new cv term
