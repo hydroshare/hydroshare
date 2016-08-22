@@ -64,9 +64,10 @@ class TestTimeSeriesMetaData(MockIRODSTestCaseMixin, TransactionTestCase):
             shutil.rmtree(self.temp_dir)
 
     def test_allowed_file_types(self):
-        # test allowed file type is '.sqlite'
+        # test allowed file type are '.sqlite' and '.csv
         self.assertIn('.sqlite', TimeSeriesResource.get_supported_upload_file_types())
-        self.assertEqual(len(TimeSeriesResource.get_supported_upload_file_types()), 1)
+        self.assertIn('.csv', TimeSeriesResource.get_supported_upload_file_types())
+        self.assertEqual(len(TimeSeriesResource.get_supported_upload_file_types()), 2)
 
         # there should not be any content file
         self.assertEqual(self.resTimeSeries.files.all().count(), 0)
@@ -300,8 +301,8 @@ class TestTimeSeriesMetaData(MockIRODSTestCaseMixin, TransactionTestCase):
         self.assertEqual(CVUnitsType.objects.all().count(), 179)
         self.assertEqual(core_metadata_obj.cv_statuses.all().count(), 4)
         self.assertEqual(CVStatus.objects.all().count(), 4)
-        self.assertEqual(core_metadata_obj.cv_mediums.all().count(), 17)
-        self.assertEqual(CVMedium.objects.all().count(), 17)
+        self.assertEqual(core_metadata_obj.cv_mediums.all().count(), 18)
+        self.assertEqual(CVMedium.objects.all().count(), 18)
         self.assertEqual(core_metadata_obj.cv_aggregation_statistics.all().count(), 17)
         self.assertEqual(CVAggregationStatistic.objects.all().count(), 17)
 
@@ -374,7 +375,9 @@ class TestTimeSeriesMetaData(MockIRODSTestCaseMixin, TransactionTestCase):
                                                              'Research Laboratory west bridge',
                                                    elevation_m=1414,
                                                    elevation_datum='EGM96',
-                                                   site_type='Stream')
+                                                   site_type='Stream',
+                                                   latitude=65.789,
+                                                   longitude=120.56789)
 
         site_element = self.resTimeSeries.metadata.sites.all().first()
         self.assertEqual(len(site_element.series_ids), 1)
@@ -830,8 +833,11 @@ class TestTimeSeriesMetaData(MockIRODSTestCaseMixin, TransactionTestCase):
         # there should be 5 CV_Status records
         self.assertEqual(self.resTimeSeries.metadata.cv_statuses.all().count(), 5)
 
-        # there should be 17 CV_Medium records
-        self.assertEqual(self.resTimeSeries.metadata.cv_mediums.all().count(), 17)
+        # there should be 18 CV_Medium records. sqlite file CV_Medium table
+        # contains 17 records and one more is added as a result of creating TimeSeriesResult
+        # element. The Results table has SampleMediumCV value that's is not in CV_Medium table
+        # therefore an additional CVMedium metadata element is created
+        self.assertEqual(self.resTimeSeries.metadata.cv_mediums.all().count(), 18)
         # now update the timeseriesresult element with a new term for sample medium
         self.resTimeSeries.metadata.update_element('timeseriesresult', ts_result.id,
                                                    sample_medium="Sample medium-1"
@@ -840,8 +846,8 @@ class TestTimeSeriesMetaData(MockIRODSTestCaseMixin, TransactionTestCase):
         self.assertIn('sampleMedium_1', [s_medium.term for s_medium in
                                          self.resTimeSeries.metadata.cv_mediums.all()])
 
-        # there should be 18 CV_Medium records
-        self.assertEqual(self.resTimeSeries.metadata.cv_mediums.all().count(), 18)
+        # there should be 19 CV_Medium records
+        self.assertEqual(self.resTimeSeries.metadata.cv_mediums.all().count(), 19)
 
         # there should be 17 CV_aggregationStatistics records
         self.assertEqual(self.resTimeSeries.metadata.cv_aggregation_statistics.all().count(), 17)
@@ -1085,6 +1091,6 @@ class TestTimeSeriesMetaData(MockIRODSTestCaseMixin, TransactionTestCase):
         # there should be 4 CV_Status records
         self.assertEqual(self.resTimeSeries.metadata.cv_statuses.all().count(), 4)
         # there should be 17 CV_Medium records
-        self.assertEqual(self.resTimeSeries.metadata.cv_mediums.all().count(), 17)
+        self.assertEqual(self.resTimeSeries.metadata.cv_mediums.all().count(), 18)
         # there should be 17 CV_aggregationStatistics records
         self.assertEqual(self.resTimeSeries.metadata.cv_aggregation_statistics.all().count(), 17)
