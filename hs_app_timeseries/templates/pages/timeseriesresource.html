@@ -254,6 +254,8 @@
                     $('#id_latitude').attr('readonly', false);
                     $('#id_longitude').val("");
                     $('#id_longitude').attr('readonly', false);
+                    $("#id_site_type").css('pointer-events', 'auto');
+                    $("#id_elevation_datum").css('pointer-events', 'auto');
                     var form_action = $('#id-site').attr('action');
                     if(form_action.includes("update-metadata")) {
                         var slice_end_index = form_action.toLowerCase().indexOf("site") + 5;
@@ -297,6 +299,14 @@
                          $('#id_site_type').attr('readonly', selectedSiteCode !== original_site_code);
                          $('#id_latitude').attr('readonly', selectedSiteCode !== original_site_code);
                          $('#id_longitude').attr('readonly', selectedSiteCode !== original_site_code);
+                        if (selectedSiteCode !== original_site_code){
+                             $("#id_site_type").css('pointer-events', 'none');
+                             $("#id_elevation_datum").css('pointer-events', 'none');
+                         }
+                         else {
+                             $("#id_site_type").css('pointer-events', 'auto');
+                             $("#id_elevation_datum").css('pointer-events', 'auto');
+                        }
                         return false;
                     }
                 });
@@ -324,6 +334,9 @@
                     $('#id_variable_definition').attr('readonly', false);
                     $('#id_speciation').val("");
                     $('#id_speciation').attr('readonly', false);
+                    $('#id_variable_name').css('pointer-events', 'auto');
+                    $('#id_variable_type').css('pointer-events', 'auto');
+                    $('#id_speciation').css('pointer-events', 'auto');
                     var form_action = $('#id-variable').attr('action');
                     if(form_action.includes("update-metadata")) {
                         var slice_end_index = form_action.toLowerCase().indexOf("variable") + 9;
@@ -365,6 +378,16 @@
                         $('#id_no_data_value').attr('readonly', selectedVariableCode !== original_variable_code);
                         $('#id_variable_definition').attr('readonly', selectedVariableCode !== original_variable_code);
                         $('#id_speciation').attr('readonly', selectedVariableCode !== original_variable_code);
+                        if(selectedVariableCode !== original_variable_code){
+                            $('#id_variable_name').css('pointer-events', 'none');
+                            $('#id_variable_type').css('pointer-events', 'none');
+                            $('#id_speciation').css('pointer-events', 'none');
+                        }
+                        else {
+                            $('#id_variable_name').css('pointer-events', 'auto');
+                            $('#id_variable_type').css('pointer-events', 'auto');
+                            $('#id_speciation').css('pointer-events', 'auto');
+                        }
                         return false;
                     }
                 });
@@ -390,6 +413,7 @@
                     $('#id_method_description').attr('readonly', false);
                     $('#id_method_link').val("");
                     $('#id_method_link').attr('readonly', false);
+                    $('#id_method_type').css('pointer-events', 'auto');
 
                     var form_action = $('#id-method').attr('action');
                     if(form_action.includes("update-metadata")) {
@@ -431,6 +455,12 @@
                         $('#id_method_type').attr('readonly', selectedMethodCode !== original_method_code);
                         $('#id_method_description').attr('readonly', selectedMethodCode !== original_method_code);
                         $('#id_method_link').attr('readonly', selectedMethodCode !== original_method_code);
+                        if(selectedMethodCode !== original_method_code){
+                            $('#id_method_type').css('pointer-events', 'none');
+                        }
+                        else {
+                            $('#id_method_type').css('pointer-events', 'auto');
+                        }
                         return false;
                     }
                 });
