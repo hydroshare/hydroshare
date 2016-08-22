@@ -113,10 +113,11 @@ class Site(TimeSeriesAbstractMetaDataElement):
     def update(cls, element_id, **kwargs):
         element = cls.objects.get(id=element_id)
         # check that we are not updating site elements with duplicate site_code value
-        if any(kwargs['site_code'].lower() == site.site_code.lower() and site.id != element.id
-                for site in element.metadata.sites):
-            raise ValidationError("There is already a site element "
-                                  "with site_code:{}".format(kwargs['site_code']))
+        if 'site_code' in kwargs:
+            if any(kwargs['site_code'].lower() == site.site_code.lower() and site.id != element.id
+                    for site in element.metadata.sites):
+                raise ValidationError("There is already a site element "
+                                      "with site_code:{}".format(kwargs['site_code']))
         # if the user has entered a new elevation datum or site type, then create a
         # corresponding new cv term
         _create_site_related_cv_terms(element=element, data_dict=kwargs)
@@ -183,11 +184,12 @@ class Variable(TimeSeriesAbstractMetaDataElement):
     def update(cls, element_id, **kwargs):
         element = cls.objects.get(id=element_id)
         # check that we are not creating variable elements with duplicate variable_code value
-        if any(kwargs['variable_code'].lower() ==
-               variable.variable_code.lower() and variable.id != element.id for variable in
-               element.metadata.variables):
-            raise ValidationError("There is already a variable element "
-                                  "with variable_code:{}".format(kwargs['variable_code']))
+        if 'variable_code' in kwargs:
+            if any(kwargs['variable_code'].lower() ==
+                   variable.variable_code.lower() and variable.id != element.id for variable in
+                   element.metadata.variables):
+                raise ValidationError("There is already a variable element "
+                                      "with variable_code:{}".format(kwargs['variable_code']))
 
         # if the user has entered a new variable name, variable type or speciation,
         # then create a corresponding new cv term
@@ -245,7 +247,7 @@ class Method(TimeSeriesAbstractMetaDataElement):
 
         # if the user has entered a new method type, then create a corresponding new cv term
         _create_cv_term(element=element, cv_term_class=CVMethodType,
-                        cv_term_str='method_type', element_cv_term=element.method_type,
+                        cv_term_str='method_type',
                         element_metadata_cv_terms=element.metadata.cv_method_types.all(),
                         data_dict=kwargs)
 
@@ -254,15 +256,16 @@ class Method(TimeSeriesAbstractMetaDataElement):
     def update(cls, element_id, **kwargs):
         element = cls.objects.get(id=element_id)
         # check that we are not creating method elements with duplicate method_code value
-        if any(kwargs['method_code'].lower() ==
-                method.method_code.lower() and method.id != element.id for method in
-                element.metadata.methods):
-            raise ValidationError("There is already a method element "
-                                  "with method_code:{}".format(kwargs['method_code']))
+        if 'method_code' in kwargs:
+            if any(kwargs['method_code'].lower() ==
+                    method.method_code.lower() and method.id != element.id for method in
+                    element.metadata.methods):
+                raise ValidationError("There is already a method element "
+                                      "with method_code:{}".format(kwargs['method_code']))
 
         # if the user has entered a new method type, then create a corresponding new cv term
         _create_cv_term(element=element, cv_term_class=CVMethodType,
-                        cv_term_str='method_type', element_cv_term=element.method_type,
+                        cv_term_str='method_type',
                         element_metadata_cv_terms=element.metadata.cv_method_types.all(),
                         data_dict=kwargs)
 
@@ -321,13 +324,14 @@ class ProcessingLevel(TimeSeriesAbstractMetaDataElement):
         element = cls.objects.get(id=element_id)
         # check that we are not creating processinglevel elements with duplicate
         # processing_level_code value
-        if any(kwargs['processing_level_code'] ==
-                pro_level.processing_level_code and
-                pro_level.id != element.id for pro_level in
-               element.metadata.processing_levels):
-            err_msg = "There is already a processinglevel element with processing_level_code:{}"
-            err_msg = err_msg.format(kwargs['processing_level_code'])
-            raise ValidationError(err_msg)
+        if 'processing_level_code' in kwargs:
+            if any(kwargs['processing_level_code'] ==
+                    pro_level.processing_level_code and
+                    pro_level.id != element.id for pro_level in
+                   element.metadata.processing_levels):
+                err_msg = "There is already a processinglevel element with processing_level_code:{}"
+                err_msg = err_msg.format(kwargs['processing_level_code'])
+                raise ValidationError(err_msg)
 
         super(ProcessingLevel, cls).update(element_id, **kwargs)
         selected_series_id = kwargs.pop('selected_series_id', None)
@@ -1667,13 +1671,13 @@ def _update_resource_coverage_element(site_element):
 def _create_site_related_cv_terms(element, data_dict):
     # if the user has entered a new elevation datum, then create a corresponding new cv term
     _create_cv_term(element=element, cv_term_class=CVElevationDatum,
-                    cv_term_str='elevation_datum', element_cv_term=element.elevation_datum,
+                    cv_term_str='elevation_datum',
                     element_metadata_cv_terms=element.metadata.cv_elevation_datums.all(),
                     data_dict=data_dict)
 
     # if the user has entered a new site type, then create a corresponding new cv term
     _create_cv_term(element=element, cv_term_class=CVSiteType,
-                    cv_term_str='site_type', element_cv_term=element.site_type,
+                    cv_term_str='site_type',
                     element_metadata_cv_terms=element.metadata.cv_site_types.all(),
                     data_dict=data_dict)
 
@@ -1681,19 +1685,19 @@ def _create_site_related_cv_terms(element, data_dict):
 def _create_variable_related_cv_terms(element, data_dict):
     # if the user has entered a new variable name, then create a corresponding new cv term
     _create_cv_term(element=element, cv_term_class=CVVariableName,
-                    cv_term_str='variable_name', element_cv_term=element.variable_name,
+                    cv_term_str='variable_name',
                     element_metadata_cv_terms=element.metadata.cv_variable_names.all(),
                     data_dict=data_dict)
 
     # if the user has entered a new variable type, then create a corresponding new cv term
     _create_cv_term(element=element, cv_term_class=CVVariableType,
-                    cv_term_str='variable_type', element_cv_term=element.variable_type,
+                    cv_term_str='variable_type',
                     element_metadata_cv_terms=element.metadata.cv_variable_types.all(),
                     data_dict=data_dict)
 
     # if the user has entered a new speciation, then create a corresponding new cv term
     _create_cv_term(element=element, cv_term_class=CVSpeciation,
-                    cv_term_str='speciation', element_cv_term=element.speciation,
+                    cv_term_str='speciation',
                     element_metadata_cv_terms=element.metadata.cv_speciations.all(),
                     data_dict=data_dict)
 
@@ -1701,19 +1705,19 @@ def _create_variable_related_cv_terms(element, data_dict):
 def _create_timeseriesresult_related_cv_terms(element, data_dict):
     # if the user has entered a new sample medium, then create a corresponding new cv term
     _create_cv_term(element=element, cv_term_class=CVMedium,
-                    cv_term_str='sample_medium', element_cv_term=element.sample_medium,
+                    cv_term_str='sample_medium',
                     element_metadata_cv_terms=element.metadata.cv_mediums.all(),
                     data_dict=data_dict)
 
     # if the user has entered a new units type, then create a corresponding new cv term
     _create_cv_term(element=element, cv_term_class=CVUnitsType,
-                    cv_term_str='units_type', element_cv_term=element.units_type,
+                    cv_term_str='units_type',
                     element_metadata_cv_terms=element.metadata.cv_units_types.all(),
                     data_dict=data_dict)
 
     # if the user has entered a new status, then create a corresponding new cv term
     _create_cv_term(element=element, cv_term_class=CVStatus,
-                    cv_term_str='status', element_cv_term=element.status,
+                    cv_term_str='status',
                     element_metadata_cv_terms=element.metadata.cv_statuses.all(),
                     data_dict=data_dict)
 
@@ -1721,20 +1725,16 @@ def _create_timeseriesresult_related_cv_terms(element, data_dict):
     # cv term
     _create_cv_term(element=element, cv_term_class=CVAggregationStatistic,
                     cv_term_str='aggregation_statistics',
-                    element_cv_term=element.aggregation_statistics,
                     element_metadata_cv_terms=element.metadata.cv_aggregation_statistics.all(),
                     data_dict=data_dict)
 
 
-def _create_cv_term(element, cv_term_class, cv_term_str, element_cv_term,
-                    element_metadata_cv_terms, data_dict):
+def _create_cv_term(element, cv_term_class, cv_term_str, element_metadata_cv_terms, data_dict):
     """
     Helper function for creating a new CV term if needed
     :param element: the metadata element object being updated
     :param cv_term_class: CV term model class based on which an object to be created
     :param cv_term_str: cv term field name being updated
-    :param element_cv_term: specific cv term object (an instance of cv_term_class) associated with
-    the 'element' object
     :param element_metadata_cv_terms: list of all cv term objects
     (instances of cv_term_class) associated with the 'metadata' object
     :param data_dict: dict that has the data for updating the 'element'
@@ -1742,7 +1742,7 @@ def _create_cv_term(element, cv_term_class, cv_term_str, element_cv_term,
     """
     if cv_term_str in data_dict:
         # check if the user has entered a new name for the cv term
-        if not any(data_dict[cv_term_str] == item.name
+        if not any(data_dict[cv_term_str].lower() == item.name.lower()
                    for item in element_metadata_cv_terms):
             # generate term for the new name
             data_dict[cv_term_str] = data_dict[cv_term_str].strip()
