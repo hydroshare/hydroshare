@@ -547,6 +547,7 @@ class Relation(AbstractMetaDataElement):
         ('isHostedBy', 'Hosted By'),
         ('isCopiedFrom', 'Copied From'),
         ('isPartOf', 'Part Of'),
+        ('hasPart', 'Has Part'),
         ('isExecutedBy', 'Executed By'),
         ('isCreatedBy', 'Created By'),
         ('isVersionOf', 'Version Of'),
@@ -567,8 +568,8 @@ class Relation(AbstractMetaDataElement):
     def __unicode__(self):
         return "{type} {value}".format(type=self.type, value=self.value)
 
-    class Meta:
-        unique_together = ("type", "content_type", "object_id")
+    # class Meta:
+    #     unique_together = ("content_type", "object_id")
 
     @classmethod
     def create(cls, **kwargs):
