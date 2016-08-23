@@ -53,6 +53,12 @@ class TestTimeSeriesMetaData(MockIRODSTestCaseMixin, TransactionTestCase):
         shutil.copy(self.odm2_sqlite_bad_file, target_temp_bad_sqlite_file)
         self.odm2_sqlite_bad_file_obj = open(target_temp_bad_sqlite_file, 'r')
 
+        self.odm2_csv_file_name = 'ODM2_Multi_Site_One_Variable_Test.csv'
+        self.odm2_csv_file = 'hs_app_timeseries/tests/{}'.format(self.odm2_csv_file_name)
+        target_temp_csv_file = os.path.join(self.temp_dir, self.odm2_csv_file_name)
+        shutil.copy(self.odm2_csv_file, target_temp_csv_file)
+        self.odm2_csv_file_obj = open(target_temp_csv_file, 'r')
+
         temp_text_file = os.path.join(self.temp_dir, 'ODM2.txt')
         text_file = open(temp_text_file, 'w')
         text_file.write("ODM2 records")
@@ -942,6 +948,135 @@ class TestTimeSeriesMetaData(MockIRODSTestCaseMixin, TransactionTestCase):
         self.assertTrue(self.resTimeSeries.has_required_content_files())
         self.assertTrue(self.resTimeSeries.metadata.has_all_required_elements())
         self.assertTrue(self.resTimeSeries.can_be_public_or_discoverable)
+
+    def test_csv_file_upload(self):
+        # adding a valid csv file should be successful
+        # the resource metadata object will have the data column headings
+
+        self.assertEqual(self.resTimeSeries.metadata.title.value, 'Test Time Series Resource')
+        self._test_no_change_in_metadata()
+        # there shouldn't any format element
+        self.assertEqual(self.resTimeSeries.metadata.formats.all().count(), 0)
+
+        # at this point the resource should not have any content files
+        self.assertEqual(self.resTimeSeries.files.all().count(), 0)
+
+        # at this point there should not be any series names associated with the metadata object
+        self.assertEqual(len(self.resTimeSeries.metadata.series_names), 0)
+        files = [UploadedFile(file=self.odm2_csv_file_obj, name=self.odm2_csv_file_name)]
+        utils.resource_file_add_pre_process(resource=self.resTimeSeries, files=files,
+                                            user=self.user)
+
+        utils.resource_file_add_process(resource=self.resTimeSeries, files=files, user=self.user)
+        # at this point the resource should have one content file
+        self.assertEqual(self.resTimeSeries.files.all().count(), 1)
+
+        csv_file_name, _ = utils.get_resource_file_name_and_extension(
+            self.resTimeSeries.files.first())
+        self.assertEqual(csv_file_name, self.odm2_csv_file_name)
+
+        # since the uploaded csv file has 7 data columns, the metadata should have 7 series names
+        self.assertEqual(len(self.resTimeSeries.metadata.series_names), 7)
+        csv_data_colum_names = set(['Temp_DegC_Mendon', 'Temp_DegC_Paradise',
+                                    'Temp_DegC_Wellsville', 'Temp_DegC_Confluence',
+                                    'Temp_DegC_EFLower', 'Temp_DegC_SFLower', 'Temp_DegC_SFUpper'])
+
+        self.assertEqual(set(self.resTimeSeries.metadata.series_names), csv_data_colum_names)
+        # metadata is deleted on csv file upload - therefore the title change
+        self.assertEqual(self.resTimeSeries.metadata.title.value, 'Untitled resource')
+        self._test_no_change_in_metadata()
+        # there should be  1 format element
+        self.assertEqual(self.resTimeSeries.metadata.formats.all().count(), 1)
+
+    def test_invalid_csv_file(self):
+        # This file contains invalid number of data column headings
+        invalid_csv_file_name = 'Invalid_Headings_Test_1.csv'
+        self._test_invalid_csv_file(invalid_csv_file_name)
+
+        # This file missing a data column heading
+        invalid_csv_file_name = 'Invalid_Headings_Test_2.csv'
+        self._test_invalid_csv_file(invalid_csv_file_name)
+
+        # This file has an additional data column heading
+        invalid_csv_file_name = 'Invalid_Headings_Test_3.csv'
+        self._test_invalid_csv_file(invalid_csv_file_name)
+
+        # This file contains a duplicate data column heading
+        invalid_csv_file_name = 'Invalid_Headings_Test_4.csv'
+        self._test_invalid_csv_file(invalid_csv_file_name)
+
+        # This file has no data column heading
+        invalid_csv_file_name = 'Invalid_Headings_Test_5.csv'
+        self._test_invalid_csv_file(invalid_csv_file_name)
+
+        # This file has not a CSV file
+        invalid_csv_file_name = 'Invalid_format_Test.csv'
+        self._test_invalid_csv_file(invalid_csv_file_name)
+
+        # This file has a bad datetime value
+        invalid_csv_file_name = 'Invalid_Data_Test_1.csv'
+        self._test_invalid_csv_file(invalid_csv_file_name)
+
+        # This file has a bad data value (not numeric)
+        invalid_csv_file_name = 'Invalid_Data_Test_2.csv'
+        self._test_invalid_csv_file(invalid_csv_file_name)
+
+        # This file is missing a data value
+        invalid_csv_file_name = 'Invalid_Data_Test_3.csv'
+        self._test_invalid_csv_file(invalid_csv_file_name)
+
+        # This file has a additional data value
+        invalid_csv_file_name = 'Invalid_Data_Test_4.csv'
+        self._test_invalid_csv_file(invalid_csv_file_name)
+
+        # This file has no data values
+        invalid_csv_file_name = 'Invalid_Data_Test_5.csv'
+        self._test_invalid_csv_file(invalid_csv_file_name)
+
+    def _test_invalid_csv_file(self, invalid_csv_file_name):
+        invalid_csv_file_obj = self._get_invalid_csv_file_obj(invalid_csv_file_name)
+
+        # at this point the resource should not have any content files
+        self.assertEqual(self.resTimeSeries.files.all().count(), 0)
+
+        files = [UploadedFile(file=invalid_csv_file_obj, name=invalid_csv_file_name)]
+        utils.resource_file_add_pre_process(resource=self.resTimeSeries, files=files,
+                                            user=self.user)
+
+        # the validation of csv happens during file_add_process - which should fail
+        with self.assertRaises(utils.ResourceFileValidationException):
+            utils.resource_file_add_process(resource=self.resTimeSeries, files=files,
+                                            user=self.user)
+        # at this point the resource should have one content file
+        self.assertEqual(self.resTimeSeries.files.all().count(), 0)
+
+    def _get_invalid_csv_file_obj(self, invalid_csv_file_name):
+        invalid_csv_file = 'hs_app_timeseries/tests/{}'.format(invalid_csv_file_name)
+        target_temp_csv_file = os.path.join(self.temp_dir, invalid_csv_file_name)
+        shutil.copy(invalid_csv_file, target_temp_csv_file)
+        return open(target_temp_csv_file, 'r')
+
+    def _test_no_change_in_metadata(self):
+        # test the core metadata at this point
+
+        # there shouldn't any abstract element
+        self.assertEqual(self.resTimeSeries.metadata.description, None)
+
+        # there shouldn't any coverage element
+        self.assertEqual(self.resTimeSeries.metadata.coverages.all().count(), 0)
+
+        # there shouldn't any subject element
+        self.assertEqual(self.resTimeSeries.metadata.subjects.all().count(), 0)
+
+        # there shouldn't any contributor element
+        self.assertEqual(self.resTimeSeries.metadata.contributors.all().count(), 0)
+
+        # check that there are no extended metadata elements at this point
+        self.assertEqual(self.resTimeSeries.metadata.sites.all().count(), 0)
+        self.assertEqual(self.resTimeSeries.metadata.variables.all().count(), 0)
+        self.assertEqual(self.resTimeSeries.metadata.methods.all().count(), 0)
+        self.assertEqual(self.resTimeSeries.metadata.processing_levels.all().count(), 0)
+        self.assertEqual(self.resTimeSeries.metadata.time_series_results.all().count(), 0)
 
     def _test_metadata_extraction(self):
         # there should one content file

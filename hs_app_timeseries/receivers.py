@@ -751,6 +751,11 @@ def _validate_csv_file(resource, uploaded_csv_file_name):
         # read the first row
         header = csv_reader.next()
         header = [el.strip() for el in header]
+        if any(len(h) == 0 for h in header):
+            err_message += " Column heading is missing."
+            log.error(err_message)
+            return err_message
+
         # check that there are at least 2 headings
         if len(header) < 2:
             err_message += " There needs to be at least 2 columns of data."
@@ -758,10 +763,14 @@ def _validate_csv_file(resource, uploaded_csv_file_name):
             return err_message
 
         # check the header has only string values
-        if any(not isinstance(el, str) for el in header):
-            err_message += " One or more column heading found not to be of type string."
-            log.error(err_message)
-            return err_message
+        for hdr in header:
+            try:
+                float(hdr)
+                err_message += " Column heading must be a string."
+                log.error(err_message)
+                return err_message
+            except ValueError:
+                pass
 
         # check that there are no duplicate column headings
         if len(header) != len(set(header)):
