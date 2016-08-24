@@ -87,6 +87,24 @@
                                                        data-toggle="toggle" data-onstyle="default"
                                                        data-offstyle="default" data-on="<i class='glyphicon glyphicon-th-large' aria-hidden='true'></i>"
                                                        data-off="<i class='fa fa-list' aria-hidden='true'></i>">
+
+
+                                                <div id="fb-sort" class="btn-group">
+                                                    <button type="button" class="btn btn-default dropdown-toggle"
+                                                            data-toggle="dropdown" aria-haspopup="true"
+                                                            aria-expanded="false">
+                                                        Sort By <span class="caret"></span>
+                                                    </button>
+                                                    <ul class="dropdown-menu">
+                                                        <li data-method="name"><a href="#">Name</a></li>
+                                                        <li data-method="type" class="active"><a href="#">Type</a></li>
+                                                        <li data-method="size"><a href="#">Size</a></li>
+                                                        <li role="separator" class="divider"></li>
+                                                        <li data-order="asc" class="active"><a href="#">Ascending</a></li>
+                                                        <li data-order="desc"><a href="#">Descending</a></li>
+                                                    </ul>
+                                                </div>
+
                                             </div>
 
                                             <div class="col-xs-6">
@@ -150,7 +168,6 @@
                                                         <span class="fb-file-size">98 KB</span>
                                                     </li>
 
-                                                    {# FOLDER TEMPLATE #}
                                                     <li class="fb-folder droppable">
                                                         <span class='glyphicon glyphicon-chevron-right fb-dropdown-toggle fb-help-icon'></span>
                                                         <span class='fa fa-arrows fb-handle fb-help-icon'></span>
@@ -160,7 +177,6 @@
                                                         <span class="fb-file-size">98 KB</span>
                                                     </li>
 
-                                                    {# FOLDER TEMPLATE #}
                                                     <li class="fb-folder droppable">
                                                         <span class='glyphicon glyphicon-chevron-right fb-dropdown-toggle fb-help-icon'></span>
                                                         <span class='fa fa-arrows fb-handle fb-help-icon'></span>
@@ -180,7 +196,6 @@
                                                         <span class="fb-file-size">12 KB</span>
                                                     </li>
 
-                                                    {# FILE TEMPLATE #}
                                                     <li class="fb-file droppable">
                                                         <span class='glyphicon glyphicon-chevron-right fb-dropdown-toggle fb-help-icon'></span>
                                                         <span class='fa fa-arrows fb-handle fb-help-icon'></span>
@@ -190,22 +205,11 @@
                                                         <span class="fb-file-size">12 KB</span>
                                                     </li>
 
-                                                    {# FILE TEMPLATE #}
                                                     <li class="fb-file droppable">
                                                         <span class='glyphicon glyphicon-chevron-right fb-dropdown-toggle fb-help-icon'></span>
                                                         <span class='fa fa-arrows fb-handle fb-help-icon'></span>
                                                         <span class="fb-file-icon fa fa-file-text"></span>
                                                         <span class="fb-file-name">File 3.txt</span>
-                                                        <span class="fb-file-type">Text File</span>
-                                                        <span class="fb-file-size">12 KB</span>
-                                                    </li>
-
-                                                    {# FILE TEMPLATE #}
-                                                    <li class="fb-file droppable">
-                                                        <span class='glyphicon glyphicon-chevron-right fb-dropdown-toggle fb-help-icon'></span>
-                                                        <span class='fa fa-arrows fb-handle fb-help-icon'></span>
-                                                        <span class="fb-file-icon fa fa-file-text"></span>
-                                                        <span class="fb-file-name">File 4.txt</span>
                                                         <span class="fb-file-type">Text File</span>
                                                         <span class="fb-file-size">12 KB</span>
                                                     </li>
@@ -1182,8 +1186,9 @@
     {% block extra_js %}
         <script type="text/javascript" src="{{ STATIC_URL }}js/coverageMap.js"></script>
         <script src="https://maps.googleapis.com/maps/api/js?libraries=drawing"></script>
-        <script src="https://cdnjs.cloudflare.com/ajax/libs/dropzone/4.3.0/dropzone.js"></script>
+         <script type="text/javascript" src="{{ STATIC_URL }}js/dropzone.js"></script>
         <script type="text/javascript" src="{{ STATIC_URL }}js/resourceLandingAjax.js"></script>
+        <script type="text/javascript" src="{{ STATIC_URL }}js/filesize.js"></script>
         <script type="text/javascript" src="{{ STATIC_URL }}js/hs_file_browser.js"></script>
         <script type="text/javascript" src='//cdn.datatables.net/1.10.10/js/jquery.dataTables.js'></script>
         <link href="https://gitcdn.github.io/bootstrap-toggle/2.2.2/css/bootstrap-toggle.min.css" rel="stylesheet">

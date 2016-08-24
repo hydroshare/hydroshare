@@ -13,6 +13,13 @@ function selectSelectableElement (selectableContainer, elementsToSelect) {
     selectableContainer.data("selectable")._mouseStop(null);
 }
 
+function bytesToSize(bytes) {
+   var sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB'];
+   if (bytes == 0) return '0 Byte';
+   var i = parseInt(Math.floor(Math.log(bytes) / Math.log(1024)));
+   return Math.round(bytes / Math.pow(1024, i), 2) + ' ' + sizes[i];
+};
+
 
 $(document).ready(function () {
     // Show file drop visual feedback
@@ -104,5 +111,67 @@ $(document).ready(function () {
             $(".ui-selected").removeClass("ui-selected");
             $("#selection-menu").hide();
         }
+    });
+
+    function sort(method, order) {
+        var sorted;
+        if (method == "name") {
+            // Sort by name
+            if (order == "asc") {
+                sorted = $('#fb-files-container li').sort(function (element1, element2) {
+                    return $(element2).children('span.fb-file-name').text().localeCompare($(element1).children('span.fb-file-name').text());
+                });
+            }
+            else {
+                sorted = $('#fb-files-container li').sort(function (element1, element2) {
+                    return $(element1).children('span.fb-file-name').text().localeCompare($(element2).children('span.fb-file-name').text());
+                });
+            }
+        }
+        else if (method == "type") {
+            if (order == "asc") {
+                sorted = $('#fb-files-container li').sort(function (element1, element2) {
+                    return $(element2).children('span.fb-file-type').text().localeCompare($(element1).children('span.fb-file-type').text());
+                });
+            }
+            else {
+                sorted = $('#fb-files-container li').sort(function (element1, element2) {
+                    return $(element1).children('span.fb-file-type').text().localeCompare($(element2).children('span.fb-file-type').text());
+                });
+            }
+        }
+
+        // Move elements to the new order
+        for (var i = 0; i < sorted.length; i++) {
+            $(sorted[i]).prependTo("#fb-files-container");
+        }
+
+    }
+
+    $("#fb-sort li").click(function () {
+
+        if ($(this).attr("data-method")) {
+            $("#fb-sort li[data-method]").removeClass("active");
+            $(this).addClass("active");
+        }
+
+        if ($(this).attr("data-order")) {
+            $("#fb-sort li[data-order]").removeClass("active");
+            $(this).addClass("active");
+        }
+
+
+        var method = $("#fb-sort li[data-method].active").attr("data-method");
+        var order = $("#fb-sort li[data-order].active").attr("data-order");
+        // Sort by type
+        if (method == "type") {
+            // sort("name",order);
+            sort(method, order);
+        }
+        else {
+            sort(method, order);
+        }
+
+
     })
 });
