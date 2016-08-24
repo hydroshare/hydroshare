@@ -33,6 +33,14 @@
                     {% endif %}
                 {% endblock %}
 
+                {%  if task_id and download_path %}
+                    <input type="hidden" id="task_id" name="task_id" value="{{ task_id }}">
+                    <input type="hidden" id="download_path" name="download_path" value="{{ download_path }}">
+                    <div id='download-status-info' class="alert alert-success">
+                        Please wait for the resource bag to be created<span id="loading">.</span>
+                    </div>
+                {% endif %}
+
                 {# ======= Title ======= #}
                 {% include "resource-landing-page/title-section.html" %}
 
@@ -146,9 +154,12 @@
                                                                                                   title="Download"
                                                                                                   class="glyphicon glyphicon-download icon-button btn-download"></span></a>
                                                         {% else %}
-                                                            <span data-toggle="tooltip" data-placement="auto"
-                                                                  title="File larger than 1GB cannot be downloaded directly via HTTP. Please download the large file via iRODS clients."
-                                                                  class="glyphicon glyphicon-download icon-button btn-download"></span>
+                                                            <a data-toggle="modal" data-target="#large-file-download-alert">
+                                                                <span data-toggle="tooltip" data-placement="auto"
+                                                                    title="Download"
+                                                                    class="glyphicon glyphicon-download icon-button btn-download">
+                                                                </span>
+                                                            </a>
                                                         {% endif %}
                                                         {% if preview %}
                                                             <a href="{{ preview }}"><span data-toggle="tooltip"
@@ -1306,8 +1317,55 @@
                 $('#save-extra-meta-btn').show();
             }
 
+            function update_download_status(task_id, download_path) {
+                download_status_timeout_id=-1;
+                // disable download button to prevent it from being clicked again
+                $('#btn-download-all').attr('disabled', 'disabled');
+                $.ajax({
+                    dataType: "json",
+                    cache: false,
+                    timeout: 60000,
+                    type: "POST",
+                    url: '/django_irods/check_task_status/',
+                    data: {
+                        task_id: task_id
+                    },
+                    success: function(data) {
+                        if(data.status) {
+                            $("#loading").html('');
+                            if(download_status_timeout_id > -1)
+                                clearTimeout(download_status_timeout_id);
+                            $("#btn-download-all").removeAttr('disabled');
+                            $("#download-status-info").html(
+                                    "If your download does not start automatically, " +
+                                    "please click <a href='" + download_path + "'>here</a>.");
+                            window.location.href = download_path;
+                        }
+                        // only check status again in 3 seconds when $("#loading") is not
+                        // cleared up by success status above
+                        else if($("#loading").html()) {
+                            $("#loading").html($("#loading").html() + ".");
+                            download_status_timeout_id = setTimeout(function () {
+                                update_download_status(task_id, download_path);
+                            }, 3000);
+                        }
+                    },
+                    error: function (xhr, errmsg, err) {
+                        if(download_status_timeout_id > -1)
+                            clearTimeout(download_status_timeout_id);
+                        $("#btn-download-all").removeAttr('disabled');
+                        console.log(errmsg);
+                        alert("Resource bag cannot be generated due to download poll errors: " + errmsg);
+                    }
+                });
+            }
+
             $(document).ready(function () {
                 google.maps.event.addDomListener(window, "load", initMap);
+                var task_id = $('#task_id').val();
+                var download_path = $('#download_path').val();
+                if (task_id)
+                    update_download_status(task_id, download_path);
 
                 $("#agree-chk").on('click', function(e) {
                     e.stopImmediatePropagation();

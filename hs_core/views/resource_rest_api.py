@@ -218,6 +218,12 @@ class ResourceList(ResourceToListItemMixin, generics.ListAPIView):
         return serializers.ResourceListItemSerializer
 
 
+class CheckTaskStatus(generics.RetrieveAPIView):
+    def get(self, request, task_id):
+        url = reverse('rest_check_task_status', kwargs={'task_id': task_id})
+        return HttpResponseRedirect(url)
+
+
 class ResourceReadUpdateDelete(ResourceToListItemMixin, generics.RetrieveUpdateDestroyAPIView):
     """
     Create, read, or delete a resource
@@ -265,8 +271,8 @@ class ResourceReadUpdateDelete(ResourceToListItemMixin, generics.RetrieveUpdateD
             bag_url = site_url + reverse('download_refts_resource_bag',
                                          kwargs={'shortkey': pk})
         else:
-            bag_url = site_url + AbstractResource.bag_url(pk)
-
+            bag_url = site_url + reverse('rest_download',
+                                         kwargs={'path': 'bags/{}.zip'.format(pk)})
         return HttpResponseRedirect(bag_url)
 
     def put(self, request, pk):
