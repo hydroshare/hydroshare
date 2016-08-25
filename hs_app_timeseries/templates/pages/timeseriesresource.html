@@ -191,8 +191,16 @@
                 $("#sql-file-update").show();
             }
 
-            $("#coverage-spatial :input").prop('disabled', true);
-            $("#coverage-spatial").children().prop("disabled", true);
+            $("#coverage-spatial :input").prop('readonly', true);
+            $("#id_type_1").attr('onclick', 'return false');
+            $("#id_type_2").attr('onclick', 'return false');
+
+            if ($('#id_north').val() || $('#id_northlimit').val()){
+                $("#id_name").prop('readonly', false);
+                $('#coverage-spatial').find("button.btn-primary").prop('disabled', false);
+            }
+
+            $("#coverage-temporal :input").prop('disabled', true);
             // TODO: google map is not still disabled
             $("#coverageMap").prop('disabled', true);
 
