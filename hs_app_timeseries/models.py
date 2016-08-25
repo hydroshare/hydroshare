@@ -61,7 +61,8 @@ class TimeSeriesAbstractMetaDataElement(AbstractMetaDataElement):
 
     @classmethod
     def validate_series_ids(cls, metadata, element_data_dict):
-        # this validation applies only in case of csv upload
+        # this validation applies only in case of csv upload - until data is
+        # written to the blank ODM2 sqlite file
         selected_series_id = element_data_dict.pop('selected_series_id', None)
         if selected_series_id is not None:
             element_data_dict['series_ids'] = [selected_series_id]
@@ -71,6 +72,26 @@ class TimeSeriesAbstractMetaDataElement(AbstractMetaDataElement):
             for s_id in element_data_dict['series_ids']:
                 if int(s_id) >= len(metadata.series_names):
                     raise ValidationError("Not a valid series id.")
+
+    @classmethod
+    def process_series_ids(cls, metadata, element_data_dict):
+        # should be called prior to updating an element
+        selected_series_id = element_data_dict.get('selected_series_id', None)
+        if len(metadata.series_names) > 0:
+            # this validation applies only in case of CSV upload
+            cls.validate_series_ids(metadata, element_data_dict)
+
+        if selected_series_id is not None:
+            # case of additive - the selected_series_id will be added to the existing
+            # series ids of the element being updated
+            # so not updating series_ids as part of the element update
+            # update element series_ids as part of the update_related_elements_on_update()
+            series_ids = element_data_dict.pop('series_ids', [])
+        else:
+            # case of replacement - existing series_ids of the element will be replaced
+            # by the series_ids
+            series_ids = element_data_dict.get('series_ids', [])
+        return series_ids
 
     class Meta:
         abstract = True
@@ -128,13 +149,7 @@ class Site(TimeSeriesAbstractMetaDataElement):
                 raise ValidationError("There is already a site element "
                                       "with site_code:{}".format(kwargs['site_code']))
 
-        if len(element.metadata.series_names) > 0:
-            # this validation applies only in case of CSV upload
-            cls.validate_series_ids(element.metadata, kwargs)
-
-        # Not updating series_ids as part of the element update
-        # update element series_ids as part of the update_related_elements_on_update()
-        series_ids = kwargs.pop('series_ids', [])
+        series_ids = cls.process_series_ids(element.metadata, kwargs)
         super(Site, cls).update(element_id, **kwargs)
         element = cls.objects.get(id=element_id)
         # if the user has entered a new elevation datum or site type, then create a
@@ -207,13 +222,7 @@ class Variable(TimeSeriesAbstractMetaDataElement):
                 raise ValidationError("There is already a variable element "
                                       "with variable_code:{}".format(kwargs['variable_code']))
 
-        if len(element.metadata.series_names) > 0:
-            # this validation applies only in case of CSV upload
-            cls.validate_series_ids(element.metadata, kwargs)
-
-        # Not updating series_ids as part of the element update
-        # update element series_ids as part of the update_related_elements_on_update()
-        series_ids = kwargs.pop('series_ids', [])
+        series_ids = cls.process_series_ids(element.metadata, kwargs)
         super(Variable, cls).update(element_id, **kwargs)
         element = cls.objects.get(id=element_id)
         # if the user has entered a new variable name, variable type or speciation,
@@ -284,13 +293,7 @@ class Method(TimeSeriesAbstractMetaDataElement):
                 raise ValidationError("There is already a method element "
                                       "with method_code:{}".format(kwargs['method_code']))
 
-        if len(element.metadata.series_names) > 0:
-            # this validation applies only in case of CSV upload
-            cls.validate_series_ids(element.metadata, kwargs)
-
-        # Not updating series_ids as part of the element update
-        # update element series_ids as part of the update_related_elements_on_update()
-        series_ids = kwargs.pop('series_ids', [])
+        series_ids = cls.process_series_ids(element.metadata, kwargs)
         super(Method, cls).update(element_id, **kwargs)
         element = cls.objects.get(id=element_id)
         # if the user has entered a new method type, then create a corresponding new cv term
@@ -361,13 +364,7 @@ class ProcessingLevel(TimeSeriesAbstractMetaDataElement):
                 err_msg = err_msg.format(kwargs['processing_level_code'])
                 raise ValidationError(err_msg)
 
-        if len(element.metadata.series_names) > 0:
-            # this validation applies only in case of CSV upload
-            cls.validate_series_ids(element.metadata, kwargs)
-
-        # Not updating series_ids as part of the element update
-        # update element series_ids as part of the update_related_elements_on_update()
-        series_ids = kwargs.pop('series_ids', [])
+        series_ids = cls.process_series_ids(element.metadata, kwargs)
         super(ProcessingLevel, cls).update(element_id, **kwargs)
         element = cls.objects.get(id=element_id)
         for series_id in series_ids:

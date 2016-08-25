@@ -1333,7 +1333,18 @@ class TestTimeSeriesMetaData(MockIRODSTestCaseMixin, TransactionTestCase):
         self.assertEqual(len(site.series_ids), 2)
         self.assertEqual(set(site.series_ids), set(['0', '1']))
 
-        # TODO: test update of Site element
+        # test update of Site element
+        self.resTimeSeries.metadata.update_element('site', site.id, series_ids=['0'])
+        self.assertEqual(self.resTimeSeries.metadata.sites.all().count(), 1)
+        site = self.resTimeSeries.metadata.sites.first()
+        self.assertEqual(len(site.series_ids), 1)
+        self.assertEqual(site.series_ids, ['0'])
+
+        self.resTimeSeries.metadata.update_element('site', site.id, selected_series_id='1')
+        self.assertEqual(self.resTimeSeries.metadata.sites.all().count(), 1)
+        site = self.resTimeSeries.metadata.sites.first()
+        self.assertEqual(len(site.series_ids), 2)
+        self.assertEqual(set(site.series_ids), set(['0', '1']))
 
         # test element 'Variable'
 
@@ -1381,7 +1392,7 @@ class TestTimeSeriesMetaData(MockIRODSTestCaseMixin, TransactionTestCase):
 
         # there should be 1 variable element at this point
         self.assertEqual(self.resTimeSeries.metadata.variables.all().count(), 1)
-        variable = self.resTimeSeries.metadata.variables.all()[0]
+        variable = self.resTimeSeries.metadata.variables.first()
         self.assertEqual(len(variable.series_ids), 1)
         self.assertEqual(variable.series_ids, ['0'])
 
@@ -1414,7 +1425,17 @@ class TestTimeSeriesMetaData(MockIRODSTestCaseMixin, TransactionTestCase):
         self.assertEqual(len(variable.series_ids), 2)
         self.assertEqual(set(variable.series_ids), set(['0', '1']))
 
-        # TODO: test update of Variable element
+        # test update of Variable element
+        self.resTimeSeries.metadata.update_element('variable', variable.id, series_ids=['0'])
+        variable = self.resTimeSeries.metadata.variables.first()
+        self.assertEqual(len(variable.series_ids), 1)
+        self.assertEqual(variable.series_ids, ['0'])
+
+        self.resTimeSeries.metadata.update_element('variable', variable.id,
+                                                   selected_series_id='1')
+        variable = self.resTimeSeries.metadata.variables.first()
+        self.assertEqual(len(variable.series_ids), 2)
+        self.assertEqual(set(variable.series_ids), set(['0', '1']))
 
         # test element 'Method'
         with self.assertRaises(ValidationError):
@@ -1492,7 +1513,16 @@ class TestTimeSeriesMetaData(MockIRODSTestCaseMixin, TransactionTestCase):
         self.assertEqual(len(method.series_ids), 2)
         self.assertEqual(set(method.series_ids), set(['0', '1']))
 
-        # TODO: test update of Method element
+        # test update of Method element
+        self.resTimeSeries.metadata.update_element('method', method.id, series_ids=['1'])
+        method = self.resTimeSeries.metadata.methods.first()
+        self.assertEqual(len(method.series_ids), 1)
+        self.assertEqual(method.series_ids, ['1'])
+
+        self.resTimeSeries.metadata.update_element('method', method.id, selected_series_id='0')
+        method = self.resTimeSeries.metadata.methods.first()
+        self.assertEqual(len(method.series_ids), 2)
+        self.assertEqual(set(method.series_ids), set(['0', '1']))
 
         # test element "ProcessingLevel"
         with self.assertRaises(ValidationError):
@@ -1559,7 +1589,19 @@ class TestTimeSeriesMetaData(MockIRODSTestCaseMixin, TransactionTestCase):
         self.assertEqual(len(pro_level.series_ids), 2)
         self.assertEqual(set(pro_level.series_ids), set(['0', '1']))
 
-        # TODO: test update of ProcessingLevel element
+        # test update of ProcessingLevel element
+        self.resTimeSeries.metadata.update_element('processinglevel', pro_level.id,
+                                                   series_ids=['1'])
+
+        pro_level = self.resTimeSeries.metadata.processing_levels.first()
+        self.assertEqual(len(pro_level.series_ids), 1)
+        self.assertEqual(pro_level.series_ids, ['1'])
+
+        self.resTimeSeries.metadata.update_element('processinglevel', pro_level.id,
+                                                   selected_series_id='0')
+        pro_level = self.resTimeSeries.metadata.processing_levels.first()
+        self.assertEqual(len(pro_level.series_ids), 2)
+        self.assertEqual(set(pro_level.series_ids), set(['0', '1']))
 
         # test element "TimeSeriesResult"
         with self.assertRaises(ValidationError):
@@ -1649,7 +1691,37 @@ class TestTimeSeriesMetaData(MockIRODSTestCaseMixin, TransactionTestCase):
         self.assertEqual(len(ts_result_2.series_ids), 1)
         self.assertEqual(set(ts_result_1.series_ids + ts_result_2.series_ids), set(['0', '1']))
 
-        # TODO: test update of TimeSeriesResult element
+        # test update of TimeSeriesResult element
+        self.resTimeSeries.metadata.time_series_results.all().delete()
+
+        # create a timeseriesresult element for series id '0'
+        self.resTimeSeries.metadata.create_element('timeseriesresult', series_ids=['0'],
+                                                   units_type='Temperature',
+                                                   units_name='Degree F',
+                                                   units_abbreviation='degF',
+                                                   status='Complete',
+                                                   sample_medium='Air',
+                                                   value_count=1550,
+                                                   aggregation_statistics='Average'
+                                                   )
+
+        ts_result = self.resTimeSeries.metadata.time_series_results.first()
+        self.assertEqual(len(ts_result.series_ids), 1)
+        self.assertEqual(ts_result.series_ids, ['0'])
+
+        # update the series id to '1'
+        self.resTimeSeries.metadata.update_element('timeseriesresult', ts_result.id,
+                                                   series_ids=['1'])
+        ts_result = self.resTimeSeries.metadata.time_series_results.first()
+        self.assertEqual(len(ts_result.series_ids), 1)
+        self.assertEqual(ts_result.series_ids, ['1'])
+
+        # update the series id back to '0' - this time using the selected_series_id parameter
+        self.resTimeSeries.metadata.update_element('timeseriesresult', ts_result.id,
+                                                   selected_series_id='0')
+        ts_result = self.resTimeSeries.metadata.time_series_results.first()
+        self.assertEqual(len(ts_result.series_ids), 1)
+        self.assertEqual(ts_result.series_ids, ['0'])
 
     def test_element_duplicate_code(self):
         pass
