@@ -7,7 +7,7 @@ from django.db import transaction
 from hs_core.views.utils import authorize, ACTION_TO_AUTHORIZE
 from hs_core.hydroshare.utils import get_resource_by_shortkey, resource_modified, current_site_url
 
-from .utils import add_or_remove_relation_metadata, detect_loop_in_collection
+from .utils import add_or_remove_relation_metadata, detect_loop_in_collection, FoundLoopException
 
 logger = logging.getLogger(__name__)
 UI_DATETIME_FORMAT = "%m/%d/%Y"
@@ -122,6 +122,10 @@ def update_collection(request, shortkey, *args, **kwargs):
 
             resource_modified(collection_res_obj, user)
 
+    except FoundLoopException as ex:
+        err_msg = "Found a loop: {0}".format('-->'.join(ex.path_list) + "-->" + ex.node_id)
+        status = "error"
+        msg = err_msg
     except Exception as ex:
         err_msg = "update_collection: {0} ; username: {1}; collection_id: {2} ."
         logger.error(err_msg.format(ex.message,
