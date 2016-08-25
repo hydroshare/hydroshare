@@ -191,6 +191,10 @@
                 $("#sql-file-update").show();
             }
 
+            if ($("#resource-mode").val() === 'Edit'){
+                $("#readonly-coverage-notice").show();
+            }
+
             $("#coverage-spatial :input").prop('readonly', true);
             $("#id_type_1").attr('onclick', 'return false');
             $("#id_type_2").attr('onclick', 'return false');

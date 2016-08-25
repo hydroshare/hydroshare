@@ -15,6 +15,7 @@
         <input type="hidden" id="supported-file-types" value="{{ cm.get_supported_upload_file_types }}">
         <input type="hidden" id="allow-multiple-file-upload" value={{ cm.can_have_multiple_files }}>
         <input type="hidden" id="file-count" value={{ cm.files.all.count }}>
+        <input type="hidden" id="resource-mode" value="{% if metadata_form %}Edit{% else %}View{% endif %}" >
 
         <div class="container">
             <div class="row">
@@ -697,7 +698,9 @@
                                                                     </div>
                                                                 </fieldset>
                                                             </form>
-
+                                                            <div id="readonly-coverage-notice" class="col-sm-12 text-info" style="display: none;">
+                                                                <label>Spatial coverage should be set by editing the site coordinates </label>
+                                                            </div>
                                                         </div>
                                                     </div>
 
