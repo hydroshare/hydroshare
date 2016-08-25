@@ -305,7 +305,7 @@ rebuild_hs() {
     docker-compose build
     echo "  - docker-compose up -d"
     docker-compose up -d
-    for pc in $(seq 10 -1 1); do
+    for pc in $(seq 20 -1 1); do
         echo -ne "$pc ...\033[0K\r" && sleep 1;
     done
     if [ "$2" == "--db" ]; then
