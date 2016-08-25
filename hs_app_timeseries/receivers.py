@@ -161,6 +161,18 @@ def _process_uploaded_csv_file(resource, res_file, validate_files_dict,
             _create_cv_lookup_models(cur, resource.metadata, 'CV_AggregationStatistic',
                                      CVAggregationStatistic)
 
+        # set the temporal coverage for the resource using the date values from the csv file
+        with open(fl_obj_name, 'r') as fl_obj:
+            csv_reader = csv.reader(fl_obj, delimiter=',')
+            # read the first row and skip - header
+            csv_reader.next()
+            start_date_str = csv_reader.next()[0]
+            last_row = None
+            for row in csv_reader:
+                last_row = row
+            end_date_str = last_row[0]
+            resource.metadata.create_element('coverage', type='period',
+                                             value={'start': start_date_str, 'end': end_date_str})
         # cleanup the temp sqlite file directory
         if os.path.exists(temp_dir):
             shutil.rmtree(temp_dir)
