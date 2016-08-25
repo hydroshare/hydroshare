@@ -486,6 +486,8 @@
                             <div id="discover-map-legend"></div>
 
                             <div id="resetZoom"></div>
+                            <br />
+                            <table id="map-items" style="width:100%; max-height:200px"></table>
                         </div>
                     </div>
                 </div>
@@ -525,21 +527,7 @@
                 mapTypeId: google.maps.MapTypeId.TERRAIN
             });
 
-            info_window = new google.maps.InfoWindow();
-            rectangle = new google.maps.Rectangle({
-                strokeColor: '#FF0000',
-                strokeOpacity: 0.8,
-                strokeWeight: 2,
-                fillColor: '#FF0000',
-                fillOpacity: 0.35,
-                map: map,
-                bounds: {
-                    north: 0,
-                    south: 0,
-                    east: 0,
-                    west: 0
-                }
-            });
+            info_window = new google.maps.InfoWindow()
 
             setMarkers(json_results);
 
@@ -638,6 +626,34 @@
                 imagePath: '//cdn.rawgit.com/googlemaps/js-marker-clusterer/gh-pages/images/m'
             });
         };
+
+        var setMapItemsList = function(json_results) {
+            var map_resources = [];
+            json_results.forEach(function(resource) {
+                var author_name = "";
+                if (resource.first_author_description) {
+                    author_name = '<a href="' + resource.first_author_description + '">' + resource.first_author + '</a>';
+                } else {
+                    author_name = resource.first_author;
+                }
+                var resource_title = '<a href="' + resource.get_absolute_url + '">' + resource.title + '</a>';
+                var map_resource = [resource.resource_type, resource.coverage_type, resource_title, author_name];
+                map_resources.push(map_resource);
+            });
+            $('#map-items').DataTable( {
+                data: map_resources,
+                "scrollY": "200px",
+                "scrollCollapse": true,
+                "paging": false,
+                "bDestroy": true,
+                columns: [
+                    { title: "Resource Type" },
+                    { title: "Coverage Type"},
+                    { title: "Title" },
+                    { title: "First Author" }
+                ]
+            } );
+        }
 
         var setBoxResourcesList = function(json_results) {
             var box_resources = [];
@@ -846,6 +862,7 @@
                 position: latlng
             });
             markers.push(marker);
+
             google.maps.event.addListener(marker, 'click', function() {
                 info_window.setContent(info_content);
                 info_window.open(map, marker);
@@ -964,7 +981,8 @@
             var filtered_results = [];
             clientUpdateMarkers(filtered_results);
             setMarkers(filtered_results);
-            setBoxResourcesList(filtered_results);
+            //setBoxResourcesList(filtered_results);
+            setMapItemsList(filtered_results);
             var results_selection = $('input:radio[name=results-selection]:checked').val();
             if (results_selection == 'map-results-selected') {
                 var bnds = map.getBounds();
@@ -1271,7 +1289,6 @@
                             }
                             initMap(json_results);
                             $("#resource-search").show();
-
                         },
                         failure: function(data) {
                             console.error("Ajax call for getting map data failed");
