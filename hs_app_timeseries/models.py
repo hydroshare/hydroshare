@@ -52,14 +52,25 @@ class TimeSeriesAbstractMetaDataElement(AbstractMetaDataElement):
 
     @classmethod
     def update(cls, element_id, **kwargs):
-        if 'series_ids' in kwargs:
-            raise ValidationError("Timeseries ID(s) can't be updated")
         super(TimeSeriesAbstractMetaDataElement, cls).update(element_id, **kwargs)
         element = cls.objects.get(id=element_id)
         element.is_dirty = True
         element.save()
         element.metadata.is_dirty = True
         element.metadata.save()
+
+    @classmethod
+    def validate_series_ids(cls, metadata, element_data_dict):
+        # this validation applies only in case of csv upload
+        selected_series_id = element_data_dict.pop('selected_series_id', None)
+        if selected_series_id is not None:
+            element_data_dict['series_ids'] = [selected_series_id]
+        if 'series_ids' in element_data_dict:
+            if len(element_data_dict['series_ids']) > len(metadata.series_names):
+                raise ValidationError("Not a valid series id.")
+            for s_id in element_data_dict['series_ids']:
+                if int(s_id) >= len(metadata.series_names):
+                    raise ValidationError("Not a valid series id.")
 
     class Meta:
         abstract = True
@@ -90,16 +101,14 @@ class Site(TimeSeriesAbstractMetaDataElement):
                                   "with site_code:{}".format(kwargs['site_code']))
 
         if len(metadata.series_names) > 0:
-            # this case applies only in case of CSV upload
-            selected_series_id = kwargs.pop('selected_series_id', None)
-            if selected_series_id is None:
-                raise ValueError("Series id is missing")
-            kwargs['series_ids'] = [selected_series_id]
+            # this validation applies only in case of CSV upload
+            cls.validate_series_ids(metadata, kwargs)
             element = super(Site, cls).create(**kwargs)
             # update any other site element that is associated with the selected_series_id
-            update_related_elements_on_create(element=element,
-                                              related_elements=element.metadata.sites,
-                                              selected_series_id=selected_series_id)
+            for series_id in kwargs['series_ids']:
+                update_related_elements_on_create(element=element,
+                                                  related_elements=element.metadata.sites,
+                                                  selected_series_id=series_id)
         else:
             element = super(Site, cls).create(**kwargs)
 
@@ -118,15 +127,24 @@ class Site(TimeSeriesAbstractMetaDataElement):
                     for site in element.metadata.sites):
                 raise ValidationError("There is already a site element "
                                       "with site_code:{}".format(kwargs['site_code']))
+
+        if len(element.metadata.series_names) > 0:
+            # this validation applies only in case of CSV upload
+            cls.validate_series_ids(element.metadata, kwargs)
+
+        # Not updating series_ids as part of the element update
+        # update element series_ids as part of the update_related_elements_on_update()
+        series_ids = kwargs.pop('series_ids', [])
+        super(Site, cls).update(element_id, **kwargs)
+        element = cls.objects.get(id=element_id)
         # if the user has entered a new elevation datum or site type, then create a
         # corresponding new cv term
         _create_site_related_cv_terms(element=element, data_dict=kwargs)
 
-        super(Site, cls).update(element_id, **kwargs)
-        selected_series_id = kwargs.pop('selected_series_id', None)
-        update_related_elements_on_update(element=element,
-                                          related_elements=element.metadata.sites,
-                                          selected_series_id=selected_series_id)
+        for series_id in series_ids:
+            update_related_elements_on_update(element=element,
+                                              related_elements=element.metadata.sites,
+                                              selected_series_id=series_id)
 
         _update_resource_coverage_element(site_element=element)
 
@@ -161,16 +179,14 @@ class Variable(TimeSeriesAbstractMetaDataElement):
                                   "with variable_code:{}".format(kwargs['variable_code']))
 
         if len(metadata.series_names) > 0:
-            # this case applies only in case of CSV upload
-            selected_series_id = kwargs.pop('selected_series_id', None)
-            if selected_series_id is None:
-                raise ValueError("Series id is missing")
-            kwargs['series_ids'] = [selected_series_id]
+            # this validation applies only in case of CSV upload
+            cls.validate_series_ids(metadata, kwargs)
             element = super(Variable, cls).create(**kwargs)
             # update any other variable element that is associated with the selected_series_id
-            update_related_elements_on_create(element=element,
-                                              related_elements=element.metadata.variables,
-                                              selected_series_id=selected_series_id)
+            for series_id in kwargs['series_ids']:
+                update_related_elements_on_create(element=element,
+                                                  related_elements=element.metadata.variables,
+                                                  selected_series_id=series_id)
 
         else:
             element = super(Variable, cls).create(**kwargs)
@@ -191,15 +207,22 @@ class Variable(TimeSeriesAbstractMetaDataElement):
                 raise ValidationError("There is already a variable element "
                                       "with variable_code:{}".format(kwargs['variable_code']))
 
+        if len(element.metadata.series_names) > 0:
+            # this validation applies only in case of CSV upload
+            cls.validate_series_ids(element.metadata, kwargs)
+
+        # Not updating series_ids as part of the element update
+        # update element series_ids as part of the update_related_elements_on_update()
+        series_ids = kwargs.pop('series_ids', [])
+        super(Variable, cls).update(element_id, **kwargs)
+        element = cls.objects.get(id=element_id)
         # if the user has entered a new variable name, variable type or speciation,
         # then create a corresponding new cv term
         _create_variable_related_cv_terms(element=element, data_dict=kwargs)
-
-        super(Variable, cls).update(element_id, **kwargs)
-        selected_series_id = kwargs.pop('selected_series_id', None)
-        update_related_elements_on_update(element=element,
-                                          related_elements=element.metadata.variables,
-                                          selected_series_id=selected_series_id)
+        for series_id in series_ids:
+            update_related_elements_on_update(element=element,
+                                              related_elements=element.metadata.variables,
+                                              selected_series_id=series_id)
 
     @classmethod
     def remove(cls, element_id):
@@ -231,16 +254,14 @@ class Method(TimeSeriesAbstractMetaDataElement):
                                   "with method_code:{}".format(kwargs['method_code']))
 
         if len(metadata.series_names) > 0:
-            # this case applies only in case of CSV upload
-            selected_series_id = kwargs.pop('selected_series_id', None)
-            if selected_series_id is None:
-                raise ValueError("Series id is missing")
-            kwargs['series_ids'] = [selected_series_id]
+            # this validation applies only in case of CSV upload
+            cls.validate_series_ids(metadata, kwargs)
             element = super(Method, cls).create(**kwargs)
             # update any other method element that is associated with the selected_series_id
-            update_related_elements_on_create(element=element,
-                                              related_elements=element.metadata.methods,
-                                              selected_series_id=selected_series_id)
+            for series_id in kwargs['series_ids']:
+                update_related_elements_on_create(element=element,
+                                                  related_elements=element.metadata.methods,
+                                                  selected_series_id=series_id)
 
         else:
             element = super(Method, cls).create(**kwargs)
@@ -250,8 +271,8 @@ class Method(TimeSeriesAbstractMetaDataElement):
                         cv_term_str='method_type',
                         element_metadata_cv_terms=element.metadata.cv_method_types.all(),
                         data_dict=kwargs)
-
         return element
+
     @classmethod
     def update(cls, element_id, **kwargs):
         element = cls.objects.get(id=element_id)
@@ -263,17 +284,25 @@ class Method(TimeSeriesAbstractMetaDataElement):
                 raise ValidationError("There is already a method element "
                                       "with method_code:{}".format(kwargs['method_code']))
 
+        if len(element.metadata.series_names) > 0:
+            # this validation applies only in case of CSV upload
+            cls.validate_series_ids(element.metadata, kwargs)
+
+        # Not updating series_ids as part of the element update
+        # update element series_ids as part of the update_related_elements_on_update()
+        series_ids = kwargs.pop('series_ids', [])
+        super(Method, cls).update(element_id, **kwargs)
+        element = cls.objects.get(id=element_id)
         # if the user has entered a new method type, then create a corresponding new cv term
         _create_cv_term(element=element, cv_term_class=CVMethodType,
                         cv_term_str='method_type',
                         element_metadata_cv_terms=element.metadata.cv_method_types.all(),
                         data_dict=kwargs)
 
-        super(Method, cls).update(element_id, **kwargs)
-        selected_series_id = kwargs.pop('selected_series_id', None)
-        update_related_elements_on_update(element=element,
-                                          related_elements=element.metadata.methods,
-                                          selected_series_id=selected_series_id)
+        for series_id in series_ids:
+            update_related_elements_on_update(element=element,
+                                              related_elements=element.metadata.methods,
+                                              selected_series_id=series_id)
 
     @classmethod
     def remove(cls, element_id):
@@ -305,16 +334,15 @@ class ProcessingLevel(TimeSeriesAbstractMetaDataElement):
             raise ValidationError(err_msg)
 
         if len(metadata.series_names) > 0:
-            # this case applies only in case of CSV upload
-            selected_series_id = kwargs.pop('selected_series_id', None)
-            if selected_series_id is None:
-                raise ValueError("Series id is missing")
-            kwargs['series_ids'] = [selected_series_id]
+            # this validation applies only in case of CSV upload
+            cls.validate_series_ids(metadata, kwargs)
             element = super(ProcessingLevel, cls).create(**kwargs)
             # update any other method element that is associated with the selected_series_id
-            update_related_elements_on_create(element=element,
-                                              related_elements=element.metadata.processing_levels,
-                                              selected_series_id=selected_series_id)
+            for series_id in kwargs['series_ids']:
+                update_related_elements_on_create(element=element,
+                                                  related_elements
+                                                  =element.metadata.processing_levels,
+                                                  selected_series_id=series_id)
             return element
 
         return super(ProcessingLevel, cls).create(**kwargs)
@@ -333,11 +361,20 @@ class ProcessingLevel(TimeSeriesAbstractMetaDataElement):
                 err_msg = err_msg.format(kwargs['processing_level_code'])
                 raise ValidationError(err_msg)
 
+        if len(element.metadata.series_names) > 0:
+            # this validation applies only in case of CSV upload
+            cls.validate_series_ids(element.metadata, kwargs)
+
+        # Not updating series_ids as part of the element update
+        # update element series_ids as part of the update_related_elements_on_update()
+        series_ids = kwargs.pop('series_ids', [])
         super(ProcessingLevel, cls).update(element_id, **kwargs)
-        selected_series_id = kwargs.pop('selected_series_id', None)
-        update_related_elements_on_update(element=element,
-                                          related_elements=element.metadata.processing_levels,
-                                          selected_series_id=selected_series_id)
+        element = cls.objects.get(id=element_id)
+        for series_id in series_ids:
+            update_related_elements_on_update(element=element,
+                                              related_elements
+                                              =element.metadata.processing_levels,
+                                              selected_series_id=series_id)
 
     @classmethod
     def remove(cls, element_id):
@@ -366,30 +403,33 @@ class TimeSeriesResult(TimeSeriesAbstractMetaDataElement):
     def create(cls, **kwargs):
         metadata = kwargs['content_object']
         if len(metadata.series_names) > 0:
-            # this case applies only in case of CSV upload
-            selected_series_id = kwargs.pop('selected_series_id', None)
-            if selected_series_id is None:
-                raise ValueError("Series id is missing")
-            kwargs['series_ids'] = [selected_series_id]
-            element = super(TimeSeriesResult, cls).create(**kwargs)
+            # this validation applies only in case of CSV upload
+            cls.validate_series_ids(metadata, kwargs)
 
-        else:
-            element = super(TimeSeriesResult, cls).create(**kwargs)
+        if len(kwargs['series_ids']) > 1:
+            raise ValidationError("Multiple series ids can't be assigned.")
 
+        element = super(TimeSeriesResult, cls).create(**kwargs)
         # if the user has entered a new sample medium, units type, status, or
         # aggregation statistics then create a corresponding new cv term
         _create_timeseriesresult_related_cv_terms(element=element, data_dict=kwargs)
-
         return element
 
     @classmethod
     def update(cls, element_id, **kwargs):
         element = cls.objects.get(id=element_id)
+        if 'series_ids' in kwargs:
+            if len(kwargs['series_ids']) > 1:
+                raise ValidationError("Multiple series ids can't be assigned.")
+
+        if len(element.metadata.series_names) > 0:
+            # this validation applies only in case of CSV upload
+            cls.validate_series_ids(element.metadata, kwargs)
+
+        super(TimeSeriesResult, cls).update(element_id, **kwargs)
         # if the user has entered a new sample medium, units type, status, or
         # aggregation statistics then create a corresponding new cv term
         _create_timeseriesresult_related_cv_terms(element=element, data_dict=kwargs)
-
-        super(TimeSeriesResult, cls).update(element_id, **kwargs)
 
     @classmethod
     def remove(cls, element_id):
@@ -1785,14 +1825,14 @@ def update_related_elements_on_update(element, related_elements, selected_series
             if selected_series_id not in element.series_ids:
                 element.series_ids = element.series_ids + [selected_series_id]
                 element.save()
-                other_elements = related_elements.filter(
-                    series_ids__contains=[selected_series_id]).exclude(id=element.id).all()
-                for el in other_elements:
-                    el.series_ids.remove(selected_series_id)
-                    if len(el.series_ids) == 0:
-                        el.delete()
-                    else:
-                        el.save()
+            other_elements = related_elements.filter(
+                series_ids__contains=[selected_series_id]).exclude(id=element.id).all()
+            for el in other_elements:
+                el.series_ids.remove(selected_series_id)
+                if len(el.series_ids) == 0:
+                    el.delete()
+                else:
+                    el.save()
 
 def _generate_term_from_name(name):
     name = name.strip()

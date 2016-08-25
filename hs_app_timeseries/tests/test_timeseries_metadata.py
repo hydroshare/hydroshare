@@ -500,6 +500,7 @@ class TestTimeSeriesMetaData(MockIRODSTestCaseMixin, TransactionTestCase):
             site_code='LR_WaterLab_BB', site_name='Logan River at the Utah WRL west bridge',
             elevation_m=1515, elevation_datum='EGM97', site_type='Stream flow')
 
+        self.assertEqual(self.resTimeSeries.metadata.sites.all().count(), 1)
         site_element = self.resTimeSeries.metadata.sites.all().first()
         self.assertEqual(site_element.site_code, 'LR_WaterLab_BB')
         self.assertEqual(site_element.site_name, 'Logan River at the Utah WRL west bridge')
@@ -647,7 +648,7 @@ class TestTimeSeriesMetaData(MockIRODSTestCaseMixin, TransactionTestCase):
         self.resTimeSeries.metadata.update_element('variable', variable.id,
                                                    variable_code='USU37',
                                                    variable_name=variable.variable_name,
-                                                   varaiable_type=variable.variable_type,
+                                                   variable_type=variable.variable_type,
                                                    no_data_value=variable.no_data_value,
                                                    speciation=variable.speciation)
 
@@ -669,7 +670,7 @@ class TestTimeSeriesMetaData(MockIRODSTestCaseMixin, TransactionTestCase):
                                                    method_code='30',
                                                    method_name=method.method_name,
                                                    method_type=method.method_type,
-                                                   description=method.method_description,
+                                                   method_description=method.method_description,
                                                    method_link=method.method_link)
 
         method = self.resTimeSeries.metadata.methods.filter(id=method.id).first()
@@ -976,10 +977,8 @@ class TestTimeSeriesMetaData(MockIRODSTestCaseMixin, TransactionTestCase):
         self.assertEqual(csv_file_name, self.odm2_csv_file_name)
 
         # since the uploaded csv file has 7 data columns, the metadata should have 7 series names
-        self.assertEqual(len(self.resTimeSeries.metadata.series_names), 7)
-        csv_data_colum_names = set(['Temp_DegC_Mendon', 'Temp_DegC_Paradise',
-                                    'Temp_DegC_Wellsville', 'Temp_DegC_Confluence',
-                                    'Temp_DegC_EFLower', 'Temp_DegC_SFLower', 'Temp_DegC_SFUpper'])
+        self.assertEqual(len(self.resTimeSeries.metadata.series_names), 2)
+        csv_data_colum_names = set(['Temp_DegC_Mendon', 'Temp_DegC_Paradise'])
 
         self.assertEqual(set(self.resTimeSeries.metadata.series_names), csv_data_colum_names)
         # metadata is deleted on csv file upload - therefore the title change
@@ -987,6 +986,7 @@ class TestTimeSeriesMetaData(MockIRODSTestCaseMixin, TransactionTestCase):
         self._test_no_change_in_metadata()
         # there should be  1 format element
         self.assertEqual(self.resTimeSeries.metadata.formats.all().count(), 1)
+        self.assertEqual(self.resTimeSeries.has_csv_file, True)
 
     def test_invalid_csv_file(self):
         # This file contains invalid number of data column headings
@@ -1033,6 +1033,627 @@ class TestTimeSeriesMetaData(MockIRODSTestCaseMixin, TransactionTestCase):
         invalid_csv_file_name = 'Invalid_Data_Test_5.csv'
         self._test_invalid_csv_file(invalid_csv_file_name)
 
+    def test_populating_blank_sqlite_file(self):
+        # This case applies to csv file upload only
+
+        # first add a valid csv file to the resource
+        files = [UploadedFile(file=self.odm2_csv_file_obj, name=self.odm2_csv_file_name)]
+        utils.resource_file_add_pre_process(resource=self.resTimeSeries, files=files,
+                                            user=self.user)
+
+        utils.resource_file_add_process(resource=self.resTimeSeries, files=files, user=self.user)
+
+        # test that the resource does not have the required metadata elements at this point
+        self.assertEqual(self.resTimeSeries.metadata.has_all_required_elements(), False)
+
+        # add/update core metadata -required elements
+        self.resTimeSeries.metadata.update_element('title', self.resTimeSeries.metadata.title.id,
+                                                   value="Multi-Site One Variable Time Series")
+
+        self.resTimeSeries.metadata.create_element('description', abstract='Testing CSV File')
+
+        self.resTimeSeries.metadata.create_element('subject', value='CSV')
+
+        # add resource specific metadata
+
+        # there should be no coverage element before a site element is added
+        self.assertEqual(self.resTimeSeries.metadata.sites.all().count(), 0)
+        self.assertEqual(self.resTimeSeries.metadata.coverages.all().count(), 0)
+
+        # add 2 site elements (one for each data column of the uploaded csv file)
+
+        # since there are 2 data columns the valid series ids are 0 and 1
+        self.resTimeSeries.metadata.create_element('site', series_ids=['0'],
+                                                   site_code='Temp_DegC_Mendon',
+                                                   site_name='Logan River at the Utah Water '
+                                                             'Research Laboratory west bridge',
+                                                   elevation_m=1414,
+                                                   elevation_datum='EGM96',
+                                                   site_type='Stream',
+                                                   latitude=65.789,
+                                                   longitude=120.56789)
+
+        # there should be 1 site element at this point
+        self.assertEqual(self.resTimeSeries.metadata.sites.all().count(), 1)
+        # at this point the resource level coverage element should have been automatically created
+        # there should be 1 coverage element -  point type
+        self.assertEqual(self.resTimeSeries.metadata.coverages.all().count(), 1)
+        self.assertEqual(self.resTimeSeries.metadata.coverages.all().filter(type='point').count(),
+                         1)
+        site = self.resTimeSeries.metadata.sites.first()
+        point_cov = self.resTimeSeries.metadata.coverages.all().filter(type='point').first()
+        self.assertEqual(site.latitude, point_cov.value['north'])
+        self.assertEqual(site.longitude, point_cov.value['east'])
+        self.assertEqual(len(site.series_ids), 1)
+        self.assertEqual(site.series_ids[0], '0')
+
+        # add the 2nd site element
+        self.resTimeSeries.metadata.create_element('site', series_ids=['1'],
+                                                   site_code='Temp_DegC_Paradise',
+                                                   site_name='Logan River at the Utah Water '
+                                                             'Research Laboratory west bridge',
+                                                   elevation_m=1414,
+                                                   elevation_datum='EGM96',
+                                                   site_type='Stream',
+                                                   latitude=85.789,
+                                                   longitude=110.56789)
+
+        # there should be 2 site element at this point
+        self.assertEqual(self.resTimeSeries.metadata.sites.all().count(), 2)
+        site_1 = self.resTimeSeries.metadata.sites.all()[0]
+        site_2 = self.resTimeSeries.metadata.sites.all()[1]
+        self.assertEqual(len(site_1.series_ids), 1)
+        self.assertEqual(len(site_2.series_ids), 1)
+        self.assertEqual(set(site_1.series_ids + site_2.series_ids), set(['0', '1']))
+
+        # there should be 1 coverage element -  box type
+        self.assertEqual(self.resTimeSeries.metadata.coverages.all().count(), 1)
+        self.assertEqual(self.resTimeSeries.metadata.coverages.all().filter(type='box').count(),
+                         1)
+
+        box_coverage = self.resTimeSeries.metadata.coverages.all().filter(type='box').first()
+        self.assertEqual(box_coverage.value['projection'], 'Unknown')
+        self.assertEqual(box_coverage.value['units'], 'Decimal degrees')
+        self.assertEqual(box_coverage.value['northlimit'], 85.789)
+        self.assertEqual(box_coverage.value['eastlimit'], 120.56789)
+        self.assertEqual(box_coverage.value['southlimit'], 65.789)
+        self.assertEqual(box_coverage.value['westlimit'], 110.56789)
+
+        # test that the resource still does not have the required metadata elements at this point
+        self.assertEqual(self.resTimeSeries.metadata.has_all_required_elements(), False)
+
+        # add one variable element
+        self.resTimeSeries.metadata.create_element('variable', series_ids=['0'],
+                                                   variable_code='USU37',
+                                                   variable_name='Temperature',
+                                                   variable_type='Climate',
+                                                   no_data_value=-999,
+                                                   speciation='Not Applicable')
+
+        # there should be 1 variable element at this point
+        self.assertEqual(self.resTimeSeries.metadata.variables.all().count(), 1)
+        variable = self.resTimeSeries.metadata.variables.first()
+        self.assertEqual(len(variable.series_ids), 1)
+        self.assertEqual(variable.series_ids[0], '0')
+
+        # test that the resource still does not have the required metadata elements at this point
+        self.assertEqual(self.resTimeSeries.metadata.has_all_required_elements(), False)
+
+        # associate the same variable element with series id  1
+        variable = self.resTimeSeries.metadata.variables.first()
+        self.resTimeSeries.metadata.update_element('variable', variable.id, series_ids=['0', '1'])
+        variable = self.resTimeSeries.metadata.variables.first()
+        self.assertEqual(len(variable.series_ids), 2)
+        self.assertIn('0', variable.series_ids)
+        self.assertIn('1', variable.series_ids)
+
+        # add 2 method elements - one for each series
+        self.resTimeSeries.metadata.create_element('method', series_ids=['0'],
+                                                   method_code='MC-30',
+                                                   method_name='Testing method-1',
+                                                   method_type='Data collection',
+                                                   method_description=''
+                                                   )
+
+        # there should be 1 method element at this point
+        self.assertEqual(self.resTimeSeries.metadata.methods.all().count(), 1)
+        method = self.resTimeSeries.metadata.methods.first()
+        self.assertEqual(len(method.series_ids), 1)
+        self.assertEqual(method.series_ids[0], '0')
+
+        # test that the resource still does not have the required metadata elements at this point
+        self.assertEqual(self.resTimeSeries.metadata.has_all_required_elements(), False)
+
+        self.resTimeSeries.metadata.create_element('method', series_ids=['1'],
+                                                   method_code='MC-40',
+                                                   method_name='Testing method-2',
+                                                   method_type='Data collection',
+                                                   method_description=''
+                                                   )
+        # there should be 2 method elements at this point
+        self.assertEqual(self.resTimeSeries.metadata.methods.all().count(), 2)
+        method_1 = self.resTimeSeries.metadata.methods.all()[0]
+        method_2 = self.resTimeSeries.metadata.methods.all()[1]
+        self.assertEqual(len(method_1.series_ids), 1)
+        self.assertEqual(len(method_2.series_ids), 1)
+        self.assertEqual(set(method_1.series_ids + method_2.series_ids), set(['0', '1']))
+
+        # test that the resource still does not have the required metadata elements at this point
+        self.assertEqual(self.resTimeSeries.metadata.has_all_required_elements(), False)
+
+        # add 1 processing level elements for the 2 series
+        self.resTimeSeries.metadata.create_element('processinglevel', series_ids=['0', '1'],
+                                                   processing_level_code='101')
+
+        pro_level = self.resTimeSeries.metadata.processing_levels.first()
+        self.assertEqual(len(pro_level.series_ids), 2)
+        self.assertEqual(set(pro_level.series_ids), set(['0', '1']))
+
+        # test that the resource still does not have the required metadata elements at this point
+        self.assertEqual(self.resTimeSeries.metadata.has_all_required_elements(), False)
+
+        # add 2 timeseries result element - one for each series
+        self.resTimeSeries.metadata.create_element('timeseriesresult', series_ids=['0'],
+                                                   units_type='Temperature',
+                                                   units_name='Degree F',
+                                                   units_abbreviation='degF',
+                                                   status='Complete',
+                                                   sample_medium='Air',
+                                                   value_count=1550,
+                                                   aggregation_statistics='Average'
+                                                   )
+        # there should be 1 timeseries result element at this point
+        self.assertEqual(self.resTimeSeries.metadata.time_series_results.all().count(), 1)
+        ts_result = self.resTimeSeries.metadata.time_series_results.first()
+        self.assertEqual(len(ts_result.series_ids), 1)
+        self.assertEqual(ts_result.series_ids[0], '0')
+
+        # test that the resource still does not have the required metadata elements at this point
+        self.assertEqual(self.resTimeSeries.metadata.has_all_required_elements(), False)
+
+        # add a 2nd timeseries result element
+        self.resTimeSeries.metadata.create_element('timeseriesresult', series_ids=['1'],
+                                                   units_type='Temperature',
+                                                   units_name='Degree F',
+                                                   units_abbreviation='degF',
+                                                   status='Complete',
+                                                   sample_medium='Air',
+                                                   value_count=1200,
+                                                   aggregation_statistics='Average'
+                                                   )
+
+        # there should be 2 timeseries result element at this point
+        self.assertEqual(self.resTimeSeries.metadata.time_series_results.all().count(), 2)
+        ts_result_1 = self.resTimeSeries.metadata.time_series_results.all()[0]
+        ts_result_2 = self.resTimeSeries.metadata.time_series_results.all()[1]
+        self.assertEqual(len(ts_result_1.series_ids), 1)
+        self.assertEqual(len(ts_result_2.series_ids), 1)
+        self.assertEqual(set(ts_result_1.series_ids + ts_result_2.series_ids), set(['0', '1']))
+
+        # test that the resource has the required metadata elements at this point
+        self.assertEqual(self.resTimeSeries.metadata.has_all_required_elements(), True)
+
+    def test_series_id_for_metadata_element_create(self):
+        # this applies only to csv file upload
+
+        # first add a valid csv file to the resource
+        files = [UploadedFile(file=self.odm2_csv_file_obj, name=self.odm2_csv_file_name)]
+        utils.resource_file_add_pre_process(resource=self.resTimeSeries, files=files,
+                                            user=self.user)
+
+        utils.resource_file_add_process(resource=self.resTimeSeries, files=files, user=self.user)
+        # since there are 2 data columns the valid series ids are 0 and 1
+
+        # test element 'Site'
+        # using a series id of 2 should fail to create the element
+        with self.assertRaises(ValidationError):
+            self.resTimeSeries.metadata.create_element('site', series_ids=['2'],
+                                                       site_code='LR_WaterLab_AA',
+                                                       site_name='Logan River at the Utah Water '
+                                                                 'Research Laboratory west bridge',
+                                                       elevation_m=1414,
+                                                       elevation_datum='EGM96',
+                                                       site_type='Stream',
+                                                       latitude=65.789,
+                                                       longitude=120.56789)
+
+        with self.assertRaises(ValidationError):
+            self.resTimeSeries.metadata.create_element('site', series_ids=['0', '1', '2'],
+                                                       site_code='LR_WaterLab_AA',
+                                                       site_name='Logan River at the Utah Water '
+                                                                 'Research Laboratory west bridge',
+                                                       elevation_m=1414,
+                                                       elevation_datum='EGM96',
+                                                       site_type='Stream',
+                                                       latitude=65.789,
+                                                       longitude=120.56789)
+
+        # there should be no site element at this point
+        self.assertEqual(self.resTimeSeries.metadata.sites.all().count(), 0)
+
+        # test using 'selected_series_id'
+        with self.assertRaises(ValidationError):
+            self.resTimeSeries.metadata.create_element('site', selected_series_id='2',
+                                                       site_code='LR_WaterLab_AA',
+                                                       site_name='Logan River at the Utah Water '
+                                                                 'Research Laboratory west bridge',
+                                                       elevation_m=1414,
+                                                       elevation_datum='EGM96',
+                                                       site_type='Stream',
+                                                       latitude=65.789,
+                                                       longitude=120.56789)
+
+        self.resTimeSeries.metadata.create_element('site', series_ids=['1'],
+                                                   site_code='LR_WaterLab_AA',
+                                                   site_name='Logan River at the Utah Water '
+                                                             'Research Laboratory west bridge',
+                                                   elevation_m=1414,
+                                                   elevation_datum='EGM96',
+                                                   site_type='Stream',
+                                                   latitude=65.789,
+                                                   longitude=120.56789)
+
+        # there should be 1 site element at this point
+        self.assertEqual(self.resTimeSeries.metadata.sites.all().count(), 1)
+        site = self.resTimeSeries.metadata.sites.all()[0]
+        self.assertEqual(len(site.series_ids), 1)
+        self.assertEqual(site.series_ids, ['1'])
+
+        self.resTimeSeries.metadata.create_element('site', selected_series_id='0',
+                                                   site_code='LR_WaterLab_BB',
+                                                   site_name='Logan River at the Utah Water '
+                                                             'Research Laboratory west bridge',
+                                                   elevation_m=1414,
+                                                   elevation_datum='EGM96',
+                                                   site_type='Stream',
+                                                   latitude=65.789,
+                                                   longitude=120.56789)
+
+        # there should be 2 site elements at this point
+        self.assertEqual(self.resTimeSeries.metadata.sites.all().count(), 2)
+        site_1 = self.resTimeSeries.metadata.sites.all()[0]
+        site_2 = self.resTimeSeries.metadata.sites.all()[1]
+        self.assertEqual(len(site_1.series_ids), 1)
+        self.assertEqual(len(site_2.series_ids), 1)
+        self.assertEqual(set(site_1.series_ids + site_2.series_ids), set(['0', '1']))
+
+        self.resTimeSeries.metadata.sites.all().delete()
+        self.resTimeSeries.metadata.create_element('site', series_ids=['0', '1'],
+                                                   site_code='LR_WaterLab_AA',
+                                                   site_name='Logan River at the Utah Water '
+                                                             'Research Laboratory west bridge',
+                                                   elevation_m=1414,
+                                                   elevation_datum='EGM96',
+                                                   site_type='Stream',
+                                                   latitude=65.789,
+                                                   longitude=120.56789)
+        # there should be 1 site element at this point
+        self.assertEqual(self.resTimeSeries.metadata.sites.all().count(), 1)
+        site = self.resTimeSeries.metadata.sites.first()
+        self.assertEqual(len(site.series_ids), 2)
+        self.assertEqual(set(site.series_ids), set(['0', '1']))
+
+        # TODO: test update of Site element
+
+        # test element 'Variable'
+
+        # invalid series id: 2
+        with self.assertRaises(ValidationError):
+            self.resTimeSeries.metadata.create_element('variable', series_ids=['2'],
+                                                       variable_code='USU37',
+                                                       variable_name='Temperature',
+                                                       variable_type='Climate',
+                                                       no_data_value=-999,
+                                                       speciation='Not Applicable')
+
+        # there should be no variable element at this point
+        self.assertEqual(self.resTimeSeries.metadata.variables.all().count(), 0)
+
+        # invalid series id: 2
+        with self.assertRaises(ValidationError):
+            self.resTimeSeries.metadata.create_element('variable', series_ids=['0', '1', '2'],
+                                                       variable_code='USU37',
+                                                       variable_name='Temperature',
+                                                       variable_type='Climate',
+                                                       no_data_value=-999,
+                                                       speciation='Not Applicable')
+        # there should be no variable element at this point
+        self.assertEqual(self.resTimeSeries.metadata.variables.all().count(), 0)
+
+        # test using selected_series_id (invalid series id: 2)
+        with self.assertRaises(ValidationError):
+            self.resTimeSeries.metadata.create_element('variable', selected_series_id='2',
+                                                       variable_code='USU37',
+                                                       variable_name='Temperature',
+                                                       variable_type='Climate',
+                                                       no_data_value=-999,
+                                                       speciation='Not Applicable')
+
+        # there should be no variable element at this point
+        self.assertEqual(self.resTimeSeries.metadata.variables.all().count(), 0)
+
+        self.resTimeSeries.metadata.create_element('variable', series_ids=['0'],
+                                                   variable_code='USU37',
+                                                   variable_name='Temperature',
+                                                   variable_type='Climate',
+                                                   no_data_value=-999,
+                                                   speciation='Not Applicable')
+
+        # there should be 1 variable element at this point
+        self.assertEqual(self.resTimeSeries.metadata.variables.all().count(), 1)
+        variable = self.resTimeSeries.metadata.variables.all()[0]
+        self.assertEqual(len(variable.series_ids), 1)
+        self.assertEqual(variable.series_ids, ['0'])
+
+        self.resTimeSeries.metadata.create_element('variable', selected_series_id='1',
+                                                   variable_code='USU38',
+                                                   variable_name='Temperature',
+                                                   variable_type='Climate',
+                                                   no_data_value=-999,
+                                                   speciation='Not Applicable')
+        # there should be 2 variable elements at this point
+        self.assertEqual(self.resTimeSeries.metadata.variables.all().count(), 2)
+        variable_1 = self.resTimeSeries.metadata.variables.all()[0]
+        variable_2 = self.resTimeSeries.metadata.variables.all()[1]
+        self.assertEqual(len(variable_1.series_ids), 1)
+        self.assertEqual(len(variable_2.series_ids), 1)
+        self.assertEqual(set(variable_1.series_ids + variable_2.series_ids), set(['0', '1']))
+
+        self.resTimeSeries.metadata.variables.all().delete()
+
+        self.resTimeSeries.metadata.create_element('variable', series_ids=['0', '1'],
+                                                   variable_code='USU37',
+                                                   variable_name='Temperature',
+                                                   variable_type='Climate',
+                                                   no_data_value=-999,
+                                                   speciation='Not Applicable')
+
+        # there should be 1 variable element at this point
+        self.assertEqual(self.resTimeSeries.metadata.variables.all().count(), 1)
+        variable = self.resTimeSeries.metadata.variables.first()
+        self.assertEqual(len(variable.series_ids), 2)
+        self.assertEqual(set(variable.series_ids), set(['0', '1']))
+
+        # TODO: test update of Variable element
+
+        # test element 'Method'
+        with self.assertRaises(ValidationError):
+            self.resTimeSeries.metadata.create_element('method', series_ids=['2'],
+                                                       method_code='MC-30',
+                                                       method_name='Testing method-1',
+                                                       method_type='Data collection',
+                                                       method_description=''
+                                                       )
+
+        # there should be no method element at this point
+        self.assertEqual(self.resTimeSeries.metadata.methods.all().count(), 0)
+
+        with self.assertRaises(ValidationError):
+            self.resTimeSeries.metadata.create_element('method', series_ids=['0', '1', '2'],
+                                                       method_code='MC-30',
+                                                       method_name='Testing method-1',
+                                                       method_type='Data collection',
+                                                       method_description=''
+                                                       )
+        # there should be no method element at this point
+        self.assertEqual(self.resTimeSeries.metadata.methods.all().count(), 0)
+
+        with self.assertRaises(ValidationError):
+            self.resTimeSeries.metadata.create_element('method', selected_series_id='2',
+                                                       method_code='MC-30',
+                                                       method_name='Testing method-1',
+                                                       method_type='Data collection',
+                                                       method_description=''
+                                                       )
+
+        # there should be no method element at this point
+        self.assertEqual(self.resTimeSeries.metadata.methods.all().count(), 0)
+
+        self.resTimeSeries.metadata.create_element('method', series_ids=['1'],
+                                                   method_code='MC-30',
+                                                   method_name='Testing method-1',
+                                                   method_type='Data collection',
+                                                   method_description=''
+                                                   )
+
+        # there should be 1 method element at this point
+        self.assertEqual(self.resTimeSeries.metadata.methods.all().count(), 1)
+        method = self.resTimeSeries.metadata.methods.first()
+        self.assertEqual(len(method.series_ids), 1)
+        self.assertEqual(method.series_ids, ['1'])
+
+        self.resTimeSeries.metadata.create_element('method', selected_series_id='0',
+                                                   method_code='MC-31',
+                                                   method_name='Testing method-1',
+                                                   method_type='Data collection',
+                                                   method_description=''
+                                                   )
+
+        # there should be 2 method elements at this point
+        self.assertEqual(self.resTimeSeries.metadata.methods.all().count(), 2)
+        method_1 = self.resTimeSeries.metadata.methods.all()[0]
+        method_2 = self.resTimeSeries.metadata.methods.all()[1]
+        self.assertEqual(len(method_1.series_ids), 1)
+        self.assertEqual(len(method_2.series_ids), 1)
+        self.assertEqual(set(method_1.series_ids + method_2.series_ids), set(['0', '1']))
+
+        self.resTimeSeries.metadata.methods.all().delete()
+
+        self.resTimeSeries.metadata.create_element('method', series_ids=['0', '1'],
+                                                   method_code='MC-30',
+                                                   method_name='Testing method-1',
+                                                   method_type='Data collection',
+                                                   method_description=''
+                                                   )
+
+        # there should be 1 method element at this point
+        self.assertEqual(self.resTimeSeries.metadata.methods.all().count(), 1)
+        method = self.resTimeSeries.metadata.methods.first()
+        self.assertEqual(len(method.series_ids), 2)
+        self.assertEqual(set(method.series_ids), set(['0', '1']))
+
+        # TODO: test update of Method element
+
+        # test element "ProcessingLevel"
+        with self.assertRaises(ValidationError):
+            self.resTimeSeries.metadata.create_element('processinglevel', series_ids=['2'],
+                                                       definition='pro level definition',
+                                                       explanation='pro level explanation',
+                                                       processing_level_code='101')
+
+        # there should be no processinglevel element at this point
+        self.assertEqual(self.resTimeSeries.metadata.processing_levels.all().count(), 0)
+
+        with self.assertRaises(ValidationError):
+            self.resTimeSeries.metadata.create_element('processinglevel',
+                                                       series_ids=['0', '1', '2'],
+                                                       definition='pro level definition',
+                                                       explanation='pro level explanation',
+                                                       processing_level_code='101')
+
+        # there should be no processinglevel element at this point
+        self.assertEqual(self.resTimeSeries.metadata.processing_levels.all().count(), 0)
+
+        with self.assertRaises(ValidationError):
+            self.resTimeSeries.metadata.create_element('processinglevel', selected_series_id='2',
+                                                       definition='pro level definition',
+                                                       explanation='pro level explanation',
+                                                       processing_level_code='101')
+
+        # there should be no processinglevel element at this point
+        self.assertEqual(self.resTimeSeries.metadata.processing_levels.all().count(), 0)
+
+        self.resTimeSeries.metadata.create_element('processinglevel', series_ids=['1'],
+                                                   definition='pro level definition',
+                                                   explanation='pro level explanation',
+                                                   processing_level_code='101')
+
+        # there should be 1 processinglevel element at this point
+        self.assertEqual(self.resTimeSeries.metadata.processing_levels.all().count(), 1)
+        pro_level = self.resTimeSeries.metadata.processing_levels.first()
+        self.assertEqual(len(pro_level.series_ids), 1)
+        self.assertEqual(pro_level.series_ids, ['1'])
+
+        self.resTimeSeries.metadata.create_element('processinglevel', selected_series_id='0',
+                                                   definition='pro level definition',
+                                                   explanation='pro level explanation',
+                                                   processing_level_code='102')
+
+        # there should be 2 processinglevel element at this point
+        self.assertEqual(self.resTimeSeries.metadata.processing_levels.all().count(), 2)
+        pro_level_1 = self.resTimeSeries.metadata.processing_levels.all()[0]
+        pro_level_2 = self.resTimeSeries.metadata.processing_levels.all()[1]
+        self.assertEqual(len(pro_level_1.series_ids), 1)
+        self.assertEqual(len(pro_level_2.series_ids), 1)
+        self.assertEqual(set(pro_level_1.series_ids + pro_level_2.series_ids), set(['0', '1']))
+
+        self.resTimeSeries.metadata.processing_levels.all().delete()
+        self.resTimeSeries.metadata.create_element('processinglevel', series_ids=['1', '0'],
+                                                   definition='pro level definition',
+                                                   explanation='pro level explanation',
+                                                   processing_level_code='101')
+
+        # there should be 1 processinglevel element at this point
+        self.assertEqual(self.resTimeSeries.metadata.processing_levels.all().count(), 1)
+        pro_level = self.resTimeSeries.metadata.processing_levels.first()
+        self.assertEqual(len(pro_level.series_ids), 2)
+        self.assertEqual(set(pro_level.series_ids), set(['0', '1']))
+
+        # TODO: test update of ProcessingLevel element
+
+        # test element "TimeSeriesResult"
+        with self.assertRaises(ValidationError):
+            self.resTimeSeries.metadata.create_element('timeseriesresult', series_ids=['2'],
+                                                       units_type='Temperature',
+                                                       units_name='Degree F',
+                                                       units_abbreviation='degF',
+                                                       status='Complete',
+                                                       sample_medium='Air',
+                                                       value_count=1550,
+                                                       aggregation_statistics='Average'
+                                                       )
+        # there should be no timeseriesresult element at this point
+        self.assertEqual(self.resTimeSeries.metadata.time_series_results.all().count(), 0)
+
+        with self.assertRaises(ValidationError):
+            self.resTimeSeries.metadata.create_element('timeseriesresult',
+                                                       series_ids=['0', '1', '2'],
+                                                       units_type='Temperature',
+                                                       units_name='Degree F',
+                                                       units_abbreviation='degF',
+                                                       status='Complete',
+                                                       sample_medium='Air',
+                                                       value_count=1550,
+                                                       aggregation_statistics='Average'
+                                                       )
+        # there should be no timeseriesresult element at this point
+        self.assertEqual(self.resTimeSeries.metadata.time_series_results.all().count(), 0)
+
+        # timeseriesresult element can' be assinged multiple series ids
+        with self.assertRaises(ValidationError):
+            self.resTimeSeries.metadata.create_element('timeseriesresult',
+                                                       series_ids=['0', '1'],
+                                                       units_type='Temperature',
+                                                       units_name='Degree F',
+                                                       units_abbreviation='degF',
+                                                       status='Complete',
+                                                       sample_medium='Air',
+                                                       value_count=1550,
+                                                       aggregation_statistics='Average'
+                                                       )
+        # there should be no timeseriesresult element at this point
+        self.assertEqual(self.resTimeSeries.metadata.time_series_results.all().count(), 0)
+
+        with self.assertRaises(ValidationError):
+            self.resTimeSeries.metadata.create_element('timeseriesresult', selected_series_id='2',
+                                                       units_type='Temperature',
+                                                       units_name='Degree F',
+                                                       units_abbreviation='degF',
+                                                       status='Complete',
+                                                       sample_medium='Air',
+                                                       value_count=1550,
+                                                       aggregation_statistics='Average'
+                                                       )
+        # there should be no timeseriesresult element at this point
+        self.assertEqual(self.resTimeSeries.metadata.time_series_results.all().count(), 0)
+
+        self.resTimeSeries.metadata.create_element('timeseriesresult', series_ids=['1'],
+                                                   units_type='Temperature',
+                                                   units_name='Degree F',
+                                                   units_abbreviation='degF',
+                                                   status='Complete',
+                                                   sample_medium='Air',
+                                                   value_count=1550,
+                                                   aggregation_statistics='Average'
+                                                   )
+        # there should be 1 timeseriesresult element at this point
+        self.assertEqual(self.resTimeSeries.metadata.time_series_results.all().count(), 1)
+        ts_result = self.resTimeSeries.metadata.time_series_results.first()
+        self.assertEqual(len(ts_result.series_ids), 1)
+        self.assertEqual(ts_result.series_ids, ['1'])
+
+        self.resTimeSeries.metadata.create_element('timeseriesresult', selected_series_id='0',
+                                                   units_type='Temperature',
+                                                   units_name='Degree F',
+                                                   units_abbreviation='degF',
+                                                   status='Complete',
+                                                   sample_medium='Air',
+                                                   value_count=1550,
+                                                   aggregation_statistics='Average'
+                                                   )
+        # there should be 2 timeseriesresult elements at this point
+        self.assertEqual(self.resTimeSeries.metadata.time_series_results.all().count(), 2)
+        ts_result_1 = self.resTimeSeries.metadata.time_series_results.all()[0]
+        ts_result_2 = self.resTimeSeries.metadata.time_series_results.all()[1]
+        self.assertEqual(len(ts_result_1.series_ids), 1)
+        self.assertEqual(len(ts_result_2.series_ids), 1)
+        self.assertEqual(set(ts_result_1.series_ids + ts_result_2.series_ids), set(['0', '1']))
+
+        # TODO: test update of TimeSeriesResult element
+
+    def test_element_duplicate_code(self):
+        pass
+
     def _test_invalid_csv_file(self, invalid_csv_file_name):
         invalid_csv_file_obj = self._get_invalid_csv_file_obj(invalid_csv_file_name)
 
@@ -1049,6 +1670,7 @@ class TestTimeSeriesMetaData(MockIRODSTestCaseMixin, TransactionTestCase):
                                             user=self.user)
         # at this point the resource should have one content file
         self.assertEqual(self.resTimeSeries.files.all().count(), 0)
+        self.assertEqual(self.resTimeSeries.has_csv_file, False)
 
     def _get_invalid_csv_file_obj(self, invalid_csv_file_name):
         invalid_csv_file = 'hs_app_timeseries/tests/{}'.format(invalid_csv_file_name)
@@ -1100,7 +1722,7 @@ class TestTimeSeriesMetaData(MockIRODSTestCaseMixin, TransactionTestCase):
         self.assertEqual(self.resTimeSeries.metadata.description.abstract.strip(),
                          extracted_abstract)
 
-        # there should be 2 coverage element -  point type and period type
+        # there should be 2 coverage element -  box type and period type
         self.assertEqual(self.resTimeSeries.metadata.coverages.all().count(), 2)
         self.assertEqual(self.resTimeSeries.metadata.coverages.all().filter(type='box').count(), 1)
         self.assertEqual(self.resTimeSeries.metadata.coverages.all().filter(
