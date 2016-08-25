@@ -109,7 +109,7 @@ POSTGIS_VERSION=(2,1,1)
 
 # Local resource iRODS configuration
 USE_IRODS = True
-IRODS_ROOT = '/hs_tmp'
+IRODS_ROOT = '/tmp'
 IRODS_ICOMMANDS_PATH = '/usr/bin'
 IRODS_HOST = 'hydrotest41.renci.org'
 IRODS_PORT = '1247'
