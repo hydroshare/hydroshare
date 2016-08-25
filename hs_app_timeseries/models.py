@@ -1779,15 +1779,16 @@ def _create_cv_term(element, cv_term_class, cv_term_str, element_metadata_cv_ter
     """
     if cv_term_str in data_dict:
         # check if the user has entered a new name for the cv term
-        if not any(data_dict[cv_term_str].lower() == item.name.lower()
-                   for item in element_metadata_cv_terms):
-            # generate term for the new name
-            data_dict[cv_term_str] = data_dict[cv_term_str].strip()
-            term = _generate_term_from_name(data_dict[cv_term_str])
-            cv_term = cv_term_class.objects.create(
-                    metadata=element.metadata, term=term, name=data_dict[cv_term_str])
-            cv_term.is_dirty = True
-            cv_term.save()
+        if len(data_dict[cv_term_str]) > 0:
+            if not any(data_dict[cv_term_str].lower() == item.name.lower()
+                       for item in element_metadata_cv_terms):
+                # generate term for the new name
+                data_dict[cv_term_str] = data_dict[cv_term_str].strip()
+                term = _generate_term_from_name(data_dict[cv_term_str])
+                cv_term = cv_term_class.objects.create(
+                        metadata=element.metadata, term=term, name=data_dict[cv_term_str])
+                cv_term.is_dirty = True
+                cv_term.save()
 
 
 def update_related_elements_on_create(element, related_elements, selected_series_id):

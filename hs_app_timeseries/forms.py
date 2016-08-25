@@ -11,6 +11,8 @@ from hs_core.forms import BaseFormHelper
 from models import Site, Variable, Method, ProcessingLevel, TimeSeriesResult
 
 
+NO_SELECTION_DROPDOWN_OPTION = "-----"
+
 class SiteFormHelper(BaseFormHelper):
     def __init__(self, allow_edit=True, res_short_id=None, element_id=None, element_name=None,
                  show_site_code_selection=False, *args, **kwargs):
@@ -33,8 +35,7 @@ class SiteFormHelper(BaseFormHelper):
                             Field('longitude', css_class=field_width),
                      )
         layout = _set_form_helper_layout(common_layout=common_layout, element_name="site",
-                                         is_show_element_code_selection=
-                                         show_site_code_selection,
+                                         is_show_element_code_selection=show_site_code_selection,
                                          field_css=field_width)
 
         super(SiteFormHelper, self).__init__(allow_edit, res_short_id, element_id, element_name,
@@ -116,6 +117,27 @@ class SiteValidationForm(forms.Form):
             raise forms.ValidationError("Value for longitude must be in the range of -180 to 180")
         return lon
 
+    def clean_elevation_datum(self):
+        e_datum = self.cleaned_data['elevation_datum']
+        if e_datum == NO_SELECTION_DROPDOWN_OPTION:
+            e_datum = ''
+        return e_datum
+
+    def clean_site_type(self):
+        s_type = self.cleaned_data['site_type']
+        if s_type == NO_SELECTION_DROPDOWN_OPTION:
+            s_type = ''
+        return s_type
+
+    def clean(self):
+        cleaned_data = super(SiteValidationForm, self).clean()
+        elevation_m = cleaned_data.get('elevation_m', None)
+        elevation_datum = cleaned_data.get('elevation_datum', '')
+        if elevation_m is not None:
+            if len(elevation_datum) == 0:
+                self._errors['elevation_datum'] = ["A value for elevation datum is missing"]
+
+        return self.cleaned_data
 
 class VariableFormHelper(BaseFormHelper):
     def __init__(self, allow_edit=True, res_short_id=None, element_id=None, element_name=None,
@@ -136,8 +158,8 @@ class VariableFormHelper(BaseFormHelper):
                 )
 
         layout = _set_form_helper_layout(common_layout=common_layout, element_name="variable",
-                                         is_show_element_code_selection=
-                                         show_variable_code_selection,
+                                         is_show_element_code_selection
+                                         =show_variable_code_selection,
                                          field_css=field_width)
 
         super(VariableFormHelper, self).__init__(allow_edit, res_short_id, element_id,
@@ -208,6 +230,23 @@ class VariableValidationForm(forms.Form):
     speciation = forms.CharField(max_length=255, required=False)
     selected_series_id = forms.CharField(max_length=50, required=False)
 
+    def clean_speciation(self):
+        spe = self.cleaned_data['speciation']
+        if spe == NO_SELECTION_DROPDOWN_OPTION:
+            spe = ''
+        return spe
+
+    def clean(self):
+        cleaned_data = super(VariableValidationForm, self).clean()
+        variable_name = cleaned_data.get('variable_name', None)
+        variable_type = cleaned_data.get('variable_type', None)
+        if variable_name is None or variable_name == NO_SELECTION_DROPDOWN_OPTION:
+            self._errors['variable_name'] = ["A value for variable name is missing"]
+
+        if variable_type is None or variable_type == NO_SELECTION_DROPDOWN_OPTION:
+            self._errors['variable_type'] = ["A value for variable type is missing"]
+
+        return self.cleaned_data
 
 class MethodFormHelper(BaseFormHelper):
     def __init__(self, allow_edit=True, res_short_id=None, element_id=None, element_name=None,
@@ -289,6 +328,14 @@ class MethodValidationForm(forms.Form):
     method_link = forms.URLField(required=False)
     selected_series_id = forms.CharField(max_length=50, required=False)
 
+    def clean(self):
+        cleaned_data = super(MethodValidationForm, self).clean()
+        method_type = cleaned_data.get('method_type', None)
+        if method_type is None or method_type == NO_SELECTION_DROPDOWN_OPTION:
+            self._errors['method_type'] = ["A value for method type is missing"]
+
+        return self.cleaned_data
+
 
 class ProcessingLevelFormHelper(BaseFormHelper):
     def __init__(self, allow_edit=True, res_short_id=None, element_id=None, element_name=None,
@@ -306,8 +353,8 @@ class ProcessingLevelFormHelper(BaseFormHelper):
 
         layout = _set_form_helper_layout(common_layout=common_layout,
                                          element_name="processinglevel",
-                                         is_show_element_code_selection=
-                                         show_processing_level_code_selection,
+                                         is_show_element_code_selection
+                                         =show_processing_level_code_selection,
                                          field_css=field_width)
 
         kwargs['element_name_label'] = 'Processing Level'
@@ -439,7 +486,7 @@ class TimeSeriesResultForm(ModelForm):
         fields = ['units_type', 'units_name', 'units_abbreviation', 'status', 'sample_medium',
                   'value_count', 'aggregation_statistics', 'series_label']
         widgets = {'value_count': forms.TextInput()}
-
+        labels = {'aggregation_statistics': 'Aggregation statistic'}
 
 class TimeSeriesResultValidationForm(forms.Form):
     units_type = forms.CharField(max_length=255)
@@ -452,6 +499,25 @@ class TimeSeriesResultValidationForm(forms.Form):
     series_label = forms.CharField(max_length=255, required=False)
     selected_series_id = forms.CharField(max_length=50, required=False)
 
+    def clean(self):
+        cleaned_data = super(TimeSeriesResultValidationForm, self).clean()
+        units_type = cleaned_data.get('units_type', None)
+        status = cleaned_data.get('status', None)
+        sample_medium = cleaned_data.get('sample_medium', None)
+        aggregation_statistics = cleaned_data.get('aggregation_statistics', None)
+
+        if units_type is None or units_type == NO_SELECTION_DROPDOWN_OPTION:
+            self._errors['units_type'] = ["A value for units type is missing"]
+
+        if status is None or status == NO_SELECTION_DROPDOWN_OPTION:
+            self._errors['status'] = ["A value for status is missing"]
+
+        if sample_medium is None or sample_medium == NO_SELECTION_DROPDOWN_OPTION:
+            self._errors['sample_medium'] = ["A value for sample medium is missing"]
+
+        if aggregation_statistics is None or aggregation_statistics == NO_SELECTION_DROPDOWN_OPTION:
+            self._errors['aggregation_statistics'] = ["A value for aggregation statistic "
+                                                      "is missing"]
 
 def _get_cv_dropdown_widget_items(dropdown_items, selected_item_name):
     # filter out the item that needs to shown as the currently selected item
@@ -464,10 +530,13 @@ def _get_cv_dropdown_widget_items(dropdown_items, selected_item_name):
     # alphabetize the terms
     cv_items.sort(key=lambda tup: tup[0])
 
-    if selected_item_name is not None:
-        # add the selected item as a tuple to the beginning of the list of items
-        # so that it will be displayed as the currently selected item
+    if selected_item_name is None or len(selected_item_name) == 0:
+        selected_item_name = NO_SELECTION_DROPDOWN_OPTION
         cv_items = [(selected_item_name, selected_item_name)] + cv_items
+    else:
+        cv_items = [(selected_item_name, selected_item_name)] + cv_items + \
+                   [(NO_SELECTION_DROPDOWN_OPTION, NO_SELECTION_DROPDOWN_OPTION)]
+
     cv_item_choices = tuple(cv_items)
     return cv_item_choices
 
