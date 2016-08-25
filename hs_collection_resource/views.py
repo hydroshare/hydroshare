@@ -7,7 +7,7 @@ from django.db import transaction
 from hs_core.views.utils import authorize, ACTION_TO_AUTHORIZE
 from hs_core.hydroshare.utils import get_resource_by_shortkey, resource_modified, current_site_url
 
-from .utils import add_or_remove_relation_metadata
+from .utils import add_or_remove_relation_metadata, detect_loop_in_collection
 
 logger = logging.getLogger(__name__)
 UI_DATETIME_FORMAT = "%m/%d/%Y"
@@ -29,6 +29,12 @@ def update_collection(request, shortkey, *args, **kwargs):
     msg = ""
     metadata_status = "Insufficient to make public"
     new_coverage_list = []
+
+    isPartOf = "isPartOf"
+    hasPart = "hasPart"
+    site_url = current_site_url()
+    relation_value_template = site_url + "/resource/{0}/"
+
     try:
         with transaction.atomic():
             collection_res_obj, is_authorized, user \
@@ -49,69 +55,65 @@ def update_collection(request, shortkey, *args, **kwargs):
                 if updated_contained_res_id == shortkey:
                     raise Exception("Can not add collection itself.")
 
-                # check authorization for all new resources being added to the collection
-                # the requesting user should at least have metadata view permission for each of the
-                # new resources to be added to the collection
-                if not collection_res_obj.\
-                        resources.filter(short_id=updated_contained_res_id).exists():
-                    res_to_add, _, _ \
-                        = authorize(request, updated_contained_res_id,
-                                    needed_permission=ACTION_TO_AUTHORIZE.VIEW_METADATA)
-
-            # handle "Relation" metadata
-            isPartOf = "isPartOf"
-            hasPart = "hasPart"
-            site_url = current_site_url()
-            relation_value_template = site_url + "/resource/{0}/"
+            # current contained res
             res_id_list_current_collection = \
                 [res.short_id for res in collection_res_obj.resources.all()]
-            # find differences between "current res id list" with "updated res id list"
 
-            # 1) if res id in updated list is not in current list
-            #    this res is being added to collection
-            #    create a new "Relation" metadata
-            for res_id_added in updated_contained_res_id_list:
-                if res_id_added not in res_id_list_current_collection:
+            # res to remove
+            res_id_list_remove = []
+            for res_id_remove in res_id_list_current_collection:
+                if res_id_remove not in updated_contained_res_id_list:
+                    res_id_list_remove.append(res_id_remove)
+                    res_obj_remove = get_resource_by_shortkey(res_id_remove)
+                    collection_res_obj.resources.remove(res_obj_remove)
+
+                    # change "Relation" metadata
                     # change collection
-                    value = relation_value_template.format(res_id_added)
-                    add_or_remove_relation_metadata(add=True, target_res_obj=collection_res_obj,
-                                                    relation_type=hasPart, relation_value=value,
-                                                    set_res_modified=False)
-
-                    # change contained res
-                    value = relation_value_template.format(collection_res_obj.short_id)
-                    res_obj = get_resource_by_shortkey(res_id_added)
-                    add_or_remove_relation_metadata(add=True, target_res_obj=res_obj,
-                                                    relation_type=isPartOf, relation_value=value,
-                                                    set_res_modified=True, last_change_user=user)
-                    pass
-
-            # 2) if res id in current list is not in updated list
-            #    this res is being removed from collection
-            #    then remove existing "Relation" metadata
-            for res_id_removed in res_id_list_current_collection:
-                if res_id_removed not in updated_contained_res_id_list:
-                    # change collection
-                    value = relation_value_template.format(res_id_removed)
+                    value = relation_value_template.format(res_id_remove)
                     add_or_remove_relation_metadata(add=False, target_res_obj=collection_res_obj,
                                                     relation_type=hasPart, relation_value=value,
                                                     set_res_modified=False)
 
                     # change contained res
                     value = relation_value_template.format(collection_res_obj.short_id)
-                    res_obj = get_resource_by_shortkey(res_id_removed)
+                    res_obj = get_resource_by_shortkey(res_id_remove)
                     add_or_remove_relation_metadata(add=False, target_res_obj=res_obj,
                                                     relation_type=isPartOf, relation_value=value,
                                                     set_res_modified=True, last_change_user=user)
-                    pass
 
-            # remove all resources from the collection
-            collection_res_obj.resources.clear()
+            # res to add
+            res_id_list_add = []
+            for res_id_add in updated_contained_res_id_list:
+                if res_id_add not in res_id_list_current_collection:
+                    res_id_list_add.append(res_id_add)
+                    # check authorization for all new resources being added to the collection
+                    # the requesting user should at least have metadata view permission for each of
+                    # the new resources to be added to the collection
+                    res_to_add, _, _ \
+                        = authorize(request, res_id_add,
+                                    needed_permission=ACTION_TO_AUTHORIZE.VIEW_METADATA)
 
-            # add resources to the collection
-            for updated_contained_res_id in updated_contained_res_id_list:
-                updated_contained_res_obj = get_resource_by_shortkey(updated_contained_res_id)
-                collection_res_obj.resources.add(updated_contained_res_obj)
+                    # add this new res to collection
+                    res_obj_add = get_resource_by_shortkey(res_id_add)
+                    collection_res_obj.resources.add(res_obj_add)
+
+                    # check loop
+                    detect_loop_in_collection(collection_res_obj)
+
+                    # change "Relation" metadata
+                    # change collection
+                    value = relation_value_template.format(res_id_add)
+                    add_or_remove_relation_metadata(add=True, target_res_obj=collection_res_obj,
+                                                    relation_type=hasPart, relation_value=value,
+                                                    set_res_modified=False)
+
+                    # change contained res
+                    value = relation_value_template.format(collection_res_obj.short_id)
+                    res_obj = get_resource_by_shortkey(res_id_add)
+                    add_or_remove_relation_metadata(add=True, target_res_obj=res_obj,
+                                                    relation_type=isPartOf, relation_value=value,
+                                                    set_res_modified=True, last_change_user=user)
+
 
             if collection_res_obj.can_be_public_or_discoverable:
                 metadata_status = "Sufficient to make public"
