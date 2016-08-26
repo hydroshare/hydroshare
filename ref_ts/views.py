@@ -221,7 +221,7 @@ def download_refts_resource_files(request, shortkey, *args, **kwargs):
             return response
 
         path = "bags/" + str(shortkey) + ".zip"
-        response_irods = download_bag_from_irods(request, path)
+        response_irods = download_bag_from_irods(request, path, use_async=False)
 
         tempdir = tempfile.mkdtemp()
         bag_save_to_path = tempdir + "/" + str(shortkey) + ".zip"
