@@ -956,8 +956,12 @@ class TestTimeSeriesMetaData(MockIRODSTestCaseMixin, TransactionTestCase):
 
         self.assertEqual(self.resTimeSeries.metadata.title.value, 'Test Time Series Resource')
         self._test_no_change_in_metadata()
+
         # there shouldn't any format element
         self.assertEqual(self.resTimeSeries.metadata.formats.all().count(), 0)
+
+        # there shouldn't any coverage element
+        self.assertEqual(self.resTimeSeries.metadata.coverages.all().count(), 0)
 
         # at this point the resource should not have any content files
         self.assertEqual(self.resTimeSeries.files.all().count(), 0)
@@ -986,6 +990,10 @@ class TestTimeSeriesMetaData(MockIRODSTestCaseMixin, TransactionTestCase):
         self._test_no_change_in_metadata()
         # there should be  1 format element
         self.assertEqual(self.resTimeSeries.metadata.formats.all().count(), 1)
+
+        # there should be 1 coverage element of type period
+        self.assertEqual(self.resTimeSeries.metadata.coverages.all().count(), 1)
+        self.assertEqual(self.resTimeSeries.metadata.coverages.filter(type='period').count(), 1)
         self.assertEqual(self.resTimeSeries.has_csv_file, True)
 
     def test_invalid_csv_file(self):
@@ -1115,7 +1123,7 @@ class TestTimeSeriesMetaData(MockIRODSTestCaseMixin, TransactionTestCase):
                          1)
 
         box_coverage = self.resTimeSeries.metadata.coverages.all().filter(type='box').first()
-        self.assertEqual(box_coverage.value['projection'], 'Unknown')
+        self.assertEqual(box_coverage.value['projection'], 'WGS 84 EPSG:4326')
         self.assertEqual(box_coverage.value['units'], 'Decimal degrees')
         self.assertEqual(box_coverage.value['northlimit'], 85.789)
         self.assertEqual(box_coverage.value['eastlimit'], 120.56789)
@@ -1763,9 +1771,6 @@ class TestTimeSeriesMetaData(MockIRODSTestCaseMixin, TransactionTestCase):
 
         # there shouldn't any abstract element
         self.assertEqual(self.resTimeSeries.metadata.description, None)
-
-        # there shouldn't any coverage element
-        self.assertEqual(self.resTimeSeries.metadata.coverages.all().count(), 0)
 
         # there shouldn't any subject element
         self.assertEqual(self.resTimeSeries.metadata.subjects.all().count(), 0)
