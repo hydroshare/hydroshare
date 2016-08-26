@@ -1697,8 +1697,10 @@ def _update_resource_coverage_element(site_element):
     if spatial_cov:
         spatial_cov.type = cov_type
         if cov_type == 'point':
+            point_value['projection'] = spatial_cov.value['projection']
             spatial_cov._value = json.dumps(point_value)
         else:
+            bbox_value['projection'] = spatial_cov.value['projection']
             spatial_cov._value = json.dumps(bbox_value)
         spatial_cov.save()
     else:
@@ -1706,6 +1708,7 @@ def _update_resource_coverage_element(site_element):
             value_dict = point_value
         else:
             value_dict = bbox_value
+
         site_element.metadata.create_element("coverage", type=cov_type, value=value_dict)
 
 def _create_site_related_cv_terms(element, data_dict):

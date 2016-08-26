@@ -864,7 +864,7 @@ class Coverage(AbstractMetaDataElement):
             elif '_value' in kwargs:
                 value_arg_dict = json.loads(kwargs['_value'])
 
-            if value_arg_dict:
+            if value_arg_dict is not None:
                 cls._validate_coverage_type_value_attributes(kwargs['type'], value_arg_dict)
 
                 if kwargs['type'] == 'period':
@@ -876,6 +876,10 @@ class Coverage(AbstractMetaDataElement):
                     value_dict = {k: v for k, v in value_arg_dict.iteritems()
                                   if k in ('units', 'northlimit', 'eastlimit', 'southlimit', 'westlimit', 'name',
                                            'uplimit', 'downlimit', 'zunits', 'projection')}
+
+                if kwargs['type'] == 'box' or kwargs['type'] == 'point':
+                    if 'projection' not in value_dict:
+                        value_dict['projection'] = 'WGS 84 EPSG:4326'
 
                 value_json = json.dumps(value_dict)
                 if 'value' in kwargs:

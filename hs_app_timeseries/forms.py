@@ -92,7 +92,8 @@ class SiteForm(ModelForm):
         exclude = ['content_object']
         widgets = {'elevation_m': forms.TextInput(), 'latitude': forms.TextInput(),
                    'longitude': forms.TextInput()}
-        labels = {'latitude': 'Latitude*', 'longitude': 'Longitude*'}
+        labels = {'latitude': 'Latitude* (SRSCode: EPSG:4326, SRSName: WGS84)',
+                  'longitude': 'Longitude* (SRSCode: EPSG:4326, SRSName: WGS84)'}
 
 
 class SiteValidationForm(forms.Form):
