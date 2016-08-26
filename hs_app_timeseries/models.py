@@ -1208,7 +1208,14 @@ class TimeSeriesMetaData(CoreMetaData):
         con.commit()
         insert_sql = "INSERT INTO Actions (ActionID, ActionTypeCV, MethodID, " \
                      "BeginDateTime, BeginDateTimeUTCOffset, " \
-                     "ActionDescription) VALUES(?,?,?,?,?,?)"
+                     "EndDateTime, EndDateTimeUTCOffset, " \
+                     "ActionDescription) VALUES(?,?,?,?,?,?,?,?)"
+        # get the begin and end date of timeseries data from the temporal coverage
+        temp_coverage = self.coverages.filter(type='period').first()
+        start_date = parser.parse(temp_coverage.value['start'])
+        end_date = parser.parse(temp_coverage.value['end'])
+        # TODO: UTC offset needs to be user input in case of CSV file upload
+        utc_offset = -7
         for index, ts_result in enumerate(self.time_series_results.all()):
             action_id = index + 1
             method_id = 1
@@ -1216,7 +1223,8 @@ class TimeSeriesMetaData(CoreMetaData):
                 if ts_result.series_ids[0] in method_data_item['series_ids']:
                     method_id = method_data_item['method_id']
                     break
-            cur.execute(insert_sql, (action_id, 'Observation', method_id, now(), -7,
+            cur.execute(insert_sql, (action_id, 'Observation', method_id, start_date, utc_offset,
+                                     end_date, utc_offset,
                                      'An observation action that generated a time '
                                      'series result.'), )
 
@@ -1358,7 +1366,6 @@ class TimeSeriesMetaData(CoreMetaData):
             time_interval = (parser.parse(second_row_data[0]) -
                              parser.parse(first_row_data[0])).seconds / 60
 
-        # data_row_count = 0
         with open(temp_csv_file, 'r') as fl_obj:
             csv_reader = csv.reader(fl_obj, delimiter=',')
             # read the first row (header) and skip
@@ -1374,6 +1381,9 @@ class TimeSeriesMetaData(CoreMetaData):
                                     dict_item['object_id'] == ts_result.id][0]
                 result_id = result_data_item['result_id']
                 data_col_index = col + 1
+                # start at the beginning of data row
+                fl_obj.seek(0)
+                csv_reader.next()
                 for date_time, data_value in self._read_csv_specified_column(
                         csv_reader, data_col_index):
                     date_time = parser.parse(date_time)
