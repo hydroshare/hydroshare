@@ -1,13 +1,17 @@
 import logging
 from dateutil import parser
+import json
 
 from django.http import JsonResponse
 from django.db import transaction
+from django.template import RequestContext
+from django.shortcuts import render_to_response
 
 from hs_core.views.utils import authorize, ACTION_TO_AUTHORIZE
 from hs_core.hydroshare.utils import get_resource_by_shortkey, resource_modified, current_site_url
 
-from .utils import add_or_remove_relation_metadata, detect_loop_in_collection, FoundLoopException
+from .utils import add_or_remove_relation_metadata, detect_loop_in_collection,\
+                   LoopFoundException, bfs_traverse
 
 logger = logging.getLogger(__name__)
 UI_DATETIME_FORMAT = "%m/%d/%Y"
@@ -97,8 +101,8 @@ def update_collection(request, shortkey, *args, **kwargs):
                     res_obj_add = get_resource_by_shortkey(res_id_add)
                     collection_res_obj.resources.add(res_obj_add)
 
-                    # check loop
-                    detect_loop_in_collection(collection_res_obj)
+                    # # check loop
+                    # detect_loop_in_collection(collection_res_obj)
 
                     # change "Relation" metadata
                     # change collection
@@ -114,7 +118,6 @@ def update_collection(request, shortkey, *args, **kwargs):
                                                     relation_type=isPartOf, relation_value=value,
                                                     set_res_modified=True, last_change_user=user)
 
-
             if collection_res_obj.can_be_public_or_discoverable:
                 metadata_status = "Sufficient to make public"
 
@@ -122,8 +125,8 @@ def update_collection(request, shortkey, *args, **kwargs):
 
             resource_modified(collection_res_obj, user)
 
-    except FoundLoopException as ex:
-        err_msg = "Found a loop: {0}".format('-->'.join(ex.path_list) + "-->" + ex.node_id)
+    except LoopFoundException as ex:
+        err_msg = str(ex)
         status = "error"
         msg = err_msg
     except Exception as ex:
@@ -301,3 +304,17 @@ def _calculate_collection_coverages(collection_res_obj):
                                   'value': value_dict, 'element_id_str': "-1"})
 
     return new_coverage_list
+
+
+def show_collection_plot(request, shortkey, *args, **kwargs):
+
+    collection_res_obj, is_authorized, user \
+                = authorize(request, shortkey,
+                            needed_permission=ACTION_TO_AUTHORIZE.VIEW_RESOURCE)
+    nodes_list_output, edges_list_output = bfs_traverse(collection_res_obj)
+
+    nodes_list_str = json.dumps(nodes_list_output)
+    edges_list_str = json.dumps(edges_list_output)
+
+    context = {'nodes_list_str': nodes_list_str, 'edges_list_str': edges_list_str}
+    return render_to_response('pages/graph.html', context, context_instance=RequestContext(request))
