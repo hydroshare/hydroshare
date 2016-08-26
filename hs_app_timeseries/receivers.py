@@ -161,18 +161,34 @@ def _process_uploaded_csv_file(resource, res_file, validate_files_dict,
             _create_cv_lookup_models(cur, resource.metadata, 'CV_AggregationStatistic',
                                      CVAggregationStatistic)
 
-        # set the temporal coverage for the resource using the date values from the csv file
+        # save some data from the csv file
         with open(fl_obj_name, 'r') as fl_obj:
             csv_reader = csv.reader(fl_obj, delimiter=',')
-            # read the first row and skip - header
-            csv_reader.next()
+            # read the first row - header
+            header = csv_reader.next()
             start_date_str = csv_reader.next()[0]
             last_row = None
+            data_row_count = 1
             for row in csv_reader:
                 last_row = row
+                data_row_count += 1
             end_date_str = last_row[0]
+            # save the series names
+            # columns starting with the 2nd column are data series names
+            TimeSeriesMetaData.objects.filter(id=resource.metadata.id).update(
+                series_names=header[1:])
+
+            value_counts = {}
+            for data_col_name in header[1:]:
+                value_counts[data_col_name] = str(data_row_count)
+
+            TimeSeriesMetaData.objects.filter(id=resource.metadata.id).update(
+                value_counts=value_counts)
+
+            # create the temporal coverage element
             resource.metadata.create_element('coverage', type='period',
                                              value={'start': start_date_str, 'end': end_date_str})
+
         # cleanup the temp sqlite file directory
         if os.path.exists(temp_dir):
             shutil.rmtree(temp_dir)
@@ -814,10 +830,8 @@ def _validate_csv_file(resource, uploaded_csv_file_name):
                     log.error(err_message)
                     return err_message
 
-    # columns starting with the 2nd column are data series names
-    TimeSeriesMetaData.objects.filter(id=resource.metadata.id).update(series_names=header[1:])
-
     return None
+
 
 def _validate_odm2_db_file(uploaded_sqlite_file_name):
     err_message = "Uploaded file is not a valid ODM2 SQLite file."

@@ -57,6 +57,12 @@ def landing_page(request, page):
         request.session['series_id'] = selected_series_id
         is_resource_specific_tab_active = False
 
+    ts_result_value_count = None
+    if len(content_model.metadata.series_names) > 0 and selected_series_id is not None:
+        sorted_series_names = sorted(content_model.metadata.series_names)
+        selected_series_name = sorted_series_names[int(selected_series_id)]
+        ts_result_value_count = int(content_model.metadata.value_counts[selected_series_name])
+
     # view depends on whether the resource is being edited
     if not edit_resource:
         # resource in VIEW Mode
@@ -65,7 +71,8 @@ def landing_page(request, page):
     else:
         # resource in EDIT Mode
         context = _get_resource_edit_context(page, request, content_model, selected_series_id,
-                                             series_ids, extended_metadata_exists)
+                                             series_ids, ts_result_value_count,
+                                             extended_metadata_exists)
 
     context['is_resource_specific_tab_active'] = is_resource_specific_tab_active
 
@@ -101,7 +108,7 @@ def _get_resource_view_context(page, request, content_model, selected_series_id,
 
 
 def _get_resource_edit_context(page, request, content_model, selected_series_id, series_ids,
-                               extended_metadata_exists):
+                               ts_result_value_count, extended_metadata_exists):
 
     selected_series_label = series_ids[selected_series_id] if selected_series_id is not None else ''
 
@@ -141,6 +148,7 @@ def _get_resource_edit_context(page, request, content_model, selected_series_id,
     else:
         timeseries_result_form.set_dropdown_widgets()
         timeseries_result_form.set_series_label(selected_series_label)
+        timeseries_result_form.set_value_count(ts_result_value_count)
 
     ext_md_layout = Layout(UpdateSQLiteLayout,
                            SeriesSelectionLayout,

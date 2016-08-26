@@ -471,6 +471,9 @@ class TimeSeriesResultForm(ModelForm):
     def set_series_label(self, series_label):
         self.fields['series_label'].initial = series_label
 
+    def set_value_count(self, value_count=None):
+        if value_count is not None:
+            self.fields['value_count'].initial = value_count
 
     @property
     def form_id(self):

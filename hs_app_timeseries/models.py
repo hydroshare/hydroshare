@@ -8,6 +8,7 @@ from uuid import uuid4
 from dateutil import parser
 import json
 
+from django.contrib.postgres.fields import HStoreField
 from django.contrib.contenttypes.fields import GenericRelation
 from django.contrib.postgres.fields import ArrayField
 from django.core.files.uploadedfile import UploadedFile
@@ -593,6 +594,8 @@ class TimeSeriesMetaData(CoreMetaData):
     is_dirty = models.BooleanField(default=False)
     # temporarily store the series names from the csv file
     series_names = ArrayField(models.CharField(max_length=200, null=True, blank=True), default=[])
+    # for storing data column name (key) and number of data points (value) for that column
+    value_counts = HStoreField(default={})
 
     @property
     def resource(self):
