@@ -1091,11 +1091,12 @@ class TimeSeriesMetaData(CoreMetaData):
         insert_sql = "INSERT INTO SamplingFeatures(SamplingFeatureID, " \
                      "SamplingFeatureUUID, SamplingFeatureTypeCV, " \
                      "SamplingFeatureCode, SamplingFeatureName, " \
-                     "Elevation_m, ElevationDatumCV) VALUES(?,?,?,?,?,?,?)"
+                     "SamplingFeatureGeotypeCV, Elevation_m, ElevationDatumCV) " \
+                     "VALUES(?,?,?,?,?,?,?,?)"
         for index, site in enumerate(self.sites):
             sampling_feature_id = index + 1
             cur.execute(insert_sql, (sampling_feature_id, uuid4().hex, site.site_type,
-                                     site.site_code, site.site_name, site.elevation_m,
+                                     site.site_code, site.site_name, 'Point', site.elevation_m,
                                      site.elevation_datum), )
 
     def _update_spatialreferences_table_insert(self, con, cur):
@@ -1105,15 +1106,17 @@ class TimeSeriesMetaData(CoreMetaData):
         cur.execute("DELETE FROM SpatialReferences")
         con.commit()
         insert_sql = "INSERT INTO SpatialReferences (SpatialReferenceID, " \
-                     "SRSName) VALUES(?,?)"
+                     "SRSCode, SRSName) VALUES(?,?,?)"
         if self.coverages.all():
             # NOTE: It looks like there will be always maximum of only one record created
             # for SpatialReferences table
             coverage = self.coverages.all().exclude(type='period').first()
             if coverage:
                 spatial_ref_id = 1
-                srs_name = coverage.value.get("projection", '')
-                cur.execute(insert_sql, (spatial_ref_id, srs_name), )
+                # this is the default projection system for coverage in HydroShare
+                srs_name = 'World Geodetic System 1984 (WGS84)'
+                srs_code = 'EPSG:4326'
+                cur.execute(insert_sql, (spatial_ref_id, srs_code, srs_name), )
 
     def _update_people_table_insert(self, con, cur):
         # insert record to People table - first delete any existing records
