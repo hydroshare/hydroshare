@@ -1043,9 +1043,12 @@ class TestTimeSeriesMetaData(MockIRODSTestCaseMixin, TransactionTestCase):
 
         utils.resource_file_add_process(resource=self.resTimeSeries, files=files, user=self.user)
 
-        # test that the resource does not have the required metadata elements at this point
+        # test that the resource does not have all the required metadata elements at this point
         self.assertEqual(self.resTimeSeries.metadata.has_all_required_elements(), False)
 
+        # with the upload of a csv file a temporal coverage element should have been created
+        self.assertEqual(self.resTimeSeries.metadata.coverages.all().filter(type='period').count(),
+                         1)
         # add/update core metadata -required elements
         self.resTimeSeries.metadata.update_element('title', self.resTimeSeries.metadata.title.id,
                                                    value="Multi-Site One Variable Time Series")
@@ -1056,9 +1059,9 @@ class TestTimeSeriesMetaData(MockIRODSTestCaseMixin, TransactionTestCase):
 
         # add resource specific metadata
 
-        # there should be no coverage element before a site element is added
+        # there should be no coverage element of type spatial before a site element is added
         self.assertEqual(self.resTimeSeries.metadata.sites.all().count(), 0)
-        self.assertEqual(self.resTimeSeries.metadata.coverages.all().count(), 0)
+        self.assertEqual(self.resTimeSeries.metadata.coverages.exclude(type='period').count(), 0)
 
         # add 2 site elements (one for each data column of the uploaded csv file)
 
@@ -1076,8 +1079,8 @@ class TestTimeSeriesMetaData(MockIRODSTestCaseMixin, TransactionTestCase):
         # there should be 1 site element at this point
         self.assertEqual(self.resTimeSeries.metadata.sites.all().count(), 1)
         # at this point the resource level coverage element should have been automatically created
-        # there should be 1 coverage element -  point type
-        self.assertEqual(self.resTimeSeries.metadata.coverages.all().count(), 1)
+        # there should be 2 coverage elements -  1 point type and the other one is temporal
+        self.assertEqual(self.resTimeSeries.metadata.coverages.all().count(), 2)
         self.assertEqual(self.resTimeSeries.metadata.coverages.all().filter(type='point').count(),
                          1)
         site = self.resTimeSeries.metadata.sites.first()
@@ -1106,8 +1109,8 @@ class TestTimeSeriesMetaData(MockIRODSTestCaseMixin, TransactionTestCase):
         self.assertEqual(len(site_2.series_ids), 1)
         self.assertEqual(set(site_1.series_ids + site_2.series_ids), set(['0', '1']))
 
-        # there should be 1 coverage element -  box type
-        self.assertEqual(self.resTimeSeries.metadata.coverages.all().count(), 1)
+        # there should be 1 coverage element -  box type and total 2 coverage elements
+        self.assertEqual(self.resTimeSeries.metadata.coverages.all().count(), 2)
         self.assertEqual(self.resTimeSeries.metadata.coverages.all().filter(type='box').count(),
                          1)
 
@@ -1232,6 +1235,10 @@ class TestTimeSeriesMetaData(MockIRODSTestCaseMixin, TransactionTestCase):
 
         # test that the resource has the required metadata elements at this point
         self.assertEqual(self.resTimeSeries.metadata.has_all_required_elements(), True)
+
+        # TODO: test addition of blank sqlite file to resource
+
+        # TODO: test populating of the blank sqlite file
 
     def test_series_id_for_metadata_element_create(self):
         # this applies only to csv file upload
@@ -1724,6 +1731,7 @@ class TestTimeSeriesMetaData(MockIRODSTestCaseMixin, TransactionTestCase):
         self.assertEqual(ts_result.series_ids, ['0'])
 
     def test_element_duplicate_code(self):
+        # TODO: implement
         pass
 
     def _test_invalid_csv_file(self, invalid_csv_file_name):
