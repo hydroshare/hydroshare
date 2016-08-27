@@ -586,7 +586,7 @@ class TimeSeriesResource(BaseResource):
     def has_required_content_files(self):
         return self.has_sqlite_file
 
-    def add_blank_sqlite_file(self):
+    def add_blank_sqlite_file(self, user=None):
         # add the blank SQLite file to this resource (self)
         if not self.can_add_blank_sqlite_file:
             err_msg = """Can't add blank ODM2 SQLite file to the resource.
@@ -606,6 +606,14 @@ class TimeSeriesResource(BaseResource):
                               name=odm2_sqlite_file_name)]
         try:
             add_resource_files(self.short_id, *files)
+            if user is not None and user.is_authenticated():
+                last_changed_by = user
+            else:
+                last_changed_by = self.resource.last_changed_by
+
+            # need to do this so that the bag will be regenerated prior to download of the bag
+            utils.resource_modified(self, by_user=last_changed_by,
+                                    overwrite_bag=False)
         except Exception as ex:
             raise ex
         finally:
@@ -904,9 +912,13 @@ class TimeSeriesMetaData(CoreMetaData):
         self.cv_mediums.all().delete()
         self.cv_aggregation_statistics.all().delete()
 
-    def update_sqlite_file(self):
-        if not self.is_dirty or not self.resource.has_sqlite_file:
+    def update_sqlite_file(self, user=None):
+        if not self.is_dirty:
             return
+
+        if not self.resource.has_sqlite_file and self.resource.can_add_blank_sqlite_file:
+            self.resource.add_blank_sqlite_file(user)
+
         log = logging.getLogger()
 
         sqlite_file_to_update = utils.get_resource_files_by_extension(self.resource,
@@ -915,7 +927,7 @@ class TimeSeriesMetaData(CoreMetaData):
         temp_sqlite_file = utils.get_file_from_irods(sqlite_file_to_update)
 
         if self.resource.has_csv_file and self._is_sqlite_file_blank(temp_sqlite_file):
-            self.populate_blank_sqlite_file(temp_sqlite_file)
+            self.populate_blank_sqlite_file(temp_sqlite_file, user)
         else:
             try:
                 con = sqlite3.connect(temp_sqlite_file)
@@ -955,7 +967,8 @@ class TimeSeriesMetaData(CoreMetaData):
                     self._update_CV_tables(con, cur)
 
                     # push the updated sqlite file to iRODS
-                    utils.replace_resource_file_on_irods(temp_sqlite_file, sqlite_file_to_update)
+                    utils.replace_resource_file_on_irods(temp_sqlite_file, sqlite_file_to_update,
+                                                         user)
                     self.is_dirty = False
                     self.save()
             except sqlite3.Error as ex:
@@ -969,12 +982,13 @@ class TimeSeriesMetaData(CoreMetaData):
                 if os.path.exists(temp_sqlite_file):
                     shutil.rmtree(os.path.dirname(temp_sqlite_file))
 
-    def populate_blank_sqlite_file(self, temp_sqlite_file):
+    def populate_blank_sqlite_file(self, temp_sqlite_file, user):
         """
         writes data to a blank sqlite file. This function is executed only in case
         of CSV file upload and executed only once when resource has all required metadata.
         :param temp_sqlite_file: this the sqlite file copied from irods to a temp location on
          Django.
+        :param user: current user
         :return:
         """
         if not self.resource.has_sqlite_file or not self.resource.has_csv_file:
@@ -1055,7 +1069,7 @@ class TimeSeriesMetaData(CoreMetaData):
                 self._update_CV_tables(con, cur)
                 con.commit()
                 # push the updated sqlite file to iRODS
-                utils.replace_resource_file_on_irods(temp_sqlite_file, blank_sqlite_file)
+                utils.replace_resource_file_on_irods(temp_sqlite_file, blank_sqlite_file, user)
                 self.is_dirty = False
                 self.save()
 

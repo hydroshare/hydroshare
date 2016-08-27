@@ -18,7 +18,7 @@ def update_sqlite_file(request, resource_id, *args, **kwargs):
                               "allowed only for timeseries resources.")
     else:
         try:
-            res.metadata.update_sqlite_file()
+            res.metadata.update_sqlite_file(user)
             messages.success(request, "SQLite file update was successful.")
             log.info("SQLite file update was successful for resource ID:{}.".format(res.short_id))
         except Exception, ex:

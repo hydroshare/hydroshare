@@ -114,7 +114,7 @@ def _get_resource_edit_context(page, request, content_model, selected_series_id,
     selected_series_label = series_ids[selected_series_id] if selected_series_id is not None else ''
 
     if content_model.can_add_blank_sqlite_file:
-        content_model.add_blank_sqlite_file()
+        content_model.add_blank_sqlite_file(request.user)
 
     utcoffset_form = None
     if content_model.has_csv_file:
