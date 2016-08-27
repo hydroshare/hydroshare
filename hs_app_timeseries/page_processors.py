@@ -3,7 +3,8 @@ from mezzanine.pages.page_processors import processor_for
 from crispy_forms.layout import Layout, HTML
 
 from forms import SiteForm, VariableForm, MethodForm, ProcessingLevelForm, TimeSeriesResultForm, \
-    UpdateSQLiteLayout, SeriesSelectionLayout, TimeSeriesMetaDataLayout
+    UpdateSQLiteLayout, SeriesSelectionLayout, TimeSeriesMetaDataLayout, UTCOffSetLayout, \
+    UTCOffSetForm
 from hs_core import page_processors
 from hs_core.views import add_generic_context
 from hs_core.hydroshare import utils
@@ -115,6 +116,13 @@ def _get_resource_edit_context(page, request, content_model, selected_series_id,
     if content_model.can_add_blank_sqlite_file:
         content_model.add_blank_sqlite_file()
 
+    utcoffset_form = None
+    if content_model.has_csv_file:
+        utc_offset = content_model.metadata.utc_offset
+        utcoffset_form = UTCOffSetForm(instance=utc_offset,
+                                       res_short_id=content_model.short_id,
+                                       element_id=utc_offset.id if utc_offset else None,
+                                       selected_series_id = selected_series_id)
     # create timeseries specific metadata element forms
     site_form = _create_site_form(resource=content_model, selected_series_id=selected_series_id)
     variable_form = _create_variable_form(resource=content_model,
@@ -151,6 +159,7 @@ def _get_resource_edit_context(page, request, content_model, selected_series_id,
         timeseries_result_form.set_value_count(ts_result_value_count)
 
     ext_md_layout = Layout(UpdateSQLiteLayout,
+                           UTCOffSetLayout,
                            SeriesSelectionLayout,
                            TimeSeriesMetaDataLayout)
 
@@ -169,6 +178,7 @@ def _get_resource_edit_context(page, request, content_model, selected_series_id,
     context['resource_type'] = 'Time Series Resource'
     context['selected_series_id'] = selected_series_id
     context['series_ids'] = series_ids
+    context['utcoffset_form'] = utcoffset_form
     context['site_form'] = site_form
     context['variable_form'] = variable_form
     context['method_form'] = method_form

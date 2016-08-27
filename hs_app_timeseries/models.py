@@ -438,6 +438,39 @@ class TimeSeriesResult(TimeSeriesAbstractMetaDataElement):
         return _get_series_ids(element_class=cls, metadata_obj=metadata_obj)
 
 
+class UTCOffSet(TimeSeriesAbstractMetaDataElement):
+    # this element is not part of the science metadata
+    term = 'UTCOffSet'
+    value = models.FloatField(default=0.0)
+
+    @classmethod
+    def create(cls, **kwargs):
+        metadata = kwargs['content_object']
+        kwargs.pop('selected_series_id', None)
+        if metadata.utc_offset:
+            raise ValidationError("There is already an UTCOffSet element")
+
+        if len(metadata.series_names) > 0:
+            # this validation applies only in case of CSV upload
+            # cls.validate_series_ids(metadata, kwargs)
+            kwargs['series_ids'] = range(len(metadata.series_names))
+        return super(UTCOffSet, cls).create(**kwargs)
+
+    @classmethod
+    def update(cls, element_id, **kwargs):
+        element = cls.objects.get(id=element_id)
+        kwargs.pop('selected_series_id', None)
+        if len(element.metadata.series_names) > 0:
+            # this validation applies only in case of CSV upload
+            # cls.validate_series_ids(metadata, kwargs)
+            kwargs['series_ids'] = range(len(element.metadata.series_names))
+
+        super(UTCOffSet, cls).update(element_id, **kwargs)
+
+    @classmethod
+    def remove(cls, element_id):
+        raise ValidationError("UTCOffSet element of a resource can't be deleted.")
+
 class AbstractCVLookupTable(models.Model):
     term = models.CharField(max_length=255)
     name = models.CharField(max_length=255)
@@ -591,11 +624,13 @@ class TimeSeriesMetaData(CoreMetaData):
     _methods = GenericRelation(Method)
     _processing_levels = GenericRelation(ProcessingLevel)
     _time_series_results = GenericRelation(TimeSeriesResult)
+    _utc_offset = GenericRelation(UTCOffSet)
     is_dirty = models.BooleanField(default=False)
     # temporarily store the series names from the csv file
     series_names = ArrayField(models.CharField(max_length=200, null=True, blank=True), default=[])
     # for storing data column name (key) and number of data points (value) for that column
     value_counts = HStoreField(default={})
+
 
     @property
     def resource(self):
@@ -621,6 +656,10 @@ class TimeSeriesMetaData(CoreMetaData):
     def time_series_results(self):
         return self._time_series_results.all()
 
+    @property
+    def utc_offset(self):
+        return self._utc_offset.all().first()
+
     @classmethod
     def get_supported_element_names(cls):
         # get the names of all core metadata elements
@@ -631,6 +670,7 @@ class TimeSeriesMetaData(CoreMetaData):
         elements.append('Method')
         elements.append('ProcessingLevel')
         elements.append('TimeSeriesResult')
+        elements.append('UTCOffSet')
         return elements
 
     def has_all_required_elements(self):
@@ -646,6 +686,11 @@ class TimeSeriesMetaData(CoreMetaData):
             return False
         if not self.time_series_results:
             return False
+
+        if self.resource.has_csv_file:
+            # applies to the case of csv file upload
+            if not self.utc_offset:
+                return False
 
         if len(self.series_names) > 0:
             # applies to the case of csv file upload
@@ -894,6 +939,10 @@ class TimeSeriesMetaData(CoreMetaData):
 
                     # insert record to ActionBy table
                     self._update_actionby_table_insert(con, cur, people_data)
+
+                    # since we are allowing user to set the UTC offset in case of CSV file
+                    # upload we have to update the actions table
+                    self._update_utcoffset_related_tables(con, cur)
 
                     # update resource specific metadata
                     self._update_variables_table(con, cur)
@@ -1214,8 +1263,8 @@ class TimeSeriesMetaData(CoreMetaData):
         temp_coverage = self.coverages.filter(type='period').first()
         start_date = parser.parse(temp_coverage.value['start'])
         end_date = parser.parse(temp_coverage.value['end'])
-        # TODO: UTC offset needs to be user input in case of CSV file upload
-        utc_offset = -7
+
+        utc_offset = self.utc_offset.value
         for index, ts_result in enumerate(self.time_series_results.all()):
             action_id = index + 1
             method_id = 1
@@ -1297,6 +1346,7 @@ class TimeSeriesMetaData(CoreMetaData):
                      "SampledMediumCV, ValueCount) VALUES(?,?,?,?,?,?,?,?,?,?,?,?)"
 
         results_data = []
+        utc_offset = self.utc_offset.value
         for index, ts_res in enumerate(self.time_series_results.all()):
             result_id = index + 1
             cur.execute("SELECT * FROM FeatureActions WHERE ActionID=?", (result_id,))
@@ -1320,7 +1370,7 @@ class TimeSeriesMetaData(CoreMetaData):
             unit = cur.fetchone()
             cur.execute(insert_sql, (result_id, ts_res.series_ids[0],
                                      feature_act['FeatureActionID'], 'Time series coverage',
-                                     variable_id, unit['UnitsID'], pro_level_id, now(), -7,
+                                     variable_id, unit['UnitsID'], pro_level_id, now(), utc_offset,
                                      ts_res.status, ts_res.sample_medium,
                                      ts_res.value_count), )
             results_data.append({'result_id': result_id, 'object_id': ts_res.id})
@@ -1356,7 +1406,7 @@ class TimeSeriesMetaData(CoreMetaData):
 
         # read the csv file to determine time interval (in minutes) between each reading
         # we will use the first 2 rows of data to determine this value
-        time_interval = 0
+        utc_offset = self.utc_offset.value
         with open(temp_csv_file, 'r') as fl_obj:
             csv_reader = csv.reader(fl_obj, delimiter=',')
             # read the first row (header)
@@ -1388,7 +1438,7 @@ class TimeSeriesMetaData(CoreMetaData):
                         csv_reader, data_col_index):
                     date_time = parser.parse(date_time)
                     cur.execute(insert_sql, (value_id, result_id, data_value,
-                                             date_time, -7, 'Unknown', 'Unknown',
+                                             date_time, utc_offset, 'Unknown', 'Unknown',
                                              time_interval, 102), )
                     value_id += 1
 
@@ -1456,6 +1506,27 @@ class TimeSeriesMetaData(CoreMetaData):
         for index, result in enumerate(results):
             bridge_id = index + 1
             cur.execute(insert_sql, (bridge_id, 1, result['ResultID']), )
+
+    def _update_utcoffset_related_tables(self, con, cur):
+        # updates Actions, Results, TimeSeriesResultValues tables
+        # used for updating a sqlite file that is not blank and a csv file exists
+        if self.resource.has_csv_file and self.utc_offset.is_dirty:
+            update_sql = "UPDATE Actions SET BeginDateTimeUTCOffset=?, EndDateTimeUTCOffset=?"
+            utc_offset = self.utc_offset.value
+            param_values = (utc_offset, utc_offset)
+            cur.execute(update_sql, param_values)
+
+            update_sql = "UPDATE Results SET ResultDateTimeUTCOffset=?"
+            param_values = (utc_offset,)
+            cur.execute(update_sql, param_values)
+
+            update_sql = "UPDATE TimeSeriesResultValues SET ValueDateTimeUTCOffset=?"
+            param_values = (utc_offset,)
+            cur.execute(update_sql, param_values)
+
+            con.commit()
+            self.utc_offset.is_dirty = False
+            self.utc_offset.save()
 
     def _update_variables_table(self, con, cur):
         # updates Variables table

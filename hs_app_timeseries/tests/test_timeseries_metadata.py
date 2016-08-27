@@ -17,7 +17,8 @@ from hs_core.models import CoreMetaData, Creator, Contributor, Coverage, Rights,
 from hs_core.testing import MockIRODSTestCaseMixin
 from hs_app_timeseries.models import TimeSeriesResource, Site, Variable, Method, ProcessingLevel, \
     TimeSeriesResult, CVVariableType, CVVariableName, CVSpeciation, CVElevationDatum, CVSiteType, \
-    CVMethodType, CVUnitsType, CVStatus, CVMedium, CVAggregationStatistic, TimeSeriesMetaData
+    CVMethodType, CVUnitsType, CVStatus, CVMedium, CVAggregationStatistic, TimeSeriesMetaData, \
+    UTCOffSet
 
 
 class TestTimeSeriesMetaData(MockIRODSTestCaseMixin, TransactionTestCase):
@@ -134,6 +135,7 @@ class TestTimeSeriesMetaData(MockIRODSTestCaseMixin, TransactionTestCase):
         self._test_metadata_extraction()
 
     def test_metadata_extraction_on_content_file_add(self):
+        # resource creation with uploaded sqlite file
         # test the core metadata at this point
         self.assertEqual(self.resTimeSeries.metadata.title.value, 'Test Time Series Resource')
 
@@ -158,6 +160,7 @@ class TestTimeSeriesMetaData(MockIRODSTestCaseMixin, TransactionTestCase):
         self.assertEqual(self.resTimeSeries.metadata.methods.all().count(), 0)
         self.assertEqual(self.resTimeSeries.metadata.processing_levels.all().count(), 0)
         self.assertEqual(self.resTimeSeries.metadata.time_series_results.all().count(), 0)
+        self.assertEqual(self.resTimeSeries.metadata.utc_offset, None)
 
         # adding a valid ODM2 sqlite file should generate some core metadata and all extended
         # metadata
@@ -980,11 +983,20 @@ class TestTimeSeriesMetaData(MockIRODSTestCaseMixin, TransactionTestCase):
             self.resTimeSeries.files.first())
         self.assertEqual(csv_file_name, self.odm2_csv_file_name)
 
-        # since the uploaded csv file has 7 data columns, the metadata should have 7 series names
+        # since the uploaded csv file has 2 data columns, the metadata should have 2 series names
         self.assertEqual(len(self.resTimeSeries.metadata.series_names), 2)
         csv_data_colum_names = set(['Temp_DegC_Mendon', 'Temp_DegC_Paradise'])
-
         self.assertEqual(set(self.resTimeSeries.metadata.series_names), csv_data_colum_names)
+
+        # since the uploaded csv file has 2 data columns, the metadata should have
+        # the attribute value_counts (dict) 2 elements
+        self.assertEqual(len(self.resTimeSeries.metadata.value_counts), 2)
+        self.assertEqual(set(self.resTimeSeries.metadata.value_counts.keys()), csv_data_colum_names)
+
+        # there should be 20 data values for each series
+        self.assertEqual(self.resTimeSeries.metadata.value_counts['Temp_DegC_Mendon'], '20')
+        self.assertEqual(self.resTimeSeries.metadata.value_counts['Temp_DegC_Paradise'], '20')
+
         # metadata is deleted on csv file upload - therefore the title change
         self.assertEqual(self.resTimeSeries.metadata.title.value, 'Untitled resource')
         self._test_no_change_in_metadata()
@@ -1123,6 +1135,7 @@ class TestTimeSeriesMetaData(MockIRODSTestCaseMixin, TransactionTestCase):
                          1)
 
         box_coverage = self.resTimeSeries.metadata.coverages.all().filter(type='box').first()
+        # projection should be auto set to 'WGS 84 EPSG:4326'
         self.assertEqual(box_coverage.value['projection'], 'WGS 84 EPSG:4326')
         self.assertEqual(box_coverage.value['units'], 'Decimal degrees')
         self.assertEqual(box_coverage.value['northlimit'], 85.789)
@@ -1240,6 +1253,16 @@ class TestTimeSeriesMetaData(MockIRODSTestCaseMixin, TransactionTestCase):
         self.assertEqual(len(ts_result_1.series_ids), 1)
         self.assertEqual(len(ts_result_2.series_ids), 1)
         self.assertEqual(set(ts_result_1.series_ids + ts_result_2.series_ids), set(['0', '1']))
+
+        # test that the resource still does not have the required metadata elements at this point
+        self.assertEqual(self.resTimeSeries.metadata.has_all_required_elements(), False)
+
+        # set the utc offset
+        self.resTimeSeries.metadata.create_element('UTCOffset', value=-7.5)
+        # there should be one UTCOffset element
+        self.assertTrue(UTCOffSet.objects.filter(
+            object_id=self.resTimeSeries.metadata.id).count(), 1)
+        self.assertEqual(self.resTimeSeries.metadata.utc_offset.value, -7.5)
 
         # test that the resource has the required metadata elements at this point
         self.assertEqual(self.resTimeSeries.metadata.has_all_required_elements(), True)
@@ -1936,3 +1959,5 @@ class TestTimeSeriesMetaData(MockIRODSTestCaseMixin, TransactionTestCase):
         self.assertEqual(self.resTimeSeries.metadata.cv_mediums.all().count(), 18)
         # there should be 17 CV_aggregationStatistics records
         self.assertEqual(self.resTimeSeries.metadata.cv_aggregation_statistics.all().count(), 17)
+        # there should not be any UTCOffset element
+        self.assertEqual(self.resTimeSeries.metadata.utc_offset, None)

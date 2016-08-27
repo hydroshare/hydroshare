@@ -16,7 +16,7 @@ from hs_app_timeseries.models import TimeSeriesResource, CVVariableType, CVVaria
     CVSpeciation, CVSiteType, CVElevationDatum, CVMethodType, CVUnitsType, CVStatus, CVMedium, \
     CVAggregationStatistic, TimeSeriesMetaData
 from forms import SiteValidationForm, VariableValidationForm, MethodValidationForm, \
-    ProcessingLevelValidationForm, TimeSeriesResultValidationForm
+    ProcessingLevelValidationForm, TimeSeriesResultValidationForm, UTCOffSetValidationForm
 
 
 FILE_UPLOAD_ERROR_MESSAGE = "(Uploaded file was not added to the resource)"
@@ -276,6 +276,8 @@ def _validate_metadata(request, element_name):
         element_form = ProcessingLevelValidationForm(request.POST)
     elif element_name == 'timeseriesresult':
         element_form = TimeSeriesResultValidationForm(request.POST)
+    elif element_name == 'utcoffset':
+        element_form = UTCOffSetValidationForm(request.POST)
     else:
         raise Exception("Invalid metadata element name:{}".format(element_name))
 
@@ -741,6 +743,8 @@ def _delete_extracted_metadata(resource):
     resource.metadata.methods.delete()
     resource.metadata.processing_levels.delete()
     resource.metadata.time_series_results.delete()
+    if resource.metadata.utc_offset:
+        resource.metadata.utc_offset.delete()
 
     # delete CV lookup django tables
     resource.metadata.cv_variable_types.all().delete()

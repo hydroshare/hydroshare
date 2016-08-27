@@ -8,7 +8,7 @@ from crispy_forms.layout import Layout, HTML
 from crispy_forms.bootstrap import Field
 
 from hs_core.forms import BaseFormHelper
-from models import Site, Variable, Method, ProcessingLevel, TimeSeriesResult
+from models import Site, Variable, Method, ProcessingLevel, TimeSeriesResult, UTCOffSet
 
 
 NO_SELECTION_DROPDOWN_OPTION = "-----"
@@ -523,6 +523,42 @@ class TimeSeriesResultValidationForm(forms.Form):
             self._errors['aggregation_statistics'] = ["A value for aggregation statistic "
                                                       "is missing"]
 
+
+class UTCOffSetFormHelper(BaseFormHelper):
+    def __init__(self, allow_edit=True, res_short_id=None, element_id=None, element_name=None,
+                 *args, **kwargs):
+        field_width = 'form-control input-sm'
+        layout = Layout(
+            Field('selected_series_id', css_class=field_width, type="hidden"),
+            Field('value', css_class=field_width),
+        )
+        kwargs['element_name_label'] = 'UTC Offset'
+        super(UTCOffSetFormHelper, self).__init__(allow_edit, res_short_id, element_id,
+                                                  element_name, layout, *args, **kwargs)
+
+
+class UTCOffSetForm(ModelForm):
+    selected_series_id = forms.CharField(max_length=50, required=False)
+
+    def __init__(self, allow_edit=True, res_short_id=None, element_id=None, *args, **kwargs):
+        selected_series_id = kwargs.pop('selected_series_id', None)
+        super(UTCOffSetForm, self).__init__(*args, **kwargs)
+        self.helper = UTCOffSetFormHelper(allow_edit, res_short_id, element_id,
+                                                 element_name='UTCOffSet')
+        self.fields['selected_series_id'].initial = selected_series_id
+
+    class Meta:
+        model = UTCOffSet
+        fields = ['value']
+        exclude = ['content_object']
+        widgets = {'value': forms.TextInput()}
+        labels = {'value': ""}
+
+
+class UTCOffSetValidationForm(forms.Form):
+    value = forms.FloatField(required=True)
+
+
 def _get_cv_dropdown_widget_items(dropdown_items, selected_item_name):
     # filter out the item that needs to shown as the currently selected item
     # in the dropdown list
@@ -648,6 +684,15 @@ SeriesSelectionLayout = Layout(HTML("""
 """
                                     )
                                )
+UTCOffSetLayout = HTML("""
+<div class="form-group col-sm-12 col-xs-12 time-series-forms">
+     <div id="utc_offset">
+         {% load crispy_forms_tags %}
+         {% crispy utcoffset_form %}
+         <hr style="border:0">
+     </div>
+</div>
+""")
 
 TimeSeriesMetaDataLayout = HTML("""
 <div class="form-group col-sm-6 col-xs-12 time-series-forms">
