@@ -113,12 +113,6 @@ class TestTimeSeriesMetaData(MockIRODSTestCaseMixin, TransactionTestCase):
         # there should one content file
         self.assertEqual(self.resTimeSeries.files.all().count(), 1)
 
-        # file pre add process should raise validation error if we try to add a 2nd file when the
-        # resource has already has one content file
-        with self.assertRaises(utils.ResourceFileValidationException):
-            utils.resource_file_add_pre_process(resource=self.resTimeSeries, files=files,
-                                                user=self.user, extract_metadata=False)
-
     def test_metadata_extraction_on_resource_creation(self):
         # passing the file object that points to the temp dir doesn't work - create_resource
         # throws error open the file from the fixed file location
@@ -878,13 +872,8 @@ class TestTimeSeriesMetaData(MockIRODSTestCaseMixin, TransactionTestCase):
 
         # there should not be any file in the resource
         self.assertEqual(self.resTimeSeries.files.all().count(), 0)
-        files = [UploadedFile(file=self.odm2_sqlite_file_obj, name=self.odm2_sqlite_file_name)]
-        utils.resource_file_add_pre_process(resource=self.resTimeSeries, files=files,
-                                            user=self.user, extract_metadata=False)
-
-        utils.resource_file_add_process(resource=self.resTimeSeries, files=files, user=self.user,
-                                        extract_metadata=True)
-
+        self._upload_valid_sqlite_file()
+        
         # there should be one file in the resource
         self.assertEqual(self.resTimeSeries.files.all().count(), 1)
         self.assertEqual(self.resTimeSeries.metadata.is_dirty, False)
@@ -922,18 +911,18 @@ class TestTimeSeriesMetaData(MockIRODSTestCaseMixin, TransactionTestCase):
 
     def test_get_xml(self):
         # add a valid odm2 sqlite file to generate metadata
-        files = [UploadedFile(file=self.odm2_sqlite_file_obj, name=self.odm2_sqlite_file_name)]
-        utils.resource_file_add_pre_process(resource=self.resTimeSeries, files=files,
-                                            user=self.user, extract_metadata=False)
-
-        utils.resource_file_add_process(resource=self.resTimeSeries, files=files, user=self.user,
-                                        extract_metadata=True)
+        self._upload_valid_sqlite_file()
 
         # test if xml from get_xml() is well formed
         ET.fromstring(self.resTimeSeries.metadata.get_xml())
 
-    def test_multiple_content_files(self):
-        self.assertFalse(TimeSeriesResource.can_have_multiple_files())
+    def test_can_have_multiple_content_files(self):
+        # timeseries resource can have multiple files (csv and sqlite)
+        self.assertTrue(TimeSeriesResource.can_have_multiple_files())
+
+    def test_can_upload_multiple_content_files(self):
+        # only one file can be uploaded
+        self.assertFalse(TimeSeriesResource.allow_multiple_file_upload())
 
     def test_public_or_discoverable(self):
         self.assertFalse(self.resTimeSeries.has_required_content_files())
@@ -942,12 +931,7 @@ class TestTimeSeriesMetaData(MockIRODSTestCaseMixin, TransactionTestCase):
 
         # adding a valid ODM2 sqlite file should generate required core metadata and all
         # extended metadata
-        files = [UploadedFile(file=self.odm2_sqlite_file_obj, name=self.odm2_sqlite_file_name)]
-        utils.resource_file_add_pre_process(resource=self.resTimeSeries, files=files,
-                                            user=self.user, extract_metadata=False)
-
-        utils.resource_file_add_process(resource=self.resTimeSeries, files=files, user=self.user,
-                                        extract_metadata=True)
+        self._upload_valid_sqlite_file()
 
         self.assertTrue(self.resTimeSeries.has_required_content_files())
         self.assertTrue(self.resTimeSeries.metadata.has_all_required_elements())
@@ -971,11 +955,10 @@ class TestTimeSeriesMetaData(MockIRODSTestCaseMixin, TransactionTestCase):
 
         # at this point there should not be any series names associated with the metadata object
         self.assertEqual(len(self.resTimeSeries.metadata.series_names), 0)
-        files = [UploadedFile(file=self.odm2_csv_file_obj, name=self.odm2_csv_file_name)]
-        utils.resource_file_add_pre_process(resource=self.resTimeSeries, files=files,
-                                            user=self.user)
 
-        utils.resource_file_add_process(resource=self.resTimeSeries, files=files, user=self.user)
+        # add a valid csv file to the resource
+        self._upload_valid_csv_file()
+
         # at this point the resource should have one content file
         self.assertEqual(self.resTimeSeries.files.all().count(), 1)
 
@@ -1053,15 +1036,37 @@ class TestTimeSeriesMetaData(MockIRODSTestCaseMixin, TransactionTestCase):
         invalid_csv_file_name = 'Invalid_Data_Test_5.csv'
         self._test_invalid_csv_file(invalid_csv_file_name)
 
+    def test_file_delete_on_file_upload(self):
+        # this is to test that if a CSV file is uploaded then if the resource contains a sqlite file
+        # that sqlite file will be deleted automatically
+        # similarly if a sqlite file is uploaded, then the existing csv file will be deleted
+
+        # upload a sqlite file
+        self._upload_valid_sqlite_file()
+
+        # at this point the resource should have one content file
+        self.assertEqual(self.resTimeSeries.files.all().count(), 1)
+        self.assertEqual(self.resTimeSeries.has_sqlite_file, True)
+
+        # now uploading of a csv file should delete the above uploaded sqlite file
+        self._upload_valid_csv_file()
+        # at this point the resource should have one content file
+        self.assertEqual(self.resTimeSeries.files.all().count(), 1)
+        self.assertEqual(self.resTimeSeries.has_csv_file, True)
+        self.assertEqual(self.resTimeSeries.has_sqlite_file, False)
+
+        # now uploading a sqlite file should delete the above uploaded csv file
+        self._upload_valid_sqlite_file()
+        # at this point the resource should have one content file
+        self.assertEqual(self.resTimeSeries.files.all().count(), 1)
+        self.assertEqual(self.resTimeSeries.has_csv_file, False)
+        self.assertEqual(self.resTimeSeries.has_sqlite_file, True)
+
     def test_populating_blank_sqlite_file(self):
         # This case applies to csv file upload only
 
         # first add a valid csv file to the resource
-        files = [UploadedFile(file=self.odm2_csv_file_obj, name=self.odm2_csv_file_name)]
-        utils.resource_file_add_pre_process(resource=self.resTimeSeries, files=files,
-                                            user=self.user)
-
-        utils.resource_file_add_process(resource=self.resTimeSeries, files=files, user=self.user)
+        self._upload_valid_csv_file()
 
         # test that the resource does not have all the required metadata elements at this point
         self.assertEqual(self.resTimeSeries.metadata.has_all_required_elements(), False)
@@ -1275,11 +1280,8 @@ class TestTimeSeriesMetaData(MockIRODSTestCaseMixin, TransactionTestCase):
         # this applies only to csv file upload
 
         # first add a valid csv file to the resource
-        files = [UploadedFile(file=self.odm2_csv_file_obj, name=self.odm2_csv_file_name)]
-        utils.resource_file_add_pre_process(resource=self.resTimeSeries, files=files,
-                                            user=self.user)
+        self._upload_valid_csv_file()
 
-        utils.resource_file_add_process(resource=self.resTimeSeries, files=files, user=self.user)
         # since there are 2 data columns the valid series ids are 0 and 1
 
         # test element 'Site'
@@ -1764,6 +1766,23 @@ class TestTimeSeriesMetaData(MockIRODSTestCaseMixin, TransactionTestCase):
     def test_element_duplicate_code(self):
         # TODO: implement
         pass
+
+    def _upload_valid_csv_file(self):
+        # first add a valid csv file to the resource
+        files = [UploadedFile(file=self.odm2_csv_file_obj, name=self.odm2_csv_file_name)]
+        utils.resource_file_add_pre_process(resource=self.resTimeSeries, files=files,
+                                            user=self.user)
+
+        utils.resource_file_add_process(resource=self.resTimeSeries, files=files, user=self.user)
+
+    def _upload_valid_sqlite_file(self):
+        # first add a valid csv file to the resource
+        files = [UploadedFile(file=self.odm2_sqlite_file_obj, name=self.odm2_sqlite_file_name)]
+        utils.resource_file_add_pre_process(resource=self.resTimeSeries, files=files,
+                                            user=self.user, extract_metadata=False)
+
+        utils.resource_file_add_process(resource=self.resTimeSeries, files=files, user=self.user,
+                                        extract_metadata=True)
 
     def _test_invalid_csv_file(self, invalid_csv_file_name):
         invalid_csv_file_obj = self._get_invalid_csv_file_obj(invalid_csv_file_name)

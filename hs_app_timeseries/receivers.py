@@ -94,6 +94,7 @@ def post_add_files_to_resource_handler(sender, **kwargs):
             _process_uploaded_sqlite_file(user, resource, uploaded_file_to_process,
                                           validate_files_dict,
                                           delete_existing_metadata=True)
+
         elif uploaded_file_ext == ".csv":
             _process_uploaded_csv_file(resource, uploaded_file_to_process, validate_files_dict,
                                        delete_existing_metadata=True)
@@ -204,6 +205,7 @@ def _process_uploaded_csv_file(resource, res_file, validate_files_dict,
     if os.path.exists(fl_obj_name):
         shutil.rmtree(os.path.dirname(fl_obj_name))
 
+
 def _process_uploaded_sqlite_file(user, resource, res_file, validate_files_dict,
                                   delete_existing_metadata=True):
     # check if it a sqlite file
@@ -291,6 +293,7 @@ def _validate_metadata(request, element_name):
 def file_pre_download_handler(sender, **kwargs):
     resource = kwargs['resource']
     if resource.metadata.is_dirty:
+        # TODO: Pabitra - Check if we really want to update the sqlite file prior to any download
         resource.metadata.update_sqlite_file()
 
 
@@ -538,7 +541,7 @@ def _extract_metadata(resource, sqlite_file_name):
         sqlite_err_msg = str(ex.args[0])
         log.error(sqlite_err_msg)
         return sqlite_err_msg
-    except Exception, ex:
+    except Exception as ex:
         log.error(ex.message)
         return err_message
 
@@ -731,6 +734,9 @@ def _delete_extracted_metadata(resource):
     resource.metadata.title.delete()
     if resource.metadata.description:
         resource.metadata.description.delete()
+
+    TimeSeriesMetaData.objects.filter(id=resource.metadata.id).update(series_names=[])
+    TimeSeriesMetaData.objects.filter(id=resource.metadata.id).update(value_counts={})
 
     resource.metadata.creators.all().delete()
     resource.metadata.contributors.all().delete()
