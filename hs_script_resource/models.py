@@ -19,10 +19,7 @@ class ScriptResource(BaseResource):
         # one file type is supported
         return ".r", ".py", ".m"
 
-    @classmethod
-    def can_have_multiple_files(cls):
-        # can have multiple files
-        return True
+
 
     @property
     def metadata(self):

@@ -26,6 +26,11 @@ class RefTimeSeriesResource(BaseResource):
         return ()
 
     @classmethod
+    def allow_multiple_file_upload(cls):
+        # no file can be uploaded
+        return False
+
+    @classmethod
     def can_have_multiple_files(cls):
         # resource can't have any files
         return False

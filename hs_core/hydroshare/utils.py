@@ -557,7 +557,7 @@ def validate_resource_file_count(resource_cls, files, resource=None):
         err_msg = "Multiple content files are not supported in {res_type} resource"
         err_msg = err_msg.format(res_type=resource_cls)
         if len(files) > 1:
-            if not resource_cls.can_have_multiple_files():
+            if not resource_cls.allow_multiple_file_upload():
                 raise ResourceFileValidationException(err_msg)
 
         if resource is not None and resource.files.all().count() > 0:

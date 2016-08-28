@@ -573,7 +573,7 @@ class TimeSeriesResource(BaseResource):
         return ".sqlite", ".csv"
 
     @classmethod
-    def can_have_multiple_files(cls):
+    def allow_multiple_file_upload(cls):
         # can upload only 1 file
         # however, the resource can have a sqlite file and a csv file
         # if the user uploads a sqlite file, then the resource will have
@@ -582,6 +582,12 @@ class TimeSeriesResource(BaseResource):
         # both the uploaded csv file and the generated sqlite file will be part
         # of the resource.
         return False
+
+    @classmethod
+    def can_have_multiple_files(cls):
+        # can have a csv file and a sqlite file - one of those is uploaded the other one is system
+        # generated
+        return True
 
     def has_required_content_files(self):
         return self.has_sqlite_file

@@ -327,9 +327,6 @@ class SWATModelInstanceResource(BaseResource):
         # all file types are supported
         return ('.*')
 
-    @classmethod
-    def can_have_multiple_files(cls):
-        return True
 
 processor_for(SWATModelInstanceResource)(resource_processor)
 

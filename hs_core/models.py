@@ -1352,6 +1352,14 @@ class AbstractResource(ResourcePermissionsMixin):
         return (".*",)
 
     @classmethod
+    def allow_multiple_file_upload(cls):
+        # NOTES FOR ANY SUBCLASS OF THIS CLASS TO OVERRIDE THIS FUNCTION:
+        # to allow multiple files to be uploaded return True, otherwise return False
+
+        # resource by default allows multiple file upload
+        return True
+
+    @classmethod
     def can_have_multiple_files(cls):
         # NOTES FOR ANY SUBCLASS OF THIS CLASS TO OVERRIDE THIS FUNCTION:
         # to allow resource to have only 1 file or no file, return False

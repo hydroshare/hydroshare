@@ -132,11 +132,11 @@ def get_supported_file_types_for_resource_type(request, resource_type, *args, **
         return HttpResponseRedirect(request.META['HTTP_REFERER'])
 
 
-def is_multiple_file_allowed_for_resource_type(request, resource_type, *args, **kwargs):
+def is_multiple_file_upload_allowed(request, resource_type, *args, **kwargs):
     resource_cls = hydroshare.check_resource_type(resource_type)
     if request.is_ajax:
         # TODO: use try catch
-        ajax_response_data = {'allow_multiple_file': resource_cls.can_have_multiple_files()}
+        ajax_response_data = {'allow_multiple_file': resource_cls.allow_multiple_file_upload()}
         return HttpResponse(json.dumps(ajax_response_data))
     else:
         return HttpResponseRedirect(request.META['HTTP_REFERER'])
