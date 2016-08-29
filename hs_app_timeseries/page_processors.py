@@ -111,7 +111,10 @@ def _get_resource_view_context(page, request, content_model, selected_series_id,
 def _get_resource_edit_context(page, request, content_model, selected_series_id, series_ids,
                                ts_result_value_count, extended_metadata_exists):
 
-    selected_series_label = series_ids[selected_series_id] if selected_series_id is not None else ''
+    if series_ids and selected_series_id is not None:
+        selected_series_label = series_ids[selected_series_id]
+    else:
+        selected_series_label = ''
 
     if content_model.can_add_blank_sqlite_file:
         content_model.add_blank_sqlite_file(request.user)
