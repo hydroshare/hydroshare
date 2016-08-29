@@ -209,11 +209,12 @@ def create_ref_time_series(request, *args, **kwargs):
         context = {'resource_creation_error': "Error: failed to create resource." }
         return render_to_response('pages/create-ref-time-series.html', context, context_instance=RequestContext(request))
 
-@api_view(['GET'])
+
 def download_refts_resource_files(request, shortkey, *args, **kwargs):
     tempdir = None
     try:
-        _, authorized, _ = authorize(request, shortkey, needed_permission=ACTION_TO_AUTHORIZE.VIEW_RESOURCE,
+        _, authorized, _ = authorize(request, shortkey,
+                                     needed_permission=ACTION_TO_AUTHORIZE.VIEW_RESOURCE,
                                      raises_exception=False)
         if not authorized:
             response = HttpResponse(status=401)
@@ -224,25 +225,7 @@ def download_refts_resource_files(request, shortkey, *args, **kwargs):
         response_irods = download_bag_from_irods(request, path, use_async=False)
 
         tempdir = tempfile.mkdtemp()
-        bag_save_to_path = tempdir + "/" + str(shortkey) + ".zip"
-
-        with open(bag_save_to_path, 'wb+') as f:
-            for chunk in response_irods.streaming_content:
-                f.write(chunk)
-
-        res_files_fp_arr = ts_utils.generate_resource_files(shortkey, tempdir)
-
-        bag_zip_obj = zipfile.ZipFile(bag_save_to_path, "a", zipfile.ZIP_DEFLATED)
-        bag_content_base_folder = str(shortkey) + "/data/contents/" # _RESOURCE_ID_/data/contents/
-        for fn_fp in res_files_fp_arr:
-            fh = open(fn_fp['fullpath'], 'r')
-            bag_zip_obj.writestr(bag_content_base_folder + fn_fp['fname'], fh.read())
-            fh.close()
-        bag_zip_obj.close()
-
-        response = FileResponse(open(bag_save_to_path, 'rb'), content_type='application/zip')
-        response['Content-Disposition'] = 'attachment; filename="' + str(shortkey) + '.zip"'
-        response['Content-Length'] = os.path.getsize(bag_save_to_path)
+        response = assemble_refts_bag(shortkey, response_irods, temp_dir=tempdir)
 
         return response
     except Exception as e:
@@ -253,3 +236,69 @@ def download_refts_resource_files(request, shortkey, *args, **kwargs):
     finally:
         if tempdir is not None:
            shutil.rmtree(tempdir)
+
+
+@api_view(['GET'])
+def rest_download_refts_resource_files(request, shortkey, *args, **kwargs):
+    tempdir = None
+    _, authorized, _ = authorize(request, shortkey,
+                                 needed_permission=ACTION_TO_AUTHORIZE.VIEW_RESOURCE,
+                                 raises_exception=True)
+    try:
+
+        path = "bags/" + str(shortkey) + ".zip"
+        response_irods = download_bag_from_irods(request, path, rest_call=True, use_async=False)
+
+        rest_error_msg_bag_creation_failure = "Bag cannot be created successfully"
+        rest_error_msg_bag_too_big = "File larger than 1GB cannot be downloaded directly via HTTP"
+        if rest_error_msg_bag_creation_failure in response_irods.content:
+            raise Exception(rest_error_msg_bag_creation_failure)
+        elif rest_error_msg_bag_too_big in response_irods:
+            raise Exception(rest_error_msg_bag_creation_failure)
+
+        tempdir = tempfile.mkdtemp()
+        response = assemble_refts_bag(shortkey, response_irods, temp_dir=tempdir)
+
+        return response
+    except Exception as e:
+        logger.exception("rest_download_resource_files: %s" % (e.message))
+        response = HttpResponse(status=503)
+        response.content = "Failed to download this resource!"
+        return response
+    finally:
+        if tempdir is not None:
+           shutil.rmtree(tempdir)
+
+
+def assemble_refts_bag(res_id, empty_bag_stream, temp_dir=None):
+    """
+    save empty_bag_stream to local; download latest wml;
+    put wml into empty bag; return filled-in bag in FileResponse
+    :param res_id: the resource id of the RefTS resource
+    :param bag_stream: the stream of the empty bag
+    :param temp_dir: a folder to store files locally
+    :return: FileResponse obj
+    """
+    if temp_dir is None:
+        temp_dir = tempfile.mkdtemp()
+    bag_save_to_path = temp_dir + "/" + str(res_id) + ".zip"
+
+    with open(bag_save_to_path, 'wb+') as f:
+        for chunk in empty_bag_stream.streaming_content:
+            f.write(chunk)
+
+    res_files_fp_arr = ts_utils.generate_resource_files(res_id, temp_dir)
+
+    bag_zip_obj = zipfile.ZipFile(bag_save_to_path, "a", zipfile.ZIP_DEFLATED)
+    bag_content_base_folder = str(res_id) + "/data/contents/"  # _RESOURCE_ID_/data/contents/
+    for fn_fp in res_files_fp_arr:
+        fh = open(fn_fp['fullpath'], 'r')
+        bag_zip_obj.writestr(bag_content_base_folder + fn_fp['fname'], fh.read())
+        fh.close()
+    bag_zip_obj.close()
+
+    response = FileResponse(open(bag_save_to_path, 'rb'), content_type='application/zip')
+    response['Content-Disposition'] = 'attachment; filename="' + str(res_id) + '.zip"'
+    response['Content-Length'] = os.path.getsize(bag_save_to_path)
+
+    return response

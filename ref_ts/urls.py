@@ -12,4 +12,7 @@ urlpatterns = patterns('',
     url(r'^_internal/(?P<shortkey>[A-z0-9]+)/download-refts-bag/$',
         views.download_refts_resource_files,
         name="download_refts_resource_bag"),
+    url(r'^_internal/(?P<shortkey>[A-z0-9]+)/rest-download-refts-bag/$',
+        views.rest_download_refts_resource_files,
+        name="rest_download_refts_resource_bag"),
     )
