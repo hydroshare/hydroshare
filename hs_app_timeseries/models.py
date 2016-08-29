@@ -452,7 +452,6 @@ class UTCOffSet(TimeSeriesAbstractMetaDataElement):
 
         if len(metadata.series_names) > 0:
             # this validation applies only in case of CSV upload
-            # cls.validate_series_ids(metadata, kwargs)
             kwargs['series_ids'] = range(len(metadata.series_names))
         return super(UTCOffSet, cls).create(**kwargs)
 
@@ -462,7 +461,6 @@ class UTCOffSet(TimeSeriesAbstractMetaDataElement):
         kwargs.pop('selected_series_id', None)
         if len(element.metadata.series_names) > 0:
             # this validation applies only in case of CSV upload
-            # cls.validate_series_ids(metadata, kwargs)
             kwargs['series_ids'] = range(len(element.metadata.series_names))
 
         super(UTCOffSet, cls).update(element_id, **kwargs)
@@ -470,6 +468,7 @@ class UTCOffSet(TimeSeriesAbstractMetaDataElement):
     @classmethod
     def remove(cls, element_id):
         raise ValidationError("UTCOffSet element of a resource can't be deleted.")
+
 
 class AbstractCVLookupTable(models.Model):
     term = models.CharField(max_length=255)
@@ -674,6 +673,7 @@ class TimeSeriesMetaData(CoreMetaData):
     def utc_offset(self):
         return self._utc_offset.all().first()
 
+
     @classmethod
     def get_supported_element_names(cls):
         # get the names of all core metadata elements
@@ -757,6 +757,8 @@ class TimeSeriesMetaData(CoreMetaData):
             if self.time_series_results and series_ids != \
                     set(TimeSeriesResult.get_series_ids(metadata_obj=self)):
                 missing_required_elements.append('Time Series Result')
+            if not self.utc_offset:
+                missing_required_elements.append('UTC Offset')
 
         return missing_required_elements
 
