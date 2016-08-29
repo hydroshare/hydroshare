@@ -696,7 +696,6 @@
 
             $('#map-items tbody').on( 'click', '[role="button"]', function () {
                 var data = mapItems.row( $(this).parents('tr') ).data();
-                console.log(data[0]);
                 showBoxMarker(data[0], true);
             } );
         };
