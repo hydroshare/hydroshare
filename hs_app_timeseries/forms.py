@@ -13,6 +13,7 @@ from models import Site, Variable, Method, ProcessingLevel, TimeSeriesResult, UT
 
 NO_SELECTION_DROPDOWN_OPTION = "-----"
 
+
 class SiteFormHelper(BaseFormHelper):
     def __init__(self, allow_edit=True, res_short_id=None, element_id=None, element_name=None,
                  show_site_code_selection=False, *args, **kwargs):
@@ -140,6 +141,7 @@ class SiteValidationForm(forms.Form):
 
         return self.cleaned_data
 
+
 class VariableFormHelper(BaseFormHelper):
     def __init__(self, allow_edit=True, res_short_id=None, element_id=None, element_name=None,
                  show_variable_code_selection=False, *args, **kwargs):
@@ -158,10 +160,10 @@ class VariableFormHelper(BaseFormHelper):
                            title="Select 'Other...' to specify a new speciation term"),
                 )
 
-        layout = _set_form_helper_layout(common_layout=common_layout, element_name="variable",
-                                         is_show_element_code_selection
-                                         =show_variable_code_selection,
-                                         field_css=field_width)
+        layout = _set_form_helper_layout(
+            common_layout=common_layout, element_name="variable",
+            is_show_element_code_selection=show_variable_code_selection,
+            field_css=field_width)
 
         super(VariableFormHelper, self).__init__(allow_edit, res_short_id, element_id,
                                                  element_name, layout,  *args, **kwargs)
@@ -248,6 +250,7 @@ class VariableValidationForm(forms.Form):
             self._errors['variable_type'] = ["A value for variable type is missing"]
 
         return self.cleaned_data
+
 
 class MethodFormHelper(BaseFormHelper):
     def __init__(self, allow_edit=True, res_short_id=None, element_id=None, element_name=None,
@@ -352,11 +355,11 @@ class ProcessingLevelFormHelper(BaseFormHelper):
                      Field('explanation', css_class=field_width),
                      )
 
-        layout = _set_form_helper_layout(common_layout=common_layout,
-                                         element_name="processinglevel",
-                                         is_show_element_code_selection
-                                         =show_processing_level_code_selection,
-                                         field_css=field_width)
+        layout = _set_form_helper_layout(
+            common_layout=common_layout,
+            element_name="processinglevel",
+            is_show_element_code_selection=show_processing_level_code_selection,
+            field_css=field_width)
 
         kwargs['element_name_label'] = 'Processing Level'
         super(ProcessingLevelFormHelper, self).__init__(allow_edit, res_short_id, element_id,
@@ -374,10 +377,11 @@ class ProcessingLevelForm(ModelForm):
         show_processing_level_code_selection = kwargs.pop('show_processing_level_code_selection',
                                                           False)
         super(ProcessingLevelForm, self).__init__(*args, **kwargs)
-        self.helper = ProcessingLevelFormHelper(allow_edit, res_short_id, element_id,
-                                                element_name='ProcessingLevel',
-                                                show_processing_level_code_selection=
-                                                show_processing_level_code_selection)
+        self.helper = ProcessingLevelFormHelper(
+            allow_edit, res_short_id, element_id,
+            element_name='ProcessingLevel',
+            show_processing_level_code_selection=show_processing_level_code_selection)
+
         self.fields['selected_series_id'].initial = selected_series_id
         _set_available_elements_form_field(self, available_processinglevels, "processinglevel")
         code_selection_label = "Select any existing processing level to use for this series"
@@ -492,6 +496,7 @@ class TimeSeriesResultForm(ModelForm):
         widgets = {'value_count': forms.TextInput()}
         labels = {'aggregation_statistics': 'Aggregation statistic'}
 
+
 class TimeSeriesResultValidationForm(forms.Form):
     units_type = forms.CharField(max_length=255)
     units_name = forms.CharField(max_length=255)
@@ -544,7 +549,7 @@ class UTCOffSetForm(ModelForm):
         selected_series_id = kwargs.pop('selected_series_id', None)
         super(UTCOffSetForm, self).__init__(*args, **kwargs)
         self.helper = UTCOffSetFormHelper(allow_edit, res_short_id, element_id,
-                                                 element_name='UTCOffSet')
+                                          element_name='UTCOffSet')
         self.fields['selected_series_id'].initial = selected_series_id
 
     class Meta:

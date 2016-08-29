@@ -312,6 +312,7 @@ def replace_resource_file_on_irods(new_file, original_resource_file, user=None):
     # need to do this so that the bag will be regenerated prior to download of the bag
     resource_modified(ori_res, by_user=last_changed_by, overwrite_bag=False)
 
+
 def get_resource_file_name_and_extension(res_file):
     """
     Gets the file name and extension of the specified resource file
@@ -339,6 +340,7 @@ def get_resource_files_by_extension(resource, file_extension):
         if file_ext == file_extension:
             matching_files.append(res_file)
     return matching_files
+
 
 def delete_fed_zone_file(file_name_with_full_path):
     '''

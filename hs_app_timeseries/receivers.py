@@ -886,4 +886,3 @@ def _delete_resource_file(resource, file_ext):
         _, res_file_ext = utils.get_resource_file_name_and_extension(res_file)
         if res_file_ext == file_ext:
             delete_resource_file_only(resource, res_file)
-

@@ -1241,7 +1241,7 @@ class TestTimeSeriesMetaData(MockIRODSTestCaseMixin, TransactionTestCase):
                                                    sample_medium='Air',
                                                    value_count=1550,
                                                    aggregation_statistics='Average',
-                                                   series_label = 'Temp_DegC_Mendon'
+                                                   series_label='Temp_DegC_Mendon'
                                                    )
         # there should be 1 timeseries result element at this point
         self.assertEqual(self.resTimeSeries.metadata.time_series_results.all().count(), 1)
@@ -1262,7 +1262,7 @@ class TestTimeSeriesMetaData(MockIRODSTestCaseMixin, TransactionTestCase):
                                                    sample_medium='Air',
                                                    value_count=1200,
                                                    aggregation_statistics='Average',
-                                                   series_label = 'Temp_DegC_Paradise'
+                                                   series_label='Temp_DegC_Paradise'
                                                    )
 
         # there should be 2 timeseries result element at this point

@@ -343,10 +343,10 @@ class ProcessingLevel(TimeSeriesAbstractMetaDataElement):
             element = super(ProcessingLevel, cls).create(**kwargs)
             # update any other method element that is associated with the selected_series_id
             for series_id in kwargs['series_ids']:
-                update_related_elements_on_create(element=element,
-                                                  related_elements
-                                                  =element.metadata.processing_levels,
-                                                  selected_series_id=series_id)
+                update_related_elements_on_create(
+                    element=element,
+                    related_elements=element.metadata.processing_levels,
+                    selected_series_id=series_id)
             return element
 
         return super(ProcessingLevel, cls).create(**kwargs)
@@ -369,10 +369,10 @@ class ProcessingLevel(TimeSeriesAbstractMetaDataElement):
         super(ProcessingLevel, cls).update(element_id, **kwargs)
         element = cls.objects.get(id=element_id)
         for series_id in series_ids:
-            update_related_elements_on_update(element=element,
-                                              related_elements
-                                              =element.metadata.processing_levels,
-                                              selected_series_id=series_id)
+            update_related_elements_on_update(
+                element=element,
+                related_elements=element.metadata.processing_levels,
+                selected_series_id=series_id)
 
     @classmethod
     def remove(cls, element_id):
@@ -642,7 +642,6 @@ class TimeSeriesMetaData(CoreMetaData):
     # temporarily store the series names from the csv file
     # for storing data column name (key) and number of data points (value) for that column
     value_counts = HStoreField(default={})
-
 
     @property
     def resource(self):
@@ -1200,7 +1199,7 @@ class TimeSeriesMetaData(CoreMetaData):
                      "PersonMiddleName, PersonLastName) VALUES(?,?,?,?)"
         people_data = []
         for index, person in enumerate(list(self.creators.all()) +
-                                            list(self.contributors.all())):
+                                       list(self.contributors.all())):
             person_id = index + 1
             name_parts = person.name.split()
             first_name = name_parts[0]
@@ -1819,6 +1818,7 @@ def _update_resource_coverage_element(site_element):
 
         site_element.metadata.create_element("coverage", type=cov_type, value=value_dict)
 
+
 def _create_site_related_cv_terms(element, data_dict):
     # if the user has entered a new elevation datum, then create a corresponding new cv term
     _create_cv_term(element=element, cv_term_class=CVElevationDatum,
@@ -1945,6 +1945,7 @@ def update_related_elements_on_update(element, related_elements, selected_series
                     el.delete()
                 else:
                     el.save()
+
 
 def _generate_term_from_name(name):
     name = name.strip()

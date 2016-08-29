@@ -122,7 +122,7 @@ def _get_resource_edit_context(page, request, content_model, selected_series_id,
         utcoffset_form = UTCOffSetForm(instance=utc_offset,
                                        res_short_id=content_model.short_id,
                                        element_id=utc_offset.id if utc_offset else None,
-                                       selected_series_id = selected_series_id)
+                                       selected_series_id=selected_series_id)
     # create timeseries specific metadata element forms
     site_form = _create_site_form(resource=content_model, selected_series_id=selected_series_id)
     variable_form = _create_variable_form(resource=content_model,
@@ -294,14 +294,13 @@ def _create_processing_level_form(resource, selected_series_id):
     if resource.metadata.processing_levels:
         pro_level = resource.metadata.processing_levels.filter(
             series_ids__contains=[selected_series_id]).first()
-        processing_level_form = ProcessingLevelForm(instance=pro_level,
-                                                    res_short_id=resource.short_id,
-                                                    element_id=pro_level.id if pro_level else None,
-                                                    show_processing_level_code_selection=
-                                                    not resource.has_sqlite_file,
-                                                    available_processinglevels=
-                                                    resource.metadata.processing_levels,
-                                                    selected_series_id=selected_series_id)
+        processing_level_form = ProcessingLevelForm(
+            instance=pro_level,
+            res_short_id=resource.short_id,
+            element_id=pro_level.id if pro_level else None,
+            show_processing_level_code_selection=not resource.has_sqlite_file,
+            available_processinglevels=resource.metadata.processing_levels,
+            selected_series_id=selected_series_id)
 
         if pro_level is not None:
             processing_level_form.action = _get_element_update_form_action('processinglevel',
