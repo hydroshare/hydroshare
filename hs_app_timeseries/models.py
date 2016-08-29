@@ -1211,7 +1211,7 @@ class TimeSeriesMetaData(CoreMetaData):
             is_creator = isinstance(person, Creator)
             people_data.append({'person_id': person_id,
                                 'organization': person.organization,
-                                'email': person.email,
+                                'email': person.email if person.email else '',
                                 'phone': person.phone,
                                 'address': person.address,
                                 'is_creator': is_creator,

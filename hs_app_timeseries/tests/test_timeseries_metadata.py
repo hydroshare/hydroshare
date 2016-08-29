@@ -1,4 +1,5 @@
 import os
+import sqlite3
 import tempfile
 import shutil
 from dateutil import parser
@@ -873,7 +874,7 @@ class TestTimeSeriesMetaData(MockIRODSTestCaseMixin, TransactionTestCase):
         # there should not be any file in the resource
         self.assertEqual(self.resTimeSeries.files.all().count(), 0)
         self._upload_valid_sqlite_file()
-        
+
         # there should be one file in the resource
         self.assertEqual(self.resTimeSeries.files.all().count(), 1)
         self.assertEqual(self.resTimeSeries.metadata.is_dirty, False)
@@ -1065,6 +1066,11 @@ class TestTimeSeriesMetaData(MockIRODSTestCaseMixin, TransactionTestCase):
     def test_populating_blank_sqlite_file(self):
         # This case applies to csv file upload only
 
+        # at this point a blank sqlite file can't be added by the system
+        # a blank sqlite file can be added to the resource after uploading a csv file
+        # and entering all required metadata
+        self.assertEqual(self.resTimeSeries.can_add_blank_sqlite_file, False)
+
         # first add a valid csv file to the resource
         self._upload_valid_csv_file()
 
@@ -1081,6 +1087,10 @@ class TestTimeSeriesMetaData(MockIRODSTestCaseMixin, TransactionTestCase):
         self.resTimeSeries.metadata.create_element('description', abstract='Testing CSV File')
 
         self.resTimeSeries.metadata.create_element('subject', value='CSV')
+
+        # add a contributor with organization
+        self.resTimeSeries.metadata.create_element('contributor', name='John Smith',
+                                                   organization='Utah State University')
 
         # add resource specific metadata
 
@@ -1222,6 +1232,7 @@ class TestTimeSeriesMetaData(MockIRODSTestCaseMixin, TransactionTestCase):
         self.assertEqual(self.resTimeSeries.metadata.has_all_required_elements(), False)
 
         # add 2 timeseries result element - one for each series
+        # here the value for the param 'series_label' is the 1st data column heading
         self.resTimeSeries.metadata.create_element('timeseriesresult', series_ids=['0'],
                                                    units_type='Temperature',
                                                    units_name='Degree F',
@@ -1229,7 +1240,8 @@ class TestTimeSeriesMetaData(MockIRODSTestCaseMixin, TransactionTestCase):
                                                    status='Complete',
                                                    sample_medium='Air',
                                                    value_count=1550,
-                                                   aggregation_statistics='Average'
+                                                   aggregation_statistics='Average',
+                                                   series_label = 'Temp_DegC_Mendon'
                                                    )
         # there should be 1 timeseries result element at this point
         self.assertEqual(self.resTimeSeries.metadata.time_series_results.all().count(), 1)
@@ -1241,6 +1253,7 @@ class TestTimeSeriesMetaData(MockIRODSTestCaseMixin, TransactionTestCase):
         self.assertEqual(self.resTimeSeries.metadata.has_all_required_elements(), False)
 
         # add a 2nd timeseries result element
+        # here the value for the param 'series_label' is the 2nd data column heading
         self.resTimeSeries.metadata.create_element('timeseriesresult', series_ids=['1'],
                                                    units_type='Temperature',
                                                    units_name='Degree F',
@@ -1248,7 +1261,8 @@ class TestTimeSeriesMetaData(MockIRODSTestCaseMixin, TransactionTestCase):
                                                    status='Complete',
                                                    sample_medium='Air',
                                                    value_count=1200,
-                                                   aggregation_statistics='Average'
+                                                   aggregation_statistics='Average',
+                                                   series_label = 'Temp_DegC_Paradise'
                                                    )
 
         # there should be 2 timeseries result element at this point
@@ -1272,9 +1286,35 @@ class TestTimeSeriesMetaData(MockIRODSTestCaseMixin, TransactionTestCase):
         # test that the resource has the required metadata elements at this point
         self.assertEqual(self.resTimeSeries.metadata.has_all_required_elements(), True)
 
-        # TODO: test addition of blank sqlite file to resource
+        # until a blank sqlite file is added it wonut be possible to update sqlite file
+        self.assertEqual(self.resTimeSeries.can_update_sqlite_file, False)
+        # at this point system can add a blank sqlite file
+        self.assertEqual(self.resTimeSeries.can_add_blank_sqlite_file, True)
 
-        # TODO: test populating of the blank sqlite file
+        # test addition of blank sqlite file to resource
+        self.resTimeSeries.add_blank_sqlite_file(self.user)
+        # at this point system can't add a blank sqlite file since the resource already has
+        # a sqlite file
+        self.assertEqual(self.resTimeSeries.can_add_blank_sqlite_file, False)
+
+        # at this point it should be possible to update sqlite file with metadata in django db
+        self.assertEqual(self.resTimeSeries.can_update_sqlite_file, True)
+
+        # at this point the resource should have 2 content file
+        self.assertEqual(self.resTimeSeries.files.all().count(), 2)
+        # resource should have a sqlite file at this point
+        self.assertEqual(self.resTimeSeries.has_sqlite_file, True)
+        # resource should have a csv file at this point
+        self.assertEqual(self.resTimeSeries.has_csv_file, True)
+
+        # test the sqlite file is blank at this point
+        self._test_sqlite_file_is_blank()
+
+        # test populating of the blank sqlite file
+        self.resTimeSeries.metadata.update_sqlite_file(self.user)
+
+        # test that the sqlite file has now data
+        self._test_sqlite_file_has_data()
 
     def test_series_id_for_metadata_element_create(self):
         # this applies only to csv file upload
@@ -1980,3 +2020,192 @@ class TestTimeSeriesMetaData(MockIRODSTestCaseMixin, TransactionTestCase):
         self.assertEqual(self.resTimeSeries.metadata.cv_aggregation_statistics.all().count(), 17)
         # there should not be any UTCOffset element
         self.assertEqual(self.resTimeSeries.metadata.utc_offset, None)
+
+    def _test_sqlite_file_is_blank(self):
+        sqlite_file_to_update = utils.get_resource_files_by_extension(self.resTimeSeries,
+                                                                      ".sqlite")[0]
+        # retrieve the sqlite file from iRODS and save it to temp directory
+        temp_sqlite_file = utils.get_file_from_irods(sqlite_file_to_update)
+        con = sqlite3.connect(temp_sqlite_file)
+        with con:
+            # get the records in python dictionary format
+            con.row_factory = sqlite3.Row
+            cur = con.cursor()
+            cur.execute("SELECT * FROM SamplingFeatures")
+            query_result = cur.fetchone()
+            self.assertEqual(query_result, None)
+
+            cur.execute("SELECT * FROM SpatialReferences")
+            query_result = cur.fetchone()
+            self.assertEqual(query_result, None)
+
+            cur.execute("SELECT * FROM Sites")
+            query_result = cur.fetchone()
+            self.assertEqual(query_result, None)
+
+            cur.execute("SELECT * FROM Methods")
+            query_result = cur.fetchone()
+            self.assertEqual(query_result, None)
+
+            cur.execute("SELECT * FROM Variables")
+            query_result = cur.fetchone()
+            self.assertEqual(query_result, None)
+
+            cur.execute("SELECT * FROM Units")
+            query_result = cur.fetchone()
+            self.assertEqual(query_result, None)
+
+            cur.execute("SELECT * FROM ProcessingLevels")
+            query_result = cur.fetchone()
+            self.assertEqual(query_result, None)
+
+            cur.execute("SELECT * FROM People")
+            query_result = cur.fetchone()
+            self.assertEqual(query_result, None)
+
+            cur.execute("SELECT * FROM Organizations")
+            query_result = cur.fetchone()
+            self.assertEqual(query_result, None)
+
+            cur.execute("SELECT * FROM Affiliations")
+            query_result = cur.fetchone()
+            self.assertEqual(query_result, None)
+
+            cur.execute("SELECT * FROM Actions")
+            query_result = cur.fetchone()
+            self.assertEqual(query_result, None)
+
+            cur.execute("SELECT * FROM ActionBy")
+            query_result = cur.fetchone()
+            self.assertEqual(query_result, None)
+
+            cur.execute("SELECT * FROM FeatureActions")
+            query_result = cur.fetchone()
+            self.assertEqual(query_result, None)
+
+            cur.execute("SELECT * FROM Results")
+            query_result = cur.fetchone()
+            self.assertEqual(query_result, None)
+
+            cur.execute("SELECT * FROM TimeSeriesResults")
+            query_result = cur.fetchone()
+            self.assertEqual(query_result, None)
+
+            cur.execute("SELECT * FROM TimeSeriesResultValues")
+            query_result = cur.fetchone()
+            self.assertEqual(query_result, None)
+
+            cur.execute("SELECT * FROM Datasets")
+            query_result = cur.fetchone()
+            self.assertEqual(query_result, None)
+
+            cur.execute("SELECT * FROM DatasetsResults")
+            query_result = cur.fetchone()
+            self.assertEqual(query_result, None)
+
+        if os.path.exists(temp_sqlite_file):
+            shutil.rmtree(os.path.dirname(temp_sqlite_file))
+
+    def _test_sqlite_file_has_data(self):
+        sqlite_file_to_update = utils.get_resource_files_by_extension(self.resTimeSeries,
+                                                                      ".sqlite")[0]
+        # retrieve the sqlite file from iRODS and save it to temp directory
+        temp_sqlite_file = utils.get_file_from_irods(sqlite_file_to_update)
+        con = sqlite3.connect(temp_sqlite_file)
+        record_count_query = "SELECT COUNT() FROM {}"
+        with con:
+            # get the records in python dictionary format
+            con.row_factory = sqlite3.Row
+            cur = con.cursor()
+
+            cur.execute(record_count_query.format("SamplingFeatures"))
+            record_count = cur.fetchone()[0]
+            self.assertEqual(record_count, 2)
+
+            # there should be 1 record in SpatialReferences table
+            cur.execute(record_count_query.format("SpatialReferences"))
+            record_count = cur.fetchone()[0]
+            self.assertEqual(record_count, 1)
+
+            # there should be 2 records in Sites table
+            cur.execute(record_count_query.format("Sites"))
+            record_count = cur.fetchone()[0]
+            self.assertEqual(record_count, 2)
+
+            # there should be 2 records in Methods table
+            cur.execute(record_count_query.format("Methods"))
+            record_count = cur.fetchone()[0]
+            self.assertEqual(record_count, 2)
+
+            # there should be 1 record in Variables table
+            cur.execute(record_count_query.format("Variables"))
+            record_count = cur.fetchone()[0]
+            self.assertEqual(record_count, 1)
+
+            # there should be 2 records in Units table
+            cur.execute(record_count_query.format("Units"))
+            record_count = cur.fetchone()[0]
+            self.assertEqual(record_count, 2)
+
+            # there should be 1 record in ProcessingLevel table
+            cur.execute(record_count_query.format("ProcessingLevels"))
+            record_count = cur.fetchone()[0]
+            self.assertEqual(record_count, 1)
+
+            # there should be 2 records in People table
+            cur.execute(record_count_query.format("People"))
+            record_count = cur.fetchone()[0]
+            self.assertEqual(record_count, 2)
+
+            # there should be 2 records in Organizations table
+            cur.execute(record_count_query.format("Organizations"))
+            record_count = cur.fetchone()[0]
+            self.assertEqual(record_count, 2)
+
+            # there should be 2 records in Affiliations table
+            cur.execute(record_count_query.format("Affiliations"))
+            record_count = cur.fetchone()[0]
+            self.assertEqual(record_count, 2)
+
+            # there should be 2 records in Actions table
+            cur.execute(record_count_query.format("Actions"))
+            record_count = cur.fetchone()[0]
+            self.assertEqual(record_count, 2)
+
+            # there should be 4 records in ActionBy table
+            cur.execute(record_count_query.format("ActionBy"))
+            record_count = cur.fetchone()[0]
+            self.assertEqual(record_count, 4)
+
+            # there should be 2 records in FeatureActions table
+            cur.execute(record_count_query.format("FeatureActions"))
+            record_count = cur.fetchone()[0]
+            self.assertEqual(record_count, 2)
+
+            # there should be 2 records in Results table
+            cur.execute(record_count_query.format("Results"))
+            record_count = cur.fetchone()[0]
+            self.assertEqual(record_count, 2)
+
+            # there should be 2 records in TimeSeriesResults table
+            cur.execute(record_count_query.format("TimeSeriesResults"))
+            record_count = cur.fetchone()[0]
+            self.assertEqual(record_count, 2)
+
+            # there should be 40 records in TimeSeriesResultValues table
+            cur.execute(record_count_query.format("TimeSeriesResultValues"))
+            record_count = cur.fetchone()[0]
+            self.assertEqual(record_count, 40)
+
+            # there should be 1 record in Datasets table
+            cur.execute(record_count_query.format("Datasets"))
+            record_count = cur.fetchone()[0]
+            self.assertEqual(record_count, 1)
+
+            # there should be 2 records in DatasetsResults table
+            cur.execute(record_count_query.format("DatasetsResults"))
+            record_count = cur.fetchone()[0]
+            self.assertEqual(record_count, 2)
+
+        if os.path.exists(temp_sqlite_file):
+            shutil.rmtree(os.path.dirname(temp_sqlite_file))
