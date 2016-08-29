@@ -640,7 +640,6 @@ class TimeSeriesMetaData(CoreMetaData):
     _utc_offset = GenericRelation(UTCOffSet)
     is_dirty = models.BooleanField(default=False)
     # temporarily store the series names from the csv file
-    series_names = ArrayField(models.CharField(max_length=200, null=True, blank=True), default=[])
     # for storing data column name (key) and number of data points (value) for that column
     value_counts = HStoreField(default={})
 
@@ -673,6 +672,9 @@ class TimeSeriesMetaData(CoreMetaData):
     def utc_offset(self):
         return self._utc_offset.all().first()
 
+    @property
+    def series_names(self):
+        return self.value_counts.keys()
 
     @classmethod
     def get_supported_element_names(cls):
@@ -1151,8 +1153,8 @@ class TimeSeriesMetaData(CoreMetaData):
             update_to_guids(self.variables)
             update_to_guids(self.methods)
             update_to_guids(self.processing_levels)
-            # delete all series name
-            self.series_names = []
+            # delete all value_counts
+            self.value_counts = {}
             self.save()
 
     def _update_samplingfeatures_table_insert(self, con, cur):

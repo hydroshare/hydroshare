@@ -3,13 +3,14 @@ from __future__ import unicode_literals
 
 from django.db import migrations, models
 import django.contrib.postgres.fields
+import django.contrib.postgres.fields.hstore
 
 
 class Migration(migrations.Migration):
 
     dependencies = [
         ('contenttypes', '0002_remove_content_type_name'),
-        ('hs_app_timeseries', '0009_timeseriesmetadata_value_counts'),
+        ('hs_app_timeseries', 'custom_data_migration_20160718'),
     ]
 
     operations = [
@@ -26,5 +27,25 @@ class Migration(migrations.Migration):
             options={
                 'abstract': False,
             },
+        ),
+        migrations.AddField(
+            model_name='site',
+            name='latitude',
+            field=models.FloatField(null=True, blank=True),
+        ),
+        migrations.AddField(
+            model_name='site',
+            name='longitude',
+            field=models.FloatField(null=True, blank=True),
+        ),
+        migrations.AddField(
+            model_name='timeseriesmetadata',
+            name='value_counts',
+            field=django.contrib.postgres.fields.hstore.HStoreField(default={}),
+        ),
+        migrations.AddField(
+            model_name='timeseriesresult',
+            name='series_label',
+            field=models.CharField(max_length=255, null=True, blank=True),
         ),
     ]
