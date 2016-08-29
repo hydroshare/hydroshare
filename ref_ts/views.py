@@ -225,7 +225,8 @@ def download_refts_resource_files(request, shortkey, *args, **kwargs):
         response_irods = download_bag_from_irods(request, path, use_async=False)
 
         tempdir = tempfile.mkdtemp()
-        response = assemble_refts_bag(shortkey, response_irods, temp_dir=tempdir)
+        response = assemble_refts_bag(shortkey, response_irods.streaming_content,
+                                      temp_dir=tempdir)
 
         return response
     except Exception as e:
@@ -249,17 +250,14 @@ def rest_download_refts_resource_files(request, shortkey, *args, **kwargs):
         path = "bags/" + str(shortkey) + ".zip"
         response_irods = download_bag_from_irods(request, path, rest_call=True, use_async=False)
 
-        rest_error_msg_bag_creation_failure = "Bag cannot be created successfully"
-        rest_error_msg_bag_too_big = "File larger than 1GB cannot be downloaded directly via HTTP"
-        if rest_error_msg_bag_creation_failure in response_irods.content:
-            raise Exception(rest_error_msg_bag_creation_failure)
-        elif rest_error_msg_bag_too_big in response_irods:
-            raise Exception(rest_error_msg_bag_creation_failure)
+        if not response_irods.streaming:
+            raise Exception("Failed to stream RefTS bag")
+        else:
+            tempdir = tempfile.mkdtemp()
+            response = assemble_refts_bag(shortkey, response_irods.streaming_content,
+                                          temp_dir=tempdir)
+            return response
 
-        tempdir = tempfile.mkdtemp()
-        response = assemble_refts_bag(shortkey, response_irods, temp_dir=tempdir)
-
-        return response
     except Exception as e:
         logger.exception("rest_download_resource_files: %s" % (e.message))
         response = HttpResponse(status=503)
@@ -284,7 +282,7 @@ def assemble_refts_bag(res_id, empty_bag_stream, temp_dir=None):
     bag_save_to_path = temp_dir + "/" + str(res_id) + ".zip"
 
     with open(bag_save_to_path, 'wb+') as f:
-        for chunk in empty_bag_stream.streaming_content:
+        for chunk in empty_bag_stream:
             f.write(chunk)
 
     res_files_fp_arr = ts_utils.generate_resource_files(res_id, temp_dir)
