@@ -10,7 +10,7 @@ from django.dispatch import receiver
 
 from hs_core.signals import pre_create_resource, pre_add_files_to_resource, \
     pre_delete_file_from_resource, post_add_files_to_resource, post_create_resource, \
-    pre_metadata_element_create, pre_metadata_element_update, pre_download_file
+    pre_metadata_element_create, pre_metadata_element_update
 from hs_core.hydroshare import utils, delete_resource_file_only
 from hs_app_timeseries.models import TimeSeriesResource, CVVariableType, CVVariableName, \
     CVSpeciation, CVSiteType, CVElevationDatum, CVMethodType, CVUnitsType, CVStatus, CVMedium, \
@@ -174,11 +174,9 @@ def _process_uploaded_csv_file(resource, res_file, validate_files_dict,
                 last_row = row
                 data_row_count += 1
             end_date_str = last_row[0]
-            # save the series names
-            # columns starting with the 2nd column are data series names
-            TimeSeriesMetaData.objects.filter(id=resource.metadata.id).update(
-                series_names=header[1:])
 
+            # save the series names along with number of data points for each series
+            # columns starting with the 2nd column are data series names
             value_counts = {}
             for data_col_name in header[1:]:
                 value_counts[data_col_name] = str(data_row_count)
@@ -287,14 +285,6 @@ def _validate_metadata(request, element_name):
         return {'is_valid': True, 'element_data_dict': element_form.cleaned_data}
     else:
         return {'is_valid': False, 'element_data_dict': None, "errors": element_form.errors}
-
-
-@receiver(pre_download_file, sender=TimeSeriesResource)
-def file_pre_download_handler(sender, **kwargs):
-    resource = kwargs['resource']
-    if resource.metadata.is_dirty:
-        # TODO: Pabitra - Check if we really want to update the sqlite file prior to any download
-        resource.metadata.update_sqlite_file()
 
 
 def _extract_metadata(resource, sqlite_file_name):
@@ -735,7 +725,6 @@ def _delete_extracted_metadata(resource):
     if resource.metadata.description:
         resource.metadata.description.delete()
 
-    TimeSeriesMetaData.objects.filter(id=resource.metadata.id).update(series_names=[])
     TimeSeriesMetaData.objects.filter(id=resource.metadata.id).update(value_counts={})
 
     resource.metadata.creators.all().delete()
