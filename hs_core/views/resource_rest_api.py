@@ -703,7 +703,7 @@ class ResourceFileCRUD(APIView):
 
         # redirects to django_irods/views.download function
         # use new internal url for rest call
-        redirect_url = f.url.replace('download/', 'rest_download/')
+        redirect_url = f.url.replace('django_irods/download/', 'django_irods/rest_download/')
         return HttpResponseRedirect(redirect_url)
 
     def post(self, request, pk):
