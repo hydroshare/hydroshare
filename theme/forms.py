@@ -114,17 +114,6 @@ class CommentForm(CommentDetailsForm):
 # added by Hong Yi for customizing THreadedCommentForm
 class ThreadedCommentForm(CommentForm, Html5Mixin):
 
-    # name = forms.CharField(label=_("Name"), help_text=_("required"),
-    #                       max_length=50, widget=forms.HiddenInput())
-    # email = forms.EmailField(label=_("Email"),
-    #                         help_text=_("required (not published)"))
-    # url = forms.URLField(label=_("Website"), help_text=_("optional"),
-    #                     required=False)
-
-    # These are used to get/set prepopulated fields via cookies.
-    # cookie_fields = ("name", "email", "url")
-    # cookie_prefix = "mezzanine-comment-"
-
     def __init__(self, request, *args, **kwargs):
         """
         Set some initial field values from cookies or the logged in
