@@ -1,6 +1,8 @@
 *.pyc
 *.pyo
 *.db
+.bash_history
+.cache
 .coverage
 .DS_Store
 .idea
@@ -14,4 +16,8 @@
 /static
 celeryd.pid
 docker-compose.yml
+init-defaultworker
+init-dockerworker
+init-hydroshare
+run-server
 schema.xml

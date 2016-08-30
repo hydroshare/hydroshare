@@ -10,7 +10,7 @@ from hs_core import hydroshare
 class TestRefTS(TestCase):
 
     def setUp(self):
-        self.logger = logging.getLogger("django")
+        self.logger = logging.getLogger(__name__)
         self.api_client = Client()
 
         self.username = 'creator'

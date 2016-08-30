@@ -26,7 +26,7 @@ from mezzanine.conf import settings
 from hs_core.signals import pre_create_resource, post_create_resource, pre_add_files_to_resource, \
     post_add_files_to_resource
 from hs_core.models import AbstractResource, BaseResource, ResourceFile
-from hs_core.hydroshare.hs_bagit import create_bag_files, create_bag_by_irods
+from hs_core.hydroshare.hs_bagit import create_bag_files
 
 from django_irods.icommands import SessionException
 from django_irods.storage import IrodsStorage
@@ -379,9 +379,9 @@ def replicate_resource_bag_to_user_zone(user, res_id):
     if istorage.exists(res_coll):
         bag_modified = istorage.getAVU(res_coll, 'bag_modified')
     if bag_modified == "true":
+        # import here to avoid circular import issue
+        from hs_core.tasks import create_bag_by_irods
         create_bag_by_irods(res_id, istorage)
-        if istorage.exists(res_coll):
-            istorage.setAVU(res_coll, 'bag_modified', "false")
 
     # do replication of the resource bag to irods user zone
     if not res.resource_federation_path:

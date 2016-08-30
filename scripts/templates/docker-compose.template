@@ -1,6 +1,8 @@
 postgis:
   image: mjstealey/hs_postgres:9.4.7
   container_name: postgis
+  volumes:
+    - "/var/lib/postgresql/data"
 redis:
   image: redis:2.8
   container_name: redis
@@ -36,24 +38,24 @@ hydroshare:
     SOLR_HOST: solr
   volumes:
     # hydroshare repository
-    - "HS_PATH:/home/docker/hydroshare"
+    - "HS_PATH:/hydroshare"
     # pycharm debugging
-    # - "/home/hydro/pycharm-debug:/home/docker/pycharm-debug"
+    # - "/home/hydro/pycharm-debug:/pycharm-debug"
     # log files
-    - "HS_LOG_FILES:/var/log/hydroshare"
+    - "HS_LOG_FILES:/hydroshare/log"
     # shared location for uwsgi.sock between containers
-    - "/var/run"
+    - "/hs_tmp"
     # temp directory shared with celery workers
-    - "/shared_temp"
+    - "/shared_tmp"
   ports:
-    - "1338:22"
+    - "1338:2022"
     - "8000:8000"
   links:
     - postgis:postgis
     - redis:redis
     - rabbitmq:rabbitmq
     - solr:solr
-  command: /bin/bash init
+  command: /bin/bash init-hydroshare
 defaultworker:
   build: .
   container_name: defaultworker
@@ -74,7 +76,7 @@ defaultworker:
     - postgis:postgis
     - redis:redis
     - rabbitmq:rabbitmq
-  command: ./run_celery.sh
+  command: /bin/bash init-defaultworker
 dockerworker:
   build: .
   container_name: dockerworker
@@ -95,4 +97,4 @@ dockerworker:
     - postgis:postgis
     - redis:redis
     - rabbitmq:rabbitmq
-  command: celery worker -A hydroshare -E -Q docker_container_tasks,docker_broadcast_tasks
+  command: /bin/bash init-dockerworker

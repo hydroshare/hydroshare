@@ -484,7 +484,7 @@ PASSWORD_RESET_TIMEOUT_DAYS = 1
 RESOURCE_LOCK_TIMEOUT_SECONDS = 300 # in seconds
 
 # customized temporary file path for large files retrieved from iRODS user zone for metadata extraction
-TEMP_FILE_DIR = '/tmp'
+TEMP_FILE_DIR = '/hs_tmp'
 
 ####################
 # OAUTH TOKEN SETTINGS #
@@ -516,7 +516,7 @@ LOGGING = {
         'syslog': {
             'level': 'WARNING',
             'class': 'logging.handlers.RotatingFileHandler',
-            'filename': '/var/log/hydroshare/system.log',
+            'filename': '/hydroshare/log/system.log',
             'formatter': 'simple',
             'maxBytes': 1024*1024*15, # 15MB
             'backupCount': 10,
@@ -524,7 +524,7 @@ LOGGING = {
         'djangolog': {
             'level': 'DEBUG',
             'class': 'logging.handlers.RotatingFileHandler',
-            'filename': '/var/log/hydroshare/django.log',
+            'filename': '/hydroshare/log/django.log',
             'formatter': 'verbose',
             'maxBytes': 1024*1024*15, # 15MB
             'backupCount': 10,
@@ -532,7 +532,7 @@ LOGGING = {
         'hydrosharelog': {
             'level': 'DEBUG',
             'class': 'logging.handlers.RotatingFileHandler',
-            'filename': '/var/log/hydroshare/hydroshare.log',
+            'filename': '/hydroshare/log/hydroshare.log',
             'formatter': 'verbose',
             'maxBytes': 1024*1024*15, # 15MB
             'backupCount': 10,
