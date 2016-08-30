@@ -230,7 +230,7 @@ def download_refts_resource_bag(request, shortkey, *args, **kwargs):
 
         return response
     except Exception as e:
-        logger.exception("download_resource_files: %s" % (e.message))
+        logger.exception("download_refts_resource_bag: %s" % (e.message))
         response = HttpResponse(status=503)
         response.content = "<h3>Failed to download this resource!</h3>"
         return response
@@ -259,7 +259,7 @@ def rest_download_refts_resource_bag(request, shortkey, *args, **kwargs):
             return response
 
     except Exception as e:
-        logger.exception("rest_download_resource_files: %s" % (e.message))
+        logger.exception("rest_download_refts_resource_bag: %s" % (e.message))
         response = HttpResponse(status=503)
         response.content = "Failed to download this resource!"
         return response
