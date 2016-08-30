@@ -13,7 +13,7 @@
         {% keywords_for page as kws %}
         {% set_page_permissions page %}
         <input type="hidden" id="supported-file-types" value="{{ cm.get_supported_upload_file_types }}">
-        <input type="hidden" id="allow-multiple-file-upload" value={{ cm.can_have_multiple_files }}>
+        <input type="hidden" id="allow-multiple-file-upload" value={{ cm.allow_multiple_file_upload }}>
         <input type="hidden" id="file-count" value={{ cm.files.all.count }}>
         <input type="hidden" id="resource-mode" value="{% if metadata_form %}Edit{% else %}View{% endif %}" >
 

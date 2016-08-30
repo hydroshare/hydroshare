@@ -184,8 +184,6 @@ def get_page_context(page, user, resource_edit=False, extended_metadata_layout=N
                    'fundingagencies': content_model.metadata.funding_agencies.all(),
                    'metadata_status': metadata_status,
                    'missing_metadata_elements': content_model.metadata.get_required_missing_elements(),
-                   'supported_file_types': content_model.get_supported_upload_file_types(),
-                   'allow_multiple_file_upload': content_model.allow_multiple_file_upload(),
                    'validation_error': validation_error if validation_error else None,
                    'new_version_resource_creation_error': new_version_create_resource_error if new_version_create_resource_error else None,
                    'relevant_tools': relevant_tools,
