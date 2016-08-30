@@ -702,7 +702,9 @@ class ResourceFileCRUD(APIView):
             raise NotFound(detail=err_msg)
 
         # redirects to django_irods/views.download function
-        return HttpResponseRedirect(f.url)
+        # use new internal url for rest call
+        redirect_url = f.url.replace('download/', 'rest_download/')
+        return HttpResponseRedirect(redirect_url)
 
     def post(self, request, pk):
         """
