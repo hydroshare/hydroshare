@@ -717,6 +717,10 @@ class Identifier(AbstractMetaDataElement):
 
 
 class Publisher(AbstractMetaDataElement):
+    publisher_name_CUAHSI = "Consortium of Universities for the Advancement of Hydrologic " \
+                           "Science, Inc. (CUAHSI)"
+
+    publisher_url_CUAHSI = 'https://www.cuahsi.org'
     term = 'Publisher'
     name = models.CharField(max_length=200)
     url = models.URLField()
@@ -736,30 +740,18 @@ class Publisher(AbstractMetaDataElement):
             raise ValidationError("Publisher element can't be created for a resource that "
                                   "is not yet published.")
 
-        publisher_CUAHSI = "Consortium of Universities for the Advancement of Hydrologic " \
-                           "Science, Inc. (CUAHSI)"
 
-        if resource.files.all():
-            # if the resource has content files, set CUAHSI as the publisher
-            if 'name' in kwargs:
-                if kwargs['name'].lower() != publisher_CUAHSI.lower():
-                    raise ValidationError("Invalid publisher name")
-
-            kwargs['name'] = publisher_CUAHSI
-            if 'url' in kwargs:
-                if kwargs['url'].lower() != 'https://www.cuahsi.org':
-                    raise ValidationError("Invalid publisher URL")
-
-            kwargs['url'] = 'https://www.cuahsi.org'
+        if 'name' in kwargs:
+            if kwargs['name'].lower() != cls.publisher_name_CUAHSI.lower():
+                raise ValidationError("Invalid publisher name")
         else:
-            # make sure we are not setting CUAHSI as publisher for a resource
-            # that has no content files
-            if 'name' in kwargs:
-                if kwargs['name'].lower() == publisher_CUAHSI.lower():
-                    raise ValidationError("Invalid publisher name")
-            if 'url' in kwargs:
-                if kwargs['url'].lower() == 'https://www.cuahsi.org':
-                    raise ValidationError("Invalid publisher URL")
+            kwargs['name'] = cls.publisher_name_CUAHSI
+
+        if 'url' in kwargs:
+            if kwargs['url'].lower() != cls.publisher_url_CUAHSI.lower():
+                raise ValidationError("Invalid publisher URL")
+        else:
+            kwargs['url'] = cls.publisher_url_CUAHSI
 
         return super(Publisher, cls).create(**kwargs)
 
