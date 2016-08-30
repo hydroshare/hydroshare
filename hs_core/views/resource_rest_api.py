@@ -268,7 +268,7 @@ class ResourceReadUpdateDelete(ResourceToListItemMixin, generics.RetrieveUpdateD
         if res.resource_type.lower() == "reftimeseriesresource":
 
             # if res is RefTimeSeriesResource
-            bag_url = site_url + reverse('download_refts_resource_bag',
+            bag_url = site_url + reverse('rest_download_refts_resource_bag',
                                          kwargs={'shortkey': pk})
         else:
             bag_url = site_url + reverse('rest_download',
@@ -702,7 +702,9 @@ class ResourceFileCRUD(APIView):
             raise NotFound(detail=err_msg)
 
         # redirects to django_irods/views.download function
-        return HttpResponseRedirect(f.url)
+        # use new internal url for rest call
+        redirect_url = f.url.replace('django_irods/download/', 'django_irods/rest_download/')
+        return HttpResponseRedirect(redirect_url)
 
     def post(self, request, pk):
         """
