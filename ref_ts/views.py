@@ -210,7 +210,7 @@ def create_ref_time_series(request, *args, **kwargs):
         return render_to_response('pages/create-ref-time-series.html', context, context_instance=RequestContext(request))
 
 
-def download_refts_resource_files(request, shortkey, *args, **kwargs):
+def download_refts_resource_bag(request, shortkey, *args, **kwargs):
     tempdir = None
     try:
         _, authorized, _ = authorize(request, shortkey,
@@ -240,7 +240,7 @@ def download_refts_resource_files(request, shortkey, *args, **kwargs):
 
 
 @api_view(['GET'])
-def rest_download_refts_resource_files(request, shortkey, *args, **kwargs):
+def rest_download_refts_resource_bag(request, shortkey, *args, **kwargs):
     tempdir = None
     _, authorized, _ = authorize(request, shortkey,
                                  needed_permission=ACTION_TO_AUTHORIZE.VIEW_RESOURCE,
