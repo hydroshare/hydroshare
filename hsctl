@@ -213,12 +213,12 @@ loaddb_hs() {
     echo "LOADDB:"
     echo "  - docker exec -u hydro-service hydroshare dropdb -U postgres -h postgis postgres"
     docker exec -u hydro-service hydroshare dropdb -U postgres -h postgis postgres
-    echo "  - docker exec -u hydro-service hydroshare createdb -U postgres -h postgis postgres --encoding UNICODE --template=template0"
-    docker exec -u hydro-service hydroshare createdb -U postgres -h postgis postgres --encoding UNICODE --template=template0
-    echo "  - docker exec -u hydro-service hydroshare psql -U postgres -h postgis -d postgres -w -c 'CREATE EXTENSION postgis;'"
-    docker exec -u hydro-service hydroshare psql -U postgres -h postgis -d postgres -w -c 'CREATE EXTENSION postgis;'
-    echo "  - docker exec -u hydro-service hydroshare psql -U postgres -h postgis -d postgres -w -c 'CREATE EXTENSION hstore;'"
-    docker exec -u hydro-service hydroshare psql -U postgres -h postgis -d postgres -w -c 'CREATE EXTENSION hstore;'
+    echo "  - docker exec -u hydro-service hydroshare psql -U postgres -h postgis -d template1 -w -c 'CREATE EXTENSION postgis;'"
+    docker exec -u hydro-service hydroshare psql -U postgres -h postgis -d template1 -w -c 'CREATE EXTENSION postgis;'
+    echo "  - docker exec -u hydro-service hydroshare psql -U postgres -h postgis -d template1 -w -c 'CREATE EXTENSION hstore;'"
+    docker exec -u hydro-service hydroshare psql -U postgres -h postgis -d template1 -w -c 'CREATE EXTENSION hstore;'
+    echo "  - docker exec -u hydro-service hydroshare createdb -U postgres -h postgis postgres --encoding UNICODE --template=template1"
+    docker exec -u hydro-service hydroshare createdb -U postgres -h postgis postgres --encoding UNICODE --template=template1
     echo "  - docker exec -u hydro-service hydroshare psql -U postgres -h postgis -d postgres -w -c 'SET client_min_messages TO WARNING;'"
     docker exec -u hydro-service hydroshare psql -U postgres -h postgis -d postgres -w -c 'SET client_min_messages TO WARNING;'
     echo "  - docker exec -u hydro-service hydroshare psql -U postgres -h postgis -d postgres -q -f ${HS_DATABASE}"
