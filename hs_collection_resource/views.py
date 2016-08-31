@@ -78,13 +78,6 @@ def update_collection(request, shortkey, *args, **kwargs):
                                                     relation_type=hasPart, relation_value=value,
                                                     set_res_modified=False)
 
-                    # # change contained res
-                    # value = relation_value_template.format(collection_res_obj.short_id)
-                    # res_obj = get_resource_by_shortkey(res_id_remove)
-                    # add_or_remove_relation_metadata(add=False, target_res_obj=res_obj,
-                    #                                 relation_type=isPartOf, relation_value=value,
-                    #                                 set_res_modified=True, last_change_user=user)
-
             # res to add
             res_id_list_add = []
             for res_id_add in updated_contained_res_id_list:
@@ -96,6 +89,7 @@ def update_collection(request, shortkey, *args, **kwargs):
                     res_to_add, _, _ \
                         = authorize(request, res_id_add,
                                     needed_permission=ACTION_TO_AUTHORIZE.VIEW_METADATA)
+
                     if not res_to_add.raccess.shareable:
                         raise Exception('This resource can not be added \
                         to a collection since it is not sharable')
@@ -113,13 +107,6 @@ def update_collection(request, shortkey, *args, **kwargs):
                     add_or_remove_relation_metadata(add=True, target_res_obj=collection_res_obj,
                                                     relation_type=hasPart, relation_value=value,
                                                     set_res_modified=False)
-
-                    # # change contained res
-                    # value = relation_value_template.format(collection_res_obj.short_id)
-                    # res_obj = get_resource_by_shortkey(res_id_add)
-                    # add_or_remove_relation_metadata(add=True, target_res_obj=res_obj,
-                    #                                 relation_type=isPartOf, relation_value=value,
-                    #                                 set_res_modified=True, last_change_user=user)
 
             if collection_res_obj.can_be_public_or_discoverable:
                 metadata_status = "Sufficient to make public"

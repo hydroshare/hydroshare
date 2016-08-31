@@ -320,6 +320,7 @@ def delete_resource(request, shortkey, *args, **kwargs):
     resource_related_collections = [col for col in res.collections.all()]
     owners_list = [owner for owner in res.raccess.owners.all()]
 
+
     try:
         hydroshare.delete_resource(shortkey)
     except ValidationError as ex:
@@ -732,7 +733,7 @@ class GroupUpdateForm(GroupForm):
 @processor_for('my-resources')
 @login_required
 def my_resources(request, page):
-    
+
     resource_collection = get_my_resources_list(request)
     context = {'collection': resource_collection}
     
