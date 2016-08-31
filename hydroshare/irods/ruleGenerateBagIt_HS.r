@@ -16,8 +16,8 @@ generateBagIt {
 ###   files in place without creating new bagit root directory
 ### - writes bagit.txt to BAGITDATA/bagit.txt
 ### - generates payload manifest file of BAGITDATA/data
-### - writes payload manifest to BAGITDATA/manifest-sha2.txt
-### - writes tagmanifest file to BAGITDATA/tagmanifest-sha2.txt
+### - writes payload manifest to BAGITDATA/manifest-sha256.txt
+### - writes tagmanifest file to BAGITDATA/tagmanifest-sha256.txt
 ### - writes to rodsLog
 #
 # -----------------------------------------------------
@@ -55,20 +55,21 @@ generateBagIt {
     }
   }
 
-  ### - writes payload manifest to BAGITDATA/manifest-sha2.txt
-  msiDataObjCreate("*BAGITDATA" ++ "/manifest-sha2.txt", "destRescName=" ++ "*DESTRESC" ++ "++++forceFlag=", *FD);
+  ### - writes payload manifest to BAGITDATA/manifest-sha256.txt
+  msiDataObjCreate("*BAGITDATA" ++ "/manifest-sha256.txt", "destRescName=" ++ "*DESTRESC" ++ "++++forceFlag=", *FD);
   msiDataObjWrite(*FD, "stdout", *WLEN);
   msiDataObjClose(*FD, *Status);
   msiFreeBuffer("stdout");
 
-  ### - writes tagmanifest file to BAGITDATA/tagmanifest-sha2.txt
+  ### - writes tagmanifest file to BAGITDATA/tagmanifest-sha256.txt
   msiDataObjChksum("*BAGITDATA" ++ "/bagit.txt", "forceChksum", *CHKSUM);
   writeString("stdout", *CHKSUM);
   writeLine("stdout", "    bagit.txt")
-  msiDataObjChksum("*BAGITDATA" ++ "/manifest-sha2.txt", "forceChksum", *CHKSUM);
+  msiDataObjChksum("*BAGITDATA" ++ "/manifest-sha256.txt", "forceChksum", *CHKSUM);
+  msiExecCmd("base64", "-d"
   writeString("stdout", *CHKSUM);
-  writeLine("stdout", "    manifest-sha2.txt");
-  msiDataObjCreate("*BAGITDATA" ++ "/tagmanifest-sha2.txt", "destRescName=" ++ "*DESTRESC" ++ "++++forceFlag=", *FD);
+  writeLine("stdout", "    manifest-sha256.txt");
+  msiDataObjCreate("*BAGITDATA" ++ "/tagmanifest-sha256.txt", "destRescName=" ++ "*DESTRESC" ++ "++++forceFlag=", *FD);
   msiDataObjWrite(*FD, "stdout", *WLEN);
   msiDataObjClose(*FD, *Status);
   msiFreeBuffer("stdout");

@@ -22,7 +22,7 @@ def landing_page(request, page):
     context['method'] = content_model.metadata.methods.all().first()
     context['quality_level'] = content_model.metadata.quality_levels.all().first
     context['referenceURL'] = content_model.metadata.referenceURLs.all().first
-    context['download_files_url'] = "/hsapi/_internal/%s/download-refts-bag/" % content_model.short_id
+    context['download_files_url'] = "/hsapi/_internal/%s/download-refts-resource-bag/" % content_model.short_id
     hs_core_dublin_context = add_generic_context(request, page)
     context.update(hs_core_dublin_context)
 
