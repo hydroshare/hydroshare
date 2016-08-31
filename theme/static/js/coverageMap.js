@@ -21,8 +21,10 @@ $(document).ready(function () {
 
 function initMap() {
     var shapeType;
+    var resourceType;
     if ($("#coverageMap")[0]) {
         shapeType = $("#coverageMap")[0].getAttribute("data-shape-type");
+        resourceType = $("#resource-type").val();
     }
     coverageMap = new google.maps.Map(document.getElementById('coverageMap'), {
         color:"#DDD",
@@ -38,7 +40,7 @@ function initMap() {
             ]
         }
     });
-    if (!shapeType) {
+    if (!shapeType && resourceType !== "Time Series") {
         drawingManager = new google.maps.drawing.DrawingManager({
             drawingControl: true,
             drawingControlOptions: {

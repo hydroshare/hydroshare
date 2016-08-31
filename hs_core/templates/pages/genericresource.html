@@ -16,6 +16,7 @@
         <input type="hidden" id="allow-multiple-file-upload" value={{ cm.allow_multiple_file_upload }}>
         <input type="hidden" id="file-count" value={{ cm.files.all.count }}>
         <input type="hidden" id="resource-mode" value="{% if metadata_form %}Edit{% else %}View{% endif %}" >
+        <input type="hidden" id="resource-type" value="{{ cm|resource_type }}" >
 
         <div class="container">
             <div class="row">
