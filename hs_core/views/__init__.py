@@ -318,7 +318,7 @@ def delete_resource(request, shortkey, *args, **kwargs):
     res_id = shortkey
     res_type = res.resource_type
     resource_related_collections = [col for col in res.collections.all()]
-    contained_resources_list = [res for res in res.resources.all()]
+    owners_list = [owner for owner in res.raccess.owners.all()]
 
     try:
         hydroshare.delete_resource(shortkey)
@@ -330,31 +330,15 @@ def delete_resource(request, shortkey, *args, **kwargs):
     # create a CollectionDeletedResource object which can then be used to list collection deleted
     # resources on collection resource landing page
     for collection_res in resource_related_collections:
-        CollectionDeletedResource.objects.create(resource_title=res_title,
-                                                 deleted_by=user,
-                                                 resource_id=res_id,
-                                                 resource_type=res_type,
-                                                 collection=collection_res)
-
-    # handle "Relation" metadata
-    isPartOf = "isPartOf"
-    hasPart = "hasPart"
-    site_url = utils.current_site_url()
-    relation_value_template = site_url + "/resource/{0}/"
-    relation_value = relation_value_template.format(res_id)
-    for collection_res in resource_related_collections:
-        add_or_remove_relation_metadata(add=False, target_res_obj=collection_res,
-                                        relation_type=hasPart, relation_value=relation_value,
-                                        set_res_modified=True, last_change_user=user)
-
-    if res_type.lower() == "collectionresource":
-        for contained_res in contained_resources_list:
-            # change contained res
-            relation_value = relation_value_template.format(res_id)
-            add_or_remove_relation_metadata(add=False, target_res_obj=contained_res,
-                                            relation_type=isPartOf, relation_value=relation_value,
-                                            set_res_modified=True, last_change_user=user)
-
+        o=CollectionDeletedResource.objects.create(
+             resource_title=res_title,
+             deleted_by=user,
+             resource_id=res_id,
+             resource_type=res_type,
+             collection=collection_res
+             )
+        for owner in owners_list:
+            o.resource_owners.add(owner)
 
     return HttpResponseRedirect('/my-resources/')
 
@@ -748,7 +732,7 @@ class GroupUpdateForm(GroupForm):
 @processor_for('my-resources')
 @login_required
 def my_resources(request, page):
-   
+    
     resource_collection = get_my_resources_list(request)
     context = {'collection': resource_collection}
     

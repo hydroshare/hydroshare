@@ -124,7 +124,7 @@
                         <a id="btn-download-all" type="button" class="btn btn-default row-selector"
                            href="{{ bag_url }}">
                     <span class="glyphicon glyphicon-download-alt">
-                        <span title='Download All Content as Zipped BagIt Archive' class="button-label">Download Collection Bag</span>
+                        <span title='Download Collection List as Zipped BagIt Archive' class="button-label">Download Collection List Bag</span>
                     </span>
                             <a target="_blank" href="http://en.wikipedia.org/wiki/BagIt">Learn more about the Bagit
                                 archive format</a>
@@ -256,6 +256,7 @@
                         <tr>
                             <th>Resource ID</th>
                             <th>Title</th>
+                            <th>Owner</th>
                             <th>Type</th>
                             <th>Deleted by</th>
                             <th>Date</th>
@@ -269,6 +270,18 @@
                                     </td>
                                     <td>
                                         {{ res.resource_title }}
+                                    </td>
+                                   <td>
+                                       {% for owner in res.resource_owners.all %}
+                                        {% if forloop.counter0 > 0 %} · {% endif %}
+                                        {% if owner.first_name %}
+                                            <strong><a href='/user/{{ owner.pk }}/'
+                                                       target="_blank">{{ owner.first_name }} {{ owner.last_name }}</a></strong>
+                                        {% else %}
+                                            <strong><a href='/user/{{ owner.pk }}/'
+                                                       target="_blank">{{ owner.username }}</a></strong>
+                                        {% endif %}
+                                    {% endfor %}
                                     </td>
                                     <td>
                                         {{ res.resource_type }}

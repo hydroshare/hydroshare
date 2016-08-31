@@ -48,6 +48,13 @@ def get_page_context(page, user, resource_edit=False, extended_metadata_layout=N
 
     metadata_status = _get_metadata_status(content_model)
 
+    connections = None
+    if content_model.collections.count() > 0:
+        if connections is None:
+            connections = {}
+        connections['collected_by'] = content_model.collections.all()
+
+
     relevant_tools = None
     if not resource_edit:  # In view mode
         relevant_tools = []
@@ -197,7 +204,8 @@ def get_page_context(page, user, resource_edit=False, extended_metadata_layout=N
                    'show_content_files': show_content_files,
                    'discoverable': discoverable,
                    'resource_is_mine': resource_is_mine,
-                   'is_resource_specific_tab_active': False
+                   'is_resource_specific_tab_active': False,
+                   'connections': connections
         }
 
         if 'task_id' in request.session:
@@ -406,8 +414,8 @@ def get_page_context(page, user, resource_edit=False, extended_metadata_layout=N
                'relation_source_types': tuple((type_value, type_display)
                                               for type_value, type_display in Relation.SOURCE_TYPES
                                               if type_value != 'isReplacedBy' and type_value != 'isVersionOf'),
-               'is_resource_specific_tab_active': False
-
+               'is_resource_specific_tab_active': False,
+               'connections': connections
     }
 
     return context

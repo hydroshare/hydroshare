@@ -78,12 +78,12 @@ def update_collection(request, shortkey, *args, **kwargs):
                                                     relation_type=hasPart, relation_value=value,
                                                     set_res_modified=False)
 
-                    # change contained res
-                    value = relation_value_template.format(collection_res_obj.short_id)
-                    res_obj = get_resource_by_shortkey(res_id_remove)
-                    add_or_remove_relation_metadata(add=False, target_res_obj=res_obj,
-                                                    relation_type=isPartOf, relation_value=value,
-                                                    set_res_modified=True, last_change_user=user)
+                    # # change contained res
+                    # value = relation_value_template.format(collection_res_obj.short_id)
+                    # res_obj = get_resource_by_shortkey(res_id_remove)
+                    # add_or_remove_relation_metadata(add=False, target_res_obj=res_obj,
+                    #                                 relation_type=isPartOf, relation_value=value,
+                    #                                 set_res_modified=True, last_change_user=user)
 
             # res to add
             res_id_list_add = []
@@ -96,6 +96,9 @@ def update_collection(request, shortkey, *args, **kwargs):
                     res_to_add, _, _ \
                         = authorize(request, res_id_add,
                                     needed_permission=ACTION_TO_AUTHORIZE.VIEW_METADATA)
+                    if not res_to_add.raccess.shareable:
+                        raise Exception('This resource can not be added \
+                        to a collection since it is not sharable')
 
                     # add this new res to collection
                     res_obj_add = get_resource_by_shortkey(res_id_add)
@@ -111,12 +114,12 @@ def update_collection(request, shortkey, *args, **kwargs):
                                                     relation_type=hasPart, relation_value=value,
                                                     set_res_modified=False)
 
-                    # change contained res
-                    value = relation_value_template.format(collection_res_obj.short_id)
-                    res_obj = get_resource_by_shortkey(res_id_add)
-                    add_or_remove_relation_metadata(add=True, target_res_obj=res_obj,
-                                                    relation_type=isPartOf, relation_value=value,
-                                                    set_res_modified=True, last_change_user=user)
+                    # # change contained res
+                    # value = relation_value_template.format(collection_res_obj.short_id)
+                    # res_obj = get_resource_by_shortkey(res_id_add)
+                    # add_or_remove_relation_metadata(add=True, target_res_obj=res_obj,
+                    #                                 relation_type=isPartOf, relation_value=value,
+                    #                                 set_res_modified=True, last_change_user=user)
 
             if collection_res_obj.can_be_public_or_discoverable:
                 metadata_status = "Sufficient to make public"
@@ -159,6 +162,17 @@ def update_collection_for_deleted_resources(request, shortkey, *args, **kwargs):
 
         if collection_res.resource_type.lower() != "collectionresource":
             raise Exception("Resource {0} is not a collection resource.".format(shortkey))
+
+        # handle "Relation" metadata
+        hasPart = "hasPart"
+        site_url = current_site_url()
+        relation_value_template = site_url + "/resource/{0}/"
+        for deleted_res_log in collection_res.deleted_resources:
+            relation_value = relation_value_template.format(deleted_res_log.resource_id)
+
+            add_or_remove_relation_metadata(add=False, target_res_obj=collection_res,
+                                            relation_type=hasPart, relation_value=relation_value,
+                                            set_res_modified=False)
 
         new_coverage_list = _update_collection_coverages(collection_res)
         ajax_response_data['new_coverage_list'] = new_coverage_list
