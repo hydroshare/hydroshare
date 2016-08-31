@@ -66,7 +66,6 @@ generateBagIt {
   writeString("stdout", *CHKSUM);
   writeLine("stdout", "    bagit.txt")
   msiDataObjChksum("*BAGITDATA" ++ "/manifest-sha256.txt", "forceChksum", *CHKSUM);
-  msiExecCmd("base64", "-d"
   writeString("stdout", *CHKSUM);
   writeLine("stdout", "    manifest-sha256.txt");
   msiDataObjCreate("*BAGITDATA" ++ "/tagmanifest-sha256.txt", "destRescName=" ++ "*DESTRESC" ++ "++++forceFlag=", *FD);
