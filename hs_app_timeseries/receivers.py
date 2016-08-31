@@ -36,7 +36,7 @@ def pre_add_files_to_resource_handler(sender, **kwargs):
 
 @receiver(pre_delete_file_from_resource, sender=TimeSeriesResource)
 def pre_delete_file_from_resource_handler(sender, **kwargs):
-    # if the deleted file is the sqlite file then reset the 'is_dirty' attribute
+    # if any of the content files (sqlite or csv) is deleted then reset the 'is_dirty' attribute
     # for all extracted metadata to False
     resource = kwargs['resource']
     del_file = kwargs['file']
@@ -48,9 +48,7 @@ def pre_delete_file_from_resource_handler(sender, **kwargs):
             element.is_dirty = False
             element.save()
 
-    # check if it is a sqlite file
-    fl_ext = utils.get_resource_file_name_and_extension(del_file)[1]
-    if fl_ext == '.sqlite' and resource.metadata.is_dirty:
+    if resource.metadata.is_dirty:
         TimeSeriesMetaData.objects.filter(id=resource.metadata.id).update(is_dirty=False)
         # metadata object is_dirty attribute for some reason can't be set using the following
         # 2 lines of code

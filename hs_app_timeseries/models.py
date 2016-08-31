@@ -45,8 +45,11 @@ class TimeSeriesAbstractMetaDataElement(AbstractMetaDataElement):
         element = super(TimeSeriesAbstractMetaDataElement, cls).create(**kwargs)
         # set the 'is_dirty' field of metadata object to True
         # if we are creating element when there is a csv file
+        # in case of sqlite file upload we don't create any resource specific metadata element
         metadata = element.metadata
         if metadata.resource.has_csv_file:
+            element.is_dirty = True
+            element.save()
             metadata.is_dirty = True
             metadata.save()
         return element

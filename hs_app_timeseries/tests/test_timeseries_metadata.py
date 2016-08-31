@@ -905,10 +905,65 @@ class TestTimeSeriesMetaData(MockIRODSTestCaseMixin, TransactionTestCase):
         # at this point the is_dirty for metadata must be false
         self.assertEqual(self.resTimeSeries.metadata.is_dirty, False)
 
+    def test_metadata_is_dirty_on_csv_file_delete(self):
+        # upon delete of the csv file, the 'is_dirty' attribute of the metadata object
+        # should be set to False
+
+        # there should not be any file in the resource
+        self.assertEqual(self.resTimeSeries.files.all().count(), 0)
+
+        # add csv file to the resource
+        self._upload_valid_csv_file()
+
+        # there should be one file in the resource
+        self.assertEqual(self.resTimeSeries.files.all().count(), 1)
+        self.assertEqual(self.resTimeSeries.metadata.is_dirty, False)
+
+        # create a site element
+        self.resTimeSeries.metadata.create_element('site', series_ids=['0'],
+                                                   site_code='Temp_DegC_Mendon',
+                                                   site_name='Logan River at the Utah Water '
+                                                             'Research Laboratory west bridge',
+                                                   elevation_m=1414,
+                                                   elevation_datum='EGM96',
+                                                   site_type='Stream',
+                                                   latitude=65.789,
+                                                   longitude=120.56789)
+
+        # added site element should be dirty
+        site = self.resTimeSeries.metadata.sites.all().first()
+        self.assertEqual(site.is_dirty, True)
+        # at this point the is_dirty for metadata must be true
+        self.assertEqual(self.resTimeSeries.metadata.is_dirty, True)
+
+        # delete content file that we added above
+        hydroshare.delete_resource_file(self.resTimeSeries.short_id, self.odm2_csv_file_name,
+                                        self.user)
+
+        # there should not be any file in the resource
+        self.assertEqual(self.resTimeSeries.files.all().count(), 0)
+        # at this point the is_dirty for metadata must be false
+        self.assertEqual(self.resTimeSeries.metadata.is_dirty, False)
+
     def test_has_sqlite_file(self):
         # here we are testing the property has_sqlite_file
         # the resource should not have a sqlite file at this point
         self.assertFalse(self.resTimeSeries.has_sqlite_file)
+        # add a valid odm2 sqlite file
+        self._upload_valid_sqlite_file()
+
+        # the resource should have a sqlite file at this point
+        self.assertTrue(self.resTimeSeries.has_sqlite_file)
+
+    def test_has_csv_file(self):
+        # here we are testing the property has_sqlite_file
+        # the resource should not have a csv file at this point
+        self.assertFalse(self.resTimeSeries.has_csv_file)
+        # add a csv file
+        self._upload_valid_csv_file()
+
+        # the resource should have a sqlite file at this point
+        self.assertTrue(self.resTimeSeries.has_csv_file)
 
     def test_get_xml(self):
         # add a valid odm2 sqlite file to generate metadata
@@ -937,6 +992,17 @@ class TestTimeSeriesMetaData(MockIRODSTestCaseMixin, TransactionTestCase):
         self.assertTrue(self.resTimeSeries.has_required_content_files())
         self.assertTrue(self.resTimeSeries.metadata.has_all_required_elements())
         self.assertTrue(self.resTimeSeries.can_be_public_or_discoverable)
+
+    def test_has_required_content_files(self):
+        # test that sqlite file is the require content file
+
+        # upload a sqlite file
+        self._upload_valid_sqlite_file()
+        self.assertTrue(self.resTimeSeries.has_required_content_files())
+
+        # add a csv file which deletes the sqlite file
+        self._upload_valid_csv_file()
+        self.assertFalse(self.resTimeSeries.has_required_content_files())
 
     def test_csv_file_upload(self):
         # adding a valid csv file should be successful
@@ -1038,8 +1104,8 @@ class TestTimeSeriesMetaData(MockIRODSTestCaseMixin, TransactionTestCase):
         self._test_invalid_csv_file(invalid_csv_file_name)
 
     def test_file_delete_on_file_upload(self):
-        # this is to test that if a CSV file is uploaded then if the resource contains a sqlite file
-        # that sqlite file will be deleted automatically
+        # this is to test that if a CSV file is uploaded then if the resource contains a
+        # sqlite file that sqlite file will be deleted automatically
         # similarly if a sqlite file is uploaded, then the existing csv file will be deleted
 
         # upload a sqlite file
@@ -1073,6 +1139,9 @@ class TestTimeSeriesMetaData(MockIRODSTestCaseMixin, TransactionTestCase):
 
         # first add a valid csv file to the resource
         self._upload_valid_csv_file()
+
+        # test that the value_count is set
+        self.assertEqual(len(self.resTimeSeries.metadata.value_counts), 2)
 
         # test that the resource does not have all the required metadata elements at this point
         self.assertEqual(self.resTimeSeries.metadata.has_all_required_elements(), False)
@@ -1222,7 +1291,10 @@ class TestTimeSeriesMetaData(MockIRODSTestCaseMixin, TransactionTestCase):
 
         # add 1 processing level elements for the 2 series
         self.resTimeSeries.metadata.create_element('processinglevel', series_ids=['0', '1'],
-                                                   processing_level_code='101')
+                                                   processing_level_code=101)
+
+        # there should be 1 processinglevel element at this point
+        self.assertEqual(self.resTimeSeries.metadata.processing_levels.all().count(), 1)
 
         pro_level = self.resTimeSeries.metadata.processing_levels.first()
         self.assertEqual(len(pro_level.series_ids), 2)
@@ -1315,6 +1387,9 @@ class TestTimeSeriesMetaData(MockIRODSTestCaseMixin, TransactionTestCase):
 
         # test that the sqlite file has now data
         self._test_sqlite_file_has_data()
+
+        # test that the value_count is rest
+        self.assertEqual(len(self.resTimeSeries.metadata.value_counts), 0)
 
     def test_series_id_for_metadata_element_create(self):
         # this applies only to csv file upload
@@ -1803,9 +1878,170 @@ class TestTimeSeriesMetaData(MockIRODSTestCaseMixin, TransactionTestCase):
         self.assertEqual(len(ts_result.series_ids), 1)
         self.assertEqual(ts_result.series_ids, ['0'])
 
+        # test only one UTCOffSet element can be created
+        self.resTimeSeries.metadata.create_element('UTCOffset', value=-7.5)
+        # there should be one UTCOffset element
+        self.assertTrue(UTCOffSet.objects.filter(
+            object_id=self.resTimeSeries.metadata.id).count(), 1)
+
+        # trying to create a 2nd UTCOffSet element should raise exception
+        with self.assertRaises(ValidationError):
+            self.resTimeSeries.metadata.create_element('UTCOffset', value=-9.0)
+
     def test_element_duplicate_code(self):
-        # TODO: implement
-        pass
+        # this is to test that we can't create/update some of the resource specific
+        # metadata elements with duplicate code
+
+        # first add a csv file to the resource
+        self._upload_valid_csv_file()
+
+        # create a site element
+        site_code = 'Temp_DegC_Mendon'
+        self.resTimeSeries.metadata.create_element('site', series_ids=['0'],
+                                                   site_code=site_code,
+                                                   site_name='Logan River at the Utah Water '
+                                                             'Research Laboratory west bridge',
+                                                   elevation_m=1414,
+                                                   elevation_datum='EGM96',
+                                                   site_type='Stream',
+                                                   latitude=65.789,
+                                                   longitude=120.56789)
+
+        # trying to create a 2nd site element with same site_code value should raise exception
+        with self.assertRaises(ValidationError):
+            self.resTimeSeries.metadata.create_element('site', series_ids=['1'],
+                                                       site_code=site_code,
+                                                       site_name='Logan River at Logan',
+                                                       elevation_m=2025,
+                                                       elevation_datum='EGM96',
+                                                       site_type='Stream',
+                                                       latitude=40.789,
+                                                       longitude=130.1234)
+
+        # there should be 1 site element at this point
+        self.assertEqual(self.resTimeSeries.metadata.sites.all().count(), 1)
+
+        # create 2nd site element with different site code
+        self.resTimeSeries.metadata.create_element('site', series_ids=['1'],
+                                                   site_code='Temp_DegC_Paradise',
+                                                   site_name='Logan River at the Utah Water '
+                                                             'Research Laboratory west bridge',
+                                                   elevation_m=1414,
+                                                   elevation_datum='EGM96',
+                                                   site_type='Stream',
+                                                   latitude=85.789,
+                                                   longitude=110.56789)
+
+        # there should be 2 site element at this point
+        self.assertEqual(self.resTimeSeries.metadata.sites.all().count(), 2)
+
+        site = self.resTimeSeries.metadata.sites.filter(site_code='Temp_DegC_Paradise').first()
+
+        # trying to update the site element with duplicate site code should raise exception
+        with self.assertRaises(ValidationError):
+            self.resTimeSeries.metadata.update_element('site', site.id, site_code=site_code)
+
+        # add a variable element
+        variable_code = 'USU37'
+        self.resTimeSeries.metadata.create_element('variable', series_ids=['0'],
+                                                   variable_code=variable_code,
+                                                   variable_name='Temperature',
+                                                   variable_type='Climate',
+                                                   no_data_value=-999,
+                                                   speciation='Not Applicable')
+
+        # trying to create a 2nd variable element with same variable_code value should raise
+        # exception
+        with self.assertRaises(ValidationError):
+            self.resTimeSeries.metadata.create_element('variable', series_ids=['1'],
+                                                       variable_code=variable_code,
+                                                       variable_name='RH',
+                                                       variable_type='Climate',
+                                                       no_data_value=-888,
+                                                       speciation='Not Applicable')
+
+        # there should be 1 variable element at this point
+        self.assertEqual(self.resTimeSeries.metadata.variables.all().count(), 1)
+
+        # create 2nd variable with different variable_code
+        self.resTimeSeries.metadata.create_element('variable', series_ids=['1'],
+                                                   variable_code='VAR-101',
+                                                   variable_name='RH',
+                                                   variable_type='Climate',
+                                                   no_data_value=-888,
+                                                   speciation='Not Applicable')
+
+        # there should be 2 variable elements at this point
+        self.assertEqual(self.resTimeSeries.metadata.variables.all().count(), 2)
+
+        variable = self.resTimeSeries.metadata.variables.filter(variable_code='VAR-101').first()
+
+        # trying to update variable_code with duplicate value should raise exception
+        with self.assertRaises(ValidationError):
+            self.resTimeSeries.metadata.update_element('variable', variable.id,
+                                                       variable_code=variable_code)
+
+        # create a method element
+        method_code = 'MC-30'
+        self.resTimeSeries.metadata.create_element('method', series_ids=['0'],
+                                                   method_code=method_code,
+                                                   method_name='Testing method-1',
+                                                   method_type='Data collection',
+                                                   method_description=''
+                                                   )
+        # trying to create a 2nd method element with same method_code should raise exception
+        with self.assertRaises(ValidationError):
+            self.resTimeSeries.metadata.create_element('method', series_ids=['1'],
+                                                       method_code=method_code,
+                                                       method_name='Testing method-2',
+                                                       method_type='Data collection-2',
+                                                       method_description='description'
+                                                       )
+        # there should be 1 method element at this point
+        self.assertEqual(self.resTimeSeries.metadata.methods.all().count(), 1)
+
+        # create a 2nd method element with a different method_code
+        self.resTimeSeries.metadata.create_element('method', series_ids=['1'],
+                                                   method_code='MC-50',
+                                                   method_name='Testing method-2',
+                                                   method_type='Data collection-2',
+                                                   method_description='description'
+                                                   )
+        # there should be 2 method element at this point
+        self.assertEqual(self.resTimeSeries.metadata.methods.all().count(), 2)
+
+        method = self.resTimeSeries.metadata.methods.filter(method_code='MC-50').first()
+        # trying to update method_code with duplicate value should raise exception
+        with self.assertRaises(ValidationError):
+            self.resTimeSeries.metadata.update_element('method', method.id,
+                                                       method_code=method_code)
+
+        # add a processing level element
+        self.resTimeSeries.metadata.create_element('processinglevel', series_ids=['0'],
+                                                   processing_level_code=101)
+
+        # creating a 2nd processinglevel element with same code should raise excpetion
+        with self.assertRaises(ValidationError):
+            self.resTimeSeries.metadata.create_element('processinglevel', series_ids=['1'],
+                                                       processing_level_code=101)
+
+        # there should be 1 processinglevel element at this point
+        self.assertEqual(self.resTimeSeries.metadata.processing_levels.all().count(), 1)
+
+        # create 2nd processinglevel element with a different code
+        self.resTimeSeries.metadata.create_element('processinglevel', series_ids=['1'],
+                                                   processing_level_code=105)
+
+        # there should be 2 processinglevel element at this point
+        self.assertEqual(self.resTimeSeries.metadata.processing_levels.all().count(), 2)
+
+        pro_level = self.resTimeSeries.metadata.processing_levels.filter(
+            processing_level_code='105').first()
+
+        # trying to update with a duplicate code should raise exception
+        with self.assertRaises(ValidationError):
+            self.resTimeSeries.metadata.update_element('processinglevel', pro_level.id,
+                                                       processing_level_code=101)
 
     def _upload_valid_csv_file(self):
         # first add a valid csv file to the resource
