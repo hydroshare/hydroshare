@@ -39,8 +39,7 @@ def pre_delete_file_from_resource_handler(sender, **kwargs):
     # if any of the content files (sqlite or csv) is deleted then reset the 'is_dirty' attribute
     # for all extracted metadata to False
     resource = kwargs['resource']
-    del_file = kwargs['file']
-
+    
     def reset_metadata_elements_is_dirty(elements):
         # filter out any non-dirty element
         elements = [element for element in elements if element.is_dirty]
