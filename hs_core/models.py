@@ -740,7 +740,6 @@ class Publisher(AbstractMetaDataElement):
             raise ValidationError("Publisher element can't be created for a resource that "
                                   "is not yet published.")
 
-
         if 'name' in kwargs:
             if kwargs['name'].lower() != cls.publisher_name_CUAHSI.lower():
                 raise ValidationError("Invalid publisher name")
