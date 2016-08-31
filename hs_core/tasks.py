@@ -180,9 +180,9 @@ def create_bag_by_irods(resource_id, istorage=None):
         bagit_files = [
                 '{fed_path}/{res_id}/bagit.txt'.format(fed_path=res.resource_federation_path,
                                                        res_id=resource_id),
-                '{fed_path}/{res_id}/manifest-sha2.txt'.format(
+                '{fed_path}/{res_id}/manifest-sha256.txt'.format(
                     fed_path=res.resource_federation_path, res_id=resource_id),
-                '{fed_path}/{res_id}/tagmanifest-sha2.txt'.format(
+                '{fed_path}/{res_id}/tagmanifest-sha256.txt'.format(
                     fed_path=res.resource_federation_path, res_id=resource_id),
                 '{fed_path}/bags/{res_id}.zip'.format(fed_path=res.resource_federation_path,
                                                       res_id=resource_id)
@@ -198,8 +198,8 @@ def create_bag_by_irods(resource_id, istorage=None):
             def_res=settings.IRODS_DEFAULT_RESOURCE)
         bagit_files = [
                 '{res_id}/bagit.txt'.format(res_id=resource_id),
-                '{res_id}/manifest-sha2.txt'.format(res_id=resource_id),
-                '{res_id}/tagmanifest-sha2.txt'.format(res_id=resource_id),
+                '{res_id}/manifest-sha256.txt'.format(res_id=resource_id),
+                '{res_id}/tagmanifest-sha256.txt'.format(res_id=resource_id),
                 'bags/{res_id}.zip'.format(res_id=resource_id)
         ]
 
