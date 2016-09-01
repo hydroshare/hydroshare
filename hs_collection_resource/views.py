@@ -1,11 +1,8 @@
 import logging
 from dateutil import parser
-import json
 
 from django.http import JsonResponse
 from django.db import transaction
-from django.template import RequestContext
-from django.shortcuts import render_to_response
 
 from hs_core.views.utils import authorize, ACTION_TO_AUTHORIZE
 from hs_core.hydroshare.utils import get_resource_by_shortkey, resource_modified, current_site_url

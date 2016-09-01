@@ -1,5 +1,3 @@
-import copy
-
 from hs_core.hydroshare.utils import resource_modified
 
 
