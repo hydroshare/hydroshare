@@ -585,9 +585,6 @@ class Relation(AbstractMetaDataElement):
     def __unicode__(self):
         return "{type} {value}".format(type=self.type, value=self.value)
 
-    # class Meta:
-    #     unique_together = ("content_type", "object_id")
-
     @classmethod
     def create(cls, **kwargs):
         if 'type' in kwargs:

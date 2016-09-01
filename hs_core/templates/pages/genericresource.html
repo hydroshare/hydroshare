@@ -1033,6 +1033,10 @@
                                                                     {% else %}
                                                                         Private
                                                                     {% endif %}
+
+                                                                    {% if res.raccess.shareable %}
+                                                                        + Shareable
+                                                                    {% endif %}
                                                                 </td>
                                                                 <td>
                                                                     {% if res|user_permission:request.user.pk|lower == "none" %}
