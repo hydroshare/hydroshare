@@ -183,7 +183,8 @@ preflight_hs() {
             exit 1;
         fi
         if [[ ! -d ${HOST_SSL_DIR} ]]; then
-            mkdir -p ${HOST_SSL_DIR};
+            mkdir -p ${HOST_SSL_DIR}
+            cp ${HS_PATH}/nginx/cert-files/* ${HOST_SSL_DIR};
         fi
         cp -rf ${SSL_CERT_DIR}/${SSL_CERT_FILE} ${HOST_SSL_DIR}
         cp -rf ${SSL_CERT_DIR}/${SSL_KEY_FILE} ${HOST_SSL_DIR}
@@ -311,8 +312,8 @@ rebuild_hs() {
     if [ "$2" == "--db" ]; then
         loaddb_hs;
     fi
-    echo "  - docker exec hydroshare chown -R hydro-service:storage-hydro /hydroshare /hs_tmp /shared_tmp"
-    docker exec hydroshare chown -R hydro-service:storage-hydro /hydroshare /hs_tmp /shared_tmp
+    echo "  - docker exec hydroshare chown -R hydro-service:storage-hydro /hydroshare /tmp /shared_tmp"
+    docker exec hydroshare chown -R hydro-service:storage-hydro /hydroshare /tmp /shared_tmp
     if [ "${USE_NGINX,,}" = true ]; then
         start_nginx;
     fi
