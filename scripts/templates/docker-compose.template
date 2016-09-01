@@ -44,7 +44,7 @@ hydroshare:
     # log files
     - "HS_LOG_FILES:/hydroshare/log"
     # shared location for uwsgi.sock between containers
-    - "/hs_tmp"
+    - "/tmp"
     # temp directory shared with celery workers
     - "/shared_tmp"
   ports:
