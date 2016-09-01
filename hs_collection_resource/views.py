@@ -34,7 +34,6 @@ def update_collection(request, shortkey, *args, **kwargs):
     metadata_status = "Insufficient to make public"
     new_coverage_list = []
 
-    isPartOf = "isPartOf"
     hasPart = "hasPart"
     site_url = current_site_url()
     relation_value_template = site_url + "/resource/{0}/"
@@ -71,8 +70,7 @@ def update_collection(request, shortkey, *args, **kwargs):
                     res_obj_remove = get_resource_by_shortkey(res_id_remove)
                     collection_res_obj.resources.remove(res_obj_remove)
 
-                    # change "Relation" metadata
-                    # change collection
+                    # change "Relation" metadata in collection
                     value = relation_value_template.format(res_id_remove)
                     add_or_remove_relation_metadata(add=False, target_res_obj=collection_res_obj,
                                                     relation_type=hasPart, relation_value=value,
@@ -90,19 +88,20 @@ def update_collection(request, shortkey, *args, **kwargs):
                         = authorize(request, res_id_add,
                                     needed_permission=ACTION_TO_AUTHORIZE.VIEW_METADATA)
 
-                    if not res_to_add.raccess.shareable:
-                        raise Exception('This resource can not be added \
-                        to a collection since it is not sharable')
+                    is_shareable = res_to_add.raccess.shareable
+                    is_owner = res_to_add.raccess.owners.filter(pk=user.pk).exists()
+                    if not is_shareable and not is_owner:
+                            raise Exception('Only resource owner can add a resource '
+                                            'without "Shareable" flag to a collection')
 
                     # add this new res to collection
                     res_obj_add = get_resource_by_shortkey(res_id_add)
                     collection_res_obj.resources.add(res_obj_add)
 
-                    # # check loop
-                    # detect_loop_in_collection(collection_res_obj)
+                    # check loop here
+                    # not implemented
 
-                    # change "Relation" metadata
-                    # change collection
+                    # change "Relation" metadata in collection
                     value = relation_value_template.format(res_id_add)
                     add_or_remove_relation_metadata(add=True, target_res_obj=collection_res_obj,
                                                     relation_type=hasPart, relation_value=value,
@@ -132,6 +131,7 @@ def update_collection(request, shortkey, *args, **kwargs):
              'metadata_status': metadata_status,
              'new_coverage_list': new_coverage_list}
         return JsonResponse(ajax_response_data)
+
 
 def update_collection_for_deleted_resources(request, shortkey, *args, **kwargs):
     """

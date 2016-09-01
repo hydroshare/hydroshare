@@ -29,7 +29,7 @@
                         <th>Title</th>
                         <th>Type</th>
                         <th>Owners</th>
-                        <th>Sharing status</th>
+                        <th>Sharing Status</th>
                         <th>My Permission</th>
                         <th>Remove</th>
                     </tr>
@@ -73,6 +73,10 @@
                                         Discoverable
                                     {% else %}
                                         Private
+                                    {% endif %}
+
+                                    {% if res.raccess.shareable %}
+                                         + Shareable
                                     {% endif %}
                                 </td>
                                 <td>
@@ -164,7 +168,7 @@
             <div class="modal-content">
                 <div class="modal-header">
                     <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
-                    <h4 class="modal-title" id="save-collection-warning-title">My Resources Pool</h4>
+                    <h4 class="modal-title" id="save-collection-warning-title">Collectable Resources</h4>
                 </div>
                 <div class="modal-body" id="save-collection-warning-body">
                     <table id="collection-table-candidate" class="table-hover table-striped resource-custom-table" width="100%">
@@ -174,7 +178,7 @@
                             <th>Title</th>
                             <th>Type</th>
                             <th>Owners</th>
-                            <th>Sharing status</th>
+                            <th>Sharing Status</th>
                             <th>My Permission</th>
                             <th>Remove</th>
                         </tr>
@@ -210,6 +214,10 @@
                                             Discoverable
                                         {% else %}
                                             Private
+                                        {% endif %}
+
+                                        {% if res.raccess.shareable %}
+                                            + Shareable
                                         {% endif %}
                                     </td>
                                      <td>
@@ -258,8 +266,8 @@
                             <th>Title</th>
                             <th>Owner</th>
                             <th>Type</th>
-                            <th>Deleted by</th>
-                            <th>Date</th>
+                            <th>Deleted By</th>
+                            <th>Deletion Date</th>
                         </tr>
                         </thead>
                         <tbody>
@@ -452,6 +460,18 @@
                 });
 
                 waning_message = "You have NO PERMISSION over the resource you are about to remove from this collection. Once confirmed, you CAN NOT add it back.";
+
+                $('#save-collection-warning-body').text(waning_message);
+                $('#save-collection-warning').modal('show');
+            }
+            else if(removed_row_from_colletion.data()[4].toLowerCase().indexOf("shareable") < 0 &&
+            removed_row_from_colletion.data()[5].toLowerCase().indexOf("owner") < 0) {
+                $('#save-collection-btn-cancel').off("click");
+                $('#save-collection-btn-ok').off("click").on("click", function(){
+                    removed_row_from_colletion.remove().draw(false);
+                });
+
+                waning_message = "The resource you are about to remove has 'Shareable=False' flag. Once confirmed, you CAN NOT add it back.";
 
                 $('#save-collection-warning-body').text(waning_message);
                 $('#save-collection-warning').modal('show');

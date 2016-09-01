@@ -28,15 +28,15 @@ def add_or_remove_relation_metadata(add=True, target_res_obj=None, relation_type
             .first().delete()
 
     if set_res_modified:
-       resource_modified(target_res_obj, last_change_user)
+        resource_modified(target_res_obj, last_change_user)
 
 
 class LoopFoundException(Exception):
-     def __init__(self, node_id, path_list):
+    def __init__(self, node_id, path_list):
         self.node_id = node_id
         self.path_list = path_list
 
-     def __str__(self):
+    def __str__(self):
         return "Found a loop: {0}".format('-->'.join(self.path_list) + "-->" + self.node_id)
 
 
@@ -60,7 +60,9 @@ def detect_loop_in_collection(collection_node, visited_collection_list=None):
                 if node.short_id in visited_collection_list_this_level:
                     raise LoopFoundException(node.short_id, visited_collection_list_this_level)
                 else:
-                    detect_loop_in_collection(node, visited_collection_list=visited_collection_list_this_level)
+                    detect_loop_in_collection(node,
+                                              visited_collection_list=
+                                              visited_collection_list_this_level)
     return visited_collection_list
 
 
@@ -70,24 +72,32 @@ def bfs_traverse(node, visited_nodes=None, nodes_list_output=None, edges_list_ou
         visited_nodes.append(node)
         nodes_list_output = []
         edges_list_output = []
-        nodes_list_output.append({'id': node.short_id, 'label': node.title, 'color': 'red',
+        nodes_list_output.append({'id': node.short_id,
+                                  'label': node.title,
+                                  'color': 'red',
                                   'shape': 'circle'})
 
     escape_deeper_list = []
     if node.resource_type.lower() == "collectionresource":
         for contained_node in node.resources.all():
-            edges_list_output.append({'from': node.short_id, "to": contained_node.short_id, 'arrows': 'to'})
+            edges_list_output.append({'from': node.short_id,
+                                      "to": contained_node.short_id,
+                                      'arrows': 'to'})
             if contained_node not in visited_nodes:
                 visited_nodes.append(contained_node)
                 if contained_node.resource_type.lower() == "collectionresource":
-                    nodes_list_output.append({'id': contained_node.short_id, 'label': contained_node.title, 'color': 'red'})
+                    nodes_list_output.append({'id': contained_node.short_id,
+                                              'label': contained_node.title,
+                                              'color': 'red'})
                 else:
-                    nodes_list_output.append({'id': contained_node.short_id, 'label': contained_node.title})
+                    nodes_list_output.append({'id': contained_node.short_id,
+                                              'label': contained_node.title})
             else:
                 escape_deeper_list.append(contained_node)
         for contained_node in node.resources.all():
             if contained_node not in escape_deeper_list:
-                bfs_traverse(contained_node, visited_nodes=visited_nodes, nodes_list_output=nodes_list_output, edges_list_output=edges_list_output)
+                bfs_traverse(contained_node, visited_nodes=visited_nodes,
+                             nodes_list_output=nodes_list_output,
+                             edges_list_output=edges_list_output)
 
     return nodes_list_output, edges_list_output
-

@@ -1062,19 +1062,11 @@ class TestCoreMetadata(MockIRODSTestCaseMixin, TestCase):
         self.assertRaises(Exception, lambda: resource.update_metadata_element(self.res.short_id, 'relation',
                                                                               rel_to_update.id, type='isCopiedFrom'))
 
-        # test that duplicate relation types are not allowed
-        self.assertRaises(Exception, lambda: resource.create_metadata_element(
-            self.res.short_id, 'relation', type='isDataFor', value='http://hydroshare.org/resource/003'))
-
         # test update relation type
         rel_to_update = self.res.metadata.relations.all().filter(type='isPartOf').first()
         resource.update_metadata_element(self.res.short_id, 'relation', rel_to_update.id, type='isVersionOf')
         self.assertIn('isVersionOf', [rel.type for rel in self.res.metadata.relations.all()],
                       msg="No relation element of type 'isVersionOf' was found")
-
-        # test that duplicate relation types are not allowed during update - exception
-        self.assertRaises(Exception, lambda : resource.update_metadata_element(self.res.short_id, 'relation',
-                                                                               rel_to_update.id, type='isDataFor'))
 
         # test update relation value
         rel_to_update = self.res.metadata.relations.all().filter(type='isVersionOf').first()
