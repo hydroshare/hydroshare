@@ -537,7 +537,7 @@ class UTCOffSetFormHelper(BaseFormHelper):
             Field('selected_series_id', css_class=field_width, type="hidden"),
             Field('value', css_class=field_width),
         )
-        kwargs['element_name_label'] = 'UTC Offset'
+        kwargs['element_name_label'] = '  '
         super(UTCOffSetFormHelper, self).__init__(allow_edit, res_short_id, element_id,
                                                   element_name, layout, *args, **kwargs)
 
@@ -557,7 +557,7 @@ class UTCOffSetForm(ModelForm):
         fields = ['value']
         exclude = ['content_object']
         widgets = {'value': forms.TextInput()}
-        labels = {'value': ""}
+        labels = {'value': "UTC Offset"}
 
 
 class UTCOffSetValidationForm(forms.Form):
@@ -690,7 +690,7 @@ SeriesSelectionLayout = Layout(HTML("""
                                     )
                                )
 UTCOffSetLayout = HTML("""
-<div class="form-group col-sm-12 col-xs-12 time-series-forms">
+<div class="form-group col-sm-6 col-xs-12 time-series-forms">
      <div id="utc_offset">
          {% load crispy_forms_tags %}
          {% crispy utcoffset_form %}

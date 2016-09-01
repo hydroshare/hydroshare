@@ -162,9 +162,9 @@ def _get_resource_edit_context(page, request, content_model, selected_series_id,
         timeseries_result_form.set_value_count(ts_result_value_count)
 
     ext_md_layout = Layout(UpdateSQLiteLayout,
-                           UTCOffSetLayout,
                            SeriesSelectionLayout,
-                           TimeSeriesMetaDataLayout)
+                           TimeSeriesMetaDataLayout,
+                           UTCOffSetLayout)
 
     if content_model.files.all().count() == 0:
         ext_md_layout = Layout(HTML("""<div class="alert alert-warning"><strong>No resource
