@@ -10,8 +10,7 @@ from django.shortcuts import render_to_response
 from hs_core.views.utils import authorize, ACTION_TO_AUTHORIZE
 from hs_core.hydroshare.utils import get_resource_by_shortkey, resource_modified, current_site_url
 
-from .utils import add_or_remove_relation_metadata, detect_loop_in_collection,\
-                   LoopFoundException, bfs_traverse
+from .utils import add_or_remove_relation_metadata
 
 logger = logging.getLogger(__name__)
 UI_DATETIME_FORMAT = "%m/%d/%Y"
@@ -114,10 +113,6 @@ def update_collection(request, shortkey, *args, **kwargs):
 
             resource_modified(collection_res_obj, user)
 
-    except LoopFoundException as ex:
-        err_msg = str(ex)
-        status = "error"
-        msg = err_msg
     except Exception as ex:
         err_msg = "update_collection: {0} ; username: {1}; collection_id: {2} ."
         logger.error(err_msg.format(ex.message,
@@ -305,17 +300,3 @@ def _calculate_collection_coverages(collection_res_obj):
                                   'value': value_dict, 'element_id_str': "-1"})
 
     return new_coverage_list
-
-
-def show_collection_plot(request, shortkey, *args, **kwargs):
-
-    collection_res_obj, is_authorized, user \
-                = authorize(request, shortkey,
-                            needed_permission=ACTION_TO_AUTHORIZE.VIEW_RESOURCE)
-    nodes_list_output, edges_list_output = bfs_traverse(collection_res_obj)
-
-    nodes_list_str = json.dumps(nodes_list_output)
-    edges_list_str = json.dumps(edges_list_output)
-
-    context = {'nodes_list_str': nodes_list_str, 'edges_list_str': edges_list_str}
-    return render_to_response('pages/graph.html', context, context_instance=RequestContext(request))
