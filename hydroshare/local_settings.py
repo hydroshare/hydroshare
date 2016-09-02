@@ -76,7 +76,7 @@ DOCKER_API_VERSION = '1.12'
 
 
 # CartoCSS
-CARTO_HOME='/tmp/node_modules/carto'
+CARTO_HOME='/hs_tmp/node_modules/carto'
 
 
 USE_SOUTH = False
