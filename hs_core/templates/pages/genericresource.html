@@ -817,7 +817,9 @@
                                                 {% for relation in relations %}
                                                     <div class="row">
                                                         <div class="col-sm-4"><strong>{{ relation.type }}:</strong></div>
-                                                        <div class="col-sm-8">{{ relation.value }}</div>
+                                                        {% autoescape off %}
+                                                            <div class="col-sm-8">{{ relation.value }}</div>
+                                                        {% endautoescape %}
                                                     </div>
                                                 {% endfor %}
                                             {% endif %}
@@ -862,7 +864,9 @@
                                                     {% for relation in relation_formset.initial %}
                                                         <tr>
                                                             <th scope="row" class="dataset-label">{{ relation.type }}:</th>
-                                                            <td class="dataset-details">{{ relation.value }}</td>
+                                                            {% autoescape off %}
+                                                                <td class="dataset-details">{{ relation.value }}</td>
+                                                            {% endautoescape %}
                                                             <td>
                                                                 <a data-toggle="modal" data-placement="auto" title="Edit"
                                                                    class="glyphicon glyphicon-pencil icon-button icon-blue"

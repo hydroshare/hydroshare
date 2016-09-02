@@ -32,7 +32,8 @@ def update_collection(request, shortkey, *args, **kwargs):
 
     hasPart = "hasPart"
     site_url = current_site_url()
-    relation_value_template = site_url + "/resource/{0}/"
+    contained_res_url_template = site_url + "/resource/{0}/"
+    relation_value_template = '<a href="{0}">{1}</a>'
 
     try:
         with transaction.atomic():
@@ -67,7 +68,8 @@ def update_collection(request, shortkey, *args, **kwargs):
                     collection_res_obj.resources.remove(res_obj_remove)
 
                     # change "Relation" metadata in collection
-                    value = relation_value_template.format(res_id_remove)
+                    contained_res_url = contained_res_url_template.format(res_id_remove)
+                    value = relation_value_template.format(contained_res_url, contained_res_url)
                     add_or_remove_relation_metadata(add=False, target_res_obj=collection_res_obj,
                                                     relation_type=hasPart, relation_value=value,
                                                     set_res_modified=False)
@@ -98,7 +100,8 @@ def update_collection(request, shortkey, *args, **kwargs):
                     # not implemented
 
                     # change "Relation" metadata in collection
-                    value = relation_value_template.format(res_id_add)
+                    contained_res_url = contained_res_url_template.format(res_id_add)
+                    value = relation_value_template.format(contained_res_url, contained_res_url)
                     add_or_remove_relation_metadata(add=True, target_res_obj=collection_res_obj,
                                                     relation_type=hasPart, relation_value=value,
                                                     set_res_modified=False)
@@ -145,9 +148,11 @@ def update_collection_for_deleted_resources(request, shortkey, *args, **kwargs):
         # handle "Relation" metadata
         hasPart = "hasPart"
         site_url = current_site_url()
-        relation_value_template = site_url + "/resource/{0}/"
+        contained_res_url_template = site_url + "/resource/{0}/"
+        relation_value_template = '<a href="{0}">{1}</a>'
         for deleted_res_log in collection_res.deleted_resources:
-            relation_value = relation_value_template.format(deleted_res_log.resource_id)
+            contained_res_url = contained_res_url_template.format(deleted_res_log.resource_id)
+            relation_value = relation_value_template.format(contained_res_url, contained_res_url)
 
             add_or_remove_relation_metadata(add=False, target_res_obj=collection_res,
                                             relation_type=hasPart, relation_value=relation_value,
