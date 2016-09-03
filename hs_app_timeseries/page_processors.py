@@ -7,7 +7,6 @@ from forms import SiteForm, VariableForm, MethodForm, ProcessingLevelForm, TimeS
     UTCOffSetForm
 from hs_core import page_processors
 from hs_core.views import add_generic_context
-from hs_core.hydroshare import utils
 from hs_app_timeseries.models import TimeSeriesResource
 
 
