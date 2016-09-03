@@ -559,7 +559,7 @@ class TimeSeriesResource(BaseResource):
         if not self.has_csv_file:
             return False
 
-        return self.metadata.has_all_required_elements()
+        return True
 
     @property
     def can_update_sqlite_file(self):

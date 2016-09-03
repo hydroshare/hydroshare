@@ -6,7 +6,7 @@
     {% if extended_metadata_exists %}
         <div id="div-series-selection" class="row">
             <div class="col-sm-12">
-                <strong>Select a timeseries to see corresponding metadata(Number of
+                <strong>Select a timeseries to see corresponding metadata (Number of
                     timeseries:{{ series_ids.items|length }}):</strong>
                 <form action="/resource/{{ cm.short_id }}/" method="get" enctype="multipart/form-data">
                     {% csrf_token %}
@@ -132,6 +132,9 @@
                             <tr><th class="text-muted">Sample Medium </th><td>{{ timeseries_result.sample_medium }}</td></tr>
                             <tr><th class="text-muted">Value Count </th><td>{{ timeseries_result.value_count }}</td></tr>
                             <tr><th class="text-muted">Aggregation Statistics </th><td>{{ timeseries_result.aggregation_statistics }}</td></tr>
+                            {% if utc_offset %}
+                                <tr><th class="text-muted">UTC Offset </th><td>{{ utc_offset }}</td></tr>
+                            {% endif %}
                         </tbody>
                     </table>
                     <hr style="border:0">

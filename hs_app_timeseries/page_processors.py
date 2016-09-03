@@ -29,14 +29,12 @@ def landing_page(request, page):
         extended_metadata_exists = True
 
     series_ids = {}
-    if not content_model.has_sqlite_file and len(content_model.metadata.series_names) > 0:
-        res_file = content_model.files.all().first()
-        if res_file:
-            # check if the file is a csv file
-            file_ext = utils.get_resource_file_name_and_extension(res_file)[1]
-            if file_ext == ".csv":
-                for index, series_name in enumerate(sorted(content_model.metadata.series_names)):
-                    series_ids[str(index)] = series_name
+    if content_model.has_csv_file and len(content_model.metadata.series_names) > 0:
+        # this condition is true if the user has uploaded a csv file and the blank
+        # sqlite file (added by the system) has never been synced before with metadata changes
+
+        for index, series_name in enumerate(sorted(content_model.metadata.series_names)):
+            series_ids[str(index)] = series_name
     else:
         for result in content_model.metadata.time_series_results:
             series_id = result.series_ids[0]
@@ -104,6 +102,8 @@ def _get_resource_view_context(page, request, content_model, selected_series_id,
     context['timeseries_results'] = [ts_result for ts_result in
                                      content_model.metadata.time_series_results if
                                      selected_series_id in ts_result.series_ids]
+    context['utc_offset'] = content_model.metadata.utc_offset.value if \
+        content_model.metadata.utc_offset else None
 
     return context
 
@@ -115,9 +115,6 @@ def _get_resource_edit_context(page, request, content_model, selected_series_id,
         selected_series_label = series_ids[selected_series_id]
     else:
         selected_series_label = ''
-
-    if content_model.can_add_blank_sqlite_file:
-        content_model.add_blank_sqlite_file(request.user)
 
     utcoffset_form = None
     if content_model.has_csv_file:
@@ -198,7 +195,7 @@ def _create_site_form(resource, selected_series_id):
                              element_id=site.id if site else None,
                              cv_site_types=resource.metadata.cv_site_types.all(),
                              cv_elevation_datums=resource.metadata.cv_elevation_datums.all(),
-                             show_site_code_selection=not resource.has_sqlite_file,
+                             show_site_code_selection=len(resource.metadata.series_names) > 0,
                              available_sites=resource.metadata.sites,
                              selected_series_id=selected_series_id)
 
@@ -228,14 +225,15 @@ def _create_variable_form(resource, selected_series_id):
     if resource.metadata.variables:
         variable = resource.metadata.variables.filter(
             series_ids__contains=[selected_series_id]).first()
-        variable_form = VariableForm(instance=variable, res_short_id=resource.short_id,
-                                     element_id=variable.id if variable else None,
-                                     cv_variable_types=resource.metadata.cv_variable_types.all(),
-                                     cv_variable_names=resource.metadata.cv_variable_names.all(),
-                                     cv_speciations=resource.metadata.cv_speciations.all(),
-                                     show_variable_code_selection=not resource.has_sqlite_file,
-                                     available_variables=resource.metadata.variables,
-                                     selected_series_id=selected_series_id)
+        variable_form = VariableForm(
+            instance=variable, res_short_id=resource.short_id,
+            element_id=variable.id if variable else None,
+            cv_variable_types=resource.metadata.cv_variable_types.all(),
+            cv_variable_names=resource.metadata.cv_variable_names.all(),
+            cv_speciations=resource.metadata.cv_speciations.all(),
+            show_variable_code_selection=len(resource.metadata.series_names) > 0,
+            available_variables=resource.metadata.variables,
+            selected_series_id=selected_series_id)
 
         if variable is not None:
             variable_form.action = _get_element_update_form_action('variable', resource.short_id,
@@ -270,7 +268,7 @@ def _create_method_form(resource, selected_series_id):
         method_form = MethodForm(instance=method, res_short_id=resource.short_id,
                                  element_id=method.id if method else None,
                                  cv_method_types=resource.metadata.cv_method_types.all(),
-                                 show_method_code_selection=not resource.has_sqlite_file,
+                                 show_method_code_selection=len(resource.metadata.series_names) > 0,
                                  available_methods=resource.metadata.methods,
                                  selected_series_id=selected_series_id)
 
@@ -301,7 +299,7 @@ def _create_processing_level_form(resource, selected_series_id):
             instance=pro_level,
             res_short_id=resource.short_id,
             element_id=pro_level.id if pro_level else None,
-            show_processing_level_code_selection=not resource.has_sqlite_file,
+            show_processing_level_code_selection=len(resource.metadata.series_names) > 0,
             available_processinglevels=resource.metadata.processing_levels,
             selected_series_id=selected_series_id)
 

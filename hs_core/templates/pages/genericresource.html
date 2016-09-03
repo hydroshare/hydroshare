@@ -561,6 +561,9 @@
                                                 {% endif %}
                                             {% else %}
                                                 <div class="form-group">
+                                                     <div id="readonly-coverage-notice" class="col-sm-12 alert alert-warning alert-dismissible" style="display: none;">
+                                                        <label>Spatial coverage for time series resources should be set by editing the coordinates of the monitoring sites on the "Resource Specific" metadata tab. </label>
+                                                    </div>
                                                     <div class="col-md-8 col-sm-12 col-xs-12" id="coverage-spatial">
                                                         <div class="row">
                                                             <form action="/hsapi/_internal/{{ cm.short_id }}/coverage/{% if not coverage_spatial_form.initial.north and not coverage_spatial_form.initial.northlimit %}add-metadata/{% else %}{{ coverage_spatial_form.initial.id }}/update-metadata/{% endif %}"
@@ -710,9 +713,6 @@
                                                                     </div>
                                                                 </fieldset>
                                                             </form>
-                                                            <div id="readonly-coverage-notice" class="col-sm-12 text-info" style="display: none;">
-                                                                <label>Spatial coverage should be set by editing the site coordinates </label>
-                                                            </div>
                                                         </div>
                                                     </div>
 

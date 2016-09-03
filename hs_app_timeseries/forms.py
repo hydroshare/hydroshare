@@ -537,7 +537,7 @@ class UTCOffSetFormHelper(BaseFormHelper):
             Field('selected_series_id', css_class=field_width, type="hidden"),
             Field('value', css_class=field_width),
         )
-        kwargs['element_name_label'] = '  '
+        kwargs['element_name_label'] = 'UTC Offset'
         super(UTCOffSetFormHelper, self).__init__(allow_edit, res_short_id, element_id,
                                                   element_name, layout, *args, **kwargs)
 
@@ -557,7 +557,7 @@ class UTCOffSetForm(ModelForm):
         fields = ['value']
         exclude = ['content_object']
         widgets = {'value': forms.TextInput()}
-        labels = {'value': "UTC Offset"}
+        labels = {'value': ""}
 
 
 class UTCOffSetValidationForm(forms.Form):
@@ -641,7 +641,7 @@ def _set_form_helper_layout(common_layout, element_name, is_show_element_code_se
 
 UpdateSQLiteLayout = Layout(HTML("""
 <div id="sql-file-update" class="row"
-{% if not cm.has_sqlite_file or not cm.metadata.is_dirty  %}style="display:none;
+{% if not cm.can_update_sqlite_file or not cm.metadata.is_dirty %}style="display:none;
   "{% endif %} style="margin-bottom:10px">
     <div class="col-sm-12">
         <div class="alert alert-warning alert-dismissible" role="alert">

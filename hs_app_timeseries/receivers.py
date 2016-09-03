@@ -30,8 +30,15 @@ def resource_pre_create_handler(sender, **kwargs):
 
 @receiver(pre_add_files_to_resource, sender=TimeSeriesResource)
 def pre_add_files_to_resource_handler(sender, **kwargs):
-    # if needed more actions can be taken here before content file is added to a TimeSeries resource
-    pass
+    resource = kwargs['resource']
+    files = kwargs['files']
+    validate_files_dict = kwargs['validate_files']
+    fed_res_fnames = kwargs['fed_res_file_names']
+
+    if files or fed_res_fnames:
+        if resource.has_sqlite_file or resource.has_csv_file:
+            validate_files_dict['are_files_valid'] = False
+            validate_files_dict['message'] = 'Resource already has the necessary content files.'
 
 
 @receiver(pre_delete_file_from_resource, sender=TimeSeriesResource)
@@ -94,7 +101,7 @@ def post_add_files_to_resource_handler(sender, **kwargs):
 
         elif uploaded_file_ext == ".csv":
             _process_uploaded_csv_file(resource, uploaded_file_to_process, validate_files_dict,
-                                       delete_existing_metadata=True)
+                                       user, delete_existing_metadata=True)
 
 
 @receiver(post_create_resource, sender=TimeSeriesResource)
@@ -112,11 +119,11 @@ def post_create_resource_handler(sender, **kwargs):
             _process_uploaded_sqlite_file(user, resource, res_file, validate_files_dict,
                                           delete_existing_metadata=False)
         elif file_ext == '.csv':
-            _process_uploaded_csv_file(resource, res_file, validate_files_dict,
+            _process_uploaded_csv_file(resource, res_file, validate_files_dict, user,
                                        delete_existing_metadata=False)
 
 
-def _process_uploaded_csv_file(resource, res_file, validate_files_dict,
+def _process_uploaded_csv_file(resource, res_file, validate_files_dict, user,
                                delete_existing_metadata=True):
     # get the csv file from iRODS to a temp directory
     fl_obj_name = utils.get_file_from_irods(res_file)
@@ -129,6 +136,9 @@ def _process_uploaded_csv_file(resource, res_file, validate_files_dict,
 
         # delete the sqlite file if it exists
         _delete_resource_file(resource, ".sqlite")
+
+        # add the blank sqlite file
+        resource.add_blank_sqlite_file(user)
 
         # populate CV metadata django models from the blank sqlite file
 
