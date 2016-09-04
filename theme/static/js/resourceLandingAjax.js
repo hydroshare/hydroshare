@@ -320,6 +320,9 @@ function metadata_update_ajax_submit(form_id){
                 if ($("#can-update-sqlite-file").val() === "True") {
                     $("#sql-file-update").show();
                 }
+                else if(json_response.metadata_status === "Sufficient to publish or make public"){
+                    $("#sql-file-update").show();
+                }
                 
                 if (($form.attr("id") == "id-site")){
                     makeTimeSeriesMetaDataElementFormReadOnly(form_id, "id_site");
