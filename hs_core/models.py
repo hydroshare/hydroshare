@@ -420,6 +420,16 @@ class Description(AbstractMetaDataElement):
         unique_together = ("content_type", "object_id")
 
     @classmethod
+    def update(cls, element_id, **kwargs):
+        element = Description.objects.get(id=element_id)
+        resource = element.metadata.resource
+        if resource.resource_type == "TimeSeriesResource":
+            element.metadata.is_dirty = True
+            element.metadata.save()
+
+        super(Description, cls).update(element_id, **kwargs)
+
+    @classmethod
     def remove(cls, element_id):
         raise ValidationError("Description element of a resource can't be deleted.")
 
@@ -433,6 +443,16 @@ class Title(AbstractMetaDataElement):
 
     class Meta:
         unique_together = ("content_type", "object_id")
+
+    @classmethod
+    def update(cls, element_id, **kwargs):
+        element = Title.objects.get(id=element_id)
+        resource = element.metadata.resource
+        if resource.resource_type == "TimeSeriesResource":
+            element.metadata.is_dirty = True
+            element.metadata.save()
+
+        super(Title, cls).update(element_id, **kwargs)
 
     @classmethod
     def remove(cls, element_id):
@@ -1721,9 +1741,10 @@ class CoreMetaData(models.Model):
                 'Publisher',
                 'FundingAgency']
 
-    # this method needs to be overriden by any subclass of this class
-    # if they implement additional metadata elements that are required
     def has_all_required_elements(self):
+        # this method needs to be overriden by any subclass of this class
+        # if they implement additional metadata elements that are required
+
         if not self.title:
             return False
         elif self.title.value.lower() == 'untitled resource':
@@ -1747,9 +1768,9 @@ class CoreMetaData(models.Model):
 
         return True
 
-    # this method needs to be overriden by any subclass of this class
-    # if they implement additional metadata elements that are required
     def get_required_missing_elements(self):
+        # this method needs to be overriden by any subclass of this class
+        # if they implement additional metadata elements that are required
         missing_required_elements = []
 
         if not self.title:
@@ -1763,8 +1784,10 @@ class CoreMetaData(models.Model):
 
         return missing_required_elements
 
-    # this method needs to be overriden by any subclass of this class
     def delete_all_elements(self):
+        # this method needs to be overriden by any subclass of this class if that class
+        # has additional metadata elements
+
         if self.title:
             self.title.delete()
         if self.description:
