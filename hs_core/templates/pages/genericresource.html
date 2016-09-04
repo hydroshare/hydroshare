@@ -1421,14 +1421,27 @@
                         google.maps.event.trigger(coverageMap, "resize");
                         // This field is populated if the page is in view mode
                         var shapeType = $("#coverageMap")[0].getAttribute("data-shape-type");
+                        var resourceType = $("#resource-type").val();
                         // Center the map
-                        if (shapeType) {
+                        if (shapeType || resourceType === "Time Series") {
                             deleteAllShapes();
-                            if (shapeType == "point") {
-                                var myLatLng = {
-                                    lat: parseFloat($("#cov_north").text()),
-                                    lng: parseFloat($("#cov_east").text())
-                                };
+                            if (shapeType == "point" || resourceType === "Time Series") {
+                                var myLatLng;
+                                if (shapeType == "point"){
+                                    // resource view mode
+                                    myLatLng = {
+                                        lat: parseFloat($("#cov_north").text()),
+                                        lng: parseFloat($("#cov_east").text())
+                                    };
+                                }
+                                else {
+                                    // time series resource in edit mode
+                                    myLatLng = {
+                                        lat: parseFloat($("#id_north").val()),
+                                        lng: parseFloat($("#id_east").val())
+                                    };
+                                }
+
                                 if (!myLatLng.lat || !myLatLng.lng) {
                                     return;
                                 }
@@ -1444,13 +1457,27 @@
                                     coverageMap.setCenter(marker.getPosition());
                                 });
                             }
-                            else if (shapeType == "box") {
-                                var bounds = {
-                                    north: parseFloat($("#cov_northlimit").text()),
-                                    south: parseFloat($("#cov_southlimit").text()),
-                                    east: parseFloat($("#cov_eastlimit").text()),
-                                    west: parseFloat($("#cov_westlimit").text())
-                                };
+                            else if (shapeType == "box" || resourceType === "Time Series") {
+                                var bounds;
+                                if (shapeType == "box"){
+                                   //resource view mode
+                                    bounds = {
+                                        north: parseFloat($("#cov_northlimit").text()),
+                                        south: parseFloat($("#cov_southlimit").text()),
+                                        east: parseFloat($("#cov_eastlimit").text()),
+                                        west: parseFloat($("#cov_westlimit").text())
+                                    };
+                                }
+                                else {
+                                    // time series resource edit mode
+                                    bounds = {
+                                        north: parseFloat($("#id_northlimit").val()),
+                                        south: parseFloat($("#id_southlimit").val()),
+                                        east: parseFloat($("#id_eastlimit").val()),
+                                        west: parseFloat($("#id_westlimit").val())
+                                    };
+                                }
+
                                 if (!bounds.north || !bounds.south || !bounds.east || !bounds.west) {
                                     return;
                                 }
