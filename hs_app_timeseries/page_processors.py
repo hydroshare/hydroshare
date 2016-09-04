@@ -28,7 +28,7 @@ def landing_page(request, page):
         extended_metadata_exists = True
 
     series_ids = {}
-    if content_model.has_csv_file and len(content_model.metadata.series_names) > 0:
+    if content_model.has_csv_file and content_model.metadata.series_names:
         # this condition is true if the user has uploaded a csv file and the blank
         # sqlite file (added by the system) has never been synced before with metadata changes
 
@@ -56,7 +56,7 @@ def landing_page(request, page):
         is_resource_specific_tab_active = False
 
     ts_result_value_count = None
-    if len(content_model.metadata.series_names) > 0 and selected_series_id is not None:
+    if content_model.metadata.series_names and selected_series_id is not None:
         sorted_series_names = sorted(content_model.metadata.series_names)
         selected_series_name = sorted_series_names[int(selected_series_id)]
         ts_result_value_count = int(content_model.metadata.value_counts[selected_series_name])

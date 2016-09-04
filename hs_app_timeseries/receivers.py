@@ -30,6 +30,8 @@ def resource_pre_create_handler(sender, **kwargs):
 
 @receiver(pre_add_files_to_resource, sender=TimeSeriesResource)
 def pre_add_files_to_resource_handler(sender, **kwargs):
+    # file upload is not allowed if the resource already
+    # has either a sqlite file or a csv file
     resource = kwargs['resource']
     files = kwargs['files']
     validate_files_dict = kwargs['validate_files']
