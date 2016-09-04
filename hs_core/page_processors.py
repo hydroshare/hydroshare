@@ -390,6 +390,7 @@ def get_page_context(page, user, resource_edit=False, extended_metadata_layout=N
                'language_form': language_form,
                'coverage_temporal_form': coverage_temporal_form,
                'coverage_spatial_form': coverage_spatial_form,
+               'spatial_coverage': spatial_coverage_data_dict,
                'subjects_form': subjects_form,
                'metadata_status': metadata_status,
                'missing_metadata_elements': content_model.metadata.get_required_missing_elements(),

@@ -17,6 +17,7 @@
         <input type="hidden" id="file-count" value={{ cm.files.all.count }}>
         <input type="hidden" id="resource-mode" value="{% if metadata_form %}Edit{% else %}View{% endif %}" >
         <input type="hidden" id="resource-type" value="{{ cm|resource_type }}" >
+        <input type="hidden" id="spatial-coverage-type" value="{{ spatial_coverage.type }}" >
 
         <div class="container">
             <div class="row">
@@ -1421,11 +1422,13 @@
                         google.maps.event.trigger(coverageMap, "resize");
                         // This field is populated if the page is in view mode
                         var shapeType = $("#coverageMap")[0].getAttribute("data-shape-type");
+
                         var resourceType = $("#resource-type").val();
+                        var spatialCoverageType = $("#spatial-coverage-type").val();
                         // Center the map
                         if (shapeType || resourceType === "Time Series") {
                             deleteAllShapes();
-                            if (shapeType == "point" || resourceType === "Time Series") {
+                            if (shapeType == "point" || (resourceType === "Time Series" && spatialCoverageType == "point")) {
                                 var myLatLng;
                                 if (shapeType == "point"){
                                     // resource view mode
@@ -1457,7 +1460,7 @@
                                     coverageMap.setCenter(marker.getPosition());
                                 });
                             }
-                            else if (shapeType == "box" || resourceType === "Time Series") {
+                            else if (shapeType == "box" || (resourceType === "Time Series" && spatialCoverageType == "box")) {
                                 var bounds;
                                 if (shapeType == "box"){
                                    //resource view mode
