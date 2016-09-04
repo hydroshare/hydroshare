@@ -25,7 +25,9 @@ from hs_core.hydroshare import add_resource_files
 
 
 class TimeSeriesAbstractMetaDataElement(AbstractMetaDataElement):
+    # for associating an metadata element with one or more time series
     series_ids = ArrayField(models.CharField(max_length=36, null=True, blank=True), default=[])
+    # to track if element has been modified to trigger sqlite file update
     is_dirty = models.BooleanField(default=False)
 
     @classmethod
@@ -44,8 +46,9 @@ class TimeSeriesAbstractMetaDataElement(AbstractMetaDataElement):
 
         element = super(TimeSeriesAbstractMetaDataElement, cls).create(**kwargs)
         # set the 'is_dirty' field of metadata object to True
-        # if we are creating element when there is a csv file
-        # in case of sqlite file upload we don't create any resource specific metadata element
+        # if we are creating the element when there is a csv file
+        # note: in case of sqlite file upload we don't create any resource specific metadata
+        # elements - we do only metadata element updates
         metadata = element.metadata
         if metadata.resource.has_csv_file:
             element.is_dirty = True
@@ -79,9 +82,11 @@ class TimeSeriesAbstractMetaDataElement(AbstractMetaDataElement):
 
     @classmethod
     def process_series_ids(cls, metadata, element_data_dict):
-        # should be called prior to updating an element
+        # this class method should be called prior to updating an element
         selected_series_id = element_data_dict.get('selected_series_id', None)
-        if len(metadata.series_names) > 0:
+        if metadata.series_names:
+            # this condition is true if csv file has been uploaded but data has not been written
+            # to the blank sqlite file
             # this validation applies only in case of CSV upload
             cls.validate_series_ids(metadata, element_data_dict)
 
@@ -101,10 +106,8 @@ class TimeSeriesAbstractMetaDataElement(AbstractMetaDataElement):
         abstract = True
 
 
-# define extended metadata elements for Time Series resource type
 class Site(TimeSeriesAbstractMetaDataElement):
     term = 'Site'
-
     site_code = models.CharField(max_length=200)
     site_name = models.CharField(max_length=255)
     elevation_m = models.IntegerField(null=True, blank=True)
@@ -125,7 +128,9 @@ class Site(TimeSeriesAbstractMetaDataElement):
             raise ValidationError("There is already a site element "
                                   "with site_code:{}".format(kwargs['site_code']))
 
-        if len(metadata.series_names) > 0:
+        if metadata.series_names:
+            # this condition is true if csv file has been uploaded but data has not been written
+            # to the blank sqlite file
             # this validation applies only in case of CSV upload
             cls.validate_series_ids(metadata, kwargs)
             element = super(Site, cls).create(**kwargs)
@@ -140,6 +145,8 @@ class Site(TimeSeriesAbstractMetaDataElement):
         # if the user has entered a new elevation datum or site type, then
         # create a corresponding new cv term
         _create_site_related_cv_terms(element=element, data_dict=kwargs)
+
+        # update resource coverage upon site element create
         _update_resource_coverage_element(site_element=element)
         return element
 
@@ -165,6 +172,7 @@ class Site(TimeSeriesAbstractMetaDataElement):
                                               related_elements=element.metadata.sites,
                                               selected_series_id=series_id)
 
+        # update resource coverage upon site element update
         _update_resource_coverage_element(site_element=element)
 
     @classmethod
@@ -173,6 +181,7 @@ class Site(TimeSeriesAbstractMetaDataElement):
 
     @classmethod
     def get_series_ids(cls, metadata_obj):
+        # get the series ids associated with this element
         return _get_series_ids(element_class=cls, metadata_obj=metadata_obj)
 
 
@@ -197,7 +206,9 @@ class Variable(TimeSeriesAbstractMetaDataElement):
             raise ValidationError("There is already a variable element "
                                   "with variable_code:{}".format(kwargs['variable_code']))
 
-        if len(metadata.series_names) > 0:
+        if metadata.series_names:
+            # this condition is true if csv file has been uploaded but data has not been written
+            # to the blank sqlite file
             # this validation applies only in case of CSV upload
             cls.validate_series_ids(metadata, kwargs)
             element = super(Variable, cls).create(**kwargs)
@@ -266,7 +277,9 @@ class Method(TimeSeriesAbstractMetaDataElement):
             raise ValidationError("There is already a method element "
                                   "with method_code:{}".format(kwargs['method_code']))
 
-        if len(metadata.series_names) > 0:
+        if metadata.series_names:
+            # this condition is true if csv file has been uploaded but data has not been written
+            # to the blank sqlite file
             # this validation applies only in case of CSV upload
             cls.validate_series_ids(metadata, kwargs)
             element = super(Method, cls).create(**kwargs)
@@ -317,6 +330,7 @@ class Method(TimeSeriesAbstractMetaDataElement):
 
     @classmethod
     def get_series_ids(cls, metadata_obj):
+        # get series ids associated with this element
         return _get_series_ids(element_class=cls, metadata_obj=metadata_obj)
 
 
@@ -340,7 +354,9 @@ class ProcessingLevel(TimeSeriesAbstractMetaDataElement):
             err_msg = err_msg.format(kwargs['processing_level_code'])
             raise ValidationError(err_msg)
 
-        if len(metadata.series_names) > 0:
+        if metadata.series_names:
+            # this condition is true if csv file has been uploaded but data has not been written
+            # to the blank sqlite file
             # this validation applies only in case of CSV upload
             cls.validate_series_ids(metadata, kwargs)
             element = super(ProcessingLevel, cls).create(**kwargs)
@@ -403,7 +419,9 @@ class TimeSeriesResult(TimeSeriesAbstractMetaDataElement):
     @classmethod
     def create(cls, **kwargs):
         metadata = kwargs['content_object']
-        if len(metadata.series_names) > 0:
+        if metadata.series_names:
+            # this condition is true if csv file has been uploaded but data has not been written
+            # to the blank sqlite file
             # this validation applies only in case of CSV upload
             cls.validate_series_ids(metadata, kwargs)
 
@@ -423,7 +441,9 @@ class TimeSeriesResult(TimeSeriesAbstractMetaDataElement):
             if len(kwargs['series_ids']) > 1:
                 raise ValidationError("Multiple series ids can't be assigned.")
 
-        if len(element.metadata.series_names) > 0:
+        if element.metadata.series_names:
+            # this condition is true if csv file has been uploaded but data has not been written
+            # to the blank sqlite file
             # this validation applies only in case of CSV upload
             cls.validate_series_ids(element.metadata, kwargs)
 
@@ -453,17 +473,20 @@ class UTCOffSet(TimeSeriesAbstractMetaDataElement):
         if metadata.utc_offset:
             raise ValidationError("There is already an UTCOffSet element")
 
-        if len(metadata.series_names) > 0:
-            # this validation applies only in case of CSV upload
+        if metadata.series_names:
+            # this condition is true if csv file has been uploaded but data has not been written
+            # to the blank sqlite file
             kwargs['series_ids'] = range(len(metadata.series_names))
+
         return super(UTCOffSet, cls).create(**kwargs)
 
     @classmethod
     def update(cls, element_id, **kwargs):
         element = cls.objects.get(id=element_id)
         kwargs.pop('selected_series_id', None)
-        if len(element.metadata.series_names) > 0:
-            # this validation applies only in case of CSV upload
+        if element.metadata.series_names:
+            # this condition is true if csv file has been uploaded but data has not been written
+            # to the blank sqlite file
             kwargs['series_ids'] = range(len(element.metadata.series_names))
 
         super(UTCOffSet, cls).update(element_id, **kwargs)
@@ -563,6 +586,8 @@ class TimeSeriesResource(BaseResource):
 
     @property
     def can_update_sqlite_file(self):
+        # guard property to determine when the sqlite file can be updated as result of
+        # metadata changes
         return self.has_sqlite_file and self.metadata.has_all_required_elements()
 
     @classmethod
@@ -592,15 +617,18 @@ class TimeSeriesResource(BaseResource):
         return True
 
     def has_required_content_files(self):
+        # sqlite file is the required content file
         return self.has_sqlite_file
 
-    def add_blank_sqlite_file(self, user=None):
+    def add_blank_sqlite_file(self, user):
         # add the blank SQLite file to this resource (self)
         if not self.can_add_blank_sqlite_file:
             err_msg = """Can't add blank ODM2 SQLite file to the resource.
              Resource may already have a SQLite file or there may not be enough metadata
              for the resource."""
             raise Exception(err_msg)
+
+        log = logging.getLogger()
 
         # copy the blank sqlite file to a temp directory
         temp_dir = tempfile.mkdtemp()
@@ -614,15 +642,12 @@ class TimeSeriesResource(BaseResource):
                               name=odm2_sqlite_file_name)]
         try:
             add_resource_files(self.short_id, *files)
-            if user is not None and user.is_authenticated():
-                last_changed_by = user
-            else:
-                last_changed_by = self.resource.last_changed_by
+            log.info("Blank SQLite file was added.")
 
             # need to do this so that the bag will be regenerated prior to download of the bag
-            utils.resource_modified(self, by_user=last_changed_by,
-                                    overwrite_bag=False)
+            utils.resource_modified(self, by_user=user)
         except Exception as ex:
+            log.exception("Error when adding the blank SQLite file. Error:{}".format(ex.message))
             raise ex
         finally:
             # cleanup the temp sqlite file directory
@@ -642,8 +667,10 @@ class TimeSeriesMetaData(CoreMetaData):
     _time_series_results = GenericRelation(TimeSeriesResult)
     _utc_offset = GenericRelation(UTCOffSet)
     is_dirty = models.BooleanField(default=False)
-    # temporarily store the series names from the csv file
+    # temporarily store the series names (data column names) from the csv file
     # for storing data column name (key) and number of data points (value) for that column
+    # this field is set to an empty dict once metadata changes are written to the blank sqlite
+    # file as part of the syn operation
     value_counts = HStoreField(default={})
 
     @property
@@ -676,6 +703,11 @@ class TimeSeriesMetaData(CoreMetaData):
 
     @property
     def series_names(self):
+        # This is used only in case of csv file upload
+        # this property holds a list of data column names read from the
+        # uploaded csv file. This list becomes an empty list
+        # once metadata changes are written to the blank sqlite file as
+        # part of the syn operation.
         return self.value_counts.keys()
 
     @classmethod
@@ -710,7 +742,7 @@ class TimeSeriesMetaData(CoreMetaData):
             if not self.utc_offset:
                 return False
 
-        if len(self.series_names) > 0:
+        if self.series_names:
             # applies to the case of csv file upload
             # check that we have each type of metadata element for each of the series ids
             series_ids = range(0, len(self.series_names))
@@ -744,7 +776,7 @@ class TimeSeriesMetaData(CoreMetaData):
         if not self.time_series_results:
             missing_required_elements.append('Time Series Result')
 
-        if len(self.series_names) > 0:
+        if self.series_names:
             # applies only in the case of csv file upload
             # check that we have each type of metadata element for each of the series ids
             series_ids = range(0, len(self.series_names))
@@ -912,6 +944,9 @@ class TimeSeriesMetaData(CoreMetaData):
         self.methods.delete()
         self.processing_levels.delete()
         self.time_series_results.delete()
+        if self.utc_offset:
+            self.utc_offset.delete()
+
         # delete CV lookup django tables
         self.cv_variable_types.all().delete()
         self.cv_variable_names.all().delete()
@@ -924,7 +959,7 @@ class TimeSeriesMetaData(CoreMetaData):
         self.cv_mediums.all().delete()
         self.cv_aggregation_statistics.all().delete()
 
-    def update_sqlite_file(self, user=None):
+    def update_sqlite_file(self, user):
         if not self.is_dirty:
             return
 
@@ -933,12 +968,11 @@ class TimeSeriesMetaData(CoreMetaData):
 
         log = logging.getLogger()
 
-        sqlite_file_to_update = utils.get_resource_files_by_extension(self.resource,
-                                                                      ".sqlite")[0]
+        sqlite_file_to_update = utils.get_resource_files_by_extension(self.resource, ".sqlite")[0]
         # retrieve the sqlite file from iRODS and save it to temp directory
         temp_sqlite_file = utils.get_file_from_irods(sqlite_file_to_update)
 
-        if self.resource.has_csv_file and self._is_sqlite_file_blank(temp_sqlite_file):
+        if self.resource.has_csv_file and self.resource.metadata.series_names:
             self.populate_blank_sqlite_file(temp_sqlite_file, user)
         else:
             try:
@@ -983,12 +1017,13 @@ class TimeSeriesMetaData(CoreMetaData):
                                                          user)
                     self.is_dirty = False
                     self.save()
+                    log.info("SQLite file update was successful.")
             except sqlite3.Error as ex:
                 sqlite_err_msg = str(ex.args[0])
                 log.error("Failed to update SQLite file. Error:{}".format(sqlite_err_msg))
                 raise Exception(sqlite_err_msg)
             except Exception as ex:
-                log.error("Failed to update SQLite file. Error:{}".format(ex.message))
+                log.exception("Failed to update SQLite file. Error:{}".format(ex.message))
                 raise ex
             finally:
                 if os.path.exists(temp_sqlite_file):
@@ -997,16 +1032,17 @@ class TimeSeriesMetaData(CoreMetaData):
     def populate_blank_sqlite_file(self, temp_sqlite_file, user):
         """
         writes data to a blank sqlite file. This function is executed only in case
-        of CSV file upload and executed only once when resource has all required metadata.
+        of CSV file upload and executed only once at the time of csv file upload.
         :param temp_sqlite_file: this the sqlite file copied from irods to a temp location on
          Django.
-        :param user: current user
+        :param user: current user who is uploading the csv file
         :return:
         """
-        if not self.resource.has_sqlite_file or not self.resource.has_csv_file:
-            return
-
         log = logging.getLogger()
+        if not self.resource.has_csv_file:
+            msg = "Resource needs to have a CSV file before a blank SQLite file can be added"
+            log.exception(msg)
+            raise Exception(msg)
 
         # update resource specific metadata element series ids with generated GUID
         self._update_metadata_element_series_ids_with_guids()
@@ -1084,13 +1120,13 @@ class TimeSeriesMetaData(CoreMetaData):
                 utils.replace_resource_file_on_irods(temp_sqlite_file, blank_sqlite_file, user)
                 self.is_dirty = False
                 self.save()
-
+                log.info("Data written to the blank sqlite file successfully.")
         except sqlite3.Error as ex:
             sqlite_err_msg = str(ex.args[0])
             log.error("Failed to update SQLite file. Error:{}".format(sqlite_err_msg))
             raise Exception(sqlite_err_msg)
         except Exception as ex:
-            log.error("Failed to update SQLite file. Error:{}".format(ex.message))
+            log.exception("Failed to update SQLite file. Error:{}".format(ex.message))
             raise ex
         finally:
             if os.path.exists(temp_sqlite_file):
@@ -1103,35 +1139,11 @@ class TimeSeriesMetaData(CoreMetaData):
         for row in csv_reader:
             yield row[0], row[data_column_index]
 
-    def _is_sqlite_file_blank(self, sqlite_file):
-        # check if the existing sqlite file is blank
-        is_blank = True
-        try:
-            con = sqlite3.connect(sqlite_file)
-            with con:
-                # get the records in python dictionary format
-                con.row_factory = sqlite3.Row
-                cur = con.cursor()
-                # since we write to the DatasetsResults table the last when populating
-                # a blank sqlite file, check that table to see if there are records in that
-                # table
-                cur.execute("SELECT * FROM DatasetsResults")
-                ds_result = cur.fetchone()
-                if ds_result is not None:
-                    is_blank = False
-        except sqlite3.Error as ex:
-            sqlite_err_msg = str(ex.args[0])
-            # log.error("Failed to update SQLite file. Error:{}".format(sqlite_err_msg))
-            raise Exception(sqlite_err_msg)
-        except Exception as ex:
-            if os.path.exists(sqlite_file):
-                shutil.rmtree(os.path.dirname(sqlite_file))
-            # log.error("Failed to update SQLite file. Error:{}".format(ex.message))
-            raise ex
-        return is_blank
-
     def _update_metadata_element_series_ids_with_guids(self):
-        if len(self.series_names) > 0:
+        # replace sequential series ids (0, 1, 2 ...) with GUID
+        # only needs to be done in case of csv file upload before
+        # writing metadata to the blank sqlite file
+        if self.series_names:
             series_ids = {}
             # generate GUID for for each of the series ids
             for ts_result in self.time_series_results:
