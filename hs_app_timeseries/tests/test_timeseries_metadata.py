@@ -176,7 +176,7 @@ class TestTimeSeriesMetaData(MockIRODSTestCaseMixin, TransactionTestCase):
 
         self._test_metadata_extraction()
 
-    def test_metadata_extraction_on_content_file_add(self):
+    def test_metadata_extraction_on_sqlite_file_add(self):
         # resource creation with uploaded sqlite file
         # test the core metadata at this point
         self.assertEqual(self.resTimeSeries.metadata.title.value, 'Test Time Series Resource')
@@ -357,6 +357,11 @@ class TestTimeSeriesMetaData(MockIRODSTestCaseMixin, TransactionTestCase):
         self.assertEqual(core_metadata_obj.cv_aggregation_statistics.all().count(), 17)
         self.assertEqual(CVAggregationStatistic.objects.all().count(), 17)
 
+        # add the UTCOffset element which is only relevant in case of resource having a csv file
+        self.resTimeSeries.metadata.create_element('UTCOffset', value=-7.5,
+                                                   series_ids=['yyi123', '789ghjk'])
+        self.assertTrue(UTCOffSet.objects.filter(object_id=core_metadata_obj.id).exists())
+
         # delete resource
         hydroshare.delete_resource(self.resTimeSeries.short_id)
         self.assertEqual(CoreMetaData.objects.all().count(), 0)
@@ -403,6 +408,9 @@ class TestTimeSeriesMetaData(MockIRODSTestCaseMixin, TransactionTestCase):
         self.assertFalse(ProcessingLevel.objects.filter(object_id=core_metadata_obj.id).exists())
         # there should be no TimeSeriesResult metadata objects
         self.assertFalse(TimeSeriesResult.objects.filter(object_id=core_metadata_obj.id).exists())
+
+        # there should not be any UTCOffset element
+        self.assertFalse(UTCOffSet.objects.filter(object_id=core_metadata_obj.id).exists())
 
         # check CV lookup tables are empty
         self.assertEqual(CVVariableType.objects.all().count(), 0)
@@ -662,8 +670,31 @@ class TestTimeSeriesMetaData(MockIRODSTestCaseMixin, TransactionTestCase):
             )
         utils.resource_post_create_actions(resource=self.resTimeSeries, user=self.user, metadata=[])
 
-        # at this point the is_dirty be set to false
-        self.assertEqual(self.resTimeSeries.metadata.is_dirty, False)
+        # at this point the is_dirty be set to True due to the title element getting updated with
+        # extracted data
+        self.assertEqual(self.resTimeSeries.metadata.is_dirty, True)
+        # rest metadata is_dirty to false
+        TimeSeriesMetaData.objects.filter(id=self.resTimeSeries.metadata.id).update(is_dirty=False)
+
+        # updating the core metadata element title should also set the metadata is_dirty to True
+        title = self.resTimeSeries.metadata.title
+        self.resTimeSeries.metadata.update_element('title', title.id, value="New Resource Title")
+        # at this point the is_dirty be set to true
+        self.assertEqual(self.resTimeSeries.metadata.is_dirty, True)
+        # rest metadata is_dirty to false
+        TimeSeriesMetaData.objects.filter(id=self.resTimeSeries.metadata.id).update(is_dirty=False)
+
+        # updating the core metadata element Description (Abstract) should also set the
+        # metadata is_dirty to True
+        description = self.resTimeSeries.metadata.description
+        self.resTimeSeries.metadata.update_element('description', description.id,
+                                                   value="New abstract")
+        # at this point the is_dirty be set to trye
+        self.assertEqual(self.resTimeSeries.metadata.is_dirty, True)
+        # rest metadata is_dirty to false
+        TimeSeriesMetaData.objects.filter(id=self.resTimeSeries.metadata.id).update(is_dirty=False)
+
+        # test with resource specific metadata elements
         site = self.resTimeSeries.metadata.sites.all().first()
         self.assertEqual(site.is_dirty, False)
         # now update the site element
@@ -924,7 +955,9 @@ class TestTimeSeriesMetaData(MockIRODSTestCaseMixin, TransactionTestCase):
 
         # there should be one file in the resource
         self.assertEqual(self.resTimeSeries.files.all().count(), 1)
-        self.assertEqual(self.resTimeSeries.metadata.is_dirty, False)
+        # with extraction of metadata both the title and abstract element get updated
+        # resulting in metadata is_dirty to true
+        self.assertEqual(self.resTimeSeries.metadata.is_dirty, True)
 
         # editing a resource specific metadata should set the is_dirty attribute of metadata object
         # to True
@@ -1436,6 +1469,7 @@ class TestTimeSeriesMetaData(MockIRODSTestCaseMixin, TransactionTestCase):
         self.assertEqual(self.resTimeSeries.metadata.utc_offset.value, -7.5)
 
         # test that the resource has the required metadata elements at this point
+        self.assertEqual(self.resTimeSeries.metadata.get_required_missing_elements(), [])
         self.assertEqual(self.resTimeSeries.metadata.has_all_required_elements(), True)
 
         # at this point it should be possible to update sqlite file
@@ -1452,6 +1486,9 @@ class TestTimeSeriesMetaData(MockIRODSTestCaseMixin, TransactionTestCase):
 
         # test that the value_count is rest
         self.assertEqual(len(self.resTimeSeries.metadata.value_counts), 0)
+
+        # test series_names is empty
+        self.assertEqual(len(self.resTimeSeries.metadata.series_names), 0)
 
     def test_series_id_for_metadata_element_create(self):
         # this applies only to csv file upload
