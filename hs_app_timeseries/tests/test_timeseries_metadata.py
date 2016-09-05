@@ -670,12 +670,6 @@ class TestTimeSeriesMetaData(MockIRODSTestCaseMixin, TransactionTestCase):
             )
         utils.resource_post_create_actions(resource=self.resTimeSeries, user=self.user, metadata=[])
 
-        # at this point the is_dirty be set to True due to the title element getting updated with
-        # extracted data
-        self.assertEqual(self.resTimeSeries.metadata.is_dirty, True)
-        # rest metadata is_dirty to false
-        TimeSeriesMetaData.objects.filter(id=self.resTimeSeries.metadata.id).update(is_dirty=False)
-
         # updating the core metadata element title should also set the metadata is_dirty to True
         title = self.resTimeSeries.metadata.title
         self.resTimeSeries.metadata.update_element('title', title.id, value="New Resource Title")
@@ -955,9 +949,6 @@ class TestTimeSeriesMetaData(MockIRODSTestCaseMixin, TransactionTestCase):
 
         # there should be one file in the resource
         self.assertEqual(self.resTimeSeries.files.all().count(), 1)
-        # with extraction of metadata both the title and abstract element get updated
-        # resulting in metadata is_dirty to true
-        self.assertEqual(self.resTimeSeries.metadata.is_dirty, True)
 
         # editing a resource specific metadata should set the is_dirty attribute of metadata object
         # to True

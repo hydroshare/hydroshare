@@ -237,6 +237,8 @@ def _process_uploaded_sqlite_file(user, resource, res_file, validate_files_dict,
                 extract_err_message += "{}".format(FILE_UPLOAD_ERROR_MESSAGE)
                 validate_files_dict['message'] = extract_err_message
             else:
+                # set metadata is_dirty to False
+                TimeSeriesMetaData.objects.filter(id=resource.metadata.id).update(is_dirty=False)
                 # delete the csv file if it exists
                 _delete_resource_file(resource, ".csv")
                 utils.resource_modified(resource, user)
