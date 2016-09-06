@@ -266,7 +266,7 @@
                                         </a>
                                     </li>
                                 {% endif %}
-                                {% if sources or relations or metadata_form %}
+                                {% if sources or show_relations_tab or metadata_form %}
                                     <li class="col-xs-2 col-md-2">
                                         <a href="#relatedResourcesTab" data-toggle="tab" title="Related resources">
                                             <span class="glyphicon glyphicon-book"></span>
@@ -815,10 +815,12 @@
                                                 <h4><strong>Relations</strong></h4>
                                                 <hr style="margin-top: 0;margin-bottom: 2px">
                                                 {% for relation in relations %}
-                                                    <div class="row">
-                                                        <div class="col-sm-4"><strong>{{ relation.type }}:</strong></div>
-                                                        <div class="col-sm-8">{{ relation.value }}</div>
-                                                    </div>
+                                                    {% if  relation.type|lower != "haspart"%}
+                                                        <div class="row">
+                                                            <div class="col-sm-4"><strong>{{ relation.type }}:</strong></div>
+                                                            <div class="col-sm-8">{{ relation.value }}</div>
+                                                        </div>
+                                                    {% endif %}
                                                 {% endfor %}
                                             {% endif %}
                                         {% else %}
@@ -860,23 +862,25 @@
                                                     <tbody>
                                                     <legend>Relations</legend>
                                                     {% for relation in relation_formset.initial %}
-                                                        <tr>
-                                                            <th scope="row" class="dataset-label">{{ relation.type }}:</th>
-                                                            <td class="dataset-details">{{ relation.value }}</td>
-                                                            <td>
-                                                                <a data-toggle="modal" data-placement="auto" title="Edit"
-                                                                   class="glyphicon glyphicon-pencil icon-button icon-blue"
-                                                                   data-target="#edit-relation-dialog_{{ relation.id }}"
-                                                                   style="top: -5px; "></a>
-                                                            </td>
-                                                            <td>
-                                                                <a data-toggle="modal" data-placement="auto"
-                                                                   title="Remove"
-                                                                   class="glyphicon glyphicon-trash icon-button btn-remove"
-                                                                   data-target="#delete-relation-element-dialog{{ relation.id }}"
-                                                                   style="top: -5px; right:20px;"></a>
-                                                            </td>
-                                                        </tr>
+                                                        {% if  relation.type|lower != "haspart"%}
+                                                            <tr>
+                                                                <th scope="row" class="dataset-label">{{ relation.type }}:</th>
+                                                                <td class="dataset-details">{{ relation.value }}</td>
+                                                                <td>
+                                                                    <a data-toggle="modal" data-placement="auto" title="Edit"
+                                                                       class="glyphicon glyphicon-pencil icon-button icon-blue"
+                                                                       data-target="#edit-relation-dialog_{{ relation.id }}"
+                                                                       style="top: -5px; "></a>
+                                                                </td>
+                                                                <td>
+                                                                    <a data-toggle="modal" data-placement="auto"
+                                                                       title="Remove"
+                                                                       class="glyphicon glyphicon-trash icon-button btn-remove"
+                                                                       data-target="#delete-relation-element-dialog{{ relation.id }}"
+                                                                       style="top: -5px; right:20px;"></a>
+                                                                </td>
+                                                            </tr>
+                                                        {% endif %}
                                                     {% endfor %}
 
                                                     </tbody>
@@ -989,7 +993,7 @@
                                 {% if connections %}
                                     <div class="tab-pane" id="connectionsTab">
                                          {% if connections.collected_by %}
-                                                <h4><strong>Collected by:</strong></h4>
+                                                <h4><strong>Belongs to Collections:</strong></h4>
                                                 <hr style="margin-top: 0;margin-bottom: 2px">
                                                 <table id="collected-by-table" class="table-hover table-striped resource-custom-table" width="100%">
                                                     <thead>
@@ -1035,7 +1039,7 @@
                                                                     {% endif %}
 
                                                                     {% if res.raccess.shareable %}
-                                                                        + Shareable
+                                                                        & Shareable
                                                                     {% endif %}
                                                                 </td>
                                                                 <td>

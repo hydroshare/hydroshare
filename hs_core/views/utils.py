@@ -389,3 +389,21 @@ def send_action_to_take_email(request, user, action_type, **kwargs):
     send_mail_template(subject, "email/%s" % action_type,
                        settings.DEFAULT_FROM_EMAIL, email_to.email,
                        context=context)
+
+
+def show_relations_tab(res_obj):
+    """
+    This func is to determine whether to show 'Relations' tab.
+    Return True if number of "hasPart" < number of all relation metadata
+    :param res_obj:  resource object
+    :return: Bool
+    """
+    try:
+        all_relation_count = res_obj.metadata.relations.count()
+        hasPart_count = res_obj.metadata.relations.filter(type="hasPart").count()
+        if all_relation_count > hasPart_count:
+             return True
+        return False
+    except Exception as ex:
+        return False
+

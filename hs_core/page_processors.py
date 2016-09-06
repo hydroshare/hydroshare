@@ -5,7 +5,7 @@ from hs_core import languages_iso
 from forms import *
 from hs_tools_resource.models import SupportedResTypes, ToolResource
 from hs_core import hydroshare
-from hs_core.views.utils import authorize, ACTION_TO_AUTHORIZE
+from hs_core.views.utils import authorize, ACTION_TO_AUTHORIZE, show_relations_tab
 from hs_core.hydroshare.resource import METADATA_STATUS_SUFFICIENT, METADATA_STATUS_INSUFFICIENT
 from hs_tools_resource.utils import parse_app_url_template
 
@@ -189,6 +189,7 @@ def get_page_context(page, user, resource_edit=False, extended_metadata_layout=N
                    'rights': content_model.metadata.rights,
                    'sources': content_model.metadata.sources.all(),
                    'relations': content_model.metadata.relations.all(),
+                   'show_relations_tab': show_relations_tab(content_model),
                    'fundingagencies': content_model.metadata.funding_agencies.all(),
                    'metadata_status': metadata_status,
                    'missing_metadata_elements': content_model.metadata.get_required_missing_elements(),
@@ -413,7 +414,9 @@ def get_page_context(page, user, resource_edit=False, extended_metadata_layout=N
                'resource_is_mine': resource_is_mine,
                'relation_source_types': tuple((type_value, type_display)
                                               for type_value, type_display in Relation.SOURCE_TYPES
-                                              if type_value != 'isReplacedBy' and type_value != 'isVersionOf'),
+                                              if type_value != 'isReplacedBy'
+                                              and type_value != 'isVersionOf'
+                                              and type_value != 'hasPart'),
                'is_resource_specific_tab_active': False,
                'connections': connections
     }
