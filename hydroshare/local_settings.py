@@ -129,6 +129,8 @@ IRODS_BAGIT_RULE='hydroshare/irods/ruleGenerateBagIt_HS.r'
 IRODS_BAGIT_PATH = 'bags'
 IRODS_BAGIT_POSTFIX = 'zip'
 
+HS_BAGIT_README_FILE_WITH_PATH = 'docs/bagit/readme.txt'
+
 # crossref login credential for resource publication
 USE_CROSSREF_TEST = True
 CROSSREF_LOGIN_ID = ''
