@@ -135,30 +135,34 @@ def update_collection_for_deleted_resources(request, shortkey, *args, **kwargs):
 
     ajax_response_data = {'status': "success"}
     try:
-        collection_res, is_authorized, user \
-            = authorize(request, shortkey,
-                        needed_permission=ACTION_TO_AUTHORIZE.EDIT_RESOURCE)
+        with transaction.atomic():
+            collection_res, is_authorized, user \
+                = authorize(request, shortkey,
+                            needed_permission=ACTION_TO_AUTHORIZE.EDIT_RESOURCE)
 
-        if collection_res.resource_type.lower() != "collectionresource":
-            raise Exception("Resource {0} is not a collection resource.".format(shortkey))
+            if collection_res.resource_type.lower() != "collectionresource":
+                raise Exception("Resource {0} is not a collection resource.".format(shortkey))
 
-        # handle "Relation" metadata
-        hasPart = "hasPart"
-        site_url = current_site_url()
-        relation_value_template = site_url + "/resource/{0}/"
-        for deleted_res_log in collection_res.deleted_resources:
-            relation_value = relation_value_template.format(deleted_res_log.resource_id)
+            # handle "Relation" metadata
+            hasPart = "hasPart"
+            site_url = current_site_url()
+            relation_value_template = site_url + "/resource/{0}/"
+            for deleted_res_log in collection_res.deleted_resources:
+                relation_value = relation_value_template.format(deleted_res_log.resource_id)
 
-            add_or_remove_relation_metadata(add=False, target_res_obj=collection_res,
-                                            relation_type=hasPart, relation_value=relation_value,
-                                            set_res_modified=False)
+                add_or_remove_relation_metadata(add=False,
+                                                target_res_obj=collection_res,
+                                                relation_type=hasPart,
+                                                relation_value=relation_value,
+                                                set_res_modified=False)
 
-        new_coverage_list = _update_collection_coverages(collection_res)
-        ajax_response_data['new_coverage_list'] = new_coverage_list
+            new_coverage_list = _update_collection_coverages(collection_res)
+            ajax_response_data['new_coverage_list'] = new_coverage_list
 
-        resource_modified(collection_res, user)
-        # remove all logged deleted resources for the collection
-        collection_res.deleted_resources.all().delete()
+            resource_modified(collection_res, user)
+
+            # remove all logged deleted resources for the collection
+            collection_res.deleted_resources.all().delete()
 
     except Exception as ex:
         logger.error("Failed to update collection for "

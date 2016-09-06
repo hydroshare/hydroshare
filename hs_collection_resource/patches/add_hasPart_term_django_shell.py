@@ -2,6 +2,8 @@
 # how to run:
 # docker exec -i hydroshare python manage.py shell \
 # < "hs_collection_resource/patches/add_hasPart_term_django_shell.py"
+# Note: use "-i" instead of "-it" in above command as
+# the latter may cause error "cannot enable tty mode on non tty input"
 
 from datetime import datetime
 
