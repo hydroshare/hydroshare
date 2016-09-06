@@ -7,8 +7,10 @@ from django.contrib.auth.models import Group
 from hs_core.hydroshare import create_resource, create_account, \
      create_new_version_empty_resource, create_new_version_resource, \
      update_science_metadata
+from hs_core.hydroshare.utils import current_site_url
 from hs_core.testing import MockIRODSTestCaseMixin
 from hs_access_control.models import PrivilegeCodes
+
 from hs_collection_resource.models import CollectionDeletedResource
 from hs_collection_resource.models import CollectionResource
 from hs_collection_resource.views import _update_collection_coverages
@@ -661,3 +663,67 @@ class TestCollection(MockIRODSTestCaseMixin, TransactionTestCase):
         self.resCollection.resources.clear()
         _update_collection_coverages(self.resCollection)
         self.assertEqual(self.resCollection.metadata.coverages.count(), 0)
+
+    def test_hasPart_metadata(self):
+
+        # no contained res
+        self.assertEqual(self.resCollection.resources.count(), 0)
+        # no hasPart metadata
+        self.assertEqual(self.resCollection.metadata.relations.count(), 0)
+
+        url_to_update_collection = self.url_to_update_collection.format(self.resCollection.short_id)
+        # user 1 login
+        self.api_client.login(username='user1', password='mypassword1')
+        # add 3 private member resources
+        # should inform frontend "sufficient to make public"
+        response = self.api_client.post(url_to_update_collection,
+                                        {'resource_id_list':
+                                         [self.resGen1.short_id, self.resGen2.short_id,
+                                          self.resGen3.short_id]}, )
+        resp_json = json.loads(response.content)
+        self.assertEqual(resp_json["status"], "success")
+        self.assertEqual(self.resCollection.resources.count(), 3)
+
+        # should be 3 hasPart metadata
+        self.assertEqual(self.resCollection.metadata.relations.count(), 3)
+
+        # check contained res
+        hasPart = "hasPart"
+        site_url = current_site_url()
+        relation_value_template = site_url + "/resource/{0}/"
+        # check self.resGen1.short_id
+        value = relation_value_template.format(self.resGen1.short_id)
+        self.assertEqual(
+            self.resCollection.metadata.relations.filter(type=hasPart, value=value).count(), 1)
+        # check self.resGen2.short_id
+        value = relation_value_template.format(self.resGen2.short_id)
+        self.assertEqual(
+            self.resCollection.metadata.relations.filter(type=hasPart, value=value).count(), 1)
+        # check self.resGen3.short_id
+        value = relation_value_template.format(self.resGen3.short_id)
+        self.assertEqual(
+            self.resCollection.metadata.relations.filter(type=hasPart, value=value).count(), 1)
+
+        # remove renGen2 (keep 1 and 3)
+        response = self.api_client.post(url_to_update_collection,
+                                        {'resource_id_list':
+                                         [self.resGen1.short_id, self.resGen3.short_id]}, )
+        resp_json = json.loads(response.content)
+        self.assertEqual(resp_json["status"], "success")
+        self.assertEqual(self.resCollection.resources.count(), 2)
+
+        # should be 2 hasPart metadata
+        self.assertEqual(self.resCollection.metadata.relations.count(), 2)
+
+        # check self.resGen1.short_id
+        value = relation_value_template.format(self.resGen1.short_id)
+        self.assertEqual(
+            self.resCollection.metadata.relations.filter(type=hasPart, value=value).count(), 1)
+        # check self.resGen2.short_id -- should be 0
+        value = relation_value_template.format(self.resGen2.short_id)
+        self.assertEqual(
+            self.resCollection.metadata.relations.filter(type=hasPart, value=value).count(), 0)
+        # check self.resGen3.short_id
+        value = relation_value_template.format(self.resGen3.short_id)
+        self.assertEqual(
+            self.resCollection.metadata.relations.filter(type=hasPart, value=value).count(), 1)
