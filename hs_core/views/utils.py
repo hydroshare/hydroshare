@@ -287,8 +287,11 @@ def validate_metadata(metadata, resource_type):
 class MetadataElementRequest(object):
     def __init__(self, element_name, **element_data_dict):
         if element_name.lower() == 'coverage' or element_name.lower() == 'originalcoverage':
+            cov_type = element_data_dict.get('type', None)
             if 'value' in element_data_dict:
                 element_data_dict = element_data_dict['value']
+                if cov_type is not None:
+                    element_data_dict['type'] = cov_type
         self.POST = element_data_dict
 
 

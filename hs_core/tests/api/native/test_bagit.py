@@ -3,6 +3,7 @@ from django.test import TestCase
 
 from hs_core import hydroshare
 from hs_core.hydroshare import hs_bagit
+from hs_core.tasks import create_bag_by_irods
 
 from django_irods.storage import IrodsStorage
 
@@ -48,7 +49,7 @@ class TestBagIt(TestCase):
     def test_create_bag_by_irods(self):
         try:
             # this is the api call we testing
-            hs_bagit.create_bag_by_irods(self.test_res.short_id)
+            create_bag_by_irods(self.test_res.short_id)
         except Exception as ex:
             self.fail("create_bag_by_irods() raised exception.{}".format(ex.message))
 

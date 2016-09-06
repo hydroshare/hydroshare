@@ -3,12 +3,12 @@
 # remove-root-items
 # Author: Michael Stealey <michael.j.stealey@gmail.com>
 
-echo "REMOVE: root owned files"
 find /hydroshare -user root -ls | rev | cut -d ' ' -f 1 | rev > root-items.txt
 
+echo "CHOWN files owned by root"
 while read line ; do
-    echo "  - rm -rf ${line}"
-    rm -rf ${line};
+    echo "  - chown -R hydro-service:storage-hydro ${line}"
+    chown -R hydro-service:storage-hydro ${line};
 done < root-items.txt
 
 exit 0;
