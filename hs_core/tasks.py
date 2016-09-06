@@ -167,12 +167,19 @@ def create_bag_by_irods(resource_id, istorage=None):
 
     res = get_resource_by_shortkey(resource_id)
     is_exist = False
+    is_bagit_readme_exist = False
+
     bag_full_name = 'bags/{res_id}.zip'.format(res_id=resource_id)
     if res.resource_federation_path:
         if not istorage:
             istorage = IrodsStorage('federated')
         irods_bagit_input_path = os.path.join(res.resource_federation_path, resource_id)
         is_exist = istorage.exists(irods_bagit_input_path)
+        # check to see if bagit readme.txt file exists or not
+        bagit_readme_file = '{fed_path}/{res_id}/readme.txt'.format(
+            fed_path=res.resource_federation_path,
+            res_id=resource_id)
+        is_bagit_readme_exist = istorage.exists(bagit_readme_file)
         bagit_input_path = "*BAGITDATA='{path}'".format(path=irods_bagit_input_path)
         bagit_input_resource = "*DESTRESC='{def_res}'".format(
             def_res=settings.HS_IRODS_LOCAL_ZONE_DEF_RES)
@@ -191,6 +198,9 @@ def create_bag_by_irods(resource_id, istorage=None):
         if not istorage:
             istorage = IrodsStorage()
         is_exist = istorage.exists(resource_id)
+        # check to see if bagit readme.txt file exists or not
+        bagit_readme_file = '{res_id}/readme.txt'.format(res_id=resource_id)
+        is_bagit_readme_exist = istorage.exists(bagit_readme_file)
         irods_dest_prefix = "/" + settings.IRODS_ZONE + "/home/" + settings.IRODS_USERNAME
         irods_bagit_input_path = os.path.join(irods_dest_prefix, resource_id)
         bagit_input_path = "*BAGITDATA='{path}'".format(path=irods_bagit_input_path)
@@ -206,6 +216,12 @@ def create_bag_by_irods(resource_id, istorage=None):
     # only proceed when the resource is not deleted potentially by another request
     # when being downloaded
     if is_exist:
+        # if bagit readme.txt does not exist, add it.
+        if not is_bagit_readme_exist:
+            from_file_name = getattr(settings, 'HS_BAGIT_README_FILE_WITH_PATH',
+                                     'docs/bagit/readme.txt')
+            istorage.saveFile(from_file_name, bagit_readme_file, True)
+
         # call iRODS bagit rule here
         bagit_rule_file = getattr(settings, 'IRODS_BAGIT_RULE',
                                   'hydroshare/irods/ruleGenerateBagIt_HS.r')
