@@ -402,8 +402,7 @@ def show_relations_tab(res_obj):
         all_relation_count = res_obj.metadata.relations.count()
         hasPart_count = res_obj.metadata.relations.filter(type="hasPart").count()
         if all_relation_count > hasPart_count:
-             return True
+            return True
         return False
-    except Exception as ex:
+    except:
         return False
-
