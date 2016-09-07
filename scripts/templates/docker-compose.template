@@ -43,7 +43,7 @@ hydroshare:
     # - "/home/hydro/pycharm-debug:/pycharm-debug"
     # log files
     - "HS_LOG_FILES:/hydroshare/log"
-    # shared location for uwsgi.sock between containers
+    # shared location for gunicorn.sock between containers
     - "/hs_tmp"
     # temp directory shared with celery workers
     - "/shared_tmp"
