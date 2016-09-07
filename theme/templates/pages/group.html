@@ -1334,7 +1334,7 @@
             // Initialize Shared By filter
             var grantors = $("#grantors-list span");
             if (grantors.length)
-                $("#filter-shared-by h5").remove();
+                $("#filter-shared-by .no-items-found").remove();
             for (var i = 0; i < grantors.length; i++) {
                 var id = $(grantors[i]).attr("data-grantor-id");
                 if ($("#filter-shared-by .grantor[data-grantor-id='" + id + "']").length == 0) {
