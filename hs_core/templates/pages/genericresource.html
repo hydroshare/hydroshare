@@ -255,7 +255,7 @@
                                 {%  endif %}
                                     <a href="#contactTab" data-toggle="tab" title="Contact">
                                         <span class="glyphicon glyphicon-user"> </span>
-                                        &nbspContact
+                                        &nbspAuthorship
                                     </a>
                                 </li>
                                 {% if spatial_coverage.north or spatial_coverage.northlimit or temporal_coverage or metadata_form %}
@@ -324,7 +324,14 @@
                                         <table class="table table-striped">
                                             <tbody>
                                             <tr>
-                                                <th class="division-title">Authors</th>
+                                                <th class="division-title" colspan="5"><span>Authors </span>
+                                                    <div>
+                                                        <small class="text-muted division-title-caption">The people
+                                                            or organizations that created the intellectual content
+                                                            of the resource.
+                                                        </small>
+                                                    </div>
+                                                </th>
                                             </tr>
                                             <tr class="header-row">
                                                 <th>Name</th>
@@ -344,7 +351,16 @@
                                             {% endfor %}
                                             {% if contributors %}
                                                 <tr>
-                                                    <th class="division-title">Contributors</th>
+                                                    <th class="division-title" colspan="5"><span>Contributors</span>
+                                                        <div>
+                                                            <small class="text-muted division-title-caption">People or
+                                                                organizations that contributed technically, materially,
+                                                                financially, or provided general support for the
+                                                                creation of the resource's content but are not
+                                                                considered authors.
+                                                            </small>
+                                                        </div>
+                                                    </th>
                                                 </tr>
                                                 <tr class="header-row">
                                                     <th>Name</th>
@@ -371,7 +387,14 @@
                                             <table id="contact-table" class="table table-striped">
                                                 <tbody>
                                                 <tr>
-                                                    <th class="division-title">Authors</th>
+                                                    <th class="division-title" colspan="5"><span>Authors</span>
+                                                        <div>
+                                                            <small class="text-muted division-title-caption">The people
+                                                                or organizations that created the intellectual content
+                                                                of the resource.
+                                                            </small>
+                                                        </div>
+                                                    </th>
                                                 </tr>
                                                 <tr class="header-row">
                                                     <th>Name</th>
@@ -405,7 +428,7 @@
 
                                                 {% endfor %}
                                                 <tr>
-                                                    <th class="division-title">
+                                                    <th class="division-title" colspan="5">
                                                         <a type="button" class="btn btn-success" data-toggle="modal"
                                                            data-target="#add-creator-dialog" multiple="multiple">
                                                                 <span class="glyphicon glyphicon-plus"><span
@@ -414,7 +437,16 @@
                                                     </th>
                                                 </tr>
                                                 <tr>
-                                                    <th class="division-title">Contributors</th>
+                                                    <th class="division-title" colspan="5"><span>Contributors</span>
+                                                        <div>
+                                                            <small class="text-muted division-title-caption">People or
+                                                                organizations that contributed technically, materially,
+                                                                financially, or provided general support for the
+                                                                creation of the resource's content but are not
+                                                                considered authors.
+                                                            </small>
+                                                        </div>
+                                                    </th>
                                                 </tr>
                                                 <tr class="header-row">
                                                     <th>Name</th>
@@ -446,7 +478,7 @@
                                                 {% endfor %}
 
                                                 <tr>
-                                                    <th class="division-title">
+                                                    <th class="division-title" colspan="5">
                                                         <a type="button" class="btn btn-success" data-toggle="modal"
                                                            data-target="#add-contributor-dialog" multiple="multiple">
                                                             <span class="glyphicon glyphicon-plus"><span class="button-label"> Add Contributor</span></span>
