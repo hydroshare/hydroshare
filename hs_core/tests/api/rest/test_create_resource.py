@@ -333,7 +333,7 @@ class TestCreateResource(HSRESTTestCase):
         response = self.client.post(rest_url, params)
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
-    @skip()
+    @skip("skip this test until we find out how to mock it up")
     def test_refts_creation_via_rest_api(self):
 
         rtype = 'RefTimeSeriesResource'
