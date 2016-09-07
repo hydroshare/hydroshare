@@ -300,7 +300,7 @@ function metadata_update_ajax_submit(form_id){
     </div>';
 
     var flagAsync = (form_id == "id-subject" ? false : true);   // Run keyword related changes synchronously to prevent integrity error
-
+    var resourceType = $("#resource-type").val();
     $form = $('#' + form_id);
     var datastring = $form.serialize();
     $.ajax({
@@ -323,7 +323,42 @@ function metadata_update_ajax_submit(form_id){
                 else if(json_response.metadata_status === "Sufficient to publish or make public"){
                     $("#sql-file-update").show();
                 }
-                
+
+                // dynamically update resource coverage when timeseries 'site' element gets updated
+                if (json_response.element_name.toLowerCase() === 'site' && resourceType === 'Time Series'){
+                    var spatialCoverage = json_response.spatial_coverage;
+                    $("#spatial-coverage-type").val(spatialCoverage.type);
+                    if (spatialCoverage.type === 'point'){
+                        $("#id_type_2").attr('checked', 'checked');
+                        $("#id_north").val(spatialCoverage.north);
+                        $("#id_east").val(spatialCoverage.east);
+                        $("#div_id_north").show();
+                        $("#div_id_east").show();
+                        $("#div_id_elevation").show();
+                        $("#div_id_northlimit").hide();
+                        $("#div_id_eastlimit").hide();
+                        $("#div_id_southlimit").hide();
+                        $("#div_id_westlimit").hide();
+                        $("#div_id_uplimit").hide();
+                        $("#div_id_downlimit").hide();
+                    }
+                    else { //coverage type is 'box'
+                        $("#id_type_1").attr('checked', 'checked');
+                        $("#id_eastlimit").val(spatialCoverage.eastlimit);
+                        $("#id_northlimit").val(spatialCoverage.northlimit);
+                        $("#id_westlimit").val(spatialCoverage.westlimit);
+                        $("#id_southlimit").val(spatialCoverage.southlimit);
+                        $("#div_id_north").hide();
+                        $("#div_id_east").hide();
+                        $("#div_id_elevation").hide();
+                        $("#div_id_northlimit").show();
+                        $("#div_id_eastlimit").show();
+                        $("#div_id_southlimit").show();
+                        $("#div_id_westlimit").show();
+                        $("#div_id_uplimit").show();
+                        $("#div_id_downlimit").show();
+                    }
+                }
                 if (($form.attr("id") == "id-site")){
                     makeTimeSeriesMetaDataElementFormReadOnly(form_id, "id_site");
                 }

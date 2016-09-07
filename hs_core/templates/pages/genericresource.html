@@ -1443,6 +1443,9 @@
                                         lat: parseFloat($("#id_north").val()),
                                         lng: parseFloat($("#id_east").val())
                                     };
+                                    if ($('#id_north').val()){
+                                        $("#id_name").prop('readonly', false);
+                                    }
                                 }
 
                                 if (!myLatLng.lat || !myLatLng.lng) {
@@ -1479,6 +1482,9 @@
                                         east: parseFloat($("#id_eastlimit").val()),
                                         west: parseFloat($("#id_westlimit").val())
                                     };
+                                    if ($('#id_northlimit').val()){
+                                        $("#id_name").prop('readonly', false);
+                                    }
                                 }
 
                                 if (!bounds.north || !bounds.south || !bounds.east || !bounds.west) {
