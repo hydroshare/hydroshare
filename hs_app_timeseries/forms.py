@@ -551,6 +551,8 @@ class UTCOffSetForm(ModelForm):
         self.helper = UTCOffSetFormHelper(allow_edit, res_short_id, element_id,
                                           element_name='UTCOffSet')
         self.fields['selected_series_id'].initial = selected_series_id
+        if not element_id:
+            self.fields['value'].initial = ""
 
     class Meta:
         model = UTCOffSet
