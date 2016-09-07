@@ -13,7 +13,12 @@ generateBagIt {
 # -----------------------------------------------------
 #
 ### - use the input BAGITDATA directory to generate bagit 
-###   files in place without creating new bagit root directory
+### - files in place without creating new bagit root directory.
+### - Note that default hash scheme has to be set to MD5 on
+### - both client and server in order for checksum to comply
+### - with bagit specification since the default SHA256 hash
+### - scheme is base64 encoded, which does not meet hex-encoded
+### - requirement for checksums in bagit specification.
 ### - writes bagit.txt to BAGITDATA/bagit.txt
 ### - generates payload manifest file of BAGITDATA/data
 ### - writes payload manifest to BAGITDATA/manifest-md5.txt
@@ -23,56 +28,76 @@ generateBagIt {
 # -----------------------------------------------------
 
   ### - writes bagit.txt to NEWBAGITROOT/bagit.txt
-  writeLine("stdout","BagIt-Version: 0.96");
-  writeLine("stdout","Tag-File-Character-Encoding: UTF-8");
-  msiDataObjCreate("*BAGITDATA" ++ "/bagit.txt","destRescName=" ++ "*DESTRESC" ++ "++++forceFlag=",*FD);
-  msiDataObjWrite(*FD,"stdout",*WLEN);
-  msiDataObjClose(*FD,*Status);
+  writeLine("stdout", "BagIt-Version: 0.96");
+  writeLine("stdout", "Tag-File-Character-Encoding: UTF-8");
+  msiDataObjCreate("*BAGITDATA" ++ "/bagit.txt", "destRescName=" ++ "*DESTRESC" ++ "++++forceFlag=", *FD);
+  msiDataObjWrite(*FD, "stdout", *WLEN);
+  msiDataObjClose(*FD, *Status);
   msiFreeBuffer("stdout");
 
   ### - generates payload manifest file of BAGITDATA/data
-  msiStrlen(*BAGITDATA,*ROOTLENGTH);
+  msiStrlen(*BAGITDATA, *ROOTLENGTH);
   *OFFSET = int(*ROOTLENGTH) + 1;
   *NEWBAGITDATA = "*BAGITDATA" ++ "/data";
   *ContInxOld = 1;
   *Condition = "COLL_NAME like '*NEWBAGITDATA%%'";
-  msiMakeGenQuery("DATA_ID, DATA_NAME, COLL_NAME",*Condition,*GenQInp);
+  msiMakeGenQuery("DATA_ID, DATA_NAME, COLL_NAME, DATA_CHECKSUM", *Condition, *GenQInp);
   msiExecGenQuery(*GenQInp, *GenQOut);
-  msiGetContInxFromGenQueryOut(*GenQOut,*ContInxNew);
+  msiGetContInxFromGenQueryOut(*GenQOut, *ContInxNew);
   while(*ContInxOld > 0) {
     foreach(*GenQOut) {
-       msiGetValByKey(*GenQOut, "DATA_NAME", *Object);
-       msiGetValByKey(*GenQOut, "COLL_NAME", *Coll);
-       *FULLPATH = "*Coll" ++ "/" ++ "*Object";
-       msiDataObjChksum(*FULLPATH, "forceChksum=", *CHKSUM);
-       msiSubstr(*FULLPATH,str(*OFFSET),"null",*RELATIVEPATH);
-       writeString("stdout", *RELATIVEPATH);
-       writeLine("stdout","   *CHKSUM")
+      msiGetValByKey(*GenQOut, "DATA_NAME", *Object);
+      msiGetValByKey(*GenQOut, "COLL_NAME", *Coll);
+      msiGetValByKey(*GenQOut, "DATA_CHECKSUM", *CHKSUM);
+      ### - only recalculate checksum when the checksum retrieved from iCAT
+      ### - is empty or not MD5, but sha256 prefixed which is the default hash scheme
+      ### - to accommodate the case that the checksum stored in iCAT might
+      ### - be generated before default hash scheme is changed to MD5
+      *FULLPATH = "*Coll" ++ "/" ++ "*Object";
+      if (strlen(*CHKSUM) > 5) {
+        *PrefixStr = substr(*CHKSUM, 0, 5);
+        if (*PrefixStr == 'sha2:') {
+          msiDataObjChksum(*FULLPATH, "forceChksum=", *CHKSUM);
+        }
+      }
+      else {
+        msiDataObjChksum(*FULLPATH, "forceChksum=", *CHKSUM);
+      }
+
+      msiSubstr(*FULLPATH, str(*OFFSET), "null", *RELATIVEPATH);
+      writeString("stdout", *CHKSUM);
+      writeLine("stdout", "    *RELATIVEPATH")
     }
     *ContInxOld = *ContInxNew;
-    if(*ContInxOld > 0) {msiGetMoreRows(*GenQInp,*GenQOut,*ContInxNew);}
+    if(*ContInxOld > 0) {
+      msiGetMoreRows(*GenQInp, *GenQOut, *ContInxNew);
+    }
   }
 
   ### - writes payload manifest to BAGITDATA/manifest-md5.txt
-  msiDataObjCreate("*BAGITDATA" ++ "/manifest-md5.txt","destRescName=" ++ "*DESTRESC" ++ "++++forceFlag=",*FD);
-  msiDataObjWrite(*FD,"stdout",*WLEN);
-  msiDataObjClose(*FD,*Status);
+  msiDataObjCreate("*BAGITDATA" ++ "/manifest-md5.txt", "destRescName=" ++ "*DESTRESC" ++ "++++forceFlag=", *FD);
+  msiDataObjWrite(*FD, "stdout", *WLEN);
+  msiDataObjClose(*FD, *Status);
   msiFreeBuffer("stdout");
 
   ### - writes tagmanifest file to BAGITDATA/tagmanifest-md5.txt
-  writeString("stdout","bagit.txt    ");
-  msiDataObjChksum("*BAGITDATA" ++ "/bagit.txt","forceChksum",*CHKSUM);
-  writeLine("stdout",*CHKSUM);
-  writeString("stdout","manifest-md5.txt    ");
-  msiDataObjChksum("*BAGITDATA" ++ "/manifest-md5.txt","forceChksum",*CHKSUM);
-  writeLine("stdout",*CHKSUM);
-  msiDataObjCreate("*BAGITDATA" ++ "/tagmanifest-md5.txt","destRescName=" ++ "*DESTRESC" ++ "++++forceFlag=",*FD);
-  msiDataObjWrite(*FD,"stdout",*WLEN);
-  msiDataObjClose(*FD,*Status);
+  msiDataObjChksum("*BAGITDATA" ++ "/bagit.txt", "forceChksum=", *CHKSUM);
+  writeString("stdout", *CHKSUM);
+  writeLine("stdout", "    bagit.txt")
+  msiDataObjChksum("*BAGITDATA" ++ "/manifest-md5.txt", "forceChksum=", *CHKSUM);
+  writeString("stdout", *CHKSUM);
+  writeLine("stdout", "    manifest-md5.txt");
+  ### - write readme.txt file checksum to BAGITDATA/tagmanifest-md5.txt as readme.txt is included in all HydroShare resource bags
+  msiDataObjChksum("*BAGITDATA" ++ "/readme.txt", "forceChksum=", *CHKSUM);
+  writeString("stdout", *CHKSUM);
+  writeLine("stdout", "    readme.txt")
+  msiDataObjCreate("*BAGITDATA" ++ "/tagmanifest-md5.txt", "destRescName=" ++ "*DESTRESC" ++ "++++forceFlag=", *FD);
+  msiDataObjWrite(*FD, "stdout", *WLEN);
+  msiDataObjClose(*FD, *Status);
   msiFreeBuffer("stdout");
 
   ### - writes to rodsLog
-  msiWriteRodsLog("BagIt bag files created in place: *BAGITDATA <- *BAGITDATA",*Status);
+  msiWriteRodsLog("BagIt bag files created in place: *BAGITDATA <- *BAGITDATA", *Status);
 }
 INPUT *BAGITDATA="/dummy/dummy/dummy", *DESTRESC="dummy"
 OUTPUT ruleExecOut

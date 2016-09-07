@@ -8,8 +8,6 @@ from django_comments.models import Comment
 from django.contrib.contenttypes.models import ContentType
 from django.utils.encoding import force_text
 from django.utils import timezone
-from django.utils.text import get_text_list
-from django.utils.translation import ungettext
 from django.contrib.auth.models import User
 
 from mezzanine.core.forms import Html5Mixin
@@ -23,7 +21,8 @@ from .models import UserProfile
 from hs_core.hydroshare.users import create_account
 from hs_core.templatetags.hydroshare_tags import best_name
 
-COMMENT_MAX_LENGTH = getattr(settings,'COMMENT_MAX_LENGTH', 3000)
+COMMENT_MAX_LENGTH = getattr(settings, 'COMMENT_MAX_LENGTH', 3000)
+
 
 # This form.py is added by Hong Yi for customizing comments in HydroShare
 # as part of effort to address issue https://github.com/hydroshare/hydroshare/issues/186
@@ -33,11 +32,8 @@ class CommentDetailsForm(CommentSecurityForm):
     """
     Handles the specific details of the comment (name, comment, etc.).
     """
-    #name          = forms.CharField(label=_("Name"), max_length=50, widget=forms.HiddenInput())
-    #email         = forms.EmailField(label=_("Email address"))
-    #url           = forms.URLField(label=_("URL"), required=False)
-    comment       = forms.CharField(label=_('Comment'), widget=forms.Textarea,
-                                    max_length=COMMENT_MAX_LENGTH)
+    comment = forms.CharField(label=_('Comment'), widget=forms.Textarea,
+                              max_length=COMMENT_MAX_LENGTH)
 
     def get_comment_object(self):
         """
@@ -103,9 +99,9 @@ class CommentDetailsForm(CommentSecurityForm):
 
 
 class CommentForm(CommentDetailsForm):
-    honeypot      = forms.CharField(required=False,
-                                    label=_('If you enter anything in this field '\
-                                            'your comment will be treated as spam'))
+    honeypot = forms.CharField(required=False,
+                               label=_('If you enter anything in this field '
+                                       'your comment will be treated as spam'))
 
     def clean_honeypot(self):
         """Check that nothing's been entered into the honeypot."""
@@ -114,19 +110,9 @@ class CommentForm(CommentDetailsForm):
             raise forms.ValidationError(self.fields["honeypot"].label)
         return value
 
+
 # added by Hong Yi for customizing THreadedCommentForm
 class ThreadedCommentForm(CommentForm, Html5Mixin):
-
-    #name = forms.CharField(label=_("Name"), help_text=_("required"),
-    #                       max_length=50, widget=forms.HiddenInput())
-    #email = forms.EmailField(label=_("Email"),
-    #                         help_text=_("required (not published)"))
-    #url = forms.URLField(label=_("Website"), help_text=_("optional"),
-    #                     required=False)
-
-    # These are used to get/set prepopulated fields via cookies.
-    #cookie_fields = ("name", "email", "url")
-    #cookie_prefix = "mezzanine-comment-"
 
     def __init__(self, request, *args, **kwargs):
         """
@@ -135,18 +121,6 @@ class ThreadedCommentForm(CommentForm, Html5Mixin):
         ``FORMS_USE_HTML5`` setting is ``True``.
         """
         kwargs.setdefault("initial", {})
-        user = request.user
-        # for field in ThreadedCommentForm.cookie_fields:
-        #     cookie_name = ThreadedCommentForm.cookie_prefix + field
-        #     value = request.COOKIES.get(cookie_name, "")
-        #     if not value and user.is_authenticated():
-        #         if field == "name":
-        #             value = user.get_full_name()
-        #             if not value and user.username != user.email:
-        #                 value = user.username
-        #         elif field == "email":
-        #             value = user.email
-        #     kwargs["initial"][field] = value
         super(ThreadedCommentForm, self).__init__(*args, **kwargs)
 
     def get_comment_model(self):
@@ -173,11 +147,12 @@ class ThreadedCommentForm(CommentForm, Html5Mixin):
                                 request=request)
         notify_emails = split_addresses(settings.COMMENTS_NOTIFICATION_EMAILS)
         notify_emails.append(obj.user.email)
-        reply_to_comment = comment.replied_to;
+        reply_to_comment = comment.replied_to
         if reply_to_comment is not None:
             notify_emails.append(reply_to_comment.user.email)
         if notify_emails:
-            subject = "New comment by {c_name} for: {res_obj}".format(c_name=comment.user_name, res_obj=str(obj))
+            subject = "[HydroShare Support] New comment by {c_name} for: {res_obj}".format(
+                c_name=comment.user_name, res_obj=str(obj))
             context = {
                 "comment": comment,
                 "comment_url": add_cache_bypass(comment.get_absolute_url()),
@@ -187,6 +162,7 @@ class ThreadedCommentForm(CommentForm, Html5Mixin):
             send_mail_template(subject, "email/comment_notification",
                                settings.DEFAULT_FROM_EMAIL, notify_emails,
                                context)
+
         return comment
 
 
@@ -261,7 +237,8 @@ class SignupForm(forms.ModelForm):
 
     def verify_captcha(self):
         params = dict(self.cleaned_data)
-        params['privatekey'] = getattr(settings, 'RECAPTCHA_PRIVATE_KEY', "6LdNC_USAAAAADNdzytMK2-qmDCzJcgybFkw8Z5x")
+        params['privatekey'] = getattr(settings, 'RECAPTCHA_PRIVATE_KEY',
+                                       "6LdNC_USAAAAADNdzytMK2-qmDCzJcgybFkw8Z5x")
         params['remoteip'] = self.request.META['REMOTE_ADDR']
         resp = requests.post('https://www.google.com/recaptcha/api/verify', params=params)
         lines = resp.text.split('\n')
@@ -346,4 +323,3 @@ class UserProfileForm(forms.ModelForm):
         if len(data.strip()) == 0:
             raise forms.ValidationError("State is a required field.")
         return data
-

@@ -167,6 +167,7 @@ def get_page_context(page, user, resource_edit=False, extended_metadata_layout=N
         language = languages_dict[content_model.metadata.language.code] if content_model.metadata.language else None
         title = content_model.metadata.title.value if content_model.metadata.title else None
         abstract = content_model.metadata.description.abstract if content_model.metadata.description else None
+
         context = {
                    'metadata_form': None,
                    'citation': content_model.get_citation(),
@@ -197,8 +198,20 @@ def get_page_context(page, user, resource_edit=False, extended_metadata_layout=N
                    'discoverable': discoverable,
                    'resource_is_mine': resource_is_mine,
                    'is_resource_specific_tab_active': False
-
         }
+
+        if 'task_id' in request.session:
+            task_id = request.session.get('task_id', None)
+            if task_id:
+                context['task_id'] = task_id
+            del request.session['task_id']
+
+        if 'download_path' in request.session:
+            download_path = request.session.get('download_path', None)
+            if download_path:
+                context['download_path'] = download_path
+            del request.session['download_path']
+
         return context
 
     # user requested the resource in EDIT MODE
