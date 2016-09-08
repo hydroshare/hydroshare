@@ -228,24 +228,11 @@ def add_metadata_element(request, shortkey, element_name, *args, **kwargs):
                 ajax_response_data = {'status': 'success', 'element_name': element_name, 'metadata_status': metadata_status}
             elif element_name.lower() == 'site' and res.resource_type == 'TimeSeriesResource':
                 # get the spatial coverage element
-                spatial_coverage = res.metadata.coverages.exclude(type='period').first()
-                if spatial_coverage:
-                    spatial_coverage_dict = {}
-                    spatial_coverage_dict['type'] = spatial_coverage.type
-                    if spatial_coverage.type == 'point':
-                        spatial_coverage_dict['east'] = spatial_coverage.value['east']
-                        spatial_coverage_dict['north'] = spatial_coverage.value['north']
-                    else:
-                        # type is box
-                        spatial_coverage_dict['eastlimit'] = spatial_coverage.value['eastlimit']
-                        spatial_coverage_dict['northlimit'] = spatial_coverage.value['northlimit']
-                        spatial_coverage_dict['westlimit'] = spatial_coverage.value['westlimit']
-                        spatial_coverage_dict['southlimit'] = spatial_coverage.value['southlimit']
-
-                    ajax_response_data = {'status': 'success', 'element_id': element.id,
-                                          'element_name': element_name,
-                                          'spatial_coverage': spatial_coverage_dict,
-                                          'metadata_status': metadata_status}
+                spatial_coverage_dict = _get_spatial_coverage_data(res)
+                ajax_response_data = {'status': 'success', 'element_id': element.id,
+                                      'element_name': element_name,
+                                      'spatial_coverage': spatial_coverage_dict,
+                                      'metadata_status': metadata_status}
             else:
                 ajax_response_data = {'status': 'success', 'element_id': element.id,
                                       'element_name': element_name,
@@ -302,24 +289,11 @@ def update_metadata_element(request, shortkey, element_name, element_id, *args, 
                 metadata_status = METADATA_STATUS_INSUFFICIENT
             if element_name.lower() == 'site' and res.resource_type == 'TimeSeriesResource':
                 # get the spatial coverage element
-                spatial_coverage = res.metadata.coverages.exclude(type='period').first()
-                if spatial_coverage:
-                    spatial_coverage_dict = {}
-                    spatial_coverage_dict['type'] = spatial_coverage.type
-                    if spatial_coverage.type == 'point':
-                        spatial_coverage_dict['east'] = spatial_coverage.value['east']
-                        spatial_coverage_dict['north'] = spatial_coverage.value['north']
-                    else:
-                        # type is box
-                        spatial_coverage_dict['eastlimit'] = spatial_coverage.value['eastlimit']
-                        spatial_coverage_dict['northlimit'] = spatial_coverage.value['northlimit']
-                        spatial_coverage_dict['westlimit'] = spatial_coverage.value['westlimit']
-                        spatial_coverage_dict['southlimit'] = spatial_coverage.value['southlimit']
-
-                    ajax_response_data = {'status': 'success',
-                                          'element_name': element_name,
-                                          'spatial_coverage': spatial_coverage_dict,
-                                          'metadata_status': metadata_status}
+                spatial_coverage_dict = _get_spatial_coverage_data(res)
+                ajax_response_data = {'status': 'success',
+                                      'element_name': element_name,
+                                      'spatial_coverage': spatial_coverage_dict,
+                                      'metadata_status': metadata_status}
             else:
                 ajax_response_data = {'status': 'success', 'element_name': element_name,
                                       'metadata_status': metadata_status}
@@ -1166,6 +1140,24 @@ def get_user_data(request, user_id, *args, **kwargs):
     user_data['website'] = user.userprofile.website if user.userprofile.website else ''
 
     return JsonResponse(user_data)
+
+
+def _get_spatial_coverage_data(resource):
+    spatial_coverage = resource.metadata.coverages.exclude(type='period').first()
+    spatial_coverage_dict = {}
+    if spatial_coverage:
+        spatial_coverage_dict['type'] = spatial_coverage.type
+        if spatial_coverage.type == 'point':
+            spatial_coverage_dict['east'] = spatial_coverage.value['east']
+            spatial_coverage_dict['north'] = spatial_coverage.value['north']
+        else:
+            # type is box
+            spatial_coverage_dict['eastlimit'] = spatial_coverage.value['eastlimit']
+            spatial_coverage_dict['northlimit'] = spatial_coverage.value['northlimit']
+            spatial_coverage_dict['westlimit'] = spatial_coverage.value['westlimit']
+            spatial_coverage_dict['southlimit'] = spatial_coverage.value['southlimit']
+
+    return spatial_coverage_dict
 
 def _send_email_on_group_membership_acceptance(membership_request):
     """
