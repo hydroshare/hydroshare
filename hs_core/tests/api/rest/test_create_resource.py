@@ -341,7 +341,7 @@ class TestCreateResource(HSRESTTestCase):
         #           "location=iutah:LR_WaterLab_AA&variable=iutah:WaterTemp_EXO&" \
         #           "startDate=2014-12-02T19:45:00Z&endDate=2014-12-05T19:45:00Z"
 
-        ref_url = "http://localhost:8000/static/ref_ts/xml/datavalues.xml"
+        ref_url = "http://localhost/static/ref_ts/xml/datavalues.xml"
         ref_type = "rest"
 
         # test the "ref_url" rest endpoint is up
