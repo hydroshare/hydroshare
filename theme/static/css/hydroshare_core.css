@@ -1323,11 +1323,17 @@ table.table-plain td{
 
 .division-title {
     clear:left;
-    font-size: 20px;
-    font-weight: 500;
     margin-left: 7px;
     background-color: #FFF !important;
+}
 
+.division-title > span {
+	font-size: 20px;
+	font-weight: 500;
+}
+
+.division-title-caption {
+	font-weight: normal;
 }
 
 .page-title {

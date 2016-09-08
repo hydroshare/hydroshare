@@ -81,12 +81,16 @@ generateBagIt {
   msiFreeBuffer("stdout");
 
   ### - writes tagmanifest file to BAGITDATA/tagmanifest-md5.txt
-  msiDataObjChksum("*BAGITDATA" ++ "/bagit.txt", "forceChksum", *CHKSUM);
+  msiDataObjChksum("*BAGITDATA" ++ "/bagit.txt", "forceChksum=", *CHKSUM);
   writeString("stdout", *CHKSUM);
   writeLine("stdout", "    bagit.txt")
-  msiDataObjChksum("*BAGITDATA" ++ "/manifest-md5.txt", "forceChksum", *CHKSUM);
+  msiDataObjChksum("*BAGITDATA" ++ "/manifest-md5.txt", "forceChksum=", *CHKSUM);
   writeString("stdout", *CHKSUM);
   writeLine("stdout", "    manifest-md5.txt");
+  ### - write readme.txt file checksum to BAGITDATA/tagmanifest-md5.txt as readme.txt is included in all HydroShare resource bags
+  msiDataObjChksum("*BAGITDATA" ++ "/readme.txt", "forceChksum=", *CHKSUM);
+  writeString("stdout", *CHKSUM);
+  writeLine("stdout", "    readme.txt")
   msiDataObjCreate("*BAGITDATA" ++ "/tagmanifest-md5.txt", "destRescName=" ++ "*DESTRESC" ++ "++++forceFlag=", *FD);
   msiDataObjWrite(*FD, "stdout", *WLEN);
   msiDataObjClose(*FD, *Status);
