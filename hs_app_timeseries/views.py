@@ -21,7 +21,7 @@ def update_sqlite_file(request, resource_id, *args, **kwargs):
             res.metadata.update_sqlite_file(user)
             messages.success(request, "SQLite file update was successful.")
             log.info("SQLite file update was successful for resource ID:{}.".format(res.short_id))
-        except Exception, ex:
+        except Exception as ex:
             messages.error(request, "Failed to update SQLite file. Error:{}".format(ex.message))
             log.exception("Failed to update SQLite file. Error:{}".format(ex.message))
 

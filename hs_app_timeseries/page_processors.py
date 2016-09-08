@@ -1,3 +1,5 @@
+from django.contrib import messages
+
 from mezzanine.pages.page_processors import processor_for
 
 from crispy_forms.layout import Layout, HTML
@@ -18,6 +20,8 @@ def landing_page(request, page):
     """
     content_model = page.get_content_model()
     edit_resource = page_processors.check_resource_mode(request)
+    if content_model.metadata.is_dirty and content_model.can_update_sqlite_file:
+        messages.info(request, "SQLite file is out of sync with metadata changes.")
 
     extended_metadata_exists = False
     if content_model.metadata.sites or \
