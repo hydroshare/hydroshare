@@ -337,9 +337,11 @@ class TestCreateResource(HSRESTTestCase):
         rtype = 'RefTimeSeriesResource'
         title = 'My Test RefTS res'
 
-        ref_url = "http://data.iutahepscor.org/LoganRiverWOF/REST/waterml_1_1.svc/datavalues?" \
-                  "location=iutah:LR_WaterLab_AA&variable=iutah:WaterTemp_EXO&" \
-                  "startDate=2014-12-02T19:45:00Z&endDate=2014-12-05T19:45:00Z"
+        # ref_url = "http://data.iutahepscor.org/LoganRiverWOF/REST/waterml_1_1.svc/datavalues?" \
+        #           "location=iutah:LR_WaterLab_AA&variable=iutah:WaterTemp_EXO&" \
+        #           "startDate=2014-12-02T19:45:00Z&endDate=2014-12-05T19:45:00Z"
+
+        ref_url = "http://localhost:8000/static/ref_ts/xml/datavalues.xml"
         ref_type = "rest"
 
         # test the "ref_url" rest endpoint is up
