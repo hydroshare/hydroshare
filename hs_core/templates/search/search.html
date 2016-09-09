@@ -515,6 +515,7 @@
         var markerCluster = null;
         var info_window = null;
         var rectangle = null;
+        var shade_rects = [];
 
         var initMap = function(json_results) {
             var $mapDiv = $("#discover-map");
@@ -636,10 +637,100 @@
                 createPointResourceMarker(lat, lng, info_content, counter);
             });
 
+            modified_boxes_data.forEach(function(box){
+                var info_content = box.info_link;
+                var northlimit = parseFloat(box.northlimit);
+                var southlimit = parseFloat(box.southlimit);
+                var eastlimit = parseFloat(box.eastlimit);
+                var westlimit = parseFloat(box.westlimit);
+                var counter = box.counter.toString();
+                createBoxResourceMarker (northlimit, southlimit, eastlimit, westlimit, info_content, counter);
+            });
+
+            var outter_boxes = [];
+            createShadeRectangles(modified_boxes_data, outter_boxes);
+
+            //console.log(outter_boxes);
+            drawShadeRectangles(outter_boxes);
             markerCluster = new MarkerClusterer(map, markers, {
                 imagePath: '//cdn.rawgit.com/googlemaps/js-marker-clusterer/gh-pages/images/m'
             });
         };
+
+        var drawShadeRectangles = function(outter_boxes) {
+            console.log("drawing");
+            for (var i = 0; i < outter_boxes.length; i++) {
+                var box = outter_boxes[i];
+                var northlimit = parseFloat(box.getNorthEast().lat());
+                var southlimit = parseFloat(box.getSouthWest().lat());
+                var eastlimit = parseFloat(box.getNorthEast().lng());
+                var westlimit = parseFloat(box.getSouthWest().lng());
+
+                        // Define the LatLng coordinates for the polygon's  outer path.
+                var outerCoords = [
+                  {lat: northlimit, lng: westlimit},
+                  {lat: northlimit, lng: eastlimit},
+                  {lat: southlimit, lng: eastlimit},
+                  {lat: southlimit, lng: westlimit}
+                ];
+
+                // Define the LatLng coordinates for the polygon's inner path.
+                // Note that the points forming the inner path are wound in the
+                // opposite direction to those in the outer path, to form the hole.
+                var innerCoords = [
+                  {lat: northlimit-1, lng: westlimit+1},
+                  {lat: southlimit+1, lng: westlimit+1},
+                  {lat: southlimit+1, lng: eastlimit-1},
+                  {lat: northlimit-1, lng: eastlimit-1}
+                ];
+
+                // Construct the polygon, including both paths.
+                shade_rects[i] = new google.maps.Polygon({
+                  paths: [outerCoords, innerCoords],
+                  strokeColor: '#FF0000',
+                  strokeOpacity: 0.2,
+                  strokeWeight: 2,
+                  fillColor: '#FF0000',
+                  fillOpacity: 0.03
+                });
+                shade_rects[i].setMap(map);
+            }
+        }
+
+        var createShadeRectangles = function (modified_boxes_data, outter_boxes) {
+            for (var i = 0; i < modified_boxes_data.length; i++) {
+                var cur_ne = new google.maps.LatLng(modified_boxes_data[i].northlimit, modified_boxes_data[i].eastlimit);
+                var cur_sw = new google.maps.LatLng(modified_boxes_data[i].southlimit, modified_boxes_data[i].westlimit);
+                var cur_bound = new google.maps.LatLngBounds(cur_sw, cur_ne);
+
+                for (var j = 0; j < modified_boxes_data.length; j++) {
+                    if (i != j) {
+                        var test_ne = new google.maps.LatLng(modified_boxes_data[j].northlimit, modified_boxes_data[j].eastlimit);
+                        var test_sw = new google.maps.LatLng(modified_boxes_data[j].southlimit, modified_boxes_data[j].westlimit);
+                        var test_bound = new google.maps.LatLngBounds(test_sw, test_ne);
+                        if (test_bound.contains(cur_ne) && test_bound.contains(cur_sw)) {
+                            cur_ne = test_ne;
+                            cur_sw = test_sw;
+                            cur_bound = test_bound;
+                        }
+                    }
+                }
+                if (!containsBound(cur_bound, outter_boxes)){
+                    outter_boxes.push(cur_bound);
+                }
+            }
+        }
+
+        function containsBound(bound, list) {
+            var i;
+            for (i = 0; i < list.length; i++) {
+                if (list[i] === bound) {
+                    return true;
+                }
+            }
+
+            return false;
+        }
 
         var buildMapItemsTableData = function(json_data, map_resources) {
             json_data.forEach(function(resource) {
@@ -660,19 +751,6 @@
 
         var setMapItemsList = function(json_results) {
             var map_resources = [];
-{#            json_results.forEach(function(resource) {#}
-{#                if (resource.coverage_type == 'box') {#}
-{#                    var author_name = "";#}
-{#                    if (resource.first_author_description) {#}
-{#                        author_name = '<a target="_blank" href="' + resource.first_author_description + '">' + resource.first_author + '</a>';#}
-{#                    } else {#}
-{#                        author_name = resource.first_author;#}
-{#                    }#}
-{#                    var resource_title = '<a target="_blank" href="' + resource.get_absolute_url + '">' + resource.title + '</a>';#}
-{#                    var map_resource = [resource, resource.resource_type, resource_title, author_name];#}
-{#                    map_resources.push(map_resource);#}
-{#                }#}
-{#            });#}
             buildMapItemsTableData(json_results, map_resources);
 
             var mapItems = $('#map-items').DataTable( {
@@ -781,8 +859,8 @@
 
             if (map.getBounds().contains(ne_latlng) || map.getBounds().contains(sw_latlng)) {
                 var rectBounds = new google.maps.LatLngBounds(
-                        new google.maps.LatLng(northlimit, westlimit),
-                        new google.maps.LatLng(southlimit, eastlimit)
+                        new google.maps.LatLng(southlimit, westlimit),
+                        new google.maps.LatLng(northlimit, eastlimit)
                 );
                 rectangle.set('bounds', rectBounds);
                 if (zoom_on_map) {
@@ -823,6 +901,12 @@
         };
 
         var removeMarkers = function() {
+            for (var n = 0; n < shade_rects.length; n++) {
+                if (shade_rects[n].getMap() != null) {
+                    shade_rects[n].setMap(null);
+                }
+            }
+            shade_rects = [];
 
             if (markerCluster) {
                 markerCluster.clearMarkers(markers);
@@ -901,6 +985,7 @@
             var lat = (parseFloat(northlimit) + parseFloat(southlimit)) / 2;
             var lng = (parseFloat(eastlimit) + parseFloat(westlimit)) / 2;
             var latlng = new google.maps.LatLng(lat, lng);
+
             var marker = new google.maps.Marker({
                 map: map,
                 icon: '//cdn.rawgit.com/Concept211/Google-Maps-Markers/master/images/marker_blue' + counter + '.png',
@@ -912,10 +997,12 @@
                 info_window.setContent(info_content);
                 info_window.open(map, marker);
                 var rectBounds = new google.maps.LatLngBounds(
-                        new google.maps.LatLng(northlimit, westlimit),
-                        new google.maps.LatLng(southlimit, eastlimit)
+                        new google.maps.LatLng(southlimit, westlimit),
+                        new google.maps.LatLng(northlimit, eastlimit)
                 );
                 rectangle.set('bounds', rectBounds);
+{#                map.fitBounds(rectBounds);#}
+{#                updateMapView();#}
             });
         };
 
@@ -967,7 +1054,7 @@
             var resetButton_content = [];
             // legend_content.push("<p style='margin-left:5px'><img src='//cdn.rawgit.com/googlemaps/js-marker-clusterer/gh-pages/images/m2.png'> number of sites </p>");
             legend_content.push("<p><img src='//cdn.rawgit.com/Concept211/Google-Maps-Markers/master/images/marker_red.png'> Point Coverage Resources </p>");
-            //legend_content.push("<p><img src='//cdn.rawgit.com/Concept211/Google-Maps-Markers/master/images/marker_blue.png'> Box Coverage Resources </p>");
+            legend_content.push("<p><img src='//cdn.rawgit.com/Concept211/Google-Maps-Markers/master/images/marker_blue.png'> Box Coverage Resources </p>");
             geocoder_content.push("<input id='geocoder-address' type='textbox' placeholder='Search Locations...'>");
             geocoder_content.push("<a id='geocoder-submit' style='margin-left:10px' class='btn btn-default' role='button'><span class='glyphicon glyphicon-zoom-in'></span> Go </a>");
             resetButton_content.push("<a id='reset-zoom-btn' data-toggle='tooltip' title='Reset Zoom' class='btn btn-default btn-sm' onclick='resetMapZoom()'>");
