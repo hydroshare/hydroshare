@@ -639,6 +639,9 @@ class Relation(AbstractMetaDataElement):
                                           'isHostedBy relation already exists.' % rel.type)
 
             # avoid changing this relation to an existing relation of same type and same value
+            if 'value' not in kwargs:
+                kwargs['value'] = rel.value
+
             metadata_obj = kwargs['content_object']
             metadata_type = ContentType.objects.get_for_model(metadata_obj)
             qs = Relation.objects.filter(type=kwargs['type'],

@@ -1062,6 +1062,13 @@ class TestCoreMetadata(MockIRODSTestCaseMixin, TestCase):
         self.assertRaises(Exception, lambda: resource.update_metadata_element(self.res.short_id, 'relation',
                                                                               rel_to_update.id, type='isCopiedFrom'))
 
+        # test that cannot create a relation that is identical to an existing one
+        # (same type and same value) is not allowed
+        self.assertTrue(self.res.metadata.relations.all().
+                        filter(type='isHostedBy', value='https://www.cuahsi.org/').exists())
+        self.assertRaises(Exception, lambda: resource.create_metadata_element(self.res.short_id,
+                          'relation', type='isHostedBy', value='https://www.cuahsi.org/'))
+
         # test update relation type
         rel_to_update = self.res.metadata.relations.all().filter(type='isPartOf').first()
         resource.update_metadata_element(self.res.short_id, 'relation', rel_to_update.id, type='isVersionOf')
@@ -1076,6 +1083,16 @@ class TestCoreMetadata(MockIRODSTestCaseMixin, TestCase):
                       msg="No relation element of type 'isVersionOf' was found")
         self.assertIn('Another resource', [rel.value for rel in self.res.metadata.relations.all()],
                       msg="No relation element of value 'Another resource' was found")
+
+        # test that cannot update relation to an existing identical one
+        rel_to_update = self.res.metadata.relations.all().filter(type='isVersionOf').first()
+        self.assertTrue(self.res.metadata.relations.all().
+                        filter(type='isHostedBy', value='https://www.cuahsi.org/').exists())
+        self.assertRaises(Exception,
+                          lambda: resource.update_metadata_element(
+                          self.res.short_id, 'relation',
+                          rel_to_update.id, type='isHostedBy',
+                          value='https://www.cuahsi.org/'))
 
         # test that it is possible to delete all relation elements
         for rel in self.res.metadata.relations.all():

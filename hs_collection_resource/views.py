@@ -5,9 +5,9 @@ from django.http import JsonResponse
 from django.db import transaction
 
 from hs_core.views.utils import authorize, ACTION_TO_AUTHORIZE
-from hs_core.hydroshare.utils import get_resource_by_shortkey, resource_modified, current_site_url
+from hs_core.hydroshare.utils import get_resource_by_shortkey, resource_modified
 
-from .utils import add_or_remove_relation_metadata
+from .utils import add_or_remove_relation_metadata, RES_LANDING_PAGE_URL_TEMPLATE
 
 logger = logging.getLogger(__name__)
 UI_DATETIME_FORMAT = "%m/%d/%Y"
@@ -29,10 +29,7 @@ def update_collection(request, shortkey, *args, **kwargs):
     msg = ""
     metadata_status = "Insufficient to make public"
     new_coverage_list = []
-
     hasPart = "hasPart"
-    site_url = current_site_url()
-    relation_value_template = site_url + "/resource/{0}/"
 
     try:
         with transaction.atomic():
@@ -67,7 +64,7 @@ def update_collection(request, shortkey, *args, **kwargs):
                     collection_res_obj.resources.remove(res_obj_remove)
 
                     # change "Relation" metadata in collection
-                    value = relation_value_template.format(res_id_remove)
+                    value = RES_LANDING_PAGE_URL_TEMPLATE.format(res_id_remove)
                     add_or_remove_relation_metadata(add=False, target_res_obj=collection_res_obj,
                                                     relation_type=hasPart, relation_value=value,
                                                     set_res_modified=False)
@@ -98,7 +95,7 @@ def update_collection(request, shortkey, *args, **kwargs):
                     # not implemented
 
                     # change "Relation" metadata in collection
-                    value = relation_value_template.format(res_id_add)
+                    value = RES_LANDING_PAGE_URL_TEMPLATE.format(res_id_add)
                     add_or_remove_relation_metadata(add=True, target_res_obj=collection_res_obj,
                                                     relation_type=hasPart, relation_value=value,
                                                     set_res_modified=False)
@@ -145,10 +142,8 @@ def update_collection_for_deleted_resources(request, shortkey, *args, **kwargs):
 
             # handle "Relation" metadata
             hasPart = "hasPart"
-            site_url = current_site_url()
-            relation_value_template = site_url + "/resource/{0}/"
             for deleted_res_log in collection_res.deleted_resources:
-                relation_value = relation_value_template.format(deleted_res_log.resource_id)
+                relation_value = RES_LANDING_PAGE_URL_TEMPLATE.format(deleted_res_log.resource_id)
 
                 add_or_remove_relation_metadata(add=False,
                                                 target_res_obj=collection_res,

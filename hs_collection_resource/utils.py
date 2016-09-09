@@ -1,5 +1,7 @@
 from hs_core.hydroshare.utils import resource_modified
+from hs_core.hydroshare.utils import current_site_url
 
+RES_LANDING_PAGE_URL_TEMPLATE = current_site_url() + "/resource/{0}/"
 
 def add_or_remove_relation_metadata(add=True, target_res_obj=None, relation_type="",
                                     relation_value="", set_res_modified=False,

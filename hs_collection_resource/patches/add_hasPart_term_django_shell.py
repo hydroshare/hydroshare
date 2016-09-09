@@ -9,8 +9,9 @@ from datetime import datetime
 
 from django.contrib.auth.models import User
 
-from hs_core.hydroshare.utils import resource_modified, current_site_url
-from hs_collection_resource.utils import add_or_remove_relation_metadata
+from hs_core.hydroshare.utils import resource_modified
+from hs_collection_resource.utils import add_or_remove_relation_metadata, \
+    RES_LANDING_PAGE_URL_TEMPLATE
 from hs_collection_resource.models import CollectionResource
 
 last_changed_by_user = None
@@ -20,8 +21,6 @@ except Exception as ex:
     print "[{0}] Failed to get Admin user obj, set 'last_changed_by_user = None'\n"
 
 hasPart = "hasPart"
-site_url = current_site_url()
-relation_value_template = site_url + "/resource/{0}/"
 collection_res_list = list(CollectionResource.objects.all())
 collection_count = len(collection_res_list)
 print "[{0}] Find {1} Collection Resources\n".format(str(datetime.now()),
@@ -37,7 +36,7 @@ for collection_res_obj in collection_res_list:
                                                                        counter,
                                                                        collection_count)
         for contained_res_obj in collection_res_obj.resources.all():
-            value = relation_value_template.format(contained_res_obj.short_id)
+            value = RES_LANDING_PAGE_URL_TEMPLATE.format(contained_res_obj.short_id)
             add_or_remove_relation_metadata(add=True, target_res_obj=collection_res_obj,
                                             relation_type=hasPart, relation_value=value,
                                             set_res_modified=False)

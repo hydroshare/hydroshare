@@ -47,7 +47,6 @@ from hs_core.signals import *
 from hs_access_control.models import PrivilegeCodes, GroupMembershipRequest, GroupResourcePrivilege
 
 from hs_collection_resource.models import CollectionDeletedResource
-from hs_collection_resource.utils import add_or_remove_relation_metadata
 
 logger = logging.getLogger(__name__)
 
@@ -338,8 +337,9 @@ def delete_resource(request, shortkey, *args, **kwargs):
              resource_type=res_type,
              collection=collection_res
              )
-        for owner in owners_list:
-            o.resource_owners.add(owner)
+        # for owner in owners_list:
+        #     o.resource_owners.add(owner)
+        o.resource_owners.add(res.raccess.owners.all())
 
     return HttpResponseRedirect('/my-resources/')
 
