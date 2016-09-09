@@ -93,9 +93,8 @@ def landing_page(request, page):
                                HTML('<div class="col-xs-12 col-sm-6"><div class="form-group" id="modelinput"> '
                                     '{% load crispy_forms_tags %} '
                                     '{% crispy model_input_form %} '
-                                    '</div></div>'),
-
-                        )
+                                    '</div></div></div>'),
+                               )
 
 
         # get the context from hs_core
