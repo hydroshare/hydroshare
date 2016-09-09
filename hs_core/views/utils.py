@@ -398,11 +398,10 @@ def show_relations_tab(res_obj):
     :param res_obj:  resource object
     :return: Bool
     """
-    try:
-        all_relation_count = res_obj.metadata.relations.count()
-        hasPart_count = res_obj.metadata.relations.filter(type="hasPart").count()
-        if all_relation_count > hasPart_count:
-            return True
-        return False
-    except:
-        return False
+
+    all_relation_count = res_obj.metadata.relations.count()
+    hasPart_count = res_obj.metadata.relations.filter(type="hasPart").count()
+    if all_relation_count > hasPart_count:
+        return True
+    return False
+

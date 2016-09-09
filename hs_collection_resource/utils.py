@@ -22,10 +22,8 @@ def add_or_remove_relation_metadata(add=True, target_res_obj=None, relation_type
         meta_dict['value'] = relation_value
         target_res_obj.metadata.create_element("relation", **meta_dict)
     else:
-        if target_res_obj.metadata.relations.\
-                filter(type=relation_type, value=relation_value).exists():
-            target_res_obj.metadata.relations.\
-                filter(type=relation_type, value=relation_value).first().delete()
+        target_res_obj.metadata.relations.\
+                filter(type=relation_type, value=relation_value).all().delete()
 
     if set_res_modified:
         resource_modified(target_res_obj, last_change_user)

@@ -87,8 +87,8 @@ def update_collection(request, shortkey, *args, **kwargs):
                     is_shareable = res_to_add.raccess.shareable
                     is_owner = res_to_add.raccess.owners.filter(pk=user.pk).exists()
                     if not is_shareable and not is_owner:
-                            raise Exception('Only resource owner can add a resource '
-                                            'without "Shareable" flag to a collection')
+                            raise Exception('Only resource owner can add a non-shareable '
+                                            'resource to a collection ')
 
                     # add this new res to collection
                     res_obj_add = get_resource_by_shortkey(res_id_add)

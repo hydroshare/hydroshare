@@ -594,6 +594,15 @@ class Relation(AbstractMetaDataElement):
             # ensure isHostedBy and isCopiedFrom are mutually exclusive
             metadata_obj = kwargs['content_object']
             metadata_type = ContentType.objects.get_for_model(metadata_obj)
+
+            # avoid creating duplicated element
+            if Relation.objects.filter(type=kwargs['type'],
+                                       value=kwargs['value'],
+                                       object_id=metadata_obj.id,
+                                       content_type=metadata_type).exists():
+                raise ValidationError('Relation element of the same type and value already exists. '
+                                      'Cannot create a duplicated element')
+
             if kwargs['type'] == 'isHostedBy' and \
                Relation.objects.filter(type='isCopiedFrom', object_id=metadata_obj.id,
                                        content_type=metadata_type).exists():
@@ -628,6 +637,30 @@ class Relation(AbstractMetaDataElement):
                                                 content_type__pk=rel.content_type.id).exists():
                     raise ValidationError('Relation type:%s cannot be updated since '
                                           'isHostedBy relation already exists.' % rel.type)
+
+            # avoid changing this relation to an existing relation of same type and same value
+            metadata_obj = kwargs['content_object']
+            metadata_type = ContentType.objects.get_for_model(metadata_obj)
+            qs = Relation.objects.filter(type=kwargs['type'],
+                                         value=kwargs['value'],
+                                         object_id=metadata_obj.id,
+                                         content_type=metadata_type)
+            if rel.type == kwargs['type']:
+                # user did no change type
+                if qs.exists():
+                    if qs.first() != rel:
+                        # user changed value to an existing relation of the same value
+                        raise ValidationError('Relation type:%s cannot be updated since '
+                                              'a element of the same type and '
+                                              'value already exists.' % kwargs['type'])
+                    else:
+                        # user did not change anything literally but clicked 'update' btn
+                        pass
+            elif qs.exists():
+                # user changed type
+                raise ValidationError('Relation type:%s cannot be updated since '
+                                      'a element of the same type and '
+                                      'value already exists.' % kwargs['type'])
 
         super(Relation, cls).update(element_id, **kwargs)
 
