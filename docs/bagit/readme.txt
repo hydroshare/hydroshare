@@ -16,8 +16,7 @@ We've summarized the important points below.
 
 Zip File (the "bag") Structure
 --------------------------------------
-Once you unzip the downloaded file, you should see a single folder. This folder is called the "base directory." The name of this folder is the resource's unique identifier in the HydroShare
-system. Within the base directory is the content of the resource.  The following is an example of what you would get if you download a time series resource, but all resources use the same structure:
+Once you unzip the downloaded file, you should see a single folder. This folder is called the "base directory." The name of this folder is the resource's unique identifier in the HydroShare system. Within the base directory is the content of the resource.  The following is an example of what you would get if you download a time series resource, but all resources use the same structure:
 
 1a25b11fa1354773b6edb9495e754f4e/    # Base directory
     bagit.txt                        # Tag file with BagIt version number
