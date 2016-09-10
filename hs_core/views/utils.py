@@ -404,4 +404,3 @@ def show_relations_tab(res_obj):
     if all_relation_count > hasPart_count:
         return True
     return False
-

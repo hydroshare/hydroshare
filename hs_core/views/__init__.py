@@ -319,7 +319,6 @@ def delete_resource(request, shortkey, *args, **kwargs):
     resource_related_collections = [col for col in res.collections.all()]
     owners_list = [owner for owner in res.raccess.owners.all()]
 
-
     try:
         hydroshare.delete_resource(shortkey)
     except ValidationError as ex:
@@ -337,9 +336,7 @@ def delete_resource(request, shortkey, *args, **kwargs):
              resource_type=res_type,
              collection=collection_res
              )
-        # for owner in owners_list:
-        #     o.resource_owners.add(owner)
-        o.resource_owners.add(res.raccess.owners.all())
+        o.resource_owners.add(*owners_list)
 
     return HttpResponseRedirect('/my-resources/')
 
