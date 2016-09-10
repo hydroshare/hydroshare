@@ -391,16 +391,16 @@ def send_action_to_take_email(request, user, action_type, **kwargs):
                        context=context)
 
 
-def show_relations_tab(res_obj):
+def show_relations_section(res_obj):
     """
-    This func is to determine whether to show 'Relations' tab.
+    This func is to determine whether to show 'Relations' section in 'Related Resources' tab.
     Return True if number of "hasPart" < number of all relation metadata
     :param res_obj:  resource object
     :return: Bool
     """
 
     all_relation_count = res_obj.metadata.relations.count()
-    hasPart_count = res_obj.metadata.relations.filter(type="hasPart").count()
-    if all_relation_count > hasPart_count:
+    has_part_count = res_obj.metadata.relations.filter(type="hasPart").count()
+    if all_relation_count > has_part_count:
         return True
     return False

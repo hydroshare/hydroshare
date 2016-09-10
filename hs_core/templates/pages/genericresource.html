@@ -266,7 +266,7 @@
                                         </a>
                                     </li>
                                 {% endif %}
-                                {% if sources or show_relations_tab or metadata_form %}
+                                {% if sources or show_relations_section or belongs_to_collections or metadata_form %}
                                     <li class="col-xs-2 col-md-2">
                                         <a href="#relatedResourcesTab" data-toggle="tab" title="Related resources">
                                             <span class="glyphicon glyphicon-book"></span>
@@ -797,7 +797,7 @@
                                     </div>
                                 {% endif %}
                                 <!-- ========= RELATED RESOURCES TAB ========= -->
-                                {% if sources or relations or metadata_form %}
+                                {% if sources or show_relations_section or belongs_to_collections or metadata_form %}
                                     <div class="tab-pane" id="relatedResourcesTab">
                                         {% if not metadata_form %}
                                             {% if sources %}
@@ -810,7 +810,7 @@
                                                     </div>
                                                 {% endfor %}
                                             {% endif %}
-                                            {% if relations %}
+                                            {% if show_relations_section %}
                                                 <hr style="border: 0;">
                                                 <h4><strong>Relations</strong></h4>
                                                 <hr style="margin-top: 0;margin-bottom: 2px">
@@ -892,7 +892,72 @@
                                                       class="glyphicon glyphicon-info-sign text-muted"></span>
                                             </div>
                                         {% endif %}
+                                        {% if belongs_to_collections %}
+                                            <h4><strong>Belongs to Collections:</strong></h4>
+                                            <table id="collected-by-table" class="table-hover table-striped resource-custom-table" width="100%">
+                                                <thead>
+                                                    <tr>
+                                                        <th>Title</th>
+                                                        <th>Owners</th>
+                                                        <th>Sharing Status</th>
+                                                        <th>My Permission</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                {% for res in belongs_to_collections %}
+                                                    <tr id="{{ res.short_id }}">
+                                                        <td>
+                                                            {% if res|user_permission:request.user.pk|lower == "none" %}
+                                                                <strong>{{ res.metadata.title }}</strong>
+                                                            {% else %}
+                                                                <strong><a href="{{ res.get_absolute_url }}"
+                                                                           target="_blank">{{ res.metadata.title }}</a></strong>
+                                                            {% endif %}
+                                                        </td>
+                                                        <td>
+                                                            {% for owner in res.raccess.owners.all %}
+                                                                {% if forloop.counter0 > 0 %} · {% endif %}
+                                                                {% if owner.first_name %}
+                                                                    <strong><a href='/user/{{ owner.pk }}/'
+                                                                               target="_blank">{{ owner.first_name }} {{ owner.last_name }}</a></strong>
+                                                                {% else %}
+                                                                    <strong><a href='/user/{{ owner.pk }}/'
+                                                                               target="_blank">{{ owner.username }}</a></strong>
+                                                                {% endif %}
+                                                            {% endfor %}
+                                                        </td>
+                                                        <td>
+                                                            {% if res.raccess.published %}
+                                                                Published
+                                                            {% elif res.raccess.public %}
+                                                                Public
+                                                            {% elif res.raccess.discoverable %}
+                                                                Discoverable
+                                                            {% else %}
+                                                                Private
+                                                            {% endif %}
+
+                                                            {% if res.raccess.shareable %}
+                                                                & Shareable
+                                                            {% endif %}
+                                                        </td>
+                                                        <td>
+                                                            {% if res|user_permission:request.user.pk|lower == "none" %}
+                                                                <strong class="label-private">{{ res|user_permission:request.user.pk }}</strong>
+                                                            {% elif res|user_permission:request.user.pk|lower == "open access" %}
+                                                                <strong class="label-public">{{ res|user_permission:request.user.pk }}</strong>
+                                                            {% else %}
+                                                                {{ res|user_permission:request.user.pk }}
+                                                            {% endif %}
+                                                        </td>
+                                                    </tr>
+                                                {% endfor %}
+
+                                            </tbody>
+                                        </table>
+                                        {% endif%}
                                     </div>
+
                                 {% endif %}
                                 <!-- ========= RESOURCE SPECIFIC TAB ========= -->
                                 {% if site or extended_metadata_exists or res_add_metadata or metadata_form %}
@@ -988,79 +1053,6 @@
 
                                 </div>
                                 {% endif %}
-
-                                  <!-- ========= CONNECTIONS TAB ========= -->
-                                {% if connections %}
-                                    <div class="tab-pane" id="connectionsTab">
-                                         {% if connections.collected_by %}
-                                                <h4><strong>Belongs to Collections:</strong></h4>
-                                                <hr style="margin-top: 0;margin-bottom: 2px">
-                                                <table id="collected-by-table" class="table-hover table-striped resource-custom-table" width="100%">
-                                                    <thead>
-                                                        <tr>
-                                                            <th>Title</th>
-                                                            <th>Owners</th>
-                                                            <th>Sharing Status</th>
-                                                            <th>My Permission</th>
-                                                        </tr>
-                                                    </thead>
-                                                    <tbody>
-                                                        {% for res in connections.collected_by %}
-                                                            <tr id="{{ res.short_id }}">
-                                                                <td>
-                                                                    {% if res|user_permission:request.user.pk|lower == "none" %}
-                                                                        <strong>{{ res.metadata.title }}</strong>
-                                                                    {% else %}
-                                                                        <strong><a href="{{ res.get_absolute_url }}"
-                                                                                   target="_blank">{{ res.metadata.title }}</a></strong>
-                                                                    {% endif %}
-                                                                </td>
-                                                                <td>
-                                                                    {% for owner in res.raccess.owners.all %}
-                                                                        {% if forloop.counter0 > 0 %} · {% endif %}
-                                                                        {% if owner.first_name %}
-                                                                            <strong><a href='/user/{{ owner.pk }}/'
-                                                                                       target="_blank">{{ owner.first_name }} {{ owner.last_name }}</a></strong>
-                                                                        {% else %}
-                                                                            <strong><a href='/user/{{ owner.pk }}/'
-                                                                                       target="_blank">{{ owner.username }}</a></strong>
-                                                                        {% endif %}
-                                                                    {% endfor %}
-                                                                </td>
-                                                                <td>
-                                                                    {% if res.raccess.published %}
-                                                                        Published
-                                                                    {% elif res.raccess.public %}
-                                                                        Public
-                                                                    {% elif res.raccess.discoverable %}
-                                                                        Discoverable
-                                                                    {% else %}
-                                                                        Private
-                                                                    {% endif %}
-
-                                                                    {% if res.raccess.shareable %}
-                                                                        & Shareable
-                                                                    {% endif %}
-                                                                </td>
-                                                                <td>
-                                                                    {% if res|user_permission:request.user.pk|lower == "none" %}
-                                                                        <strong class="label-private">{{ res|user_permission:request.user.pk }}</strong>
-                                                                    {% elif res|user_permission:request.user.pk|lower == "open access" %}
-                                                                        <strong class="label-public">{{ res|user_permission:request.user.pk }}</strong>
-                                                                    {% else %}
-                                                                        {{ res|user_permission:request.user.pk }}
-                                                                    {% endif %}
-                                                                </td>
-                                                            </tr>
-                                                        {% endfor %}
-
-                                                    </tbody>
-                                                </table>
-                                            {% endif%}
-
-                                    </div>
-                                {% endif %}
-
 
                             </div>
                         </div>
