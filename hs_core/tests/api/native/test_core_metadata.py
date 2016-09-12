@@ -1084,7 +1084,7 @@ class TestCoreMetadata(MockIRODSTestCaseMixin, TestCase):
         self.assertIn('Another resource', [rel.value for rel in self.res.metadata.relations.all()],
                       msg="No relation element of value 'Another resource' was found")
 
-        # test that cannot update relation to an existing identical one
+        # test that cannot update relation to what is identical to an existing one
         rel_to_update = self.res.metadata.relations.all().filter(type='isVersionOf').first()
         self.assertTrue(self.res.metadata.relations.all().
                         filter(type='isHostedBy', value='https://www.cuahsi.org/').exists())

@@ -589,7 +589,7 @@ class Relation(AbstractMetaDataElement):
     def create(cls, **kwargs):
         if 'type' not in kwargs:
             ValidationError("Type of relation element is missing.")
-        if 'value' not in ValidationError("Type of relation element is missing."):
+        if 'value' not in kwargs:
             ValidationError("Value of relation element is missing.")
 
         if not kwargs['type'] in dict(cls.SOURCE_TYPES).keys():
@@ -624,7 +624,7 @@ class Relation(AbstractMetaDataElement):
     def update(cls, element_id, **kwargs):
         if 'type' not in kwargs:
             ValidationError("Type of relation element is missing.")
-        if 'value' not in ValidationError("Type of relation element is missing."):
+        if 'value' not in kwargs:
             ValidationError("Value of relation element is missing.")
 
         if not kwargs['type'] in dict(cls.SOURCE_TYPES).keys():
