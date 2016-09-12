@@ -647,17 +647,24 @@ UpdateSQLiteLayout = Layout(HTML("""
   "{% endif %} style="margin-bottom:10px">
     <div class="col-sm-12">
         <div class="alert alert-warning alert-dismissible" role="alert">
-        <strong>SQLite file needs to be synced with metadata changes:</strong>
-        <input id="can-update-sqlite-file" type="hidden" value="{{ cm.can_update_sqlite_file }}">
-        <input id="metadata-dirty" type="hidden" value="{{ cm.metadata.is_dirty }}">
-        <form action="/timeseries/sqlite/update/{{ cm.short_id }}/" method="post"
-        enctype="multipart/form-data">
-            {% csrf_token %}
-            <input name="resource-mode" type="hidden" value="edit">
-            <button type="button" class="btn btn-primary" onclick="this.form.submit();
-            return false;">Update SQLite File</button>
-        </form>
-            </div>
+            <strong>SQLite file needs to be synced with metadata changes.</strong>
+            {% if cm.metadata.series_names %}
+                <div>
+                <strong><span style="color:red;">NOTE:</span> New resource specific metadata
+                elements can't be created after you update the SQLite file.</strong>
+                </div>
+            {% endif %}
+            <input id="can-update-sqlite-file" type="hidden"
+            value="{{ cm.can_update_sqlite_file }}">
+            <input id="metadata-dirty" type="hidden" value="{{ cm.metadata.is_dirty }}">
+            <form action="/timeseries/sqlite/update/{{ cm.short_id }}/" method="post"
+            enctype="multipart/form-data">
+                {% csrf_token %}
+                <input name="resource-mode" type="hidden" value="edit">
+                <button type="button" class="btn btn-primary" onclick="this.form.submit();
+                return false;">Update SQLite File</button>
+            </form>
+        </div>
     </div>
 </div>
 """
