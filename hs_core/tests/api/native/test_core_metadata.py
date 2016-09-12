@@ -1059,8 +1059,11 @@ class TestCoreMetadata(MockIRODSTestCaseMixin, TestCase):
                                                                               value='Another Source'))
 
         rel_to_update = self.res.metadata.relations.all().filter(type='isHostedBy').first()
-        self.assertRaises(Exception, lambda: resource.update_metadata_element(self.res.short_id, 'relation',
-                                                                              rel_to_update.id, type='isCopiedFrom'))
+        self.assertRaises(Exception, lambda: resource.update_metadata_element(self.res.short_id,
+                                                                              'relation',
+                                                                              rel_to_update.id,
+                                                                              type='isCopiedFrom',
+                                                                              value="dummy value 1"))
 
         # test that cannot create a relation that is identical to an existing one
         # (same type and same value) is not allowed
@@ -1071,12 +1074,23 @@ class TestCoreMetadata(MockIRODSTestCaseMixin, TestCase):
 
         # test update relation type
         rel_to_update = self.res.metadata.relations.all().filter(type='isPartOf').first()
-        resource.update_metadata_element(self.res.short_id, 'relation', rel_to_update.id, type='isVersionOf')
+        resource.update_metadata_element(self.res.short_id, 'relation', rel_to_update.id,
+                                         type='isVersionOf', value="dummy value 2")
         self.assertIn('isVersionOf', [rel.type for rel in self.res.metadata.relations.all()],
                       msg="No relation element of type 'isVersionOf' was found")
 
         # test update relation value
         rel_to_update = self.res.metadata.relations.all().filter(type='isVersionOf').first()
+        # missing any of 'type' and 'value' is not allowed:
+        self.assertRaises(Exception,
+                          lambda: resource.
+                          update_metadata_element(self.res.short_id, 'relation', rel_to_update.id,
+                                                  value='Another resource'))
+        self.assertRaises(Exception,
+                          lambda: resource.
+                          update_metadata_element(self.res.short_id, 'relation', rel_to_update.id,
+                                                  type='isVersionOf'))
+
         resource.update_metadata_element(self.res.short_id, 'relation', rel_to_update.id, type='isVersionOf',
                                          value='Another resource')
         self.assertIn('isVersionOf', [rel.type for rel in self.res.metadata.relations.all()],
@@ -1089,10 +1103,12 @@ class TestCoreMetadata(MockIRODSTestCaseMixin, TestCase):
         self.assertTrue(self.res.metadata.relations.all().
                         filter(type='isHostedBy', value='https://www.cuahsi.org/').exists())
         self.assertRaises(Exception,
-                          lambda: resource.update_metadata_element(
-                          self.res.short_id, 'relation',
-                          rel_to_update.id, type='isHostedBy',
-                          value='https://www.cuahsi.org/'))
+                          lambda: resource.
+                          update_metadata_element(self.res.short_id,
+                                                  'relation',
+                                                  rel_to_update.id,
+                                                  type='isHostedBy',
+                                                  value='https://www.cuahsi.org/'))
 
         # test that it is possible to delete all relation elements
         for rel in self.res.metadata.relations.all():
@@ -1126,8 +1142,12 @@ class TestCoreMetadata(MockIRODSTestCaseMixin, TestCase):
                                                                               value='https://www.cuahsi.org/'))
 
         rel_to_update = self.res.metadata.relations.all().filter(type='isCopiedFrom').first()
-        self.assertRaises(Exception, lambda: resource.update_metadata_element(self.res.short_id,'relation',
-                                                                              rel_to_update.id, type='isHostedBy'))
+        self.assertRaises(Exception, lambda: resource.
+                          update_metadata_element(self.res.short_id,
+                                                  'relation',
+                                                  rel_to_update.id,
+                                                  type='isHostedBy',
+                                                  value="dummy value 3"))
 
         # test that it is possible to delete all relation elements
         for rel in self.res.metadata.relations.all():

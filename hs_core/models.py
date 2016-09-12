@@ -599,7 +599,7 @@ class Relation(AbstractMetaDataElement):
         metadata_obj = kwargs['content_object']
         metadata_type = ContentType.objects.get_for_model(metadata_obj)
 
-        # avoid creating duplicated element
+        # avoid creating duplicate element (same type and same value)
         if Relation.objects.filter(type=kwargs['type'],
                                    value=kwargs['value'],
                                    object_id=metadata_obj.id,
