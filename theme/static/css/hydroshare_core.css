@@ -3459,6 +3459,7 @@ button.no-style:focus {
     margin-top:20px;
 	max-height:250px;
 	overflow-y: auto;
+	word-break: break-word;
 }
 
 .group-name {
@@ -3468,6 +3469,11 @@ button.no-style:focus {
 .group-search {
     margin-bottom: 20px;
 	width: 100%;
+}
+
+.members-modal .modal-body {
+	max-height: 600px;
+    overflow: auto;
 }
 
 #txt-search-groups {
