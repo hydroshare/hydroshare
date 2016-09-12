@@ -40,16 +40,33 @@ def update_collection(request, shortkey, *args, **kwargs):
             if collection_res_obj.resource_type.lower() != "collectionresource":
                 raise Exception("Resource {0} is not a collection resource.".format(shortkey))
 
-            # get res_id list from POST
+            # get 'resource_id_list' list from POST
             updated_contained_res_id_list = request.POST.getlist("resource_id_list")
 
+            # get optional 'update_type' parameter:
+            # 1) "set" (default): set collection content to the list,
+            # following code will find out which resources are newly added, removed and unchanged
+            # 2) 'add': add resources in the list to collection
+            # adding a resource that is already in the collection will raise error
+            # 3) 'remove': remove resources in the list from collection
+            # removing a resource that is not in collection will raise error
+            update_type = request.POST.get("update_type", None)
+            if update_type is not None:
+                update_type = update_type.lower()
+                if update_type not in ["set", "add", "remove"]:
+                    raise Exception("Invalid value of 'update_type' parameter")
+            else:
+                # backward compatible: missing of 'update_type'
+                # results in 'set' action by default
+                update_type = 'set'
+
             if len(updated_contained_res_id_list) > len(set(updated_contained_res_id_list)):
-                raise Exception("Duplicate resources were found for adding to the collection")
+                raise Exception("Duplicate resources exist in list 'resource_id_list'")
 
             for updated_contained_res_id in updated_contained_res_id_list:
                 # avoid adding collection itself
                 if updated_contained_res_id == shortkey:
-                    raise Exception("Can not add collection itself.")
+                    raise Exception("Can not contain collection itself.")
 
             # current contained res
             res_id_list_current_collection = \
@@ -57,48 +74,69 @@ def update_collection(request, shortkey, *args, **kwargs):
 
             # res to remove
             res_id_list_remove = []
-            for res_id_remove in res_id_list_current_collection:
-                if res_id_remove not in updated_contained_res_id_list:
-                    res_id_list_remove.append(res_id_remove)
-                    res_obj_remove = get_resource_by_shortkey(res_id_remove)
-                    collection_res_obj.resources.remove(res_obj_remove)
+            if update_type == "remove":
+                res_id_list_remove = updated_contained_res_id_list
+                for res_id_remove in res_id_list_remove:
+                    if res_id_remove not in res_id_list_current_collection:
+                        raise Exception('Cannot remove resource {0} as it '
+                                        'is not currently contained '
+                                        'in collection'.format(res_id_remove))
 
-                    # change "Relation" metadata in collection
-                    value = RES_LANDING_PAGE_URL_TEMPLATE.format(res_id_remove)
-                    add_or_remove_relation_metadata(add=False, target_res_obj=collection_res_obj,
-                                                    relation_type=hasPart, relation_value=value,
-                                                    set_res_modified=False)
+            elif update_type == "set":
+                for res_id_remove in res_id_list_current_collection:
+                    if res_id_remove not in updated_contained_res_id_list:
+                        res_id_list_remove.append(res_id_remove)
+            for res_id_remove in res_id_list_remove:
+                # user with Edit permission over this collection can remove any resource from it
+                res_obj_remove = get_resource_by_shortkey(res_id_remove)
+                collection_res_obj.resources.remove(res_obj_remove)
+
+                # change "Relation" metadata in collection
+                value = RES_LANDING_PAGE_URL_TEMPLATE.format(res_id_remove)
+                add_or_remove_relation_metadata(add=False, target_res_obj=collection_res_obj,
+                                                relation_type=hasPart, relation_value=value,
+                                                set_res_modified=False)
 
             # res to add
             res_id_list_add = []
-            for res_id_add in updated_contained_res_id_list:
-                if res_id_add not in res_id_list_current_collection:
-                    res_id_list_add.append(res_id_add)
-                    # check authorization for all new resources being added to the collection
-                    # the requesting user should at least have metadata view permission for each of
-                    # the new resources to be added to the collection
-                    res_to_add, _, _ \
-                        = authorize(request, res_id_add,
-                                    needed_permission=ACTION_TO_AUTHORIZE.VIEW_METADATA)
+            if update_type == "add":
+                res_id_list_add = updated_contained_res_id_list
+                for res_id_add in res_id_list_add:
+                    if res_id_add in res_id_list_current_collection:
+                        raise Exception('Cannot add resource {0} as it '
+                                        'is already contained in collection'.format(res_id_add))
+            elif update_type == "set":
+                for res_id_add in updated_contained_res_id_list:
+                    if res_id_add not in res_id_list_current_collection:
+                        res_id_list_add.append(res_id_add)
+            for res_id_add in res_id_list_add:
+                # check authorization for all new resources being added to the collection
+                # the requesting user should at least have metadata view permission for each of
+                # the new resources to be added to the collection
+                res_to_add, _, _ \
+                    = authorize(request, res_id_add,
+                                needed_permission=ACTION_TO_AUTHORIZE.VIEW_METADATA)
 
-                    is_shareable = res_to_add.raccess.shareable
-                    is_owner = res_to_add.raccess.owners.filter(pk=user.pk).exists()
-                    if not is_shareable and not is_owner:
-                            raise Exception('Only resource owner can add a non-shareable '
-                                            'resource to a collection ')
+                # the resources being added should be 'Shareable'
+                # or is owned by current user
+                is_shareable = res_to_add.raccess.shareable
+                is_owner = res_to_add.raccess.owners.filter(pk=user.pk).exists()
+                if not is_shareable and not is_owner:
+                        raise Exception('Only resource owner can add a non-shareable '
+                                        'resource to a collection ')
 
-                    # add this new res to collection
-                    res_obj_add = get_resource_by_shortkey(res_id_add)
-                    collection_res_obj.resources.add(res_obj_add)
+                # add this new res to collection
+                res_obj_add = get_resource_by_shortkey(res_id_add)
+                collection_res_obj.resources.add(res_obj_add)
 
-                    # check loop here
-                    # not implemented
+                # check loop here
+                # not implemented
 
-                    # change "Relation" metadata in collection
-                    value = RES_LANDING_PAGE_URL_TEMPLATE.format(res_id_add)
-                    add_or_remove_relation_metadata(add=True, target_res_obj=collection_res_obj,
-                                                    relation_type=hasPart, relation_value=value,
-                                                    set_res_modified=False)
+                # change "Relation" metadata in collection
+                value = RES_LANDING_PAGE_URL_TEMPLATE.format(res_id_add)
+                add_or_remove_relation_metadata(add=True, target_res_obj=collection_res_obj,
+                                                relation_type=hasPart, relation_value=value,
+                                                set_res_modified=False)
 
             if collection_res_obj.can_be_public_or_discoverable:
                 metadata_status = "Sufficient to make public"
