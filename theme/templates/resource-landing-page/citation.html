@@ -100,7 +100,7 @@
     {% endif %}
 
     <div id="sharing-status">
-        <span class="pull-left">Sharing status:</span>
+        <span>Sharing status:</span>
         {% if can_change_resource_flags%}
             <div id="status-btn-group" class="btn-group" role="group" aria-label="...">
                 {# -------- PUBLIC -------- #}
@@ -169,20 +169,26 @@
             {% endif %}
 
             {% if is_owner_user %}
-                <div class="clear-fix" id="shareable-container">
+                <div id="shareable-container">
                     {#   Shareable flag    #}
-                    <form class="pull-left" action="/hsapi/_internal/{{ cm.short_id }}/set-resource-flag/"
+                    <form action="/hsapi/_internal/{{ cm.short_id }}/set-resource-flag/"
                           method="POST">
                         {% csrf_token %}
 
                         <input name="t" type="hidden" {% if cm.raccess.shareable %}value="make_not_shareable"
                                {% else %}value="make_shareable"{% endif %}/>
 
-                        <div class="checkbox" data-toggle="tooltip"
-                             title="When checked, users other than owners may grant access to the resource.">
-                            <label><input id="btn-shareable" type="checkbox"
-                                          {% if cm.raccess.shareable %}checked{% endif %}>Shareable</label>
+                        <input id="btn-shareable" data-toggle="toggle"
+                               data-on="<i class='glyphicon glyphicon-share'></i> Shareable"
+                               data-off="<i class='glyphicon glyphicon-ban-circle'></i> Not Shareable" type="checkbox"
+                               data-onstyle="success"
+                               {% if cm.raccess.shareable %}checked{% endif %} data-toggle="toggle">
+                        <div>
+                            <small class="text-muted">When enabled, users other than owners may grant access to the
+                                resource.
+                            </small>
                         </div>
+
                     </form>
                 </div>
             {% endif %}
@@ -203,15 +209,16 @@
                 &{% if cm.raccess.shareable %}<strong style="color:#5cb85c">&nbsp;Shareable</strong>{% else %}<strong style="color:#d9534f">&nbsp;Not Shareable</strong>{% endif %}
             {% endif %}
         {% endif %}
-    </div>
 
-    <div id="user-permission-msg">
-        {% if is_owner_user %}
-            <div class="clear-fix"><i>You are the owner of this resource.</i></div>
-        {% elif is_edit_user %}
-            <div class="clear-fix"><i>You have been given specific permission to {% if cm.raccess.published %}view{% else %}edit{% endif %} this resource.</i></div>
-        {% elif is_view_user %}
-             <div class="clear-fix"><i>You have been given specific permission to view this resource.</i></div>
-        {% endif %}
+        <div id="user-permission-msg">
+            {% if is_owner_user %}
+                <span class="alert alert-info" role="alert">You are the owner of this resource.</span>
+            {% elif is_edit_user %}
+                <span class="alert alert-info" role="alert">You have been given specific permission to
+                    {% if cm.raccess.published %} view{% else %} edit{% endif %} this resource.</span>
+            {% elif is_view_user %}
+                <span class="alert alert-info" role="alert">You have been given specific permission to view this resource.</span>
+            {% endif %}
+        </div>
     </div>
 </div>

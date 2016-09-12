@@ -1187,7 +1187,6 @@ a[data-toggle='tab']{
 
 #status-btn-group {
     margin-left: 10px;
-    float: left;
 }
 
 .btn-success {
@@ -1620,7 +1619,6 @@ body > .main-container {
 }
 
 div#sharing-status {
-    overflow: hidden; /* Fixes height for floating elements */
 	margin-top: 20px;
 }
 
@@ -2099,11 +2097,14 @@ td.user-actions > span:hover {
 }
 
 #user-permission-msg {
-    margin-top: 20px;
+	margin-bottom: 20px;
+	margin-top: 30px;
+	margin-left: 100px;
 }
 
 #shareable-container {
     margin-left: 100px;
+	padding-top: 20px;
 }
 
 button.loading {
