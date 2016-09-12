@@ -118,7 +118,12 @@
                                             <div class="col-xs-6">
                                                 <div class="input-group file-browser-search">
                                                     <span class="glyphicon glyphicon-search search-icon"></span>
-                                                    <input type="text" class="form-control fb-input-search"
+                                                    <span id="btn-clear-search-input"
+                                                          class="glyphicon glyphicon-remove-sign btn-clear-search"
+                                                          data-toggle="tooltip"
+                                                          data-placement="auto"
+                                                          title="Clear search"></span>
+                                                    <input type="text" id="txtDirSearch" class="form-control fb-input-search"
                                                            placeholder="Search current directory">
                                                 </div>
                                             </div>
@@ -173,7 +178,7 @@
                                                         <span class="fb-file-icon fa fa-folder glyphicon-folder"></span>
                                                         <span class="fb-file-name">Folder 1</span>
                                                         <span class="fb-file-type">File Folder</span>
-                                                        <span class="fb-file-size">98 KB</span>
+                                                        <span class="fb-file-size" data-file-size="98523">98 KB</span>
                                                     </li>
 
                                                     <li class="fb-folder droppable">
@@ -182,7 +187,7 @@
                                                         <span class="fb-file-icon fa fa-folder glyphicon-folder"></span>
                                                         <span class="fb-file-name">Folder 2</span>
                                                         <span class="fb-file-type">File Folder</span>
-                                                        <span class="fb-file-size">98 KB</span>
+                                                        <span class="fb-file-size" data-file-size="94326">94 KB</span>
                                                     </li>
 
                                                     <li class="fb-folder droppable">
@@ -191,7 +196,7 @@
                                                         <span class="fb-file-icon fa fa-folder glyphicon-folder"></span>
                                                         <span class="fb-file-name">Folder 3</span>
                                                         <span class="fb-file-type">File Folder</span>
-                                                        <span class="fb-file-size">98 KB</span>
+                                                        <span class="fb-file-size" data-file-size="24326">24 KB</span>
                                                     </li>
 
                                                     {# FILE TEMPLATE #}
@@ -201,7 +206,7 @@
                                                         <span class="fb-file-icon fa fa-file-text"></span>
                                                         <span class="fb-file-name">File 1.txt</span>
                                                         <span class="fb-file-type">Text File</span>
-                                                        <span class="fb-file-size">12 KB</span>
+                                                        <span class="fb-file-size" data-file-size="12345">12 KB</span>
                                                     </li>
 
                                                     <li class="fb-file droppable">
@@ -210,7 +215,7 @@
                                                         <span class="fb-file-icon fa fa-file-text"></span>
                                                         <span class="fb-file-name">File 2.txt</span>
                                                         <span class="fb-file-type">Text File</span>
-                                                        <span class="fb-file-size">12 KB</span>
+                                                        <span class="fb-file-size" data-file-size="9874">9 KB</span>
                                                     </li>
 
                                                     <li class="fb-file droppable">
@@ -219,11 +224,9 @@
                                                         <span class="fb-file-icon fa fa-file-text"></span>
                                                         <span class="fb-file-name">File 3.txt</span>
                                                         <span class="fb-file-type">Text File</span>
-                                                        <span class="fb-file-size">12 KB</span>
+                                                        <span class="fb-file-size" data-file-size="26000">26 KB</span>
                                                     </li>
                                                 </ul>
-
-
                                             </form>
                                         </div>
                                         <div class="fb-upload-caption "><small>Upload files by dragging & dropping, or click this box to select them.</small></div>
@@ -1231,7 +1234,6 @@
         <script src="https://maps.googleapis.com/maps/api/js?libraries=drawing"></script>
          <script type="text/javascript" src="{{ STATIC_URL }}js/dropzone.js"></script>
         <script type="text/javascript" src="{{ STATIC_URL }}js/resourceLandingAjax.js"></script>
-        <script type="text/javascript" src="{{ STATIC_URL }}js/filesize.js"></script>
         <script type="text/javascript" src="{{ STATIC_URL }}js/hs_file_browser.js"></script>
         <script type="text/javascript" src='//cdn.datatables.net/1.10.10/js/jquery.dataTables.js'></script>
         <link href="https://gitcdn.github.io/bootstrap-toggle/2.2.2/css/bootstrap-toggle.min.css" rel="stylesheet">

@@ -2754,13 +2754,21 @@ h4.title {
 	width: 284px;
 }
 
+#search-container .btn-clear-search {
+	right: 40px;
+}
+
+.file-browser-search .btn-clear-search {
+	right: 10px;
+}
+
 .btn-clear-search {
-	position: absolute;
-	left: -25px;
-	color: #A8A8A8;
-	font-size: 16px;
-	background: #FFF;
-	top: 10px;
+    position: absolute;
+
+    color: #A8A8A8;
+    font-size: 16px;
+    background: #FFF;
+    top: 10px;
 }
 
 .search-icon {
@@ -3962,6 +3970,7 @@ form#covereage-search-fields {
 
 .fb-input-search {
     padding-left: 25px;
+	padding-right: 35px;
 }
 
 span.fb-control-round {

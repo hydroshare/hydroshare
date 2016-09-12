@@ -128,6 +128,29 @@ $(document).ready(function () {
                 });
             }
         }
+        else if (method == "size") {
+            var size1, size2;
+
+            sorted = $('#fb-files-container li').sort(function (element1, element2) {
+                if (order == "asc") {
+                    size1 = parseInt($(element2).children('span.fb-file-size').attr("data-file-size"));
+                    size2 = parseInt($(element1).children('span.fb-file-size').attr("data-file-size"));
+                }
+                else {
+                    size1 = parseInt($(element1).children('span.fb-file-size').attr("data-file-size"));
+                    size2 = parseInt($(element2).children('span.fb-file-size').attr("data-file-size"));
+
+                }
+                if (size1 < size2) {
+                    return -1;
+                }
+                if (size1 > size2) {
+                    return 1;
+                }
+                // Both sizes are equal
+                return 0;
+            });
+        }
         else if (method == "type") {
             if (order == "asc") {
                 sorted = $('#fb-files-container li').sort(function (element1, element2) {
@@ -145,11 +168,10 @@ $(document).ready(function () {
         for (var i = 0; i < sorted.length; i++) {
             $(sorted[i]).prependTo("#fb-files-container");
         }
-
     }
 
+    // Bind sort method
     $("#fb-sort li").click(function () {
-
         if ($(this).attr("data-method")) {
             $("#fb-sort li[data-method]").removeClass("active");
             $(this).addClass("active");
@@ -160,18 +182,30 @@ $(document).ready(function () {
             $(this).addClass("active");
         }
 
-
         var method = $("#fb-sort li[data-method].active").attr("data-method");
         var order = $("#fb-sort li[data-order].active").attr("data-order");
-        // Sort by type
-        if (method == "type") {
-            // sort("name",order);
-            sort(method, order);
-        }
-        else {
-            sort(method, order);
-        }
 
+        sort(method, order);
+    });
 
+    // Filter files on search input text change
+    function filter(){
+        var items = $('#fb-files-container li').children('span.fb-file-name');
+        var search = $("#txtDirSearch").val().toLowerCase();
+        for (var i = 0; i < items.length; i++) {
+            if ($(items[i]).text().toLowerCase().indexOf(search) >= 0) {
+                $(items[i]).parent().show();
+            }
+            else {
+                $(items[i]).parent().hide();
+            }
+        }
+    }
+    $("#txtDirSearch").on("input", filter);
+
+    // Clear search input
+    $("#btn-clear-search-input").click(function(){
+        $("#txtDirSearch").val("");
+        filter();
     })
 });
