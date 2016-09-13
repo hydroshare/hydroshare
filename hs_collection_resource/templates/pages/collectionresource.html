@@ -111,7 +111,7 @@
             </div>
             {% if deleted_resources|length > 0 %}
                 <div id="view_deleted_res_div">
-                    <input type="button" id="view_deleted_res_btn" style="color: red" value="View deleted contents"
+                    <input type="button" id="view_deleted_res_btn" class="btn btn-default" value="View deleted contents"
                            onclick=" $('#deleted-resources-modal').modal('show');">
             <span data-toggle="tooltip" data-placement="auto"
                   title='Some resources in this collection have been deleted which may result in broken resource links in the bag. {% if edit_mode %} You need to remove deleted resources from the collection to fix that.{% endif %}'
