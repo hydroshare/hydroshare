@@ -1233,6 +1233,12 @@ class AbstractResource(ResourcePermissionsMixin):
         return scimeta_url
 
     @classmethod
+    def resmap_url(cls, resource_id):
+        resmap_path = "{resource_id}/data/resourcemap.xml".format(resource_id=resource_id)
+        resmap_url = reverse('rest_download', kwargs={'path': resmap_path})
+        return resmap_url
+
+    @classmethod
     def sysmeta_path(cls, resource_id):
         return "{resource_id}/data/resourcemap.xml".format(resource_id=resource_id)
 

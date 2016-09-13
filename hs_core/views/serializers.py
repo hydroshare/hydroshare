@@ -95,6 +95,7 @@ class ResourceListItemSerializer(serializers.Serializer):
     published = serializers.BooleanField()
     bag_url = serializers.URLField()
     science_metadata_url = serializers.URLField()
+    resource_map_url = serializers.URLField()
     resource_url = serializers.URLField()
 
 

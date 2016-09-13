@@ -25,6 +25,9 @@ urlpatterns = patterns('',
     url(r'^scimeta/(?P<pk>[A-z0-9]+)/$', views.resource_rest_api.ScienceMetadataRetrieveUpdate.as_view(),
         name='get_update_science_metadata'),
 
+    url(r'^resmap/(?P<pk>[A-z0-9]+)/$', views.resource_rest_api.ResourceMapRetrieve.as_view(),
+        name='get_resource_map'),
+
     url(r'^resource/(?P<pk>[A-z0-9]+)/files/$', views.resource_rest_api.ResourceFileCRUD.as_view(),
         name='add_resource_file'),
 
