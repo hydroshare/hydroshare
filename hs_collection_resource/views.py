@@ -50,15 +50,10 @@ def update_collection(request, shortkey, *args, **kwargs):
             # adding a resource that is already in the collection will raise error
             # 3) 'remove': remove resources in the list from collection
             # removing a resource that is not in collection will raise error
-            update_type = request.POST.get("update_type", None)
-            if update_type is not None:
-                update_type = update_type.lower()
-                if update_type not in ["set", "add", "remove"]:
-                    raise Exception("Invalid value of 'update_type' parameter")
-            else:
-                # backward compatible: missing of 'update_type'
-                # results in 'set' action by default
-                update_type = 'set'
+            update_type = request.POST.get("update_type", 'set').lower()
+
+            if update_type not in ["set", "add", "remove"]:
+                raise Exception("Invalid value of 'update_type' parameter")
 
             if len(updated_contained_res_id_list) > len(set(updated_contained_res_id_list)):
                 raise Exception("Duplicate resources exist in list 'resource_id_list'")
@@ -81,11 +76,11 @@ def update_collection(request, shortkey, *args, **kwargs):
                         raise Exception('Cannot remove resource {0} as it '
                                         'is not currently contained '
                                         'in collection'.format(res_id_remove))
-
             elif update_type == "set":
                 for res_id_remove in res_id_list_current_collection:
                     if res_id_remove not in updated_contained_res_id_list:
                         res_id_list_remove.append(res_id_remove)
+
             for res_id_remove in res_id_list_remove:
                 # user with Edit permission over this collection can remove any resource from it
                 res_obj_remove = get_resource_by_shortkey(res_id_remove)
@@ -128,9 +123,6 @@ def update_collection(request, shortkey, *args, **kwargs):
                 # add this new res to collection
                 res_obj_add = get_resource_by_shortkey(res_id_add)
                 collection_res_obj.resources.add(res_obj_add)
-
-                # check loop here
-                # not implemented
 
                 # change "Relation" metadata in collection
                 value = RES_LANDING_PAGE_URL_TEMPLATE.format(res_id_add)

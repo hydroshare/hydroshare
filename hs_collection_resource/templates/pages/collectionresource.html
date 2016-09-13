@@ -15,7 +15,6 @@
         <div id="collection_content_div">
             <div id="title_and_add_btn_div">
                 <h3>Collection Contents </h3>
-
             </div>
             <div id="collection-table-div">
                 {% if edit_mode %}
@@ -281,15 +280,15 @@
                                     </td>
                                    <td>
                                        {% for owner in res.resource_owners.all %}
-                                        {% if forloop.counter0 > 0 %} · {% endif %}
-                                        {% if owner.first_name %}
-                                            <strong><a href='/user/{{ owner.pk }}/'
-                                                       target="_blank">{{ owner.first_name }} {{ owner.last_name }}</a></strong>
-                                        {% else %}
-                                            <strong><a href='/user/{{ owner.pk }}/'
-                                                       target="_blank">{{ owner.username }}</a></strong>
-                                        {% endif %}
-                                    {% endfor %}
+                                            {% if forloop.counter0 > 0 %} · {% endif %}
+                                            {% if owner.first_name %}
+                                                <strong><a href='/user/{{ owner.pk }}/'
+                                                           target="_blank">{{ owner.first_name }} {{ owner.last_name }}</a></strong>
+                                            {% else %}
+                                                <strong><a href='/user/{{ owner.pk }}/'
+                                                           target="_blank">{{ owner.username }}</a></strong>
+                                            {% endif %}
+                                      {% endfor %}
                                     </td>
                                     <td>
                                         {{ res.resource_type }}
@@ -312,7 +311,7 @@
                 </div>
                 <div class="modal-footer">
                     {% if edit_mode|lower == "true" %}
-                    <button type="button" class="btn btn-success" id="clear-deleted-res-btn" onclick="clear_deleted_resources_table('{{collection_res_id}}');">
+                    <button type="button" class="btn btn-success" id="clear-deleted-res-btn" onclick="clear_deleted_resources_table_ajax('{{collection_res_id}}');">
                         Clear and Update Bag
                     </button>
                     {% endif %}
@@ -650,7 +649,7 @@
             return false;
         }
 
-        function clear_deleted_resources_table(collection_id) {
+        function clear_deleted_resources_table_ajax(collection_id) {
             document.body.style.cursor='wait';
             // hide view deleted
             $("#view_deleted_res_div").hide();
