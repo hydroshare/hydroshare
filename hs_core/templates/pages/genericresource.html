@@ -890,10 +890,11 @@
                                                 <span data-toggle="tooltip" data-placement="auto"
                                                       title='Click this button to add a relationship to another resource, external website, or document. You can express the type of relationship and then enter a URL to the resource or website. If the related resource does not have a URL, you can paste in a full text citation.'
                                                       class="glyphicon glyphicon-info-sign text-muted"></span>
+                                                <hr style="border: 0;">
                                             </div>
                                         {% endif %}
                                         {% if belongs_to_collections %}
-                                            <h4><strong>This resource belongs to the following collections:</strong></h4>
+                                            <legend>This resource belongs to the following collections:</legend>
                                             <table id="collected-by-table" class="table-hover table-striped resource-custom-table" width="100%">
                                                 <thead>
                                                     <tr>
@@ -918,27 +919,35 @@
                                                             {% for owner in res.raccess.owners.all %}
                                                                 {% if forloop.counter0 > 0 %} · {% endif %}
                                                                 {% if owner.first_name %}
-                                                                    <strong><a href='/user/{{ owner.pk }}/'
-                                                                               target="_blank">{{ owner.first_name }} {{ owner.last_name }}</a></strong>
+                                                                    <a href='/user/{{ owner.pk }}/'
+                                                                               target="_blank">{{ owner.first_name }} {{ owner.last_name }}</a>
                                                                 {% else %}
-                                                                    <strong><a href='/user/{{ owner.pk }}/'
-                                                                               target="_blank">{{ owner.username }}</a></strong>
+                                                                    <a href='/user/{{ owner.pk }}/'
+                                                                               target="_blank">{{ owner.username }}</a>
                                                                 {% endif %}
                                                             {% endfor %}
                                                         </td>
                                                         <td>
                                                             {% if res.raccess.published %}
-                                                                Published
+                                                                <strong class="label-public">&nbsp;Published</strong>
                                                             {% elif res.raccess.public %}
-                                                                Public
+                                                                <strong class="label-public">&nbsp;Public</strong>
                                                             {% elif res.raccess.discoverable %}
-                                                                Discoverable
+                                                                <strong class="label-discoverable">
+                                                                    &nbsp;Discoverable</strong>
                                                             {% else %}
-                                                                Private
+                                                                <strong class="label-private">&nbsp;Private</strong>
                                                             {% endif %}
-
-                                                            {% if res.raccess.shareable %}
-                                                                & Shareable
+                                                            {% if res.raccess.published %}
+                                                                {% if "pending" in cm.doi or "failure" in cm.doi %}
+                                                                    &#8210; Note that the DOI will not be available
+                                                                    until
+                                                                    it has been registered and activated.{% endif %}
+                                                            {% else %}
+                                                                &{% if res.raccess.shareable %}
+                                                                <strong style="color:#5cb85c">&nbsp;Shareable</strong>
+                                                            {% else %}<strong style="color:#d9534f">&nbsp;Not
+                                                                    Shareable</strong>{% endif %}
                                                             {% endif %}
                                                         </td>
                                                         <td>

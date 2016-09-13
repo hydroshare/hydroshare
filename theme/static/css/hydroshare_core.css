@@ -2704,6 +2704,10 @@ h4.title {
 	border-top-left-radius: 4px;
 }
 
+#collected-by-table {
+    border: 0px !important;
+}
+
 #item-selectors.group-resource-list {
     width: 100% !important;
 }
@@ -2715,6 +2719,7 @@ h4.title {
 
 .resource-custom-table thead th {
     border-bottom: 1px solid #DDD !important;
+    padding: 8px;
 }
 
 #item-selectors thead th:first-child {
