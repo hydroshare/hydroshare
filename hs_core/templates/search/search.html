@@ -606,6 +606,7 @@
                 updateMapView();
             });
 
+
             generateLegend();
 
             var input_address = document.getElementById('geocoder-address');
@@ -647,26 +648,59 @@
                 createBoxResourceMarker (northlimit, southlimit, eastlimit, westlimit, info_content, counter);
             });
 
-            var outter_boxes = [];
-            createShadeRectangles(modified_boxes_data, outter_boxes);
+            //var outter_boxes = [];
+            //createShadeRectangles(modified_boxes_data, outter_boxes);
 
             //console.log(outter_boxes);
-            drawShadeRectangles(outter_boxes);
+            drawShadeRectangles(modified_boxes_data);
+            shade_rects.forEach(function(rect){
+                google.maps.event.addListener(rect,'click',function(e){
+                    highlightOverlapping(e.latLng);
+                });
+            });
+{#            shade_rects[2].getPaths().getArray().forEach(function(path){#}
+{#                path.getArray().forEach(function(latlng){#}
+{#                   console.log(latlng);#}
+{#                });#}
+{#            });#}
             markerCluster = new MarkerClusterer(map, markers, {
                 imagePath: '//cdn.rawgit.com/googlemaps/js-marker-clusterer/gh-pages/images/m'
             });
         };
 
+        var highlightOverlapping = function(position) {
+            shade_rects.forEach(function(rect){
+                var rect_bound = new google.maps.LatLngBounds();
+                rect.getPaths().getArray().forEach(function(path){
+                    path.getArray().forEach(function(latlng){
+                        rect_bound.extend(latlng);
+                    });
+                });
+                if (rect_bound.contains(position)) {
+                    rect.setOptions({fillOpacity: 0.15});
+                } else {
+                    rect.setOptions({fillOpacity: 0});
+                }
+            });
+        }
+
         var drawShadeRectangles = function(outter_boxes) {
-            console.log("drawing");
             for (var i = 0; i < outter_boxes.length; i++) {
                 var box = outter_boxes[i];
-                var northlimit = parseFloat(box.getNorthEast().lat());
-                var southlimit = parseFloat(box.getSouthWest().lat());
-                var eastlimit = parseFloat(box.getNorthEast().lng());
-                var westlimit = parseFloat(box.getSouthWest().lng());
+{#                var northlimit = parseFloat(box.getNorthEast().lat());#}
+{#                var southlimit = parseFloat(box.getSouthWest().lat());#}
+{#                var eastlimit = parseFloat(box.getNorthEast().lng());#}
+{#                var westlimit = parseFloat(box.getSouthWest().lng());#}
+                var northlimit = parseFloat(box.northlimit);
+                var southlimit = parseFloat(box.southlimit);
+                var eastlimit = parseFloat(box.eastlimit);
+                var westlimit = parseFloat(box.westlimit);
+                var box_ne = new google.maps.LatLng(northlimit, eastlimit);
+                var box_sw = new google.maps.LatLng(southlimit, westlimit);
+                var box_bound = new google.maps.LatLngBounds(box_ne, box_sw);
 
-                        // Define the LatLng coordinates for the polygon's  outer path.
+
+                // Define the LatLng coordinates for the polygon's  outer path.
                 var outerCoords = [
                   {lat: northlimit, lng: westlimit},
                   {lat: northlimit, lng: eastlimit},
@@ -686,13 +720,14 @@
 
                 // Construct the polygon, including both paths.
                 shade_rects[i] = new google.maps.Polygon({
-                  paths: [outerCoords, innerCoords],
-                  strokeColor: '#FF0000',
-                  strokeOpacity: 0.2,
-                  strokeWeight: 2,
-                  fillColor: '#FF0000',
-                  fillOpacity: 0.03
+                    paths: [outerCoords],
+                    strokeColor: '#FF0000',
+                    strokeOpacity: 0.15,
+                    strokeWeight: 2,
+                    fillColor: '#FF0000',
+                    fillOpacity: 0
                 });
+                //shade_rects[i]["bound"] = box_bound;
                 shade_rects[i].setMap(map);
             }
         }
