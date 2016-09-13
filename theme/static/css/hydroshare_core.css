@@ -1185,10 +1185,6 @@ a[data-toggle='tab']{
     border-bottom-right-radius: 0;
 }
 
-#status-btn-group {
-    margin-left: 10px;
-}
-
 .btn-success {
     border-color: #20833F;
 }
@@ -2098,12 +2094,10 @@ td.user-actions > span:hover {
 
 #user-permission-msg {
 	margin-bottom: 20px;
-	margin-top: 30px;
-	margin-left: 100px;
+	margin-top: 50px;
 }
 
 #shareable-container {
-    margin-left: 100px;
 	padding-top: 20px;
 }
 

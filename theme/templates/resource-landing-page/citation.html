@@ -100,9 +100,9 @@
     {% endif %}
 
     <div id="sharing-status">
-        <span>Sharing status:</span>
+        <h4>Sharing status:</h4>
         {% if can_change_resource_flags%}
-            <div id="status-btn-group" class="btn-group" role="group" aria-label="...">
+            <div class="btn-group" role="group" aria-label="...">
                 {# -------- PUBLIC -------- #}
                 {% if cm.raccess.public %}
                     <button id="btn-public" data-toggle="tooltip" data-placement="auto"
@@ -163,11 +163,6 @@
                 {% endif %}
             </div>
 
-            {% if is_owner_user and cm.resource_type == "NetcdfResource" and not cm.raccess.public %}
-                <div class="pull-left label-public">Note that making the resource public may take a little extra time to update
-                        Hyrax server in order to provide OPeNDAP service for this resource. </div>
-            {% endif %}
-
             {% if is_owner_user %}
                 <div id="shareable-container">
                     {#   Shareable flag    #}
@@ -183,14 +178,16 @@
                                data-off="<i class='glyphicon glyphicon-ban-circle'></i> Not Shareable" type="checkbox"
                                data-onstyle="success"
                                {% if cm.raccess.shareable %}checked{% endif %} data-toggle="toggle">
-                        <div>
-                            <small class="text-muted">When enabled, users other than owners may grant access to the
-                                resource.
-                            </small>
-                        </div>
-
+                        <span data-toggle="tooltip" data-placement="auto"
+                          title='When enabled, users other than owners may grant access to the resource.'
+                          class="glyphicon glyphicon-info-sign text-muted"></span>
                     </form>
                 </div>
+            {% endif %}
+
+            {% if is_owner_user and cm.resource_type == "NetcdfResource" and not cm.raccess.public %}
+                <div class="pull-left label-public">Note that making the resource public may take a little extra time to update
+                        Hyrax server in order to provide OPeNDAP service for this resource. </div>
             {% endif %}
         {% else %}
             {% if cm.raccess.published %}
