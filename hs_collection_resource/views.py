@@ -16,12 +16,16 @@ UI_DATETIME_FORMAT = "%m/%d/%Y"
 # update collection
 def update_collection(request, shortkey, *args, **kwargs):
     """
-    Add resources to a collection. The POST request should contain a
-    list of resource ids for those resources to be part of the collection. Any existing resources
-    from the collection are removed before adding resources as specified by the list of
-    resource ids in the post request. Requesting user must at least have metadata view permission
-    for any new resources being added to the collection.
-
+    Update collection. The POST request should contain a
+    list of resource ids and a 'update_type' parameter with value of 'set', 'add' or 'remove',
+    which are three differnt mode to update the collection.If no 'update_type' parameter is
+    provided, the 'set' will be used by default.
+    To add a resource to collection, user should have certain premission on both collection
+    and resources being added.
+    For collection: user should have at least Edit permission
+    For resources being added, one the following criteria should be met:
+    1) user has at lest View permission and the resource is Shareable
+    2) user is resource owner
     :param shortkey: id of the collection resource to which resources are to be added.
     """
 

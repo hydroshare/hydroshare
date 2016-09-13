@@ -333,7 +333,7 @@ class TestCollection(MockIRODSTestCaseMixin, TransactionTestCase):
         self.assertIn(self.resGen2, self.resCollection.resources.all())
         self.assertIn(self.resGen4, self.resCollection.resources.all())
 
-        # remove all remain resources: [resGen2, resGen4] -- error expected
+        # remove all remain resources: [resGen2, resGen4]
         response = self.api_client.post(url_to_update_collection,
                                         {'update_type': 'remove',
                                          'resource_id_list':
