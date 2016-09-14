@@ -317,6 +317,7 @@ def delete_resource(request, shortkey, *args, **kwargs):
     res_id = shortkey
     res_type = res.resource_type
     resource_related_collections = [col for col in res.collections.all()]
+    owners_list = [owner for owner in res.raccess.owners.all()]
 
     try:
         hydroshare.delete_resource(shortkey)
@@ -328,11 +329,14 @@ def delete_resource(request, shortkey, *args, **kwargs):
     # create a CollectionDeletedResource object which can then be used to list collection deleted
     # resources on collection resource landing page
     for collection_res in resource_related_collections:
-        CollectionDeletedResource.objects.create(resource_title=res_title,
-                                                 deleted_by=user,
-                                                 resource_id=res_id,
-                                                 resource_type=res_type,
-                                                 collection=collection_res)
+        o=CollectionDeletedResource.objects.create(
+             resource_title=res_title,
+             deleted_by=user,
+             resource_id=res_id,
+             resource_type=res_type,
+             collection=collection_res
+             )
+        o.resource_owners.add(*owners_list)
 
     return HttpResponseRedirect('/my-resources/')
 
@@ -726,6 +730,7 @@ class GroupUpdateForm(GroupForm):
 @processor_for('my-resources')
 @login_required
 def my_resources(request, page):
+
     resource_collection = get_my_resources_list(request)
     context = {'collection': resource_collection}
     

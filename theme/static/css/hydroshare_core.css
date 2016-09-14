@@ -1414,13 +1414,13 @@ body > .main-container {
 }
 
 .custom-alert {
-    position: fixed;
-    background-color: lightgreen;
-    padding: 0 10px;
-    text-align: center;
-    line-height: 50px;
-    border: 1px solid #16E716;
-    text-shadow: 1px -1px #BEFFBE;
+	position: fixed;
+	background-color: lightgreen;
+	padding: 0 10px;
+	text-align: center;
+	line-height: 50px;
+	text-shadow: 1px -1px #BEFFBE;
+	z-index: 2;
 }
 
 .custom-alert-icon {
@@ -2710,6 +2710,10 @@ h4.title {
 	border-top-left-radius: 4px;
 }
 
+#collected-by-table {
+    border: 0px !important;
+}
+
 #item-selectors.group-resource-list {
     width: 100% !important;
 }
@@ -2721,6 +2725,7 @@ h4.title {
 
 .resource-custom-table thead th {
     border-bottom: 1px solid #DDD !important;
+    padding: 8px;
 }
 
 #item-selectors thead th:first-child {
