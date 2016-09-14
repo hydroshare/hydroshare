@@ -656,6 +656,12 @@
             shade_rects.forEach(function(rect){
                 google.maps.event.addListener(rect,'click',function(e){
                     highlightOverlapping(e.latLng);
+                    var map_resources = [];
+                    buildMapItemsTableData(modified_boxes_data, map_resources, e.latLng);
+                    var map_items_table = $('#map-items').DataTable();
+                    map_items_table.clear();
+                    map_items_table.rows.add(map_resources);
+                    map_items_table.draw();
                 });
             });
 {#            shade_rects[2].getPaths().getArray().forEach(function(path){#}
@@ -767,9 +773,16 @@
             return false;
         }
 
-        var buildMapItemsTableData = function(json_data, map_resources) {
-            json_data.forEach(function(resource) {
-                if (resource.coverage_type == 'box') {
+        var buildMapItemsTableData = function(box_resources, map_resources, latLng) {
+            box_resources.forEach(function(resource) {
+                var northlimit = parseFloat(resource.northlimit);
+                var southlimit = parseFloat(resource.southlimit);
+                var eastlimit = parseFloat(resource.eastlimit);
+                var westlimit = parseFloat(resource.westlimit);
+                var ne_latlng = new google.maps.LatLng(northlimit, eastlimit);
+                var sw_latlng = new google.maps.LatLng(southlimit, westlimit);
+                var resource_bound = new google.maps.LatLngBounds(sw_latlng, ne_latlng);
+                if (resource_bound.contains(latLng)) {
                     var author_name = "";
                     if (resource.first_author_description) {
                         author_name = '<a target="_blank" href="' + resource.first_author_description + '">' + resource.first_author + '</a>';
@@ -784,9 +797,9 @@
 
         }
 
-        var setMapItemsList = function(json_results) {
+        var setMapItemsList = function(json_results, latLng) {
             var map_resources = [];
-            buildMapItemsTableData(json_results, map_resources);
+            buildMapItemsTableData(json_results, map_resources, latLng);
 
             var mapItems = $('#map-items').DataTable( {
                 data: map_resources,
@@ -1115,6 +1128,7 @@
         var resetMapZoom = function() {
             removeMarkers();
             setMarkers(raw_results);
+            setMapItemsList([], null);
             var bounds = (markers.length > 0) ? createBoundsForMarkers(markers) : map.setZoom(2);
             if (bounds) {
                 map.fitBounds(bounds);
@@ -1149,12 +1163,6 @@
             clientUpdateMarkers(filtered_results);
             setMarkers(filtered_results);
             //setBoxResourcesList(filtered_results);
-            var map_resources = [];
-            buildMapItemsTableData(filtered_results, map_resources);
-            var map_items_table = $('#map-items').DataTable();
-            map_items_table.clear();
-            map_items_table.rows.add(map_resources);
-            map_items_table.draw();
 
             var results_selection = $('input:radio[name=results-selection]:checked').val();
             if (results_selection == 'map-results-selected') {
@@ -1461,7 +1469,7 @@
                                 raw_results.push(item);
                             }
                             initMap(json_results);
-                            setMapItemsList(json_results);
+                            setMapItemsList([], null);
                             $("#resource-search").show();
                         },
                         failure: function(data) {
