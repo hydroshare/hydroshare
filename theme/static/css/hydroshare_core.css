@@ -1408,13 +1408,13 @@ body > .main-container {
 }
 
 .custom-alert {
-    position: fixed;
-    background-color: lightgreen;
-    padding: 0 10px;
-    text-align: center;
-    line-height: 50px;
-    border: 1px solid #16E716;
-    text-shadow: 1px -1px #BEFFBE;
+	position: fixed;
+	background-color: lightgreen;
+	padding: 0 10px;
+	text-align: center;
+	line-height: 50px;
+	text-shadow: 1px -1px #BEFFBE;
+	z-index: 2;
 }
 
 .custom-alert-icon {
