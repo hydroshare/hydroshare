@@ -452,6 +452,7 @@
             var removed_row_from_colletion = $('#collection-table').DataTable().row('#' + res_id);
 
             if(removed_row_from_colletion.data()[5].toLowerCase().indexOf("none") >= 0) {
+                 // if "My Permission" cell is "None"
                 $('#remove-collection-btn-cancel').off("click");
                 $('#remove-collection-btn-ok').off("click").on("click", function(){
                     remove_collection_item_ajax(res_id, false);
@@ -464,6 +465,7 @@
             }
             else if(removed_row_from_colletion.data()[4].toLowerCase().indexOf("shareable") < 0 &&
             removed_row_from_colletion.data()[5].toLowerCase().indexOf("owner") < 0) {
+                // if "My Permission" cell has no "Shareable" and no "Owner"
                 $('#remove-collection-btn-cancel').off("click");
                 $('#remove-collection-btn-ok').off("click").on("click", function(){
                     remove_collection_item_ajax(res_id, false);
@@ -538,7 +540,7 @@
                         {
                             // copy row data and add to collection-candidate table
                             $('#collection-table-candidate').DataTable().row.add(removed_row_from_colletion.data()).draw(false);
-                            // Rebind click event for new row#}
+                            // Rebind click event for new row
                             $("#collection-table-candidate td").click(onCollectionTableRowClick);
                         }
                         // remove row obj
