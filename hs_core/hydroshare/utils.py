@@ -448,6 +448,12 @@ def resource_modified(resource, by_user=None, overwrite_bag=True):
 
     # set bag_modified-true AVU pair for the modified resource in iRODS to indicate
     # the resource is modified for on-demand bagging.
+    set_dirty_bag_flag(resource)
+
+
+def set_dirty_bag_flag(resource):
+    # set bag_modified-true AVU pair for the modified resource in iRODS to indicate
+    # the resource is modified for on-demand bagging.
     res_coll = resource.short_id
     if resource.resource_federation_path:
         istorage = IrodsStorage('federated')

@@ -188,10 +188,10 @@ def update_collection_for_deleted_resources(request, shortkey, *args, **kwargs):
             new_coverage_list = _update_collection_coverages(collection_res)
             ajax_response_data['new_coverage_list'] = new_coverage_list
 
-            resource_modified(collection_res, user)
-
             # remove all logged deleted resources for the collection
             collection_res.deleted_resources.all().delete()
+
+            resource_modified(collection_res, user)
 
     except Exception as ex:
         logger.error("Failed to update collection for "
