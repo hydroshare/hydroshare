@@ -17,5 +17,12 @@ def pre_add_files_to_resource_handler(sender, **kwargs):
 @receiver(pre_check_bag_flag, sender=CollectionResource)
 def pre_check_bag_flag_handler(sender, **kwargs):
     resource = kwargs['resource']
-    update_collection_list_csv(resource)
-    set_dirty_bag_flag(resource)
+    request_obj = kwargs['request_obj']
+
+    flag = request_obj.session.get("update_list_csv", False)
+    if not flag:
+        update_collection_list_csv(resource)
+        set_dirty_bag_flag(resource)
+        request_obj.session['update_list_csv'] = True
+    else:
+        del request_obj.session['update_list_csv']
