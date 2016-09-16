@@ -56,10 +56,28 @@ class Command(BaseCommand):
 
     def current_users_details(self):
         w = csv.writer(sys.stdout)
-        fields = ['first name', 'last name', 'email', 'user type', 'organization']
+        fields = [
+            'first name',
+            'last name',
+            'email',
+            'user type',
+            'organization',
+            'created date',
+            'last login',
+        ]
         w.writerow(fields)
+
         for up in UserProfile.objects.all():
-            values = [up.user.first_name, up.user.last_name, up.user.email, up.user_type, up.organization]
+            last_login = up.user.last_login.strftime('%m/%d/%Y') if up.user.last_login else ""
+            values = [
+                up.user.first_name,
+                up.user.last_name,
+                up.user.email,
+                up.user_type,
+                up.organization,
+                up.user.date_joined.strftime('%m/%d/%Y'),
+                last_login,
+            ]
             w.writerow([unicode(v).encode("utf-8") for v in values])
 
     def current_resources_details(self):
