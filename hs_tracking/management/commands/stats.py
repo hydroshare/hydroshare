@@ -82,19 +82,20 @@ class Command(BaseCommand):
 
     def current_resources_details(self):
         w = csv.writer(sys.stdout)
-        resources = BaseResource.objects.all()#annotate(total_file_size=Sum('resource_file__size'))
-        fields = ['title', 'resource type', 'size', 'federated resource file size','creation date', 'publication status']
+        fields = [
+            'title',
+            'resource type',
+            'size',
+            'federated resource file size',
+            'creation date',
+            'publication status'
+        ]
         w.writerow(fields)
-        for r in resources:
-            try:
-                total_file_size = sum([f.resource_file.size if f.resource_file else 0 for f in r.files.all()])
-            except SessionException as e:
-                total_file_size = "SessionsException"
 
-            try:
-                federated_resource_file_size = sum([int(f.fed_resource_file_size) if f.fed_resource_file_size else 0 for f in r.files.all()])
-            except SessionException as e:
-                federated_resource_file_size = "SessionsException"
+        resources = BaseResource.objects.all()
+        for r in resources:
+            total_file_size = sum([f.resource_file.size if f.resource_file else 0 for f in r.files.all()])
+            federated_resource_file_size = sum([int(f.fed_resource_file_size) if f.fed_resource_file_size else 0 for f in r.files.all()])
 
             values = [
                 r.metadata.title.value,
