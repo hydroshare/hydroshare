@@ -35,7 +35,6 @@ def pre_check_bag_flag_handler(sender, **kwargs):
         if collection_id_dict is None:
             request.session['collection_id_dict'] = {}
         request.session['collection_id_dict'][collection_res_obj.short_id] = "creating bag"
-
     else:
         del request.session['collection_id_dict'][collection_res_obj.short_id]
         if len(request.session['collection_id_dict']) == 0:

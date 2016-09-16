@@ -4,13 +4,14 @@ import shutil
 
 from django.core.files.uploadedfile import UploadedFile
 
-from hs_core.hydroshare.utils import resource_modified, get_resource_by_shortkey, current_site_url
+from hs_core.hydroshare.utils import resource_modified, current_site_url
 from hs_core.hydroshare.resource import ResourceFile, \
-    get_resource_file_name, delete_resource_file_only, add_resource_files
+     delete_resource_file_only, add_resource_files
 
 RES_LANDING_PAGE_URL_TEMPLATE = current_site_url() + "/resource/{0}/"
 CSV_FULL_NAME_TEMPLATE = "collection_list_{0}.csv"
 DELETED_RES_STRING = "Resource Deleted"
+
 
 def add_or_remove_relation_metadata(add=True, target_res_obj=None, relation_type="",
                                     relation_value="", set_res_modified=False,
