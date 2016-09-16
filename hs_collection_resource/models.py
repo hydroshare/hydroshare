@@ -3,8 +3,8 @@ from django.db import models
 
 from mezzanine.pages.page_processors import processor_for
 
-from hs_core.models import BaseResource, ResourceManager, resource_processor
-
+from hs_core.models import BaseResource, ResourceManager, resource_processor,\
+     CoreMetaData, AbstractMetaDataElement
 
 class CollectionResource(BaseResource):
     objects = ResourceManager('CollectionResource')
@@ -40,6 +40,20 @@ class CollectionResource(BaseResource):
         if not self.has_resources:
             return False
         return not self.resources.all().filter(raccess__published=False).exists()
+
+    @property
+    def update_text_file(self):
+        return self.extra_data.get('update_text_file', 'True')
+
+    @update_text_file.setter
+    def update_text_file(self, value):
+        if type(value) is not str:
+            raise ValueError("Value must be type of 'str'")
+        if value.lower() not in ['true', 'false']:
+            raise ValueError("Invalid value")
+
+        self.extra_data['update_text_file'] = value
+        self.save()
 
 
 processor_for(CollectionResource)(resource_processor)
