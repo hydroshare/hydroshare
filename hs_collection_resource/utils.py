@@ -85,7 +85,9 @@ def update_collection_list_csv(collection_obj):
                                 deleted_res_log.resource_type,
                                 deleted_res_log.resource_id,
                                 DELETED_RES_STRING,
-                                _get_owners_string(list(deleted_res_log.resource_owners.all())),
+                                _get_owners_string(list(deleted_res_log.resource_owners.all()))
+                                if deleted_res_log.resource_owners.count() > 0
+                                else DELETED_RES_STRING,
                                 DELETED_RES_STRING
                                 ]
                 csv_content_list.append(csv_data_row)
