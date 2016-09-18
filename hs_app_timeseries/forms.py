@@ -136,7 +136,7 @@ class SiteValidationForm(forms.Form):
         elevation_m = cleaned_data.get('elevation_m', None)
         elevation_datum = cleaned_data.get('elevation_datum', '')
         if elevation_m is not None:
-            if len(elevation_datum) == 0:
+            if len(elevation_datum.strip()) == 0:
                 self._errors['elevation_datum'] = ["A value for elevation datum is missing"]
 
         return self.cleaned_data
@@ -571,11 +571,12 @@ def _get_cv_dropdown_widget_items(dropdown_items, selected_item_name):
     # in the dropdown list
     dropdown_items = [item for item in dropdown_items if item.name != selected_item_name]
 
-    # create a list of tuples
-    cv_items = [(item.name, item.name) for item in dropdown_items]
+    # sort the cv items
+    cv_item_names = [item.name for item in dropdown_items]
+    cv_item_names.sort(key=unicode.lower)
 
-    # alphabetize the terms
-    cv_items.sort(key=lambda tup: tup[0])
+    # create a list of tuples from item names
+    cv_items = [(item_name, item_name) for item_name in cv_item_names]
 
     if selected_item_name is None or len(selected_item_name) == 0:
         selected_item_name = NO_SELECTION_DROPDOWN_OPTION
@@ -602,21 +603,28 @@ def _set_available_elements_form_field(form, elements, element_name):
 
 def _set_element_code_selection_form_field(form, form_field_name, form_field_label, element_id,
                                            elements, element_code_att_name, element_name_att_name):
+    element_display_str = "{code_att_name}:{name_att_name}"
     if len(elements) > 0:
         if len(form.initial) > 0:
             element_code_choices = [(getattr(element, element_code_att_name),
-                                     str(getattr(element, element_code_att_name)) + ":" +
-                                     getattr(element, element_name_att_name)) for
-                                    element in elements if element.id != element_id]
+                                     element_display_str.format(
+                                         code_att_name=str(getattr(element, element_code_att_name)),
+                                         name_att_name=getattr(element, element_name_att_name))
+                                     ) for element in elements if element.id != element_id]
+
             element_code_choices = tuple([(form.initial[element_code_att_name],
-                                           str(form.initial[element_code_att_name]) + ":" +
-                                           form.initial[element_name_att_name])] +
+                                          element_display_str.format(
+                                            code_att_name=str(form.initial[element_code_att_name]),
+                                            name_att_name=form.initial[element_name_att_name]))] +
                                          element_code_choices + [("----", "----")])
+
         else:
             element_code_choices = [(getattr(element, element_code_att_name),
-                                     str(getattr(element, element_code_att_name)) + ":" +
-                                     getattr(element, element_name_att_name)) for
-                                    element in elements]
+                                     element_display_str.format(
+                                         code_att_name=str(getattr(element, element_code_att_name)),
+                                         name_att_name=getattr(element, element_name_att_name)))
+                                    for element in elements]
+
             element_code_choices = tuple([("----", "----")] + element_code_choices)
 
         form.fields[form_field_name].widget = forms.Select(

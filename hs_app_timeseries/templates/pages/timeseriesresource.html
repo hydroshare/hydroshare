@@ -248,6 +248,7 @@
             var sites_text = $('#id_available_sites').val();
             var sites_json = $.parseJSON(sites_text);
             var original_site_code = $('#id_site_code').val();
+            var site_form_elements = ['#id_site_code', '#id_site_name', '#id_elevation_m', '#id_elevation_datum', '#id_site_type', '#id_latitude', '#id_longitude'];
             // remove the select option "Other.." from site code selection dropdown
             $("#id_site_code_choices option[value='Other']").remove();
 
@@ -255,20 +256,11 @@
                 var selectedSiteCode = this.value;
                 if(selectedSiteCode === "----"){
                     $('#id-site').find("button.btn-primary").hide();
-                    $('#id_site_code').val("");
-                    $('#id_site_code').attr('readonly', false);
-                    $('#id_site_name').val("");
-                    $('#id_site_name').attr('readonly', false);
-                    $('#id_elevation_m').val("");
-                    $('#id_elevation_m').attr('readonly', false);
-                    $('#id_elevation_datum').val("");
-                    $('#id_elevation_datum').attr('readonly', false);
-                    $('#id_site_type').val("");
-                    $('#id_site_type').attr('readonly', false);
-                    $('#id_latitude').val("");
-                    $('#id_latitude').attr('readonly', false);
-                    $('#id_longitude').val("");
-                    $('#id_longitude').attr('readonly', false);
+                    for (i = 0; i < site_form_elements.length; i++) {
+                        $(site_form_elements[i]).val("");
+                        $(site_form_elements[i]).attr('readonly', false);
+                    }
+
                     $("#id_site_type").css('pointer-events', 'auto');
                     $("#id_elevation_datum").css('pointer-events', 'auto');
                     var form_action = $('#id-site').attr('action');
@@ -307,13 +299,10 @@
                         else {
                             $('#id-site').find("button.btn-primary").hide();
                         }
-                         $('#id_site_code').attr('readonly', selectedSiteCode !== original_site_code);
-                         $('#id_site_name').attr('readonly', selectedSiteCode !== original_site_code);
-                         $('#id_elevation_m').attr('readonly', selectedSiteCode !== original_site_code);
-                         $('#id_elevation_datum').attr('readonly', selectedSiteCode !== original_site_code);
-                         $('#id_site_type').attr('readonly', selectedSiteCode !== original_site_code);
-                         $('#id_latitude').attr('readonly', selectedSiteCode !== original_site_code);
-                         $('#id_longitude').attr('readonly', selectedSiteCode !== original_site_code);
+                        for (i = 0; i < site_form_elements.length; i++) {
+                            $(site_form_elements[i]).attr('readonly', selectedSiteCode !== original_site_code);
+                        }
+
                         if (selectedSiteCode !== original_site_code){
                              $("#id_site_type").css('pointer-events', 'none');
                              $("#id_elevation_datum").css('pointer-events', 'none');
@@ -331,24 +320,18 @@
             var variable_text = $('#id_available_variables').val();
             var variables_json = $.parseJSON(variable_text);
             var original_variable_code = $('#id_variable_code').val();
+            var variable_from_elements = ['#id_variable_code', '#id_variable_name', '#id_variable_type', '#id_no_data_value', '#id_variable_definition', '#id_speciation'];
             // remove the select option "Other.." from variable code selection dropdown
             $("#id_variable_code_choices option[value='Other']").remove();
             $('#id_variable_code_choices').change(function () {
                 var selectedVariableCode = this.value;
                 if(selectedVariableCode === "----"){
                     $('#id-variable').find("button.btn-primary").hide();
-                    $('#id_variable_code').val("");
-                    $('#id_variable_code').attr('readonly', false);
-                    $('#id_variable_name').val("");
-                    $('#id_variable_name').attr('readonly', false);
-                    $('#id_variable_type').val("");
-                    $('#id_variable_type').attr('readonly', false);
-                    $('#id_no_data_value').val("");
-                    $('#id_no_data_value').attr('readonly', false);
-                    $('#id_variable_definition').val("");
-                    $('#id_variable_definition').attr('readonly', false);
-                    $('#id_speciation').val("");
-                    $('#id_speciation').attr('readonly', false);
+                    for (i = 0; i < variable_from_elements.length; i++) {
+                        $(variable_from_elements[i]).val("");
+                        $(variable_from_elements[i]).attr('readonly', false);
+                    }
+
                     $('#id_variable_name').css('pointer-events', 'auto');
                     $('#id_variable_type').css('pointer-events', 'auto');
                     $('#id_speciation').css('pointer-events', 'auto');
@@ -387,12 +370,10 @@
                         else {
                             $('#id-variable').find("button.btn-primary").hide();
                         }
-                        $('#id_variable_code').attr('readonly', selectedVariableCode !== original_variable_code);
-                        $('#id_variable_name').attr('readonly', selectedVariableCode !== original_variable_code);
-                        $('#id_variable_type').attr('readonly', selectedVariableCode !== original_variable_code);
-                        $('#id_no_data_value').attr('readonly', selectedVariableCode !== original_variable_code);
-                        $('#id_variable_definition').attr('readonly', selectedVariableCode !== original_variable_code);
-                        $('#id_speciation').attr('readonly', selectedVariableCode !== original_variable_code);
+                        for (i = 0; i < variable_from_elements.length; i++) {
+                            $(variable_from_elements[i]).attr('readonly', selectedVariableCode !== original_variable_code);
+                        }
+
                         if(selectedVariableCode !== original_variable_code){
                             $('#id_variable_name').css('pointer-events', 'none');
                             $('#id_variable_type').css('pointer-events', 'none');
@@ -412,22 +393,17 @@
             var method_text = $('#id_available_methods').val();
             var methods_json = $.parseJSON(method_text);
             var original_method_code = $('#id_method_code').val();
+            var method_form_elements = ['#id_method_code', '#id_method_name', '#id_method_type', '#id_method_description', '#id_method_link'];
             // remove the select option "Other.." from method code selection dropdown
             $("#id_method_code_choices option[value='Other']").remove();
             $('#id_method_code_choices').change(function () {
                 var selectedMethodCode = this.value;
                 if(selectedMethodCode === "----"){
                     $('#id-method').find("button.btn-primary").hide();
-                    $('#id_method_code').val("");
-                    $('#id_method_code').attr('readonly', false);
-                    $('#id_method_name').val("");
-                    $('#id_method_name').attr('readonly', false);
-                    $('#id_method_type').val("");
-                    $('#id_method_type').attr('readonly', false);
-                    $('#id_method_description').val("");
-                    $('#id_method_description').attr('readonly', false);
-                    $('#id_method_link').val("");
-                    $('#id_method_link').attr('readonly', false);
+                    for (i = 0; i < method_form_elements.length; i++) {
+                        $(method_form_elements[i]).val("");
+                        $(method_form_elements[i]).attr('readonly', false);
+                    }
                     $('#id_method_type').css('pointer-events', 'auto');
 
                     var form_action = $('#id-method').attr('action');
@@ -465,11 +441,10 @@
                         else {
                             $('#id-method').find("button.btn-primary").hide();
                         }
-                        $('#id_method_code').attr('readonly', selectedMethodCode !== original_method_code);
-                        $('#id_method_name').attr('readonly', selectedMethodCode !== original_method_code);
-                        $('#id_method_type').attr('readonly', selectedMethodCode !== original_method_code);
-                        $('#id_method_description').attr('readonly', selectedMethodCode !== original_method_code);
-                        $('#id_method_link').attr('readonly', selectedMethodCode !== original_method_code);
+                        for (i = 0; i < method_form_elements.length; i++) {
+                            $(method_form_elements[i]).attr('readonly', selectedMethodCode !== original_method_code);
+                        }
+
                         if(selectedMethodCode !== original_method_code){
                             $('#id_method_type').css('pointer-events', 'none');
                         }
@@ -486,18 +461,17 @@
             var pro_level_text = $('#id_available_processinglevels').val();
             var pro_levels_json = $.parseJSON(pro_level_text);
             var original_pro_level_code = $('#id_processing_level_code').val();
+            var pro_level_form_elements = ['#id_processing_level_code', '#id_definition', '#id_explanation'];
             // remove the select option "Other.." from processinglevel code selection dropdown
             $("#id_processinglevel_code_choices option[value='Other']").remove();
             $('#id_processinglevel_code_choices').change(function () {
                 var selectedProLevelCode = this.value;
                 if(selectedProLevelCode === "----"){
                     $('#id-processinglevel').find("button.btn-primary").hide();
-                    $('#id_processing_level_code').val("");
-                    $('#id_processing_level_code').attr('readonly', false);
-                    $('#id_definition').val("");
-                    $('#id_definition').attr('readonly', false);
-                    $('#id_explanation').val("");
-                    $('#id_explanation').attr('readonly', false);
+                    for (i = 0; i < pro_level_form_elements.length; i++) {
+                        $(pro_level_form_elements[i]).val("");
+                        $(pro_level_form_elements[i]).attr('readonly', false);
+                    }
 
                     var form_action = $('#id-processinglevel').attr('action');
                     if(form_action.includes("update-metadata")) {
@@ -532,10 +506,9 @@
                         else {
                             $('#id-processinglevel').find("button.btn-primary").hide();
                         }
-                        $('#id_processing_level_code').attr('readonly', selectedProLevelCode !== original_pro_level_code);
-                        $('#id_definition').attr('readonly', selectedProLevelCode !== original_pro_level_code);
-                        $('#id_explanation').attr('readonly', selectedProLevelCode !== original_pro_level_code);
-
+                        for (i = 0; i < pro_level_form_elements.length; i++) {
+                            $(pro_level_form_elements[i]).attr('readonly', selectedProLevelCode !== original_pro_level_code);
+                        }
                         return false;
                     }
                 });

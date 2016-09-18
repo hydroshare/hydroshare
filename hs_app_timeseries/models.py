@@ -630,16 +630,11 @@ class TimeSeriesResource(BaseResource):
 
         log = logging.getLogger()
 
-        # copy the blank sqlite file to a temp directory
-        temp_dir = tempfile.mkdtemp()
+        # add the sqlite file to the resource
         odm2_sqlite_file_name = 'ODM2.sqlite'
         odm2_sqlite_file = 'hs_app_timeseries/files/{}'.format(odm2_sqlite_file_name)
-        target_temp_sqlite_file = os.path.join(temp_dir, odm2_sqlite_file_name)
-        shutil.copy(odm2_sqlite_file, target_temp_sqlite_file)
+        files = [UploadedFile(file=open(odm2_sqlite_file, 'rb'), name=odm2_sqlite_file_name)]
 
-        # add the sqlite file to the resource
-        files = [UploadedFile(file=open(target_temp_sqlite_file, 'rb'),
-                              name=odm2_sqlite_file_name)]
         try:
             add_resource_files(self.short_id, *files)
             log.info("Blank SQLite file was added.")
@@ -649,10 +644,7 @@ class TimeSeriesResource(BaseResource):
         except Exception as ex:
             log.exception("Error when adding the blank SQLite file. Error:{}".format(ex.message))
             raise ex
-        finally:
-            # cleanup the temp sqlite file directory
-            if os.path.exists(temp_dir):
-                shutil.rmtree(temp_dir)
+
 
 # this would allow us to pick up additional form elements for the template before the template
 # is displayed
@@ -670,7 +662,7 @@ class TimeSeriesMetaData(CoreMetaData):
     # temporarily store the series names (data column names) from the csv file
     # for storing data column name (key) and number of data points (value) for that column
     # this field is set to an empty dict once metadata changes are written to the blank sqlite
-    # file as part of the syn operation
+    # file as part of the sync operation
     value_counts = HStoreField(default={})
 
     @property
@@ -707,7 +699,7 @@ class TimeSeriesMetaData(CoreMetaData):
         # this property holds a list of data column names read from the
         # uploaded csv file. This list becomes an empty list
         # once metadata changes are written to the blank sqlite file as
-        # part of the syn operation.
+        # part of the sync operation.
         return self.value_counts.keys()
 
     @classmethod
@@ -1032,15 +1024,16 @@ class TimeSeriesMetaData(CoreMetaData):
     def populate_blank_sqlite_file(self, temp_sqlite_file, user):
         """
         writes data to a blank sqlite file. This function is executed only in case
-        of CSV file upload and executed only once at the time of csv file upload.
+        of CSV file upload and executed only once when updating the sqlite file for the first time.
         :param temp_sqlite_file: this the sqlite file copied from irods to a temp location on
          Django.
-        :param user: current user who is uploading the csv file
+        :param user: current user (must have edit permission on resource) who is updating the
+        sqlite file to sync metadata changes in django database.
         :return:
         """
         log = logging.getLogger()
         if not self.resource.has_csv_file:
-            msg = "Resource needs to have a CSV file before a blank SQLite file can be added"
+            msg = "Resource needs to have a CSV file before a blank SQLite file can be updated"
             log.exception(msg)
             raise Exception(msg)
 
@@ -1120,13 +1113,13 @@ class TimeSeriesMetaData(CoreMetaData):
                 utils.replace_resource_file_on_irods(temp_sqlite_file, blank_sqlite_file, user)
                 self.is_dirty = False
                 self.save()
-                log.info("Data written to the blank sqlite file successfully.")
+                log.info("Blank SQLite file was updated successfully.")
         except sqlite3.Error as ex:
             sqlite_err_msg = str(ex.args[0])
-            log.error("Failed to update SQLite file. Error:{}".format(sqlite_err_msg))
+            log.error("Failed to update blank SQLite file. Error:{}".format(sqlite_err_msg))
             raise Exception(sqlite_err_msg)
         except Exception as ex:
-            log.exception("Failed to update SQLite file. Error:{}".format(ex.message))
+            log.exception("Failed to update blank SQLite file. Error:{}".format(ex.message))
             raise ex
         finally:
             if os.path.exists(temp_sqlite_file):
@@ -1145,7 +1138,7 @@ class TimeSeriesMetaData(CoreMetaData):
         # writing metadata to the blank sqlite file
         if self.series_names:
             series_ids = {}
-            # generate GUID for for each of the series ids
+            # generate GUID for each of the series ids
             for ts_result in self.time_series_results:
                 guid = uuid4().hex
                 if ts_result.series_ids[0] not in series_ids:

@@ -675,7 +675,7 @@ class TestTimeSeriesMetaData(MockIRODSTestCaseMixin, TransactionTestCase):
         self.resTimeSeries.metadata.update_element('title', title.id, value="New Resource Title")
         # at this point the is_dirty be set to true
         self.assertEqual(self.resTimeSeries.metadata.is_dirty, True)
-        # rest metadata is_dirty to false
+        # reset metadata is_dirty to false
         TimeSeriesMetaData.objects.filter(id=self.resTimeSeries.metadata.id).update(is_dirty=False)
 
         # updating the core metadata element Description (Abstract) should also set the
@@ -685,7 +685,7 @@ class TestTimeSeriesMetaData(MockIRODSTestCaseMixin, TransactionTestCase):
                                                    value="New abstract")
         # at this point the is_dirty be set to trye
         self.assertEqual(self.resTimeSeries.metadata.is_dirty, True)
-        # rest metadata is_dirty to false
+        # reset metadata is_dirty to false
         TimeSeriesMetaData.objects.filter(id=self.resTimeSeries.metadata.id).update(is_dirty=False)
 
         # test with resource specific metadata elements

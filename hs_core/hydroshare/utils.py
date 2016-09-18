@@ -282,13 +282,13 @@ def get_file_from_irods(res_file):
     return copied_file
 
 
-def replace_resource_file_on_irods(new_file, original_resource_file, user=None):
+def replace_resource_file_on_irods(new_file, original_resource_file, user):
     """
     Replaces the specified resource file with file (new_file) by copying to iRODS
     (local or federated zone)
     :param new_file: file path for the file to be copied to iRODS
     :param original_resource_file: an instance of ResourceFile that is to be replaced
-    :param user: user who is replacing the file. It can be sometime the system replacing a file
+    :param user: user who is replacing the resource file.
     :return:
     """
 
@@ -304,13 +304,9 @@ def replace_resource_file_on_irods(new_file, original_resource_file, user=None):
             destination_file = os.path.join(ori_res.resource_federation_path, ori_res.short_id,
                                             original_resource_file.fed_resource_file_name_or_path)
     istorage.saveFile(new_file, destination_file, True)
-    if user is not None and user.is_authenticated():
-        last_changed_by = user
-    else:
-        last_changed_by = ori_res.last_changed_by
 
     # need to do this so that the bag will be regenerated prior to download of the bag
-    resource_modified(ori_res, by_user=last_changed_by, overwrite_bag=False)
+    resource_modified(ori_res, by_user=user, overwrite_bag=False)
 
 
 def get_resource_file_name_and_extension(res_file):
