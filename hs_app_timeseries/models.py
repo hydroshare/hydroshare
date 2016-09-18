@@ -3,7 +3,6 @@ import sqlite3
 import csv
 import shutil
 import logging
-import tempfile
 from uuid import uuid4
 from dateutil import parser
 import json
