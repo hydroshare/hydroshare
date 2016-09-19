@@ -88,5 +88,6 @@ urlpatterns = patterns('',
     url(r'^_internal/(?P<resource_type>[A-z]+)/allow-multiple-file/$',
         views.is_multiple_file_allowed_for_resource_type),
     url(r'^_internal/search/autocomplete/', "hs_core.views.autocomplete.autocomplete"),
+    url(r'^_internal/data-store-structure/$', views.resource_folder_hierarchy.data_store_structure),
 
 )

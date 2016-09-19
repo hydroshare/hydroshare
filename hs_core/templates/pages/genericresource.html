@@ -383,6 +383,9 @@
                                         </span>
                                         <a target="_blank" href="http://en.wikipedia.org/wiki/BagIt">Learn more about the Bagit archive format</a>
                                     </a>
+                                    <button type="button" class="btn btn-primary pull-right"
+                                            onclick="get_irods_folder_struct_ajax_submit('{{ cm.short_id }}', 'data/contents'); return false;">Request iRODS folder info
+                                    </button>
                                 {% endfor %}
                                 {% if user_zone_account_exist %}
                                     <div id='rep-alert-success' class="alert alert-success alert-dismissible" role="alert" style="display:none">

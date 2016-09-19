@@ -407,3 +407,51 @@ function get_user_info_ajax_submit(url, obj) {
         }
     });
 }
+
+function formatBytes(bytes) {
+    if(bytes < 1024) return bytes + " Bytes";
+    else if(bytes < 1048576) return(bytes / 1024).toFixed(1) + " KB";
+    else if(bytes < 1073741824) return(bytes / 1048576).toFixed(1) + " MB";
+    else return(bytes / 1073741824).toFixed(1) + " GB";
+}
+
+function get_irods_folder_struct_ajax_submit(res_id, store_path) {
+    $.ajax({
+        type: "POST",
+        url: '/hsapi/_internal/data-store-structure/',
+        async: true,
+        data: {
+            res_id: res_id,
+            store_path: store_path
+        },
+        success: function (result) {
+            var files = result.files;
+            var folders = result.folders;
+            if (files.length > 0) {
+                $.each(files, function(i, v) {
+                    $('#fb-files-container').append("<li class='fb-file droppable'>" +
+                        "<span class='glyphicon glyphicon-chevron-right fb-dropdown-toggle fb-help-icon'></span>" +
+                        "<span class='fa fa-arrows fb-handle fb-help-icon'></span>" +
+                        "<span class='fb-file-icon fa fa-file-text'></span>" +
+                        "<span class='fb-file-name'>" + v['name'] + "</span>" +
+                        "<span class='fb-file-type'>" + v['type'] + " File</span>" +
+                        "<span class='fb-file-size' data-file-size=" + v['size'] + ">" + formatBytes(parseInt(v['size'])) + "</span></li>");
+                });
+            }
+            if (folders.length > 0) {
+                $.each(folders, function(i, v) {
+                    $('#fb-files-container').append("<li class='fb-folder droppable'>" +
+                        "<span class='glyphicon glyphicon-chevron-right fb-dropdown-toggle fb-help-icon'></span>" +
+                        "<span class='fa fa-arrows fb-handle fb-help-icon'></span>" +
+                        "<span class='fb-file-icon fa fa-folder glyphicon-folder'></span>" +
+                        "<span class='fb-file-name'>" + v + "</span>" +
+                        "<span class='fb-file-type'>File Folder</span>" +
+                        "<span class='fb-file-size' data-file-size='24326'>24 KB</span></li>");
+                });
+            }
+        },
+        error: function(XMLHttpRequest, textStatus, errorThrown){
+
+        }
+    });
+}
