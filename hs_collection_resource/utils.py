@@ -41,14 +41,17 @@ def add_or_remove_relation_metadata(add=True, target_res_obj=None, relation_type
         resource_modified(target_res_obj, last_change_user)
 
 
-def update_collection_list_csv(collection_obj):
+def update_collection_list_csv(collection_obj, keep_local_csv=False):
     """
     This func is to create a new csv file in bag that lists info of all contained resources
     :param collection_obj: collection resource object
-    :return:
+    :param keep_local_csv: (default: False) if True, return the full path to csv on django server,
+    in which case user should be responsible for garbage collection (GC) of this csv file
+    :return: full path to csv file if keep_local_csv=True, otherwise None
     """
 
     tmp_dir = None
+    csv_full_path = None
 
     try:
         csv_full_name = CSV_FULL_NAME_TEMPLATE.format(collection_obj.short_id)
@@ -108,8 +111,13 @@ def update_collection_list_csv(collection_obj):
     except Exception as ex:
         raise Exception("update_collection_list_csv error: " + ex.message)
     finally:
-        if tmp_dir is not None:
-            shutil.rmtree(tmp_dir)
+        if keep_local_csv:
+            return csv_full_path
+        else:
+            if tmp_dir is not None:
+                shutil.rmtree(tmp_dir)
+            return None
+
 
 
 def _get_owners_string(owners_list):

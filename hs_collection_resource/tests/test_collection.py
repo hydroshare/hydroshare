@@ -1,4 +1,6 @@
+import os
 import json
+import csv
 from dateutil import parser
 
 from django.test import TransactionTestCase, Client
@@ -9,10 +11,11 @@ from hs_core.hydroshare import create_resource, create_account, \
      update_science_metadata
 from hs_core.testing import MockIRODSTestCaseMixin
 from hs_access_control.models import PrivilegeCodes
+from hs_core.hydroshare.resource import ResourceFile
 
 from hs_collection_resource.models import CollectionResource, CollectionDeletedResource
 from hs_collection_resource.views import _update_collection_coverages
-from hs_collection_resource.utils import RES_LANDING_PAGE_URL_TEMPLATE
+from hs_collection_resource.utils import RES_LANDING_PAGE_URL_TEMPLATE, update_collection_list_csv
 
 
 class TestCollection(MockIRODSTestCaseMixin, TransactionTestCase):
@@ -875,3 +878,48 @@ class TestCollection(MockIRODSTestCaseMixin, TransactionTestCase):
         value = RES_LANDING_PAGE_URL_TEMPLATE.format(self.resGen3.short_id)
         self.assertEqual(
             self.resCollection.metadata.relations.filter(type=hasPart, value=value).count(), 1)
+
+    def test_save_resource_list_csv_to_bag(self):
+
+        # test "update_text_file" attribute
+        # by default it is 'True'
+        self.assertEqual(self.resCollection.update_text_file, "True")
+        # set it to 'False'
+        self.resCollection.update_text_file = 'False'
+        self.assertEqual(self.resCollection.update_text_file, "False")
+        with self.assertRaises(ValueError):
+            self.resCollection.update_text_file = "Invalid String"
+        with self.assertRaises(ValueError):
+            self.resCollection.update_text_file = 1
+        # set it back to 'True'
+        self.resCollection.update_text_file = 'True'
+        self.assertEqual(self.resCollection.update_text_file, "True")
+
+        # test update_collection_list_csv()
+        self.assertEqual(self.resCollection.resources.count(), 0)
+        self.resCollection.resources.add(self.resGen1)
+        self.resCollection.resources.add(self.resGen2)
+        self.resCollection.resources.add(self.resGen3)
+        self.assertEqual(self.resCollection.resources.count(), 3)
+        self.assertEqual(ResourceFile.objects.filter(object_id=self.resCollection.id).count(), 0)
+        csv_full_path = update_collection_list_csv(self.resCollection, keep_local_csv=True)
+        self.assertTrue(os.path.isfile(csv_full_path))
+        self.assertEqual(ResourceFile.objects.filter(object_id=self.resCollection.id).count(), 1)
+
+        # check csv content
+        csv_list = []
+        with open(csv_full_path, 'r') as f:
+            reader = csv.reader(f)
+            csv_list = list(reader)
+        # csv should have 4 rows: header row + 3 data rows
+        self.assertEqual(len(csv_list), 4)
+        # add res_id to one list
+        res_id_list = []
+        res_id_list.append(csv_list[1][2])
+        res_id_list.append(csv_list[2][2])
+        res_id_list.append(csv_list[3][2])
+        self.assertEqual(len(res_id_list), 3)
+        self.asserIn(self.resGen1.short_id, res_id_list)
+        self.asserIn(self.resGen2.short_id, res_id_list)
+        self.asserIn(self.resGen3.short_id, res_id_list)
+        os.remove(csv_full_path)

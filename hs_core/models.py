@@ -1234,8 +1234,8 @@ class AbstractResource(ResourcePermissionsMixin):
     extra_metadata = HStoreField(default={})
 
     # this field is for specific resource types to store extra key:value pairs
-    # for internal use, which can compensate some limitations of proxy model
-    # this field SHOULD NEVER be used for storing metadata
+    # for internal use only
+    # this field WILL NOT get recorded in bag and SHOULD NEVER be used for storing metadata
     extra_data = HStoreField(default={})
 
     @classmethod
