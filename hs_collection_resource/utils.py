@@ -119,7 +119,6 @@ def update_collection_list_csv(collection_obj, keep_local_csv=False):
             return None
 
 
-
 def _get_owners_string(owners_list):
 
     name_list = []

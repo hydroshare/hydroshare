@@ -8,8 +8,8 @@ from hs_core.models import BaseResource
 from hs_core.hydroshare.utils import resource_modified
 
 def migrate_namespace_for_source_and_relation(apps, schema_editor):
-    # # migrate the namespace for the 'Source' and 'Relation' metadata
-    # # elements from 'dcterms' to 'hsterms' by regenerating the metadata xml
+    # migrate the namespace for the 'Source' and 'Relation' metadata
+    # elements from 'dcterms' to 'hsterms' by regenerating the metadata xml
     # log = logging.getLogger()
     # for res in BaseResource.objects.all():
     #     # need to regenerate xml file only for those resources that have either 'source' or 'relation' metadata
