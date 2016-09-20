@@ -450,8 +450,40 @@ function get_irods_folder_struct_ajax_submit(res_id, store_path) {
                 });
             }
         },
-        error: function(XMLHttpRequest, textStatus, errorThrown){
+        error: function(xhr, errmsg, err){
+            console.log(xhr.status + ": " + xhr.responseText + ". Error message: " + errmsg);
+        }
+    });
+}
 
+function zip_irods_folder_ajax_submit(res_id, input_coll_path) {
+    $.ajax({
+        type: "POST",
+        url: '/hsapi/_internal/data-store-folder-zip/',
+        async: true,
+        data: {
+            res_id: res_id,
+            input_coll_path: input_coll_path,
+            output_zip_file_name: "test.zip",
+            remove_original_after_zip: "false"
+        },
+        success: function (result) {
+            var output_file_name = result.name;
+            var output_file_size = result.size;
+            var output_file_type = result.type;
+            if (output_file_name.length > 0) {
+                $('#fb-files-container').append("<li class='fb-file droppable'>" +
+                    "<span class='glyphicon glyphicon-chevron-right fb-dropdown-toggle fb-help-icon'></span>" +
+                    "<span class='fa fa-arrows fb-handle fb-help-icon'></span>" +
+                    "<span class='fb-file-icon fa fa-file-text'></span>" +
+                    "<span class='fb-file-name'>" + output_file_name + "</span>" +
+                    "<span class='fb-file-type'>" + output_file_type + " File</span>" +
+                    "<span class='fb-file-size' data-file-size=" + output_file_size + ">" + formatBytes(parseInt(output_file_size)) + "</span></li>");
+
+            }
+        },
+        error: function(xhr, errmsg, err){
+            console.log(xhr.status + ": " + xhr.responseText + ". Error message: " + errmsg);
         }
     });
 }

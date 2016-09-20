@@ -384,7 +384,10 @@
                                         <a target="_blank" href="http://en.wikipedia.org/wiki/BagIt">Learn more about the Bagit archive format</a>
                                     </a>
                                     <button type="button" class="btn btn-primary pull-right"
-                                            onclick="get_irods_folder_struct_ajax_submit('{{ cm.short_id }}', 'data/contents'); return false;">Request iRODS folder info
+                                            onclick="get_irods_folder_struct_ajax_submit('{{ cm.short_id }}', 'data/contents'); return false;">iRODS folder info
+                                    </button>
+                                    <button type="button" class="btn btn-primary pull-right"
+                                            onclick="zip_irods_folder_ajax_submit('{{ cm.short_id }}', 'data/contents'); return false;">Zip iRODS Collection
                                     </button>
                                 {% endfor %}
                                 {% if user_zone_account_exist %}
