@@ -530,20 +530,21 @@
             });
 
             info_window = new google.maps.InfoWindow();
-            rectangle = new google.maps.Rectangle({
-                strokeColor: '#FF0000',
-                strokeOpacity: 0.8,
-                strokeWeight: 2,
-                fillColor: '#FF0000',
-                fillOpacity: 0.35,
-                map: map,
-                bounds: {
-                    north: 0,
-                    south: 0,
-                    east: 0,
-                    west: 0
-                }
-            });
+{#            rectangle = new google.maps.Rectangle({#}
+{#                strokeColor: '#FF0000',#}
+{#                strokeOpacity: 0.15,#}
+{#                strokeWeight: 2,#}
+{#                fillColor: '#FF0000',#}
+{#                fillOpacity: 0,#}
+{#                map: map,#}
+{#                bounds: {#}
+{#                    north: 0,#}
+{#                    south: 0,#}
+{#                    east: 0,#}
+{#                    west: 0#}
+{#                }#}
+{#            });#}
+
             setMarkers(json_results);
 
             var bounds = (markers.length > 0) ? createBoundsForMarkers(markers) : map.setZoom(2);
@@ -616,17 +617,27 @@
             document.getElementById('geocoder-submit').addEventListener('click', function() {
                 geocodeAddress(geocoder, map, mapDim);
             });
+
+            google.maps.event.addListener(map,'click',function(e){
+                var map_items_table = $('#map-items').DataTable();
+                map_items_table.clear().draw();
+                shade_rects.forEach(function(rect){
+                    rect.setOptions({fillOpacity: 0});
+                });
+            });
         };
 
 
         var setMarkers = function(json_results) {
             var modified_points_data = [];
             var modified_boxes_data = [];
+            var boxes_data = [];
             for (var i = 0; i < json_results.length; i++ ) {
                 if (json_results[i].coverage_type == 'point') {
                     checkDuplicatePointResults(modified_points_data, json_results[i]);
                 } else if (json_results[i].coverage_type == 'box') {
                     checkDuplicateBoxResults(modified_boxes_data, json_results[i]);
+                    boxes_data.push(json_results[i]);
                 }
             }
 
@@ -638,6 +649,9 @@
                 createPointResourceMarker(lat, lng, info_content, counter);
             });
 
+
+            drawShadeRectangles(boxes_data);
+
             modified_boxes_data.forEach(function(box){
                 var info_content = box.info_link;
                 var northlimit = parseFloat(box.northlimit);
@@ -648,40 +662,31 @@
                 createBoxResourceMarker (northlimit, southlimit, eastlimit, westlimit, info_content, counter);
             });
 
-            //var outter_boxes = [];
-            //createShadeRectangles(modified_boxes_data, outter_boxes);
-
-            //console.log(outter_boxes);
-            drawShadeRectangles(modified_boxes_data);
             shade_rects.forEach(function(rect){
                 google.maps.event.addListener(rect,'click',function(e){
                     highlightOverlapping(e.latLng);
                     var map_resources = [];
-                    buildMapItemsTableData(modified_boxes_data, map_resources, e.latLng);
+                    buildMapItemsTableData(boxes_data, map_resources, e.latLng);
                     var map_items_table = $('#map-items').DataTable();
                     map_items_table.clear();
                     map_items_table.rows.add(map_resources);
                     map_items_table.draw();
                 });
             });
-{#            shade_rects[2].getPaths().getArray().forEach(function(path){#}
-{#                path.getArray().forEach(function(latlng){#}
-{#                   console.log(latlng);#}
-{#                });#}
-{#            });#}
+
             markerCluster = new MarkerClusterer(map, markers, {
-                imagePath: '//cdn.rawgit.com/googlemaps/js-marker-clusterer/gh-pages/images/m'
+                styles:[{
+                    height: 55,
+                    width: 56,
+                    url: '//cdn.rawgit.com/googlemaps/js-marker-clusterer/gh-pages/images/m2.png'
+                }]
             });
         };
 
         var highlightOverlapping = function(position) {
             shade_rects.forEach(function(rect){
                 var rect_bound = new google.maps.LatLngBounds();
-                rect.getPaths().getArray().forEach(function(path){
-                    path.getArray().forEach(function(latlng){
-                        rect_bound.extend(latlng);
-                    });
-                });
+                calShadeRectBounds(rect, rect_bound);
                 if (rect_bound.contains(position)) {
                     rect.setOptions({fillOpacity: 0.15});
                 } else {
@@ -690,88 +695,39 @@
             });
         }
 
-        var drawShadeRectangles = function(outter_boxes) {
-            for (var i = 0; i < outter_boxes.length; i++) {
-                var box = outter_boxes[i];
-{#                var northlimit = parseFloat(box.getNorthEast().lat());#}
-{#                var southlimit = parseFloat(box.getSouthWest().lat());#}
-{#                var eastlimit = parseFloat(box.getNorthEast().lng());#}
-{#                var westlimit = parseFloat(box.getSouthWest().lng());#}
+        var drawShadeRectangles = function(boxes) {
+            for (var i = 0; i < boxes.length; i++) {
+                var box = boxes[i];
                 var northlimit = parseFloat(box.northlimit);
                 var southlimit = parseFloat(box.southlimit);
                 var eastlimit = parseFloat(box.eastlimit);
                 var westlimit = parseFloat(box.westlimit);
+
                 var box_ne = new google.maps.LatLng(northlimit, eastlimit);
                 var box_sw = new google.maps.LatLng(southlimit, westlimit);
+
                 var box_bound = new google.maps.LatLngBounds(box_ne, box_sw);
 
-
-                // Define the LatLng coordinates for the polygon's  outer path.
-                var outerCoords = [
+                var rectCoords = [
                   {lat: northlimit, lng: westlimit},
                   {lat: northlimit, lng: eastlimit},
                   {lat: southlimit, lng: eastlimit},
                   {lat: southlimit, lng: westlimit}
                 ];
 
-                // Define the LatLng coordinates for the polygon's inner path.
-                // Note that the points forming the inner path are wound in the
-                // opposite direction to those in the outer path, to form the hole.
-                var innerCoords = [
-                  {lat: northlimit-1, lng: westlimit+1},
-                  {lat: southlimit+1, lng: westlimit+1},
-                  {lat: southlimit+1, lng: eastlimit-1},
-                  {lat: northlimit-1, lng: eastlimit-1}
-                ];
-
-                // Construct the polygon, including both paths.
                 shade_rects[i] = new google.maps.Polygon({
-                    paths: [outerCoords],
+                    paths: [rectCoords],
                     strokeColor: '#FF0000',
                     strokeOpacity: 0.15,
                     strokeWeight: 2,
                     fillColor: '#FF0000',
                     fillOpacity: 0
                 });
-                //shade_rects[i]["bound"] = box_bound;
+
                 shade_rects[i].setMap(map);
             }
-        }
+        };
 
-        var createShadeRectangles = function (modified_boxes_data, outter_boxes) {
-            for (var i = 0; i < modified_boxes_data.length; i++) {
-                var cur_ne = new google.maps.LatLng(modified_boxes_data[i].northlimit, modified_boxes_data[i].eastlimit);
-                var cur_sw = new google.maps.LatLng(modified_boxes_data[i].southlimit, modified_boxes_data[i].westlimit);
-                var cur_bound = new google.maps.LatLngBounds(cur_sw, cur_ne);
-
-                for (var j = 0; j < modified_boxes_data.length; j++) {
-                    if (i != j) {
-                        var test_ne = new google.maps.LatLng(modified_boxes_data[j].northlimit, modified_boxes_data[j].eastlimit);
-                        var test_sw = new google.maps.LatLng(modified_boxes_data[j].southlimit, modified_boxes_data[j].westlimit);
-                        var test_bound = new google.maps.LatLngBounds(test_sw, test_ne);
-                        if (test_bound.contains(cur_ne) && test_bound.contains(cur_sw)) {
-                            cur_ne = test_ne;
-                            cur_sw = test_sw;
-                            cur_bound = test_bound;
-                        }
-                    }
-                }
-                if (!containsBound(cur_bound, outter_boxes)){
-                    outter_boxes.push(cur_bound);
-                }
-            }
-        }
-
-        function containsBound(bound, list) {
-            var i;
-            for (i = 0; i < list.length; i++) {
-                if (list[i] === bound) {
-                    return true;
-                }
-            }
-
-            return false;
-        }
 
         var buildMapItemsTableData = function(box_resources, map_resources, latLng) {
             box_resources.forEach(function(resource) {
@@ -826,75 +782,6 @@
             } );
         };
 
-        var setBoxResourcesList = function(json_results) {
-            var box_resources = [];
-            $("#coverages-master-list").empty();
-            for (var i = 0; i < json_results.length; i++ ) {
-                if (json_results[i].coverage_type == 'box') {
-                    var area = calcArea(json_results[i]);
-                    json_results[i].area = area;
-                    box_resources.push(json_results[i]);
-                }
-            }
-            var tabindex = 0;
-            box_resources.forEach(function(box) {
-                var title = truncateTitle(box.title);
-                var title_button = '<a tabindex="' + tabindex + '" class="box-title-item btn btn-primary btn-xs" role="button" data-trigger="focus" style="margin:5px" data-toggle="popover">' + title + '</a>';
-                var $list_item = $(title_button);
-
-                $("#coverages-master-list").append($list_item);
-
-                var show_box_button = '<a class="show-box-button resource-popover-option btn btn-default" role="button">Zoom on map </a>';
-                var resource_link = '<a class="resource-popover-option" target="_blank" href="' + box.get_absolute_url + '"> More Details  <span class="glyphicon glyphicon-link"></span></a>';
-
-                $list_item.popover({
-                    html: true,
-                    placement: 'top',
-                    title: box.title,
-                    content: '<p>' + show_box_button + resource_link  + '</p>',
-                    trigger: 'focus'
-                });
-
-                $list_item.on('shown.bs.popover', function () {
-                    var boxIndex = $(this).attr('tabindex');
-                    var $crntPopOver = $(this).next();
-                    var $crntPopOverBtn = $crntPopOver.find('[role="button"]');
-                    $crntPopOverBtn.one('click', function() {
-                        showBoxMarker(box_resources[boxIndex], true);
-                    })
-                });
-
-                $list_item.hover(
-                    function() {
-                        showBoxMarker(box, false);
-                        $list_item.removeClass('btn-primary').addClass('btn-warning');
-                    }, function() {
-                        $list_item.removeClass('btn-warning').addClass('btn-primary');
-                        var rectBounds = new google.maps.LatLngBounds(
-                            new google.maps.LatLng(0, 0),
-                            new google.maps.LatLng(0, 0)
-                        );
-                        rectangle.set('bounds', rectBounds);
-                    }
-                );
-                tabindex++;
-
-            });
-        };
-
-        var calcArea = function(box) {
-            var northlimit = parseFloat(box.northlimit);
-            var southlimit = parseFloat(box.southlimit);
-            var eastlimit = parseFloat(box.eastlimit);
-            var westlimit = parseFloat(box.westlimit);
-
-            var southWest = new google.maps.LatLng(southlimit, westlimit);
-            var northEast = new google.maps.LatLng(northlimit, eastlimit);
-            var southEast = new google.maps.LatLng(southlimit, eastlimit);
-            var northWest = new google.maps.LatLng(northlimit, westlimit);
-            var area = google.maps.geometry.spherical.computeArea([northEast, northWest, southWest, southEast]);
-            return (area * 3.8610216e-07).toFixed(2);
-        };
 
         var showBoxMarker = function(box, zoom_on_map) {
             var northlimit = parseFloat(box.northlimit);
@@ -905,16 +792,15 @@
             var ne_latlng = new google.maps.LatLng(northlimit, eastlimit);
             var sw_latlng = new google.maps.LatLng(southlimit, westlimit);
 
-            if (map.getBounds().contains(ne_latlng) || map.getBounds().contains(sw_latlng)) {
-                var rectBounds = new google.maps.LatLngBounds(
-                        new google.maps.LatLng(southlimit, westlimit),
-                        new google.maps.LatLng(northlimit, eastlimit)
-                );
-                rectangle.set('bounds', rectBounds);
-                if (zoom_on_map) {
-                    map.fitBounds(rectBounds);
-                    updateMapView();
-                }
+            var rectBounds = new google.maps.LatLngBounds(
+                    new google.maps.LatLng(southlimit, westlimit),
+                    new google.maps.LatLng(northlimit, eastlimit)
+            );
+
+            if (zoom_on_map) {
+                map.fitBounds(rectBounds);
+                updateMapView();
+                findShadeRect(rectBounds);
             }
         };
 
@@ -1048,9 +934,7 @@
                         new google.maps.LatLng(southlimit, westlimit),
                         new google.maps.LatLng(northlimit, eastlimit)
                 );
-                rectangle.set('bounds', rectBounds);
-{#                map.fitBounds(rectBounds);#}
-{#                updateMapView();#}
+                findShadeRect(rectBounds);
             });
         };
 
@@ -1100,9 +984,9 @@
             var legend_content = [];
             var geocoder_content = [];
             var resetButton_content = [];
-            // legend_content.push("<p style='margin-left:5px'><img src='//cdn.rawgit.com/googlemaps/js-marker-clusterer/gh-pages/images/m2.png'> number of sites </p>");
             legend_content.push("<p><img src='//cdn.rawgit.com/Concept211/Google-Maps-Markers/master/images/marker_red.png'> Point Coverage Resources </p>");
             legend_content.push("<p><img src='//cdn.rawgit.com/Concept211/Google-Maps-Markers/master/images/marker_blue.png'> Box Coverage Resources </p>");
+            legend_content.push("<p><img src='//cdn.rawgit.com/googlemaps/js-marker-clusterer/gh-pages/images/m2.png'> number of sites </p>");
             geocoder_content.push("<input id='geocoder-address' type='textbox' placeholder='Search Locations...'>");
             geocoder_content.push("<a id='geocoder-submit' style='margin-left:10px' class='btn btn-default' role='button'><span class='glyphicon glyphicon-zoom-in'></span> Go </a>");
             resetButton_content.push("<a id='reset-zoom-btn' data-toggle='tooltip' title='Reset Zoom' class='btn btn-default btn-sm' onclick='resetMapZoom()'>");
@@ -1128,7 +1012,9 @@
         var resetMapZoom = function() {
             removeMarkers();
             setMarkers(raw_results);
-            setMapItemsList([], null);
+            var map_items_table = $('#map-items').DataTable();
+            map_items_table.clear().draw();
+
             var bounds = (markers.length > 0) ? createBoundsForMarkers(markers) : map.setZoom(2);
             if (bounds) {
                 map.fitBounds(bounds);
@@ -1143,10 +1029,10 @@
             }
             rectangle = new google.maps.Rectangle({
                 strokeColor: '#FF0000',
-                strokeOpacity: 0.8,
+                strokeOpacity: 0.15,
                 strokeWeight: 2,
                 fillColor: '#FF0000',
-                fillOpacity: 0.35,
+                fillOpacity: 0,
                 map: map,
                 bounds: {
                     north: 0,
@@ -1220,7 +1106,29 @@
                     console.error("Ajax call for updating list-view data failed");
                 }
             });
-        }
+        };
+
+        var calShadeRectBounds = function (rect, shade_rect_bound) {
+            rect.getPaths().getArray().forEach(function(path){
+                path.getArray().forEach(function(latlng){
+                    shade_rect_bound.extend(latlng);
+                });
+            });
+        };
+
+        var findShadeRect = function(rectBounds) {
+            var found = 0;
+            shade_rects.forEach(function(rect){
+                var shade_rect_bound = new google.maps.LatLngBounds();
+                calShadeRectBounds(rect, shade_rect_bound);
+                if (rectBounds.equals(shade_rect_bound) && found == 0) {
+                    rect.setOptions({fillOpacity: 0.35});
+                    found = 1;
+                } else {
+                    rect.setOptions({fillOpacity: 0});
+                }
+            });
+        };
 
         var setLatLngLabels = function() {
             var ne_lat = parseFloat(document.getElementById("id_NElat").value).toFixed(3) + '°';
@@ -1231,18 +1139,6 @@
             jQuery("label[for='ne-lng-value']").html(ne_lng);
             jQuery("label[for='sw-lat-value']").html(sw_lat);
             jQuery("label[for='sw-lng-value']").html(sw_lng);
-        };
-
-        var truncateTitle = function(title){
-            var tokens = title.split(" ");
-            var trunc_title = "";
-            var length = tokens.length;
-            if (length > 3){
-                trunc_title = tokens[0] + " " + tokens[1] + " ... " + tokens[length-2] + " " + tokens[length-1];
-                return trunc_title;
-            } else {
-                return title;
-            }
         };
 
         var reorderDivs = function() {
