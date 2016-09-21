@@ -366,38 +366,47 @@
 {#                                    {% endif %}#}
 {#                                {% endif %}#}
                             <!-- Buttons -->
-{#                            {% block download_bag %}#}
-{#                            <div>#}
-{#                                {% if user_zone_account_exist %}#}
-{#                                    <a id="rep-res-bag" type="button" class="btn btn-default row-selector" data-toggle="modal" data-target="#rep-resource-to-irods-dialog">#}
-{#                                        <span class="glyphicon">#}
-{#                                           <span title='Replicate Resource Bag to iRODS User Zone' class="button-label">Replicate Resource Bag to iRODS User Zone</span>#}
-{#                                        </span>#}
-{#                                    </a>#}
-{#                                {% endif %}#}
-{#                                {% for b in cm.bags.all %}#}
-{#                                    <a id="btn-download-all" type="button" class="btn btn-default row-selector" href="{{ bag_url }}">#}
-{#                                        <span class="glyphicon glyphicon-download-alt">#}
-{#                                            <span title='Download All Content as Zipped BagIt Archive' class="button-label">Download All Content as Zipped BagIt Archive</span>#}
-{#                                        </span>#}
-{#                                        <a target="_blank" href="http://en.wikipedia.org/wiki/BagIt">Learn more about the Bagit archive format</a>#}
-{#                                    </a>#}
-{#                                {% endfor %}#}
-{#                                {% if user_zone_account_exist %}#}
-{#                                    <div id='rep-alert-success' class="alert alert-success alert-dismissible" role="alert" style="display:none">#}
-{#                                        <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>#}
-{#                                        <span id="rep-status-success"></span>#}
-{#                                    </div>#}
-{#                                    <div id='rep-alert-error' class="alert alert-danger alert-dismissible" role="alert" style="display:none">#}
-{#                                        <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>#}
-{#                                        <span id="rep-status-error"></span>#}
-{#                                    </div>#}
-{#                                {% endif %}#}
-{#                            </div>#}
-{#                            {% endblock %} {#  download_bag #}
-{#                        {% else %}#}
-{#                            <i class="glyphicon glyphicon-eye-close text-danger no-access-icon"></i>&nbsp;#}
-{#                            <span>You do not have permission to see these content files. Please contact the Authors if you wish to obtain access.</span>#}
+                            {% block download_bag %}
+                            <div>
+                                {% if user_zone_account_exist %}
+                                    <a id="rep-res-bag" type="button" class="btn btn-default row-selector" data-toggle="modal" data-target="#rep-resource-to-irods-dialog">
+                                        <span class="glyphicon">
+                                           <span title='Replicate Resource Bag to iRODS User Zone' class="button-label">Replicate Resource Bag to iRODS User Zone</span>
+                                        </span>
+                                    </a>
+                                {% endif %}
+                                {% for b in cm.bags.all %}
+                                    <a id="btn-download-all" type="button" class="btn btn-default row-selector" href="{{ bag_url }}">
+                                        <span class="glyphicon glyphicon-download-alt">
+                                            <span title='Download All Content as Zipped BagIt Archive' class="button-label">Download All Content as Zipped BagIt Archive</span>
+                                        </span>
+                                        <a target="_blank" href="http://en.wikipedia.org/wiki/BagIt">Learn more about the Bagit archive format</a>
+                                    </a>
+                                    <button type="button" class="btn btn-primary pull-right"
+                                            onclick="get_irods_folder_struct_ajax_submit('{{ cm.short_id }}', 'data/contents'); return false;">iRODS folder info
+                                    </button>
+                                    <button type="button" class="btn btn-primary pull-right"
+                                            onclick="zip_irods_folder_ajax_submit('{{ cm.short_id }}', 'data/contents'); return false;">Zip iRODS Collection
+                                    </button>
+                                    <button type="button" class="btn btn-primary pull-right"
+                                            onclick="unzip_irods_file_ajax_submit('{{ cm.short_id }}', 'data/contents/test.zip'); return false;">Unzip iRODS file
+                                    </button>
+                                {% endfor %}
+                                {% if user_zone_account_exist %}
+                                    <div id='rep-alert-success' class="alert alert-success alert-dismissible" role="alert" style="display:none">
+                                        <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                                        <span id="rep-status-success"></span>
+                                    </div>
+                                    <div id='rep-alert-error' class="alert alert-danger alert-dismissible" role="alert" style="display:none">
+                                        <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                                        <span id="rep-status-error"></span>
+                                    </div>
+                                {% endif %}
+                            </div>
+                            {% endblock %} {#  download_bag #}
+                        {% else %}
+                            <i class="glyphicon glyphicon-eye-close text-danger no-access-icon"></i>&nbsp;
+                            <span>You do not have permission to see these content files. Please contact the Authors if you wish to obtain access.</span>
                         {% endif %}
                     </div>
                 {% endif %}

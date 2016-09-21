@@ -407,3 +407,105 @@ function get_user_info_ajax_submit(url, obj) {
         }
     });
 }
+
+function formatBytes(bytes) {
+    if(bytes < 1024) return bytes + " Bytes";
+    else if(bytes < 1048576) return(bytes / 1024).toFixed(1) + " KB";
+    else if(bytes < 1073741824) return(bytes / 1048576).toFixed(1) + " MB";
+    else return(bytes / 1073741824).toFixed(1) + " GB";
+}
+
+function get_irods_folder_struct_ajax_submit(res_id, store_path) {
+    $.ajax({
+        type: "POST",
+        url: '/hsapi/_internal/data-store-structure/',
+        async: true,
+        data: {
+            res_id: res_id,
+            store_path: store_path
+        },
+        success: function (result) {
+            var files = result.files;
+            var folders = result.folders;
+            if (files.length > 0) {
+                $.each(files, function(i, v) {
+                    $('#fb-files-container').append("<li class='fb-file droppable'>" +
+                        "<span class='glyphicon glyphicon-chevron-right fb-dropdown-toggle fb-help-icon'></span>" +
+                        "<span class='fa fa-arrows fb-handle fb-help-icon'></span>" +
+                        "<span class='fb-file-icon fa fa-file-text'></span>" +
+                        "<span class='fb-file-name'>" + v['name'] + "</span>" +
+                        "<span class='fb-file-type'>" + v['type'] + " File</span>" +
+                        "<span class='fb-file-size' data-file-size=" + v['size'] + ">" + formatBytes(parseInt(v['size'])) + "</span></li>");
+                });
+            }
+            if (folders.length > 0) {
+                $.each(folders, function(i, v) {
+                    $('#fb-files-container').append("<li class='fb-folder droppable'>" +
+                        "<span class='glyphicon glyphicon-chevron-right fb-dropdown-toggle fb-help-icon'></span>" +
+                        "<span class='fa fa-arrows fb-handle fb-help-icon'></span>" +
+                        "<span class='fb-file-icon fa fa-folder glyphicon-folder'></span>" +
+                        "<span class='fb-file-name'>" + v + "</span>" +
+                        "<span class='fb-file-type'>File Folder</span>" +
+                        "<span class='fb-file-size' data-file-size='24326'>24 KB</span></li>");
+                });
+            }
+        },
+        error: function(xhr, errmsg, err){
+            console.log(xhr.status + ": " + xhr.responseText + ". Error message: " + errmsg);
+        }
+    });
+}
+
+function zip_irods_folder_ajax_submit(res_id, input_coll_path) {
+    $.ajax({
+        type: "POST",
+        url: '/hsapi/_internal/data-store-folder-zip/',
+        async: true,
+        data: {
+            res_id: res_id,
+            input_coll_path: input_coll_path,
+            output_zip_file_name: "test.zip",
+            remove_original_after_zip: "true"
+        },
+        success: function (result) {
+            var output_file_name = result.name;
+            var output_file_size = result.size;
+            var output_file_type = result.type;
+            if (output_file_name.length > 0) {
+                $('#fb-files-container').append("<li class='fb-file droppable'>" +
+                    "<span class='glyphicon glyphicon-chevron-right fb-dropdown-toggle fb-help-icon'></span>" +
+                    "<span class='fa fa-arrows fb-handle fb-help-icon'></span>" +
+                    "<span class='fb-file-icon fa fa-file-text'></span>" +
+                    "<span class='fb-file-name'>" + output_file_name + "</span>" +
+                    "<span class='fb-file-type'>" + output_file_type + " File</span>" +
+                    "<span class='fb-file-size' data-file-size=" + output_file_size + ">" + formatBytes(parseInt(output_file_size)) + "</span></li>");
+
+            }
+        },
+        error: function(xhr, errmsg, err){
+            console.log(xhr.status + ": " + xhr.responseText + ". Error message: " + errmsg);
+        }
+    });
+}
+
+function unzip_irods_file_ajax_submit(res_id, zip_with_rel_path) {
+    $.ajax({
+        type: "POST",
+        url: '/hsapi/_internal/data-store-folder-unzip/',
+        async: true,
+        data: {
+            res_id: res_id,
+            zip_with_rel_path: zip_with_rel_path,
+            remove_original_zip: "false"
+        },
+        success: function (result) {
+            var unzipped_path = result.unzipped_path;
+            if (unzipped_path.length > 0) {
+                get_irods_folder_struct_ajax_submit(res_id, unzipped_path)
+            }
+        },
+        error: function(xhr, errmsg, err){
+            console.log(xhr.status + ": " + xhr.responseText + ". Error message: " + errmsg);
+        }
+    });
+}
