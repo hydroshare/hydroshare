@@ -69,7 +69,7 @@
                         <h3>Content</h3>
                         {% if show_content_files %}
                                 {% if cm.files.all %}
-                                    <div class="file-browser">
+                                    <div id="hs-file-browser" data-res-id="{{ cm.short_id }}" class="file-browser">
                                         <div id="file-browser-controls" class="row">
                                             <div class="col-xs-6">
                                                 <span class="btn btn-default fb-control-round"
@@ -169,60 +169,60 @@
 
                                                 <ul id="fb-files-container" class="selectable fb-view-grid">
                                                     {# FOLDER TEMPLATE #}
-                                                    <li class="fb-folder droppable" title="98 KB">
-                                                        <span class='glyphicon glyphicon-chevron-right fb-dropdown-toggle fb-help-icon'></span>
-                                                        <span class='fa fa-arrows fb-handle fb-help-icon'></span>
-                                                        <span class="fb-file-icon fa fa-folder glyphicon-folder"></span>
-                                                        <span class="fb-file-name">Folder 1</span>
-                                                        <span class="fb-file-type">File Folder</span>
-                                                        <span class="fb-file-size" data-file-size="98523">98 KB</span>
-                                                    </li>
-
-                                                    <li class="fb-folder droppable" title="94 KB">
-                                                        <span class='glyphicon glyphicon-chevron-right fb-dropdown-toggle fb-help-icon'></span>
-                                                        <span class='fa fa-arrows fb-handle fb-help-icon'></span>
-                                                        <span class="fb-file-icon fa fa-folder glyphicon-folder"></span>
-                                                        <span class="fb-file-name">Folder 2</span>
-                                                        <span class="fb-file-type">File Folder</span>
-                                                        <span class="fb-file-size" data-file-size="94326">94 KB</span>
-                                                    </li>
-
-                                                    <li class="fb-folder droppable" title="24 KB">
-                                                        <span class='glyphicon glyphicon-chevron-right fb-dropdown-toggle fb-help-icon'></span>
-                                                        <span class='fa fa-arrows fb-handle fb-help-icon'></span>
-                                                        <span class="fb-file-icon fa fa-folder glyphicon-folder"></span>
-                                                        <span class="fb-file-name">Folder 3</span>
-                                                        <span class="fb-file-type">File Folder</span>
-                                                        <span class="fb-file-size" data-file-size="24326">24 KB</span>
-                                                    </li>
-
+{#                                                    <li class="fb-folder droppable" title="98 KB">#}
+{#                                                        <span class='glyphicon glyphicon-chevron-right fb-dropdown-toggle fb-help-icon'></span>#}
+{#                                                        <span class='fa fa-arrows fb-handle fb-help-icon'></span>#}
+{#                                                        <span class="fb-file-icon fa fa-folder glyphicon-folder"></span>#}
+{#                                                        <span class="fb-file-name">Folder 1</span>#}
+{#                                                        <span class="fb-file-type">File Folder</span>#}
+{#                                                        <span class="fb-file-size" data-file-size="98523">98 KB</span>#}
+{#                                                    </li>#}
+{##}
+{#                                                    <li class="fb-folder droppable" title="94 KB">#}
+{#                                                        <span class='glyphicon glyphicon-chevron-right fb-dropdown-toggle fb-help-icon'></span>#}
+{#                                                        <span class='fa fa-arrows fb-handle fb-help-icon'></span>#}
+{#                                                        <span class="fb-file-icon fa fa-folder glyphicon-folder"></span>#}
+{#                                                        <span class="fb-file-name">Folder 2</span>#}
+{#                                                        <span class="fb-file-type">File Folder</span>#}
+{#                                                        <span class="fb-file-size" data-file-size="94326">94 KB</span>#}
+{#                                                    </li>#}
+{##}
+{#                                                    <li class="fb-folder droppable" title="24 KB">#}
+{#                                                        <span class='glyphicon glyphicon-chevron-right fb-dropdown-toggle fb-help-icon'></span>#}
+{#                                                        <span class='fa fa-arrows fb-handle fb-help-icon'></span>#}
+{#                                                        <span class="fb-file-icon fa fa-folder glyphicon-folder"></span>#}
+{#                                                        <span class="fb-file-name">Folder 3</span>#}
+{#                                                        <span class="fb-file-type">File Folder</span>#}
+{#                                                        <span class="fb-file-size" data-file-size="24326">24 KB</span>#}
+{#                                                    </li>#}
+{##}
                                                     {# FILE TEMPLATE #}
-                                                    <li class="fb-file droppable" title="12 KB">
-                                                        <span class='glyphicon glyphicon-chevron-right fb-dropdown-toggle fb-help-icon'></span>
-                                                        <span class='fa fa-arrows fb-handle fb-help-icon'></span>
-                                                        <span class="fb-file-icon fa fa-file-text"></span>
-                                                        <span class="fb-file-name">File 1.txt</span>
-                                                        <span class="fb-file-type">Text File</span>
-                                                        <span class="fb-file-size" data-file-size="12345">12 KB</span>
-                                                    </li>
-
-                                                    <li class="fb-file droppable" title="9 KB">
-                                                        <span class='glyphicon glyphicon-chevron-right fb-dropdown-toggle fb-help-icon'></span>
-                                                        <span class='fa fa-arrows fb-handle fb-help-icon'></span>
-                                                        <span class="fb-file-icon fa fa-file-text"></span>
-                                                        <span class="fb-file-name">File 2.txt</span>
-                                                        <span class="fb-file-type">Text File</span>
-                                                        <span class="fb-file-size" data-file-size="9874">9 KB</span>
-                                                    </li>
-
-                                                    <li class="fb-file droppable" title="26 KB">
-                                                        <span class='glyphicon glyphicon-chevron-right fb-dropdown-toggle fb-help-icon'></span>
-                                                        <span class='fa fa-arrows fb-handle fb-help-icon'></span>
-                                                        <span class="fb-file-icon fa fa-file-text"></span>
-                                                        <span class="fb-file-name">File 3.txt</span>
-                                                        <span class="fb-file-type">Text File</span>
-                                                        <span class="fb-file-size" data-file-size="26000">26 KB</span>
-                                                    </li>
+{#                                                    <li class="fb-file droppable" title="12 KB">#}
+{#                                                        <span class='glyphicon glyphicon-chevron-right fb-dropdown-toggle fb-help-icon'></span>#}
+{#                                                        <span class='fa fa-arrows fb-handle fb-help-icon'></span>#}
+{#                                                        <span class="fb-file-icon fa fa-file-text"></span>#}
+{#                                                        <span class="fb-file-name">File 1.txt</span>#}
+{#                                                        <span class="fb-file-type">Text File</span>#}
+{#                                                        <span class="fb-file-size" data-file-size="12345">12 KB</span>#}
+{#                                                    </li>#}
+{##}
+{#                                                    <li class="fb-file droppable" title="9 KB">#}
+{#                                                        <span class='glyphicon glyphicon-chevron-right fb-dropdown-toggle fb-help-icon'></span>#}
+{#                                                        <span class='fa fa-arrows fb-handle fb-help-icon'></span>#}
+{#                                                        <span class="fb-file-icon fa fa-file-text"></span>#}
+{#                                                        <span class="fb-file-name">File 2.txt</span>#}
+{#                                                        <span class="fb-file-type">Text File</span>#}
+{#                                                        <span class="fb-file-size" data-file-size="9874">9 KB</span>#}
+{#                                                    </li>#}
+{##}
+{#                                                    <li class="fb-file droppable" title="26 KB">#}
+{#                                                        <span class='glyphicon glyphicon-chevron-right fb-dropdown-toggle fb-help-icon'></span>#}
+{#                                                        <span class='fa fa-arrows fb-handle fb-help-icon'></span>#}
+{#                                                        <span class="fb-file-icon fa fa-file-text"></span>#}
+{#                                                        <span class="fb-file-name">File 3.txt</span>#}
+{#                                                        <span class="fb-file-type">Text File</span>#}
+{#                                                        <span class="fb-file-size" data-file-size="26000">26 KB</span>#}
+{#                                                    </li>#}
                                                 </ul>
                                             </form>
                                         </div>
@@ -1665,6 +1665,7 @@
                 google.maps.event.addDomListener(window, "load", initMap);
                 var task_id = $('#task_id').val();
                 var download_path = $('#download_path').val();
+                var resID = $("#hs-file-browser").attr("data-res-id");
                 if (task_id)
                     update_download_status(task_id, download_path);
 
@@ -1928,6 +1929,7 @@
                         }
                     }
                 });
+
                 if ($("#id_type_1").is(':checked')) { //box type coverage
                     $("#div_id_north").hide();
                     $("#div_id_east").hide();
@@ -2097,6 +2099,12 @@
                         $("#invite-flag button[data-value='groups']").addClass("btn-primary");
                     }
                 });
+
+                // Set initial folder structure
+                if (resID) {
+                    get_irods_folder_struct_ajax_submit(resID, 'data/contents');
+                }
+
 
             });
         </script>
