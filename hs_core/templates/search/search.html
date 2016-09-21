@@ -801,10 +801,8 @@
             if (zoom_on_map) {
                 map.fitBounds(rectBounds);
                 updateMapView();
-                findShadeRect(rectBounds);
-            } else {
-                findShadeRect(rectBounds);
             }
+            findShadeRect(rectBounds);
         };
 
         var clientUpdateMarkers = function(filtered_results) {
