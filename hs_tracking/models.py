@@ -18,31 +18,38 @@ if set(PROFILE_FIELDS) & set(USER_FIELDS):
 
 
 class SessionManager(models.Manager):
-    def for_request(self, request):
+    def for_request(self, request, user=None):
+        if hasattr(request, 'user'):
+            user = request.user
+
         signed_id = request.session.get('hs_tracking_id')
         if signed_id:
             tracking_id = signing.loads(signed_id)
             cut_off = datetime.now() - timedelta(seconds=SESSION_TIMEOUT)
             session = None
+
             try:
                 session = Session.objects.filter(
                     variable__timestamp__gte=cut_off).filter(id=tracking_id['id']).first()
             except Session.DoesNotExist:
                 pass
-            if session is not None:
-                if session.visitor.user is None and request.user.is_authenticated():
+
+            if session is not None and user is not None:
+                if session.visitor.user is None and user.is_authenticated():
                     try:
-                        session.visitor = Visitor.objects.get(user=request.user)
+                        session.visitor = Visitor.objects.get(user=user)
                         session.save()
                     except Visitor.DoesNotExist:
-                        session.visitor.user = request.user
+                        session.visitor.user = user
                         session.visitor.save()
                 return session
+
         # No session found, create one
-        if request.user.is_authenticated():
-            visitor, _ = Visitor.objects.get_or_create(user=request.user)
+        if user.is_authenticated():
+            visitor, _ = Visitor.objects.get_or_create(user=user)
         else:
             visitor = Visitor.objects.create()
+
         session = Session.objects.create(visitor=visitor)
         session.record('begin_session')
         request.session['hs_tracking_id'] = signing.dumps({'id': session.id})

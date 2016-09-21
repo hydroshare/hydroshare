@@ -51,9 +51,9 @@
 
             <div class="col-sm-7">
                 <h2 class="group-title">{{ group.name }}</h2>
-                <h4 class="text-muted">{{ group.gaccess.purpose }}</h4>
+                <h4 class="text-muted">{{ group.gaccess.purpose|linebreaks }}</h4>
 
-                <p>{{ group.gaccess.description }}</p>
+                <p>{{ group.gaccess.description|linebreaks }}</p>
             </div>
 
 
@@ -467,7 +467,7 @@
                                     <div class="panel-body">
                                         <div class="list-group">
                                             <ul class="list-group inputs-group">
-                                                <h5><i>No resources have been shared with this group yet.</i></h5>
+                                                <i class="list-group-item no-items-found">No resources have been shared with this group yet.</i>
                                             </ul>
                                         </div>
 
@@ -502,18 +502,19 @@
                                                                 <label for="filter">Resource Type</label>
                                                                 <select id="input-resource-type" class="form-control pull-left">
                                                                     <option value="" selected>All</option>
+                                                                    <option value="collection resource">Collection</option>
                                                                     <option value="generic">Generic</option>
                                                                     <option value="geographic feature">Geographic Feature (ESRI Shapefiles)</option>
                                                                     <option value="geographic raster">Geographic Raster</option>
                                                                     <option value="his referenced time series">HIS Referenced Time Series</option>
                                                                     <option value="model instance resource">Model Instance</option>
                                                                     <option value="model program">Model Program</option>
+                                                                    <option value="modflow model instance resource">MODFLOW Model Instance</option>
                                                                     <option value="multidimensional">Multidimensional (NetCDF)</option>
                                                                     <option value="script resource">Script Resource</option>
                                                                     <option value="swat model instance resource">Swat Model Instance</option>
                                                                     <option value="time series">Time Series</option>
                                                                     <option value="web app resource">Web App</option>
-                                                                    <option value="collection resource">Collection</option>
                                                                 </select>
                                                             </div>
                                                             <div class="form-group">
@@ -595,6 +596,10 @@
                                                          alt="{{ res|resource_type }}" title="{{ res|resource_type }}" class="table-res-type-icon"/>
                                                 {% elif res|resource_type == "Collection Resource" %}
                                                     <img src="{{ STATIC_URL }}img/resource-icons/collection48x48.png"
+                                                         alt="{{ res|resource_type }}" title="{{ res|resource_type }}"
+                                                         class="table-res-type-icon"/>
+                                                {% elif res|resource_type == "MODFLOW Model Instance Resource" %}
+                                                    <img src="{{ STATIC_URL }}img/resource-icons/modflow48x48.png"
                                                          alt="{{ res|resource_type }}" title="{{ res|resource_type }}"
                                                          class="table-res-type-icon"/>
                                                 {% endif %}
@@ -691,147 +696,8 @@
                                 </tbody>
                             </table>
 
-                            <div class="panel-group" role="tablist">
-                                <div class="panel panel-default">
-                                    <div class="panel-heading" role="tab" id="headingLegend">
-                                        <h4 class="panel-title">
-                                            <span class="glyphicon glyphicon-info-sign"></span>&nbsp;
-                                            <a role="button" data-toggle="collapse" data-parent="#accordion" href="#legend-collapse"
-                                               aria-expanded="true" aria-controls="legend-collapse">
-                                                Legend
-                                            </a>
-                                        </h4>
-                                    </div>
+                            {% include "includes/legend.html" %}
 
-                                    <div id="legend-collapse" class="panel-collapse collapse" role="tabpanel"
-                                         aria-labelledby="headingLegend">
-                                        <div class="panel-body">
-                                            <div class="row">
-                                                <div class="col-xs-12 col-sm-5">
-                                                    <div class="row">
-                                                        <div class="col-sm-12"><label>Sharing and Access</label></div>
-
-                                                        <div class="col-sm-6">
-                                                            <img src="{{ STATIC_URL }}img/public.png" alt="Public Resource"/>
-                                                            <small>Public</small>
-                                                        </div>
-
-                                                        <div class="col-sm-6">
-                                                            <img src="{{ STATIC_URL }}img/private.png" alt="Private Resource"/>
-                                                            <small>Private</small>
-                                                        </div>
-
-                                                        <div class="col-sm-6">
-                                                            <img src="{{ STATIC_URL }}img/discoverable.png" alt="Discoverable Resource"/>
-                                                            <small>Discoverable</small>
-                                                        </div>
-
-                                                        <div class="col-sm-6">
-                                                            <img src="{{ STATIC_URL }}img/published.png" alt="Published Resource"/>
-                                                            <small>Published</small>
-                                                        </div>
-
-                                                        <div class="col-sm-6">
-                                                            <img src="{{ STATIC_URL }}img/pending.png" alt="Pending Publication"/>
-                                                            <small>Pending publication</small>
-                                                        </div>
-
-                                                        <div class="col-sm-6">
-                                                            <img src="{{ STATIC_URL }}img/shareable.png" alt="Sharable Resource"/>
-                                                            <small>Shareable</small>
-                                                        </div>
-
-                                                        <div class="col-sm-8">
-                                                            <img src="{{ STATIC_URL }}img/non-shareable.png" alt="Non Sharable Resource"/>
-                                                            <small>Not shareable</small>
-                                                        </div>
-
-                                                    </div>
-                                                </div>
-
-                                                <div class="col-xs-12 col-sm-7">
-                                                    <div class="row" id="legend-resource-type">
-                                                        <div class="col-sm-12"><label>Resource types</label></div>
-
-                                                        <div class="col-sm-6">
-                                                            <img src="{{ STATIC_URL }}img/resource-icons/generic48x48.png"
-                                                                 alt="Generic Resource Icon" class="table-res-type-icon"/>
-                                                            <small>&nbsp;Generic</small>
-                                                        </div>
-
-                                                        <div class="col-sm-6">
-                                                            <img src="{{ STATIC_URL }}img/resource-icons/geographicfeature48x48.png"
-                                                                 alt="Geographic Feature Resource Icon" class="table-res-type-icon"/>
-                                                            <small>&nbsp;Geographic Feature</small>
-                                                        </div>
-
-                                                        <div class="col-sm-6">
-                                                            <img src="{{ STATIC_URL }}img/resource-icons/geographicraster48x48.png"
-                                                                 alt="Geographic Raster Resource Icon" class="table-res-type-icon"/>
-                                                            <small>&nbsp;Geographic Raster</small>
-                                                        </div>
-
-                                                        <div class="col-sm-6">
-                                                            <img src="{{ STATIC_URL }}img/resource-icons/modelinstance48x48.png"
-                                                                 alt="Model Instance Resource Icon" class="table-res-type-icon"/>
-                                                            <small>&nbsp;Model Instance</small>
-                                                        </div>
-
-                                                        <div class="col-sm-6">
-                                                            <img src="{{ STATIC_URL }}img/resource-icons/swat48x48.png"
-                                                                 alt="SWAT Model Instance Resource Icon" class="table-res-type-icon"/>
-                                                            <small>&nbsp;SWAT Model Instance</small>
-                                                        </div>
-
-                                                        <div class="col-sm-6">
-                                                            <img src="{{ STATIC_URL }}img/resource-icons/modelprogram48x48.png"
-                                                                 alt="Model Program Resource Icon" class="table-res-type-icon"/>
-                                                            <small>&nbsp;Model Program</small>
-                                                        </div>
-
-                                                        <div class="col-sm-6">
-                                                            <img src="{{ STATIC_URL }}img/resource-icons/multidimensional48x48.png"
-                                                                 alt="Multidimensional Resource Icon" class="table-res-type-icon"/>
-                                                            <small>&nbsp;Multidimensional</small>
-                                                        </div>
-
-                                                        <div class="col-sm-6">
-                                                            <img src="{{ STATIC_URL }}img/resource-icons/timeseries48x48.png"
-                                                                 alt="Time Series Resource Icon" class="table-res-type-icon"/>
-                                                            <small>&nbsp;Time Series</small>
-                                                        </div>
-
-                                                        <div class="col-sm-6">
-                                                            <img src="{{ STATIC_URL }}img/resource-icons/his48x48.png"
-                                                                 alt="HIS Referenced Time Series Resource Icon"
-                                                                 class="table-res-type-icon"/>
-                                                            <small>&nbsp;HIS Referenced Time Series</small>
-                                                        </div>
-
-                                                        <div class="col-sm-6">
-                                                            <img src="{{ STATIC_URL }}img/resource-icons/webapp48x48.png"
-                                                                 alt="Web App Resource Icon" class="table-res-type-icon"/>
-                                                            <small>&nbsp;Web App</small>
-                                                        </div>
-
-                                                        <div class="col-sm-6">
-                                                            <img src="{{ STATIC_URL }}img/resource-icons/script48x48.png"
-                                                                 alt="Script Resource Icon" class="table-res-type-icon"/>
-                                                            <small>&nbsp;Script</small>
-                                                        </div>
-
-                                                        <div class="col-sm-6">
-                                                            <img src="{{ STATIC_URL }}img/resource-icons/collection48x48.png"
-                                                                 alt="Collection Resource Icon" class="table-res-type-icon"/>
-                                                            <small>&nbsp;Collection</small>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
                         </div>
                      </div>
                  </div>
@@ -1007,8 +873,6 @@
                                 <fieldset class="col-sm-12">
                                     <small class="text-muted">( * ) Required fields</small>
                                 </fieldset>
-
-
                             </div>
 
                         </div>
@@ -1090,6 +954,7 @@
                 "searchable": true
             }
         ];
+
         function group_invite_ajax_submit() {
             if (!$("#id_user-deck > .hilight").length) {
                 return false; // If no user selected, ignore the request
@@ -1334,7 +1199,7 @@
             // Initialize Shared By filter
             var grantors = $("#grantors-list span");
             if (grantors.length)
-                $("#filter-shared-by h5").remove();
+                $("#filter-shared-by .no-items-found").remove();
             for (var i = 0; i < grantors.length; i++) {
                 var id = $(grantors[i]).attr("data-grantor-id");
                 if ($("#filter-shared-by .grantor[data-grantor-id='" + id + "']").length == 0) {
@@ -1357,9 +1222,9 @@
                 input.val(label);
             });
 
-
         });
     </script>
+
     <script type="text/javascript" src="{{ STATIC_URL }}js/hs_resource_table.js"></script>
 
 {% endblock %}

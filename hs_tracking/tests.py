@@ -109,9 +109,6 @@ class TrackingTests(TestCase):
         client = Client()
         client.login(username=self.user.username, password='password')
 
-        self.visitor.user = self.user
-        self.visitor.save()
-
         response = client.get('/tracking/reports/profiles/')
         reader = csv.reader(StringIO(response.content))
         rows = list(reader)
@@ -119,7 +116,10 @@ class TrackingTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertEqual(rows[0], VISITOR_FIELDS)
         i = VISITOR_FIELDS.index('username')
-        self.assertEqual(rows[1][i], self.user.username)
+        # Row 1 is the original unauthenticated session created in setUp()
+        self.assertEqual(rows[1][i], '')
+        # Row 2 is the user we just authenticated
+        self.assertEqual(rows[2][i], self.user.username)
 
     def test_history_empty(self):
         self.user.is_staff = True
@@ -151,3 +151,23 @@ class TrackingTests(TestCase):
         self.assertEqual(int(data['visitor']), self.visitor.id)
         self.assertEqual(data['variable'], "testvar")
         self.assertEqual(data['value'], "abcdef")
+
+    def test_capture_logins_and_logouts(self):
+        self.assertEqual(Variable.objects.count(), 0)
+
+        client = Client()
+        client.login(username=self.user.username, password='password')
+
+        self.assertEqual(Variable.objects.count(), 2)
+        var1, var2 = Variable.objects.all()
+        self.assertEqual(var1.name, 'begin_session')
+        self.assertEqual(var1.value, 'none')
+        self.assertEqual(var2.name, 'login')
+        self.assertEqual(var2.value, 'none')
+
+        client.logout()
+
+        self.assertEqual(Variable.objects.count(), 3)
+        var = Variable.objects.latest('timestamp')
+        self.assertEqual(var.name, 'logout')
+        self.assertEqual(var.value, 'none')

@@ -5,7 +5,7 @@ from hs_core import languages_iso
 from forms import *
 from hs_tools_resource.models import SupportedResTypes, ToolResource
 from hs_core import hydroshare
-from hs_core.views.utils import authorize, ACTION_TO_AUTHORIZE
+from hs_core.views.utils import authorize, ACTION_TO_AUTHORIZE, show_relations_section
 from hs_core.hydroshare.resource import METADATA_STATUS_SUFFICIENT, METADATA_STATUS_INSUFFICIENT
 from hs_tools_resource.utils import parse_app_url_template
 
@@ -48,6 +48,8 @@ def get_page_context(page, user, resource_edit=False, extended_metadata_layout=N
 
     metadata_status = _get_metadata_status(content_model)
 
+    belongs_to_collections = content_model.collections.all()
+
     relevant_tools = None
     if not resource_edit:  # In view mode
         relevant_tools = []
@@ -64,22 +66,40 @@ def get_page_context(page, user, resource_edit=False, extended_metadata_layout=N
                 # reverse lookup: metadata obj --> res obj
                 tool_res_obj = ToolResource.objects.get(object_id=res_type.object_id)
                 if tool_res_obj:
-                    is_authorized = authorize(request, tool_res_obj.short_id,
-                                              needed_permission=ACTION_TO_AUTHORIZE.VIEW_RESOURCE,
-                                              raises_exception=False)[1]
-                    if is_authorized:
-                        tool_url = tool_res_obj.metadata.url_bases.first().value \
-                            if tool_res_obj.metadata.url_bases.first() else None
-                        tool_icon_url = tool_res_obj.metadata.tool_icon.first().url \
-                            if tool_res_obj.metadata.tool_icon.first() else "raise-img-error"
-                        hs_term_dict_user = {}
-                        hs_term_dict_user["HS_USR_NAME"] = request.user.username if request.user.is_authenticated() else "anonymous"
-                        tool_url_new = parse_app_url_template(tool_url, [content_model.get_hs_term_dict(), hs_term_dict_user])
-                        if tool_url_new is not None:
-                            tl = {'title': str(tool_res_obj.metadata.title.value),
-                                  'icon_url': tool_icon_url,
-                                  'url': tool_url_new}
-                            relevant_tools.append(tl)
+                    sharing_status_supported = False
+
+                    supported_sharing_status_obj = tool_res_obj.metadata.\
+                        supported_sharing_status.first()
+                    if supported_sharing_status_obj is not None:
+                        suppored_sharing_status_str = supported_sharing_status_obj.\
+                                                      get_sharing_status_str()
+                        if len(suppored_sharing_status_str) > 0:
+                            res_sharing_status = content_model.raccess.sharing_status
+                            if suppored_sharing_status_str.lower().\
+                                    find(res_sharing_status.lower()) != -1:
+                                sharing_status_supported = True
+                    else:
+                        # backward compatible: webapp without supported_sharing_status metadata
+                        # is considered to support all sharing status
+                        sharing_status_supported = True
+
+                    if sharing_status_supported:
+                        is_authorized = authorize(request, tool_res_obj.short_id,
+                                                  needed_permission=ACTION_TO_AUTHORIZE.VIEW_RESOURCE,
+                                                  raises_exception=False)[1]
+                        if is_authorized:
+                            tool_url = tool_res_obj.metadata.url_bases.first().value \
+                                if tool_res_obj.metadata.url_bases.first() else None
+                            tool_icon_url = tool_res_obj.metadata.tool_icon.first().url \
+                                if tool_res_obj.metadata.tool_icon.first() else "raise-img-error"
+                            hs_term_dict_user = {}
+                            hs_term_dict_user["HS_USR_NAME"] = request.user.username if request.user.is_authenticated() else "anonymous"
+                            tool_url_new = parse_app_url_template(tool_url, [content_model.get_hs_term_dict(), hs_term_dict_user])
+                            if tool_url_new is not None:
+                                tl = {'title': str(tool_res_obj.metadata.title.value),
+                                      'icon_url': tool_icon_url,
+                                      'url': tool_url_new}
+                                relevant_tools.append(tl)
 
     just_created = False
     new_version_create_resource_error = None
@@ -149,6 +169,7 @@ def get_page_context(page, user, resource_edit=False, extended_metadata_layout=N
         language = languages_dict[content_model.metadata.language.code] if content_model.metadata.language else None
         title = content_model.metadata.title.value if content_model.metadata.title else None
         abstract = content_model.metadata.description.abstract if content_model.metadata.description else None
+
         context = {
                    'metadata_form': None,
                    'citation': content_model.get_citation(),
@@ -163,6 +184,7 @@ def get_page_context(page, user, resource_edit=False, extended_metadata_layout=N
                    'rights': content_model.metadata.rights,
                    'sources': content_model.metadata.sources.all(),
                    'relations': content_model.metadata.relations.all(),
+                   'show_relations_section': show_relations_section(content_model),
                    'fundingagencies': content_model.metadata.funding_agencies.all(),
                    'metadata_status': metadata_status,
                    'missing_metadata_elements': content_model.metadata.get_required_missing_elements(),
@@ -178,9 +200,22 @@ def get_page_context(page, user, resource_edit=False, extended_metadata_layout=N
                    'show_content_files': show_content_files,
                    'discoverable': discoverable,
                    'resource_is_mine': resource_is_mine,
-                   'is_resource_specific_tab_active': False
-
+                   'is_resource_specific_tab_active': False,
+                   'belongs_to_collections': belongs_to_collections
         }
+
+        if 'task_id' in request.session:
+            task_id = request.session.get('task_id', None)
+            if task_id:
+                context['task_id'] = task_id
+            del request.session['task_id']
+
+        if 'download_path' in request.session:
+            download_path = request.session.get('download_path', None)
+            if download_path:
+                context['download_path'] = download_path
+            del request.session['download_path']
+
         return context
 
     # user requested the resource in EDIT MODE
@@ -363,6 +398,7 @@ def get_page_context(page, user, resource_edit=False, extended_metadata_layout=N
                'coverage_spatial_form': coverage_spatial_form,
                'subjects_form': subjects_form,
                'metadata_status': metadata_status,
+               'missing_metadata_elements': content_model.metadata.get_required_missing_elements(),
                'citation': content_model.get_citation(),
                'extended_metadata_layout': extended_metadata_layout,
                'bag_url': bag_url,
@@ -373,9 +409,11 @@ def get_page_context(page, user, resource_edit=False, extended_metadata_layout=N
                'resource_is_mine': resource_is_mine,
                'relation_source_types': tuple((type_value, type_display)
                                               for type_value, type_display in Relation.SOURCE_TYPES
-                                              if type_value != 'isReplacedBy' and type_value != 'isVersionOf'),
-               'is_resource_specific_tab_active': False
-
+                                              if type_value != 'isReplacedBy'
+                                              and type_value != 'isVersionOf'
+                                              and type_value != 'hasPart'),
+               'is_resource_specific_tab_active': False,
+               'belongs_to_collections': belongs_to_collections
     }
 
     return context

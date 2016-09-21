@@ -3,8 +3,6 @@
 # run-nginx
 # Author: Michael Stealey <michael.j.stealey@gmail.com>
 
-echo "*** RUN SCRIPT run-nginx.sh ***"
-
 ### Load Configuration Variables ###
 NGINX_CONFIG_DIRECTORY='./config-files'
 NGINX_DOCKER_IMG='hydroshare_nginx'
@@ -20,7 +18,7 @@ display_usage() {
 }
 
 preflight_nginx() {
-    echo "*** Check for SSL ***"
+    echo "PREFLIGHT NGINX:"
     if [ "${USE_SSL,,}" = true ]; then
         yes | cp -rf ${NGINX_CONFIG_DIRECTORY}/hydroshare-ssl-nginx.conf ${NGINX_CONFIG_DIRECTORY}/hs-nginx.conf
         sed -i 's/FQDN_OR_IP/'${FQDN_OR_IP}'/g' ${NGINX_CONFIG_DIRECTORY}/hs-nginx.conf
@@ -33,8 +31,8 @@ preflight_nginx() {
 }
 
 stop_nginx() {
-    echo "*** ${1^^} ***"
-    echo "*** remove - CONTAINER: ${NGINX_DOCKER_CNTR}, IMG: ${NGINX_DOCKER_IMG} ***"
+    echo "STOP NGINX:"
+    echo "  - REMOVE: container ${NGINX_DOCKER_CNTR}, image ${NGINX_DOCKER_IMG}"
     CHECK_NGINX_CID=`docker ps -a | tr -s ' ' | grep ${NGINX_DOCKER_CNTR} | cut -d ' ' -f 1`
     if [[ -n "${CHECK_NGINX_CID}" ]]; then
         docker stop ${NGINX_DOCKER_CNTR}
@@ -47,21 +45,21 @@ stop_nginx() {
 }
 
 start_nginx() {
-    echo "*** ${1^^} ***"
+    echo "START NGINX:"
     preflight_nginx
     # build hydroshare_nginx if it doesn't exist
     CHECK_NGINX_IMAGE=`docker images | tr -s ' ' | cut -d ' ' -f 1 | grep ${NGINX_DOCKER_IMG}`
     if [[ -z "${CHECK_NGINX_IMAGE}" ]]; then
-        echo "*** docker build -t ${NGINX_DOCKER_IMG} . ***"
+        echo "  - docker build -t ${NGINX_DOCKER_IMG} ."
         docker build -t ${NGINX_DOCKER_IMG} .;
     else
-        echo "*** IMG: ${NGINX_DOCKER_IMG} already exists ***";
+        echo " - INFO: image ${NGINX_DOCKER_IMG} already exists";
     fi
     # Launch nginx as docker container nginx
     HYDROSHARE_CID=`docker-compose ps | grep hydroshare | tr -s ' ' | cut -d ' ' -f 1`
     CHECK_NGINX_CID=`docker ps -a | tr -s ' ' | grep ${NGINX_DOCKER_CNTR} | cut -d ' ' -f 1`
     if [[ -z "${CHECK_NGINX_CID}" ]]; then
-        echo "*** docker run ${NGINX_DOCKER_IMG} as ${NGINX_DOCKER_CNTR} ***"
+        echo "  - docker run ${NGINX_DOCKER_IMG} as ${NGINX_DOCKER_CNTR}"
         docker run -d --name ${NGINX_DOCKER_CNTR} \
             --link ${HYDROSHARE_CID}:hydroshare \
             -p 80:80 -p 443:443 \
@@ -72,10 +70,10 @@ start_nginx() {
     else
         CHECK_NGINX_CID=`docker ps | tr -s ' ' | grep ${NGINX_DOCKER_CNTR} | cut -d ' ' -f 1`
         if [[ -z "${CHECK_NGINX_CID}" ]]; then
-            echo "*** CONTAINER: ${NGINX_DOCKER_CNTR} already exists but is not running, restarting the container ***"
+            echo "  - INFO: ${NGINX_DOCKER_CNTR} already exists but is not running, restarting the container"
             docker start ${NGINX_DOCKER_CNTR};
         else
-            echo "*** CONTAINER: ${NGINX_DOCKER_CNTR} already exists as CID: ${CHECK_NGINX_CID}, restart current container ***";
+            echo "  - INFO: ${NGINX_DOCKER_CNTR} already exists as CID: ${CHECK_NGINX_CID}, restart current container";
             docker stop ${NGINX_DOCKER_CNTR}
             sleep 1s
             docker start ${NGINX_DOCKER_CNTR};
@@ -84,18 +82,20 @@ start_nginx() {
 }
 
 restart_nginx() {
-    echo "*** ${1^^} ***"
+    echo "RESTART NGINX:"
     stop_nginx STOP
     start_nginx START
 }
 
 maint_on_nginx() {
-    echo "*** ${1^^} ***"
+    echo "MAINT ON:"
+    echo "  - cp maintenance_on.html ../hydroshare/static/maintenance_on.html"
     cp maintenance_on.html ../hydroshare/static/maintenance_on.html
 }
 
 maint_off_nginx() {
-    echo "*** ${1^^} ***"
+    echo "MAINT OFF:"
+    echo "  - rm ../hydroshare/static/maintenance_on.html"
     rm ../hydroshare/static/maintenance_on.html
 }
 

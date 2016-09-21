@@ -46,7 +46,7 @@ def pre_delete_file_from_resource_handler(sender, **kwargs):
             element.save()
 
     # check if it is a sqlite file
-    fl_ext = utils.get_resource_file_extension(del_file)
+    fl_ext = utils.get_resource_file_name_and_extension(del_file)[1]
     if fl_ext == '.sqlite' and resource.metadata.is_dirty:
         TimeSeriesMetaData.objects.filter(id=resource.metadata.id).update(is_dirty=False)
         # metadata object is_dirty attribute for some reason can't be set using the following
@@ -99,7 +99,7 @@ def post_create_resource_handler(sender, **kwargs):
 def _process_uploaded_sqlite_file(user, resource, res_file, validate_files_dict,
                                   delete_existing_metadata=True):
     # check if it a sqlite file
-    fl_ext = utils.get_resource_file_extension(res_file)
+    fl_ext = utils.get_resource_file_name_and_extension(res_file)[1]
 
     if fl_ext == '.sqlite':
         # get the file from iRODS to a temp directory

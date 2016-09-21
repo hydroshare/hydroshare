@@ -71,6 +71,9 @@ def upload_from_irods(username, password, host, port, zone, irods_fnames, res_fi
         fname = os.path.basename(ifname.rstrip(os.sep))
         res_files.append(UploadedFile(file=tmpFile, name=fname, size=size))
 
+    # delete the user session after iRODS file operations are done
+    irods_storage.delete_user_session()
+
 
 def run_ssh_command(host, uname, pwd, exec_cmd):
     """
@@ -284,8 +287,11 @@ def validate_metadata(metadata, resource_type):
 class MetadataElementRequest(object):
     def __init__(self, element_name, **element_data_dict):
         if element_name.lower() == 'coverage' or element_name.lower() == 'originalcoverage':
+            cov_type = element_data_dict.get('type', None)
             if 'value' in element_data_dict:
                 element_data_dict = element_data_dict['value']
+                if cov_type is not None:
+                    element_data_dict['type'] = cov_type
         self.POST = element_data_dict
 
 
@@ -383,3 +389,18 @@ def send_action_to_take_email(request, user, action_type, **kwargs):
     send_mail_template(subject, "email/%s" % action_type,
                        settings.DEFAULT_FROM_EMAIL, email_to.email,
                        context=context)
+
+
+def show_relations_section(res_obj):
+    """
+    This func is to determine whether to show 'Relations' section in 'Related Resources' tab.
+    Return True if number of "hasPart" < number of all relation metadata
+    :param res_obj:  resource object
+    :return: Bool
+    """
+
+    all_relation_count = res_obj.metadata.relations.count()
+    has_part_count = res_obj.metadata.relations.filter(type="hasPart").count()
+    if all_relation_count > has_part_count:
+        return True
+    return False

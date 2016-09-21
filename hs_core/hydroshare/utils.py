@@ -26,7 +26,7 @@ from mezzanine.conf import settings
 from hs_core.signals import pre_create_resource, post_create_resource, pre_add_files_to_resource, \
     post_add_files_to_resource
 from hs_core.models import AbstractResource, BaseResource, ResourceFile
-from hs_core.hydroshare.hs_bagit import create_bag_files, create_bag_by_irods
+from hs_core.hydroshare.hs_bagit import create_bag_files
 
 from django_irods.icommands import SessionException
 from django_irods.storage import IrodsStorage
@@ -305,21 +305,24 @@ def replace_resource_file_on_irods(new_file, original_resource_file):
     istorage.saveFile(new_file, destination_file, True)
 
 
-def get_resource_file_extension(res_file):
+def get_resource_file_name_and_extension(res_file):
     """
-    Gets the file extension of the specified resource file
+    Gets the file name and extension of the specified resource file
     :param res_file: an instance of ResourceFile for which file extension to be retrieved
-    :return: file extension
+    :return: (full filename, file extension) ex: "/my_path_to/ABC.nc" --> ("ABC.nc", ".nc")
     """
-    fl_ext = None
+    f_fullname = None
     if res_file.resource_file:
-        fl_ext = os.path.splitext(res_file.resource_file.name)[1]
+        f_fullname = res_file.resource_file.name
     elif res_file.fed_resource_file:
-        fl_ext = os.path.splitext(res_file.fed_resource_file.name)[1]
+        f_fullname = res_file.fed_resource_file.name
     elif res_file.fed_resource_file_name_or_path:
-        fl_ext = os.path.splitext(res_file.fed_resource_file_name_or_path)[1]
+        f_fullname = res_file.fed_resource_file_name_or_path
 
-    return fl_ext
+    f_fullname = os.path.basename(f_fullname)
+    _, file_ext = os.path.splitext(f_fullname)
+
+    return f_fullname, file_ext
 
 
 def delete_fed_zone_file(file_name_with_full_path):
@@ -359,9 +362,9 @@ def replicate_resource_bag_to_user_zone(user, res_id):
     if istorage.exists(res_coll):
         bag_modified = istorage.getAVU(res_coll, 'bag_modified')
     if bag_modified == "true":
+        # import here to avoid circular import issue
+        from hs_core.tasks import create_bag_by_irods
         create_bag_by_irods(res_id, istorage)
-        if istorage.exists(res_coll):
-            istorage.setAVU(res_coll, 'bag_modified', "false")
 
     # do replication of the resource bag to irods user zone
     if not res.resource_federation_path:

@@ -1,8 +1,0 @@
-#!/usr/bin/env bash
-
-# Run migrations separately for django 1.8
-# Specific to running in PyCharm on local machine (due to sshd)
-
-sleep 3s
-/usr/sbin/sshd
-python manage.py runserver 0.0.0.0:8000

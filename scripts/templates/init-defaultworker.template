@@ -1,0 +1,7 @@
+#!/usr/bin/env bash
+
+cd /hydroshare
+usermod -u HS_SERVICE_UID hydro-service
+groupmod -g HS_SERVICE_GID storage-hydro
+celery beat -A hydroshare -s /hydroshare/celery/celerybeat-schedule &
+celery worker -A hydroshare -E -Q default

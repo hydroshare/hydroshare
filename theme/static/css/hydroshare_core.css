@@ -947,6 +947,14 @@ li.account p{
     text-decoration: none;
 }
 
+#contactTab table .header-row {
+    border-bottom: 1px solid #DDD;
+}
+
+#contactTab table .header-row th {
+    background-color: #FFF;
+}
+
 #txt-abstract{
     height: 155px;
 }
@@ -1323,11 +1331,17 @@ table.table-plain td{
 
 .division-title {
     clear:left;
-    font-size: 20px;
-    font-weight: 500;
     margin-left: 7px;
     background-color: #FFF !important;
+}
 
+.division-title > span {
+	font-size: 20px;
+	font-weight: 500;
+}
+
+.division-title-caption {
+	font-weight: normal;
 }
 
 .page-title {
@@ -1408,13 +1422,13 @@ body > .main-container {
 }
 
 .custom-alert {
-    position: fixed;
-    background-color: lightgreen;
-    padding: 0 10px;
-    text-align: center;
-    line-height: 50px;
-    border: 1px solid #16E716;
-    text-shadow: 1px -1px #BEFFBE;
+	position: fixed;
+	background-color: lightgreen;
+	padding: 0 10px;
+	text-align: center;
+	line-height: 50px;
+	text-shadow: 1px -1px #BEFFBE;
+	z-index: 2;
 }
 
 .custom-alert-icon {
@@ -2523,8 +2537,12 @@ table.overview tr > td:first-child {
     cursor:pointer;
 }
 
+.table-user-contributions tr {
+    border: 1px solid #DDD;
+}
+
 .table-user-contributions tbody > tr.active {
-    border-left: 4px solid #0A91AB;
+    border-left: 2px solid #0A91AB;
     pointer-events: none;
 }
 
@@ -2568,7 +2586,7 @@ h4.title {
 }
 
 #badge-multidimensional .badge {
-    background-color: #7247BC;
+    background-color: #9c27b0;
 }
 
 #badge-time-series .badge {
@@ -2589,6 +2607,14 @@ h4.title {
 
 #badge-collection .badge {
 	background-color: #bc836f;
+}
+
+#badge-modflow .badge {
+	background-color: #673ab7;
+}
+
+.table-user-contributions .badge {
+	float: right;
 }
 
 #color-scheme {
@@ -2704,6 +2730,10 @@ h4.title {
 	border-top-left-radius: 4px;
 }
 
+#collected-by-table {
+    border: 0px !important;
+}
+
 #item-selectors.group-resource-list {
     width: 100% !important;
 }
@@ -2715,6 +2745,7 @@ h4.title {
 
 .resource-custom-table thead th {
     border-bottom: 1px solid #DDD !important;
+    padding: 8px;
 }
 
 #item-selectors thead th:first-child {
@@ -2794,10 +2825,6 @@ h4.title {
 }
 
 #resource-actions-container > span.glyphicon-tags {
-	color: #0A91AB;
-}
-
-#resource-actions-container > span.glyphicon-share {
 	color: #0A91AB;
 }
 
@@ -2923,6 +2950,13 @@ h4.title {
     border-radius: 0;
 }
 
+.no-items-found {
+    font-style: italic;
+    font-size: 14px;
+    pointer-events: none;
+	border: 0;
+}
+
 .list-labels li:hover {
 	background:#DDD;
 }
@@ -2936,11 +2970,6 @@ h4.title {
 	margin-bottom: 0;
 }
 
-.no-labels-found {
-    font-style: italic;
-    font-size: 14px;
-    pointer-events: none;
-}
 
 #toolbar-labels-dropdown {
 	font-size: 14px;
@@ -3433,6 +3462,7 @@ button.no-style:focus {
     margin-top:20px;
 	max-height:250px;
 	overflow-y: auto;
+	word-break: break-word;
 }
 
 .group-name {
@@ -3442,6 +3472,11 @@ button.no-style:focus {
 .group-search {
     margin-bottom: 20px;
 	width: 100%;
+}
+
+.members-modal .modal-body {
+	max-height: 600px;
+    overflow: auto;
 }
 
 #txt-search-groups {

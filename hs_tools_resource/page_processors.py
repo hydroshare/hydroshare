@@ -4,8 +4,9 @@ from crispy_forms.layout import Layout, HTML
 from hs_core import page_processors
 from hs_core.views import add_generic_context
 
-from forms import UrlBaseForm, VersionForm, SupportedResTypesForm, ToolIconForm, parameters_choices
-from models import ToolResource, RequestUrlBase
+from forms import UrlBaseForm, VersionForm, SupportedResTypesForm, ToolIconForm, \
+    SupportedResTypes_choices, SupportedSharingStatusForm
+from models import ToolResource
 
 
 @processor_for(ToolResource)
@@ -13,6 +14,10 @@ def landing_page(request, page):
     content_model = page.get_content_model()
     edit_resource = page_processors.check_resource_mode(request)
 
+    if content_model.metadata.supported_sharing_status.first() is None:
+        content_model.metadata.create_element('SupportedSharingStatus',
+                                              sharing_status=
+                                              ['Published', 'Public', 'Discoverable', 'Private'],)
     if not edit_resource:
         # get the context from hs_core
         context = page_processors.get_page_context(page, request.user,
@@ -29,12 +34,18 @@ def landing_page(request, page):
             supported_res_types_str = content_model.metadata.supported_res_types.first().get_supported_res_types_str()
             supported_res_types_array = supported_res_types_str.split(',')
             for type_name in supported_res_types_array:
-                for display_name_tuple in parameters_choices:
+                for display_name_tuple in SupportedResTypes_choices:
                     if type_name.lower() == display_name_tuple[0].lower():
                         new_supported_res_types_array += [display_name_tuple[1]]
                         break
 
             context['supported_res_types'] = ", ".join(new_supported_res_types_array)
+
+        if content_model.metadata.supported_sharing_status.first() is not None:
+            extended_metadata_exists = True
+            sharing_status_str = content_model.metadata.supported_sharing_status.first()\
+                .get_sharing_status_str()
+            context['supported_sharing_status'] = sharing_status_str
 
         if content_model.metadata.tool_icon.first():
             context['tool_icon_url'] = content_model.metadata.tool_icon.first().url
@@ -62,6 +73,12 @@ def landing_page(request, page):
                                                          element_id=supported_res_types_obj.id
                                                          if supported_res_types_obj else None)
 
+        sharing_status_obj = content_model.metadata.supported_sharing_status.first()
+        sharing_status_obj_form = SupportedSharingStatusForm(instance=sharing_status_obj,
+                                                         res_short_id=content_model.short_id,
+                                                         element_id=sharing_status_obj.id
+                                                         if sharing_status_obj else None)
+
         tool_icon_obj = content_model.metadata.tool_icon.first()
         tool_icon_form = ToolIconForm(instance=tool_icon_obj,
                                       res_short_id=content_model.short_id,
@@ -72,6 +89,10 @@ def landing_page(request, page):
                 HTML('<div class="form-group col-lg-6 col-xs-12" id="SupportedResTypes"> '
                      '{% load crispy_forms_tags %} '
                      '{% crispy supported_res_types_form %} '
+                     '</div> '),
+                HTML('<div class="form-group col-lg-6 col-xs-12" id="SupportedSharingStatus"> '
+                     '{% load crispy_forms_tags %} '
+                     '{% crispy sharing_status_obj_form %} '
                      '</div> '),
                 HTML("<div class='form-group col-lg-6 col-xs-12' id='url_bases'> "
                      '{% load crispy_forms_tags %} '
@@ -85,7 +106,6 @@ def landing_page(request, page):
                      '{% load crispy_forms_tags %} '
                      '{% crispy tool_icon_form %} '
                      '</div> '),
-                HTML('<div id="checked_res_div" hidden="true">{{ checked_res }}</div>')
         )
 
         # get the context from hs_core
@@ -97,16 +117,7 @@ def landing_page(request, page):
         context['version_form'] = version_form
         context['supported_res_types_form'] = supported_res_types_form
         context['tool_icon_form'] = tool_icon_form
-
-        if supported_res_types_obj:
-            supported_res_types = supported_res_types_obj.supported_res_types.all()
-            checked_res_str = ""
-            if len(supported_res_types) > 0:
-                for parameter in supported_res_types:
-                    checked_res_str += str(parameter.description)
-                    checked_res_str += ","
-
-            context['checked_res'] = checked_res_str
+        context['sharing_status_obj_form'] = sharing_status_obj_form
 
     hs_core_dublin_context = add_generic_context(request, page)
     context.update(hs_core_dublin_context)

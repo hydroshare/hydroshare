@@ -11,10 +11,10 @@
             <div class="col-md-12">
                 <div>
                     {% if url_base %}
-                        <h4><strong>App URL:</strong></h4>
+                        <h4><strong>App URL Pattern:</strong></h4>
                         <hr style="margin-top: 0px;margin-bottom: 2px">
                         <div class="row">
-                            <div class="col-sm-8"><a href='{{ url_base.value }}'>{{ url_base.value }}</a></div>
+                            <div class="col-sm-8">{{ url_base.value }}</div>
                         </div>
                         <hr style="border:0">
                     {%  endif %}
@@ -35,6 +35,16 @@
                         <hr style="margin-top: 0px;margin-bottom: 2px">
                         <div class="row">
                             <div class="col-sm-8">{{ supported_res_types }}</div>
+                        </div>
+                        <hr style="border:0">
+                    {% endif %}
+                </div>
+                <div>
+                    {% if supported_sharing_status %}
+                        <h4><strong>Supported Resource Sharing Status:</strong></h4>
+                        <hr style="margin-top: 0px;margin-bottom: 2px">
+                        <div class="row">
+                            <div class="col-sm-8">{{ supported_sharing_status }}</div>
                         </div>
                         <hr style="border:0">
                     {% endif %}

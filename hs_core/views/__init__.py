@@ -21,9 +21,7 @@ from django import forms
 from django.views.generic import TemplateView
 from django.core.urlresolvers import reverse
 
-
 from rest_framework.decorators import api_view
-from rest_framework import status
 
 from mezzanine.conf import settings
 from mezzanine.pages.page_processors import processor_for
@@ -31,9 +29,8 @@ import autocomplete_light
 from inplaceeditform.commons import get_dict_from_obj, apply_filters
 from inplaceeditform.views import _get_http_response, _get_adaptor
 from django_irods.storage import IrodsStorage
-
-
 from django_irods.icommands import SessionException
+
 from hs_core import hydroshare
 from hs_core.hydroshare.utils import get_resource_by_shortkey, resource_modified
 from .utils import authorize, upload_from_irods, ACTION_TO_AUTHORIZE, run_script_to_update_hyrax_input_files, \
@@ -320,6 +317,7 @@ def delete_resource(request, shortkey, *args, **kwargs):
     res_id = shortkey
     res_type = res.resource_type
     resource_related_collections = [col for col in res.collections.all()]
+    owners_list = [owner for owner in res.raccess.owners.all()]
 
     try:
         hydroshare.delete_resource(shortkey)
@@ -331,11 +329,14 @@ def delete_resource(request, shortkey, *args, **kwargs):
     # create a CollectionDeletedResource object which can then be used to list collection deleted
     # resources on collection resource landing page
     for collection_res in resource_related_collections:
-        CollectionDeletedResource.objects.create(resource_title=res_title,
-                                                 deleted_by=user,
-                                                 resource_id=res_id,
-                                                 resource_type=res_type,
-                                                 collection=collection_res)
+        o=CollectionDeletedResource.objects.create(
+             resource_title=res_title,
+             deleted_by=user,
+             resource_id=res_id,
+             resource_type=res_type,
+             collection=collection_res
+             )
+        o.resource_owners.add(*owners_list)
 
     return HttpResponseRedirect('/my-resources/')
 
@@ -729,6 +730,7 @@ class GroupUpdateForm(GroupForm):
 @processor_for('my-resources')
 @login_required
 def my_resources(request, page):
+
     resource_collection = get_my_resources_list(request)
     context = {'collection': resource_collection}
     
