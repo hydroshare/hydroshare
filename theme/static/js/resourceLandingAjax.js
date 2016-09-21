@@ -501,7 +501,7 @@ function unzip_irods_file_ajax_submit(res_id, zip_with_rel_path) {
         success: function (result) {
             var unzipped_path = result.unzipped_path;
             if (unzipped_path.length > 0) {
-                zip_irods_folder_ajax_submit(res_id, unzipped_path)
+                get_irods_folder_struct_ajax_submit(res_id, unzipped_path)
             }
         },
         error: function(xhr, errmsg, err){

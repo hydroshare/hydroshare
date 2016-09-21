@@ -18,20 +18,24 @@ def link_irods_file_to_django(resource, filename, size=0):
     # link the newly created zip file to Django resource model
     if resource:
         if resource.resource_federation_path:
-            ResourceFile.objects.create(content_object=resource,
-                                        resource_file=None,
-                                        fed_resource_file_name_or_path=filename,
-                                        fed_resource_file_size=size)
+            if not ResourceFile.objects.filter(object_id=resource.id,
+                                        fed_resource_file_name_or_path=filename).exists():
+                ResourceFile.objects.create(content_object=resource,
+                                            resource_file=None,
+                                            fed_resource_file_name_or_path=filename,
+                                            fed_resource_file_size=size)
         else:
-            ResourceFile.objects.create(content_object=resource,
-                                        resource_file=filename)
+            if not ResourceFile.objects.filter(object_id=resource.id,
+                                               resource_file=filename).exists():
+                ResourceFile.objects.create(content_object=resource,
+                                            resource_file=filename)
 
 def link_irods_folder_to_django(resource, istorage, foldername, exclude=()):
     if resource and istorage and foldername:
         store = istorage.listdir(foldername)
         # add the unzipped files into Django resource model
         for file in store[1]:
-            if not file in exclude:
+            if file not in exclude:
                 file_path = os.path.join(foldername, file)
                 size = istorage.size(file_path)
                 link_irods_file_to_django(resource, file_path, size)
@@ -222,7 +226,7 @@ def data_store_folder_unzip(request):
     zip_fname = os.path.basename(zip_with_rel_path)
     try:
         istorage.session.run("ibun", None, '-xfDzip', zip_with_full_path, coll_dir)
-        link_irods_folder_to_django(resource, istorage, unzip_path, (zip_fname))
+        link_irods_folder_to_django(resource, istorage, unzip_path, (zip_fname,))
     except SessionException as ex:
         logger.error(ex.stderr)
         return HttpResponse(status=500)
