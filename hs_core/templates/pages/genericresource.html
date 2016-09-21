@@ -436,7 +436,7 @@
                                         </a>
                                     </li>
                                 {% endif %}
-                                {% if sources or relations or metadata_form %}
+                                {% if sources or show_relations_section or belongs_to_collections or metadata_form %}
                                     <li class="col-xs-2 col-md-2">
                                         <a href="#relatedResourcesTab" data-toggle="tab" title="Related resources">
                                             <span class="glyphicon glyphicon-book"></span>
@@ -479,6 +479,15 @@
                                         </a>
                                      </li>
                                 {% endif %}
+                                {% if connections %}
+                                    <li class="col-xs-2 col-md-2">
+                                        <a href="#connectionsTab" data-toggle="tab" title="Connections">
+                                            <span class="glyphicon glyphicon-fullscreen"> </span>
+                                            &nbspConnections
+                                        </a>
+                                     </li>
+                                {% endif %}
+
                             </ul>
                         </div>
                         <div class="tabs-body">
@@ -990,7 +999,7 @@
                                     </div>
                                 {% endif %}
                                 <!-- ========= RELATED RESOURCES TAB ========= -->
-                                {% if sources or relations or metadata_form %}
+                                {% if sources or show_relations_section or belongs_to_collections or metadata_form %}
                                     <div class="tab-pane" id="relatedResourcesTab">
                                         {% if not metadata_form %}
                                             {% if sources %}
@@ -1003,15 +1012,17 @@
                                                     </div>
                                                 {% endfor %}
                                             {% endif %}
-                                            {% if relations %}
+                                            {% if show_relations_section %}
                                                 <hr style="border: 0;">
                                                 <h4><strong>Relations</strong></h4>
                                                 <hr style="margin-top: 0;margin-bottom: 2px">
                                                 {% for relation in relations %}
-                                                    <div class="row">
-                                                        <div class="col-sm-4"><strong>{{ relation.type }}:</strong></div>
-                                                        <div class="col-sm-8">{{ relation.value }}</div>
-                                                    </div>
+                                                    {% if  relation.type|lower != "haspart"%}
+                                                        <div class="row">
+                                                            <div class="col-sm-4"><strong>{{ relation.type }}:</strong></div>
+                                                            <div class="col-sm-8">{{ relation.value }}</div>
+                                                        </div>
+                                                    {% endif %}
                                                 {% endfor %}
                                             {% endif %}
                                         {% else %}
@@ -1053,23 +1064,25 @@
                                                     <tbody>
                                                     <legend>Relations</legend>
                                                     {% for relation in relation_formset.initial %}
-                                                        <tr>
-                                                            <th scope="row" class="dataset-label">{{ relation.type }}:</th>
-                                                            <td class="dataset-details">{{ relation.value }}</td>
-                                                            <td>
-                                                                <a data-toggle="modal" data-placement="auto" title="Edit"
-                                                                   class="glyphicon glyphicon-pencil icon-button icon-blue"
-                                                                   data-target="#edit-relation-dialog_{{ relation.id }}"
-                                                                   style="top: -5px; "></a>
-                                                            </td>
-                                                            <td>
-                                                                <a data-toggle="modal" data-placement="auto"
-                                                                   title="Remove"
-                                                                   class="glyphicon glyphicon-trash icon-button btn-remove"
-                                                                   data-target="#delete-relation-element-dialog{{ relation.id }}"
-                                                                   style="top: -5px; right:20px;"></a>
-                                                            </td>
-                                                        </tr>
+                                                        {% if  relation.type|lower != "haspart"%}
+                                                            <tr>
+                                                                <th scope="row" class="dataset-label">{{ relation.type }}:</th>
+                                                                <td class="dataset-details">{{ relation.value }}</td>
+                                                                <td>
+                                                                    <a data-toggle="modal" data-placement="auto" title="Edit"
+                                                                       class="glyphicon glyphicon-pencil icon-button icon-blue"
+                                                                       data-target="#edit-relation-dialog_{{ relation.id }}"
+                                                                       style="top: -5px; "></a>
+                                                                </td>
+                                                                <td>
+                                                                    <a data-toggle="modal" data-placement="auto"
+                                                                       title="Remove"
+                                                                       class="glyphicon glyphicon-trash icon-button btn-remove"
+                                                                       data-target="#delete-relation-element-dialog{{ relation.id }}"
+                                                                       style="top: -5px; right:20px;"></a>
+                                                                </td>
+                                                            </tr>
+                                                        {% endif %}
                                                     {% endfor %}
 
                                                     </tbody>
@@ -1079,9 +1092,83 @@
                                                 <span data-toggle="tooltip" data-placement="auto"
                                                       title='Click this button to add a relationship to another resource, external website, or document. You can express the type of relationship and then enter a URL to the resource or website. If the related resource does not have a URL, you can paste in a full text citation.'
                                                       class="glyphicon glyphicon-info-sign text-muted"></span>
+                                                <hr style="border: 0;">
                                             </div>
                                         {% endif %}
+                                        {% if belongs_to_collections %}
+                                            <legend>This resource belongs to the following collections:</legend>
+                                            <table id="collected-by-table" class="table-hover table-striped resource-custom-table" width="100%">
+                                                <thead>
+                                                    <tr>
+                                                        <th>Title</th>
+                                                        <th>Owners</th>
+                                                        <th>Sharing Status</th>
+                                                        <th>My Permission</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                {% for res in belongs_to_collections %}
+                                                    <tr id="{{ res.short_id }}">
+                                                        <td>
+                                                            {% if res|user_permission:request.user.pk|lower == "none" %}
+                                                                <strong>{{ res.metadata.title }}</strong>
+                                                            {% else %}
+                                                                <strong><a href="{{ res.get_absolute_url }}"
+                                                                           target="_blank">{{ res.metadata.title }}</a></strong>
+                                                            {% endif %}
+                                                        </td>
+                                                        <td>
+                                                            {% for owner in res.raccess.owners.all %}
+                                                                {% if forloop.counter0 > 0 %} · {% endif %}
+                                                                {% if owner.first_name %}
+                                                                    <a href='/user/{{ owner.pk }}/'
+                                                                               target="_blank">{{ owner.first_name }} {{ owner.last_name }}</a>
+                                                                {% else %}
+                                                                    <a href='/user/{{ owner.pk }}/'
+                                                                               target="_blank">{{ owner.username }}</a>
+                                                                {% endif %}
+                                                            {% endfor %}
+                                                        </td>
+                                                        <td>
+                                                            {% if res.raccess.published %}
+                                                                <strong class="label-public">&nbsp;Published</strong>
+                                                            {% elif res.raccess.public %}
+                                                                <strong class="label-public">&nbsp;Public</strong>
+                                                            {% elif res.raccess.discoverable %}
+                                                                <strong class="label-discoverable">
+                                                                    &nbsp;Discoverable</strong>
+                                                            {% else %}
+                                                                <strong class="label-private">&nbsp;Private</strong>
+                                                            {% endif %}
+                                                            {% if res.raccess.published %}
+                                                                {% if "pending" in cm.doi or "failure" in cm.doi %}
+                                                                    &#8210; Note that the DOI will not be available
+                                                                    until
+                                                                    it has been registered and activated.{% endif %}
+                                                            {% else %}
+                                                                &{% if res.raccess.shareable %}
+                                                                <strong style="color:#5cb85c">&nbsp;Shareable</strong>
+                                                            {% else %}<strong style="color:#d9534f">&nbsp;Not
+                                                                    Shareable</strong>{% endif %}
+                                                            {% endif %}
+                                                        </td>
+                                                        <td>
+                                                            {% if res|user_permission:request.user.pk|lower == "none" %}
+                                                                <strong class="label-private">{{ res|user_permission:request.user.pk }}</strong>
+                                                            {% elif res|user_permission:request.user.pk|lower == "open access" %}
+                                                                <strong class="label-public">{{ res|user_permission:request.user.pk }}</strong>
+                                                            {% else %}
+                                                                {{ res|user_permission:request.user.pk }}
+                                                            {% endif %}
+                                                        </td>
+                                                    </tr>
+                                                {% endfor %}
+
+                                            </tbody>
+                                        </table>
+                                        {% endif%}
                                     </div>
+
                                 {% endif %}
                                 <!-- ========= RESOURCE SPECIFIC TAB ========= -->
                                 {% if site or extended_metadata_exists or res_add_metadata or metadata_form %}
@@ -1131,6 +1218,7 @@
                                         {%  endif %}
                                     </div>
                                 {% endif %}
+
                                 <!-- ========= EXTRA METADATA TAB ========= -->
                                 {% if metadata_form or page.get_content_model.extra_metadata.items|length > 0 %}
                                     <div class="tab-pane" id="extraMetaTab">
@@ -1176,7 +1264,6 @@
 
                                 </div>
                                 {% endif %}
-
 
                             </div>
                         </div>

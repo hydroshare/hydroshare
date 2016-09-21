@@ -564,6 +564,7 @@ class Relation(AbstractMetaDataElement):
         ('isHostedBy', 'Hosted By'),
         ('isCopiedFrom', 'Copied From'),
         ('isPartOf', 'Part Of'),
+        ('hasPart', 'Has Part'),
         ('isExecutedBy', 'Executed By'),
         ('isCreatedBy', 'Created By'),
         ('isVersionOf', 'Version Of'),
@@ -584,52 +585,76 @@ class Relation(AbstractMetaDataElement):
     def __unicode__(self):
         return "{type} {value}".format(type=self.type, value=self.value)
 
-    class Meta:
-        unique_together = ("type", "content_type", "object_id")
-
     @classmethod
     def create(cls, **kwargs):
-        if 'type' in kwargs:
-            if not kwargs['type'] in dict(cls.SOURCE_TYPES).keys():
-                raise ValidationError('Invalid relation type:%s' % kwargs['type'])
+        if 'type' not in kwargs:
+            ValidationError("Type of relation element is missing.")
+        if 'value' not in kwargs:
+            ValidationError("Value of relation element is missing.")
 
-            # ensure isHostedBy and isCopiedFrom are mutually exclusive
-            metadata_obj = kwargs['content_object']
-            metadata_type = ContentType.objects.get_for_model(metadata_obj)
-            if kwargs['type'] == 'isHostedBy' and \
-               Relation.objects.filter(type='isCopiedFrom', object_id=metadata_obj.id,
-                                       content_type=metadata_type).exists():
-                raise ValidationError('Relation type:%s cannot be created since '
-                                      'isCopiedFrom relation already exists.' % kwargs['type'])
-            elif kwargs['type'] == 'isCopiedFrom' and \
-                    Relation.objects.filter(type='isHostedBy', object_id=metadata_obj.id,
-                                            content_type=metadata_type).exists():
-                raise ValidationError('Relation type:%s cannot be created since '
-                                      'isHostedBy relation already exists.' % kwargs['type'])
+        if not kwargs['type'] in dict(cls.SOURCE_TYPES).keys():
+            raise ValidationError('Invalid relation type:%s' % kwargs['type'])
 
-            return super(Relation, cls).create(**kwargs)
-        else:
-            raise ValidationError("Type of relation element is missing.")
+        # ensure isHostedBy and isCopiedFrom are mutually exclusive
+        metadata_obj = kwargs['content_object']
+        metadata_type = ContentType.objects.get_for_model(metadata_obj)
+
+        # avoid creating duplicate element (same type and same value)
+        if Relation.objects.filter(type=kwargs['type'],
+                                   value=kwargs['value'],
+                                   object_id=metadata_obj.id,
+                                   content_type=metadata_type).exists():
+            raise ValidationError('Relation element of the same type '
+                                  'and value already exists.')
+
+        if kwargs['type'] == 'isHostedBy' and \
+           Relation.objects.filter(type='isCopiedFrom', object_id=metadata_obj.id,
+                                   content_type=metadata_type).exists():
+            raise ValidationError('Relation type:%s cannot be created since '
+                                  'isCopiedFrom relation already exists.' % kwargs['type'])
+        elif kwargs['type'] == 'isCopiedFrom' and \
+                Relation.objects.filter(type='isHostedBy', object_id=metadata_obj.id,
+                                        content_type=metadata_type).exists():
+            raise ValidationError('Relation type:%s cannot be created since '
+                                  'isHostedBy relation already exists.' % kwargs['type'])
+
+        return super(Relation, cls).create(**kwargs)
 
     @classmethod
     def update(cls, element_id, **kwargs):
-        if 'type' in kwargs:
-            if not kwargs['type'] in dict(cls.SOURCE_TYPES).keys():
-                raise ValidationError('Invalid relation type:%s' % kwargs['type'])
+        if 'type' not in kwargs:
+            ValidationError("Type of relation element is missing.")
+        if 'value' not in kwargs:
+            ValidationError("Value of relation element is missing.")
 
-            # ensure isHostedBy and isCopiedFrom are mutually exclusive
-            rel = Relation.objects.get(id=element_id)
-            if rel.type != kwargs['type']:
-                if kwargs['type'] == 'isHostedBy' and \
-                     Relation.objects.filter(type='isCopiedFrom', object_id=rel.object_id,
-                                             content_type__pk=rel.content_type.id).exists():
-                    raise ValidationError('Relation type:%s cannot be updated since '
-                                          'isCopiedFrom relation already exists.' % rel.type)
-                elif kwargs['type'] == 'isCopiedFrom' and \
-                        Relation.objects.filter(type='isHostedBy', object_id=rel.object_id,
-                                                content_type__pk=rel.content_type.id).exists():
-                    raise ValidationError('Relation type:%s cannot be updated since '
-                                          'isHostedBy relation already exists.' % rel.type)
+        if not kwargs['type'] in dict(cls.SOURCE_TYPES).keys():
+            raise ValidationError('Invalid relation type:%s' % kwargs['type'])
+
+        # ensure isHostedBy and isCopiedFrom are mutually exclusive
+        rel = Relation.objects.get(id=element_id)
+        if rel.type != kwargs['type']:
+            if kwargs['type'] == 'isHostedBy' and \
+                 Relation.objects.filter(type='isCopiedFrom', object_id=rel.object_id,
+                                         content_type__pk=rel.content_type.id).exists():
+                raise ValidationError('Relation type:%s cannot be updated since '
+                                      'isCopiedFrom relation already exists.' % rel.type)
+            elif kwargs['type'] == 'isCopiedFrom' and \
+                    Relation.objects.filter(type='isHostedBy', object_id=rel.object_id,
+                                            content_type__pk=rel.content_type.id).exists():
+                raise ValidationError('Relation type:%s cannot be updated since '
+                                      'isHostedBy relation already exists.' % rel.type)
+
+        # avoid changing this relation to an existing relation of same type and same value
+        metadata_obj = kwargs['content_object']
+        metadata_type = ContentType.objects.get_for_model(metadata_obj)
+        qs = Relation.objects.filter(type=kwargs['type'],
+                                     value=kwargs['value'],
+                                     object_id=metadata_obj.id,
+                                     content_type=metadata_type)
+
+        if qs.exists() and qs.first() != rel:
+            # this update will create a duplicate relation element
+            raise ValidationError('A relation element of the same type and value already exists.')
 
         super(Relation, cls).update(element_id, **kwargs)
 
