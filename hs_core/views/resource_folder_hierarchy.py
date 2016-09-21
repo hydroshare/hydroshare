@@ -7,28 +7,29 @@ from rest_framework.exceptions import NotFound, PermissionDenied
 
 from django_irods.storage import IrodsStorage
 from django_irods.icommands import SessionException
-from hs_core.hydroshare.utils import get_resource_by_shortkey, get_file_mime_type
+from hs_core.hydroshare.utils import get_file_mime_type
 from hs_core.views.utils import authorize, ACTION_TO_AUTHORIZE
 from hs_core.hydroshare import delete_resource_file
 from hs_core.models import ResourceFile
 
 logger = logging.getLogger(__name__)
 
+
 def link_irods_file_to_django(resource, filename, size=0):
     # link the newly created zip file to Django resource model
     if resource:
         if resource.resource_federation_path:
             if not ResourceFile.objects.filter(object_id=resource.id,
-                                        fed_resource_file_name_or_path=filename).exists():
+                                               fed_resource_file_name_or_path=filename).exists():
                 ResourceFile.objects.create(content_object=resource,
                                             resource_file=None,
                                             fed_resource_file_name_or_path=filename,
                                             fed_resource_file_size=size)
-        else:
-            if not ResourceFile.objects.filter(object_id=resource.id,
-                                               resource_file=filename).exists():
+        elif not ResourceFile.objects.filter(object_id=resource.id,
+                                             resource_file=filename).exists():
                 ResourceFile.objects.create(content_object=resource,
                                             resource_file=filename)
+
 
 def link_irods_folder_to_django(resource, istorage, foldername, exclude=()):
     if resource and istorage and foldername:
@@ -40,7 +41,28 @@ def link_irods_folder_to_django(resource, istorage, foldername, exclude=()):
                 size = istorage.size(file_path)
                 link_irods_file_to_django(resource, file_path, size)
         for folder in store[0]:
-            link_irods_folder_to_django(resource, istorage, os.path.join(foldername, folder), exclude)
+            link_irods_folder_to_django(resource,
+                                        istorage, os.path.join(foldername, folder), exclude)
+
+
+def rename_irods_file_in_django(resource, src_name, tgt_name):
+    if resource:
+        if resource.resource_federation_path:
+            res_file_obj = ResourceFile.objects.filter(object_id=resource.id,
+                                                       fed_resource_file_name_or_path=src_name)
+            if res_file_obj.exists():
+                res_file_obj[0].fed_resource_file_name_or_path = tgt_name
+                res_file_obj[0].save()
+        else:
+            res_file_obj = ResourceFile.objects.filter(object_id=resource.id,
+                                                       resource_file=src_name)
+            if res_file_obj.exists():
+                # since resource_file is a FileField which cannot be directly renamed,
+                # this old ResourceFile object has to be deleted followed by creation of
+                # a new ResourceFile with new file associated that replace the old one
+                res_file_obj[0].delete()
+                ResourceFile.objects.create(content_object=resource, resource_file=tgt_name)
+
 
 def data_store_structure(request):
     """
@@ -95,8 +117,9 @@ def data_store_structure(request):
 
     return HttpResponse(
         json.dumps(return_object),
-        content_type = "application/json"
+        content_type="application/json"
     )
+
 
 def data_store_folder_zip(request):
     """
@@ -177,6 +200,7 @@ def data_store_folder_zip(request):
         content_type="application/json"
     )
 
+
 def data_store_folder_unzip(request):
     """
     Unzip requested zip file while preserving folder structures in hydroshareZone or
@@ -240,6 +264,106 @@ def data_store_folder_unzip(request):
     # this unzipped_path can be used for POST request input to data_store_structure()
     # to list the folder structure after unzipping
     return_object = {'unzipped_path': os.path.dirname(zip_with_rel_path)}
+
+    return HttpResponse(
+        json.dumps(return_object),
+        content_type="application/json"
+    )
+
+
+def data_store_create_folder(request):
+    """
+    create a sub-folder/sub-collection in hydroshareZone or any federated zone used for HydroShare
+    resource backend store. It is invoked by an AJAX call and returns json object that has the
+    relative path of the new folder created if succeeds, and return empty string if fails. The
+    AJAX request must be a POST request with input data passed in for res_id and folder_path
+    where folder_path is the relative path for the new folder to be created under
+    res_id collection/directory.
+    """
+    res_id = request.POST['res_id']
+    if res_id is None:
+        return HttpResponse(status=400)
+    res_id = str(res_id).strip()
+    try:
+        resource, _, _ = authorize(request, res_id,
+                                   needed_permission=ACTION_TO_AUTHORIZE.EDIT_RESOURCE)
+    except (NotFound, PermissionDenied):
+        # return permission defined response
+        return HttpResponse(status=403)
+
+    folder_path = request.POST['folder_path']
+    if folder_path is None:
+        return HttpResponse(status=400)
+    folder_path = str(folder_path).strip()
+    if not folder_path:
+        return HttpResponse(status=400)
+    if resource.resource_federation_path:
+        istorage = IrodsStorage('federated')
+        coll_path = os.path.join(resource.resource_federation_path, res_id, folder_path)
+    else:
+        istorage = IrodsStorage()
+        coll_path = os.path.join(res_id, folder_path)
+
+    try:
+        istorage.session.run("imkdir", None, '-p', coll_path)
+    except SessionException as ex:
+        logger.error(ex.stderr)
+        return HttpResponse(status=500)
+
+    return_object = {'new_folder_rel_path': folder_path}
+
+    return HttpResponse(
+        json.dumps(return_object),
+        content_type="application/json"
+    )
+
+
+def data_store_file_or_folder_move_or_rename(request):
+    """
+    Move or rename a file or folder in hydroshareZone or any federated zone used for HydroShare
+    resource backend store. It is invoked by an AJAX call and returns json object that has the
+    relative path of the target file or folder being moved to if succeeds, and return empty string
+    if fails. The AJAX request must be a POST request with input data passed in for res_id,
+    source_path, and target_path where source_path and target_path are the relative paths for the
+    source and target file or folder under res_id collection/directory.
+    """
+    res_id = request.POST['res_id']
+    if res_id is None:
+        return HttpResponse(status=400)
+    res_id = str(res_id).strip()
+    try:
+        resource, _, _ = authorize(request, res_id,
+                                   needed_permission=ACTION_TO_AUTHORIZE.EDIT_RESOURCE)
+    except (NotFound, PermissionDenied):
+        # return permission defined response
+        return HttpResponse(status=403)
+
+    src_path = request.POST['source_path']
+    tgt_path = request.POST['target_path']
+    if src_path is None or tgt_path is None:
+        return HttpResponse(status=400)
+    src_path = str(src_path).strip()
+    tgt_path = str(tgt_path).strip()
+    if not src_path or not tgt_path:
+        return HttpResponse(status=400)
+    if resource.resource_federation_path:
+        istorage = IrodsStorage('federated')
+        src_full_path = os.path.join(resource.resource_federation_path, res_id, src_path)
+        tgt_full_path = os.path.join(resource.resource_federation_path, res_id, tgt_path)
+    else:
+        istorage = IrodsStorage()
+        src_full_path = os.path.join(res_id, src_path)
+        tgt_full_path = os.path.join(res_id, tgt_path)
+
+    try:
+        istorage.moveFile(src_full_path, tgt_full_path)
+    except SessionException as ex:
+        logger.error(ex.stderr)
+        return HttpResponse(status=500)
+
+    rename_irods_file_in_django(resource, src_full_path, tgt_full_path)
+
+    return_object = {'target_rel_path': tgt_path}
 
     return HttpResponse(
         json.dumps(return_object),
