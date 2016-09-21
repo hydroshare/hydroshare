@@ -780,6 +780,10 @@
                 var data = mapItems.row( $(this).parents('tr') ).data();
                 showBoxMarker(data[0], true);
             } );
+            $('#map-items tbody').on( 'hover', 'tr', function () {
+                var data = mapItems.row( this ).data();
+                showBoxMarker(data[0], false);
+            });
         };
 
 
@@ -789,9 +793,6 @@
             var eastlimit = parseFloat(box.eastlimit);
             var westlimit = parseFloat(box.westlimit);
 
-            var ne_latlng = new google.maps.LatLng(northlimit, eastlimit);
-            var sw_latlng = new google.maps.LatLng(southlimit, westlimit);
-
             var rectBounds = new google.maps.LatLngBounds(
                     new google.maps.LatLng(southlimit, westlimit),
                     new google.maps.LatLng(northlimit, eastlimit)
@@ -800,6 +801,8 @@
             if (zoom_on_map) {
                 map.fitBounds(rectBounds);
                 updateMapView();
+                findShadeRect(rectBounds);
+            } else {
                 findShadeRect(rectBounds);
             }
         };
