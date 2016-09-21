@@ -99,122 +99,125 @@
         </div>
     {% endif %}
 
-    <div id="sharing-status">
-        <h4>Sharing status:</h4>
-        {% if can_change_resource_flags%}
-            <div class="btn-group" role="group" aria-label="...">
-                {# -------- PUBLIC -------- #}
-                {% if cm.raccess.public %}
-                    <button id="btn-public" data-toggle="tooltip" data-placement="auto"
-                            title='Can be viewed and downloaded by anyone.' type="button"
-                            class="btn btn-default active">Public
-                    </button>
-                {% else %}
-                    <form class="pull-left"
-                          action="/hsapi/_internal/{{ cm.short_id }}/set-resource-flag/"
-                          method="POST">
-                        {% csrf_token %}
-                        <input name="t" type="hidden" value="make_public"/>
-                        <button {% if not cm.can_be_public_or_discoverable %} disabled {% endif %}
-                                id="btn-public" data-toggle="tooltip" data-placement="auto"
-                                title='Can be viewed and downloaded by anyone.' type="submit"
-                                class="btn btn-default">Public
+    <div id="sharing-status" class="row">
+        <div class="col-sm-12"><h4>Sharing status:</h4></div>
+        {% if can_change_resource_flags %}
+            <div class="col-sm-12">
+                <div class="btn-group" role="group">
+                    {# -------- PUBLIC -------- #}
+                    {% if cm.raccess.public %}
+                        <button id="btn-public" data-toggle="tooltip" data-placement="auto"
+                                title='Can be viewed and downloaded by anyone.' type="button"
+                                class="btn btn-default active">Public
                         </button>
-                    </form>
-                {% endif %}
+                    {% else %}
+                        <form class="pull-left"
+                              action="/hsapi/_internal/{{ cm.short_id }}/set-resource-flag/"
+                              method="POST">
+                            {% csrf_token %}
+                            <input name="t" type="hidden" value="make_public"/>
+                            <button {% if not cm.can_be_public_or_discoverable %} disabled {% endif %}
+                                    id="btn-public" data-toggle="tooltip" data-placement="auto"
+                                    title='Can be viewed and downloaded by anyone.' type="submit"
+                                    class="btn btn-default">Public
+                            </button>
+                        </form>
+                    {% endif %}
 
-                {# -------- DISCOVERABLE -------- #}
-                {% if not cm.raccess.public and discoverable %}
-                    <button id="btn-discoverable" data-toggle="tooltip" data-placement="auto"
-                            title='Metadata is public but data is protected.' type="button"
-                            class="btn btn-default active">Discoverable
-                    </button>
-                {% else %}
-                    <form class="pull-left"
-                          action="/hsapi/_internal/{{ cm.short_id }}/set-resource-flag/"
-                          method="POST">
-                        <input name="t" type="hidden" value="make_discoverable"/>
-                        {% csrf_token %}
-                        <button {% if not cm.can_be_public_or_discoverable %} disabled {% endif %}
-                                id="btn-discoverable" data-toggle="tooltip" data-placement="auto"
-                                title='Metadata is public but data is protected.' type="submit"
-                                class="btn btn-default">Discoverable
+                    {# -------- DISCOVERABLE -------- #}
+                    {% if not cm.raccess.public and discoverable %}
+                        <button id="btn-discoverable" data-toggle="tooltip" data-placement="auto"
+                                title='Metadata is public but data is protected.' type="button"
+                                class="btn btn-default active">Discoverable
                         </button>
-                    </form>
-                {% endif %}
+                    {% else %}
+                        <form class="pull-left"
+                              action="/hsapi/_internal/{{ cm.short_id }}/set-resource-flag/"
+                              method="POST">
+                            <input name="t" type="hidden" value="make_discoverable"/>
+                            {% csrf_token %}
+                            <button {% if not cm.can_be_public_or_discoverable %} disabled {% endif %}
+                                    id="btn-discoverable" data-toggle="tooltip" data-placement="auto"
+                                    title='Metadata is public but data is protected.' type="submit"
+                                    class="btn btn-default">Discoverable
+                            </button>
+                        </form>
+                    {% endif %}
 
-                {# -------- PRIVATE -------- #}
-                {% if not cm.raccess.public and not discoverable %}
-                    <button id="btn-private" data-toggle="tooltip" data-placement="auto"
-                            title='Can be viewed and downloaded only by designated users or research groups.'
-                            type="button" class="btn btn-default active">Private
-                    </button>
-                {% else %}
-                    <form class="pull-left"
-                          action="/hsapi/_internal/{{ cm.short_id }}/set-resource-flag/"
-                          method="POST">
-                        <input name="t" type="hidden" value="make_private"/>
-                        {% csrf_token %}
+                    {# -------- PRIVATE -------- #}
+                    {% if not cm.raccess.public and not discoverable %}
                         <button id="btn-private" data-toggle="tooltip" data-placement="auto"
-                                title='Can be viewed and downloaded only by designated users or research groups.' type="submit"
-                                class="btn btn-default">Private
+                                title='Can be viewed and downloaded only by designated users or research groups.'
+                                type="button" class="btn btn-default active">Private
                         </button>
-                    </form>
-                {% endif %}
+                    {% else %}
+                        <form class="pull-left"
+                              action="/hsapi/_internal/{{ cm.short_id }}/set-resource-flag/"
+                              method="POST">
+                            <input name="t" type="hidden" value="make_private"/>
+                            {% csrf_token %}
+                            <button id="btn-private" data-toggle="tooltip" data-placement="auto"
+                                    title='Can be viewed and downloaded only by designated users or research groups.' type="submit"
+                                    class="btn btn-default">Private
+                            </button>
+                        </form>
+                    {% endif %}
+                </div>
             </div>
 
+            {% if is_owner_user and cm.resource_type == "NetcdfResource" and not cm.raccess.public %}
+                <div class="pull-left label-public">Note that making the resource public may take a little extra time to update
+                        Hyrax server in order to provide OPeNDAP service for this resource. </div>
+            {% endif %}
+
             {% if is_owner_user %}
-                <div id="shareable-container">
+                <div id="shareable-container" class="col-sm-12 height-fix">
                     {#   Shareable flag    #}
-                    <form action="/hsapi/_internal/{{ cm.short_id }}/set-resource-flag/"
+                    <form class="pull-left" action="/hsapi/_internal/{{ cm.short_id }}/set-resource-flag/"
                           method="POST">
                         {% csrf_token %}
 
                         <input name="t" type="hidden" {% if cm.raccess.shareable %}value="make_not_shareable"
                                {% else %}value="make_shareable"{% endif %}/>
 
-                        <input id="btn-shareable" data-toggle="toggle"
-                               data-on="<i class='glyphicon glyphicon-share'></i> Shareable"
-                               data-off="<i class='glyphicon glyphicon-ban-circle'></i> Not Shareable" type="checkbox"
-                               data-onstyle="success"
-                               {% if cm.raccess.shareable %}checked{% endif %} data-toggle="toggle">
-                        <span data-toggle="tooltip" data-placement="auto"
-                          title='When enabled, users other than owners may grant access to the resource.'
-                          class="glyphicon glyphicon-info-sign text-muted"></span>
+                        <div class="input-group" data-toggle="tooltip" title="When checked, users other than owners may grant access to the resource.">
+                          <span class="input-group-addon">
+                            <input id="btn-shareable" type="checkbox"
+                                          {% if cm.raccess.shareable %}checked{% endif %}>
+                          </span>
+                          <span class="form-control">Shareable</span>
+                        </div><!-- /input-group -->
                     </form>
                 </div>
             {% endif %}
-
-            {% if is_owner_user and cm.resource_type == "NetcdfResource" and not cm.raccess.public %}
-                <div class="pull-left label-public">Note that making the resource public may take a little extra time to update
-                        Hyrax server in order to provide OPeNDAP service for this resource. </div>
-            {% endif %}
         {% else %}
-            {% if cm.raccess.published %}
-                <strong class="label-public">&nbsp;Published</strong>
-            {% elif cm.raccess.public %}
-                <strong class="label-public">&nbsp;Public</strong>
-            {% elif cm.raccess.discoverable %}
-                <strong class="label-discoverable">&nbsp;Discoverable</strong>
-            {% else %}
-                <strong class="label-private">&nbsp;Private</strong>
-            {% endif %}
-            {% if cm.raccess.published %}
-                {% if "pending" in cm.doi or "failure" in cm.doi %}&#8210; Note that the DOI will not be available until
-                    it has been registered and activated.{% endif %}
-            {% else %}
-                &{% if cm.raccess.shareable %}<strong style="color:#5cb85c">&nbsp;Shareable</strong>{% else %}<strong style="color:#d9534f">&nbsp;Not Shareable</strong>{% endif %}
-            {% endif %}
+            <div class="col-sm-12">
+                {% if cm.raccess.published %}
+                    <strong class="label-public">&nbsp;Published</strong>
+                {% elif cm.raccess.public %}
+                    <strong class="label-public">&nbsp;Public</strong>
+                {% elif cm.raccess.discoverable %}
+                    <strong class="label-discoverable">&nbsp;Discoverable</strong>
+                {% else %}
+                    <strong class="label-private">&nbsp;Private</strong>
+                {% endif %}
+                {% if cm.raccess.published %}
+                    {% if "pending" in cm.doi or "failure" in cm.doi %}&#8210; Note that the DOI will not be available until
+                        it has been registered and activated.{% endif %}
+                {% else %}
+                    &{% if cm.raccess.shareable %}<strong style="color:#5cb85c">&nbsp;Shareable</strong>{% else %}<strong style="color:#d9534f">&nbsp;Not Shareable</strong>{% endif %}
+                {% endif %}
+            </div>
         {% endif %}
 
-        <div id="user-permission-msg">
+        <div id="user-permission-msg" class="col-sm-12">
             {% if is_owner_user %}
-                <span class="alert alert-info" role="alert">You are the owner of this resource.</span>
+                <div class="alert alert-info" role="alert">You are the owner of this resource.</div>
             {% elif is_edit_user %}
-                <span class="alert alert-info" role="alert">You have been given specific permission to
-                    {% if cm.raccess.published %} view{% else %} edit{% endif %} this resource.</span>
+                <div class="alert alert-info" role="alert">You have been given specific permission to
+                    {% if cm.raccess.published %} view{% else %} edit{% endif %} this resource.</div>
             {% elif is_view_user %}
-                <span class="alert alert-info" role="alert">You have been given specific permission to view this resource.</span>
+                <div class="alert alert-info" role="alert">You have been given specific permission to view this resource.</div>
             {% endif %}
         </div>
     </div>
