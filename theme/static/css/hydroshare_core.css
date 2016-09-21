@@ -1618,6 +1618,12 @@ div#sharing-status {
 	margin-top: 20px;
 }
 
+div#sharing-status .col-sm-12{
+	margin-bottom: 20px;
+}
+
+
+
 .tag-list {
     min-height:46px !important;
     margin-top:10px;
@@ -2093,12 +2099,11 @@ td.user-actions > span:hover {
 }
 
 #user-permission-msg {
-	margin-bottom: 20px;
-	margin-top: 50px;
+
 }
 
 #shareable-container {
-	padding-top: 20px;
+
 }
 
 button.loading {
@@ -3827,7 +3832,22 @@ form#covereage-search-fields {
 .fb-view-grid .fb-folder, .fb-view-grid .fb-file {
     width: 100px;
     float: left;
+}
 
+#fb-sort a {
+	cursor: pointer;
+}
+
+#fb-sort ul {
+	background :#FFF;
+}
+
+#fb-sort ul li:not(.divider) {
+	padding: 2px 5px;
+}
+
+#fb-sort ul li.active {
+	pointer-events: none;
 }
 
 .fb-folder, .fb-file {
@@ -3888,7 +3908,6 @@ form#covereage-search-fields {
 
 .file-browser-container {
     border:1px solid #DDD;
-	border-bottom: 0;
 }
 
 .files-container {
@@ -4023,6 +4042,7 @@ span.fb-control-square {
 div.fb-upload-caption {
 	padding: 8px;
 	border: 1px solid #DDD;
+	border-top: 0;
 	cursor: pointer;
 	color: #777;
 	background: rgb(252, 255, 244);
