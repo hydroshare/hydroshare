@@ -509,3 +509,46 @@ function unzip_irods_file_ajax_submit(res_id, zip_with_rel_path) {
         }
     });
 }
+
+function create_irods_folder_ajax_submit(res_id, folder_path) {
+    $.ajax({
+        type: "POST",
+        url: '/hsapi/_internal/data-store-create-folder/',
+        async: true,
+        data: {
+            res_id: res_id,
+            folder_path: folder_path
+        },
+        success: function (result) {
+            var new_folder_rel_path = result.new_folder_rel_path;
+            if (new_folder_rel_path.length > 0) {
+                console.log("Folder " + new_folder_rel_path + " is created successfully.");
+            }
+        },
+        error: function(xhr, errmsg, err){
+            console.log(xhr.status + ": " + xhr.responseText + ". Error message: " + errmsg);
+        }
+    });
+}
+
+function move_or_rename_irods_file_or_folder_ajax_submit(res_id, source_path, target_path) {
+    $.ajax({
+        type: "POST",
+        url: '/hsapi/_internal/data-store-move-or-rename/',
+        async: true,
+        data: {
+            res_id: res_id,
+            source_path: source_path,
+            target_path: target_path
+        },
+        success: function (result) {
+            var target_rel_path = result.target_rel_path;
+            if (target_rel_path.length > 0) {
+                console.log(source_path + " has been renamed or moved to " + target_path);
+            }
+        },
+        error: function(xhr, errmsg, err){
+            console.log(xhr.status + ": " + xhr.responseText + ". Error message: " + errmsg);
+        }
+    });
+}

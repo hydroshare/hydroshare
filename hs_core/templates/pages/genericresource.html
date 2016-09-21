@@ -391,6 +391,12 @@
                                     <button type="button" class="btn btn-primary pull-right"
                                             onclick="unzip_irods_file_ajax_submit('{{ cm.short_id }}', 'data/contents/test.zip'); return false;">Unzip iRODS file
                                     </button>
+                                    <button type="button" class="btn btn-primary pull-right"
+                                            onclick="create_irods_folder_ajax_submit('{{ cm.short_id }}', 'data/contents/test_sub_folder'); return false;">Create folder
+                                    </button>
+                                    <button type="button" class="btn btn-primary pull-right"
+                                            onclick="move_or_rename_irods_file_or_folder_ajax_submit('{{ cm.short_id }}', 'data/contents/test.zip', 'data/contents/test_renamed.zip'); return false;">Move file
+                                    </button>
                                 {% endfor %}
                                 {% if user_zone_account_exist %}
                                     <div id='rep-alert-success' class="alert alert-success alert-dismissible" role="alert" style="display:none">
