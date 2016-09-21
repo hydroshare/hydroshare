@@ -90,5 +90,5 @@ urlpatterns = patterns('',
     url(r'^_internal/search/autocomplete/', "hs_core.views.autocomplete.autocomplete"),
     url(r'^_internal/data-store-structure/$', views.resource_folder_hierarchy.data_store_structure),
     url(r'^_internal/data-store-folder-zip/$', views.resource_folder_hierarchy.data_store_folder_zip),
-
+    url(r'^_internal/data-store-folder-unzip/$', views.resource_folder_hierarchy.data_store_folder_unzip),
 )

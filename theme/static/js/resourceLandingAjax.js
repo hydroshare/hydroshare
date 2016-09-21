@@ -465,7 +465,7 @@ function zip_irods_folder_ajax_submit(res_id, input_coll_path) {
             res_id: res_id,
             input_coll_path: input_coll_path,
             output_zip_file_name: "test.zip",
-            remove_original_after_zip: "false"
+            remove_original_after_zip: "true"
         },
         success: function (result) {
             var output_file_name = result.name;
@@ -480,6 +480,28 @@ function zip_irods_folder_ajax_submit(res_id, input_coll_path) {
                     "<span class='fb-file-type'>" + output_file_type + " File</span>" +
                     "<span class='fb-file-size' data-file-size=" + output_file_size + ">" + formatBytes(parseInt(output_file_size)) + "</span></li>");
 
+            }
+        },
+        error: function(xhr, errmsg, err){
+            console.log(xhr.status + ": " + xhr.responseText + ". Error message: " + errmsg);
+        }
+    });
+}
+
+function unzip_irods_file_ajax_submit(res_id, zip_with_rel_path) {
+    $.ajax({
+        type: "POST",
+        url: '/hsapi/_internal/data-store-folder-unzip/',
+        async: true,
+        data: {
+            res_id: res_id,
+            zip_with_rel_path: zip_with_rel_path,
+            remove_original_zip: "false"
+        },
+        success: function (result) {
+            var unzipped_path = result.unzipped_path;
+            if (unzipped_path.length > 0) {
+                zip_irods_folder_ajax_submit(res_id, unzipped_path)
             }
         },
         error: function(xhr, errmsg, err){
