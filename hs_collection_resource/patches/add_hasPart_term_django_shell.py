@@ -10,8 +10,8 @@ from datetime import datetime
 from django.contrib.auth.models import User
 
 from hs_core.hydroshare.utils import resource_modified
-from hs_collection_resource.utils import add_or_remove_relation_metadata, \
-    RES_LANDING_PAGE_URL_TEMPLATE
+from hs_collection_resource.utils import add_or_remove_relation_metadata
+from hs_collection_resource.utils import RES_LANDING_PAGE_URL_TEMPLATE
 from hs_collection_resource.models import CollectionResource
 
 last_changed_by_user = None
