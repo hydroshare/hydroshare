@@ -107,11 +107,7 @@ def create_bag_files(resource, fed_zone_home_path=''):
 
     # make the resource map
     current_site_url = current_site_url()
-    if fed_zone_home_path:
-        hs_res_url = '{hs_url}/resource/{res_id}/data'.format(hs_url=current_site_url,
-                                                                    res_id=resource.short_id)
-    else:
-        hs_res_url = '{hs_url}/resource/{res_id}/data'.format(hs_url=current_site_url,
+    hs_res_url = '{hs_url}/resource/{res_id}/data'.format(hs_url=current_site_url,
                                                               res_id=resource.short_id)
     metadata_url = os.path.join(hs_res_url, 'resourcemetadata.xml')
     res_map_url = os.path.join(hs_res_url, 'resourcemap.xml')
@@ -153,24 +149,22 @@ def create_bag_files(resource, fed_zone_home_path=''):
             # in federated zone
             from_fname = f.fed_resource_file_name_or_path
             filename = from_fname.rsplit('/')[-1]
-            res_path = os.path.join(
-                '{hs_url}/resource/{res_id}/data/contents/{file_name}'.format(
+            res_path = '{hs_url}/resource/{res_id}/data/contents/{file_name}'.format(
                     hs_url=current_site_url,
                     res_id=resource.short_id,
-                    file_name=filename))
+                    file_name=filename)
         elif f.resource_file:
             filename = os.path.basename(f.resource_file.name)
-            res_path = os.path.join('{hs_url}/resource/{res_id}/data/contents/{file_name}'.format(
+            res_path = '{hs_url}/resource/{res_id}/data/contents/{file_name}'.format(
                     hs_url=current_site_url,
                     res_id=resource.short_id,
-                    file_name=filename))
+                    file_name=filename)
         elif f.fed_resource_file:
             filename = os.path.basename(f.fed_resource_file.name)
-            res_path = os.path.join(
-                '{hs_url}/resource/{res_id}/data/contents/{file_name}'.format(
+            res_path = '{hs_url}/resource/{res_id}/data/contents/{file_name}'.format(
                     hs_url=current_site_url,
                     res_id=resource.short_id,
-                    file_name=filename))
+                    file_name=filename)
         else:
             filename = ''
         if filename:
@@ -188,14 +182,10 @@ def create_bag_files(resource, fed_zone_home_path=''):
     if resource.resource_type == "CollectionResource" and resource.resources:
         for contained_res in resource.resources.all():
             contained_res_id = contained_res.short_id
-            if contained_res.resource_federation_path:
-                resource_map_url = '{hs_url}/resource/{res_id}/data/resourcemap.xml'.format(
+            resource_map_url = '{hs_url}/resource/{res_id}/data/resourcemap.xml'.format(
                     hs_url=current_site_url,
                     res_id=contained_res_id)
-            else:
-                resource_map_url = '{hs_url}/resource/{res_id}/data/resourcemap.xml'.format(
-                    hs_url=current_site_url,
-                    res_id=contained_res_id)
+
             ar = AggregatedResource(resource_map_url)
             ar._ore.isAggregatedBy = ag_url
             ar._dc.format = "application/rdf+xml"
