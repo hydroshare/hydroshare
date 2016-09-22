@@ -16,7 +16,7 @@ from hs_core.signals import pre_create_resource, pre_metadata_element_create,\
                             pre_add_files_to_resource, post_add_files_to_resource
 
 
-from hs_geographic_feature_resource.parse_lib import parse_shp, UNKNOWN_STR
+from hs_geographic_feature_resource.parse_lib import parse_shp, UNKNOWN_STR, parse_shp_xml
 from hs_geographic_feature_resource.forms import OriginalCoverageValidationForm,\
                                                  GeometryInformationValidationForm,\
                                                  FieldInformationValidationForm
@@ -57,13 +57,22 @@ def check_fn_for_shp(files):
                 fileName, fileExtension = os.path.splitext(fullName.lower())
                 if ".shp" == fileExtension:
                     shp_filename = fileName
-                    shp = True
+                    if not shp:
+                        shp = True
+                    else:
+                        return False
                 elif ".shx" == fileExtension:
                     shx_filename = fileName
-                    shx = True
+                    if not shx:
+                        shx = True
+                    else:
+                        return False
                 elif ".dbf" == fileExtension:
                     dbf_filename = fileName
-                    dbf = True
+                    if not dbf:
+                        dbf = True
+                    else:
+                        return False
 
         if shp_filename == shx_filename and shp_filename == dbf_filename:
             all_have_same_filename = True
@@ -94,6 +103,11 @@ def check_uploaded_files_type(file_info_list):
         shp_full_path = tmp_dir + "/" + fileName + ".shp"
         files_type_dict['shp_full_path'] = shp_full_path
         files_type_dict["baseFilename"] = baseFilename
+        # Expected fullpath of ESRI Shapefile Metadat XML file
+        # This file may not exist, should check existence before reading
+        shp_xml_full_path = tmp_dir + "/" + baseFilename + ".shp.xml"
+        files_type_dict['shp_xml_full_path'] = shp_xml_full_path
+
         uploadedFileCount = len(file_info_list)
         files_type_dict["uploadedFileCount"] = uploadedFileCount
         uploadedFilenameString_dict = {}
@@ -139,8 +153,12 @@ def check_uploaded_files_type(file_info_list):
                 uploadedFilenameString_dict[(fileName + fileExtension).lower()] = str(-1)  # -1: unzipped file
 
         files_type_dict['shp_full_path'] = shp_full_path
-
         files_type_dict["baseFilename"] = baseFilename
+        # Expected fullpath of ESRI Shapefile Metadat XML file
+        # This file may not exist, should check existence before reading
+        shp_xml_full_path = tmp_dir + "/" + baseFilename + ".shp.xml"
+        files_type_dict['shp_xml_full_path'] = shp_xml_full_path
+
         files_type_dict["uploadedFileCount"] = uploadedFileCount
         uploadedFilenameString = json.dumps(uploadedFilenameString_dict)
         files_type_dict["uploadedFilenameString"] = uploadedFilenameString
@@ -149,9 +167,13 @@ def check_uploaded_files_type(file_info_list):
         files_type_dict['message'] = 'All files are validated.'
     else:
         files_type_dict["are_files_valid"] = False
-        files_type_dict['message'] = "Invalid files uploaded. Please note the three mandatory files (.shp, .shx, .dbf) of ESRI Shapefiles should be uploaded at the same time (or in a zip file)."
+        files_type_dict['message'] = "Invalid files uploaded. You may upload only one " \
+                                     "ESRI shapefile that includes the three " \
+                                     "mandatory files (.shp, .shx, .dfb) or " \
+                                     "upload one zipped shapefile."
 
     return files_type_dict
+
 
 def parse_shp_zshp(uploadedFileType, baseFilename, uploadedFileCount, uploadedFilenameString, shpFullPath):
     try:
@@ -269,6 +291,7 @@ def geofeature_pre_create_resource(sender, **kwargs):
                                                            uploadedFilenameString,
                                                            shp_full_path)
                     metadata.extend(meta_array)
+                    metadata.extend(parse_shp_xml(files_type['shp_xml_full_path']))
 
                     if fed_res_fnames:
                         # as long as there is a file uploaded from a fed'd irod zone, the res should be created in that fed'd zone
@@ -464,6 +487,7 @@ def geofeature_pre_add_files_to_resource(sender, **kwargs):
                 uploadedFileCount = files_type['uploadedFileCount']
                 uploadedFilenameString = files_type['uploadedFilenameString']
                 shp_full_path = files_type['shp_full_path']
+                shp_xml_full_path = files_type['shp_xml_full_path']
                 parsed_md_dict = None
                 if uploaded_file_type == "shp" or uploaded_file_type == "zipped_shp":
                     meta_array, meta_dict = parse_shp_zshp(uploaded_file_type,
@@ -511,6 +535,29 @@ def geofeature_pre_add_files_to_resource(sender, **kwargs):
                                                 featureCount=geometryinformation_dict['featureCount'],
                                                 geometryType=geometryinformation_dict['geometryType']
                                                 )
+
+                shp_xml_metadata_list = parse_shp_xml(shp_xml_full_path)
+                for shp_xml_metadata in shp_xml_metadata_list:
+                    if 'description' in shp_xml_metadata:
+                        if res_obj.metadata.description:
+                            res_obj.metadata.description.delete()
+                        res_obj.metadata.create_element('description',
+                                                        abstract=shp_xml_metadata
+                                                        ['description']['abstract'])
+                    elif 'title' in shp_xml_metadata:
+                        if res_obj.metadata.title:
+                           res_obj.metadata.title.delete()
+                        res_obj.metadata.create_element('title',
+                                                        value=shp_xml_metadata
+                                                        ['title']['value'])
+                    elif 'subject' in shp_xml_metadata:
+                        existing_keywords = [subject.value for
+                                             subject in res_obj.metadata.subjects.all()]
+                        if shp_xml_metadata['subject']['value'] not in existing_keywords:
+                            res_obj.metadata.create_element('subject',
+                                                            value=shp_xml_metadata
+                                                            ['subject']['value'])
+
                 if uploaded_file_type == "zipped_shp":
                         if fed_res_fnames:
                             # remove the temp zip file retrieved from federated zone

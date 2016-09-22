@@ -1,7 +1,16 @@
-
+import os
+import xmltodict
+import re
 from osgeo import ogr, osr
+try:
+    #  Python 2.6-2.7
+    from HTMLParser import HTMLParser
+except ImportError:
+    #  Python 3
+    from html.parser import HTMLParser
 
 UNKNOWN_STR = "unknown"
+
 
 def parse_shp(file_path):
     # output dictionary format
@@ -130,3 +139,61 @@ def parse_shp(file_path):
         shp_metadata_dict["wgs84_extent_dict"]["units"] = UNKNOWN_STR
 
     return shp_metadata_dict
+
+
+def parse_shp_xml(shp_xml_full_path):
+    """
+    Parse ArcGIS 10.x ESRI Shapefile Metadata XML.
+    :param shp_xml_full_path: Expected fullpath to the .shp.xml file
+    :return: a list of metadata dict
+    """
+    metadata = []
+
+    try:
+        if os.path.isfile(shp_xml_full_path):
+            with open(shp_xml_full_path) as fd:
+                xml_dict = xmltodict.parse(fd.read())
+                if 'metadata' in xml_dict:
+                    if 'dataIdInfo' in xml_dict['metadata']:
+                        dataIdInfo_dict = xml_dict['metadata']['dataIdInfo']
+                        if 'idAbs' in dataIdInfo_dict:
+                            description_value = clean_text(dataIdInfo_dict['idAbs'])
+                            description = {'description': {'abstract': description_value}}
+                            metadata.append(description)
+                        if 'idPurp' in xml_dict['metadata']['dataIdInfo']:
+                            title_value = clean_text(dataIdInfo_dict['idPurp'])
+                            title = {'title': {'value': title_value}}
+                            metadata.append(title)
+                        if 'searchKeys' in dataIdInfo_dict:
+                            searchKeys_dict = dataIdInfo_dict['searchKeys']
+                            if 'keyword' in searchKeys_dict:
+                                keyword_list = []
+                                if type(searchKeys_dict["keyword"]) is list:
+                                    keyword_list += searchKeys_dict["keyword"]
+                                else:
+                                    keyword_list.append(searchKeys_dict["keyword"])
+                                for k in keyword_list:
+                                    metadata.append({'subject': {'value': k}})
+
+    except Exception as ex:
+        # Due to the continuous variance in ESRI Shapefile Metadata XML format
+        # of different ArcGIS versions, an empty list will be returned
+        # if any exception occurs
+        metadata = []
+    finally:
+        return metadata
+
+
+def clean_text(text):
+    #  Decode html
+
+    h = HTMLParser()
+    return h.unescape(clean_html(text))
+
+
+def clean_html(raw_html):
+    # Remove html tag from raw_html
+
+    cleanr =re.compile('<.*?>')
+    cleantext = re.sub(cleanr,'', raw_html)
+    return cleantext
