@@ -1235,7 +1235,6 @@ class AbstractResource(ResourcePermissionsMixin):
 
     @classmethod
     def bag_url(cls, resource_id):
-        from hs_core.hydroshare.utils import get_resource_by_shortkey
         bagit_path = getattr(settings, 'IRODS_BAGIT_PATH', 'bags')
         bagit_postfix = getattr(settings, 'IRODS_BAGIT_POSTFIX', 'zip')
         bag_path = "{path}/{resource_id}.{postfix}".format(path=bagit_path,

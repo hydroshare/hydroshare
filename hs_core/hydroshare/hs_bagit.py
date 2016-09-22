@@ -108,7 +108,7 @@ def create_bag_files(resource, fed_zone_home_path=''):
     # make the resource map
     current_site_url = current_site_url()
     hs_res_url = '{hs_url}/resource/{res_id}/data'.format(hs_url=current_site_url,
-                                                              res_id=resource.short_id)
+                                                          res_id=resource.short_id)
     metadata_url = os.path.join(hs_res_url, 'resourcemetadata.xml')
     res_map_url = os.path.join(hs_res_url, 'resourcemap.xml')
 
