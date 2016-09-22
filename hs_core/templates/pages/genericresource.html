@@ -130,10 +130,8 @@
 
                                         <div class="file-browser-container">
                                             <div class="file-browser-breadcrumb">
-                                                <ol class="breadcrumb">
-                                                    <li><a href="#"><i class="fa fa-folder-o" aria-hidden="true"></i> Foo</a></li>
-                                                    <li><a href="#"><i class="fa fa-folder-o" aria-hidden="true"></i> Bar</a></li>
-                                                    <li class="active"><i class="fa fa-folder-open-o" aria-hidden="true"></i> Data</li>
+                                                <ol id="fb-bread-crumbs" class="breadcrumb">
+
                                                 </ol>
                                             </div>
 
@@ -168,6 +166,10 @@
                                                 </ul>
 
                                                 <ul id="fb-files-container" class="selectable fb-view-grid">
+                                                    <li class="fb-loading-spinner">
+                                                        <i class="fa fa-spinner fa-pulse fa-2x fa-fw margin-bottom"></i>
+                                                    </li>
+
                                                     {# FOLDER TEMPLATE #}
 {#                                                    <li class="fb-folder droppable" title="98 KB">#}
 {#                                                        <span class='glyphicon glyphicon-chevron-right fb-dropdown-toggle fb-help-icon'></span>#}
@@ -1333,9 +1335,9 @@
     {% block extra_js %}
         <script type="text/javascript" src="{{ STATIC_URL }}js/coverageMap.js"></script>
         <script src="https://maps.googleapis.com/maps/api/js?libraries=drawing"></script>
-         <script type="text/javascript" src="{{ STATIC_URL }}js/dropzone.js"></script>
-        <script type="text/javascript" src="{{ STATIC_URL }}js/resourceLandingAjax.js"></script>
+        <script type="text/javascript" src="{{ STATIC_URL }}js/dropzone.js"></script>
         <script type="text/javascript" src="{{ STATIC_URL }}js/hs_file_browser.js"></script>
+        <script type="text/javascript" src="{{ STATIC_URL }}js/resourceLandingAjax.js"></script>
         <script type="text/javascript" src='//cdn.datatables.net/1.10.10/js/jquery.dataTables.js'></script>
         <link href="https://gitcdn.github.io/bootstrap-toggle/2.2.2/css/bootstrap-toggle.min.css" rel="stylesheet">
         <script src="https://gitcdn.github.io/bootstrap-toggle/2.2.2/js/bootstrap-toggle.min.js"></script>
@@ -1665,7 +1667,7 @@
                 google.maps.event.addDomListener(window, "load", initMap);
                 var task_id = $('#task_id').val();
                 var download_path = $('#download_path').val();
-                var resID = $("#hs-file-browser").attr("data-res-id");
+                resID = $("#hs-file-browser").attr("data-res-id");
                 if (task_id)
                     update_download_status(task_id, download_path);
 
@@ -2104,7 +2106,6 @@
                 if (resID) {
                     get_irods_folder_struct_ajax_submit(resID, 'data/contents');
                 }
-
 
             });
         </script>

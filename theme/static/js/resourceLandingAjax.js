@@ -408,6 +408,27 @@ function get_user_info_ajax_submit(url, obj) {
     });
 }
 
+function getFolderTemplateInstance(folderName) {
+    return "<li class='fb-folder droppable' title='" + folderName + "&#13;Type: Filde Folder'>" +
+        "<span class='glyphicon glyphicon-chevron-right fb-dropdown-toggle fb-help-icon'></span>" +
+        "<span class='fa fa-arrows fb-handle fb-help-icon'></span>" +
+        "<span class='fb-file-icon fa fa-folder glyphicon-folder'></span>" +
+        "<span class='fb-file-name'>" + folderName + "</span>" +
+        "<span class='fb-file-type'>File Folder</span>" +
+        "<span class='fb-file-size'></span>" +
+        "</li>"
+}
+
+function getFileTemplateInstance(fileName, fileType, fileSize) {
+    return "<li class='fb-file droppable' title='" + fileName + "&#13;Type: " + fileType + "&#13;Size: " + formatBytes(parseInt(fileSize)) +  "'>" +
+        "<span class='glyphicon glyphicon-chevron-right fb-dropdown-toggle fb-help-icon'></span>" +
+        "<span class='fa fa-arrows fb-handle fb-help-icon'></span>" +
+        "<span class='fb-file-icon fa fa-file-text'></span>" +
+        "<span class='fb-file-name''>" + fileName + "</span>" +
+        "<span class='fb-file-type'>" + fileType + " File</span>" +
+        "<span class='fb-file-size' data-file-size=" + fileSize + "'>" + formatBytes(parseInt(fileSize)) + "</span></li>"
+}
+
 function formatBytes(bytes) {
     if(bytes < 1024) return bytes + " Bytes";
     else if(bytes < 1048576) return(bytes / 1024).toFixed(1) + " KB";
@@ -427,28 +448,21 @@ function get_irods_folder_struct_ajax_submit(res_id, store_path) {
         success: function (result) {
             var files = result.files;
             var folders = result.folders;
+            $('#fb-files-container').empty();
             if (files.length > 0) {
                 $.each(files, function(i, v) {
-                    $('#fb-files-container').append("<li class='fb-file droppable'>" +
-                        "<span class='glyphicon glyphicon-chevron-right fb-dropdown-toggle fb-help-icon'></span>" +
-                        "<span class='fa fa-arrows fb-handle fb-help-icon'></span>" +
-                        "<span class='fb-file-icon fa fa-file-text'></span>" +
-                        "<span class='fb-file-name'>" + v['name'] + "</span>" +
-                        "<span class='fb-file-type'>" + v['type'] + " File</span>" +
-                        "<span class='fb-file-size' data-file-size=" + v['size'] + ">" + formatBytes(parseInt(v['size'])) + "</span></li>");
+                    $('#fb-files-container').append(getFileTemplateInstance(v['name'], v['type'], v['size']));
                 });
             }
             if (folders.length > 0) {
                 $.each(folders, function(i, v) {
-                    $('#fb-files-container').append("<li class='fb-folder droppable'>" +
-                        "<span class='glyphicon glyphicon-chevron-right fb-dropdown-toggle fb-help-icon'></span>" +
-                        "<span class='fa fa-arrows fb-handle fb-help-icon'></span>" +
-                        "<span class='fb-file-icon fa fa-folder glyphicon-folder'></span>" +
-                        "<span class='fb-file-name'>" + v + "</span>" +
-                        "<span class='fb-file-type'>File Folder</span>" +
-                        "<span class='fb-file-size' data-file-size='24326'>24 KB</span></li>");
+                    $('#fb-files-container').append(getFolderTemplateInstance(v));
                 });
             }
+            bindFileBrowserItemEvents();
+            $("#fb-files-container").attr("data-current-path", store_path);
+            $("#fb-files-container").attr("data-res-id", res_id);
+            setBreadCrumbs(store_path);
         },
         error: function(xhr, errmsg, err){
             console.log(xhr.status + ": " + xhr.responseText + ". Error message: " + errmsg);

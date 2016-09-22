@@ -13,47 +13,7 @@ function selectSelectableElement (selectableContainer, elementsToSelect) {
     selectableContainer.data("selectable")._mouseStop(null);
 }
 
-function bytesToSize(bytes) {
-   var sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB'];
-   if (bytes == 0) return '0 Byte';
-   var i = parseInt(Math.floor(Math.log(bytes) / Math.log(1024)));
-   return Math.round(bytes / Math.pow(1024, i), 2) + ' ' + sizes[i];
-};
-
-
-$(document).ready(function () {
-    // Show file drop visual feedback
-    Dropzone.options.fbContainmentWrapper = {
-        paramName: "files", // The name that will be used to transfer the file
-        clickable: ".fb-upload-caption",
-        init: function () {
-            this.on("dragenter", function (file) {
-                $(".fb-drag-flag").show();
-            });
-
-            this.on("dragleave", function (file) {
-                $(".fb-drag-flag").hide();
-            });
-
-            this.on("addedfile", function (file) {
-                $(".fb-drag-flag").hide();
-            });
-        }
-    };
-    
-    $("#toggle-list-view").change(function () {
-        if ($("#fb-files-container").hasClass("fb-view-list")) {
-            // ------- Switch to grid view -------
-            $("#fb-files-container").removeClass("fb-view-list");
-            $("#fb-files-container").addClass("fb-view-grid");
-        }
-        else {
-            // ------- switch to table view -------
-            $("#fb-files-container").removeClass("fb-view-grid");
-            $("#fb-files-container").addClass("fb-view-list");
-        }
-    });
-
+function bindFileBrowserItemEvents() {
     $(".fb-dropdown-toggle").click(function () {
         var menu = $("#selection-menu");
         var offsetTop = 170;
@@ -92,6 +52,7 @@ $(document).ready(function () {
         })
         .selectable({
             filter: "li", cancel: ".fb-dropdown-toggle, .fb-handle",
+            cancel: '.ui-selected',
             selected: function (event, ui) {
 
             },
@@ -106,12 +67,81 @@ $(document).ready(function () {
     });
 
     // Dismiss dropdown when clicking on empty space
-    $("#fbContainmentWrapper").click(function() {
+    $("#fbContainmentWrapper").click(function () {
         if (event.target.tagName == "FORM") {
             $(".ui-selected").removeClass("ui-selected");
             $("#selection-menu").hide();
         }
     });
+
+    $("#hs-file-browser li.fb-folder").dblclick(function() {
+        var resID = $("#fb-files-container").attr("data-res-id");
+        var currentPath = $("#fb-files-container").attr("data-current-path");
+        var folderName = $(this).children(".fb-file-name").text();
+        get_irods_folder_struct_ajax_submit(resID, currentPath + "/" + folderName);
+    });
+}
+
+function setBreadCrumbs(path) {
+    var crumbs = $("#fb-bread-crumbs");
+    crumbs.empty();
+
+    var setFirstActive = false;
+    while (path){
+        var folder = path.substr(path.lastIndexOf("/") + 1, path.length);
+        var currentPath = path;
+        path = path.substr(0, path.lastIndexOf("/"));
+        if (setFirstActive) {
+            crumbs.prepend('<li data-path="' + currentPath + '"><i class="fa fa-folder-o" aria-hidden="true"></i><span> ' + folder + '</span></li>');
+        }
+        else {
+            crumbs.prepend('<li class="active"><i class="fa fa-folder-open-o" aria-hidden="true"></i><span> ' + folder + '</span></li>');
+            setFirstActive = true;
+        }
+    }
+
+    // Bind click events
+    $("#fb-bread-crumbs li").click(function() {
+        var resID = $("#fb-files-container").attr("data-res-id");
+        var path = $(this).attr("data-path");
+        get_irods_folder_struct_ajax_submit(resID, path);
+    });
+}
+
+$(document).ready(function () {
+    // Show file drop visual feedback
+    Dropzone.options.fbContainmentWrapper = {
+        paramName: "files", // The name that will be used to transfer the file
+        clickable: ".fb-upload-caption",
+        init: function () {
+            this.on("dragenter", function (file) {
+                $(".fb-drag-flag").show();
+            });
+
+            this.on("dragleave", function (file) {
+                $(".fb-drag-flag").hide();
+            });
+
+            this.on("addedfile", function (file) {
+                $(".fb-drag-flag").hide();
+            });
+        }
+    };
+    
+    $("#toggle-list-view").change(function () {
+        if ($("#fb-files-container").hasClass("fb-view-list")) {
+            // ------- Switch to grid view -------
+            $("#fb-files-container").removeClass("fb-view-list");
+            $("#fb-files-container").addClass("fb-view-grid");
+        }
+        else {
+            // ------- switch to table view -------
+            $("#fb-files-container").removeClass("fb-view-grid");
+            $("#fb-files-container").addClass("fb-view-list");
+        }
+    });
+
+    bindFileBrowserItemEvents();
 
     function sort(method, order) {
         var sorted;
@@ -207,5 +237,23 @@ $(document).ready(function () {
     $("#btn-clear-search-input").click(function(){
         $("#txtDirSearch").val("");
         filter();
-    })
+    });
+
+    // Create folder at current directory
+    $("#fb-create-folder").click(function() {
+        var resID = $("#fb-files-container").attr("data-res-id");
+        var currentPath = $("#fb-files-container").attr("data-current-path");
+        var folderName = "Test Folder";
+        create_irods_folder_ajax_submit(resID, currentPath + "/" + folderName);
+        get_irods_folder_struct_ajax_submit(resID, currentPath);
+        // setBreadCrumbs(currentPath);
+    });
+
+     // Move up one directory
+    $("#fb-move-up").click(function() {
+        var resID = $("#fb-files-container").attr("data-res-id");
+        var upPath = $("#fb-files-container").attr("data-current-path");
+        upPath = upPath.substr(0,upPath.lastIndexOf("/"));
+        get_irods_folder_struct_ajax_submit(resID, upPath);
+    });
 });
