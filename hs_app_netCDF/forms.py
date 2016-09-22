@@ -183,7 +183,7 @@ class VariableValidationForm(forms.Form):
     type = forms.CharField(max_length=1000)
     shape = forms.CharField(max_length=1000)
     descriptive_name = forms.CharField(max_length=1000, required=False)
-    method = forms.CharField(max_length=1000, required=False)
+    method = forms.CharField(max_length=10000, required=False)
     missing_value = forms.CharField(max_length=1000, required=False)
 
 from hs_core.forms import Helper
