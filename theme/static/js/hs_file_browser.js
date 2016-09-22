@@ -240,13 +240,17 @@ $(document).ready(function () {
     });
 
     // Create folder at current directory
-    $("#fb-create-folder").click(function() {
+    $("#btn-create-folder").click(function() {
         var resID = $("#fb-files-container").attr("data-res-id");
         var currentPath = $("#fb-files-container").attr("data-current-path");
-        var folderName = "Test Folder";
-        create_irods_folder_ajax_submit(resID, currentPath + "/" + folderName);
-        get_irods_folder_struct_ajax_submit(resID, currentPath);
-        // setBreadCrumbs(currentPath);
+        var folderName = $("#txtFolderName").val();
+        if (folderName) {
+            create_irods_folder_ajax_submit(resID, currentPath + "/" + folderName);
+            get_irods_folder_struct_ajax_submit(resID, currentPath);
+            setBreadCrumbs(currentPath);
+        }
+
+        return false;
     });
 
      // Move up one directory

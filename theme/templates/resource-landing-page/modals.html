@@ -1711,8 +1711,36 @@
             </div>
         </div>
     </div>
-
 {% endfor %}
+
+<div class="modal fade in" id="create-folder-dialog" tabindex="-1" role="dialog"
+     aria-labelledby="create-folder" aria-hidden="false">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form>
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+                    <h4 class="modal-title" id="delete-funding-agency">New Folder</h4>
+                </div>
+
+                <div class="modal-body">
+                    <div class="row">
+                        {# Group Name #}
+                        <fieldset class="col-sm-12">
+                            <label>Folder Name *</label>
+                            <input id="txtFolderName" class="form-control" >
+                        </fieldset>
+                    </div>
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+                    <button type="button" id="btn-create-folder" class="btn btn-primary" data-dismiss="modal">Create</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
 
 {% block extra_js %}
     <script type="text/javascript">
