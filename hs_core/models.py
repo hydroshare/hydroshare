@@ -1241,11 +1241,6 @@ class AbstractResource(ResourcePermissionsMixin):
         bag_path = "{path}/{resource_id}.{postfix}".format(path=bagit_path,
                                                            resource_id=resource_id,
                                                            postfix=bagit_postfix)
-        res = get_resource_by_shortkey(resource_id)
-        if res.resource_federation_path:
-            rel_fed_path = res.resource_federation_path[1:]
-            bag_path = os.path.join(rel_fed_path, bag_path)
-
         istorage = IrodsStorage()
         bag_url = istorage.url(bag_path)
 

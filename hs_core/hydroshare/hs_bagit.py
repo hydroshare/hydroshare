@@ -108,8 +108,7 @@ def create_bag_files(resource, fed_zone_home_path=''):
     # make the resource map
     current_site_url = current_site_url()
     if fed_zone_home_path:
-        hs_res_url = '{hs_url}/resource{zone}/{res_id}/data'.format(hs_url=current_site_url,
-                                                                    zone=fed_zone_home_path,
+        hs_res_url = '{hs_url}/resource/{res_id}/data'.format(hs_url=current_site_url,
                                                                     res_id=resource.short_id)
     else:
         hs_res_url = '{hs_url}/resource/{res_id}/data'.format(hs_url=current_site_url,
@@ -155,9 +154,8 @@ def create_bag_files(resource, fed_zone_home_path=''):
             from_fname = f.fed_resource_file_name_or_path
             filename = from_fname.rsplit('/')[-1]
             res_path = os.path.join(
-                '{hs_url}/resource{zone}/{res_id}/data/contents/{file_name}'.format(
+                '{hs_url}/resource/{res_id}/data/contents/{file_name}'.format(
                     hs_url=current_site_url,
-                    zone=resource.resource_federation_path,
                     res_id=resource.short_id,
                     file_name=filename))
         elif f.resource_file:
@@ -169,9 +167,8 @@ def create_bag_files(resource, fed_zone_home_path=''):
         elif f.fed_resource_file:
             filename = os.path.basename(f.fed_resource_file.name)
             res_path = os.path.join(
-                '{hs_url}/resource{zone}/{res_id}/data/contents/{file_name}'.format(
+                '{hs_url}/resource/{res_id}/data/contents/{file_name}'.format(
                     hs_url=current_site_url,
-                    zone=resource.resource_federation_path,
                     res_id=resource.short_id,
                     file_name=filename))
         else:
@@ -192,9 +189,8 @@ def create_bag_files(resource, fed_zone_home_path=''):
         for contained_res in resource.resources.all():
             contained_res_id = contained_res.short_id
             if contained_res.resource_federation_path:
-                resource_map_url = '{hs_url}/resource{zone}/{res_id}/data/resourcemap.xml'.format(
+                resource_map_url = '{hs_url}/resource/{res_id}/data/resourcemap.xml'.format(
                     hs_url=current_site_url,
-                    zone=contained_res.resource_federation_path,
                     res_id=contained_res_id)
             else:
                 resource_map_url = '{hs_url}/resource/{res_id}/data/resourcemap.xml'.format(
