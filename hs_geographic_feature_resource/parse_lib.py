@@ -176,6 +176,7 @@ def parse_shp_xml(shp_xml_full_path):
                                     metadata.append({'subject': {'value': k}})
 
     except Exception as ex:
+        # Catch any exception silently and return an empty list
         # Due to the continuous variance in ESRI Shapefile Metadata XML format
         # of different ArcGIS versions, an empty list will be returned
         # if any exception occurs

@@ -18,7 +18,7 @@ from hs_geographic_feature_resource.receivers import geofeature_post_add_files_t
                                                      metadata_element_pre_create_handler,\
                                                      metadata_element_pre_update_handler,\
                                                      UNKNOWN_STR,\
-                                                     parse_shp_zshp
+                                                     parse_shp_zshp, parse_shp_xml
 
 class TestGeoFeature(TransactionTestCase):
 
@@ -526,3 +526,29 @@ class TestGeoFeature(TransactionTestCase):
         self.assertEqual(coverage_dict["Coverage"]["type"].lower(), "point")
         self.assertTrue(abs(coverage_dict["Coverage"]["value"]["east"] + 111.790377929) < self.allowance)
         self.assertTrue(abs(coverage_dict["Coverage"]["value"]["north"] - 41.7422180799) < self.allowance)
+
+    def test_read_shp_xml(self):
+        # test parsing shapefile xml metadata
+        shp_xml_full_path = 'hs_geographic_feature_resource/tests/beaver_ponds_1940.shp.xml'
+        metadata = parse_shp_xml(shp_xml_full_path)
+        resGeoFeature2 = hydroshare.create_resource(
+            resource_type='GeographicFeatureResource',
+            owner=self.user,
+            title="",
+            metadata=metadata
+        )
+
+        # test abstract
+        self.assertIn("white aerial photographs taken in July 1940 by the U.S. Department of Agriculture",
+                      resGeoFeature2.metadata.description.abstract)
+
+        # test title
+        self.assertIn("Ponds and wetlands impounded by beaver dams as of 1940",
+                      resGeoFeature2.metadata.title.value)
+
+        # test keywords
+        self.assertEqual(resGeoFeature2.metadata.subjects.all().count(), 3)
+        subject_list = [s.value for s in resGeoFeature2.metadata.subjects.all()]
+        self.assertIn("beaver ponds", subject_list)
+        self.assertIn("beaver meadows", subject_list)
+        self.assertIn("Voyageurs National Park", subject_list)
