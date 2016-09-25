@@ -176,9 +176,10 @@ def _process_uploaded_csv_file(resource, res_file, validate_files_dict, user,
             csv_reader = csv.reader(fl_obj, delimiter=',')
             # read the first row - header
             header = csv_reader.next()
+            # read the 1st data row
             start_date_str = csv_reader.next()[0]
             last_row = None
-            data_row_count = 0
+            data_row_count = 1
             for row in csv_reader:
                 last_row = row
                 data_row_count += 1
