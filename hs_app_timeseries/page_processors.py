@@ -1,3 +1,5 @@
+from collections import OrderedDict
+
 from django.contrib import messages
 
 from mezzanine.pages.page_processors import processor_for
@@ -35,16 +37,23 @@ def landing_page(request, page):
     if content_model.has_csv_file and content_model.metadata.series_names:
         # this condition is true if the user has uploaded a csv file and the blank
         # sqlite file (added by the system) has never been synced before with metadata changes
-
-        for index, series_name in enumerate(sorted(content_model.metadata.series_names)):
+        for index, series_name in enumerate(content_model.metadata.series_names):
             series_ids[str(index)] = series_name
     else:
         for result in content_model.metadata.time_series_results:
             series_id = result.series_ids[0]
             series_ids[series_id] = _get_series_label(series_id, content_model)
 
+    # sort the dict on series names - item[1]
+    series_ids = OrderedDict(sorted(series_ids.items(), key=lambda item: item[1].lower()))
+
     if 'series_id' in request.GET:
         selected_series_id = request.GET['series_id']
+        if selected_series_id not in series_ids.keys():
+            # this will happen only in case of CSV file upload when data is written
+            # first time to the blank sqlite file as the series ids get changed to
+            # uuids
+            selected_series_id = series_ids.keys()[0]
         if 'series_id' in request.session:
             if selected_series_id != request.session['series_id']:
                 is_resource_specific_tab_active = True
