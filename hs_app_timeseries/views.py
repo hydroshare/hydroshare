@@ -28,4 +28,6 @@ def update_sqlite_file(request, resource_id, *args, **kwargs):
     if 'resource-mode' in request.POST:
         request.session['resource-mode'] = 'edit'
 
+    # remove if there exits any previous form validation errors
+    request.session['validation_error'] = ''
     return HttpResponseRedirect(request.META['HTTP_REFERER'])
