@@ -29,5 +29,7 @@ def update_sqlite_file(request, resource_id, *args, **kwargs):
         request.session['resource-mode'] = 'edit'
 
     # remove if there exits any previous form validation errors
-    request.session['validation_error'] = ''
+    if 'validation_error' in request.session:
+        del request.session['validation_error']
+
     return HttpResponseRedirect(request.META['HTTP_REFERER'])
