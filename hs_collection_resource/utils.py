@@ -128,7 +128,10 @@ def _get_owners_string(owners_list):
         else:
             name_str = owner.username
         name_list.append(name_str)
-    return '&'.join(name_list)
+    if len(name_list) > 1:
+        return '"' + ', '.join(name_list) + '"'
+    else:
+        return name_list[0]
 
 
 def _get_sharing_status_string(res_obj):
