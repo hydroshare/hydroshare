@@ -65,6 +65,24 @@
                 {% block content_block %}
                 {# ======= Content (code moved here because django does not render blocks inside included templates) ======= #}
                 {% if cm.resource_type != "ToolResource" %}
+                    {# POPUP MENU #}
+                    <ul id="selection-menu" class="dropdown-menu fb-dropdown">
+                        <li><a href="#"><span
+                                class="glyphicon glyphicon-folder-open glyphicon-folder"></span>Open</a>
+                        </li>
+                        <li><a href="#"><span
+                                class="fa fa-scissors icon-blue"></span>Cut</a>
+                        </li>
+                        <li><a href="#"><span
+                                class="glyphicon glyphicon-download icon-blue"></span>Download</a>
+                        </li>
+                        <li><a href="#"><span
+                                class="glyphicon glyphicon-pencil icon-blue"></span>Rename</a>
+                        </li>
+                        <li><a href="#"><span
+                                class="glyphicon glyphicon-trash icon-button btn-remove"></span>Delete</a>
+                        </li>
+                    </ul>
                     <div class="col-sm-12 content-block">
                         <h3>Content</h3>
                         {% if show_content_files %}
@@ -146,26 +164,6 @@
                                                     <span class="fa fa-plus-square fa-5x"></span>
                                                 </div>
 
-
-                                                {# POPUP MENU #}
-                                                <ul id="selection-menu" class="dropdown-menu fb-dropdown">
-                                                    <li><a href="#"><span
-                                                            class="glyphicon glyphicon-folder-open glyphicon-folder"></span>Open</a>
-                                                    </li>
-                                                    <li><a href="#"><span
-                                                            class="fa fa-scissors icon-blue"></span>Cut</a>
-                                                    </li>
-                                                    <li><a href="#"><span
-                                                            class="glyphicon glyphicon-download icon-blue"></span>Download</a>
-                                                    </li>
-                                                    <li><a href="#"><span
-                                                            class="glyphicon glyphicon-pencil icon-blue"></span>Rename</a>
-                                                    </li>
-                                                    <li><a href="#"><span
-                                                            class="glyphicon glyphicon-trash icon-button btn-remove"></span>Delete</a>
-                                                    </li>
-                                                </ul>
-
                                                 <ul id="fb-files-container" class="selectable fb-view-grid">
                                                     <li class="fb-loading-spinner">
                                                         <i class="fa fa-spinner fa-pulse fa-2x fa-fw margin-bottom"></i>
@@ -173,59 +171,23 @@
 
                                                     {# FOLDER TEMPLATE #}
 {#                                                    <li class="fb-folder droppable" title="98 KB">#}
-{#                                                        <span class='glyphicon glyphicon-chevron-right fb-dropdown-toggle fb-help-icon'></span>#}
 {#                                                        <span class='fa fa-arrows fb-handle fb-help-icon'></span>#}
 {#                                                        <span class="fb-file-icon fa fa-folder glyphicon-folder"></span>#}
 {#                                                        <span class="fb-file-name">Folder 1</span>#}
 {#                                                        <span class="fb-file-type">File Folder</span>#}
 {#                                                        <span class="fb-file-size" data-file-size="98523">98 KB</span>#}
 {#                                                    </li>#}
-{##}
-{#                                                    <li class="fb-folder droppable" title="94 KB">#}
-{#                                                        <span class='glyphicon glyphicon-chevron-right fb-dropdown-toggle fb-help-icon'></span>#}
-{#                                                        <span class='fa fa-arrows fb-handle fb-help-icon'></span>#}
-{#                                                        <span class="fb-file-icon fa fa-folder glyphicon-folder"></span>#}
-{#                                                        <span class="fb-file-name">Folder 2</span>#}
-{#                                                        <span class="fb-file-type">File Folder</span>#}
-{#                                                        <span class="fb-file-size" data-file-size="94326">94 KB</span>#}
-{#                                                    </li>#}
-{##}
-{#                                                    <li class="fb-folder droppable" title="24 KB">#}
-{#                                                        <span class='glyphicon glyphicon-chevron-right fb-dropdown-toggle fb-help-icon'></span>#}
-{#                                                        <span class='fa fa-arrows fb-handle fb-help-icon'></span>#}
-{#                                                        <span class="fb-file-icon fa fa-folder glyphicon-folder"></span>#}
-{#                                                        <span class="fb-file-name">Folder 3</span>#}
-{#                                                        <span class="fb-file-type">File Folder</span>#}
-{#                                                        <span class="fb-file-size" data-file-size="24326">24 KB</span>#}
-{#                                                    </li>#}
+
 {##}
                                                     {# FILE TEMPLATE #}
 {#                                                    <li class="fb-file droppable" title="12 KB">#}
-{#                                                        <span class='glyphicon glyphicon-chevron-right fb-dropdown-toggle fb-help-icon'></span>#}
 {#                                                        <span class='fa fa-arrows fb-handle fb-help-icon'></span>#}
 {#                                                        <span class="fb-file-icon fa fa-file-text"></span>#}
 {#                                                        <span class="fb-file-name">File 1.txt</span>#}
 {#                                                        <span class="fb-file-type">Text File</span>#}
 {#                                                        <span class="fb-file-size" data-file-size="12345">12 KB</span>#}
 {#                                                    </li>#}
-{##}
-{#                                                    <li class="fb-file droppable" title="9 KB">#}
-{#                                                        <span class='glyphicon glyphicon-chevron-right fb-dropdown-toggle fb-help-icon'></span>#}
-{#                                                        <span class='fa fa-arrows fb-handle fb-help-icon'></span>#}
-{#                                                        <span class="fb-file-icon fa fa-file-text"></span>#}
-{#                                                        <span class="fb-file-name">File 2.txt</span>#}
-{#                                                        <span class="fb-file-type">Text File</span>#}
-{#                                                        <span class="fb-file-size" data-file-size="9874">9 KB</span>#}
-{#                                                    </li>#}
-{##}
-{#                                                    <li class="fb-file droppable" title="26 KB">#}
-{#                                                        <span class='glyphicon glyphicon-chevron-right fb-dropdown-toggle fb-help-icon'></span>#}
-{#                                                        <span class='fa fa-arrows fb-handle fb-help-icon'></span>#}
-{#                                                        <span class="fb-file-icon fa fa-file-text"></span>#}
-{#                                                        <span class="fb-file-name">File 3.txt</span>#}
-{#                                                        <span class="fb-file-type">Text File</span>#}
-{#                                                        <span class="fb-file-size" data-file-size="26000">26 KB</span>#}
-{#                                                    </li>#}
+
                                                 </ul>
                                             </form>
                                         </div>

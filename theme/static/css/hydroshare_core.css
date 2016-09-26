@@ -3982,14 +3982,10 @@ form#covereage-search-fields {
 }
 
 .fb-dropdown {
-    position: relative;
+    position: absolute;
     padding: 0;
     margin: 0;
-    left: -30px;
-    top: 10px;
     border: 0;
-    width: 0;
-    height: 0;
 }
 
 .fb-dropdown .glyphicon {
@@ -4007,6 +4003,10 @@ form#covereage-search-fields {
     border-top: 0;
 }
 
+#selection-menu li > a {
+	padding: 8px;
+}
+
 .fb-dropdown li:last-child {
     border-bottom: 1px solid #DDD;
 }
@@ -4014,12 +4014,6 @@ form#covereage-search-fields {
 .fb-dropdown li:first-child {
     border-top: 1px solid #DDD;
     margin-top: -1px;
-}
-
-.fb-dropdown-toggle {
-	float: right;
-	visibility: hidden;
-	cursor: pointer;
 }
 
 /*#fb-files-container > li > span:nth-child(4) {*/
@@ -4090,12 +4084,6 @@ span.fb-control-square {
 #selection-menu .fa {
 	font-size: 18px;
 	margin-right: 10px;
-}
-
-.fb-dropdown-toggle {
-	float: right;
-	visibility: hidden;
-	cursor: pointer;
 }
 
 div.fb-upload-caption {

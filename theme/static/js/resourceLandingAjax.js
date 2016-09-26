@@ -410,7 +410,6 @@ function get_user_info_ajax_submit(url, obj) {
 
 function getFolderTemplateInstance(folderName) {
     return "<li class='fb-folder droppable' title='" + folderName + "&#13;Type: Filde Folder'>" +
-        "<span class='glyphicon glyphicon-chevron-right fb-dropdown-toggle fb-help-icon'></span>" +
         "<span class='fa fa-arrows fb-handle fb-help-icon'></span>" +
         "<span class='fb-file-icon fa fa-folder glyphicon-folder'></span>" +
         "<span class='fb-file-name'>" + folderName + "</span>" +
@@ -421,7 +420,6 @@ function getFolderTemplateInstance(folderName) {
 
 function getFileTemplateInstance(fileName, fileType, fileSize) {
     return "<li class='fb-file droppable' title='" + fileName + "&#13;Type: " + fileType + "&#13;Size: " + formatBytes(parseInt(fileSize)) +  "'>" +
-        "<span class='glyphicon glyphicon-chevron-right fb-dropdown-toggle fb-help-icon'></span>" +
         "<span class='fa fa-arrows fb-handle fb-help-icon'></span>" +
         "<span class='fb-file-icon fa fa-file-text'></span>" +
         "<span class='fb-file-name''>" + fileName + "</span>" +
@@ -487,7 +485,6 @@ function zip_irods_folder_ajax_submit(res_id, input_coll_path) {
             var output_file_type = result.type;
             if (output_file_name.length > 0) {
                 $('#fb-files-container').append("<li class='fb-file droppable'>" +
-                    "<span class='glyphicon glyphicon-chevron-right fb-dropdown-toggle fb-help-icon'></span>" +
                     "<span class='fa fa-arrows fb-handle fb-help-icon'></span>" +
                     "<span class='fb-file-icon fa fa-file-text'></span>" +
                     "<span class='fb-file-name'>" + output_file_name + "</span>" +

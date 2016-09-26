@@ -14,26 +14,6 @@ function selectSelectableElement (selectableContainer, elementsToSelect) {
 }
 
 function bindFileBrowserItemEvents() {
-    $(".fb-dropdown-toggle").click(function () {
-        var menu = $("#selection-menu");
-        var offsetTop = 170;
-        var offsetLeft = 10;
-        var top = $(this).position().top - offsetTop;
-        var left = $(this).position().left - offsetLeft;
-
-        menu.css({top: top, left: left});
-
-        if (menu.css("display") == "none")
-            menu.show();
-        else {
-            menu.hide();
-        }
-
-        if (!$(this).parent().hasClass("ui-selected")) {
-            selectSelectableElement($("#fb-files-container"), $(this).parent());    // Mark item as selected
-        }
-    });
-
     // Drop
     $(".droppable").droppable({
         drop: function (event, ui) {
@@ -51,8 +31,7 @@ function bindFileBrowserItemEvents() {
             containment: "parent"
         })
         .selectable({
-            filter: "li", cancel: ".fb-dropdown-toggle, .fb-handle",
-            cancel: '.ui-selected',
+            filter: "li", cancel: ".fb-handle, .ui-selected",
             selected: function (event, ui) {
 
             },
@@ -67,7 +46,7 @@ function bindFileBrowserItemEvents() {
     });
 
     // Dismiss dropdown when clicking on empty space
-    $("#fbContainmentWrapper").click(function () {
+    $("#fb-files-container, #fb-files-container li").click(function () {
         if (event.target.tagName == "FORM") {
             $(".ui-selected").removeClass("ui-selected");
             $("#selection-menu").hide();
@@ -79,6 +58,34 @@ function bindFileBrowserItemEvents() {
         var currentPath = $("#fb-files-container").attr("data-current-path");
         var folderName = $(this).children(".fb-file-name").text();
         get_irods_folder_struct_ajax_submit(resID, currentPath + "/" + folderName);
+    });
+
+    $("#fb-files-container li").bind("contextmenu", function (event) {
+
+        // Avoid the real one
+        event.preventDefault();
+        if (!$(this).hasClass("ui-selected")) {
+            $(".ui-selected").removeClass("ui-selected");
+            $(this).addClass("ui-selected");
+        }
+        var menu = $("#selection-menu");
+        var top = event.pageY;
+        var left = event.pageX;
+
+        menu.css({top: top, left: left});
+
+        if (menu.css("display") == "none")
+            menu.show();
+        else {
+            menu.hide();
+        }
+
+        // Show contextmenu
+        // $(".custom-menu").finish().toggle(100).// In the right position (the mouse)
+        // css({
+        //     top: event.pageY + "px",
+        //     left: event.pageX + "px"
+        // });
     });
 }
 
