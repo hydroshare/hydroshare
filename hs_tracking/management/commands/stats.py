@@ -1,6 +1,7 @@
 import csv
 import sys
 from calendar import monthrange
+from optparse import make_option
 
 from django.core.management.base import BaseCommand
 from django.db.models import Q, Sum
@@ -32,6 +33,39 @@ def month_year_iter(start, end):
 class Command(BaseCommand):
     help = "Output engagement stats about HydroShare"
 
+    option_list = BaseCommand.option_list + (
+        make_option(
+            "--user-stats",
+            dest = "user_stats",
+            action="store_true",
+            help = "current user list",
+        ),
+        make_option(
+            "--resource-stats",
+            dest = "resource_stats",
+            action="store_true",
+            help = "current resource list with sizes",
+        ),
+        make_option(
+            "--running-users",
+            dest = "running_users",
+            action="store_true",
+            help = "user stats by month",
+        ),
+        make_option(
+            "--running-users-by-type",
+            dest = "running_users_by_type",
+            action="store_true",
+            help = "user type stats by month",
+        ),
+        make_option(
+            "--running-orgs",
+            dest = "running_orgs",
+            action="store_true",
+            help = "unique organization stats by month",
+        ),
+    )
+
     def print_var(self, var_name, value, period=None):
         timestamp = timezone.now()
         if not period:
@@ -40,14 +74,23 @@ class Command(BaseCommand):
             start, end = period
             print("{}: ({}/{}--{}/{}) {} {}".format(timestamp, start.year, start.month, end.year, end.month, var_name, value))
 
-    def cummulative_users_report(self, start_date, end_date):
-        profiles = UserProfile.objects.filter(user__date_joined__lte=end_date)
+    def users_count(self, start_date, end_date):
+        profiles = UserProfile.objects.filter(
+            user__date_joined__lte=end_date,
+            user__is_active=True
+        )
         self.print_var("all_users", profiles.count(), (start_date, end_date))
+
+    def orgs_count(self, start_date, end_date):
+        profiles = UserProfile.objects.filter(user__date_joined__lte=end_date)
         self.print_var("all_orgs", profiles.values('organization').distinct().count(), (start_date, end_date))
 
     def active_users_by_type_report(self, start_date, end_date):
         #Active user type,Number of active users, Number of resources created, Number of resources downloaded, Number of logons
-        date_filtered = UserProfile.objects.filter(user__date_joined__lte=end_date)
+        date_filtered = UserProfile.objects.filter(
+            user__date_joined__lte=end_date,
+            user__is_active=True
+        )
         for ut in [_['user_type'] for _ in UserProfile.objects.values('user_type').distinct()]:
             ut_profiles = UserProfile.objects.filter(user_type=ut)
             ut_users = [p.user for p in ut_profiles]
@@ -67,7 +110,7 @@ class Command(BaseCommand):
         ]
         w.writerow(fields)
 
-        for up in UserProfile.objects.all():
+        for up in UserProfile.objects.filter(user__is_active=True):
             last_login = up.user.last_login.strftime('%m/%d/%Y') if up.user.last_login else ""
             values = [
                 up.user.first_name,
@@ -112,12 +155,18 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         start_date = timezone.datetime(2016, 1, 1).date()
         end_date = timezone.datetime.now().replace(hour=0, minute=0, second=0, microsecond=0)
-        for month_end in month_year_iter(start_date, end_date):
-            month_start = timezone.datetime(month_end.year, month_end.month, 1, 0, 0, tzinfo=timezone.pytz.utc)
-            self.active_users_by_type_report(month_start, month_end)
 
-        for month_end in month_year_iter(start_date, end_date):
-            self.cummulative_users_report(start_date, month_end)
-
-        self.current_users_details()
-        self.current_resources_details()
+        if options["running_users_by_type"]:
+            for month_end in month_year_iter(start_date, end_date):
+                month_start = timezone.datetime(month_end.year, month_end.month, 1, 0, 0, tzinfo=timezone.pytz.utc)
+                self.active_users_by_type_report(month_start, month_end)
+        if options["running_orgs"]:
+            for month_end in month_year_iter(start_date, end_date):
+                self.orgs_count(start_date, month_end)
+        if options["running_users"]:
+            for month_end in month_year_iter(start_date, end_date):
+                self.users_count(start_date, month_end)
+        if options["user_stats"]:
+            self.current_users_details()
+        if options["resource_stats"]:
+            self.current_resources_details()
