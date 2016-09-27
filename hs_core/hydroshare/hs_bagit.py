@@ -149,25 +149,17 @@ def create_bag_files(resource, fed_zone_home_path=''):
             # in federated zone
             from_fname = f.fed_resource_file_name_or_path
             filename = from_fname.rsplit('/')[-1]
-            res_path = '{hs_url}/resource/{res_id}/data/contents/{file_name}'.format(
-                    hs_url=current_site_url,
-                    res_id=resource.short_id,
-                    file_name=filename)
         elif f.resource_file:
             filename = os.path.basename(f.resource_file.name)
-            res_path = '{hs_url}/resource/{res_id}/data/contents/{file_name}'.format(
-                    hs_url=current_site_url,
-                    res_id=resource.short_id,
-                    file_name=filename)
         elif f.fed_resource_file:
             filename = os.path.basename(f.fed_resource_file.name)
-            res_path = '{hs_url}/resource/{res_id}/data/contents/{file_name}'.format(
-                    hs_url=current_site_url,
-                    res_id=resource.short_id,
-                    file_name=filename)
         else:
             filename = ''
         if filename:
+            res_path = '{hs_url}/resource/{res_id}/data/contents/{file_name}'.format(
+                hs_url=current_site_url,
+                res_id=resource.short_id,
+                file_name=filename)
             resFiles.append(AggregatedResource(res_path))
             resFiles[n]._ore.isAggregatedBy = ag_url
             resFiles[n]._dc.format = get_file_mime_type(filename)
