@@ -67,27 +67,40 @@
                 {% if cm.resource_type != "ToolResource" %}
                     {# POPUP MENU #}
                     <ul id="selection-menu" class="dropdown-menu fb-dropdown">
-                        <li><a href="#"><span
-                                class="glyphicon glyphicon-folder-open glyphicon-folder"></span>Open</a>
+                        <li data-menu-name="open">
+                            <span class="glyphicon glyphicon-folder-open glyphicon-folder"></span>
+                            <span>Open</span>
                         </li>
-                        <li><a href="#"><span
-                                class="fa fa-scissors icon-blue"></span>Cut</a>
+
+                        <li role="separator" class="divider"></li>
+
+                        <li data-menu-name="download">
+                            <span class="glyphicon glyphicon-download icon-blue"></span>
+                            <span>Download</span>
                         </li>
-                        <li><a href="#"><span
-                                class="glyphicon glyphicon-download icon-blue"></span>Download</a>
+
+                        <li role="separator" class="divider"></li>
+
+                        <li data-menu-name="cut">
+                            <span class="fa fa-scissors icon-blue"></span>
+                            <span>Cut</span>
                         </li>
-                        <li><a href="#"><span
-                                class="glyphicon glyphicon-pencil icon-blue"></span>Rename</a>
+
+                        <li data-menu-name="rename">
+                            <span class="glyphicon glyphicon-pencil icon-blue"></span>
+                            <span>Rename</span>
                         </li>
-                        <li><a href="#"><span
-                                class="glyphicon glyphicon-trash icon-button btn-remove"></span>Delete</a>
+
+                        <li data-menu-name="delete" class="fb-files-remove">
+                            <span class="glyphicon glyphicon-trash icon-button btn-remove"></span>
+                            <span>Delete</span>
                         </li>
                     </ul>
                     <div class="col-sm-12 content-block">
                         <h3>Content</h3>
                         {% if show_content_files %}
-                                {% if cm.files.all %}
-                                    <div id="hs-file-browser" data-res-id="{{ cm.short_id }}" class="file-browser">
+
+                                    <div id="hs-file-browser" data-res-id="{{ cm.short_id }}" class="file-browser" >
                                         <div id="file-browser-controls" class="row">
                                             <div class="col-xs-6">
                                                 <span class="btn btn-default fb-control-round"
@@ -106,15 +119,15 @@
                                                       title="Create new folder">
                                                     <span class="fa fa-folder glyphicon-folder"></span></span>
 
-                                                <span id="fb-delete" class="btn btn-default fb-control-squared"
-                                                      title="Delete"><span
-                                                        class="glyphicon glyphicon-trash btn-remove"></span></span>
+                                                <span id="fb-delete" class="btn btn-default fb-control-squared fb-files-remove"
+                                                      title="Delete">
+                                                    <span class="glyphicon glyphicon-trash btn-remove"></span>
+                                                </span>
 
                                                 <input id="toggle-list-view" type="checkbox" checked
                                                        data-toggle="toggle" data-onstyle="default"
                                                        data-offstyle="default" data-on="<i class='fa fa-list' aria-hidden='true'></i>"
                                                        data-off="<i class='glyphicon glyphicon-th-large' aria-hidden='true'></i>">
-
 
                                                 <div id="fb-sort" class="btn-group">
                                                     <button type="button" class="btn btn-default dropdown-toggle"
@@ -194,7 +207,42 @@
                                         {% if page.perms.change and metadata_form %}
                                             <div class="fb-upload-caption "><small>Upload files by dragging & dropping, or click this box to select them.</small></div>
                                         {% endif %}
+                                    </div>
+
+                                    <div class="table table-striped" class="files" id="previews">
+                                        <div id="fb-template" class="file-row">
+                                            <!-- This is used as the file preview template -->
+                                            <div>
+                                                <span class="preview"><img data-dz-thumbnail/></span>
+                                            </div>
+                                            <div>
+                                                <p class="name" data-dz-name></p>
+                                                <strong class="error text-danger" data-dz-errormessage></strong>
+                                            </div>
+                                            <div>
+                                                <p class="size" data-dz-size></p>
+                                                <div class="progress progress-striped active" role="progressbar"
+                                                     aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+                                                    <div class="progress-bar progress-bar-success" style="width:0%;"
+                                                         data-dz-uploadprogress></div>
+                                                </div>
+                                            </div>
+                                            <div>
+                                                <button class="btn btn-primary start">
+                                                    <i class="glyphicon glyphicon-upload"></i>
+                                                    <span>Start</span>
+                                                </button>
+                                                <button data-dz-remove class="btn btn-warning cancel">
+                                                    <i class="glyphicon glyphicon-ban-circle"></i>
+                                                    <span>Cancel</span>
+                                                </button>
+                                                <button data-dz-remove class="btn btn-danger delete">
+                                                    <i class="glyphicon glyphicon-trash"></i>
+                                                    <span>Delete</span>
+                                                </button>
+                                            </div>
                                         </div>
+                                    </div>
 {#                                    <div class="table-container">#}
 {#                                        <table class="table-plain table-striped">#}
 {#                                            {% for f in cm.files.all %}#}
@@ -301,9 +349,6 @@
 {#                                            {% endfor %}#}
 {#                                        </table>#}
 {#                                    </div>#}
-                                {% else %}
-                                    <i>No files have been uploaded.</i>
-                                {% endif %}
 
 {#                                {% if page.perms.change and metadata_form %}#}
 {#                                    <span title="Add files smaller than 1GB in size" data-toggle="tooltip">#}

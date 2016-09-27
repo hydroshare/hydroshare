@@ -418,8 +418,8 @@ function getFolderTemplateInstance(folderName) {
         "</li>"
 }
 
-function getFileTemplateInstance(fileName, fileType, fileSize) {
-    return "<li class='fb-file droppable' title='" + fileName + "&#13;Type: " + fileType + "&#13;Size: " + formatBytes(parseInt(fileSize)) +  "'>" +
+function getFileTemplateInstance(fileName, fileType, fileSize, pk) {
+    return "<li data-pk='" + pk + "' class='fb-file droppable' title='" + fileName + "&#13;Type: " + fileType + "&#13;Size: " + formatBytes(parseInt(fileSize)) +  "'>" +
         "<span class='fa fa-arrows fb-handle fb-help-icon'></span>" +
         "<span class='fb-file-icon fa fa-file-text'></span>" +
         "<span class='fb-file-name''>" + fileName + "</span>" +
@@ -432,6 +432,20 @@ function formatBytes(bytes) {
     else if(bytes < 1048576) return(bytes / 1024).toFixed(1) + " KB";
     else if(bytes < 1073741824) return(bytes / 1048576).toFixed(1) + " MB";
     else return(bytes / 1073741824).toFixed(1) + " GB";
+}
+
+function delete_file_ajax_submit(res_id, file_pk) {
+    $.ajax({
+        type: "POST",
+        url: '/hsapi/_internal/' + res_id + '/delete-resource-file/' + file_pk + '/',
+        async: true,
+        success: function (result) {
+            console.log("File deleted");
+        },
+        error: function(xhr, errmsg, err){
+            console.log(xhr.status + ": " + xhr.responseText + ". Error message: " + errmsg);
+        }
+    });
 }
 
 function get_irods_folder_struct_ajax_submit(res_id, store_path) {
@@ -449,7 +463,7 @@ function get_irods_folder_struct_ajax_submit(res_id, store_path) {
             $('#fb-files-container').empty();
             if (files.length > 0) {
                 $.each(files, function(i, v) {
-                    $('#fb-files-container').append(getFileTemplateInstance(v['name'], v['type'], v['size']));
+                    $('#fb-files-container').append(getFileTemplateInstance(v['name'], v['type'], v['size'], v['pk']));
                 });
             }
             if (folders.length > 0) {
@@ -533,6 +547,7 @@ function create_irods_folder_ajax_submit(res_id, folder_path) {
         success: function (result) {
             var new_folder_rel_path = result.new_folder_rel_path;
             if (new_folder_rel_path.length > 0) {
+                $('#create-folder-dialog').modal('hide');
                 console.log("Folder " + new_folder_rel_path + " is created successfully.");
             }
         },

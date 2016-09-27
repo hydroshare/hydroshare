@@ -109,7 +109,6 @@ h1.hl small, h2.hl small, h3.hl small, h4.hl small, h5.hl small, h6.hl small {
 }
 
 .dropdown-menu {
-    background-color: #EEEEEE;
     border: 1px solid #D6D6D6;
     border-top-color: #EEEEEE;
     border-radius: 0;
@@ -3979,9 +3978,11 @@ form#covereage-search-fields {
 
 .fb-dropdown {
     position: absolute;
-    padding: 0;
-    margin: 0;
-    border: 0;
+	padding-top: 9px;
+	border: 1px solid #DDD;
+	box-shadow: 1px 1px 5px #E8E8E8;
+	-moz-box-shadow: 1px 1px 5px #E8E8E8;
+	-webkit-box-shadow: 1px 1px 5px #E8E8E8;
 }
 
 .fb-dropdown .glyphicon {
@@ -3994,22 +3995,17 @@ form#covereage-search-fields {
 
 .fb-dropdown li {
     background: #FFF;
-    border: 1px solid #DDD;
     border-bottom: 0;
     border-top: 0;
 }
 
-#selection-menu li > a {
-	padding: 8px;
+#selection-menu li:not(.divider) {
+    padding: 4px 8px;
+    cursor: pointer;
 }
 
-.fb-dropdown li:last-child {
-    border-bottom: 1px solid #DDD;
-}
-
-.fb-dropdown li:first-child {
-    border-top: 1px solid #DDD;
-    margin-top: -1px;
+#selection-menu li:hover {
+    background-color:#DDD;
 }
 
 /*#fb-files-container > li > span:nth-child(4) {*/
@@ -4148,6 +4144,8 @@ div.fb-upload-caption {
 
 .fb-view-grid .fb-file-name {
 	display: block;
+	text-overflow: ellipsis;
+    overflow: hidden;
 }
 
 .fb-view-list .fb-file-icon {
