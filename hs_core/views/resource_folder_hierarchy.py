@@ -7,7 +7,7 @@ from rest_framework.exceptions import NotFound, PermissionDenied
 
 from django_irods.storage import IrodsStorage
 from django_irods.icommands import SessionException
-from hs_core.hydroshare.utils import get_file_mime_type
+from hs_core.hydroshare.utils import get_file_mime_type, get_resource_file_name_and_extension
 from hs_core.views.utils import authorize, ACTION_TO_AUTHORIZE
 from hs_core.hydroshare import delete_resource_file
 from hs_core.models import ResourceFile
@@ -107,7 +107,12 @@ def data_store_structure(request):
             idx = mtype.find('/')
             if idx >= 0:
                 mtype = mtype[idx + 1:]
-            files.append({'name': fname, 'size': size, 'type': mtype})
+            f_pk = ''
+            for f in ResourceFile.objects.filter(object_id=resource.id):
+                if fname == get_resource_file_name_and_extension(f)[0]:
+                    f_pk = f.pk
+                    break
+            files.append({'name': fname, 'size': size, 'type': mtype, 'pk': f_pk})
     except SessionException as ex:
         logger.error(ex.stderr)
         return HttpResponse(status=500)
