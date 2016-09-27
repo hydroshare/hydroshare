@@ -3894,10 +3894,6 @@ form#covereage-search-fields {
 	background :#FFF;
 }
 
-#fb-sort ul li:not(.divider) {
-	padding: 0 4px;
-}
-
 #fb-sort ul li.active {
 	pointer-events: none;
 }
@@ -4147,6 +4143,11 @@ div.fb-upload-caption {
 
 .fb-view-grid .fb-file-icon {
 	margin-top: 18px;
+	display: block;
+}
+
+.fb-view-grid .fb-file-name {
+	display: block;
 }
 
 .fb-view-list .fb-file-icon {

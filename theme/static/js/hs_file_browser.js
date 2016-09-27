@@ -28,7 +28,30 @@ function bindFileBrowserItemEvents() {
         })
         .sortable({
             handle: ".fb-handle",
-            containment: "parent"
+            containment: "parent",
+            helper: function (e, item) { //create custom helper
+
+                // clone selected items before hiding
+                var elements = $('.ui-selected').not(".ui-sortable-helper").clone();
+                //hide selected items
+                item.siblings('.ui-selected').addClass('hidden');
+                return item.append(elements);
+            },
+            // start: function (e, ui) {
+            //     var elements = ui.item.siblings('.ui-selected.hidden').not('.ui-sortable-placeholder');
+            //     //store the selected items to item being dragged
+            //     ui.item.data('items', elements);
+            // },
+            // receive: function (e, ui) {
+            //     //manually add the selected items before the one actually being dragged
+            //     ui.item.before(ui.item.data('items'));
+            // },
+            // stop: function (e, ui) {
+            //     //show the selected items after the operation
+            //     ui.item.siblings('.selected').removeClass('hidden');
+            //     //unselect since the operation is complete
+            //     $('.selected').removeClass('selected');
+            // },
         })
         .selectable({
             filter: "li", cancel: ".fb-handle, .ui-selected",
@@ -60,33 +83,26 @@ function bindFileBrowserItemEvents() {
         get_irods_folder_struct_ajax_submit(resID, currentPath + "/" + folderName);
     });
 
-    $("#fb-files-container li").bind("contextmenu", function (event) {
-
-        // Avoid the real one
-        event.preventDefault();
-        if (!$(this).hasClass("ui-selected")) {
-            $(".ui-selected").removeClass("ui-selected");
-            $(this).addClass("ui-selected");
-        }
-        var menu = $("#selection-menu");
-        var top = event.pageY;
-        var left = event.pageX;
-
-        menu.css({top: top, left: left});
-
-        if (menu.css("display") == "none")
-            menu.show();
-        else {
-            menu.hide();
-        }
-
-        // Show contextmenu
-        // $(".custom-menu").finish().toggle(100).// In the right position (the mouse)
-        // css({
-        //     top: event.pageY + "px",
-        //     left: event.pageX + "px"
-        // });
-    });
+    // $("#fb-files-container li").bind("contextmenu", function (event) {
+    //
+    //     // Avoid the real one
+    //     event.preventDefault();
+    //     if (!$(this).hasClass("ui-selected")) {
+    //         $(".ui-selected").removeClass("ui-selected");
+    //         $(this).addClass("ui-selected");
+    //     }
+    //     var menu = $("#selection-menu");
+    //     var top = event.pageY;
+    //     var left = event.pageX;
+    //
+    //     menu.css({top: top, left: left});
+    //
+    //     if (menu.css("display") == "none")
+    //         menu.show();
+    //     else {
+    //         menu.hide();
+    //     }
+    // });
 }
 
 function setBreadCrumbs(path) {
@@ -178,6 +194,10 @@ $(document).ready(function () {
                     size2 = parseInt($(element2).children('span.fb-file-size').attr("data-file-size"));
 
                 }
+
+                if (isNaN(size1)) size1 = 0;
+                if (isNaN(size2)) size2 = 0;
+
                 if (size1 < size2) {
                     return -1;
                 }
