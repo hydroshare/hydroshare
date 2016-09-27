@@ -30,7 +30,6 @@ function bindFileBrowserItemEvents() {
             handle: ".fb-handle",
             containment: "parent",
             helper: function (e, item) { //create custom helper
-
                 // clone selected items before hiding
                 var elements = $('.ui-selected').not(".ui-sortable-helper").clone();
                 //hide selected items
