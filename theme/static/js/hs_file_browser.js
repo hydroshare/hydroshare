@@ -336,10 +336,14 @@ $(document).ready(function () {
         var resID = $("#fb-files-container").attr("data-res-id");
         var currentPath = $("#fb-files-container").attr("data-current-path");
         var folderName = $("#txtFolderName").val();
+        $("#txtFolderName").val("");
         if (folderName) {
-            create_irods_folder_ajax_submit(resID, currentPath + "/" + folderName);
-            refreshFileBrowser();
-            setBreadCrumbs(currentPath);
+            var calls = [];
+            calls.push(create_irods_folder_ajax_submit(resID, currentPath + "/" + folderName));
+
+            $.when.apply($, calls).done(function () {
+                refreshFileBrowser();
+            });
         }
 
         return false;
@@ -456,4 +460,19 @@ $(document).ready(function () {
             refreshFileBrowser();
         });
     });
+
+     // Download method
+    $("#btn-download").click(function () {
+        var downloadList = $("#fb-files-container li.ui-selected");
+        if (downloadList.length) {
+            for (var i = 0; i < downloadList.length; i++) {
+                downloadFiles($(downloadList[i]).attr("data-url"))
+                // $("#download-frame").attr("src", downloadList.attr(data-url));
+            }
+        }
+    });
+
+    function downloadFiles(url) {
+        document.getElementById('download-frame').src = url;
+    };
 });

@@ -65,18 +65,14 @@
                 {% block content_block %}
                 {# ======= Content (code moved here because django does not render blocks inside included templates) ======= #}
                 {% if cm.resource_type != "ToolResource" %}
+                    {# Used to force browser to download a file instead of opening it #}
+                    <iframe id="download-frame" style="display:none;"></iframe>
+
                     {# POPUP MENU - Right clicking items #}
                     <ul id="right-click-menu" class="dropdown-menu fb-dropdown selection-menu">
                         <li id="btn-open" data-menu-name="open">
                             <span class="glyphicon glyphicon-folder-open glyphicon-folder"></span>
                             <span>Open</span>
-                        </li>
-
-                        <li role="separator" class="divider"></li>
-
-                        <li data-menu-name="download">
-                            <span class="glyphicon glyphicon-download icon-blue"></span>
-                            <span>Download</span>
                         </li>
 
                         <li role="separator" class="divider"></li>
@@ -99,6 +95,13 @@
                         <li class="fb-files-remove" data-toggle="modal" data-target="#confirm-delete-dialog">
                             <span class="glyphicon glyphicon-trash icon-button btn-remove"></span>
                             <span>Delete</span>
+                        </li>
+
+                        <li role="separator" class="divider"></li>
+
+                        <li id="btn-download" data-menu-name="download">
+                            <span class="glyphicon glyphicon-download icon-blue"></span>
+                            <span>Download</span>
                         </li>
                     </ul>
 
@@ -414,21 +417,21 @@
                                         <a target="_blank" href="http://en.wikipedia.org/wiki/BagIt">Learn more about the Bagit archive format</a>
                                     </div>
 
-                                    <button type="button" class="btn btn-primary pull-right"
-                                            onclick="get_irods_folder_struct_ajax_submit('{{ cm.short_id }}', 'data/contents'); return false;">iRODS folder info
-                                    </button>
-                                    <button type="button" class="btn btn-primary pull-right"
-                                            onclick="zip_irods_folder_ajax_submit('{{ cm.short_id }}', 'data/contents'); return false;">Zip iRODS Collection
-                                    </button>
-                                    <button type="button" class="btn btn-primary pull-right"
-                                            onclick="unzip_irods_file_ajax_submit('{{ cm.short_id }}', 'data/contents/test.zip'); return false;">Unzip iRODS file
-                                    </button>
-                                    <button type="button" class="btn btn-primary pull-right"
-                                            onclick="create_irods_folder_ajax_submit('{{ cm.short_id }}', 'data/contents/test_sub_folder'); return false;">Create folder
-                                    </button>
-                                    <button type="button" class="btn btn-primary pull-right"
-                                            onclick="move_or_rename_irods_file_or_folder_ajax_submit('{{ cm.short_id }}', 'data/contents/test.zip', 'data/contents/test_renamed.zip'); return false;">Move file
-                                    </button>
+{#                                    <button type="button" class="btn btn-primary pull-right"#}
+{#                                            onclick="get_irods_folder_struct_ajax_submit('{{ cm.short_id }}', 'data/contents'); return false;">iRODS folder info#}
+{#                                    </button>#}
+{#                                    <button type="button" class="btn btn-primary pull-right"#}
+{#                                            onclick="zip_irods_folder_ajax_submit('{{ cm.short_id }}', 'data/contents'); return false;">Zip iRODS Collection#}
+{#                                    </button>#}
+{#                                    <button type="button" class="btn btn-primary pull-right"#}
+{#                                            onclick="unzip_irods_file_ajax_submit('{{ cm.short_id }}', 'data/contents/test.zip'); return false;">Unzip iRODS file#}
+{#                                    </button>#}
+{#                                    <button type="button" class="btn btn-primary pull-right"#}
+{#                                            onclick="create_irods_folder_ajax_submit('{{ cm.short_id }}', 'data/contents/test_sub_folder'); return false;">Create folder#}
+{#                                    </button>#}
+{#                                    <button type="button" class="btn btn-primary pull-right"#}
+{#                                            onclick="move_or_rename_irods_file_or_folder_ajax_submit('{{ cm.short_id }}', 'data/contents/test.zip', 'data/contents/test_renamed.zip'); return false;">Move file#}
+{#                                    </button>#}
                                 {% endfor %}
                                 {% if user_zone_account_exist %}
                                     <div id='rep-alert-success' class="alert alert-success alert-dismissible" role="alert" style="display:none">
