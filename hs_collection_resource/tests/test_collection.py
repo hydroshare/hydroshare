@@ -885,14 +885,17 @@ class TestCollection(MockIRODSTestCaseMixin, TransactionTestCase):
         # by default it is 'True'
         self.assertEqual(self.resCollection.update_text_file, "True")
         # set it to 'False'
-        self.resCollection.update_text_file = 'False'
+        self.resCollection.extra_data = {'update_text_file': 'False'}
+        self.resCollection.save()
         self.assertEqual(self.resCollection.update_text_file, "False")
-        with self.assertRaises(ValueError):
+        # update_text_file is a read-only attribute
+        with self.assertRaises(AttributeError):
             self.resCollection.update_text_file = "Invalid String"
-        with self.assertRaises(ValueError):
+        with self.assertRaises(AttributeError):
             self.resCollection.update_text_file = 1
         # set it back to 'True'
-        self.resCollection.update_text_file = 'True'
+        self.resCollection.extra_data = {'update_text_file': 'True'}
+        self.resCollection.save()
         self.assertEqual(self.resCollection.update_text_file, "True")
 
         # test update_collection_list_csv()

@@ -1,13 +1,15 @@
+import os
 import tempfile
 import csv
 import shutil
+import logging
 
 from django.core.files.uploadedfile import UploadedFile
 
 from hs_core.hydroshare.utils import resource_modified, current_site_url
-from hs_core.hydroshare.resource import ResourceFile, \
-     delete_resource_file_only, add_resource_files
+from hs_core.hydroshare.resource import delete_resource_file_only, add_resource_files
 
+logger = logging.getLogger(__name__)
 RES_LANDING_PAGE_URL_TEMPLATE = current_site_url() + "/resource/{0}/"
 CSV_FULL_NAME_TEMPLATE = "collection_list_{0}.csv"
 DELETED_RES_STRING = "Resource Deleted"
@@ -43,7 +45,7 @@ def add_or_remove_relation_metadata(add=True, target_res_obj=None, relation_type
 
 def update_collection_list_csv(collection_obj, keep_local_csv=False):
     """
-    This func is to create a new csv file in bag that lists info of all contained resources
+    This function is to create a new csv file in bag that lists info of all contained resources
     :param collection_obj: collection resource object
     :param keep_local_csv: (default: False) if True, return the full path to csv on django server,
     in which case user should be responsible for garbage collection (GC) of this csv file
@@ -52,12 +54,13 @@ def update_collection_list_csv(collection_obj, keep_local_csv=False):
 
     tmp_dir = None
     csv_full_path = None
-
+    short_key = ""
     try:
+        short_key = collection_obj.short_id
         csv_full_name = CSV_FULL_NAME_TEMPLATE.format(collection_obj.short_id)
 
         # remove all files in bag
-        for f in ResourceFile.objects.filter(object_id=collection_obj.id):
+        for f in collection_obj.files.all():
             delete_resource_file_only(collection_obj, f)
 
         if collection_obj.resources.count() > 0 or collection_obj.deleted_resources.count() > 0:
@@ -98,7 +101,7 @@ def update_collection_list_csv(collection_obj, keep_local_csv=False):
 
             # create a new csv on django server
             tmp_dir = tempfile.mkdtemp()
-            csv_full_path = tmp_dir + "/" + csv_full_name
+            csv_full_path = os.path.join(tmp_dir, csv_full_name)
             with open(csv_full_path, 'w') as csv_file_handle:
                 w = csv.writer(csv_file_handle)
                 for row in csv_content_list:
@@ -109,6 +112,8 @@ def update_collection_list_csv(collection_obj, keep_local_csv=False):
             add_resource_files(collection_obj.short_id, files)
 
     except Exception as ex:
+        logger.error("Failed to update_collection_list_csv in {}"
+                     "Error:{} ".format(short_key, ex.message))
         raise Exception("update_collection_list_csv error: " + ex.message)
     finally:
         if keep_local_csv:
