@@ -45,7 +45,8 @@
                                 <h3 class="group-name"><a href="/group/{{ group.id }}">{{ group.name }}</a></h3>
                                 <small class="text-muted group-keywords">{{ group.gaccess.purpose|linebreaks }}</small>
 
-                                <p class="group-description">{{ group.gaccess.description|linebreaks }}</p>
+                                <div class="group-description"> <p>{{ group.gaccess.description|linebreaks }}</p></div>
+
 
                                 <div class="text-center group-thumbnail-footer">
                                     {% if group.gaccess.public %}
@@ -70,7 +71,7 @@
                                         {% endif %}
 
                                         <!-- Members List Modal -->
-                                        <div class="modal fade" id="modal-members-list-{{ group.id }}" tabindex="-1" role="dialog"
+                                        <div class="modal fade members-modal" id="modal-members-list-{{ group.id }}" tabindex="-1" role="dialog"
                                              aria-labelledby="Invite">
                                             <div class="modal-dialog" role="document">
                                                 <div class="modal-content">

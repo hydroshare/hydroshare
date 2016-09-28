@@ -311,8 +311,8 @@ rebuild_hs() {
     if [ "$2" == "--db" ]; then
         loaddb_hs;
     fi
-    echo "  - docker exec hydroshare chown -R hydro-service:storage-hydro /hydroshare /hs_tmp /shared_tmp"
-    docker exec hydroshare chown -R hydro-service:storage-hydro /hydroshare /hs_tmp /shared_tmp
+    echo "  - docker exec hydroshare chown -R hydro-service:storage-hydro /hydroshare /tmp /shared_tmp"
+    docker exec hydroshare chown -R hydro-service:storage-hydro /hydroshare /tmp /shared_tmp
     if [ "${USE_NGINX,,}" = true ]; then
         start_nginx;
     fi
@@ -327,6 +327,7 @@ rebuild_hs() {
     solr_reload_hs
     sleep 2s
     rebuild_solr_index
+    restart_hs
     echo "END BUILD"
 }
 
