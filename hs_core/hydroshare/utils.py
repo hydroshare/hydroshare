@@ -325,6 +325,25 @@ def get_resource_file_name_and_extension(res_file):
     return f_fullname, file_ext
 
 
+def get_resource_file_url(res_file):
+    """
+    Gets the download url of the specified resource file
+    :param res_file: an instance of ResourceFile for which download url is to be retrieved
+    :return: download url for the resource file
+    """
+    if res_file.resource_file:
+        f_url = res_file.resource_file.url
+    elif res_file.fed_resource_file:
+        idx = res_file.fed_resource_file.url.find('/data/contents/')
+        f_url = res_file.fed_resource_file.url[idx + 1:]
+    elif res_file.fed_resource_file_name_or_path:
+        f_url = res_file.fed_resource_file_name_or_path
+    else:
+        f_url = ''
+
+    return f_url
+
+
 def delete_fed_zone_file(file_name_with_full_path):
     '''
     Args:
