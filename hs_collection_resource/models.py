@@ -46,16 +46,6 @@ class CollectionResource(BaseResource):
     def update_text_file(self):
         return self.extra_data.get('update_text_file', 'True')
 
-    # @update_text_file.setter
-    # def update_text_file(self, value):
-    #     if type(value) is not str:
-    #         raise ValueError("Value must be type of 'str'")
-    #     if value.lower() not in ['true', 'false']:
-    #         raise ValueError("Invalid value")
-    #
-    #     self.extra_data['update_text_file'] = value
-    #     self.save()
-
 
 processor_for(CollectionResource)(resource_processor)
 
