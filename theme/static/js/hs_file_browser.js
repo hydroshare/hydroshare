@@ -187,7 +187,6 @@ $(document).ready(function () {
     // Show file drop visual feedback
     Dropzone.options.fbContainmentWrapper = {
         paramName: "files", // The name that will be used to transfer the file
-        clickable: ".fb-upload-caption",
         previewsContainer: "#previews", // Define the container to display the previews
         init: function () {
             this.on("dragenter", function (file) {
@@ -345,8 +344,6 @@ $(document).ready(function () {
 
         return false;
     });
-
-
 
     // Reload the current folder structure
     function refreshFileBrowser () {

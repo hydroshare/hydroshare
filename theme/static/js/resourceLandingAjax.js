@@ -485,10 +485,11 @@ function get_irods_folder_struct_ajax_submit(res_id, store_path) {
             $("body").css("cursor", "default");
         },
         error: function(xhr, errmsg, err){
-            console.log(xhr.status + ": " + xhr.responseText + ". Error message: " + errmsg);
             $(".selection-menu").hide();
             $("#flag-uploading").remove();
             $("body").css("cursor", "default");
+            $('#fb-files-container').empty();
+            $("#fb-files-container").prepend("<span>No files have been uploaded to this directory</span>")
         }
     });
 }
