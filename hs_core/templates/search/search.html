@@ -530,20 +530,6 @@
             });
 
             info_window = new google.maps.InfoWindow();
-{#            rectangle = new google.maps.Rectangle({#}
-{#                strokeColor: '#FF0000',#}
-{#                strokeOpacity: 0.15,#}
-{#                strokeWeight: 2,#}
-{#                fillColor: '#FF0000',#}
-{#                fillOpacity: 0,#}
-{#                map: map,#}
-{#                bounds: {#}
-{#                    north: 0,#}
-{#                    south: 0,#}
-{#                    east: 0,#}
-{#                    west: 0#}
-{#                }#}
-{#            });#}
 
             setMarkers(json_results);
 
@@ -642,24 +628,14 @@
             }
 
             modified_points_data.forEach(function(point){
-                var info_content = point.info_link;
-                var lat = parseFloat(point.north);
-                var lng = parseFloat(point.east);
-                var counter = point.counter.toString();
-                createPointResourceMarker(lat, lng, info_content, counter);
+                createPointResourceMarker(point);
             });
 
 
             drawShadeRectangles(boxes_data);
 
             modified_boxes_data.forEach(function(box){
-                var info_content = box.info_link;
-                var northlimit = parseFloat(box.northlimit);
-                var southlimit = parseFloat(box.southlimit);
-                var eastlimit = parseFloat(box.eastlimit);
-                var westlimit = parseFloat(box.westlimit);
-                var counter = box.counter.toString();
-                createBoxResourceMarker (northlimit, southlimit, eastlimit, westlimit, info_content, counter);
+                createBoxResourceMarker (box);
             });
 
             shade_rects.forEach(function(rect){
@@ -752,7 +728,26 @@
             });
 
         }
-
+        var buildMapItemsTableDataforMarkers = function (resources_list, map_resources) {
+            resources_list.forEach(function(resource) {
+                var northlimit = parseFloat(resource.northlimit);
+                var southlimit = parseFloat(resource.southlimit);
+                var eastlimit = parseFloat(resource.eastlimit);
+                var westlimit = parseFloat(resource.westlimit);
+                var ne_latlng = new google.maps.LatLng(northlimit, eastlimit);
+                var sw_latlng = new google.maps.LatLng(southlimit, westlimit);
+                var resource_bound = new google.maps.LatLngBounds(sw_latlng, ne_latlng);
+                var author_name = "";
+                if (resource.first_author_description) {
+                    author_name = '<a target="_blank" href="' + resource.first_author_description + '">' + resource.first_author + '</a>';
+                } else {
+                    author_name = resource.first_author;
+                }
+                var resource_title = '<a target="_blank" href="' + resource.get_absolute_url + '">' + resource.title + '</a>';
+                var map_resource = [resource, resource.resource_type, resource_title, author_name];
+                map_resources.push(map_resource);
+            });
+        }
         var setMapItemsList = function(json_results, latLng) {
             var map_resources = [];
             buildMapItemsTableData(json_results, map_resources, latLng);
@@ -891,17 +886,24 @@
                 if (lat_diff < minFloatingNumber && lng_diff < minFloatingNumber) {
                     item.info_link = item.info_link + '<br />' + '<a href="' + test.get_absolute_url + '">' + test.title + '</a>';
                     item.counter++;
+                    item.resources_list.push(test);
                     existed = true;
                 }
             });
             if (!existed) {
+                test.resources_list = [];
+                test.resources_list.push(test);
                 test.info_link = '<a href="' + test.get_absolute_url + '">' + test.title + '</a>';
                 test.counter = 1;
                 modified_boxes_data.push(test);
             }
         };
 
-        var createPointResourceMarker = function (lat, lng, info_content, counter) {
+        var createPointResourceMarker = function (point) {
+            var info_content = point.info_link;
+            var lat = parseFloat(point.north);
+            var lng = parseFloat(point.east);
+            var counter = point.counter.toString();
             var latlng = new google.maps.LatLng(lat, lng);
             var marker = new google.maps.Marker({
                 map: map,
@@ -916,7 +918,13 @@
             });
         };
 
-        var createBoxResourceMarker = function (northlimit, southlimit, eastlimit, westlimit, info_content, counter) {
+        var createBoxResourceMarker = function (box) {
+            var info_content = box.info_link;
+            var northlimit = parseFloat(box.northlimit);
+            var southlimit = parseFloat(box.southlimit);
+            var eastlimit = parseFloat(box.eastlimit);
+            var westlimit = parseFloat(box.westlimit);
+            var counter = box.counter.toString();
             var lat = (parseFloat(northlimit) + parseFloat(southlimit)) / 2;
             var lng = (parseFloat(eastlimit) + parseFloat(westlimit)) / 2;
             var latlng = new google.maps.LatLng(lat, lng);
@@ -929,6 +937,12 @@
             markers.push(marker);
 
             google.maps.event.addListener(marker, 'click', function() {
+                var map_resources = [];
+                buildMapItemsTableDataforMarkers(box.resources_list, map_resources);
+                var map_items_table = $('#map-items').DataTable();
+                map_items_table.clear();
+                map_items_table.rows.add(map_resources);
+                map_items_table.draw();
                 info_window.setContent(info_content);
                 info_window.open(map, marker);
                 var rectBounds = new google.maps.LatLngBounds(
