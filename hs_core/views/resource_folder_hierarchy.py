@@ -7,7 +7,9 @@ from rest_framework.exceptions import NotFound, PermissionDenied
 
 from django_irods.storage import IrodsStorage
 from django_irods.icommands import SessionException
-from hs_core.hydroshare.utils import get_file_mime_type, get_resource_file_name_and_extension
+
+from hs_core.hydroshare.utils import get_file_mime_type, get_resource_file_name_and_extension, \
+    get_resource_file_url
 from hs_core.views.utils import authorize, ACTION_TO_AUTHORIZE
 from hs_core.hydroshare import delete_resource_file
 from hs_core.models import ResourceFile
@@ -108,11 +110,13 @@ def data_store_structure(request):
             if idx >= 0:
                 mtype = mtype[idx + 1:]
             f_pk = ''
+            f_url = ''
             for f in ResourceFile.objects.filter(object_id=resource.id):
                 if fname == get_resource_file_name_and_extension(f)[0]:
                     f_pk = f.pk
+                    f_url = get_resource_file_url(f)
                     break
-            files.append({'name': fname, 'size': size, 'type': mtype, 'pk': f_pk})
+            files.append({'name': fname, 'size': size, 'type': mtype, 'pk': f_pk, 'url': f_url})
     except SessionException as ex:
         logger.error(ex.stderr)
         return HttpResponse(status=500)
@@ -316,6 +320,53 @@ def data_store_create_folder(request):
         return HttpResponse(status=500)
 
     return_object = {'new_folder_rel_path': folder_path}
+
+    return HttpResponse(
+        json.dumps(return_object),
+        content_type="application/json"
+    )
+
+
+def data_store_remove_folder(request):
+    """
+    remove a sub-folder/sub-collection in hydroshareZone or any federated zone used for HydroShare
+    resource backend store. It is invoked by an AJAX call and returns json object that include a
+    status of 'success' if succeeds, and HttpResponse of status code of 403, 400, or 500 if fails.
+    The AJAX request must be a POST request with input data passed in for res_id and folder_path
+    where folder_path is the relative path for the folder to be removed under
+    res_id collection/directory.
+    """
+    res_id = request.POST['res_id']
+    if res_id is None:
+        return HttpResponse(status=400)
+    res_id = str(res_id).strip()
+    try:
+        resource, _, _ = authorize(request, res_id,
+                                   needed_permission=ACTION_TO_AUTHORIZE.EDIT_RESOURCE)
+    except (NotFound, PermissionDenied):
+        # return permission defined response
+        return HttpResponse(status=403)
+
+    folder_path = request.POST['folder_path']
+    if folder_path is None:
+        return HttpResponse(status=400)
+    folder_path = str(folder_path).strip()
+    if not folder_path:
+        return HttpResponse(status=400)
+    if resource.resource_federation_path:
+        istorage = IrodsStorage('federated')
+        coll_path = os.path.join(resource.resource_federation_path, res_id, folder_path)
+    else:
+        istorage = IrodsStorage()
+        coll_path = os.path.join(res_id, folder_path)
+
+    try:
+        istorage.delete(coll_path)
+    except SessionException as ex:
+        logger.error(ex.stderr)
+        return HttpResponse(status=500)
+
+    return_object = {'status': 'success'}
 
     return HttpResponse(
         json.dumps(return_object),
