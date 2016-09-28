@@ -3937,9 +3937,54 @@ form#covereage-search-fields {
     color: #777;
 }
 
-.fb-file .fb-file-icon {
-    color: #1abc9c;
+.fb-file .fb-file-icon.fa-file-zip-o {
+    color: rgb(140, 86, 75);
 }
+
+.fb-file .fb-file-icon.fa-file-excel-o {
+    color: rgb(44, 160, 44);
+}
+
+.fb-file .fb-file-icon.fa-file-o {
+    color: rgb(127, 127, 127);
+}
+
+.fb-file .fb-file-icon.fa-file-pdf-o {
+    color: rgb(214, 39, 40);
+}
+
+.fb-file .fb-file-icon.fa-file-word-o {
+    color: rgb(31, 119, 180);
+}
+
+.fb-file .fb-file-icon.fa-file-audio-o {
+    color: rgb(148, 103, 189);
+}
+
+.fb-file .fb-file-icon.fa-file-movie-o {
+    color: rgb(227, 119, 194);
+}
+.fb-file .fb-file-icon.fa-file-image-o {
+    color: rgb(255, 127, 14);
+}
+
+.fb-file .fb-file-icon.fa-file-text-o {
+    color: rgb(127, 127, 127);
+}
+
+.fb-file .fb-file-icon.fa-file-powerpoint-o {
+    color: rgb(255, 187, 120);
+}
+
+.fb-file .fb-file-icon.fa-file-code-o {
+    color: rgb(102, 170, 0);
+}
+
+
+
+
+
+
 
 #fb-files-container li.ui-selected .fb-file-name, #fb-files-container li.ui-selecting .fb-file-name {
 	word-break: break-word;
@@ -4184,3 +4229,4 @@ div.fb-upload-caption {
 #previews {
 	display: none;
 }
+

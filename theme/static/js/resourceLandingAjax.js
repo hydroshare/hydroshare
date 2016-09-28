@@ -419,10 +419,46 @@ function getFolderTemplateInstance(folderName) {
 }
 
 function getFileTemplateInstance(fileName, fileType, fileSize, pk) {
+    var fileTypeExt = fileName.substr(fileName.lastIndexOf(".") + 1, fileName.length);
+    var extIcon = "fa-file-o";
+
+    if (fileName.lastIndexOf(".")) {
+        if (fileTypeExt.toUpperCase() == "PDF") {
+            extIcon = "fa-file-pdf-o";
+        }
+        else if (fileTypeExt.toUpperCase() == "XLS" || fileTypeExt.toUpperCase() == "XLT" || fileTypeExt.toUpperCase() == "XML" || fileTypeExt.toUpperCase() == "CSV") {
+            extIcon = "fa-file-excel-o";
+        }
+        else if (fileTypeExt.toUpperCase() == "ZIP" || fileTypeExt.toUpperCase() == "RAR" || fileTypeExt.toUpperCase() == "RAR5") {
+            extIcon = "fa-file-zip-o";
+        }
+        else if (fileTypeExt.toUpperCase() == "DOC" || fileTypeExt.toUpperCase() == "DOCX") {
+            extIcon = "fa-file-word-o";
+        }
+        else if (fileTypeExt.toUpperCase() == "MP3" || fileTypeExt.toUpperCase() == "WAV" || fileTypeExt.toUpperCase() == "WMA") {
+            extIcon = "fa-file-audio-o";
+        }
+        else if (fileTypeExt.toUpperCase() == "MP4" || fileTypeExt.toUpperCase() == "MOV" || fileTypeExt.toUpperCase() == "WMV") {
+            extIcon = "fa-file-movie-o";
+        }
+        else if (fileTypeExt.toUpperCase() == "PNG" || fileTypeExt.toUpperCase() == "JPG" || fileTypeExt.toUpperCase() == "JPEG" || fileTypeExt.toUpperCase() == "GIF" || fileTypeExt.toUpperCase() == "TIF" || fileTypeExt.toUpperCase() == "BMP") {
+            extIcon = "fa-file-image-o";
+        }
+        else if (fileTypeExt.toUpperCase() == "TXT") {
+            extIcon = "fa-file-text-o";
+        }
+        else if (fileTypeExt.toUpperCase() == "PPT" || fileTypeExt.toUpperCase() == "PPTX") {
+            extIcon = "fa-file-powerpoint-o";
+        }
+        else if (fileTypeExt.toUpperCase() == "JS" || fileTypeExt.toUpperCase() == "PY" || fileTypeExt.toUpperCase() == "PHP" || fileTypeExt.toUpperCase() == "JAVA" || fileTypeExt.toUpperCase() == "CS") {
+            extIcon = "fa-file-code-o";
+        }
+    }
+
     return "<li data-pk='" + pk + "' class='fb-file droppable' title='" + fileName + "&#13;Type: " + fileType + "&#13;Size: " + formatBytes(parseInt(fileSize)) +  "'>" +
         "<span class='fa fa-arrows fb-handle fb-help-icon'></span>" +
-        "<span class='fb-file-icon fa fa-file-text'></span>" +
-        "<span class='fb-file-name''>" + fileName + "</span>" +
+        "<span class='fb-file-icon fa " + extIcon + "'></span>" +
+        "<span class='fb-file-name'>" + fileName + "</span>" +
         "<span class='fb-file-type'>" + fileType + " File</span>" +
         "<span class='fb-file-size' data-file-size=" + fileSize + "'>" + formatBytes(parseInt(fileSize)) + "</span></li>"
 }
