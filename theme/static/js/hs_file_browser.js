@@ -22,21 +22,19 @@ function updateSelectionMenuContext() {
     var flagDisableDownload = false;
     var flagDisableRename = false;
     var flagDisablePaste = false;
+    var flagDisableZip = false;
 
     if (selected.length > 1) {
         flagDisableRename = true;   // 'rename' menu item
         flagDisableOpen = true;
         flagDisablePaste = true;
+        flagDisableZip = true;
     }
 
     if (selected.hasClass("fb-file")) {
         flagDisableOpen = true;
         flagDisablePaste = true;
-    }
-
-    if (selected.hasClass("fb-file")) {
-        flagDisableOpen = true;
-        flagDisablePaste = true;
+        flagDisableZip = true;
     }
 
     if (selected.hasClass("fb-folder")) {
@@ -50,6 +48,7 @@ function updateSelectionMenuContext() {
     $("#right-click-menu").children("li[data-menu-name='open']").toggleClass("disabled", flagDisableOpen);
     $("#right-click-menu").children("li[data-menu-name='download']").toggleClass("disabled", flagDisableDownload);
     $("#right-click-menu").children("li[data-menu-name='rename']").toggleClass("disabled", flagDisableRename);
+    $("#right-click-menu").children("li[data-menu-name='zip']").toggleClass("disabled", flagDisableZip);
     $(".selection-menu").children("li[data-menu-name='paste']").toggleClass("disabled", flagDisablePaste);
 }
 
@@ -470,6 +469,14 @@ $(document).ready(function () {
                 // $("#download-frame").attr("src", downloadList.attr(data-url));
             }
         }
+    });
+
+    // Zip method
+    $("#btn-zip").click(function() {
+        var resID = $("#fb-files-container").attr("data-res-id");
+        var currentPath = $("#fb-files-container").attr("data-current-path");
+        var folderName = $("#fb-files-container li.ui-selected").children(".fb-file-name").text();
+        zip_irods_folder_ajax_submit(resID, currentPath + "/" + folderName);
     });
 
     function downloadFiles(url) {

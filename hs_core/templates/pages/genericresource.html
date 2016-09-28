@@ -99,6 +99,18 @@
 
                         <li role="separator" class="divider"></li>
 
+                        <li id="btn-zip" data-menu-name="cut">
+                            <span class="fa fa-file-archive-o icon-blue"></span>
+                            <span>Zip</span>
+                        </li>
+
+                        <li id="btn-unzip" data-menu-name="cut">
+                            <span class="fa fa-file-archive-o icon-blue"></span>
+                            <span>Unzip</span>
+                        </li>
+
+                        <li role="separator" class="divider"></li>
+
                         <li id="btn-download" data-menu-name="download">
                             <span class="glyphicon glyphicon-download icon-blue"></span>
                             <span>Download</span>
@@ -254,13 +266,11 @@
                                             </form>
                                         </div>
                                         {% if page.perms.change and metadata_form %}
-                                            <div class="fb-upload-caption "><small>Upload files by dragging & dropping, or click this box to select them.</small></div>
+                                            <div class="fb-upload-caption dz-clickable"><small>Upload files by dragging & dropping, or click this box to select them.</small></div>
                                         {% endif %}
                                     </div>
 
-                                    <div class="table table-striped" class="files" id="previews">
-
-                                    </div>
+                                    <div class="table table-striped" class="files" id="previews"></div>
 {#                                    <div class="table-container">#}
 {#                                        <table class="table-plain table-striped">#}
 {#                                            {% for f in cm.files.all %}#}
