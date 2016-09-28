@@ -488,6 +488,7 @@ function delete_file_ajax_submit(res_id, file_pk) {
     });
 }
 
+// This method is called to refresh the loader with the most recent structure after every other call
 function get_irods_folder_struct_ajax_submit(res_id, store_path) {
     $("body").css("cursor", "progress");
     $.ajax({
@@ -533,6 +534,7 @@ function get_irods_folder_struct_ajax_submit(res_id, store_path) {
 }
 
 function zip_irods_folder_ajax_submit(res_id, input_coll_path) {
+    $("body").css("cursor", "progress");
     $.ajax({
         type: "POST",
         url: '/hsapi/_internal/data-store-folder-zip/',
@@ -544,17 +546,7 @@ function zip_irods_folder_ajax_submit(res_id, input_coll_path) {
             remove_original_after_zip: "true"
         },
         success: function (result) {
-            var output_file_name = result.name;
-            var output_file_size = result.size;
-            var output_file_type = result.type;
-            if (output_file_name.length > 0) {
-                $('#fb-files-container').append("<li class='fb-file droppable'>" +
-                    "<span class='fa fa-arrows fb-handle fb-help-icon'></span>" +
-                    "<span class='fb-file-icon fa fa-file-text'></span>" +
-                    "<span class='fb-file-name'>" + output_file_name + "</span>" +
-                    "<span class='fb-file-type'>" + output_file_type + " File</span>" +
-                    "<span class='fb-file-size' data-file-size=" + output_file_size + ">" + formatBytes(parseInt(output_file_size)) + "</span></li>");
-            }
+            console.log("file zipped");
         },
         error: function(xhr, errmsg, err){
             console.log(xhr.status + ": " + xhr.responseText + ". Error message: " + errmsg);
@@ -600,11 +592,10 @@ function create_irods_folder_ajax_submit(res_id, folder_path) {
                 $('#create-folder-dialog').modal('hide');
                 console.log("Folder " + new_folder_rel_path + " is created successfully.");
             }
-            $("body").css("cursor", "default");
+
         },
         error: function(xhr, errmsg, err){
             console.log(xhr.status + ": " + xhr.responseText + ". Error message: " + errmsg);
-            $("body").css("cursor", "default");
         }
     });
 }
@@ -626,11 +617,9 @@ function move_or_rename_irods_file_or_folder_ajax_submit(res_id, source_path, ta
                 console.log(source_path + " has been renamed or moved to " + target_path);
                 $("#fb-files-container li").removeClass("fb-cutting");
             }
-            $("body").css("cursor", "default");
         },
         error: function(xhr, errmsg, err){
             console.log(xhr.status + ": " + xhr.responseText + ". Error message: " + errmsg);
-            $("body").css("cursor", "default");
         }
     });
 }

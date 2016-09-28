@@ -476,7 +476,14 @@ $(document).ready(function () {
         var resID = $("#fb-files-container").attr("data-res-id");
         var currentPath = $("#fb-files-container").attr("data-current-path");
         var folderName = $("#fb-files-container li.ui-selected").children(".fb-file-name").text();
-        zip_irods_folder_ajax_submit(resID, currentPath + "/" + folderName);
+
+        var calls = [];
+        calls.push(zip_irods_folder_ajax_submit(resID, currentPath + "/" + folderName));
+
+        // Wait for the asynchronous calls to finish to get new folder structure
+        $.when.apply($, calls).done(function () {
+            refreshFileBrowser();
+        });
     });
 
     function downloadFiles(url) {
