@@ -1693,6 +1693,11 @@ class TimeSeriesMetaData(CoreMetaData):
             if site.is_dirty:
                 # get the SamplingFeatureID to update the corresponding row in Sites and
                 # SamplingFeatures tables
+                # No need to process each series id associated with a site element. This
+                # is due to the fact that for each site there can be only one value for
+                # SamplingFeatureID. If we take into account all the series ids associated
+                # with a site we will end up updating the same record in site table multiple
+                # times with the same data.
                 series_id = site.series_ids[0]
                 cur.execute("SELECT FeatureActionID FROM Results WHERE ResultUUID=?", (series_id,))
                 result = cur.fetchone()
