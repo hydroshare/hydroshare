@@ -3999,13 +3999,23 @@ form#covereage-search-fields {
     border-top: 0;
 }
 
-#selection-menu li:not(.divider) {
+.selection-menu li:not(.divider) {
     padding: 4px 8px;
     cursor: pointer;
 }
 
-#selection-menu li:hover {
+.selection-menu li:hover {
     background-color:#DDD;
+}
+
+.selection-menu li.disabled {
+	color: #999;
+	pointer-events:none;
+}
+
+.selection-menu li.disabled span {
+	color: #999;
+	text-shadow: initial;
 }
 
 /*#fb-files-container > li > span:nth-child(4) {*/
@@ -4032,7 +4042,7 @@ form#covereage-search-fields {
 	padding-right: 35px;
 }
 
-span.fb-control-round {
+button.fb-control-round {
     border-radius: 50%;
     width: 36px;
     height: 36px;
@@ -4054,6 +4064,11 @@ span.fb-control-square {
 	padding: 10px;
 }
 
+#fb-files-container li.fb-cutting {
+	border: 1px dashed #DDD !important;
+	opacity: 0.75;
+}
+
 .fb-handle {
 	width: 20px;
 	display: inline;
@@ -4073,7 +4088,7 @@ span.fb-control-square {
 	border: 0 !important;
 }
 
-#selection-menu .fa {
+.selection-menu .fa {
 	font-size: 18px;
 	margin-right: 10px;
 }
@@ -4083,12 +4098,8 @@ div.fb-upload-caption {
 	border: 1px solid #DDD;
 	border-top: 0;
 	cursor: pointer;
-	color: #777;
-	background: rgb(252, 255, 244);
-	background: -moz-linear-gradient(top, rgba(252, 255, 244, 1) 0%, rgba(233, 233, 206, 1) 100%);
-	background: -webkit-linear-gradient(top, rgba(252, 255, 244, 1) 0%, rgba(233, 233, 206, 1) 100%);
-	background: linear-gradient(to bottom, rgba(252, 255, 244, 1) 0%, rgba(233, 233, 206, 1) 100%);
-	filter: progid:DXImageTransform.Microsoft.gradient(startColorstr='#fcfff4', endColorstr='#e9e9ce', GradientType=0);
+    background: #f9f9f9;
+    color: #555;
 }
 
 .dropzone {
@@ -4162,4 +4173,14 @@ div.fb-upload-caption {
 	list-style: none;
     width: 100%;
     margin-top: 100px;
+}
+
+#flag-uploading {
+    border-bottom: 1px solid #DDD;
+    padding: 4px;
+    background: #f9f9f9;
+}
+
+#previews {
+	display: none;
 }

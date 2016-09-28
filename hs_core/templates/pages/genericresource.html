@@ -65,9 +65,9 @@
                 {% block content_block %}
                 {# ======= Content (code moved here because django does not render blocks inside included templates) ======= #}
                 {% if cm.resource_type != "ToolResource" %}
-                    {# POPUP MENU #}
-                    <ul id="selection-menu" class="dropdown-menu fb-dropdown">
-                        <li data-menu-name="open">
+                    {# POPUP MENU - Right clicking items #}
+                    <ul id="right-click-menu" class="dropdown-menu fb-dropdown selection-menu">
+                        <li id="btn-open" data-menu-name="open">
                             <span class="glyphicon glyphicon-folder-open glyphicon-folder"></span>
                             <span>Open</span>
                         </li>
@@ -81,48 +81,90 @@
 
                         <li role="separator" class="divider"></li>
 
-                        <li data-menu-name="cut">
+                        <li id="btn-cut" data-menu-name="cut">
                             <span class="fa fa-scissors icon-blue"></span>
                             <span>Cut</span>
                         </li>
 
-                        <li data-menu-name="rename">
+                        <li data-menu-name="paste">
+                            <span class="fa fa-clipboard icon-blue"></span>
+                            <span>Paste</span>
+                        </li>
+
+                        <li data-menu-name="rename" data-toggle="modal" data-target="#rename-dialog">
                             <span class="glyphicon glyphicon-pencil icon-blue"></span>
                             <span>Rename</span>
                         </li>
 
-                        <li data-menu-name="delete" class="fb-files-remove">
+                        <li class="fb-files-remove" data-toggle="modal" data-target="#confirm-delete-dialog">
                             <span class="glyphicon glyphicon-trash icon-button btn-remove"></span>
                             <span>Delete</span>
                         </li>
                     </ul>
+
+                    {# POPUP MENU - Right clicking empty space in file browser #}
+                    <ul id="right-click-container-menu" class="dropdown-menu fb-dropdown selection-menu">
+                        <li id="btn-new-folder" data-menu-name="new-folder" data-toggle="modal" data-target="#create-folder-dialog">
+                            <span class="fa fa-folder glyphicon-folder"></span>
+                            <span>New Folder</span>
+                        </li>
+
+                        <li role="separator" class="divider"></li>
+
+                        <li data-menu-name="paste">
+                            <span class="fa fa-clipboard icon-blue"></span>
+                            <span>Paste</span>
+                        </li>
+                    </ul>
+
                     <div class="col-sm-12 content-block">
                         <h3>Content</h3>
                         {% if show_content_files %}
-
+                            {#                            ======= Modal window begins =======#}
+                            <div class="modal fade" id="confirm-delete-dialog" tabindex="-1" role="dialog"
+                                 aria-labelledby="myModalLabel" aria-hidden="true">
+                                <div class="modal-dialog">
+                                    <div class="modal-content">
+                                        <div class="modal-header">
+                                            <button type="button" class="close" data-dismiss="modal"
+                                                    aria-hidden="true">&times;</button>
+                                            <h4 class="modal-title">Confirm files deletion</h4>
+                                        </div>
+                                        <div class="modal-body">Consider saving a copy of the files before you delete it
+                                            if it is important to you.
+                                        </div>
+                                        <div class="modal-footer">
+                                            <button type="button" class="btn btn-default" data-dismiss="modal">Cancel
+                                            </button>
+                                            <button id="btn-confirm-delete" type="button" class="btn btn-danger">Delete</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+{#                            ======= Modal window ends =======#}
                                     <div id="hs-file-browser" data-res-id="{{ cm.short_id }}" class="file-browser" >
                                         <div id="file-browser-controls" class="row">
                                             <div class="col-xs-6">
-                                                <span class="btn btn-default fb-control-round"
+                                                <button class="btn btn-default fb-control-round"
                                                       title="Click to go back"><span
-                                                        class="glyphicon glyphicon-arrow-left"></span></span>
+                                                        class="glyphicon glyphicon-arrow-left"></span></button>
 
-                                                <span class="btn btn-default fb-control-round"
+                                                <button class="btn btn-default fb-control-round"
                                                       title="Click to go forward"><span
-                                                        class="glyphicon glyphicon-arrow-right"></span></span>
+                                                        class="glyphicon glyphicon-arrow-right"></span></button>
 
-                                                <span id="fb-move-up" class="btn btn-default fb-control-squared"
-                                                      title="Click to go to parent directory"><span class="fa fa-level-up"></span></span>
+                                                <button id="fb-move-up" class="btn btn-default fb-control-squared"
+                                                      title="Click to go to parent directory"><span class="fa fa-level-up"></span></button>
 
-                                                <span id="fb-create-folder" class="btn btn-default fb-control-squared"
+                                                <button id="fb-create-folder" class="btn btn-default fb-control-squared"
                                                       data-toggle="modal" data-target="#create-folder-dialog"
                                                       title="Create new folder">
-                                                    <span class="fa fa-folder glyphicon-folder"></span></span>
+                                                    <span class="fa fa-folder glyphicon-folder"></span></button>
 
-                                                <span id="fb-delete" class="btn btn-default fb-control-squared fb-files-remove"
-                                                      title="Delete">
+                                                <button id="fb-delete" class="btn btn-default fb-control-squared fb-files-remove"
+                                                      title="Delete" data-toggle="modal" data-target="#confirm-delete-dialog">
                                                     <span class="glyphicon glyphicon-trash btn-remove"></span>
-                                                </span>
+                                                </button>
 
                                                 <input id="toggle-list-view" type="checkbox" checked
                                                        data-toggle="toggle" data-onstyle="default"
@@ -171,7 +213,11 @@
                                                   class="files-container ui-widget-content dropzone"
                                                   action="/hsapi/_internal/{{ cm.short_id }}/add-file-to-resource/"
                                                   method="POST">
-                                                    {% csrf_token %}
+                                                {% csrf_token %}
+
+                                                <div id="flag-uploading">
+                                                    <i class="fa fa-circle-o-notch fa-spin fa-fw"></i><small class="uploading-message"> Uploading files...</small>
+                                                </div>
 
                                                 <div class="fb-drag-flag">
                                                     <span class="fa fa-plus-square fa-5x"></span>
@@ -210,38 +256,7 @@
                                     </div>
 
                                     <div class="table table-striped" class="files" id="previews">
-                                        <div id="fb-template" class="file-row">
-                                            <!-- This is used as the file preview template -->
-                                            <div>
-                                                <span class="preview"><img data-dz-thumbnail/></span>
-                                            </div>
-                                            <div>
-                                                <p class="name" data-dz-name></p>
-                                                <strong class="error text-danger" data-dz-errormessage></strong>
-                                            </div>
-                                            <div>
-                                                <p class="size" data-dz-size></p>
-                                                <div class="progress progress-striped active" role="progressbar"
-                                                     aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
-                                                    <div class="progress-bar progress-bar-success" style="width:0%;"
-                                                         data-dz-uploadprogress></div>
-                                                </div>
-                                            </div>
-                                            <div>
-                                                <button class="btn btn-primary start">
-                                                    <i class="glyphicon glyphicon-upload"></i>
-                                                    <span>Start</span>
-                                                </button>
-                                                <button data-dz-remove class="btn btn-warning cancel">
-                                                    <i class="glyphicon glyphicon-ban-circle"></i>
-                                                    <span>Cancel</span>
-                                                </button>
-                                                <button data-dz-remove class="btn btn-danger delete">
-                                                    <i class="glyphicon glyphicon-trash"></i>
-                                                    <span>Delete</span>
-                                                </button>
-                                            </div>
-                                        </div>
+
                                     </div>
 {#                                    <div class="table-container">#}
 {#                                        <table class="table-plain table-striped">#}
@@ -386,12 +401,19 @@
                                     </a>
                                 {% endif %}
                                 {% for b in cm.bags.all %}
-                                    <a id="btn-download-all" type="button" class="btn btn-default row-selector" href="{{ bag_url }}">
+                                    <div>
+                                        <a id="btn-download-all" type="button" class="btn btn-default row-selector"
+                                           href="{{ bag_url }}">
                                         <span class="glyphicon glyphicon-download-alt">
-                                            <span title='Download All Content as Zipped BagIt Archive' class="button-label">Download All Content as Zipped BagIt Archive</span>
+                                            <span title='Download All Content as Zipped BagIt Archive'
+                                                  class="button-label">Download All Content as Zipped BagIt Archive</span>
                                         </span>
+                                        </a>
+                                    </div>
+                                    <div>
                                         <a target="_blank" href="http://en.wikipedia.org/wiki/BagIt">Learn more about the Bagit archive format</a>
-                                    </a>
+                                    </div>
+
                                     <button type="button" class="btn btn-primary pull-right"
                                             onclick="get_irods_folder_struct_ajax_submit('{{ cm.short_id }}', 'data/contents'); return false;">iRODS folder info
                                     </button>

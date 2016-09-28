@@ -2,6 +2,8 @@
  * Created by Mauriel on 8/16/2016.
  */
 
+var sourcePaths = [];
+
 function selectSelectableElement (selectableContainer, elementsToSelect) {
     // add unselecting class to all elements in the styleboard canvas except the ones to select
     $(".ui-selected", selectableContainer).not(elementsToSelect).removeClass("ui-selected").addClass("ui-unselecting");
@@ -15,9 +17,40 @@ function selectSelectableElement (selectableContainer, elementsToSelect) {
 
 function updateSelectionMenuContext() {
     var selected = $("#fb-files-container li.ui-selected");
+
+    var flagDisableOpen = false;
+    var flagDisableDownload = false;
+    var flagDisableRename = false;
+    var flagDisablePaste = false;
+
     if (selected.length > 1) {
-        
+        flagDisableRename = true;   // 'rename' menu item
+        flagDisableOpen = true;
+        flagDisablePaste = true;
     }
+
+    if (selected.hasClass("fb-file")) {
+        flagDisableOpen = true;
+        flagDisablePaste = true;
+    }
+
+    if (selected.hasClass("fb-file")) {
+        flagDisableOpen = true;
+        flagDisablePaste = true;
+    }
+
+    if (selected.hasClass("fb-folder")) {
+        flagDisableDownload = true;
+    }
+
+    if (!sourcePaths.length) {
+        flagDisablePaste = true;
+    }
+
+    $("#right-click-menu").children("li[data-menu-name='open']").toggleClass("disabled", flagDisableOpen);
+    $("#right-click-menu").children("li[data-menu-name='download']").toggleClass("disabled", flagDisableDownload);
+    $("#right-click-menu").children("li[data-menu-name='rename']").toggleClass("disabled", flagDisableRename);
+    $(".selection-menu").children("li[data-menu-name='paste']").toggleClass("disabled", flagDisablePaste);
 }
 
 function bindFileBrowserItemEvents() {
@@ -36,13 +69,13 @@ function bindFileBrowserItemEvents() {
         .sortable({
             handle: ".fb-handle",
             containment: "parent",
-            helper: function (e, item) { //create custom helper
-                // clone selected items before hiding
-                var elements = $('.ui-selected').not(".ui-sortable-helper").clone();
-                //hide selected items
-                item.siblings('.ui-selected').addClass('hidden');
-                return item.append(elements);
-            },
+            // helper: function (e, item) { //create custom helper
+            //     // clone selected items before hiding
+            //     var elements = $('.ui-selected').not(".ui-sortable-helper").clone();
+            //     //hide selected items
+            //     item.siblings('.ui-selected').addClass('hidden');
+            //     return item.append(elements);
+            // },
             // start: function (e, ui) {
             //     var elements = ui.item.siblings('.ui-selected.hidden').not('.ui-sortable-placeholder');
             //     //store the selected items to item being dragged
@@ -65,19 +98,18 @@ function bindFileBrowserItemEvents() {
 
             },
             unselected: function (event, ui) {
-                $("#selection-menu").hide();
+                $(".selection-menu").hide();
             }
         });
 
     $(".fb-handle").click(function () {
         selectSelectableElement($("#fb-files-container"), $(this).parent());    // Mark item as selected
-        $("#selection-menu").hide();
+        $(".selection-menu").hide();
     });
 
-    // Dismiss right click menu when clicking outside of it
-    $("#fb-files-container, #fb-files-container li").click(function () {
-
-            $("#selection-menu").hide();
+    // Dismiss right click menu when mouse down outside of it
+    $("#fb-files-container, #fb-files-container li, #fbContainmentWrapper").mousedown(function () {
+        $(".selection-menu").hide();
     });
 
     $("#hs-file-browser li.fb-folder").dblclick(function() {
@@ -87,30 +119,40 @@ function bindFileBrowserItemEvents() {
         get_irods_folder_struct_ajax_submit(resID, currentPath + "/" + folderName);
     });
 
-    // Right click menu for file browser items
-    $("#fb-files-container li").bind("contextmenu", function (event) {
-
+    // Right click menu for file browser
+    $("#fbContainmentWrapper").bind("contextmenu", function (event) {
         // Avoid the real one
         event.preventDefault();
-        if (!$(this).hasClass("ui-selected")) {
-            $(".ui-selected").removeClass("ui-selected");
-            $(this).addClass("ui-selected");
+
+        var menu;   // The menu to show
+        updateSelectionMenuContext();
+
+        if ($(event.target).closest("li").length) {     // If a file item was clicked
+            if (!$(event.target).closest("li").hasClass("ui-selected")) {
+                $(".ui-selected").removeClass("ui-selected");
+                $(event.target).closest("li").addClass("ui-selected");
+            }
+            menu = $("#right-click-menu");
         }
-        var menu = $("#selection-menu");
+        else {
+            menu = $("#right-click-container-menu");    // empty space was clicked
+        }
+
+        $(".selection-menu").hide();    // Hide other menus
+
         var top = event.pageY;
         var left = event.pageX;
 
         menu.css({top: top, left: left});
 
-        if (menu.css("display") == "none")
+        if (menu.css("display") == "none") {
             menu.show();
+        }
         else {
             menu.hide();
         }
     });
 }
-
-
 
 function setBreadCrumbs(path) {
     var crumbs = $("#fb-bread-crumbs");
@@ -139,17 +181,13 @@ function setBreadCrumbs(path) {
 }
 
 $(document).ready(function () {
-    // Get the template HTML and remove it from the doumenthe template HTML and remove it from the doument
-    var previewNode = document.querySelector("#fb-template");
-    previewNode.id = "";
-    var previewTemplate = previewNode.parentNode.innerHTML;
-    previewNode.parentNode.removeChild(previewNode);
+    var previewNode = $("#flag-uploading").clone();
+    $("#flag-uploading").remove();
 
     // Show file drop visual feedback
     Dropzone.options.fbContainmentWrapper = {
         paramName: "files", // The name that will be used to transfer the file
         clickable: ".fb-upload-caption",
-        previewTemplate: previewTemplate,
         previewsContainer: "#previews", // Define the container to display the previews
         init: function () {
             this.on("dragenter", function (file) {
@@ -164,6 +202,11 @@ $(document).ready(function () {
                 $(".fb-drag-flag").hide();
             });
 
+            this.on("processing", function (file) {
+                if (!$("#flag-uploading").length) {
+                    $("#fbContainmentWrapper").prepend(previewNode);
+                }
+            });
             this.on("queuecomplete", function () {
                  refreshFileBrowser();
                 $("#previews").empty();
@@ -171,7 +214,7 @@ $(document).ready(function () {
         }
     };
 
-
+    // Toggle between grid and list view
     $("#toggle-list-view").change(function () {
         if ($("#fb-files-container").hasClass("fb-view-list")) {
             // ------- Switch to grid view -------
@@ -185,8 +228,10 @@ $(document).ready(function () {
         }
     });
 
+    // Bind file browser gui events
     bindFileBrowserItemEvents();
 
+    // File sorting algorithms
     function sort(method, order) {
         var sorted;
         if (method == "name") {
@@ -301,28 +346,14 @@ $(document).ready(function () {
         return false;
     });
 
-    function onDeleteClick() {
-        var resID = $("#fb-files-container").attr("data-res-id");
-        var deleteList = $("#fb-files-container li.ui-selected");
-        if (deleteList.length) {
-            for (var i = 0; i < deleteList.length; i++) {
-                var pk = $(deleteList[i]).attr("data-pk");
-                if (pk) {
-                    delete_file_ajax_submit(resID, pk);
-                }
-            }
-            refreshFileBrowser();
-        }
-    }
 
-    // Call delete for every item selected
-    $(".fb-files-remove").click(onDeleteClick);
 
+    // Reload the current folder structure
     function refreshFileBrowser () {
         var resID = $("#fb-files-container").attr("data-res-id");
         var currentPath = $("#fb-files-container").attr("data-current-path");
         get_irods_folder_struct_ajax_submit(resID, currentPath);
-        $("#selection-menu").hide();
+        $(".selection-menu").hide();
     }
 
     // Move up one directory
@@ -333,4 +364,99 @@ $(document).ready(function () {
         get_irods_folder_struct_ajax_submit(resID, upPath);
     });
 
+    $("#btn-open").click(function () {
+        var resID = $("#fb-files-container").attr("data-res-id");
+        var currentPath = $("#fb-files-container").attr("data-current-path");
+        var folderName = $("#fb-files-container li.ui-selected").children(".fb-file-name").text();
+        get_irods_folder_struct_ajax_submit(resID, currentPath + "/" + folderName);
+    });
+
+    $("#btn-cut").click(function () {
+        var currentPath = $("#fb-files-container").attr("data-current-path");
+        $("#fb-files-container li").removeClass("fb-cutting");
+        sourcePaths = [];
+
+        var selection = $("#fb-files-container li.ui-selected");
+
+        for (var i = 0; i < selection.length; i++) {
+            var itemName = $(selection[i]).children(".fb-file-name").text();
+            sourcePaths.push(currentPath + "/" + itemName);
+
+            $(selection[i]).addClass("fb-cutting");
+        }
+
+        if (sourcePaths.length) {
+            $(".selection-menu").children("li[data-menu-name='paste']").toggleClass("disabled", false);
+        }
+
+        $(".selection-menu").hide();
+    });
+
+    $(".selection-menu li[data-menu-name='paste']").click(function () {
+        var folderName = $("#fb-files-container li.ui-selected").children(".fb-file-name").text();
+        var resID = $("#fb-files-container").attr("data-res-id");
+        var targetPath = $("#fb-files-container").attr("data-current-path");
+
+        if (folderName) {
+            targetPath = targetPath + "/" + folderName
+        }
+
+        var calls = [];
+        for (var i = 0; i < sourcePaths.length; i++) {
+            calls.push(move_or_rename_irods_file_or_folder_ajax_submit(resID, sourcePaths[i], targetPath));
+        }
+
+        // Wait for the asynchronous calls to finish to get new folder structure
+        $.when.apply($, calls).done(function () {
+            refreshFileBrowser();
+        });
+
+        sourcePaths = [];
+
+        $("#fb-files-container li").removeClass("fb-cutting");
+        $(".selection-menu").hide();
+    });
+
+    // File(s) delete method
+    $("#btn-confirm-delete").click(function () {
+        var resID = $("#fb-files-container").attr("data-res-id");
+        var deleteList = $("#fb-files-container li.ui-selected");
+        if (deleteList.length) {
+            var calls = [];
+            for (var i = 0; i < deleteList.length; i++) {
+                var pk = $(deleteList[i]).attr("data-pk");
+                if (pk) {
+                    calls.push(delete_file_ajax_submit(resID, pk));
+                }
+            }
+
+            // Wait for the asynchronous calls to finish to get new folder structure
+            $.when.apply($, calls).done(function () {
+                refreshFileBrowser();
+                $('#confirm-delete-dialog').modal('toggle');
+            });
+        }
+    });
+
+    $(".selection-menu li[data-menu-name='rename']").click(function(){
+        $('.selection-menu').hide();
+        var name = $("#fb-files-container li.ui-selected").children(".fb-file-name").text();
+        $("#txtName").val(name);
+    });
+
+    // Rename method
+    $("#btn-rename").click(function () {
+        var resID = $("#fb-files-container").attr("data-res-id");
+        var currentPath = $("#fb-files-container").attr("data-current-path");
+        var oldName = $("#fb-files-container li.ui-selected").children(".fb-file-name").text();
+        var newName = $("#txtName").val();
+
+        var calls = [];
+        calls.push(move_or_rename_irods_file_or_folder_ajax_submit(resID, currentPath + "/" + oldName, currentPath + "/" + newName));
+
+        // Wait for the asynchronous calls to finish to get new folder structure
+        $.when.apply($, calls).done(function () {
+            refreshFileBrowser();
+        });
+    });
 });

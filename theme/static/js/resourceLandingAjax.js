@@ -435,20 +435,25 @@ function formatBytes(bytes) {
 }
 
 function delete_file_ajax_submit(res_id, file_pk) {
-    $.ajax({
+    $(".file-browser-container").css("cursor", "progress");
+
+    return $.ajax({
         type: "POST",
         url: '/hsapi/_internal/' + res_id + '/delete-resource-file/' + file_pk + '/',
         async: true,
         success: function (result) {
             console.log("File deleted");
+            $(".file-browser-container").css("cursor", "default");
         },
         error: function(xhr, errmsg, err){
             console.log(xhr.status + ": " + xhr.responseText + ". Error message: " + errmsg);
+            $(".file-browser-container").css("cursor", "default");
         }
     });
 }
 
 function get_irods_folder_struct_ajax_submit(res_id, store_path) {
+    $("body").css("cursor", "progress");
     $.ajax({
         type: "POST",
         url: '/hsapi/_internal/data-store-structure/',
@@ -475,9 +480,15 @@ function get_irods_folder_struct_ajax_submit(res_id, store_path) {
             $("#fb-files-container").attr("data-current-path", store_path);
             $("#fb-files-container").attr("data-res-id", res_id);
             setBreadCrumbs(store_path);
+            $(".selection-menu").hide();
+            $("#flag-uploading").remove();
+            $("body").css("cursor", "default");
         },
         error: function(xhr, errmsg, err){
             console.log(xhr.status + ": " + xhr.responseText + ". Error message: " + errmsg);
+            $(".selection-menu").hide();
+            $("#flag-uploading").remove();
+            $("body").css("cursor", "default");
         }
     });
 }
@@ -504,7 +515,6 @@ function zip_irods_folder_ajax_submit(res_id, input_coll_path) {
                     "<span class='fb-file-name'>" + output_file_name + "</span>" +
                     "<span class='fb-file-type'>" + output_file_type + " File</span>" +
                     "<span class='fb-file-size' data-file-size=" + output_file_size + ">" + formatBytes(parseInt(output_file_size)) + "</span></li>");
-
             }
         },
         error: function(xhr, errmsg, err){
@@ -536,6 +546,7 @@ function unzip_irods_file_ajax_submit(res_id, zip_with_rel_path) {
 }
 
 function create_irods_folder_ajax_submit(res_id, folder_path) {
+    $("body").css("cursor", "progress");
     $.ajax({
         type: "POST",
         url: '/hsapi/_internal/data-store-create-folder/',
@@ -550,15 +561,18 @@ function create_irods_folder_ajax_submit(res_id, folder_path) {
                 $('#create-folder-dialog').modal('hide');
                 console.log("Folder " + new_folder_rel_path + " is created successfully.");
             }
+            $("body").css("cursor", "default");
         },
         error: function(xhr, errmsg, err){
             console.log(xhr.status + ": " + xhr.responseText + ". Error message: " + errmsg);
+            $("body").css("cursor", "default");
         }
     });
 }
 
 function move_or_rename_irods_file_or_folder_ajax_submit(res_id, source_path, target_path) {
-    $.ajax({
+    $("body").css("cursor", "progress");
+    return $.ajax({
         type: "POST",
         url: '/hsapi/_internal/data-store-move-or-rename/',
         async: true,
@@ -571,10 +585,13 @@ function move_or_rename_irods_file_or_folder_ajax_submit(res_id, source_path, ta
             var target_rel_path = result.target_rel_path;
             if (target_rel_path.length > 0) {
                 console.log(source_path + " has been renamed or moved to " + target_path);
+                $("#fb-files-container li").removeClass("fb-cutting");
             }
+            $("body").css("cursor", "default");
         },
         error: function(xhr, errmsg, err){
             console.log(xhr.status + ": " + xhr.responseText + ". Error message: " + errmsg);
+            $("body").css("cursor", "default");
         }
     });
 }
