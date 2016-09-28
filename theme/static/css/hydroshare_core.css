@@ -4193,6 +4193,10 @@ div.fb-upload-caption {
 	float: left;
 }
 
+.fb-view-grid .fb-file, .fb-view-grid .fb-folder {
+	height: 150px;
+}
+
 .fb-view-grid .fb-file-icon {
 	margin-top: 18px;
 	display: block;

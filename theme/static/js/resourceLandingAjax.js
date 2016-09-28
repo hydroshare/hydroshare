@@ -519,6 +519,8 @@ function get_irods_folder_struct_ajax_submit(res_id, store_path) {
             $(".selection-menu").hide();
             $("#flag-uploading").remove();
             $("body").css("cursor", "default");
+
+            // Make all grid items have same height;
         },
         error: function(xhr, errmsg, err){
             $(".selection-menu").hide();
