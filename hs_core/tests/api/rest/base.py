@@ -235,3 +235,62 @@ class ModelInstanceSciMetaTestCase(SciMetaTestCase):
         id_elem.text = self.RESOURCE_URL_TEMPLATE.format(id) + '/'
 
         return scimeta
+
+
+class ResMapTestCase(HSRESTTestCase):
+
+    NS = {'rdf': "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
+          'rdfs1': "http://www.w3.org/2001/01/rdf-schema#",
+          'dc': "http://purl.org/dc/elements/1.1/",
+          'dcterms': "http://purl.org/dc/terms/",
+          'hsterms': "http://hydroshare.org/terms/"}
+
+    RESOURCE_URL_TEMPLATE = "http://example.com/resource/{0}"
+
+    RESOURCE_METADATA = 'resourcemap.xml'
+    RESOURCE_METADATA_OLD = 'resourcemap_old.xml'
+    RESOURCE_METADATA_UPDATED = 'resourcemap_updated.xml'
+
+    def getTitle(self, resmap, should_exist=True):
+        """ Get title from parsed ElementTree representation of resource map.
+
+        :param resmap: ElementTree representing resource map
+        :param should_exist: If True, the abstract is expected to exist in the DOM.
+        :return: String representing title text, if should_exist == True, else None.
+        """
+        title = resmap.xpath('/rdf:RDF/rdf:Description[1]/dc:title', namespaces=self.NS)
+
+        if should_exist:
+            self.assertEqual(len(title), 1)
+            return title[0].text
+        else:
+            self.assertEqual(len(title), 0)
+
+        return None
+
+    def getAbstract(self, resmap, should_exist=True):
+        """ Get abstract from parsed ElementTree representation of resource map.
+
+        :param resmap: ElementTree representing resource map
+        :param should_exist: If True, the abstract is expected to exist in the DOM.
+        :return: String representing abstract text, if should_exist == True, else None.
+        """
+        abstract = resmap.xpath('/rdf:RDF/rdf:Description[1]/dc:description/rdf:Description/dcterms:abstract',
+                                 namespaces=self.NS)
+        if should_exist:
+            self.assertEqual(len(abstract), 1)
+            return abstract[0].text
+        else:
+            self.assertEqual(len(abstract), 0)
+
+        return None
+
+    def getKeywords(self, resmap):
+        """ Get keywords from parsed ElementTree representation of resource map.
+        :param resmap: ElementTree representing resource map
+        :return: Tuple of Strings representing keyword metadata elements
+        """
+        keywords = resmap.xpath('/rdf:RDF/rdf:Description[1]/dc:subject',
+                                 namespaces=self.NS)
+        return tuple(k.text for k in keywords)
+
