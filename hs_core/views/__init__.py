@@ -248,6 +248,7 @@ def update_metadata_element(request, shortkey, element_name, element_id, *args, 
                 element_data_dict = response['element_data_dict']
                 try:
                     res.metadata.update_element(element_name, element_id, **element_data_dict)
+                    post_handler_response = post_metadata_element_update.send(sender=sender_resource, element_name=element_name, element_id=element_id)
                     is_update_success = True
                 except ValidationError as exp:
                     err_msg = err_msg.format(element_name, exp.message)
@@ -272,7 +273,8 @@ def update_metadata_element(request, shortkey, element_name, element_id, *args, 
             else:
                 metadata_status = METADATA_STATUS_INSUFFICIENT
 
-            ajax_response_data = {'status': 'success', 'element_name': element_name, 'metadata_status': metadata_status}
+            ajax_response_data = {'status': 'success', 'element_name': element_name, 'metadata_status': metadata_status, 'element_exists': post_handler_response[0][1]['element_exists']}
+            # raise Exception(ajax_response_data)
             return HttpResponse(json.dumps(ajax_response_data))
         else:
             ajax_response_data = {'status': 'error', 'message': err_msg}
