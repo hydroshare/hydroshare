@@ -26,7 +26,7 @@ def metadata_element_pre_create_handler(sender, **kwargs):
     if element_form.is_valid():
         return {'is_valid': True, 'element_data_dict': element_form.cleaned_data}
     else:
-        return {'is_valid': False, 'element_data_dict': None}
+        return {'is_valid': False, 'element_data_dict': None, "errors": element_form.errors}
 
 @receiver(pre_metadata_element_update, sender=ModelProgramResource)
 def mp_pre_update_handler(sender, **kwargs):
@@ -46,5 +46,5 @@ def mp_pre_update_handler(sender, **kwargs):
             cleaned_form['modelCodeRepository'] = 'http://'+cleaned_form['modelCodeRepository']
         return {'is_valid': True, 'element_data_dict': cleaned_form}
     else:
-        return {'is_valid': False, 'element_data_dict': None}
+        return {'is_valid': False, 'element_data_dict': None, "errors": element_form.errors}
 
