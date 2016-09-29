@@ -1,6 +1,4 @@
-import os
 import json
-import csv
 from dateutil import parser
 
 from django.test import TransactionTestCase, Client
@@ -905,16 +903,10 @@ class TestCollection(MockIRODSTestCaseMixin, TransactionTestCase):
         self.resCollection.resources.add(self.resGen3)
         self.assertEqual(self.resCollection.resources.count(), 3)
         self.assertEqual(ResourceFile.objects.filter(object_id=self.resCollection.id).count(), 0)
-        csv_full_path = update_collection_list_csv(self.resCollection, keep_local_csv=True)
-        self.assertTrue(os.path.isfile(csv_full_path))
+        csv_list = update_collection_list_csv(self.resCollection)
         self.assertEqual(ResourceFile.objects.filter(object_id=self.resCollection.id).count(), 1)
 
-        # check csv content
-        csv_list = []
-        with open(csv_full_path, 'r') as f:
-            reader = csv.reader(f)
-            csv_list = list(reader)
-        # csv should have 4 rows: header row + 3 data rows
+        # csv_list should have 4 rows: header row + 3 data rows
         self.assertEqual(len(csv_list), 4)
         # add res_id to one list
         res_id_list = []
@@ -925,4 +917,3 @@ class TestCollection(MockIRODSTestCaseMixin, TransactionTestCase):
         self.assertIn(self.resGen1.short_id, res_id_list)
         self.assertIn(self.resGen2.short_id, res_id_list)
         self.assertIn(self.resGen3.short_id, res_id_list)
-        os.remove(csv_full_path)

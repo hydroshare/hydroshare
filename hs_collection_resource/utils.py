@@ -43,18 +43,17 @@ def add_or_remove_relation_metadata(add=True, target_res_obj=None, relation_type
         resource_modified(target_res_obj, last_change_user)
 
 
-def update_collection_list_csv(collection_obj, keep_local_csv=False):
+def update_collection_list_csv(collection_obj):
     """
-    This function is to create a new csv file in bag that lists info of all contained resources
+    This function is to create a new csv file in bag that lists info of all contained resources.
+    A list that contains all csv content will be returned for unit test use.
     :param collection_obj: collection resource object
-    :param keep_local_csv: (default: False) if True, return the full path to csv on django server,
-    in which case user should be responsible for garbage collection (GC) of this csv file
-    :return: full path to csv file if keep_local_csv=True, otherwise None
+    :return: the csv content in a list object
     """
 
     tmp_dir = None
-    csv_full_path = None
     short_key = ""
+    csv_content_list = []
     try:
         short_key = collection_obj.short_id
         csv_full_name = CSV_FULL_NAME_TEMPLATE.format(collection_obj.short_id)
@@ -65,7 +64,6 @@ def update_collection_list_csv(collection_obj, keep_local_csv=False):
 
         if collection_obj.resources.count() > 0 or collection_obj.deleted_resources.count() > 0:
             # prepare csv content
-            csv_content_list = []
             # create headers
             csv_header_row = ['Title',
                               'Type',
@@ -116,12 +114,9 @@ def update_collection_list_csv(collection_obj, keep_local_csv=False):
                      "Error:{} ".format(short_key, ex.message))
         raise Exception("update_collection_list_csv error: " + ex.message)
     finally:
-        if keep_local_csv:
-            return csv_full_path
-        else:
-            if tmp_dir is not None:
-                shutil.rmtree(tmp_dir)
-            return None
+        if tmp_dir is not None:
+            shutil.rmtree(tmp_dir)
+        return csv_content_list
 
 
 def _get_owners_string(owners_list):
