@@ -7,6 +7,7 @@ from hs_core.models import BaseResource, ResourceManager, resource_processor
 
 
 class CollectionResource(BaseResource):
+
     objects = ResourceManager('CollectionResource')
 
     class Meta:
@@ -45,6 +46,10 @@ class CollectionResource(BaseResource):
         if not self.has_resources:
             return False
         return not self.resources.all().filter(raccess__published=False).exists()
+
+    @property
+    def update_text_file(self):
+        return self.extra_data.get('update_text_file', 'True')
 
 
 processor_for(CollectionResource)(resource_processor)

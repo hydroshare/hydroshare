@@ -4,13 +4,19 @@ import logging
 
 from django.db import migrations
 
-from hs_core.models import BaseResource
+# from hs_core.models import BaseResource
 from hs_core.hydroshare.utils import resource_modified
+
 
 def migrate_namespace_for_source_and_relation(apps, schema_editor):
     # migrate the namespace for the 'Source' and 'Relation' metadata
     # elements from 'dcterms' to 'hsterms' by regenerating the metadata xml
     log = logging.getLogger()
+
+    # We can't import the BaseResource model directly as it may be a newer
+    # version than this migration expects. We use the historical version.
+    BaseResource = apps.get_model("hs_core", "BaseResource")
+
     for res in BaseResource.objects.all():
         # need to regenerate xml file only for those resources that have either 'source' or 'relation' metadata
         if len(res.metadata.sources.all()) > 0 or len(res.metadata.relations.all()) > 0:

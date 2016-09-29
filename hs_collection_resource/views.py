@@ -7,7 +7,8 @@ from django.db import transaction
 from hs_core.views.utils import authorize, ACTION_TO_AUTHORIZE
 from hs_core.hydroshare.utils import get_resource_by_shortkey, resource_modified
 
-from .utils import add_or_remove_relation_metadata, RES_LANDING_PAGE_URL_TEMPLATE
+from .utils import add_or_remove_relation_metadata, RES_LANDING_PAGE_URL_TEMPLATE,\
+    update_collection_list_csv
 
 logger = logging.getLogger(__name__)
 UI_DATETIME_FORMAT = "%m/%d/%Y"
@@ -139,6 +140,8 @@ def update_collection(request, shortkey, *args, **kwargs):
 
             new_coverage_list = _update_collection_coverages(collection_res_obj)
 
+            update_collection_list_csv(collection_res_obj)
+
             resource_modified(collection_res_obj, user)
 
     except Exception as ex:
@@ -188,10 +191,12 @@ def update_collection_for_deleted_resources(request, shortkey, *args, **kwargs):
             new_coverage_list = _update_collection_coverages(collection_res)
             ajax_response_data['new_coverage_list'] = new_coverage_list
 
-            resource_modified(collection_res, user)
-
             # remove all logged deleted resources for the collection
             collection_res.deleted_resources.all().delete()
+
+            update_collection_list_csv(collection_res)
+
+            resource_modified(collection_res, user)
 
     except Exception as ex:
         logger.error("Failed to update collection for "
