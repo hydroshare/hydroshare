@@ -503,8 +503,12 @@ class TestRasterMetaData(MockIRODSTestCaseMixin, TransactionTestCase):
         # test if xml from get_xml() is well formed
         ET.fromstring(self.resRaster.metadata.get_xml())
 
-    def test_multiple_content_files(self):
+    def test_can_have_multiple_content_files(self):
         self.assertFalse(RasterResource.can_have_multiple_files())
+
+    def test_can_upload_multiple_content_files(self):
+        # only one file can be uploaded
+        self.assertFalse(RasterResource.allow_multiple_file_upload())
 
     def test_public_or_discoverable(self):
         self.assertFalse(self.resRaster.has_required_content_files())

@@ -21,6 +21,11 @@ class ToolResource(BaseResource):
         return ()
 
     @classmethod
+    def allow_multiple_file_upload(cls):
+        # no file can be uploaded
+        return False
+
+    @classmethod
     def can_have_multiple_files(cls):
         # resource can't have any files
         return False
@@ -178,6 +183,10 @@ class ToolMetaData(CoreMetaData):
     tool_icon = GenericRelation(ToolIcon)
     supported_sharing_status = GenericRelation(SupportedSharingStatus)
     homepage_url = GenericRelation(AppHomePageUrl)
+
+    @property
+    def resource(self):
+        return ToolResource.objects.filter(object_id=self.id).first()
 
     @classmethod
     def get_supported_element_names(cls):
