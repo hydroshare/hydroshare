@@ -5,7 +5,7 @@ from hs_core import page_processors
 from hs_core.views import add_generic_context
 
 from forms import UrlBaseForm, VersionForm, SupportedResTypesForm, ToolIconForm, \
-    SupportedResTypes_choices, SupportedSharingStatusForm
+    SupportedResTypes_choices, SupportedSharingStatusForm, AppHomePageUrlForm
 from models import ToolResource
 
 
@@ -53,6 +53,7 @@ def landing_page(request, page):
         context['extended_metadata_exists'] = extended_metadata_exists
         context['url_base'] = content_model.metadata.url_bases.first()
         context['version'] = content_model.metadata.versions.first()
+        context['homepage_url'] = content_model.metadata.homepage_url.first()
 
     else:
         url_base = content_model.metadata.url_bases.first()
@@ -60,6 +61,12 @@ def landing_page(request, page):
                                     res_short_id=content_model.short_id,
                                     element_id=url_base.id
                                     if url_base else None)
+
+        homepage_url = content_model.metadata.homepage_url.first()
+        homepage_url_form = AppHomePageUrlForm(instance=homepage_url,
+                                    res_short_id=content_model.short_id,
+                                    element_id=homepage_url.id
+                                    if homepage_url else None)
 
         version = content_model.metadata.versions.first()
         version_form = VersionForm(instance=version,
@@ -94,6 +101,10 @@ def landing_page(request, page):
                      '{% load crispy_forms_tags %} '
                      '{% crispy sharing_status_obj_form %} '
                      '</div> '),
+                HTML("<div class='form-group col-lg-6 col-xs-12' id='homepage_url'> "
+                     '{% load crispy_forms_tags %} '
+                     '{% crispy homepage_url_form %} '
+                     '</div>'),
                 HTML("<div class='form-group col-lg-6 col-xs-12' id='url_bases'> "
                      '{% load crispy_forms_tags %} '
                      '{% crispy url_base_form %} '
@@ -114,6 +125,7 @@ def landing_page(request, page):
                                                    extended_metadata_layout=ext_md_layout,
                                                    request=request)
         context['url_base_form'] = url_base_form
+        context['homepage_url_form'] = homepage_url_form
         context['version_form'] = version_form
         context['supported_res_types_form'] = supported_res_types_form
         context['tool_icon_form'] = tool_icon_form

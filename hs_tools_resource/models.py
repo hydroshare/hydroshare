@@ -33,6 +33,15 @@ class ToolResource(BaseResource):
 processor_for(ToolResource)(resource_processor)
 
 
+class AppHomePageUrl(AbstractMetaDataElement):
+    term = 'AppHomePageUrl'
+    value = models.CharField(max_length=1024, null=True)
+
+    class Meta:
+        # AppHomePageUrl element is not repeatable
+        unique_together = ("content_type", "object_id")
+
+
 class RequestUrlBase(AbstractMetaDataElement):
     term = 'RequestUrlBase'
     value = models.CharField(max_length=1024, null=True)
@@ -168,6 +177,7 @@ class ToolMetaData(CoreMetaData):
     supported_res_types = GenericRelation(SupportedResTypes)
     tool_icon = GenericRelation(ToolIcon)
     supported_sharing_status = GenericRelation(SupportedSharingStatus)
+    homepage_url = GenericRelation(AppHomePageUrl)
 
     @classmethod
     def get_supported_element_names(cls):
@@ -177,6 +187,7 @@ class ToolMetaData(CoreMetaData):
         elements.append('SupportedResTypes')
         elements.append('ToolIcon')
         elements.append('SupportedSharingStatus')
+        elements.append('AppHomePageUrl')
         return elements
 
     def has_all_required_elements(self):
@@ -186,10 +197,15 @@ class ToolMetaData(CoreMetaData):
 
     def get_required_missing_elements(self):  # show missing required meta
         missing_required_elements = super(ToolMetaData, self).get_required_missing_elements()
+        if not self.homepage_url.all().first():
+            missing_required_elements.append('Home Page Url')
+        elif not self.homepage_url.all().first().value:
+            missing_required_elements.append('Home Page Url')
+
         if not self.url_bases.all().first():
-            missing_required_elements.append('App Url')
+            missing_required_elements.append('App-launching Url Pattern')
         elif not self.url_bases.all().first().value:
-            missing_required_elements.append('App Url')
+            missing_required_elements.append('App-launching Url Pattern')
 
         if not self.supported_res_types.all().first():
             missing_required_elements.append('Supported Resource Types')
@@ -209,5 +225,6 @@ class ToolMetaData(CoreMetaData):
         self.supported_res_types.all().delete()
         self.tool_icon.all().delete()
         self.supported_sharing_status.all().delete()
+        self.homepage_url.all().delete()
 
 import receivers # never delete this otherwise non of the receiver function will work

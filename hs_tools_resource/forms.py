@@ -3,7 +3,8 @@ from django import forms
 
 from crispy_forms.layout import Layout, Field
 
-from models import RequestUrlBase, ToolVersion, SupportedResTypes, ToolIcon, SupportedSharingStatus
+from models import RequestUrlBase, ToolVersion, SupportedResTypes, ToolIcon,\
+    SupportedSharingStatus, AppHomePageUrl
 from hs_core.forms import BaseFormHelper
 
 
@@ -16,7 +17,7 @@ class UrlBaseFormHelper(BaseFormHelper):
         layout = Layout(
             Field('value', css_class=field_width)
         )
-        kwargs['element_name_label'] = "App URL Pattern <a href='/terms#AppURL' target='_blank'><font size='3'>Help</font></a>"
+        kwargs['element_name_label'] = "App-launching URL Pattern <a href='/terms#AppURLPattern' target='_blank'><font size='3'>Help</font></a>"
 
         super(UrlBaseFormHelper, self).__init__(allow_edit, res_short_id, element_id, element_name, layout,  *args, **kwargs)
 
@@ -36,7 +37,35 @@ class UrlBaseForm(ModelForm):
 class UrlBaseValidationForm(forms.Form):
     value = forms.URLField(max_length=1024)
 
-# The following 3 classes need to have the "field" same as the fields defined in "ToolResourceType" table in models.py
+
+class AppHomePageUrlFormHelper(BaseFormHelper):
+    def __init__(self, allow_edit=True, res_short_id=None, element_id=None, element_name=None,  *args, **kwargs):
+
+        # the order in which the model fields are listed for the FieldSet is the order these fields will be displayed
+        field_width = 'form-control input-sm'
+        layout = Layout(
+            Field('value', css_class=field_width)
+        )
+        kwargs['element_name_label'] = "App Home Page URL"
+
+        super(AppHomePageUrlFormHelper, self).__init__(allow_edit, res_short_id, element_id, element_name, layout,  *args, **kwargs)
+
+
+class AppHomePageUrlForm(ModelForm):
+    def __init__(self, allow_edit=True, res_short_id=None, element_id=None, *args, **kwargs):
+        super(AppHomePageUrlForm, self).__init__(*args, **kwargs)
+        self.helper = AppHomePageUrlFormHelper(allow_edit, res_short_id, element_id, element_name='AppHomePageUrl')
+        self.fields['value'].label = ''
+
+    class Meta:
+        model = AppHomePageUrl
+        fields = ['value']
+        exclude = ['content_object']
+
+
+class AppHomePageUrlValidationForm(forms.Form):
+    value = forms.URLField(max_length=1024)
+
 
 class VersionFormHelper(BaseFormHelper):
     def __init__(self, allow_edit=True, res_short_id=None, element_id=None, element_name=None, *args, **kwargs):
