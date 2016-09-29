@@ -30,7 +30,6 @@ function updateSelectionMenuContext() {
         flagDisableOpen = true;
         flagDisablePaste = true;
         flagDisableZip = true;
-        flagDisableUnzip = true;
     }
 
     if (selected.hasClass("fb-file")) {
@@ -508,14 +507,17 @@ $(document).ready(function () {
         });
     });
 
-    // Zip method
-    $("#btn-unzip").click(function() {
+    // Unzip method
+    $("#btn-unzip").click(function () {
         var resID = $("#fb-files-container").attr("data-res-id");
         var currentPath = $("#fb-files-container").attr("data-current-path");
-        var fileName = $("#fb-files-container li.ui-selected").children(".fb-file-name").text();
+        var files = $("#fb-files-container li.ui-selected");
 
         var calls = [];
-        calls.push(unzip_irods_file_ajax_submit(resID, currentPath + "/" + fileName));
+        for (var i = 0; i < files.length; i++) {
+            var fileName = $(files[i]).children(".fb-file-name").text()
+            calls.push(unzip_irods_file_ajax_submit(resID, currentPath + "/" + fileName));
+        }
 
         // Wait for the asynchronous calls to finish to get new folder structure
         $.when.apply($, calls).done(function () {
