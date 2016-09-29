@@ -146,13 +146,13 @@
                                                                                                   title="Download"
                                                                                                   class="glyphicon glyphicon-download icon-button btn-download"></span></a>
                                                         {% elif f.fed_resource_file and f.fed_resource_file.size < 1000000000 %}
-                                                            <a href="{{ f.fed_resource_file.url }}"><span data-toggle="tooltip"
+                                                            <a href="{{ f.fed_resource_file.url|relative_irods_path }}"><span data-toggle="tooltip"
                                                                                                   data-placement="auto"
                                                                                                   title="Download"
                                                                                                   class="glyphicon glyphicon-download icon-button btn-download"></span></a>
                                                         {# only allow download from irods user zone for files smaller than 1GB #}
                                                         {% elif f.fed_resource_file_name_or_path and f.fed_resource_file_size|to_int < 1000000000 %}
-                                                            <a href="/django_irods/download{{ cm.resource_federation_path }}/{{ cm.short_id }}/{{ f.fed_resource_file_name_or_path }}"><span data-toggle="tooltip"
+                                                            <a href="/django_irods/download/{{ cm.short_id }}/{{ f.fed_resource_file_name_or_path }}"><span data-toggle="tooltip"
                                                                                                   data-placement="auto"
                                                                                                   title="Download"
                                                                                                   class="glyphicon glyphicon-download icon-button btn-download"></span></a>
