@@ -14,14 +14,14 @@
                         <h4><strong>Home Page URL:</strong></h4>
                         <hr style="margin-top: 0px;margin-bottom: 2px">
                         <div class="row">
-                            <div class="col-sm-8">{{ homepage_url.value }}</div>
+                            <div class="col-sm-8">{{ homepage_url.value|urlize }}</div>
                         </div>
                         <hr style="border:0">
                     {%  endif %}
                 </div>
                 <div>
                     {% if url_base %}
-                        <h4><strong>App-launching URL Pattern:</strong></h4>
+                        <h4><strong>App-launching URL Pattern: <a href='/terms#AppURLPattern' target='_blank'><font size='3'>Help</font></a></strong></h4>
                         <hr style="margin-top: 0px;margin-bottom: 2px">
                         <div class="row">
                             <div class="col-sm-8">{{ url_base.value }}</div>

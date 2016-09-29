@@ -197,10 +197,6 @@ class ToolMetaData(CoreMetaData):
 
     def get_required_missing_elements(self):  # show missing required meta
         missing_required_elements = super(ToolMetaData, self).get_required_missing_elements()
-        if not self.homepage_url.all().first():
-            missing_required_elements.append('Home Page Url')
-        elif not self.homepage_url.all().first().value:
-            missing_required_elements.append('Home Page Url')
 
         if not self.url_bases.all().first():
             missing_required_elements.append('App-launching Url Pattern')

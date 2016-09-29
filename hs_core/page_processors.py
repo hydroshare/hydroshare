@@ -51,9 +51,14 @@ def get_page_context(page, user, resource_edit=False, extended_metadata_layout=N
     belongs_to_collections = content_model.collections.all()
 
     relevant_tools = None
+    tool_homepage_url = None
     if not resource_edit:  # In view mode
-        relevant_tools = []
         content_model_str = str(content_model.content_model).lower()
+        if content_model_str.lower() == "toolresource":
+            if content_model.metadata.homepage_url.exists():
+                tool_homepage_url = content_model.metadata.homepage_url.first().value
+
+        relevant_tools = []
         # loop through all SupportedResTypes objs (one webapp resources has one SupportedResTypes obj)
         for res_type in SupportedResTypes.objects.all():
             supported_flag = False
@@ -193,6 +198,7 @@ def get_page_context(page, user, resource_edit=False, extended_metadata_layout=N
                    'validation_error': validation_error if validation_error else None,
                    'new_version_resource_creation_error': new_version_create_resource_error if new_version_create_resource_error else None,
                    'relevant_tools': relevant_tools,
+                   'tool_homepage_url': tool_homepage_url,
                    'file_type_error': file_type_error,
                    'just_created': just_created,
                    'just_published': just_published,
