@@ -3836,8 +3836,8 @@ form#covereage-search-fields {
     margin-bottom: 20px;
 }
 
-#file-browser-controls  {
-    margin-bottom:10px;
+#file-browser-controls > div {
+	margin-bottom: 10px;
 }
 
 .files-container {

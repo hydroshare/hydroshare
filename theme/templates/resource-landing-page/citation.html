@@ -212,12 +212,12 @@
 
         <div id="user-permission-msg" class="col-sm-12">
             {% if is_owner_user %}
-                <div class="alert alert-info" role="alert">You are the owner of this resource.</div>
+                <span class="alert alert-info" role="alert">You are the owner of this resource.</span>
             {% elif is_edit_user %}
-                <div class="alert alert-info" role="alert">You have been given specific permission to
-                    {% if cm.raccess.published %} view{% else %} edit{% endif %} this resource.</div>
+                <span class="alert alert-info" role="alert">You have been given specific permission to
+                    {% if cm.raccess.published %} view{% else %} edit{% endif %} this resource.</span>
             {% elif is_view_user %}
-                <div class="alert alert-info" role="alert">You have been given specific permission to view this resource.</div>
+                <span class="alert alert-info" role="alert">You have been given specific permission to view this resource.</span>
             {% endif %}
         </div>
     </div>

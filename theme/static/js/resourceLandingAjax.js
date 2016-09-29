@@ -490,7 +490,7 @@ function delete_file_ajax_submit(res_id, file_pk) {
 
 // This method is called to refresh the loader with the most recent structure after every other call
 function get_irods_folder_struct_ajax_submit(res_id, store_path) {
-    $("body").css("cursor", "progress");
+    $("#fb-files-container").css("cursor", "progress");
     $.ajax({
         type: "POST",
         url: '/hsapi/_internal/data-store-structure/',
@@ -513,28 +513,31 @@ function get_irods_folder_struct_ajax_submit(res_id, store_path) {
                     $('#fb-files-container').append(getFolderTemplateInstance(v));
                 });
             }
+
+            onSort();
+            
             bindFileBrowserItemEvents();
             $("#fb-files-container").attr("data-current-path", store_path);
             $("#fb-files-container").attr("data-res-id", res_id);
             setBreadCrumbs(store_path);
             $(".selection-menu").hide();
             $("#flag-uploading").remove();
-            $("body").css("cursor", "default");
+            $("#fb-files-container").css("cursor", "default");
 
             // Make all grid items have same height;
         },
         error: function(xhr, errmsg, err){
             $(".selection-menu").hide();
             $("#flag-uploading").remove();
-            $("body").css("cursor", "default");
+            $("#fb-files-container").css("cursor", "default");
             $('#fb-files-container').empty();
-            $("#fb-files-container").prepend("<span>No files have been uploaded to this directory</span>")
+            $(".fb-files-container").prepend("<span>No files have been uploaded to this directory</span>")
         }
     });
 }
 
 function zip_irods_folder_ajax_submit(res_id, input_coll_path) {
-    $("body").css("cursor", "progress");
+    $("#fb-files-container").css("cursor", "progress");
     $.ajax({
         type: "POST",
         url: '/hsapi/_internal/data-store-folder-zip/',
@@ -555,6 +558,7 @@ function zip_irods_folder_ajax_submit(res_id, input_coll_path) {
 }
 
 function unzip_irods_file_ajax_submit(res_id, zip_with_rel_path) {
+    $("#fb-files-container").css("cursor", "progress");
     $.ajax({
         type: "POST",
         url: '/hsapi/_internal/data-store-folder-unzip/',
@@ -577,7 +581,7 @@ function unzip_irods_file_ajax_submit(res_id, zip_with_rel_path) {
 }
 
 function create_irods_folder_ajax_submit(res_id, folder_path) {
-    $("body").css("cursor", "progress");
+    $("#fb-files-container").css("cursor", "progress");
     $.ajax({
         type: "POST",
         url: '/hsapi/_internal/data-store-create-folder/',
@@ -601,7 +605,7 @@ function create_irods_folder_ajax_submit(res_id, folder_path) {
 }
 
 function move_or_rename_irods_file_or_folder_ajax_submit(res_id, source_path, target_path) {
-    $("body").css("cursor", "progress");
+    $("#fb-files-container").css("cursor", "progress");
     return $.ajax({
         type: "POST",
         url: '/hsapi/_internal/data-store-move-or-rename/',

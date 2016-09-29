@@ -99,12 +99,12 @@
 
                         <li role="separator" class="divider"></li>
 
-                        <li id="btn-zip" data-menu-name="cut">
+                        <li id="btn-zip" data-menu-name="zip">
                             <span class="fa fa-file-archive-o icon-blue"></span>
-                            <span>Zip</span>
+                            <span>Zip content inside</span>
                         </li>
 
-                        <li id="btn-unzip" data-menu-name="cut">
+                        <li id="btn-unzip" data-menu-name="unzip">
                             <span class="fa fa-file-archive-o icon-blue"></span>
                             <span>Unzip</span>
                         </li>
@@ -122,6 +122,18 @@
                         <li id="btn-new-folder" data-menu-name="new-folder" data-toggle="modal" data-target="#create-folder-dialog">
                             <span class="fa fa-folder glyphicon-folder"></span>
                             <span>New Folder</span>
+                        </li>
+
+                        <li role="separator" class="divider"></li>
+
+                        <li data-menu-name="refresh">
+                            <span class="fa fa-refresh icon-blue"></span>
+                            <span>Refresh</span>
+                        </li>
+
+                        <li data-menu-name="select-all">
+                            <span class="fa fa-plus-square-o icon-blue"></span>
+                            <span>Select All</span>
                         </li>
 
                         <li role="separator" class="divider"></li>
@@ -159,7 +171,7 @@
 {#                            ======= Modal window ends =======#}
                                     <div id="hs-file-browser" data-res-id="{{ cm.short_id }}" class="file-browser" >
                                         <div id="file-browser-controls" class="row">
-                                            <div class="col-xs-6">
+                                            <div class="col-sm-6 col-xs-12">
                                                 <button class="btn btn-default fb-control-round"
                                                       title="Click to go back"><span
                                                         class="glyphicon glyphicon-arrow-left"></span></button>
@@ -193,8 +205,8 @@
                                                         Sort By <span class="caret"></span>
                                                     </button>
                                                     <ul class="dropdown-menu">
-                                                        <li data-method="name"><a>Name</a></li>
                                                         <li data-method="type" class="active"><a>Type</a></li>
+                                                        <li data-method="name"><a>Name</a></li>
                                                         <li data-method="size"><a>Size</a></li>
                                                         <li role="separator" class="divider"></li>
                                                         <li data-order="asc" class="active"><a><i class="fa fa-sort-amount-asc"></i>&nbsp;&nbsp;Ascending</a></li>
@@ -203,7 +215,7 @@
                                                 </div>
                                             </div>
 
-                                            <div class="col-xs-6">
+                                            <div class="col-sm-6 col-xs-12">
                                                 <div class="input-group file-browser-search">
                                                     <span class="glyphicon glyphicon-search search-icon"></span>
                                                     <span id="btn-clear-search-input"
@@ -431,7 +443,7 @@
 {#                                            onclick="get_irods_folder_struct_ajax_submit('{{ cm.short_id }}', 'data/contents'); return false;">iRODS folder info#}
 {#                                    </button>#}
                                     <button type="button" class="btn btn-primary pull-right"
-                                            onclick="zip_irods_folder_ajax_submit('{{ cm.short_id }}', 'data/contents/Some'); return false;">Zip iRODS Collection
+                                            onclick="zip_irods_folder_ajax_submit('{{ cm.short_id }}', 'data/contents/Some Folder'); return false;">Zip iRODS Collection
                                     </button>
 {#                                    <button type="button" class="btn btn-primary pull-right"#}
 {#                                            onclick="unzip_irods_file_ajax_submit('{{ cm.short_id }}', 'data/contents/test.zip'); return false;">Unzip iRODS file#}

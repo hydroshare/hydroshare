@@ -23,12 +23,14 @@ function updateSelectionMenuContext() {
     var flagDisableRename = false;
     var flagDisablePaste = false;
     var flagDisableZip = false;
+    var flagDisableUnzip = false;
 
     if (selected.length > 1) {
         flagDisableRename = true;   // 'rename' menu item
         flagDisableOpen = true;
         flagDisablePaste = true;
         flagDisableZip = true;
+        flagDisableUnzip = true;
     }
 
     if (selected.hasClass("fb-file")) {
@@ -39,16 +41,26 @@ function updateSelectionMenuContext() {
 
     if (selected.hasClass("fb-folder")) {
         flagDisableDownload = true;
+        flagDisableUnzip = true;
     }
 
     if (!sourcePaths.length) {
         flagDisablePaste = true;
     }
 
+    for (var i = 0; i < selected.length; i++) {
+        var fileName = $(selected[i]).children(".fb-file-name").text();
+        var fileExt = fileName.substr(fileName.lastIndexOf(".") + 1, fileName.length);
+        if (fileExt.toUpperCase() != "ZIP") {
+            flagDisableUnzip = true;
+        }
+    }
+
     $("#right-click-menu").children("li[data-menu-name='open']").toggleClass("disabled", flagDisableOpen);
     $("#right-click-menu").children("li[data-menu-name='download']").toggleClass("disabled", flagDisableDownload);
     $("#right-click-menu").children("li[data-menu-name='rename']").toggleClass("disabled", flagDisableRename);
     $("#right-click-menu").children("li[data-menu-name='zip']").toggleClass("disabled", flagDisableZip);
+    $("#right-click-menu").children("li[data-menu-name='unzip']").toggleClass("disabled", flagDisableUnzip);
     $(".selection-menu").children("li[data-menu-name='paste']").toggleClass("disabled", flagDisablePaste);
 }
 
@@ -179,6 +191,75 @@ function setBreadCrumbs(path) {
     });
 }
 
+// File sorting sort algorithms
+function sort(method, order) {
+    var sorted;
+    if (method == "name") {
+        // Sort by name
+        if (order == "asc") {
+            sorted = $('#fb-files-container li').sort(function (element1, element2) {
+                return $(element2).children('span.fb-file-name').text().localeCompare($(element1).children('span.fb-file-name').text());
+            });
+        }
+        else {
+            sorted = $('#fb-files-container li').sort(function (element1, element2) {
+                return $(element1).children('span.fb-file-name').text().localeCompare($(element2).children('span.fb-file-name').text());
+            });
+        }
+    }
+    else if (method == "size") {
+        var size1, size2;
+
+        sorted = $('#fb-files-container li').sort(function (element1, element2) {
+            if (order == "asc") {
+                size1 = parseInt($(element2).children('span.fb-file-size').attr("data-file-size"));
+                size2 = parseInt($(element1).children('span.fb-file-size').attr("data-file-size"));
+            }
+            else {
+                size1 = parseInt($(element1).children('span.fb-file-size').attr("data-file-size"));
+                size2 = parseInt($(element2).children('span.fb-file-size').attr("data-file-size"));
+
+            }
+
+            if (isNaN(size1)) size1 = 0;
+            if (isNaN(size2)) size2 = 0;
+
+            if (size1 < size2) {
+                return -1;
+            }
+            if (size1 > size2) {
+                return 1;
+            }
+            // Both sizes are equal
+            return 0;
+        });
+    }
+    else if (method == "type") {
+        if (order == "asc") {
+            sorted = $('#fb-files-container li').sort(function (element1, element2) {
+                return $(element2).children('span.fb-file-type').text().localeCompare($(element1).children('span.fb-file-type').text());
+            });
+        }
+        else {
+            sorted = $('#fb-files-container li').sort(function (element1, element2) {
+                return $(element1).children('span.fb-file-type').text().localeCompare($(element2).children('span.fb-file-type').text());
+            });
+        }
+    }
+
+    // Move elements to the new order
+    for (var i = 0; i < sorted.length; i++) {
+        $(sorted[i]).prependTo("#fb-files-container");
+    }
+}
+
+function onSort() {
+    var method = $("#fb-sort li[data-method].active").attr("data-method");
+    var order = $("#fb-sort li[data-order].active").attr("data-order");
+
+    sort(method, order);
+}
+
 $(document).ready(function () {
     var previewNode = $("#flag-uploading").clone();
     $("#flag-uploading").remove();
@@ -229,68 +310,6 @@ $(document).ready(function () {
     // Bind file browser gui events
     bindFileBrowserItemEvents();
 
-    // File sorting algorithms
-    function sort(method, order) {
-        var sorted;
-        if (method == "name") {
-            // Sort by name
-            if (order == "asc") {
-                sorted = $('#fb-files-container li').sort(function (element1, element2) {
-                    return $(element2).children('span.fb-file-name').text().localeCompare($(element1).children('span.fb-file-name').text());
-                });
-            }
-            else {
-                sorted = $('#fb-files-container li').sort(function (element1, element2) {
-                    return $(element1).children('span.fb-file-name').text().localeCompare($(element2).children('span.fb-file-name').text());
-                });
-            }
-        }
-        else if (method == "size") {
-            var size1, size2;
-
-            sorted = $('#fb-files-container li').sort(function (element1, element2) {
-                if (order == "asc") {
-                    size1 = parseInt($(element2).children('span.fb-file-size').attr("data-file-size"));
-                    size2 = parseInt($(element1).children('span.fb-file-size').attr("data-file-size"));
-                }
-                else {
-                    size1 = parseInt($(element1).children('span.fb-file-size').attr("data-file-size"));
-                    size2 = parseInt($(element2).children('span.fb-file-size').attr("data-file-size"));
-
-                }
-
-                if (isNaN(size1)) size1 = 0;
-                if (isNaN(size2)) size2 = 0;
-
-                if (size1 < size2) {
-                    return -1;
-                }
-                if (size1 > size2) {
-                    return 1;
-                }
-                // Both sizes are equal
-                return 0;
-            });
-        }
-        else if (method == "type") {
-            if (order == "asc") {
-                sorted = $('#fb-files-container li').sort(function (element1, element2) {
-                    return $(element2).children('span.fb-file-type').text().localeCompare($(element1).children('span.fb-file-type').text());
-                });
-            }
-            else {
-                sorted = $('#fb-files-container li').sort(function (element1, element2) {
-                    return $(element1).children('span.fb-file-type').text().localeCompare($(element2).children('span.fb-file-type').text());
-                });
-            }
-        }
-
-        // Move elements to the new order
-        for (var i = 0; i < sorted.length; i++) {
-            $(sorted[i]).prependTo("#fb-files-container");
-        }
-    }
-
     // Bind sort method
     $("#fb-sort li").click(function () {
         if ($(this).attr("data-method")) {
@@ -303,10 +322,7 @@ $(document).ready(function () {
             $(this).addClass("active");
         }
 
-        var method = $("#fb-sort li[data-method].active").attr("data-method");
-        var order = $("#fb-sort li[data-order].active").attr("data-order");
-
-        sort(method, order);
+        onSort();
     });
 
     // Filter files on search input text change
@@ -315,10 +331,10 @@ $(document).ready(function () {
         var search = $("#txtDirSearch").val().toLowerCase();
         for (var i = 0; i < items.length; i++) {
             if ($(items[i]).text().toLowerCase().indexOf(search) >= 0) {
-                $(items[i]).parent().show();
+                $(items[i]).parent().removeClass("hidden");
             }
             else {
-                $(items[i]).parent().hide();
+                $(items[i]).parent().addClass("hidden");
             }
         }
     }
@@ -352,8 +368,14 @@ $(document).ready(function () {
     function refreshFileBrowser () {
         var resID = $("#fb-files-container").attr("data-res-id");
         var currentPath = $("#fb-files-container").attr("data-current-path");
-        get_irods_folder_struct_ajax_submit(resID, currentPath);
-        $(".selection-menu").hide();
+        var calls = [];
+        calls.push(get_irods_folder_struct_ajax_submit(resID, currentPath));
+
+        $.when.apply($, calls).done(function () {
+            $("#fb-files-container li").removeClass("fb-cutting");
+            $(".selection-menu").hide();
+            sourcePaths = [];
+        });
     }
 
     // Move up one directory
@@ -376,7 +398,7 @@ $(document).ready(function () {
         $("#fb-files-container li").removeClass("fb-cutting");
         sourcePaths = [];
 
-        var selection = $("#fb-files-container li.ui-selected");
+        var selection = $("#fb-files-container li.ui-selected:not(.hidden)");
 
         for (var i = 0; i < selection.length; i++) {
             var itemName = $(selection[i]).children(".fb-file-name").text();
@@ -486,7 +508,33 @@ $(document).ready(function () {
         });
     });
 
+    // Zip method
+    $("#btn-unzip").click(function() {
+        var resID = $("#fb-files-container").attr("data-res-id");
+        var currentPath = $("#fb-files-container").attr("data-current-path");
+        var fileName = $("#fb-files-container li.ui-selected").children(".fb-file-name").text();
+
+        var calls = [];
+        calls.push(unzip_irods_file_ajax_submit(resID, currentPath + "/" + fileName));
+
+        // Wait for the asynchronous calls to finish to get new folder structure
+        $.when.apply($, calls).done(function () {
+            refreshFileBrowser();
+        });
+    });
+
     function downloadFiles(url) {
         document.getElementById('download-frame').src = url;
     };
+
+    $(".selection-menu li[data-menu-name='refresh']").click(function () {
+        refreshFileBrowser();
+        $(".selection-menu").hide();
+    });
+
+    $(".selection-menu li[data-menu-name='select-all']").click(function () {
+        $("#fb-files-container > li").removeClass("ui-selected");
+        $("#fb-files-container > li:not(.hidden)").addClass("ui-selected");
+        $(".selection-menu").hide();
+    });
 });
