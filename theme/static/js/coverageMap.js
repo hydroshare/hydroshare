@@ -21,8 +21,15 @@ $(document).ready(function () {
 
 function initMap() {
     var shapeType;
+    var resourceType;
     if ($("#coverageMap")[0]) {
+        // data-shape-type is set to have a value only in resource view mode
         shapeType = $("#coverageMap")[0].getAttribute("data-shape-type");
+        resourceType = $("#resource-type").val();
+        if (resourceType === "Time Series"){
+            // set to view mode
+            shapeType = " ";
+        }
     }
     coverageMap = new google.maps.Map(document.getElementById('coverageMap'), {
         color:"#DDD",

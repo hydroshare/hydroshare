@@ -20,6 +20,11 @@ class CollectionResource(BaseResource):
         return ()
 
     @classmethod
+    def allow_multiple_file_upload(cls):
+        # cannot upload any file
+        return False
+
+    @classmethod
     def can_have_multiple_files(cls):
         # resource can't have any files
         return False
