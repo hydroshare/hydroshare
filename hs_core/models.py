@@ -420,6 +420,16 @@ class Description(AbstractMetaDataElement):
         unique_together = ("content_type", "object_id")
 
     @classmethod
+    def update(cls, element_id, **kwargs):
+        element = Description.objects.get(id=element_id)
+        resource = element.metadata.resource
+        if resource.resource_type == "TimeSeriesResource":
+            element.metadata.is_dirty = True
+            element.metadata.save()
+
+        super(Description, cls).update(element_id, **kwargs)
+
+    @classmethod
     def remove(cls, element_id):
         raise ValidationError("Description element of a resource can't be deleted.")
 
@@ -433,6 +443,16 @@ class Title(AbstractMetaDataElement):
 
     class Meta:
         unique_together = ("content_type", "object_id")
+
+    @classmethod
+    def update(cls, element_id, **kwargs):
+        element = Title.objects.get(id=element_id)
+        resource = element.metadata.resource
+        if resource.resource_type == "TimeSeriesResource":
+            element.metadata.is_dirty = True
+            element.metadata.save()
+
+        super(Title, cls).update(element_id, **kwargs)
 
     @classmethod
     def remove(cls, element_id):
@@ -921,7 +941,7 @@ class Coverage(AbstractMetaDataElement):
             elif '_value' in kwargs:
                 value_arg_dict = json.loads(kwargs['_value'])
 
-            if value_arg_dict:
+            if value_arg_dict is not None:
                 cls._validate_coverage_type_value_attributes(kwargs['type'], value_arg_dict)
 
                 if kwargs['type'] == 'period':
@@ -936,6 +956,10 @@ class Coverage(AbstractMetaDataElement):
                                   if k in ('units', 'northlimit', 'eastlimit', 'southlimit',
                                            'westlimit', 'name', 'uplimit', 'downlimit',
                                            'zunits', 'projection')}
+
+                if kwargs['type'] == 'box' or kwargs['type'] == 'point':
+                    if 'projection' not in value_dict:
+                        value_dict['projection'] = 'WGS 84 EPSG:4326'
 
                 value_json = json.dumps(value_dict)
                 if 'value' in kwargs:
@@ -1424,6 +1448,14 @@ class AbstractResource(ResourcePermissionsMixin):
         return (".*",)
 
     @classmethod
+    def allow_multiple_file_upload(cls):
+        # NOTES FOR ANY SUBCLASS OF THIS CLASS TO OVERRIDE THIS FUNCTION:
+        # to allow multiple files to be uploaded return True, otherwise return False
+
+        # resource by default allows multiple file upload
+        return True
+
+    @classmethod
     def can_have_multiple_files(cls):
         # NOTES FOR ANY SUBCLASS OF THIS CLASS TO OVERRIDE THIS FUNCTION:
         # to allow resource to have only 1 file or no file, return False
@@ -1734,9 +1766,10 @@ class CoreMetaData(models.Model):
                 'Publisher',
                 'FundingAgency']
 
-    # this method needs to be overriden by any subclass of this class
-    # if they implement additional metadata elements that are required
     def has_all_required_elements(self):
+        # this method needs to be overriden by any subclass of this class
+        # if they implement additional metadata elements that are required
+
         if not self.title:
             return False
         elif self.title.value.lower() == 'untitled resource':
@@ -1760,9 +1793,9 @@ class CoreMetaData(models.Model):
 
         return True
 
-    # this method needs to be overriden by any subclass of this class
-    # if they implement additional metadata elements that are required
     def get_required_missing_elements(self):
+        # this method needs to be overriden by any subclass of this class
+        # if they implement additional metadata elements that are required
         missing_required_elements = []
 
         if not self.title:
@@ -1776,8 +1809,10 @@ class CoreMetaData(models.Model):
 
         return missing_required_elements
 
-    # this method needs to be overriden by any subclass of this class
     def delete_all_elements(self):
+        # this method needs to be overriden by any subclass of this class if that class
+        # has additional metadata elements
+
         if self.title:
             self.title.delete()
         if self.description:

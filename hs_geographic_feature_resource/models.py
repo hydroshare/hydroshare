@@ -84,10 +84,6 @@ class GeographicFeatureResource(BaseResource):
         return (".zip", ".shp", ".shx", ".dbf", ".prj", ".sbx", ".sbn", ".cpg", ".xml", ".fbn", ".fbx", ".ain",
                 ".aih", ".atx", ".ixs", ".mxs")
 
-    @classmethod
-    def can_have_multiple_files(cls):
-        # can have more than one files
-        return True
 
     # add resource-specific HS terms
     def get_hs_term_dict(self):
@@ -112,6 +108,10 @@ class GeographicFeatureMetaData(CoreMetaData):
     fieldinformation = GenericRelation(FieldInformation)
     originalcoverage = GenericRelation(OriginalCoverage)
     originalfileinfo = GenericRelation(OriginalFileInfo)
+
+    @property
+    def resource(self):
+        return GeographicFeatureResource.objects.filter(object_id=self.id).first()
 
     @classmethod
     def get_supported_element_names(cls):

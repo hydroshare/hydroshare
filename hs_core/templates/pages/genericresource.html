@@ -13,8 +13,11 @@
         {% keywords_for page as kws %}
         {% set_page_permissions page %}
         <input type="hidden" id="supported-file-types" value="{{ cm.get_supported_upload_file_types }}">
-        <input type="hidden" id="allow-multiple-file-upload" value={{ cm.can_have_multiple_files }}>
+        <input type="hidden" id="allow-multiple-file-upload" value={{ cm.allow_multiple_file_upload }}>
         <input type="hidden" id="file-count" value={{ cm.files.all.count }}>
+        <input type="hidden" id="resource-mode" value="{% if metadata_form %}Edit{% else %}View{% endif %}" >
+        <input type="hidden" id="resource-type" value="{{ cm|resource_type }}" >
+        <input type="hidden" id="spatial-coverage-type" value="{{ spatial_coverage.type }}" >
 
         <div class="container">
             <div class="row">
@@ -600,6 +603,9 @@
                                                 {% endif %}
                                             {% else %}
                                                 <div class="form-group">
+                                                     <div id="readonly-coverage-notice" class="col-sm-12 alert alert-warning alert-dismissible" style="display: none;">
+                                                        <label>Spatial coverage for time series resources should be set by editing the coordinates of the monitoring sites on the "Resource Specific" metadata tab. </label>
+                                                    </div>
                                                     <div class="col-md-8 col-sm-12 col-xs-12" id="coverage-spatial">
                                                         <div class="row">
                                                             <form action="/hsapi/_internal/{{ cm.short_id }}/coverage/{% if not coverage_spatial_form.initial.north and not coverage_spatial_form.initial.northlimit %}add-metadata/{% else %}{{ coverage_spatial_form.initial.id }}/update-metadata/{% endif %}"
@@ -749,7 +755,6 @@
                                                                     </div>
                                                                 </fieldset>
                                                             </form>
-
                                                         </div>
                                                     </div>
 
@@ -1536,14 +1541,32 @@
                         google.maps.event.trigger(coverageMap, "resize");
                         // This field is populated if the page is in view mode
                         var shapeType = $("#coverageMap")[0].getAttribute("data-shape-type");
+
+                        var resourceType = $("#resource-type").val();
+                        var spatialCoverageType = $("#spatial-coverage-type").val();
                         // Center the map
-                        if (shapeType) {
+                        if (shapeType || resourceType === "Time Series") {
                             deleteAllShapes();
-                            if (shapeType == "point") {
-                                var myLatLng = {
-                                    lat: parseFloat($("#cov_north").text()),
-                                    lng: parseFloat($("#cov_east").text())
-                                };
+                            if (shapeType == "point" || (resourceType === "Time Series" && spatialCoverageType == "point")) {
+                                var myLatLng;
+                                if (shapeType == "point"){
+                                    // resource view mode
+                                    myLatLng = {
+                                        lat: parseFloat($("#cov_north").text()),
+                                        lng: parseFloat($("#cov_east").text())
+                                    };
+                                }
+                                else {
+                                    // time series resource in edit mode
+                                    myLatLng = {
+                                        lat: parseFloat($("#id_north").val()),
+                                        lng: parseFloat($("#id_east").val())
+                                    };
+                                    if ($('#id_north').val()){
+                                        $("#id_name").prop('readonly', false);
+                                    }
+                                }
+
                                 if (!myLatLng.lat || !myLatLng.lng) {
                                     return;
                                 }
@@ -1559,13 +1582,30 @@
                                     coverageMap.setCenter(marker.getPosition());
                                 });
                             }
-                            else if (shapeType == "box") {
-                                var bounds = {
-                                    north: parseFloat($("#cov_northlimit").text()),
-                                    south: parseFloat($("#cov_southlimit").text()),
-                                    east: parseFloat($("#cov_eastlimit").text()),
-                                    west: parseFloat($("#cov_westlimit").text())
-                                };
+                            else if (shapeType == "box" || (resourceType === "Time Series" && spatialCoverageType == "box")) {
+                                var bounds;
+                                if (shapeType == "box"){
+                                   //resource view mode
+                                    bounds = {
+                                        north: parseFloat($("#cov_northlimit").text()),
+                                        south: parseFloat($("#cov_southlimit").text()),
+                                        east: parseFloat($("#cov_eastlimit").text()),
+                                        west: parseFloat($("#cov_westlimit").text())
+                                    };
+                                }
+                                else {
+                                    // time series resource edit mode
+                                    bounds = {
+                                        north: parseFloat($("#id_northlimit").val()),
+                                        south: parseFloat($("#id_southlimit").val()),
+                                        east: parseFloat($("#id_eastlimit").val()),
+                                        west: parseFloat($("#id_westlimit").val())
+                                    };
+                                    if ($('#id_northlimit').val()){
+                                        $("#id_name").prop('readonly', false);
+                                    }
+                                }
+
                                 if (!bounds.north || !bounds.south || !bounds.east || !bounds.west) {
                                     return;
                                 }

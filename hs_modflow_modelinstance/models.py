@@ -639,6 +639,10 @@ class MODFLOWModelInstanceMetaData(ModelInstanceMetaData):
     _general_elements = GenericRelation(GeneralElements)
 
     @property
+    def resource(self):
+        return MODFLOWModelInstanceResource.objects.filter(object_id=self.id).first()
+
+    @property
     def study_area(self):
         return self._study_area.all().first()
 
