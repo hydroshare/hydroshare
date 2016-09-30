@@ -86,4 +86,4 @@ def _process_metadata_update_create(update_or_create, **kwargs):
     if element_form.is_valid():
         return {'is_valid': True, 'element_data_dict': element_form.cleaned_data}
     else:
-        return {'is_valid': False, 'element_data_dict': None}
+        return {'is_valid': False, 'element_data_dict': None, "errors": element_form.errors}
