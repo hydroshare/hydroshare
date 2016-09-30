@@ -123,8 +123,8 @@ function bindFileBrowserItemEvents() {
     });
 
     $("#hs-file-browser li.fb-folder").dblclick(function() {
-        var resID = $("#fb-files-container").attr("data-res-id");
-        var currentPath = $("#fb-files-container").attr("data-current-path");
+        var resID = $("#hs-file-browser").attr("data-res-id");
+        var currentPath = $("#hs-file-browser").attr("data-current-path");
         var folderName = $(this).children(".fb-file-name").text();
         get_irods_folder_struct_ajax_submit(resID, currentPath + "/" + folderName);
     });
@@ -168,6 +168,13 @@ function setBreadCrumbs(path) {
     var crumbs = $("#fb-bread-crumbs");
     crumbs.empty();
 
+    if (path.lastIndexOf("/") == "-1") {
+        $("#fb-move-up").attr("disabled", true)
+    }
+    else {
+        $("#fb-move-up").attr("disabled", false)
+    }
+
     var setFirstActive = false;
     while (path){
         var folder = path.substr(path.lastIndexOf("/") + 1, path.length);
@@ -184,7 +191,7 @@ function setBreadCrumbs(path) {
 
     // Bind click events
     $("#fb-bread-crumbs li").click(function() {
-        var resID = $("#fb-files-container").attr("data-res-id");
+        var resID = $("#hs-file-browser").attr("data-res-id");
         var path = $(this).attr("data-path");
         get_irods_folder_struct_ajax_submit(resID, path);
     });
@@ -260,7 +267,7 @@ function onSort() {
 }
 
 $(document).ready(function () {
-    var previewNode = $("#flag-uploading").clone();
+    var previewNode = $("#flag-uploading").removeClass("hidden").clone();
     $("#flag-uploading").remove();
 
     // Show file drop visual feedback
@@ -347,8 +354,8 @@ $(document).ready(function () {
 
     // Create folder at current directory
     $("#btn-create-folder").click(function () {
-        var resID = $("#fb-files-container").attr("data-res-id");
-        var currentPath = $("#fb-files-container").attr("data-current-path");
+        var resID = $("#hs-file-browser").attr("data-res-id");
+        var currentPath = $("#hs-file-browser").attr("data-current-path");
         var folderName = $("#txtFolderName").val();
         $("#txtFolderName").val("");
         if (folderName) {
@@ -365,8 +372,8 @@ $(document).ready(function () {
 
     // Reload the current folder structure
     function refreshFileBrowser () {
-        var resID = $("#fb-files-container").attr("data-res-id");
-        var currentPath = $("#fb-files-container").attr("data-current-path");
+        var resID = $("#hs-file-browser").attr("data-res-id");
+        var currentPath = $("#hs-file-browser").attr("data-current-path");
         var calls = [];
         calls.push(get_irods_folder_struct_ajax_submit(resID, currentPath));
 
@@ -379,21 +386,21 @@ $(document).ready(function () {
 
     // Move up one directory
     $("#fb-move-up").click(function () {
-        var resID = $("#fb-files-container").attr("data-res-id");
-        var upPath = $("#fb-files-container").attr("data-current-path");
+        var resID = $("#hs-file-browser").attr("data-res-id");
+        var upPath = $("#hs-file-browser").attr("data-current-path");
         upPath = upPath.substr(0, upPath.lastIndexOf("/"));
         get_irods_folder_struct_ajax_submit(resID, upPath);
     });
 
     $("#btn-open").click(function () {
-        var resID = $("#fb-files-container").attr("data-res-id");
-        var currentPath = $("#fb-files-container").attr("data-current-path");
+        var resID = $("#hs-file-browser").attr("data-res-id");
+        var currentPath = $("#hs-file-browser").attr("data-current-path");
         var folderName = $("#fb-files-container li.ui-selected").children(".fb-file-name").text();
         get_irods_folder_struct_ajax_submit(resID, currentPath + "/" + folderName);
     });
 
     $("#btn-cut").click(function () {
-        var currentPath = $("#fb-files-container").attr("data-current-path");
+        var currentPath = $("#hs-file-browser").attr("data-current-path");
         $("#fb-files-container li").removeClass("fb-cutting");
         sourcePaths = [];
 
@@ -415,8 +422,8 @@ $(document).ready(function () {
 
     $(".selection-menu li[data-menu-name='paste']").click(function () {
         var folderName = $("#fb-files-container li.ui-selected").children(".fb-file-name").text();
-        var resID = $("#fb-files-container").attr("data-res-id");
-        var targetPath = $("#fb-files-container").attr("data-current-path");
+        var resID = $("#hs-file-browser").attr("data-res-id");
+        var targetPath = $("#hs-file-browser").attr("data-current-path");
 
         if (folderName) {
             targetPath = targetPath + "/" + folderName
@@ -440,7 +447,7 @@ $(document).ready(function () {
 
     // File(s) delete method
     $("#btn-confirm-delete").click(function () {
-        var resID = $("#fb-files-container").attr("data-res-id");
+        var resID = $("#hs-file-browser").attr("data-res-id");
         var deleteList = $("#fb-files-container li.ui-selected");
         if (deleteList.length) {
             var calls = [];
@@ -467,8 +474,8 @@ $(document).ready(function () {
 
     // Rename method
     $("#btn-rename").click(function () {
-        var resID = $("#fb-files-container").attr("data-res-id");
-        var currentPath = $("#fb-files-container").attr("data-current-path");
+        var resID = $("#hs-file-browser").attr("data-res-id");
+        var currentPath = $("#hs-file-browser").attr("data-current-path");
         var oldName = $("#fb-files-container li.ui-selected").children(".fb-file-name").text();
         var newName = $("#txtName").val();
 
@@ -494,8 +501,8 @@ $(document).ready(function () {
 
     // Zip method
     $("#btn-zip").click(function() {
-        var resID = $("#fb-files-container").attr("data-res-id");
-        var currentPath = $("#fb-files-container").attr("data-current-path");
+        var resID = $("#hs-file-browser").attr("data-res-id");
+        var currentPath = $("#hs-file-browser").attr("data-current-path");
         var folderName = $("#fb-files-container li.ui-selected").children(".fb-file-name").text();
 
         var calls = [];
@@ -509,8 +516,8 @@ $(document).ready(function () {
 
     // Unzip method
     $("#btn-unzip").click(function () {
-        var resID = $("#fb-files-container").attr("data-res-id");
-        var currentPath = $("#fb-files-container").attr("data-current-path");
+        var resID = $("#hs-file-browser").attr("data-res-id");
+        var currentPath = $("#hs-file-browser").attr("data-current-path");
         var files = $("#fb-files-container li.ui-selected");
 
         var calls = [];

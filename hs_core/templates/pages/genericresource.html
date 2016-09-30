@@ -169,20 +169,9 @@
                                 </div>
                             </div>
 {#                            ======= Modal window ends =======#}
-                                    <div id="hs-file-browser" data-res-id="{{ cm.short_id }}" class="file-browser" >
-                                        <div id="file-browser-controls" class="row">
+                                    <div id="hs-file-browser" data-res-id="{{ cm.short_id }}" data-current-path="data/contents" class="file-browser">
+                                        <div class="file-browser-controls row">
                                             <div class="col-sm-6 col-xs-12">
-                                                <button class="btn btn-default fb-control-round"
-                                                      title="Click to go back"><span
-                                                        class="glyphicon glyphicon-arrow-left"></span></button>
-
-                                                <button class="btn btn-default fb-control-round"
-                                                      title="Click to go forward"><span
-                                                        class="glyphicon glyphicon-arrow-right"></span></button>
-
-                                                <button id="fb-move-up" class="btn btn-default fb-control-squared"
-                                                      title="Click to go to parent directory"><span class="fa fa-level-up"></span></button>
-
                                                 <button id="fb-create-folder" class="btn btn-default fb-control-squared"
                                                       data-toggle="modal" data-target="#create-folder-dialog"
                                                       title="Create new folder">
@@ -193,16 +182,22 @@
                                                     <span class="glyphicon glyphicon-trash btn-remove"></span>
                                                 </button>
 
-                                                <input id="toggle-list-view" type="checkbox" checked
-                                                       data-toggle="toggle" data-onstyle="default"
-                                                       data-offstyle="default" data-on="<i class='fa fa-list' aria-hidden='true'></i>"
-                                                       data-off="<i class='glyphicon glyphicon-th-large' aria-hidden='true'></i>">
+                                                <button id="fb-cut" class="btn btn-default fb-control-squared"
+                                                      title="Cut">
+                                                    <span class="fa fa-scissors icon-blue"></span>
+                                                </button>
 
-                                                <div id="fb-sort" class="btn-group">
+                                                <button id="fb-paste" class="btn btn-default fb-control-squared"
+                                                      title="Paste">
+                                                    <span class="fa fa-clipboard icon-blue"></span>
+                                                </button>
+
+                                                <div id="fb-sort" class="btn-group pull-right">
                                                     <button type="button" class="btn btn-default dropdown-toggle"
                                                             data-toggle="dropdown" aria-haspopup="true"
                                                             aria-expanded="false">
-                                                        Sort By <span class="caret"></span>
+                                                        <span class="glyphicon glyphicon-sort"></span>&nbsp;<span>Sort By</span>&nbsp;<span
+                                                            class="caret"></span>
                                                     </button>
                                                     <ul class="dropdown-menu">
                                                         <li data-method="type" class="active"><a>Type</a></li>
@@ -212,6 +207,14 @@
                                                         <li data-order="asc" class="active"><a><i class="fa fa-sort-amount-asc"></i>&nbsp;&nbsp;Ascending</a></li>
                                                         <li data-order="desc"><a><i class="fa fa-sort-amount-desc"></i>&nbsp;&nbsp;Descending</a></li>
                                                     </ul>
+                                                </div>
+
+                                                <div class="pull-right">
+                                                    <input id="toggle-list-view" type="checkbox" checked
+                                                           data-toggle="toggle" data-onstyle="default"
+                                                           data-offstyle="default"
+                                                           data-on="<i class='fa fa-list' aria-hidden='true'></i>"
+                                                           data-off="<i class='glyphicon glyphicon-th-large' aria-hidden='true'></i>">
                                                 </div>
                                             </div>
 
@@ -230,7 +233,22 @@
                                         </div>
 
                                         <div class="file-browser-container">
-                                            <div class="file-browser-breadcrumb">
+                                            <div class="file-browser-breadcrumb height-fix">
+                                                <div class="pull-left">
+                                                    <button class="btn btn-default fb-control-round"
+                                                            title="Click to go back"><span
+                                                            class="glyphicon glyphicon-arrow-left"></span></button>
+
+                                                    <button class="btn btn-default fb-control-round"
+                                                            title="Click to go forward"><span
+                                                            class="glyphicon glyphicon-arrow-right"></span></button>
+
+                                                    <button id="fb-move-up" class="btn btn-default fb-control-squared"
+                                                            title="Click to go to parent directory"><span
+                                                            class="fa fa-level-up"></span></button>
+                                                </div>
+
+
                                                 <ol id="fb-bread-crumbs" class="breadcrumb">
 
                                                 </ol>
@@ -242,8 +260,8 @@
                                                   method="POST">
                                                 {% csrf_token %}
 
-                                                <div id="flag-uploading">
-                                                    <i class="fa fa-circle-o-notch fa-spin fa-fw"></i><small class="uploading-message"> Uploading files...</small>
+                                                <div id="flag-uploading" class="hidden">
+                                                    <i class="fa fa-circle-o-notch fa-spin fa-fw"></i><small class="uploading-message"> Uploading files to: data/contents</small>
                                                 </div>
 
                                                 <div class="fb-drag-flag">
@@ -254,26 +272,6 @@
                                                     <li class="fb-loading-spinner">
                                                         <i class="fa fa-spinner fa-pulse fa-2x fa-fw margin-bottom"></i>
                                                     </li>
-
-                                                    {# FOLDER TEMPLATE #}
-{#                                                    <li class="fb-folder droppable" title="98 KB">#}
-{#                                                        <span class='fa fa-arrows fb-handle fb-help-icon'></span>#}
-{#                                                        <span class="fb-file-icon fa fa-folder glyphicon-folder"></span>#}
-{#                                                        <span class="fb-file-name">Folder 1</span>#}
-{#                                                        <span class="fb-file-type">File Folder</span>#}
-{#                                                        <span class="fb-file-size" data-file-size="98523">98 KB</span>#}
-{#                                                    </li>#}
-
-{##}
-                                                    {# FILE TEMPLATE #}
-{#                                                    <li class="fb-file droppable" title="12 KB">#}
-{#                                                        <span class='fa fa-arrows fb-handle fb-help-icon'></span>#}
-{#                                                        <span class="fb-file-icon fa fa-file-text"></span>#}
-{#                                                        <span class="fb-file-name">File 1.txt</span>#}
-{#                                                        <span class="fb-file-type">Text File</span>#}
-{#                                                        <span class="fb-file-size" data-file-size="12345">12 KB</span>#}
-{#                                                    </li>#}
-
                                                 </ul>
                                             </form>
                                         </div>
@@ -2161,7 +2159,6 @@
                 if (resID) {
                     get_irods_folder_struct_ajax_submit(resID, 'data/contents');
                 }
-
             });
         </script>
 

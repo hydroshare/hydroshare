@@ -515,10 +515,10 @@ function get_irods_folder_struct_ajax_submit(res_id, store_path) {
             }
 
             onSort();
-            
+
             bindFileBrowserItemEvents();
-            $("#fb-files-container").attr("data-current-path", store_path);
-            $("#fb-files-container").attr("data-res-id", res_id);
+            $("#hs-file-browser").attr("data-current-path", store_path);
+            $("#hs-file-browser").attr("data-res-id", res_id);
             setBreadCrumbs(store_path);
             $(".selection-menu").hide();
             $("#flag-uploading").remove();
@@ -531,7 +531,8 @@ function get_irods_folder_struct_ajax_submit(res_id, store_path) {
             $("#flag-uploading").remove();
             $("#fb-files-container").css("cursor", "default");
             $('#fb-files-container').empty();
-            $(".fb-files-container").prepend("<span>No files have been uploaded to this directory</span>")
+            setBreadCrumbs(store_path);
+            $("#fb-files-container").prepend("<span>No files to display.</span>")
         }
     });
 }
