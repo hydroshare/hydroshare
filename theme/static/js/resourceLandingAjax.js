@@ -334,7 +334,6 @@ function metadata_update_ajax_submit(form_id){
                     res_short_id = form_update_action.split('/')[3];
                     update_url = "/hsapi/_internal/" + res_short_id + "/" + json_response.element_name + "/add-metadata/"
                     $form.attr('action', update_url);
-
                 }
                 if (json_response.hasOwnProperty('element_name')){
                     if(json_response.element_name === 'title'){

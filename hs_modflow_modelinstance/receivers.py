@@ -27,8 +27,6 @@ def metadata_element_pre_create_handler(sender, **kwargs):
 
 @receiver(pre_metadata_element_update, sender=MODFLOWModelInstanceResource)
 def metadata_element_pre_update_handler(sender, **kwargs):
-    # check if the element should be all blank
-
     return _process_metadata_update_create(update_or_create='update', **kwargs)
 
 @receiver(post_metadata_element_update, sender=MODFLOWModelInstanceResource)

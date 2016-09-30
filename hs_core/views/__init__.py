@@ -274,7 +274,6 @@ def update_metadata_element(request, shortkey, element_name, element_id, *args, 
                 metadata_status = METADATA_STATUS_INSUFFICIENT
 
             ajax_response_data = {'status': 'success', 'element_name': element_name, 'metadata_status': metadata_status, 'element_exists': post_handler_response[0][1]['element_exists']}
-            # raise Exception(ajax_response_data)
             return HttpResponse(json.dumps(ajax_response_data))
         else:
             ajax_response_data = {'status': 'error', 'message': err_msg}
