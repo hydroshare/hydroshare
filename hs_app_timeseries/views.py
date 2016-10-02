@@ -18,14 +18,18 @@ def update_sqlite_file(request, resource_id, *args, **kwargs):
                               "allowed only for timeseries resources.")
     else:
         try:
-            res.metadata.update_sqlite_file()
+            res.metadata.update_sqlite_file(user)
             messages.success(request, "SQLite file update was successful.")
             log.info("SQLite file update was successful for resource ID:{}.".format(res.short_id))
-        except Exception, ex:
+        except Exception as ex:
             messages.error(request, "Failed to update SQLite file. Error:{}".format(ex.message))
             log.exception("Failed to update SQLite file. Error:{}".format(ex.message))
 
     if 'resource-mode' in request.POST:
         request.session['resource-mode'] = 'edit'
+
+    # remove if there exits any previous form validation errors
+    if 'validation_error' in request.session:
+        del request.session['validation_error']
 
     return HttpResponseRedirect(request.META['HTTP_REFERER'])

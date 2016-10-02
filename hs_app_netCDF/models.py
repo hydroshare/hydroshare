@@ -152,6 +152,11 @@ class NetcdfResource(BaseResource):
         return (".nc",)
 
     @classmethod
+    def allow_multiple_file_upload(cls):
+        # can upload only 1 file
+        return False
+
+    @classmethod
     def can_have_multiple_files(cls):
         # can have only 1 file
         return False
@@ -189,6 +194,10 @@ class NetcdfMetaData(CoreMetaData):
         elements.append('Variable')
         elements.append('OriginalCoverage')
         return elements
+
+    @property
+    def resource(self):
+        return NetcdfResource.objects.filter(object_id=self.id).first()
 
     def has_all_required_elements(self):
         if not super(NetcdfMetaData, self).has_all_required_elements():  # check required meta
