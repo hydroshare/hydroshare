@@ -63,18 +63,36 @@ function updateSelectionMenuContext() {
     $(".selection-menu").children("li[data-menu-name='paste']").toggleClass("disabled", flagDisablePaste);
 }
 
+var isDragging = false;
+
 function bindFileBrowserItemEvents() {
     // Drop
     $(".droppable").droppable({
         drop: function (event, ui) {
+            var resID = $("#hs-file-browser").attr("data-res-id");
             var source = $(ui.helper);
             var destination = $(event.target);
-
             var sourceName = source.children(".fb-file-name").text();
             var destName = destination.children(".fb-file-name").text();
             var destFileType = destination.children(".fb-file-type").text();
 
-            destination.removeClass("fb-drag-cutting");
+            if (destFileType != "File Folder") {
+                return;
+            }
+
+            var currentPath = $("#hs-file-browser").attr("data-current-path");
+
+            var sourcePath = currentPath + "/" + sourceName;
+            var destPath = currentPath + "/" + destName;
+
+            var calls = [];
+            calls.push(move_or_rename_irods_file_or_folder_ajax_submit(resID, sourcePath, destPath));
+
+            $.when.apply($, calls).done(function () {
+                refreshFileBrowser();
+                destination.removeClass("fb-drag-cutting");
+            });
+
         },
         over: function(event, ui) {
             $(ui.helper).addClass("fb-drag-cutting");
@@ -87,11 +105,20 @@ function bindFileBrowserItemEvents() {
         accept: 'li'
     });
 
+    // Handle "select" of clicked elements
+    $("#fb-files-container li").mousedown(function (e) {
+        if (!e.ctrlKey) {
+            $(this).addClass("ui-selected");
+        }
+
+    });
 
     // Handle "select" of clicked elements
-    $("#fb-files-container li").click(function (e) {
+    $("#fb-files-container li").mouseup(function (e) {
         if (!e.ctrlKey) {
-            $("#fb-files-container li").removeClass("ui-selected");
+            if (!isDragging) {
+                $("#fb-files-container li").removeClass("ui-selected");
+            }
             $(this).addClass("ui-selected");
         }
         else {
@@ -100,12 +127,21 @@ function bindFileBrowserItemEvents() {
     });
 
     $(".draggable").draggable({
-            revert: true,
+            containment: "parent",
             start: function( event, ui ) {
-                $(ui.helper).addClass("ui-selected");
+                $(ui.helper).addClass(".ui-selected");
+                isDragging = true;
             },
             stop: function( event, ui ) {
                 $(ui.helper).removeClass("fb-drag-cutting");
+                $('#fb-files-container li').animate({ top:0, left:0 }, 200);    // Custom revert to handle multiple selection
+                isDragging = false;
+            },
+            drag: function (event, ui) {
+                $('.ui-selected').css({
+                    top : ui.position.top,
+                    left: ui.position.left
+                });
             },
         }
     );
@@ -271,6 +307,20 @@ function onSort() {
     sort(method, order);
 }
 
+// Reload the current folder structure
+function refreshFileBrowser() {
+    var resID = $("#hs-file-browser").attr("data-res-id");
+    var currentPath = $("#hs-file-browser").attr("data-current-path");
+    var calls = [];
+    calls.push(get_irods_folder_struct_ajax_submit(resID, currentPath));
+
+    $.when.apply($, calls).done(function () {
+        $("#fb-files-container li").removeClass("fb-cutting");
+        $(".selection-menu").hide();
+        sourcePaths = [];
+    });
+    }
+
 $(document).ready(function () {
     var previewNode = $("#flag-uploading").removeClass("hidden").clone();
     $("#flag-uploading").remove();
@@ -376,20 +426,6 @@ $(document).ready(function () {
         }
         return false;
     });
-
-    // Reload the current folder structure
-    function refreshFileBrowser () {
-        var resID = $("#hs-file-browser").attr("data-res-id");
-        var currentPath = $("#hs-file-browser").attr("data-current-path");
-        var calls = [];
-        calls.push(get_irods_folder_struct_ajax_submit(resID, currentPath));
-
-        $.when.apply($, calls).done(function () {
-            $("#fb-files-container li").removeClass("fb-cutting");
-            $(".selection-menu").hide();
-            sourcePaths = [];
-        });
-    }
 
     // Move up one directory
     $("#fb-move-up").click(function () {

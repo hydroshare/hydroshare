@@ -3887,6 +3887,8 @@ form#covereage-search-fields {
 
 .fb-view-grid .fb-folder, .fb-view-grid .fb-file {
     width: 100px;
+    height: 100px;
+	margin:4px;
     float: left;
 	overflow: hidden;
     text-overflow: ellipsis;
@@ -4123,6 +4125,7 @@ span.fb-control-square {
 #fb-files-container li.fb-cutting, #fb-files-container li.fb-drag-cutting {
 	border: 1px dashed #999 !important;
 	opacity: 0.75;
+	padding: 9px;
 }
 
 #fb-move-up, #fb-delete, #fb-sort {
@@ -4189,12 +4192,7 @@ div.fb-upload-caption {
 	text-align: center;
 }
 
-.fb-view-grid .fb-file, .fb-view-grid .fb-folder {
-	height: 150px;
-}
-
 .fb-view-grid .fb-file-icon {
-	margin-top: 18px;
 	display: block;
 }
 
