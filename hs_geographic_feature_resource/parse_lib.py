@@ -143,7 +143,7 @@ def parse_shp(file_path):
 
 def parse_shp_xml(shp_xml_full_path):
     """
-    Parse ArcGIS 10.x ESRI Shapefile Metadata XML.
+    Parse ArcGIS 10.0 - 10.4 ESRI Shapefile Metadata XML.
     :param shp_xml_full_path: Expected fullpath to the .shp.xml file
     :return: a list of metadata dict
     """
@@ -177,7 +177,7 @@ def parse_shp_xml(shp_xml_full_path):
 
     except Exception as ex:
         # Catch any exception silently and return an empty list
-        # Due to the continuous variance in ESRI Shapefile Metadata XML format
+        # Due to the variances in ESRI Shapefile Metadata XML format
         # of different ArcGIS versions, an empty list will be returned
         # if any exception occurs
         metadata = []

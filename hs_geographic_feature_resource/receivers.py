@@ -168,7 +168,7 @@ def check_uploaded_files_type(file_info_list):
     else:
         files_type_dict["are_files_valid"] = False
         files_type_dict['message'] = "Invalid files uploaded. You may upload only one " \
-                                     "ESRI shapefile that includes the three " \
+                                     "ESRI shapefile that includes at least three " \
                                      "mandatory files (.shp, .shx, .dfb) or " \
                                      "upload one zipped shapefile."
 
@@ -539,18 +539,21 @@ def geofeature_pre_add_files_to_resource(sender, **kwargs):
                 shp_xml_metadata_list = parse_shp_xml(shp_xml_full_path)
                 for shp_xml_metadata in shp_xml_metadata_list:
                     if 'description' in shp_xml_metadata:
+                        # overwrite existing description metadata
                         if res_obj.metadata.description:
                             res_obj.metadata.description.delete()
                         res_obj.metadata.create_element('description',
                                                         abstract=shp_xml_metadata
                                                         ['description']['abstract'])
                     elif 'title' in shp_xml_metadata:
+                        # overwrite existing title metadata
                         if res_obj.metadata.title:
                            res_obj.metadata.title.delete()
                         res_obj.metadata.create_element('title',
                                                         value=shp_xml_metadata
                                                         ['title']['value'])
                     elif 'subject' in shp_xml_metadata:
+                        # append new keywords to existing keywords
                         existing_keywords = [subject.value for
                                              subject in res_obj.metadata.subjects.all()]
                         if shp_xml_metadata['subject']['value'] not in existing_keywords:
