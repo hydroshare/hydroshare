@@ -124,6 +124,7 @@ ResourceListItem = namedtuple('ResourceListItem',
                                'date_last_updated',
                                'bag_url',
                                'science_metadata_url',
+                               'resource_map_url',
                                'resource_url'])
 
 ResourceFileItem = namedtuple('ResourceFileItem',
