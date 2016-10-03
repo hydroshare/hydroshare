@@ -70,9 +70,8 @@ function bindFileBrowserItemEvents() {
     $(".droppable").droppable({
         drop: function (event, ui) {
             var resID = $("#hs-file-browser").attr("data-res-id");
-            var source = $(ui.helper);
             var destination = $(event.target);
-            var sourceName = source.children(".fb-file-name").text();
+            var sources = $("#fb-files-container li.ui-selected").children(".fb-file-name");
             var destName = destination.children(".fb-file-name").text();
             var destFileType = destination.children(".fb-file-type").text();
 
@@ -81,18 +80,18 @@ function bindFileBrowserItemEvents() {
             }
 
             var currentPath = $("#hs-file-browser").attr("data-current-path");
-
-            var sourcePath = currentPath + "/" + sourceName;
             var destPath = currentPath + "/" + destName;
 
             var calls = [];
-            calls.push(move_or_rename_irods_file_or_folder_ajax_submit(resID, sourcePath, destPath));
+            for (var i = 0; i < sources.length; i++) {
+                var sourcePath = currentPath + "/" + $(sources[i]).text();
+                calls.push(move_or_rename_irods_file_or_folder_ajax_submit(resID, sourcePath, destPath));
+            }
 
             $.when.apply($, calls).done(function () {
                 refreshFileBrowser();
                 destination.removeClass("fb-drag-cutting");
             });
-
         },
         over: function(event, ui) {
             $(ui.helper).addClass("fb-drag-cutting");
@@ -110,13 +109,12 @@ function bindFileBrowserItemEvents() {
         if (!e.ctrlKey) {
             $(this).addClass("ui-selected");
         }
-
     });
 
     // Handle "select" of clicked elements
     $("#fb-files-container li").mouseup(function (e) {
         if (!e.ctrlKey) {
-            if (!isDragging) {
+            if (!isDragging && event.which == 1) {
                 $("#fb-files-container li").removeClass("ui-selected");
             }
             $(this).addClass("ui-selected");
@@ -442,7 +440,9 @@ $(document).ready(function () {
         get_irods_folder_struct_ajax_submit(resID, currentPath + "/" + folderName);
     });
 
-    $("#btn-cut").click(function () {
+    $("#btn-cut, #fb-cut").click(onCut);
+
+    function onCut() {
         var currentPath = $("#hs-file-browser").attr("data-current-path");
         $("#fb-files-container li").removeClass("fb-cutting");
         sourcePaths = [];
@@ -461,9 +461,11 @@ $(document).ready(function () {
         }
 
         $(".selection-menu").hide();
-    });
+    }
 
-    $(".selection-menu li[data-menu-name='paste']").click(function () {
+    $(".selection-menu li[data-menu-name='paste'], #fb-paste").click(onPaste);
+
+    function onPaste() {
         var folderName = $("#fb-files-container li.ui-selected").children(".fb-file-name").text();
         var resID = $("#hs-file-browser").attr("data-res-id");
         var targetPath = $("#hs-file-browser").attr("data-current-path");
@@ -486,7 +488,9 @@ $(document).ready(function () {
 
         $("#fb-files-container li").removeClass("fb-cutting");
         $(".selection-menu").hide();
-    });
+    }
+
+
 
     // File(s) delete method
     $("#btn-confirm-delete").click(function () {
