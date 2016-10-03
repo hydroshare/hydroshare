@@ -211,7 +211,7 @@
 
                                             <div id="fb-inner-controls" class="container">
                                                 <div class="row">
-                                                    <div class="col-sm-6 col-xs-12">
+                                                    <div class="col-sm-8 col-xs-12">
                                                         <button id="fb-create-folder"
                                                                 class="btn btn-default fb-control-squared"
                                                                 data-toggle="modal" data-target="#create-folder-dialog"
@@ -255,9 +255,15 @@
                                                                 title="Refresh">
                                                             <span class="fa fa-refresh icon-blue"></span>
                                                         </button>
+
+                                                        <button id="fb-download"
+                                                                class="btn btn-default fb-control-squared disabled"
+                                                                title="Download">
+                                                            <span class="glyphicon glyphicon-download icon-blue"></span>
+                                                        </button>
                                                     </div>
 
-                                                    <div class="col-sm-6 col-xs-12">
+                                                    <div class="col-sm-4 col-xs-12 ">
                                                         <div id="fb-sort" class="btn-group pull-right">
                                                             <button type="button"
                                                                     class="btn btn-default dropdown-toggle"
@@ -280,13 +286,13 @@
                                                             </ul>
                                                         </div>
 
-                                                    <span class="pull-right">
-                                                        <input id="toggle-list-view" type="checkbox" checked
-                                                               data-toggle="toggle" data-onstyle="default"
-                                                               data-offstyle="default"
-                                                               data-on="<i class='fa fa-list' aria-hidden='true'></i>"
-                                                               data-off="<i class='glyphicon glyphicon-th-large' aria-hidden='true'></i>">
-                                                    </span>
+                                                        <span id="fb-view" class="pull-right">
+                                                            <input id="toggle-list-view" type="checkbox" checked
+                                                                   data-toggle="toggle" data-onstyle="default"
+                                                                   data-offstyle="default"
+                                                                   data-on="<i class='fa fa-list' aria-hidden='true'></i>"
+                                                                   data-off="<i class='glyphicon glyphicon-th-large' aria-hidden='true'></i>">
+                                                        </span>
                                                     </div>
                                                 </div>
                                             </div>

@@ -123,6 +123,7 @@ function updateSelectionMenuContext() {
 
     // Download
     menu.children("li[data-menu-name='download']").toggleClass("disabled", flagDisableDownload);
+    $("#fb-download").toggleClass("disabled", flagDisableDownload);
 
     // Rename
     menu.children("li[data-menu-name='rename']").toggleClass("disabled", flagDisableRename);

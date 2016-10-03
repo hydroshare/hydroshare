@@ -4133,8 +4133,8 @@ span.fb-control-square {
 	padding: 9px;
 }
 
-#fb-move-up, #fb-delete, #fb-sort, #fb-cut, #fb-select-all {
-	margin-left: 15px;
+#fb-move-up, #fb-create-folder, #fb-delete, #fb-rename, #fb-refresh, #fb-view {
+	margin-right: 15px;
 }
 
 .ui-widget-content {
@@ -4151,7 +4151,7 @@ div.fb-upload-caption {
 	border: 1px solid #DDD;
 	border-top: 0;
 	cursor: pointer;
-    background: #f9f9f9;
+    background: #fafafa;
     color: #555;
 }
 
@@ -4165,7 +4165,7 @@ div.fb-upload-caption {
     text-align: center;
     color: rgba(66, 139, 202, 0.51);
 	left: calc(50% - 60px);
-    top: 30%;
+    top: 40%;
 	display: none;
 	pointer-events: none;
 }
@@ -4213,13 +4213,23 @@ div.fb-upload-caption {
 	font-size: 14px;
 }
 
-.file-browser-controls .btn:focus, .file-browser-breadcrumb .btn:focus {
+.file-browser-controls .btn:focus, .file-browser-breadcrumb .btn:focus, #fb-inner-controls .btn:focus {
   outline: none;
 }
 
 div#fb-inner-controls {
     padding: 8px;
+	padding-bottom: 0;
     border-bottom: 1px solid #DDD;
+	background: #fafafa;
+}
+
+div#fb-inner-controls {
+	min-height: 34px;
+}
+
+div#fb-inner-controls button {
+	margin-bottom: 8px;
 }
 
 .fb-loading-spinner {
