@@ -173,53 +173,6 @@
                                     <div id="hs-file-browser" data-res-id="{{ cm.short_id }}" data-current-path="data/contents" class="file-browser">
                                         <div class="file-browser-controls row">
                                             <div class="col-sm-6 col-xs-12">
-                                                <button id="fb-create-folder" class="btn btn-default fb-control-squared"
-                                                      data-toggle="modal" data-target="#create-folder-dialog"
-                                                      title="Create new folder">
-                                                    <span class="fa fa-folder glyphicon-folder"></span></button>
-
-                                                <button id="fb-delete" class="btn btn-default fb-control-squared fb-files-remove"
-                                                      title="Delete" data-toggle="modal" data-target="#confirm-delete-dialog">
-                                                    <span class="glyphicon glyphicon-trash btn-remove"></span>
-                                                </button>
-
-                                                <button id="fb-cut" class="btn btn-default disabled fb-control-squared"
-                                                      title="Cut">
-                                                    <span class="fa fa-scissors icon-blue"></span>
-                                                </button>
-
-                                                <button id="fb-paste" class="btn btn-default fb-control-squared disabled"
-                                                      title="Paste">
-                                                    <span class="fa fa-clipboard icon-blue"></span>
-                                                </button>
-
-                                                <div id="fb-sort" class="btn-group pull-right">
-                                                    <button type="button" class="btn btn-default dropdown-toggle"
-                                                            data-toggle="dropdown" aria-haspopup="true"
-                                                            aria-expanded="false">
-                                                        <span class="glyphicon glyphicon-sort"></span>&nbsp;<span>Sort By</span>&nbsp;<span
-                                                            class="caret"></span>
-                                                    </button>
-                                                    <ul class="dropdown-menu">
-                                                        <li data-method="type" class="active"><a>Type</a></li>
-                                                        <li data-method="name"><a>Name</a></li>
-                                                        <li data-method="size"><a>Size</a></li>
-                                                        <li role="separator" class="divider"></li>
-                                                        <li data-order="asc" class="active"><a><i class="fa fa-sort-amount-asc"></i>&nbsp;&nbsp;Ascending</a></li>
-                                                        <li data-order="desc"><a><i class="fa fa-sort-amount-desc"></i>&nbsp;&nbsp;Descending</a></li>
-                                                    </ul>
-                                                </div>
-
-                                                <div class="pull-right">
-                                                    <input id="toggle-list-view" type="checkbox" checked
-                                                           data-toggle="toggle" data-onstyle="default"
-                                                           data-offstyle="default"
-                                                           data-on="<i class='fa fa-list' aria-hidden='true'></i>"
-                                                           data-off="<i class='glyphicon glyphicon-th-large' aria-hidden='true'></i>">
-                                                </div>
-                                            </div>
-
-                                            <div class="col-sm-6 col-xs-12">
                                                 <div class="input-group file-browser-search">
                                                     <span class="glyphicon glyphicon-search search-icon"></span>
                                                     <span id="btn-clear-search-input"
@@ -227,7 +180,8 @@
                                                           data-toggle="tooltip"
                                                           data-placement="auto"
                                                           title="Clear search"></span>
-                                                    <input type="text" id="txtDirSearch" class="form-control fb-input-search"
+                                                    <input type="text" id="txtDirSearch"
+                                                           class="form-control fb-input-search"
                                                            placeholder="Search current directory">
                                                 </div>
                                             </div>
@@ -253,6 +207,88 @@
                                                 <ol id="fb-bread-crumbs" class="breadcrumb">
 
                                                 </ol>
+                                            </div>
+
+                                            <div id="fb-inner-controls" class="container">
+                                                <div class="row">
+                                                    <div class="col-sm-6 col-xs-12">
+                                                        <button id="fb-create-folder"
+                                                                class="btn btn-default fb-control-squared"
+                                                                data-toggle="modal" data-target="#create-folder-dialog"
+                                                                title="Create new folder">
+                                                            <span class="fa fa-folder glyphicon-folder"></span></button>
+
+                                                        <button id="fb-delete"
+                                                                class="btn btn-default fb-control-squared fb-files-remove disabled"
+                                                                title="Delete" data-toggle="modal"
+                                                                data-target="#confirm-delete-dialog">
+                                                            <span class="glyphicon glyphicon-trash btn-remove"></span>
+                                                        </button>
+
+                                                        <button id="fb-cut"
+                                                                class="btn btn-default disabled fb-control-squared"
+                                                                title="Cut">
+                                                            <span class="fa fa-scissors icon-blue"></span>
+                                                        </button>
+
+                                                        <button id="fb-paste"
+                                                                class="btn btn-default fb-control-squared disabled"
+                                                                title="Paste">
+                                                            <span class="fa fa-clipboard icon-blue"></span>
+                                                        </button>
+
+                                                        <button id="fb-rename"
+                                                                class="btn btn-default fb-control-squared disabled"
+                                                                title="Rename" data-toggle="modal"
+                                                                data-target="#rename-dialog">
+                                                            <span class="glyphicon glyphicon-pencil icon-blue"></span>
+                                                        </button>
+
+                                                        <button id="fb-select-all"
+                                                                class="btn btn-default fb-control-squared"
+                                                                title="Select All">
+                                                            <span class="fa fa-plus-square-o icon-blue"></span>
+                                                        </button>
+
+                                                        <button id="fb-refresh"
+                                                                class="btn btn-default fb-control-squared"
+                                                                title="Refresh">
+                                                            <span class="fa fa-refresh icon-blue"></span>
+                                                        </button>
+                                                    </div>
+
+                                                    <div class="col-sm-6 col-xs-12">
+                                                        <div id="fb-sort" class="btn-group pull-right">
+                                                            <button type="button"
+                                                                    class="btn btn-default dropdown-toggle"
+                                                                    data-toggle="dropdown" aria-haspopup="true"
+                                                                    aria-expanded="false">
+                                                                <span class="glyphicon glyphicon-sort"></span>&nbsp;<span>Sort By</span>&nbsp;<span
+                                                                    class="caret"></span>
+                                                            </button>
+                                                            <ul class="dropdown-menu">
+                                                                <li data-method="type" class="active"><a>Type</a></li>
+                                                                <li data-method="name"><a>Name</a></li>
+                                                                <li data-method="size"><a>Size</a></li>
+                                                                <li role="separator" class="divider"></li>
+                                                                <li data-order="asc" class="active"><a><i
+                                                                        class="fa fa-sort-amount-asc"></i>&nbsp;&nbsp;Ascending</a>
+                                                                </li>
+                                                                <li data-order="desc"><a><i
+                                                                        class="fa fa-sort-amount-desc"></i>&nbsp;&nbsp;Descending</a>
+                                                                </li>
+                                                            </ul>
+                                                        </div>
+
+                                                    <span class="pull-right">
+                                                        <input id="toggle-list-view" type="checkbox" checked
+                                                               data-toggle="toggle" data-onstyle="default"
+                                                               data-offstyle="default"
+                                                               data-on="<i class='fa fa-list' aria-hidden='true'></i>"
+                                                               data-off="<i class='glyphicon glyphicon-th-large' aria-hidden='true'></i>">
+                                                    </span>
+                                                    </div>
+                                                </div>
                                             </div>
 
                                             <form id="fbContainmentWrapper"

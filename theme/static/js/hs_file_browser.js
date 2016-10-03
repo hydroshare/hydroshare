@@ -4,15 +4,64 @@
 
 var sourcePaths = [];
 
-function selectSelectableElement (selectableContainer, elementsToSelect) {
-    // add unselecting class to all elements in the styleboard canvas except the ones to select
-    $(".ui-selected", selectableContainer).not(elementsToSelect).removeClass("ui-selected").addClass("ui-unselecting");
+function getFolderTemplateInstance(folderName) {
+    return "<li class='fb-folder droppable draggable' title='" + folderName + "&#13;Type: Filde Folder'>" +
+        "<span class='fb-file-icon fa fa-folder glyphicon-folder'></span>" +
+        "<span class='fb-file-name'>" + folderName + "</span>" +
+        "<span class='fb-file-type'>File Folder</span>" +
+        "<span class='fb-file-size'></span>" +
+        "</li>"
+}
 
-    // add ui-selecting class to the elements to select
-    $(elementsToSelect).not(".ui-selected").addClass("ui-selected");
+function getFileTemplateInstance(fileName, fileType, fileSize, pk, url) {
+    var fileTypeExt = fileName.substr(fileName.lastIndexOf(".") + 1, fileName.length);
+    var extIcon = "fa-file-o";
 
-    // trigger the mouse stop event (this will select all .ui-selecting elements, and deselect all .ui-unselecting elements)
-    selectableContainer.data("selectable")._mouseStop(null);
+    if (fileName.lastIndexOf(".")) {
+        if (fileTypeExt.toUpperCase() == "PDF") {
+            extIcon = "fa-file-pdf-o";
+        }
+        else if (fileTypeExt.toUpperCase() == "XLS" || fileTypeExt.toUpperCase() == "XLT" || fileTypeExt.toUpperCase() == "XML" || fileTypeExt.toUpperCase() == "CSV") {
+            extIcon = "fa-file-excel-o";
+        }
+        else if (fileTypeExt.toUpperCase() == "ZIP" || fileTypeExt.toUpperCase() == "RAR" || fileTypeExt.toUpperCase() == "RAR5") {
+            extIcon = "fa-file-zip-o";
+        }
+        else if (fileTypeExt.toUpperCase() == "DOC" || fileTypeExt.toUpperCase() == "DOCX") {
+            extIcon = "fa-file-word-o";
+        }
+        else if (fileTypeExt.toUpperCase() == "MP3" || fileTypeExt.toUpperCase() == "WAV" || fileTypeExt.toUpperCase() == "WMA") {
+            extIcon = "fa-file-audio-o";
+        }
+        else if (fileTypeExt.toUpperCase() == "MP4" || fileTypeExt.toUpperCase() == "MOV" || fileTypeExt.toUpperCase() == "WMV") {
+            extIcon = "fa-file-movie-o";
+        }
+        else if (fileTypeExt.toUpperCase() == "PNG" || fileTypeExt.toUpperCase() == "JPG" || fileTypeExt.toUpperCase() == "JPEG" || fileTypeExt.toUpperCase() == "GIF" || fileTypeExt.toUpperCase() == "TIF" || fileTypeExt.toUpperCase() == "BMP") {
+            extIcon = "fa-file-image-o";
+        }
+        else if (fileTypeExt.toUpperCase() == "TXT") {
+            extIcon = "fa-file-text-o";
+        }
+        else if (fileTypeExt.toUpperCase() == "PPT" || fileTypeExt.toUpperCase() == "PPTX") {
+            extIcon = "fa-file-powerpoint-o";
+        }
+        else if (fileTypeExt.toUpperCase() == "JS" || fileTypeExt.toUpperCase() == "PY" || fileTypeExt.toUpperCase() == "PHP" || fileTypeExt.toUpperCase() == "JAVA" || fileTypeExt.toUpperCase() == "CS") {
+            extIcon = "fa-file-code-o";
+        }
+    }
+
+    return "<li data-pk='" + pk + "' data-url='" + url + "' class='fb-file draggable' title='" + fileName + "&#13;Type: " + fileType + "&#13;Size: " + formatBytes(parseInt(fileSize)) +  "'>" +
+        "<span class='fb-file-icon fa " + extIcon + "'></span>" +
+        "<span class='fb-file-name'>" + fileName + "</span>" +
+        "<span class='fb-file-type'>" + fileType + " File</span>" +
+        "<span class='fb-file-size' data-file-size=" + fileSize + "'>" + formatBytes(parseInt(fileSize)) + "</span></li>"
+}
+
+function formatBytes(bytes) {
+    if(bytes < 1024) return bytes + " Bytes";
+    else if(bytes < 1048576) return(bytes / 1024).toFixed(1) + " KB";
+    else if(bytes < 1073741824) return(bytes / 1048576).toFixed(1) + " MB";
+    else return(bytes / 1073741824).toFixed(1) + " GB";
 }
 
 function updateSelectionMenuContext() {
@@ -25,6 +74,7 @@ function updateSelectionMenuContext() {
     var flagDisableZip = false;
     var flagDisableUnzip = false;
     var flagDisableCut = false;
+    var flagDisableDelete = false;
 
     if (selected.length > 1) {
         flagDisableRename = true;   // 'rename' menu item
@@ -37,6 +87,10 @@ function updateSelectionMenuContext() {
     }
     else {
         flagDisableCut = true;
+        flagDisableRename = true;
+        flagDisableUnzip = true;
+        flagDisableZip = true;
+        flagDisableDelete = true;
     }
 
     if (selected.hasClass("fb-file")) {
@@ -62,16 +116,35 @@ function updateSelectionMenuContext() {
         }
     }
 
-    $("#right-click-menu").children("li[data-menu-name='open']").toggleClass("disabled", flagDisableOpen);
-    $("#right-click-menu").children("li[data-menu-name='download']").toggleClass("disabled", flagDisableDownload);
-    $("#right-click-menu").children("li[data-menu-name='rename']").toggleClass("disabled", flagDisableRename);
-    $("#right-click-menu").children("li[data-menu-name='zip']").toggleClass("disabled", flagDisableZip);
-    $("#right-click-menu").children("li[data-menu-name='unzip']").toggleClass("disabled", flagDisableUnzip);
-    $("#right-click-menu").children("li[data-menu-name='cut']").toggleClass("disabled", flagDisableCut);
-    $("#fb-fb-cut").toggleClass("disabled", flagDisableCut);
-    $(".selection-menu").children("li[data-menu-name='paste']").toggleClass("disabled", flagDisablePaste);
-    $("#fb-paste").toggleClass("disabled", flagDisablePaste);
+    var menu = $("#right-click-menu");
+
+    // Open
+    menu.children("li[data-menu-name='open']").toggleClass("disabled", flagDisableOpen);
+
+    // Download
+    menu.children("li[data-menu-name='download']").toggleClass("disabled", flagDisableDownload);
+
+    // Rename
+    menu.children("li[data-menu-name='rename']").toggleClass("disabled", flagDisableRename);
+    $("#fb-rename").toggleClass("disabled", flagDisableRename);
+
+    // Zip
+    menu.children("li[data-menu-name='zip']").toggleClass("disabled", flagDisableZip);
+
+    // Unzip
+    menu.children("li[data-menu-name='unzip']").toggleClass("disabled", flagDisableUnzip);
+
+    // Cut
+    menu.children("li[data-menu-name='cut']").toggleClass("disabled", flagDisableCut);
     $("#fb-cut").toggleClass("disabled", flagDisableCut);
+
+    // Paste
+    menu.children("li[data-menu-name='paste']").toggleClass("disabled", flagDisablePaste);
+    $("#fb-paste").toggleClass("disabled", flagDisablePaste);
+
+    // Delete
+    $("#fb-delete").toggleClass("disabled", flagDisableDelete);
+    menu.children("li[data-menu-name='delete']").toggleClass("disabled", flagDisableDelete);
 }
 
 var isDragging = false;
@@ -105,11 +178,11 @@ function bindFileBrowserItemEvents() {
             });
         },
         over: function(event, ui) {
-            $(ui.helper).addClass("fb-drag-cutting");
+            $("#fb-files-container li.ui-selected").addClass("fb-drag-cutting");
             $(event.target).addClass("fb-drag-cutting");
         },
         out: function(event, ui) {
-            $(ui.helper).removeClass("fb-drag-cutting");
+            $("#fb-files-container li.ui-selected").removeClass("fb-drag-cutting");
             $(event.target).removeClass("fb-drag-cutting");
         },
         accept: 'li'
@@ -117,8 +190,14 @@ function bindFileBrowserItemEvents() {
 
     // Handle "select" of clicked elements
     $("#fb-files-container li").mousedown(function (e) {
-        if (!e.ctrlKey) {
-            $(this).addClass("ui-selected");
+        if (e.ctrlKey) {
+            $(this).toggleClass("ui-selected");
+        }
+        else {
+            if (!$(this).hasClass("ui-selected")) {
+                $("#fb-files-container li").removeClass("ui-selected");
+                $(this).addClass("ui-selected");
+            }
         }
     });
 
@@ -130,21 +209,18 @@ function bindFileBrowserItemEvents() {
             }
             $(this).addClass("ui-selected");
         }
-        else {
-            $(this).toggleClass("ui-selected");
-        }
 
         updateSelectionMenuContext();
     });
 
     $(".draggable").draggable({
-            containment: "parent",
+            containment: "#fb-files-container",
             start: function( event, ui ) {
                 $(ui.helper).addClass(".ui-selected");
                 isDragging = true;
             },
             stop: function( event, ui ) {
-                $(ui.helper).removeClass("fb-drag-cutting");
+                $("#fb-files-container li.ui-selected").removeClass("fb-drag-cutting");
                 $('#fb-files-container li').animate({ top:0, left:0 }, 200);    // Custom revert to handle multiple selection
                 isDragging = false;
             },
@@ -240,7 +316,7 @@ function setBreadCrumbs(path) {
     }
 
     // Bind click events
-    $("#fb-bread-crumbs li").click(function() {
+    $("#fb-bread-crumbs li:not(.active)").click(function() {
         var resID = $("#hs-file-browser").attr("data-res-id");
         var path = $(this).attr("data-path");
         get_irods_folder_struct_ajax_submit(resID, path);
@@ -337,7 +413,9 @@ $(document).ready(function () {
     // Show file drop visual feedback
     Dropzone.options.fbContainmentWrapper = {
         paramName: "files", // The name that will be used to transfer the file
+        clickable: ".fb-upload-caption",
         previewsContainer: "#previews", // Define the container to display the previews
+        maxFilesize: 2048, // MB
         init: function () {
             this.on("dragenter", function (file) {
                 $(".fb-drag-flag").show();
@@ -417,7 +495,33 @@ $(document).ready(function () {
     });
 
     $('#create-folder-dialog').on('shown.bs.modal', function () {
+        $('#txtFolderName').val("");
         $('#txtFolderName').focus();
+    });
+
+    $('#rename-dialog').on('shown.bs.modal', function () {
+        $('#txtName').focus();
+        var input = document.getElementById("txtName");
+        var startPos = 0;
+        var endPos = $("#txtName").val().lastIndexOf(".");
+
+        if (endPos == -1) {
+            endPos = $("#txtName").val().length;
+        }
+
+
+        if (typeof input.selectionStart != "undefined") {
+            input.selectionStart = startPos;
+            input.selectionEnd = endPos;
+        } else if (document.selection && document.selection.createRange) {
+            // IE branch
+            input.select();
+            var range = document.selection.createRange();
+            range.collapse(true);
+            range.moveEnd("character", endPos);
+            range.moveStart("character", startPos);
+            range.select();
+        }
     });
 
     // Create folder at current directory
@@ -483,7 +587,7 @@ $(document).ready(function () {
         var resID = $("#hs-file-browser").attr("data-res-id");
         var targetPath = $("#hs-file-browser").attr("data-current-path");
 
-        if (folderName) {
+        if (folderName && folderName.lastIndexOf(".") == -1) {  // Makes sure the destination is a folder
             targetPath = targetPath + "/" + folderName
         }
 
@@ -495,12 +599,11 @@ $(document).ready(function () {
         // Wait for the asynchronous calls to finish to get new folder structure
         $.when.apply($, calls).done(function () {
             refreshFileBrowser();
+            sourcePaths = [];
+            $("#fb-files-container li").removeClass("fb-cutting");
+            $(".selection-menu").hide();
+            updateSelectionMenuContext();
         });
-
-        sourcePaths = [];
-
-        $("#fb-files-container li").removeClass("fb-cutting");
-        $(".selection-menu").hide();
     }
 
 
@@ -526,7 +629,7 @@ $(document).ready(function () {
         }
     });
 
-    $(".selection-menu li[data-menu-name='rename']").click(function(){
+    $(".selection-menu li[data-menu-name='rename'], #fb-rename").click(function(){
         $('.selection-menu').hide();
         var name = $("#fb-files-container li.ui-selected").children(".fb-file-name").text();
         $("#txtName").val(name);
@@ -596,12 +699,12 @@ $(document).ready(function () {
         document.getElementById('download-frame').src = url;
     };
 
-    $(".selection-menu li[data-menu-name='refresh']").click(function () {
+    $(".selection-menu li[data-menu-name='refresh'], #fb-refresh").click(function () {
         refreshFileBrowser();
         $(".selection-menu").hide();
     });
 
-    $(".selection-menu li[data-menu-name='select-all']").click(function () {
+    $(".selection-menu li[data-menu-name='select-all'], #fb-select-all").click(function () {
         $("#fb-files-container > li").removeClass("ui-selected");
         $("#fb-files-container > li:not(.hidden)").addClass("ui-selected");
         $(".selection-menu").hide();

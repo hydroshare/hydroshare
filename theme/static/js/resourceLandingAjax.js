@@ -466,66 +466,6 @@ function get_user_info_ajax_submit(url, obj) {
     });
 }
 
-function getFolderTemplateInstance(folderName) {
-    return "<li class='fb-folder droppable draggable' title='" + folderName + "&#13;Type: Filde Folder'>" +
-        "<span class='fb-file-icon fa fa-folder glyphicon-folder'></span>" +
-        "<span class='fb-file-name'>" + folderName + "</span>" +
-        "<span class='fb-file-type'>File Folder</span>" +
-        "<span class='fb-file-size'></span>" +
-        "</li>"
-}
-
-function getFileTemplateInstance(fileName, fileType, fileSize, pk, url) {
-    var fileTypeExt = fileName.substr(fileName.lastIndexOf(".") + 1, fileName.length);
-    var extIcon = "fa-file-o";
-
-    if (fileName.lastIndexOf(".")) {
-        if (fileTypeExt.toUpperCase() == "PDF") {
-            extIcon = "fa-file-pdf-o";
-        }
-        else if (fileTypeExt.toUpperCase() == "XLS" || fileTypeExt.toUpperCase() == "XLT" || fileTypeExt.toUpperCase() == "XML" || fileTypeExt.toUpperCase() == "CSV") {
-            extIcon = "fa-file-excel-o";
-        }
-        else if (fileTypeExt.toUpperCase() == "ZIP" || fileTypeExt.toUpperCase() == "RAR" || fileTypeExt.toUpperCase() == "RAR5") {
-            extIcon = "fa-file-zip-o";
-        }
-        else if (fileTypeExt.toUpperCase() == "DOC" || fileTypeExt.toUpperCase() == "DOCX") {
-            extIcon = "fa-file-word-o";
-        }
-        else if (fileTypeExt.toUpperCase() == "MP3" || fileTypeExt.toUpperCase() == "WAV" || fileTypeExt.toUpperCase() == "WMA") {
-            extIcon = "fa-file-audio-o";
-        }
-        else if (fileTypeExt.toUpperCase() == "MP4" || fileTypeExt.toUpperCase() == "MOV" || fileTypeExt.toUpperCase() == "WMV") {
-            extIcon = "fa-file-movie-o";
-        }
-        else if (fileTypeExt.toUpperCase() == "PNG" || fileTypeExt.toUpperCase() == "JPG" || fileTypeExt.toUpperCase() == "JPEG" || fileTypeExt.toUpperCase() == "GIF" || fileTypeExt.toUpperCase() == "TIF" || fileTypeExt.toUpperCase() == "BMP") {
-            extIcon = "fa-file-image-o";
-        }
-        else if (fileTypeExt.toUpperCase() == "TXT") {
-            extIcon = "fa-file-text-o";
-        }
-        else if (fileTypeExt.toUpperCase() == "PPT" || fileTypeExt.toUpperCase() == "PPTX") {
-            extIcon = "fa-file-powerpoint-o";
-        }
-        else if (fileTypeExt.toUpperCase() == "JS" || fileTypeExt.toUpperCase() == "PY" || fileTypeExt.toUpperCase() == "PHP" || fileTypeExt.toUpperCase() == "JAVA" || fileTypeExt.toUpperCase() == "CS") {
-            extIcon = "fa-file-code-o";
-        }
-    }
-
-    return "<li data-pk='" + pk + "' data-url='" + url + "' class='fb-file draggable' title='" + fileName + "&#13;Type: " + fileType + "&#13;Size: " + formatBytes(parseInt(fileSize)) +  "'>" +
-        "<span class='fb-file-icon fa " + extIcon + "'></span>" +
-        "<span class='fb-file-name'>" + fileName + "</span>" +
-        "<span class='fb-file-type'>" + fileType + " File</span>" +
-        "<span class='fb-file-size' data-file-size=" + fileSize + "'>" + formatBytes(parseInt(fileSize)) + "</span></li>"
-}
-
-function formatBytes(bytes) {
-    if(bytes < 1024) return bytes + " Bytes";
-    else if(bytes < 1048576) return(bytes / 1024).toFixed(1) + " KB";
-    else if(bytes < 1073741824) return(bytes / 1048576).toFixed(1) + " MB";
-    else return(bytes / 1073741824).toFixed(1) + " GB";
-}
-
 function delete_file_ajax_submit(res_id, file_pk) {
     $(".file-browser-container").css("cursor", "progress");
 
