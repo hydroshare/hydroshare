@@ -19,10 +19,7 @@ class ScriptResource(BaseResource):
         # one file type is supported
         return ".r", ".py", ".m"
 
-    @classmethod
-    def can_have_multiple_files(cls):
-        # can have multiple files
-        return True
+
 
     @property
     def metadata(self):
@@ -66,6 +63,10 @@ class ScriptSpecificMetadata(AbstractMetaDataElement):
 
 class ScriptMetaData(CoreMetaData):
     scriptspecificmetadata = GenericRelation(ScriptSpecificMetadata)
+
+    @property
+    def resource(self):
+        return ScriptResource.objects.filter(object_id=self.id).first()
 
     @property
     def program(self):

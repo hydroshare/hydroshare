@@ -18,6 +18,15 @@ def landing_page(request, page):
     else:  # anonymous user
         user_all_accessible_resource_list = list(BaseResource.discoverable_resources.all())
 
+    # resource is collectable if
+    # 1) Shareable=True
+    # 2) OR, current user is a owner of it
+    user_all_collectable_resource_list = []
+    for res in user_all_accessible_resource_list:
+        if res.raccess.shareable or res.raccess.owners.filter(pk=user.pk).exists():
+            user_all_collectable_resource_list.append(res)
+
+    # current contained resources list
     collection_items_list = list(content_model.resources.all())
 
     # get the context from hs_core
@@ -27,7 +36,7 @@ def landing_page(request, page):
                                                request=request)
     if edit_resource:
         candidate_resources_list = []
-        for res in user_all_accessible_resource_list:
+        for res in user_all_collectable_resource_list:
             if content_model.short_id == res.short_id:
                 continue  # skip current collection resource object
             elif res in content_model.resources.all():

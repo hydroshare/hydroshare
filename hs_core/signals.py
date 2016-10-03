@@ -11,3 +11,5 @@ pre_metadata_element_create = django.dispatch.Signal(providing_args=['element_na
 pre_metadata_element_update = django.dispatch.Signal(providing_args=['element_name', 'element_id' 'request'])
 
 pre_download_file = django.dispatch.Signal(providing_args=['resource', 'download_file_name'])
+
+pre_check_bag_flag = django.dispatch.Signal(providing_args=['resource'])

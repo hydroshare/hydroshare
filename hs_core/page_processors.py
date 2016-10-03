@@ -5,7 +5,7 @@ from hs_core import languages_iso
 from forms import *
 from hs_tools_resource.models import SupportedResTypes, ToolResource
 from hs_core import hydroshare
-from hs_core.views.utils import authorize, ACTION_TO_AUTHORIZE
+from hs_core.views.utils import authorize, ACTION_TO_AUTHORIZE, show_relations_section
 from hs_core.hydroshare.resource import METADATA_STATUS_SUFFICIENT, METADATA_STATUS_INSUFFICIENT
 from hs_tools_resource.utils import parse_app_url_template
 
@@ -47,6 +47,8 @@ def get_page_context(page, user, resource_edit=False, extended_metadata_layout=N
         resource_is_mine = content_model.rlabels.is_mine(user)
 
     metadata_status = _get_metadata_status(content_model)
+
+    belongs_to_collections = content_model.collections.all()
 
     relevant_tools = None
     if not resource_edit:  # In view mode
@@ -182,11 +184,10 @@ def get_page_context(page, user, resource_edit=False, extended_metadata_layout=N
                    'rights': content_model.metadata.rights,
                    'sources': content_model.metadata.sources.all(),
                    'relations': content_model.metadata.relations.all(),
+                   'show_relations_section': show_relations_section(content_model),
                    'fundingagencies': content_model.metadata.funding_agencies.all(),
                    'metadata_status': metadata_status,
                    'missing_metadata_elements': content_model.metadata.get_required_missing_elements(),
-                   'supported_file_types': content_model.get_supported_upload_file_types(),
-                   'allow_multiple_file_upload': content_model.can_have_multiple_files(),
                    'validation_error': validation_error if validation_error else None,
                    'new_version_resource_creation_error': new_version_create_resource_error if new_version_create_resource_error else None,
                    'relevant_tools': relevant_tools,
@@ -197,7 +198,8 @@ def get_page_context(page, user, resource_edit=False, extended_metadata_layout=N
                    'show_content_files': show_content_files,
                    'discoverable': discoverable,
                    'resource_is_mine': resource_is_mine,
-                   'is_resource_specific_tab_active': False
+                   'is_resource_specific_tab_active': False,
+                   'belongs_to_collections': belongs_to_collections
         }
 
         if 'task_id' in request.session:
@@ -392,6 +394,7 @@ def get_page_context(page, user, resource_edit=False, extended_metadata_layout=N
                'language_form': language_form,
                'coverage_temporal_form': coverage_temporal_form,
                'coverage_spatial_form': coverage_spatial_form,
+               'spatial_coverage': spatial_coverage_data_dict,
                'subjects_form': subjects_form,
                'metadata_status': metadata_status,
                'missing_metadata_elements': content_model.metadata.get_required_missing_elements(),
@@ -405,9 +408,11 @@ def get_page_context(page, user, resource_edit=False, extended_metadata_layout=N
                'resource_is_mine': resource_is_mine,
                'relation_source_types': tuple((type_value, type_display)
                                               for type_value, type_display in Relation.SOURCE_TYPES
-                                              if type_value != 'isReplacedBy' and type_value != 'isVersionOf'),
-               'is_resource_specific_tab_active': False
-
+                                              if type_value != 'isReplacedBy'
+                                              and type_value != 'isVersionOf'
+                                              and type_value != 'hasPart'),
+               'is_resource_specific_tab_active': False,
+               'belongs_to_collections': belongs_to_collections
     }
 
     return context

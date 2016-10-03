@@ -13,8 +13,11 @@
         {% keywords_for page as kws %}
         {% set_page_permissions page %}
         <input type="hidden" id="supported-file-types" value="{{ cm.get_supported_upload_file_types }}">
-        <input type="hidden" id="allow-multiple-file-upload" value={{ cm.can_have_multiple_files }}>
+        <input type="hidden" id="allow-multiple-file-upload" value={{ cm.allow_multiple_file_upload }}>
         <input type="hidden" id="file-count" value={{ cm.files.all.count }}>
+        <input type="hidden" id="resource-mode" value="{% if metadata_form %}Edit{% else %}View{% endif %}" >
+        <input type="hidden" id="resource-type" value="{{ cm|resource_type }}" >
+        <input type="hidden" id="spatial-coverage-type" value="{{ spatial_coverage.type }}" >
 
         <div class="container">
             <div class="row">
@@ -143,13 +146,13 @@
                                                                                                   title="Download"
                                                                                                   class="glyphicon glyphicon-download icon-button btn-download"></span></a>
                                                         {% elif f.fed_resource_file and f.fed_resource_file.size < 1000000000 %}
-                                                            <a href="{{ f.fed_resource_file.url }}"><span data-toggle="tooltip"
+                                                            <a href="{{ f.fed_resource_file.url|relative_irods_path }}"><span data-toggle="tooltip"
                                                                                                   data-placement="auto"
                                                                                                   title="Download"
                                                                                                   class="glyphicon glyphicon-download icon-button btn-download"></span></a>
                                                         {# only allow download from irods user zone for files smaller than 1GB #}
                                                         {% elif f.fed_resource_file_name_or_path and f.fed_resource_file_size|to_int < 1000000000 %}
-                                                            <a href="/django_irods/download{{ cm.resource_federation_path }}/{{ cm.short_id }}/{{ f.fed_resource_file_name_or_path }}"><span data-toggle="tooltip"
+                                                            <a href="/django_irods/download/{{ cm.short_id }}/{{ f.fed_resource_file_name_or_path }}"><span data-toggle="tooltip"
                                                                                                   data-placement="auto"
                                                                                                   title="Download"
                                                                                                   class="glyphicon glyphicon-download icon-button btn-download"></span></a>
@@ -266,7 +269,7 @@
                                         </a>
                                     </li>
                                 {% endif %}
-                                {% if sources or relations or metadata_form %}
+                                {% if sources or show_relations_section or belongs_to_collections or metadata_form %}
                                     <li class="col-xs-2 col-md-2">
                                         <a href="#relatedResourcesTab" data-toggle="tab" title="Related resources">
                                             <span class="glyphicon glyphicon-book"></span>
@@ -309,6 +312,15 @@
                                         </a>
                                      </li>
                                 {% endif %}
+                                {% if connections %}
+                                    <li class="col-xs-2 col-md-2">
+                                        <a href="#connectionsTab" data-toggle="tab" title="Connections">
+                                            <span class="glyphicon glyphicon-fullscreen"> </span>
+                                            &nbspConnections
+                                        </a>
+                                     </li>
+                                {% endif %}
+
                             </ul>
                         </div>
                         <div class="tabs-body">
@@ -591,6 +603,9 @@
                                                 {% endif %}
                                             {% else %}
                                                 <div class="form-group">
+                                                     <div id="readonly-coverage-notice" class="col-sm-12 alert alert-warning alert-dismissible" style="display: none;">
+                                                        <label>Spatial coverage for time series resources should be set by editing the coordinates of the monitoring sites on the "Resource Specific" metadata tab. </label>
+                                                    </div>
                                                     <div class="col-md-8 col-sm-12 col-xs-12" id="coverage-spatial">
                                                         <div class="row">
                                                             <form action="/hsapi/_internal/{{ cm.short_id }}/coverage/{% if not coverage_spatial_form.initial.north and not coverage_spatial_form.initial.northlimit %}add-metadata/{% else %}{{ coverage_spatial_form.initial.id }}/update-metadata/{% endif %}"
@@ -740,7 +755,6 @@
                                                                     </div>
                                                                 </fieldset>
                                                             </form>
-
                                                         </div>
                                                     </div>
 
@@ -820,7 +834,7 @@
                                     </div>
                                 {% endif %}
                                 <!-- ========= RELATED RESOURCES TAB ========= -->
-                                {% if sources or relations or metadata_form %}
+                                {% if sources or show_relations_section or belongs_to_collections or metadata_form %}
                                     <div class="tab-pane" id="relatedResourcesTab">
                                         {% if not metadata_form %}
                                             {% if sources %}
@@ -833,15 +847,17 @@
                                                     </div>
                                                 {% endfor %}
                                             {% endif %}
-                                            {% if relations %}
+                                            {% if show_relations_section %}
                                                 <hr style="border: 0;">
                                                 <h4><strong>Relations</strong></h4>
                                                 <hr style="margin-top: 0;margin-bottom: 2px">
                                                 {% for relation in relations %}
-                                                    <div class="row">
-                                                        <div class="col-sm-4"><strong>{{ relation.type }}:</strong></div>
-                                                        <div class="col-sm-8">{{ relation.value }}</div>
-                                                    </div>
+                                                    {% if  relation.type|lower != "haspart"%}
+                                                        <div class="row">
+                                                            <div class="col-sm-4"><strong>{{ relation.type }}:</strong></div>
+                                                            <div class="col-sm-8">{{ relation.value }}</div>
+                                                        </div>
+                                                    {% endif %}
                                                 {% endfor %}
                                             {% endif %}
                                         {% else %}
@@ -883,23 +899,25 @@
                                                     <tbody>
                                                     <legend>Relations</legend>
                                                     {% for relation in relation_formset.initial %}
-                                                        <tr>
-                                                            <th scope="row" class="dataset-label">{{ relation.type }}:</th>
-                                                            <td class="dataset-details">{{ relation.value }}</td>
-                                                            <td>
-                                                                <a data-toggle="modal" data-placement="auto" title="Edit"
-                                                                   class="glyphicon glyphicon-pencil icon-button icon-blue"
-                                                                   data-target="#edit-relation-dialog_{{ relation.id }}"
-                                                                   style="top: -5px; "></a>
-                                                            </td>
-                                                            <td>
-                                                                <a data-toggle="modal" data-placement="auto"
-                                                                   title="Remove"
-                                                                   class="glyphicon glyphicon-trash icon-button btn-remove"
-                                                                   data-target="#delete-relation-element-dialog{{ relation.id }}"
-                                                                   style="top: -5px; right:20px;"></a>
-                                                            </td>
-                                                        </tr>
+                                                        {% if  relation.type|lower != "haspart"%}
+                                                            <tr>
+                                                                <th scope="row" class="dataset-label">{{ relation.type }}:</th>
+                                                                <td class="dataset-details">{{ relation.value }}</td>
+                                                                <td>
+                                                                    <a data-toggle="modal" data-placement="auto" title="Edit"
+                                                                       class="glyphicon glyphicon-pencil icon-button icon-blue"
+                                                                       data-target="#edit-relation-dialog_{{ relation.id }}"
+                                                                       style="top: -5px; "></a>
+                                                                </td>
+                                                                <td>
+                                                                    <a data-toggle="modal" data-placement="auto"
+                                                                       title="Remove"
+                                                                       class="glyphicon glyphicon-trash icon-button btn-remove"
+                                                                       data-target="#delete-relation-element-dialog{{ relation.id }}"
+                                                                       style="top: -5px; right:20px;"></a>
+                                                                </td>
+                                                            </tr>
+                                                        {% endif %}
                                                     {% endfor %}
 
                                                     </tbody>
@@ -909,9 +927,83 @@
                                                 <span data-toggle="tooltip" data-placement="auto"
                                                       title='Click this button to add a relationship to another resource, external website, or document. You can express the type of relationship and then enter a URL to the resource or website. If the related resource does not have a URL, you can paste in a full text citation.'
                                                       class="glyphicon glyphicon-info-sign text-muted"></span>
+                                                <hr style="border: 0;">
                                             </div>
                                         {% endif %}
+                                        {% if belongs_to_collections %}
+                                            <legend>This resource belongs to the following collections:</legend>
+                                            <table id="collected-by-table" class="table-hover table-striped resource-custom-table" width="100%">
+                                                <thead>
+                                                    <tr>
+                                                        <th>Title</th>
+                                                        <th>Owners</th>
+                                                        <th>Sharing Status</th>
+                                                        <th>My Permission</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                {% for res in belongs_to_collections %}
+                                                    <tr id="{{ res.short_id }}">
+                                                        <td>
+                                                            {% if res|user_permission:request.user.pk|lower == "none" %}
+                                                                <strong>{{ res.metadata.title }}</strong>
+                                                            {% else %}
+                                                                <strong><a href="{{ res.get_absolute_url }}"
+                                                                           target="_blank">{{ res.metadata.title }}</a></strong>
+                                                            {% endif %}
+                                                        </td>
+                                                        <td>
+                                                            {% for owner in res.raccess.owners.all %}
+                                                                {% if forloop.counter0 > 0 %} · {% endif %}
+                                                                {% if owner.first_name %}
+                                                                    <a href='/user/{{ owner.pk }}/'
+                                                                               target="_blank">{{ owner.first_name }} {{ owner.last_name }}</a>
+                                                                {% else %}
+                                                                    <a href='/user/{{ owner.pk }}/'
+                                                                               target="_blank">{{ owner.username }}</a>
+                                                                {% endif %}
+                                                            {% endfor %}
+                                                        </td>
+                                                        <td>
+                                                            {% if res.raccess.published %}
+                                                                <strong class="label-public">&nbsp;Published</strong>
+                                                            {% elif res.raccess.public %}
+                                                                <strong class="label-public">&nbsp;Public</strong>
+                                                            {% elif res.raccess.discoverable %}
+                                                                <strong class="label-discoverable">
+                                                                    &nbsp;Discoverable</strong>
+                                                            {% else %}
+                                                                <strong class="label-private">&nbsp;Private</strong>
+                                                            {% endif %}
+                                                            {% if res.raccess.published %}
+                                                                {% if "pending" in cm.doi or "failure" in cm.doi %}
+                                                                    &#8210; Note that the DOI will not be available
+                                                                    until
+                                                                    it has been registered and activated.{% endif %}
+                                                            {% else %}
+                                                                &{% if res.raccess.shareable %}
+                                                                <strong style="color:#5cb85c">&nbsp;Shareable</strong>
+                                                            {% else %}<strong style="color:#d9534f">&nbsp;Not
+                                                                    Shareable</strong>{% endif %}
+                                                            {% endif %}
+                                                        </td>
+                                                        <td>
+                                                            {% if res|user_permission:request.user.pk|lower == "none" %}
+                                                                <strong class="label-private">{{ res|user_permission:request.user.pk }}</strong>
+                                                            {% elif res|user_permission:request.user.pk|lower == "open access" %}
+                                                                <strong class="label-public">{{ res|user_permission:request.user.pk }}</strong>
+                                                            {% else %}
+                                                                {{ res|user_permission:request.user.pk }}
+                                                            {% endif %}
+                                                        </td>
+                                                    </tr>
+                                                {% endfor %}
+
+                                            </tbody>
+                                        </table>
+                                        {% endif%}
                                     </div>
+
                                 {% endif %}
                                 <!-- ========= RESOURCE SPECIFIC TAB ========= -->
                                 {% if site or extended_metadata_exists or res_add_metadata or metadata_form %}
@@ -961,6 +1053,7 @@
                                         {%  endif %}
                                     </div>
                                 {% endif %}
+
                                 <!-- ========= EXTRA METADATA TAB ========= -->
                                 {% if metadata_form or page.get_content_model.extra_metadata.items|length > 0 %}
                                     <div class="tab-pane" id="extraMetaTab">
@@ -1006,7 +1099,6 @@
 
                                 </div>
                                 {% endif %}
-
 
                             </div>
                         </div>
@@ -1449,14 +1541,32 @@
                         google.maps.event.trigger(coverageMap, "resize");
                         // This field is populated if the page is in view mode
                         var shapeType = $("#coverageMap")[0].getAttribute("data-shape-type");
+
+                        var resourceType = $("#resource-type").val();
+                        var spatialCoverageType = $("#spatial-coverage-type").val();
                         // Center the map
-                        if (shapeType) {
+                        if (shapeType || resourceType === "Time Series") {
                             deleteAllShapes();
-                            if (shapeType == "point") {
-                                var myLatLng = {
-                                    lat: parseFloat($("#cov_north").text()),
-                                    lng: parseFloat($("#cov_east").text())
-                                };
+                            if (shapeType == "point" || (resourceType === "Time Series" && spatialCoverageType == "point")) {
+                                var myLatLng;
+                                if (shapeType == "point"){
+                                    // resource view mode
+                                    myLatLng = {
+                                        lat: parseFloat($("#cov_north").text()),
+                                        lng: parseFloat($("#cov_east").text())
+                                    };
+                                }
+                                else {
+                                    // time series resource in edit mode
+                                    myLatLng = {
+                                        lat: parseFloat($("#id_north").val()),
+                                        lng: parseFloat($("#id_east").val())
+                                    };
+                                    if ($('#id_north').val()){
+                                        $("#id_name").prop('readonly', false);
+                                    }
+                                }
+
                                 if (!myLatLng.lat || !myLatLng.lng) {
                                     return;
                                 }
@@ -1472,13 +1582,30 @@
                                     coverageMap.setCenter(marker.getPosition());
                                 });
                             }
-                            else if (shapeType == "box") {
-                                var bounds = {
-                                    north: parseFloat($("#cov_northlimit").text()),
-                                    south: parseFloat($("#cov_southlimit").text()),
-                                    east: parseFloat($("#cov_eastlimit").text()),
-                                    west: parseFloat($("#cov_westlimit").text())
-                                };
+                            else if (shapeType == "box" || (resourceType === "Time Series" && spatialCoverageType == "box")) {
+                                var bounds;
+                                if (shapeType == "box"){
+                                   //resource view mode
+                                    bounds = {
+                                        north: parseFloat($("#cov_northlimit").text()),
+                                        south: parseFloat($("#cov_southlimit").text()),
+                                        east: parseFloat($("#cov_eastlimit").text()),
+                                        west: parseFloat($("#cov_westlimit").text())
+                                    };
+                                }
+                                else {
+                                    // time series resource edit mode
+                                    bounds = {
+                                        north: parseFloat($("#id_northlimit").val()),
+                                        south: parseFloat($("#id_southlimit").val()),
+                                        east: parseFloat($("#id_eastlimit").val()),
+                                        west: parseFloat($("#id_westlimit").val())
+                                    };
+                                    if ($('#id_northlimit').val()){
+                                        $("#id_name").prop('readonly', false);
+                                    }
+                                }
+
                                 if (!bounds.north || !bounds.south || !bounds.east || !bounds.west) {
                                     return;
                                 }
