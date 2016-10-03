@@ -24,12 +24,19 @@ function updateSelectionMenuContext() {
     var flagDisablePaste = false;
     var flagDisableZip = false;
     var flagDisableUnzip = false;
+    var flagDisableCut = false;
 
     if (selected.length > 1) {
         flagDisableRename = true;   // 'rename' menu item
         flagDisableOpen = true;
         flagDisablePaste = true;
         flagDisableZip = true;
+    }
+    else if (selected.length == 1) {
+
+    }
+    else {
+        flagDisableCut = true;
     }
 
     if (selected.hasClass("fb-file")) {
@@ -60,7 +67,11 @@ function updateSelectionMenuContext() {
     $("#right-click-menu").children("li[data-menu-name='rename']").toggleClass("disabled", flagDisableRename);
     $("#right-click-menu").children("li[data-menu-name='zip']").toggleClass("disabled", flagDisableZip);
     $("#right-click-menu").children("li[data-menu-name='unzip']").toggleClass("disabled", flagDisableUnzip);
+    $("#right-click-menu").children("li[data-menu-name='cut']").toggleClass("disabled", flagDisableCut);
+    $("#fb-fb-cut").toggleClass("disabled", flagDisableCut);
     $(".selection-menu").children("li[data-menu-name='paste']").toggleClass("disabled", flagDisablePaste);
+    $("#fb-paste").toggleClass("disabled", flagDisablePaste);
+    $("#fb-cut").toggleClass("disabled", flagDisableCut);
 }
 
 var isDragging = false;
@@ -122,6 +133,8 @@ function bindFileBrowserItemEvents() {
         else {
             $(this).toggleClass("ui-selected");
         }
+
+        updateSelectionMenuContext();
     });
 
     $(".draggable").draggable({
@@ -148,11 +161,9 @@ function bindFileBrowserItemEvents() {
     $("#fb-files-container")
         .selectable({
             filter: "li", cancel: ".ui-selected",
-            selected: function (event, ui) {
-
-            },
-            unselected: function (event, ui) {
+            stop: function (event, ui) {
                 $(".selection-menu").hide();
+                updateSelectionMenuContext();
             }
         });
 
@@ -317,7 +328,7 @@ function refreshFileBrowser() {
         $(".selection-menu").hide();
         sourcePaths = [];
     });
-    }
+}
 
 $(document).ready(function () {
     var previewNode = $("#flag-uploading").removeClass("hidden").clone();
@@ -458,8 +469,10 @@ $(document).ready(function () {
 
         if (sourcePaths.length) {
             $(".selection-menu").children("li[data-menu-name='paste']").toggleClass("disabled", false);
+            $("#fb-paste").toggleClass("disabled", false);
         }
 
+        $("#fb-cut").toggleClass("disabled", true);
         $(".selection-menu").hide();
     }
 
