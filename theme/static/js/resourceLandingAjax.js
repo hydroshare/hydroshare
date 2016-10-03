@@ -467,8 +467,7 @@ function get_user_info_ajax_submit(url, obj) {
 }
 
 function getFolderTemplateInstance(folderName) {
-    return "<li class='fb-folder droppable' title='" + folderName + "&#13;Type: Filde Folder'>" +
-        "<span class='fa fa-arrows fb-handle fb-help-icon'></span>" +
+    return "<li class='fb-folder droppable draggable' title='" + folderName + "&#13;Type: Filde Folder'>" +
         "<span class='fb-file-icon fa fa-folder glyphicon-folder'></span>" +
         "<span class='fb-file-name'>" + folderName + "</span>" +
         "<span class='fb-file-type'>File Folder</span>" +
@@ -513,8 +512,7 @@ function getFileTemplateInstance(fileName, fileType, fileSize, pk, url) {
         }
     }
 
-    return "<li data-pk='" + pk + "' data-url='" + url + "' class='fb-file droppable' title='" + fileName + "&#13;Type: " + fileType + "&#13;Size: " + formatBytes(parseInt(fileSize)) +  "'>" +
-        "<span class='fa fa-arrows fb-handle fb-help-icon'></span>" +
+    return "<li data-pk='" + pk + "' data-url='" + url + "' class='fb-file draggable' title='" + fileName + "&#13;Type: " + fileType + "&#13;Size: " + formatBytes(parseInt(fileSize)) +  "'>" +
         "<span class='fb-file-icon fa " + extIcon + "'></span>" +
         "<span class='fb-file-name'>" + fileName + "</span>" +
         "<span class='fb-file-type'>" + fileType + " File</span>" +
@@ -653,6 +651,7 @@ function create_irods_folder_ajax_submit(res_id, folder_path) {
             var new_folder_rel_path = result.new_folder_rel_path;
             if (new_folder_rel_path.length > 0) {
                 $('#create-folder-dialog').modal('hide');
+                $("#txtFolderName").val("");
                 console.log("Folder " + new_folder_rel_path + " is created successfully.");
             }
 

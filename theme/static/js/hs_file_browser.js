@@ -67,43 +67,53 @@ function bindFileBrowserItemEvents() {
     // Drop
     $(".droppable").droppable({
         drop: function (event, ui) {
+            var source = $(ui.helper);
+            var destination = $(event.target);
 
+            var sourceName = source.children(".fb-file-name").text();
+            var destName = destination.children(".fb-file-name").text();
+            var destFileType = destination.children(".fb-file-type").text();
+
+            destination.removeClass("fb-drag-cutting");
+        },
+        over: function(event, ui) {
+            $(ui.helper).addClass("fb-drag-cutting");
+            $(event.target).addClass("fb-drag-cutting");
+        },
+        out: function(event, ui) {
+            $(ui.helper).removeClass("fb-drag-cutting");
+            $(event.target).removeClass("fb-drag-cutting");
         },
         accept: 'li'
     });
 
+
+    // Handle "select" of clicked elements
+    $("#fb-files-container li").click(function (e) {
+        if (!e.ctrlKey) {
+            $("#fb-files-container li").removeClass("ui-selected");
+            $(this).addClass("ui-selected");
+        }
+        else {
+            $(this).toggleClass("ui-selected");
+        }
+    });
+
+    $(".draggable").draggable({
+            revert: true,
+            start: function( event, ui ) {
+                $(ui.helper).addClass("ui-selected");
+            },
+            stop: function( event, ui ) {
+                $(ui.helper).removeClass("fb-drag-cutting");
+            },
+        }
+    );
+
+    // Provides selection by drawing a rectangular area
     $("#fb-files-container")
-        .droppable({
-            greedy: true
-        })
-        .sortable({
-            handle: ".fb-handle",
-            containment: "parent",
-            // helper: function (e, item) { //create custom helper
-            //     // clone selected items before hiding
-            //     var elements = $('.ui-selected').not(".ui-sortable-helper").clone();
-            //     //hide selected items
-            //     item.siblings('.ui-selected').addClass('hidden');
-            //     return item.append(elements);
-            // },
-            // start: function (e, ui) {
-            //     var elements = ui.item.siblings('.ui-selected.hidden').not('.ui-sortable-placeholder');
-            //     //store the selected items to item being dragged
-            //     ui.item.data('items', elements);
-            // },
-            // receive: function (e, ui) {
-            //     //manually add the selected items before the one actually being dragged
-            //     ui.item.before(ui.item.data('items'));
-            // },
-            // stop: function (e, ui) {
-            //     //show the selected items after the operation
-            //     ui.item.siblings('.selected').removeClass('hidden');
-            //     //unselect since the operation is complete
-            //     $('.selected').removeClass('selected');
-            // },
-        })
         .selectable({
-            filter: "li", cancel: ".fb-handle, .ui-selected",
+            filter: "li", cancel: ".ui-selected",
             selected: function (event, ui) {
 
             },
@@ -111,11 +121,6 @@ function bindFileBrowserItemEvents() {
                 $(".selection-menu").hide();
             }
         });
-
-    $(".fb-handle").click(function () {
-        selectSelectableElement($("#fb-files-container"), $(this).parent());    // Mark item as selected
-        $(".selection-menu").hide();
-    });
 
     // Dismiss right click menu when mouse down outside of it
     $("#fb-files-container, #fb-files-container li, #fbContainmentWrapper").mousedown(function () {
@@ -352,12 +357,15 @@ $(document).ready(function () {
         filter();
     });
 
+    $('#create-folder-dialog').on('shown.bs.modal', function () {
+        $('#txtFolderName').focus();
+    });
+
     // Create folder at current directory
     $("#btn-create-folder").click(function () {
         var resID = $("#hs-file-browser").attr("data-res-id");
         var currentPath = $("#hs-file-browser").attr("data-current-path");
         var folderName = $("#txtFolderName").val();
-        $("#txtFolderName").val("");
         if (folderName) {
             var calls = [];
             calls.push(create_irods_folder_ajax_submit(resID, currentPath + "/" + folderName));
@@ -366,7 +374,6 @@ $(document).ready(function () {
                 refreshFileBrowser();
             });
         }
-
         return false;
     });
 
