@@ -91,6 +91,7 @@ function updateSelectionMenuContext() {
         flagDisableUnzip = true;
         flagDisableZip = true;
         flagDisableDelete = true;
+        flagDisableDownload = true;
     }
 
     if (selected.hasClass("fb-file")) {
@@ -653,11 +654,11 @@ $(document).ready(function () {
     });
 
      // Download method
-    $("#btn-download").click(function () {
+    $("#btn-download, #fb-download").click(function () {
         var downloadList = $("#fb-files-container li.ui-selected");
         if (downloadList.length) {
             for (var i = 0; i < downloadList.length; i++) {
-                downloadFiles($(downloadList[i]).attr("data-url"))
+                downloadFiles($(downloadList[i]).attr("data-url"));
                 // $("#download-frame").attr("src", downloadList.attr(data-url));
             }
         }

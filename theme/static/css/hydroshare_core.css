@@ -335,9 +335,15 @@ a.sign-out-inline:hover {
 .modal-content {
 	border-radius: 0;
 }
+
 .modal-header {
-	background: #f5f5f5;
+	background: rgb(255, 255, 255);
+	background: -moz-linear-gradient(top, rgba(255, 255, 255, 1) 0%, rgba(246, 246, 246, 1) 47%, rgba(237, 237, 237, 1) 100%);
+	background: -webkit-linear-gradient(top, rgba(255, 255, 255, 1) 0%, rgba(246, 246, 246, 1) 47%, rgba(237, 237, 237, 1) 100%);
+	background: linear-gradient(to bottom, rgba(255, 255, 255, 1) 0%, rgba(246, 246, 246, 1) 47%, rgba(237, 237, 237, 1) 100%);
+	filter: progid:DXImageTransform.Microsoft.gradient(startColorstr='#ffffff', endColorstr='#ededed', GradientType=0);
 }
+
 .modal-header > img,
 .dialog-new > img {
 	height: 50px;
@@ -4076,7 +4082,7 @@ span.fb-file-icon::before {
     background-color:#DDD;
 }
 
-.selection-menu li.disabled, .file-browser-controls button.disabled > span {
+.selection-menu li.disabled, #fb-inner-controls button.disabled > span {
 	color: #999;
 	pointer-events:none;
 }
