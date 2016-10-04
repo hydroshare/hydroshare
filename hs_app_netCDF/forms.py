@@ -43,7 +43,7 @@ class OriginalCoverageForm(forms.Form):
     eastlimit = forms.DecimalField(label='East Extent', widget=forms.TextInput())
     southlimit = forms.DecimalField(label='South Extent', widget=forms.TextInput())
     westlimit = forms.DecimalField(label='West Extent', widget=forms.TextInput())
-    units = forms.CharField(max_length=50, label='Extent Unit')
+    units = forms.CharField(max_length=100, label='Extent Unit')
     projection_string_type = forms.ChoiceField(choices=PRO_STR_TYPES, label='Coordinate Reference System Representation Type', required=False)
     projection_string_text = forms.CharField(max_length=1000, label='Coordinate Reference System Representation Text', required=False, widget=forms.Textarea())
 
@@ -178,13 +178,13 @@ class VariableForm(ModelForm):
 
 
 class VariableValidationForm(forms.Form):
-    name = forms.CharField(max_length=20)
-    unit = forms.CharField(max_length=100)
-    type = forms.CharField(max_length=100)
-    shape = forms.CharField(max_length=100)
-    descriptive_name = forms.CharField(max_length=100, required=False)
-    method = forms.CharField(max_length=300, required=False)
-    missing_value = forms.CharField(max_length=50, required=False)
+    name = forms.CharField(max_length=1000)
+    unit = forms.CharField(max_length=1000)
+    type = forms.CharField(max_length=1000)
+    shape = forms.CharField(max_length=1000)
+    descriptive_name = forms.CharField(max_length=1000, required=False)
+    method = forms.CharField(max_length=10000, required=False)
+    missing_value = forms.CharField(max_length=1000, required=False)
 
 from hs_core.forms import Helper
 ModalDialogLayoutAddVariable = Helper.get_element_add_modal_form('Variable', 'add_variable_modal_form')

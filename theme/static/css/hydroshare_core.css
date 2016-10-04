@@ -947,6 +947,14 @@ li.account p{
     text-decoration: none;
 }
 
+#contactTab table .header-row {
+    border-bottom: 1px solid #DDD;
+}
+
+#contactTab table .header-row th {
+    background-color: #FFF;
+}
+
 #txt-abstract{
     height: 155px;
 }
@@ -1414,13 +1422,13 @@ body > .main-container {
 }
 
 .custom-alert {
-    position: fixed;
-    background-color: lightgreen;
-    padding: 0 10px;
-    text-align: center;
-    line-height: 50px;
-    border: 1px solid #16E716;
-    text-shadow: 1px -1px #BEFFBE;
+	position: fixed;
+	background-color: lightgreen;
+	padding: 0 10px;
+	text-align: center;
+	line-height: 50px;
+	text-shadow: 1px -1px #BEFFBE;
+	z-index: 2;
 }
 
 .custom-alert-icon {
@@ -2529,8 +2537,12 @@ table.overview tr > td:first-child {
     cursor:pointer;
 }
 
+.table-user-contributions tr {
+    border: 1px solid #DDD;
+}
+
 .table-user-contributions tbody > tr.active {
-    border-left: 4px solid #0A91AB;
+    border-left: 2px solid #0A91AB;
     pointer-events: none;
 }
 
@@ -2574,7 +2586,7 @@ h4.title {
 }
 
 #badge-multidimensional .badge {
-    background-color: #7247BC;
+    background-color: #9c27b0;
 }
 
 #badge-time-series .badge {
@@ -2595,6 +2607,14 @@ h4.title {
 
 #badge-collection .badge {
 	background-color: #bc836f;
+}
+
+#badge-modflow .badge {
+	background-color: #673ab7;
+}
+
+.table-user-contributions .badge {
+	float: right;
 }
 
 #color-scheme {
@@ -2710,6 +2730,10 @@ h4.title {
 	border-top-left-radius: 4px;
 }
 
+#collected-by-table {
+    border: 0px !important;
+}
+
 #item-selectors.group-resource-list {
     width: 100% !important;
 }
@@ -2721,6 +2745,7 @@ h4.title {
 
 .resource-custom-table thead th {
     border-bottom: 1px solid #DDD !important;
+    padding: 8px;
 }
 
 #item-selectors thead th:first-child {
