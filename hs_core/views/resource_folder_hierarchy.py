@@ -411,6 +411,13 @@ def data_store_file_or_folder_move_or_rename(request):
         src_full_path = os.path.join(res_id, src_path)
         tgt_full_path = os.path.join(res_id, tgt_path)
 
+    tgt_file_name = os.path.basename(tgt_full_path)
+    src_file_name = os.path.basename(src_full_path)
+
+    # ensure the target_full_path contains the file name to be moved or renamed to
+    if tgt_file_name != src_file_name:
+        tgt_full_path = os.path.join(tgt_full_path, src_file_name)
+
     try:
         istorage.moveFile(src_full_path, tgt_full_path)
     except SessionException as ex:
