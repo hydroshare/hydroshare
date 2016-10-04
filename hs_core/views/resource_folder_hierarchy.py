@@ -112,7 +112,7 @@ def data_store_structure(request):
             f_pk = ''
             f_url = ''
             for f in ResourceFile.objects.filter(object_id=resource.id):
-                if fname == get_resource_file_name_and_extension(f)[0]:
+                if fname == get_resource_file_name_and_extension(f)[1]:
                     f_pk = f.pk
                     f_url = get_resource_file_url(f)
                     break
@@ -178,11 +178,11 @@ def data_store_folder_zip(request):
         istorage = IrodsStorage()
         res_coll_input = os.path.join(res_id, input_coll_path)
 
-    content_dir = res_coll_input
+    logger.debug("Before: res_coll_input is: " + res_coll_input)
+    content_dir = os.path.dirname(res_coll_input)
+    logger.debug("After: content_dir: " + content_dir)
     output_zip_full_path = os.path.join(content_dir, output_zip_fname)
     try:
-        if bool_remove_original:
-            store = istorage.listdir(res_coll_input)
         istorage.session.run("ibun", None, '-cDzip', '-f', output_zip_full_path, res_coll_input)
         size = istorage.size(output_zip_full_path)
     except SessionException as ex:
@@ -193,10 +193,13 @@ def data_store_folder_zip(request):
 
     if bool_remove_original:
         try:
-            for folder in store[0]:
-                delete_resource_file(res_id, folder, request.user)
-            for file in store[1]:
-                delete_resource_file(res_id, file, request.user)
+            for f in ResourceFile.objects.filter(object_id=resource.id):
+                full_path_name, basename, _ = get_resource_file_name_and_extension(f)
+                if res_coll_input in full_path_name:
+                    delete_resource_file(res_id, basename, request.user)
+
+            # remove empty folder in iRODS
+            istorage.delete(res_coll_input)
         except Exception:
             return HttpResponse(status=500)
 
@@ -252,13 +255,10 @@ def data_store_folder_unzip(request):
         istorage = IrodsStorage()
         zip_with_full_path = os.path.join(res_id, zip_with_rel_path)
 
-    coll_dir = os.path.dirname(zip_with_full_path)
-    # has to go above one directory as the collection path to unzip file to
-    coll_dir = os.path.dirname(coll_dir)
     unzip_path = os.path.dirname(zip_with_full_path)
     zip_fname = os.path.basename(zip_with_rel_path)
     try:
-        istorage.session.run("ibun", None, '-xfDzip', zip_with_full_path, coll_dir)
+        istorage.session.run("ibun", None, '-xfDzip', zip_with_full_path, unzip_path)
         link_irods_folder_to_django(resource, istorage, unzip_path, (zip_fname,))
     except SessionException as ex:
         logger.error(ex.stderr)

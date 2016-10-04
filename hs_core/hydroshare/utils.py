@@ -313,7 +313,8 @@ def get_resource_file_name_and_extension(res_file):
     """
     Gets the file name and extension of the specified resource file
     :param res_file: an instance of ResourceFile for which file extension to be retrieved
-    :return: (full filename, file extension) ex: "/my_path_to/ABC.nc" --> ("ABC.nc", ".nc")
+    :return: (full filename with path, full file base name, file extension)
+             ex: "/my_path_to/ABC.nc" --> ("/my_path_to/ABC.nc", "ABC.nc", ".nc")
     """
     f_fullname = None
     if res_file.resource_file:
@@ -323,10 +324,10 @@ def get_resource_file_name_and_extension(res_file):
     elif res_file.fed_resource_file_name_or_path:
         f_fullname = res_file.fed_resource_file_name_or_path
 
-    f_fullname = os.path.basename(f_fullname)
+    f_basename = os.path.basename(f_fullname)
     _, file_ext = os.path.splitext(f_fullname)
 
-    return f_fullname, file_ext
+    return f_fullname, f_basename, file_ext
 
 
 def get_resource_file_url(res_file):
@@ -351,7 +352,7 @@ def get_resource_file_url(res_file):
 def get_resource_files_by_extension(resource, file_extension):
     matching_files = []
     for res_file in resource.files.all():
-        _, file_ext = get_resource_file_name_and_extension(res_file)
+        _, _, file_ext = get_resource_file_name_and_extension(res_file)
         if file_ext == file_extension:
             matching_files.append(res_file)
     return matching_files
