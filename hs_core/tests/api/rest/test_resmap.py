@@ -35,7 +35,7 @@ class TestResourceMap(ResMapTestCase):
         self.assertEqual(response.status_code, status.HTTP_302_FOUND)
         response2 = self.client.get(response.url)
         self.assertEqual(response2.status_code, status.HTTP_200_OK)
-        # TODO: read and parse streaming XML response 
+        # TODO: read and parse streaming XML response
 
         # now create a file in the resource map
         txt_file_name = 'text.txt'
@@ -59,4 +59,4 @@ class TestResourceMap(ResMapTestCase):
         self.assertEqual(response.status_code, status.HTTP_302_FOUND)
         response2 = self.client.get(response.url)
         self.assertEqual(response2.status_code, status.HTTP_200_OK)
-        # TODO: read and parse streaming XML response 
+        # TODO: read and parse streaming XML response
