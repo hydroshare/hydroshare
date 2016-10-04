@@ -335,9 +335,15 @@ a.sign-out-inline:hover {
 .modal-content {
 	border-radius: 0;
 }
+
 .modal-header {
-	background: #f5f5f5;
+	background: rgb(255, 255, 255);
+	background: -moz-linear-gradient(top, rgba(255, 255, 255, 1) 0%, rgba(246, 246, 246, 1) 47%, rgba(237, 237, 237, 1) 100%);
+	background: -webkit-linear-gradient(top, rgba(255, 255, 255, 1) 0%, rgba(246, 246, 246, 1) 47%, rgba(237, 237, 237, 1) 100%);
+	background: linear-gradient(to bottom, rgba(255, 255, 255, 1) 0%, rgba(246, 246, 246, 1) 47%, rgba(237, 237, 237, 1) 100%);
+	filter: progid:DXImageTransform.Microsoft.gradient(startColorstr='#ffffff', endColorstr='#ededed', GradientType=0);
 }
+
 .modal-header > img,
 .dialog-new > img {
 	height: 50px;
@@ -4008,6 +4014,11 @@ form#covereage-search-fields {
 	word-break: break-word;
 }
 
+span.fb-file-icon::before {
+    background-color: #FFF;
+    border-top-right-radius: 50%;
+}
+
 .fb-file-name {
 	color: #555;
 	font-size: 12px;
@@ -4071,7 +4082,7 @@ form#covereage-search-fields {
     background-color:#DDD;
 }
 
-.selection-menu li.disabled {
+.selection-menu li.disabled, #fb-inner-controls button.disabled > span {
 	color: #999;
 	pointer-events:none;
 }
@@ -4128,8 +4139,8 @@ span.fb-control-square {
 	padding: 9px;
 }
 
-#fb-move-up, #fb-delete, #fb-sort {
-	margin-left: 15px;
+#fb-move-up, #fb-create-folder, #fb-delete, #fb-rename, #fb-refresh, #fb-view {
+	margin-right: 15px;
 }
 
 .ui-widget-content {
@@ -4146,7 +4157,7 @@ div.fb-upload-caption {
 	border: 1px solid #DDD;
 	border-top: 0;
 	cursor: pointer;
-    background: #f9f9f9;
+    background: #fafafa;
     color: #555;
 }
 
@@ -4160,7 +4171,7 @@ div.fb-upload-caption {
     text-align: center;
     color: rgba(66, 139, 202, 0.51);
 	left: calc(50% - 60px);
-    top: 30%;
+    top: 40%;
 	display: none;
 	pointer-events: none;
 }
@@ -4208,8 +4219,23 @@ div.fb-upload-caption {
 	font-size: 14px;
 }
 
-.file-browser-controls .btn:focus, .file-browser-breadcrumb .btn:focus {
+.file-browser-controls .btn:focus, .file-browser-breadcrumb .btn:focus, #fb-inner-controls .btn:focus {
   outline: none;
+}
+
+div#fb-inner-controls {
+    padding: 8px;
+	padding-bottom: 0;
+    border-bottom: 1px solid #DDD;
+	background: #fafafa;
+}
+
+div#fb-inner-controls {
+	min-height: 34px;
+}
+
+div#fb-inner-controls button {
+	margin-bottom: 8px;
 }
 
 .fb-loading-spinner {
