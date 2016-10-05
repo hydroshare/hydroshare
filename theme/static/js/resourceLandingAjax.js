@@ -472,14 +472,32 @@ function delete_file_ajax_submit(res_id, file_pk) {
     return $.ajax({
         type: "POST",
         url: '/hsapi/_internal/' + res_id + '/delete-resource-file/' + file_pk + '/',
-        async: true,
         success: function (result) {
             console.log("File deleted");
             $(".file-browser-container").css("cursor", "default");
         },
         error: function(xhr, errmsg, err){
-            console.log(xhr.status + ": " + xhr.responseText + ". Error message: " + errmsg);
             $(".file-browser-container").css("cursor", "default");
+        }
+    });
+}
+
+function delete_folder_ajax_submit(res_id, folder_path) {
+    $(".file-browser-container").css("cursor", "progress");
+
+    return $.ajax({
+        type: "POST",
+        url: '/hsapi/_internal/' + res_id + '/data-store-delete-folder/' + folder_path + '/',
+        async: true,
+        data: {
+            res_id: res_id,
+            folder_path: folder_path
+        },
+        success: function (result) {
+            console.log("deleted " + folder_path)
+        },
+        error: function(xhr, errmsg, err){
+            console.log(errmsg);
         }
     });
 }
@@ -511,11 +529,12 @@ function get_irods_folder_struct_ajax_submit(res_id, store_path) {
             }
 
             onSort();
-
+            
             bindFileBrowserItemEvents();
             $("#hs-file-browser").attr("data-current-path", store_path);
             $("#hs-file-browser").attr("data-res-id", res_id);
             setBreadCrumbs(store_path);
+            updateNavigationState();
             $(".selection-menu").hide();
             $("#flag-uploading").remove();
             $("#fb-files-container").css("cursor", "default");

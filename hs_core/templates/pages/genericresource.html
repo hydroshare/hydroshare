@@ -164,7 +164,7 @@
                                         <div class="modal-footer">
                                             <button type="button" class="btn btn-default" data-dismiss="modal">Cancel
                                             </button>
-                                            <button id="btn-confirm-delete" type="button" class="btn btn-danger">Delete</button>
+                                            <button id="btn-confirm-delete" type="button" class="btn btn-danger" data-dismiss="modal">Delete</button>
                                         </div>
                                     </div>
                                 </div>
@@ -190,15 +190,15 @@
                                         <div class="file-browser-container">
                                             <div class="file-browser-breadcrumb height-fix">
                                                 <div class="pull-left">
-                                                    <button class="btn btn-default fb-control-round"
+                                                    <button id="fb-move-back" class="btn btn-default fb-control-round disabled"
                                                             title="Click to go back"><span
                                                             class="glyphicon glyphicon-arrow-left"></span></button>
 
-                                                    <button class="btn btn-default fb-control-round"
+                                                    <button id="fb-move-forward" class="btn btn-default fb-control-round disabled"
                                                             title="Click to go forward"><span
                                                             class="glyphicon glyphicon-arrow-right"></span></button>
 
-                                                    <button id="fb-move-up" class="btn btn-default fb-control-squared"
+                                                    <button id="fb-move-up" class="btn btn-default fb-control-squared disabled"
                                                             title="Click to go to parent directory"><span
                                                             class="fa fa-level-up"></span></button>
                                                 </div>
@@ -2231,11 +2231,6 @@
                         $("#invite-flag button[data-value='groups']").addClass("btn-primary");
                     }
                 });
-
-                // Set initial folder structure
-                if (resID) {
-                    get_irods_folder_struct_ajax_submit(resID, 'data/contents');
-                }
             });
         </script>
 
