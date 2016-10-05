@@ -1076,7 +1076,7 @@
                     var ne_lat = ne.lat();
                     var ne_lng = ne.lng();
                     var sw_lat = sw.lat();
-                    var sw_lng = value = sw.lng();
+                    var sw_lng = sw.lng();
                     var data = {
                         NElat: ne_lat,
                         NElng: ne_lng,
@@ -1090,7 +1090,7 @@
             }
         };
 
-        function updateListView (data) {
+        var updateListView = function (data) {
             $('#items-discovered_wrapper').empty();
             $("#discover-page-options").empty();
             var requestURL = "/search/";
@@ -1122,6 +1122,30 @@
                 }
             });
         };
+
+        var updateFacetingItems = function (request_url) {
+            $('filter-items_wrapper').empty();
+            $('#items-discovered_wrapper').empty();
+            $("#discover-page-options").empty();
+            $.ajax({
+                type: "GET",
+                url: request_url,
+                //data: data,
+                dataType: 'html',
+                success: function (data) {
+                    var filterItemsDiv = $("#filter-items", data);
+                    $("#filter-items_wrapper").html(filterItemsDiv);
+                    var tableDiv = $("#items-discovered", data);
+                    $("#items-discovered_wrapper").html(tableDiv);
+                    var pageOptionDiv = $("#discover-page-options", data);
+                    $("#discover-page-options").html(pageOptionDiv);
+                    initializeTable();
+                },
+                failure: function (data) {
+                    console.error("Ajax call for updating list-view data failed");
+                }
+            });
+        }
 
         var calShadeRectBounds = function (rect, shade_rect_bound) {
             rect.getPaths().getArray().forEach(function(path){
@@ -1325,9 +1349,7 @@
                     var dateSearchParams = formDateParameters();
                     var windowPath = window.location.pathname;
                     var requestURL =  windowPath + searchURL + geoSearchParams + dateSearchParams;
-                    if (window.location.hash) {
-                        requestURL = requestURL + window.location.hash;
-                    }
+                    date
                     window.location = requestURL;
                 }
             });
@@ -1474,10 +1496,11 @@
                     var sessionStorageCheckboxId = 'search-' + checkboxId;
                     sessionStorage[sessionStorageCheckboxId] = 'true';
                     requestURL = requestURL + geoSearchParams + dateSearchParams;
-                    if (window.location.hash) {
-                        requestURL = requestURL + window.location.hash;
-                    }
-                    window.location = requestURL;
+{#                    if (window.location.hash) {#}
+{#                        requestURL = requestURL + window.location.hash;#}
+{#                    }#}
+                    updateFacetingItems(requestURL);
+                    //window.location = requestURL;
                 }
                 else {
                     var checkboxId = $(this).attr("id");
