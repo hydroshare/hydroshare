@@ -441,7 +441,7 @@ def metadata_element_pre_create_handler(sender, **kwargs):
     if element_form.is_valid():
         return {'is_valid': True, 'element_data_dict': element_form.cleaned_data}
     else:
-        return {'is_valid': False, 'element_data_dict': None}
+        return {'is_valid': False, 'element_data_dict': None, "errors": element_form.errors}
 
 
 # This handler is executed only when a metadata element is added as part of editing a resource
@@ -464,5 +464,4 @@ def metadata_element_pre_update_handler(sender, **kwargs):
     if element_form.is_valid():
         return {'is_valid': True, 'element_data_dict': element_form.cleaned_data}
     else:
-        # TODO: need to return form errors
-        return {'is_valid': False, 'element_data_dict': None}
+        return {'is_valid': False, 'element_data_dict': None, "errors": element_form.errors}

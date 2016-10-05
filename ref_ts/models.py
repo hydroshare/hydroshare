@@ -26,6 +26,11 @@ class RefTimeSeriesResource(BaseResource):
         return ()
 
     @classmethod
+    def allow_multiple_file_upload(cls):
+        # no file can be uploaded
+        return False
+
+    @classmethod
     def can_have_multiple_files(cls):
         # resource can't have any files
         return False
@@ -75,6 +80,10 @@ class RefTSMetadata(CoreMetaData):
     methods = GenericRelation(Method)
     quality_levels = GenericRelation(QualityControlLevel)
     datasources = GenericRelation(DataSource)
+
+    @property
+    def resource(self):
+        return RefTimeSeriesResource.objects.filter(object_id=self.id).first()
 
     @classmethod
     def get_supported_element_names(cls):

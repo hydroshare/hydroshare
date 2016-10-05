@@ -327,9 +327,6 @@ class SWATModelInstanceResource(BaseResource):
         # all file types are supported
         return ('.*')
 
-    @classmethod
-    def can_have_multiple_files(cls):
-        return True
 
 processor_for(SWATModelInstanceResource)(resource_processor)
 
@@ -341,6 +338,10 @@ class SWATModelInstanceMetaData(ModelInstanceMetaData):
     _model_method = GenericRelation(ModelMethod)
     _model_parameter = GenericRelation(ModelParameter)
     _model_input = GenericRelation(ModelInput)
+
+    @property
+    def resource(self):
+        return SWATModelInstanceResource.objects.filter(object_id=self.id).first()
 
     @property
     def model_objective(self):

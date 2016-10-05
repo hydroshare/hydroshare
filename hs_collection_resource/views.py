@@ -7,6 +7,9 @@ from django.db import transaction
 from hs_core.views.utils import authorize, ACTION_TO_AUTHORIZE
 from hs_core.hydroshare.utils import get_resource_by_shortkey, resource_modified
 
+from .utils import add_or_remove_relation_metadata, RES_LANDING_PAGE_URL_TEMPLATE,\
+    update_collection_list_csv
+
 logger = logging.getLogger(__name__)
 UI_DATETIME_FORMAT = "%m/%d/%Y"
 
@@ -14,12 +17,16 @@ UI_DATETIME_FORMAT = "%m/%d/%Y"
 # update collection
 def update_collection(request, shortkey, *args, **kwargs):
     """
-    Add resources to a collection. The POST request should contain a
-    list of resource ids for those resources to be part of the collection. Any existing resources
-    from the collection are removed before adding resources as specified by the list of
-    resource ids in the post request. Requesting user must at least have metadata view permission
-    for any new resources being added to the collection.
-
+    Update collection. The POST request should contain a
+    list of resource ids and a 'update_type' parameter with value of 'set', 'add' or 'remove',
+    which are three differnt mode to update the collection.If no 'update_type' parameter is
+    provided, the 'set' will be used by default.
+    To add a resource to collection, user should have certain premission on both collection
+    and resources being added.
+    For collection: user should have at least Edit permission
+    For resources being added, one the following criteria should be met:
+    1) user has at lest View permission and the resource is Shareable
+    2) user is resource owner
     :param shortkey: id of the collection resource to which resources are to be added.
     """
 
@@ -27,6 +34,8 @@ def update_collection(request, shortkey, *args, **kwargs):
     msg = ""
     metadata_status = "Insufficient to make public"
     new_coverage_list = []
+    hasPart = "hasPart"
+
     try:
         with transaction.atomic():
             collection_res_obj, is_authorized, user \
@@ -36,38 +45,102 @@ def update_collection(request, shortkey, *args, **kwargs):
             if collection_res_obj.resource_type.lower() != "collectionresource":
                 raise Exception("Resource {0} is not a collection resource.".format(shortkey))
 
-            # get res_id list from POST
+            # get 'resource_id_list' list from POST
             updated_contained_res_id_list = request.POST.getlist("resource_id_list")
 
+            # get optional 'update_type' parameter:
+            # 1) "set" (default): set collection content to the list,
+            # following code will find out which resources are newly added, removed and unchanged
+            # 2) 'add': add resources in the list to collection
+            # adding a resource that is already in the collection will raise error
+            # 3) 'remove': remove resources in the list from collection
+            # removing a resource that is not in collection will raise error
+            update_type = request.POST.get("update_type", 'set').lower()
+
+            if update_type not in ["set", "add", "remove"]:
+                raise Exception("Invalid value of 'update_type' parameter")
+
             if len(updated_contained_res_id_list) > len(set(updated_contained_res_id_list)):
-                raise Exception("Duplicate resources were found for adding to the collection")
+                raise Exception("Duplicate resources exist in list 'resource_id_list'")
 
             for updated_contained_res_id in updated_contained_res_id_list:
                 # avoid adding collection itself
                 if updated_contained_res_id == shortkey:
-                    raise Exception("Can not add collection itself.")
+                    raise Exception("Can not contain collection itself.")
 
+            # current contained res
+            res_id_list_current_collection = \
+                [res.short_id for res in collection_res_obj.resources.all()]
+
+            # res to remove
+            res_id_list_remove = []
+            if update_type == "remove":
+                res_id_list_remove = updated_contained_res_id_list
+                for res_id_remove in res_id_list_remove:
+                    if res_id_remove not in res_id_list_current_collection:
+                        raise Exception('Cannot remove resource {0} as it '
+                                        'is not currently contained '
+                                        'in collection'.format(res_id_remove))
+            elif update_type == "set":
+                for res_id_remove in res_id_list_current_collection:
+                    if res_id_remove not in updated_contained_res_id_list:
+                        res_id_list_remove.append(res_id_remove)
+
+            for res_id_remove in res_id_list_remove:
+                # user with Edit permission over this collection can remove any resource from it
+                res_obj_remove = get_resource_by_shortkey(res_id_remove)
+                collection_res_obj.resources.remove(res_obj_remove)
+
+                # change "Relation" metadata in collection
+                value = RES_LANDING_PAGE_URL_TEMPLATE.format(res_id_remove)
+                add_or_remove_relation_metadata(add=False, target_res_obj=collection_res_obj,
+                                                relation_type=hasPart, relation_value=value,
+                                                set_res_modified=False)
+
+            # res to add
+            res_id_list_add = []
+            if update_type == "add":
+                res_id_list_add = updated_contained_res_id_list
+                for res_id_add in res_id_list_add:
+                    if res_id_add in res_id_list_current_collection:
+                        raise Exception('Cannot add resource {0} as it '
+                                        'is already contained in collection'.format(res_id_add))
+            elif update_type == "set":
+                for res_id_add in updated_contained_res_id_list:
+                    if res_id_add not in res_id_list_current_collection:
+                        res_id_list_add.append(res_id_add)
+            for res_id_add in res_id_list_add:
                 # check authorization for all new resources being added to the collection
-                # the requesting user should at least have metadata view permission for each of the
-                # new resources to be added to the collection
-                if not collection_res_obj.\
-                        resources.filter(short_id=updated_contained_res_id).exists():
-                    res_to_add, _, _ \
-                        = authorize(request, updated_contained_res_id,
-                                    needed_permission=ACTION_TO_AUTHORIZE.VIEW_METADATA)
+                # the requesting user should at least have metadata view permission for each of
+                # the new resources to be added to the collection
+                res_to_add, _, _ \
+                    = authorize(request, res_id_add,
+                                needed_permission=ACTION_TO_AUTHORIZE.VIEW_METADATA)
 
-            # remove all resources from the collection
-            collection_res_obj.resources.clear()
+                # the resources being added should be 'Shareable'
+                # or is owned by current user
+                is_shareable = res_to_add.raccess.shareable
+                is_owner = res_to_add.raccess.owners.filter(pk=user.pk).exists()
+                if not is_shareable and not is_owner:
+                        raise Exception('Only resource owner can add a non-shareable '
+                                        'resource to a collection ')
 
-            # add resources to the collection
-            for updated_contained_res_id in updated_contained_res_id_list:
-                updated_contained_res_obj = get_resource_by_shortkey(updated_contained_res_id)
-                collection_res_obj.resources.add(updated_contained_res_obj)
+                # add this new res to collection
+                res_obj_add = get_resource_by_shortkey(res_id_add)
+                collection_res_obj.resources.add(res_obj_add)
+
+                # change "Relation" metadata in collection
+                value = RES_LANDING_PAGE_URL_TEMPLATE.format(res_id_add)
+                add_or_remove_relation_metadata(add=True, target_res_obj=collection_res_obj,
+                                                relation_type=hasPart, relation_value=value,
+                                                set_res_modified=False)
 
             if collection_res_obj.can_be_public_or_discoverable:
                 metadata_status = "Sufficient to make public"
 
             new_coverage_list = _update_collection_coverages(collection_res_obj)
+
+            update_collection_list_csv(collection_res_obj)
 
             resource_modified(collection_res_obj, user)
 
@@ -96,19 +169,34 @@ def update_collection_for_deleted_resources(request, shortkey, *args, **kwargs):
 
     ajax_response_data = {'status': "success"}
     try:
-        collection_res, is_authorized, user \
-            = authorize(request, shortkey,
-                        needed_permission=ACTION_TO_AUTHORIZE.EDIT_RESOURCE)
+        with transaction.atomic():
+            collection_res, is_authorized, user \
+                = authorize(request, shortkey,
+                            needed_permission=ACTION_TO_AUTHORIZE.EDIT_RESOURCE)
 
-        if collection_res.resource_type.lower() != "collectionresource":
-            raise Exception("Resource {0} is not a collection resource.".format(shortkey))
+            if collection_res.resource_type.lower() != "collectionresource":
+                raise Exception("Resource {0} is not a collection resource.".format(shortkey))
 
-        new_coverage_list = _update_collection_coverages(collection_res)
-        ajax_response_data['new_coverage_list'] = new_coverage_list
+            # handle "Relation" metadata
+            hasPart = "hasPart"
+            for deleted_res_log in collection_res.deleted_resources:
+                relation_value = RES_LANDING_PAGE_URL_TEMPLATE.format(deleted_res_log.resource_id)
 
-        resource_modified(collection_res, user)
-        # remove all logged deleted resources for the collection
-        collection_res.deleted_resources.all().delete()
+                add_or_remove_relation_metadata(add=False,
+                                                target_res_obj=collection_res,
+                                                relation_type=hasPart,
+                                                relation_value=relation_value,
+                                                set_res_modified=False)
+
+            new_coverage_list = _update_collection_coverages(collection_res)
+            ajax_response_data['new_coverage_list'] = new_coverage_list
+
+            # remove all logged deleted resources for the collection
+            collection_res.deleted_resources.all().delete()
+
+            update_collection_list_csv(collection_res)
+
+            resource_modified(collection_res, user)
 
     except Exception as ex:
         logger.error("Failed to update collection for "
