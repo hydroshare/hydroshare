@@ -51,10 +51,11 @@ class TestResourceMap(ResMapTestCase):
             (None, term.URIRef(u'http://purl.org/spar/cito/documents'), None)
         )
 
-        self.assertEqual(len(documents), 1)
         # check for "documents" node
+        doclen = 0
         for s, p, o in documents:
 
+            doclen += 1
             self.assertTrue(isinstance(s, term.URIRef))
             subject = s.split('/')
             subject = subject[len(subject)-1]
@@ -64,6 +65,8 @@ class TestResourceMap(ResMapTestCase):
             object = o.split('/')
             object = object[len(object)-1]
             self.assertEqual(object, "resourcemap.xml#aggregation")
+
+        self.assertEqual(doclen, 1)
 
         # now create a file in the resource map
         txt_file_name = 'text.txt'
@@ -105,10 +108,11 @@ class TestResourceMap(ResMapTestCase):
         documents = g.triples(
             (None, term.URIRef(u'http://purl.org/spar/cito/documents'), None)
         )
-        self.assertEqual(len(documents), 1)
 
+        doclen = 0
         for s, p, o in documents:
 
+            doclen += 1
             self.assertTrue(isinstance(s, term.URIRef))
             subject = s.split('/')
             subject = subject[len(subject)-1]
@@ -119,13 +123,16 @@ class TestResourceMap(ResMapTestCase):
             object = object[len(object)-1]
             self.assertEqual(object, "resourcemap.xml#aggregation")
 
+        self.assertEqual(doclen, 1)
+
         formats = g.triples(
             (None, term.URIRef(u'http://purl.org/dc/elements/1.1/format'), None)
         )
-        self.assertEqual(len(formats), 3)
 
         # check that MIME types are correctly defined
+        fmtlen = 0
         for s, p, o in formats:
+            fmtlen += 1
             subject = s.split('/')
             subject = subject[len(subject)-1]
             self.assertTrue(isinstance(o, term.Literal))
@@ -133,3 +140,6 @@ class TestResourceMap(ResMapTestCase):
                 self.assertEqual(o, u'text/plain')
             else:
                 self.assertEqual(o, u'application/rdf+xml')
+
+        # pidgeonhole principle: if there are three, then one is the file in question
+        self.assertEqual(fmtlen, 3)
