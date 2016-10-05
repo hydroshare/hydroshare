@@ -3857,6 +3857,14 @@ form#covereage-search-fields {
     margin-bottom: 0;
 }
 
+.file-browser-breadcrumb .btn:not(.disabled) {
+	color: #428bd3;
+}
+
+.file-browser-breadcrumb .btn.disabled {
+	color: #9e9e9e;
+}
+
 .file-browser-breadcrumb {
 	padding: 8px;
 	border-bottom: 1px solid #DDD;
@@ -4227,7 +4235,6 @@ div#fb-inner-controls {
     padding: 8px;
 	padding-bottom: 0;
     border-bottom: 1px solid #DDD;
-	background: #fafafa;
 }
 
 div#fb-inner-controls {
@@ -4253,4 +4260,3 @@ div#fb-inner-controls button {
 #previews {
 	display: none;
 }
-
