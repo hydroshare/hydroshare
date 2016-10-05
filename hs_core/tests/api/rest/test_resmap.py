@@ -3,8 +3,7 @@ import json
 import tempfile
 import shutil
 from rest_framework import status
-
-# from lxml import etree
+from rdflib import Graph, term
 
 from hs_core.hydroshare import resource
 from .base import ResMapTestCase
@@ -35,7 +34,36 @@ class TestResourceMap(ResMapTestCase):
         self.assertEqual(response.status_code, status.HTTP_302_FOUND)
         response2 = self.client.get(response.url)
         self.assertEqual(response2.status_code, status.HTTP_200_OK)
-        # TODO: read and parse streaming XML response
+
+        # collect response from stream
+        output = ""
+        while True:
+            try:
+                output += response2.streaming_content.next()
+            except StopIteration:
+                break
+
+        # parse as simple RDF graph
+        g = Graph()
+        g.parse(data=output)
+
+        documents = g.triples(
+            (None, term.URIRef(u'http://purl.org/spar/cito/documents'), None)
+        )
+
+        self.assertEqual(len(documents), 1)
+        # check for "documents" node
+        for s, p, o in documents:
+
+            self.assertTrue(isinstance(s, term.URIRef))
+            subject = s.split('/')
+            subject = subject[len(subject)-1]
+            self.assertEqual(subject, "resourcemetadata.xml")
+
+            self.assertTrue(isinstance(o, term.Literal))
+            object = o.split('/')
+            object = object[len(object)-1]
+            self.assertEqual(object, "resourcemap.xml#aggregation")
 
         # now create a file in the resource map
         txt_file_name = 'text.txt'
@@ -54,9 +82,54 @@ class TestResourceMap(ResMapTestCase):
         content = json.loads(response.content)
         self.assertEquals(content['resource_id'], self.pid)
 
+        # download the resource map and
         # Make sure the new file appears in the resource map
         response = self.client.get("/hsapi/resmap/{pid}/".format(pid=self.pid))
         self.assertEqual(response.status_code, status.HTTP_302_FOUND)
         response2 = self.client.get(response.url)
         self.assertEqual(response2.status_code, status.HTTP_200_OK)
-        # TODO: read and parse streaming XML response
+
+        # collect the map from the stream
+        output = ""
+        while True:
+            try:
+                output += response2.streaming_content.next()
+            except StopIteration:
+                break
+
+        # parse as a simple RDF file of triples
+        g = Graph()
+        g.parse(data=output)
+
+        # check that the graph contains an appropriate "documents" node
+        documents = g.triples(
+            (None, term.URIRef(u'http://purl.org/spar/cito/documents'), None)
+        )
+        self.assertEqual(len(documents), 1)
+
+        for s, p, o in documents:
+
+            self.assertTrue(isinstance(s, term.URIRef))
+            subject = s.split('/')
+            subject = subject[len(subject)-1]
+            self.assertEqual(subject, "resourcemetadata.xml")
+
+            self.assertTrue(isinstance(o, term.Literal))
+            object = o.split('/')
+            object = object[len(object)-1]
+            self.assertEqual(object, "resourcemap.xml#aggregation")
+
+        formats = g.triples(
+            (None, term.URIRef(u'http://purl.org/dc/elements/1.1/format'), None)
+        )
+        self.assertEqual(len(formats), 3)
+
+        # check that MIME types are correctly defined
+        for s, p, o in formats:
+            subject = s.split('/')
+            subject = subject[len(subject)-1]
+            self.assertTrue(isinstance(o, term.Literal))
+            if (subject == 'test.txt'):
+                self.assertEqual(o, u'text/plain')
+            else:
+                self.assertEqual(o, u'application/rdf+xml')
