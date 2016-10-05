@@ -143,6 +143,20 @@ class CellInformation(AbstractMetaDataElement):
         raise ValidationError("CellInformation element of a raster resource cannot be removed")
 
 
+class OGCWebServices(AbstractMetaDataElement):
+    term = 'OGCWebServices'
+    layerName = models.CharField(max_length=500, null=True)
+    wmsEndpoint = models.CharField(max_length=500, null=True)
+    wcsEndpoint = models.CharField(max_length=500, null=True)
+
+    def __unicode__(self):
+        return self.name
+
+    class Meta:
+        # CellInformation element is not repeatable
+        unique_together = ("content_type", "object_id")
+
+
 #
 # To create a new resource, use these two super-classes.
 #
@@ -178,6 +192,7 @@ class RasterMetaData(CoreMetaData):
     _cell_information = GenericRelation(CellInformation)
     _band_information = GenericRelation(BandInformation)
     _ori_coverage = GenericRelation(OriginalCoverage)
+    _ogcWebServices = GenericRelation(OGCWebServices)
 
     @property
     def cellInformation(self):
@@ -191,6 +206,10 @@ class RasterMetaData(CoreMetaData):
     def originalCoverage(self):
         return self._ori_coverage.all().first()
 
+    @property
+    def ogcWebServices(self):
+        return self._ogcWebServices.all().first()
+
     @classmethod
     def get_supported_element_names(cls):
         # get the names of all core metadata elements
@@ -199,6 +218,7 @@ class RasterMetaData(CoreMetaData):
         elements.append('CellInformation')
         elements.append('BandInformation')
         elements.append('OriginalCoverage')
+        elements.append('OGCWebServices')
         return elements
 
     def has_all_required_elements(self):
@@ -259,6 +279,10 @@ class RasterMetaData(CoreMetaData):
                 cov_value = cov_value + '; projection=%s' % ori_coverage.value['projection']
 
             rdf_coverage_value.text = cov_value
+
+        if self.ogcWebServices:
+            ogc_web_services_fields = ['wmsEndpoint', 'wcsEndpoint', 'layerName']
+            self.add_metadata_element_to_xml(container, self.ogcWebServices, ogc_web_services_fields)
 
         return etree.tostring(RDF_ROOT, pretty_print=True)
 

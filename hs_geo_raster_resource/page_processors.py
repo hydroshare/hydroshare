@@ -33,6 +33,7 @@ def landing_page(request, page):
             context['originalCoverage'] = ori_coverage_data_dict
         context['cellInformation'] = content_model.metadata.cellInformation
         context['bandInformation'] = content_model.metadata.bandInformation
+        context['ogcWebServices'] = content_model.metadata.ogcWebServices
     else:
         # cellinfo_form
         cellinfo_form = CellInfoForm(instance=content_model.metadata.cellInformation, res_short_id=content_model.short_id,

@@ -7,6 +7,33 @@
     {% if extended_metadata_exists %}
         <div class="row">
 
+        {% if ogcWebServices %}
+            <div class="col-xs-12 col-sm-6" style="margin-bottom:40px;">
+                <legend>OGC Web Services for Accessing Geographic Data</legend>
+                <table class="custom-table">
+                    <tbody>
+
+                        <tr>
+                            <th class="text-muted">WMS Endpoint</th>
+                            <td>{{ ogcWebServices.wmsEndpoint }}</td>
+                        </tr>
+
+                        <tr>
+                            <th class="text-muted">WCS Endpoint</th>
+                            <td>{{ ogcWebServices.wcsEndpoint }}</td>
+                        </tr>
+
+                        <tr>
+                            <th class="text-muted">Layer Name</th>
+                            <td>{{ ogcWebServices.layerName }}</td>
+                        </tr>
+
+                    </tbody>
+                </table>
+
+            </div>
+        {% endif %}
+
         {% if originalCoverage %}
             <div class="col-xs-12 col-sm-6" style="margin-bottom:40px;">
                 <legend>Spatial Reference</legend>

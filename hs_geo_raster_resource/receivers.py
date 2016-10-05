@@ -17,11 +17,12 @@ from django.dispatch import receiver
 from hs_core.hydroshare import utils
 from hs_core.hydroshare.resource import ResourceFile, \
     get_resource_file_name, delete_resource_file_only
-from hs_core.signals import pre_create_resource, pre_add_files_to_resource, pre_delete_file_from_resource, \
+from hs_core.signals import pre_create_resource, post_create_resource, pre_add_files_to_resource, post_add_files_to_resource, pre_delete_file_from_resource, \
     pre_metadata_element_create, pre_metadata_element_update
 from forms import CellInfoValidationForm, BandInfoValidationForm, OriginalCoverageSpatialForm
 from models import RasterResource
 import raster_meta_extract
+from hs_core.ogc_services_utility import create_ogc_service
 
 # signal handler to extract metadata from uploaded geotiff file and return template contexts
 # to populate create-resource.html template page
@@ -267,6 +268,19 @@ def raster_pre_create_resource_trigger(sender, **kwargs):
         # Save extended meta to metadata variable
         ori_cov = {'OriginalCoverage': {'value': spatial_coverage_info}}
         metadata.append(ori_cov)
+
+    ogc_web_services_info = {
+        'layerName': "Pending...",
+        'wmsEndpoint': "Pending...",
+        'wcsEndpoint': "Pending..."
+    }
+    metadata.append({'OGCWebServices': ogc_web_services_info})
+
+
+@receiver(post_create_resource, sender=RasterResource)
+def raster_post_create_resource_trigger(sender, **kwargs):
+    resource = kwargs['resource']
+    create_ogc_service.apply_async([resource])
 
 
 @receiver(pre_add_files_to_resource, sender=RasterResource)
