@@ -172,12 +172,14 @@
                                         <div class="modal-footer">
                                             <button type="button" class="btn btn-default" data-dismiss="modal">Cancel
                                             </button>
-                                            <button id="btn-confirm-delete" type="button" class="btn btn-danger" data-dismiss="modal">Delete</button>
+                                            <button id="btn-confirm-delete" type="button" class="btn btn-danger"
+                                                    data-dismiss="modal">Delete
+                                            </button>
                                         </div>
                                     </div>
                                 </div>
                             </div>
-{#                            ======= Modal window ends =======#}
+                            {#                            ======= Modal window ends =======#}
                                     <div id="hs-file-browser" data-res-id="{{ cm.short_id }}" data-current-path="data/contents" {% if page.perms.change and metadata_form %}data-mode="edit"{% endif %} class="file-browser">
                                         <div class="file-browser-controls row">
                                             <div class="col-sm-6 col-xs-12">
@@ -333,16 +335,39 @@
                                                 </ul>
                                             </form>
                                         </div>
+
                                         {% if page.perms.change and metadata_form %}
-                                            <div class="fb-upload-caption dz-clickable">
-                                                <small><i class="fa fa-upload" aria-hidden="true"></i>&nbsp;&nbsp;Upload
-                                                    files smaller than 1GB in size by dragging & dropping, or click this box to select them.
-                                                </small>
+                                            <div class="fb-upload-caption">
+                                                <span><i class="fa fa-upload" aria-hidden="true"></i>&nbsp;&nbsp;Upload
+                                                    files smaller than 1GB in size by dragging & dropping, or click <a id="upload-toggle" class="dz-clickable">here</a> to select them.
+                                                </span>
+                                                <span id="log-into-irods">To add files from an iRODS server,
+                                                <a id="btn-signin-irods" type="button" class="btn-link" data-toggle="modal"
+                                                data-target="#irodsSignin">Log in to iRODS</a></span>
+                                                <span id="sign-in-info"></span>
+                                                <a id="btn-signout-irods" type="button" class="btn-link hidden-form">Log out of iRODS</a>
                                             </div>
                                         {% endif %}
                                     </div>
 
-                                    <div class="table table-striped" class="files" id="previews"></div>
+                                {% if page.perms.change and metadata_form %}
+                                    <a id="btn-select-irods-file" type="button"
+                                       class="btn btn-success row-selector hidden-form" data-toggle="modal"
+                                       data-target="#irodsContent">
+                                        <span class="glyphicon glyphicon-plus"><span class="button-label"> Add files from iRODS...</span></span>
+                                    </a>
+                                    {% if file_type_error %}
+                                        <div class="alert alert-danger alert-dismissible" role="alert">
+                                            <button id="validation-error-close" type="button" class="close"
+                                                    data-dismiss="alert"
+                                                    aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                                            <strong>Uploaded File Type Validation Error: {{ file_type_error }}</strong>
+                                        </div>
+                                    {% endif %}
+                                {% endif %}
+
+                            <div class="table table-striped" class="files" id="previews"></div>
+
 {#                                    <div class="table-container">#}
 {#                                        <table class="table-plain table-striped">#}
 {#                                            {% for f in cm.files.all %}#}

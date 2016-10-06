@@ -463,7 +463,7 @@ $(document).ready(function () {
     if (mode == "edit") {
         Dropzone.options.fbContainmentWrapper = {
             paramName: "files", // The name that will be used to transfer the file
-            clickable: ".fb-upload-caption",
+            clickable: "#upload-toggle",
             previewsContainer: "#previews", // Define the container to display the previews
             maxFilesize: 1024, // MB
             init: function () {
