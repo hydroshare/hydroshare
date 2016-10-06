@@ -176,17 +176,23 @@ function bindFileBrowserItemEvents() {
                 var calls = [];
                 for (var i = 0; i < sources.length; i++) {
                     var sourcePath = currentPath + "/" + $(sources[i]).text();
-                    calls.push(move_or_rename_irods_file_or_folder_ajax_submit(resID, sourcePath, destPath));
+                    if (sourcePath != destPath) {
+                        calls.push(move_or_rename_irods_file_or_folder_ajax_submit(resID, sourcePath, destPath));
+                    }
                 }
 
                 $.when.apply($, calls).done(function () {
                     refreshFileBrowser();
                     destination.removeClass("fb-drag-cutting");
                 });
+                
+                $("#fb-files-container li.ui-selected").fadeOut();
             },
             over: function (event, ui) {
-                $("#fb-files-container li.ui-selected").addClass("fb-drag-cutting");
-                $(event.target).addClass("fb-drag-cutting");
+                if (!$(event.target).hasClass("ui-selected")) {
+                    $("#fb-files-container li.ui-selected").addClass("fb-drag-cutting");
+                    $(event.target).addClass("fb-drag-cutting");
+                }
             },
             out: function (event, ui) {
                 $("#fb-files-container li.ui-selected").removeClass("fb-drag-cutting");
@@ -221,6 +227,7 @@ function bindFileBrowserItemEvents() {
         updateSelectionMenuContext();
     });
 
+    // Drag method
     if (mode == "edit") {
         $(".draggable").draggable({
                 containment: "#fb-files-container",
