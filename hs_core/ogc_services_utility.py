@@ -101,6 +101,6 @@ def remove_ogc_services(resource):
     elif type(resource) == GeographicFeatureResource:
         store_type = 'datastores'
 
-    url = '{0}/workspaces/{1}/{2}/{3}'.format(endpoint, store_type, workspace, res_id)
+    url = '{0}/workspaces/{1}/{2}/{3}'.format(endpoint, workspace, store_type, res_id)
 
-    delete(url, params=params, auth=HTTPBasicAuth(username=username, password=password))
+    r = delete(url, params=params, auth=HTTPBasicAuth(username=username, password=password))

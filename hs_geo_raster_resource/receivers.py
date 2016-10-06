@@ -290,6 +290,12 @@ def raster_post_create_resource_trigger(sender, **kwargs):
         add_ogc_services.apply_async([resource])
 
 
+@receiver(pre_delete_resource, sender=RasterResource)
+def raster_pre_delete_resource_trigger(sender, **kwargs):
+    resource = kwargs['resource']
+    remove_ogc_services.apply_async([resource])
+
+
 @receiver(pre_add_files_to_resource, sender=RasterResource)
 def raster_pre_add_files_to_resource_trigger(sender, **kwargs):
     files = kwargs['files']
@@ -410,13 +416,22 @@ def raster_pre_delete_file_from_resource_trigger(sender, **kwargs):
     }
     res.metadata.update_element("OGCWebServices", md_id, **ogc_metadata)
 
-    remove_ogc_services(res)
+    remove_ogc_services.apply_async([res])
 
 
 @receiver(post_add_files_to_resource, sender=RasterResource)
 def raster_post_add_files_trigger(sender, **kwargs):
     resource = kwargs['resource']
+
     add_ogc_services.apply_async([resource])
+
+    md_id = resource.metadata.ogcWebServices.id
+    ogc_metadata = {
+        'wmsEndpoint': "Pending...",
+        'wcsEndpoint': "Pending...",
+        'layerName': "Pending..."
+    }
+    resource.metadata.update_element("OGCWebServices", md_id, **ogc_metadata)
 
 
 @receiver(pre_metadata_element_create, sender=RasterResource)

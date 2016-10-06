@@ -293,5 +293,6 @@ class RasterMetaData(CoreMetaData):
         if self.originalCoverage:
             self.originalCoverage.delete()
         self.bandInformation.delete()
+        self.ogcWebServices.delete()
 
 import receivers
