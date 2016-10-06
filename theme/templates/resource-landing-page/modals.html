@@ -1727,14 +1727,14 @@
                     {# Folder Name #}
                     <fieldset class="col-sm-12">
                         <label>Folder Name *</label>
-                        <input id="txtFolderName" class="form-control">
+                        <input id="txtFolderName" class="form-control modal-only-required">
                     </fieldset>
                 </div>
             </div>
 
             <div class="modal-footer">
                 <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
-                <button type="button" id="btn-create-folder" class="btn btn-primary" data-dismiss="modal">Create
+                <button type="button" id="btn-create-folder" class="btn btn-primary disabled" data-dismiss="modal">Create
                 </button>
             </div>
         </div>
@@ -1756,7 +1756,7 @@
                         {# Folder Name #}
                         <fieldset class="col-sm-12">
                             <label>Name *</label>
-                            <input id="txtName" class="form-control" >
+                            <input id="txtName" class="form-control modal-only-required" >
                         </fieldset>
                     </div>
                 </div>
@@ -1764,6 +1764,38 @@
                 <div class="modal-footer">
                     <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
                     <button type="button" id="btn-rename" class="btn btn-primary" data-dismiss="modal">Save Changes</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade in" id="zip-folder-dialog" tabindex="-1" role="dialog"
+     aria-labelledby="rename" aria-hidden="false">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form>
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+                    <h4 class="modal-title" id="rename">Zip Folder</h4>
+                </div>
+
+                <div class="modal-body">
+                    <div class="row">
+                        <fieldset class="col-sm-6 col-xs-12">
+                            <label>Name *</label>
+                            <div class="input-group">
+                                <input id="txtZipName" type="text" class="form-control modal-only-required" placeholder="File name"
+                                       aria-describedby="file-type-addon">
+                                <span class="input-group-addon" id="file-type-addon">.zip</span>
+                            </div>
+                        </fieldset>
+                    </div>
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+                    <button type="button" id="btn-confirm-zip" class="btn btn-primary" data-dismiss="modal">Confirm</button>
                 </div>
             </form>
         </div>
