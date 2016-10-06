@@ -19,18 +19,21 @@ def parse_shp(file_path):
     # shp_metadata_dict["origin_datum"]: origin_datum
     # shp_metadata_dict["origin_unit"]: origin_unit
     # shp_metadata_dict["field_meta_dict"]["field_list"]: list [fieldname1, fieldname2...]
-    # shp_metadata_dict["field_meta_dict"]["field_attr_dic"]: dict {"fieldname": dict {
-    #                                                                        "fieldName":fieldName,
-    #                                                                        "fieldTypeCode":fieldTypeCode,
-    #                                                                        "fieldType":fieldType,
-    #                                                                        "fieldWidth:fieldWidth,
-    #                                                                        "fieldPrecision:fieldPrecision"
-    #                                                                                 }
-    #                                                               }
+    # shp_metadata_dict["field_meta_dict"]["field_attr_dic"]:
+    #   dict {"fieldname": dict {
+    #                         "fieldName":fieldName,
+    #                         "fieldTypeCode":fieldTypeCode,
+    #                         "fieldType":fieldType,
+    #                         "fieldWidth:fieldWidth,
+    #                         "fieldPrecision:fieldPrecision"
+    #                          }
+    #         }
     # shp_metadata_dict["feature_count"]: feature count
     # shp_metadata_dict["geometry_type"]: geometry_type
-    # shp_metadata_dict["origin_extent_dict"]: dict{"west": east, "north":north, "east":east, "south":south}
-    # shp_metadata_dict["wgs84_extent_dict"]: dict{"west": east, "north":north, "east":east, "south":south}
+    # shp_metadata_dict["origin_extent_dict"]:
+    # dict{"west": east, "north":north, "east":east, "south":south}
+    # shp_metadata_dict["wgs84_extent_dict"]:
+    # dict{"west": east, "north":north, "east":east, "south":south}
 
     shp_metadata_dict = {}
     # read shapefile
@@ -59,7 +62,7 @@ def parse_shp(file_path):
 
     field_list = []
     filed_attr_dic = {}
-    field_meta_dict = {"field_list":field_list, "field_attr_dict":filed_attr_dic}
+    field_meta_dict = {"field_list": field_list, "field_attr_dict": filed_attr_dic}
     shp_metadata_dict["field_meta_dict"] = field_meta_dict
     # get Attributes
     layerDefinition = layer.GetLayerDefn()
@@ -104,9 +107,9 @@ def parse_shp(file_path):
 
     # create two key points from layer extent
     left_upper_point = ogr.Geometry(ogr.wkbPoint)
-    left_upper_point.AddPoint(layer_extent[0], layer_extent[3]) # left-upper
+    left_upper_point.AddPoint(layer_extent[0], layer_extent[3])  # left-upper
     right_lower_point = ogr.Geometry(ogr.wkbPoint)
-    right_lower_point.AddPoint(layer_extent[1], layer_extent[2]) # right-lower
+    right_lower_point.AddPoint(layer_extent[1], layer_extent[2])  # right-lower
 
     # source map always has extent, even projection is unknown
     shp_metadata_dict["origin_extent_dict"] = {}
@@ -143,7 +146,7 @@ def parse_shp(file_path):
 
 def parse_shp_xml(shp_xml_full_path):
     """
-    Parse ArcGIS 10.0 - 10.4 ESRI Shapefile Metadata XML.
+    Parse ArcGIS 10.X ESRI Shapefile Metadata XML.
     :param shp_xml_full_path: Expected fullpath to the .shp.xml file
     :return: a list of metadata dict
     """
@@ -175,10 +178,10 @@ def parse_shp_xml(shp_xml_full_path):
                                 for k in keyword_list:
                                     metadata.append({'subject': {'value': k}})
 
-    except Exception as ex:
+    except Exception:
         # Catch any exception silently and return an empty list
-        # Due to the variances in ESRI Shapefile Metadata XML format
-        # of different ArcGIS versions, an empty list will be returned
+        # Due to the variant format of ESRI Shapefile Metadata XML
+        # among different ArcGIS versions, an empty list will be returned
         # if any exception occurs
         metadata = []
     finally:
@@ -195,6 +198,6 @@ def clean_text(text):
 def clean_html(raw_html):
     # Remove html tag from raw_html
 
-    cleanr =re.compile('<.*?>')
-    cleantext = re.sub(cleanr,'', raw_html)
+    cleanr = re.compile('<.*?>')
+    cleantext = re.sub(cleanr, '', raw_html)
     return cleantext
