@@ -631,7 +631,7 @@ class ResourceMapRetrieve(APIView):
 
     :type pk: str
     :param pk: id of the resource
-    :return: science metadata as XML document
+    :return: resource map as XML document
     :rtype: str
     :raises:
     NotFound: return json format: {'detail': 'No resource was found for resource id:pk'}
