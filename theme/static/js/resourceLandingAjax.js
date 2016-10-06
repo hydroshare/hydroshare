@@ -505,7 +505,7 @@ function delete_folder_ajax_submit(res_id, folder_path) {
 // This method is called to refresh the loader with the most recent structure after every other call
 function get_irods_folder_struct_ajax_submit(res_id, store_path) {
     $("#fb-files-container").css("cursor", "progress");
-    $.ajax({
+    return $.ajax({
         type: "POST",
         url: '/hsapi/_internal/data-store-structure/',
         async: true,
@@ -554,7 +554,7 @@ function get_irods_folder_struct_ajax_submit(res_id, store_path) {
 
 function zip_irods_folder_ajax_submit(res_id, input_coll_path, fileName) {
     $("#fb-files-container").css("cursor", "progress");
-    $.ajax({
+    return $.ajax({
         type: "POST",
         url: '/hsapi/_internal/data-store-folder-zip/',
         async: true,
@@ -562,12 +562,12 @@ function zip_irods_folder_ajax_submit(res_id, input_coll_path, fileName) {
             res_id: res_id,
             input_coll_path: input_coll_path,
             output_zip_file_name: fileName,
-            remove_original_after_zip: "true"
+            remove_original_after_zip: "false"
         },
         success: function (result) {
             console.log("file zipped");
         },
-        error: function(xhr, errmsg, err){
+        error: function (xhr, errmsg, err) {
             console.log(xhr.status + ": " + xhr.responseText + ". Error message: " + errmsg);
         }
     });
@@ -575,7 +575,7 @@ function zip_irods_folder_ajax_submit(res_id, input_coll_path, fileName) {
 
 function unzip_irods_file_ajax_submit(res_id, zip_with_rel_path) {
     $("#fb-files-container").css("cursor", "progress");
-    $.ajax({
+    return $.ajax({
         type: "POST",
         url: '/hsapi/_internal/data-store-folder-unzip/',
         async: true,
@@ -590,7 +590,7 @@ function unzip_irods_file_ajax_submit(res_id, zip_with_rel_path) {
                 get_irods_folder_struct_ajax_submit(res_id, unzipped_path)
             }
         },
-        error: function(xhr, errmsg, err){
+        error: function (xhr, errmsg, err) {
             console.log(xhr.status + ": " + xhr.responseText + ". Error message: " + errmsg);
         }
     });

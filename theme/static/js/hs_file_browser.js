@@ -436,6 +436,7 @@ function refreshFileBrowser() {
         $("#fb-files-container li").removeClass("fb-cutting");
         $(".selection-menu").hide();
         sourcePaths = [];
+        updateSelectionMenuContext();
     });
 }
 
@@ -545,6 +546,7 @@ $(document).ready(function () {
 
     $('#zip-folder-dialog').on('shown.bs.modal', function () {
         $('#txtFolderName').focus();
+
         // Select the file name by default
         var input = document.getElementById("txtZipName");
         var startPos = 0;
@@ -610,7 +612,6 @@ $(document).ready(function () {
 
     // Move up one directory
     $("#fb-move-up").click(function () {
-        var resID = $("#hs-file-browser").attr("data-res-id");
         var upPath = $("#hs-file-browser").attr("data-current-path");
         upPath = upPath.substr(0, upPath.lastIndexOf("/"));
         pathLog.push(upPath);
@@ -620,8 +621,6 @@ $(document).ready(function () {
 
     // Move back
     $("#fb-move-back").click(function () {
-        var resID = $("#hs-file-browser").attr("data-res-id");
-
         if (pathLogIndex > 0) {
             pathLogIndex--;
             if (pathLogIndex == 0) {
@@ -666,14 +665,12 @@ $(document).ready(function () {
         }
 
         $("#fb-cut").toggleClass("disabled", true);
-        $(".selection-menu").hide();
     }
 
     $(".selection-menu li[data-menu-name='paste'], #fb-paste").click(onPaste);
 
     function onPaste() {
         var folderName = $("#fb-files-container li.ui-selected").children(".fb-file-name").text();
-        var resID = $("#hs-file-browser").attr("data-res-id");
         var targetPath = $("#hs-file-browser").attr("data-current-path");
 
         if (folderName && folderName.lastIndexOf(".") == -1) {  // Makes sure the destination is a folder
@@ -690,14 +687,12 @@ $(document).ready(function () {
             refreshFileBrowser();
             sourcePaths = [];
             $("#fb-files-container li").removeClass("fb-cutting");
-            $(".selection-menu").hide();
             updateSelectionMenuContext();
         });
     }
 
     // File(s) delete method
     $("#btn-confirm-delete").click(function () {
-        var resID = $("#hs-file-browser").attr("data-res-id");
         var deleteList = $("#fb-files-container li.ui-selected");
         var currentPath = $("#hs-file-browser").attr("data-current-path");
         if (deleteList.length) {
@@ -714,8 +709,6 @@ $(document).ready(function () {
                 }
             }
 
-            $(".selection-menu").hide();
-
             // Wait for the asynchronous calls to finish to get new folder structure
             $.when.apply($, calls).done(function () {
                 refreshFileBrowser();
@@ -731,7 +724,6 @@ $(document).ready(function () {
 
     // Rename method
     $("#btn-rename").click(function () {
-        var resID = $("#hs-file-browser").attr("data-res-id");
         var currentPath = $("#hs-file-browser").attr("data-current-path");
         var oldName = $("#fb-files-container li.ui-selected").children(".fb-file-name").text();
         var newName = $("#txtName").val();
@@ -755,7 +747,6 @@ $(document).ready(function () {
                 downloadURI(url, fileName);
             }
         }
-        $(".selection-menu").hide();
     });
 
     function downloadURI(uri, name) {
@@ -769,7 +760,6 @@ $(document).ready(function () {
     // Zip method
     $("#btn-confirm-zip").click(function () {
         if ($("#txtZipName").val().trim() != "") {
-            var resID = $("#hs-file-browser").attr("data-res-id");
             var currentPath = $("#hs-file-browser").attr("data-current-path");
             var folderName = $("#fb-files-container li.ui-selected").children(".fb-file-name").text();
             var fileName = $("#txtZipName").val() + ".zip";
@@ -791,7 +781,6 @@ $(document).ready(function () {
 
     // Unzip method
     $("#btn-unzip").click(function () {
-        var resID = $("#hs-file-browser").attr("data-res-id");
         var currentPath = $("#hs-file-browser").attr("data-current-path");
         var files = $("#fb-files-container li.ui-selected");
 
@@ -807,15 +796,17 @@ $(document).ready(function () {
         });
     });
 
+    $(".selection-menu li").click(function () {
+        $(".selection-menu").hide();
+    });
+
     $(".selection-menu li[data-menu-name='refresh'], #fb-refresh").click(function () {
         refreshFileBrowser();
-        $(".selection-menu").hide();
     });
 
     $(".selection-menu li[data-menu-name='select-all'], #fb-select-all").click(function () {
         $("#fb-files-container > li").removeClass("ui-selected");
         $("#fb-files-container > li:not(.hidden)").addClass("ui-selected");
-        $(".selection-menu").hide();
         updateSelectionMenuContext();
     });
 
