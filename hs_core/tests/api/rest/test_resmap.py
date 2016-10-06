@@ -69,7 +69,7 @@ class TestResourceMap(ResMapTestCase):
         self.assertEqual(doclen, 1)
 
         # now create a file in the resource map
-        txt_file_name = 'text.txt'
+        txt_file_name = 'test.txt'
         txt_file_path = os.path.join(self.tmp_dir, txt_file_name)
         txt = open(txt_file_path, 'w')
         txt.write("Hello World.\n")
@@ -137,9 +137,9 @@ class TestResourceMap(ResMapTestCase):
             subject = subject[len(subject)-1]
             self.assertTrue(isinstance(o, term.Literal))
             if (subject == 'test.txt'):
-                self.assertEqual(o, u'text/plain')
+                self.assertEqual(str(o), u'text/plain')
             else:
-                self.assertEqual(o, u'application/rdf+xml')
+                self.assertEqual(str(o), u'application/rdf+xml')
 
         # pidgeonhole principle: if there are three, then one is the file in question
         self.assertEqual(fmtlen, 3)
