@@ -3,17 +3,20 @@ import json
 from django.contrib.contenttypes.fields import GenericRelation
 from django.db import models
 from django.contrib.contenttypes.models import ContentType
-from django.core.exceptions import ObjectDoesNotExist, ValidationError
+from django.core.exceptions import ValidationError
 
 from mezzanine.pages.models import Page
 from mezzanine.pages.page_processors import processor_for
 
-from hs_core.models import BaseResource, ResourceManager, resource_processor, CoreMetaData, AbstractMetaDataElement
+from hs_core.models import BaseResource, ResourceManager, resource_processor, CoreMetaData, \
+    AbstractMetaDataElement
 
 
+# extended metadata for raster resource type to store the original box type coverage since
+# the core metadata coverage
+# stores the converted WGS84 geographic coordinate system projection coverage,
+# see issue #210 on github for details
 
-# extended metadata for raster resource type to store the original box type coverage since the core metadata coverage
-# stores the converted WGS84 geographic coordinate system projection coverage, see issue #210 on github for details
 class OriginalCoverage(AbstractMetaDataElement):
     term = 'OriginalCoverage'
 
@@ -100,7 +103,8 @@ class OriginalCoverage(AbstractMetaDataElement):
 class BandInformation(AbstractMetaDataElement):
     term = 'BandInformation'
     # required fields
-    # has to call the field name rather than bandName, which seems to be enforced by the AbstractMetaDataElement;
+    # has to call the field name rather than bandName, which seems to be enforced by
+    # the AbstractMetaDataElement;
     # otherwise, got an error indicating required "name" field does not exist
     name = models.CharField(max_length=500, null=True)
     variableName = models.TextField(max_length=100, null=True)
@@ -174,20 +178,15 @@ class RasterResource(BaseResource):
         return False
 
 
-# this would allow us to pick up additional form elements for the template before the template is displayed via Mezzanine page processor
+# this would allow us to pick up additional form elements for the template before the template
+# is displayed via Mezzanine page processor
 processor_for(RasterResource)(resource_processor)
 
+# This mixin should not generate any new migration for this resource type
+class GeoRasterMetaDataMixin(models.Model):
 
-class RasterMetaData(CoreMetaData):
-    # required non-repeatable cell information metadata elements
-    _cell_information = GenericRelation(CellInformation)
-    _band_information = GenericRelation(BandInformation)
-    _ori_coverage = GenericRelation(OriginalCoverage)
-
-    @property
-    def resource(self):
-        return RasterResource.objects.filter(object_id=self.id).first()
-
+    class Meta:
+        abstract = True
     @property
     def cellInformation(self):
         return self._cell_information.all().first()
@@ -203,7 +202,8 @@ class RasterMetaData(CoreMetaData):
     @classmethod
     def get_supported_element_names(cls):
         # get the names of all core metadata elements
-        elements = super(RasterMetaData, cls).get_supported_element_names()
+        # this works because the superclass we want is listed first
+        elements = super(cls, cls).get_supported_element_names()
         # add the name of any additional element to the list
         elements.append('CellInformation')
         elements.append('BandInformation')
@@ -211,7 +211,8 @@ class RasterMetaData(CoreMetaData):
         return elements
 
     def has_all_required_elements(self):
-        if not super(RasterMetaData, self).has_all_required_elements():
+        # this works because the superclass we want is listed first
+        if not super(type(self), self).has_all_required_elements():
             return False
         if not self.cellInformation:
             return False
@@ -222,7 +223,8 @@ class RasterMetaData(CoreMetaData):
         return True
 
     def get_required_missing_elements(self):
-        missing_required_elements = super(RasterMetaData, self).get_required_missing_elements()
+        # this works because the superclass we want is listed first
+        missing_required_elements = super(type(self), self).get_required_missing_elements()
         if not self.coverages.all().filter(type='box').first():
             missing_required_elements.append('Spatial Coverage: Box')
         if not self.cellInformation:
@@ -235,7 +237,8 @@ class RasterMetaData(CoreMetaData):
     def get_xml(self):
         from lxml import etree
         # get the xml string representation of the core metadata elements
-        xml_string = super(RasterMetaData, self).get_xml(pretty_print=False)
+        # this works because the superclass we want is listed first
+        xml_string = super(type(self), self).get_xml(pretty_print=False)
 
         # create an etree xml object
         RDF_ROOT = etree.fromstring(xml_string)
@@ -245,24 +248,28 @@ class RasterMetaData(CoreMetaData):
 
         # inject raster resource specific metadata elements to container element
         if self.cellInformation:
-            cellinfo_fields = ['rows', 'columns', 'cellSizeXValue', 'cellSizeYValue', 'cellDataType']
+            cellinfo_fields = ['rows', 'columns', 'cellSizeXValue', 'cellSizeYValue',
+                               'cellDataType']
             self.add_metadata_element_to_xml(container, self.cellInformation, cellinfo_fields)
 
         for band_info in self.bandInformation:
-            bandinfo_fields = ['name', 'variableName', 'variableUnit', 'noDataValue', 'maximumValue', 'minimumValue',
+            bandinfo_fields = ['name', 'variableName', 'variableUnit', 'noDataValue',
+                               'maximumValue', 'minimumValue',
                                'method', 'comment']
             self.add_metadata_element_to_xml(container, band_info, bandinfo_fields)
 
         if self.originalCoverage:
-            ori_coverage = self.originalCoverage;
+            ori_coverage = self.originalCoverage
             cov = etree.SubElement(container, '{%s}spatialReference' % self.NAMESPACES['hsterms'])
             cov_term = '{%s}' + 'box'
             coverage_terms = etree.SubElement(cov, cov_term % self.NAMESPACES['hsterms'])
-            rdf_coverage_value = etree.SubElement(coverage_terms, '{%s}value' % self.NAMESPACES['rdf'])
-            #raster original coverage is of box type
+            rdf_coverage_value = etree.SubElement(coverage_terms,
+                                                  '{%s}value' % self.NAMESPACES['rdf'])
+            # raster original coverage is of box type
             cov_value = 'northlimit=%s; eastlimit=%s; southlimit=%s; westlimit=%s; units=%s' \
-                        %(ori_coverage.value['northlimit'], ori_coverage.value['eastlimit'],
-                          ori_coverage.value['southlimit'], ori_coverage.value['westlimit'], ori_coverage.value['units'])
+                        % (ori_coverage.value['northlimit'], ori_coverage.value['eastlimit'],
+                           ori_coverage.value['southlimit'], ori_coverage.value['westlimit'],
+                           ori_coverage.value['units'])
 
             if 'projection' in ori_coverage.value:
                 cov_value = cov_value + '; projection=%s' % ori_coverage.value['projection']
@@ -272,11 +279,26 @@ class RasterMetaData(CoreMetaData):
         return etree.tostring(RDF_ROOT, pretty_print=True)
 
     def delete_all_elements(self):
-        super(RasterMetaData, self).delete_all_elements()
+        # this works because the superclass we want is listed first
+        super(type(self), self).delete_all_elements()
         if self.cellInformation:
             self.cellInformation.delete()
         if self.originalCoverage:
             self.originalCoverage.delete()
         self.bandInformation.delete()
+
+
+# this additional inheritance from GeoRasterMetaDataMixin should not generate new migration
+class RasterMetaData(CoreMetaData, GeoRasterMetaDataMixin):
+    # required non-repeatable cell information metadata elements
+    _cell_information = GenericRelation(CellInformation)
+    _band_information = GenericRelation(BandInformation)
+    _ori_coverage = GenericRelation(OriginalCoverage)
+
+    @property
+    def resource(self):
+        return RasterResource.objects.filter(object_id=self.id).first()
+
+
 
 import receivers

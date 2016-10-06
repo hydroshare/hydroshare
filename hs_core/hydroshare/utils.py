@@ -31,6 +31,7 @@ from hs_core.hydroshare.hs_bagit import create_bag_files
 from django_irods.icommands import SessionException
 from django_irods.storage import IrodsStorage
 
+from hs_file_types.models import GenericLogicalFile
 
 logger = logging.getLogger(__name__)
 
@@ -338,6 +339,14 @@ def get_resource_files_by_extension(resource, file_extension):
     return matching_files
 
 
+def get_resource_file_by_name(resource, file_name):
+    for res_file in resource.files.all():
+        fl_name, _ = get_resource_file_name_and_extension(res_file)
+        if fl_name == file_name:
+            return res_file
+    return None
+
+
 def delete_fed_zone_file(file_name_with_full_path):
     '''
     Args:
@@ -571,7 +580,7 @@ def validate_resource_file_count(resource_cls, files, resource=None):
 
 def resource_pre_create_actions(resource_type, resource_title, page_redirect_url_key,
                                 files=(), fed_res_file_names='', metadata=None,
-                                requesting_user=None, **kwargs):
+                                requesting_user=None, hs_file_type=GenericLogicalFile, **kwargs):
     from.resource import check_resource_type
     from hs_core.views.utils import validate_metadata
 
@@ -591,7 +600,7 @@ def resource_pre_create_actions(resource_type, resource_title, page_redirect_url
     if not metadata:
         metadata = []
     else:
-        validate_metadata(metadata, resource_type)
+        validate_metadata(metadata, resource_type, hs_file_type)
 
     page_url_dict = {}
     # this is needed since raster and feature resource types allows to upload a zip file,
@@ -612,7 +621,8 @@ def resource_pre_create_actions(resource_type, resource_title, page_redirect_url
                              url_key=page_redirect_url_key, page_url_dict=page_url_dict,
                              validate_files=file_validation_dict,
                              fed_res_file_names=fed_res_file_names,
-                             user=requesting_user, fed_res_path=fed_res_path, **kwargs)
+                             user=requesting_user, fed_res_path=fed_res_path,
+                             hs_file_type=GenericLogicalFile, **kwargs)
 
     if len(files) > 0:
         check_file_dict_for_error(file_validation_dict)
@@ -789,6 +799,7 @@ def add_file_to_resource(resource, f, fed_res_file_name_or_path='', fed_copy_or_
                                               resource_file=File(f) if not isinstance(
                                                   f, UploadedFile) else f,
                                               fed_resource_file=None)
+
         # add format metadata element if necessary
         file_format_type = get_file_mime_type(f.name)
     elif fed_res_file_name_or_path and (fed_copy_or_move == 'copy' or fed_copy_or_move == 'move'):

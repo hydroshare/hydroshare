@@ -31,6 +31,7 @@ from mezzanine.conf import settings as s
 from mezzanine.pages.managers import PageManager
 
 
+
 class GroupOwnership(models.Model):
     group = models.ForeignKey(Group)
     owner = models.ForeignKey(User)
@@ -1509,9 +1510,27 @@ class ResourceFile(models.Model):
     fed_resource_file_name_or_path = models.CharField(max_length=255, null=True, blank=True)
     fed_resource_file_size = models.CharField(max_length=15, null=True, blank=True)
 
+    # we are using GenericForeignKey to allow resource file to be associated with any
+    # HydroShare defined LogicalFile types
+    logical_file_object_id = models.PositiveIntegerField(default=0)
+    logical_file_content_type = models.ForeignKey(ContentType, related_name="resource_file",
+                                                  default=None)
+
+    logical_file_content_object = GenericForeignKey('logical_file_content_type',
+                                                    'logical_file_object_id')
+
+
     @property
     def resource(self):
         return self.content_object
+
+    @property
+    def logical_file(self):
+        return self.logical_file_content_object
+
+    @property
+    def metadata(self):
+        return self.logical_file.metadata
 
 
 class Bags(models.Model):
