@@ -465,7 +465,7 @@ $(document).ready(function () {
             paramName: "files", // The name that will be used to transfer the file
             clickable: ".fb-upload-caption",
             previewsContainer: "#previews", // Define the container to display the previews
-            maxFilesize: 2048, // MB
+            maxFilesize: 1024, // MB
             init: function () {
                 this.on("dragenter", function (file) {
                     $(".fb-drag-flag").show();
@@ -484,10 +484,15 @@ $(document).ready(function () {
                         $("#fbContainmentWrapper").prepend(previewNode);
                     }
                 });
+
                 this.on("queuecomplete", function () {
                     refreshFileBrowser();
                     $("#previews").empty();
-                })
+                });
+
+                this.on("totaluploadprogress", function (uploadProgress, totalBytes , totalBytesSent) {
+                    $("#upload-progress").text(formatBytes(totalBytesSent) + " / " +  formatBytes(totalBytes) + " (" + parseInt(uploadProgress) + "%)" );
+                });
             }
         };
     }
@@ -720,6 +725,8 @@ $(document).ready(function () {
             $.when.apply($, calls).done(function () {
                 refreshFileBrowser();
             });
+
+            $("#fb-files-container li.ui-selected").fadeOut(200);
         }
     });
 

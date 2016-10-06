@@ -315,7 +315,11 @@
                                                 {% csrf_token %}
 
                                                 <div id="flag-uploading" class="hidden">
-                                                    <i class="fa fa-circle-o-notch fa-spin fa-fw"></i><small class="uploading-message"> Uploading files to: data/contents</small>
+                                                    <i class="fa fa-circle-o-notch fa-spin fa-fw"></i>
+                                                    <small class="uploading-message">
+                                                        <strong>Uploading files to:</strong>&nbsp;data/contents<strong>
+                                                        &nbsp;&nbsp;Progress:&nbsp;</strong>
+                                                        <span id="upload-progress"></span></small>
                                                 </div>
 
                                                 <div class="fb-drag-flag">
@@ -332,7 +336,7 @@
                                         {% if page.perms.change and metadata_form %}
                                             <div class="fb-upload-caption dz-clickable">
                                                 <small><i class="fa fa-upload" aria-hidden="true"></i>&nbsp;&nbsp;Upload
-                                                    files by dragging & dropping, or click this box to select them.
+                                                    files smaller than 1GB in size by dragging & dropping, or click this box to select them.
                                                 </small>
                                             </div>
                                         {% endif %}
@@ -498,12 +502,12 @@
 {#                                    <button type="button" class="btn btn-primary pull-right"#}
 {#                                            onclick="get_irods_folder_struct_ajax_submit('{{ cm.short_id }}', 'data/contents'); return false;">iRODS folder info#}
 {#                                    </button>#}
-                                    <button type="button" class="btn btn-primary pull-right"
-                                            onclick="zip_irods_folder_ajax_submit('{{ cm.short_id }}', 'data/contents/Some Folder'); return false;">Zip iRODS Collection
-                                    </button>
-                                    <button type="button" class="btn btn-primary pull-right"#}
-                                            onclick="unzip_irods_file_ajax_submit('{{ cm.short_id }}', 'data/contents/test.zip'); return false;">Unzip iRODS file
-                                    </button>
+{#                                    <button type="button" class="btn btn-primary pull-right"#}
+{#                                            onclick="zip_irods_folder_ajax_submit('{{ cm.short_id }}', 'data/contents/Some Folder'); return false;">Zip iRODS Collection#}
+{#                                    </button>#}
+{#                                    <button type="button" class="btn btn-primary pull-right"#}
+{#                                            onclick="unzip_irods_file_ajax_submit('{{ cm.short_id }}', 'data/contents/test.zip'); return false;">Unzip iRODS file#}
+{#                                    </button>#}
 {#                                    <button type="button" class="btn btn-primary pull-right"#}
 {#                                            onclick="create_irods_folder_ajax_submit('{{ cm.short_id }}', 'data/contents/test_sub_folder'); return false;">Create folder#}
 {#                                    </button>#}
