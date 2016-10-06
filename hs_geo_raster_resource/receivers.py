@@ -17,12 +17,11 @@ from django.dispatch import receiver
 from hs_core.hydroshare import utils
 from hs_core.hydroshare.resource import ResourceFile, \
     get_resource_file_name, delete_resource_file_only
-from hs_core.signals import pre_create_resource, post_create_resource, pre_add_files_to_resource, post_add_files_to_resource, pre_delete_file_from_resource, \
-    pre_metadata_element_create, pre_metadata_element_update
+from hs_core.signals import *
 from forms import CellInfoValidationForm, BandInfoValidationForm, OriginalCoverageSpatialForm
 from models import RasterResource
 import raster_meta_extract
-from hs_core.ogc_services_utility import create_ogc_service
+from hs_core.ogc_services_utility import add_ogc_services, remove_ogc_services
 
 # signal handler to extract metadata from uploaded geotiff file and return template contexts
 # to populate create-resource.html template page
@@ -215,7 +214,6 @@ def raster_pre_create_resource_trigger(sender, **kwargs):
 
             # Save extended meta spatial reference
             ori_cov = {'OriginalCoverage': {'value': res_md_dict['spatial_coverage_info']['original_coverage_info'] }}
-            metadata.append(ori_cov)
 
             # Save extended meta cell info
             res_md_dict['cell_info']['name'] = os.path.basename(vrt_file_path)
@@ -234,6 +232,13 @@ def raster_pre_create_resource_trigger(sender, **kwargs):
         # remove temp file retrieved from federated zone for metadata extraction
         if fed_res_fnames and fed_tmpfile_name:
             shutil.rmtree(os.path.dirname(fed_tmpfile_name))
+
+        ogc_web_services_info = {
+            'layerName': "Pending...",
+            'wmsEndpoint': "Pending...",
+            'wcsEndpoint': "Pending..."
+        }
+
     else:
         # initialize required raster metadata to be place holders to be edited later by users
         cell_info = OrderedDict([
@@ -269,18 +274,20 @@ def raster_pre_create_resource_trigger(sender, **kwargs):
         ori_cov = {'OriginalCoverage': {'value': spatial_coverage_info}}
         metadata.append(ori_cov)
 
-    ogc_web_services_info = {
-        'layerName': "Pending...",
-        'wmsEndpoint': "Pending...",
-        'wcsEndpoint': "Pending..."
-    }
+        ogc_web_services_info = {
+            'layerName': None,
+            'wmsEndpoint': None,
+            'wcsEndpoint': None,
+        }
+
     metadata.append({'OGCWebServices': ogc_web_services_info})
 
 
 @receiver(post_create_resource, sender=RasterResource)
 def raster_post_create_resource_trigger(sender, **kwargs):
     resource = kwargs['resource']
-    create_ogc_service.apply_async([resource])
+    if len(resource.files.all()) > 0:
+        add_ogc_services.apply_async([resource])
 
 
 @receiver(pre_add_files_to_resource, sender=RasterResource)
@@ -394,6 +401,22 @@ def raster_pre_delete_file_from_resource_trigger(sender, **kwargs):
     for format_element in res.metadata.formats.all():
         if format_element.value != del_file_format:
             res.metadata.delete_element(format_element.term, format_element.id)
+
+    md_id = res.metadata.ogcWebServices.id
+    ogc_metadata = {
+        'wmsEndpoint': None,
+        'wcsEndpoint': None,
+        'layerName': None
+    }
+    res.metadata.update_element("OGCWebServices", md_id, **ogc_metadata)
+
+    remove_ogc_services(res)
+
+
+@receiver(post_add_files_to_resource, sender=RasterResource)
+def raster_post_add_files_trigger(sender, **kwargs):
+    resource = kwargs['resource']
+    add_ogc_services.apply_async([resource])
 
 
 @receiver(pre_metadata_element_create, sender=RasterResource)

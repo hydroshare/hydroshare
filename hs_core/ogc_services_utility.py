@@ -1,4 +1,4 @@
-from requests import put
+from requests import put, delete
 from requests.auth import HTTPBasicAuth
 from celery import shared_task
 from hs_geo_raster_resource.models import RasterResource
@@ -11,7 +11,7 @@ password = 'hydroshare'
 
 
 @shared_task
-def create_ogc_service(resource):
+def add_ogc_services(resource):
     r = None
 
     if type(resource) == RasterResource:
@@ -87,3 +87,20 @@ def create_feature_layer(resource):
 def update_resource_ogc_metadata(resource, metadata):
     md_id = resource.metadata.ogcWebServices.id
     resource.metadata.update_element("OGCWebServices", md_id, **metadata)
+
+
+@shared_task
+def remove_ogc_services(resource):
+    res_id = resource.short_id
+    store_type = None
+    params = {'recurse': 'true'}
+
+    if type(resource) == RasterResource:
+        store_type = 'coveragestores'
+        params['purge'] = 'all'
+    elif type(resource) == GeographicFeatureResource:
+        store_type = 'datastores'
+
+    url = '{0}/workspaces/{1}/{2}/{3}'.format(endpoint, store_type, workspace, res_id)
+
+    delete(url, params=params, auth=HTTPBasicAuth(username=username, password=password))
