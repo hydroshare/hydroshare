@@ -1300,7 +1300,7 @@ class AbstractResource(ResourcePermissionsMixin):
                 fl.resource_file.delete()
             elif fl.fed_resource_file:
                 fl.fed_resource_file.delete()
-
+            fl.delete()
         hs_bagit.delete_bag(self)
 
         self.metadata.delete_all_elements()
