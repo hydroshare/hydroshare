@@ -1,12 +1,12 @@
 from django.dispatch import receiver
 from django.core.exceptions import ObjectDoesNotExist
-import sys
 
 from hs_core.signals import pre_metadata_element_create, pre_metadata_element_update, \
     pre_create_resource, post_metadata_element_update
 
-from hs_modflow_modelinstance.models import MODFLOWModelInstanceResource, GridDimensions,\
-    StudyArea, StressPeriod, BoundaryCondition, GroundWaterFlow, ModelCalibration, GeneralElements
+from hs_modflow_modelinstance.models import MODFLOWModelInstanceResource, ModelOutput, ExecutedBy,\
+    GridDimensions, StudyArea, StressPeriod, BoundaryCondition, GroundWaterFlow, ModelCalibration,\
+    GeneralElements
 from hs_modflow_modelinstance.forms import ModelOutputValidationForm, ExecutedByValidationForm,\
     StudyAreaValidationForm, GridDimensionsValidationForm, StressPeriodValidationForm,\
     GroundWaterFlowValidationForm, BoundaryConditionValidationForm, ModelCalibrationValidationForm,\
@@ -29,18 +29,21 @@ def metadata_element_pre_create_handler(sender, **kwargs):
 def metadata_element_pre_update_handler(sender, **kwargs):
     return _process_metadata_update_create(update_or_create='update', **kwargs)
 
+
 @receiver(post_metadata_element_update, sender=MODFLOWModelInstanceResource)
 def check_element_exist(sender, **kwargs):
-    element_exists = False
-    cls = getattr(sys.modules[__name__], kwargs['element_name'])
     element_id = kwargs['element_id']
-    try:
-        el = cls.objects.get(pk=element_id)
-        element_exists = True
-    except ObjectDoesNotExist:
-        pass
-    return {'element_exists': element_exists}
-
+    element_name = kwargs['element_name']
+    element_exists = False
+    class_names = globals().copy()
+    for class_name, cls in class_names.iteritems():
+        if class_name.lower() == element_name.lower():
+            try:
+                cls.objects.get(pk=element_id)
+                element_exists = True
+            except ObjectDoesNotExist:
+                pass
+            return {'element_exists': element_exists}
 
 
 def _process_metadata_update_create(update_or_create, **kwargs):
