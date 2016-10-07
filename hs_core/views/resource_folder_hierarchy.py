@@ -66,6 +66,18 @@ def rename_irods_file_in_django(resource, src_name, tgt_name):
                 ResourceFile.objects.create(content_object=resource, resource_file=tgt_name)
 
 
+def remove_irods_folder_in_django(resource, istorage, foldername):
+    if resource and istorage and foldername:
+        if resource.resource_federation_path:
+            res_file_set = ResourceFile.objects.filter(
+                object_id=resource.id, fed_resource_file_name_or_path__icontains=foldername)
+        else:
+            res_file_set = ResourceFile.objects.filter(
+                object_id=resource.id, resource_file__icontains=foldername)
+        for f in res_file_set:
+            f.delete()
+
+
 def data_store_structure(request):
     """
     Get file hierarchy (collection of subcollections and data objects) for the requested directory
@@ -366,6 +378,7 @@ def data_store_remove_folder(request):
         logger.error(ex.stderr)
         return HttpResponse(status=500)
 
+    remove_irods_folder_in_django(resource, istorage, coll_path)
     return_object = {'status': 'success'}
 
     return HttpResponse(
@@ -412,10 +425,12 @@ def data_store_file_or_folder_move_or_rename(request):
         tgt_full_path = os.path.join(res_id, tgt_path)
 
     tgt_file_name = os.path.basename(tgt_full_path)
+    tgt_file_dir = os.path.dirname(tgt_full_path)
     src_file_name = os.path.basename(src_full_path)
+    src_file_dir = os.path.dirname(src_full_path)
 
     # ensure the target_full_path contains the file name to be moved or renamed to
-    if tgt_file_name != src_file_name:
+    if src_file_dir != tgt_file_dir and tgt_file_name != src_file_name:
         tgt_full_path = os.path.join(tgt_full_path, src_file_name)
 
     try:

@@ -487,7 +487,7 @@ function delete_folder_ajax_submit(res_id, folder_path) {
 
     return $.ajax({
         type: "POST",
-        url: '/hsapi/_internal/' + res_id + '/data-store-delete-folder/' + folder_path + '/',
+        url: '/hsapi/_internal/data-store-delete-folder/',
         async: true,
         data: {
             res_id: res_id,

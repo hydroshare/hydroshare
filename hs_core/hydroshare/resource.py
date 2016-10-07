@@ -758,6 +758,7 @@ def add_resource_files(pk, *files, **kwargs):
     fed_zone_home_path = kwargs.pop('fed_zone_home_path', '')
     # for adding files to existing resources, the default action is copy
     fed_copy_or_move = kwargs.pop('fed_copy_or_move', 'copy')
+
     for f in files:
         if fed_zone_home_path:
             # user has selected files from a federated iRODS zone, so files uploaded from local disk
@@ -778,6 +779,9 @@ def add_resource_files(pk, *files, **kwargs):
         for ifname in ifnames:
             ret.append(utils.add_file_to_resource(resource, None, fed_res_file_name_or_path=ifname,
                                                   fed_copy_or_move=fed_copy_or_move))
+    if not ret:
+        # no file has been added, make sure data/contents directory exists if no file is added
+        utils.create_empty_contents_directory(resource)
     return ret
 
 
