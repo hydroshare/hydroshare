@@ -9,7 +9,7 @@ from django_irods.storage import IrodsStorage
 from django_irods.icommands import SessionException
 
 from hs_core.hydroshare.utils import get_file_mime_type, get_resource_file_name_and_extension, \
-    get_resource_file_url
+    get_resource_file_url, resource_modified
 from hs_core.views.utils import authorize, ACTION_TO_AUTHORIZE
 from hs_core.hydroshare import delete_resource_file
 from hs_core.models import ResourceFile
@@ -159,7 +159,7 @@ def data_store_folder_zip(request):
         return HttpResponse(status=400)
     res_id = str(res_id).strip()
     try:
-        resource, _, _ = authorize(request, res_id,
+        resource, _, user = authorize(request, res_id,
                                    needed_permission=ACTION_TO_AUTHORIZE.EDIT_RESOURCE)
     except (NotFound, PermissionDenied):
         # return permission defined response
@@ -215,6 +215,7 @@ def data_store_folder_zip(request):
         except Exception:
             return HttpResponse(status=500)
 
+    resource_modified(resource, user)
     return_object = {'name': output_zip_fname,
                      'size': size,
                      'type': 'zip'}
@@ -241,7 +242,7 @@ def data_store_folder_unzip(request):
         return HttpResponse(status=400)
     res_id = str(res_id).strip()
     try:
-        resource, _, _ = authorize(request, res_id,
+        resource, _, user = authorize(request, res_id,
                                    needed_permission=ACTION_TO_AUTHORIZE.EDIT_RESOURCE)
     except (NotFound, PermissionDenied):
         # return permission defined response
@@ -281,6 +282,8 @@ def data_store_folder_unzip(request):
             delete_resource_file(res_id, zip_fname, request.user)
         except Exception:
             return HttpResponse(status=500)
+
+    resource_modified(resource, user)
 
     # this unzipped_path can be used for POST request input to data_store_structure()
     # to list the folder structure after unzipping
@@ -353,7 +356,7 @@ def data_store_remove_folder(request):
         return HttpResponse(status=400)
     res_id = str(res_id).strip()
     try:
-        resource, _, _ = authorize(request, res_id,
+        resource, _, user = authorize(request, res_id,
                                    needed_permission=ACTION_TO_AUTHORIZE.EDIT_RESOURCE)
     except (NotFound, PermissionDenied):
         # return permission defined response
@@ -381,6 +384,15 @@ def data_store_remove_folder(request):
     remove_irods_folder_in_django(resource, istorage, coll_path)
     return_object = {'status': 'success'}
 
+    if resource.raccess.public or resource.raccess.discoverable:
+        if not resource.can_be_public_or_discoverable:
+            resource.raccess.public = False
+            resource.raccess.discoverable = False
+            resource.raccess.save()
+
+    # generate bag
+    resource_modified(resource, user)
+
     return HttpResponse(
         json.dumps(return_object),
         content_type="application/json"
@@ -401,7 +413,7 @@ def data_store_file_or_folder_move_or_rename(request):
         return HttpResponse(status=400)
     res_id = str(res_id).strip()
     try:
-        resource, _, _ = authorize(request, res_id,
+        resource, _, user = authorize(request, res_id,
                                    needed_permission=ACTION_TO_AUTHORIZE.EDIT_RESOURCE)
     except (NotFound, PermissionDenied):
         # return permission defined response
@@ -440,6 +452,7 @@ def data_store_file_or_folder_move_or_rename(request):
         return HttpResponse(status=500)
 
     rename_irods_file_in_django(resource, src_full_path, tgt_full_path)
+    resource_modified(resource, user)
 
     return_object = {'target_rel_path': tgt_path}
 
