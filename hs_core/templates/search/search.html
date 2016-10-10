@@ -1159,14 +1159,10 @@
             });
 
             var map_update_url = "/searchjson/";
-            if (window.location.search.length == 0) {
-                map_update_url += "?q=";
-            } else {
-                var textSearch = $("#id_q").val();
-                var searchURL = "?q=" + textSearch;
-                map_update_url += searchURL;
-                map_update_url += buildURLOnCheckboxes();
-            }
+            var textSearch = $("#id_q").val();
+            var searchURL = "?q=" + textSearch;
+            map_update_url += searchURL;
+            map_update_url += buildURLOnCheckboxes();
             var ne_lat = document.getElementById("id_NElat").value;
             var ne_lng = document.getElementById("id_NElng").value;
             var sw_lat = document.getElementById("id_SWlat").value;
@@ -1552,11 +1548,11 @@
                     var sessionStorageCheckboxId = 'search-' + checkboxId;
                     sessionStorage[sessionStorageCheckboxId] = 'true';
                     requestURL = requestURL + geoSearchParams + dateSearchParams;
-                    if (window.location.hash) {
-                        requestURL = requestURL + window.location.hash;
-                    }
-                    //updateFacetingItems(requestURL);
-                    window.location = requestURL;
+{#                    if (window.location.hash) {#}
+{#                        requestURL = requestURL + window.location.hash;#}
+{#                    }#}
+                    updateFacetingItems(requestURL);
+                    //window.location = requestURL;
                 }
                 else {
                     var checkboxId = $(this).attr("id");
