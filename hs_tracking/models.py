@@ -115,7 +115,7 @@ class Variable(models.Model):
     timestamp = models.DateTimeField(auto_now_add=True)
     name = models.CharField(max_length=32)
     type = models.IntegerField(choices=TYPE_CHOICES)
-    value = models.CharField(max_length=130)
+    value = models.CharField(max_length=500)
 
     def get_value(self):
         v = self.value
