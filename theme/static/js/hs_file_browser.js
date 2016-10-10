@@ -498,16 +498,17 @@ $(document).ready(function () {
     }
 
     // Toggle between grid and list view
-    $("#toggle-list-view").change(function () {
-        if ($("#fb-files-container").hasClass("fb-view-list")) {
-            // ------- Switch to grid view -------
-            $("#fb-files-container").removeClass("fb-view-list");
-            $("#fb-files-container").addClass("fb-view-grid");
-        }
-        else {
+    $("#btn-group-view button").click(function () {
+        $("#btn-group-view button").toggleClass("active");
+        if ($(this).attr("data-view") == "list") {
             // ------- switch to table view -------
             $("#fb-files-container").removeClass("fb-view-grid");
             $("#fb-files-container").addClass("fb-view-list");
+        }
+        else {
+            // ------- Switch to grid view -------
+            $("#fb-files-container").removeClass("fb-view-list");
+            $("#fb-files-container").addClass("fb-view-grid");
         }
     });
 
