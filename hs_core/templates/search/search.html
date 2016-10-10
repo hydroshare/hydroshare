@@ -532,7 +532,6 @@
             info_window = new google.maps.InfoWindow();
 
             setMarkers(json_results);
-
             var bounds = (markers.length > 0) ? createBoundsForMarkers(markers) : map.setZoom(2);
             if (bounds) {
                 var ne = bounds.getNorthEast();
@@ -631,12 +630,11 @@
                 createPointResourceMarker(point);
             });
 
-
-            drawShadeRectangles(boxes_data);
-
             modified_boxes_data.forEach(function(box){
                 createBoxResourceMarker (box);
             });
+
+            drawShadeRectangles(boxes_data);
 
             shade_rects.forEach(function(rect){
                 google.maps.event.addListener(rect,'click',function(e){
@@ -649,7 +647,6 @@
                     map_items_table.draw();
                 });
             });
-
             markerCluster = new MarkerClusterer(map, markers, {
                 styles:[{
                     height: 55,
@@ -681,8 +678,6 @@
 
                 var box_ne = new google.maps.LatLng(northlimit, eastlimit);
                 var box_sw = new google.maps.LatLng(southlimit, westlimit);
-
-                var box_bound = new google.maps.LatLngBounds(box_ne, box_sw);
 
                 var rectCoords = [
                   {lat: northlimit, lng: westlimit},
@@ -765,11 +760,16 @@
                     { title: "First Author" }
                 ],
                 "columnDefs": [ {
-                    "targets": 0,
+                    "targets": [0],
+                    "width": "90px",
                     "data": null,
                     "defaultContent": '<a class="btn btn-default" role="button"><span class="glyphicon glyphicon-zoom-in"></span></button>'
-                } ]
-            } );
+                },
+                {
+                   "targets": [1],     // Resource type
+                    "width": "110px"
+                }]
+            });
 
             $('#map-items tbody').on( 'click', '[role="button"]', function () {
                 var data = mapItems.row( $(this).parents('tr') ).data();
@@ -802,16 +802,14 @@
 
         var clientUpdateMarkers = function(filtered_results) {
             removeMarkers();
-            var data_lat = 0;
-            var data_lng = 0;
             var bnds = map.getBounds();
             if (bnds) {
                 for (var  i = 0; i < raw_results.length; i++ ) {
                     if (raw_results[i].coverage_type == 'point') {
-                        data_lat = parseFloat(raw_results[i].north);
-                        data_lng = parseFloat(raw_results[i].east);
+                        var data_lat = parseFloat(raw_results[i].north);
+                        var data_lng = parseFloat(raw_results[i].east);
                         var latlng = new google.maps.LatLng(data_lat, data_lng);
-                        if (map.getBounds().contains(latlng)) {
+                        if (bnds.contains(latlng)) {
                             filtered_results.push(raw_results[i]);
                         }
                     } else if (raw_results[i].coverage_type == 'box') {
@@ -819,10 +817,15 @@
                         var southlimit =  parseFloat(raw_results[i].southlimit);
                         var eastlimit = parseFloat(raw_results[i].eastlimit);
                         var westlimit = parseFloat(raw_results[i].westlimit);
+{#                        var box_center_lat = (northlimit + southlimit) / 2;#}
+{#                        var box_center_lng = (eastlimit + westlimit) / 2;#}
                         var ne_latlng = new google.maps.LatLng(northlimit, eastlimit);
                         var sw_latlng = new google.maps.LatLng(southlimit, westlimit);
-                        var latlng = new google.maps.LatLng(data_lat, data_lng);
-                        if (map.getBounds().contains(ne_latlng) || map.getBounds().contains(sw_latlng)) {
+                        var box_bound = new google.maps.LatLngBounds(sw_latlng, ne_latlng);
+{#                        var center_latlng = new google.maps.LatLng(box_center_lat, box_center_lng);#}
+{#                        var map_bound_ne = bnds.getNorthEast();#}
+{#                        var map_bound_sw = bnds.getSouthWest();#}
+                        if (bnds.intersects(box_bound)) {
                             filtered_results.push(raw_results[i]);
                         }
                     }
@@ -862,10 +865,13 @@
                 if (lat_diff < minFloatingNumber && lng_diff < minFloatingNumber) {
                     item.info_link = item.info_link + '<br />' + '<a href="' + test.get_absolute_url + '">' + test.title +'</a>';
                     item.counter++;
+                    item.resources_list.push(test);
                     existed = true;
                 }
             });
             if (!existed) {
+                test.resources_list = [];
+                test.resources_list.push(test);
                 test.info_link = '<a href="' + test.get_absolute_url + '">' + test.title + '</a>';
                 test.counter = 1;
                 modified_points_data.push(test);
@@ -912,6 +918,12 @@
             });
             markers.push(marker);
             google.maps.event.addListener(marker, 'click', function() {
+                var map_resources = [];
+                buildMapItemsTableDataforMarkers(point.resources_list, map_resources);
+                var map_items_table = $('#map-items').DataTable();
+                map_items_table.clear();
+                map_items_table.rows.add(map_resources);
+                map_items_table.draw();
                 info_window.setContent(info_content);
                 info_window.open(map, marker);
 
@@ -1349,7 +1361,6 @@
                     var dateSearchParams = formDateParameters();
                     var windowPath = window.location.pathname;
                     var requestURL =  windowPath + searchURL + geoSearchParams + dateSearchParams;
-                    date
                     window.location = requestURL;
                 }
             });
