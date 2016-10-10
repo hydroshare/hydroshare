@@ -1136,7 +1136,7 @@
         };
 
         var updateFacetingItems = function (request_url) {
-            $('filter-items_wrapper').empty();
+            //$('filter-items_wrapper').empty();
             $('#items-discovered_wrapper').empty();
             $("#discover-page-options").empty();
             $.ajax({
@@ -1145,8 +1145,8 @@
                 //data: data,
                 dataType: 'html',
                 success: function (data) {
-                    var filterItemsDiv = $("#filter-items", data);
-                    $("#filter-items_wrapper").html(filterItemsDiv);
+                    //var filterItemsDiv = $("#filter-items", data);
+                    //$("#filter-items_wrapper").html(filterItemsDiv);
                     var tableDiv = $("#items-discovered", data);
                     $("#items-discovered_wrapper").html(tableDiv);
                     var pageOptionDiv = $("#discover-page-options", data);
@@ -1155,6 +1155,50 @@
                 },
                 failure: function (data) {
                     console.error("Ajax call for updating list-view data failed");
+                }
+            });
+
+            var map_update_url = "/searchjson/";
+            if (window.location.search.length == 0) {
+                map_update_url += "?q=";
+            } else {
+                var textSearch = $("#id_q").val();
+                var searchURL = "?q=" + textSearch;
+                map_update_url += searchURL;
+                map_update_url += buildURLOnCheckboxes();
+            }
+            var ne_lat = document.getElementById("id_NElat").value;
+            var ne_lng = document.getElementById("id_NElng").value;
+            var sw_lat = document.getElementById("id_SWlat").value;
+            var sw_lng = document.getElementById("id_SWlng").value;
+            var start_date = $("#id_start_date").val();
+            var end_date = $("#id_end_date").val();
+            removeMarkers();
+            $.ajax({
+                type: "GET",
+                url: map_update_url,
+                data: {
+                    NElat: ne_lat,
+                    NElng: ne_lng,
+                    SWlat: sw_lat,
+                    SWlng: sw_lng,
+                    start_date: start_date,
+                    end_date: end_date
+                },
+                dataType: 'json',
+                success: function (data) {
+                    raw_results = [];
+                    for (var j = 0; j < data.length; j++) {
+                        var item = $.parseJSON(data[j]);
+                        //json_results.push(item);
+                        raw_results.push(item);
+                    }
+
+                    updateMapView();
+
+                },
+                failure: function(data) {
+                    console.error("Ajax call for getting map data failed");
                 }
             });
         }
@@ -1228,22 +1272,22 @@
             return "&start_date="+start_date+"&end_date="+end_date;
         };
 
-        var formLinkButtonURL = function(key, value) {
-            var textSearch = $("#id_q").val();
-            var searchURL = "?q=" + textSearch;
-            var geoSearchParams = formGeoParameters();
-            var dateSearchParams = formDateParameters();
-            var windowPath = window.location.pathname;
-            var requestURL =  windowPath + searchURL + geoSearchParams + dateSearchParams;
-            var checkboxId =  key + "-" + value;
-            var sessionStorageCheckboxId = 'search-' + checkboxId;
-            sessionStorage[sessionStorageCheckboxId] = 'true';
-            requestURL += buildURLOnCheckboxes();
-            if (window.location.hash) {
-                requestURL = requestURL + window.location.hash;
-            }
-            window.location = requestURL;
-        };
+{#        var formLinkButtonURL = function(key, value) {#}
+{#            var textSearch = $("#id_q").val();#}
+{#            var searchURL = "?q=" + textSearch;#}
+{#            var geoSearchParams = formGeoParameters();#}
+{#            var dateSearchParams = formDateParameters();#}
+{#            var windowPath = window.location.pathname;#}
+{#            var requestURL =  windowPath + searchURL + geoSearchParams + dateSearchParams;#}
+{#            var checkboxId =  key + "-" + value;#}
+{#            var sessionStorageCheckboxId = 'search-' + checkboxId;#}
+{#            sessionStorage[sessionStorageCheckboxId] = 'true';#}
+{#            requestURL += buildURLOnCheckboxes();#}
+{#            if (window.location.hash) {#}
+{#                requestURL = requestURL + window.location.hash;#}
+{#            }#}
+{#            window.location = requestURL;#}
+{#        };#}
 
         var buildURLOnCheckboxes = function () {
             var requestURL = '';
@@ -1500,6 +1544,7 @@
                 var geoSearchParams = formGeoParameters();
                 var dateSearchParams = formDateParameters();
                 var windowPath = window.location.pathname;
+                console.log(windowPath);
                 var requestURL =  windowPath + searchURL;
                 if($(this).is(":checked")) {
                     requestURL += buildURLOnCheckboxes();
@@ -1507,21 +1552,22 @@
                     var sessionStorageCheckboxId = 'search-' + checkboxId;
                     sessionStorage[sessionStorageCheckboxId] = 'true';
                     requestURL = requestURL + geoSearchParams + dateSearchParams;
-{#                    if (window.location.hash) {#}
-{#                        requestURL = requestURL + window.location.hash;#}
-{#                    }#}
-                    updateFacetingItems(requestURL);
-                    //window.location = requestURL;
+                    if (window.location.hash) {
+                        requestURL = requestURL + window.location.hash;
+                    }
+                    //updateFacetingItems(requestURL);
+                    window.location = requestURL;
                 }
                 else {
                     var checkboxId = $(this).attr("id");
                     var sessionStorageCheckboxId = 'search-' + checkboxId;
                     sessionStorage.removeItem(sessionStorageCheckboxId);
                     var updateURL =  windowPath + searchURL + buildURLOnCheckboxes() + geoSearchParams + dateSearchParams;
-                    updateURL += buildURLOnCheckboxes();
+                    //updateURL += buildURLOnCheckboxes();
                     if (window.location.hash) {
                         updateURL = updateURL + window.location.hash;
                     }
+                    //updateFacetingItems(updateURL);
                     window.location = updateURL;
                 }
             });
