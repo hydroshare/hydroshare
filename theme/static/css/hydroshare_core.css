@@ -3760,6 +3760,18 @@ div.group-add-photo {
 	display: inline-block;
 }
 
+#coverages-master-list {
+	display:inline-block;
+	max-height:190px;
+	overflow-y: auto;
+	border: 1px solid #DDD;
+}
+
+.resource-popover-option {
+	display: inline-block;
+	margin: 5px;
+}
+
 #discover-filter-buttons {
 	margin-bottom: 10px;
 }
@@ -3779,6 +3791,26 @@ div.group-add-photo {
 	padding: 10px;
 	margin: 5px;
 	border-radius: 4px;
+	border: 1px solid #DDD;
+}
+
+#geocoder-panel {
+	z-index: 5;
+	padding: 5px;
+	text-align: center;
+	font-family: 'Roboto','sans-serif';
+	padding-left: 10px;
+	background-color: rgba(255,255,255,0.75);
+	border: 1px solid #DDD;
+	border-radius: 4px;
+	width: 300px;
+    margin-left: 10px;
+    line-height: 30px;
+    font-size: 16px;
+}
+
+#geocoder-address {
+    width: 210px;
 }
 
 #manual-zoom-btn {
