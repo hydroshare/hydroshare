@@ -1635,8 +1635,6 @@ div#sharing-status .col-sm-12{
 	margin-bottom: 20px;
 }
 
-
-
 .tag-list {
     min-height:46px !important;
     margin-top:10px;
@@ -1687,7 +1685,6 @@ a.tag:hover {
     margin-top: 20px;
     border:0;
 }
-
 
 .tab-elements .table:not(.table-striped) {
     width:auto;

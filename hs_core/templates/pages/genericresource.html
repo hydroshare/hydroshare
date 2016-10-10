@@ -334,6 +334,13 @@
                                                     </li>
                                                 </ul>
                                             </form>
+
+                                            <form id="fb-delete-files-form" class="hidden"
+                                                  action="/hsapi/_internal/{{ cm.short_id }}/delete__multiple_files/"
+                                                  method="POST" enctype="multipart/form-data">
+                                                    {% csrf_token %}
+                                                    <input type="hidden" name="file_ids" value="" />
+                                            </form>
                                         </div>
 
                                         {% if page.perms.change and metadata_form %}
