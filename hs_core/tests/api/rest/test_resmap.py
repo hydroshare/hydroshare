@@ -29,8 +29,10 @@ class TestResourceMap(ResMapTestCase):
         super(TestResourceMap, self).tearDown()
 
     def test_get_resmap(self):
-        response = self.client.get("/hsapi/resmap/{pid}/".format(pid=self.pid),
+        response = self.client.get("/hsapi/resource/{pid}/map/".format(pid=self.pid),
                                    format='json')
+        # Note: this presumes that there is always a single redirection.
+        # This might not be true if we utilize systems other than iRODS.
         self.assertEqual(response.status_code, status.HTTP_302_FOUND)
         response2 = self.client.get(response.url)
         self.assertEqual(response2.status_code, status.HTTP_200_OK)
@@ -87,7 +89,7 @@ class TestResourceMap(ResMapTestCase):
 
         # download the resource map and
         # Make sure the new file appears in the resource map
-        response = self.client.get("/hsapi/resmap/{pid}/".format(pid=self.pid))
+        response = self.client.get("/hsapi/resource/{pid}/map/".format(pid=self.pid))
         self.assertEqual(response.status_code, status.HTTP_302_FOUND)
         response2 = self.client.get(response.url)
         self.assertEqual(response2.status_code, status.HTTP_200_OK)
