@@ -134,9 +134,11 @@ function updateSelectionMenuContext() {
 
     // Zip
     menu.children("li[data-menu-name='zip']").toggleClass("disabled", flagDisableZip);
+    $("#fb-zip").toggleClass("disabled", flagDisableZip);
 
     // Unzip
     menu.children("li[data-menu-name='unzip']").toggleClass("disabled", flagDisableUnzip);
+    $("#fb-unzip").toggleClass("disabled", flagDisableUnzip);
 
     // Cut
     menu.children("li[data-menu-name='cut']").toggleClass("disabled", flagDisableCut);
@@ -838,6 +840,11 @@ $(document).ready(function () {
     });
 
     $(".modal input.modal-only-required").keyup(function() {
-        $(this).closest(".modal-content").find(".btn-primary").toggleClass("disabled", $(this).val().trim() == "")
+        var submitBtn = $(this).closest(".modal-content").find(".btn-primary");
+        submitBtn.toggleClass("disabled", $(this).val().trim() == "");
+        var key = event.which;
+        if (key == 13) {    // The enter key
+            submitBtn.trigger('click');
+        }
     });
 });

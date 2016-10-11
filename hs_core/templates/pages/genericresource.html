@@ -102,7 +102,7 @@
                         <li role="separator" class="divider"></li>
 
                         <li id="btn-zip" data-menu-name="zip" data-toggle="modal" data-target="#zip-folder-dialog">
-                            <span class="fa fa-file-archive-o icon-blue"></span>
+                            <span class="glyphicon glyphicon-compressed icon-blue"></span>
                             <span>Zip Folder...</span>
                         </li>
 
@@ -232,7 +232,7 @@
                                                                 class="caret"></span>
                                                         </button>
 
-                                                        <ul class="dropdown-menu">
+                                                        <ul class="dropdown-menu text-left">
                                                             <li data-method="type" class="active"><a>Type</a></li>
                                                             <li data-method="name"><a>Name</a></li>
                                                             <li data-method="size"><a>Size</a></li>
@@ -295,6 +295,19 @@
                                                                 title="Rename" data-toggle="modal"
                                                                 data-target="#rename-dialog">
                                                             <span class="glyphicon glyphicon-pencil icon-blue"></span>
+                                                        </button>
+
+                                                        <button id="fb-zip"
+                                                                class="disabled"
+                                                                title="Zip Folder" data-toggle="modal"
+                                                                data-target="#zip-folder-dialog">
+                                                            <span class="glyphicon glyphicon-compressed icon-blue"></span>
+                                                        </button>
+
+                                                        <button id="fb-unzip"
+                                                                class="disabled"
+                                                                title="Unzip here">
+                                                            <span class="fa fa-file-archive-o icon-blue"></span>
                                                         </button>
                                                     {% endif %}
 
