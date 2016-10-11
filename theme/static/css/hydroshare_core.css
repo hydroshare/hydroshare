@@ -3865,7 +3865,6 @@ form#covereage-search-fields {
     border-radius: 4px;
 }
 
-
 /* -------------- File browser styling ---------------- */
 .file-browser {
     margin-bottom: 20px;
@@ -3899,8 +3898,6 @@ form#covereage-search-fields {
 	padding: 8px;
 	min-height: 36px;
 }
-
-
 
 #fb-bread-crumbs li {
 	color: #428bca;
@@ -3949,8 +3946,6 @@ form#covereage-search-fields {
 #fb-sort ul li:not(.divider) {
 	padding: 4px 8px;
 }
-
-
 
 .fb-folder, .fb-file {
 	list-style-type: none;
@@ -4264,9 +4259,6 @@ div.fb-upload-caption a {
 	filter: progid:DXImageTransform.Microsoft.gradient(startColorstr='#ffffff', endColorstr='#ededed', GradientType=0);
 }
 
-.fb-inner-buttons-right {
-}
-
 div#fb-inner-controls {
 	padding: 0;
 	padding-bottom: 0;
@@ -4325,5 +4317,9 @@ div#fb-file-operations-controls {
 
 #previews {
 	display: none;
+}
+
+#btn-group-view button.active {
+	pointer-events: none;
 }
 
