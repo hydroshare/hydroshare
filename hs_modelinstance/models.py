@@ -58,12 +58,20 @@ class ExecutedBy(AbstractMetaDataElement):
 
     @classmethod
     def create(cls, **kwargs):
-        shortid = kwargs['model_name']
+        # get the foreign key id
+        mp_short_id = kwargs['model_program_fk']
+
         # get the MP object that matches.  Returns None if nothing is found
-        obj = ModelProgramResource.objects.filter(short_id=shortid).first()
-        metadata_obj = kwargs['content_object']
-        title = obj.title
-        return super(ExecutedBy,cls).create(model_program_fk=obj, model_name=title,content_object=metadata_obj)
+        obj = ModelProgramResource.objects.filter(id=mp_short_id).first()
+
+        if obj is None:
+            # return Null
+            return None
+        else:
+            # return an instance of the ExecutedBy class using the selected Model Program as a foreign key
+            metadata_obj = kwargs['content_object']
+            title = obj.title
+            return super(ExecutedBy,cls).create(model_program_fk=obj, model_name=title, content_object=metadata_obj)
 
     @classmethod
     def update(cls, element_id, **kwargs):
@@ -75,7 +83,7 @@ class ExecutedBy(AbstractMetaDataElement):
         obj = ModelProgramResource.objects.filter(short_id=shortid).first()
 
         if obj is None:
-            # return an Null instance of the ExecutedBy class
+            # return a Null instance of the ExecutedBy class
             return super(ExecutedBy,cls).update(model_program_fk=None, model_name='Unspecified', element_id=element_id)
         else:
             # return an instance of the ExecutedBy class using the selected Model Program as a foreign key
