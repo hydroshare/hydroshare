@@ -210,14 +210,14 @@
             </div>
         {% endif %}
 
-        <div id="user-permission-msg" class="col-sm-12">
+        <div id="user-permission-msg" class="col-sm-6 col-xs-12">
             {% if is_owner_user %}
-                <span class="alert alert-info" role="alert">You are the owner of this resource.</span>
+                <div class="alert alert-info" role="alert">You are the owner of this resource.</div>
             {% elif is_edit_user %}
-                <span class="alert alert-info" role="alert">You have been given specific permission to
-                    {% if cm.raccess.published %} view{% else %} edit{% endif %} this resource.</span>
+                <div class="alert alert-info" role="alert">You have been given specific permission to
+                    {% if cm.raccess.published %} view{% else %} edit{% endif %} this resource.</div>
             {% elif is_view_user %}
-                <span class="alert alert-info" role="alert">You have been given specific permission to view this resource.</span>
+                <div class="alert alert-info" role="alert">You have been given specific permission to view this resource.</div>
             {% endif %}
         </div>
     </div>
