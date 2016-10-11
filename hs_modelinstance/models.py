@@ -32,7 +32,7 @@ class ModelOutput(AbstractMetaDataElement):
 class ExecutedBy(AbstractMetaDataElement):
     term = 'ExecutedBY'
     # model_name: the id of the model program used for execution
-    model_name = models.CharField(max_length=500, default=None)
+    model_name = models.CharField(max_length=500, default=None, null=True)
     model_program_fk = models.ForeignKey('hs_model_program.ModelProgramResource', null=True, blank=True, default=None, related_name='modelinstance')
 
     def __unicode__(self):
@@ -67,11 +67,20 @@ class ExecutedBy(AbstractMetaDataElement):
 
     @classmethod
     def update(cls, element_id, **kwargs):
+
+        # get the shortid of the selected model program (passed in from javascript)
         shortid = kwargs['model_name']
+
         # get the MP object that matches.  Returns None if nothing is found
         obj = ModelProgramResource.objects.filter(short_id=shortid).first()
-        title = obj.title
-        return super(ExecutedBy,cls).update(model_program_fk=obj, model_name=title, element_id=element_id)
+
+        if obj is None:
+            # return an Null instance of the ExecutedBy class
+            return super(ExecutedBy,cls).update(model_program_fk=None, model_name='Unspecified', element_id=element_id)
+        else:
+            # return an instance of the ExecutedBy class using the selected Model Program as a foreign key
+            title = obj.title
+            return super(ExecutedBy,cls).update(model_program_fk=obj, model_name=title, element_id=element_id)
 
 # Model Instance Resource type
 class ModelInstanceResource(BaseResource):
