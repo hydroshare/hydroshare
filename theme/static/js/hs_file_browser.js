@@ -709,6 +709,7 @@ $(document).ready(function () {
         var deleteList = $("#fb-files-container li.ui-selected");
         var currentPath = $("#hs-file-browser").attr("data-current-path");
         var filesToDelete = "";
+        $(".file-browser-container, #fb-files-container").css("cursor", "progress");
         if (deleteList.length) {
             var calls = [];
             for (var i = 0; i < deleteList.length; i++) {
@@ -737,9 +738,8 @@ $(document).ready(function () {
                 else {
                     refreshFileBrowser();
                 }
+                // $("#fb-files-container li.ui-selected").fadeOut(200);
             });
-
-            $("#fb-files-container li.ui-selected").fadeOut(200);
         }
     });
 

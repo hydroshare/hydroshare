@@ -188,7 +188,7 @@
                                     <div id="fb-inner-controls">
                                         <div id="fb-inner-buttons">
                                             <div class="row">
-                                                <div class="col-xs-12 col-sm-4">
+                                                <div class="col-xs-6 col-sm-3 col-md-3">
                                                     <button id="fb-move-back"
                                                             class="btn btn-default fb-control-round disabled"
                                                             title="Click to go back"><span
@@ -207,7 +207,47 @@
                                                             class="fa fa-level-up"></span></button>
                                                 </div>
 
-                                                <div class="col-xs-12 col-sm-8">
+                                                <div class="col-xs-6 col-sm-4 col-md-3 pull-right text-right">
+                                                    <div id="btn-group-view" class="btn-group" role="group">
+                                                        <button data-view="list" data-toggle="tooltip"
+                                                                data-placement="auto"
+                                                                title='List'
+                                                                type="button"
+                                                                class="btn btn-default"><i class='fa fa-list' aria-hidden='true'></i>
+                                                        </button>
+
+                                                        <button data-view="grid" data-toggle="tooltip"
+                                                                data-placement="auto" type="button"
+                                                                title='Grid'
+                                                                class="btn btn-default active"><i class='glyphicon glyphicon-th-large' aria-hidden='true'></i>
+                                                        </button>
+                                                    </div>
+
+                                                    <div id="fb-sort" class="btn-group">
+                                                        <button type="button"
+                                                                class="btn btn-default dropdown-toggle"
+                                                                data-toggle="dropdown" aria-haspopup="true"
+                                                                aria-expanded="false">
+                                                            <span class="glyphicon glyphicon-sort"></span>&nbsp;<span>Sort By</span>&nbsp;<span
+                                                                class="caret"></span>
+                                                        </button>
+
+                                                        <ul class="dropdown-menu">
+                                                            <li data-method="type" class="active"><a>Type</a></li>
+                                                            <li data-method="name"><a>Name</a></li>
+                                                            <li data-method="size"><a>Size</a></li>
+                                                            <li role="separator" class="divider"></li>
+                                                            <li data-order="asc" class="active"><a><i
+                                                                    class="fa fa-sort-amount-asc"></i>&nbsp;&nbsp;Ascending</a>
+                                                            </li>
+                                                            <li data-order="desc"><a><i
+                                                                    class="fa fa-sort-amount-desc"></i>&nbsp;&nbsp;Descending</a>
+                                                            </li>
+                                                        </ul>
+                                                    </div>
+                                                </div>
+
+                                                <div class="col-xs-12 col-sm-5 col-md-6 height-fix">
                                                     <div class="input-group file-browser-search">
                                                         <span class="glyphicon glyphicon-search search-icon"></span>
                                                     <span id="btn-clear-search-input"
@@ -274,46 +314,6 @@
                                                         <span class="glyphicon glyphicon-download icon-blue"></span>
                                                     </button>
                                                 </div>
-
-                                                <div class="col-xs-12 col-sm-4">
-                                                    <div id="btn-group-view" class="btn-group" role="group">
-                                                        <button data-view="list" data-toggle="tooltip"
-                                                                data-placement="auto"
-                                                                title='List'
-                                                                type="button"
-                                                                class="btn btn-default"><i class='fa fa-list' aria-hidden='true'></i>
-                                                        </button>
-
-                                                        <button data-view="grid" data-toggle="tooltip"
-                                                                data-placement="auto" type="button"
-                                                                title='Grid'
-                                                                class="btn btn-default active"><i class='glyphicon glyphicon-th-large' aria-hidden='true'></i>
-                                                        </button>
-                                                    </div>
-
-                                                    <div id="fb-sort" class="btn-group">
-                                                        <button type="button"
-                                                                class="btn btn-default dropdown-toggle"
-                                                                data-toggle="dropdown" aria-haspopup="true"
-                                                                aria-expanded="false">
-                                                            <span class="glyphicon glyphicon-sort"></span>&nbsp;<span>Sort By</span>&nbsp;<span
-                                                                class="caret"></span>
-                                                        </button>
-
-                                                        <ul class="dropdown-menu">
-                                                            <li data-method="type" class="active"><a>Type</a></li>
-                                                            <li data-method="name"><a>Name</a></li>
-                                                            <li data-method="size"><a>Size</a></li>
-                                                            <li role="separator" class="divider"></li>
-                                                            <li data-order="asc" class="active"><a><i
-                                                                    class="fa fa-sort-amount-asc"></i>&nbsp;&nbsp;Ascending</a>
-                                                            </li>
-                                                            <li data-order="desc"><a><i
-                                                                    class="fa fa-sort-amount-desc"></i>&nbsp;&nbsp;Descending</a>
-                                                            </li>
-                                                        </ul>
-                                                    </div>
-                                                </div>
                                             </div>
                                         </div>
 
@@ -324,7 +324,7 @@
                                         </div>
                                     </div>
                                     <form id="fbContainmentWrapper"
-                                          class="files-container ui-widget-content dropzone"
+                                          class="files-container ui-widget-content {% if page.perms.change and metadata_form %}dropzone{% endif %}"
                                           action="/hsapi/_internal/{{ cm.short_id }}/add-file-to-resource/"
                                           method="POST">
                                         {% csrf_token %}

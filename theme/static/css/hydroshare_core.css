@@ -3884,6 +3884,7 @@ form#covereage-search-fields {
 .file-browser-breadcrumb .breadcrumb{
     background: #FFF;
     margin-bottom: 0;
+	padding: 0 4px;
 }
 
 .file-browser-breadcrumb .btn:not(.disabled) {
@@ -3896,6 +3897,7 @@ form#covereage-search-fields {
 
 .file-browser-breadcrumb {
 	padding: 8px;
+	min-height: 36px;
 }
 
 
@@ -4182,9 +4184,12 @@ div.fb-upload-caption {
 	padding: 8px;
 	border: 1px solid #DDD;
 	border-top: 0;
-	cursor: pointer;
     background: #fafafa;
     color: #555;
+}
+
+div.fb-upload-caption a {
+	cursor: pointer;
 }
 
 .dropzone {
@@ -4293,6 +4298,7 @@ div#fb-inner-controls button, .file-browser-search {
 
 #fb-file-operations-controls > button {
 	margin-top: 8px;
+	text-shadow: 0 1px 0 #fff;
 }
 
 div#fb-file-operations-controls {

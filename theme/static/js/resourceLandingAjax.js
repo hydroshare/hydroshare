@@ -467,23 +467,23 @@ function get_user_info_ajax_submit(url, obj) {
 }
 
 function delete_file_ajax_submit(res_id, file_pk) {
-    $(".file-browser-container").css("cursor", "progress");
+    $(".file-browser-container, #fb-files-container").css("cursor", "progress");
 
     return $.ajax({
         type: "POST",
         url: '/hsapi/_internal/' + res_id + '/delete-resource-file/' + file_pk + '/',
         success: function (result) {
             console.log("File deleted");
-            $(".file-browser-container").css("cursor", "default");
+            $(".file-browser-container, #fb-files-container").css("cursor", "default");
         },
         error: function(xhr, errmsg, err){
-            $(".file-browser-container").css("cursor", "default");
+            $(".file-browser-container, #fb-files-container").css("cursor", "default");
         }
     });
 }
 
 function delete_folder_ajax_submit(res_id, folder_path) {
-    $(".file-browser-container").css("cursor", "progress");
+    $(".file-browser-container, #fb-files-container").css("cursor", "progress");
 
     return $.ajax({
         type: "POST",
@@ -504,7 +504,7 @@ function delete_folder_ajax_submit(res_id, folder_path) {
 
 // This method is called to refresh the loader with the most recent structure after every other call
 function get_irods_folder_struct_ajax_submit(res_id, store_path) {
-    $("#fb-files-container").css("cursor", "progress");
+    $("#fb-files-container, #fb-files-container").css("cursor", "progress");
     return $.ajax({
         type: "POST",
         url: '/hsapi/_internal/data-store-structure/',
@@ -537,14 +537,14 @@ function get_irods_folder_struct_ajax_submit(res_id, store_path) {
             updateNavigationState();
             $(".selection-menu").hide();
             $("#flag-uploading").remove();
-            $("#fb-files-container").css("cursor", "default");
+            $("#fb-files-container, #fb-files-container").css("cursor", "default");
 
             // Make all grid items have same height;
         },
         error: function(xhr, errmsg, err){
             $(".selection-menu").hide();
             $("#flag-uploading").remove();
-            $("#fb-files-container").css("cursor", "default");
+            $("#fb-files-container, #fb-files-container").css("cursor", "default");
             $('#fb-files-container').empty();
             setBreadCrumbs(store_path);
             $("#fb-files-container").prepend("<span>No files to display.</span>")
@@ -553,7 +553,7 @@ function get_irods_folder_struct_ajax_submit(res_id, store_path) {
 }
 
 function zip_irods_folder_ajax_submit(res_id, input_coll_path, fileName) {
-    $("#fb-files-container").css("cursor", "progress");
+    $("#fb-files-container, #fb-files-container").css("cursor", "progress");
     return $.ajax({
         type: "POST",
         url: '/hsapi/_internal/data-store-folder-zip/',
@@ -574,7 +574,7 @@ function zip_irods_folder_ajax_submit(res_id, input_coll_path, fileName) {
 }
 
 function unzip_irods_file_ajax_submit(res_id, zip_with_rel_path) {
-    $("#fb-files-container").css("cursor", "progress");
+    $("#fb-files-container, #fb-files-container").css("cursor", "progress");
     return $.ajax({
         type: "POST",
         url: '/hsapi/_internal/data-store-folder-unzip/',
@@ -597,7 +597,7 @@ function unzip_irods_file_ajax_submit(res_id, zip_with_rel_path) {
 }
 
 function create_irods_folder_ajax_submit(res_id, folder_path) {
-    $("#fb-files-container").css("cursor", "progress");
+    $("#fb-files-container, #fb-files-container").css("cursor", "progress");
     $.ajax({
         type: "POST",
         url: '/hsapi/_internal/data-store-create-folder/',
@@ -622,7 +622,7 @@ function create_irods_folder_ajax_submit(res_id, folder_path) {
 }
 
 function move_or_rename_irods_file_or_folder_ajax_submit(res_id, source_path, target_path) {
-    $("#fb-files-container").css("cursor", "progress");
+    $("#fb-files-container, #fb-files-container").css("cursor", "progress");
     return $.ajax({
         type: "POST",
         url: '/hsapi/_internal/data-store-move-or-rename/',
