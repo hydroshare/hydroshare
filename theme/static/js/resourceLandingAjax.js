@@ -524,6 +524,9 @@ function get_irods_folder_struct_ajax_submit(res_id, store_path) {
                     $('#fb-files-container').append(getFolderTemplateInstance(v));
                 });
             }
+            if (!files.length && !folders.length) {
+                $('#fb-files-container').append('<span class="text-muted">This directory is empty</span>');
+            }
 
             onSort();
 
@@ -535,8 +538,6 @@ function get_irods_folder_struct_ajax_submit(res_id, store_path) {
             $(".selection-menu").hide();
             $("#flag-uploading").remove();
             $("#fb-files-container, #fb-files-container").css("cursor", "default");
-
-            // Make all grid items have same height;
         },
         error: function(xhr, errmsg, err){
             $(".selection-menu").hide();
