@@ -498,16 +498,17 @@ $(document).ready(function () {
     }
 
     // Toggle between grid and list view
-    $("#toggle-list-view").change(function () {
-        if ($("#fb-files-container").hasClass("fb-view-list")) {
-            // ------- Switch to grid view -------
-            $("#fb-files-container").removeClass("fb-view-list");
-            $("#fb-files-container").addClass("fb-view-grid");
-        }
-        else {
+    $("#btn-group-view button").click(function () {
+        $("#btn-group-view button").toggleClass("active");
+        if ($(this).attr("data-view") == "list") {
             // ------- switch to table view -------
             $("#fb-files-container").removeClass("fb-view-grid");
             $("#fb-files-container").addClass("fb-view-list");
+        }
+        else {
+            // ------- Switch to grid view -------
+            $("#fb-files-container").removeClass("fb-view-list");
+            $("#fb-files-container").addClass("fb-view-grid");
         }
     });
 
@@ -707,12 +708,16 @@ $(document).ready(function () {
     $("#btn-confirm-delete").click(function () {
         var deleteList = $("#fb-files-container li.ui-selected");
         var currentPath = $("#hs-file-browser").attr("data-current-path");
+        var filesToDelete = "";
         if (deleteList.length) {
             var calls = [];
             for (var i = 0; i < deleteList.length; i++) {
                 var pk = $(deleteList[i]).attr("data-pk");
                 if (pk) {
-                    calls.push(delete_file_ajax_submit(resID, pk));
+                    if (filesToDelete != "") {
+                        filesToDelete += ",";
+                    }
+                    filesToDelete += pk;
                 }
                 else {  // item is a folder
                     var folderName = $(deleteList[i]).children(".fb-file-name").text();
@@ -721,9 +726,17 @@ $(document).ready(function () {
                 }
             }
 
+            $("#delete-file-form input")
+
             // Wait for the asynchronous calls to finish to get new folder structure
             $.when.apply($, calls).done(function () {
-                refreshFileBrowser();
+                if (filesToDelete != "") {
+                    $("#fb-delete-files-form input[name='file_ids']").val(filesToDelete);
+                    $("#fb-delete-files-form").submit();
+                }
+                else {
+                    refreshFileBrowser();
+                }
             });
 
             $("#fb-files-container li.ui-selected").fadeOut(200);

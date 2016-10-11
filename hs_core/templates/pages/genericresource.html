@@ -180,191 +180,214 @@
                                 </div>
                             </div>
                             {#                            ======= Modal window ends =======#}
-                                    <div id="hs-file-browser" data-res-id="{{ cm.short_id }}" data-current-path="data/contents" {% if page.perms.change and metadata_form %}data-mode="edit"{% endif %} class="file-browser">
-                                        <div class="file-browser-controls row">
-                                            <div class="col-sm-6 col-xs-12">
-                                                <div class="input-group file-browser-search">
-                                                    <span class="glyphicon glyphicon-search search-icon"></span>
+                            <div id="hs-file-browser" data-res-id="{{ cm.short_id }}" data-current-path="data/contents"
+                                 {% if page.perms.change and metadata_form %}data-mode="edit"{% endif %}
+                                 class="file-browser">
+
+                                <div class="file-browser-container">
+                                    <div id="fb-inner-controls">
+                                        <div id="fb-inner-buttons">
+                                            <div class="row">
+                                                <div class="col-xs-12 col-sm-4">
+                                                    <button id="fb-move-back"
+                                                            class="btn btn-default fb-control-round disabled"
+                                                            title="Click to go back"><span
+                                                            class="glyphicon glyphicon-arrow-left"></span>
+                                                    </button>
+
+                                                    <button id="fb-move-forward"
+                                                            class="btn btn-default fb-control-round disabled"
+                                                            title="Click to go forward"><span
+                                                            class="glyphicon glyphicon-arrow-right"></span>
+                                                    </button>
+
+                                                    <button id="fb-move-up"
+                                                            class="btn btn-default fb-control-squared disabled"
+                                                            title="Click to go to parent directory"><span
+                                                            class="fa fa-level-up"></span></button>
+                                                </div>
+
+                                                <div class="col-xs-12 col-sm-8">
+                                                    <div class="input-group file-browser-search">
+                                                        <span class="glyphicon glyphicon-search search-icon"></span>
                                                     <span id="btn-clear-search-input"
                                                           class="glyphicon glyphicon-remove-sign btn-clear-search"
                                                           data-toggle="tooltip"
                                                           data-placement="auto"
                                                           title="Clear search"></span>
-                                                    <input type="text" id="txtDirSearch"
-                                                           class="form-control fb-input-search"
-                                                           placeholder="Search current directory">
-                                                </div>
-                                            </div>
-                                        </div>
-
-                                        <div class="file-browser-container">
-                                            <div class="file-browser-breadcrumb height-fix">
-                                                <div class="pull-left">
-                                                    <button id="fb-move-back" class="btn btn-default fb-control-round disabled"
-                                                            title="Click to go back"><span
-                                                            class="glyphicon glyphicon-arrow-left"></span></button>
-
-                                                    <button id="fb-move-forward" class="btn btn-default fb-control-round disabled"
-                                                            title="Click to go forward"><span
-                                                            class="glyphicon glyphicon-arrow-right"></span></button>
-
-                                                    <button id="fb-move-up" class="btn btn-default fb-control-squared disabled"
-                                                            title="Click to go to parent directory"><span
-                                                            class="fa fa-level-up"></span></button>
+                                                        <input type="text" id="txtDirSearch"
+                                                               class="form-control fb-input-search"
+                                                               placeholder="Search current directory">
+                                                    </div>
                                                 </div>
 
-
-                                                <ol id="fb-bread-crumbs" class="breadcrumb">
-
-                                                </ol>
                                             </div>
-
-                                            <div id="fb-inner-controls" class="container">
-                                                <div class="row">
-                                                    <div class="col-sm-8 col-xs-12">
-                                                        {% if page.perms.change and metadata_form %}
+                                            <div class="row">
+                                                <div id="fb-file-operations-controls" class="col-xs-12 col-sm-8 height-fix">
+                                                    {% if page.perms.change and metadata_form %}
                                                         <button id="fb-create-folder"
-                                                                class="btn btn-default fb-control-squared"
                                                                 data-toggle="modal" data-target="#create-folder-dialog"
                                                                 title="Create new folder">
                                                             <span class="fa fa-folder glyphicon-folder"></span>
                                                         </button>
 
                                                         <button id="fb-delete"
-                                                                class="btn btn-default fb-control-squared fb-files-remove disabled"
+                                                                class="disabled"
                                                                 title="Delete" data-toggle="modal"
                                                                 data-target="#confirm-delete-dialog">
                                                             <span class="glyphicon glyphicon-trash btn-remove"></span>
                                                         </button>
 
                                                         <button id="fb-cut"
-                                                                class="btn btn-default disabled fb-control-squared"
+                                                                class="disabled"
                                                                 title="Cut">
                                                             <span class="fa fa-scissors icon-blue"></span>
                                                         </button>
 
                                                         <button id="fb-paste"
-                                                                class="btn btn-default fb-control-squared disabled"
+                                                                class="disabled"
                                                                 title="Paste">
                                                             <span class="fa fa-clipboard icon-blue"></span>
                                                         </button>
 
                                                         <button id="fb-rename"
-                                                                class="btn btn-default fb-control-squared disabled"
+                                                                class="disabled"
                                                                 title="Rename" data-toggle="modal"
                                                                 data-target="#rename-dialog">
                                                             <span class="glyphicon glyphicon-pencil icon-blue"></span>
                                                         </button>
-                                                        {% endif %}
+                                                    {% endif %}
 
-                                                        <button id="fb-select-all"
-                                                                class="btn btn-default fb-control-squared"
-                                                                title="Select All">
-                                                            <span class="fa fa-plus-square-o icon-blue"></span>
+                                                    <button id="fb-select-all"
+                                                            title="Select All">
+                                                        <span class="fa fa-plus-square-o icon-blue"></span>
+                                                    </button>
+
+                                                    <button id="fb-refresh"
+                                                            title="Refresh">
+                                                        <span class="fa fa-refresh icon-blue"></span>
+                                                    </button>
+
+                                                    <button id="fb-download"
+                                                            class="disabled"
+                                                            title="Download">
+                                                        <span class="glyphicon glyphicon-download icon-blue"></span>
+                                                    </button>
+                                                </div>
+
+                                                <div class="col-xs-12 col-sm-4">
+                                                    <div id="btn-group-view" class="btn-group" role="group">
+                                                        <button data-view="list" data-toggle="tooltip"
+                                                                data-placement="auto"
+                                                                title='List'
+                                                                type="button"
+                                                                class="btn btn-default"><i class='fa fa-list' aria-hidden='true'></i>
                                                         </button>
 
-                                                        <button id="fb-refresh"
-                                                                class="btn btn-default fb-control-squared"
-                                                                title="Refresh">
-                                                            <span class="fa fa-refresh icon-blue"></span>
-                                                        </button>
-
-                                                        <button id="fb-download"
-                                                                class="btn btn-default fb-control-squared disabled"
-                                                                title="Download">
-                                                            <span class="glyphicon glyphicon-download icon-blue"></span>
+                                                        <button data-view="grid" data-toggle="tooltip"
+                                                                data-placement="auto" type="button"
+                                                                title='Grid'
+                                                                class="btn btn-default active"><i class='glyphicon glyphicon-th-large' aria-hidden='true'></i>
                                                         </button>
                                                     </div>
 
-                                                    <div class="col-sm-4 col-xs-12 ">
-                                                        <div id="fb-sort" class="btn-group pull-right">
-                                                            <button type="button"
-                                                                    class="btn btn-default dropdown-toggle"
-                                                                    data-toggle="dropdown" aria-haspopup="true"
-                                                                    aria-expanded="false">
-                                                                <span class="glyphicon glyphicon-sort"></span>&nbsp;<span>Sort By</span>&nbsp;<span
-                                                                    class="caret"></span>
-                                                            </button>
-                                                            <ul class="dropdown-menu">
-                                                                <li data-method="type" class="active"><a>Type</a></li>
-                                                                <li data-method="name"><a>Name</a></li>
-                                                                <li data-method="size"><a>Size</a></li>
-                                                                <li role="separator" class="divider"></li>
-                                                                <li data-order="asc" class="active"><a><i
-                                                                        class="fa fa-sort-amount-asc"></i>&nbsp;&nbsp;Ascending</a>
-                                                                </li>
-                                                                <li data-order="desc"><a><i
-                                                                        class="fa fa-sort-amount-desc"></i>&nbsp;&nbsp;Descending</a>
-                                                                </li>
-                                                            </ul>
-                                                        </div>
+                                                    <div id="fb-sort" class="btn-group">
+                                                        <button type="button"
+                                                                class="btn btn-default dropdown-toggle"
+                                                                data-toggle="dropdown" aria-haspopup="true"
+                                                                aria-expanded="false">
+                                                            <span class="glyphicon glyphicon-sort"></span>&nbsp;<span>Sort By</span>&nbsp;<span
+                                                                class="caret"></span>
+                                                        </button>
 
-                                                        <span id="fb-view" class="pull-right">
-                                                            <input id="toggle-list-view" type="checkbox" checked
-                                                                   data-toggle="toggle" data-onstyle="default"
-                                                                   data-offstyle="default"
-                                                                   data-on="<i class='fa fa-list' aria-hidden='true'></i>"
-                                                                   data-off="<i class='glyphicon glyphicon-th-large' aria-hidden='true'></i>">
-                                                        </span>
+                                                        <ul class="dropdown-menu">
+                                                            <li data-method="type" class="active"><a>Type</a></li>
+                                                            <li data-method="name"><a>Name</a></li>
+                                                            <li data-method="size"><a>Size</a></li>
+                                                            <li role="separator" class="divider"></li>
+                                                            <li data-order="asc" class="active"><a><i
+                                                                    class="fa fa-sort-amount-asc"></i>&nbsp;&nbsp;Ascending</a>
+                                                            </li>
+                                                            <li data-order="desc"><a><i
+                                                                    class="fa fa-sort-amount-desc"></i>&nbsp;&nbsp;Descending</a>
+                                                            </li>
+                                                        </ul>
                                                     </div>
                                                 </div>
                                             </div>
-
-                                            <form id="fbContainmentWrapper"
-                                                  class="files-container ui-widget-content dropzone"
-                                                  action="/hsapi/_internal/{{ cm.short_id }}/add-file-to-resource/"
-                                                  method="POST">
-                                                {% csrf_token %}
-
-                                                <div id="flag-uploading" class="hidden">
-                                                    <i class="fa fa-circle-o-notch fa-spin fa-fw"></i>
-                                                    <small class="uploading-message">
-                                                        <strong>Uploading files to:</strong>&nbsp;data/contents<strong>
-                                                        &nbsp;&nbsp;Progress:&nbsp;</strong>
-                                                        <span id="upload-progress"></span></small>
-                                                </div>
-
-                                                <div class="fb-drag-flag">
-                                                    <span class="fa fa-plus-square fa-5x"></span>
-                                                </div>
-
-                                                <ul id="fb-files-container" class="selectable fb-view-grid">
-                                                    <li class="fb-loading-spinner">
-                                                        <i class="fa fa-spinner fa-pulse fa-2x fa-fw margin-bottom"></i>
-                                                    </li>
-                                                </ul>
-                                            </form>
                                         </div>
 
-                                        {% if page.perms.change and metadata_form %}
-                                            <div class="fb-upload-caption">
-                                                <span><i class="fa fa-upload" aria-hidden="true"></i>&nbsp;&nbsp;Upload
-                                                    files smaller than 1GB in size by dragging & dropping, or click <a id="upload-toggle" class="dz-clickable">here</a> to select them.
-                                                </span>
-                                                <span id="log-into-irods">To add files from an iRODS server,
-                                                <a id="btn-signin-irods" type="button" class="btn-link" data-toggle="modal"
-                                                data-target="#irodsSignin">Log in to iRODS</a></span>
-                                                <span id="sign-in-info"></span>
-                                                <a id="btn-signout-irods" type="button" class="btn-link hidden-form">Log out of iRODS</a>
-                                            </div>
-                                        {% endif %}
+                                        <div class="file-browser-breadcrumb height-fix">
+                                            <ol id="fb-bread-crumbs" class="breadcrumb">
+
+                                            </ol>
+                                        </div>
                                     </div>
+                                    <form id="fbContainmentWrapper"
+                                          class="files-container ui-widget-content dropzone"
+                                          action="/hsapi/_internal/{{ cm.short_id }}/add-file-to-resource/"
+                                          method="POST">
+                                        {% csrf_token %}
+
+                                        <div id="flag-uploading" class="hidden">
+                                            <i class="fa fa-circle-o-notch fa-spin fa-fw"></i>
+                                            <small class="uploading-message">
+                                                <strong>Uploading files to:</strong>&nbsp;data/contents<strong>
+                                                &nbsp;&nbsp;Progress:&nbsp;</strong>
+                                                <span id="upload-progress"></span></small>
+                                        </div>
+
+                                        <div class="fb-drag-flag">
+                                            <span class="fa fa-plus-square fa-5x"></span>
+                                        </div>
+
+                                        <ul id="fb-files-container" class="selectable fb-view-grid">
+                                            <li class="fb-loading-spinner">
+                                                <i class="fa fa-spinner fa-pulse fa-2x fa-fw margin-bottom"></i>
+                                            </li>
+                                        </ul>
+                                    </form>
+
+                                    <form id="fb-delete-files-form" class="hidden"
+                                          action="/hsapi/_internal/{{ cm.short_id }}/delete__multiple_files/"
+                                          method="POST" enctype="multipart/form-data">
+                                        {% csrf_token %}
+                                        <input type="hidden" name="file_ids" value=""/>
+                                    </form>
+                                </div>
 
                                 {% if page.perms.change and metadata_form %}
-                                    <a id="btn-select-irods-file" type="button"
-                                       class="btn btn-success row-selector hidden-form" data-toggle="modal"
-                                       data-target="#irodsContent">
-                                        <span class="glyphicon glyphicon-plus"><span class="button-label"> Add files from iRODS...</span></span>
-                                    </a>
-                                    {% if file_type_error %}
-                                        <div class="alert alert-danger alert-dismissible" role="alert">
-                                            <button id="validation-error-close" type="button" class="close"
-                                                    data-dismiss="alert"
-                                                    aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                                            <strong>Uploaded File Type Validation Error: {{ file_type_error }}</strong>
-                                        </div>
-                                    {% endif %}
+                                    <div class="fb-upload-caption">
+                                                <span><i class="fa fa-upload" aria-hidden="true"></i>&nbsp;&nbsp;Upload
+                                                    files smaller than 1GB in size by dragging & dropping, or click <a
+                                                            id="upload-toggle" class="dz-clickable">here</a> to select them.
+                                                </span>
+                                                <span id="log-into-irods">To add files from an iRODS server,
+                                                <a id="btn-signin-irods" type="button" class="btn-link"
+                                                   data-toggle="modal"
+                                                   data-target="#irodsSignin">Log in to iRODS</a></span>
+                                        <span id="sign-in-info"></span>
+                                        <a id="btn-signout-irods" type="button" class="btn-link hidden-form">Log out of
+                                            iRODS</a>
+                                    </div>
                                 {% endif %}
+                            </div>
+
+                            {% if page.perms.change and metadata_form %}
+                                <a id="btn-select-irods-file" type="button"
+                                   class="btn btn-success row-selector hidden-form" data-toggle="modal"
+                                   data-target="#irodsContent">
+                                    <span class="glyphicon glyphicon-plus"><span class="button-label"> Add files from iRODS...</span></span>
+                                </a>
+                                {% if file_type_error %}
+                                    <div class="alert alert-danger alert-dismissible" role="alert">
+                                        <button id="validation-error-close" type="button" class="close"
+                                                data-dismiss="alert"
+                                                aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                                        <strong>Uploaded File Type Validation Error: {{ file_type_error }}</strong>
+                                    </div>
+                                {% endif %}
+                            {% endif %}
 
                             <div class="table table-striped" class="files" id="previews"></div>
 
@@ -1479,8 +1502,6 @@
     <script type="text/javascript" src="{{ STATIC_URL }}js/hs_file_browser.js"></script>
     <script type="text/javascript" src="{{ STATIC_URL }}js/resourceLandingAjax.js"></script>
     <script type="text/javascript" src='//cdn.datatables.net/1.10.10/js/jquery.dataTables.js'></script>
-    <link href="https://gitcdn.github.io/bootstrap-toggle/2.2.2/css/bootstrap-toggle.min.css" rel="stylesheet">
-    <script src="https://gitcdn.github.io/bootstrap-toggle/2.2.2/js/bootstrap-toggle.min.js"></script>
     <script type="text/javascript">
         function onRoleSelect(event) {
             var el = $(event.target);
