@@ -402,190 +402,40 @@
                                 {% endif %}
                             {% endif %}
 
-                            <div class="table table-striped" class="files" id="previews"></div>
-
-{#                                    <div class="table-container">#}
-{#                                        <table class="table-plain table-striped">#}
-{#                                            {% for f in cm.files.all %}#}
-{#                                                {% if f.resource_file or f.fed_resource_file or f.fed_resource_file_name_or_path %}#}
-    {#                                                ======= Modal window begins =======#}
-{#                                                    {% if page.perms.change and metadata_form %}#}
-{#                                                        <div class="modal fade" id="delete-resource-file-{{ f.pk }}" tabindex="-1"#}
-{#                                                             role="dialog"#}
-{#                                                             aria-labelledby="myModalLabel" aria-hidden="true">#}
-{#                                                            <div class="modal-dialog">#}
-{#                                                                <div class="modal-content">#}
-{#                                                                    <div class="modal-header">#}
-{#                                                                        <button type="button" class="close" data-dismiss="modal"#}
-{#                                                                                aria-hidden="true">&times;</button>#}
-{#                                                                        <h4 class="modal-title">Confirm file deletion</h4>#}
-{#                                                                    </div>#}
-{#                                                                    <div class="modal-body">#}
-{#                                                                        Consider saving a copy of the file before you delete it if#}
-{#                                                                        it is#}
-{#                                                                        important to you.#}
-{#                                                                    </div>#}
-{#                                                                    <div class="modal-footer">#}
-{#                                                                        <button type="button" class="btn btn-default"#}
-{#                                                                                data-dismiss="modal">#}
-{#                                                                            Cancel#}
-{#                                                                        </button>#}
-{#                                                                        <a type="button" class="btn btn-danger"#}
-{#                                                                           href="/hsapi/_internal/{{ cm.short_id }}/delete-resource-file/{{ f.pk }}/">Delete</a>#}
-{#                                                                    </div>#}
-{#                                                                </div>#}
-{#                                                            </div>#}
-{#                                                        </div>#}
-{#                                                    {% endif %}#}
-    {#                                                ======= Modal window ends =======#}
-{#                                                    <tr>#}
-{#                                                        <td>#}
-{#                                                            <span class="glyphicon glyphicon-file file-icon"></span>#}
-{#                                                    <span>#}
-{#                                                        <span class="label-file-name">#}
-{#                                                            {{ f.resource_file.name|slice:"33:" }}#}
-{#                                                            {% if f.fed_resource_file %}#}
-{#                                                                {{ f.fed_resource_file.name|relative_irods_path }}#}
-{#                                                            {% endif %}#}
-{#                                                            {% if f.fed_resource_file_name_or_path %}#}
-{#                                                                {{ f.fed_resource_file_name_or_path }}#}
-{#                                                            {% endif %}#}
-{#                                                        </span>#}
-{#                                                        <p class="label-file-size">#}
-{#                                                            {% if f.resource_file %}#}
-{#                                                                {{ f.resource_file.size|filesizeformat }}#}
-{#                                                            {% elif f.fed_resource_file %}#}
-{#                                                                {{ f.fed_resource_file.size|filesizeformat }}#}
-{#                                                            {% else %}#}
-{#                                                                {{ f.fed_resource_file_size|filesizeformat }}#}
-{#                                                            {% endif %}#}
-{#                                                        </p>#}
-{#                                                    </span>#}
-{#                                                        </td>#}
-{#                                                                            <td>{% if preview %}<a class="btn btn-info btn-block" href="{{ preview }}">Preview</a>{% endif %}</td>#}
-{#                                                        <td>#}
-{#                                                            {% if page.perms.change and metadata_form %}#}
-{#                                                                <a href="{% if f.resource_file %} {{ f.resource_file.url }}#}
-{#                                                                {% elif f.fed_resource_file %} {{ f.fed_resource_file.url }}#}
-{#                                                                {% else %} {{ f.fed_resource_file_name_or_path }}{% endif %}"><span data-toggle="modal"#}
-{#                                                                                                          data-target="#delete-resource-file-{{ f.pk }}"#}
-{#                                                                                                          data-placement="auto"#}
-{#                                                                                                          title="Delete"#}
-{#                                                                                                          class="glyphicon glyphicon-trash icon-button btn-remove"></span></a>#}
-{#    #}
-{#                                                            {% endif %}#}
-{#                                                            {% if f.resource_file and f.resource_file.size < 1000000000 %}#}
-{#                                                                <a href="{{ f.resource_file.url }}"><span data-toggle="tooltip"#}
-{#                                                                                                      data-placement="auto"#}
-{#                                                                                                      title="Download"#}
-{#                                                                                                      class="glyphicon glyphicon-download icon-button btn-download"></span></a>#}
-{#                                                            {% elif f.fed_resource_file and f.fed_resource_file.size < 1000000000 %}#}
-{#                                                                <a href="{{ f.fed_resource_file.url }}"><span data-toggle="tooltip"#}
-{#                                                                                                      data-placement="auto"#}
-{#                                                                                                      title="Download"#}
-{#                                                                                                      class="glyphicon glyphicon-download icon-button btn-download"></span></a>#}
-{#                                                             only allow download from irods user zone for files smaller than 1GB#}
-{#                                                            {% elif f.fed_resource_file_name_or_path and f.fed_resource_file_size|to_int < 1000000000 %}#}
-{#                                                                <a href="/django_irods/download{{ cm.resource_federation_path }}/{{ cm.short_id }}/{{ f.fed_resource_file_name_or_path }}"><span data-toggle="tooltip"#}
-{#                                                                                                      data-placement="auto"#}
-{#                                                                                                      title="Download"#}
-{#                                                                                                      class="glyphicon glyphicon-download icon-button btn-download"></span></a>#}
-{#                                                            {% else %}#}
-{#                                                                <a data-toggle="modal" data-target="#large-file-download-alert">#}
-{#                                                                    <span data-toggle="tooltip" data-placement="auto"#}
-{#                                                                        title="Download"#}
-{#                                                                        class="glyphicon glyphicon-download icon-button btn-download">#}
-{#                                                                    </span>#}
-{#                                                                </a>#}
-{#                                                            {% endif %}#}
-{#                                                            {% if preview %}#}
-{#                                                                <a href="{{ preview }}"><span data-toggle="tooltip"#}
-{#                                                                                              data-placement="auto"#}
-{#                                                                                              title="Preview"#}
-{#                                                                                              class="glyphicon glyphicon-eye-open icon-button"></span></a>#}
-{#                                                            {% endif %}#}
-{#                                                        </td>#}
-{#                                                    </tr>#}
-{#                                                {% endif %}#}
-{#                                            {% endfor %}#}
-{#                                        </table>#}
-{#                                    </div>#}
-
-{#                                {% if page.perms.change and metadata_form %}#}
-{#                                    <span title="Add files smaller than 1GB in size" data-toggle="tooltip">#}
-{#                                        <a id="btn-add-file" type="button" class="btn btn-success row-selector" data-toggle="modal"#}
-{#                                            data-target="#add-file-dialog" multiple="multiple">#}
-{#                                            <span class="glyphicon glyphicon-plus"><span class="button-label"> Add files...</span></span>#}
-{#                                        </a>#}
-{#                                    </span>#}
-{##}
-{#                                    <a id="btn-select-irods-file" type="button" class="btn btn-success row-selector hidden-form" data-toggle="modal" data-target="#irodsContent" >#}
-{#                                        <span class="glyphicon glyphicon-plus"><span class="button-label"> Add files from iRODS...</span></span>#}
-{#                                    </a>#}
-{##}
-{#                                    <span id="log-into-irods">To add files from an iRODS server,#}
-{#                                        <a id="btn-signin-irods" type="button" class="btn-link" data-toggle="modal" data-target="#irodsSignin">log in to iRODS</a>#}
-{#                                    </span>#}
-{#                                    <span id="sign-in-info"></span>#}
-{#                                    <a id="btn-signout-irods" type="button" class="btn-link hidden-form">log out of iRODS</a>#}
-{##}
-{#                                    {% if file_type_error %}#}
-{#                                      <div class="alert alert-danger alert-dismissible" role="alert">#}
-{#                                        <button id="validation-error-close" type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>#}
-{#                                        <strong>Uploaded File Type Validation Error: {{ file_type_error }}</strong>#}
-{#                                      </div>#}
-{#                                    {% endif %}#}
-{#                                {% endif %}#}
-                            <!-- Buttons -->
-                            {% block download_bag %}
+                            <div class="files" id="previews"></div>
+                                {% block download_bag %}
                             <div>
-                                {% if user_zone_account_exist %}
-                                    <a id="rep-res-bag" type="button" class="btn btn-default row-selector" data-toggle="modal" data-target="#rep-resource-to-irods-dialog">
-                                        <span class="glyphicon">
-                                           <span title='Replicate Resource Bag to iRODS User Zone' class="button-label">Replicate Resource Bag to iRODS User Zone</span>
-                                        </span>
+                            {% if user_zone_account_exist %}
+                                <a id="rep-res-bag" type="button" class="btn btn-default row-selector" data-toggle="modal" data-target="#rep-resource-to-irods-dialog">
+                                    <span class="glyphicon">
+                                       <span title='Replicate Resource Bag to iRODS User Zone' class="button-label">Replicate Resource Bag to iRODS User Zone</span>
+                                    </span>
+                                </a>
+                            {% endif %}
+                            {% for b in cm.bags.all %}
+                                <div>
+                                    <a id="btn-download-all" type="button" class="btn btn-default row-selector"
+                                       href="{{ bag_url }}" target="_blank">
+                                    <span class="glyphicon glyphicon-download-alt">
+                                        <span title='Download All Content as Zipped BagIt Archive'
+                                              class="button-label">Download All Content as Zipped BagIt Archive</span>
+                                    </span>
                                     </a>
-                                {% endif %}
-                                {% for b in cm.bags.all %}
-                                    <div>
-                                        <a id="btn-download-all" type="button" class="btn btn-default row-selector"
-                                           href="{{ bag_url }}">
-                                        <span class="glyphicon glyphicon-download-alt">
-                                            <span title='Download All Content as Zipped BagIt Archive'
-                                                  class="button-label">Download All Content as Zipped BagIt Archive</span>
-                                        </span>
-                                        </a>
-                                    </div>
-                                    <div>
-                                        <a target="_blank" href="http://en.wikipedia.org/wiki/BagIt">Learn more about the Bagit archive format</a>
-                                    </div>
-
-{#                                    <button type="button" class="btn btn-primary pull-right"#}
-{#                                            onclick="get_irods_folder_struct_ajax_submit('{{ cm.short_id }}', 'data/contents'); return false;">iRODS folder info#}
-{#                                    </button>#}
-{#                                    <button type="button" class="btn btn-primary pull-right"#}
-{#                                            onclick="zip_irods_folder_ajax_submit('{{ cm.short_id }}', 'data/contents/Some Folder'); return false;">Zip iRODS Collection#}
-{#                                    </button>#}
-{#                                    <button type="button" class="btn btn-primary pull-right"#}
-{#                                            onclick="unzip_irods_file_ajax_submit('{{ cm.short_id }}', 'data/contents/test.zip'); return false;">Unzip iRODS file#}
-{#                                    </button>#}
-{#                                    <button type="button" class="btn btn-primary pull-right"#}
-{#                                            onclick="create_irods_folder_ajax_submit('{{ cm.short_id }}', 'data/contents/test_sub_folder'); return false;">Create folder#}
-{#                                    </button>#}
-{#                                    <button type="button" class="btn btn-primary pull-right"#}
-{#                                            onclick="move_or_rename_irods_file_or_folder_ajax_submit('{{ cm.short_id }}', 'data/contents/test.zip', 'data/contents/test_renamed.zip'); return false;">Move file#}
-{#                                    </button>#}
-                                {% endfor %}
-                                {% if user_zone_account_exist %}
-                                    <div id='rep-alert-success' class="alert alert-success alert-dismissible" role="alert" style="display:none">
-                                        <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                                        <span id="rep-status-success"></span>
-                                    </div>
-                                    <div id='rep-alert-error' class="alert alert-danger alert-dismissible" role="alert" style="display:none">
-                                        <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                                        <span id="rep-status-error"></span>
-                                    </div>
-                                {% endif %}
+                                </div>
+                                <div>
+                                    <a target="_blank" href="http://en.wikipedia.org/wiki/BagIt">Learn more about the Bagit archive format</a>
+                                </div>
+                            {% endfor %}
+                            {% if user_zone_account_exist %}
+                                <div id='rep-alert-success' class="alert alert-success alert-dismissible" role="alert" style="display:none">
+                                    <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                                    <span id="rep-status-success"></span>
+                                </div>
+                                <div id='rep-alert-error' class="alert alert-danger alert-dismissible" role="alert" style="display:none">
+                                    <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                                    <span id="rep-status-error"></span>
+                                </div>
+                            {% endif %}
                             </div>
                             {% endblock %} {#  download_bag #}
                         {% else %}
