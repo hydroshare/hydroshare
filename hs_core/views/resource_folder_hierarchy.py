@@ -160,7 +160,7 @@ def data_store_folder_zip(request):
     res_id = str(res_id).strip()
     try:
         resource, _, user = authorize(request, res_id,
-                                   needed_permission=ACTION_TO_AUTHORIZE.EDIT_RESOURCE)
+                                      needed_permission=ACTION_TO_AUTHORIZE.EDIT_RESOURCE)
     except (NotFound, PermissionDenied):
         # return permission defined response
         return HttpResponse(status=403)
@@ -243,7 +243,7 @@ def data_store_folder_unzip(request):
     res_id = str(res_id).strip()
     try:
         resource, _, user = authorize(request, res_id,
-                                   needed_permission=ACTION_TO_AUTHORIZE.EDIT_RESOURCE)
+                                      needed_permission=ACTION_TO_AUTHORIZE.EDIT_RESOURCE)
     except (NotFound, PermissionDenied):
         # return permission defined response
         return HttpResponse(status=403)
@@ -357,7 +357,7 @@ def data_store_remove_folder(request):
     res_id = str(res_id).strip()
     try:
         resource, _, user = authorize(request, res_id,
-                                   needed_permission=ACTION_TO_AUTHORIZE.EDIT_RESOURCE)
+                                      needed_permission=ACTION_TO_AUTHORIZE.EDIT_RESOURCE)
     except (NotFound, PermissionDenied):
         # return permission defined response
         return HttpResponse(status=403)
@@ -414,7 +414,7 @@ def data_store_file_or_folder_move_or_rename(request):
     res_id = str(res_id).strip()
     try:
         resource, _, user = authorize(request, res_id,
-                                   needed_permission=ACTION_TO_AUTHORIZE.EDIT_RESOURCE)
+                                      needed_permission=ACTION_TO_AUTHORIZE.EDIT_RESOURCE)
     except (NotFound, PermissionDenied):
         # return permission defined response
         return HttpResponse(status=403)
