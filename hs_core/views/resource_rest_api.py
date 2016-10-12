@@ -626,7 +626,7 @@ class ResourceMapRetrieve(APIView):
     """
     Retrieve resource map
 
-    REST URL: hsapi/resmap/{pk}
+    REST URL: hsapi/resource/{pk}/map
     HTTP method: GET
 
     :type pk: str
