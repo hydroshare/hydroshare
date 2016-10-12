@@ -254,6 +254,67 @@ class TestCreateResource(HSRESTTestCase):
 
         self.resources_to_delete.append(res_id)
 
+    def test_resource_create_with_core_and_extra_metadata(self):
+
+        rtype = 'GenericResource'
+        title = 'My Test resource'
+        metadata = []
+        metadata.append({'coverage': {'type': 'period', 'value': {'start': '01/01/2000',
+                                                                  'end': '12/12/2010'}}})
+        extra_metadata = {'latitude': '40', 'longitude': '-110'}
+
+        params = {'resource_type': rtype,
+                  'title': title,
+                  'metadata': json.dumps(metadata),
+                  'extra_metadata': json.dumps(extra_metadata),
+                 }
+
+        rest_url = '/hsapi/resource/'
+        response = self.client.post(rest_url, params)
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+        # test core metadata
+        content = json.loads(response.content)
+        res_id = content['resource_id']
+        resource = get_resource_by_shortkey(res_id)
+        self.assertEqual(resource.metadata.coverages.all().count(), 1)
+        self.assertEqual(resource.metadata.coverages.filter(type='period').count(), 1)
+        coverage = resource.metadata.coverages.all().first()
+        self.assertEqual(parser.parse(coverage.value['start']).date(),
+                         parser.parse('01/01/2000').date())
+        self.assertEqual(parser.parse(coverage.value['end']).date(),
+                         parser.parse('12/12/2010').date())
+
+        # test extra metadata
+        self.assertEquals(resource.extra_metadata.get('latitude'), '40')
+        self.assertEquals(resource.extra_metadata.get('longitude'), '-110')
+
+        self.resources_to_delete.append(res_id)
+
+    def test_resource_create_with_extra_metadata(self):
+        rtype = 'GenericResource'
+        title = 'My Test resource'
+        extra_metadata = {'latitude': '40', 'longitude': '-110'}
+
+        params = {'resource_type': rtype,
+                  'title': title,
+                  'extra_metadata': json.dumps(extra_metadata),
+                 }
+
+        rest_url = '/hsapi/resource/'
+        response = self.client.post(rest_url, params)
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        content = json.loads(response.content)
+        res_id = content['resource_id']
+        resource = get_resource_by_shortkey(res_id)
+
+        # test extra metadata
+        self.assertEquals(resource.extra_metadata.get('latitude'), '40')
+        self.assertEquals(resource.extra_metadata.get('longitude'), '-110')
+
+        self.resources_to_delete.append(res_id)
+
+
     def test_create_resource_not_allowed_valid_metadata_elements(self):
         """
         This is to test that the following core valid metadata elements can't be passed using the
