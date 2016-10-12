@@ -266,8 +266,7 @@ class TestCreateResource(HSRESTTestCase):
         params = {'resource_type': rtype,
                   'title': title,
                   'metadata': json.dumps(metadata),
-                  'extra_metadata': json.dumps(extra_metadata),
-                 }
+                  'extra_metadata': json.dumps(extra_metadata)}
 
         rest_url = '/hsapi/resource/'
         response = self.client.post(rest_url, params)
@@ -298,8 +297,7 @@ class TestCreateResource(HSRESTTestCase):
 
         params = {'resource_type': rtype,
                   'title': title,
-                  'extra_metadata': json.dumps(extra_metadata),
-                 }
+                  'extra_metadata': json.dumps(extra_metadata)}
 
         rest_url = '/hsapi/resource/'
         response = self.client.post(rest_url, params)
@@ -313,7 +311,6 @@ class TestCreateResource(HSRESTTestCase):
         self.assertEquals(resource.extra_metadata.get('longitude'), '-110')
 
         self.resources_to_delete.append(res_id)
-
 
     def test_create_resource_not_allowed_valid_metadata_elements(self):
         """
