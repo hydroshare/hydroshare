@@ -32,7 +32,7 @@ class ModelOutput(AbstractMetaDataElement):
 class ExecutedBy(AbstractMetaDataElement):
     term = 'ExecutedBY'
     # model_name: the id of the model program used for execution
-    model_name = models.CharField(max_length=500, default=None, null=True)
+    model_name = models.CharField(max_length=500, default=None)
     model_program_fk = models.ForeignKey('hs_model_program.ModelProgramResource', null=True, blank=True, default=None, related_name='modelinstance')
 
     def __unicode__(self):
@@ -58,11 +58,24 @@ class ExecutedBy(AbstractMetaDataElement):
 
     @classmethod
     def create(cls, **kwargs):
-        # get the foreign key id
-        mp_short_id = kwargs['model_program_fk']
 
-        # get the MP object that matches.  Returns None if nothing is found
-        obj = ModelProgramResource.objects.filter(id=mp_short_id).first()
+        # when creating a new resource version, we need to lookup the existing model_program_fk
+        if 'model_program_fk' in kwargs:
+
+            # get the foreign key id if one has been set (i.e. when creating a new version)
+            mp_short_id = kwargs['model_program_fk']
+
+            # get the MP object that matches.  Returns None if nothing is found
+            obj = ModelProgramResource.objects.filter(id=mp_short_id).first()
+
+        # when adding or changing the model_program_fk, we need to lookup the model obj based on mp_short_id
+        else:
+            # get the selected model program short id that has been submitted via the form
+            mp_short_id = kwargs['model_name']
+
+            # get the MP object that matches.  Returns None if nothing is found
+            obj = ModelProgramResource.objects.filter(short_id=mp_short_id).first()
+
 
         if obj is None:
             # return Null
