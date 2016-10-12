@@ -1136,29 +1136,33 @@
         };
 
         var updateFacetingItems = function (request_url) {
-            var tabId = window.location.hash.substr(1);
-            if (tabId == "list-view" || tabId == "") {
-                $('#items-discovered_wrapper').empty();
-                $("#discover-page-options").empty();
-                $.ajax({
-                    type: "GET",
-                    url: request_url,
-                    //data: data,
-                    dataType: 'html',
-                    success: function (data) {
-                        //var filterItemsDiv = $("#filter-items", data);
-                        //$("#filter-items_wrapper").html(filterItemsDiv);
-                        var tableDiv = $("#items-discovered", data);
-                        $("#items-discovered_wrapper").html(tableDiv);
-                        var pageOptionDiv = $("#discover-page-options", data);
-                        $("#discover-page-options").html(pageOptionDiv);
-                        initializeTable();
-                    },
-                    failure: function (data) {
-                        console.error("Ajax call for updating list-view data failed");
-                    }
-                });
-            } else if (tabId == "map-view" && map != null){
+            updateListFaceting(request_url);
+            updateMapFaceting();
+        }
+
+        var updateListFaceting = function (request_url) {
+            $('#items-discovered_wrapper').empty();
+            $("#discover-page-options").empty();
+            $.ajax({
+                type: "GET",
+                url: request_url,
+                //data: data,
+                dataType: 'html',
+                success: function (data) {
+                    var tableDiv = $("#items-discovered", data);
+                    $("#items-discovered_wrapper").html(tableDiv);
+                    var pageOptionDiv = $("#discover-page-options", data);
+                    $("#discover-page-options").html(pageOptionDiv);
+                    initializeTable();
+                },
+                failure: function (data) {
+                    console.error("Ajax call for updating list-view data failed");
+                }
+            });
+        };
+
+        var updateMapFaceting = function (){
+            if (map != null){
                 var map_update_url = "/searchjson/";
                 var textSearch = $("#id_q").val();
                 var searchURL = "?q=" + textSearch;
@@ -1273,23 +1277,6 @@
             var end_date = $("#id_end_date").val();
             return "&start_date="+start_date+"&end_date="+end_date;
         };
-
-{#        var formLinkButtonURL = function(key, value) {#}
-{#            var textSearch = $("#id_q").val();#}
-{#            var searchURL = "?q=" + textSearch;#}
-{#            var geoSearchParams = formGeoParameters();#}
-{#            var dateSearchParams = formDateParameters();#}
-{#            var windowPath = window.location.pathname;#}
-{#            var requestURL =  windowPath + searchURL + geoSearchParams + dateSearchParams;#}
-{#            var checkboxId =  key + "-" + value;#}
-{#            var sessionStorageCheckboxId = 'search-' + checkboxId;#}
-{#            sessionStorage[sessionStorageCheckboxId] = 'true';#}
-{#            requestURL += buildURLOnCheckboxes();#}
-{#            if (window.location.hash) {#}
-{#                requestURL = requestURL + window.location.hash;#}
-{#            }#}
-{#            window.location = requestURL;#}
-{#        };#}
 
         var buildURLOnCheckboxes = function () {
             var requestURL = '';
