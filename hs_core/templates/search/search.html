@@ -1136,68 +1136,74 @@
         };
 
         var updateFacetingItems = function (request_url) {
-            //$('filter-items_wrapper').empty();
-            $('#items-discovered_wrapper').empty();
-            $("#discover-page-options").empty();
-            $.ajax({
-                type: "GET",
-                url: request_url,
-                //data: data,
-                dataType: 'html',
-                success: function (data) {
-                    //var filterItemsDiv = $("#filter-items", data);
-                    //$("#filter-items_wrapper").html(filterItemsDiv);
-                    var tableDiv = $("#items-discovered", data);
-                    $("#items-discovered_wrapper").html(tableDiv);
-                    var pageOptionDiv = $("#discover-page-options", data);
-                    $("#discover-page-options").html(pageOptionDiv);
-                    initializeTable();
-                },
-                failure: function (data) {
-                    console.error("Ajax call for updating list-view data failed");
-                }
-            });
-
-            var map_update_url = "/searchjson/";
-            var textSearch = $("#id_q").val();
-            var searchURL = "?q=" + textSearch;
-            map_update_url += searchURL;
-            map_update_url += buildURLOnCheckboxes();
-            var ne_lat = document.getElementById("id_NElat").value;
-            var ne_lng = document.getElementById("id_NElng").value;
-            var sw_lat = document.getElementById("id_SWlat").value;
-            var sw_lng = document.getElementById("id_SWlng").value;
-            var start_date = $("#id_start_date").val();
-            var end_date = $("#id_end_date").val();
-            removeMarkers();
-            $.ajax({
-                type: "GET",
-                url: map_update_url,
-                data: {
-                    NElat: ne_lat,
-                    NElng: ne_lng,
-                    SWlat: sw_lat,
-                    SWlng: sw_lng,
-                    start_date: start_date,
-                    end_date: end_date
-                },
-                dataType: 'json',
-                success: function (data) {
-                    raw_results = [];
-                    for (var j = 0; j < data.length; j++) {
-                        var item = $.parseJSON(data[j]);
-                        //json_results.push(item);
-                        raw_results.push(item);
+            var tabId = window.location.hash.substr(1);
+            if (tabId == "list-view" || tabId == "") {
+                $('#items-discovered_wrapper').empty();
+                $("#discover-page-options").empty();
+                $.ajax({
+                    type: "GET",
+                    url: request_url,
+                    //data: data,
+                    dataType: 'html',
+                    success: function (data) {
+                        //var filterItemsDiv = $("#filter-items", data);
+                        //$("#filter-items_wrapper").html(filterItemsDiv);
+                        var tableDiv = $("#items-discovered", data);
+                        $("#items-discovered_wrapper").html(tableDiv);
+                        var pageOptionDiv = $("#discover-page-options", data);
+                        $("#discover-page-options").html(pageOptionDiv);
+                        initializeTable();
+                    },
+                    failure: function (data) {
+                        console.error("Ajax call for updating list-view data failed");
                     }
+                });
+            } else if (tabId == "map-view" && map != null){
+                var map_update_url = "/searchjson/";
+                var textSearch = $("#id_q").val();
+                var searchURL = "?q=" + textSearch;
+                map_update_url += searchURL;
+                map_update_url += buildURLOnCheckboxes();
+                var ne_lat = parseFloat(document.getElementById("id_NElat").value);
+                var ne_lng = parseFloat(document.getElementById("id_NElng").value);
+                var sw_lat = parseFloat(document.getElementById("id_SWlat").value);
+                var sw_lng = parseFloat(document.getElementById("id_SWlng").value);
+                var mapBounds = new google.maps.LatLngBounds(
+                    new google.maps.LatLng(sw_lat, sw_lng),
+                    new google.maps.LatLng(ne_lat, ne_lng)
+                );
+                var start_date = $("#id_start_date").val();
+                var end_date = $("#id_end_date").val();
+                removeMarkers();
+                $.ajax({
+                    type: "GET",
+                    url: map_update_url,
+                    data: {
+                        NElat: '',
+                        NElng: '',
+                        SWlat: '',
+                        SWlng: '',
+                        start_date: start_date,
+                        end_date: end_date
+                    },
+                    dataType: 'json',
+                    success: function (data) {
+                        raw_results = [];
+                        for (var j = 0; j < data.length; j++) {
+                            var item = $.parseJSON(data[j]);
+                            //json_results.push(item);
+                            raw_results.push(item);
+                        }
 
-                    updateMapView();
-
-                },
-                failure: function(data) {
-                    console.error("Ajax call for getting map data failed");
-                }
-            });
-        }
+                        updateMapView();
+                        map.fitBounds(mapBounds);
+                    },
+                    failure: function(data) {
+                        console.error("Ajax call for getting map data failed");
+                    }
+                });
+            }
+        };
 
         var calShadeRectBounds = function (rect, shade_rect_bound) {
             rect.getPaths().getArray().forEach(function(path){
@@ -1418,14 +1424,14 @@
                 window.location.hash = tabId;
                 if (tabId == "map-view" && map == null) {
                     var requestURL = "/searchjson/";
-                    if (window.location.search.length == 0) {
-                        requestURL += "?q=";
-                    } else {
-                        var textSearch = $("#id_q").val();
-                        var searchURL = "?q=" + textSearch;
-                        requestURL += searchURL;
-                        requestURL += buildURLOnCheckboxes();
-                    }
+{#                    if (window.location.search.length == 0) {#}
+{#                        requestURL += "?q=";#}
+{#                    } else {#}
+                    var textSearch = $("#id_q").val();
+                    var searchURL = "?q=" + textSearch;
+                    requestURL += searchURL;
+                    requestURL += buildURLOnCheckboxes();
+                    //}
                     var ne_lat = document.getElementById("id_NElat").value;
                     var ne_lng = document.getElementById("id_NElng").value;
                     var sw_lat = document.getElementById("id_SWlat").value;
@@ -1540,7 +1546,6 @@
                 var geoSearchParams = formGeoParameters();
                 var dateSearchParams = formDateParameters();
                 var windowPath = window.location.pathname;
-                console.log(windowPath);
                 var requestURL =  windowPath + searchURL;
                 if($(this).is(":checked")) {
                     requestURL += buildURLOnCheckboxes();
@@ -1560,11 +1565,11 @@
                     sessionStorage.removeItem(sessionStorageCheckboxId);
                     var updateURL =  windowPath + searchURL + buildURLOnCheckboxes() + geoSearchParams + dateSearchParams;
                     //updateURL += buildURLOnCheckboxes();
-                    if (window.location.hash) {
-                        updateURL = updateURL + window.location.hash;
-                    }
-                    //updateFacetingItems(updateURL);
-                    window.location = updateURL;
+{#                    if (window.location.hash) {#}
+{#                        updateURL = updateURL + window.location.hash;#}
+{#                    }#}
+                    updateFacetingItems(updateURL);
+                    //window.location = updateURL;
                 }
             });
 
