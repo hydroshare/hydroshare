@@ -145,6 +145,11 @@
         </div>
     {%  endif %}
 {%  endblock %}
+
+{% block upload_message %}
+    <small class="text-muted">If the uploaded file is a SQLIte file, metadata will be extracted and will overwrite existing metadata in the resource.</small>
+{% endblock %}
+
 {%  block modal_add_file %}
     <div class="modal fade" id="add-file-dialog" tabindex="-1" role="dialog" aria-labelledby="myModalLabel"
          aria-hidden="true">
@@ -184,6 +189,7 @@
         </div>
     </div>
 {% endblock %}
+
 {% block extra_js %}
     {{ block.super }}
 
