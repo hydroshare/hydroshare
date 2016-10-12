@@ -2,7 +2,8 @@
 {% load geoanalytics_tags pages_tags mezzanine_tags keyword_tags comment_tags hydroshare_tags %}
 {% block title %}Discovery{% endblock %}
 {% block main %}
-<div class="container" id="main">
+{#<div id="discover-load" style="display: none"></div>#}
+<div class="container" id="discover-main">
     <div class="row">
         <div class="col-sm-12">
             <h2 class="page-title">Discover
@@ -1110,7 +1111,7 @@
                 requestURL += searchURL;
                 requestURL += buildURLOnCheckboxes();
             }
-
+            //$("#discover-load").show();
             $.ajax({
                 type: "GET",
                 url: requestURL,
@@ -1123,6 +1124,7 @@
                     $("#discover-page-options").html(pageOptionDiv);
 
                     initializeTable();
+                    //$("#discover-load").hide();
                 },
                 failure: function (data) {
                     console.error("Ajax call for updating list-view data failed");
@@ -1131,16 +1133,16 @@
         };
 
         var updateFacetingItems = function (request_url) {
-            //var tabId = window.location.hash.substr(1);
             if (map != null) {
                 updateMapFaceting();
             }
             updateListFaceting(request_url);
-        }
+        };
 
         var updateListFaceting = function (request_url) {
             $('#items-discovered_wrapper').empty();
             $("#discover-page-options").empty();
+            //$("#discover-load").show();
             $.ajax({
                 type: "GET",
                 url: request_url,
@@ -1152,9 +1154,11 @@
                     var pageOptionDiv = $("#discover-page-options", data);
                     $("#discover-page-options").html(pageOptionDiv);
                     initializeTable();
+                    //$("#discover-load").hide();
                 },
                 failure: function (data) {
                     console.error("Ajax call for updating list-view data failed");
+                    //$("#discover-load").hide();
                 }
             });
         };
@@ -1168,6 +1172,7 @@
             var start_date = $("#id_start_date").val();
             var end_date = $("#id_end_date").val();
             removeMarkers();
+            //$("#discover-load").show();
             $.ajax({
                 type: "GET",
                 url: map_update_url,
@@ -1188,6 +1193,7 @@
                     }
 
                     updateMapView();
+                    //$("#discover-load").hide();
                 },
                 failure: function(data) {
                     console.error("Ajax call for getting map data failed");
@@ -1354,6 +1360,7 @@
         }
 
         $(document).ready(function () {
+
             $("#id_start_date").datepicker({
                 dateFormat: 'mm/dd/yy',
                 changeMonth: true,
@@ -1407,7 +1414,7 @@
                     var sw_lng = document.getElementById("id_SWlng").value;
                     var start_date = $("#id_start_date").val();
                     var end_date = $("#id_end_date").val();
-
+                    //$("#discover-load").show();
                     $.ajax({
                         type: "GET",
                         url: requestURL,
@@ -1430,6 +1437,7 @@
                             initMap(json_results);
                             setMapItemsList([], null);
                             $("#resource-search").show();
+                            //$("#discover-load").hide();
                         },
                         failure: function(data) {
                             console.error("Ajax call for getting map data failed");
