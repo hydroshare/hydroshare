@@ -145,6 +145,26 @@
                     </table>
                 </form>
                 <br>
+                <div id="resource-search" style="display:none">
+                    <div id="coverages-master-list"></div>
+                    <br />
+                    <table id="lat-lng-labels" style="display:none">
+                        <tr>
+                            <td>
+                                North Latitude: <label for="ne-lat-value"></label>
+                            </td>
+                            <td>
+                                East Longitude: <label for="ne-lng-value"></label>
+                            </td>
+                            <td>
+                                South Latitude: <label for="sw-lat-value"></label>
+                            </td>
+                            <td>
+                                West Longitude: <label for="sw-lng-value"></label>
+                            </td>
+                        </tr>
+                    </table>
+                </div>
             </div>
 
             <ul id="switch-view" class="nav nav-tabs">
@@ -457,28 +477,6 @@
                                 {% endfor %}
                             </form>
 
-                            <div id="resource-search" style="display:none">
-                                <div id="coverages-master-list"></div>
-                                <br />
-                                <table id="lat-lng-labels" style="display:none">
-                                    <tr>
-                                        <td>
-                                            North Latitude: <label for="ne-lat-value"></label>
-                                        </td>
-                                        <td>
-                                            East Longitude: <label for="ne-lng-value"></label>
-                                        </td>
-                                        <td>
-                                            South Latitude: <label for="sw-lat-value"></label>
-                                        </td>
-                                        <td>
-                                            West Longitude: <label for="sw-lng-value"></label>
-                                        </td>
-                                    </tr>
-                                </table>
-                            </div>
-                            <br />
-
                             <div id="geocoder-panel"></div>
 
                             <div id="discover-map"></div>
@@ -666,7 +664,7 @@
                     rect.setOptions({fillOpacity: 0});
                 }
             });
-        }
+        };
 
         var drawShadeRectangles = function(boxes) {
             for (var i = 0; i < boxes.length; i++) {
@@ -722,7 +720,8 @@
                 }
             });
 
-        }
+        };
+
         var buildMapItemsTableDataforMarkers = function (resources_list, map_resources) {
             resources_list.forEach(function(resource) {
                 var northlimit = parseFloat(resource.northlimit);
@@ -742,7 +741,8 @@
                 var map_resource = [resource, resource.resource_type, resource_title, author_name];
                 map_resources.push(map_resource);
             });
-        }
+        };
+
         var setMapItemsList = function(json_results, latLng) {
             var map_resources = [];
             buildMapItemsTableData(json_results, map_resources, latLng);
@@ -817,14 +817,9 @@
                         var southlimit =  parseFloat(raw_results[i].southlimit);
                         var eastlimit = parseFloat(raw_results[i].eastlimit);
                         var westlimit = parseFloat(raw_results[i].westlimit);
-{#                        var box_center_lat = (northlimit + southlimit) / 2;#}
-{#                        var box_center_lng = (eastlimit + westlimit) / 2;#}
                         var ne_latlng = new google.maps.LatLng(northlimit, eastlimit);
                         var sw_latlng = new google.maps.LatLng(southlimit, westlimit);
                         var box_bound = new google.maps.LatLngBounds(sw_latlng, ne_latlng);
-{#                        var center_latlng = new google.maps.LatLng(box_center_lat, box_center_lng);#}
-{#                        var map_bound_ne = bnds.getNorthEast();#}
-{#                        var map_bound_sw = bnds.getSouthWest();#}
                         if (bnds.intersects(box_bound)) {
                             filtered_results.push(raw_results[i]);
                         }
@@ -1136,8 +1131,11 @@
         };
 
         var updateFacetingItems = function (request_url) {
+            //var tabId = window.location.hash.substr(1);
+            if (map != null) {
+                updateMapFaceting();
+            }
             updateListFaceting(request_url);
-            updateMapFaceting();
         }
 
         var updateListFaceting = function (request_url) {
@@ -1162,51 +1160,39 @@
         };
 
         var updateMapFaceting = function (){
-            if (map != null){
-                var map_update_url = "/searchjson/";
-                var textSearch = $("#id_q").val();
-                var searchURL = "?q=" + textSearch;
-                map_update_url += searchURL;
-                map_update_url += buildURLOnCheckboxes();
-                var ne_lat = parseFloat(document.getElementById("id_NElat").value);
-                var ne_lng = parseFloat(document.getElementById("id_NElng").value);
-                var sw_lat = parseFloat(document.getElementById("id_SWlat").value);
-                var sw_lng = parseFloat(document.getElementById("id_SWlng").value);
-                var mapBounds = new google.maps.LatLngBounds(
-                    new google.maps.LatLng(sw_lat, sw_lng),
-                    new google.maps.LatLng(ne_lat, ne_lng)
-                );
-                var start_date = $("#id_start_date").val();
-                var end_date = $("#id_end_date").val();
-                removeMarkers();
-                $.ajax({
-                    type: "GET",
-                    url: map_update_url,
-                    data: {
-                        NElat: '',
-                        NElng: '',
-                        SWlat: '',
-                        SWlng: '',
-                        start_date: start_date,
-                        end_date: end_date
-                    },
-                    dataType: 'json',
-                    success: function (data) {
-                        raw_results = [];
-                        for (var j = 0; j < data.length; j++) {
-                            var item = $.parseJSON(data[j]);
-                            //json_results.push(item);
-                            raw_results.push(item);
-                        }
-
-                        updateMapView();
-                        map.fitBounds(mapBounds);
-                    },
-                    failure: function(data) {
-                        console.error("Ajax call for getting map data failed");
+            var map_update_url = "/searchjson/";
+            var textSearch = $("#id_q").val();
+            var searchURL = "?q=" + textSearch;
+            map_update_url += searchURL;
+            map_update_url += buildURLOnCheckboxes();
+            var start_date = $("#id_start_date").val();
+            var end_date = $("#id_end_date").val();
+            removeMarkers();
+            $.ajax({
+                type: "GET",
+                url: map_update_url,
+                data: {
+                    NElat: '',
+                    NElng: '',
+                    SWlat: '',
+                    SWlng: '',
+                    start_date: start_date,
+                    end_date: end_date
+                },
+                dataType: 'json',
+                success: function (data) {
+                    raw_results = [];
+                    for (var j = 0; j < data.length; j++) {
+                        var item = $.parseJSON(data[j]);
+                        raw_results.push(item);
                     }
-                });
-            }
+
+                    updateMapView();
+                },
+                failure: function(data) {
+                    console.error("Ajax call for getting map data failed");
+                }
+            });
         };
 
         var calShadeRectBounds = function (rect, shade_rect_bound) {
@@ -1411,14 +1397,10 @@
                 window.location.hash = tabId;
                 if (tabId == "map-view" && map == null) {
                     var requestURL = "/searchjson/";
-{#                    if (window.location.search.length == 0) {#}
-{#                        requestURL += "?q=";#}
-{#                    } else {#}
                     var textSearch = $("#id_q").val();
                     var searchURL = "?q=" + textSearch;
                     requestURL += searchURL;
                     requestURL += buildURLOnCheckboxes();
-                    //}
                     var ne_lat = document.getElementById("id_NElat").value;
                     var ne_lng = document.getElementById("id_NElng").value;
                     var sw_lat = document.getElementById("id_SWlat").value;
