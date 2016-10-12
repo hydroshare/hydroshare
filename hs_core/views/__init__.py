@@ -336,7 +336,7 @@ def delete_file(request, shortkey, f, *args, **kwargs):
     return HttpResponseRedirect(request.META['HTTP_REFERER'])
 
 
-def delete__multiple_files(request, shortkey, *args, **kwargs):
+def delete_multiple_files(request, shortkey, *args, **kwargs):
     res, _, user = authorize(request, shortkey, needed_permission=ACTION_TO_AUTHORIZE.EDIT_RESOURCE)
     # file_ids is a string of file ids separated by comma
     f_ids = request.POST['file_ids']
