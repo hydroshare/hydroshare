@@ -1612,7 +1612,7 @@ body > .main-container {
     word-break: break-word;
 }
 
-#btn-download-all, #btn-add-file, #btn-select-irods-file, #rep-res-bag {
+#btn-download-all, #btn-select-irods-file, #rep-res-bag {
     margin-bottom:5px;
     max-width:100%;
 }

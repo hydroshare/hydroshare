@@ -332,11 +332,11 @@ def delete_metadata_element(request, shortkey, element_name, element_id, *args, 
 def delete_file(request, shortkey, f, *args, **kwargs):
     res, _, user = authorize(request, shortkey, needed_permission=ACTION_TO_AUTHORIZE.EDIT_RESOURCE)
     hydroshare.delete_resource_file(shortkey, f, user)
-
+    request.session['resource-mode'] = 'edit'
     return HttpResponseRedirect(request.META['HTTP_REFERER'])
 
 
-def delete__multiple_files(request, shortkey, *args, **kwargs):
+def delete_multiple_files(request, shortkey, *args, **kwargs):
     res, _, user = authorize(request, shortkey, needed_permission=ACTION_TO_AUTHORIZE.EDIT_RESOURCE)
     # file_ids is a string of file ids separated by comma
     f_ids = request.POST['file_ids']
@@ -344,7 +344,7 @@ def delete__multiple_files(request, shortkey, *args, **kwargs):
     for f_id in f_id_list:
         f_id = f_id.strip()
         hydroshare.delete_resource_file(shortkey, f_id, user)
-
+    request.session['resource-mode'] = 'edit'
     return HttpResponseRedirect(request.META['HTTP_REFERER'])
 
 
