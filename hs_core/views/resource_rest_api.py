@@ -226,7 +226,7 @@ class CheckTaskStatus(generics.RetrieveAPIView):
 
 class ResourceReadUpdateDelete(ResourceToListItemMixin, generics.RetrieveUpdateDestroyAPIView):
     """
-    Create, read, or delete a resource
+    Read, update, or delete a resource
 
     REST URL: hsapi/resource/{pk}
     HTTP method: GET
@@ -257,7 +257,7 @@ class ResourceReadUpdateDelete(ResourceToListItemMixin, generics.RetrieveUpdateD
     """
     pagination_class = PageNumberPagination
 
-    allowed_methods = ('GET', 'POST', 'PUT', 'DELETE')
+    allowed_methods = ('GET', 'PUT', 'DELETE')
 
     def get(self, request, pk):
         """ Get resource in zipped BagIt format
@@ -375,6 +375,7 @@ class ResourceCreate(generics.CreateAPIView):
         metadata = validated_request_data.get('metadata', None)
 
         num_files = len(request.FILES)
+        # TODO: (Couch) reconsider whether multiple file upload should be supported
         if num_files > 0:
             if num_files > 1:
                 raise ValidationError(detail={'file': 'Multiple file upload is not allowed on '
@@ -620,7 +621,7 @@ class ScienceMetadataRetrieveUpdate(APIView):
             shutil.rmtree(tmp_dir)
 
 
-class ResourceFileCRUD(APIView):
+class ResourceFileCRUD(APIView, ResourceFileToListItemMixin):
     """
     Retrieve, add, update or delete a resource file
 
@@ -703,6 +704,7 @@ class ResourceFileCRUD(APIView):
 
         # redirects to django_irods/views.download function
         # use new internal url for rest call
+        # TODO: (Couch) Migrate model (with a "data migration") so that this hack is not needed. 
         redirect_url = f.url.replace('django_irods/download/', 'django_irods/rest_download/')
         return HttpResponseRedirect(redirect_url)
 

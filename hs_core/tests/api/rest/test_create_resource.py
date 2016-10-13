@@ -13,7 +13,7 @@ from .base import HSRESTTestCase
 
 class TestCreateResource(HSRESTTestCase):
     @override_settings(CELERY_ALWAYS_EAGER=True)
-    def test_post_resource_get_sysmeta(self):
+    def test_DEPRECATED_post_resource_get_sysmeta(self):
         rtype = 'GenericResource'
         title = 'My Test resource'
         params = {'resource_type': rtype,
@@ -31,6 +31,48 @@ class TestCreateResource(HSRESTTestCase):
         # Get the resource system metadata to make sure the resource was
         # properly created.
         sysmeta_url = "/hsapi/sysmeta/{res_id}/".format(res_id=res_id)
+        response = self.client.get(sysmeta_url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        content = json.loads(response.content)
+        self.assertEqual(content['resource_type'], rtype)
+        self.assertEqual(content['resource_title'], title)
+        # Get resource bag
+        response = self.getResourceBag(res_id)
+        if response['Content-Type'] == 'application/json':
+            content = json.loads(response.content)
+            if content['bag_status'] == "Not ready":
+                # wait for 10 seconds to give task a chance to run and finish
+                time.sleep(10)
+                task_id = content['task_id']
+                status_response = self.getDownloadTaskStatus(task_id)
+                status_content = json.loads(status_response.content)
+                if status_content['status']:
+                    # bag creation task succeeds, get bag again
+                    response = self.getResourceBag(res_id)
+                    self.assertEqual(response['Content-Type'], 'application/zip')
+                    self.assertGreater(int(response['Content-Length']), 0)
+        else:
+            self.assertEqual(response['Content-Type'], 'application/zip')
+            self.assertGreater(int(response['Content-Length']), 0)
+
+    def test_post_resource_get_sysmeta(self):
+        rtype = 'GenericResource'
+        title = 'My Test resource'
+        params = {'resource_type': rtype,
+                  'title': title,
+                  'file': ('cea.tif',
+                           open('hs_core/tests/data/cea.tif'),
+                           'image/tiff')}
+        url = '/hsapi/resource/'
+        response = self.client.post(url, params)
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        content = json.loads(response.content)
+        res_id = content['resource_id']
+        self.resources_to_delete.append(res_id)
+
+        # Get the resource system metadata to make sure the resource was
+        # properly created.
+        sysmeta_url = "/hsapi/resource/{res_id}/sysmeta/".format(res_id=res_id)
         response = self.client.get(sysmeta_url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         content = json.loads(response.content)
