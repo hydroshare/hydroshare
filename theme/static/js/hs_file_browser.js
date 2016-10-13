@@ -178,6 +178,7 @@ function bindFileBrowserItemEvents() {
                 var calls = [];
                 for (var i = 0; i < sources.length; i++) {
                     var sourcePath = currentPath + "/" + $(sources[i]).text();
+                    var destPath = destPath + "/" + $(sources[i]).text();
                     if (sourcePath != destPath) {
                         calls.push(move_or_rename_irods_file_or_folder_ajax_submit(resID, sourcePath, destPath));
                     }
@@ -707,7 +708,8 @@ $(document).ready(function () {
 
         var calls = [];
         for (var i = 0; i < sourcePaths.length; i++) {
-            calls.push(move_or_rename_irods_file_or_folder_ajax_submit(resID, sourcePaths[i], targetPath));
+            sourceName = sourcePaths[i].substring(sourcePaths[i].lastIndexOf("/")+1, sourcePaths[i].length);
+            calls.push(move_or_rename_irods_file_or_folder_ajax_submit(resID, sourcePaths[i], targetPath+'/'+sourceName));
         }
 
         // Wait for the asynchronous calls to finish to get new folder structure

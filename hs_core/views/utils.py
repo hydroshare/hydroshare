@@ -23,8 +23,8 @@ from mezzanine.conf import settings
 from ga_resources.utils import get_user
 
 from hs_core import hydroshare
-from hs_core.hydroshare import check_resource_type
-from hs_core.models import AbstractMetaDataElement, GenericResource, Relation
+from hs_core.hydroshare import check_resource_type, delete_resource_file
+from hs_core.models import AbstractMetaDataElement, GenericResource, Relation, ResourceFile
 from hs_core.signals import pre_metadata_element_create
 from hs_core.hydroshare import FILE_SIZE_LIMIT
 from hs_core.hydroshare.utils import raise_file_size_exception
@@ -404,3 +404,249 @@ def show_relations_section(res_obj):
     if all_relation_count > has_part_count:
         return True
     return False
+
+def link_irods_file_to_django(resource, filename, size=0):
+    # link the newly created zip file to Django resource model
+    if resource:
+        if resource.resource_federation_path:
+            if not ResourceFile.objects.filter(object_id=resource.id,
+                                               fed_resource_file_name_or_path=filename).exists():
+                ResourceFile.objects.create(content_object=resource,
+                                            resource_file=None,
+                                            fed_resource_file_name_or_path=filename,
+                                            fed_resource_file_size=size)
+        elif not ResourceFile.objects.filter(object_id=resource.id,
+                                             resource_file=filename).exists():
+                ResourceFile.objects.create(content_object=resource,
+                                            resource_file=filename)
+
+
+def link_irods_folder_to_django(resource, istorage, foldername, exclude=()):
+    """
+    Recursively Link irods folder and all files and sub-folders inside the folder to Django
+    Database after iRODS file and folder operations to get Django and iRODS in sync
+    :param resource: the BaseResource object representing a HydroShare resource
+    :param istorage: IrodsStorage object
+    :param foldername: the folder name
+    :param exclude: a tuple that includes file names to be excluded from linking under the folder;
+     default is empty meaning nothing is excluded.
+    :return:
+    """
+    if resource and istorage and foldername:
+        store = istorage.listdir(foldername)
+        # add the unzipped files into Django resource model
+        for file in store[1]:
+            if file not in exclude:
+                file_path = os.path.join(foldername, file)
+                size = istorage.size(file_path)
+                link_irods_file_to_django(resource, file_path, size)
+        for folder in store[0]:
+            link_irods_folder_to_django(resource,
+                                        istorage, os.path.join(foldername, folder), exclude)
+
+
+def rename_irods_file_in_django(resource, src_name, tgt_name):
+    """
+    Rename file in Django DB after the file is renamed in Django side
+    :param resource: the BaseResource object representing a HydroShare resource
+    :param src_name: the file name to be renamed
+    :param tgt_name: the file name to be renamed to
+    :return:
+    """
+    if resource:
+        if resource.resource_federation_path:
+            res_file_obj = ResourceFile.objects.filter(object_id=resource.id,
+                                                       fed_resource_file_name_or_path=src_name)
+            if res_file_obj.exists():
+                res_file_obj[0].fed_resource_file_name_or_path = tgt_name
+                res_file_obj[0].save()
+        else:
+            res_file_obj = ResourceFile.objects.filter(object_id=resource.id,
+                                                       resource_file=src_name)
+            if res_file_obj.exists():
+                # since resource_file is a FileField which cannot be directly renamed,
+                # this old ResourceFile object has to be deleted followed by creation of
+                # a new ResourceFile with new file associated that replace the old one
+                res_file_obj[0].delete()
+                ResourceFile.objects.create(content_object=resource, resource_file=tgt_name)
+
+
+def remove_irods_folder_in_django(resource, istorage, foldername):
+    """
+    Remove all files inside a folder in Django DB after the folder is removed from iRODS
+    :param resource: the BaseResource object representing a HydroShare resource
+    :param istorage: IrodsStorage object
+    :param foldername: the folder name that has been removed from iRODS
+    :return:
+    """
+    if resource and istorage and foldername:
+        fed_path = resource.resource_federation_path
+        if fed_path:
+            res_file_set = ResourceFile.objects.filter(
+                object_id=resource.id, fed_resource_file_name_or_path__icontains=foldername)
+        else:
+            res_file_set = ResourceFile.objects.filter(
+                object_id=resource.id, resource_file__icontains=foldername)
+        for f in res_file_set:
+            filename = hydroshare.get_resource_file_name(f)
+            f.delete()
+            hydroshare.delete_format_metadata_after_delete_file(resource, filename)
+
+
+def zip_folder(user, res_id, input_coll_path, output_zip_fname, bool_remove_original):
+    """
+    Zip input_coll_path into a zip file in hydroshareZone or any federated zone used for HydroShare
+    resource backend store and modify HydroShare Django site accordingly.
+
+    :param user: the requesting user
+    :param res_id: resource uuid
+    :param input_coll_path: relative sub-collection path under res_id collection to be zipped.
+    :param output_zip_fname: file name only with no path of the generated zip file name
+    :param bool_remove_original: a boolean indicating whether original files will be deleted
+    after zipping.
+    :return: output_zip_fname and output_zip_size pair
+    """
+    resource = hydroshare.utils.get_resource_by_shortkey(res_id)
+    if resource.resource_federation_path:
+        istorage = IrodsStorage('federated')
+        res_coll_input = os.path.join(resource.resource_federation_path, res_id, input_coll_path)
+    else:
+        istorage = IrodsStorage()
+        res_coll_input = os.path.join(res_id, input_coll_path)
+
+    content_dir = os.path.dirname(res_coll_input)
+    output_zip_full_path = os.path.join(content_dir, output_zip_fname)
+    istorage.session.run("ibun", None, '-cDzip', '-f', output_zip_full_path, res_coll_input)
+    output_zip_size = istorage.size(output_zip_full_path)
+
+    link_irods_file_to_django(resource, output_zip_full_path, output_zip_size)
+
+    if bool_remove_original:
+        for f in ResourceFile.objects.filter(object_id=resource.id):
+            full_path_name, basename, _ = \
+                hydroshare.utils.get_resource_file_name_and_extension(f)
+            if res_coll_input in full_path_name:
+                delete_resource_file(res_id, basename, user)
+
+        # remove empty folder in iRODS
+        istorage.delete(res_coll_input)
+
+    hydroshare.utils.resource_modified(resource, user)
+    return output_zip_fname, output_zip_size
+
+
+def unzip_file(user, res_id, zip_with_rel_path, bool_remove_original):
+    """
+    Unzip the input zip file while preserving folder structures in hydroshareZone or
+    any federated zone used for HydroShare resource backend store and keep Django DB in sync.
+    :param user: requesting user
+    :param res_id: resource uuid
+    :param zip_with_rel_path: the zip file name with relative path under res_id collection to
+    be unzipped
+    :param bool_remove_original: a bool indicating whether original zip file will be deleted
+    after unzipping.
+    :return:
+    """
+    resource = hydroshare.utils.get_resource_by_shortkey(res_id)
+    if resource.resource_federation_path:
+        istorage = IrodsStorage('federated')
+        zip_with_full_path = os.path.join(resource.resource_federation_path, res_id,
+                                          zip_with_rel_path)
+    else:
+        istorage = IrodsStorage()
+        zip_with_full_path = os.path.join(res_id, zip_with_rel_path)
+
+    unzip_path = os.path.dirname(zip_with_full_path)
+    zip_fname = os.path.basename(zip_with_rel_path)
+    istorage.session.run("ibun", None, '-xfDzip', zip_with_full_path, unzip_path)
+    link_irods_folder_to_django(resource, istorage, unzip_path, (zip_fname,))
+
+    if bool_remove_original:
+        delete_resource_file(res_id, zip_fname, user)
+
+    hydroshare.utils.resource_modified(resource, user)
+
+
+def create_folder(res_id, folder_path):
+    """
+    create a sub-folder/sub-collection in hydroshareZone or any federated zone used for HydroShare
+    resource backend store.
+    :param res_id: resource uuid
+    :param folder_path: relative path for the new folder to be created under
+    res_id collection/directory
+    :return:
+    """
+    resource = hydroshare.utils.get_resource_by_shortkey(res_id)
+    if resource.resource_federation_path:
+        istorage = IrodsStorage('federated')
+        coll_path = os.path.join(resource.resource_federation_path, res_id, folder_path)
+    else:
+        istorage = IrodsStorage()
+        coll_path = os.path.join(res_id, folder_path)
+
+    istorage.session.run("imkdir", None, '-p', coll_path)
+
+
+def remove_folder(user, res_id, folder_path):
+    """
+    remove a sub-folder/sub-collection in hydroshareZone or any federated zone used for HydroShare
+    resource backend store.
+    :param user: requesting user
+    :param res_id: resource uuid
+    :param folder_path: the relative path for the folder to be removed under res_id collection.
+    :return:
+    """
+    resource = hydroshare.utils.get_resource_by_shortkey(res_id)
+    if resource.resource_federation_path:
+        istorage = IrodsStorage('federated')
+        coll_path = os.path.join(resource.resource_federation_path, res_id, folder_path)
+    else:
+        istorage = IrodsStorage()
+        coll_path = os.path.join(res_id, folder_path)
+
+    istorage.delete(coll_path)
+
+    remove_irods_folder_in_django(resource, istorage, coll_path)
+
+    if resource.raccess.public or resource.raccess.discoverable:
+        if not resource.can_be_public_or_discoverable:
+            resource.raccess.public = False
+            resource.raccess.discoverable = False
+            resource.raccess.save()
+
+    hydroshare.utils.resource_modified(resource, user)
+
+
+def remove_or_rename_file_or_folder(user, res_id, src_path, tgt_path):
+    """
+    Move or rename a file or folder in hydroshareZone or any federated zone used for HydroShare
+    resource backend store.
+    :param user: requesting user
+    :param res_id: resource uuid
+    :param src_path: the relative paths for the source file or folder under res_id collection
+    :param tgt_path: the relative paths for the target file or folder under res_id collection
+    :return:
+    """
+    resource = hydroshare.utils.get_resource_by_shortkey(res_id)
+    if resource.resource_federation_path:
+        istorage = IrodsStorage('federated')
+        src_full_path = os.path.join(resource.resource_federation_path, res_id, src_path)
+        tgt_full_path = os.path.join(resource.resource_federation_path, res_id, tgt_path)
+    else:
+        istorage = IrodsStorage()
+        src_full_path = os.path.join(res_id, src_path)
+        tgt_full_path = os.path.join(res_id, tgt_path)
+
+    tgt_file_name = os.path.basename(tgt_full_path)
+    tgt_file_dir = os.path.dirname(tgt_full_path)
+    src_file_name = os.path.basename(src_full_path)
+    src_file_dir = os.path.dirname(src_full_path)
+
+    # ensure the target_full_path contains the file name to be moved or renamed to
+    if src_file_dir != tgt_file_dir and tgt_file_name != src_file_name:
+        tgt_full_path = os.path.join(tgt_full_path, src_file_name)
+
+    istorage.moveFile(src_full_path, tgt_full_path)
+
+    rename_irods_file_in_django(resource, src_full_path, tgt_full_path)
+    hydroshare.utils.resource_modified(resource, user)
