@@ -41,8 +41,8 @@ def check_element_exist(sender, **kwargs):
                 cls.objects.get(pk=element_id)
                 element_exists = True
             except ObjectDoesNotExist:
-                pass
-            return {'element_exists': element_exists}
+                break
+    return {'element_exists': element_exists}
 
 
 def _process_metadata_update_create(update_or_create, **kwargs):

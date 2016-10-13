@@ -266,10 +266,11 @@ def update_metadata_element(request, shortkey, element_name, element_id, *args, 
                     is_update_success = True
                     # this is how we handle if a post_metadata_element_update receiver
                     # is not implemented in the resource type's receivers.py
-                    try:
-                        element_exists = post_handler_response[0][1]['element_exists']
-                    except IndexError:
-                        element_exists = True
+                    element_exists = True
+                    for receiver, response in post_handler_response:
+                        if 'element_exists' in response:
+                            element_exists = response['element_exists']
+
                 except ValidationError as exp:
                     err_msg = err_msg.format(element_name, exp.message)
                     request.session['validation_error'] = err_msg

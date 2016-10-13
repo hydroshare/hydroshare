@@ -381,7 +381,7 @@ function metadata_update_ajax_submit(form_id){
                     update_url = "/hsapi/_internal/" + res_short_id + "/" + json_response.element_name +"/" + json_response.element_id + "/update-metadata/"
                     $form.attr('action', update_url);
                 }
-                if (json_response.element_exists === false){
+                if (json_response.element_exists == false){
                     form_update_action = $form.attr('action');
                     res_short_id = form_update_action.split('/')[3];
                     update_url = "/hsapi/_internal/" + res_short_id + "/" + json_response.element_name + "/add-metadata/"
