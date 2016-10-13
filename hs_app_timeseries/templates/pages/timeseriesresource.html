@@ -157,9 +157,11 @@
     <script>
         $(document).ready(function(){
             var el = $('#div-series-selection');
-            $(window).scrollTop($(el).offset().top - 300);
-            if ($("#can-update-sqlite-file").val() === "True" && ($("#metadata-dirty").val() === "True")){
-                $("#sql-file-update").show();
+            if (el.length) {
+                $(window).scrollTop($(el).offset().top - 300);
+                if ($("#can-update-sqlite-file").val() === "True" && ($("#metadata-dirty").val() === "True")) {
+                    $("#sql-file-update").show();
+                }
             }
 
             if ($("#resource-mode").val() === 'Edit'){

@@ -156,7 +156,7 @@
                     <div class="col-sm-12 content-block">
                         <h3>Content</h3>
                         {% if show_content_files %}
-                            {#                            ======= Modal window begins =======#}
+                            {# ======= Modal window begins =======#}
                             <div class="modal fade" id="confirm-delete-dialog" tabindex="-1" role="dialog"
                                  aria-labelledby="myModalLabel" aria-hidden="true">
                                 <div class="modal-dialog">
@@ -179,7 +179,22 @@
                                     </div>
                                 </div>
                             </div>
-                            {#                            ======= Modal window ends =======#}
+                            {# ======= Modal window ends =======#}
+
+                            {% if page.perms.change and metadata_form and cm.get_supported_upload_file_types != "()" %}
+                            <div class="alert alert-warning alert-dismissible" role="alert">
+                                <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                                    <span aria-hidden="true">&times;</span></button>
+                                <div>
+                                    <small id="file-types"></small>
+                                </div>
+                                <div>
+                                    <small id="file-multiple"></small>
+                                </div>
+                                {% block upload_message %}{% endblock %}
+                            </div>
+                            {% endif %}
+
                             <div id="hs-file-browser" data-res-id="{{ cm.short_id }}" data-current-path="data/contents"
                                  {% if page.perms.change and metadata_form %}data-mode="edit"{% endif %}
                                  data-supported-files="{{ cm.get_supported_upload_file_types }}"
@@ -384,14 +399,6 @@
                                         <span id="sign-in-info"></span>
                                         <a id="btn-signout-irods" type="button" class="btn-link hidden-form">Log out of
                                             iRODS</a>
-                                    </div>
-                                    <div class="alert alert-warning alert-dismissible" role="alert">
-                                        <button type="button" class="close" data-dismiss="alert" aria-label="Close">
-                                            <span aria-hidden="true">&times;</span></button>
-                                        <div>
-                                            <small id="file-types"></small>
-                                        </div>
-                                        {% block upload_message %}{% endblock %}
                                     </div>
                                 {% endif %}
                             </div>
@@ -1898,6 +1905,24 @@
             }
             else {
                 $("#file-types").text("Any file type can be uploaded.");
+            }
+            var file_count = $("#file-count").attr('value');
+
+            // set if multiple file can be uploaded
+            var allow_multiple_file_upload = $("#allow-multiple-file-upload").attr('value');
+            if (allow_multiple_file_upload === "True") {
+                $("#file-multiple").text("Multiple file upload is allowed.");
+                $("#file-multiple-irods").text("Multiple file upload is allowed.");
+            }
+            else {
+                $("#file-multiple").text("Only one file can be uploaded.");
+                $("#file-multiple-irods").text("Only one file can be uploaded.");
+
+                if (file_count > 0) {
+                    $("#log-into-irods").hide();
+                    $("#sign-in-info").hide();
+                    $("#btn-select-irods-file").hide();
+                }
             }
 
             if ($("#id_type_1").is(':checked')) { //box type coverage
