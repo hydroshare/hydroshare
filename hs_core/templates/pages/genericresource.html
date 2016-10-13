@@ -387,7 +387,7 @@
                                 </div>
 
                                 {% if page.perms.change and metadata_form and cm.get_supported_upload_file_types != "()" %}
-                                    <div class="fb-upload-caption">
+                                    <div class="fb-upload-caption {% if cm.files.all.count > 0 and cm.allow_multiple_file_upload != "True" %}hidden{% endif %}">
                                         <span><i class="fa fa-upload" aria-hidden="true"></i>&nbsp;&nbsp;Upload
                                             files smaller than 1GB in size by dragging & dropping, or click <a
                                                     id="upload-toggle" class="dz-clickable">here</a> to select them.
