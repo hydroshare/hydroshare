@@ -465,14 +465,17 @@ $(document).ready(function () {
     var acceptedFiles = $("#hs-file-browser").attr("data-supported-files").replace(/\(/g, '').replace(/\)/g, '').replace(/'/g, ''); // Strip undesired characters
 
     if (mode == "edit" && acceptedFiles.length > 0) {
-        var allowMultiple = $("#hs-file-browser").attr("data-allow-multiple-files") == "True";
+        var allowMultiple = null;
+        if ($("#hs-file-browser").attr("data-allow-multiple-files") != "True") {
+            allowMultiple = 1;
+        }
         Dropzone.options.fbContainmentWrapper = {
             paramName: "files", // The name that will be used to transfer the file
             clickable: "#upload-toggle",
             previewsContainer: "#previews", // Define the container to display the previews
             maxFilesize: 1024, // MB
             acceptedFiles: acceptedFiles,
-            uploadMultiple: allowMultiple,
+            maxFiles: allowMultiple,
             init: function () {
                 this.on("dragenter", function (file) {
                     $(".fb-drag-flag").show();
@@ -500,6 +503,11 @@ $(document).ready(function () {
                 this.on("totaluploadprogress", function (uploadProgress, totalBytes , totalBytesSent) {
                     $("#upload-progress").text(formatBytes(totalBytesSent) + " / " +  formatBytes(totalBytes) + " (" + parseInt(uploadProgress) + "%)" );
                 });
+
+                if (allowMultiple) {
+                    this.hiddenFileInput.removeAttribute('multiple');
+                }
+
             }
         };
     }

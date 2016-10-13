@@ -385,18 +385,25 @@
                                         <a id="btn-signout-irods" type="button" class="btn-link hidden-form">Log out of
                                             iRODS</a>
                                     </div>
-                                    {% block upload_message %}
-
-                                    {% endblock %}
+                                    <div class="alert alert-warning alert-dismissible" role="alert">
+                                        <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                                            <span aria-hidden="true">&times;</span></button>
+                                        <div>
+                                            <small id="file-types"></small>
+                                        </div>
+                                        {% block upload_message %}{% endblock %}
+                                    </div>
                                 {% endif %}
                             </div>
 
                             {% if page.perms.change and metadata_form %}
+                                {% if cm.get_supported_upload_file_types != "()" %}
                                 <a id="btn-select-irods-file" type="button"
                                    class="btn btn-success row-selector hidden-form" data-toggle="modal"
                                    data-target="#irodsContent">
                                     <span class="glyphicon glyphicon-plus"><span class="button-label"> Add files from iRODS...</span></span>
                                 </a>
+                                {% endif %}
                                 {% if file_type_error %}
                                     <div class="alert alert-danger alert-dismissible" role="alert">
                                         <button id="validation-error-close" type="button" class="close"
@@ -1326,40 +1333,6 @@
                 {%  endblock %}
             </div>
         </div>
-        <!-- Modal -->
-        {%  block modal_add_file %}
-        <div class="modal fade" id="add-file-dialog" tabindex="-1" role="dialog" aria-labelledby="add-file"
-             aria-hidden="true">
-            <div class="modal-dialog">
-                <div class="modal-content">
-                    <form action="/hsapi/_internal/{{ cm.short_id }}/add-file-to-resource/" method="POST"
-                          enctype="multipart/form-data">
-
-                        <div class="modal-header">
-                            <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
-                            <h4 class="modal-title" id="add-file">Add file to resource</h4>
-                        </div>
-                        <div class="modal-body">
-                            {% csrf_token %}
-                            <div class="form-group">
-                                <label for="add-file-input">Select files:</label>
-                                <input type="file" name="files" id="add-file-input" multiple/>
-                            </div>
-                            <div id="file-types">Any file type can be uploaded.</div>
-                            <div id="file-multiple">Multiple file upload is allowed.</div>
-                            <br>
-                            <h3 style="color: red" id="file-type-error"></h3>
-                        </div>
-                        <div class="modal-footer">
-                            <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-                            <button type="submit" class="btn btn-primary">Save changes</button>
-                        </div>
-                    </form>
-                </div>
-            </div>
-        </div>
-        {%  endblock %}
-
     {% endwith %}
 {% endblock %}
 
@@ -1916,9 +1889,7 @@
             $("#id_user-autocomplete").attr("placeholder", "Search by name or username");
             $("#id_group-autocomplete").attr("placeholder", "Search by group name");
 
-            // hide add file button if necessary
-            var file_count = $("#file-count").attr('value');
-            //set allowed file types
+
             var file_types = $("#supported-file-types").attr('value');
             if (file_types != ".*") {
                 var display_file_types = file_types.substring(0, file_types.length - 2) + ').';
@@ -1927,72 +1898,8 @@
             }
             else {
                 $("#file-types").text("Any file type can be uploaded.");
-                $("#file-types-irods").text("Any file type can be uploaded.");
-            }
-            // set if multiple file can be uploaded
-            var allow_multiple_file_upload = $("#allow-multiple-file-upload").attr('value');
-            if (allow_multiple_file_upload === "True") {
-                $("#file-multiple").text("Multiple file upload is allowed.");
-                $("#file-multiple-irods").text("Multiple file upload is allowed.");
-                $("#add-file-input").attr('multiple', 'multiple');
-            }
-            else {
-                $("#file-multiple").text("Only one file can be uploaded.");
-                $("#file-multiple-irods").text("Only one file can be uploaded.");
-                $("#add-file-input").removeAttr('multiple');
-                if (file_count > 0) {
-                    $("#log-into-irods").hide();
-                    $("#sign-in-info").hide();
-                    $("#btn-select-irods-file").hide();
-                }
-            }
-            // hide add file button if file upload is not allowed for the resource type
-            if (file_types == "()") {
-                $("#log-into-irods").hide();
-                $("#sign-in-info").hide();
-                $("#btn-select-irods-file").hide();
             }
 
-            // file upload validation when file is selected for upload
-            $('#add-file-input').on('change', function () {
-                var file_types = $("#supported-file-types").attr('value');
-                if (file_types != ".*") {
-                    file_types = file_types.substring(1, file_types.length - 1).split(",");
-                }
-                else {
-                    $("#file-types").text("Any file type can be uploaded.");
-                    return;
-                }
-                var fileList = this.files || [];
-                var ext = ".*";
-                for (var i = 0; i < fileList.length; i++) {
-                    ext = fileList[i].name.match(/\.([^\.]+)$/)[1];
-                    ext = "'." + ext.toLowerCase() + "'";
-                    var ext_found = false;
-                    if (ext === file_types) {
-                        ext_found = true;
-                    }
-                    else {
-                        var index;
-                        for (index = 0; index < file_types.length; index++) {
-                            if (ext === file_types[index].trim()) {
-                                ext_found = true;
-                                break;
-                            }
-                        }
-                    }
-                    if (!ext_found) {
-                        //remove user selected files
-                        this.value = '';
-                        var err_msg = 'Invalid file type: ' + ext;
-                        $('#file-type-error').text(err_msg);
-                        //alert('Invalid file type:' + ext)
-                    }
-                    else {
-                        $('#file-type-error').text('');
-                    }
-                }
-            });
             if ($("#id_type_1").is(':checked')) { //box type coverage
                 $("#div_id_north").hide();
                 $("#div_id_east").hide();

@@ -147,46 +147,7 @@
 {%  endblock %}
 
 {% block upload_message %}
-    <small class="text-muted">If the uploaded file is a SQLIte file, metadata will be extracted and will overwrite existing metadata in the resource.</small>
-{% endblock %}
-
-{%  block modal_add_file %}
-    <div class="modal fade" id="add-file-dialog" tabindex="-1" role="dialog" aria-labelledby="myModalLabel"
-         aria-hidden="true">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <form action="/hsapi/_internal/{{ cm.short_id }}/add-file-to-resource/" method="POST"
-                      enctype="multipart/form-data">
-                    <div class="modal-header">
-                        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
-                        <h4 class="modal-title" id="myModalLabel">Add file to resource</h4>
-                    </div>
-                    <div class="modal-body">
-                        {% csrf_token %}
-                        <div class="form-group">
-                            <label for="add-file-input">Select files:</label>
-                            <input type="file" name="files" id="add-file-input" multiple/>
-                        </div>
-                        <div id="file-types">Any file type can be uploaded.</div>
-                        <div id="file-multiple">Multiple file upload is allowed.</div>
-                        <br>
-                        <h3 style="color: red" id="file-type-error"></h3>
-                        <hr>
-                        <div>
-                            <div class="alert alert-warning" role="alert">
-                                <span class="glyphicon glyphicon-info-sign" aria-hidden="true"></span>
-                                If the uploaded file is a SQLIte file, metadata will be extracted and will overwrite existing metadata in the resource.
-                            </div>
-                        </div>
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-                        <button type="submit" class="btn btn-primary">Save changes</button>
-                    </div>
-                </form>
-            </div>
-        </div>
-    </div>
+    <div><small>If the uploaded file is a SQLIte file, metadata will be extracted and will overwrite existing metadata in the resource.</small></div>
 {% endblock %}
 
 {% block extra_js %}
