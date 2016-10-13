@@ -533,7 +533,10 @@ function get_irods_folder_struct_ajax_submit(res_id, store_path) {
             bindFileBrowserItemEvents();
             $("#hs-file-browser").attr("data-current-path", store_path);
             $("#hs-file-browser").attr("data-res-id", res_id);
-            setBreadCrumbs(store_path);
+
+            // strip the 'data' folder from the path
+            setBreadCrumbs(store_path.replace("data/", ""));
+
             updateNavigationState();
             $(".selection-menu").hide();
             $("#flag-uploading").remove();
