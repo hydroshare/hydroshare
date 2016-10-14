@@ -4194,11 +4194,11 @@ div.fb-upload-caption a {
 
 .fb-drag-flag {
 	position: absolute;
-    font-size: 32px;
-    text-align: center;
-    color: rgba(66, 139, 202, 0.51);
-	left: calc(50% - 60px);
-    top: 50%;
+	font-size: 32px;
+	text-align: center;
+	color: rgba(66, 139, 202, 0.51);
+	margin-top: 62px;
+	margin-left: calc(50% - 80px);
 	display: none;
 	pointer-events: none;
 }
