@@ -71,49 +71,57 @@
 
                     {# POPUP MENU - Right clicking items #}
                     <ul id="right-click-menu" class="dropdown-menu fb-dropdown selection-menu">
+                        {% if cm|resource_type == "Generic" %}
                         <li id="btn-open" data-menu-name="open">
                             <span class="glyphicon glyphicon-folder-open glyphicon-folder"></span>
                             <span>Open</span>
                         </li>
 
                         <li role="separator" class="divider"></li>
-
-                        {% if page.perms.change and metadata_form %}
-                        <li id="btn-cut" data-menu-name="cut">
-                            <span class="fa fa-scissors icon-blue"></span>
-                            <span>Cut</span>
-                        </li>
-
-                        <li data-menu-name="paste">
-                            <span class="fa fa-clipboard icon-blue"></span>
-                            <span>Paste</span>
-                        </li>
-
-                        <li data-menu-name="rename" data-toggle="modal" data-target="#rename-dialog">
-                            <span class="glyphicon glyphicon-pencil icon-blue"></span>
-                            <span>Rename</span>
-                        </li>
-
-                        <li class="fb-files-remove" data-toggle="modal" data-target="#confirm-delete-dialog">
-                            <span class="glyphicon glyphicon-trash icon-button btn-remove"></span>
-                            <span>Delete</span>
-                        </li>
-
-                        <li role="separator" class="divider"></li>
-
-                        <li id="btn-zip" data-menu-name="zip" data-toggle="modal" data-target="#zip-folder-dialog">
-                            <span class="glyphicon glyphicon-compressed icon-blue"></span>
-                            <span>Zip Folder...</span>
-                        </li>
-
-                        <li id="btn-unzip" data-menu-name="unzip">
-                            <span class="fa fa-file-archive-o icon-blue"></span>
-                            <span>Unzip here</span>
-                        </li>
-
-                        <li role="separator" class="divider"></li>
                         {% endif %}
 
+                        {% if page.perms.change and metadata_form %}
+                            {% if cm|resource_type == "Generic" %}
+                                <li id="btn-cut" data-menu-name="cut">
+                                    <span class="fa fa-scissors icon-blue"></span>
+                                    <span>Cut</span>
+                                </li>
+
+                                <li data-menu-name="paste">
+                                    <span class="fa fa-clipboard icon-blue"></span>
+                                    <span>Paste</span>
+                                </li>
+
+                                <li data-menu-name="rename" data-toggle="modal" data-target="#rename-dialog">
+                                    <span class="glyphicon glyphicon-pencil icon-blue"></span>
+                                    <span>Rename</span>
+                                </li>
+                            {% endif %}
+
+                            <li class="fb-files-remove" data-toggle="modal" data-target="#confirm-delete-dialog">
+                                <span class="glyphicon glyphicon-trash icon-button btn-remove"></span>
+                                <span>Delete</span>
+                            </li>
+
+                            <li role="separator" class="divider"></li>
+
+                            {% if cm|resource_type == "Generic" %}
+
+                                <li id="btn-zip" data-menu-name="zip" data-toggle="modal"
+                                    data-target="#zip-folder-dialog">
+                                    <span class="glyphicon glyphicon-compressed icon-blue"></span>
+                                    <span>Zip Folder...</span>
+                                </li>
+
+                                <li id="btn-unzip" data-menu-name="unzip">
+                                    <span class="fa fa-file-archive-o icon-blue"></span>
+                                    <span>Unzip here</span>
+                                </li>
+
+                                <li role="separator" class="divider"></li>
+                            {% endif %}
+
+                        {% endif %}
                         <li id="btn-download" data-menu-name="download">
                             <span class="glyphicon glyphicon-download icon-blue"></span>
                             <span>Download</span>
@@ -122,7 +130,7 @@
 
                     {# POPUP MENU - Right clicking empty space in file browser #}
                     <ul id="right-click-container-menu" class="dropdown-menu fb-dropdown selection-menu">
-                        {% if page.perms.change and metadata_form %}
+                        {% if page.perms.change and metadata_form and cm|resource_type == "Generic"%}
                             <li id="btn-new-folder" data-menu-name="new-folder" data-toggle="modal"
                                 data-target="#create-folder-dialog">
                                 <span class="fa fa-folder glyphicon-folder"></span>
@@ -141,8 +149,7 @@
                             <span class="fa fa-plus-square-o icon-blue"></span>
                             <span>Select All</span>
                         </li>
-
-                        {% if page.perms.change and metadata_form %}
+                        {% if page.perms.change and metadata_form and cm|resource_type == "Generic"%}
 
                             <li role="separator" class="divider"></li>
 
@@ -285,11 +292,13 @@
                                             <div class="row">
                                                 <div id="fb-file-operations-controls" class="col-xs-12 col-sm-8 height-fix">
                                                     {% if page.perms.change and metadata_form %}
+                                                        {% if cm|resource_type == "Generic" %}
                                                         <button id="fb-create-folder"
                                                                 data-toggle="modal" data-target="#create-folder-dialog"
                                                                 title="Create new folder">
                                                             <span class="fa fa-folder glyphicon-folder"></span>
                                                         </button>
+                                                        {% endif %}
 
                                                         <button id="fb-delete"
                                                                 class="disabled"
@@ -298,6 +307,7 @@
                                                             <span class="glyphicon glyphicon-trash btn-remove"></span>
                                                         </button>
 
+                                                        {% if cm|resource_type == "Generic" %}
                                                         <button id="fb-cut"
                                                                 class="disabled"
                                                                 title="Cut">
@@ -317,6 +327,8 @@
                                                             <span class="glyphicon glyphicon-pencil icon-blue"></span>
                                                         </button>
 
+
+
                                                         <button id="fb-zip"
                                                                 class="disabled"
                                                                 title="Zip Folder" data-toggle="modal"
@@ -329,6 +341,7 @@
                                                                 title="Unzip here">
                                                             <span class="fa fa-file-archive-o icon-blue"></span>
                                                         </button>
+                                                        {% endif %}
                                                     {% endif %}
 
                                                     <button id="fb-select-all"
