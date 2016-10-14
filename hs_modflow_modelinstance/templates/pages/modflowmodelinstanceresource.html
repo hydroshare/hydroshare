@@ -193,7 +193,7 @@
             <table class="custom-table">
                 <tbody>
                 <tr>
-                    {% if boundary_condition.specified_head_boundary_packages %}
+                    {% if boundary_condition.other_specified_head_boundary_packages or boundary_condition.get_specified_head_boundary_packages %}
                     <th class="text-muted">Specified head boundary package(s)</th>
                     <td>
                         {% if boundary_condition.other_specified_head_boundary_packages and boundary_condition.get_specified_head_boundary_packages %}
@@ -207,7 +207,7 @@
                     {% endif %}
                 </tr>
                 <tr>
-                    {% if boundary_condition.specified_flux_boundary_packages %}
+                    {% if boundary_condition.other_specified_flux_boundary_packages or boundary_condition.get_specified_flux_boundary_packages %}
                         <th class="text-muted">Specified flux boundary package(s)</th>
                     <td>
                         {% if boundary_condition.other_specified_flux_boundary_packages and boundary_condition.get_specified_flux_boundary_packages %}
@@ -221,7 +221,7 @@
                     {% endif %}
                 </tr>
                 <tr>
-                    {% if boundary_condition.head_dependent_flux_boundary_packages %}
+                    {% if boundary_condition.other_head_dependent_flux_boundary_packages or boundary_condition.get_head_dependent_flux_boundary_packages %}
                         <th class="text-muted">Head-dependent flux boundary package(s)</th>
                     <td>
                         {% if boundary_condition.other_head_dependent_flux_boundary_packages and boundary_condition.get_head_dependent_flux_boundary_packages %}

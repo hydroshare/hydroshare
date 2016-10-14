@@ -263,7 +263,15 @@ def update_metadata_element(request, shortkey, element_name, element_id, *args, 
                 element_data_dict = response['element_data_dict']
                 try:
                     res.metadata.update_element(element_name, element_id, **element_data_dict)
+                    post_handler_response = post_metadata_element_update.send(sender=sender_resource, element_name=element_name, element_id=element_id)
                     is_update_success = True
+                    # this is how we handle if a post_metadata_element_update receiver
+                    # is not implemented in the resource type's receivers.py
+                    element_exists = True
+                    for receiver, response in post_handler_response:
+                        if 'element_exists' in response:
+                            element_exists = response['element_exists']
+
                 except ValidationError as exp:
                     err_msg = err_msg.format(element_name, exp.message)
                     request.session['validation_error'] = err_msg
@@ -294,10 +302,13 @@ def update_metadata_element(request, shortkey, element_name, element_id, *args, 
                 ajax_response_data = {'status': 'success',
                                       'element_name': element_name,
                                       'spatial_coverage': spatial_coverage_dict,
-                                      'metadata_status': metadata_status}
+                                      'metadata_status': metadata_status,
+                                      'element_exists':element_exists}
             else:
-                ajax_response_data = {'status': 'success', 'element_name': element_name,
-                                      'metadata_status': metadata_status}
+                ajax_response_data = {'status': 'success',
+                                      'element_name': element_name,
+                                      'metadata_status': metadata_status,
+                                      'element_exists':element_exists}
 
             return JsonResponse(ajax_response_data)
         else:
