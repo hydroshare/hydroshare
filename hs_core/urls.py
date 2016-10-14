@@ -14,7 +14,6 @@ urlpatterns = patterns('',
     url(r'^resourceList/$', views.resource_rest_api.ResourceList.as_view(),
         name='DEPRECATED_list_resources'),
 
-    # TODO: must combine listing into this function
     url(r'^resource/$', views.resource_rest_api.ResourceCreate.as_view(),
         name='create_resource'),
 
@@ -48,6 +47,10 @@ urlpatterns = patterns('',
     url(r'^resource/(?P<pk>[0-9a-f-]+)/files/(?P<filename>[^/]+)/$',
         views.resource_rest_api.ResourceFileCRUD.as_view(), name='get_update_delete_resource_file'),
 
+    url(r'^resource/(?P<pk>[0-9a-f-]+)/files/$', views.resource_rest_api.ResourceFileList.as_view(),
+        name='get_resource_file_list'),
+
+    # DEPRECATED: use form above instead. 
     url(r'^resource/(?P<pk>[0-9a-f-]+)/file_list/$', views.resource_rest_api.ResourceFileList.as_view(),
         name='get_resource_file_list'),
 

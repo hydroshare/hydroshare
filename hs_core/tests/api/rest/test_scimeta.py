@@ -24,7 +24,7 @@ class TestScienceMetadata(SciMetaTestCase):
     def test_get_scimeta(self):
         # Get science metadata XML
         self.getScienceMetadata(self.pid)
-        # TODO: test that content is reasonable! 
+        # TODO: test that content is reasonable!
 
     def test_put_scimeta_generic(self):
         # Update science metadata XML

@@ -291,9 +291,9 @@ class ResourceReadUpdateDelete(ResourceToListItemMixin, generics.RetrieveUpdateD
         return serializers.ResourceListItemSerializer
 
 
-class ResourceCreate(generics.CreateAPIView):
+class ResourceCreate(ResourceToListItemMixin, generics.ListCreateAPIView):
     """
-    Create a new resource
+    Create a new resource or list existing resources
 
     REST URL: hsapi/resource
     HTTP method: POST
@@ -336,6 +336,10 @@ class ResourceCreate(generics.CreateAPIView):
 
         https://github.com/tomchristie/django-rest-framework/issues/3951
 
+        Couch: This issue was recently closed (10/12/2016, 2 days before this writing)
+        and is slated to be incorporated in the Django REST API 3.5.0 release.
+        At that time, we should remove this hack.
+
         :param request:
         :param args:
         :param kwargs:
@@ -350,8 +354,12 @@ class ResourceCreate(generics.CreateAPIView):
             request.FILES.update(old_file_data)
         return request
 
-    def get_serializer_class(self):
-        return serializers.ResourceCreateRequestValidator
+    # Couch: This is called explicitly in the overrided create() method and thus this
+    # declaration does nothing. Thus, it can be changed to whatever is convenient.
+    # Currently, it is convenient to use the listing serializer instead, so that
+    # it will be the default output serializer.
+    # def get_serializer_class(self):
+    #     return serializers.ResourceCreateRequestValidator
 
     def post(self, request):
         return self.create(request)
@@ -375,7 +383,8 @@ class ResourceCreate(generics.CreateAPIView):
         metadata = validated_request_data.get('metadata', None)
 
         num_files = len(request.FILES)
-        # TODO: (Couch) reconsider whether multiple file upload should be supported
+        # TODO: (Couch) reconsider whether multiple file upload should be
+        # supported when multipart bug fixed.
         if num_files > 0:
             if num_files > 1:
                 raise ValidationError(detail={'file': 'Multiple file upload is not allowed on '
@@ -394,8 +403,9 @@ class ResourceCreate(generics.CreateAPIView):
 
         try:
             _, res_title, metadata, _ = hydroshare.utils.resource_pre_create_actions(
-                resource_type=resource_type, resource_title=res_title, page_redirect_url_key=None,
-                files=files, metadata=metadata,  **kwargs)
+                resource_type=resource_type, resource_title=res_title,
+                page_redirect_url_key=None, files=files, metadata=metadata,
+                **kwargs)
         except Exception as ex:
             error_msg = {'resource': "Resource creation failed. %s" % ex.message}
             raise ValidationError(detail=error_msg)
@@ -421,6 +431,40 @@ class ResourceCreate(generics.CreateAPIView):
 
         response_data = {'resource_type': resource_type, 'resource_id': resource.short_id}
         return Response(data=response_data,  status=status.HTTP_201_CREATED)
+
+    pagination_class = PageNumberPagination
+
+    def get(self, request):
+        return self.list(request)
+
+    # needed for list of resources
+    # copied from ResourceList
+    def get_queryset(self):
+        resource_list_request_validator = serializers.ResourceListRequestValidator(
+            data=self.request.query_params)
+        if not resource_list_request_validator.is_valid():
+            raise ValidationError(detail=resource_list_request_validator.errors)
+
+        filter_parms = resource_list_request_validator.validated_data
+        filter_parms['user'] = (self.request.user if self.request.user.is_authenticated() else None)
+        if len(filter_parms['type']) == 0:
+            filter_parms['type'] = None
+        else:
+            filter_parms['type'] = list(filter_parms['type'])
+
+        filter_parms['public'] = not self.request.user.is_authenticated()
+
+        filtered_res_list = []
+
+        for r in hydroshare.get_resource_list(**filter_parms):
+            resource_list_item = self.resourceToResourceListItem(r)
+            filtered_res_list.append(resource_list_item)
+
+        return filtered_res_list
+
+    # covers serialization of output from GET request
+    def get_serializer_class(self):
+        return serializers.ResourceListItemSerializer
 
 
 class SystemMetadataRetrieve(ResourceToListItemMixin, APIView):
@@ -679,6 +723,10 @@ class ResourceFileCRUD(APIView, ResourceFileToListItemMixin):
 
         https://github.com/tomchristie/django-rest-framework/issues/3951
 
+        Couch: This issue was recently closed (10/12/2016, 2 days before this writing)
+        and is slated to be incorporated in the Django REST API 3.5.0 release.
+        At that time, we should remove this hack.
+
         :param request:
         :param args:
         :param kwargs:
@@ -704,7 +752,7 @@ class ResourceFileCRUD(APIView, ResourceFileToListItemMixin):
 
         # redirects to django_irods/views.download function
         # use new internal url for rest call
-        # TODO: (Couch) Migrate model (with a "data migration") so that this hack is not needed. 
+        # TODO: (Couch) Migrate model (with a "data migration") so that this hack is not needed.
         redirect_url = f.url.replace('django_irods/download/', 'django_irods/rest_download/')
         return HttpResponseRedirect(redirect_url)
 
@@ -726,7 +774,7 @@ class ResourceFileCRUD(APIView, ResourceFileToListItemMixin):
                                  'added at a time.'}
             raise ValidationError(detail=error_msg)
 
-        # TODO: I know there has been some discussion when to validate a file
+        # TODO: (Brian) I know there has been some discussion when to validate a file
         # I agree that we should not validate and extract metadata as part of the file add api
         # Once we have a decision, I will change this implementation accordingly. In that case
         # we have to implement additional rest endpoints for file validation and extraction.
@@ -770,9 +818,8 @@ class ResourceFileCRUD(APIView, ResourceFileToListItemMixin):
         return Response(data=response_data, status=status.HTTP_200_OK)
 
     def put(self, request, pk, filename):
-        # TODO: Currently we do not have this action for the front end. Will implement
-        # in the next iteration
-        # Implement only after we have a decision when to validate a file
+        # TODO: (Brian) Currently we do not have this action for the front end. Will implement
+        # in the next iteration. Implement only after we have a decision on when to validate a file
         raise NotImplementedError()
 
 
