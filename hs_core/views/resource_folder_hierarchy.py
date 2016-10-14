@@ -9,73 +9,12 @@ from django_irods.storage import IrodsStorage
 from django_irods.icommands import SessionException
 
 from hs_core.hydroshare.utils import get_file_mime_type, get_resource_file_name_and_extension, \
-    get_resource_file_url, resource_modified
-from hs_core.views.utils import authorize, ACTION_TO_AUTHORIZE
-from hs_core.hydroshare import delete_resource_file
+    get_resource_file_url
+from hs_core.views.utils import authorize, ACTION_TO_AUTHORIZE, zip_folder, unzip_file, \
+    create_folder, remove_folder, remove_or_rename_file_or_folder
 from hs_core.models import ResourceFile
 
 logger = logging.getLogger(__name__)
-
-
-def link_irods_file_to_django(resource, filename, size=0):
-    # link the newly created zip file to Django resource model
-    if resource:
-        if resource.resource_federation_path:
-            if not ResourceFile.objects.filter(object_id=resource.id,
-                                               fed_resource_file_name_or_path=filename).exists():
-                ResourceFile.objects.create(content_object=resource,
-                                            resource_file=None,
-                                            fed_resource_file_name_or_path=filename,
-                                            fed_resource_file_size=size)
-        elif not ResourceFile.objects.filter(object_id=resource.id,
-                                             resource_file=filename).exists():
-                ResourceFile.objects.create(content_object=resource,
-                                            resource_file=filename)
-
-
-def link_irods_folder_to_django(resource, istorage, foldername, exclude=()):
-    if resource and istorage and foldername:
-        store = istorage.listdir(foldername)
-        # add the unzipped files into Django resource model
-        for file in store[1]:
-            if file not in exclude:
-                file_path = os.path.join(foldername, file)
-                size = istorage.size(file_path)
-                link_irods_file_to_django(resource, file_path, size)
-        for folder in store[0]:
-            link_irods_folder_to_django(resource,
-                                        istorage, os.path.join(foldername, folder), exclude)
-
-
-def rename_irods_file_in_django(resource, src_name, tgt_name):
-    if resource:
-        if resource.resource_federation_path:
-            res_file_obj = ResourceFile.objects.filter(object_id=resource.id,
-                                                       fed_resource_file_name_or_path=src_name)
-            if res_file_obj.exists():
-                res_file_obj[0].fed_resource_file_name_or_path = tgt_name
-                res_file_obj[0].save()
-        else:
-            res_file_obj = ResourceFile.objects.filter(object_id=resource.id,
-                                                       resource_file=src_name)
-            if res_file_obj.exists():
-                # since resource_file is a FileField which cannot be directly renamed,
-                # this old ResourceFile object has to be deleted followed by creation of
-                # a new ResourceFile with new file associated that replace the old one
-                res_file_obj[0].delete()
-                ResourceFile.objects.create(content_object=resource, resource_file=tgt_name)
-
-
-def remove_irods_folder_in_django(resource, istorage, foldername):
-    if resource and istorage and foldername:
-        if resource.resource_federation_path:
-            res_file_set = ResourceFile.objects.filter(
-                object_id=resource.id, fed_resource_file_name_or_path__icontains=foldername)
-        else:
-            res_file_set = ResourceFile.objects.filter(
-                object_id=resource.id, resource_file__icontains=foldername)
-        for f in res_file_set:
-            f.delete()
 
 
 def data_store_structure(request):
@@ -183,39 +122,16 @@ def data_store_folder_zip(request):
         if remove_original == 'false':
             bool_remove_original = False
 
-    if resource.resource_federation_path:
-        istorage = IrodsStorage('federated')
-        res_coll_input = os.path.join(resource.resource_federation_path, res_id, input_coll_path)
-    else:
-        istorage = IrodsStorage()
-        res_coll_input = os.path.join(res_id, input_coll_path)
-
-    logger.debug("Before: res_coll_input is: " + res_coll_input)
-    content_dir = os.path.dirname(res_coll_input)
-    logger.debug("After: content_dir: " + content_dir)
-    output_zip_full_path = os.path.join(content_dir, output_zip_fname)
     try:
-        istorage.session.run("ibun", None, '-cDzip', '-f', output_zip_full_path, res_coll_input)
-        size = istorage.size(output_zip_full_path)
+        output_zip_fname, size = \
+            zip_folder(user, res_id, input_coll_path, output_zip_fname, bool_remove_original)
     except SessionException as ex:
         logger.error(ex.stderr)
         return HttpResponse(status=500)
+    except Exception as ex:
+        logger.error(ex.message)
+        return HttpResponse(status=500)
 
-    link_irods_file_to_django(resource, output_zip_full_path, size)
-
-    if bool_remove_original:
-        try:
-            for f in ResourceFile.objects.filter(object_id=resource.id):
-                full_path_name, basename, _ = get_resource_file_name_and_extension(f)
-                if res_coll_input in full_path_name:
-                    delete_resource_file(res_id, basename, request.user)
-
-            # remove empty folder in iRODS
-            istorage.delete(res_coll_input)
-        except Exception:
-            return HttpResponse(status=500)
-
-    resource_modified(resource, user)
     return_object = {'name': output_zip_fname,
                      'size': size,
                      'type': 'zip'}
@@ -260,30 +176,13 @@ def data_store_folder_unzip(request):
         if remove_original == 'false':
             bool_remove_original = False
 
-    if resource.resource_federation_path:
-        istorage = IrodsStorage('federated')
-        zip_with_full_path = os.path.join(resource.resource_federation_path, res_id,
-                                          zip_with_rel_path)
-    else:
-        istorage = IrodsStorage()
-        zip_with_full_path = os.path.join(res_id, zip_with_rel_path)
-
-    unzip_path = os.path.dirname(zip_with_full_path)
-    zip_fname = os.path.basename(zip_with_rel_path)
     try:
-        istorage.session.run("ibun", None, '-xfDzip', zip_with_full_path, unzip_path)
-        link_irods_folder_to_django(resource, istorage, unzip_path, (zip_fname,))
+        unzip_file(user, res_id, zip_with_rel_path, bool_remove_original)
     except SessionException as ex:
         logger.error(ex.stderr)
         return HttpResponse(status=500)
-
-    if bool_remove_original:
-        try:
-            delete_resource_file(res_id, zip_fname, request.user)
-        except Exception:
-            return HttpResponse(status=500)
-
-    resource_modified(resource, user)
+    except Exception:
+        return HttpResponse(status=500)
 
     # this unzipped_path can be used for POST request input to data_store_structure()
     # to list the folder structure after unzipping
@@ -321,17 +220,14 @@ def data_store_create_folder(request):
     folder_path = str(folder_path).strip()
     if not folder_path:
         return HttpResponse(status=400)
-    if resource.resource_federation_path:
-        istorage = IrodsStorage('federated')
-        coll_path = os.path.join(resource.resource_federation_path, res_id, folder_path)
-    else:
-        istorage = IrodsStorage()
-        coll_path = os.path.join(res_id, folder_path)
 
     try:
-        istorage.session.run("imkdir", None, '-p', coll_path)
+        create_folder(res_id, folder_path)
     except SessionException as ex:
         logger.error(ex.stderr)
+        return HttpResponse(status=500)
+    except Exception as ex:
+        logger.error(ex.message)
         return HttpResponse(status=500)
 
     return_object = {'new_folder_rel_path': folder_path}
@@ -368,31 +264,17 @@ def data_store_remove_folder(request):
     folder_path = str(folder_path).strip()
     if not folder_path:
         return HttpResponse(status=400)
-    if resource.resource_federation_path:
-        istorage = IrodsStorage('federated')
-        coll_path = os.path.join(resource.resource_federation_path, res_id, folder_path)
-    else:
-        istorage = IrodsStorage()
-        coll_path = os.path.join(res_id, folder_path)
 
     try:
-        istorage.delete(coll_path)
+        remove_folder(user, res_id, folder_path)
     except SessionException as ex:
         logger.error(ex.stderr)
         return HttpResponse(status=500)
+    except Exception as ex:
+        logger.error(ex.message)
+        return HttpResponse(status=500)
 
-    remove_irods_folder_in_django(resource, istorage, coll_path)
     return_object = {'status': 'success'}
-
-    if resource.raccess.public or resource.raccess.discoverable:
-        if not resource.can_be_public_or_discoverable:
-            resource.raccess.public = False
-            resource.raccess.discoverable = False
-            resource.raccess.save()
-
-    # generate bag
-    resource_modified(resource, user)
-
     return HttpResponse(
         json.dumps(return_object),
         content_type="application/json"
@@ -427,32 +309,15 @@ def data_store_file_or_folder_move_or_rename(request):
     tgt_path = str(tgt_path).strip()
     if not src_path or not tgt_path:
         return HttpResponse(status=400)
-    if resource.resource_federation_path:
-        istorage = IrodsStorage('federated')
-        src_full_path = os.path.join(resource.resource_federation_path, res_id, src_path)
-        tgt_full_path = os.path.join(resource.resource_federation_path, res_id, tgt_path)
-    else:
-        istorage = IrodsStorage()
-        src_full_path = os.path.join(res_id, src_path)
-        tgt_full_path = os.path.join(res_id, tgt_path)
-
-    tgt_file_name = os.path.basename(tgt_full_path)
-    tgt_file_dir = os.path.dirname(tgt_full_path)
-    src_file_name = os.path.basename(src_full_path)
-    src_file_dir = os.path.dirname(src_full_path)
-
-    # ensure the target_full_path contains the file name to be moved or renamed to
-    if src_file_dir != tgt_file_dir and tgt_file_name != src_file_name:
-        tgt_full_path = os.path.join(tgt_full_path, src_file_name)
 
     try:
-        istorage.moveFile(src_full_path, tgt_full_path)
+        remove_or_rename_file_or_folder(user, res_id, src_path, tgt_path)
     except SessionException as ex:
         logger.error(ex.stderr)
         return HttpResponse(status=500)
-
-    rename_irods_file_in_django(resource, src_full_path, tgt_full_path)
-    resource_modified(resource, user)
+    except Exception as ex:
+        logger.error(ex.message)
+        return HttpResponse(status=500)
 
     return_object = {'target_rel_path': tgt_path}
 

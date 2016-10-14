@@ -932,6 +932,26 @@ def delete_resource_file_only(resource, f):
     return file_name
 
 
+def delete_format_metadata_after_delete_file(resource, file_name):
+    """
+    delete format metadata as appropriate after a file is deleted.
+    :param resource: BaseResource object representing a HydroShare resource
+    :param file_name: the file name to be deleted
+    :return:
+    """
+    delete_file_mime_type = utils.get_file_mime_type(file_name)
+    delete_file_extension = os.path.splitext(file_name)[1]
+
+    # if there is no other resource file with the same extension as the
+    # file just deleted then delete the matching format metadata element for the resource
+    resource_file_extensions = [os.path.splitext(get_resource_file_name(f))[1] for f in
+                                    resource.files.all()]
+    if delete_file_extension not in resource_file_extensions:
+        format_element = resource.metadata.formats.filter(value=delete_file_mime_type).first()
+        if format_element:
+            resource.metadata.delete_element(format_element.term, format_element.id)
+
+
 def delete_resource_file(pk, filename_or_id, user):
     """
     Deletes an individual file from a HydroShare resource. If the file does not exist, the Exceptions.NotFound exception
@@ -982,16 +1002,8 @@ def delete_resource_file(pk, filename_or_id, user):
             # send signal
             signals.pre_delete_file_from_resource.send(sender=res_cls, file=f, resource=resource, user=user)
             file_name = delete_resource_file_only(resource, f)
-            delete_file_mime_type = utils.get_file_mime_type(file_name)
-            delete_file_extension = os.path.splitext(file_name)[1]
 
-            # if there is no other resource file with the same extension as the
-            # file just deleted then delete the matching format metadata element for the resource
-            resource_file_extensions = [os.path.splitext(f.resource_file.name)[1] for f in resource.files.all()]
-            if delete_file_extension not in resource_file_extensions:
-                format_element = resource.metadata.formats.filter(value=delete_file_mime_type).first()
-                if format_element:
-                    resource.metadata.delete_element(format_element.term, format_element.id)
+            delete_format_metadata_after_delete_file(resource, file_name)
             break
     else:
         raise ObjectDoesNotExist(filename_or_id)
