@@ -15,7 +15,7 @@ urlpatterns = patterns('',
     url(r'^resourceList/$', views.resource_rest_api.ResourceList.as_view(),
         name='DEPRECATED_list_resources'),
 
-    url(r'^resource/$', views.resource_rest_api.ResourceCreate.as_view(),
+    url(r'^resource/$', views.resource_rest_api.ResourceListCreate.as_view(),
         name='create_resource'),
 
     url(r'^resource/(?P<pk>[0-9a-f-]+)/$', views.resource_rest_api.ResourceReadUpdateDelete.as_view(),
@@ -42,21 +42,22 @@ urlpatterns = patterns('',
     url(r'^scimeta/(?P<pk>[0-9a-f-]+)/$', views.resource_rest_api.ScienceMetadataRetrieveUpdate.as_view(),
         name='DEPRECATED_get_update_science_metadata'),
 
-    # TODO: need another ListCreate instance for this, rather than ResourceFileCRUD
-    url(r'^resource/(?P<pk>[0-9a-f-]+)/files/$', views.resource_rest_api.ResourceFileCRUD.as_view(),
-        name='add_resource_file'),
+    # Unused. See ResourceFileListCreate. 
+    # url(r'^resource/(?P<pk>[0-9a-f-]+)/files/$', 
+    #     views.resource_rest_api.ResourceFileCRUD.as_view(),
+    #     name='add_resource_file'),
 
     url(r'^resource/(?P<pk>[0-9a-f-]+)/files/(?P<filename>[^/]+)/$',
         views.resource_rest_api.ResourceFileCRUD.as_view(), 
         name='get_update_delete_resource_file'),
 
     url(r'^resource/(?P<pk>[0-9a-f-]+)/files/$', 
-        views.resource_rest_api.ResourceFileList.as_view(),
+        views.resource_rest_api.ResourceFileListCreate.as_view(),
         name='get_resource_file_list'),
 
-    # DEPRECATED: use form above instead. 
+    # DEPRECATED: use form above instead. Added unused POST for simplicity 
     url(r'^resource/(?P<pk>[0-9a-f-]+)/file_list/$', 
-        views.resource_rest_api.ResourceFileList.as_view(),
+        views.resource_rest_api.ResourceFileListCreate.as_view(),
         name='DEPRECATED_get_resource_file_list'),
 
     url(r'^taskstatus/(?P<task_id>[A-z0-9\-]+)/$', views.resource_rest_api.CheckTaskStatus.as_view(),

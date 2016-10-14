@@ -131,7 +131,7 @@ class ResourceTypes(generics.ListAPIView):
 class ResourceList(ResourceToListItemMixin, generics.ListAPIView):
     """
     Get a list of resources based on the following filter query parameters
-    DEPRECATED: See GET /resource/ in CreateResource 
+    DEPRECATED: See GET /resource/ in CreateResource
 
     For an anonymous user, all public resources will be listed.
     For any authenticated user with no other query parameters provided in the request, all
@@ -292,7 +292,7 @@ class ResourceReadUpdateDelete(ResourceToListItemMixin, generics.RetrieveUpdateD
         return serializers.ResourceListItemSerializer
 
 
-class ResourceCreate(ResourceToListItemMixin, generics.ListCreateAPIView):
+class ResourceListCreate(ResourceToListItemMixin, generics.ListCreateAPIView):
     """
     Create a new resource or list existing resources
 
@@ -398,7 +398,7 @@ class ResourceCreate(ResourceToListItemMixin, generics.ListCreateAPIView):
             # Don't deep copy the file data as it may contain an open file handle
             old_file_data = copy.copy(request.FILES)
             old_post_data = copy.deepcopy(request.POST)
-            request = super(ResourceCreate, self).initialize_request(request, *args, **kwargs)
+            request = super(ResourceListCreate, self).initialize_request(request, *args, **kwargs)
             request.POST.update(old_post_data)
             request.FILES.update(old_file_data)
         return request
@@ -728,7 +728,8 @@ class ResourceFileCRUD(APIView, ResourceFileToListItemMixin):
     :return: resource file data
     :rtype: file data bytes
 
-    REST URL: POST hsapi/resource/{pk}/files/{filename}
+    REST URL: POST hsapi/resource/{pk}/files/
+    DEPRECATED: See ResourceFileListCreate for details. 
     HTTP method: POST
 
     Request post data: file data (required)
@@ -872,7 +873,7 @@ class ResourceFileCRUD(APIView, ResourceFileToListItemMixin):
         raise NotImplementedError()
 
 
-class ResourceFileList(ResourceFileToListItemMixin, generics.ListCreateAPIView):
+class ResourceFileListCreate(ResourceFileToListItemMixin, generics.ListCreateAPIView):
     """
     Retrieve a list of resource files for a resource
 
@@ -914,6 +915,30 @@ class ResourceFileList(ResourceFileToListItemMixin, generics.ListCreateAPIView):
     """
     allowed_methods = ('GET', 'POST')
 
+    def initialize_request(self, request, *args, **kwargs):
+        """
+        Hack to work around the following issue in django-rest-framework:
+
+        https://github.com/tomchristie/django-rest-framework/issues/3951
+
+        Couch: This issue was recently closed (10/12/2016, 2 days before this writing)
+        and is slated to be incorporated in the Django REST API 3.5.0 release.
+        At that time, we should remove this hack.
+
+        :param request:
+        :param args:
+        :param kwargs:
+        :return:
+        """
+        if not isinstance(request, Request):
+            # Don't deep copy the file data as it may contain an open file handle
+            old_file_data = copy.copy(request.FILES)
+            old_post_data = copy.deepcopy(request.POST)
+            request = super(ResourceFileListCreate, self).initialize_request(request, *args, **kwargs)
+            request.POST.update(old_post_data)
+            request.FILES.update(old_file_data)
+        return request
+
     def get(self, request, pk):
         """
         Get a listing of files within a resource.
@@ -933,6 +958,54 @@ class ResourceFileList(ResourceFileToListItemMixin, generics.ListCreateAPIView):
 
     def get_serializer_class(self):
         return serializers.ResourceFileSerializer
+
+    def post(self, request, pk):
+        """
+        Add a file to a resource.
+        :param request:
+        :param pk: Primary key of the resource (i.e. resource short ID)
+        :return:
+        """
+        resource, _, _ = view_utils.authorize(request, pk,
+                                              needed_permission=ACTION_TO_AUTHORIZE.EDIT_RESOURCE)
+        resource_files = request.FILES.values()
+        if len(resource_files) == 0:
+            error_msg = {'file': 'No file was found to add to the resource.'}
+            raise ValidationError(detail=error_msg)
+        elif len(resource_files) > 1:
+            error_msg = {'file': 'More than one file was found. Only one file can be '
+                                 'added at a time.'}
+            raise ValidationError(detail=error_msg)
+
+        # TODO: (Brian) I know there has been some discussion when to validate a file
+        # I agree that we should not validate and extract metadata as part of the file add api
+        # Once we have a decision, I will change this implementation accordingly. In that case
+        # we have to implement additional rest endpoints for file validation and extraction.
+        try:
+            hydroshare.utils.resource_file_add_pre_process(resource=resource,
+                                                           files=[resource_files[0]],
+                                                           user=request.user, extract_metadata=True)
+
+        except (hydroshare.utils.ResourceFileSizeException,
+                hydroshare.utils.ResourceFileValidationException, Exception) as ex:
+            error_msg = {'file': 'Adding file to resource failed. %s' % ex.message}
+            raise ValidationError(detail=error_msg)
+
+        try:
+            res_file_objects = hydroshare.utils.resource_file_add_process(resource=resource,
+                                                                          files=[resource_files[0]],
+                                                                          user=request.user,
+                                                                          extract_metadata=True)
+
+        except (hydroshare.utils.ResourceFileValidationException, Exception) as ex:
+            error_msg = {'file': 'Adding file to resource failed. %s' % ex.message}
+            raise ValidationError(detail=error_msg)
+
+        # prepare response data
+        file_name = os.path.basename(res_file_objects[0].resource_file.name)
+        response_data = {'resource_id': pk, 'file_name': file_name}
+        resource_modified(resource, request.user)
+        return Response(data=response_data, status=status.HTTP_201_CREATED)
 
 
 def _validate_metadata(metadata_list):
