@@ -3956,6 +3956,7 @@ form#covereage-search-fields {
 	border: 1px solid #fcefa1 !important;
 	color: #363636;
 	padding: 9px;
+	z-index: 5;
 }
 
 .fb-folder.ui-selected, .fb-file.ui-selected {
