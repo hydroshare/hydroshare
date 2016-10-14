@@ -518,7 +518,7 @@ class ResourceListCreate(ResourceToListItemMixin, generics.ListCreateAPIView):
 
 class SystemMetadataRetrieve(ResourceToListItemMixin, APIView):
     """
-    Retrieve resource science metadata
+    Retrieve resource system metadata
 
     REST URL: hsapi/sysmeta/{pk}
     HTTP method: GET
@@ -569,13 +569,15 @@ class AccessRulesUpdate(APIView):
     """
     Set access rules for a resource
 
-    REST URL: hsapi/resource/accessRules/{pk}
+    REST URL: hsapi/resource/{pk}/access
+    DEPRECATED: hsapi/resource/accessRules/{pk}
     HTTP method: PUT
 
     :type pk: str
     :param pk: id of the resource
     :return: No content.  Status code will 200 (OK)
     """
+    # TODO: (Couch) Need GET as well.
     allowed_methods = ('PUT',)
 
     def put(self, request, pk):
@@ -729,7 +731,7 @@ class ResourceFileCRUD(APIView, ResourceFileToListItemMixin):
     :rtype: file data bytes
 
     REST URL: POST hsapi/resource/{pk}/files/
-    DEPRECATED: See ResourceFileListCreate for details. 
+    DEPRECATED: See ResourceFileListCreate for details.
     HTTP method: POST
 
     Request post data: file data (required)
@@ -875,7 +877,7 @@ class ResourceFileCRUD(APIView, ResourceFileToListItemMixin):
 
 class ResourceFileListCreate(ResourceFileToListItemMixin, generics.ListCreateAPIView):
     """
-    Retrieve a list of resource files for a resource
+    Create a resource file or retrieve a list of resource files
 
     REST URL: hsapi/resource/{pk}/files/
     DEPRECATED: hsapi/resource/{pk}/file_list/
@@ -886,6 +888,15 @@ class ResourceFileListCreate(ResourceFileToListItemMixin, generics.ListCreateAPI
     :param pk: resource id
     :param filename: name of the file to retrieve/download
     :return: JSON representation of list of files of the form:
+
+    REST URL: POST hsapi/resource/{pk}/files/
+    HTTP method: POST
+
+    Request post data: file data (required)
+    :type pk: str
+    :param pk: resource id
+    :return: id of the resource and name of the file added
+    :rtype: json string of format: {'resource_id':pk, 'file_name': name of the file added}
 
     {
         "count": 2,
@@ -912,6 +923,7 @@ class ResourceFileListCreate(ResourceFileToListItemMixin, generics.ListCreateAPI
     NotFound: return json format: {'detail': 'No resource was found for resource id':pk}
     PermissionDenied: return json format: {'detail': 'You do not have permission to perform
     this action.'}
+
     """
     allowed_methods = ('GET', 'POST')
 
@@ -934,7 +946,8 @@ class ResourceFileListCreate(ResourceFileToListItemMixin, generics.ListCreateAPI
             # Don't deep copy the file data as it may contain an open file handle
             old_file_data = copy.copy(request.FILES)
             old_post_data = copy.deepcopy(request.POST)
-            request = super(ResourceFileListCreate, self).initialize_request(request, *args, **kwargs)
+            request = super(ResourceFileListCreate, self).initialize_request(
+                                request, *args, **kwargs)
             request.POST.update(old_post_data)
             request.FILES.update(old_file_data)
         return request
