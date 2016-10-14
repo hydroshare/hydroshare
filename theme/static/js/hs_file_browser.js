@@ -5,6 +5,7 @@
 var sourcePaths = [];
 var pathLog = [];
 var pathLogIndex = 0;
+var isDragging = false;
 
 function getFolderTemplateInstance(folderName) {
     return "<li class='fb-folder droppable draggable' title='" + folderName + "&#13;Type: Filde Folder'>" +
@@ -152,8 +153,6 @@ function updateSelectionMenuContext() {
     $("#fb-delete").toggleClass("disabled", flagDisableDelete);
     menu.children("li[data-menu-name='delete']").toggleClass("disabled", flagDisableDelete);
 }
-
-var isDragging = false;
 
 function bindFileBrowserItemEvents() {
     var mode = $("#hs-file-browser").attr("data-mode");
@@ -539,8 +538,11 @@ $(document).ready(function () {
                 // Applies allowing upload of multiple files to OS upload dialog
                 if (allowMultiple) {
                     this.hiddenFileInput.removeAttribute('multiple');
+                    var fileCount = parseInt($("#hs-file-browser").attr("data-initial-file-count"));
+                    if (fileCount > 0) {
+                        $('.dz-input').hide();
+                    }
                 }
-
             }
         };
     }

@@ -553,6 +553,7 @@ function get_irods_folder_struct_ajax_submit(res_id, store_path) {
             else {
                 $('.dz-input').show();
                 $(".fb-upload-caption").toggleClass("hidden", false);
+                 Dropzone.forElement("#fbContainmentWrapper").files = [];
             }
 
             updateNavigationState();

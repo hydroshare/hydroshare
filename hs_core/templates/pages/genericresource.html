@@ -209,6 +209,7 @@
                                  {% if page.perms.change and metadata_form %}data-mode="edit"{% endif %}
                                  data-supported-files="{{ cm.get_supported_upload_file_types }}"
                                  data-allow-multiple-files="{{ cm.allow_multiple_file_upload }}"
+                                 data-initial-file-count="{{ cm.files.all.count }}"
                                  class="file-browser">
 
                                 <div class="file-browser-container">
