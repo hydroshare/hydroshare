@@ -131,6 +131,7 @@ class ResourceTypes(generics.ListAPIView):
 class ResourceList(ResourceToListItemMixin, generics.ListAPIView):
     """
     Get a list of resources based on the following filter query parameters
+    DEPRECATED: See GET /resource/ in CreateResource 
 
     For an anonymous user, all public resources will be listed.
     For any authenticated user with no other query parameters provided in the request, all
@@ -295,7 +296,7 @@ class ResourceCreate(ResourceToListItemMixin, generics.ListCreateAPIView):
     """
     Create a new resource or list existing resources
 
-    REST URL: hsapi/resource
+    REST URL: hsapi/resource/
     HTTP method: POST
 
     Request data payload parameters:
@@ -329,6 +330,54 @@ class ResourceCreate(ResourceToListItemMixin, generics.ListCreateAPIView):
     provided.'}
     ValidationError: return json format: {parameter-1':['error message-1'], 'parameter-2':
     ['error message-2'], .. }
+
+    REST URL: hsapi/resource/
+    HTTP method: GET
+
+    Supported query parameters (all are optional):
+
+    :type   owner: str
+    :type   types: list of resource type class names
+    :type   from_date:  str (e.g., 2015-04-01)
+    :type   to_date:    str (e.g., 2015-05-01)
+    :type   edit_permission: bool
+    :param  owner: (optional) - to get a list of resources owned by a specified username
+    :param  types: (optional) - to get a list of resources of the specified resource types
+    :param  from_date: (optional) - to get a list of resources created on or after this date
+    :param  to_date: (optional) - to get a list of resources created on or before this date
+    :param  edit_permission: (optional) - to get a list of resources for which the authorised user
+    has edit permission
+    :rtype:  json string
+    :return:  a paginated list of resources with data for resource id, title, resource type,
+    creator, public, date created, date last updated, resource bag url path, and science
+    metadata url path
+
+    example return JSON format for GET /hsapi/resourceList:
+
+        {   "count":n
+            "next": link to next page
+            "previous": link to previous page
+            "results":[
+                    {"resource_type": resource type, "resource_title": resource title,
+                    "resource_id": resource id,
+                    "creator": creator name, "date_created": date resource created,
+                    "date_last_updated": date resource last updated, "public": true or false,
+                    "discoverable": true or false, "shareable": true or false,
+                    "immutable": true or false,
+                    "published": true or false, "bag_url": link to bag file,
+                    "science_metadata_url": link to science metadata,
+                    "resource_url": link to resource landing HTML page},
+                    {"resource_type": resource type, "resource_title": resource title,
+                    "resource_id": resource id,
+                    "creator": creator name, "date_created": date resource created,
+                    "date_last_updated": date resource last updated, "public": true or false,
+                    "discoverable": true or false, "shareable": true or false,
+                    "immutable": true or false,
+                    "published": true or false, "bag_url": link to bag file,
+                    "science_metadata_url": link to science metadata,
+                    "resource_url": link to resource landing HTML page},
+            ]
+        }
     """
     def initialize_request(self, request, *args, **kwargs):
         """
@@ -679,7 +728,7 @@ class ResourceFileCRUD(APIView, ResourceFileToListItemMixin):
     :return: resource file data
     :rtype: file data bytes
 
-    REST URL: POST hsapi/resource/{pk}/files
+    REST URL: POST hsapi/resource/{pk}/files/{filename}
     HTTP method: POST
 
     Request post data: file data (required)
@@ -823,11 +872,12 @@ class ResourceFileCRUD(APIView, ResourceFileToListItemMixin):
         raise NotImplementedError()
 
 
-class ResourceFileList(ResourceFileToListItemMixin, generics.ListAPIView):
+class ResourceFileList(ResourceFileToListItemMixin, generics.ListCreateAPIView):
     """
     Retrieve a list of resource files for a resource
 
-    REST URL: hsapi/resource/{pk}/file_list/
+    REST URL: hsapi/resource/{pk}/files/
+    DEPRECATED: hsapi/resource/{pk}/file_list/
     HTTP method: GET
 
     :type pk: str
@@ -862,7 +912,7 @@ class ResourceFileList(ResourceFileToListItemMixin, generics.ListAPIView):
     PermissionDenied: return json format: {'detail': 'You do not have permission to perform
     this action.'}
     """
-    allowed_methods = ('GET',)
+    allowed_methods = ('GET', 'POST')
 
     def get(self, request, pk):
         """
