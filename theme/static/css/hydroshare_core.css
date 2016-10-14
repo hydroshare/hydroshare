@@ -4324,3 +4324,7 @@ div#fb-file-operations-controls {
 	pointer-events: none;
 }
 
+.glow-blue {
+	box-shadow: inset 0 0 10px #00b4ff;
+}
+

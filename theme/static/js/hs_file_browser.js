@@ -470,6 +470,10 @@ $(document).ready(function () {
         if ($("#hs-file-browser").attr("data-allow-multiple-files") != "True") {
             allowMultiple = 1;
         }
+        if (acceptedFiles == ".*") {
+            acceptedFiles = null; // Dropzone default to accept all files
+        }
+
         Dropzone.options.fbContainmentWrapper = {
             paramName: "files", // The name that will be used to transfer the file
             clickable: "#upload-toggle",
@@ -480,10 +484,12 @@ $(document).ready(function () {
             init: function () {
                 this.on("dragenter", function (file) {
                     $(".fb-drag-flag").show();
+                    $("#fbContainmentWrapper").toggleClass("glow-blue", true);
                 });
 
                 this.on("dragleave", function (file) {
                     $(".fb-drag-flag").hide();
+                    $("#fbContainmentWrapper").toggleClass("glow-blue", false);
                 });
 
                 this.on("addedfile", function (file) {
@@ -494,6 +500,7 @@ $(document).ready(function () {
                     if (!$("#flag-uploading").length) {
                         $("#fbContainmentWrapper").prepend(previewNode);
                     }
+                    $("#fbContainmentWrapper").toggleClass("glow-blue", false);
                 });
 
                 this.on("queuecomplete", function () {
