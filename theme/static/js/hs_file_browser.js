@@ -172,12 +172,12 @@ function bindFileBrowserItemEvents() {
                 }
 
                 var currentPath = $("#hs-file-browser").attr("data-current-path");
-                var destPath = currentPath + "/" + destName;
+                var destFolderPath = currentPath + "/" + destName;
 
                 var calls = [];
                 for (var i = 0; i < sources.length; i++) {
                     var sourcePath = currentPath + "/" + $(sources[i]).text();
-                    var destPath = destPath + "/" + $(sources[i]).text();
+                    var destPath = destFolderPath + "/" + $(sources[i]).text();
                     if (sourcePath != destPath) {
                         calls.push(move_or_rename_irods_file_or_folder_ajax_submit(resID, sourcePath, destPath));
                     }
