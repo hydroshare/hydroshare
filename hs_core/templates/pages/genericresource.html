@@ -182,17 +182,20 @@
                             {# ======= Modal window ends =======#}
 
                             {% if page.perms.change and metadata_form and cm.get_supported_upload_file_types != "()" %}
-                            <div class="alert alert-warning alert-dismissible" role="alert">
-                                <button type="button" class="close" data-dismiss="alert" aria-label="Close">
-                                    <span aria-hidden="true">&times;</span></button>
-                                <div>
-                                    <small id="file-types"></small>
+                                <div id="fb-alerts">
+                                    <div class="alert alert-warning alert-dismissible" role="alert">
+                                        <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                                            <span aria-hidden="true">&times;</span>
+                                        </button>
+
+                                        <strong><i class="glyphicon glyphicon-info-sign"></i>&nbsp;&nbsp;Uploading</strong>
+                                        <ul>
+                                            <li><span id="file-types"></span></li>
+                                            <li><span id="file-multiple"></span></li>
+                                            {% block upload_message %}{% endblock %}
+                                        </ul>
+                                    </div>
                                 </div>
-                                <div>
-                                    <small id="file-multiple"></small>
-                                </div>
-                                {% block upload_message %}{% endblock %}
-                            </div>
                             {% endif %}
 
                             <div id="hs-file-browser" data-res-id="{{ cm.short_id }}" data-current-path="data/contents"

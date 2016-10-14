@@ -482,20 +482,24 @@ $(document).ready(function () {
             acceptedFiles: acceptedFiles,
             maxFiles: allowMultiple,
             init: function () {
+                // The user dragged a file onto the Dropzone
                 this.on("dragenter", function (file) {
                     $(".fb-drag-flag").show();
                     $("#fbContainmentWrapper").toggleClass("glow-blue", true);
                 });
 
+                // The user dragged a file out of the Dropzone
                 this.on("dragleave", function (file) {
                     $(".fb-drag-flag").hide();
                     $("#fbContainmentWrapper").toggleClass("glow-blue", false);
                 });
 
+                // When a file is added to the list
                 this.on("addedfile", function (file) {
                     $(".fb-drag-flag").hide();
                 });
 
+                // When a file gets processed
                 this.on("processing", function (file) {
                     if (!$("#flag-uploading").length) {
                         $("#fbContainmentWrapper").prepend(previewNode);
@@ -503,15 +507,36 @@ $(document).ready(function () {
                     $("#fbContainmentWrapper").toggleClass("glow-blue", false);
                 });
 
+                // Called when all files in the queue finish uploading.
                 this.on("queuecomplete", function () {
                     refreshFileBrowser();
                     $("#previews").empty();
                 });
 
+                // An error occured. Receives the errorMessage as second parameter and if the error was due to the XMLHttpRequest the xhr object as third.
+                this.on("error", function (error, errorMessage, xhr) {
+                    $("#fb-alerts .upload-failed-alert").remove();
+                    $("#fbContainmentWrapper").toggleClass("glow-blue", false);
+
+                    $("#fb-alerts").append(
+                            '<div class="alert alert-danger alert-dismissible upload-failed-alert" role="alert">' +
+                                '<button type="button" class="close" data-dismiss="alert" aria-label="Close">' +
+                                    '<span aria-hidden="true">&times;</span></button>' +
+                                '<div>' +
+                                    '<strong>File Upload Failed</strong>'+
+                                '</div>'+
+                                '<div>'+
+                                    '<span>' + errorMessage + '</span>' +
+                                '</div>'+
+                            '</div>').fadeIn(200);
+                });
+
+                // Called with the total uploadProgress (0-100), the totalBytes and the totalBytesSent
                 this.on("totaluploadprogress", function (uploadProgress, totalBytes , totalBytesSent) {
                     $("#upload-progress").text(formatBytes(totalBytesSent) + " / " +  formatBytes(totalBytes) + " (" + parseInt(uploadProgress) + "%)" );
                 });
 
+                // Applies allowing upload of multiple files to OS upload dialog
                 if (allowMultiple) {
                     this.hiddenFileInput.removeAttribute('multiple');
                 }
