@@ -8,7 +8,7 @@ var pathLogIndex = 0;
 var isDragging = false;
 
 function getFolderTemplateInstance(folderName) {
-    return "<li class='fb-folder droppable draggable' title='" + folderName + "&#13;Type: Filde Folder'>" +
+    return "<li class='fb-folder droppable draggable' title='" + folderName + "&#13;Type: File Folder'>" +
         "<span class='fb-file-icon fa fa-folder glyphicon-folder'></span>" +
         "<span class='fb-file-name'>" + folderName + "</span>" +
         "<span class='fb-file-type'>File Folder</span>" +
