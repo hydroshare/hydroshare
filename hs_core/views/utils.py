@@ -405,6 +405,7 @@ def show_relations_section(res_obj):
         return True
     return False
 
+
 def link_irods_file_to_django(resource, filename, size=0):
     # link the newly created zip file to Django resource model
     if resource:
@@ -649,4 +650,6 @@ def remove_or_rename_file_or_folder(user, res_id, src_path, tgt_path):
     istorage.moveFile(src_full_path, tgt_full_path)
 
     rename_irods_file_in_django(resource, src_full_path, tgt_full_path)
+
     hydroshare.utils.resource_modified(resource, user)
+
