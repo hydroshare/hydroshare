@@ -8,15 +8,23 @@ from django.contrib.postgres.fields import HStoreField
 from hs_core.models import ResourceFile
 
 
+
 class AbstractFileMetaData(models.Model):
     # base class for file metadata, shared among all supported HS file types
-    size = models.IntegerField()
+    size = models.IntegerField(default=0)
     # mime type of the dominant file in the group
-    mime_type = models.CharField(max_length=1000)
+    mime_type = models.CharField(max_length=1000, default='')
     extra_metadata = HStoreField(default={})
 
     class Meta:
         abstract = True
+
+    def delete_all_elements(self):
+        raise NotImplementedError
+
+    @classmethod
+    def get_supported_element_names(cls):
+        raise NotImplementedError
 
     def create_element(self, element_model_name, **kwargs):
         model_type = self._get_metadata_element_model_type(element_model_name)
@@ -43,7 +51,7 @@ class AbstractFileMetaData(models.Model):
         unsupported_element_error = "Metadata element type:%s is not supported." \
                                     % element_model_name
         try:
-            model_type = ContentType.objects.get(app_label=self._meta.app_label,
+            model_type = ContentType.objects.get(app_label='hs_geo_raster_resource',
                                                  model=element_model_name)
         except ObjectDoesNotExist:
             try:
@@ -66,8 +74,9 @@ class AbstractLogicalFile(models.Model):
     # the hydroshare file type to be used for a group of files
     hs_file_type = models.CharField(max_length=1000, default="Generic")
     # total size of all files in the logical group
-    size = models.IntegerField()
-    resource_files = GenericRelation(ResourceFile)
+    size = models.IntegerField(default=0)
+    files = GenericRelation(ResourceFile, content_type_field='logical_file_content_type',
+                            object_id_field='logical_file_object_id')
 
     class Meta:
         abstract = True
@@ -82,14 +91,20 @@ class AbstractLogicalFile(models.Model):
         # can store any file types
         return [".*"]
 
+    @property
+    def has_metadata(self):
+        return hasattr(self, 'metadata')
+
     def delete(self, using=None):
-        if hasattr(self, 'metadata'):
+        from hs_core.hydroshare.resource import delete_resource_file_only
+        if self.has_metadata:
             self.metadata.delete_all_elements()
             self.metadata.delete()
         # delete all resource files associated with this instance of logical file
-        for f in self.resource_files:
-            f.delete()
+        for f in self.files.all():
+            delete_resource_file_only(f.resource, f)
 
 
 class GenericLogicalFile(AbstractLogicalFile):
     pass
+

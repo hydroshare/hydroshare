@@ -8,7 +8,7 @@ from hs_core.views.utils import ACTION_TO_AUTHORIZE, authorize
 from .utils import raster_extract_metadata
 
 @login_required
-def extract_metadata(request, resource_id, hs_file_type, f, **kwargs):
+def extract_metadata(request, resource_id, file_id, hs_file_type,  **kwargs):
     res, _, _ = authorize(request, resource_id, needed_permission=ACTION_TO_AUTHORIZE.EDIT_RESOURCE)
     if res.resource_type != "GenericResource":
         err_msg = "File metadata extraction is allowed only for generic resource."
@@ -20,7 +20,8 @@ def extract_metadata(request, resource_id, hs_file_type, f, **kwargs):
         return HttpResponseRedirect(request.META['HTTP_REFERER'])
 
     try:
-        raster_extract_metadata(resource=res, file_name=f)
+        raster_extract_metadata(resource=res, file_id=file_id, user=request.user)
+        messages.success(request, "Raster metadata extraction successful")
     except ValidationError as ex:
         messages.error(request, ex.message)
 

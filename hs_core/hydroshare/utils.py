@@ -347,6 +347,9 @@ def get_resource_file_by_name(resource, file_name):
     return None
 
 
+def get_resource_file_by_id(resource, file_id):
+    return resource.files.filter(id=file_id).first()
+
 def delete_fed_zone_file(file_name_with_full_path):
     '''
     Args:
@@ -789,13 +792,16 @@ def add_file_to_resource(resource, f, fed_res_file_name_or_path='', fed_copy_or_
     :return: The identifier of the ResourceFile added.
     """
     if f:
+        logical_file = GenericLogicalFile.objects.create(size=0)
         if fed_res_file_name_or_path:
             ret = ResourceFile.objects.create(content_object=resource,
+                                              logical_file_content_object=logical_file,
                                               resource_file=None,
                                               fed_resource_file=File(f) if not isinstance(
                                                   f, UploadedFile) else f)
         else:
             ret = ResourceFile.objects.create(content_object=resource,
+                                              logical_file_content_object=logical_file,
                                               resource_file=File(f) if not isinstance(
                                                   f, UploadedFile) else f,
                                               fed_resource_file=None)
@@ -803,8 +809,10 @@ def add_file_to_resource(resource, f, fed_res_file_name_or_path='', fed_copy_or_
         # add format metadata element if necessary
         file_format_type = get_file_mime_type(f.name)
     elif fed_res_file_name_or_path and (fed_copy_or_move == 'copy' or fed_copy_or_move == 'move'):
+        logical_file = GenericLogicalFile.objects.create(size=0)
         size = get_fed_zone_file_size(fed_res_file_name_or_path)
         ret = ResourceFile.objects.create(content_object=resource, resource_file=None,
+                                          logical_file_content_object=logical_file,
                                           fed_resource_file=None,
                                           fed_resource_file_name_or_path=fed_res_file_name_or_path,
                                           fed_resource_file_size=size)

@@ -1302,6 +1302,9 @@ class AbstractResource(ResourcePermissionsMixin):
             elif fl.fed_resource_file:
                 fl.fed_resource_file.delete()
 
+            if fl.logical_file is not None:
+                fl.logical_file.delete()
+
         hs_bagit.delete_bag(self)
 
         self.metadata.delete_all_elements()
@@ -1474,6 +1477,16 @@ class AbstractResource(ResourcePermissionsMixin):
         else:
             return True
 
+    @property
+    def logical_files(self):
+        logical_files_list = []
+        for res_file in self.files:
+            if res_file.logical_file is not None:
+                if res_file.logical_file not in logical_files_list:
+                    logical_files_list.append(res_file.logical_file)
+        return logical_files_list
+
+
     class Meta:
         abstract = True
         unique_together = ("content_type", "object_id")
@@ -1511,10 +1524,10 @@ class ResourceFile(models.Model):
     fed_resource_file_size = models.CharField(max_length=15, null=True, blank=True)
 
     # we are using GenericForeignKey to allow resource file to be associated with any
-    # HydroShare defined LogicalFile types
-    logical_file_object_id = models.PositiveIntegerField(default=0)
-    logical_file_content_type = models.ForeignKey(ContentType, related_name="resource_file",
-                                                  default=None)
+    # HydroShare defined LogicalFile types (e.g., GeoRasterFile, NetCdfFile etc)
+    logical_file_object_id = models.PositiveIntegerField(null=True, blank=True)
+    logical_file_content_type = models.ForeignKey(ContentType, null=True, blank=True,
+                                                  related_name="files")
 
     logical_file_content_object = GenericForeignKey('logical_file_content_type',
                                                     'logical_file_object_id')
@@ -1529,8 +1542,14 @@ class ResourceFile(models.Model):
         return self.logical_file_content_object
 
     @property
+    def logical_file_type_name(self):
+        return self.logical_file_content_object.__class__.__name__
+
+    @property
     def metadata(self):
-        return self.logical_file.metadata
+        if self.logical_file is not None:
+            return self.logical_file.metadata
+        return None
 
 
 class Bags(models.Model):
