@@ -128,9 +128,6 @@ def data_store_folder_zip(request):
     except SessionException as ex:
         logger.error(ex.stderr)
         return HttpResponse(status=500)
-    except Exception as ex:
-        logger.error(ex.message)
-        return HttpResponse(status=500)
 
     return_object = {'name': output_zip_fname,
                      'size': size,
@@ -181,8 +178,6 @@ def data_store_folder_unzip(request):
     except SessionException as ex:
         logger.error(ex.stderr)
         return HttpResponse(status=500)
-    except Exception:
-        return HttpResponse(status=500)
 
     # this unzipped_path can be used for POST request input to data_store_structure()
     # to list the folder structure after unzipping
@@ -226,9 +221,6 @@ def data_store_create_folder(request):
     except SessionException as ex:
         logger.error(ex.stderr)
         return HttpResponse(status=500)
-    except Exception as ex:
-        logger.error(ex.message)
-        return HttpResponse(status=500)
 
     return_object = {'new_folder_rel_path': folder_path}
 
@@ -269,9 +261,6 @@ def data_store_remove_folder(request):
         remove_folder(user, res_id, folder_path)
     except SessionException as ex:
         logger.error(ex.stderr)
-        return HttpResponse(status=500)
-    except Exception as ex:
-        logger.error(ex.message)
         return HttpResponse(status=500)
 
     return_object = {'status': 'success'}
@@ -314,9 +303,6 @@ def data_store_file_or_folder_move_or_rename(request):
         remove_or_rename_file_or_folder(user, res_id, src_path, tgt_path)
     except SessionException as ex:
         logger.error(ex.stderr)
-        return HttpResponse(status=500)
-    except Exception as ex:
-        logger.error(ex.message)
         return HttpResponse(status=500)
 
     return_object = {'target_rel_path': tgt_path}
