@@ -16,9 +16,11 @@ def swatmodelinstance_pre_create_resource(sender, **kwargs):
     modeloutput = {'modeloutput': {'includes_output': False}}
     metadata.append(modeloutput)
 
+
 @receiver(pre_metadata_element_create, sender=swat_models.SWATModelInstanceResource)
 def metadata_element_pre_create_handler(sender, **kwargs):
     return _process_metadata_update_create(**kwargs)
+
 
 @receiver(pre_metadata_element_update, sender=swat_models.SWATModelInstanceResource)
 def metadata_element_pre_update_handler(sender, **kwargs):
