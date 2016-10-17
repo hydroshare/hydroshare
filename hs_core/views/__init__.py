@@ -129,11 +129,11 @@ def get_supported_file_types_for_resource_type(request, resource_type, *args, **
         return HttpResponseRedirect(request.META['HTTP_REFERER'])
 
 
-def is_multiple_file_allowed_for_resource_type(request, resource_type, *args, **kwargs):
+def is_multiple_file_upload_allowed(request, resource_type, *args, **kwargs):
     resource_cls = hydroshare.check_resource_type(resource_type)
     if request.is_ajax:
         # TODO: use try catch
-        ajax_response_data = {'allow_multiple_file': resource_cls.can_have_multiple_files()}
+        ajax_response_data = {'allow_multiple_file': resource_cls.allow_multiple_file_upload()}
         return HttpResponse(json.dumps(ajax_response_data))
     else:
         return HttpResponseRedirect(request.META['HTTP_REFERER'])
@@ -207,9 +207,15 @@ def add_metadata_element(request, shortkey, element_name, *args, **kwargs):
                         # some database error occurred
                         err_msg = err_msg.format(element_name, exp.message)
                         request.session['validation_error'] = err_msg
+                    except Exception as exp:
+                        # some other error occurred
+                        err_msg = err_msg.format(element_name, exp.message)
+                        request.session['validation_error'] = err_msg
 
                 if is_add_success:
                     resource_modified(res, request.user)
+            elif "errors" in response:
+                err_msg = err_msg.format(element_name, response['errors'])
 
     if request.is_ajax():
         if is_add_success:
@@ -220,14 +226,22 @@ def add_metadata_element(request, shortkey, element_name, *args, **kwargs):
 
             if element_name == 'subject':
                 ajax_response_data = {'status': 'success', 'element_name': element_name, 'metadata_status': metadata_status}
+            elif element_name.lower() == 'site' and res.resource_type == 'TimeSeriesResource':
+                # get the spatial coverage element
+                spatial_coverage_dict = _get_spatial_coverage_data(res)
+                ajax_response_data = {'status': 'success', 'element_id': element.id,
+                                      'element_name': element_name,
+                                      'spatial_coverage': spatial_coverage_dict,
+                                      'metadata_status': metadata_status}
             else:
-                ajax_response_data = {'status': 'success', 'element_id': element.id, 'element_name': element_name, 'metadata_status': metadata_status}
+                ajax_response_data = {'status': 'success', 'element_id': element.id,
+                                      'element_name': element_name,
+                                      'metadata_status': metadata_status}
 
-            return HttpResponse(json.dumps(ajax_response_data))
-
+            return JsonResponse(ajax_response_data)
         else:
             ajax_response_data = {'status': 'error', 'message': err_msg}
-            return HttpResponse (json.dumps(ajax_response_data))
+            return JsonResponse(ajax_response_data)
 
     if 'resource-mode' in request.POST:
         request.session['resource-mode'] = 'edit'
@@ -248,7 +262,15 @@ def update_metadata_element(request, shortkey, element_name, element_id, *args, 
                 element_data_dict = response['element_data_dict']
                 try:
                     res.metadata.update_element(element_name, element_id, **element_data_dict)
+                    post_handler_response = post_metadata_element_update.send(sender=sender_resource, element_name=element_name, element_id=element_id)
                     is_update_success = True
+                    # this is how we handle if a post_metadata_element_update receiver
+                    # is not implemented in the resource type's receivers.py
+                    element_exists = True
+                    for receiver, response in post_handler_response:
+                        if 'element_exists' in response:
+                            element_exists = response['element_exists']
+
                 except ValidationError as exp:
                     err_msg = err_msg.format(element_name, exp.message)
                     request.session['validation_error'] = err_msg
@@ -264,6 +286,8 @@ def update_metadata_element(request, shortkey, element_name, element_id, *args, 
 
                 if is_update_success:
                     resource_modified(res, request.user)
+            elif "errors" in response:
+                err_msg = err_msg.format(element_name, response['errors'])
 
     if request.is_ajax():
         if is_update_success:
@@ -271,12 +295,24 @@ def update_metadata_element(request, shortkey, element_name, element_id, *args, 
                 metadata_status = METADATA_STATUS_SUFFICIENT
             else:
                 metadata_status = METADATA_STATUS_INSUFFICIENT
+            if element_name.lower() == 'site' and res.resource_type == 'TimeSeriesResource':
+                # get the spatial coverage element
+                spatial_coverage_dict = _get_spatial_coverage_data(res)
+                ajax_response_data = {'status': 'success',
+                                      'element_name': element_name,
+                                      'spatial_coverage': spatial_coverage_dict,
+                                      'metadata_status': metadata_status,
+                                      'element_exists':element_exists}
+            else:
+                ajax_response_data = {'status': 'success',
+                                      'element_name': element_name,
+                                      'metadata_status': metadata_status,
+                                      'element_exists':element_exists}
 
-            ajax_response_data = {'status': 'success', 'element_name': element_name, 'metadata_status': metadata_status}
-            return HttpResponse(json.dumps(ajax_response_data))
+            return JsonResponse(ajax_response_data)
         else:
             ajax_response_data = {'status': 'error', 'message': err_msg}
-            return HttpResponse(json.dumps(ajax_response_data))
+            return JsonResponse(ajax_response_data)
 
     if 'resource-mode' in request.POST:
         request.session['resource-mode'] = 'edit'
@@ -1120,6 +1156,24 @@ def get_user_data(request, user_id, *args, **kwargs):
     user_data['website'] = user.userprofile.website if user.userprofile.website else ''
 
     return JsonResponse(user_data)
+
+
+def _get_spatial_coverage_data(resource):
+    spatial_coverage = resource.metadata.coverages.exclude(type='period').first()
+    spatial_coverage_dict = {}
+    if spatial_coverage:
+        spatial_coverage_dict['type'] = spatial_coverage.type
+        if spatial_coverage.type == 'point':
+            spatial_coverage_dict['east'] = spatial_coverage.value['east']
+            spatial_coverage_dict['north'] = spatial_coverage.value['north']
+        else:
+            # type is box
+            spatial_coverage_dict['eastlimit'] = spatial_coverage.value['eastlimit']
+            spatial_coverage_dict['northlimit'] = spatial_coverage.value['northlimit']
+            spatial_coverage_dict['westlimit'] = spatial_coverage.value['westlimit']
+            spatial_coverage_dict['southlimit'] = spatial_coverage.value['southlimit']
+
+    return spatial_coverage_dict
 
 def _send_email_on_group_membership_acceptance(membership_request):
     """
