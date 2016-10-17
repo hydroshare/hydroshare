@@ -1,5 +1,6 @@
 import csv
 import sys
+import datetime
 from calendar import monthrange
 from optparse import make_option
 
@@ -63,6 +64,12 @@ class Command(BaseCommand):
             dest = "running_orgs",
             action="store_true",
             help = "unique organization stats by month",
+        ),
+        make_option(
+            "--yesterdays-variables",
+            dest = "yesterdays_variables",
+            action="store_true",
+            help = "dump tracking variables collected today",
         ),
     )
 
@@ -150,6 +157,40 @@ class Command(BaseCommand):
             ]
             w.writerow([unicode(v).encode("utf-8") for v in values])
 
+    def yesterdays_variables(self):
+        w = csv.writer(sys.stdout)
+        fields = [
+            'timestamp',
+            'user id',
+            'session id',
+            'name',
+            'type',
+            'value',
+        ]
+        w.writerow(fields)
+
+        today_start = timezone.datetime.now().replace(
+            hour=0,
+            minute=0,
+            second=0,
+            microsecond=0
+        )
+        yesterday_start = today_start - datetime.timedelta(days=1)
+        variables = hs_tracking.Variable.objects.filter(
+            timestamp__gte=yesterday_start,
+            timestamp__lt=today_start
+        )
+        for v in variables:
+            uid = v.session.visitor.user.id if v.session.visitor.user else None
+            values = [
+                v.timestamp,
+                uid,
+                v.session.id,
+                v.name,
+                v.type,
+                v.value,
+            ]
+            w.writerow([unicode(v).encode("utf-8") for v in values])
 
 
     def handle(self, *args, **options):
@@ -170,3 +211,5 @@ class Command(BaseCommand):
             self.current_users_details()
         if options["resource_stats"]:
             self.current_resources_details()
+        if options["yesterdays_variables"]:
+            self.yesterdays_variables()
