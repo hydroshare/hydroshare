@@ -80,7 +80,7 @@ function updateSelectionMenuContext() {
     var flagDisableDelete = false;
 
     if (selected.length > 1) {
-        flagDisableRename = true;   // 'rename' menu item
+        flagDisableRename = true; 
         flagDisableOpen = true;
         flagDisablePaste = true;
         flagDisableZip = true;
