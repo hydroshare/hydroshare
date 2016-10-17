@@ -445,5 +445,4 @@ class SWATModelInstanceMetaData(ModelInstanceMetaData):
         self._model_parameter.all().delete()
         self._model_input.all().delete()
 
-import receivers
 
