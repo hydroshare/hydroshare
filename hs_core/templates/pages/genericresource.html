@@ -92,6 +92,9 @@
                                     <span>Paste</span>
                                 </li>
 
+                            {% endif %}
+
+                            {% if cm|resource_type == "Generic" or cm|resource_type == "Time Series" %}
                                 <li data-menu-name="rename" data-toggle="modal" data-target="#rename-dialog">
                                     <span class="glyphicon glyphicon-pencil icon-blue"></span>
                                     <span>Rename</span>
@@ -314,39 +317,40 @@
                                                         </button>
 
                                                         {% if cm|resource_type == "Generic" %}
-                                                        <button id="fb-cut"
-                                                                class="disabled"
-                                                                title="Cut">
-                                                            <span class="fa fa-scissors icon-blue"></span>
-                                                        </button>
+                                                            <button id="fb-cut"
+                                                                    class="disabled"
+                                                                    title="Cut">
+                                                                <span class="fa fa-scissors icon-blue"></span>
+                                                            </button>
+                                                            <button id="fb-paste"
+                                                                    class="disabled"
+                                                                    title="Paste">
+                                                                <span class="fa fa-clipboard icon-blue"></span>
+                                                            </button>
+                                                        {% endif %}
 
-                                                        <button id="fb-paste"
-                                                                class="disabled"
-                                                                title="Paste">
-                                                            <span class="fa fa-clipboard icon-blue"></span>
-                                                        </button>
+                                                        {% if cm|resource_type == "Generic" or cm|resource_type == "Time Series" %}
+                                                            <button id="fb-rename"
+                                                                    class="disabled"
+                                                                    title="Rename" data-toggle="modal"
+                                                                    data-target="#rename-dialog">
+                                                                <span class="glyphicon glyphicon-pencil icon-blue"></span>
+                                                            </button>
+                                                        {% endif %}
 
-                                                        <button id="fb-rename"
-                                                                class="disabled"
-                                                                title="Rename" data-toggle="modal"
-                                                                data-target="#rename-dialog">
-                                                            <span class="glyphicon glyphicon-pencil icon-blue"></span>
-                                                        </button>
+                                                        {% if cm|resource_type == "Generic" %}
+                                                            <button id="fb-zip"
+                                                                    class="disabled"
+                                                                    title="Zip Folder" data-toggle="modal"
+                                                                    data-target="#zip-folder-dialog">
+                                                                <span class="glyphicon glyphicon-compressed icon-blue"></span>
+                                                            </button>
 
-
-
-                                                        <button id="fb-zip"
-                                                                class="disabled"
-                                                                title="Zip Folder" data-toggle="modal"
-                                                                data-target="#zip-folder-dialog">
-                                                            <span class="glyphicon glyphicon-compressed icon-blue"></span>
-                                                        </button>
-
-                                                        <button id="fb-unzip"
-                                                                class="disabled"
-                                                                title="Unzip here">
-                                                            <span class="fa fa-file-archive-o icon-blue"></span>
-                                                        </button>
+                                                            <button id="fb-unzip"
+                                                                    class="disabled"
+                                                                    title="Unzip here">
+                                                                <span class="fa fa-file-archive-o icon-blue"></span>
+                                                            </button>
                                                         {% endif %}
                                                     {% endif %}
 
