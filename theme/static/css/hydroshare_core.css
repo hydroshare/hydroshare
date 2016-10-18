@@ -3875,8 +3875,7 @@ form#covereage-search-fields {
 }
 
 .files-container {
-	min-height: 150px;
-	max-height: 400px;
+	height: 250px;
 	overflow-y: auto;
 	overflow-x: hidden;
 }
@@ -4035,8 +4034,12 @@ form#covereage-search-fields {
     color: rgb(102, 170, 0);
 }
 
-#fb-files-container li.ui-selected .fb-file-name, #fb-files-container li.ui-selecting .fb-file-name {
+ul#fb-files-container li.ui-selected .fb-file-name, #fb-files-container li.ui-selecting .fb-file-name {
 	word-break: break-word;
+}
+
+ul#fb-files-container {
+    height: 100%;
 }
 
 span.fb-file-icon::before {
@@ -4048,14 +4051,6 @@ span.fb-file-icon::before {
 	color: #555;
 	font-size: 12px;
 	cursor: default;
-}
-
-.glyphicon-folder {
-    color: #E48E22;
-    text-shadow: -1px -1px 0 #C56E00,
-    1px -1px 0 #C56E00,
-    -1px 1px 0 #C56E00,
-    1px 1px 0 #C56E00;
 }
 
 .fb-view-grid .fb-file-icon {
@@ -4211,8 +4206,7 @@ div.fb-upload-caption a {
 
 .fb-view-grid {
 	padding: 10px 36px;
-	width: 100%;
-	height: 100%;
+	padding-left: 10px;
 	margin: 0;
 }
 
@@ -4309,7 +4303,7 @@ div#fb-file-operations-controls {
 .fb-loading-spinner {
 	list-style: none;
     width: 100%;
-    margin-top: 100px;
+	margin-top: 50px;
 }
 
 #flag-uploading {

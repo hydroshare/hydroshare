@@ -472,21 +472,6 @@ function get_user_info_ajax_submit(url, obj) {
     });
 }
 
-function delete_file_ajax_submit(res_id, file_pk) {
-    $(".file-browser-container, #fb-files-container").css("cursor", "progress");
-
-    return $.ajax({
-        type: "POST",
-        url: '/hsapi/_internal/' + res_id + '/delete-resource-file/' + file_pk + '/',
-        success: function (result) {
-            $(".file-browser-container, #fb-files-container").css("cursor", "default");
-        },
-        error: function(xhr, errmsg, err){
-            $(".file-browser-container, #fb-files-container").css("cursor", "default");
-        }
-    });
-}
-
 function delete_folder_ajax_submit(res_id, folder_path) {
     $(".file-browser-container, #fb-files-container").css("cursor", "progress");
 

@@ -73,7 +73,7 @@
                     <ul id="right-click-menu" class="dropdown-menu fb-dropdown selection-menu">
                         {% if cm|resource_type == "Generic" %}
                         <li id="btn-open" data-menu-name="open">
-                            <span class="glyphicon glyphicon-folder-open glyphicon-folder"></span>
+                            <span class="fa fa-folder-open icon-blue"></span>
                             <span>Open</span>
                         </li>
 
@@ -133,7 +133,7 @@
                         {% if page.perms.change and metadata_form and cm|resource_type == "Generic"%}
                             <li id="btn-new-folder" data-menu-name="new-folder" data-toggle="modal"
                                 data-target="#create-folder-dialog">
-                                <span class="fa fa-folder glyphicon-folder"></span>
+                                <span class="fa fa-folder icon-blue"></span>
                                 <span>New Folder</span>
                             </li>
 
@@ -302,7 +302,7 @@
                                                         <button id="fb-create-folder"
                                                                 data-toggle="modal" data-target="#create-folder-dialog"
                                                                 title="Create new folder">
-                                                            <span class="fa fa-folder glyphicon-folder"></span>
+                                                            <span class="fa fa-folder icon-blue"></span>
                                                         </button>
                                                         {% endif %}
 
@@ -393,9 +393,9 @@
                                             <span class="fa fa-plus-square fa-5x"></span>
                                         </div>
 
-                                        <ul id="fb-files-container" class="selectable fb-view-grid height-fix">
+                                        <ul id="fb-files-container" class="selectable fb-view-grid">
                                             <li class="fb-loading-spinner">
-                                                <i class="fa fa-spinner fa-pulse fa-2x fa-fw margin-bottom"></i>
+                                                <i class="fa fa-spinner fa-pulse fa-2x fa-fw  icon-blue"></i>
                                             </li>
                                         </ul>
                                     </form>
