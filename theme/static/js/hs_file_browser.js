@@ -323,7 +323,7 @@ function setBreadCrumbs(path) {
         var currentPath = path;
         path = path.substr(0, path.lastIndexOf("/"));
         if (setFirstActive) {
-            crumbs.prepend('<li data-path="' + currentPath + '"><i class="fa fa-folder-o" aria-hidden="true"></i><span> ' + folder + '</span></li>');
+            crumbs.prepend('<li data-path="data/' + currentPath + '"><i class="fa fa-folder-o" aria-hidden="true"></i><span> ' + folder + '</span></li>');
         }
         else {
             crumbs.prepend('<li class="active"><i class="fa fa-folder-open-o" aria-hidden="true"></i><span> ' + folder + '</span></li>');
