@@ -393,7 +393,7 @@
                                             <span class="fa fa-plus-square fa-5x"></span>
                                         </div>
 
-                                        <ul id="fb-files-container" class="selectable fb-view-grid">
+                                        <ul id="fb-files-container" class="selectable fb-view-grid height-fix">
                                             <li class="fb-loading-spinner">
                                                 <i class="fa fa-spinner fa-pulse fa-2x fa-fw margin-bottom"></i>
                                             </li>
@@ -1918,10 +1918,10 @@
             $("#id_user-autocomplete").attr("placeholder", "Search by name or username");
             $("#id_group-autocomplete").attr("placeholder", "Search by group name");
 
-
             var file_types = $("#supported-file-types").attr('value');
             if (file_types != ".*") {
-                var display_file_types = file_types.substring(0, file_types.length - 2) + ').';
+                var display_file_types = file_types.substring(0, file_types.length - 1) + ').';
+                display_file_types = display_file_types.replace(/'/g, '');
                 $("#file-types").text("Only the listed file types can be uploaded: " + display_file_types);
                 $("#file-types-irods").text("Only the listed file types can be uploaded: " + display_file_types);
             }

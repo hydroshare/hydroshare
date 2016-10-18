@@ -3875,7 +3875,8 @@ form#covereage-search-fields {
 }
 
 .files-container {
-	height: 300px;
+	min-height: 150px;
+	max-height: 400px;
 	overflow-y: auto;
 	overflow-x: hidden;
 }
