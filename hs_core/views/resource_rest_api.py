@@ -322,6 +322,10 @@ class ResourceCreate(generics.CreateAPIView):
     Note: the parameter 'metadata' can't be used for passing data for the following core metadata
     elements:
     Title, Description (abstract), Subject (keyword), Date, Publisher, Type, Format
+    :param  extra_metadata: (optional) data for any user-defined key/value pair metadata elements
+    of the resource can be passed as json string
+    example :
+    {'Outlet Point Latitude': '40', 'Outlet Point Longitude': '-110'}
     :return: id and type of the resource created
     :rtype: json string of the format: {'resource-id':id, 'resource_type': resource type}
     :raises:
@@ -373,6 +377,7 @@ class ResourceCreate(generics.CreateAPIView):
         keywords = validated_request_data.get('keywords', None)
         abstract = validated_request_data.get('abstract', None)
         metadata = validated_request_data.get('metadata', None)
+        extra_metadata = validated_request_data.get('extra_metadata', None)
 
         num_files = len(request.FILES)
         if num_files > 0:
@@ -390,6 +395,9 @@ class ResourceCreate(generics.CreateAPIView):
         if metadata is not None:
             metadata = json.loads(metadata)
             _validate_metadata(metadata)
+
+        if extra_metadata is not None:
+            extra_metadata = json.loads(extra_metadata)
 
         try:
             _, res_title, metadata, _ = hydroshare.utils.resource_pre_create_actions(
@@ -410,6 +418,7 @@ class ResourceCreate(generics.CreateAPIView):
                     view_groups=validated_request_data.get('view_groups', None),
                     keywords=keywords,
                     metadata=metadata,
+                    extra_metadata=extra_metadata,
                     files=files
             )
             if abstract:

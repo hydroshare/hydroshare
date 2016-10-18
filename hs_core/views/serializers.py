@@ -18,6 +18,7 @@ class StringListField(serializers.ListField):
 class ResourceUpdateRequestValidator(serializers.Serializer):
     title = serializers.CharField(required=False)
     metadata = serializers.CharField(validators=[validate_json], required=False)
+    extra_metadata = serializers.CharField(validators=[validate_json], required=False)
     edit_users = serializers.CharField(required=False)
     edit_groups = serializers.CharField(required=False)
     view_users = serializers.CharField(required=False)
