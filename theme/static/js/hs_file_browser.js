@@ -121,6 +121,7 @@ function updateSelectionMenuContext() {
     }
 
     var menu = $("#right-click-menu");
+    var menu2 = $("#right-click-container-menu");
 
     // Open
     menu.children("li[data-menu-name='open']").toggleClass("disabled", flagDisableOpen);
@@ -147,6 +148,7 @@ function updateSelectionMenuContext() {
 
     // Paste
     menu.children("li[data-menu-name='paste']").toggleClass("disabled", flagDisablePaste);
+    menu2.children("li[data-menu-name='paste']").toggleClass("disabled", flagDisablePaste);
     $("#fb-paste").toggleClass("disabled", flagDisablePaste);
 
     // Delete

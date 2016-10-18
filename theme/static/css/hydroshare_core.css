@@ -4053,6 +4053,9 @@ span.fb-file-icon::before {
 	cursor: default;
 }
 
+.fb-view-list .fb-file-name {
+	font-size: 14px;
+}
 .fb-view-grid .fb-file-icon {
     font-size: 32px;
 }
@@ -4218,7 +4221,6 @@ div.fb-upload-caption a {
 
 .fb-view-list > li {
 	float: initial;
-	margin-right: 20%;
 }
 
 .fb-view-grid > li {
@@ -4239,7 +4241,7 @@ div.fb-upload-caption a {
 .fb-view-list .fb-file-icon {
 	margin-right: 10px;
 	margin-left: 10px;
-	font-size: 14px;
+	font-size: 18px;
 }
 
 .file-browser-controls button:focus, .file-browser-breadcrumb button:focus, #fb-inner-controls button:focus {
