@@ -4039,7 +4039,7 @@ ul#fb-files-container li.ui-selected .fb-file-name, #fb-files-container li.ui-se
 }
 
 ul#fb-files-container {
-    height: 100%;
+    min-height: 100%;
 }
 
 span.fb-file-icon::before {
