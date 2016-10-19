@@ -114,10 +114,12 @@ docker run --rm --env-file env-files/rods@${HS_USER_ZONE_HOST}.env \
     mjstealey/docker-irods-icommands:4.1.8 \
     sh -c "iadmin mkuser ${HS_LOCAL_PROXY_USER_IN_FED_ZONE} rodsuser && iadmin moduser ${HS_LOCAL_PROXY_USER_IN_FED_ZONE} password ${HS_WWW_IRODS_PROXY_USER_PWD}"
 
-echo "[rods@${HS_USER_ZONE_HOST}]$ iadmin mkuser ${HS_USER_ZONE_PROXY_USER} rodsadmin"
-echo "[rods@${HS_USER_ZONE_HOST}]$ iadmin moduser ${HS_USER_ZONE_PROXY_USER} password ${HS_USER_ZONE_PROXY_USER_PWD}"
-docker run --rm --env-file env-files/rods@${HS_USER_ZONE_HOST}.env \
-    mjstealey/docker-irods-icommands:4.1.8 \
-    sh -c "iadmin mkuser ${HS_USER_ZONE_PROXY_USER} rodsadmin && iadmin moduser ${HS_USER_ZONE_PROXY_USER} password ${HS_USER_ZONE_PROXY_USER_PWD}"
+# iint the ${HS_LOCAL_PROXY_USER_IN_FED_ZONE} to operate as rods
+echo "[${HS_USER_ZONE_PROXY_USER}@${HS_USER_ZONE_HOST}]$ iinit"
+docker exec -u ${HS_USER_ZONE_PROXY_USER} ${HS_USER_ZONE_HOST} sh -c "export IRODS_HOST=${ICAT2IP} && export IRODS_USER_NAME=rods && export IRODS_PASSWORD=rods && iinit rods"
+# add irods_environment.json file for rods user
+jq -n --arg h "${HS_USER_ZONE_HOST}" --arg p "${IRODS_PORT}" --arg z "${HS_USER_IRODS_ZONE}" '{"irods_host": $h, "irods_port": $p, "irods_zone_name": $z, "irods_user_name": "rods"}' > env-files/rods@${HS_USER_ZONE_HOST}.json
+docker cp env-files/rods@${HS_USER_ZONE_HOST}.json ${HS_USER_ZONE_HOST}:/home/${HS_USER_ZONE_PROXY_USER}/.irods/irods_environment.json
+docker exec ${HS_USER_ZONE_HOST} chown ${HS_USER_ZONE_PROXY_USER}:${HS_USER_ZONE_PROXY_USER} /home/${HS_USER_ZONE_PROXY_USER}/.irods/irods_environment.json
 
 exit 0;
