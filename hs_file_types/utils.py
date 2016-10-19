@@ -1,14 +1,12 @@
-import tempfile
 import os
 import subprocess
 import shutil
 import zipfile
 from collections import OrderedDict
 import xml.etree.ElementTree as ET
+import logging
 
 import gdal
-
-from django.contrib.contenttypes.models import ContentType
 from gdalconst import GA_ReadOnly
 
 from django.core.files.uploadedfile import UploadedFile
@@ -16,16 +14,23 @@ from django.core.exceptions import ValidationError
 
 from hs_core.hydroshare import utils
 from hs_core.hydroshare.resource import add_resource_files, delete_resource_file_only
-from hs_core.models import GenericResource, Coverage
+from hs_core.models import GenericResource
+
 from hs_geo_raster_resource.models import RasterResource
 
 import raster_meta_extract
-from models import GeoRasterLogicalFile, GeoRasterFileMetaData
+from models import GeoRasterLogicalFile
 
 
-def raster_extract_metadata(resource, file_id, user):
+def set_file_to_geo_raster_file_type(resource, file_id, user):
+    log = logging.getLogger()
+
     # get the file from irods
     res_file = utils.get_resource_file_by_id(resource, file_id)
+
+    file_name = utils.get_resource_file_name_and_extension(res_file)[0]
+    file_name = file_name.split(".")[0]
+
     metadata = []
     if res_file is not None and not res_file.logical_file.has_metadata:
         # get the file from irods to temp dir
@@ -33,6 +38,7 @@ def raster_extract_metadata(resource, file_id, user):
         # validate the file
         error_info, files_to_add_to_resource = raster_file_validation(raster_file=temp_file)
         if not error_info:
+            log.info("Geo raster file type file validation successful.")
             # extract metadata
             temp_dir = os.path.dirname(temp_file)
             temp_vrt_file_path = [os.path.join(temp_dir, f) for f in os.listdir(temp_dir) if
@@ -57,12 +63,16 @@ def raster_extract_metadata(resource, file_id, user):
             for band_info in res_md_dict['band_info'].values():
                 metadata.append({'BandInformation': band_info})
 
+            log.info("Geo raster file type metadata extraction was successful.")
             # first delete the raster file that we retrieved from irods
             logical_file = res_file.logical_file
             delete_resource_file_only(resource, res_file)
+
             # TODO: modify delete_resource_file_only() to delete logical file
-            # so that we don't have to do it here
-            logical_file.delete()
+
+            # use the custom logical_delete() so that all files associated logical file object gets
+            # deleted
+            logical_file.logical_delete(user)
 
             # add all new files to the resource
             files = []
@@ -70,12 +80,14 @@ def raster_extract_metadata(resource, file_id, user):
                 files.append(UploadedFile(file=open(f, 'rb'), name=os.path.basename(f)))
             try:
                 resource_files = add_resource_files(resource.short_id, *files)
-                # log.info("Blank SQLite file was added.")
+                log.info("Geo raster file type - new files were added to the resource.")
 
                 # need to do this so that the bag will be regenerated prior to download of the bag
                 utils.resource_modified(resource, by_user=user)
             except Exception as ex:
-                # log.exception("Error when adding the blank SQLite file. Error:{}".format(ex.message))
+                msg = "Geo raster file type. Error when adding files to the resource. Error:{}"
+                msg = msg.format(ex.message)
+                log.exception(msg)
                 raise ex
 
             finally:
@@ -85,12 +97,13 @@ def raster_extract_metadata(resource, file_id, user):
 
             # set the logical file for all files we added above
             logical_file = GeoRasterLogicalFile.create()
-            # logical_file_type = ContentType.objects.get_for_model(logical_file)
+            logical_file.dataset_name = file_name
+            logical_file.save()
             for res_file in resource_files:
-                # res_file.logical_file_content_type = logical_file_type
-                # res_file.logical_file_object_id = logical_file.id
                 res_file.logical_file_content_object = logical_file
                 res_file.save()
+
+            log.info("Geo raster file type was created.")
 
             # use the extracted metadata to populate file metadata
             for element in metadata:
@@ -98,11 +111,23 @@ def raster_extract_metadata(resource, file_id, user):
                 # v is a dict of all element attributes/field names and field values
                 k, v = element.items()[0]
                 logical_file.metadata.create_element(k, **v)
+            log.info("Geo raster file type - metadata was saved to DB")
         else:
-            err_msg = 'Raster validation error. {0}'.format(' '.join(error_info))
+            err_msg = "Geo raster file type file validation failed.{}".format(' '.join(error_info))
+            log.info(err_msg)
             raise ValidationError(err_msg)
     else:
-        raise Exception("something went wrong")
+        if res_file is None:
+            err_msg = "Failed to set Geo raster file type. " \
+                      "Resource doesn't have the specified file."
+            log.error(err_msg)
+            raise Exception(err_msg)
+        else:
+            err_msg = "Failed to set Geo raster file type." \
+                      "The specified file already has a file type"
+            log.error(err_msg)
+            raise Exception(err_msg)
+
 
 # TODO: This function is NOT used
 def raster_pre_create_resource_handler(resource_type, **kwargs):

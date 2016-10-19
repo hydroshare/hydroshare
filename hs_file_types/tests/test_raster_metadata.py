@@ -12,7 +12,7 @@ from hs_core.testing import MockIRODSTestCaseMixin
 from hs_core import hydroshare
 from hs_core.models import Coverage
 
-from hs_file_types.utils import raster_extract_metadata
+from hs_file_types.utils import set_file_to_geo_raster_file_type
 from hs_file_types.models import GeoRasterLogicalFile
 
 from hs_geo_raster_resource.models import OriginalCoverage, CellInformation, BandInformation
@@ -61,7 +61,7 @@ class RasterFileTypeMetaData(MockIRODSTestCaseMixin, TransactionTestCase):
         self.assertEqual(res_file.logical_file_type_name, "GenericLogicalFile")
         # no metadata associated with genericlogicalfile
         self.assertEqual(res_file.logical_file.has_metadata, False)
-        raster_extract_metadata(self.composite_resource, res_file.id, self.user)
+        set_file_to_geo_raster_file_type(self.composite_resource, res_file.id, self.user)
 
         # test the resource now has 2 files (vrt file added as part of metadata extraction)
         self.assertEqual(self.composite_resource.files.all().count(), 2)
@@ -134,7 +134,7 @@ class RasterFileTypeMetaData(MockIRODSTestCaseMixin, TransactionTestCase):
         self.assertEqual(self.composite_resource.files.all().count(), 1)
         res_file = self.composite_resource.files.first()
         # extract metadata
-        raster_extract_metadata(self.composite_resource, res_file.id, self.user)
+        set_file_to_geo_raster_file_type(self.composite_resource, res_file.id, self.user)
         res_file = self.composite_resource.files.first()
 
         # test that we can update raster specific metadata at the file level
@@ -298,7 +298,7 @@ class RasterFileTypeMetaData(MockIRODSTestCaseMixin, TransactionTestCase):
         res_file = self.composite_resource.files.first()
 
         # extract metadata from the tif file
-        raster_extract_metadata(self.composite_resource, res_file.id, self.user)
+        set_file_to_geo_raster_file_type(self.composite_resource, res_file.id, self.user)
 
         # test that we have one logical file of type GeoRasterFileType as a result
         # of metadata extraction
@@ -331,7 +331,7 @@ class RasterFileTypeMetaData(MockIRODSTestCaseMixin, TransactionTestCase):
         res_file = self.composite_resource.files.first()
 
         # extract metadata from the tif file
-        raster_extract_metadata(self.composite_resource, res_file.id, self.user)
+        set_file_to_geo_raster_file_type(self.composite_resource, res_file.id, self.user)
 
         # test that we have one logical file of type GeoRasterFileType as a result
         # of metadata extraction
@@ -363,7 +363,7 @@ class RasterFileTypeMetaData(MockIRODSTestCaseMixin, TransactionTestCase):
         res_file = self.composite_resource.files.first()
 
         # extract metadata from the tif file
-        raster_extract_metadata(self.composite_resource, res_file.id, self.user)
+        set_file_to_geo_raster_file_type(self.composite_resource, res_file.id, self.user)
 
         # test that we have one logical file of type GeoRasterFileType as a result
         # of metadata extraction
@@ -396,7 +396,7 @@ class RasterFileTypeMetaData(MockIRODSTestCaseMixin, TransactionTestCase):
 
         res_file = self.composite_resource.files.first()
         # extract metadata
-        raster_extract_metadata(self.composite_resource, res_file.id, self.user)
+        set_file_to_geo_raster_file_type(self.composite_resource, res_file.id, self.user)
         res_file = self.composite_resource.files.first()
 
         # test the get_html() for CellInformation element
@@ -427,7 +427,7 @@ class RasterFileTypeMetaData(MockIRODSTestCaseMixin, TransactionTestCase):
         res_file = self.composite_resource.files.first()
 
         # extract metadata from the tif file
-        raster_extract_metadata(self.composite_resource, res_file.id, self.user)
+        set_file_to_geo_raster_file_type(self.composite_resource, res_file.id, self.user)
 
         # test that we have one logical file of type GeoRasterFileType
         self.assertEqual(GeoRasterLogicalFile.objects.count(), 1)
@@ -468,7 +468,7 @@ class RasterFileTypeMetaData(MockIRODSTestCaseMixin, TransactionTestCase):
         res_file = self.composite_resource.files.first()
 
         # extract metadata from the tif file
-        raster_extract_metadata(self.composite_resource, res_file.id, self.user)
+        set_file_to_geo_raster_file_type(self.composite_resource, res_file.id, self.user)
         self.assertEqual(self.composite_resource.files.all().count(), 2)
         self.assertEqual(GeoRasterLogicalFile.objects.count(), 1)
 
