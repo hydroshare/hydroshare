@@ -1303,6 +1303,7 @@ class AbstractResource(ResourcePermissionsMixin):
                 fl.fed_resource_file.delete()
 
             if fl.logical_file is not None:
+                fl.logical_file.delete_metadata()
                 fl.logical_file.delete()
 
         hs_bagit.delete_bag(self)
@@ -1532,6 +1533,7 @@ class ResourceFile(models.Model):
     logical_file_content_object = GenericForeignKey('logical_file_content_type',
                                                     'logical_file_object_id')
 
+    mime_type = models.CharField(max_length=255, null=True, blank=True)
 
     @property
     def resource(self):
@@ -1551,6 +1553,14 @@ class ResourceFile(models.Model):
             return self.logical_file.metadata
         return None
 
+    @property
+    def extension(self):
+        from .hydroshare.utils import get_resource_file_name_and_extension
+        return get_resource_file_name_and_extension(self)[1]
+
+    @property
+    def can_extract_metadata(self):
+        return self.extension in ('.tif', 'zip') and self.metadata is None
 
 class Bags(models.Model):
     object_id = models.PositiveIntegerField()

@@ -10,8 +10,12 @@ from django.core.exceptions import ValidationError
 
 from hs_core.testing import MockIRODSTestCaseMixin
 from hs_core import hydroshare
+from hs_core.models import Coverage
+
 from hs_file_types.utils import raster_extract_metadata
 from hs_file_types.models import GeoRasterLogicalFile
+
+from hs_geo_raster_resource.models import OriginalCoverage, CellInformation, BandInformation
 
 
 class RasterFileTypeMetaData(MockIRODSTestCaseMixin, TransactionTestCase):
@@ -46,6 +50,7 @@ class RasterFileTypeMetaData(MockIRODSTestCaseMixin, TransactionTestCase):
             shutil.rmtree(self.temp_dir)
 
     def test_metadata_extraction(self):
+        # here we are using a valid raster file for metadata extraction
         self.raster_file_obj = open(self.raster_file, 'r')
         self._create_composite_resource()
 
@@ -54,7 +59,7 @@ class RasterFileTypeMetaData(MockIRODSTestCaseMixin, TransactionTestCase):
 
         # check that the resource file is associated with GenericLogicalFile by default
         self.assertEqual(res_file.logical_file_type_name, "GenericLogicalFile")
-        # no metadata associated with generirclogicalfile
+        # no metadata associated with genericlogicalfile
         self.assertEqual(res_file.logical_file.has_metadata, False)
         raster_extract_metadata(self.composite_resource, res_file.id, self.user)
 
@@ -109,7 +114,6 @@ class RasterFileTypeMetaData(MockIRODSTestCaseMixin, TransactionTestCase):
 
         # testing extended metadata element: cell information
         cell_info = logical_file.metadata.cellInformation
-        # TODO: adjust these values to make the test pass
         self.assertEqual(cell_info.rows, 230)
         self.assertEqual(cell_info.columns, 329)
         self.assertEqual(cell_info.cellSizeXValue, 30.0)
@@ -279,27 +283,135 @@ class RasterFileTypeMetaData(MockIRODSTestCaseMixin, TransactionTestCase):
         # test that when any file in GeorasterFileType is deleted
         # all metadata associated with GeoRasterFileType is deleted
         # test for both .tif and .vrt delete
-        pass
+
+        # test with deleting of 'tif' file
+        self._test_file_metadata_on_file_delete(ext='.tif')
+
+        # test with deleting of 'vrt' file
+        self._test_file_metadata_on_file_delete(ext='.vrt')
 
     def test_file_metadata_on_logical_file_delete(self):
         # test that when the GeorasterFileType is deleted
         # all metadata associated with GeoRasterFileType is deleted
-        pass
+        self.raster_file_obj = open(self.raster_file, 'r')
+        self._create_composite_resource()
+        res_file = self.composite_resource.files.first()
+
+        # extract metadata from the tif file
+        raster_extract_metadata(self.composite_resource, res_file.id, self.user)
+
+        # test that we have one logical file of type GeoRasterFileType as a result
+        # of metadata extraction
+        self.assertEqual(GeoRasterLogicalFile.objects.count(), 1)
+
+        # test that we have the metadata elements
+        self.assertEqual(Coverage.objects.count(), 1)
+        self.assertEqual(OriginalCoverage.objects.count(), 1)
+        self.assertEqual(CellInformation.objects.count(), 1)
+        self.assertEqual(BandInformation.objects.count(), 1)
+
+        # delete the logical file
+        res_file = self.composite_resource.files.first()
+        logical_file = res_file.logical_file
+        logical_file.logical_delete(self.user)
+        # test that we have no logical file of type GeoRasterFileType
+        self.assertEqual(GeoRasterLogicalFile.objects.count(), 0)
+
+        # test that all metadata deleted
+        self.assertEqual(Coverage.objects.count(), 0)
+        self.assertEqual(OriginalCoverage.objects.count(), 0)
+        self.assertEqual(CellInformation.objects.count(), 0)
+        self.assertEqual(BandInformation.objects.count(), 0)
 
     def test_file_metadata_on_resource_delete(self):
         # test that when the composite resource is deleted
         # all metadata associated with GeoRasterFileType is deleted
-        pass
+        self.raster_file_obj = open(self.raster_file, 'r')
+        self._create_composite_resource()
+        res_file = self.composite_resource.files.first()
+
+        # extract metadata from the tif file
+        raster_extract_metadata(self.composite_resource, res_file.id, self.user)
+
+        # test that we have one logical file of type GeoRasterFileType as a result
+        # of metadata extraction
+        self.assertEqual(GeoRasterLogicalFile.objects.count(), 1)
+
+        # test that we have the metadata elements
+        self.assertEqual(Coverage.objects.count(), 1)
+        self.assertEqual(OriginalCoverage.objects.count(), 1)
+        self.assertEqual(CellInformation.objects.count(), 1)
+        self.assertEqual(BandInformation.objects.count(), 1)
+
+        # delete resource
+        hydroshare.delete_resource(self.composite_resource.short_id)
+
+        # test that we have no logical file of type GeoRasterFileType
+        self.assertEqual(GeoRasterLogicalFile.objects.count(), 0)
+
+        # test that all metadata deleted
+        self.assertEqual(Coverage.objects.count(), 0)
+        self.assertEqual(OriginalCoverage.objects.count(), 0)
+        self.assertEqual(CellInformation.objects.count(), 0)
+        self.assertEqual(BandInformation.objects.count(), 0)
 
     def test_logical_file_delete(self):
-        # test that when an instance GeorasterFileType is deleted
+        # test that when an instance GeoRasterFileType is deleted
         # all files associated with GeoRasterFileType is deleted
-        pass
+        self.raster_file_obj = open(self.raster_file, 'r')
+        self._create_composite_resource()
+        res_file = self.composite_resource.files.first()
+
+        # extract metadata from the tif file
+        raster_extract_metadata(self.composite_resource, res_file.id, self.user)
+
+        # test that we have one logical file of type GeoRasterFileType as a result
+        # of metadata extraction
+        self.assertEqual(GeoRasterLogicalFile.objects.count(), 1)
+        logical_file = GeoRasterLogicalFile.objects.first()
+        self.assertEqual(logical_file.files.all().count(), 2)
+        self.assertEqual(self.composite_resource.files.all().count(), 2)
+        self.assertEqual(set(self.composite_resource.files.all()),
+                         set(logical_file.files.all()))
+
+        # delete the logical file using the custom delete function - logical_delete()
+        logical_file.logical_delete(self.user)
+        self.assertEqual(self.composite_resource.files.all().count(), 0)
 
     def test_content_file_delete(self):
         # test that when any file that is part of an instance GeoRasterFileType is deleted
         # all files associated with GeoRasterFileType is deleted
-        pass
+
+        # test deleting of tif file
+        self._content_file_delete('.tif')
+
+        # test deleting of vrt file
+        self._content_file_delete('.vrt')
+
+    def test_metadata_element_html(self):
+        # here we are testing the get_html() function of the metadata element
+        # we have implemented get_html() for only CellInformation element
+        self.raster_file_obj = open(self.raster_file, 'r')
+        self._create_composite_resource()
+
+        res_file = self.composite_resource.files.first()
+        # extract metadata
+        raster_extract_metadata(self.composite_resource, res_file.id, self.user)
+        res_file = self.composite_resource.files.first()
+
+        # test the get_html() for CellInformation element
+        cellinfo_html = u'<div class="col-xs-12 col-sm-6" style="margin-bottom:40px;">' \
+                        u'<legend>Cell Information</legend><table class="custom-table">' \
+                        u'<tbody><tr><th class="text-muted">Rows</th>' \
+                        u'<td>230</td></tr><tr>' \
+                        u'<th class="text-muted">Columns</th><td>329</td></tr><tr>' \
+                        u'<th class="text-muted">Cell Size X Value</th><td>30.0</td></tr><tr>' \
+                        u'<th class="text-muted">Cell Size Y Value</th><td>30.0</td></tr>' \
+                        u'<tr><th class="text-muted">Cell Data Type</th><td>Float32</td></tr>' \
+                        u'</tbody></table></div>'
+        logical_file = res_file.logical_file
+        self.assertEqual(logical_file.metadata.cellInformation.get_html(pretty=False),
+                         cellinfo_html)
 
     def _create_composite_resource(self):
         self.composite_resource = hydroshare.create_resource(
@@ -308,3 +420,64 @@ class RasterFileTypeMetaData(MockIRODSTestCaseMixin, TransactionTestCase):
             title='Test Raster File Type Metadata',
             files=(self.raster_file_obj,)
         )
+
+    def _test_file_metadata_on_file_delete(self, ext):
+        self.raster_file_obj = open(self.raster_file, 'r')
+        self._create_composite_resource()
+        res_file = self.composite_resource.files.first()
+
+        # extract metadata from the tif file
+        raster_extract_metadata(self.composite_resource, res_file.id, self.user)
+
+        # test that we have one logical file of type GeoRasterFileType
+        self.assertEqual(GeoRasterLogicalFile.objects.count(), 1)
+
+        res_file = self.composite_resource.files.first()
+        logical_file = res_file.logical_file
+        # there should be 1 coverage element
+        self.assertEqual(logical_file.metadata.coverages.all().count(), 1)
+        self.assertNotEqual(logical_file.metadata.originalCoverage, None)
+        self.assertNotEqual(logical_file.metadata.cellInformation, None)
+        self.assertNotEqual(logical_file.metadata.bandInformation, None)
+
+        self.assertEqual(Coverage.objects.count(), 1)
+        self.assertEqual(OriginalCoverage.objects.count(), 1)
+        self.assertEqual(CellInformation.objects.count(), 1)
+        self.assertEqual(BandInformation.objects.count(), 1)
+
+        # delete content file specified by extension (ext parameter)
+        res_file_tif = hydroshare.utils.get_resource_files_by_extension(
+            self.composite_resource, ext)[0]
+        hydroshare.delete_resource_file(self.composite_resource.short_id,
+                                        res_file_tif.id,
+                                        self.user)
+        # test that we don't have logical file of type GeoRasterFileType
+        self.assertEqual(GeoRasterLogicalFile.objects.count(), 0)
+
+        # test that all metadata deleted
+        self.assertEqual(Coverage.objects.count(), 0)
+        self.assertEqual(OriginalCoverage.objects.count(), 0)
+        self.assertEqual(CellInformation.objects.count(), 0)
+        self.assertEqual(BandInformation.objects.count(), 0)
+
+    def _content_file_delete(self, ext):
+        # test that when any file that is part of an instance GeoRasterFileType is deleted
+        # all files associated with GeoRasterFileType is deleted
+        self.raster_file_obj = open(self.raster_file, 'r')
+        self._create_composite_resource()
+        res_file = self.composite_resource.files.first()
+
+        # extract metadata from the tif file
+        raster_extract_metadata(self.composite_resource, res_file.id, self.user)
+        self.assertEqual(self.composite_resource.files.all().count(), 2)
+        self.assertEqual(GeoRasterLogicalFile.objects.count(), 1)
+
+        # delete the content file specified by the ext (file extension param)
+        res_file_tif = hydroshare.utils.get_resource_files_by_extension(
+            self.composite_resource, ext)[0]
+        hydroshare.delete_resource_file(self.composite_resource.short_id,
+                                        res_file_tif.id,
+                                        self.user)
+
+        self.assertEqual(self.composite_resource.files.all().count(), 0)
+        self.assertEqual(GeoRasterLogicalFile.objects.count(), 0)
