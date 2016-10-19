@@ -93,7 +93,14 @@ class TestCreateResource(MockIRODSTestCaseMixin, TestCase):
             )
 
         # test resource has one file
-        self.assertEquals(new_res.files.all().count(), 1, msg="Number of content files is not equal to 1")
+        self.assertEqual(new_res.files.all().count(), 1)
+
+        # test the mime_type of the content file
+        res_file = new_res.files.all().first()
+        self.assertEqual(res_file.mime_type, "text/plain")
+
+        # test the extension of the content file
+        self.assertEqual(res_file.extension, ".txt")
 
         self.assertEqual(new_res.resource_type, 'GenericResource')
         self.assertTrue(isinstance(new_res, GenericResource), type(new_res))
