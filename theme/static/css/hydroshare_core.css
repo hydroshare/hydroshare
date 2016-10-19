@@ -3917,12 +3917,12 @@ form#covereage-search-fields {
 }
 
 .fb-view-grid .fb-folder, .fb-view-grid .fb-file {
-    width: 100px;
-    height: 100px;
-	margin:4px;
-    float: left;
+	width: 100px;
+	height: 100px;
+	margin: 8px;
+	float: left;
 	overflow: hidden;
-    text-overflow: ellipsis;
+	text-overflow: ellipsis;
 	-webkit-user-select: none; /* Chrome/Safari */
 	-moz-user-select: none; /* Firefox */
 	-ms-user-select: none; /* IE10+ */
@@ -4223,6 +4223,7 @@ div.fb-upload-caption a {
 
 .fb-view-list > li {
 	float: initial;
+	margin-right: 15%;
 }
 
 .fb-view-grid > li {
