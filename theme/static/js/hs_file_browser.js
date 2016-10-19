@@ -311,10 +311,10 @@ function setBreadCrumbs(path) {
     crumbs.empty();
 
     if (path.lastIndexOf("/") == "-1") {
-        $("#fb-move-up").attr("disabled", true)
+        $("#fb-move-up").toggleClass("disabled", true)
     }
     else {
-        $("#fb-move-up").attr("disabled", false)
+        $("#fb-move-up").toggleClass("disabled", false)
     }
 
     var setFirstActive = false;
@@ -433,7 +433,7 @@ function updateNavigationState() {
     var upPath = $("#hs-file-browser").attr("data-current-path");
     upPath = upPath.substr(0, upPath.lastIndexOf("/"));
 
-    $("#fb-move-up").toggleClass("disabled", upPath == "");
+    $("#fb-move-up").toggleClass("disabled", upPath == "data");
 }
 
 // Reload the current folder structure

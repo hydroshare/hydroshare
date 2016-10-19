@@ -224,6 +224,7 @@
                                     <div id="fb-inner-controls">
                                         <div id="fb-inner-buttons">
                                             <div class="row">
+                                                {% if cm|resource_type == "Generic" %}
                                                 <div class="col-xs-6 col-sm-3 col-md-3">
                                                     <button id="fb-move-back"
                                                             class="btn btn-default fb-control-round disabled"
@@ -242,8 +243,9 @@
                                                             title="Click to go to parent directory"><span
                                                             class="fa fa-level-up"></span></button>
                                                 </div>
+                                                {% endif %}
 
-                                                <div class="col-xs-6 col-sm-4 col-md-3 pull-right text-right">
+                                                <div class="{% if cm|resource_type == "Generic" %}col-xs-6{% else %}col-xs-12{% endif %} col-sm-4 col-md-3 pull-right text-right">
                                                     <div id="btn-group-view" class="btn-group" role="group">
                                                         <button data-view="list" data-toggle="tooltip"
                                                                 data-placement="auto"
