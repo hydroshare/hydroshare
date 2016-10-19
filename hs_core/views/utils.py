@@ -30,7 +30,6 @@ from hs_core.hydroshare import FILE_SIZE_LIMIT
 from hs_core.hydroshare.utils import raise_file_size_exception
 from django_irods.storage import IrodsStorage
 from hs_access_control.models import PrivilegeCodes
-from hs_file_types.models import GenericLogicalFile
 
 ActionToAuthorize = namedtuple('ActionToAuthorize',
                                'VIEW_METADATA, '
@@ -201,7 +200,7 @@ def validate_group_name(group_name):
         raise ValidationError(detail='No group found for group name:%s' % group_name)
 
 
-def validate_metadata(metadata, resource_type, hs_file_type=GenericLogicalFile):
+def validate_metadata(metadata, resource_type):
     """
     Validate metadata including validation of resource type specific metadata.
     If validation fails, ValidationError exception is raised.
@@ -236,16 +235,7 @@ def validate_metadata(metadata, resource_type, hs_file_type=GenericLogicalFile):
                 model_type = ContentType.objects.get(app_label='hs_core', model=k)
                 is_core_element = True
             except ObjectDoesNotExist:
-                if hs_file_type != GenericLogicalFile:
-                    try:
-                        model_type = ContentType.objects.get(app_label='hs_file_types', model=k)
-                    except ObjectDoesNotExist:
-                        msg = "Invalid metadata element name:{0} for file type:{1}."
-                        msg = msg.format(k, hs_file_type)
-                        validation_errors['metadata'].append(msg)
-                msg = "Invalid metadata element name:{0} for resource type:{1}."
-                msg = msg.format(k, resource_class.__name__)
-                validation_errors['metadata'].append(msg)
+                validation_errors['metadata'].append("Invalid metadata element name:%s." % k)
 
         if model_type:
             if not issubclass(model_type.model_class(), AbstractMetaDataElement):

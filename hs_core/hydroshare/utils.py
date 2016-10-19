@@ -31,7 +31,6 @@ from hs_core.hydroshare.hs_bagit import create_bag_files
 from django_irods.icommands import SessionException
 from django_irods.storage import IrodsStorage
 
-from hs_file_types.models import GenericLogicalFile
 
 logger = logging.getLogger(__name__)
 
@@ -583,7 +582,7 @@ def validate_resource_file_count(resource_cls, files, resource=None):
 
 def resource_pre_create_actions(resource_type, resource_title, page_redirect_url_key,
                                 files=(), fed_res_file_names='', metadata=None,
-                                requesting_user=None, hs_file_type=GenericLogicalFile, **kwargs):
+                                requesting_user=None, **kwargs):
     from.resource import check_resource_type
     from hs_core.views.utils import validate_metadata
 
@@ -603,7 +602,7 @@ def resource_pre_create_actions(resource_type, resource_title, page_redirect_url
     if not metadata:
         metadata = []
     else:
-        validate_metadata(metadata, resource_type, hs_file_type)
+        validate_metadata(metadata, resource_type)
 
     page_url_dict = {}
     # this is needed since raster and feature resource types allows to upload a zip file,
@@ -625,7 +624,7 @@ def resource_pre_create_actions(resource_type, resource_title, page_redirect_url
                              validate_files=file_validation_dict,
                              fed_res_file_names=fed_res_file_names,
                              user=requesting_user, fed_res_path=fed_res_path,
-                             hs_file_type=GenericLogicalFile, **kwargs)
+                             **kwargs)
 
     if len(files) > 0:
         check_file_dict_for_error(file_validation_dict)
