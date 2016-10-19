@@ -4300,9 +4300,26 @@ div#fb-file-operations-controls {
 }
 
 #fb-file-operations-controls > button:not(.disabled):hover {
-	background: #fdfdfd;
 	border: 1px solid #DDD;
 	margin: -1px;
+	box-shadow: 1px 1px 3px #e2e2e2;
+	/* Permalink - use to edit and share this gradient: http://colorzilla.com/gradient-editor/#ffffff+0,f6f6f6+47,ededed+100;White+3D+%231 */
+	background: rgb(255, 255, 255); /* Old browsers */
+	background: -moz-linear-gradient(top, rgba(255, 255, 255, 1) 0%, rgba(246, 246, 246, 1) 47%, rgba(237, 237, 237, 1) 100%); /* FF3.6-15 */
+	background: -webkit-linear-gradient(top, rgba(255, 255, 255, 1) 0%, rgba(246, 246, 246, 1) 47%, rgba(237, 237, 237, 1) 100%); /* Chrome10-25,Safari5.1-6 */
+	background: linear-gradient(to bottom, rgba(255, 255, 255, 1) 0%, rgba(246, 246, 246, 1) 47%, rgba(237, 237, 237, 1) 100%); /* W3C, IE10+, FF16+, Chrome26+, Opera12+, Safari7+ */
+	filter: progid:DXImageTransform.Microsoft.gradient(startColorstr='#ffffff', endColorstr='#ededed', GradientType=0); /* IE6-9 */
+}
+
+#fb-file-operations-controls > button:not(.disabled):active {
+	border: 1px solid #DDD;
+	margin: -1px;
+	/* Permalink - use to edit and share this gradient: http://colorzilla.com/gradient-editor/#f7f7f7+0,e5e5e5+100 */
+	background: rgb(247, 247, 247); /* Old browsers */
+	background: -moz-linear-gradient(top, rgba(247, 247, 247, 1) 0%, rgba(229, 229, 229, 1) 100%); /* FF3.6-15 */
+	background: -webkit-linear-gradient(top, rgba(247, 247, 247, 1) 0%, rgba(229, 229, 229, 1) 100%); /* Chrome10-25,Safari5.1-6 */
+	background: linear-gradient(to bottom, rgba(247, 247, 247, 1) 0%, rgba(229, 229, 229, 1) 100%); /* W3C, IE10+, FF16+, Chrome26+, Opera12+, Safari7+ */
+	filter: progid:DXImageTransform.Microsoft.gradient(startColorstr='#f7f7f7', endColorstr='#e5e5e5', GradientType=0); /* IE6-9 */
 }
 
 .fb-loading-spinner {
