@@ -8,8 +8,8 @@ from hs_core.forms import BaseFormHelper
 from hs_core.hydroshare import users
 
 from hs_modelinstance.models import ModelOutput, ExecutedBy
-from hs_swat_modelinstance.models import SWATModelInstanceResource, ModelObjective,\
-    SimulationType, ModelMethod, ModelParameter, ModelInput
+from hs_swat_modelinstance.models import  ModelObjective, SimulationType, ModelMethod, \
+    ModelParameter, ModelInput
 
 model_objective_choices = (
                             ('Hydrology', 'Hydrology'),
@@ -35,37 +35,55 @@ type_choices = (
                     ('Auto-Calibration', 'Auto-Calibration'),
                 )
 
-rainfall_type_choices = (('Choose a type', 'Choose a type'), ('Daily', 'Daily'), ('Sub-hourly', 'Sub-hourly'),)
+rainfall_type_choices = (('Choose a type', 'Choose a type'), ('Daily', 'Daily'),
+                         ('Sub-hourly', 'Sub-hourly'),
+                         )
 
-routing_type_choices = (('Choose a type', 'Choose a type'), ('Daily', 'Daily'), ('Hourly', 'Hourly'),)
+routing_type_choices = (('Choose a type', 'Choose a type'), ('Daily', 'Daily'),
+                        ('Hourly', 'Hourly'),
+                        )
 
-simulation_type_choices = (('Choose a type', 'Choose a type'), ('Annual', 'Annual'), ('Monthly', 'Monthly'), ('Daily', 'Daily'), ('Hourly', 'Hourly'),)
+simulation_type_choices = (('Choose a type', 'Choose a type'), ('Annual', 'Annual'),
+                           ('Monthly', 'Monthly'), ('Daily', 'Daily'), ('Hourly', 'Hourly'),
+                           )
+
 
 class MetadataField(layout.Field):
-          def __init__(self, *args, **kwargs):
-              kwargs['css_class'] = 'form-control input-sm'
-              super(MetadataField, self).__init__(*args, **kwargs)
+    def __init__(self, *args, **kwargs):
+        kwargs['css_class'] = 'form-control input-sm'
+        super(MetadataField, self).__init__(*args, **kwargs)
+
 
 class ModelOutputFormHelper(BaseFormHelper):
-    def __init__(self, allow_edit=True, res_short_id=None, element_id=None, element_name=None,  *args, **kwargs):
+    def __init__(self, allow_edit=True, res_short_id=None, element_id=None, element_name=None,
+                 *args, **kwargs):
 
-        # the order in which the model fields are listed for the FieldSet is the order these fields will be displayed
+        # the order in which the model fields are listed for the FieldSet is the order these fields
+        # will be displayed
         layout = Layout(
                         MetadataField('includes_output'),
                  )
         kwargs['element_name_label'] = 'Includes output files?'
-        super(ModelOutputFormHelper, self).__init__(allow_edit, res_short_id, element_id, element_name, layout,  *args, **kwargs)
+        super(ModelOutputFormHelper, self).__init__(allow_edit, res_short_id, element_id,
+                                                    element_name, layout,  *args, **kwargs)
 
 
 class ModelOutputForm(ModelForm):
-    includes_output = forms.TypedChoiceField(choices=((True, 'Yes'), (False, 'No')), widget=forms.RadioSelect(attrs={'style': 'width:auto;margin-top:-5px'}))
+    includes_output = forms.TypedChoiceField(choices=((True, 'Yes'), (False, 'No')),
+                                             widget=forms.RadioSelect(
+                                                 attrs={'style': 'width:auto;margin-top:-5px'}
+                                             )
+                                             )
+
     def __init__(self, allow_edit=True, res_short_id=None, element_id=None, *args, **kwargs):
         super(ModelOutputForm, self).__init__(*args, **kwargs)
-        self.helper = ModelOutputFormHelper(allow_edit, res_short_id, element_id, element_name='ModelOutput')
+        self.helper = ModelOutputFormHelper(allow_edit, res_short_id, element_id,
+                                            element_name='ModelOutput')
 
     class Meta:
         model = ModelOutput
         fields = ('includes_output',)
+
 
 class ModelOutputValidationForm(forms.Form):
     includes_output = forms.TypedChoiceField(choices=((True, 'Yes'), (False, 'No')), required=False)
@@ -77,25 +95,30 @@ class ModelOutputValidationForm(forms.Form):
         else:
             return True
 
+
 # ExecutedBy element forms
 class ExecutedByFormHelper(BaseFormHelper):
-    def __init__(self, allow_edit=True, res_short_id=None, element_id=None, element_name=None, *args, **kwargs):
+    def __init__(self, allow_edit=True, res_short_id=None, element_id=None, element_name=None,
+                 *args, **kwargs):
 
         # pop the model program shortid out of the kwargs dictionary
         mp_id = kwargs.pop('mpshortid')
 
         # get all model program resources and build option HTML elements for each one.
-        # ModelProgram shortid is concatenated to the selectbox id so that it is accessible in the template.
+        # ModelProgram shortid is concatenated to the selectbox id so that it is accessible in the
+        # template.
         mp_resource = users.get_resource_list(type=['ModelProgramResource'])
-        options = '\n'.join(['<option value=%s>%s</option>'%(r.short_id, r.title) for r in mp_resource ])
-        options  = '<option value=Unspecified>Unspecified</option>' + options
+        options = '\n'.join(['<option value=%s>%s</option>'
+                             % (r.short_id, r.title) for r in mp_resource])
+        options = '<option value=Unspecified>Unspecified</option>' + options
         selectbox = HTML('<div class="div-selectbox">'
-                                ' <select class="selectbox" id="selectbox_'+mp_id+'">'
-                                        + options +
-                                '</select>'
-                            '</div><br>')
+                         ' <select class="selectbox" id="selectbox_'+mp_id+'">'
+                         + options +
+                         '</select>'
+                         '</div><br>')
 
-        # the order in which the model fields are listed for the FieldSet is the order these fields will be displayed
+        # the order in which the model fields are listed for the FieldSet is the order these fields
+        # will be displayed
         layout = Layout(
             MetadataField('model_name', style="display:none"),
             selectbox,
@@ -114,20 +137,22 @@ class ExecutedByFormHelper(BaseFormHelper):
         )
 
         kwargs['element_name_label'] = 'Model Program used for execution'
-        super(ExecutedByFormHelper, self).__init__(allow_edit, res_short_id, element_id, element_name, layout, *args,
-                                                   **kwargs)
+        super(ExecutedByFormHelper, self).__init__(allow_edit, res_short_id, element_id,
+                                                   element_name, layout, *args, **kwargs)
 
 
 class ExecutedByForm(ModelForm):
     def __init__(self, allow_edit=True, res_short_id=None, element_id=None, *args, **kwargs):
         super(ExecutedByForm, self).__init__(*args, **kwargs)
 
-        # set mpshort id to '' if a foreign key has not been established yet, otherwise use mp short id
+        # set mpshort id to '' if a foreign key has not been established yet, otherwise use mp short
+        # id
         mpshortid = 'Unspecified'
         if self.instance.model_program_fk is not None:
             mpshortid = self.instance.model_program_fk.short_id
         kwargs = dict(mpshortid=mpshortid)
-        self.helper = ExecutedByFormHelper(allow_edit, res_short_id, element_id, element_name='ExecutedBy', **kwargs)
+        self.helper = ExecutedByFormHelper(allow_edit, res_short_id, element_id,
+                                           element_name='ExecutedBy', **kwargs)
 
     class Meta:
         model = ExecutedBy
@@ -140,29 +165,38 @@ class ExecutedByValidationForm(forms.Form):
 
 
 class ModelObjectiveFormHelper(BaseFormHelper):
-    def __init__(self, allow_edit=True, res_short_id=None, element_id=None, element_name=None,  *args, **kwargs):
+    def __init__(self, allow_edit=True, res_short_id=None, element_id=None, element_name=None,
+                 *args, **kwargs):
 
-        # the order in which the model fields are listed for the FieldSet is the order these fields will be displayed
+        # the order in which the model fields are listed for the FieldSet is the order these fields
+        # will be displayed
         layout = Layout(
                         MetadataField('swat_model_objectives'),
                         MetadataField('other_objectives'),
                  )
         kwargs['element_name_label'] = 'Model Objective'
-        super(ModelObjectiveFormHelper, self).__init__(allow_edit, res_short_id, element_id, element_name, layout,  *args, **kwargs)
+        super(ModelObjectiveFormHelper, self).__init__(allow_edit, res_short_id, element_id,
+                                                       element_name, layout,  *args, **kwargs)
+
 
 class ModelObjectiveForm(ModelForm):
-    swat_model_objectives = forms.MultipleChoiceField(choices=model_objective_choices,
-                                                      widget=forms.CheckboxSelectMultiple(
-                                                          attrs={'style': 'width:auto;margin-top:-5px'}))
+    swat_model_objectives = forms.MultipleChoiceField(
+        choices=model_objective_choices,
+        widget=forms.CheckboxSelectMultiple(
+            attrs={'style': 'width:auto;margin-top:-5px'}
+        )
+    )
 
     def __init__(self, allow_edit=True, res_short_id=None, element_id=None, *args, **kwargs):
         super(ModelObjectiveForm, self).__init__(*args, **kwargs)
-        self.helper = ModelObjectiveFormHelper(allow_edit, res_short_id, element_id, element_name='ModelObjective')
+        self.helper = ModelObjectiveFormHelper(allow_edit, res_short_id, element_id,
+                                               element_name='ModelObjective')
         if self.instance:
             try:
                 swat_model_objectives = self.instance.swat_model_objectives.all()
                 if len(swat_model_objectives) > 0:
-                    self.fields['swat_model_objectives'].initial = [objective.description for objective in
+                    self.fields['swat_model_objectives'].initial = [objective.description for
+                                                                    objective in
                                                                     swat_model_objectives]
                 else:
                     self.fields['swat_model_objectives'].initial = []
@@ -175,25 +209,30 @@ class ModelObjectiveForm(ModelForm):
 
 
 class ModelObjectiveValidationForm(forms.Form):
-    swat_model_objectives = forms.MultipleChoiceField(choices=model_objective_choices, required=False)
+    swat_model_objectives = forms.MultipleChoiceField(choices=model_objective_choices,
+                                                      required=False)
     other_objectives = forms.CharField(max_length=200, required=False)
 
 
 class SimulationTypeFormHelper(BaseFormHelper):
-    def __init__(self, allow_edit=True, res_short_id=None, element_id=None, element_name=None,  *args, **kwargs):
+    def __init__(self, allow_edit=True, res_short_id=None, element_id=None, element_name=None,
+                 *args, **kwargs):
 
-        # the order in which the model fields are listed for the FieldSet is the order these fields will be displayed
+        # the order in which the model fields are listed for the FieldSet is the order these fields
+        # will be displayed
         layout = Layout(
                         MetadataField('simulation_type_name'),
                  )
         kwargs['element_name_label'] = 'Simulation Type'
-        super(SimulationTypeFormHelper, self).__init__(allow_edit, res_short_id, element_id, element_name, layout,  *args, **kwargs)
+        super(SimulationTypeFormHelper, self).__init__(allow_edit, res_short_id, element_id,
+                                                       element_name, layout,  *args, **kwargs)
 
 
 class SimulationTypeForm(ModelForm):
     def __init__(self, allow_edit=True, res_short_id=None, element_id=None, *args, **kwargs):
         super(SimulationTypeForm, self).__init__(*args, **kwargs)
-        self.helper = SimulationTypeFormHelper(allow_edit, res_short_id, element_id, element_name='SimulationType')
+        self.helper = SimulationTypeFormHelper(allow_edit, res_short_id, element_id,
+                                               element_name='SimulationType')
         self.fields['simulation_type_name'].choices = type_choices
 
     class Meta:
@@ -206,21 +245,26 @@ class SimulationTypeValidationForm(forms.Form):
 
 
 class ModelMethodFormHelper(BaseFormHelper):
-    def __init__(self, allow_edit=True, res_short_id=None, element_id=None, element_name=None,  *args, **kwargs):
+    def __init__(self, allow_edit=True, res_short_id=None, element_id=None, element_name=None,
+                 *args, **kwargs):
 
-        # the order in which the model fields are listed for the FieldSet is the order these fields will be displayed
+        # the order in which the model fields are listed for the FieldSet is the order these fields
+        # will be displayed
         layout = Layout(
                         MetadataField('runoffCalculationMethod'),
                         MetadataField('flowRoutingMethod'),
                         MetadataField('petEstimationMethod'),
                  )
         kwargs['element_name_label'] = 'Model Method'
-        super(ModelMethodFormHelper, self).__init__(allow_edit, res_short_id, element_id, element_name, layout,  *args, **kwargs)
+        super(ModelMethodFormHelper, self).__init__(allow_edit, res_short_id, element_id,
+                                                    element_name, layout,  *args, **kwargs)
+
 
 class ModelMethodForm(ModelForm):
     def __init__(self, allow_edit=True, res_short_id=None, element_id=None, *args, **kwargs):
         super(ModelMethodForm, self).__init__(*args, **kwargs)
-        self.helper = ModelMethodFormHelper(allow_edit, res_short_id, element_id, element_name='ModelMethod')
+        self.helper = ModelMethodFormHelper(allow_edit, res_short_id, element_id,
+                                            element_name='ModelMethod')
 
     class Meta:
         model = ModelMethod
@@ -234,16 +278,20 @@ class ModelMethodValidationForm(forms.Form):
     flowRoutingMethod = forms.CharField(max_length=200, required=False)
     petEstimationMethod = forms.CharField(max_length=200, required=False)
 
-class ModelParameterFormHelper(BaseFormHelper):
-    def __init__(self, allow_edit=True, res_short_id=None, element_id=None, element_name=None,  *args, **kwargs):
 
-        # the order in which the model fields are listed for the FieldSet is the order these fields will be displayed
+class ModelParameterFormHelper(BaseFormHelper):
+    def __init__(self, allow_edit=True, res_short_id=None, element_id=None, element_name=None,
+                 *args, **kwargs):
+
+        # the order in which the model fields are listed for the FieldSet is the order these fields
+        # will be displayed
         layout = Layout(
                         MetadataField('model_parameters'),
                         MetadataField('other_parameters'),
                  )
         kwargs['element_name_label'] = 'Model Parameter'
-        super(ModelParameterFormHelper, self).__init__(allow_edit, res_short_id, element_id, element_name, layout,  *args, **kwargs)
+        super(ModelParameterFormHelper, self).__init__(allow_edit, res_short_id, element_id,
+                                                       element_name, layout,  *args, **kwargs)
 
 
 class ModelParameterForm(ModelForm):
@@ -253,28 +301,34 @@ class ModelParameterForm(ModelForm):
 
     def __init__(self, allow_edit=True, res_short_id=None, element_id=None, *args, **kwargs):
         super(ModelParameterForm, self).__init__(*args, **kwargs)
-        self.helper = ModelParameterFormHelper(allow_edit, res_short_id, element_id, element_name='ModelParameter')
+        self.helper = ModelParameterFormHelper(allow_edit, res_short_id, element_id,
+                                               element_name='ModelParameter')
         if self.instance:
             try:
                 model_parameters = self.instance.model_parameters.all()
                 if len(model_parameters) > 0:
-                    self.fields['model_parameters'].initial = [parameter.description for parameter in
-                                                                    model_parameters]
+                    self.fields['model_parameters'].initial = [parameter.description for
+                                                               parameter in model_parameters]
                 else:
                     self.fields['model_parameters'].initial = []
             except TypeError:
                 self.fields['model_parameters'].initial = []
+
     class Meta:
         model = ModelParameter
         fields = ('other_parameters',)
 
+
 class ModelParameterValidationForm(forms.Form):
-    model_parameters = forms.MultipleChoiceField(choices=parameters_choices,required=False)
+    model_parameters = forms.MultipleChoiceField(choices=parameters_choices, required=False)
     other_parameters = forms.CharField(max_length=200, required=False)
 
+
 class ModelInputFormHelper(BaseFormHelper):
-    def __init__(self, allow_edit=True, res_short_id=None, element_id=None, element_name=None,  *args, **kwargs):
-        # the order in which the model fields are listed for the FieldSet is the order these fields will be displayed
+    def __init__(self, allow_edit=True, res_short_id=None, element_id=None, element_name=None,
+                 *args, **kwargs):
+        # the order in which the model fields are listed for the FieldSet is the order these fields
+        # will be displayed
         layout = Layout(
                         MetadataField('warmupPeriodValue'),
                         MetadataField('rainfallTimeStepType'),
@@ -295,12 +349,15 @@ class ModelInputFormHelper(BaseFormHelper):
                         MetadataField('soilDataSourceURL'),
                  )
         kwargs['element_name_label'] = 'Model Input'
-        super(ModelInputFormHelper, self).__init__(allow_edit, res_short_id, element_id, element_name, layout,  *args, **kwargs)
+        super(ModelInputFormHelper, self).__init__(allow_edit, res_short_id, element_id,
+                                                   element_name, layout,  *args, **kwargs)
+
 
 class ModelInputForm(ModelForm):
     def __init__(self, allow_edit=True, res_short_id=None, element_id=None, *args, **kwargs):
         super(ModelInputForm, self).__init__(*args, **kwargs)
-        self.helper = ModelInputFormHelper(allow_edit, res_short_id, element_id, element_name='ModelInput')
+        self.helper = ModelInputFormHelper(allow_edit, res_short_id, element_id,
+                                           element_name='ModelInput')
         self.fields['rainfallTimeStepType'].choices = rainfall_type_choices
         self.fields['routingTimeStepType'].choices = routing_type_choices
         self.fields['simulationTimeStepType'].choices = simulation_type_choices
