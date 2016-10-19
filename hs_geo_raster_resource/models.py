@@ -153,7 +153,7 @@ class OGCWebServices(AbstractMetaDataElement):
         return self.name
 
     class Meta:
-        # CellInformation element is not repeatable
+        # OGCWebServices element is not repeatable
         unique_together = ("content_type", "object_id")
 
 

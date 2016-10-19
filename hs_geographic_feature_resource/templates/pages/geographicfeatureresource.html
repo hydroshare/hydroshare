@@ -15,6 +15,32 @@
             <div>
                 {# Add the view mode html code below for resource extended meta tab #}
                 {% if extended_metadata_exists %}
+                    {# Add the ogc web services information meta #}
+                    <legend>OGC Web Services for Accessing Geographic Data</legend>
+                    <div style="margin-bottom:40px;">
+                        {% if ogcWebServices %}
+
+                            <table class="custom-table">
+                                <tbody>
+                                {% if ogcWebServices.wmsEndpoint %}
+                                    <tr><th class="text-muted">WMS Endpoint</th><td>{{ ogcWebServices.wmsEndpoint }}</td></tr>
+                                {% endif %}
+
+                                {% if ogcWebServices.wfsEndpoint %}
+                                    <tr><th class="text-muted">WFS Endpoint</th><td>{{ ogcWebServices.wfsEndpoint }}</td></tr>
+                                {% endif %}
+
+                                {% if ogcWebServices.layerName %}
+                                    <tr><th class="text-muted">Layer Name</th><td>{{ ogcWebServices.layerName }}</td></tr>
+                                {% endif %}
+                            </tbody>
+                            </table>
+
+                        {% else %}
+                            <p><i>OGC Web Services are not available.</i></p>
+                        {% endif %}
+                    </div>
+
                     {# Add the geometry information meta #}
                     <legend>Geometry Information</legend>
                     <div style="margin-bottom:40px;">

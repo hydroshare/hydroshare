@@ -68,6 +68,21 @@ class GeometryInformation(AbstractMetaDataElement):
         # GeometryInformation element is not repeatable
         unique_together = ("content_type", "object_id")
 
+
+class OGCWebServices(AbstractMetaDataElement):
+    term = 'OGCWebServices'
+    layerName = models.CharField(max_length=500, null=True)
+    wmsEndpoint = models.CharField(max_length=500, null=True)
+    wfsEndpoint = models.CharField(max_length=500, null=True)
+
+    def __unicode__(self):
+        return self.name
+
+    class Meta:
+        # OGCWebServices element is not repeatable
+        unique_together = ("content_type", "object_id")
+
+
 # Define the Geographic Feature
 class GeographicFeatureResource(BaseResource):
 
@@ -112,6 +127,7 @@ class GeographicFeatureMetaData(CoreMetaData):
     fieldinformation = GenericRelation(FieldInformation)
     originalcoverage = GenericRelation(OriginalCoverage)
     originalfileinfo = GenericRelation(OriginalFileInfo)
+    ogcWebServices = GenericRelation(OGCWebServices)
 
     @classmethod
     def get_supported_element_names(cls):
@@ -122,6 +138,7 @@ class GeographicFeatureMetaData(CoreMetaData):
         elements.append('OriginalCoverage')
         elements.append('GeometryInformation')
         elements.append('OriginalFileInfo')
+        elements.append('OGCWebServices')
         return elements
 
     def has_all_required_elements(self):
@@ -186,6 +203,10 @@ class GeographicFeatureMetaData(CoreMetaData):
 
             rdf_coverage_value.text = cov_value
 
+        if self.ogcWebServices.first():
+            ogc_web_services_fields = ['wmsEndpoint', 'wcsEndpoint', 'layerName']
+            self.add_metadata_element_to_xml(container, self.ogcWebServices.first(), ogc_web_services_fields)
+
         return etree.tostring(RDF_ROOT, pretty_print=True)
 
     def delete_all_elements(self):
@@ -194,5 +215,6 @@ class GeographicFeatureMetaData(CoreMetaData):
         self.fieldinformation.all().delete()
         self.originalcoverage.all().delete()
         self.originalfileinfo.all().delete()
+        self.ogcWebServices.first().delete()
 
 import receivers # never delete this otherwise non of the receiver function will work

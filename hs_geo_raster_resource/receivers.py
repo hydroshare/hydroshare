@@ -214,6 +214,7 @@ def raster_pre_create_resource_trigger(sender, **kwargs):
 
             # Save extended meta spatial reference
             ori_cov = {'OriginalCoverage': {'value': res_md_dict['spatial_coverage_info']['original_coverage_info'] }}
+            metadata.append(ori_cov)
 
             # Save extended meta cell info
             res_md_dict['cell_info']['name'] = os.path.basename(vrt_file_path)

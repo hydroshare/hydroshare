@@ -58,6 +58,8 @@ def landing_page(request, page):
             field_info_list_context.append(field_info_dict_item)
         context['field_information'] = field_info_list_context
 
+        context['ogcWebServices'] = content_model.metadata.ogcWebServices.first()
+
     else: # editing mode
         geom_info_for_view = {}
         geom_info = content_model.metadata.geometryinformation.all().first()
