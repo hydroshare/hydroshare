@@ -17,7 +17,7 @@ class GeoRasterFileMetaData(AbstractFileMetaData, GeoRasterMetaDataMixin):
 
     @classmethod
     def get_supported_element_names(cls):
-        elements = []
+        elements = list()
         elements.append('CellInformation')
         elements.append('BandInformation')
         elements.append('OriginalCoverage')
@@ -32,17 +32,26 @@ class GeoRasterFileMetaData(AbstractFileMetaData, GeoRasterMetaDataMixin):
         self.bandInformation.delete()
         self.coverages.all().delete()
 
+    def get_html(self):
+        # in the template we can insert necessary html code for displaying all
+        # file type metadata associated with a logical file using this
+        # single line: {{ logical_file.metadata.get_html }}
+        html_string = ''
+        for element in (self.originalCoverage, self.cellInformation, self.bandInformation):
+            html_string += element.get_html() + "\n"
+        return html_string
+
 
 class GeoRasterLogicalFile(AbstractLogicalFile):
     metadata = models.OneToOneField(GeoRasterFileMetaData, related_name="logical_file")
 
-    @property
-    def get_allowed_uploaded_file_types(self):
+    @classmethod
+    def get_allowed_uploaded_file_types(cls):
         # can upload only .zip and .tif file types
         return [".zip", ".tif"]
 
-    @property
-    def get_allowed_storage_file_types(self):
+    @classmethod
+    def get_allowed_storage_file_types(cls):
         # file types allowed in the file group are: .tif and .vrt
         return [".tif", ".vrt"]
 
@@ -50,3 +59,11 @@ class GeoRasterLogicalFile(AbstractLogicalFile):
     def create(cls):
         raster_metadata = GeoRasterFileMetaData.objects.create()
         return cls.objects.create(metadata=raster_metadata)
+
+    @classmethod
+    def type(cls):
+        return cls.__name__
+
+    def get_html(self):
+        self.metadata.get_html()
+

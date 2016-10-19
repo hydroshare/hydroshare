@@ -8,7 +8,6 @@ from django.contrib.postgres.fields import HStoreField
 from hs_core.models import ResourceFile
 
 
-
 class AbstractFileMetaData(models.Model):
     # base class for file metadata, shared among all supported HS file types
     size = models.IntegerField(default=0)
@@ -77,17 +76,19 @@ class AbstractLogicalFile(models.Model):
     size = models.IntegerField(default=0)
     files = GenericRelation(ResourceFile, content_type_field='logical_file_content_type',
                             object_id_field='logical_file_object_id')
+    # the dataset name will allow us to identify a logical file group
+    dataset_name = models.CharField(max_length=255, null=True, blank=True)
 
     class Meta:
         abstract = True
 
-    @property
-    def get_allowed_uploaded_file_types(self):
+    @classmethod
+    def get_allowed_uploaded_file_types(cls):
         # can upload any file types
         return [".*"]
 
-    @property
-    def get_allowed_storage_file_types(self):
+    @classmethod
+    def get_allowed_storage_file_types(cls):
         # can store any file types
         return [".*"]
 
@@ -95,15 +96,20 @@ class AbstractLogicalFile(models.Model):
     def has_metadata(self):
         return hasattr(self, 'metadata')
 
-    def delete(self, using=None):
-        from hs_core.hydroshare.resource import delete_resource_file_only
+    def logical_delete(self, user):
+        from hs_core.hydroshare.resource import delete_resource_file
+        self.delete_metadata()
+        # delete all resource files associated with this instance of logical file
+        for f in self.files.all():
+            delete_resource_file(f.resource.short_id, f.id, user,
+                                 delete_logical_file=False)
+
+        super(AbstractLogicalFile, self).delete()
+
+    def delete_metadata(self):
         if self.has_metadata:
             self.metadata.delete_all_elements()
             self.metadata.delete()
-        # delete all resource files associated with this instance of logical file
-        for f in self.files.all():
-            delete_resource_file_only(f.resource, f)
-
 
 class GenericLogicalFile(AbstractLogicalFile):
     pass

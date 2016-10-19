@@ -792,27 +792,24 @@ def add_file_to_resource(resource, f, fed_res_file_name_or_path='', fed_copy_or_
     :return: The identifier of the ResourceFile added.
     """
     if f:
-        logical_file = GenericLogicalFile.objects.create(size=0)
+        file_format_type = get_file_mime_type(f.name)
         if fed_res_file_name_or_path:
             ret = ResourceFile.objects.create(content_object=resource,
-                                              logical_file_content_object=logical_file,
-                                              resource_file=None,
+                                              resource_file=None, mime_type=file_format_type,
                                               fed_resource_file=File(f) if not isinstance(
                                                   f, UploadedFile) else f)
         else:
             ret = ResourceFile.objects.create(content_object=resource,
-                                              logical_file_content_object=logical_file,
+                                              mime_type=file_format_type,
                                               resource_file=File(f) if not isinstance(
                                                   f, UploadedFile) else f,
                                               fed_resource_file=None)
 
-        # add format metadata element if necessary
-        file_format_type = get_file_mime_type(f.name)
     elif fed_res_file_name_or_path and (fed_copy_or_move == 'copy' or fed_copy_or_move == 'move'):
-        logical_file = GenericLogicalFile.objects.create(size=0)
         size = get_fed_zone_file_size(fed_res_file_name_or_path)
+        file_format_type = get_file_mime_type(fed_res_file_name_or_path)
         ret = ResourceFile.objects.create(content_object=resource, resource_file=None,
-                                          logical_file_content_object=logical_file,
+                                          mime_type=file_format_type,
                                           fed_resource_file=None,
                                           fed_resource_file_name_or_path=fed_res_file_name_or_path,
                                           fed_resource_file_size=size)
@@ -843,12 +840,11 @@ def add_file_to_resource(resource, f, fed_res_file_name_or_path='', fed_copy_or_
             ret.delete()
             # raise the exception for the calling function to inform the error on the page interface
             raise SessionException(ex.exitcode, ex.stdout, ex.stderr)
-
-        file_format_type = get_file_mime_type(fed_res_file_name_or_path)
     else:
         raise ValueError('Invalid input parameter is passed into this add_file_to_resource() '
                          'function')
 
+    # add format metadata element if necessary
     if file_format_type not in [mime.value for mime in resource.metadata.formats.all()]:
         resource.metadata.create_element('format', value=file_format_type)
 

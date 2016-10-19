@@ -1540,6 +1540,10 @@ class ResourceFile(models.Model):
         return self.content_object
 
     @property
+    def has_logical_file(self):
+        return self.logical_file is not None
+
+    @property
     def logical_file(self):
         return self.logical_file_content_object
 

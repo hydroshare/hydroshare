@@ -32,7 +32,7 @@ def set_file_to_geo_raster_file_type(resource, file_id, user):
     file_name = file_name.split(".")[0]
 
     metadata = []
-    if res_file is not None and not res_file.logical_file.has_metadata:
+    if res_file is not None and res_file.logical_file is None:
         # get the file from irods to temp dir
         temp_file = utils.get_file_from_irods(res_file)
         # validate the file
@@ -65,14 +65,9 @@ def set_file_to_geo_raster_file_type(resource, file_id, user):
 
             log.info("Geo raster file type metadata extraction was successful.")
             # first delete the raster file that we retrieved from irods
-            logical_file = res_file.logical_file
             delete_resource_file_only(resource, res_file)
 
             # TODO: modify delete_resource_file_only() to delete logical file
-
-            # use the custom logical_delete() so that all files associated logical file object gets
-            # deleted
-            logical_file.logical_delete(user)
 
             # add all new files to the resource
             files = []
@@ -121,12 +116,12 @@ def set_file_to_geo_raster_file_type(resource, file_id, user):
             err_msg = "Failed to set Geo raster file type. " \
                       "Resource doesn't have the specified file."
             log.error(err_msg)
-            raise Exception(err_msg)
+            raise ValidationError(err_msg)
         else:
             err_msg = "Failed to set Geo raster file type." \
-                      "The specified file already has a file type"
+                      "The specified file already has a file type."
             log.error(err_msg)
-            raise Exception(err_msg)
+            raise ValidationError(err_msg)
 
 
 # TODO: This function is NOT used
@@ -232,7 +227,7 @@ def raster_pre_create_resource_handler(resource_type, **kwargs):
 
 
 def raster_file_validation(raster_file):
-    # raster_file is the tem file retrieved from irods and stored on temp dir in django
+    # raster_file is the temp file retrieved from irods and stored on temp dir in django
     error_info = []
     vrt_file_path = ''
     new_resource_files_to_add = []

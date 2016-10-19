@@ -928,7 +928,7 @@ def delete_resource_file_only(resource, f):
     return file_name
 
 
-def delete_resource_file(pk, filename_or_id, user):
+def delete_resource_file(pk, filename_or_id, user, delete_logical_file=True):
     """
     Deletes an individual file from a HydroShare resource. If the file does not exist, the Exceptions.NotFound exception
     is raised.
@@ -975,6 +975,10 @@ def delete_resource_file(pk, filename_or_id, user):
 
     for f in ResourceFile.objects.filter(object_id=resource.id):
         if filter_condition(f):
+            if delete_logical_file:
+                if f.logical_file is not None:
+                    f.logical_file.logical_delete(user)
+                    return filename_or_id
             # send signal
             signals.pre_delete_file_from_resource.send(sender=res_cls, file=f, resource=resource, user=user)
             file_name = delete_resource_file_only(resource, f)
