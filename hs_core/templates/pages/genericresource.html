@@ -301,7 +301,7 @@
 
                                             </div>
                                             <div class="row">
-                                                <div id="fb-file-operations-controls" class="col-xs-12 col-sm-8 height-fix">
+                                                <div id="fb-file-operations-controls" class="col-xs-12 col-sm-12 height-fix">
                                                     {% if page.perms.change and metadata_form %}
                                                         {% if cm|resource_type == "Generic" %}
                                                         <button id="fb-create-folder"
@@ -311,16 +311,9 @@
                                                         </button>
                                                         {% endif %}
 
-                                                        <button id="fb-delete"
-                                                                class="disabled"
-                                                                title="Delete" data-toggle="modal"
-                                                                data-target="#confirm-delete-dialog">
-                                                            <span class="glyphicon glyphicon-trash btn-remove"></span>
-                                                        </button>
-
                                                         {% if cm|resource_type == "Generic" %}
                                                             <button id="fb-cut"
-                                                                    class="disabled"
+                                                                    class="disabled fb-space-left"
                                                                     title="Cut">
                                                                 <span class="fa fa-scissors icon-blue"></span>
                                                             </button>
@@ -342,7 +335,7 @@
 
                                                         {% if cm|resource_type == "Generic" %}
                                                             <button id="fb-zip"
-                                                                    class="disabled"
+                                                                    class="disabled fb-space-left"
                                                                     title="Zip Folder" data-toggle="modal"
                                                                     data-target="#zip-folder-dialog">
                                                                 <span class="glyphicon glyphicon-compressed icon-blue"></span>
@@ -357,7 +350,7 @@
                                                     {% endif %}
 
                                                     <button id="fb-select-all"
-                                                            title="Select All">
+                                                            title="Select All" class="fb-space-left">
                                                         <span class="fa fa-plus-square-o icon-blue"></span>
                                                     </button>
 
@@ -370,6 +363,13 @@
                                                             class="disabled"
                                                             title="Download">
                                                         <span class="glyphicon glyphicon-download icon-blue"></span>
+                                                    </button>
+
+                                                    <button id="fb-delete"
+                                                            class="disabled fb-space-left"
+                                                            title="Delete" data-toggle="modal"
+                                                            data-target="#confirm-delete-dialog">
+                                                        <span class="glyphicon glyphicon-trash btn-remove"></span>
                                                     </button>
                                                 </div>
                                             </div>

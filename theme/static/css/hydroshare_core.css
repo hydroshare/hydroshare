@@ -3875,7 +3875,7 @@ form#covereage-search-fields {
 }
 
 .files-container {
-	height: 250px;
+	height: 252px;
 	overflow-y: auto;
 	overflow-x: hidden;
 }
@@ -4164,8 +4164,8 @@ span.fb-control-square {
 	box-shadow: 1px 1px 5px #ececec;
 }
 
-#fb-move-up, #fb-create-folder, #fb-delete, #fb-rename, #fb-refresh, #fb-view {
-	margin-right: 15px;
+.fb-space-left {
+	margin-left: 15px;
 }
 
 .ui-widget-content {
@@ -4217,7 +4217,6 @@ div.fb-upload-caption a {
 
 .fb-view-list {
     padding: 10px;
-    height: 100%;
 	margin: 0;
 }
 
@@ -4283,7 +4282,6 @@ div#fb-inner-controls button, .file-browser-search {
 	background-image: none;
 	border: 0;
 	background: transparent;
-	margin: 0;
 }
 
 #fb-file-operations-controls > button.disabled {
@@ -4293,6 +4291,7 @@ div#fb-inner-controls button, .file-browser-search {
 #fb-file-operations-controls > button {
 	margin-top: 8px;
 	text-shadow: 0 1px 0 #fff;
+	border: 1px solid transparent;
 }
 
 div#fb-file-operations-controls {
@@ -4301,7 +4300,6 @@ div#fb-file-operations-controls {
 
 #fb-file-operations-controls > button:not(.disabled):hover {
 	border: 1px solid #DDD;
-	margin: -1px;
 	box-shadow: 1px 1px 3px #e2e2e2;
 	/* Permalink - use to edit and share this gradient: http://colorzilla.com/gradient-editor/#ffffff+0,f6f6f6+47,ededed+100;White+3D+%231 */
 	background: rgb(255, 255, 255); /* Old browsers */
@@ -4313,7 +4311,6 @@ div#fb-file-operations-controls {
 
 #fb-file-operations-controls > button:not(.disabled):active {
 	border: 1px solid #DDD;
-	margin: -1px;
 	/* Permalink - use to edit and share this gradient: http://colorzilla.com/gradient-editor/#f7f7f7+0,e5e5e5+100 */
 	background: rgb(247, 247, 247); /* Old browsers */
 	background: -moz-linear-gradient(top, rgba(247, 247, 247, 1) 0%, rgba(229, 229, 229, 1) 100%); /* FF3.6-15 */
@@ -4322,6 +4319,9 @@ div#fb-file-operations-controls {
 	filter: progid:DXImageTransform.Microsoft.gradient(startColorstr='#f7f7f7', endColorstr='#e5e5e5', GradientType=0); /* IE6-9 */
 }
 
+#fbContainmentWrapper {
+	resize: vertical;
+}
 .fb-loading-spinner {
 	list-style: none;
     width: 100%;
