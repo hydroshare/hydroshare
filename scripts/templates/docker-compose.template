@@ -55,6 +55,9 @@ hydroshare:
     - redis:redis
     - rabbitmq:rabbitmq
     - solr:solr
+  extra_hosts:
+    - "data.local.org:172.17.0.2"
+    - "users.local.org:172.17.0.3"
   command: /bin/bash init-hydroshare
 defaultworker:
   build: .
@@ -76,6 +79,9 @@ defaultworker:
     - postgis:postgis
     - redis:redis
     - rabbitmq:rabbitmq
+  extra_hosts:
+    - "data.local.org:172.17.0.2"
+    - "users.local.org:172.17.0.3"
   command: /bin/bash init-defaultworker
 dockerworker:
   build: .
@@ -97,4 +103,7 @@ dockerworker:
     - postgis:postgis
     - redis:redis
     - rabbitmq:rabbitmq
+  extra_hosts:
+    - "data.local.org:172.17.0.2"
+    - "users.local.org:172.17.0.3"
   command: /bin/bash init-dockerworker

@@ -57,12 +57,10 @@ stop_nginx() {
 restart_hs() {
     echo "RESTART HYDROSHARE:"
     stop_nginx
-    docker-compose stop hydroshare
-    docker-compose stop defaultworker
+    docker-compose stop hydroshare defaultworker dockerworker
     delete_celerybeat_scheduler
     preflight_hs
-    docker-compose start hydroshare
-    docker-compose start defaultworker
+    docker-compose start hydroshare defaultworker dockerworker
     if [ "${USE_NGINX,,}" = true ]; then
         start_nginx;
     fi
@@ -227,6 +225,8 @@ loaddb_hs() {
 
 migrate_hs() {
     echo "MIGRATE:"
+    echo "  - docker exec -u hydro-service hydroshare python manage.py migrate sites"
+    docker exec -u hydro-service hydroshare python manage.py migrate sites
     echo "  - docker exec -u hydro-service hydroshare python manage.py migrate --fake-initial"
     docker exec -u hydro-service hydroshare python manage.py migrate --fake-initial
     echo "  - docker exec -u hydro-service hydroshare python manage.py fix_permissions"
