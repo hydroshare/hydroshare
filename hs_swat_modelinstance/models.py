@@ -444,7 +444,7 @@ class SWATModelInstanceMetaData(ModelInstanceMetaData):
             self.add_metadata_element_to_xml(container, self.model_method, modelMethodFields)
 
         if self.model_parameter:
-            hsterms_swat_model_parameters = etree.SubElement(container,'{%s}modelParameter'
+            hsterms_swat_model_parameters = etree.SubElement(container, '{%s}modelParameter'
                                                              % self.NAMESPACES['hsterms'])
 
             if self.model_parameter.other_parameters:

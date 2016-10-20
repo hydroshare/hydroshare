@@ -63,7 +63,7 @@ class TestSWATModelInstanceMetaData(MockIRODSTestCaseMixin, TransactionTestCase)
             shutil.rmtree(self.temp_dir)
 
     def test_allowed_file_types(self):
-        # test allowed file type is '.*'        
+        # test allowed file type is '.*'
         self.assertEquals(self.resSWATModelInstance.get_supported_upload_file_types(), '.*')
 
         # there should not be any content file
