@@ -4346,3 +4346,6 @@ div#fb-file-operations-controls {
 	box-shadow: inset 0 0 10px #00b4ff;
 }
 
+#rename-dialog .input-group {
+	width: 100%;
+}

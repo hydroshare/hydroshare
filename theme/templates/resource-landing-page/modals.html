@@ -1752,10 +1752,14 @@
 
             <div class="modal-body">
                 <div class="row">
-                    {# Folder Name #}
                     <fieldset class="col-sm-12">
                         <label>Name *</label>
-                        <input id="txtName" class="form-control modal-only-required" >
+                        <div class="input-group">
+                            <input id="txtName" class="form-control modal-only-required">
+                            {% if cm|resource_type == "Time Series" or cm|resource_type == "Multidimensional (NetCDF)" %}
+                            <span class="input-group-addon" id="file-type-addon"></span>
+                            {% endif %}
+                        </div>
                     </fieldset>
                 </div>
             </div>
@@ -1779,12 +1783,12 @@
 
             <div class="modal-body">
                 <div class="row">
-                    <fieldset class="col-sm-6 col-xs-12">
+                    <fieldset class="col-sm-12">
                         <label>Name *</label>
                         <div class="input-group">
                             <input id="txtZipName" type="text" class="form-control modal-only-required" placeholder="File name"
                                    aria-describedby="file-type-addon">
-                            <span class="input-group-addon" id="file-type-addon">.zip</span>
+                            <span class="input-group-addon">.zip</span>
                         </div>
                     </fieldset>
                 </div>

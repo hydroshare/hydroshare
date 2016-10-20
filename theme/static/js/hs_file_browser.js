@@ -674,7 +674,7 @@ $(document).ready(function () {
         var startPos = 0;
         var endPos = $("#txtName").val().lastIndexOf(".");
 
-        if (endPos == -1) {
+        if (endPos == -1 || $("#file-type-addon").length) {
             endPos = $("#txtName").val().length;
         }
 
@@ -834,6 +834,13 @@ $(document).ready(function () {
     $(".selection-menu li[data-menu-name='rename'], #fb-rename").click(function(){
         $('.selection-menu').hide();
         var name = $("#fb-files-container li.ui-selected").children(".fb-file-name").text();
+
+        if ($("#file-type-addon").length) {
+            var ext = name.substr(name.lastIndexOf("."), name.length);
+            $("#file-type-addon").text(ext);
+            name = name.substr(0, name.lastIndexOf("."));
+        }
+
         $("#txtName").val(name);
     });
 
@@ -842,6 +849,10 @@ $(document).ready(function () {
         var currentPath = $("#hs-file-browser").attr("data-current-path");
         var oldName = $("#fb-files-container li.ui-selected").children(".fb-file-name").text();
         var newName = $("#txtName").val();
+
+        if ($("#file-type-addon").length) {
+            newName = newName + $("#file-type-addon").text();
+        }
 
         var calls = [];
         calls.push(move_or_rename_irods_file_or_folder_ajax_submit(resID, currentPath + "/" + oldName, currentPath + "/" + newName));
