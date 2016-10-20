@@ -217,15 +217,44 @@ function bindFileBrowserItemEvents() {
                 $(this).addClass("ui-selected");
             }
         }
+
+        if (!e.shiftKey) {
+            $("#fb-files-container li").removeClass("ui-last-selected");
+            $(this).addClass("ui-last-selected");
+        }
+
     });
 
-    // Handle "select" of clicked elements - Mouse Up
+
     $("#fb-files-container li").mouseup(function (e) {
+        // Handle "select" of clicked elements - Mouse Up
         if (!e.ctrlKey) {
             if (!isDragging && event.which == 1) {
                 $("#fb-files-container li").removeClass("ui-selected");
             }
             $(this).addClass("ui-selected");
+        }
+
+        // Handle selecting multiple elements with Shift + Click
+        if (!e.shiftKey || e.metaKey) {
+            $("#fb-files-container li").removeClass("ui-last-selected");
+            $(this).addClass("ui-last-selected");
+        }
+        else {
+            var lastSelected = $("#fb-files-container").find(".ui-last-selected").index();
+            var range = $(this).index();
+
+            var items = $("#fb-files-container li");
+            items.removeClass("ui-selected");
+
+            var maxRange =  Math.max(lastSelected, range);
+            var minRange = Math.min(lastSelected, range);
+
+            for (var i = 0; i < items.length; i++) {
+                if (i >= minRange && i <= maxRange) {
+                     $(items[i]).addClass("ui-selected");
+                }
+            }
         }
 
         updateSelectionMenuContext();
@@ -261,7 +290,11 @@ function bindFileBrowserItemEvents() {
             stop: function (event, ui) {
                 $(".selection-menu").hide();
                 updateSelectionMenuContext();
-            }
+
+                $("#fb-files-container li").removeClass("ui-last-selected");
+                $("#fb-files-container li.ui-selected").first().addClass("ui-last-selected");
+            },
+
         });
 
     // Dismiss right click menu when mouse down outside of it
@@ -283,6 +316,8 @@ function bindFileBrowserItemEvents() {
             if (!$(event.target).closest("li").hasClass("ui-selected")) {
                 $(".ui-selected").removeClass("ui-selected");
                 $(event.target).closest("li").addClass("ui-selected");
+                $("#fb-files-container li").removeClass("ui-last-selected");
+                $(event.target).closest("li").addClass("ui-last-selected");
             }
             menu = $("#right-click-menu");
         }
