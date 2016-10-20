@@ -5,10 +5,8 @@ import rdflib
 
 from django.db import transaction
 
-from hs_core.models import BaseResource
-from hs_core.hydroshare.utils import get_resource_by_shortkey
 from hs_core.serialization import GenericResourceMeta, HsDeserializationDependencyException
-from hs_swat_modelinstance.models import ExecutedBy, ModelObjective, SimulationType, ModelMethod, \
+from hs_swat_modelinstance.models import ModelObjective, SimulationType, ModelMethod, \
     ModelParameter, ModelInput
 from hs_swat_modelinstance.forms import model_objective_choices, parameters_choices
 
@@ -363,12 +361,8 @@ class SWATModelInstanceResourceMeta(GenericResourceMeta):
 
     class ModelObjective(object):
 
-        def __init__(self):
-            self.model_objectives = []  # Optional
-
         def __init__(self, model_objects_str):
             self.model_objectives = [o.strip() for o in model_objects_str.split(',')]
-
 
         def __str__(self):
             msg = "ModelObjective model_objectives: {model_objectives}"
@@ -411,9 +405,6 @@ class SWATModelInstanceResourceMeta(GenericResourceMeta):
             return unicode(str(self))
 
     class ModelParameter(object):
-
-        def __init__(self):
-            self.model_parameters = []  # Optional
 
         def __init__(self, model_parameters_str):
             self.model_parameters = [p.strip() for p in model_parameters_str.split(',')]

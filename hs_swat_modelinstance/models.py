@@ -6,7 +6,7 @@ from django.core.exceptions import ValidationError, ObjectDoesNotExist
 
 from mezzanine.pages.page_processors import processor_for
 
-from hs_core.models import BaseResource, ResourceManager, resource_processor, CoreMetaData, \
+from hs_core.models import BaseResource, ResourceManager, resource_processor, \
     AbstractMetaDataElement
 from hs_modelinstance.models import ModelInstanceMetaData, ModelOutput, ExecutedBy
 
@@ -36,7 +36,7 @@ class ModelObjective(AbstractMetaDataElement):
 
     def __unicode__(self):
         return self.other_objectives
-    
+
     class Meta:
         # ModelObjective element is not repeatable
         unique_together = ("content_type", "object_id")
@@ -475,5 +475,3 @@ class SWATModelInstanceMetaData(ModelInstanceMetaData):
         self._model_method.all().delete()
         self._model_parameter.all().delete()
         self._model_input.all().delete()
-
-

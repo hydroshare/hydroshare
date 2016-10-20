@@ -2,13 +2,13 @@ from django.forms import ModelForm
 from django import forms
 
 from crispy_forms import layout
-from crispy_forms.layout import Layout, Field, HTML
+from crispy_forms.layout import Layout, HTML
 
 from hs_core.forms import BaseFormHelper
 from hs_core.hydroshare import users
 
 from hs_modelinstance.models import ModelOutput, ExecutedBy
-from hs_swat_modelinstance.models import  ModelObjective, SimulationType, ModelMethod, \
+from hs_swat_modelinstance.models import ModelObjective, SimulationType, ModelMethod, \
     ModelParameter, ModelInput
 
 model_objective_choices = (
@@ -112,8 +112,7 @@ class ExecutedByFormHelper(BaseFormHelper):
                              % (r.short_id, r.title) for r in mp_resource])
         options = '<option value=Unspecified>Unspecified</option>' + options
         selectbox = HTML('<div class="div-selectbox">'
-                         ' <select class="selectbox" id="selectbox_'+mp_id+'">'
-                         + options +
+                         ' <select class="selectbox" id="selectbox_'+mp_id+'">' + options +
                          '</select>'
                          '</div><br>')
 
