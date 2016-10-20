@@ -4164,8 +4164,8 @@ span.fb-control-square {
 	box-shadow: 1px 1px 5px #ececec;
 }
 
-.fb-space-left {
-	margin-left: 15px;
+.fb-space-right {
+	margin-right: 15px;
 }
 
 .ui-widget-content {

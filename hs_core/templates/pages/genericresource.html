@@ -71,7 +71,7 @@
 
                     {# POPUP MENU - Right clicking items #}
                     <ul id="right-click-menu" class="dropdown-menu fb-dropdown selection-menu">
-                        {% if cm|resource_type == "Generic" %}
+                        {% if cm|resource_type == "Generic" or cm|resource_type == "Model Program Resource" or cm|resource_type == "MODFLOW Model Instance Resource" or cm|resource_type == "SWAT Model Instance Resource" or cm|resource_type == "Model Instance Resource" %}
                         <li id="btn-open" data-menu-name="open">
                             <span class="fa fa-folder-open icon-blue"></span>
                             <span>Open</span>
@@ -224,7 +224,7 @@
                                     <div id="fb-inner-controls">
                                         <div id="fb-inner-buttons">
                                             <div class="row">
-                                                {% if cm|resource_type == "Generic" %}
+                                                {% if cm|resource_type == "Generic" or cm|resource_type == "Model Program Resource" or cm|resource_type == "MODFLOW Model Instance Resource" or cm|resource_type == "SWAT Model Instance Resource" or cm|resource_type == "Model Instance Resource" %}
                                                 <div class="col-xs-6 col-sm-3 col-md-3">
                                                     <button id="fb-move-back"
                                                             class="btn btn-default fb-control-round disabled"
@@ -303,46 +303,47 @@
                                             <div class="row">
                                                 <div id="fb-file-operations-controls" class="col-xs-12 col-sm-12 height-fix">
                                                     {% if page.perms.change and metadata_form %}
-                                                        {% if cm|resource_type == "Generic" %}
-                                                        <button id="fb-create-folder"
-                                                                data-toggle="modal" data-target="#create-folder-dialog"
+                                                        {% if cm|resource_type == "Generic" or cm|resource_type == "Model Program Resource" or cm|resource_type == "MODFLOW Model Instance Resource" or cm|resource_type == "SWAT Model Instance Resource" or cm|resource_type == "Model Instance Resource" %}
+                                                            <button id="fb-create-folder" class="fb-space-right"
+                                                                    data-toggle="modal"
+                                                                    data-target="#create-folder-dialog"
                                                                 title="Create new folder">
                                                             <span class="fa fa-folder icon-blue"></span>
                                                         </button>
                                                         {% endif %}
 
-                                                        {% if cm|resource_type == "Generic" %}
+                                                        {% if cm|resource_type == "Generic" or cm|resource_type == "Model Program Resource" or cm|resource_type == "MODFLOW Model Instance Resource" or cm|resource_type == "SWAT Model Instance Resource" or cm|resource_type == "Model Instance Resource" %}
                                                             <button id="fb-cut"
-                                                                    class="disabled fb-space-left"
+                                                                    class="disabled"
                                                                     title="Cut">
                                                                 <span class="fa fa-scissors icon-blue"></span>
                                                             </button>
                                                             <button id="fb-paste"
-                                                                    class="disabled"
+                                                                    class="disabled fb-space-right"
                                                                     title="Paste">
                                                                 <span class="fa fa-clipboard icon-blue"></span>
                                                             </button>
                                                         {% endif %}
 
-                                                        {% if cm|resource_type == "Generic" or cm|resource_type == "Time Series" %}
+                                                        {% if cm|resource_type != "Web App Resource" and cm|resource_type != "Geographic Raster"  and cm|resource_type != "HIS Referenced Time Series"  and cm|resource_type != "Geographic Feature (ESRI Shapefiles)" %}
                                                             <button id="fb-rename"
-                                                                    class="disabled"
+                                                                    class="disabled fb-space-right"
                                                                     title="Rename" data-toggle="modal"
                                                                     data-target="#rename-dialog">
                                                                 <span class="glyphicon glyphicon-pencil icon-blue"></span>
                                                             </button>
                                                         {% endif %}
 
-                                                        {% if cm|resource_type == "Generic" %}
+                                                        {% if cm|resource_type == "Generic" or cm|resource_type == "Model Program Resource" or cm|resource_type == "MODFLOW Model Instance Resource" or cm|resource_type == "SWAT Model Instance Resource" or cm|resource_type == "Model Instance Resource" %}
                                                             <button id="fb-zip"
-                                                                    class="disabled fb-space-left"
+                                                                    class="disabled"
                                                                     title="Zip Folder" data-toggle="modal"
                                                                     data-target="#zip-folder-dialog">
                                                                 <span class="glyphicon glyphicon-compressed icon-blue"></span>
                                                             </button>
 
                                                             <button id="fb-unzip"
-                                                                    class="disabled"
+                                                                    class="disabled fb-space-right"
                                                                     title="Unzip here">
                                                                 <span class="fa fa-file-archive-o icon-blue"></span>
                                                             </button>
@@ -350,11 +351,11 @@
                                                     {% endif %}
 
                                                     <button id="fb-select-all"
-                                                            title="Select All" class="fb-space-left">
+                                                            title="Select All">
                                                         <span class="fa fa-plus-square-o icon-blue"></span>
                                                     </button>
 
-                                                    <button id="fb-refresh"
+                                                    <button id="fb-refresh" class="fb-space-right"
                                                             title="Refresh">
                                                         <span class="fa fa-refresh icon-blue"></span>
                                                     </button>
@@ -366,7 +367,7 @@
                                                     </button>
 
                                                     <button id="fb-delete"
-                                                            class="disabled fb-space-left"
+                                                            class="disabled"
                                                             title="Delete" data-toggle="modal"
                                                             data-target="#confirm-delete-dialog">
                                                         <span class="glyphicon glyphicon-trash btn-remove"></span>
