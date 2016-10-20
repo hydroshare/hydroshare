@@ -60,10 +60,4 @@ class GeoRasterLogicalFile(AbstractLogicalFile):
         raster_metadata = GeoRasterFileMetaData.objects.create()
         return cls.objects.create(metadata=raster_metadata)
 
-    @classmethod
-    def type(cls):
-        return cls.__name__
-
-    def get_html(self):
-        self.metadata.get_html()
 

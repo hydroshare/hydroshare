@@ -10,15 +10,19 @@ from hs_core.models import ResourceFile
 
 class AbstractFileMetaData(models.Model):
     # base class for file metadata, shared among all supported HS file types
-    size = models.IntegerField(default=0)
-    # mime type of the dominant file in the group
-    mime_type = models.CharField(max_length=1000, default='')
+
+    # kye/value metadata
     extra_metadata = HStoreField(default={})
 
     class Meta:
         abstract = True
 
     def delete_all_elements(self):
+        # subclass must implement
+        raise NotImplementedError
+
+    def get_html(self):
+        # subclass must implement
         raise NotImplementedError
 
     @classmethod
@@ -44,7 +48,7 @@ class AbstractFileMetaData(models.Model):
         element_model_name = element_model_name.lower()
         if not self._is_valid_element(element_model_name):
             raise ValidationError("Metadata element type:%s is not one of the "
-                                  "supported in core metadata elements."
+                                  "supported metadata elements."
                                   % element_model_name)
 
         unsupported_element_error = "Metadata element type:%s is not supported." \
@@ -70,13 +74,14 @@ class AbstractFileMetaData(models.Model):
 
 
 class AbstractLogicalFile(models.Model):
-    # the hydroshare file type to be used for a group of files
-    hs_file_type = models.CharField(max_length=1000, default="Generic")
     # total size of all files in the logical group
     size = models.IntegerField(default=0)
+    # mime type of the dominant file in the group
+    mime_type = models.CharField(max_length=1000, default='')
+    # files associated with this logical file group
     files = GenericRelation(ResourceFile, content_type_field='logical_file_content_type',
                             object_id_field='logical_file_object_id')
-    # the dataset name will allow us to identify a logical file group
+    # the dataset name will allow us to identify a logical file group on user interface
     dataset_name = models.CharField(max_length=255, null=True, blank=True)
 
     class Meta:
@@ -84,19 +89,24 @@ class AbstractLogicalFile(models.Model):
 
     @classmethod
     def get_allowed_uploaded_file_types(cls):
-        # can upload any file types
+        # can upload any file types - subclass needs to override this
         return [".*"]
 
     @classmethod
     def get_allowed_storage_file_types(cls):
-        # can store any file types
+        # can store any file types - subclass needs to override this
         return [".*"]
+
+    @classmethod
+    def type_name(cls):
+        return cls.__name__
 
     @property
     def has_metadata(self):
         return hasattr(self, 'metadata')
 
     def logical_delete(self, user):
+        # deletes the logical file as well as all resource files associated with the logical file
         from hs_core.hydroshare.resource import delete_resource_file
         self.delete_metadata()
         # delete all resource files associated with this instance of logical file
