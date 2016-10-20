@@ -2,7 +2,7 @@ import os
 import subprocess
 import shutil
 import zipfile
-from collections import OrderedDict
+
 import xml.etree.ElementTree as ET
 import logging
 
@@ -14,15 +14,19 @@ from django.core.exceptions import ValidationError
 
 from hs_core.hydroshare import utils
 from hs_core.hydroshare.resource import add_resource_files, delete_resource_file_only
-from hs_core.models import GenericResource
-
-from hs_geo_raster_resource.models import RasterResource
 
 import raster_meta_extract
 from models import GeoRasterLogicalFile
 
 
 def set_file_to_geo_raster_file_type(resource, file_id, user):
+    """
+    Sets a tif or zip raster resource file to GeoRasterFile type
+    :param resource: an instance of resource type CompositeResource
+    :param file_id: id of the resource file to be set as GeoRasterFile type
+    :param user: user who is setting the file type
+    :return:
+    """
     log = logging.getLogger()
 
     # get the file from irods
@@ -32,7 +36,7 @@ def set_file_to_geo_raster_file_type(resource, file_id, user):
     file_name = file_name.split(".")[0]
 
     metadata = []
-    if res_file is not None and res_file.logical_file is None:
+    if res_file is not None and res_file.can_set_file_type:
         # get the file from irods to temp dir
         temp_file = utils.get_file_from_irods(res_file)
         # validate the file
@@ -124,121 +128,11 @@ def set_file_to_geo_raster_file_type(resource, file_id, user):
             raise ValidationError(err_msg)
 
 
-# TODO: This function is NOT used
-def raster_pre_create_resource_handler(resource_type, **kwargs):
-    if resource_type != GenericResource or RasterResource:
-        return
-    if kwargs['hs_file_type'] != GeoRasterLogicalFile:
-        return
-
-    files = kwargs['files']
-    title = kwargs['title']
-    validate_files_dict = kwargs['validate_files']
-    metadata = kwargs['metadata']
-    fed_res_fnames = kwargs['fed_res_file_names']
-    fed_res_path = kwargs['fed_res_path']
-    file_selected = False
-
-    if files:
-        file_selected = True
-        # raster file validation
-        error_info, vrt_file_path, temp_dir = raster_file_validation(files)
-    elif fed_res_fnames:
-        ref_tmpfiles = utils.get_fed_zone_files(fed_res_fnames)
-        fed_tmpfile_name = ref_tmpfiles[0]
-        # raster file validation
-        error_info, vrt_file_path, temp_dir = raster_file_validation(files, ref_tmp_file_names=ref_tmpfiles)
-        ext = os.path.splitext(fed_res_fnames[0])[1]
-        if ext == '.zip':
-            # clear up the original zip file so that it will not be added into the resource
-            fed_res_path.append(utils.get_federated_zone_home_path(fed_res_fnames[0]))
-            # remove the temp zip file retrieved from federated zone
-            shutil.rmtree(os.path.dirname(fed_tmpfile_name))
-            del fed_res_fnames[0]
-
-        file_selected = True
-
-    if file_selected:
-        # metadata extraction
-        if not error_info:
-            temp_vrt_file_path = [os.path.join(temp_dir, f) for f in os.listdir(temp_dir) if '.vrt' == os.path.splitext(f)[1]].pop()
-            res_md_dict = raster_meta_extract.get_raster_meta_dict(temp_vrt_file_path)
-            wgs_cov_info = res_md_dict['spatial_coverage_info']['wgs84_coverage_info']
-            # add core metadata coverage - box
-            if wgs_cov_info:
-                box = {'coverage': {'type': 'box', 'value': wgs_cov_info}}
-                metadata.append(box)
-
-            # Save extended meta spatial reference
-            ori_cov = {'OriginalCoverage': {'value': res_md_dict['spatial_coverage_info']['original_coverage_info'] }}
-            metadata.append(ori_cov)
-
-            # Save extended meta cell info
-            res_md_dict['cell_info']['name'] = os.path.basename(vrt_file_path)
-            metadata.append({'CellInformation': res_md_dict['cell_info']})
-
-            # Save extended meta band info
-            for band_info in res_md_dict['band_info'].values():
-                metadata.append({'BandInformation': band_info})
-        else:
-            validate_files_dict['are_files_valid'] = False
-            validate_files_dict['message'] = 'Raster validation error. {0}'.format(' '.join(error_info))
-
-        # remove temp vrt file
-        if os.path.isdir(temp_dir):
-            shutil.rmtree(temp_dir)
-        # remove temp file retrieved from federated zone for metadata extraction
-        if fed_res_fnames and fed_tmpfile_name:
-            shutil.rmtree(os.path.dirname(fed_tmpfile_name))
-    else:
-        # initialize required raster metadata to be place holders to be edited later by users
-        cell_info = OrderedDict([
-            ('name', title),
-            ('rows', None),
-            ('columns', None),
-            ('cellSizeXValue', None),
-            ('cellSizeYValue', None),
-            ('cellDataType', None),
-        ])
-        metadata.append({'CellInformation': cell_info})
-
-        band_info = {
-                'name': 'Band_1',
-                'variableName': None,
-                'variableUnit': None,
-                'noDataValue': None,
-                'maximumValue': None,
-                'minimumValue': None,
-        }
-        metadata.append({'BandInformation': band_info})
-
-        spatial_coverage_info = OrderedDict([
-             ('units', None),
-             ('projection', None),
-             ('northlimit', None),
-             ('southlimit', None),
-             ('eastlimit', None),
-             ('westlimit', None)
-        ])
-
-        # Save extended meta to metadata variable
-        ori_cov = {'OriginalCoverage': {'value': spatial_coverage_info}}
-        metadata.append(ori_cov)
-
-
 def raster_file_validation(raster_file):
-    # raster_file is the temp file retrieved from irods and stored on temp dir in django
+    """ raster_file is the temp file retrieved from irods and stored on temp dir in django """
+
     error_info = []
-    vrt_file_path = ''
     new_resource_files_to_add = []
-    # process uploaded .tif or .zip file or file retrieved from iRODS user zone
-    # in_filename = ''
-    # if len(files) >= 1:
-    #     in_filename = files[0].name
-    #     file = files[0]
-    # elif len(ref_tmp_file_names) >= 1:
-    #     in_filename = ref_tmp_file_names[0]
-    #     file = None
 
     file_name_part, ext = os.path.splitext(os.path.basename(raster_file))
     if ext == '.tif':
@@ -251,7 +145,6 @@ def raster_file_validation(raster_file):
             if os.path.isfile(temp_vrt_file_path):
                 new_resource_files_to_add.append(temp_vrt_file_path)
                 new_resource_files_to_add.append(raster_file)
-                # files.append(UploadedFile(file=open(temp_vrt_file_path, 'r'), name=os.path.basename(temp_vrt_file_path)))
     elif ext == '.zip':
         try:
             extract_file_paths = explode_zip_file(raster_file)
@@ -259,23 +152,10 @@ def raster_file_validation(raster_file):
             error_info.append(ex.message)
         else:
             if extract_file_paths:
-                # if len(files) == 1:
-                #     del files[0]
-                # if len(ref_tmp_file_names) == 1:
-                #     del ref_tmp_file_names[0]
                 for file_path in extract_file_paths:
                     new_resource_files_to_add.append(file_path)
-                    # files.append(UploadedFile(file=open(file_path, 'r'), name=os.path.basename(file_path)))
     else:
-        error_info.append("Invalid file mime type found")
-
-    # check if raster is valid in format and data
-    # if len(files) >= 1:
-    #     files_names = [f.name for f in files]
-    #     files_path = [f.file.name for f in files]
-    # if len(ref_tmp_file_names) >= 1:
-    #     for fname in ref_tmp_file_names:
-    #         files_names.append(os.path.split(fname)[1])
+        error_info.append("Invalid file mime type found.")
 
     if not error_info:
         files_ext = [os.path.splitext(path)[1] for path in new_resource_files_to_add]
@@ -311,38 +191,44 @@ def raster_file_validation(raster_file):
                                 os.path.split(vrt_ref_raster_name)[1] in file_names):
                         continue
                     elif os.path.basename(vrt_ref_raster_name) in file_names:
-                        error_info.append('Please specify {} as {} in the .vrt file, '
-                                          'because it will be saved in the same folder with .vrt file in HydroShare'.
-                                          format(vrt_ref_raster_name, os.path.basename(vrt_ref_raster_name)))
+                        msg = "Please specify {} as {} in the .vrt file, because it will " \
+                              "be saved in the same folder with .vrt file in HydroShare."
+                        msg = msg.format(vrt_ref_raster_name, os.path.basename(vrt_ref_raster_name))
+                        error_info.append(msg)
                         break
                     else:
-                        error_info.append('Pleas provide the missing raster file {} which is specified in the .vrt file'.
-                                          format(os.path.basename(vrt_ref_raster_name)))
+                        msg = "Pleas provide the missing raster file {} which is specified " \
+                              "in the .vrt file"
+                        msg = msg.format(os.path.basename(vrt_ref_raster_name))
+                        error_info.append(msg)
                         break
 
         elif files_ext.count('.tif') == 1 and files_ext.count('.vrt') == 0:
-            error_info.append('Please define the .tif file with raster size, band, and georeference information.')
+            msg = "Please define the .tif file with raster size, band, and " \
+                  "georeference information."
+            error_info.append(msg)
         else:
-            error_info.append('The uploaded files should contain only one .vrt file and .tif files referenced by the .vrt file.')
+            msg = "The uploaded files should contain only one .vrt file and .tif files " \
+                  "referenced by the .vrt file."
+            error_info.append(msg)
 
     return error_info, new_resource_files_to_add
 
 
 def create_vrt_file(tif_file):
-    # tif_file exists in temp directory
+    """ tif_file exists in temp directory - retrieved from irods """
+
+    log = logging.getLogger()
+
     # create vrt file
     temp_dir = os.path.dirname(tif_file)
     tif_file_name = os.path.basename(tif_file)
-    # if file:
-    #     shutil.copy(file.file.name, os.path.join(temp_dir, tif_base_name))
-    # else:
-    #     shutil.copy(tif_file_name, os.path.join(temp_dir, tif_base_name))
     vrt_file_path = os.path.join(temp_dir, os.path.splitext(tif_file_name)[0] + '.vrt')
 
     with open(os.devnull, 'w') as fp:
         subprocess.Popen(['gdal_translate', '-of', 'VRT', tif_file, vrt_file_path],
                          stdout=fp,
-                         stderr=fp).wait()  # remember to add .wait()
+                         stderr=fp).wait()  # need to wait
 
     # edit VRT contents
     try:
@@ -355,16 +241,19 @@ def create_vrt_file(tif_file):
         tree.write(vrt_file_path)
 
     except Exception as ex:
-        # TODO: log the exception
-        raise Exception("Failed to write to vrt file")
+        log.exception("Failed to create/write to vrt file. Error:{}".format(ex.message))
+        raise Exception("Failed to create/write to vrt file")
 
     return vrt_file_path
 
 
-def explode_zip_file(zip_file_name):
-    temp_dir = os.path.dirname(zip_file_name)
+def explode_zip_file(zip_file):
+    """ zip_file exists in temp directory - retrieved from irods """
+
+    log = logging.getLogger()
+    temp_dir = os.path.dirname(zip_file)
     try:
-        zf = zipfile.ZipFile(zip_file_name, 'r')
+        zf = zipfile.ZipFile(zip_file, 'r')
         zf.extractall(temp_dir)
         zf.close()
 
@@ -378,7 +267,7 @@ def explode_zip_file(zip_file_name):
                     extract_file_paths.append(os.path.join(temp_dir, os.path.basename(file_path)))
 
     except Exception as ex:
-        # TODO: log the exception
+        log.exception("Failed to unzip. Error:{}".format(ex.message))
         raise ex
 
     return extract_file_paths

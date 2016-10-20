@@ -17,6 +17,7 @@ from hs_file_types.models import GeoRasterLogicalFile, GeoRasterFileMetaData
 
 from hs_geo_raster_resource.models import OriginalCoverage, CellInformation, BandInformation
 
+import mock
 
 class RasterFileTypeMetaData(MockIRODSTestCaseMixin, TransactionTestCase):
     def setUp(self):
@@ -579,6 +580,8 @@ class RasterFileTypeMetaData(MockIRODSTestCaseMixin, TransactionTestCase):
         logical_file = res_file.logical_file
         self.assertEqual(logical_file.metadata.cellInformation.get_html(pretty=False),
                          cellinfo_html)
+
+        # TODO: test get_html() for remaining elements
 
     def _create_composite_resource(self):
         self.composite_resource = hydroshare.create_resource(

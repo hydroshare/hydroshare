@@ -9,7 +9,7 @@ from hs_core.models import ResourceFile
 
 
 class AbstractFileMetaData(models.Model):
-    # base class for file metadata, shared among all supported HS file types
+    """ base class for HydroShare file type metadata """
 
     # kye/value metadata
     extra_metadata = HStoreField(default={})
@@ -23,10 +23,13 @@ class AbstractFileMetaData(models.Model):
 
     def get_html(self):
         # subclass must implement
+        # returns a string representing html code for display of metadata in view mode
         raise NotImplementedError
 
     @classmethod
     def get_supported_element_names(cls):
+        # subclass must implement
+        # returns a list of metadata element names supported by this metadata group
         raise NotImplementedError
 
     def create_element(self, element_model_name, **kwargs):
@@ -74,9 +77,11 @@ class AbstractFileMetaData(models.Model):
 
 
 class AbstractLogicalFile(models.Model):
-    # total size of all files in the logical group
+    """ base class for HydroShare file types """
+
+    # total size of all files in the logical group - not sure if we need this
     size = models.IntegerField(default=0)
-    # mime type of the dominant file in the group
+    # mime type of the dominant file in the group - not sure if we need this
     mime_type = models.CharField(max_length=1000, default='')
     # files associated with this logical file group
     files = GenericRelation(ResourceFile, content_type_field='logical_file_content_type',
@@ -89,12 +94,12 @@ class AbstractLogicalFile(models.Model):
 
     @classmethod
     def get_allowed_uploaded_file_types(cls):
-        # can upload any file types - subclass needs to override this
+        # any file can be part of this logical file group - subclass needs to override this
         return [".*"]
 
     @classmethod
     def get_allowed_storage_file_types(cls):
-        # can store any file types - subclass needs to override this
+        # can store any file types in this logical file group - subclass needs to override this
         return [".*"]
 
     @classmethod
@@ -106,7 +111,7 @@ class AbstractLogicalFile(models.Model):
         return hasattr(self, 'metadata')
 
     def logical_delete(self, user):
-        # deletes the logical file as well as all resource files associated with the logical file
+        # deletes the logical file as well as all resource files associated with this logical file
         from hs_core.hydroshare.resource import delete_resource_file
         self.delete_metadata()
         # delete all resource files associated with this instance of logical file
@@ -117,6 +122,7 @@ class AbstractLogicalFile(models.Model):
         super(AbstractLogicalFile, self).delete()
 
     def delete_metadata(self):
+        # delete all metadata associated with this file type
         if self.has_metadata:
             self.metadata.delete_all_elements()
             self.metadata.delete()

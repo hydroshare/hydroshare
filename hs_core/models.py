@@ -1563,8 +1563,8 @@ class ResourceFile(models.Model):
         return get_resource_file_name_and_extension(self)[1]
 
     @property
-    def can_extract_metadata(self):
-        return self.extension in ('.tif', 'zip') and self.metadata is None
+    def can_set_file_type(self):
+        return self.extension in ('.tif', '.zip') and self.logical_file is None
 
 class Bags(models.Model):
     object_id = models.PositiveIntegerField()
