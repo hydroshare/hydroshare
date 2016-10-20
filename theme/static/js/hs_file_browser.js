@@ -228,7 +228,7 @@ function bindFileBrowserItemEvents() {
 
     $("#fb-files-container li").mouseup(function (e) {
         // Handle "select" of clicked elements - Mouse Up
-        if (!e.ctrlKey) {
+        if (!e.ctrlKey && !e.metaKey) {
             if (!isDragging && event.which == 1) {
                 $("#fb-files-container li").removeClass("ui-selected");
             }
@@ -236,7 +236,7 @@ function bindFileBrowserItemEvents() {
         }
 
         // Handle selecting multiple elements with Shift + Click
-        if (!e.shiftKey || e.metaKey) {
+        if (!e.shiftKey) {
             $("#fb-files-container li").removeClass("ui-last-selected");
             $(this).addClass("ui-last-selected");
         }
