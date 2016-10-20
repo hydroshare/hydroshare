@@ -111,6 +111,4 @@ class AbstractLogicalFile(models.Model):
             self.metadata.delete_all_elements()
             self.metadata.delete()
 
-class GenericLogicalFile(AbstractLogicalFile):
-    pass
 
