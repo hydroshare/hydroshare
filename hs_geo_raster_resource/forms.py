@@ -4,7 +4,7 @@ from crispy_forms.layout import *
 from crispy_forms.helper import FormHelper
 from crispy_forms.bootstrap import *
 from models import *
-from hs_core.forms import BaseFormHelper
+from hs_core.forms import BaseFormHelper, get_crispy_form_fields
 from django.forms.models import formset_factory
 import copy
 
@@ -12,16 +12,12 @@ import copy
 class OriginalCoverageFormHelper(BaseFormHelper):
     def __init__(self, allow_edit=True, res_short_id=None, element_id=None, element_name=None,  *args, **kwargs):
 
-        # the order in which the model fields are listed for the FieldSet is the order these fields will be displayed
-        field_width = 'form-control input-sm'
-        layout = Layout(
-                        Field('projection', css_class=field_width),
-                        Field('units', css_class=field_width),
-                        Field('northlimit', css_class=field_width),
-                        Field('westlimit', css_class=field_width),
-                        Field('southlimit', css_class=field_width),
-                        Field('eastlimit', css_class=field_width)
-                 )
+        # the order in which the model fields are listed for the FieldSet is the order these
+        # fields will be displayed
+        form_field_names = ['projection', 'units', 'northlimit', 'westlimit', 'southlimit',
+                            'eastlimit']
+        crispy_form_fields = get_crispy_form_fields(form_field_names)
+        layout = Layout(*crispy_form_fields)
 
         super(OriginalCoverageFormHelper, self).__init__(allow_edit, res_short_id, element_id, element_name, layout, element_name_label='Spatial Reference', *args, **kwargs)
 
@@ -47,12 +43,6 @@ class OriginalCoverageSpatialForm(forms.Form):
             for field in self.fields.values():
                 field.widget.attrs['readonly'] = True
                 field.widget.attrs['style'] = "background-color:white;"
-        # enabling all element fields for editing
-        # else:
-        #     self.fields['projection'].widget.attrs['readonly'] = True
-        #     self.fields['projection'].widget.attrs['style'] = "background-color:white;"
-        #     self.fields['units'].widget.attrs['readonly'] = True
-        #     self.fields['units'].widget.attrs['style'] = "background-color:white;"
 
     def clean(self):
         # modify the form's cleaned_data dictionary
@@ -99,15 +89,11 @@ class OriginalCoverageSpatialForm(forms.Form):
 class CellInfoFormHelper(BaseFormHelper):
     def __init__(self, allow_edit=True, res_short_id=None, element_id=None, element_name=None,  *args, **kwargs):
 
-        # the order in which the model fields are listed for the FieldSet is the order these fields will be displayed
-        field_width = 'form-control input-sm'
-        layout = Layout(
-                        Field('rows', css_class=field_width),
-                        Field('columns', css_class=field_width),
-                        Field('cellSizeXValue', css_class=field_width),
-                        Field('cellSizeYValue', css_class=field_width),
-                        Field('cellDataType', css_class=field_width),
-                 )
+        # the order in which the model fields are listed for the FieldSet is the
+        # order these fields will be displayed
+        form_field_names = ['rows', 'columns', 'cellSizeXValue', 'cellSizeYValue', 'cellDataType']
+        crispy_form_fields = get_crispy_form_fields(form_field_names)
+        layout = Layout(*crispy_form_fields)
 
         super(CellInfoFormHelper, self).__init__(allow_edit, res_short_id, element_id, element_name, layout, element_name_label='Cell Information', *args, **kwargs)
 
@@ -126,7 +112,7 @@ class CellInfoForm(ModelForm):
         model = CellInformation
         fields = ['rows', 'columns', 'cellSizeXValue', 'cellSizeYValue', 'cellDataType']
         exclude = ['content_object']
-        widgets = { 'rows': forms.TextInput(attrs={'readonly': 'readonly'}),
+        widgets = {'rows': forms.TextInput(attrs={'readonly': 'readonly'}),
                     'columns': forms.TextInput(attrs={'readonly': 'readonly'}),
                     'cellSizeXValue': forms.TextInput(attrs={'readonly': 'readonly'}),
                     'cellSizeYValue': forms.TextInput(attrs={'readonly': 'readonly'}),
@@ -181,18 +167,12 @@ class BandBaseFormHelper(FormHelper):
 class BandInfoFormHelper(BandBaseFormHelper):
     def __init__(self, res_short_id=None, element_id=None, element_name=None,  *args, **kwargs):
 
-        # the order in which the model fields are listed for the FieldSet is the order these fields will be displayed
-        field_width = 'form-control input-sm'
-        layout = Layout(
-                        Field('name', css_class=field_width),
-                        Field('variableName', css_class=field_width),
-                        Field('variableUnit', css_class=field_width),
-                        Field('noDataValue', css_class=field_width),
-                        Field('maximumValue', css_class=field_width),
-                        Field('minimumValue', css_class=field_width),
-                        Field('method', css_class=field_width),
-                        Field('comment', css_class=field_width),
-                 )
+        # the order in which the model fields are listed for the FieldSet is the
+        # order these fields will be displayed
+        form_field_names = ['name', 'variableName', 'variableUnit', 'noDataValue', 'maximumValue',
+                            'minimumValue', 'method', 'comment']
+        crispy_form_fields = get_crispy_form_fields(form_field_names)
+        layout = Layout(*crispy_form_fields)
 
         super(BandInfoFormHelper, self).__init__(res_short_id, element_id, element_name, layout, *args, **kwargs)
 

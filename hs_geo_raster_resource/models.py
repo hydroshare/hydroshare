@@ -8,6 +8,8 @@ from django.core.exceptions import ValidationError
 from mezzanine.pages.models import Page
 from mezzanine.pages.page_processors import processor_for
 
+from dominate.tags import *
+
 from hs_core.models import BaseResource, ResourceManager, resource_processor, CoreMetaData, \
     AbstractMetaDataElement
 
@@ -146,10 +148,50 @@ class CellInformation(AbstractMetaDataElement):
     def remove(cls, element_id):
         raise ValidationError("CellInformation element of a raster resource cannot be removed")
 
+    def add_to_xml(self, container):
+        cellinfo_fields = ['rows', 'columns', 'cellSizeXValue', 'cellSizeYValue',
+                           'cellDataType']
+        self.add_metadata_element_to_xml(container, self, cellinfo_fields)
 
-#
+    def get_html_form(self, resource):
+        from .forms import CellInfoForm
+        cellinfo_form = CellInfoForm(instance=self,
+                                     res_short_id=resource.short_id,
+                                     element_id=self.id if self else None)
+        return cellinfo_form
+
+    def get_html(self, pretty=True):
+        # Using the dominate module to generate the
+        # html to display data for this element (resource view mode)
+        root_div = div(cls="col-xs-12 col-sm-6", style="margin-bottom:40px;")
+
+        def get_th(heading_name):
+            return th(heading_name, cls="text-muted")
+
+        with root_div:
+            legend('Cell Information')
+            with table(cls='custom-table'):
+                with tbody():
+                    with tr():
+                        get_th('Rows')
+                        td(self.rows)
+                    with tr():
+                        get_th('Columns')
+                        td(self.columns)
+                    with tr():
+                        get_th('Cell Size X Value')
+                        td(self.cellSizeXValue)
+                    with tr():
+                        get_th('Cell Size Y Value')
+                        td(self.cellSizeYValue)
+                    with tr():
+                        get_th('Cell Data Type')
+                        td(self.cellDataType)
+
+        return root_div.render(pretty=pretty)
+
+
 # To create a new resource, use these two super-classes.
-#
 class RasterResource(BaseResource):
     objects = ResourceManager("RasterResource")
 
@@ -182,6 +224,7 @@ class RasterResource(BaseResource):
 # is displayed via Mezzanine page processor
 processor_for(RasterResource)(resource_processor)
 
+
 # This mixin should not generate any new migration for this resource type
 class GeoRasterMetaDataMixin(models.Model):
 
@@ -198,17 +241,6 @@ class GeoRasterMetaDataMixin(models.Model):
     @property
     def originalCoverage(self):
         return self._ori_coverage.all().first()
-
-    @classmethod
-    def get_supported_element_names(cls):
-        # get the names of all core metadata elements
-        # this works because the superclass we want is listed first
-        elements = super(cls, cls).get_supported_element_names()
-        # add the name of any additional element to the list
-        elements.append('CellInformation')
-        elements.append('BandInformation')
-        elements.append('OriginalCoverage')
-        return elements
 
     def has_all_required_elements(self):
         # this works because the superclass we want is listed first
@@ -299,6 +331,15 @@ class RasterMetaData(CoreMetaData, GeoRasterMetaDataMixin):
     def resource(self):
         return RasterResource.objects.filter(object_id=self.id).first()
 
+    @classmethod
+    def get_supported_element_names(cls):
+        # get the names of all core metadata elements
+        elements = super(RasterMetaData, cls).get_supported_element_names()
+        # add the name of any additional element to the list
+        elements.append('CellInformation')
+        elements.append('BandInformation')
+        elements.append('OriginalCoverage')
+        return elements
 
 
 import receivers
