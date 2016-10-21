@@ -1,17 +1,18 @@
 from requests import put, delete, get
 from requests.auth import HTTPBasicAuth
 from celery import shared_task
-
-import os
+from django.conf import settings
 from subprocess import check_output
 from StringIO import StringIO
 from zipfile import ZipFile
 from shutil import rmtree
+import os
 
-endpoint = "http://apps.hydroshare.org:8181/geoserver/rest"
-workspace = "hydroshare_resources"
-username = 'admin'
-password = 'hydroshare'
+endpoint = getattr(settings, "GEOSERVER_ENDPOINT", "https://appsdev.hydroshare.org:8443/geoserver/rest")
+workspace = getattr(settings, "GEOSERVER_WORKSPACE", "hydroshare_resources")
+username = getattr(settings, "GEOSERVER_USERNAME", "admin")
+password = getattr(settings, "GEOSERVER_PASSWORD", "geoserver")
+
 preview_res_layer_url_pattern = "{wms_endpoint}?service=WMS&version=1.1.0&request=GetMap&" \
                                 "layers=hydroshare_resources:{layer_name}&styles=&bbox={bbox}&width=420&height=512&" \
                                 "srs=EPSG:{epsg_code}&format=application/openlayers"

@@ -290,6 +290,7 @@ def raster_post_create_resource_trigger(sender, **kwargs):
     if len(resource.files.all()) > 0:
         add_ogc_services.apply_async([resource])
 
+
 @receiver(pre_delete_resource, sender=RasterResource)
 def raster_pre_delete_resource_trigger(sender, **kwargs):
     resource = kwargs['resource']
