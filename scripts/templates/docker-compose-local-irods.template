@@ -55,6 +55,9 @@ hydroshare:
     - redis:redis
     - rabbitmq:rabbitmq
     - solr:solr
+  extra_hosts:
+    - "IRODS_DATA_HOSTNAME:IRODS_DATA_IP"
+    - "IRODS_USER_HOSTNAME:IRODS_USER_IP"
   command: /bin/bash init-hydroshare
 defaultworker:
   build: .
@@ -76,6 +79,9 @@ defaultworker:
     - postgis:postgis
     - redis:redis
     - rabbitmq:rabbitmq
+  extra_hosts:
+    - "IRODS_DATA_HOSTNAME:IRODS_DATA_IP"
+    - "IRODS_USER_HOSTNAME:IRODS_USER_IP"
   command: /bin/bash init-defaultworker
 dockerworker:
   build: .
@@ -97,4 +103,7 @@ dockerworker:
     - postgis:postgis
     - redis:redis
     - rabbitmq:rabbitmq
+  extra_hosts:
+    - "IRODS_DATA_HOSTNAME:IRODS_DATA_IP"
+    - "IRODS_USER_HOSTNAME:IRODS_USER_IP"
   command: /bin/bash init-dockerworker
