@@ -5,6 +5,7 @@ from calendar import monthrange
 from optparse import make_option
 
 from django.core.management.base import BaseCommand
+from django.contrib.auth.models import User
 from django.db.models import Q
 from django.utils import timezone
 
@@ -98,8 +99,7 @@ class Command(BaseCommand):
         )
         user_types = UserProfile.objects.values('user_type').distinct()
         for ut in [_['user_type'] for _ in user_types]:
-            ut_profiles = UserProfile.objects.filter(user_type=ut)
-            ut_users = [p.user for p in ut_profiles]
+            ut_users = User.objects.filter(userprofile__user_type=ut)
             sessions = hs_tracking.Session.objects.filter(
                 Q(begin__gte=start_date) &
                 Q(begin__lte=end_date) &
