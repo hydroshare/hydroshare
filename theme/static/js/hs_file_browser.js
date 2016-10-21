@@ -550,6 +550,14 @@ $(document).ready(function () {
 
                 // Called when all files in the queue finish uploading.
                 this.on("queuecomplete", function () {
+                    $("#hs-file-browser").attr("data-current-path", "data/contents");
+
+                    // Remove further paths from the log
+                    var range = pathLog.length - pathLogIndex;
+                    pathLog.splice(pathLogIndex + 1, range);
+                    pathLog.push("data/contents");
+                    pathLogIndex = pathLog.length - 1;
+
                     refreshFileBrowser();
                     $("#previews").empty();
                 });
