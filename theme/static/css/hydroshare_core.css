@@ -4329,7 +4329,7 @@ div#fb-file-operations-controls {
 }
 
 #flag-uploading {
-    border-bottom: 1px solid #DDD;
+    border-top: 1px solid #DDD;
     padding: 4px;
     background: #f9f9f9;
 }

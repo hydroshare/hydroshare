@@ -543,7 +543,7 @@ $(document).ready(function () {
                 // When a file gets processed
                 this.on("processing", function (file) {
                     if (!$("#flag-uploading").length) {
-                        $("#fbContainmentWrapper").prepend(previewNode);
+                        $("#fb-inner-controls").append(previewNode);
                     }
                     $("#fbContainmentWrapper").toggleClass("glow-blue", false);
                 });
