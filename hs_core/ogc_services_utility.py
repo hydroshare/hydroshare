@@ -17,7 +17,7 @@ preview_res_layer_url_pattern = "{wms_endpoint}?service=WMS&version=1.1.0&reques
                                 "srs=EPSG:{epsg_code}&format=application/openlayers"
 
 
-# @shared_task
+@shared_task
 def add_ogc_services(resource):
     r = None
 
