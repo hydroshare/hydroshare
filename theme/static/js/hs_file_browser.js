@@ -425,11 +425,13 @@ function sort(method, order) {
     }
     else if (method == "type") {
         if (order == "asc") {
+            sort("name", "desc");    // First sort by name
             sorted = $('#fb-files-container li').sort(function (element1, element2) {
                 return $(element2).children('span.fb-file-type').text().localeCompare($(element1).children('span.fb-file-type').text());
             });
         }
         else {
+            sort("name", order);    // First sort by name
             sorted = $('#fb-files-container li').sort(function (element1, element2) {
                 return $(element1).children('span.fb-file-type').text().localeCompare($(element2).children('span.fb-file-type').text());
             });
