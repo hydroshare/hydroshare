@@ -206,4 +206,6 @@ def upload_add(request):
     except SessionException as ex:
         request.session['validation_error'] = ex.stderr
 
+    request.session['resource-mode'] = 'edit'
     return HttpResponseRedirect(request.META['HTTP_REFERER'])
+
