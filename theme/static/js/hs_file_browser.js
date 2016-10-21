@@ -124,22 +124,24 @@ function updateSelectionMenuContext() {
     var menu2 = $("#right-click-container-menu");
 
     // Open
-    menu.children("li[data-menu-name='open']").toggleClass("disabled", flagDisableOpen);
+    menu.children("li[data-menu-name='open']").toggleClass("hidden", flagDisableOpen);
+    $("#open-separator").toggleClass("hidden", flagDisableOpen);
 
     // Download
-    menu.children("li[data-menu-name='download']").toggleClass("disabled", flagDisableDownload);
+    menu.children("li[data-menu-name='download']").toggleClass("hidden", flagDisableDownload);
     $("#fb-download").toggleClass("disabled", flagDisableDownload);
+    $("#zip-separator").toggleClass("hidden", flagDisableDownload);
 
     // Rename
     menu.children("li[data-menu-name='rename']").toggleClass("disabled", flagDisableRename);
     $("#fb-rename").toggleClass("disabled", flagDisableRename);
 
     // Zip
-    menu.children("li[data-menu-name='zip']").toggleClass("disabled", flagDisableZip);
+    menu.children("li[data-menu-name='zip']").toggleClass("hidden", flagDisableZip);
     $("#fb-zip").toggleClass("disabled", flagDisableZip);
 
     // Unzip
-    menu.children("li[data-menu-name='unzip']").toggleClass("disabled", flagDisableUnzip);
+    menu.children("li[data-menu-name='unzip']").toggleClass("hidden", flagDisableUnzip);
     $("#fb-unzip").toggleClass("disabled", flagDisableUnzip);
 
     // Cut
@@ -154,6 +156,7 @@ function updateSelectionMenuContext() {
     // Delete
     $("#fb-delete").toggleClass("disabled", flagDisableDelete);
     menu.children("li[data-menu-name='delete']").toggleClass("disabled", flagDisableDelete);
+    $("#delete-separator").toggleClass("hidden", flagDisableUnzip && flagDisableZip);
 }
 
 function bindFileBrowserItemEvents() {

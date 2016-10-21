@@ -77,7 +77,7 @@
                             <span>Open</span>
                         </li>
 
-                        <li role="separator" class="divider"></li>
+                        <li id="open-separator" role="separator" class="divider"></li>
                         {% endif %}
 
                         {% if page.perms.change and metadata_form %}
@@ -106,7 +106,7 @@
                                 <span>Delete</span>
                             </li>
 
-                            <li role="separator" class="divider"></li>
+                            <li id="delete-separator" role="separator" class="divider"></li>
 
                             {% if cm|resource_type == "Generic" %}
 
@@ -121,7 +121,7 @@
                                     <span>Unzip here</span>
                                 </li>
 
-                                <li role="separator" class="divider"></li>
+                                <li id="zip-separator" role="separator" class="divider"></li>
                             {% endif %}
 
                         {% endif %}
