@@ -31,20 +31,20 @@ class Command(BaseCommand):
 
     option_list = BaseCommand.option_list + (
         make_option(
-            "--monthly-user-counts",
-            dest="monthly-user-counts",
+            "--monthly-users-counts",
+            dest="monthly_users_counts",
             action="store_true",
             help="user stats by month",
         ),
         make_option(
             "--monthly-orgs-counts",
-            dest="monthly-orgs-counts",
+            dest="monthly_orgs_counts",
             action="store_true",
             help="unique organization stats by month",
         ),
         make_option(
             "--user-details",
-            dest="user-details",
+            dest="user_details",
             action="store_true",
             help="current user list",
         ),
@@ -56,7 +56,7 @@ class Command(BaseCommand):
         ),
         make_option(
             "--monthly-users-by-type",
-            dest="monthly-users-by-type",
+            dest="monthly_users_by_type",
             action="store_true",
             help="user type stats by month",
         ),
@@ -80,10 +80,7 @@ class Command(BaseCommand):
                                                     var_name, value))
 
     def monthly_users_counts(self, start_date, end_date):
-        profiles = UserProfile.objects.filter(
-            user__date_joined__lte=end_date,
-            user__is_active=True
-        )
+        profiles = User.objects.filter(date_joined__lte=end_date, is_active=True)
         self.print_var("monthly_users_counts", profiles.count(),
                        (start_date, end_date))
 
@@ -108,7 +105,7 @@ class Command(BaseCommand):
             self.print_var("active_{}".format(ut),
                            sessions.count(), (end_date, start_date))
 
-    def current_users_details(self):
+    def users_details(self):
         w = csv.writer(sys.stdout)
         fields = [
             'first name',
@@ -134,7 +131,7 @@ class Command(BaseCommand):
             ]
             w.writerow([unicode(v).encode("utf-8") for v in values])
 
-    def current_resources_details(self):
+    def resources_details(self):
         w = csv.writer(sys.stdout)
         fields = [
             'title',
@@ -209,21 +206,21 @@ class Command(BaseCommand):
         start_date = timezone.datetime(START_YEAR, 1, 1).date()
         end_date = timezone.datetime.now().replace(hour=0, minute=0, second=0, microsecond=0)
 
-        if options["monthly-user-counts"]:
+        if options["monthly_users_counts"]:
             for month_end in month_year_iter(start_date, end_date):
                 self.monthly_users_counts(start_date, month_end)
-        if options["monthly-orgs-counts"]:
+        if options["monthly_orgs_counts"]:
             for month_end in month_year_iter(start_date, end_date):
                 self.monthly_orgs_counts(start_date, month_end)
-        if options["user-details"]:
-            self.current_users_details()
-        if options["monthly-users-by-type"]:
+        if options["user_details"]:
+            self.user_details()
+        if options["monthly_users_by_type"]:
             for month_end in month_year_iter(start_date, end_date):
                 month_start = timezone.datetime(month_end.year, month_end.month,
                                                 1, 0, 0,
                                                 tzinfo=timezone.pytz.utc)
                 self.monthly_users_by_type(month_start, month_end)
         if options["resource_stats"]:
-            self.current_resources_details()
+            self.resources_details()
         if options["yesterdays_variables"]:
             self.yesterdays_variables()
