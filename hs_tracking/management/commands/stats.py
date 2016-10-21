@@ -74,7 +74,9 @@ class Command(BaseCommand):
         else:
             start, end = period
             print("{}: ({}/{}--{}/{}) {} {}".format(timestamp,
-                start.year, start.month, end.year, end.month, var_name, value))
+                                                    start.year, start.month,
+                                                    end.year, end.month,
+                                                    var_name, value))
 
     def monthly_users_counts(self, start_date, end_date):
         profiles = UserProfile.objects.filter(
@@ -82,7 +84,7 @@ class Command(BaseCommand):
             user__is_active=True
         )
         self.print_var("monthly_users_counts", profiles.count(),
-                        (start_date, end_date))
+                       (start_date, end_date))
 
     def monthly_orgs_counts(self, start_date, end_date):
         profiles = UserProfile.objects.filter(user__date_joined__lte=end_date)
@@ -104,7 +106,7 @@ class Command(BaseCommand):
                 Q(visitor__user__in=ut_users)
             )
             self.print_var("active_{}".format(ut),
-                            sessions.count(), (end_date, start_date))
+                           sessions.count(), (end_date, start_date))
 
     def current_users_details(self):
         w = csv.writer(sys.stdout)
@@ -147,12 +149,15 @@ class Command(BaseCommand):
         resources = BaseResource.objects.all()
         for r in resources:
             f_sizes = [f.resource_file.size
-                        if f.resource_file else 0
-                        for f in r.files.all()]
+                       if f.resource_file else 0
+                       for f in r.files.all()]
             total_file_size = sum(f_sizes)
             try:
-                federated_resource_file_size = sum([int(f.fed_resource_file_size) if f.fed_resource_file_size else 0 for f in r.files.all()])
-            except SessionException, e:
+                f_sizes = [int(f.fed_resource_file_size)
+                           if f.fed_resource_file_size else 0
+                           for f in r.files.all()]
+                federated_resource_file_size = sum()
+            except SessionException:
                 federated_resource_file_size = "SessionException"
             values = [
                 r.metadata.title.value,
@@ -199,7 +204,6 @@ class Command(BaseCommand):
             ]
             w.writerow([unicode(v).encode("utf-8") for v in values])
 
-
     def handle(self, *args, **options):
         START_YEAR = 2016
         start_date = timezone.datetime(START_YEAR, 1, 1).date()
@@ -215,7 +219,9 @@ class Command(BaseCommand):
             self.current_users_details()
         if options["monthly-users-by-type"]:
             for month_end in month_year_iter(start_date, end_date):
-                month_start = timezone.datetime(month_end.year, month_end.month, 1, 0, 0, tzinfo=timezone.pytz.utc)
+                month_start = timezone.datetime(month_end.year, month_end.month,
+                                                1, 0, 0,
+                                                tzinfo=timezone.pytz.utc)
                 self.monthly_users_by_type(month_start, month_end)
         if options["resource_stats"]:
             self.current_resources_details()
