@@ -4043,7 +4043,7 @@ ul#fb-files-container {
     min-height: 100%;
 }
 
-span.fb-file-icon::before {
+.fb-file span.fb-file-icon::before {
     background-color: #FFF;
     border-top-right-radius: 50%;
 }
