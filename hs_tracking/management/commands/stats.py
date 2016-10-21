@@ -5,8 +5,7 @@ from calendar import monthrange
 from optparse import make_option
 
 from django.core.management.base import BaseCommand
-from django.db.models import Q, Sum
-from django.contrib.auth.models import User
+from django.db.models import Q
 from django.utils import timezone
 
 from ... import models as hs_tracking
@@ -16,13 +15,7 @@ from hs_core.models import BaseResource
 from theme.models import UserProfile
 
 
-def date_range(date):
-    first_day = date.replace(day = 1)
-    last_day = date.replace(day = calendar.monthrange(date.year, date.month)[1])
-    return first_day, last_day
-
 def month_year_iter(start, end):
-    #http://stackoverflow.com/questions/5734438/how-to-create-a-month-iterator
     ym_start = 12 * start.year + start.month - 1
     ym_end = 12 * end.year + end.month - 1
     for ym in range(ym_start, ym_end):
@@ -31,45 +24,46 @@ def month_year_iter(start, end):
         d = monthrange(y, m)[1]
         yield timezone.datetime(y, m, d, tzinfo=timezone.pytz.utc)
 
+
 class Command(BaseCommand):
     help = "Output engagement stats about HydroShare"
 
     option_list = BaseCommand.option_list + (
         make_option(
-            "--user-stats",
-            dest = "user_stats",
+            "--monthly-user-counts",
+            dest="monthly-user-counts",
             action="store_true",
-            help = "current user list",
+            help="user stats by month",
+        ),
+        make_option(
+            "--monthly-orgs-counts",
+            dest="monthly-orgs-counts",
+            action="store_true",
+            help="unique organization stats by month",
+        ),
+        make_option(
+            "--user-details",
+            dest="user-details",
+            action="store_true",
+            help="current user list",
         ),
         make_option(
             "--resource-stats",
-            dest = "resource_stats",
+            dest="resource_stats",
             action="store_true",
-            help = "current resource list with sizes",
+            help="current resource list with sizes",
         ),
         make_option(
-            "--running-users",
-            dest = "running_users",
+            "--monthly-users-by-type",
+            dest="monthly-users-by-type",
             action="store_true",
-            help = "user stats by month",
-        ),
-        make_option(
-            "--running-users-by-type",
-            dest = "running_users_by_type",
-            action="store_true",
-            help = "user type stats by month",
-        ),
-        make_option(
-            "--running-orgs",
-            dest = "running_orgs",
-            action="store_true",
-            help = "unique organization stats by month",
+            help="user type stats by month",
         ),
         make_option(
             "--yesterdays-variables",
-            dest = "yesterdays_variables",
+            dest="yesterdays_variables",
             action="store_true",
-            help = "dump tracking variables collected today",
+            help="dump tracking variables collected today",
         ),
     )
 
@@ -79,30 +73,38 @@ class Command(BaseCommand):
             print("{}: {} {}".format(timestamp, var_name, value))
         else:
             start, end = period
-            print("{}: ({}/{}--{}/{}) {} {}".format(timestamp, start.year, start.month, end.year, end.month, var_name, value))
+            print("{}: ({}/{}--{}/{}) {} {}".format(timestamp,
+                start.year, start.month, end.year, end.month, var_name, value))
 
-    def users_count(self, start_date, end_date):
+    def monthly_users_counts(self, start_date, end_date):
         profiles = UserProfile.objects.filter(
             user__date_joined__lte=end_date,
             user__is_active=True
         )
-        self.print_var("all_users", profiles.count(), (start_date, end_date))
+        self.print_var("monthly_users_counts", profiles.count(),
+                        (start_date, end_date))
 
-    def orgs_count(self, start_date, end_date):
+    def monthly_orgs_counts(self, start_date, end_date):
         profiles = UserProfile.objects.filter(user__date_joined__lte=end_date)
-        self.print_var("all_orgs", profiles.values('organization').distinct().count(), (start_date, end_date))
+        org_count = profiles.values('organization').distinct().count()
+        self.print_var("monthly_orgs_counts", org_count, (start_date, end_date))
 
-    def active_users_by_type_report(self, start_date, end_date):
-        #Active user type,Number of active users, Number of resources created, Number of resources downloaded, Number of logons
+    def monthly_users_by_type(self, start_date, end_date):
         date_filtered = UserProfile.objects.filter(
             user__date_joined__lte=end_date,
             user__is_active=True
         )
-        for ut in [_['user_type'] for _ in UserProfile.objects.values('user_type').distinct()]:
+        user_types = UserProfile.objects.values('user_type').distinct()
+        for ut in [_['user_type'] for _ in user_types]:
             ut_profiles = UserProfile.objects.filter(user_type=ut)
             ut_users = [p.user for p in ut_profiles]
-            sessions = hs_tracking.Session.objects.filter(Q(begin__gte=start_date) & Q(begin__lte=end_date) & Q(visitor__user__in=ut_users))
-            self.print_var("active_{}".format(ut), sessions.count(), (end_date, start_date))
+            sessions = hs_tracking.Session.objects.filter(
+                Q(begin__gte=start_date) &
+                Q(begin__lte=end_date) &
+                Q(visitor__user__in=ut_users)
+            )
+            self.print_var("active_{}".format(ut),
+                            sessions.count(), (end_date, start_date))
 
     def current_users_details(self):
         w = csv.writer(sys.stdout)
@@ -144,15 +146,20 @@ class Command(BaseCommand):
 
         resources = BaseResource.objects.all()
         for r in resources:
-            total_file_size = sum([f.resource_file.size if f.resource_file else 0 for f in r.files.all()])
-            federated_resource_file_size = sum([int(f.fed_resource_file_size) if f.fed_resource_file_size else 0 for f in r.files.all()])
-
+            f_sizes = [f.resource_file.size
+                        if f.resource_file else 0
+                        for f in r.files.all()]
+            total_file_size = sum(f_sizes)
+            try:
+                federated_resource_file_size = sum([int(f.fed_resource_file_size) if f.fed_resource_file_size else 0 for f in r.files.all()])
+            except SessionException, e:
+                federated_resource_file_size = "SessionException"
             values = [
                 r.metadata.title.value,
                 r.resource_type,
                 total_file_size,
                 federated_resource_file_size,
-                r.metadata.dates.get(type='created').start_date.strftime('%m/%d/%Y'),
+                r.metadata.dates.get(type="created").start_date.strftime("%m/%d/%Y"),
                 r.raccess.sharing_status,
             ]
             w.writerow([unicode(v).encode("utf-8") for v in values])
@@ -194,21 +201,22 @@ class Command(BaseCommand):
 
 
     def handle(self, *args, **options):
-        start_date = timezone.datetime(2016, 1, 1).date()
+        START_YEAR = 2016
+        start_date = timezone.datetime(START_YEAR, 1, 1).date()
         end_date = timezone.datetime.now().replace(hour=0, minute=0, second=0, microsecond=0)
 
-        if options["running_users_by_type"]:
+        if options["monthly-user-counts"]:
+            for month_end in month_year_iter(start_date, end_date):
+                self.monthly_users_counts(start_date, month_end)
+        if options["monthly-orgs-counts"]:
+            for month_end in month_year_iter(start_date, end_date):
+                self.monthly_orgs_counts(start_date, month_end)
+        if options["user-details"]:
+            self.current_users_details()
+        if options["monthly-users-by-type"]:
             for month_end in month_year_iter(start_date, end_date):
                 month_start = timezone.datetime(month_end.year, month_end.month, 1, 0, 0, tzinfo=timezone.pytz.utc)
-                self.active_users_by_type_report(month_start, month_end)
-        if options["running_orgs"]:
-            for month_end in month_year_iter(start_date, end_date):
-                self.orgs_count(start_date, month_end)
-        if options["running_users"]:
-            for month_end in month_year_iter(start_date, end_date):
-                self.users_count(start_date, month_end)
-        if options["user_stats"]:
-            self.current_users_details()
+                self.monthly_users_by_type(month_start, month_end)
         if options["resource_stats"]:
             self.current_resources_details()
         if options["yesterdays_variables"]:
