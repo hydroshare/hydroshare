@@ -7,6 +7,7 @@ from hs_core import page_processors
 from hs_core.views import add_generic_context
 from hs_geographic_feature_resource.forms import OriginalCoverageForm, GeometryInformationForm
 from models import GeographicFeatureResource
+from hs_core.ogc_services_utility import preview_res_layer_url_pattern
 
 @processor_for(GeographicFeatureResource)
 # when the resource is created this page will be shown
@@ -58,9 +59,24 @@ def landing_page(request, page):
             field_info_list_context.append(field_info_dict_item)
         context['field_information'] = field_info_list_context
 
+        if content_model.metadata.ogcWebServices.first():
+            pending_text = 'Pending...'
+            md_obj = content_model.metadata.ogcWebServices.first()
+            if md_obj.wmsEndpoint != pending_text:
+                if md_obj.layerName != pending_text:
+                    bbox = content_model.metadata.coverages.first().value
+                    url = preview_res_layer_url_pattern.format(wms_endpoint=md_obj.wmsEndpoint,
+                                                               layer_name=md_obj.layerName,
+                                                               bbox='%s,%s,%s,%s' % (bbox['westlimit'],
+                                                                                     bbox['southlimit'],
+                                                                                     bbox['eastlimit'],
+                                                                                     bbox['northlimit']),
+                                                               epsg_code='4326'
+                                                               )
+                    context['previewLayerURL'] = url
         context['ogcWebServices'] = content_model.metadata.ogcWebServices.first()
 
-    else: # editing mode
+    else:  # editing mode
         geom_info_for_view = {}
         geom_info = content_model.metadata.geometryinformation.all().first()
         if geom_info:

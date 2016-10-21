@@ -6,14 +6,18 @@ import os
 from subprocess import check_output
 from StringIO import StringIO
 from zipfile import ZipFile
+from shutil import rmtree
 
 endpoint = "http://apps.hydroshare.org:8181/geoserver/rest"
 workspace = "hydroshare_resources"
 username = 'admin'
 password = 'hydroshare'
+preview_res_layer_url_pattern = "{wms_endpoint}?service=WMS&version=1.1.0&request=GetMap&" \
+                                "layers=hydroshare_resources:{layer_name}&styles=&bbox={bbox}&width=420&height=512&" \
+                                "srs=EPSG:{epsg_code}&format=application/openlayers"
 
 
-@shared_task
+# @shared_task
 def add_ogc_services(resource):
     r = None
 
@@ -51,25 +55,62 @@ def create_coverage_layer(resource):
         'results': {}
     }
     res_id = resource.short_id
-    files = resource.files.all()
-    coverage_type = None
-    coverage_file = None
-    content_type = None
+    res_files = resource.files.all()
+    pyramid_dir_path = None
+    tif_path = None
+    data = None
+    files = None
+    epsg_code = None
+    flag_check_crs = True
+    num_files = 0
+    tif_paths = []
 
-    for f in files:
+    for f in res_files:
+        num_files += 1
+
         if f.resource_file.name.endswith('.tif'):
-            coverage_file = f.resource_file.file.name
-            coverage_type = 'geotiff'
-            content_type = 'image/geotiff'
-            break
+            tif_path = f.resource_file.file.name
+            tif_paths.append(tif_path)
+            if flag_check_crs:
+                flag_check_crs = False
+                r = check_crs('RasterResource', tif_path)
 
-    r = check_crs('RasterResource', coverage_file)
-    if r['success']:
-        if r['crsWasChanged']:
-            code = r['code']
-            os.system('gdal_edit.py -a_srs {0} {1}'.format(code, coverage_file))
+                if r['success']:
 
-    data = open(coverage_file, 'rb')
+                    if r['crsWasChanged']:
+                        epsg_code = r['code']
+
+            if epsg_code:
+                os.system('gdal_edit.py -a_srs {0} {1}'.format(epsg_code, tif_path))
+
+    if num_files > 2:
+        pyramid_dir_path = '/tmp/%s/' % res_id
+        os.mkdir(pyramid_dir_path)
+        gdal_retile = 'gdal_retile.py -levels 9 -ps 2048 2048 -co "TILED=YES" -targetDir %s %s'
+        os.system(gdal_retile % (pyramid_dir_path, ' '.join(tif_paths)))
+        parent_folder = os.path.dirname(pyramid_dir_path)
+        contents = os.walk(pyramid_dir_path)
+        zip_file_in_memory = StringIO()
+
+        with ZipFile(zip_file_in_memory, 'w') as zfile:
+            for root, folders, files in contents:
+                for folder_name in folders:
+                    absolute_path = os.path.join(root, folder_name)
+                    relative_path = absolute_path.replace(parent_folder + '/', '')
+                    zfile.write(absolute_path, relative_path)
+                for file_name in files:
+                    absolute_path = os.path.join(root, file_name)
+                    relative_path = absolute_path.replace(parent_folder + '/', '')
+                    zfile.write(absolute_path, relative_path)
+
+        content_type = 'application/zip'
+        coverage_type = 'imagepyramid'
+        files = {'file': zip_file_in_memory.getvalue()}
+
+    else:
+        coverage_type = 'geotiff'
+        content_type = 'image/geotiff'
+        data = open(tif_path, 'rb')
 
     url = '{0}/workspaces/{1}/coveragestores/{2}/file.{3}'.format(endpoint, workspace, res_id,
                                                                   coverage_type)
@@ -82,7 +123,7 @@ def create_coverage_layer(resource):
     }
 
     r = put(url=url,
-            files=None,
+            files=files,
             data=data,
             headers=headers,
             params=params,
@@ -97,6 +138,9 @@ def create_coverage_layer(resource):
             'layerName': res_id
         }
 
+    if pyramid_dir_path and os.path.exists(pyramid_dir_path):
+        rmtree(pyramid_dir_path, True)
+
     return return_obj
 
 
@@ -107,7 +151,6 @@ def create_feature_layer(resource):
     }
     res_id = resource.short_id
     files = resource.files.all()
-    content_type = 'application/zip'
     shp_files = {
         '.shp': 'filepath',
         '.dbf': 'filepath',
@@ -138,7 +181,7 @@ def create_feature_layer(resource):
     url = '{0}/workspaces/{1}/datastores/{2}/file.shp'.format(endpoint, workspace, res_id)
     files = {'file': zip_file_in_memory.getvalue()}
     headers = {
-        "Content-type": content_type
+        "Content-type": 'application/zip'
     }
     params = {
         'update': 'overwrite'
@@ -173,70 +216,96 @@ def update_resource_ogc_metadata(resource, metadata):
 def check_crs(res_type, fpath):
     return_obj = {
         'success': False,
-        'message': None,
         'code': None,
         'crsWasChanged': False,
         'new_wkt': None
     }
+    crs = get_crs_from_resource(res_type, fpath)
+    code = get_epsg_code_from_wkt(crs)
 
+    if res_type == 'RasterResource':
+        if code not in crs:
+            return_obj['crsWasChanged'] = True
+            return_obj['code'] = 'EPSG:' + code
+    else:
+        if code not in crs:
+            return_obj['crsWasChanged'] = True
+            wkt = get_wkt_from_epsg_code(code)
+            return_obj['new_wkt'] = wkt
+
+    return_obj['success'] = True
+
+    return return_obj
+
+
+def get_crs_from_resource(res_type, fpath):
+    crs = None
     if res_type == 'RasterResource':
         gdal_info = check_output('gdalinfo %s' % fpath, shell=True)
         start = 'Coordinate System is:'
         length = len(start)
         end = 'Origin ='
-        if gdal_info.find(start) == -1:
-            return_obj['message'] = 'There is no projection information associated with this resource.' \
-                                    '\nResource cannot be added to the map project.'
-            return return_obj
-        start_index = gdal_info.find(start) + length
-        end_index = gdal_info.find(end)
-        crs_raw = gdal_info[start_index:end_index]
-        crs = ''.join(crs_raw.split())
+        if gdal_info.find(start) != -1:
+            start_index = gdal_info.find(start) + length
+            end_index = gdal_info.find(end)
+            crs_raw = gdal_info[start_index:end_index]
+            crs = ''.join(crs_raw.split())
     else:
         with open(fpath) as f:
             crs = f.read()
 
+    return crs
+
+
+def get_epsg_code_from_wkt(wkt):
+    code = None
     url = 'http://prj2epsg.org/search.json'
     params = {
         'mode': 'wkt',
-        'terms': crs
+        'terms': wkt
     }
     crs_is_unknown = True
     try:
         while crs_is_unknown:
             r = get(url, params=params)
+
             if '50' in str(r.status_code):
                 raise Exception
             elif r.status_code == 200:
                 response = r.json()
+
                 if 'errors' in response:
                     errs = response['errors']
+
                     if 'Invalid WKT syntax' in errs:
                         err = errs.split(':')[2]
+
                         if err and 'Parameter' in err:
                             crs_param = err.split('"')[1]
-                            rm_indx_start = crs.find(crs_param)
+                            rm_indx_start = wkt.find(crs_param)
                             rm_indx_end = None
-                            sub_str = crs[rm_indx_start:]
+                            sub_str = wkt[rm_indx_start:]
                             counter = 0
                             check = False
                             for i, c in enumerate(sub_str):
+
                                 if c == '[':
                                     counter += 1
                                     check = True
                                 elif c == ']':
                                     counter -= 1
                                     check = True
+
                                 if check:
                                     if counter == 0:
                                         rm_indx_end = i + rm_indx_start + 1
                                         break
-                            crs = crs[:rm_indx_start] + crs[rm_indx_end:]
-                            if ',' in crs[:-4]:
-                                i = crs.rfind(',')
-                                crs = crs[:i] + crs[i+1:]
-                            params['terms'] = crs
-                            return_obj['crsWasChanged'] = True
+                            wkt = wkt[:rm_indx_start] + wkt[rm_indx_end:]
+
+                            if ',' in wkt[:-4]:
+                                i = wkt.rfind(',')
+                                wkt = wkt[:i] + wkt[i + 1:]
+                            params['terms'] = wkt
                         else:
                             break
                     else:
@@ -244,26 +313,26 @@ def check_crs(res_type, fpath):
                 else:
                     crs_is_unknown = False
                     code = response['codes'][0]['code']
-                    if res_type == 'RasterResource':
-                        if code not in crs:
-                            return_obj['crsWasChanged'] = True
-                            return_obj['code'] = 'EPSG:' + code
-                    else:
-                        if code not in crs:
-                            return_obj['crsWasChanged'] = True
-                            r = get(response['codes'][0]['url'])
-                            proj_json = r.json()
-                            raw_wkt = proj_json['wkt']
-                            tmp_list = []
-                            for seg in raw_wkt.split('\n'):
-                                tmp_list.append(seg.strip())
-                            return_obj['new_wkt'] = ''.join(tmp_list)
-
-                    return_obj['success'] = True
             else:
                 params['mode'] = 'keywords'
                 continue
     except Exception as e:
-        return_obj['message'] = str(e)
+        str(e)
+        code = None
 
-    return return_obj
+    return code
+
+
+def get_wkt_from_epsg_code(code):
+    url = 'http://prj2epsg.org/epsg/%s.json' % code
+    r = get(url)
+    proj_json = r.json()
+    raw_wkt = proj_json['wkt']
+    tmp_list = []
+
+    for seg in raw_wkt.split('\n'):
+        tmp_list.append(seg.strip())
+
+    wkt = ''.join(tmp_list)
+
+    return wkt

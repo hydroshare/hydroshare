@@ -403,7 +403,7 @@ def geofeature_pre_delete_file_from_resource(sender, **kwargs):
             res_obj.metadata.originalcoverage.all().delete()
             res_obj.metadata.coverages.all().delete()
 
-            md_id = res_obj.metadata.ogcWebServices.id
+            md_id = res_obj.metadata.ogcWebServices.first().id
             ogc_metadata = {
                 'wmsEndpoint': None,
                 'wfsEndpoint': None,
@@ -581,7 +581,7 @@ def geofeature_post_add_files_to_resource_handler(sender, **kwargs):
     validate_files_dict = kwargs['validate_files']
 
     add_ogc_services.apply_async([resource])
-    md_id = resource.metadata.ogcWebServices.id
+    md_id = resource.metadata.ogcWebServices.first().id
     ogc_metadata = {
         'wmsEndpoint': "Pending...",
         'wfsEndpoint': "Pending...",

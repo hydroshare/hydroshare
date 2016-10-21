@@ -24,16 +24,25 @@
                                 <tbody>
                                 {% if ogcWebServices.wmsEndpoint %}
                                     <tr><th class="text-muted">WMS Endpoint</th><td>{{ ogcWebServices.wmsEndpoint }}</td></tr>
+                                    {% if ogcWebServices.wmsEndpoint != 'Pending...' %}
+                                        <tr><th></th><td class="text-muted">Learn to use the WMS endpoint <a target="_blank" href="http://docs.geoserver.org/latest/en/user/services/wms/reference.html">here</a>.</td></tr>
+                                    {% endif %}
                                 {% endif %}
 
                                 {% if ogcWebServices.wfsEndpoint %}
                                     <tr><th class="text-muted">WFS Endpoint</th><td>{{ ogcWebServices.wfsEndpoint }}</td></tr>
+                                    {% if ogcWebServices.wfsEndpoint != 'Pending...' %}
+                                        <tr><th></th><td class="text-muted">Learn to use the WFS endpoint <a target="_blank" href="http://docs.geoserver.org/latest/en/user/services/wfs/reference.html">here</a>.</td></tr>
+                                    {% endif %}
                                 {% endif %}
 
                                 {% if ogcWebServices.layerName %}
                                     <tr><th class="text-muted">Layer Name</th><td>{{ ogcWebServices.layerName }}</td></tr>
+                                    {% if previewLayerURL %}
+                                        <tr><th></th><td class="text-muted">Preview layer <a target="_blank" href="{{ previewLayerURL }}">here</a>.</td></tr>
+                                    {% endif %}
                                 {% endif %}
-                            </tbody>
+                                </tbody>
                             </table>
 
                         {% else %}
