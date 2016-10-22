@@ -165,4 +165,9 @@ docker run --rm --env-file env-files/rods@${HS_USER_ZONE_HOST}.env \
     mjstealey/docker-irods-icommands:4.1.8 \
     sh -c "ichmod -r -M inherit /"${HS_USER_IRODS_ZONE}"/home"
 
+# configure local_settings.py
+./config-local-settings.sh
+# configure hsctl and docker-compose-local-irods.template
+./config-hsctl-compose.sh
+
 exit 0;
