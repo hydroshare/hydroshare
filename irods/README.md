@@ -12,6 +12,8 @@ Effected files:
 
 From within the `irods` directory, run the script named **use-local-irods.sh**
 
+**NOTE:** This script requires that package `jq` be installed on the host from which the script is being run. If it's not present it can be installed by invoking `sudo apt-get install jq` in Ubuntu (or similar) environments. 
+
 ```bash
 $ cd irods
 $ ./use-local-irods.sh
