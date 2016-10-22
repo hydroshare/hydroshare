@@ -26,7 +26,7 @@ DEV_SSH_COMMAND='runuser -p -u hydro-service -g storage-hydro /usr/sbin/sshd'
 PROD_SERVER='./run-server'
 PROD_SSH_COMMAND='# REMOVED SSH COMPONENT'
 
-USE_LOCAL_IRODS=False
+USE_LOCAL_IRODS=false
 
 display_usage() {
     echo "*** HydroShare Control script ***"
@@ -149,7 +149,7 @@ preflight_hs() {
     echo "  - USE_NGINX     :${USE_NGINX}"
     echo "  - USE_SSL       :${USE_SSL}"
     # Generate docker-compose.yml
-    [[ if $USE_LOCAL_IRODS ]]; then
+    if [[ "$USE_LOCAL_IRODS" = true ]]; then
         cp -rf ${HS_PATH}/scripts/templates/docker-compose-local-irods.template ${HS_PATH}/docker-compose.yml
     else
         cp -rf ${HS_PATH}/scripts/templates/docker-compose.template ${HS_PATH}/docker-compose.yml
