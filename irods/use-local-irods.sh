@@ -105,7 +105,7 @@ docker exec ${HS_USER_ZONE_HOST} sh -c "cat /etc/irods/server_config.json | jq '
 echo "[rods@${IRODS_HOST}]$ iadmin mkresc ${IRODS_DEFAULT_RESOURCE} unixfilesystem ${IRODS_HOST}:/var/lib/irods/iRODS/Vault"
 docker run --rm --env-file env-files/rods@${IRODS_HOST}.env \
     mjstealey/docker-irods-icommands:4.1.8 \
-    sh -c 'iadmin mkresc '${IRODS_DEFAULT_RESOURCE}' unixfilesystem '${IRODS_HOST}':${IRODS_VAULT_DIRECTORY}'
+    sh -c "iadmin mkresc ${IRODS_DEFAULT_RESOURCE} unixfilesystem ${IRODS_HOST}:/var/lib/irods/iRODS/Vault"
 
 # make user ${IRODS_USERNAME} in ${IRODS_ZONE}
 echo "[rods@${IRODS_HOST}]$ iadmin mkuser ${IRODS_USERNAME} rodsuser"
@@ -128,10 +128,10 @@ docker run --rm --env-file env-files/rods@${HS_USER_ZONE_HOST}.env \
     sh -c "iadmin mkuser ${HS_USER_ZONE_PROXY_USER} rodsadmin && iadmin moduser ${HS_USER_ZONE_PROXY_USER} password ${HS_USER_ZONE_PROXY_USER_PWD}"
 
 # make resource ${HS_IRODS_LOCAL_ZONE_DEF_RES} in ${HS_USER_ZONE_HOST}
-echo "[rods@${HS_USER_ZONE_HOST}]$ iadmin mkresc ${HS_IRODS_LOCAL_ZONE_DEF_RES} unixfilesystem ${HS_WWW_IRODS_HOST}:/var/lib/irods/iRODS/Vault"
+echo "[rods@${HS_USER_ZONE_HOST}]$ iadmin mkresc ${HS_IRODS_LOCAL_ZONE_DEF_RES} unixfilesystem ${HS_USER_ZONE_HOST}:/var/lib/irods/iRODS/Vault"
 docker run --rm --env-file env-files/rods@${HS_USER_ZONE_HOST}.env \
     mjstealey/docker-irods-icommands:4.1.8 \
-    sh -c 'iadmin mkresc '${HS_IRODS_LOCAL_ZONE_DEF_RES}' unixfilesystem '${HS_USER_ZONE_HOST}':${IRODS_VAULT_DIRECTORY}'
+    sh -c "iadmin mkresc ${HS_IRODS_LOCAL_ZONE_DEF_RES} unixfilesystem ${HS_USER_ZONE_HOST}:/var/lib/irods/iRODS/Vault"
 
 # iint the ${HS_USER_ZONE_PROXY_USER} in ${HS_USER_ZONE_HOST}
 echo "[${HS_USER_ZONE_PROXY_USER}@${HS_USER_ZONE_HOST}]$ iinit"
