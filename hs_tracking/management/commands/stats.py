@@ -43,14 +43,14 @@ class Command(BaseCommand):
             help="unique organization stats by month",
         ),
         make_option(
-            "--user-details",
-            dest="user_details",
+            "--users-details",
+            dest="users_details",
             action="store_true",
             help="current user list",
         ),
         make_option(
-            "--resource-stats",
-            dest="resource_stats",
+            "--resources-details",
+            dest="resources_details",
             action="store_true",
             help="current resource list with sizes",
         ),
@@ -204,7 +204,10 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         START_YEAR = 2016
         start_date = timezone.datetime(START_YEAR, 1, 1).date()
-        end_date = timezone.datetime.now().replace(hour=0, minute=0, second=0, microsecond=0)
+        end_date = timezone.datetime.now().replace(hour=0,
+                                                   minute=0,
+                                                   second=0,
+                                                   microsecond=0)
 
         if options["monthly_users_counts"]:
             for month_end in month_year_iter(start_date, end_date):
@@ -212,15 +215,13 @@ class Command(BaseCommand):
         if options["monthly_orgs_counts"]:
             for month_end in month_year_iter(start_date, end_date):
                 self.monthly_orgs_counts(start_date, month_end)
-        if options["user_details"]:
-            self.user_details()
+        if options["users_details"]:
+            self.users_details()
         if options["monthly_users_by_type"]:
             for month_end in month_year_iter(start_date, end_date):
-                month_start = timezone.datetime(month_end.year, month_end.month,
-                                                1, 0, 0,
-                                                tzinfo=timezone.pytz.utc)
+                month_start = month_end.replace(day=1)
                 self.monthly_users_by_type(month_start, month_end)
-        if options["resource_stats"]:
+        if options["resources_details"]:
             self.resources_details()
         if options["yesterdays_variables"]:
             self.yesterdays_variables()
