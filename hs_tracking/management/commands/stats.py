@@ -89,10 +89,6 @@ class Command(BaseCommand):
         self.print_var("monthly_orgs_counts", org_count, (start_date, end_date))
 
     def monthly_users_by_type(self, start_date, end_date):
-        date_filtered = UserProfile.objects.filter(
-            user__date_joined__lte=end_date,
-            user__is_active=True
-        )
         user_types = UserProfile.objects.values('user_type').distinct()
         for ut in [_['user_type'] for _ in user_types]:
             ut_users = User.objects.filter(userprofile__user_type=ut)
