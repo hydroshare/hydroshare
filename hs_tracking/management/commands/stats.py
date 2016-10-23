@@ -1,19 +1,18 @@
 import csv
-import sys
 import datetime
+import sys
 from calendar import monthrange
 from optparse import make_option
 
-from django.core.management.base import BaseCommand
 from django.contrib.auth.models import User
+from django.core.management.base import BaseCommand
 from django.db.models import Q
 from django.utils import timezone
-
-from ... import models as hs_tracking
-
 from django_irods.icommands import SessionException
 from hs_core.models import BaseResource
 from theme.models import UserProfile
+
+from ... import models as hs_tracking
 
 
 def month_year_iter(start, end):
