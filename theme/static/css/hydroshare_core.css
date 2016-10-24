@@ -4168,10 +4168,6 @@ span.fb-control-square {
 	margin-right: 15px;
 }
 
-.ui-widget-content {
-	border: 0 !important;
-}
-
 .selection-menu .fa {
 	font-size: 18px;
 	margin-right: 10px;
@@ -4321,6 +4317,7 @@ div#fb-file-operations-controls {
 
 #fbContainmentWrapper {
 	resize: vertical;
+	border: 0;
 }
 .fb-loading-spinner {
 	list-style: none;
