@@ -50,7 +50,7 @@ def script_metadata_pre_create_handler(sender, **kwargs):
     if element_form.is_valid():
         return {'is_valid': True, 'element_data_dict': element_form.cleaned_data}
     else:
-        return {'is_valid': False, 'element_data_dict': None}
+        return {'is_valid': False, 'element_data_dict': None, "errors": element_form.errors}
 
 
 @receiver(pre_metadata_element_update, sender=ScriptResource)
@@ -69,5 +69,5 @@ def script_metadata_pre_update_handler(sender, **kwargs):
             cleaned_form['scriptCodeRepository'] = 'http://' + cleaned_form['scriptCodeRepository']
         return {'is_valid': True, 'element_data_dict': cleaned_form}
     else:
-        return {'is_valid': False, 'element_data_dict': None}
+        return {'is_valid': False, 'element_data_dict': None, "errors": element_form.errors}
 

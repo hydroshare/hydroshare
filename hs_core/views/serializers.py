@@ -18,6 +18,7 @@ class StringListField(serializers.ListField):
 class ResourceUpdateRequestValidator(serializers.Serializer):
     title = serializers.CharField(required=False)
     metadata = serializers.CharField(validators=[validate_json], required=False)
+    extra_metadata = serializers.CharField(validators=[validate_json], required=False)
     edit_users = serializers.CharField(required=False)
     edit_groups = serializers.CharField(required=False)
     view_users = serializers.CharField(required=False)
@@ -95,6 +96,7 @@ class ResourceListItemSerializer(serializers.Serializer):
     published = serializers.BooleanField()
     bag_url = serializers.URLField()
     science_metadata_url = serializers.URLField()
+    resource_map_url = serializers.URLField()
     resource_url = serializers.URLField()
 
 
@@ -123,6 +125,7 @@ ResourceListItem = namedtuple('ResourceListItem',
                                'date_last_updated',
                                'bag_url',
                                'science_metadata_url',
+                               'resource_map_url',
                                'resource_url'])
 
 ResourceFileItem = namedtuple('ResourceFileItem',

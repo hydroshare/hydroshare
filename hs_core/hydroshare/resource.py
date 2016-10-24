@@ -349,7 +349,7 @@ def add_zip_file_contents_to_resource_async(resource, f):
 def create_resource(
         resource_type, owner, title,
         edit_users=None, view_users=None, edit_groups=None, view_groups=None,
-        keywords=(), metadata=None,
+        keywords=(), metadata=None, extra_metadata=None,
         files=(), fed_res_file_names='', fed_res_path='', fed_copy_or_move=None,
         create_metadata=True,
         create_bag=True, unpack_file=False, **kwargs):
@@ -394,6 +394,7 @@ def create_resource(
     :param view_groups: list of group names or Group instances who will be given view permissions
     :param keywords: string list. list of keywords to add to the resource
     :param metadata: list of dicts containing keys (element names) and corresponding values as dicts { 'creator': {'name':'John Smith'}}.
+    :param extra_metadata: one dict containing keys and corresponding values { 'Outlet Point Latitude': '40', 'Outlet Point Longitude': '-110'}.
     :param files: list of Django File or UploadedFile objects to be attached to the resource
     :param fed_res_file_names: the file names separated by comma from a federated zone to be
                                used to create the resource in the federated zone, default is empty string
@@ -431,6 +432,10 @@ def create_resource(
 
         if not metadata:
             metadata = []
+
+        if extra_metadata is not None:
+            resource.extra_metadata = extra_metadata
+            resource.save()
 
         fed_zone_home_path = ''
         if fed_res_path:

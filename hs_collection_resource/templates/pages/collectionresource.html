@@ -114,7 +114,7 @@
                     <input type="button" id="view_deleted_res_btn" class="btn btn-default" value="View deleted contents"
                            onclick=" $('#deleted-resources-modal').modal('show');">
             <span data-toggle="tooltip" data-placement="auto"
-                  title='Some resources in this collection have been deleted which may result in broken resource links in the bag. {% if edit_mode %} You need to remove deleted resources from the collection to fix that.{% endif %}'
+                  title='Some resources in this collection have been deleted which may result in broken resource links in the bag. {% if page.perms.change %} You need to clear deleted resources to fix that.{% endif %}'
                   class="glyphicon glyphicon-info-sign text-muted"></span>
                 </div>
             {% endif %}
@@ -310,8 +310,8 @@
                     <div id="clear-deleted-res-warning" class="collection-div-popup-warning">Clearing deleted resources and updating bag. Please wait...</div>
                 </div>
                 <div class="modal-footer">
-                    {% if edit_mode|lower == "true" %}
-                    <button type="button" class="btn btn-success" id="clear-deleted-res-btn" onclick="clear_deleted_resources_table_ajax('{{collection_res_id}}');">
+                    {% if page.perms.change %}
+                    <button type="button" class="btn btn-success" id="clear-deleted-res-btn" onclick="clear_deleted_resources_table_ajax('{{cm.short_id}}');">
                         Clear and Update Bag
                     </button>
                     {% endif %}
@@ -671,7 +671,11 @@
                 if (json_response.status === 'success') {
                     $('#deleted-resources-table').DataTable().rows().remove().draw(false);
                     $("#clear-deleted-res-warning").hide();
-                    updateCoverageMetadataTabpage(json_response.new_coverage_list, true, false);
+                    var edit_mode = "{{edit_mode}}";
+                    if (edit_mode.toLowerCase() == "true")
+                    {
+                        updateCoverageMetadataTabpage(json_response.new_coverage_list, true, false);
+                    }
                 }
                 $("#clear-deleted-res-btn-cancel").prop("disabled", false);
                 document.body.style.cursor='default';

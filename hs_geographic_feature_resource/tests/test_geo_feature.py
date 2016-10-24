@@ -1,24 +1,24 @@
-
 import os
 from dateutil import parser
 
-from django.test import TestCase, TransactionTestCase
-from django.contrib.contenttypes.models import ContentType
-from django.contrib.auth.models import Group, User
+from django.test import TransactionTestCase
+from django.contrib.auth.models import Group
 from django.core.files.uploadedfile import UploadedFile
-from django.http import HttpRequest, QueryDict
+from django.http import HttpRequest
 
 from hs_core.hydroshare import resource
 from hs_core.models import ResourceFile
 from hs_core import hydroshare
 
 from hs_geographic_feature_resource.models import GeographicFeatureResource, OriginalCoverage, \
-                                                  GeometryInformation, FieldInformation, OriginalFileInfo
+                                                  GeometryInformation, FieldInformation, \
+                                                  OriginalFileInfo
 from hs_geographic_feature_resource.receivers import geofeature_post_add_files_to_resource_handler,\
                                                      metadata_element_pre_create_handler,\
                                                      metadata_element_pre_update_handler,\
                                                      UNKNOWN_STR,\
-                                                     parse_shp_zshp
+                                                     parse_shp_zshp, parse_shp_xml
+
 
 class TestGeoFeature(TransactionTestCase):
 
@@ -61,9 +61,10 @@ class TestGeoFeature(TransactionTestCase):
                                          address=cr_address,
                                          phone=cr_phone,
                                          homepage=cr_homepage,
-                                         profile_links=[{'type': 'researchID', 'url': cr_res_id},
-                                                        {'type': 'researchGateID', 'url': cr_res_gate_id}])
-
+                                         profile_links=[{'type': 'researchID',
+                                                         'url': cr_res_id},
+                                                        {'type': 'researchGateID',
+                                                         'url': cr_res_gate_id}])
 
         # add another creator with only the name
         resource.create_metadata_element(self.resGeoFeature.short_id, 'creator', name='Creator B')
@@ -78,7 +79,8 @@ class TestGeoFeature(TransactionTestCase):
         con_homepage = 'http://usu.edu/homepage/009'
         con_res_id = 'http://research.org/009'
         con_res_gate_id = 'http://research-gate.org/009'
-        resource.create_metadata_element(self.resGeoFeature.short_id,'contributor',
+        resource.create_metadata_element(self.resGeoFeature.short_id,
+                                         'contributor',
                                          name=con_name,
                                          description=con_des,
                                          organization=con_org,
@@ -86,15 +88,21 @@ class TestGeoFeature(TransactionTestCase):
                                          address=con_address,
                                          phone=con_phone,
                                          homepage=con_homepage,
-                                         profile_links=[{'type': 'researchID', 'url': con_res_id},
-                                                        {'type': 'researchGateID', 'url': con_res_gate_id}])
+                                         profile_links=[{'type': 'researchID',
+                                                         'url': con_res_id},
+                                                        {'type': 'researchGateID',
+                                                         'url': con_res_gate_id}])
 
         # add another creator with only the name
-        resource.create_metadata_element(self.resGeoFeature.short_id, 'contributor', name='Contributor B')
+        resource.create_metadata_element(self.resGeoFeature.short_id,
+                                         'contributor', name='Contributor B')
 
         # add a period type coverage
         value_dict = {'name': 'Name for period coverage', 'start': '1/1/2015', 'end': '12/31/2015'}
-        resource.create_metadata_element(self.resGeoFeature.short_id,'coverage', type='period', value=value_dict)
+        resource.create_metadata_element(self.resGeoFeature.short_id,
+                                         'coverage',
+                                         type='period',
+                                         value=value_dict)
 
         # add a point type coverage
         value_dict = {'name': 'Name for box coverage',
@@ -103,11 +111,15 @@ class TestGeoFeature(TransactionTestCase):
 
         value_dict["projection"] = "WGS 84 EPSG:4326"
         value_dict["units"] = "Decimal degrees"
-        resource.create_metadata_element(self.resGeoFeature.short_id,'coverage', type='box', value=value_dict)
+        resource.create_metadata_element(self.resGeoFeature.short_id,
+                                         'coverage', type='box', value=value_dict)
 
         # add date of type 'valid'
-        resource.create_metadata_element(self.resGeoFeature.short_id,'date', type='valid',
-                                         start_date=parser.parse('1/1/2012'), end_date=parser.parse('12/31/2012'))
+        resource.create_metadata_element(self.resGeoFeature.short_id,
+                                         'date',
+                                         type='valid',
+                                         start_date=parser.parse('1/1/2012'),
+                                         end_date=parser.parse('12/31/2012'))
 
         # add a format element
         format = 'shp'
@@ -138,16 +150,19 @@ class TestGeoFeature(TransactionTestCase):
         self.assertEqual(OriginalFileInfo.objects.all().count(), 0)
 
         # create 1 originalfileinfo obj with required para
-        resource.create_metadata_element(self.resGeoFeature.short_id, 'OriginalFileInfo', fileType='SHP',
-                                         fileCount=3, baseFilename="baseFilename")
+        resource.create_metadata_element(self.resGeoFeature.short_id, 'OriginalFileInfo',
+                                         fileType='SHP',
+                                         fileCount=3,
+                                         baseFilename="baseFilename")
         self.assertEqual(OriginalFileInfo.objects.all().count(), 1)
 
         # may not create any more OriginalFileInfo
         with self.assertRaises(Exception):
-            resource.create_metadata_element(self.resGeoFeature.short_id, 'OriginalFileInfo',
-                                                                           fileType= 'ZSHP',
-                                                                           fileCount= 5,
-                                                                           baseFilename= "baseFilename2")
+            resource.create_metadata_element(self.resGeoFeature.short_id,
+                                             'OriginalFileInfo',
+                                             fileType='ZSHP',
+                                             fileCount=5,
+                                             baseFilename="baseFilename2")
 
         self.assertEqual(OriginalFileInfo.objects.all().count(), 1)
         # update existing meta
@@ -172,7 +187,7 @@ class TestGeoFeature(TransactionTestCase):
         # create OriginalCoverage obj without a required para: southlimit
         with self.assertRaises(Exception):
             resource.create_metadata_element(self.resGeoFeature.short_id, 'originalcoverage',
-                                              northlimit='1', eastlimit='2', southlimit='3')
+                                             northlimit='1', eastlimit='2', southlimit='3')
 
         # no OriginalCoverage obj
         self.assertEqual(OriginalCoverage.objects.all().count(), 0)
@@ -186,7 +201,8 @@ class TestGeoFeature(TransactionTestCase):
         # may not create any more OriginalCoverage
         with self.assertRaises(Exception):
             resource.create_metadata_element(self.resGeoFeature.short_id, 'originalcoverage',
-                                             northlimit='1', eastlimit='2', southlimit='3', westlimit='4')
+                                             northlimit='1', eastlimit='2',
+                                             southlimit='3', westlimit='4')
 
         self.assertEqual(OriginalCoverage.objects.all().count(), 1)
         # update existing meta
@@ -247,7 +263,7 @@ class TestGeoFeature(TransactionTestCase):
 
         resource.create_metadata_element(self.resGeoFeature.short_id, 'FieldInformation',
                                          fieldName='fieldName2', fieldType='fieldType2')
-        self.assertEqual (FieldInformation.objects.all().count(), 2)
+        self.assertEqual(FieldInformation.objects.all().count(), 2)
 
         # update existing meta
         field_info_obj_list = FieldInformation.objects.filter(fieldName='fieldName1')
@@ -298,7 +314,8 @@ class TestGeoFeature(TransactionTestCase):
         url_key = "page_redirect_url"
         page_url_dict, res_title, metadata, _ = \
             hydroshare.utils.resource_pre_create_actions(resource_type=resource_type, files=files,
-                                                         resource_title=res_title, page_redirect_url_key=url_key)
+                                                         resource_title=res_title,
+                                                         page_redirect_url_key=url_key)
         self.assertEqual(len(files), 7)
 
         for item_dict in metadata:
@@ -312,38 +329,52 @@ class TestGeoFeature(TransactionTestCase):
                 self.assertEqual(len(item_dict["field_info_array"]), 5)
             elif key == "geometryinformation":
                 self.assertEqual(item_dict["geometryinformation"]["featureCount"], 51)
-                self.assertEqual(item_dict["geometryinformation"]["geometryType"], "MULTIPOLYGON")
+                self.assertEqual(item_dict["geometryinformation"]["geometryType"],
+                                 "MULTIPOLYGON")
             elif key == "originalcoverage":
-                self.assertEqual(item_dict["originalcoverage"]['datum'], 'North_American_Datum_1983')
+                self.assertEqual(item_dict["originalcoverage"]['datum'],
+                                 'North_American_Datum_1983')
                 self.assertEqual(item_dict["originalcoverage"]['eastlimit'], -66.96927125875777)
                 self.assertEqual(item_dict["originalcoverage"]['northlimit'], 71.40623539396698)
                 self.assertEqual(item_dict["originalcoverage"]['southlimit'], 18.92178634508703)
                 self.assertEqual(item_dict["originalcoverage"]['westlimit'], -178.21759836236586)
                 self.assertEqual(item_dict["originalcoverage"]['unit'], 'Degree')
-                self.assertEqual(item_dict["originalcoverage"]['projection_name'], 'GCS_North_American_1983')
+                self.assertEqual(item_dict["originalcoverage"]['projection_name'],
+                                 'GCS_North_American_1983')
 
     def test_geofeature_pre_add_files_to_resource(self):
 
         files = []
         target = 'hs_geographic_feature_resource/tests/gis.osm_adminareas_v06_with_folder.zip'
-        files.append(UploadedFile(file=open(target, 'r'), name='gis.osm_adminareas_v06_with_folder.zip'))
+        files.append(UploadedFile(file=open(target, 'r'),
+                                  name='gis.osm_adminareas_v06_with_folder.zip'))
         hydroshare.utils.resource_file_add_pre_process(self.resGeoFeature, files, self.user,)
 
         self.assertEqual(len(files), 5)
         self.assertNotEqual(self.resGeoFeature.metadata.originalfileinfo.all().first(), None)
-        self.assertEqual(self.resGeoFeature.metadata.originalfileinfo.all().first().baseFilename, "gis.osm_adminareas_v06")
+        self.assertEqual(self.resGeoFeature.metadata.originalfileinfo.all().first().baseFilename,
+                         "gis.osm_adminareas_v06")
         self.assertEqual(self.resGeoFeature.metadata.originalfileinfo.all().first().fileCount, 5)
-        self.assertEqual(self.resGeoFeature.metadata.originalfileinfo.all().first().fileType, "ZSHP")
+        self.assertEqual(self.resGeoFeature.metadata.originalfileinfo.all().first().
+                         fileType, "ZSHP")
         self.assertEqual(self.resGeoFeature.metadata.fieldinformation.all().count(), 7)
-        self.assertEqual(self.resGeoFeature.metadata.geometryinformation.all().first().featureCount, 87)
-        self.assertEqual(self.resGeoFeature.metadata.geometryinformation.all().first().geometryType, "POLYGON")
-        self.assertEqual(self.resGeoFeature.metadata.originalcoverage.all().first().datum, 'WGS_1984')
-        self.assertTrue(abs(self.resGeoFeature.metadata.originalcoverage.all().first().eastlimit - 3.4520493) < self.allowance)
-        self.assertTrue(abs(self.resGeoFeature.metadata.originalcoverage.all().first().northlimit - 45.0466382) < self.allowance)
-        self.assertTrue(abs(self.resGeoFeature.metadata.originalcoverage.all().first().southlimit - 42.5732416) < self.allowance)
-        self.assertTrue(abs(self.resGeoFeature.metadata.originalcoverage.all().first().westlimit - (-0.3263017)) < self.allowance)
+        self.assertEqual(self.resGeoFeature.metadata.geometryinformation.all().
+                         first().featureCount, 87)
+        self.assertEqual(self.resGeoFeature.metadata.geometryinformation.all().
+                         first().geometryType, "POLYGON")
+        self.assertEqual(self.resGeoFeature.metadata.originalcoverage.all().first().datum,
+                         'WGS_1984')
+        self.assertTrue(abs(self.resGeoFeature.metadata.originalcoverage.
+                            all().first().eastlimit - 3.4520493) < self.allowance)
+        self.assertTrue(abs(self.resGeoFeature.metadata.originalcoverage.
+                            all().first().northlimit - 45.0466382) < self.allowance)
+        self.assertTrue(abs(self.resGeoFeature.metadata.originalcoverage.
+                            all().first().southlimit - 42.5732416) < self.allowance)
+        self.assertTrue(abs(self.resGeoFeature.metadata.originalcoverage.
+                            all().first().westlimit - (-0.3263017)) < self.allowance)
         self.assertEqual(self.resGeoFeature.metadata.originalcoverage.all().first().unit, 'Degree')
-        self.assertEqual(self.resGeoFeature.metadata.originalcoverage.all().first().projection_name, 'GCS_WGS_1984')
+        self.assertEqual(self.resGeoFeature.metadata.originalcoverage.all().
+                         first().projection_name, 'GCS_WGS_1984')
 
     def test_geofeature_pre_delete_file(self):
         # Example
@@ -359,7 +390,8 @@ class TestGeoFeature(TransactionTestCase):
         # add files first
         files = []
         target = 'hs_geographic_feature_resource/tests/gis.osm_adminareas_v06_with_folder.zip'
-        files.append(UploadedFile(file=open(target, 'r'), name='gis.osm_adminareas_v06_with_folder.zip'))
+        files.append(UploadedFile(file=open(target, 'r'),
+                                  name='gis.osm_adminareas_v06_with_folder.zip'))
         hydroshare.utils.resource_file_add_pre_process(self.resGeoFeature, files, self.user,)
 
         hydroshare.add_resource_files(self.resGeoFeature.short_id, *files)
@@ -370,8 +402,11 @@ class TestGeoFeature(TransactionTestCase):
             del_f_fullname = del_f_fullname[del_f_fullname.rfind('/')+1:]
             del_f_name, del_f_ext = os.path.splitext(del_f_fullname)
             if del_f_ext == ".shp":
-                hydroshare.delete_resource_file(self.resGeoFeature.short_id, res_f_obj.id, self.user)
-                self.assertEqual(ResourceFile.objects.filter(object_id=self.resGeoFeature.id).count(), 0)
+                hydroshare.delete_resource_file(self.resGeoFeature.short_id,
+                                                res_f_obj.id,
+                                                self.user)
+                self.assertEqual(ResourceFile.objects.filter
+                                 (object_id=self.resGeoFeature.id).count(), 0)
 
         # test: del .prj file
         for f in ResourceFile.objects.filter(object_id=self.resGeoFeature.id):
@@ -381,7 +416,8 @@ class TestGeoFeature(TransactionTestCase):
 
         files = []
         target = 'hs_geographic_feature_resource/tests/gis.osm_adminareas_v06_with_folder.zip'
-        files.append(UploadedFile(file=open(target, 'r'), name='gis.osm_adminareas_v06_with_folder.zip'))
+        files.append(UploadedFile(file=open(target, 'r'),
+                                  name='gis.osm_adminareas_v06_with_folder.zip'))
         hydroshare.utils.resource_file_add_pre_process(self.resGeoFeature, files, self.user,)
         hydroshare.add_resource_files(self.resGeoFeature.short_id, *files)
         self.assertEqual(ResourceFile.objects.filter(object_id=self.resGeoFeature.id).count(), 5)
@@ -390,14 +426,17 @@ class TestGeoFeature(TransactionTestCase):
             del_f_fullname = del_f_fullname[del_f_fullname.rfind('/')+1:]
             del_f_name, del_f_ext = os.path.splitext(del_f_fullname)
             if del_f_ext == ".prj":
-                hydroshare.delete_resource_file(self.resGeoFeature.short_id, res_f_obj.id, self.user)
-                self.assertEqual(ResourceFile.objects.filter(object_id=self.resGeoFeature.id).count(), 4)
+                hydroshare.delete_resource_file(self.resGeoFeature.short_id,
+                                                res_f_obj.id, self.user)
+                self.assertEqual(ResourceFile.objects.filter
+                                 (object_id=self.resGeoFeature.id).count(), 4)
                 for res_f_obj_2 in ResourceFile.objects.filter(object_id=self.resGeoFeature.id):
                     del_f_fullname = res_f_obj_2.resource_file.name.lower()
                     del_f_fullname = del_f_fullname[del_f_fullname.rfind('/')+1:]
                     del_f_name, del_f_ext = os.path.splitext(del_f_fullname)
                     self.assertNotEqual(del_f_ext, ".prj")
-                    originalcoverage_obj = self.resGeoFeature.metadata.originalcoverage.all().first()
+                    originalcoverage_obj = self.resGeoFeature.metadata.\
+                        originalcoverage.all().first()
                     self.assertEqual(originalcoverage_obj.projection_string, UNKNOWN_STR)
                     self.assertEqual(self.resGeoFeature.metadata.coverages.all().count(), 0)
 
@@ -418,8 +457,10 @@ class TestGeoFeature(TransactionTestCase):
             del_f_fullname = del_f_fullname[del_f_fullname.rfind('/')+1:]
             del_f_name, del_f_ext = os.path.splitext(del_f_fullname)
             if del_f_ext == ".xml":
-                hydroshare.delete_resource_file(self.resGeoFeature.short_id, res_f_obj.id, self.user)
-                self.assertEqual(ResourceFile.objects.filter(object_id=self.resGeoFeature.id).count(), 6)
+                hydroshare.delete_resource_file(self.resGeoFeature.short_id,
+                                                res_f_obj.id, self.user)
+                self.assertEqual(ResourceFile.objects.filter
+                                 (object_id=self.resGeoFeature.id).count(), 6)
                 for res_f_obj_2 in ResourceFile.objects.filter(object_id=self.resGeoFeature.id):
                     del_f_fullname = res_f_obj_2.resource_file.name.lower()
                     del_f_fullname = del_f_fullname[del_f_fullname.rfind('/')+1:]
@@ -435,7 +476,8 @@ class TestGeoFeature(TransactionTestCase):
         # add files first
         files = []
         target = 'hs_geographic_feature_resource/tests/gis.osm_adminareas_v06_with_folder.zip'
-        files.append(UploadedFile(file=open(target, 'r'), name='gis.osm_adminareas_v06_with_folder.zip'))
+        files.append(UploadedFile(file=open(target, 'r'),
+                                  name='gis.osm_adminareas_v06_with_folder.zip'))
         hydroshare.utils.resource_file_add_pre_process(self.resGeoFeature, files, self.user,)
 
         hydroshare.add_resource_files(self.resGeoFeature.short_id, *files)
@@ -449,25 +491,30 @@ class TestGeoFeature(TransactionTestCase):
             del_f_name, del_f_ext = os.path.splitext(del_f_fullname)
 
             if del_f_ext == ".prj":
-                hydroshare.delete_resource_file(self.resGeoFeature.short_id, res_f_obj.id, self.user)
-                self.assertEqual(ResourceFile.objects.filter(object_id=self.resGeoFeature.id).count(), 4)
+                hydroshare.delete_resource_file(self.resGeoFeature.short_id,
+                                                res_f_obj.id, self.user)
+                self.assertEqual(ResourceFile.objects.filter
+                                 (object_id=self.resGeoFeature.id).count(), 4)
                 for res_f_obj_2 in ResourceFile.objects.filter(object_id=self.resGeoFeature.id):
                     del_f_fullname = res_f_obj_2.resource_file.name.lower()
                     del_f_fullname = del_f_fullname[del_f_fullname.rfind('/')+1:]
                     del_f_name, del_f_ext = os.path.splitext(del_f_fullname)
                     self.assertNotEqual(del_f_ext, ".prj")
-                    originalcoverage_obj = self.resGeoFeature.metadata.originalcoverage.all().first()
+                    originalcoverage_obj = self.resGeoFeature.metadata.\
+                        originalcoverage.all().first()
                     self.assertEqual(originalcoverage_obj.projection_string, UNKNOWN_STR)
                     self.assertEqual(self.resGeoFeature.metadata.coverages.all().count(), 0)
         # add .prj
         add_files = []
-        target = 'hs_geographic_feature_resource/tests/gis.osm_adminareas_v06/gis.osm_adminareas_v06.prj'
+        target = 'hs_geographic_feature_resource/' \
+                 'tests/gis.osm_adminareas_v06/gis.osm_adminareas_v06.prj'
         add_files.append(UploadedFile(file=open(target, 'r'), name='gis.osm_adminareas_v06.prj'))
         hydroshare.add_resource_files(self.resGeoFeature.short_id, *add_files)
         self.assertEqual(ResourceFile.objects.filter(object_id=self.resGeoFeature.id).count(), 5)
         geofeature_post_add_files_to_resource_handler(sender=GeographicFeatureResource,
                                                       resource=self.resGeoFeature, files=add_files,
-                                                      validate_files={'are_files_valid': True, 'message': ''})
+                                                      validate_files={'are_files_valid': True,
+                                                                      'message': ''})
         originalcoverage_obj = self.resGeoFeature.metadata.originalcoverage.all().first()
         self.assertNotEqual(originalcoverage_obj.projection_string, UNKNOWN_STR)
 
@@ -476,10 +523,10 @@ class TestGeoFeature(TransactionTestCase):
 
         # originalcoverage
         request.POST = {"northlimit": 123, "eastlimit": 234,
-                      "southlimit": 345, "westlimit": 456,
-                      "projection_string": "proj str",
-                      "projection_name": "prj name1",
-                      "datum": "dam1", "unit": "u1"}
+                        "southlimit": 345, "westlimit": 456,
+                        "projection_string": "proj str",
+                        "projection_name": "prj name1",
+                        "datum": "dam1", "unit": "u1"}
 
         data = metadata_element_pre_create_handler(sender=GeographicFeatureResource,
                                                    element_name="originalcoverage",
@@ -524,5 +571,34 @@ class TestGeoFeature(TransactionTestCase):
         coverage_dict = meta_dict.get("coverage", None)
         self.assertNotEqual(coverage_dict, None)
         self.assertEqual(coverage_dict["Coverage"]["type"].lower(), "point")
-        self.assertTrue(abs(coverage_dict["Coverage"]["value"]["east"] + 111.790377929) < self.allowance)
-        self.assertTrue(abs(coverage_dict["Coverage"]["value"]["north"] - 41.7422180799) < self.allowance)
+        self.assertTrue(abs(coverage_dict["Coverage"]
+                            ["value"]["east"] + 111.790377929) < self.allowance)
+        self.assertTrue(abs(coverage_dict["Coverage"]
+                            ["value"]["north"] - 41.7422180799) < self.allowance)
+
+    def test_read_shp_xml(self):
+        # test parsing shapefile xml metadata
+        shp_xml_full_path = 'hs_geographic_feature_resource/tests/beaver_ponds_1940.shp.xml'
+        metadata = parse_shp_xml(shp_xml_full_path)
+        resGeoFeature2 = hydroshare.create_resource(
+            resource_type='GeographicFeatureResource',
+            owner=self.user,
+            title="",
+            metadata=metadata
+        )
+
+        # test abstract
+        self.assertIn("white aerial photographs taken in July 1940 by the U.S. "
+                      "Department of Agriculture",
+                      resGeoFeature2.metadata.description.abstract)
+
+        # test title
+        self.assertIn("Ponds and wetlands impounded by beaver dams as of 1940",
+                      resGeoFeature2.metadata.title.value)
+
+        # test keywords
+        self.assertEqual(resGeoFeature2.metadata.subjects.all().count(), 3)
+        subject_list = [s.value for s in resGeoFeature2.metadata.subjects.all()]
+        self.assertIn("beaver ponds", subject_list)
+        self.assertIn("beaver meadows", subject_list)
+        self.assertIn("Voyageurs National Park", subject_list)

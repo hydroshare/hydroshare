@@ -81,6 +81,10 @@ class RHESSysModelInstanceMetaData(ModelInstanceMetaData):
     _model_input = GenericRelation(ModelInput)
 
     @property
+    def resource(self):
+        return RHESSysModelInstanceresource.objects.filter(object_id=self.id).first()
+
+    @property
     def model_input(self):
         return self._model_input.all().first()
 

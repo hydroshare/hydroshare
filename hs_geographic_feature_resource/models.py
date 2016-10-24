@@ -8,6 +8,7 @@ from hs_core.models import BaseResource, ResourceManager, resource_processor,\
 
 from lxml import etree
 
+
 # Create your models here.
 class OriginalFileInfo(AbstractMetaDataElement):
 
@@ -31,6 +32,7 @@ class OriginalFileInfo(AbstractMetaDataElement):
         # OriginalFileInfo element is not repeatable
         unique_together = ("content_type", "object_id")
 
+
 # Define original spatial coverage metadata info
 class OriginalCoverage(AbstractMetaDataElement):
 
@@ -49,6 +51,7 @@ class OriginalCoverage(AbstractMetaDataElement):
         # OriginalCoverage element is not repeatable
         unique_together = ("content_type", "object_id")
 
+
 class FieldInformation(AbstractMetaDataElement):
     term = 'FieldInformation'
 
@@ -57,6 +60,7 @@ class FieldInformation(AbstractMetaDataElement):
     fieldTypeCode = models.CharField(max_length=50, null=True, blank=True)
     fieldWidth = models.IntegerField(null=True, blank=True)
     fieldPrecision = models.IntegerField(null=True, blank=True)
+
 
 class GeometryInformation(AbstractMetaDataElement):
     term = 'GeometryInformation'
@@ -95,14 +99,13 @@ class GeographicFeatureResource(BaseResource):
 
     @classmethod
     def get_supported_upload_file_types(cls):
-        # See Shapefile format: http://resources.arcgis.com/en/help/main/10.2/index.html#//005600000003000000
-        return (".zip", ".shp", ".shx", ".dbf", ".prj", ".sbx", ".sbn", ".cpg", ".xml", ".fbn", ".fbx", ".ain",
-                ".aih", ".atx", ".ixs", ".mxs")
 
-    @classmethod
-    def can_have_multiple_files(cls):
-        # can have more than one files
-        return True
+        # See Shapefile format:
+        # http://resources.arcgis.com/en/help/main/10.2/index.html#//005600000003000000
+        return (".zip", ".shp", ".shx", ".dbf", ".prj",
+                ".sbx", ".sbn", ".cpg", ".xml", ".fbn",
+                ".fbx", ".ain", ".aih", ".atx", ".ixs",
+                ".mxs")
 
     # add resource-specific HS terms
     def get_hs_term_dict(self):
@@ -121,6 +124,7 @@ class GeographicFeatureResource(BaseResource):
 
 processor_for(GeographicFeatureResource)(resource_processor)
 
+
 # define the GeographicFeatureMetaData metadata
 class GeographicFeatureMetaData(CoreMetaData):
     geometryinformation = GenericRelation(GeometryInformation)
@@ -128,6 +132,10 @@ class GeographicFeatureMetaData(CoreMetaData):
     originalcoverage = GenericRelation(OriginalCoverage)
     originalfileinfo = GenericRelation(OriginalFileInfo)
     ogcWebServices = GenericRelation(OGCWebServices)
+
+    @property
+    def resource(self):
+        return GeographicFeatureResource.objects.filter(object_id=self.id).first()
 
     @classmethod
     def get_supported_element_names(cls):
@@ -147,8 +155,10 @@ class GeographicFeatureMetaData(CoreMetaData):
         return True
 
     def get_required_missing_elements(self):  # show missing required meta
-        missing_required_elements = super(GeographicFeatureMetaData, self).get_required_missing_elements()
-        if not (self.coverages.all().filter(type='box').first() or self.coverages.all().filter(type='point').first()):
+        missing_required_elements = super(GeographicFeatureMetaData, self).\
+            get_required_missing_elements()
+        if not (self.coverages.all().filter(type='box').first() or
+                self.coverages.all().filter(type='point').first()):
             missing_required_elements.append('Spatial Coverage')
         if not self.originalcoverage.all().first():
             missing_required_elements.append('Spatial Reference')
@@ -182,24 +192,26 @@ class GeographicFeatureMetaData(CoreMetaData):
                                              geometryinformation_fields)
 
         for field_info in self.fieldinformation.all():
-            field_info_fields = ['fieldName', 'fieldType', 'fieldTypeCode', 'fieldWidth', 'fieldPrecision']
+            field_info_fields = ['fieldName', 'fieldType',
+                                 'fieldTypeCode', 'fieldWidth', 'fieldPrecision']
             self.add_metadata_element_to_xml(container, field_info, field_info_fields)
 
         if self.originalcoverage.all().first():
-            ori_coverage = self.originalcoverage.all().first();
+            ori_coverage = self.originalcoverage.all().first()
             cov = etree.SubElement(container, '{%s}spatialReference' % self.NAMESPACES['hsterms'])
             cov_term = '{%s}' + 'box'
             coverage_terms = etree.SubElement(cov, cov_term % self.NAMESPACES['hsterms'])
-            rdf_coverage_value = etree.SubElement(coverage_terms, '{%s}value' % self.NAMESPACES['rdf'])
+            rdf_coverage_value = etree.SubElement(coverage_terms,
+                                                  '{%s}value' % self.NAMESPACES['rdf'])
             # original coverage is of box type
             cov_value = 'northlimit=%s; eastlimit=%s; southlimit=%s; westlimit=%s; units=%s' \
-                        % (ori_coverage.northlimit, ori_coverage.eastlimit, \
-                          ori_coverage.southlimit, ori_coverage.westlimit, ori_coverage.unit)
+                        % (ori_coverage.northlimit, ori_coverage.eastlimit,
+                           ori_coverage.southlimit, ori_coverage.westlimit, ori_coverage.unit)
 
-            cov_value = cov_value \
-                        + '; projection_name=%s' % ori_coverage.projection_name \
-                        + '; datum=%s' % ori_coverage.datum \
-                        + '; projection_string=%s' % ori_coverage.projection_string
+            cov_value = cov_value + '; projection_name=%s' % \
+                                    ori_coverage.projection_name + '; datum=%s' % \
+                                    ori_coverage.datum + '; projection_string=%s' % \
+                                    ori_coverage.projection_string
 
             rdf_coverage_value.text = cov_value
 
@@ -216,5 +228,3 @@ class GeographicFeatureMetaData(CoreMetaData):
         self.originalcoverage.all().delete()
         self.originalfileinfo.all().delete()
         self.ogcWebServices.first().delete()
-
-import receivers # never delete this otherwise non of the receiver function will work

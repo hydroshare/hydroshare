@@ -178,6 +178,11 @@ class RasterResource(BaseResource):
         return (".tif",".zip")
 
     @classmethod
+    def allow_multiple_file_upload(cls):
+        # can upload only 1 file
+        return False
+
+    @classmethod
     def can_have_multiple_files(cls):
         # can have only 1 file
         return False
@@ -193,6 +198,10 @@ class RasterMetaData(CoreMetaData):
     _band_information = GenericRelation(BandInformation)
     _ori_coverage = GenericRelation(OriginalCoverage)
     _ogcWebServices = GenericRelation(OGCWebServices)
+
+    @property
+    def resource(self):
+        return RasterResource.objects.filter(object_id=self.id).first()
 
     @property
     def cellInformation(self):

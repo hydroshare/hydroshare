@@ -25,6 +25,9 @@ urlpatterns = patterns('',
     url(r'^scimeta/(?P<pk>[A-z0-9]+)/$', views.resource_rest_api.ScienceMetadataRetrieveUpdate.as_view(),
         name='get_update_science_metadata'),
 
+    url(r'^resource/(?P<pk>[A-z0-9]+)/map/$', views.resource_rest_api.ResourceMapRetrieve.as_view(),
+        name='get_resource_map'),
+
     url(r'^resource/(?P<pk>[A-z0-9]+)/files/$', views.resource_rest_api.ResourceFileCRUD.as_view(),
         name='add_resource_file'),
 
@@ -86,7 +89,7 @@ urlpatterns = patterns('',
     url(r'^_internal/(?P<resource_type>[A-z]+)/supported-file-types/$',
         views.get_supported_file_types_for_resource_type),
     url(r'^_internal/(?P<resource_type>[A-z]+)/allow-multiple-file/$',
-        views.is_multiple_file_allowed_for_resource_type),
+        views.is_multiple_file_upload_allowed),
     url(r'^_internal/search/autocomplete/', "hs_core.views.autocomplete.autocomplete"),
 
 )
