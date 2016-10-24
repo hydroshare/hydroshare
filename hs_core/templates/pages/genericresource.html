@@ -366,12 +366,14 @@
                                                         <span class="glyphicon glyphicon-download icon-blue"></span>
                                                     </button>
 
-                                                    <button id="fb-delete"
-                                                            class="disabled"
-                                                            title="Delete" data-toggle="modal"
-                                                            data-target="#confirm-delete-dialog">
-                                                        <span class="glyphicon glyphicon-trash btn-remove"></span>
-                                                    </button>
+                                                    {% if page.perms.change and metadata_form %}
+                                                        <button id="fb-delete"
+                                                                class="disabled"
+                                                                title="Delete" data-toggle="modal"
+                                                                data-target="#confirm-delete-dialog">
+                                                            <span class="glyphicon glyphicon-trash btn-remove"></span>
+                                                        </button>
+                                                    {% endif %}
                                                 </div>
                                             </div>
                                         </div>
