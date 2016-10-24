@@ -466,7 +466,8 @@ function onOpenFolder() {
     pathLog.push(targetPath);
     pathLogIndex = pathLog.length - 1;
 
-    get_irods_folder_struct_ajax_submit(resID, targetPath);
+    $("#hs-file-browser").attr("data-current-path", targetPath);
+    refreshFileBrowser();
 }
 
 function updateNavigationState() {
