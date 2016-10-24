@@ -3985,6 +3985,7 @@ form#covereage-search-fields {
 	border: 1px solid #fcefa1;
 	color: #363636;
 	padding: 9px;
+	background: #fbf9ee;
 }
 
 .fb-file small, .fb-folder small {
@@ -4221,7 +4222,7 @@ div.fb-upload-caption a {
 
 .fb-view-list > li {
 	float: initial;
-	margin-right: 15%;
+	width: 85%;
 }
 
 .fb-view-grid > li {
