@@ -120,12 +120,17 @@ function updateSelectionMenuContext() {
         }
     }
 
+
+
     var menu = $("#right-click-menu");
     var menu2 = $("#right-click-container-menu");
 
     // Open
     menu.children("li[data-menu-name='open']").toggleClass("hidden", flagDisableOpen);
     $("#open-separator").toggleClass("hidden", flagDisableOpen);
+    if (!menu.children("li[data-menu-name='delete']").length) {
+        $("#open-separator").toggleClass("hidden", true);
+    }
 
     // Download
     menu.children("li[data-menu-name='download']").toggleClass("hidden", flagDisableDownload);
