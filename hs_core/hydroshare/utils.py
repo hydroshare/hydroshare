@@ -311,7 +311,7 @@ def replace_resource_file_on_irods(new_file, original_resource_file, user):
 
 def get_resource_file_name_and_extension(res_file):
     """
-    Gets the file name and extension of the specified resource file
+    Gets the full file name with path, file base name, and extension of the specified resource file
     :param res_file: an instance of ResourceFile for which file extension to be retrieved
     :return: (full filename with path, full file base name, file extension)
              ex: "/my_path_to/ABC.nc" --> ("/my_path_to/ABC.nc", "ABC.nc", ".nc")

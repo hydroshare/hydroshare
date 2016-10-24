@@ -27,7 +27,7 @@ from hs_core.hydroshare import check_resource_type, delete_resource_file
 from hs_core.models import AbstractMetaDataElement, GenericResource, Relation, ResourceFile
 from hs_core.signals import pre_metadata_element_create
 from hs_core.hydroshare import FILE_SIZE_LIMIT
-from hs_core.hydroshare.utils import raise_file_size_exception
+from hs_core.hydroshare.utils import raise_file_size_exception, get_file_mime_type
 from django_irods.storage import IrodsStorage
 from hs_access_control.models import PrivilegeCodes
 
@@ -408,6 +408,7 @@ def show_relations_section(res_obj):
 
 def link_irods_file_to_django(resource, filename, size=0):
     # link the newly created zip file to Django resource model
+    b_add_file = False
     if resource:
         if resource.resource_federation_path:
             if not ResourceFile.objects.filter(object_id=resource.id,
@@ -416,10 +417,18 @@ def link_irods_file_to_django(resource, filename, size=0):
                                             resource_file=None,
                                             fed_resource_file_name_or_path=filename,
                                             fed_resource_file_size=size)
+                b_add_file = True
+
         elif not ResourceFile.objects.filter(object_id=resource.id,
                                              resource_file=filename).exists():
                 ResourceFile.objects.create(content_object=resource,
                                             resource_file=filename)
+                b_add_file = True
+
+        if b_add_file:
+            file_format_type = get_file_mime_type(filename)
+            if file_format_type not in [mime.value for mime in resource.metadata.formats.all()]:
+                resource.metadata.create_element('format', value=file_format_type)
 
 
 def link_irods_folder_to_django(resource, istorage, foldername, exclude=()):
@@ -481,8 +490,7 @@ def remove_irods_folder_in_django(resource, istorage, foldername):
     :return:
     """
     if resource and istorage and foldername:
-        fed_path = resource.resource_federation_path
-        if fed_path:
+        if resource.resource_federation_path:
             res_file_set = ResourceFile.objects.filter(
                 object_id=resource.id, fed_resource_file_name_or_path__icontains=foldername)
         else:
@@ -508,11 +516,10 @@ def zip_folder(user, res_id, input_coll_path, output_zip_fname, bool_remove_orig
     :return: output_zip_fname and output_zip_size pair
     """
     resource = hydroshare.utils.get_resource_by_shortkey(res_id)
+    istorage = resource.get_irods_storage()
     if resource.resource_federation_path:
-        istorage = IrodsStorage('federated')
         res_coll_input = os.path.join(resource.resource_federation_path, res_id, input_coll_path)
     else:
-        istorage = IrodsStorage()
         res_coll_input = os.path.join(res_id, input_coll_path)
 
     content_dir = os.path.dirname(res_coll_input)

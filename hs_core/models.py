@@ -1576,6 +1576,12 @@ class BaseResource(Page, AbstractResource):
     def can_view(self, request):
         return AbstractResource.can_view(self, request)
 
+    def get_irods_storage(self):
+        if self.resource_federation_path:
+            return IrodsStorage('federated')
+        else:
+            return IrodsStorage()
+
     # create crossref deposit xml for resource publication
     def get_crossref_deposit_xml(self, pretty_print=True):
         # importing here to avoid circular import problem
