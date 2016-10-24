@@ -16,6 +16,7 @@ function getFolderTemplateInstance(folderName) {
         "</li>"
 }
 
+// Associates file icons with file extensions. Could be improved with a dictionary.
 function getFileTemplateInstance(fileName, fileType, fileSize, pk, url) {
     var fileTypeExt = fileName.substr(fileName.lastIndexOf(".") + 1, fileName.length);
     var extIcon = "fa-file-o";
@@ -67,6 +68,7 @@ function formatBytes(bytes) {
     else return(bytes / 1073741824).toFixed(1) + " GB";
 }
 
+// Updates the state of toolbar and menu buttons when a selection is made
 function updateSelectionMenuContext() {
     var selected = $("#fb-files-container li.ui-selected");
 
@@ -119,9 +121,7 @@ function updateSelectionMenuContext() {
             flagDisableUnzip = true;
         }
     }
-
-
-
+    
     var menu = $("#right-click-menu");
     var menu2 = $("#right-click-container-menu");
 
@@ -230,10 +230,8 @@ function bindFileBrowserItemEvents() {
             $("#fb-files-container li").removeClass("ui-last-selected");
             $(this).addClass("ui-last-selected");
         }
-
     });
-
-
+    
     $("#fb-files-container li").mouseup(function (e) {
         // Handle "select" of clicked elements - Mouse Up
         if (!e.ctrlKey && !e.metaKey) {
@@ -302,7 +300,6 @@ function bindFileBrowserItemEvents() {
                 $("#fb-files-container li").removeClass("ui-last-selected");
                 $("#fb-files-container li.ui-selected").first().addClass("ui-last-selected");
             },
-
         });
 
     // Dismiss right click menu when mouse down outside of it
@@ -402,6 +399,7 @@ function sort(method, order) {
         }
     }
     else if (method == "size") {
+        // Sort by size
         var size1, size2;
 
         sorted = $('#fb-files-container li').sort(function (element1, element2) {
@@ -429,6 +427,7 @@ function sort(method, order) {
         });
     }
     else if (method == "type") {
+        // Sort by type
         if (order == "asc") {
             sort("name", "desc");    // First sort by name
             sorted = $('#fb-files-container li').sort(function (element1, element2) {
@@ -797,7 +796,7 @@ $(document).ready(function () {
 
         var calls = [];
         for (var i = 0; i < sourcePaths.length; i++) {
-            sourceName = sourcePaths[i].substring(sourcePaths[i].lastIndexOf("/")+1, sourcePaths[i].length);
+            var sourceName = sourcePaths[i].substring(sourcePaths[i].lastIndexOf("/")+1, sourcePaths[i].length);
             calls.push(move_or_rename_irods_file_or_folder_ajax_submit(resID, sourcePaths[i], targetPath+'/'+sourceName));
         }
 
@@ -833,8 +832,6 @@ $(document).ready(function () {
                 }
             }
 
-            $("#delete-file-form input")
-
             // Wait for the asynchronous calls to finish to get new folder structure
             $.when.apply($, calls).done(function () {
                 if (filesToDelete != "") {
@@ -844,11 +841,11 @@ $(document).ready(function () {
                 else {
                     refreshFileBrowser();
                 }
-                // $("#fb-files-container li.ui-selected").fadeOut(200);
             });
         }
     });
 
+    // Populate name field when menu item is clicked
     $(".selection-menu li[data-menu-name='rename'], #fb-rename").click(function(){
         $('.selection-menu').hide();
         var name = $("#fb-files-container li.ui-selected").children(".fb-file-name").text();
