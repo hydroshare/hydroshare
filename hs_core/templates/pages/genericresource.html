@@ -423,6 +423,12 @@
                                             files smaller than 1GB in size by dragging & dropping, or click <a
                                                     id="upload-toggle" class="dz-clickable">here</a> to select them.
                                         </span>
+                                        <a id="btn-select-irods-file" type="button"
+                                           class="btn btn-success row-selector hidden-form" data-toggle="modal"
+                                           data-target="#irodsContent">
+                                            <span class="glyphicon glyphicon-plus"><span class="button-label"> Add files from iRODS...</span></span>
+                                        </a>
+
                                         <span id="log-into-irods">To add files from an iRODS server,
                                         <a id="btn-signin-irods" type="button" class="btn-link"
                                            data-toggle="modal"
@@ -435,13 +441,6 @@
                             </div>
 
                             {% if page.perms.change and metadata_form %}
-                                {% if cm.get_supported_upload_file_types != "()" %}
-                                <a id="btn-select-irods-file" type="button"
-                                   class="btn btn-success row-selector hidden-form" data-toggle="modal"
-                                   data-target="#irodsContent">
-                                    <span class="glyphicon glyphicon-plus"><span class="button-label"> Add files from iRODS...</span></span>
-                                </a>
-                                {% endif %}
                                 {% if file_type_error %}
                                     <div class="alert alert-danger alert-dismissible" role="alert">
                                         <button id="validation-error-close" type="button" class="close"
