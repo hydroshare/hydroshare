@@ -1,15 +1,17 @@
 
 from urlparse import urlparse, parse_qs
 
-from django.test import TestCase, TransactionTestCase
-from django.contrib.auth.models import Group, User
-from django.http import HttpRequest, QueryDict
+from django.test import TransactionTestCase
+from django.contrib.auth.models import Group
+from django.http import HttpRequest
 
 from hs_core.hydroshare import resource
 from hs_core import hydroshare
 
-from hs_tools_resource.models import RequestUrlBase, ToolVersion, SupportedResTypes, ToolResource, ToolIcon
-from hs_tools_resource.receivers import metadata_element_pre_create_handler, metadata_element_pre_update_handler
+from hs_tools_resource.models import RequestUrlBase, ToolVersion, SupportedResTypes, ToolResource,\
+                                     ToolIcon, AppHomePageUrl
+from hs_tools_resource.receivers import metadata_element_pre_create_handler, \
+                                        metadata_element_pre_update_handler
 from hs_tools_resource.utils import parse_app_url_template
 
 class TestWebAppFeature(TransactionTestCase):
@@ -151,6 +153,37 @@ class TestWebAppFeature(TransactionTestCase):
         resource.delete_metadata_element(self.resWebApp.short_id, 'ToolIcon',
                                          element_id=ToolIcon.objects.first().id)
         self.assertEqual(ToolIcon.objects.all().count(), 0)
+
+        ####################
+        # Class: AppHomePageUrl
+        ####################
+        # verify no AppHomePageUrl obj
+        self.assertEqual(AppHomePageUrl.objects.all().count(), 0)
+
+        # create 1 AppHomePageUrl obj with required params
+        resource.create_metadata_element(self.resWebApp.short_id,
+                                         'AppHomePageUrl',
+                                         value='https://my_web_app.com')
+        self.assertEqual(AppHomePageUrl.objects.all().count(), 1)
+
+        # may not create additional instance of ToolIcon
+        with self.assertRaises(Exception):
+            resource.create_metadata_element(self.resWebApp.short_id,
+                                             'AppHomePageUrl',
+                                             value='https://my_web_app_2.com')
+        self.assertEqual(AppHomePageUrl.objects.all().count(), 1)
+
+        # update existing meta
+        resource.update_metadata_element(self.resWebApp.short_id, 'AppHomePageUrl',
+                                         element_id=AppHomePageUrl.objects.first().id,
+                                         value='http://my_web_app_3.com')
+        self.assertEqual(AppHomePageUrl.objects.first().value, 'http://my_web_app_3.com')
+
+        # delete AppHomePageUrl obj
+        resource.delete_metadata_element(self.resWebApp.short_id, 'AppHomePageUrl',
+                                         element_id=AppHomePageUrl.objects.first().id)
+        self.assertEqual(AppHomePageUrl.objects.all().count(), 0)
+
 
     def test_metadata_element_pre_create_and_update(self):
         request = HttpRequest()
