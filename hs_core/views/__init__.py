@@ -354,7 +354,15 @@ def delete_multiple_files(request, shortkey, *args, **kwargs):
     f_id_list = f_ids.split(',')
     for f_id in f_id_list:
         f_id = f_id.strip()
-        hydroshare.delete_resource_file(shortkey, f_id, user)
+        try:
+            hydroshare.delete_resource_file(shortkey, f_id, user)
+        except ObjectDoesNotExist as ex:
+            # Since some specific resource types such as feature resource type delete all other
+            # dependent content files together when one file is deleted, we make this specific
+            # ObjectDoesNotExist exception as legitimate in deplete_multiple_files() without
+            # raising this specific exceptoin
+            logger.debug(ex.message)
+            continue
     request.session['resource-mode'] = 'edit'
     return HttpResponseRedirect(request.META['HTTP_REFERER'])
 

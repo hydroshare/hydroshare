@@ -585,11 +585,10 @@ def create_folder(res_id, folder_path):
     :return:
     """
     resource = hydroshare.utils.get_resource_by_shortkey(res_id)
+    istorage = resource.get_irods_storage()
     if resource.resource_federation_path:
-        istorage = IrodsStorage('federated')
         coll_path = os.path.join(resource.resource_federation_path, res_id, folder_path)
     else:
-        istorage = IrodsStorage()
         coll_path = os.path.join(res_id, folder_path)
 
     istorage.session.run("imkdir", None, '-p', coll_path)
@@ -625,7 +624,7 @@ def remove_folder(user, res_id, folder_path):
     hydroshare.utils.resource_modified(resource, user)
 
 
-def remove_or_rename_file_or_folder(user, res_id, src_path, tgt_path):
+def move_or_rename_file_or_folder(user, res_id, src_path, tgt_path):
     """
     Move or rename a file or folder in hydroshareZone or any federated zone used for HydroShare
     resource backend store.
@@ -636,12 +635,11 @@ def remove_or_rename_file_or_folder(user, res_id, src_path, tgt_path):
     :return:
     """
     resource = hydroshare.utils.get_resource_by_shortkey(res_id)
+    istorage = resource.get_irods_storage()
     if resource.resource_federation_path:
-        istorage = IrodsStorage('federated')
         src_full_path = os.path.join(resource.resource_federation_path, res_id, src_path)
         tgt_full_path = os.path.join(resource.resource_federation_path, res_id, tgt_path)
     else:
-        istorage = IrodsStorage()
         src_full_path = os.path.join(res_id, src_path)
         tgt_full_path = os.path.join(res_id, tgt_path)
 

@@ -10,7 +10,7 @@ from django_irods.icommands import SessionException
 from hs_core.hydroshare.utils import get_file_mime_type, get_resource_file_name_and_extension, \
     get_resource_file_url
 from hs_core.views.utils import authorize, ACTION_TO_AUTHORIZE, zip_folder, unzip_file, \
-    create_folder, remove_folder, remove_or_rename_file_or_folder
+    create_folder, remove_folder, move_or_rename_file_or_folder
 from hs_core.models import ResourceFile
 
 logger = logging.getLogger(__name__)
@@ -298,7 +298,7 @@ def data_store_file_or_folder_move_or_rename(request):
         return HttpResponse(content_type='application/json', status=400)
 
     try:
-        remove_or_rename_file_or_folder(user, res_id, src_path, tgt_path)
+        move_or_rename_file_or_folder(user, res_id, src_path, tgt_path)
     except SessionException as ex:
         logger.error(ex.stderr)
         return HttpResponse(content_type='application/json', status=500)
