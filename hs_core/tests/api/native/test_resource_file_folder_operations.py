@@ -166,7 +166,7 @@ class TestResourceFileFolderOprsAPI(MockIRODSTestCaseMixin, TransactionTestCase)
                       updated_res_file_names,
                       msg="resource does not contain file2.txt in the new folder after renaming")
 
-        # remote a folder
+        # remove a folder
         remove_folder(self.user_creator, self.new_res.short_id, 'data/contents/sub_dir')
         # Now resource only contains one file
         self.assertEqual(self.new_res.files.all().count(), 1,
