@@ -101,8 +101,9 @@ class RasterFileTypeMetaData(MockIRODSTestCaseMixin, TransactionTestCase):
         self.assertEqual(set(self.composite_resource.files.all()),
                          set(logical_file.files.all()))
 
-        # TODO: test that size property of the logical file is equal to sun of size of all files
+        # test that size property of the logical file is equal to sun of size of all files
         # that are part of the logical file
+        self.assertEqual(logical_file.size, sum([f.size for f in logical_file.files.all()]))
 
         # test that there should be 1 object of type GeoRasterFileMetaData
         self.assertEqual(GeoRasterFileMetaData.objects.count(), 1)
@@ -191,6 +192,10 @@ class RasterFileTypeMetaData(MockIRODSTestCaseMixin, TransactionTestCase):
         self.assertEqual(set(self.composite_resource.files.all()),
                          set(logical_file.files.all()))
 
+        # test that size property of the logical file is equal to sun of size of all files
+        # that are part of the logical file
+        self.assertEqual(logical_file.size, sum([f.size for f in logical_file.files.all()]))
+        
         # test extracted metadata for the file type
 
         # there should be 1 coverage element - box type
