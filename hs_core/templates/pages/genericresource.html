@@ -40,8 +40,10 @@
                 {%  if task_id and download_path %}
                     <input type="hidden" id="task_id" name="task_id" value="{{ task_id }}">
                     <input type="hidden" id="download_path" name="download_path" value="{{ download_path }}">
-                    <div id='download-status-info' class="alert alert-success">
-                        Please wait for the resource bag to be created<span id="loading">.</span>
+                    <div class="col-sm-12">
+                        <div id='download-status-info' class="alert alert-success">
+                            Please wait for the resource bag to be created<span id="loading">.</span>
+                        </div>
                     </div>
                 {% endif %}
 
@@ -465,7 +467,7 @@
                             {% for b in cm.bags.all %}
                                 <div>
                                     <a id="btn-download-all" type="button" class="btn btn-default row-selector"
-                                       href="{{ bag_url }}" target="_blank">
+                                       href="{{ bag_url }}">
                                     <span class="glyphicon glyphicon-download-alt">
                                         <span title='Download All Content as Zipped BagIt Archive'
                                               class="button-label">Download All Content as Zipped BagIt Archive</span>
