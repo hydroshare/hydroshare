@@ -500,6 +500,9 @@ function refreshFileBrowser() {
 }
 
 $(document).ready(function () {
+    if (!$("#hs-file-browser").length) {
+        return;
+    }
     // Set initial folder structure
     var resID = $("#hs-file-browser").attr("data-res-id");
     if (resID) {
