@@ -1,7 +1,7 @@
 {# This template is used as the landing page for Composite Resource #}
 
 {% extends "pages/genericresource.html" %}
-{% load geoanalytics_tags pages_tags mezzanine_tags crispy_forms_tags %}
+{% load geoanalytics_tags pages_tags mezzanine_tags hydroshare_tags crispy_forms_tags %}
 
 {% block content_block %}
 {# ======= Content (code moved here because django does not render blocks inside included templates) ======= #}
@@ -11,9 +11,77 @@
         {% if show_content_files %}
             <div class="custom-well">
                 {% if cm.files.all %}
-                <div class="table-container">
+                <tr class="table-container">
                     <table class="table-plain table-striped">
-                        {% for f in cm.files.all %}
+                        {# show logical files first #}
+                        {% for lf in cm.logical_files %}
+                            {% if lf.type_name == "GeoRasterLogicalFile" %}
+                            <div style="border: #00A3D4;">
+                            <tr>
+                                <td>
+                                    <h5><strong>Geo Raster: {{ lf.dataset_name }}</strong></h5>
+                                    <p class="label-file-size">
+                                        {{ lf.size|filesizeformat }}
+                                    </p>
+                                <td>
+                                    {% if page.perms.change and resource_edit_mode %}
+                                        <a href="/hsapi/_internal/{{ cm.short_id }}/GeoRaster/{{ lf.id }}/delete-file-type/">
+                                            <span data-placement="auto" title="Delete"
+                                                class="glyphicon glyphicon-trash icon-button btn-remove">
+                                            </span>
+                                        </a>
+                                   {% endif %}
+                                </td>
+                                </td>
+                            </tr>
+                            </div>
+                            {% for f in lf.files.all %}
+                                {# show files in a logical file #}
+                            <tr>
+                                <td>
+                                    <span class="glyphicon glyphicon-file file-icon" style="margin-left:20px;"></span>
+                                    <span>
+                                        <span class="label-file-name" >
+                                            {{ f.resource_file.name|slice:"33:" }}
+                                        </span>
+                                        <p class="label-file-size" style="margin-left:20px;">
+                                            {{ f.size|filesizeformat }}
+                                        </p>
+                                   </span>
+                                    <td>
+                                    <a href="{{ f.url }}"><span data-toggle="tooltip"
+                                                                                  data-placement="auto"
+                                                                                  title="Download"
+                                                                                  class="glyphicon glyphicon-download icon-button btn-download"></span></a>
+                                    </td>
+                                </td>
+                            </tr>
+                            {% endfor %}
+
+                            <tr>
+                            <td>
+                                {% if lf.type_name == "GeoRasterLogicalFile" %}
+                                    <span style="margin-left:20px;">
+                                    <a href="#test-metadata-display-{{ lf.id }}" data-toggle="collapse">Metadata</a>
+                                    <div id="test-metadata-display-{{ lf.id }}" class="collapse row" style="margin-left:7px;">
+                                        {{ lf.metadata.originalCoverage.get_html |safe }}
+                                        {{ lf.metadata.cellInformation.get_html |safe }}
+                                        <legend class="pull-left" style="margin-left:10px;">Band Information</legend>
+                                        {% for bandInfo in lf.metadata.bandInformations %}
+                                            {{ bandInfo.get_html |safe }}
+                                        {% endfor %}
+                                    </div>
+                                    </span>
+                                {% else %}
+                                    <strong>{{ lf.type_name }}:{{ lf.dataset_name }}</strong>
+                                {%  endif %}
+                            </td>
+                            <td></td>
+                            </tr>
+                            {% endif %}
+                        {% endfor %}
+                        {% for f in cm.non_logical_files %}
+                            {# these are the files that are not part of any hydroshare file type #}
                             {% if f.resource_file or f.fed_resource_file or f.fed_resource_file_name_or_path %}
                                 {#======= Modal window begins =======#}
                                 {% if page.perms.change and metadata_form %}
@@ -80,8 +148,13 @@
                                                                                       title="Delete"
                                                                                       class="glyphicon glyphicon-trash icon-button btn-remove"></span></a>
 
-                                            <a type="button" class="btn btn-primary"
-                                                       href="/hsapi/_internal/{{ cm.short_id }}/{{ f.pk }}/GeoRaster/extract-file-metadata/">Extract Metadata</a>
+                                            {% if f.extension == '.tif' or f.extension == '.zip' %}
+
+                                                <a href="/hsapi/_internal/{{ cm.short_id }}/{{ f.pk }}/GeoRaster/set-file-type/" class="pull-right">Set Geo Raster File Type
+                                                    <span class="btn-primary" data-placement="auto"></span>
+                                                </a>
+                                                </span>
+                                            {% endif %}
                                         {% endif %}
                                         {% if f.resource_file and f.resource_file.size < 1000000000 %}
                                             <a href="{{ f.resource_file.url }}"><span data-toggle="tooltip"
@@ -167,38 +240,39 @@
                             </div>
                         {% endif %}
                         {% if cellInformation %}
-                             <div class="col-xs-12 col-sm-6" style="margin-bottom:40px;">
-                                <legend>Cell Information</legend>
-                                <table class="custom-table">
-                                    <tbody>
-                                    <tr>
-                                        <th class="text-muted">Rows</th>
-                                        <td>{{ cellInformation.rows }}</td>
-                                    </tr>
-
-                                    <tr>
-                                        <th class="text-muted">Columns</th>
-                                        <td>{{ cellInformation.columns }}</td>
-                                    </tr>
-
-                                    <tr>
-                                        <th class="text-muted">CellSizeXValue</th>
-                                        <td>{{ cellInformation.cellSizeXValue }}</td>
-                                    </tr>
-
-                                    <tr>
-                                        <th class="text-muted">CellSizeYValue</th>
-                                        <td>{{ cellInformation.cellSizeYValue }}</td>
-                                    </tr>
-
-                                    <tr>
-                                        <th class="text-muted">CellDataType</th>
-                                        <td>{{ cellInformation.cellDataType }}</td>
-                                    </tr>
-
-                                    </tbody>
-                                </table>
-                            </div>
+                            {{ cellInformation.get_html }}
+{#                             <div class="col-xs-12 col-sm-6" style="margin-bottom:40px;">#}
+{#                                <legend>Cell Information</legend>#}
+{#                                <table class="custom-table">#}
+{#                                    <tbody>#}
+{#                                    <tr>#}
+{#                                        <th class="text-muted">Rows</th>#}
+{#                                        <td>{{ cellInformation.rows }}</td>#}
+{#                                    </tr>#}
+{##}
+{#                                    <tr>#}
+{#                                        <th class="text-muted">Columns</th>#}
+{#                                        <td>{{ cellInformation.columns }}</td>#}
+{#                                    </tr>#}
+{##}
+{#                                    <tr>#}
+{#                                        <th class="text-muted">CellSizeXValue</th>#}
+{#                                        <td>{{ cellInformation.cellSizeXValue }}</td>#}
+{#                                    </tr>#}
+{##}
+{#                                    <tr>#}
+{#                                        <th class="text-muted">CellSizeYValue</th>#}
+{#                                        <td>{{ cellInformation.cellSizeYValue }}</td>#}
+{#                                    </tr>#}
+{##}
+{#                                    <tr>#}
+{#                                        <th class="text-muted">CellDataType</th>#}
+{#                                        <td>{{ cellInformation.cellDataType }}</td>#}
+{#                                    </tr>#}
+{##}
+{#                                    </tbody>#}
+{#                                </table>#}
+{#                            </div>#}
                         {% endif %}
                     {% if bandInformation %}
                         <div class="col-sm-12 pull-left" style="margin-bottom:40px;">

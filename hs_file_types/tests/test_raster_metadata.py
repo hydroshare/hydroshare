@@ -101,6 +101,9 @@ class RasterFileTypeMetaData(MockIRODSTestCaseMixin, TransactionTestCase):
         self.assertEqual(set(self.composite_resource.files.all()),
                          set(logical_file.files.all()))
 
+        # TODO: test that size property of the logical file is equal to sun of size of all files
+        # that are part of the logical file
+
         # test that there should be 1 object of type GeoRasterFileMetaData
         self.assertEqual(GeoRasterFileMetaData.objects.count(), 1)
 
@@ -149,8 +152,8 @@ class RasterFileTypeMetaData(MockIRODSTestCaseMixin, TransactionTestCase):
         self.assertEqual(cell_info.cellDataType, 'Float32')
 
         # testing extended metadata element: band information
-        self.assertEqual(logical_file.metadata.bandInformation.count(), 1)
-        band_info = logical_file.metadata.bandInformation.first()
+        self.assertEqual(logical_file.metadata.bandInformations.count(), 1)
+        band_info = logical_file.metadata.bandInformations.first()
         self.assertEqual(band_info.noDataValue, '-3.40282346639e+38')
         self.assertEqual(band_info.maximumValue, '2880.00708008')
         self.assertEqual(band_info.minimumValue, '1870.63659668')
@@ -222,8 +225,8 @@ class RasterFileTypeMetaData(MockIRODSTestCaseMixin, TransactionTestCase):
         self.assertEqual(cell_info.cellDataType, 'Float32')
 
         # testing extended metadata element: band information
-        self.assertEqual(logical_file.metadata.bandInformation.count(), 1)
-        band_info = logical_file.metadata.bandInformation.first()
+        self.assertEqual(logical_file.metadata.bandInformations.count(), 1)
+        band_info = logical_file.metadata.bandInformations.first()
         self.assertEqual(band_info.noDataValue, '-3.40282346639e+38')
         self.assertEqual(band_info.maximumValue, '2880.00708008')
         self.assertEqual(band_info.minimumValue, '2274.95898438')
@@ -323,8 +326,8 @@ class RasterFileTypeMetaData(MockIRODSTestCaseMixin, TransactionTestCase):
                                                  cellSizeXValue=30.0, cellSizeYValue=30.0,
                                                  )
         # delete default band information element
-        self.assertNotEquals(logical_file.metadata.bandInformation, None)
-        logical_file.metadata.bandInformation.first().delete()
+        self.assertNotEquals(logical_file.metadata.bandInformations, None)
+        logical_file.metadata.bandInformations.first().delete()
 
         # create band information element with meaningful value
         logical_file.metadata.create_element('bandinformation', name='bandinfo',
@@ -335,7 +338,7 @@ class RasterFileTypeMetaData(MockIRODSTestCaseMixin, TransactionTestCase):
                                              maximumValue=1000, minimumValue=0,
                                              noDataValue=-9999)
 
-        band_info = logical_file.metadata.bandInformation.first()
+        band_info = logical_file.metadata.bandInformations.first()
         self.assertEquals(band_info.name, 'bandinfo')
         self.assertEquals(band_info.variableName, 'diginal elevation')
         self.assertEquals(band_info.variableUnit, 'meter')
@@ -353,7 +356,7 @@ class RasterFileTypeMetaData(MockIRODSTestCaseMixin, TransactionTestCase):
                                              comment='this is comment',
                                              maximumValue=1000, minimumValue=0,
                                              noDataValue=-9999)
-        self.assertEquals(logical_file.metadata.bandInformation.all().count(), 2)
+        self.assertEquals(logical_file.metadata.bandInformations.all().count(), 2)
 
         # test metadata delete
 
@@ -370,7 +373,7 @@ class RasterFileTypeMetaData(MockIRODSTestCaseMixin, TransactionTestCase):
         # band information deletion is not allowed
         with self.assertRaises(ValidationError):
             logical_file.metadata.delete_element('bandinformation',
-                                                logical_file.metadata.bandInformation.first().id)
+                                                logical_file.metadata.bandInformations.first().id)
 
         # test metadata update
 
@@ -401,7 +404,7 @@ class RasterFileTypeMetaData(MockIRODSTestCaseMixin, TransactionTestCase):
 
         # update band info element
         logical_file.metadata.update_element('bandinformation',
-                                             logical_file.metadata.bandInformation.first().id,
+                                             logical_file.metadata.bandInformations.first().id,
                                              name='bandinfo',
                                              variableName='precipitation',
                                              variableUnit='mm/h',
@@ -411,7 +414,7 @@ class RasterFileTypeMetaData(MockIRODSTestCaseMixin, TransactionTestCase):
                                              noDataValue=-9998
                                              )
 
-        band_info = logical_file.metadata.bandInformation.first()
+        band_info = logical_file.metadata.bandInformations.first()
         self.assertEquals(band_info.name, 'bandinfo')
         self.assertEquals(band_info.variableName, 'precipitation')
         self.assertEquals(band_info.variableUnit, 'mm/h')
@@ -568,7 +571,7 @@ class RasterFileTypeMetaData(MockIRODSTestCaseMixin, TransactionTestCase):
         res_file = self.composite_resource.files.first()
 
         # test the get_html() for CellInformation element
-        cellinfo_html = u'<div class="col-xs-12 col-sm-6" style="margin-bottom:40px;">' \
+        cellinfo_html = u'<div class="col-xs-6 col-sm-6" style="margin-bottom:40px;">' \
                         u'<legend>Cell Information</legend><table class="custom-table">' \
                         u'<tbody><tr><th class="text-muted">Rows</th>' \
                         u'<td>230</td></tr><tr>' \
@@ -578,6 +581,7 @@ class RasterFileTypeMetaData(MockIRODSTestCaseMixin, TransactionTestCase):
                         u'<tr><th class="text-muted">Cell Data Type</th><td>Float32</td></tr>' \
                         u'</tbody></table></div>'
         logical_file = res_file.logical_file
+        self.maxDiff = None
         self.assertEqual(logical_file.metadata.cellInformation.get_html(pretty=False),
                          cellinfo_html)
 
@@ -609,7 +613,7 @@ class RasterFileTypeMetaData(MockIRODSTestCaseMixin, TransactionTestCase):
         self.assertEqual(logical_file.metadata.coverages.all().count(), 1)
         self.assertNotEqual(logical_file.metadata.originalCoverage, None)
         self.assertNotEqual(logical_file.metadata.cellInformation, None)
-        self.assertNotEqual(logical_file.metadata.bandInformation, None)
+        self.assertNotEqual(logical_file.metadata.bandInformations, None)
 
         self.assertEqual(Coverage.objects.count(), 1)
         self.assertEqual(OriginalCoverage.objects.count(), 1)

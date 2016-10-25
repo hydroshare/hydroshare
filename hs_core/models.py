@@ -1226,11 +1226,6 @@ class AbstractResource(ResourcePermissionsMixin):
                                         null=True
                                         )
 
-    # dublin_metadata = GenericRelation(
-    #     'dublincore.QualifiedDublinCoreElement',
-    #     help_text='The dublin core metadata of the resource'
-    # )
-
     files = GenericRelation('hs_core.ResourceFile',
                             help_text='The files associated with this resource',
                             for_concrete_model=True)
@@ -1304,7 +1299,9 @@ class AbstractResource(ResourcePermissionsMixin):
 
             if fl.logical_file is not None:
                 fl.logical_file.delete_metadata()
-                fl.logical_file.delete()
+                # delete of metadata deletes the logical file (one-to-one relation)
+                # so no need for fl.logical_file.delete()
+                fl.logical_file.metadata.delete()
 
         hs_bagit.delete_bag(self)
 
@@ -1481,12 +1478,20 @@ class AbstractResource(ResourcePermissionsMixin):
     @property
     def logical_files(self):
         logical_files_list = []
-        for res_file in self.files:
+        for res_file in self.files.all():
             if res_file.logical_file is not None:
                 if res_file.logical_file not in logical_files_list:
                     logical_files_list.append(res_file.logical_file)
         return logical_files_list
 
+    @property
+    def non_logical_files(self):
+        non_logical_files_list = []
+        for res_file in self.files.all():
+            if res_file.logical_file is None:
+                if res_file.logical_file not in non_logical_files_list:
+                    non_logical_files_list.append(res_file)
+        return non_logical_files_list
 
     class Meta:
         abstract = True
@@ -1565,6 +1570,26 @@ class ResourceFile(models.Model):
     @property
     def can_set_file_type(self):
         return self.extension in ('.tif', '.zip') and self.logical_file is None
+
+    @property
+    def size(self):
+        # get file size (in bytes)
+        if self.resource_file:
+            return self.resource_file.size
+        elif self.fed_resource_file:
+            return self.fed_resource_file.size
+        else:
+            return self.fed_resource_file_size
+
+    @property
+    def url(self):
+        if self.resource_file:
+            return self.resource_file.url
+        elif self.fed_resource_file:
+            return self.fed_resource_file.url
+        else:
+            return self.fed_resource_file_name_or_path
+
 
 class Bags(models.Model):
     object_id = models.PositiveIntegerField()

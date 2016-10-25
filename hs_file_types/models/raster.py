@@ -28,13 +28,13 @@ class GeoRasterFileMetaData(AbstractFileMetaData, GeoRasterMetaDataMixin):
             self.cellInformation.delete()
         if self.originalCoverage:
             self.originalCoverage.delete()
-        self.bandInformation.delete()
+        self.bandInformations.all().delete()
         self.coverages.all().delete()
 
     def get_html(self):
         # in the template we can insert necessary html code for displaying all
         # file type metadata associated with a logical file using this
-        # single line: {{ logical_file.metadata.get_html }}
+        # single line: {{ logical_file.metadata.get_html |safe }}
         html_string = ''
         for element in (self.originalCoverage, self.cellInformation, self.bandInformation):
             html_string += element.get_html() + "\n"

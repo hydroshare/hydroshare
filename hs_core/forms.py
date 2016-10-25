@@ -1491,3 +1491,10 @@ class ValidDateValidationForm(forms.Form):
             self.cleaned_data['type'] = 'valid'
 
         return self.cleaned_data
+
+
+def get_crispy_form_fields(field_names):
+    crispy_fields = []
+    for field_name in field_names:
+        crispy_fields.append(Field(field_name, css_class='form-control input-sm'))
+    return crispy_fields

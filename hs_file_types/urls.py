@@ -8,4 +8,9 @@ urlpatterns = patterns('',
         views.set_file_type,
         name="set_file_type"),
 
+    url(r'^_internal/(?P<resource_id>[A-z0-9]+)/'
+        r'(?P<hs_file_type>[A-z]+)/(?P<file_type_id>[0-9]+)/delete-file-type/$',
+        views.delete_file_type,
+        name="delete_file_type"),
+
     )
