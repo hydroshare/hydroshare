@@ -321,7 +321,7 @@ def raster_pre_add_files_to_resource_trigger(sender, **kwargs):
                                         )
 
             # update extended metadata BandInformation
-            for band in res.metadata.bandInformation:
+            for band in res.metadata.bandInformations:
                 band.delete()
 
             band_info = res_md_dict['band_info']
@@ -364,7 +364,7 @@ def raster_pre_delete_file_from_resource_trigger(sender, **kwargs):
                                 )
 
     # reset extended metadata BandInformation now that the only file is deleted
-    for band in res.metadata.bandInformation:
+    for band in res.metadata.bandInformations:
         band.delete()
     res.metadata.create_element('BandInformation', name='Band_1', variableName='', variableUnit='',
                                 method='', comment='', noDataValue=None, maximumValue=None, minimumValue=None)

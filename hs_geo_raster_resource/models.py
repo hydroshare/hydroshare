@@ -101,6 +101,43 @@ class OriginalCoverage(AbstractMetaDataElement):
     def remove(cls, element_id):
         raise ValidationError("Coverage element can't be deleted.")
 
+    def get_html(self, pretty=True):
+        # Using the dominate module to generate the
+        # html to display data for this element (resource view mode)
+        root_div = div(cls="col-xs-6 col-sm-6", style="margin-bottom:40px;")
+
+        def get_th(heading_name):
+            return th(heading_name, cls="text-muted")
+
+        with root_div:
+            legend('Spatial Reference')
+            with table(cls='custom-table'):
+                with tbody():
+                    with tr():
+                        get_th('Coordinate Reference System')
+                        td(self.value['projection'])
+                    with tr():
+                        get_th('Coordinate Reference System Unit')
+                        td(self.value['units'])
+
+            h4('Extent')
+            with table(cls='custom-table'):
+                with tbody():
+                    with tr():
+                        get_th('North')
+                        td(self.value['northlimit'])
+                    with tr():
+                        get_th('West')
+                        td(self.value['westlimit'])
+                    with tr():
+                        get_th('South')
+                        td(self.value['southlimit'])
+                    with tr():
+                        get_th('East')
+                        td(self.value['eastlimit'])
+
+        return root_div.render(pretty=pretty)
+
 
 class BandInformation(AbstractMetaDataElement):
     term = 'BandInformation'
@@ -125,6 +162,48 @@ class BandInformation(AbstractMetaDataElement):
     @classmethod
     def remove(cls, element_id):
         raise ValidationError("BandInformation element of the raster resource cannot be deleted.")
+
+    def get_html(self, pretty=True):
+        # Using the dominate module to generate the
+        # html to display data for this element (resource view mode)
+        root_div = div(cls="col-xs-12 pull-left", style="margin-bottom:40px;")
+
+        def get_th(heading_name):
+            return th(heading_name, cls="text-muted")
+
+        with root_div:
+            with div(cls="custom-well"):
+                strong(self.name)
+                with table(cls='custom-table'):
+                    with tbody():
+                        with tr():
+                            get_th('Variable Name')
+                            td(self.variableName)
+                        with tr():
+                            get_th('Variable Unit')
+                            td(self.variableUnit)
+                        if self.noDataValue:
+                            with tr():
+                                get_th('No Data Value')
+                                td(self.noDataValue)
+                        if self.maximumValue:
+                            with tr():
+                                get_th('Maximum Value')
+                                td(self.maximumValue)
+                        if self.minimumValue:
+                            with tr():
+                                get_th('Minimum Value')
+                                td(self.minimumValue)
+                        if self.method:
+                            with tr():
+                                get_th('Method')
+                                td(self.method)
+                        if self.comment:
+                            with tr():
+                                get_th('Comment')
+                                td(self.comment)
+
+        return root_div.render(pretty=pretty)
 
 
 class CellInformation(AbstractMetaDataElement):
@@ -163,7 +242,7 @@ class CellInformation(AbstractMetaDataElement):
     def get_html(self, pretty=True):
         # Using the dominate module to generate the
         # html to display data for this element (resource view mode)
-        root_div = div(cls="col-xs-12 col-sm-6", style="margin-bottom:40px;")
+        root_div = div(cls="col-xs-6 col-sm-6", style="margin-bottom:40px;")
 
         def get_th(heading_name):
             return th(heading_name, cls="text-muted")
@@ -189,7 +268,6 @@ class CellInformation(AbstractMetaDataElement):
                         td(self.cellDataType)
 
         return root_div.render(pretty=pretty)
-
 
 # To create a new resource, use these two super-classes.
 class RasterResource(BaseResource):
@@ -230,12 +308,13 @@ class GeoRasterMetaDataMixin(models.Model):
 
     class Meta:
         abstract = True
+
     @property
     def cellInformation(self):
         return self._cell_information.all().first()
 
     @property
-    def bandInformation(self):
+    def bandInformations(self):
         return self._band_information.all()
 
     @property

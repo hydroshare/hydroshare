@@ -162,7 +162,7 @@ class TestRasterMetaData(MockIRODSTestCaseMixin, TransactionTestCase):
         self.assertEquals(ori_coverage.value['projection'], None)
 
         # there should be default band information:
-        band_info = self.resRaster.metadata.bandInformation.first()
+        band_info = self.resRaster.metadata.bandInformations.first()
         self.assertNotEqual(band_info, 0)
         self.assertEquals(band_info.variableName, None)
         self.assertEquals(band_info.variableUnit, None)
@@ -208,7 +208,7 @@ class TestRasterMetaData(MockIRODSTestCaseMixin, TransactionTestCase):
         # there should be default extended metadata
         self.assertNotEquals(self.resRaster.metadata.originalCoverage, None)
         self.assertNotEquals(self.resRaster.metadata.cellInformation, None)
-        self.assertNotEquals(self.resRaster.metadata.bandInformation, None)
+        self.assertNotEquals(self.resRaster.metadata.bandInformations, None)
 
         # adding a valid tiff file should generate some core metadata and all extended metadata
         files = [UploadedFile(file=self.raster_tif_file_obj, name=self.raster_tif_file_name)]
@@ -265,7 +265,7 @@ class TestRasterMetaData(MockIRODSTestCaseMixin, TransactionTestCase):
         # testing extended metadata elements
         self.assertEquals(self.resRaster.metadata.originalCoverage, None)
         self.assertNotEquals(self.resRaster.metadata.cellInformation, None)
-        self.assertNotEquals(self.resRaster.metadata.bandInformation.count, 0)
+        self.assertNotEquals(self.resRaster.metadata.bandInformations.count, 0)
 
     def test_metadata_delete_on_resource_delete(self):
         # adding a valid raster tif file should generate some core metadata and all extended metadata
@@ -403,8 +403,8 @@ class TestRasterMetaData(MockIRODSTestCaseMixin, TransactionTestCase):
                                                    )
 
         # delete default band information element
-        self.assertNotEquals(self.resRaster.metadata.bandInformation, None)
-        self.resRaster.metadata.bandInformation.first().delete()
+        self.assertNotEquals(self.resRaster.metadata.bandInformations, None)
+        self.resRaster.metadata.bandInformations.first().delete()
 
         # create band information element with meaningful value
         self.resRaster.metadata.create_element('bandinformation', name='bandinfo',
@@ -414,7 +414,7 @@ class TestRasterMetaData(MockIRODSTestCaseMixin, TransactionTestCase):
                                                comment='this is comment',
                                                maximumValue=1000, minimumValue=0, noDataValue=-9999)
 
-        band_info = self.resRaster.metadata.bandInformation.first()
+        band_info = self.resRaster.metadata.bandInformations.first()
         self.assertEquals(band_info.name, 'bandinfo')
         self.assertEquals(band_info.variableName, 'diginal elevation')
         self.assertEquals(band_info.variableUnit, 'meter')
@@ -431,7 +431,7 @@ class TestRasterMetaData(MockIRODSTestCaseMixin, TransactionTestCase):
                                                method='this is method',
                                                comment='this is comment',
                                                maximumValue=1000, minimumValue=0, noDataValue=-9999)
-        self.assertEquals(self.resRaster.metadata.bandInformation.all().count(), 2)
+        self.assertEquals(self.resRaster.metadata.bandInformations.all().count(), 2)
 
         # delete
         # original coverage deletion is not allowed
@@ -444,7 +444,7 @@ class TestRasterMetaData(MockIRODSTestCaseMixin, TransactionTestCase):
 
         # band information deletion is not allowed
         with self.assertRaises(ValidationError):
-            self.resRaster.metadata.delete_element('bandinformation', self.resRaster.metadata.bandInformation.first().id)
+            self.resRaster.metadata.delete_element('bandinformation', self.resRaster.metadata.bandInformations.first().id)
 
         # update
         # update original coverage element
@@ -472,7 +472,7 @@ class TestRasterMetaData(MockIRODSTestCaseMixin, TransactionTestCase):
 
         # update band info element
         self.resRaster.metadata.update_element('bandinformation',
-                                               self.resRaster.metadata.bandInformation.first().id,
+                                               self.resRaster.metadata.bandInformations.first().id,
                                                name='bandinfo',
                                                variableName='precipitation',
                                                variableUnit='mm/h',
@@ -481,7 +481,7 @@ class TestRasterMetaData(MockIRODSTestCaseMixin, TransactionTestCase):
                                                maximumValue=1001, minimumValue=1, noDataValue=-9998
                                                )
 
-        band_info = self.resRaster.metadata.bandInformation.first()
+        band_info = self.resRaster.metadata.bandInformations.first()
         self.assertEquals(band_info.name, 'bandinfo')
         self.assertEquals(band_info.variableName, 'precipitation')
         self.assertEquals(band_info.variableUnit, 'mm/h')
@@ -579,8 +579,8 @@ class TestRasterMetaData(MockIRODSTestCaseMixin, TransactionTestCase):
         self.assertEquals(cell_info.cellDataType, 'Float32')
 
         # testing extended metadata element: band information
-        self.assertEquals(self.resRaster.metadata.bandInformation.count(), 1)
-        band_info = self.resRaster.metadata.bandInformation.first()
+        self.assertEquals(self.resRaster.metadata.bandInformations.count(), 1)
+        band_info = self.resRaster.metadata.bandInformations.first()
         self.assertEquals(band_info.noDataValue, '-3.40282346639e+38')
         self.assertEquals(band_info.maximumValue, '3031.44311523')
         self.assertEquals(band_info.minimumValue, '1358.33459473')
