@@ -455,12 +455,12 @@ def link_irods_folder_to_django(resource, istorage, foldername, exclude=()):
                                         istorage, os.path.join(foldername, folder), exclude)
 
 
-def rename_irods_file_in_django(resource, src_name, tgt_name):
+def rename_irods_file_or_folder_in_django(resource, src_name, tgt_name):
     """
     Rename file in Django DB after the file is renamed in Django side
     :param resource: the BaseResource object representing a HydroShare resource
-    :param src_name: the file name to be renamed
-    :param tgt_name: the file name to be renamed to
+    :param src_name: the file or folder full path name to be renamed
+    :param tgt_name: the file or folder full path name to be renamed to
     :return:
     """
     if resource:
@@ -468,17 +468,39 @@ def rename_irods_file_in_django(resource, src_name, tgt_name):
             res_file_obj = ResourceFile.objects.filter(object_id=resource.id,
                                                        fed_resource_file_name_or_path=src_name)
             if res_file_obj.exists():
+                # src_name and tgt_name are file names - replace src_name with tgt_name
                 res_file_obj[0].fed_resource_file_name_or_path = tgt_name
                 res_file_obj[0].save()
+            else:
+                # src_name and tgt_name are folder names
+                res_file_objs = \
+                    ResourceFile.objects.filter(object_id=resource.id,
+                                                fed_resource_file_name_or_path__contains=src_name)
+                for fobj in res_file_objs:
+                    old_str = fobj.fed_resource_file_name_or_path
+                    new_str = old_str.replace(src_name, tgt_name)
+                    fobj.fed_resource_file_name_or_path = new_str
+                    fobj.save()
         else:
             res_file_obj = ResourceFile.objects.filter(object_id=resource.id,
                                                        resource_file=src_name)
             if res_file_obj.exists():
+                # src_name and tgt_name are file names
                 # since resource_file is a FileField which cannot be directly renamed,
                 # this old ResourceFile object has to be deleted followed by creation of
                 # a new ResourceFile with new file associated that replace the old one
                 res_file_obj[0].delete()
                 ResourceFile.objects.create(content_object=resource, resource_file=tgt_name)
+            else:
+                # src_name and tgt_name are folder names
+                res_file_objs = \
+                    ResourceFile.objects.filter(object_id=resource.id,
+                                                resource_file__contains=src_name)
+                for fobj in res_file_objs:
+                    old_str = fobj.resource_file.name
+                    new_str = old_str.replace(src_name, tgt_name)
+                    fobj.delete()
+                    ResourceFile.objects.create(content_object=resource, resource_file=new_str)
 
 
 def remove_irods_folder_in_django(resource, istorage, foldername):
@@ -533,7 +555,7 @@ def zip_folder(user, res_id, input_coll_path, output_zip_fname, bool_remove_orig
         for f in ResourceFile.objects.filter(object_id=resource.id):
             full_path_name, basename, _ = \
                 hydroshare.utils.get_resource_file_name_and_extension(f)
-            if res_coll_input in full_path_name:
+            if res_coll_input in full_path_name and output_zip_full_path not in full_path_name:
                 delete_resource_file(res_id, basename, user)
 
         # remove empty folder in iRODS
@@ -654,6 +676,6 @@ def move_or_rename_file_or_folder(user, res_id, src_path, tgt_path):
 
     istorage.moveFile(src_full_path, tgt_full_path)
 
-    rename_irods_file_in_django(resource, src_full_path, tgt_full_path)
+    rename_irods_file_or_folder_in_django(resource, src_full_path, tgt_full_path)
 
     hydroshare.utils.resource_modified(resource, user)
