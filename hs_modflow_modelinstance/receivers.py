@@ -1,30 +1,48 @@
 from django.dispatch import receiver
+from django.core.exceptions import ObjectDoesNotExist
 
 from hs_core.signals import pre_metadata_element_create, pre_metadata_element_update, \
-    pre_create_resource
+    pre_create_resource, post_metadata_element_update
 
-from hs_modflow_modelinstance.models import MODFLOWModelInstanceResource
+import hs_modflow_modelinstance.models as modflow_models
+
 from hs_modflow_modelinstance.forms import ModelOutputValidationForm, ExecutedByValidationForm,\
     StudyAreaValidationForm, GridDimensionsValidationForm, StressPeriodValidationForm,\
     GroundWaterFlowValidationForm, BoundaryConditionValidationForm, ModelCalibrationValidationForm,\
     ModelInputValidationForm, GeneralElementsValidationForm
 
 
-@receiver(pre_create_resource, sender=MODFLOWModelInstanceResource)
+@receiver(pre_create_resource, sender=modflow_models.MODFLOWModelInstanceResource)
 def modflowmodelinstance_pre_create_resource(sender, **kwargs):
     metadata = kwargs['metadata']
     modeloutput = {'modeloutput': {'includes_output': False}}
     metadata.append(modeloutput)
 
 
-@receiver(pre_metadata_element_create, sender=MODFLOWModelInstanceResource)
+@receiver(pre_metadata_element_create, sender=modflow_models.MODFLOWModelInstanceResource)
 def metadata_element_pre_create_handler(sender, **kwargs):
     return _process_metadata_update_create(update_or_create='create', **kwargs)
 
 
-@receiver(pre_metadata_element_update, sender=MODFLOWModelInstanceResource)
+@receiver(pre_metadata_element_update, sender=modflow_models.MODFLOWModelInstanceResource)
 def metadata_element_pre_update_handler(sender, **kwargs):
     return _process_metadata_update_create(update_or_create='update', **kwargs)
+
+
+@receiver(post_metadata_element_update, sender=modflow_models.MODFLOWModelInstanceResource)
+def check_element_exist(sender, **kwargs):
+    element_id = kwargs['element_id']
+    element_name = kwargs['element_name']
+    element_exists = False
+    class_names = vars(modflow_models)
+    for class_name, cls in class_names.iteritems():
+        if class_name.lower() == element_name.lower():
+            try:
+                cls.objects.get(pk=element_id)
+                element_exists = True
+            except ObjectDoesNotExist:
+                break
+    return {'element_exists': element_exists}
 
 
 def _process_metadata_update_create(update_or_create, **kwargs):

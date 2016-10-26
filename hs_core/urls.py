@@ -42,10 +42,16 @@ urlpatterns = patterns('',
     url(r'^scimeta/(?P<pk>[0-9a-f-]+)/$', views.resource_rest_api.ScienceMetadataRetrieveUpdate.as_view(),
         name='DEPRECATED_get_update_science_metadata'),
 
-    # Unused. See ResourceFileListCreate. 
+    # Unused. See ResourceFileListCreate. This is now implemented there.
     # url(r'^resource/(?P<pk>[0-9a-f-]+)/files/$', 
     #     views.resource_rest_api.ResourceFileCRUD.as_view(),
     #     name='add_resource_file'),
+
+    url(r'^resource/(?P<pk>[A-z0-9]+)/map/$', views.resource_rest_api.ResourceMapRetrieve.as_view(),
+        name='get_resource_map'),
+
+    url(r'^resource/(?P<pk>[A-z0-9]+)/files/$', views.resource_rest_api.ResourceFileCRUD.as_view(),
+        name='add_resource_file'),
 
     url(r'^resource/(?P<pk>[0-9a-f-]+)/files/(?P<filename>[^/]+)/$',
         views.resource_rest_api.ResourceFileCRUD.as_view(), 
