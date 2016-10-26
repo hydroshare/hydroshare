@@ -533,8 +533,8 @@ $(document).ready(function () {
             maxFilesize: 1024, // MB
             acceptedFiles: acceptedFiles,
             maxFiles: allowMultiple,
-            uploadMultiple: true,
             autoProcessQueue: false,
+            uploadMultiple: true,
             parallelUploads : 10,
             init: function () {
                 // The user dragged a file onto the Dropzone
@@ -545,12 +545,12 @@ $(document).ready(function () {
 
                 this.on("drop", function (event) {
                     var myDropzone = this;
-                    myDropzone.autoProcessQueue = false;
+                    myDropzone.options.autoProcessQueue = false;
                     (function () {
                         // Wait for the files to reach the queue from the drop event. Check every 200 milliseconds
                         if (myDropzone.files.length > 0) {
                             myDropzone.processQueue();
-                            myDropzone.autoProcessQueue = true;
+                            // myDropzone.options.autoProcessQueue = true;
                             return;
                         }
                         setTimeout(arguments.callee, 200);
@@ -566,6 +566,11 @@ $(document).ready(function () {
                 // When a file is added to the list
                 this.on("addedfile", function (file) {
                     $(".fb-drag-flag").hide();
+                    // console.log(file);
+                });
+
+                this.on("complete", function (file) {
+                    console.log("Ready to process queue");
                 });
 
                 // When a file gets processed
