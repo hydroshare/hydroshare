@@ -533,11 +533,28 @@ $(document).ready(function () {
             maxFilesize: 1024, // MB
             acceptedFiles: acceptedFiles,
             maxFiles: allowMultiple,
+            uploadMultiple: true,
+            autoProcessQueue: false,
+            parallelUploads : 10,
             init: function () {
                 // The user dragged a file onto the Dropzone
                 this.on("dragenter", function (file) {
                     $(".fb-drag-flag").show();
                     $("#fbContainmentWrapper").toggleClass("glow-blue", true);
+                });
+
+                this.on("drop", function (event) {
+                    var myDropzone = this;
+                    myDropzone.autoProcessQueue = false;
+                    (function () {
+                        // Wait for the files to reach the queue from the drop event. Check every 200 milliseconds
+                        if (myDropzone.files.length > 0) {
+                            myDropzone.processQueue();
+                            myDropzone.autoProcessQueue = true;
+                            return;
+                        }
+                        setTimeout(arguments.callee, 200);
+                    })();
                 });
 
                 // The user dragged a file out of the Dropzone
