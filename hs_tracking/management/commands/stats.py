@@ -103,12 +103,12 @@ class Command(BaseCommand):
     def users_details(self):
         w = csv.writer(sys.stdout)
         fields = [
+            'created date',
             'first name',
             'last name',
             'email',
             'user type',
             'organization',
-            'created date',
             'last login',
         ]
         w.writerow(fields)
@@ -116,12 +116,12 @@ class Command(BaseCommand):
         for up in UserProfile.objects.filter(user__is_active=True):
             last_login = up.user.last_login.strftime('%m/%d/%Y') if up.user.last_login else ""
             values = [
+                up.user.date_joined.strftime('%m/%d/%Y'),
                 up.user.first_name,
                 up.user.last_name,
                 up.user.email,
                 up.user_type,
                 up.organization,
-                up.user.date_joined.strftime('%m/%d/%Y'),
                 last_login,
             ]
             w.writerow([unicode(v).encode("utf-8") for v in values])
@@ -129,11 +129,11 @@ class Command(BaseCommand):
     def resources_details(self):
         w = csv.writer(sys.stdout)
         fields = [
+            'creation date',
             'title',
             'resource type',
             'size',
             'federated resource file size',
-            'creation date',
             'publication status'
         ]
         w.writerow(fields)
@@ -152,11 +152,11 @@ class Command(BaseCommand):
             except SessionException:
                 federated_resource_file_size = "SessionException"
             values = [
+                r.metadata.dates.get(type="created").start_date.strftime("%m/%d/%Y"),
                 r.metadata.title.value,
                 r.resource_type,
                 total_file_size,
                 federated_resource_file_size,
-                r.metadata.dates.get(type="created").start_date.strftime("%m/%d/%Y"),
                 r.raccess.sharing_status,
             ]
             w.writerow([unicode(v).encode("utf-8") for v in values])
