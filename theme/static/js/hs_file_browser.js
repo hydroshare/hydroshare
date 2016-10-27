@@ -545,7 +545,7 @@ $(document).ready(function () {
 
                 this.on("drop", function (event) {
                     var myDropzone = this;
-                    myDropzone.options.autoProcessQueue = false;
+                    // myDropzone.options.autoProcessQueue = false;
                     (function () {
                         // Wait for the files to reach the queue from the drop event. Check every 200 milliseconds
                         if (myDropzone.files.length > 0) {
@@ -567,10 +567,6 @@ $(document).ready(function () {
                 this.on("addedfile", function (file) {
                     $(".fb-drag-flag").hide();
                     // console.log(file);
-                });
-
-                this.on("complete", function (file) {
-                    console.log("Ready to process queue");
                 });
 
                 // When a file gets processed
