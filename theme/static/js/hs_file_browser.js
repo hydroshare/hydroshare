@@ -545,12 +545,12 @@ $(document).ready(function () {
 
                 this.on("drop", function (event) {
                     var myDropzone = this;
-                    // myDropzone.options.autoProcessQueue = false;
+                    myDropzone.options.autoProcessQueue = false;    // Disable autoProcess queue so we can wait for the files to reach the buffer before processing.
                     (function () {
                         // Wait for the files to reach the queue from the drop event. Check every 200 milliseconds
                         if (myDropzone.files.length > 0) {
                             myDropzone.processQueue();
-                            // myDropzone.options.autoProcessQueue = true;
+                            myDropzone.options.autoProcessQueue = true; // Restore autoprocess
                             return;
                         }
                         setTimeout(arguments.callee, 200);
