@@ -1,13 +1,11 @@
 import os
 import tempfile
 import shutil
-import datetime
 from xml.etree import ElementTree as ET
 
 from django.test import TransactionTestCase
 from django.core.files.uploadedfile import UploadedFile
 from django.contrib.auth.models import Group
-from django.db import IntegrityError
 
 from hs_core import hydroshare
 from hs_core.hydroshare import utils
@@ -153,8 +151,8 @@ class TestModelProgramMetaData(MockIRODSTestCaseMixin, TransactionTestCase):
         # update Model program metadata
         release_date = '2015-10-24 21:05:00.315907+00:00'
         self.resModelProgram.metadata.update_element('MpMetadata',
-                                            self.resModelProgram.metadata.program.id,
-                                            modelVersion='1.0',
+                                                     self.resModelProgram.metadata.program.id,
+                                                     modelVersion='1.0',
                                                      modelProgramLanguage='C',
                                                      modelOperatingSystem='Mac',
                                                      modelReleaseDate=release_date,
@@ -183,11 +181,10 @@ class TestModelProgramMetaData(MockIRODSTestCaseMixin, TransactionTestCase):
 
         # delete all elements
         self.resModelProgram.metadata.delete_element('MpMetadata',
-                                         self.resModelProgram.metadata.program.id)
+                                                     self.resModelProgram.metadata.program.id)
 
         # make sure they are deleted
         self.assertEqual(self.resModelProgram.metadata.program, None)
-
 
     def test_public_or_discoverable(self):
         self.assertFalse(self.resModelProgram.has_required_content_files())
@@ -322,7 +319,7 @@ class TestModelProgramMetaData(MockIRODSTestCaseMixin, TransactionTestCase):
 
         # before resource delete
         core_metadata_obj = self.resModelProgram.metadata
-        self.assertEqual(CoreMetaData.objects.all().count(), 3)
+        self.assertEqual(CoreMetaData.objects.all().count(), 1)
         # there should be Creator metadata objects
         self.assertTrue(Creator.objects.filter(object_id=core_metadata_obj.id).exists())
         # there should be Contributor metadata objects
