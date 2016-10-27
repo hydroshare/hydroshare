@@ -533,7 +533,7 @@ $(document).ready(function () {
             maxFilesize: 1024, // MB
             acceptedFiles: acceptedFiles,
             maxFiles: allowMultiple,
-            autoProcessQueue: false,
+            autoProcessQueue: true,
             uploadMultiple: true,
             parallelUploads : 10,
             init: function () {
@@ -545,7 +545,7 @@ $(document).ready(function () {
 
                 this.on("drop", function (event) {
                     var myDropzone = this;
-                    myDropzone.options.autoProcessQueue = false;    // Disable autoProcess queue so we can wait for the files to reach the buffer before processing.
+                    myDropzone.options.autoProcessQueue = false;    // Disable autoProcess queue so we can wait for the files to reach the queue before processing.
                     (function () {
                         // Wait for the files to reach the queue from the drop event. Check every 200 milliseconds
                         if (myDropzone.files.length > 0) {
