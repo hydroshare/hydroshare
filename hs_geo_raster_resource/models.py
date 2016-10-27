@@ -101,6 +101,23 @@ class OriginalCoverage(AbstractMetaDataElement):
     def remove(cls, element_id):
         raise ValidationError("Coverage element can't be deleted.")
 
+    def get_html_form(self, resource):
+        from .forms import OriginalCoverageSpatialForm
+
+        ori_coverage_data_dict = dict()
+        ori_coverage_data_dict['units'] = self.value['units']
+        ori_coverage_data_dict['projection'] = self.value.get('projection', None)
+        ori_coverage_data_dict['northlimit'] = self.value['northlimit']
+        ori_coverage_data_dict['eastlimit'] = self.value['eastlimit']
+        ori_coverage_data_dict['southlimit'] = self.value['southlimit']
+        ori_coverage_data_dict['westlimit'] = self.value['westlimit']
+
+        originalcov_form = OriginalCoverageSpatialForm(initial=ori_coverage_data_dict,
+                                     res_short_id=resource.short_id if resource else None,
+                                     element_id=self.id if self else None)
+        
+        return originalcov_form
+
     def get_html(self, pretty=True):
         # Using the dominate module to generate the
         # html to display data for this element (resource view mode)
@@ -235,7 +252,7 @@ class CellInformation(AbstractMetaDataElement):
     def get_html_form(self, resource):
         from .forms import CellInfoForm
         cellinfo_form = CellInfoForm(instance=self,
-                                     res_short_id=resource.short_id,
+                                     res_short_id=resource.short_id if resource else None,
                                      element_id=self.id if self else None)
         return cellinfo_form
 

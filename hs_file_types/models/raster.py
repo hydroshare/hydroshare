@@ -1,10 +1,15 @@
+from functools import partial, wraps
+
 from django.db import models
 from django.contrib.contenttypes.fields import GenericRelation
+from django.forms.models import formset_factory
 
 from hs_core.models import Coverage
 
 from hs_geo_raster_resource.models import CellInformation, BandInformation, OriginalCoverage, \
     GeoRasterMetaDataMixin
+from hs_geo_raster_resource.forms import BandInfoForm, BaseBandInfoFormSet, BandInfoValidationForm
+
 from base import AbstractFileMetaData, AbstractLogicalFile
 
 
@@ -39,6 +44,48 @@ class GeoRasterFileMetaData(AbstractFileMetaData, GeoRasterMetaDataMixin):
         for element in (self.originalCoverage, self.cellInformation, self.bandInformation):
             html_string += element.get_html() + "\n"
         return html_string
+
+    def get_cellinfo_form(self):
+        return self.cellInformation.get_html_form(resource=None)
+
+    def get_original_coverage_form(self):
+        return self.originalCoverage.get_html_form(resource=None)
+
+    def get_bandinfo_formset(self):
+        BandInfoFormSetEdit = formset_factory(
+            wraps(BandInfoForm)(partial(BandInfoForm, allow_edit=True)),
+            formset=BaseBandInfoFormSet, extra=0)
+        bandinfo_formset = BandInfoFormSetEdit(
+            initial=self.bandInformations.values(), prefix='BandInformation')
+
+        for form in bandinfo_formset.forms:
+            if len(form.initial) > 0:
+                form.action = "/hsapi/_internal/%s/%s/bandinformation/%s/update-file-metadata/" % (
+                "GeoRaster", self.logical_file.id, form.initial['id'])
+                form.number = form.initial['id']
+
+        return bandinfo_formset
+
+    @classmethod
+    def validate_element_data(cls, request, element_name):
+        # overidding the base class method
+
+        if element_name.lower() not in [el_name.lower() for el_name
+                                        in cls.get_supported_element_names()]:
+            err_msg = "{} is nor a supported metadata element for Geo Raster file type"
+            err_msg = err_msg.format(element_name)
+            return {'is_valid': False, 'element_data_dict': None, "errors": err_msg}
+        element_name = element_name.lower()
+        if element_name == 'bandinformation':
+            form_data = {}
+            for field_name in BandInfoValidationForm().fields:
+                matching_key = [key for key in request.POST if '-' + field_name in key][0]
+                form_data[field_name] = request.POST[matching_key]
+            element_form = BandInfoValidationForm(form_data)
+            if element_form.is_valid():
+                return {'is_valid': True, 'element_data_dict': element_form.cleaned_data}
+            else:
+                return {'is_valid': False, 'element_data_dict': None, "errors": element_form.errors}
 
 
 class GeoRasterLogicalFile(AbstractLogicalFile):

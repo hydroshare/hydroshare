@@ -75,6 +75,9 @@ class AbstractFileMetaData(models.Model):
         allowed_elements = [el.lower() for el in self.get_supported_element_names()]
         return element_name.lower() in allowed_elements
 
+    @classmethod
+    def validate_element_data(cls, request, element_name):
+        raise NotImplementedError
 
 class AbstractLogicalFile(models.Model):
     """ base class for HydroShare file types """
