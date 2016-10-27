@@ -459,7 +459,7 @@ class ResourceListCreate(ResourceToListItemMixin, generics.ListCreateAPIView):
 
         if extra_metadata is not None:
             extra_metadata = json.loads(extra_metadata)
-	    # TODO: validate extra metadata here
+            # TODO: validate extra metadata here
 
         try:
             _, res_title, metadata, _ = hydroshare.utils.resource_pre_create_actions(
