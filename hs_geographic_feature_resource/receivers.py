@@ -16,7 +16,7 @@ from hs_core.signals import pre_create_resource, pre_metadata_element_create,\
                             pre_add_files_to_resource, post_add_files_to_resource
 
 
-from hs_geographic_feature_resource.parse_lib import parse_shp, UNKNOWN_STR
+from hs_geographic_feature_resource.parse_lib import parse_shp, UNKNOWN_STR, parse_shp_xml
 from hs_geographic_feature_resource.forms import OriginalCoverageValidationForm,\
                                                  GeometryInformationValidationForm,\
                                                  FieldInformationValidationForm
@@ -24,12 +24,14 @@ from hs_geographic_feature_resource.models import GeographicFeatureResource
 
 logger = logging.getLogger(__name__)
 
+
 def is_shapefiles(file_info_list):
     # check if uploaded files are valid shapefiles (shp, shx, dbf)
     fn_list = []
     for f_info in file_info_list:
         fn_list.append(f_info[0])
     return check_fn_for_shp(fn_list)
+
 
 def is_zipped_shapefiles(file_info_list):
     # check if the uploaded zip files contains valid shapefiles (shp, shx, dbf)
@@ -40,6 +42,7 @@ def is_zipped_shapefiles(file_info_list):
             content_fn_list = zf.namelist()
             return check_fn_for_shp(content_fn_list)
     return False
+
 
 def check_fn_for_shp(files):
     # used by is_shapefiles
@@ -57,13 +60,22 @@ def check_fn_for_shp(files):
                 fileName, fileExtension = os.path.splitext(fullName.lower())
                 if ".shp" == fileExtension:
                     shp_filename = fileName
-                    shp = True
+                    if not shp:
+                        shp = True
+                    else:
+                        return False
                 elif ".shx" == fileExtension:
                     shx_filename = fileName
-                    shx = True
+                    if not shx:
+                        shx = True
+                    else:
+                        return False
                 elif ".dbf" == fileExtension:
                     dbf_filename = fileName
-                    dbf = True
+                    if not dbf:
+                        dbf = True
+                    else:
+                        return False
 
         if shp_filename == shx_filename and shp_filename == dbf_filename:
             all_have_same_filename = True
@@ -72,6 +84,7 @@ def check_fn_for_shp(files):
         return True
     else:
         return False
+
 
 def check_uploaded_files_type(file_info_list):
     files_type_dict = {}
@@ -94,6 +107,11 @@ def check_uploaded_files_type(file_info_list):
         shp_full_path = tmp_dir + "/" + fileName + ".shp"
         files_type_dict['shp_full_path'] = shp_full_path
         files_type_dict["baseFilename"] = baseFilename
+        # Expected fullpath of ESRI Shapefile Metadat XML file
+        # This file may not exist, should check existence before reading
+        shp_xml_full_path = tmp_dir + "/" + baseFilename + ".shp.xml"
+        files_type_dict['shp_xml_full_path'] = shp_xml_full_path
+
         uploadedFileCount = len(file_info_list)
         files_type_dict["uploadedFileCount"] = uploadedFileCount
         uploadedFilenameString_dict = {}
@@ -123,24 +141,33 @@ def check_uploaded_files_type(file_info_list):
         for fn in fn_list:
             source = tmp_dir + '/' + fn
             target = tmp_dir
-            if os.path.isfile(source):  # only add files, filter out folders (should be 0 or 1 folder)
+            if os.path.isfile(source):
+                # only add files, filter out folders (should be 0 or 1 folder)
                 fileName, fileExtension = os.path.splitext(fn)
-                if '/' in fileName:  # if the file is inside a folder, move it to the root of tmp_dir
+                if '/' in fileName:
+                    # if the file is inside a folder, move it to the root of tmp_dir
                     path_and_filename = fileName.split('/')
                     fileName = path_and_filename[len(path_and_filename)-1]
                 target = tmp_dir + '/' + fileName.lower() + fileExtension.lower()
-                shutil.move(source, target)  # move file from folder (if any) to tmp root and rename it into lower case
+                # move file from folder (if any) to tmp root and rename it into lower case
+                shutil.move(source, target)
 
                 if fileExtension.lower() == ".shp":  # save the real path to .shp file
                     baseFilename = fileName.lower()  # save the name of .shp as the baseFileName
                     shp_full_path = target
-                files_new.append(UploadedFile(file=open(target, 'r'), name=fileName + fileExtension))
+                files_new.append(UploadedFile(file=open(target, 'r'),
+                                              name=fileName + fileExtension))
                 uploadedFileCount += 1
-                uploadedFilenameString_dict[(fileName + fileExtension).lower()] = str(-1)  # -1: unzipped file
+                # -1: unzipped file
+                uploadedFilenameString_dict[(fileName + fileExtension).lower()] = str(-1)
 
         files_type_dict['shp_full_path'] = shp_full_path
-
         files_type_dict["baseFilename"] = baseFilename
+        # Expected fullpath of ESRI Shapefile Metadat XML file
+        # This file may not exist, should check existence before reading
+        shp_xml_full_path = tmp_dir + "/" + baseFilename + ".shp.xml"
+        files_type_dict['shp_xml_full_path'] = shp_xml_full_path
+
         files_type_dict["uploadedFileCount"] = uploadedFileCount
         uploadedFilenameString = json.dumps(uploadedFilenameString_dict)
         files_type_dict["uploadedFilenameString"] = uploadedFilenameString
@@ -149,11 +176,16 @@ def check_uploaded_files_type(file_info_list):
         files_type_dict['message'] = 'All files are validated.'
     else:
         files_type_dict["are_files_valid"] = False
-        files_type_dict['message'] = "Invalid files uploaded. Please note the three mandatory files (.shp, .shx, .dbf) of ESRI Shapefiles should be uploaded at the same time (or in a zip file)."
+        files_type_dict['message'] = "Invalid files uploaded. You may upload only one " \
+                                     "ESRI shapefile that includes at least three " \
+                                     "mandatory files (.shp, .shx, .dfb) or " \
+                                     "upload one zipped shapefile."
 
     return files_type_dict
 
-def parse_shp_zshp(uploadedFileType, baseFilename, uploadedFileCount, uploadedFilenameString, shpFullPath):
+
+def parse_shp_zshp(uploadedFileType, baseFilename,
+                   uploadedFileCount, uploadedFilenameString, shpFullPath):
     try:
         metadata_array = []
         metadata_dict = {}
@@ -181,18 +213,30 @@ def parse_shp_zshp(uploadedFileType, baseFilename, uploadedFileCount, uploadedFi
                                            "projection": wgs84_dict["projection"]}
                                 }}
             else:  # otherwise, create box type coverage
-                coverage_dict = {"Coverage": {"type": "box", "value": parsed_md_dict["wgs84_extent_dict"]}}
+                coverage_dict = {"Coverage": {"type": "box",
+                                              "value": parsed_md_dict["wgs84_extent_dict"]}}
             metadata_array.append(coverage_dict)
             metadata_dict["coverage"] = coverage_dict
 
         # original extent
         original_coverage_dict = {}
-        original_coverage_dict["originalcoverage"] = {"northlimit": parsed_md_dict["origin_extent_dict"]["northlimit"],
-                                                      "southlimit": parsed_md_dict["origin_extent_dict"]["southlimit"],
-                                                      "westlimit": parsed_md_dict["origin_extent_dict"]["westlimit"],
-                                                      "eastlimit": parsed_md_dict["origin_extent_dict"]["eastlimit"],
-                                                      "projection_string": parsed_md_dict["origin_projection_string"],
-                                                      "projection_name": parsed_md_dict["origin_projection_name"],
+        original_coverage_dict["originalcoverage"] = {"northlimit":
+                                                      parsed_md_dict
+                                                      ["origin_extent_dict"]["northlimit"],
+                                                      "southlimit":
+                                                      parsed_md_dict
+                                                      ["origin_extent_dict"]["southlimit"],
+                                                      "westlimit":
+                                                      parsed_md_dict
+                                                      ["origin_extent_dict"]["westlimit"],
+                                                      "eastlimit":
+                                                      parsed_md_dict
+                                                      ["origin_extent_dict"]["eastlimit"],
+                                                      "projection_string":
+                                                      parsed_md_dict
+                                                      ["origin_projection_string"],
+                                                      "projection_name":
+                                                      parsed_md_dict["origin_projection_name"],
                                                       "datum": parsed_md_dict["origin_datum"],
                                                       "unit": parsed_md_dict["origin_unit"]
                                                       }
@@ -204,7 +248,8 @@ def parse_shp_zshp(uploadedFileType, baseFilename, uploadedFileCount, uploadedFi
         field_name_list = parsed_md_dict["field_meta_dict"]['field_list']
         for field_name in field_name_list:
             field_info_dict_item = {}
-            field_info_dict_item['fieldinformation'] = parsed_md_dict["field_meta_dict"]["field_attr_dict"][field_name]
+            field_info_dict_item['fieldinformation'] = \
+                parsed_md_dict["field_meta_dict"]["field_attr_dict"][field_name]
             field_info_array.append(field_info_dict_item)
         metadata_array.extend(field_info_array)
         metadata_dict['field_info_array'] = field_info_array
@@ -217,6 +262,7 @@ def parse_shp_zshp(uploadedFileType, baseFilename, uploadedFileCount, uploadedFi
         return(metadata_array, metadata_dict)
     except:
         raise Exception("Parse Shapefiles Failed!")
+
 
 # receiver used to extract metadata after user click on "create resource"
 @receiver(pre_create_resource, sender=GeographicFeatureResource)
@@ -232,7 +278,8 @@ def geofeature_pre_create_resource(sender, **kwargs):
 
         if files and fed_res_fnames:
             validate_files_dict['are_files_valid'] = False
-            validate_files_dict['message'] = 'Please upload files from either local disk or irods, not both.'
+            validate_files_dict['message'] = 'Please upload files from ' \
+                                             'either local disk or irods, not both.'
             return
 
         if files or fed_res_fnames:
@@ -269,9 +316,11 @@ def geofeature_pre_create_resource(sender, **kwargs):
                                                            uploadedFilenameString,
                                                            shp_full_path)
                     metadata.extend(meta_array)
+                    metadata.extend(parse_shp_xml(files_type['shp_xml_full_path']))
 
                     if fed_res_fnames:
-                        # as long as there is a file uploaded from a fed'd irod zone, the res should be created in that fed'd zone
+                        # as long as there is a file uploaded from a fed'd
+                        # irod zone, the res should be created in that fed'd zone
                         fed_res_path.append(utils.get_federated_zone_home_path(fed_res_fnames[0]))
 
                     if uploaded_file_type == "zipped_shp":
@@ -291,7 +340,10 @@ def geofeature_pre_create_resource(sender, **kwargs):
                     pass
         else:
             validate_files_dict['are_files_valid'] = False
-            validate_files_dict['message'] = "Invalid files uploaded. Please note the three mandatory files (.shp, .shx, .dbf) of ESRI Shapefiles should be uploaded at the same time (or in a zip file)."
+            validate_files_dict['message'] = "Invalid files uploaded. Please note the " \
+                                             "three mandatory files (.shp, .shx, .dbf) " \
+                                             "of ESRI Shapefiles should be uploaded at the " \
+                                             "same time (or in a zip file)."
     except Exception as ex:
         validate_files_dict['are_files_valid'] = False
         validate_files_dict['message'] = 'Uploaded files are invalid or corrupt.'
@@ -304,6 +356,7 @@ def geofeature_pre_create_resource(sender, **kwargs):
             for file_path in fed_tmpfile_name_list:
                 shutil.rmtree(os.path.dirname(file_path))
 
+
 # This handler is executed only when a metadata element is added as part of editing a resource
 @receiver(pre_metadata_element_create, sender=GeographicFeatureResource)
 def metadata_element_pre_create_handler(sender, **kwargs):
@@ -311,12 +364,14 @@ def metadata_element_pre_create_handler(sender, **kwargs):
     request = kwargs['request']
     return validate_form(request, element_name)
 
+
 # This handler is executed only when a metadata element is updated as part of editing a resource
 @receiver(pre_metadata_element_update, sender=GeographicFeatureResource)
 def metadata_element_pre_update_handler(sender, **kwargs):
     element_name = kwargs['element_name'].lower()
     request = kwargs['request']
     return validate_form(request, element_name)
+
 
 def validate_form(request, element_name):
     element_form = None
@@ -331,6 +386,7 @@ def validate_form(request, element_name):
         return {'is_valid': True, 'element_data_dict': element_form.cleaned_data}
     else:
         return {'is_valid': False, 'element_data_dict': None, "errors": element_form.errors}
+
 
 @receiver(pre_delete_file_from_resource, sender=GeographicFeatureResource)
 def geofeature_pre_delete_file_from_resource(sender, **kwargs):
@@ -348,7 +404,8 @@ def geofeature_pre_delete_file_from_resource(sender, **kwargs):
             # The shp, shx or dbf files cannot be removed.
             all_file_removed = True
 
-            # remove all files in this res right now except for the file user just clicked to remove (hs_core will remove it later)
+            # remove all files in this res right now except for
+            # the file user just clicked to remove (hs_core will remove it later)
             for f in ResourceFile.objects.filter(object_id=res_obj.id):
                 fname = get_resource_file_name(f)
                 if fname != del_res_fname:
@@ -356,9 +413,12 @@ def geofeature_pre_delete_file_from_resource(sender, **kwargs):
 
         elif del_f_ext == ".prj":
             originalcoverage_obj = res_obj.metadata.originalcoverage.all().first()
-            res_obj.metadata.update_element('OriginalCoverage', element_id=originalcoverage_obj.id,
-                                            projection_string=UNKNOWN_STR, projection_name=UNKNOWN_STR,
-                                            datum=UNKNOWN_STR, unit=UNKNOWN_STR)
+            res_obj.metadata.update_element('OriginalCoverage',
+                                            element_id=originalcoverage_obj.id,
+                                            projection_string=UNKNOWN_STR,
+                                            projection_name=UNKNOWN_STR,
+                                            datum=UNKNOWN_STR,
+                                            unit=UNKNOWN_STR)
             res_obj.metadata.coverages.all().delete()
 
         if not all_file_removed:
@@ -386,7 +446,8 @@ def geofeature_pre_add_files_to_resource(sender, **kwargs):
     validate_files_dict = kwargs['validate_files']
     if files and fed_res_fnames:
         validate_files_dict['are_files_valid'] = False
-        validate_files_dict['message'] = 'Please upload files from either local disk or irods, not both.'
+        validate_files_dict['message'] = 'Please upload files from ' \
+                                         'either local disk or irods, not both.'
         return
 
     ori_file_info = res_obj.metadata.originalfileinfo.all().first()
@@ -420,11 +481,13 @@ def geofeature_pre_add_files_to_resource(sender, **kwargs):
                     some_new_files_added = False
                     break
                 elif (new_f_name != ori_file_info.baseFilename) and \
-                        (not (new_f_name == ori_file_info.baseFilename + ".shp" and new_f_ext == ".xml")):
+                        (not (new_f_name == ori_file_info.
+                         baseFilename + ".shp" and new_f_ext == ".xml")):
                     # need to check is it ShapefileBaseName.shp.xml
                     validate_files_dict['are_files_valid'] = False
-                    validate_files_dict['message'] = "At least one file does not follow the ESRI Shapefile naming \
-                                                        convention."
+                    validate_files_dict['message'] = "At least one file does not " \
+                                                     "follow the ESRI Shapefile naming " \
+                                                     "convention."
                     some_new_files_added = False
                     break
                 elif crt_f_str.find(new_f_fullname) != -1:
@@ -464,7 +527,7 @@ def geofeature_pre_add_files_to_resource(sender, **kwargs):
                 uploadedFileCount = files_type['uploadedFileCount']
                 uploadedFilenameString = files_type['uploadedFilenameString']
                 shp_full_path = files_type['shp_full_path']
-                parsed_md_dict = None
+                shp_xml_full_path = files_type['shp_xml_full_path']
                 if uploaded_file_type == "shp" or uploaded_file_type == "zipped_shp":
                     meta_array, meta_dict = parse_shp_zshp(uploaded_file_type,
                                                            baseFilename,
@@ -479,38 +542,67 @@ def geofeature_pre_add_files_to_resource(sender, **kwargs):
                                                     value=coverage_dict['value'])
 
                 originalfileinfo_dict = meta_dict["originalfileinfo"]
-                res_obj.metadata.create_element('OriginalFileInfo',
-                                                fileType=originalfileinfo_dict['fileType'],
-                                                baseFilename=originalfileinfo_dict['baseFilename'],
-                                                fileCount=originalfileinfo_dict['fileCount'],
-                                                filenameString=originalfileinfo_dict['filenameString'])
+                res_obj.metadata.\
+                    create_element('OriginalFileInfo',
+                                   fileType=originalfileinfo_dict['fileType'],
+                                   baseFilename=originalfileinfo_dict['baseFilename'],
+                                   fileCount=originalfileinfo_dict['fileCount'],
+                                   filenameString=originalfileinfo_dict['filenameString'])
 
                 originalcoverage_dict = meta_dict["originalcoverage"]['originalcoverage']
-                res_obj.metadata.create_element('OriginalCoverage',
-                                                northlimit=originalcoverage_dict['northlimit'],
-                                                southlimit=originalcoverage_dict['southlimit'],
-                                                westlimit=originalcoverage_dict['westlimit'],
-                                                eastlimit=originalcoverage_dict['eastlimit'],
-                                                projection_string=originalcoverage_dict['projection_string'],
-                                                projection_name=originalcoverage_dict['projection_name'],
-                                                datum=originalcoverage_dict['datum'],
-                                                unit=originalcoverage_dict['unit'])
+                res_obj.metadata.\
+                    create_element('OriginalCoverage',
+                                   northlimit=originalcoverage_dict['northlimit'],
+                                   southlimit=originalcoverage_dict['southlimit'],
+                                   westlimit=originalcoverage_dict['westlimit'],
+                                   eastlimit=originalcoverage_dict['eastlimit'],
+                                   projection_string=originalcoverage_dict['projection_string'],
+                                   projection_name=originalcoverage_dict['projection_name'],
+                                   datum=originalcoverage_dict['datum'],
+                                   unit=originalcoverage_dict['unit'])
 
                 field_info_array = meta_dict["field_info_array"]
                 for field_info in field_info_array:
                     field_info_dict = field_info["fieldinformation"]
-                    res_obj.metadata.create_element('FieldInformation',
-                                                fieldName=field_info_dict['fieldName'],
-                                                fieldType=field_info_dict['fieldType'],
-                                                fieldTypeCode=field_info_dict['fieldTypeCode'],
-                                                fieldWidth=field_info_dict['fieldWidth'],
-                                                fieldPrecision=field_info_dict['fieldPrecision'])
+                    res_obj.metadata.\
+                        create_element('FieldInformation',
+                                       fieldName=field_info_dict['fieldName'],
+                                       fieldType=field_info_dict['fieldType'],
+                                       fieldTypeCode=field_info_dict['fieldTypeCode'],
+                                       fieldWidth=field_info_dict['fieldWidth'],
+                                       fieldPrecision=field_info_dict['fieldPrecision'])
 
                 geometryinformation_dict = meta_dict["geometryinformation"]
-                res_obj.metadata.create_element('GeometryInformation',
-                                                featureCount=geometryinformation_dict['featureCount'],
-                                                geometryType=geometryinformation_dict['geometryType']
-                                                )
+                res_obj.metadata.\
+                    create_element('GeometryInformation',
+                                   featureCount=geometryinformation_dict['featureCount'],
+                                   geometryType=geometryinformation_dict['geometryType'])
+
+                shp_xml_metadata_list = parse_shp_xml(shp_xml_full_path)
+                for shp_xml_metadata in shp_xml_metadata_list:
+                    if 'description' in shp_xml_metadata:
+                        # overwrite existing description metadata
+                        if res_obj.metadata.description:
+                            res_obj.metadata.description.delete()
+                        res_obj.metadata.create_element('description',
+                                                        abstract=shp_xml_metadata
+                                                        ['description']['abstract'])
+                    elif 'title' in shp_xml_metadata:
+                        # overwrite existing title metadata
+                        if res_obj.metadata.title:
+                            res_obj.metadata.title.delete()
+                        res_obj.metadata.create_element('title',
+                                                        value=shp_xml_metadata
+                                                        ['title']['value'])
+                    elif 'subject' in shp_xml_metadata:
+                        # append new keywords to existing keywords
+                        existing_keywords = [subject.value for
+                                             subject in res_obj.metadata.subjects.all()]
+                        if shp_xml_metadata['subject']['value'] not in existing_keywords:
+                            res_obj.metadata.create_element('subject',
+                                                            value=shp_xml_metadata
+                                                            ['subject']['value'])
+
                 if uploaded_file_type == "zipped_shp":
                         if fed_res_fnames:
                             # remove the temp zip file retrieved from federated zone
@@ -522,7 +614,11 @@ def geofeature_pre_add_files_to_resource(sender, **kwargs):
 
             else:
                 validate_files_dict['are_files_valid'] = False
-                validate_files_dict['message'] = "Invalid files uploaded. Please note the three mandatory files (.shp, .shx, .dbf) of ESRI Shapefiles should be uploaded at the same time (or in a zip file)."
+                validate_files_dict['message'] = "Invalid files uploaded. " \
+                                                 "Please note the three mandatory files " \
+                                                 "(.shp, .shx, .dbf) of ESRI Shapefiles " \
+                                                 "should be uploaded at the same time " \
+                                                 "(or in a zip file)."
             if tmp_dir is not None:
                 shutil.rmtree(tmp_dir)
             # remove all temp files retrieved from federated zone
@@ -530,9 +626,14 @@ def geofeature_pre_add_files_to_resource(sender, **kwargs):
                 for file_path in fed_tmpfile_name_list:
                     shutil.rmtree(os.path.dirname(file_path))
     except Exception as ex:
-        logger.exception("geofeature_pre_add_files_to_resource: {0}. Error:{1} ".format(res_id, ex.message))
+        logger.exception("geofeature_pre_add_files_to_resource: {0}. Error:{1} ".
+                         format(res_id, ex.message))
         validate_files_dict['are_files_valid'] = False
-        validate_files_dict['message'] = "Invalid files uploaded. Please note the three mandatory files (.shp, .shx, .dbf) of ESRI Shapefiles should be uploaded at the same time (or in a zip file)."
+        validate_files_dict['message'] = "Invalid files uploaded. " \
+                                         "Please note the three mandatory files " \
+                                         "(.shp, .shx, .dbf) of ESRI Shapefiles should " \
+                                         "be uploaded at the same time (or in a zip file)."
+
 
 @receiver(post_add_files_to_resource, sender=GeographicFeatureResource)
 def geofeature_post_add_files_to_resource_handler(sender, **kwargs):
@@ -545,7 +646,6 @@ def geofeature_post_add_files_to_resource_handler(sender, **kwargs):
         fed_res_fnames = kwargs.get('fed_res_file_names', [])
         found_shp = False
         found_prj = False
-        found_zip = False
 
         files_full_name_list = [f.name.lower() for f in files]
         if fed_res_fnames:
@@ -558,8 +658,6 @@ def geofeature_post_add_files_to_resource_handler(sender, **kwargs):
                 found_shp = True
             elif fn.endswith(".prj"):
                 found_prj = True
-            elif fn.endswith(".zip"):
-                found_zip = True
 
         if found_prj and (not found_shp):
             res_file_list = resource.files.all()
@@ -572,8 +670,9 @@ def geofeature_post_add_files_to_resource_handler(sender, **kwargs):
                         f_fullname = res_f.resource_file.name
                     elif res_f.fed_resource_file_name_or_path:
                         # file is stored on fed'd user irods
-                        source = utils.get_fed_zone_files(os.path.join(resource.resource_federation_path, resource.short_id,
-                                     res_f.fed_resource_file_name_or_path))[0]
+                        source = utils.get_fed_zone_files(
+                            os.path.join(resource.resource_federation_path, resource.short_id,
+                                         res_f.fed_resource_file_name_or_path))[0]
                         f_fullname = source
                     elif res_f.fed_resource_file:
                         # file was originally from local disk, but now is stored on fed'd user irods
@@ -584,7 +683,8 @@ def geofeature_post_add_files_to_resource_handler(sender, **kwargs):
                     fileName, fileExtension = os.path.splitext(f_fullname.lower())
                     target = tmp_dir + "/" + fileName + fileExtension
                     shutil.copy(source, target)
-                    # for temp file retrieved from federation zone, it should be deleted after it is copied
+                    # for temp file retrieved from federation zone,
+                    # it should be deleted after it is copied
                     if res_f.fed_resource_file_name_or_path:
                         shutil.rmtree(source)
                 ori_file_info = resource.metadata.originalfileinfo.all().first()
@@ -592,12 +692,13 @@ def geofeature_post_add_files_to_resource_handler(sender, **kwargs):
                 parsed_md_dict = parse_shp(shp_full_path)
                 originalcoverage_obj = resource.metadata.originalcoverage.all().first()
                 if originalcoverage_obj:
-                    resource.metadata.update_element('OriginalCoverage',
-                                                     element_id=originalcoverage_obj.id,
-                                                     projection_string=parsed_md_dict["origin_projection_string"],
-                                                     projection_name=parsed_md_dict["origin_projection_name"],
-                                                     datum=parsed_md_dict["origin_datum"],
-                                                     unit=parsed_md_dict["origin_unit"])
+                    resource.metadata.\
+                        update_element('OriginalCoverage',
+                                       element_id=originalcoverage_obj.id,
+                                       projection_string=parsed_md_dict["origin_projection_string"],
+                                       projection_name=parsed_md_dict["origin_projection_name"],
+                                       datum=parsed_md_dict["origin_datum"],
+                                       unit=parsed_md_dict["origin_unit"])
 
                 coverage_obj = resource.metadata.coverages.all().first()
                 if coverage_obj:
@@ -606,10 +707,13 @@ def geofeature_post_add_files_to_resource_handler(sender, **kwargs):
                                                      type='box',
                                                      value=parsed_md_dict["wgs84_extent_dict"])
                 else:
-                    resource.metadata.create_element('Coverage', type='box', value=parsed_md_dict["wgs84_extent_dict"])
+                    resource.metadata.create_element('Coverage',
+                                                     type='box',
+                                                     value=parsed_md_dict["wgs84_extent_dict"])
 
     except Exception as ex:
-        logger.exception("geofeature_post_add_files_to_resource_handler: {0}. Error:{1} ".format(res_id, ex.message))
+        logger.exception("geofeature_post_add_files_to_resource_handler: "
+                         "{0}. Error:{1} ".format(res_id, ex.message))
         validate_files_dict['are_files_valid'] = False
         validate_files_dict['message'] = "Invalid files uploaded."
     finally:

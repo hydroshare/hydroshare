@@ -31,7 +31,6 @@ from mezzanine.conf import settings as s
 from mezzanine.pages.managers import PageManager
 
 
-
 class GroupOwnership(models.Model):
     group = models.ForeignKey(Group)
     owner = models.ForeignKey(User)
@@ -1277,6 +1276,12 @@ class AbstractResource(ResourcePermissionsMixin):
         return scimeta_url
 
     @classmethod
+    def resmap_url(cls, resource_id):
+        resmap_path = "{resource_id}/data/resourcemap.xml".format(resource_id=resource_id)
+        resmap_url = reverse('rest_download', kwargs={'path': resmap_path})
+        return resmap_url
+
+    @classmethod
     def sysmeta_path(cls, resource_id):
         return "{resource_id}/data/resourcemap.xml".format(resource_id=resource_id)
 
@@ -1303,6 +1308,7 @@ class AbstractResource(ResourcePermissionsMixin):
                 # so no need for fl.logical_file.delete()
                 fl.logical_file.metadata.delete()
 
+            fl.delete()
         hs_bagit.delete_bag(self)
 
         self.metadata.delete_all_elements()

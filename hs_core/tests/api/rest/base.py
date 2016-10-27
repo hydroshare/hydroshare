@@ -235,3 +235,19 @@ class ModelInstanceSciMetaTestCase(SciMetaTestCase):
         id_elem.text = self.RESOURCE_URL_TEMPLATE.format(id) + '/'
 
         return scimeta
+
+
+class ResMapTestCase(HSRESTTestCase):
+
+    NS = {'rdf': "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
+          'rdfs1': "http://www.w3.org/2001/01/rdf-schema#",
+          'dc': "http://purl.org/dc/elements/1.1/",
+          'dcterms': "http://purl.org/dc/terms/",
+          'hsterms': "http://hydroshare.org/terms/"}
+
+    RESOURCE_URL_TEMPLATE = "http://example.com/resource/{0}"
+
+    RESOURCE_METADATA = 'resourcemap.xml'
+    RESOURCE_METADATA_OLD = 'resourcemap_old.xml'
+    RESOURCE_METADATA_UPDATED = 'resourcemap_updated.xml'
+
