@@ -83,7 +83,8 @@ def verify(request, *args, **kwargs):
 
 def add_file_to_resource(request, shortkey, *args, **kwargs):
     resource, _, _ = authorize(request, shortkey, needed_permission=ACTION_TO_AUTHORIZE.EDIT_RESOURCE)
-    res_files = request.FILES.getlist('files')
+
+    res_files = request.FILES.values()
     extract_metadata = request.REQUEST.get('extract-metadata', 'No')
     extract_metadata = True if extract_metadata.lower() == 'yes' else False
 
