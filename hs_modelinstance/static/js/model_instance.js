@@ -52,20 +52,27 @@ function set_model_program_selection(){
         // get the selectbox
         var options = $('[id^=selectbox_]').find('option');
 
-        if (mp_id != "")
-        {
-            for (var i = 0; i< options.length; i++){
-                var o = options[i];
-                if (o.value == mp_id) {
-                    $(o).attr("selected", 1);
-                    break;
-                }
+        // clear the selected
+        var selected = $(".multiselect-container li.active").removeAttr('class');
+        for (var radio = 0; radio < $(".multiselect-container li input:checked").length; radio ++) {
+            $(".multiselect-container li input:checked")[0].checked = false
+        }
+
+        // set dropdown "active" state
+        for (var i = 0; i< options.length; i++){
+            var o = options[i];
+            if (o.value == mp_id) {
+                $(o).attr("selected", 1);
+                $(".multiselect-selected-text")[0].innerHTML = $(".multiselect-container li label")[i].innerText;
+                $(".multiselect-container li")[i].className = 'active';
+                $(".multiselect-container li input")[i].checked = true;
+
+                break;
             }
         }
-        else {
-            // set selected to 'Not Specified' if mp_id is empty
-            $(options[0]).attr("selected", 1);
-        }
+
+        // refresh the multiselect box
+        options.multiselect("refresh");
 }
 
 
