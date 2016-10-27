@@ -1756,7 +1756,7 @@
                         <label>Name *</label>
                         <div class="input-group">
                             <input id="txtName" class="form-control modal-only-required">
-                            {% if cm|resource_type == "Time Series" or cm|resource_type == "Multidimensional (NetCDF)" %}
+                            {% if cm|resource_type == "Time Series" %}
                             <span class="input-group-addon" id="file-type-addon"></span>
                             {% endif %}
                         </div>

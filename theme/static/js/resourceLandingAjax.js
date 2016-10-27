@@ -537,7 +537,6 @@ function get_irods_folder_struct_ajax_submit(res_id, store_path) {
                     $(".fb-upload-caption").toggleClass("hidden", true);
                 }
                 else {
-
                     $('.dz-input').show();
                     $(".fb-upload-caption").toggleClass("hidden", false);
                     Dropzone.forElement("#fbContainmentWrapper").files = [];

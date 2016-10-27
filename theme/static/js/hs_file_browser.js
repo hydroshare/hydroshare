@@ -349,7 +349,11 @@ function setBreadCrumbs(path) {
     var crumbs = $("#fb-bread-crumbs");
     crumbs.empty();
 
-    if (path.lastIndexOf("/") == "-1") {
+    if(!path) {
+        return;
+    }
+
+    if (path && path.lastIndexOf("/") == "-1") {
         $("#fb-move-up").toggleClass("disabled", true)
     }
     else {
