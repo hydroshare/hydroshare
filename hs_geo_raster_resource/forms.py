@@ -1,12 +1,15 @@
+import copy
+
 from django.forms import ModelForm, BaseFormSet
 from django import forms
+from django.forms.models import formset_factory
+
 from crispy_forms.layout import *
 from crispy_forms.helper import FormHelper
 from crispy_forms.bootstrap import *
+
 from models import *
 from hs_core.forms import BaseFormHelper, get_crispy_form_fields
-from django.forms.models import formset_factory
-import copy
 
 
 class OriginalCoverageFormHelper(BaseFormHelper):
@@ -268,3 +271,4 @@ BandInfoLayoutEdit = Layout(
          '</div>'
          )
 )
+
