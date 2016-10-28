@@ -50,7 +50,7 @@ urlpatterns = patterns('',
 
     # internal API
 
-    url(r'^_internal/(?P<shortkey>[A-z0-9]+)/add-file-to-resource/$', views.add_file_to_resource),
+    url(r'^_internal/(?P<shortkey>[A-z0-9]+)/add-files-to-resource/$', views.add_files_to_resource),
     url(r'^_internal/(?P<shortkey>[A-z0-9]+)/(?P<element_name>[A-z]+)/add-metadata/$',
         views.add_metadata_element),
     url(r'^_internal/(?P<shortkey>[A-z0-9]+)/(?P<element_name>[A-z]+)/(?P<element_id>[A-z0-9]+)/update-metadata/$',

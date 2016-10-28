@@ -391,7 +391,7 @@
                                     </div>
                                     <form id="hsDropzone"
                                           class="files-container ui-widget-content {% if page.perms.change and metadata_form %}dropzone{% endif %}"
-                                          action="/hsapi/_internal/{{ cm.short_id }}/add-file-to-resource/"
+                                          action="/hsapi/_internal/{{ cm.short_id }}/add-files-to-resource/"
                                           method="POST">
                                         {% csrf_token %}
 

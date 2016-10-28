@@ -81,8 +81,17 @@ def verify(request, *args, **kwargs):
     return HttpResponseRedirect('/')
 
 
-def add_file_to_resource(request, shortkey, *args, **kwargs):
-    resource, _, _ = authorize(request, shortkey, needed_permission=ACTION_TO_AUTHORIZE.EDIT_RESOURCE)
+def add_files_to_resource(request, shortkey, *args, **kwargs):
+    """
+    This view function is called by AJAX in the folder implementation
+    :param request: AJAX request
+    :param shortkey: resource uuid
+    :param args:
+    :param kwargs:
+    :return: JSON response with status code indicating success or failure
+    """
+    resource, _, _ = authorize(request, shortkey,
+                               needed_permission=ACTION_TO_AUTHORIZE.EDIT_RESOURCE)
     res_files = request.FILES.values()
     extract_metadata = request.REQUEST.get('extract-metadata', 'No')
     extract_metadata = True if extract_metadata.lower() == 'yes' else False
@@ -92,21 +101,22 @@ def add_file_to_resource(request, shortkey, *args, **kwargs):
                                             extract_metadata=extract_metadata)
 
     except hydroshare.utils.ResourceFileSizeException as ex:
-        request.session['file_size_error'] = ex.message
-        return HttpResponseRedirect(request.META['HTTP_REFERER'])
+        msg = {'file_size_error': ex.message}
+        return HttpResponse(json.dumps(msg), content_type='application/json', status=500)
 
     except (hydroshare.utils.ResourceFileValidationException, Exception) as ex:
-        request.session['validation_error'] = ex.message
-        return HttpResponseRedirect(request.META['HTTP_REFERER'])
+        msg = {'validation_error': ex.message}
+        return HttpResponse(json.dumps(msg), content_type='application/json', status=500)
 
     try:
         hydroshare.utils.resource_file_add_process(resource=resource, files=res_files, user=request.user,
                                                    extract_metadata=extract_metadata)
 
     except (hydroshare.utils.ResourceFileValidationException, Exception) as ex:
-        request.session['validation_error'] = ex.message
+        msg = {'validation_error': ex.message}
+        return HttpResponse(json.dumps(msg), content_type='application/json', status=500)
 
-    return HttpResponseRedirect(request.META['HTTP_REFERER'])
+    return HttpResponse(content_type="application/json", status=200)
 
 
 def _get_resource_sender(element_name, resource):
