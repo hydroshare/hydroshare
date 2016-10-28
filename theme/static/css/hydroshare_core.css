@@ -4315,7 +4315,7 @@ div#fb-file-operations-controls {
 	filter: progid:DXImageTransform.Microsoft.gradient(startColorstr='#f7f7f7', endColorstr='#e5e5e5', GradientType=0); /* IE6-9 */
 }
 
-#fbContainmentWrapper {
+#hsDropzone {
 	resize: vertical;
 	border: 0;
 }

@@ -530,7 +530,7 @@ $(document).ready(function () {
             acceptedFiles = null; // Dropzone default to accept all files
         }
 
-        Dropzone.options.fbContainmentWrapper = {
+        Dropzone.options.hsDropzone = {
             paramName: "files", // The name that will be used to transfer the file
             clickable: "#upload-toggle",
             previewsContainer: "#previews", // Define the container to display the previews
@@ -589,16 +589,22 @@ $(document).ready(function () {
 
                 // Called when all files in the queue finish uploading.
                 this.on("queuecomplete", function () {
-                    $("#hs-file-browser").attr("data-current-path", "data/contents");
+                    if ($("#hs-file-browser").attr("data-refresh-on-upload") == "true") {
+                        // Page refresh is needed to show updated metadata
+                        location.reload(true);
+                    }
+                    else {
+                        $("#hs-file-browser").attr("data-current-path", "data/contents");
 
-                    // Remove further paths from the log
-                    var range = pathLog.length - pathLogIndex;
-                    pathLog.splice(pathLogIndex + 1, range);
-                    pathLog.push("data/contents");
-                    pathLogIndex = pathLog.length - 1;
+                        // Remove further paths from the log
+                        var range = pathLog.length - pathLogIndex;
+                        pathLog.splice(pathLogIndex + 1, range);
+                        pathLog.push("data/contents");
+                        pathLogIndex = pathLog.length - 1;
 
-                    refreshFileBrowser();
-                    $("#previews").empty();
+                        refreshFileBrowser();
+                        $("#previews").empty();
+                    }
                 });
 
                 // An error occured. Receives the errorMessage as second parameter and if the error was due to the XMLHttpRequest the xhr object as third.
@@ -995,3 +1001,41 @@ $(document).ready(function () {
         }
     });
 });
+
+var cookieName = "page_scroll";
+var expdays = 365;
+
+// Used to set the previous scroll position after refresh
+function setCookie(name, value, expires, path, domain, secure) {
+    if (!expires) {
+        expires = new Date()
+    }
+    document.cookie = name + "=" + escape(value) +
+        ((expires == null) ? "" : "; expires=" + expires.toGMTString()) +
+        ((path == null) ? "" : "; path=" + path) +
+        ((domain == null) ? "" : "; domain=" + domain) +
+        ((secure == null) ? "" : "; secure")
+}
+
+function getCookie(name) {
+    var arg = name + "=";
+    var alen = arg.length;
+    var clen = document.cookie.length;
+    var i = 0;
+    while (i < clen) {
+        var j = i + alen;
+        if (document.cookie.substring(i, j) == arg) {
+            return getCookieVal(j)
+        }
+        i = document.cookie.indexOf(" ", i) + 1;
+        if (i == 0) break
+    }
+    return null;
+}
+
+function getCookieVal(offset) {
+    var endstr = document.cookie.indexOf(";", offset);
+    if (endstr == -1)
+        endstr = document.cookie.length;
+    return unescape(document.cookie.substring(offset, endstr));
+}
