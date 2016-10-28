@@ -18,10 +18,14 @@
                             {% if lf.type_name == "GeoRasterLogicalFile" %}
                             <tr>
                                 <td>
-                                    <h5><strong>Geo Raster: {{ lf.dataset_name }}</strong></h5>
+                                    <img title="Geo Raster File" class="table-res-type-icon" alt="Geo Raster File" src="/static/img/resource-icons/geographicraster48x48.png">
+
+
+                                    <span><strong>Geo Raster: {{ lf.dataset_name }}</strong></span>
                                     <p class="label-file-size">
                                         {{ lf.size|filesizeformat }}
                                     </p>
+                                </td>
                                 <td>
                                     {% if page.perms.change and resource_edit_mode %}
                                         <a href="/hsapi/_internal/{{ cm.short_id }}/GeoRaster/{{ lf.id }}/delete-file-type/">
@@ -30,7 +34,6 @@
                                             </span>
                                         </a>
                                    {% endif %}
-                                </td>
                                 </td>
                             </tr>
 
@@ -76,9 +79,16 @@
                                         <span style="margin-left:20px;">
                                         <a href="#test-metadata-display-{{ lf.id }}" data-toggle="collapse">Metadata</a>
                                         <div id="test-metadata-display-{{ lf.id }}" class="collapse row" style="margin-left:7px;">
-                                            {% crispy lf.metadata.get_original_coverage_form %}
-                                            {% crispy lf.metadata.get_cellinfo_form %}
+                                            <div class="col-lg-6 col-xs-12">
+                                                {% crispy lf.metadata.get_original_coverage_form %}
+                                            </div>
+                                            <div class="col-lg-6 col-xs-12">
+                                                {% crispy lf.metadata.get_cellinfo_form %}
+                                            </div>
                                             {% load crispy_forms_tags %}
+                                            <div class="pull-left col-sm-12">
+                                            <div class="well" id="variables">
+                                            <div class="row">
                                             {% for form in lf.metadata.get_bandinfo_formset.forms %}
                                                 <div class="col-sm-6 col-xs-12">
                                                     <form id="{{form.form_id}}" action="{{ form.action }}" method="POST" enctype="multipart/form-data">
@@ -92,7 +102,11 @@
                                                         </div>
                                                     </form>
                                                 </div>
+
                                             {% endfor %}
+                                            </div>
+                                            </div>
+                                            </div>
                                         </div>
                                         </span>
                                     {% endif %}
