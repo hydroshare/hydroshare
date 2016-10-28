@@ -529,7 +529,7 @@ function get_irods_folder_struct_ajax_submit(res_id, store_path) {
             // strip the 'data' folder from the path
             setBreadCrumbs(store_path.replace("data/", ""));
 
-            if ($("#fbContainmentWrapper").hasClass("dropzone")) {
+            if ($("#hsDropzone").hasClass("dropzone")) {
                 // If no multiple files allowed and a file already exists, disable upload
                 var allowMultiple = $("#hs-file-browser").attr("data-allow-multiple-files") == "True";
                 if (!allowMultiple && files.length > 0) {
@@ -539,7 +539,7 @@ function get_irods_folder_struct_ajax_submit(res_id, store_path) {
                 else {
                     $('.dz-input').show();
                     $(".fb-upload-caption").toggleClass("hidden", false);
-                    Dropzone.forElement("#fbContainmentWrapper").files = [];
+                    Dropzone.forElement("#hsDropzone").files = [];
                 }
             }
 

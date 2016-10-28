@@ -302,14 +302,14 @@ function bindFileBrowserItemEvents() {
         });
 
     // Dismiss right click menu when mouse down outside of it
-    $("#fb-files-container, #fb-files-container li, #fbContainmentWrapper").mousedown(function () {
+    $("#fb-files-container, #fb-files-container li, #hsDropzone").mousedown(function () {
         $(".selection-menu").hide();
     });
 
     $("#hs-file-browser li.fb-folder").dblclick(onOpenFolder);
 
     // Right click menu for file browser
-    $("#fbContainmentWrapper").bind("contextmenu", function (event) {
+    $("#hsDropzone").bind("contextmenu", function (event) {
         // Avoid the real one
         event.preventDefault();
 
@@ -550,7 +550,7 @@ $(document).ready(function () {
                 // The user dragged a file onto the Dropzone
                 this.on("dragenter", function (file) {
                     $(".fb-drag-flag").show();
-                    $("#fbContainmentWrapper").toggleClass("glow-blue", true);
+                    $("#hsDropzone").toggleClass("glow-blue", true);
                 });
 
                 this.on("drop", function (event) {
@@ -570,7 +570,7 @@ $(document).ready(function () {
                 // The user dragged a file out of the Dropzone
                 this.on("dragleave", function (event) {
                     $(".fb-drag-flag").hide();
-                    $("#fbContainmentWrapper").toggleClass("glow-blue", false);
+                    $("#hsDropzone").toggleClass("glow-blue", false);
                 });
 
                 // When a file is added to the list
@@ -584,7 +584,7 @@ $(document).ready(function () {
                     if (!$("#flag-uploading").length) {
                         $("#fb-inner-controls").append(previewNode);
                     }
-                    $("#fbContainmentWrapper").toggleClass("glow-blue", false);
+                    $("#hsDropzone").toggleClass("glow-blue", false);
                 });
 
                 // Called when all files in the queue finish uploading.
@@ -610,7 +610,7 @@ $(document).ready(function () {
                 // An error occured. Receives the errorMessage as second parameter and if the error was due to the XMLHttpRequest the xhr object as third.
                 this.on("error", function (error, errorMessage, xhr) {
                     $("#fb-alerts .upload-failed-alert").remove();
-                    $("#fbContainmentWrapper").toggleClass("glow-blue", false);
+                    $("#hsDropzone").toggleClass("glow-blue", false);
 
                     $("#fb-alerts").append(
                             '<div class="alert alert-danger alert-dismissible upload-failed-alert" role="alert">' +
