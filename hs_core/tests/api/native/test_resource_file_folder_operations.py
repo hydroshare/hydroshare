@@ -145,6 +145,9 @@ class TestResourceFileFolderOprsAPI(MockIRODSTestCaseMixin, TransactionTestCase)
         self.assertIn(self.new_res.short_id + '/data/contents/sub_test_dir/file2.txt',
                       updated_res_file_names,
                       msg='resource does not contain unzipped file file2.txt')
+        self.assertIn(self.new_res.short_id + '/data/contents/file3_new.txt',
+                      updated_res_file_names,
+                      msg="resource does not contain untouched file3_new.txt after unzip")
 
         # rename a folder
         move_or_rename_file_or_folder(self.user_creator, self.new_res.short_id,

@@ -775,17 +775,16 @@ def resource_file_add_process(resource, files, user, extract_metadata=False,
 
 
 def create_empty_contents_directory(resource):
-    if resource:
-        res_id = resource.short_id
-        if resource.resource_federation_path:
-            istorage = IrodsStorage('federated')
-            res_contents_dir = '{}/{}/data/contents'.format(resource.resource_federation_path,
-                                                            res_id)
-        else:
-            istorage = IrodsStorage()
-            res_contents_dir = '{}/data/contents'.format(res_id)
-        if not istorage.exists(res_contents_dir):
-            istorage.session.run("imkdir", None, '-p', res_contents_dir)
+    res_id = resource.short_id
+    if resource.resource_federation_path:
+        istorage = IrodsStorage('federated')
+        res_contents_dir = '{}/{}/data/contents'.format(resource.resource_federation_path,
+                                                        res_id)
+    else:
+        istorage = IrodsStorage()
+        res_contents_dir = '{}/data/contents'.format(res_id)
+    if not istorage.exists(res_contents_dir):
+        istorage.session.run("imkdir", None, '-p', res_contents_dir)
 
 
 def add_file_to_resource(resource, f, fed_res_file_name_or_path='', fed_copy_or_move=None):

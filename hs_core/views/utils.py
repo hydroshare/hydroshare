@@ -463,44 +463,43 @@ def rename_irods_file_or_folder_in_django(resource, src_name, tgt_name):
     :param tgt_name: the file or folder full path name to be renamed to
     :return:
     """
-    if resource:
-        if resource.resource_federation_path:
-            res_file_obj = ResourceFile.objects.filter(object_id=resource.id,
-                                                       fed_resource_file_name_or_path=src_name)
-            if res_file_obj.exists():
-                # src_name and tgt_name are file names - replace src_name with tgt_name
-                res_file_obj[0].fed_resource_file_name_or_path = tgt_name
-                res_file_obj[0].save()
-            else:
-                # src_name and tgt_name are folder names
-                res_file_objs = \
-                    ResourceFile.objects.filter(object_id=resource.id,
-                                                fed_resource_file_name_or_path__contains=src_name)
-                for fobj in res_file_objs:
-                    old_str = fobj.fed_resource_file_name_or_path
-                    new_str = old_str.replace(src_name, tgt_name)
-                    fobj.fed_resource_file_name_or_path = new_str
-                    fobj.save()
+    if resource.resource_federation_path:
+        res_file_obj = ResourceFile.objects.filter(object_id=resource.id,
+                                                   fed_resource_file_name_or_path=src_name)
+        if res_file_obj.exists():
+            # src_name and tgt_name are file names - replace src_name with tgt_name
+            res_file_obj[0].fed_resource_file_name_or_path = tgt_name
+            res_file_obj[0].save()
         else:
-            res_file_obj = ResourceFile.objects.filter(object_id=resource.id,
-                                                       resource_file=src_name)
-            if res_file_obj.exists():
-                # src_name and tgt_name are file names
-                # since resource_file is a FileField which cannot be directly renamed,
-                # this old ResourceFile object has to be deleted followed by creation of
-                # a new ResourceFile with new file associated that replace the old one
-                res_file_obj[0].delete()
-                ResourceFile.objects.create(content_object=resource, resource_file=tgt_name)
-            else:
-                # src_name and tgt_name are folder names
-                res_file_objs = \
-                    ResourceFile.objects.filter(object_id=resource.id,
-                                                resource_file__contains=src_name)
-                for fobj in res_file_objs:
-                    old_str = fobj.resource_file.name
-                    new_str = old_str.replace(src_name, tgt_name)
-                    fobj.delete()
-                    ResourceFile.objects.create(content_object=resource, resource_file=new_str)
+            # src_name and tgt_name are folder names
+            res_file_objs = \
+                ResourceFile.objects.filter(object_id=resource.id,
+                                            fed_resource_file_name_or_path__contains=src_name)
+            for fobj in res_file_objs:
+                old_str = fobj.fed_resource_file_name_or_path
+                new_str = old_str.replace(src_name, tgt_name)
+                fobj.fed_resource_file_name_or_path = new_str
+                fobj.save()
+    else:
+        res_file_obj = ResourceFile.objects.filter(object_id=resource.id,
+                                                   resource_file=src_name)
+        if res_file_obj.exists():
+            # src_name and tgt_name are file names
+            # since resource_file is a FileField which cannot be directly renamed,
+            # this old ResourceFile object has to be deleted followed by creation of
+            # a new ResourceFile with new file associated that replace the old one
+            res_file_obj[0].delete()
+            ResourceFile.objects.create(content_object=resource, resource_file=tgt_name)
+        else:
+            # src_name and tgt_name are folder names
+            res_file_objs = \
+                ResourceFile.objects.filter(object_id=resource.id,
+                                            resource_file__contains=src_name)
+            for fobj in res_file_objs:
+                old_str = fobj.resource_file.name
+                new_str = old_str.replace(src_name, tgt_name)
+                fobj.delete()
+                ResourceFile.objects.create(content_object=resource, resource_file=new_str)
 
 
 def remove_irods_folder_in_django(resource, istorage, foldername):
@@ -578,12 +577,11 @@ def unzip_file(user, res_id, zip_with_rel_path, bool_remove_original):
     :return:
     """
     resource = hydroshare.utils.get_resource_by_shortkey(res_id)
+    istorage = resource.get_irods_storage()
     if resource.resource_federation_path:
-        istorage = IrodsStorage('federated')
         zip_with_full_path = os.path.join(resource.resource_federation_path, res_id,
                                           zip_with_rel_path)
     else:
-        istorage = IrodsStorage()
         zip_with_full_path = os.path.join(res_id, zip_with_rel_path)
 
     unzip_path = os.path.dirname(zip_with_full_path)
@@ -626,11 +624,10 @@ def remove_folder(user, res_id, folder_path):
     :return:
     """
     resource = hydroshare.utils.get_resource_by_shortkey(res_id)
+    istorage = resource.get_irods_storage()
     if resource.resource_federation_path:
-        istorage = IrodsStorage('federated')
         coll_path = os.path.join(resource.resource_federation_path, res_id, folder_path)
     else:
-        istorage = IrodsStorage()
         coll_path = os.path.join(res_id, folder_path)
 
     istorage.delete(coll_path)
