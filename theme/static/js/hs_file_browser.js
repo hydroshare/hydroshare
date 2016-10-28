@@ -540,6 +540,12 @@ $(document).ready(function () {
             autoProcessQueue: true,
             uploadMultiple: true,
             parallelUploads : 10,
+            error: function (file, response) {
+                // console.log(response);
+            },
+            success: function (file, response) {
+                // console.log(response);
+            },
             init: function () {
                 // The user dragged a file onto the Dropzone
                 this.on("dragenter", function (file) {
@@ -562,7 +568,7 @@ $(document).ready(function () {
                 });
 
                 // The user dragged a file out of the Dropzone
-                this.on("dragleave", function (file) {
+                this.on("dragleave", function (event) {
                     $(".fb-drag-flag").hide();
                     $("#fbContainmentWrapper").toggleClass("glow-blue", false);
                 });
