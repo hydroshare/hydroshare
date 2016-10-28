@@ -121,11 +121,14 @@ class RasterFileTypeMetaData(MockIRODSTestCaseMixin, TransactionTestCase):
 
         # test extracted metadata for the file type
 
-        # there should be 1 coverage element - box type
-        self.assertEqual(logical_file.metadata.coverages.all().count(), 1)
-        self.assertEqual(logical_file.metadata.coverages.all().filter(type='box').count(), 1)
+        # geo raster file type should have all the metadata elements
+        self.assertEqual(logical_file.metadata.has_all_required_elements(), True)
 
-        box_coverage = logical_file.metadata.coverages.all().filter(type='box').first()
+        # there should be 1 coverage element - box type
+        self.assertNotEqual(logical_file.metadata.coverage, None)
+        self.assertEqual(logical_file.metadata.coverage.type, 'box')
+
+        box_coverage = logical_file.metadata.coverage
         self.assertEqual(box_coverage.value['projection'], 'WGS 84 EPSG:4326')
         self.assertEqual(box_coverage.value['units'], 'Decimal degrees')
         self.assertEqual(box_coverage.value['northlimit'], 42.049364058252266)
@@ -197,12 +200,14 @@ class RasterFileTypeMetaData(MockIRODSTestCaseMixin, TransactionTestCase):
         self.assertEqual(logical_file.size, sum([f.size for f in logical_file.files.all()]))
         
         # test extracted metadata for the file type
+        # geo raster file type should have all the metadata elements
+        self.assertEqual(logical_file.metadata.has_all_required_elements(), True)
 
         # there should be 1 coverage element - box type
-        self.assertEqual(logical_file.metadata.coverages.all().count(), 1)
-        self.assertEqual(logical_file.metadata.coverages.all().filter(type='box').count(), 1)
+        self.assertNotEqual(logical_file.metadata.coverage, None)
+        self.assertEqual(logical_file.metadata.coverage.type, 'box')
 
-        box_coverage = logical_file.metadata.coverages.all().filter(type='box').first()
+        box_coverage = logical_file.metadata.coverage
         self.assertEqual(box_coverage.value['projection'], 'WGS 84 EPSG:4326')
         self.assertEqual(box_coverage.value['units'], 'Decimal degrees')
         self.assertEqual(box_coverage.value['northlimit'], 42.04959948647449)
@@ -615,7 +620,7 @@ class RasterFileTypeMetaData(MockIRODSTestCaseMixin, TransactionTestCase):
         res_file = self.composite_resource.files.first()
         logical_file = res_file.logical_file
         # there should be 1 coverage element
-        self.assertEqual(logical_file.metadata.coverages.all().count(), 1)
+        self.assertNotEqual(logical_file.metadata.coverage, None)
         self.assertNotEqual(logical_file.metadata.originalCoverage, None)
         self.assertNotEqual(logical_file.metadata.cellInformation, None)
         self.assertNotEqual(logical_file.metadata.bandInformations, None)
