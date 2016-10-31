@@ -47,7 +47,7 @@ class TestModelProgramMetaData(MockIRODSTestCaseMixin, TransactionTestCase):
             shutil.rmtree(self.temp_dir)
 
     def test_allowed_file_types(self):
-        # test allowed file type is '.*'        
+        # test allowed file type is '.*'
         self.assertEquals(self.resModelProgram.get_supported_upload_file_types(), '.*')
 
         # there should not be any content file
