@@ -1110,7 +1110,7 @@ class TestTimeSeriesMetaData(MockIRODSTestCaseMixin, TransactionTestCase):
 
         csv_file = utils.get_resource_files_by_extension(self.resTimeSeries, '.csv')[0]
 
-        csv_file_name, _ = utils.get_resource_file_name_and_extension(csv_file)
+        _, csv_file_name, _ = utils.get_resource_file_name_and_extension(csv_file)
         self.assertEqual(csv_file_name, self.odm2_csv_file_name)
 
         # since the uploaded csv file has 2 data columns, the metadata should have 2 series names
@@ -1196,7 +1196,7 @@ class TestTimeSeriesMetaData(MockIRODSTestCaseMixin, TransactionTestCase):
         self.assertEqual(self.resTimeSeries.has_sqlite_file, True)
         res_file = self.resTimeSeries.files.all().first()
 
-        file_name, file_ext = utils.get_resource_file_name_and_extension(res_file)
+        _, file_name, file_ext = utils.get_resource_file_name_and_extension(res_file)
         self.assertEqual(file_name, self.odm2_sqlite_file_name)
 
         # now uploading of a csv file should delete the above uploaded sqlite file and
@@ -1211,7 +1211,7 @@ class TestTimeSeriesMetaData(MockIRODSTestCaseMixin, TransactionTestCase):
         self.assertEqual(len(utils.get_resource_files_by_extension(self.resTimeSeries,
                                                                    '.sqlite')), 1)
         sqlite_file = utils.get_resource_files_by_extension(self.resTimeSeries, '.sqlite')[0]
-        sqlite_file_name, _ = utils.get_resource_file_name_and_extension(sqlite_file)
+        _, sqlite_file_name, _ = utils.get_resource_file_name_and_extension(sqlite_file)
         self.assertEqual(sqlite_file_name, 'ODM2.sqlite')
 
         # now uploading a sqlite file should delete the above uploaded csv file

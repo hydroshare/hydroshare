@@ -129,7 +129,8 @@ def _get_owners_string(owners_list):
             name_str = owner.username
         name_list.append(name_str)
     if len(name_list) > 1:
-        return '"' + ', '.join(name_list) + '"'
+        # csv.writer can correctly handle comma in string. No need to add extra quotes here.
+        return ', '.join(name_list)
     else:
         return name_list[0]
 

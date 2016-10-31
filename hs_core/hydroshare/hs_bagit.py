@@ -1,10 +1,11 @@
-import arrow
 import os
 import shutil
 import errno
 import tempfile
 import mimetypes
 import zipfile
+
+from uuid import uuid4
 
 from foresite import utils, Aggregation, AggregatedResource, RdfLibSerializer
 from rdflib import Namespace, URIRef
@@ -72,9 +73,9 @@ def create_bag_files(resource, fed_zone_home_path=''):
     else:
         istorage = IrodsStorage()
 
-    dest_prefix = os.path.join(getattr(settings, 'IRODS_ROOT', '/tmp'), 'hydroshare')
-    bagit_path = os.path.join(dest_prefix, resource.short_id,
-                              arrow.get(resource.updated).format("YYYY.MM.DD.HH.mm.ss"))
+    # has to make bagit_path unique even for the same resource with same update time
+    # to accommodate asynchronous multiple file move operations for the same resource
+    bagit_path = os.path.join(getattr(settings, 'IRODS_ROOT', '/tmp'), uuid4().hex)
 
     try:
         os.makedirs(bagit_path)
@@ -211,7 +212,7 @@ def create_bag_files(resource, fed_zone_home_path=''):
 
     istorage.saveFile(from_file_name, to_file_name, False)
 
-    shutil.rmtree(dest_prefix)
+    shutil.rmtree(bagit_path)
     return istorage
 
 
