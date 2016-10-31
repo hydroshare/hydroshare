@@ -67,6 +67,7 @@
                                         <span style="margin-left:20px;">
                                         <a href="#test-metadata-display-{{ lf.id }}" data-toggle="collapse">Metadata</a>
                                         <div id="test-metadata-display-{{ lf.id }}" class="collapse row" style="margin-left:7px;">
+                                            {{ lf.metadata.coverage.get_html |safe }}
                                             {{ lf.metadata.originalCoverage.get_html |safe }}
                                             {{ lf.metadata.cellInformation.get_html |safe }}
                                             <legend class="pull-left" style="margin-left:10px;">Band Information</legend>
@@ -79,6 +80,9 @@
                                         <span style="margin-left:20px;">
                                         <a href="#test-metadata-display-{{ lf.id }}" data-toggle="collapse">Metadata</a>
                                         <div id="test-metadata-display-{{ lf.id }}" class="collapse row" style="margin-left:7px;">
+                                            <div class="col-lg-6 col-xs-12">
+                                                {% crispy lf.metadata.get_coverage_form %}
+                                            </div>
                                             <div class="col-lg-6 col-xs-12">
                                                 {% crispy lf.metadata.get_original_coverage_form %}
                                             </div>
@@ -429,4 +433,10 @@
 {% block extra_js %}
     {{ block.super }}
     {# resource specific js can go here #}
+    <script>
+        $(document).ready(function(){
+            // Don't allow the user to change the coverage type
+            $("#div_id_type").css('pointer-events', 'none');
+        })
+    </script>
 {% endblock %}

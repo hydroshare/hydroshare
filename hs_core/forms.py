@@ -1284,19 +1284,25 @@ class CoverageSpatialForm(forms.Form):
         else:
             self.action = ""
 
-        if len(self.initial) == 1:
+        if len(self.initial) > 0:
             self.initial['projection'] = 'WGS 84 EPSG:4326'
             self.initial['units'] = 'Decimal degrees'
+            if self.initial['type'] == 'box':
+                self.fields['east'].widget.attrs['display'] = None
+                self.fields['north'].widget.attrs['display'] = None
+            else:
+                self.fields['eastlimit'].widget.attrs['display'] = None
+                self.fields['northlimit'].widget.attrs['display'] = None
+                self.fields['westlimit'].widget.attrs['display'] = None
+                self.fields['southlimit'].widget.attrs['display'] = None
 
         if not allow_edit:
             for field in self.fields.values():
                 field.widget.attrs['readonly'] = True
-                field.widget.attrs['style'] = "background-color:white;"
         else:
             self.fields['projection'].widget.attrs['readonly'] = True
-            self.fields['projection'].widget.attrs['style'] = "background-color:white;"
             self.fields['units'].widget.attrs['readonly'] = True
-            self.fields['units'].widget.attrs['style'] = "background-color:white;"
+
 
     def clean(self):
         # modify the form's cleaned_data dictionary

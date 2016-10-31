@@ -26,6 +26,11 @@ class AbstractFileMetaData(models.Model):
         # returns a string representing html code for display of metadata in view mode
         raise NotImplementedError
 
+    def has_all_required_elements(self):
+        # subclass must implement
+        # returns True/False
+        raise NotImplementedError
+
     @classmethod
     def get_supported_element_names(cls):
         # subclass must implement
@@ -78,6 +83,7 @@ class AbstractFileMetaData(models.Model):
     @classmethod
     def validate_element_data(cls, request, element_name):
         raise NotImplementedError
+
 
 class AbstractLogicalFile(models.Model):
     """ base class for HydroShare file types """

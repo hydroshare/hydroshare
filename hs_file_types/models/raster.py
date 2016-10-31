@@ -17,7 +17,7 @@ class GeoRasterFileMetaData(AbstractFileMetaData, GeoRasterMetaDataMixin):
     _cell_information = GenericRelation(CellInformation)
     _band_information = GenericRelation(BandInformation)
     _ori_coverage = GenericRelation(OriginalCoverage)
-    coverages = GenericRelation(Coverage)
+    _coverages = GenericRelation(Coverage)
 
     @classmethod
     def get_supported_element_names(cls):
@@ -28,13 +28,34 @@ class GeoRasterFileMetaData(AbstractFileMetaData, GeoRasterMetaDataMixin):
         elements.append('Coverage')
         return elements
 
+    @property
+    def coverage(self):
+        return self._coverages.all().first()
+
     def delete_all_elements(self):
+        if self.coverage:
+            self.coverage.delete()
         if self.cellInformation:
             self.cellInformation.delete()
         if self.originalCoverage:
             self.originalCoverage.delete()
+
         self.bandInformations.all().delete()
-        self.coverages.all().delete()
+
+    def has_all_required_elements(self):
+        if not self.coverage:
+            return False
+
+        if not self.cellInformation:
+            return False
+
+        if not self.originalCoverage:
+            return False
+
+        if self.bandInformations.count() == 0:
+            return False
+
+        return True
 
     def get_html(self):
         # in the template we can insert necessary html code for displaying all
@@ -44,6 +65,9 @@ class GeoRasterFileMetaData(AbstractFileMetaData, GeoRasterMetaDataMixin):
         for element in (self.originalCoverage, self.cellInformation, self.bandInformation):
             html_string += element.get_html() + "\n"
         return html_string
+
+    def get_coverage_form(self):
+        return self.coverage.get_html_form(resource=None)
 
     def get_cellinfo_form(self):
         return self.cellInformation.get_html_form(resource=None)

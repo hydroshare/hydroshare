@@ -30,6 +30,8 @@ from mezzanine.generic.fields import CommentsField, RatingField
 from mezzanine.conf import settings as s
 from mezzanine.pages.managers import PageManager
 
+from dominate.tags import *
+
 
 class GroupOwnership(models.Model):
     group = models.ForeignKey(Group)
@@ -1089,6 +1091,77 @@ class Coverage(AbstractMetaDataElement):
                 raise ValidationError("Value for West longitude should be "
                                       "in the range of -180 to 180")
 
+    def get_html(self, pretty=True):
+        # Using the dominate module to generate the
+        # html to display data for this element (resource view mode)
+        # this function should be used only for displaying spatial coverage
+        root_div = div(cls="col-xs-6 col-sm-6", style="margin-bottom:40px;")
+
+        def get_th(heading_name):
+            return th(heading_name, cls="text-muted")
+
+        with root_div:
+            if self.type == 'box' or self.type == 'point':
+                legend('Original Coverage')
+                with table(cls='custom-table'):
+                    with tbody():
+                        with tr():
+                            get_th('Coordinate Reference System')
+                            td(self.value['projection'])
+                        with tr():
+                            get_th('Coordinate Reference System Unit')
+                            td(self.value['units'])
+
+                h4('Extent')
+                with table(cls='custom-table'):
+                    if self.type == 'box':
+                        with tbody():
+                            with tr():
+                                get_th('North')
+                                td(self.value['northlimit'])
+                            with tr():
+                                get_th('West')
+                                td(self.value['westlimit'])
+                            with tr():
+                                get_th('South')
+                                td(self.value['southlimit'])
+                            with tr():
+                                get_th('East')
+                                td(self.value['eastlimit'])
+                    else:
+                        with tr():
+                            get_th('North')
+                            td(self.value['north'])
+                        with tr():
+                            get_th('Eest')
+                            td(self.value['east'])
+
+        return root_div.render(pretty=pretty)
+
+    def get_html_form(self, resource):
+        from .forms import CoverageSpatialForm
+
+        coverage_data_dict = dict()
+        coverage_data_dict['name'] = self.value.get('name', None)
+        coverage_data_dict['units'] = self.value['units']
+        coverage_data_dict['projection'] = self.value.get('projection', None)
+        coverage_data_dict['type'] = self.type
+
+        if self.type == 'box':
+            coverage_data_dict['northlimit'] = self.value['northlimit']
+            coverage_data_dict['eastlimit'] = self.value['eastlimit']
+            coverage_data_dict['southlimit'] = self.value['southlimit']
+            coverage_data_dict['westlimit'] = self.value['westlimit']
+        else:
+            coverage_data_dict['east'] = self.value['east']
+            coverage_data_dict['north'] = self.value['north']
+            coverage_data_dict['elevation'] = self.value.get('elevation', None)
+
+        coverage_form = CoverageSpatialForm(initial=coverage_data_dict, allow_edit=False,
+                                                       res_short_id=resource.short_id if resource else None,
+                                                       element_id=self.id if self else None)
+
+        return coverage_form
 
 class Format(AbstractMetaDataElement):
     term = 'Format'
