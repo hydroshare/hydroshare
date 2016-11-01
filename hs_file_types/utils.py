@@ -13,7 +13,8 @@ from django.core.files.uploadedfile import UploadedFile
 from django.core.exceptions import ValidationError
 
 from hs_core.hydroshare import utils
-from hs_core.hydroshare.resource import add_resource_files, delete_resource_file_only
+from hs_core.hydroshare.resource import delete_resource_file_only
+from hs_core.views.utils import create_folder, move_or_rename_file_or_folder
 
 import raster_meta_extract
 from models import GeoRasterLogicalFile
@@ -32,11 +33,13 @@ def set_file_to_geo_raster_file_type(resource, file_id, user):
     # get the file from irods
     res_file = utils.get_resource_file_by_id(resource, file_id)
 
-    file_name = utils.get_resource_file_name_and_extension(res_file)[0]
+    # base file name (no path included)
+    file_name = utils.get_resource_file_name_and_extension(res_file)[1]
+    # file name without the extension
     file_name = file_name.split(".")[0]
 
     metadata = []
-    if res_file is not None and res_file.can_set_file_type:
+    if res_file is not None and res_file.has_generic_logical_file:
         # get the file from irods to temp dir
         temp_file = utils.get_file_from_irods(res_file)
         # validate the file
@@ -69,38 +72,55 @@ def set_file_to_geo_raster_file_type(resource, file_id, user):
 
             log.info("Geo raster file type metadata extraction was successful.")
             # first delete the raster file that we retrieved from irods
+            logical_file_to_delete = res_file.logical_file
             delete_resource_file_only(resource, res_file)
+            if logical_file_to_delete is not None:
+                logical_file_to_delete.logical_delete(user)
 
             # TODO: modify delete_resource_file_only() to delete logical file
 
-            # add all new files to the resource
-            files = []
-            for f in files_to_add_to_resource:
-                files.append(UploadedFile(file=open(f, 'rb'), name=os.path.basename(f)))
-            try:
-                resource_files = add_resource_files(resource.short_id, *files)
-                log.info("Geo raster file type - new files were added to the resource.")
+            # create a geo raster logical file object to be associated with resource files
+            logical_file = GeoRasterLogicalFile.create()
+            logical_file.dataset_name = file_name
+            logical_file.save()
 
-                # need to do this so that the bag will be regenerated prior to download of the bag
-                utils.resource_modified(resource, by_user=user)
+            try:
+                # create a folder for the raster file type using the base file name as the
+                # name for the new folder
+                new_folder_path = 'data/contents/{}'.format(file_name)
+                # TODO: to avoid folder creation failure when there is already matching
+                # directory path, add uuid to folder path to make it unique
+                create_folder(resource.short_id, new_folder_path)
+                log.info("Folder created:{}".format(new_folder_path))
+
+                # add all new files to the resource
+                resource_files = []
+                for f in files_to_add_to_resource:
+                    uploaded_file = UploadedFile(file=open(f, 'rb'), name=os.path.basename(f))
+                    new_res_file = utils.add_file_to_resource(resource, uploaded_file)
+                    # set the logical file for each resource file we added
+                    new_res_file.logical_file_content_object = logical_file
+                    new_res_file.save()
+
+                    resource_files.append(new_res_file)
+                    new_res_file_base_name = utils.get_resource_file_name_and_extension(
+                        new_res_file)[1]
+
+                    # rename/move the file to the new folder - keep the original file name
+                    src_path = 'data/contents/{}'.format(new_res_file_base_name)
+                    tgt_path = os.path.join(new_folder_path, os.path.basename(f))
+                    move_or_rename_file_or_folder(user, resource.short_id, src_path, tgt_path)
+
+                log.info("Geo raster file type - new files were added to the resource.")
             except Exception as ex:
-                msg = "Geo raster file type. Error when adding files to the resource. Error:{}"
+                msg = "Geo raster file type. Error when setting file type. Error:{}"
                 msg = msg.format(ex.message)
                 log.exception(msg)
                 raise ex
-
             finally:
                 # remove temp dir
                 if os.path.isdir(temp_dir):
                     shutil.rmtree(temp_dir)
-
-            # set the logical file for all files we added above
-            logical_file = GeoRasterLogicalFile.create()
-            logical_file.dataset_name = file_name
-            logical_file.save()
-            for res_file in resource_files:
-                res_file.logical_file_content_object = logical_file
-                res_file.save()
 
             log.info("Geo raster file type was created.")
 
@@ -123,7 +143,7 @@ def set_file_to_geo_raster_file_type(resource, file_id, user):
             raise ValidationError(err_msg)
         else:
             err_msg = "Failed to set Geo raster file type." \
-                      "The specified file already has a file type."
+                      "The specified file doesn't have a generic logical file type."
             log.error(err_msg)
             raise ValidationError(err_msg)
 
