@@ -2,7 +2,6 @@
 {% load geoanalytics_tags pages_tags mezzanine_tags keyword_tags comment_tags hydroshare_tags %}
 {% block title %}Discovery{% endblock %}
 {% block main %}
-<div id="discover-load" style="display: none"></div>
 <div class="container" id="discover-main">
     <div class="row">
         <div class="col-sm-12">
@@ -184,7 +183,12 @@
                             <input type="radio" name="results-selection" id="all-results-selected" value="all-results-selected">All Results
                         </label>
                     </div>
-
+                    <br />
+                    <br />
+                    <div id="discover-list-loading-spinner" class="discover-loading-icon">
+                        <i class="fa fa-spinner fa-spin fa-3x fa-fw"></i>
+                    </div>
+                    <br />
                     <table class="table-hover table-striped resource-custom-table" id="items-discovered">
                         <thead>
                             <tr>
@@ -470,7 +474,11 @@
                 <div id="map-view" class="tab-pane fade">
                     <div class="row">
                         <div class="col-xs-12">
-                            <form id="covereage-search-fields" method="get" action="." style="display: none">
+                            <div id="discover-map-loading-spinner" class="discover-loading-icon">
+                                <i class="fa fa-spinner fa-spin fa-3x fa-fw"></i>
+                            </div>
+                            <br />
+                            <form id="covereage-search-fields" method="get" action="." class="hidden">
                                 {% for field in form %}
                                     {% if field.auto_id  == "id_NElat" or field.auto_id  == "id_NElng" or field.auto_id  == "id_SWlat" or field.auto_id  == "id_SWlng" %}
                                         {{ field }}
@@ -1106,8 +1114,6 @@
         };
 
         var updateListView = function (data) {
-            $('#items-discovered_wrapper').empty();
-            $("#discover-page-options").empty();
             var requestURL = "/search/";
 
             if (window.location.search.length == 0) {
@@ -1118,49 +1124,53 @@
                 requestURL += searchURL;
                 requestURL += buildURLOnCheckboxes();
             }
-            $("#discover-load").show();
+            $("#discover-list-loading-spinner").show();
             $.ajax({
                 type: "GET",
                 url: requestURL,
                 data: data,
                 dataType: 'html',
                 success: function (data) {
+                    $('#items-discovered_wrapper').empty();
+                    $("#discover-page-options").empty();
                     var tableDiv = $("#items-discovered", data);
                     $("#items-discovered_wrapper").html(tableDiv);
                     var pageOptionDiv = $("#discover-page-options", data);
                     $("#discover-page-options").html(pageOptionDiv);
 
                     initializeTable();
-                    $("#discover-load").hide();
+                    $("#discover-list-loading-spinner").hide();
                 },
                 failure: function (data) {
                     console.error("Ajax call for updating list-view data failed");
-                    $("#discover-load").hide();
+                    $("#discover-list-loading-spinner").hide();
                 }
             });
         };
 
         var updateFacetingItems = function (request_url) {
-            $("#discover-load").show();
+            $("#discover-list-loading-spinner").show();
             if (map != null) {
+                $("#discover-map-loading-spinner").show();
                 $.when(updateMapFaceting(), updateListFaceting(request_url)).done(function(){
-                    $("#discover-load").hide();
+                    $("#discover-list-loading-spinner").hide();
+                    $("#discover-map-loading-spinner").hide();
                 });
             } else {
                 $.when(updateListFaceting(request_url)).done(function(){
-                    $("#discover-load").hide();
+                    $("#discover-list-loading-spinner").hide();
                 });
             }
         };
 
         var updateListFaceting = function (request_url) {
-            $('#items-discovered_wrapper').empty();
-            $("#discover-page-options").empty();
             return $.ajax({
                 type: "GET",
                 url: request_url,
                 dataType: 'html',
                 success: function (data) {
+                    $('#items-discovered_wrapper').empty();
+                    $("#discover-page-options").empty();
                     var tableDiv = $("#items-discovered", data);
                     $("#items-discovered_wrapper").html(tableDiv);
                     var pageOptionDiv = $("#discover-page-options", data);
@@ -1422,7 +1432,7 @@
                     var sw_lng = document.getElementById("id_SWlng").value;
                     var start_date = $("#id_start_date").val();
                     var end_date = $("#id_end_date").val();
-                    $("#discover-load").show();
+                    $("#discover-map-loading-spinner").show();
                     $.ajax({
                         type: "GET",
                         url: requestURL,
@@ -1445,9 +1455,10 @@
                             initMap(json_results);
                             setMapItemsList([], null);
                             $("#resource-search").show();
-                            $("#discover-load").hide();
+                            $("#discover-map-loading-spinner").hide();
                         },
                         failure: function(data) {
+                            $("#discover-map-loading-spinner").hide();
                             console.error("Ajax call for getting map data failed");
                         }
                     });
