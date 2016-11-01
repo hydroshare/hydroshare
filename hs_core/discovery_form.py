@@ -5,12 +5,12 @@ from crispy_forms.bootstrap import *
 from django import forms
 
 class DiscoveryForm(FacetedSearchForm):
-    NElat = forms.CharField(label='NE latitude', required=False)
-    NElng = forms.CharField(label='NE longitude', required=False)
-    SWlat = forms.CharField(label='SW latitude', required=False)
-    SWlng = forms.CharField(label='SW longitude', required=False)
-    start_date = forms.DateField(label='From', required=False)
-    end_date = forms.DateField(label='To', required=False)
+    NElat = forms.CharField(widget = forms.HiddenInput(), required=False)
+    NElng = forms.CharField(widget = forms.HiddenInput(), required=False)
+    SWlat = forms.CharField(widget = forms.HiddenInput(), required=False)
+    SWlng = forms.CharField(widget = forms.HiddenInput(), required=False)
+    start_date = forms.DateField(label='From Date', required=False)
+    end_date = forms.DateField(label='To Date', required=False)
 
     def search(self):
         if not self.cleaned_data.get('q'):

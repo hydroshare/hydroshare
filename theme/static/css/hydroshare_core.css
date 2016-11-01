@@ -67,13 +67,10 @@ h1.hl small, h2.hl small, h3.hl small, h4.hl small, h5.hl small, h6.hl small {
 	height: 160px;
 	padding: 0;
 	background: #FFF;
-	border: 1px solid #909090;
+	border: 1px solid #DDD;
 	-webkit-border-radius: 4px;
 	-moz-border-radius: 4px;
 	border-radius: 4px;
-	box-shadow: 1px 1px 5px rgba(0, 0, 0, 0.6);
-	-moz-box-shadow: 1px 1px 5px rgba(0, 0, 0, 0.6);
-	-webkit-box-shadow: 1px 1px 5px rgba(0, 0, 0, 0.6);
 }
 
 .navbar-inverse .navbar-nav > li > a:hover, .navbar-inverse .navbar-nav > li > a:focus {
@@ -112,7 +109,6 @@ h1.hl small, h2.hl small, h3.hl small, h4.hl small, h5.hl small, h6.hl small {
 }
 
 .dropdown-menu {
-    background-color: #EEEEEE;
     border: 1px solid #D6D6D6;
     border-top-color: #EEEEEE;
     border-radius: 0;
@@ -339,9 +335,15 @@ a.sign-out-inline:hover {
 .modal-content {
 	border-radius: 0;
 }
+
 .modal-header {
-	background: #f5f5f5;
+	background: rgb(255, 255, 255);
+	background: -moz-linear-gradient(top, rgba(255, 255, 255, 1) 0%, rgba(246, 246, 246, 1) 47%, rgba(237, 237, 237, 1) 100%);
+	background: -webkit-linear-gradient(top, rgba(255, 255, 255, 1) 0%, rgba(246, 246, 246, 1) 47%, rgba(237, 237, 237, 1) 100%);
+	background: linear-gradient(to bottom, rgba(255, 255, 255, 1) 0%, rgba(246, 246, 246, 1) 47%, rgba(237, 237, 237, 1) 100%);
+	filter: progid:DXImageTransform.Microsoft.gradient(startColorstr='#ffffff', endColorstr='#ededed', GradientType=0);
 }
+
 .modal-header > img,
 .dialog-new > img {
 	height: 50px;
@@ -1196,11 +1198,6 @@ a[data-toggle='tab']{
     border-bottom-right-radius: 0;
 }
 
-#status-btn-group {
-    margin-left: 10px;
-    float: left;
-}
-
 .btn-success {
     border-color: #20833F;
 }
@@ -1615,7 +1612,7 @@ body > .main-container {
     word-break: break-word;
 }
 
-#btn-download-all, #btn-add-file, #btn-select-irods-file, #rep-res-bag {
+#btn-download-all, #btn-select-irods-file, #rep-res-bag {
     margin-bottom:5px;
     max-width:100%;
 }
@@ -1631,8 +1628,11 @@ body > .main-container {
 }
 
 div#sharing-status {
-    overflow: hidden; /* Fixes height for floating elements */
 	margin-top: 20px;
+}
+
+div#sharing-status .col-sm-12{
+	margin-bottom: 20px;
 }
 
 .tag-list {
@@ -1685,7 +1685,6 @@ a.tag:hover {
     margin-top: 20px;
     border:0;
 }
-
 
 .tab-elements .table:not(.table-striped) {
     width:auto;
@@ -2110,11 +2109,11 @@ td.user-actions > span:hover {
 }
 
 #user-permission-msg {
-    margin-top: 20px;
+
 }
 
 #shareable-container {
-    margin-left: 100px;
+
 }
 
 button.loading {
@@ -2782,13 +2781,21 @@ h4.title {
 	width: 284px;
 }
 
+#search-container .btn-clear-search {
+	right: 40px;
+}
+
+.file-browser-search .btn-clear-search {
+	right: 10px;
+}
+
 .btn-clear-search {
-	position: absolute;
-	left: -25px;
-	color: #A8A8A8;
-	font-size: 16px;
-	background: #FFF;
-	top: 10px;
+    position: absolute;
+
+    color: #A8A8A8;
+    font-size: 16px;
+    background: #FFF;
+    top: 10px;
 }
 
 .search-icon {
@@ -3178,8 +3185,31 @@ h4.title {
     margin: 0 3px;
 }
 
+/*  CSS ARROW BEGINS */
 
 .arrow_box:after, .arrow_box:before {
+    bottom: 100%;
+    left: 90%;
+    border: solid transparent;
+    content: " ";
+    height: 0;
+    width: 0;
+    position: absolute;
+    pointer-events: none;
+}
+
+.arrow_box_top_center:before, .arrow_box_top_center:after {
+    bottom: 100%;
+    left: 50%;
+    border: solid transparent;
+    content: " ";
+    height: 0;
+    width: 0;
+    position: absolute;
+    pointer-events: none;
+}
+
+.arrow_box_top_right:after, .arrow_box_top_right:before {
     bottom: 100%;
     left: 90%;
     border: solid transparent;
@@ -3199,10 +3229,12 @@ h4.title {
 
 .arrow_box:before {
     border-color: rgba(194, 225, 245, 0);
-    border-bottom-color: #909090;
+    border-bottom-color: #DDD;
     border-width: 11px;
     margin-left: -11px;
 }
+
+/*  CSS ARROW ENDS */
 
 #signout-menu {
     float: right;
@@ -3725,6 +3757,18 @@ div.group-add-photo {
 	display: inline-block;
 }
 
+#coverages-master-list {
+	display:inline-block;
+	max-height:190px;
+	overflow-y: auto;
+	border: 1px solid #DDD;
+}
+
+.resource-popover-option {
+	display: inline-block;
+	margin: 5px;
+}
+
 #discover-filter-buttons {
 	margin-bottom: 10px;
 }
@@ -3744,6 +3788,26 @@ div.group-add-photo {
 	padding: 10px;
 	margin: 5px;
 	border-radius: 4px;
+	border: 1px solid #DDD;
+}
+
+#geocoder-panel {
+	z-index: 5;
+	padding: 5px;
+	text-align: center;
+	font-family: 'Roboto','sans-serif';
+	padding-left: 10px;
+	background-color: rgba(255,255,255,0.75);
+	border: 1px solid #DDD;
+	border-radius: 4px;
+	width: 300px;
+    margin-left: 10px;
+    line-height: 30px;
+    font-size: 16px;
+}
+
+#geocoder-address {
+    width: 210px;
 }
 
 #manual-zoom-btn {
@@ -3758,7 +3822,7 @@ div.group-add-photo {
 	color: red;
 }
 
-div.toggle.btn {
+#edit-group-dialog div.toggle.btn {
 	width: 100px !important;
 	float: right;
 }
@@ -3799,4 +3863,486 @@ form#covereage-search-fields {
     padding-top: 10px;
     padding-bottom: 10px;
     border-radius: 4px;
+}
+
+/* -------------- File browser styling ---------------- */
+.file-browser {
+    margin-bottom: 20px;
+}
+
+.file-browser-controls > div {
+	margin-bottom: 10px;
+}
+
+.files-container {
+	height: 252px;
+	overflow-y: auto;
+	overflow-x: hidden;
+}
+
+.file-browser-breadcrumb .breadcrumb{
+    background: #FFF;
+    margin-bottom: 0;
+	padding: 0 4px;
+}
+
+.file-browser-breadcrumb .btn:not(.disabled) {
+	color: #428bd3;
+}
+
+.file-browser-breadcrumb .btn.disabled {
+	color: #9e9e9e;
+}
+
+.file-browser-breadcrumb {
+	padding: 8px;
+	min-height: 36px;
+}
+
+#fb-bread-crumbs li {
+	color: #428bca;
+	text-shadow: 0 1px 0 #fff;
+}
+
+#fb-bread-crumbs li.active {
+	color: #999;
+}
+
+#fb-bread-crumbs li:not(.active):hover {
+	cursor:pointer;
+}
+
+#fb-bread-crumbs li:not(.active):hover span {
+	text-decoration: underline;
+}
+
+.fb-view-grid .fb-folder, .fb-view-grid .fb-file {
+	width: 100px;
+	height: 100px;
+	margin: 8px;
+	float: left;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	-webkit-user-select: none; /* Chrome/Safari */
+	-moz-user-select: none; /* Firefox */
+	-ms-user-select: none; /* IE10+ */
+	user-select: none;
+}
+
+#fb-sort a {
+	cursor: pointer;
+	padding: 5px;
+	font-size: 14px;
+}
+
+#fb-sort ul {
+	background :#FFF;
+}
+
+#fb-sort ul li.active {
+	pointer-events: none;
+}
+
+#fb-sort ul li:not(.divider) {
+	padding: 4px 8px;
+}
+
+.fb-folder, .fb-file {
+	list-style-type: none;
+	padding: 10px;
+}
+
+.fb-folder:hover, .fb-file:hover, .fb-folder.ui-selected, .fb-file.ui-selected {
+	border: 1px solid #fcefa1 !important;
+	color: #363636;
+	padding: 9px;
+	z-index: 5;
+	box-shadow: 1px 1px 5px #ececec;
+}
+
+.fb-folder.ui-selected, .fb-file.ui-selected {
+	background: rgba(252, 239, 161, 0.14);
+}
+
+.fb-help-icon {
+	font-size: 14px !important;
+	color:#e6a14b;
+	cursor: pointer;
+	visibility: hidden;
+}
+
+.fb-help-icon:hover {
+	color: #d68c31;
+}
+
+.fb-folder:hover .fb-help-icon , .fb-file:hover .fb-help-icon, .fb-file.ui-selected .fb-help-icon,
+.fb-folder.ui-selected .fb-help-icon, .fb-file.ui-selecting .fb-help-icon,
+.fb-folder.ui-selecting .fb-help-icon {
+	visibility: visible;
+}
+
+.fb-folder.ui-selecting, .fb-file.ui-selecting {
+	border: 1px solid #fcefa1;
+	color: #363636;
+	padding: 9px;
+	background: #fbf9ee;
+}
+
+.fb-file small, .fb-folder small {
+    color: #777;
+}
+
+.fb-file .fb-file-icon.fa-file-zip-o {
+    color: rgb(140, 86, 75);
+}
+
+.fb-file .fb-file-icon.fa-file-excel-o {
+    color: rgb(44, 160, 44);
+}
+
+.fb-file .fb-file-icon.fa-file-o {
+    color: rgb(127, 127, 127);
+}
+
+.fb-file .fb-file-icon.fa-file-pdf-o {
+    color: rgb(214, 39, 40);
+}
+
+.fb-file .fb-file-icon.fa-file-word-o {
+    color: rgb(31, 119, 180);
+}
+
+.fb-file .fb-file-icon.fa-file-audio-o {
+    color: rgb(148, 103, 189);
+}
+
+.fb-file .fb-file-icon.fa-file-movie-o {
+    color: rgb(227, 119, 194);
+}
+.fb-file .fb-file-icon.fa-file-image-o {
+    color: rgb(255, 127, 14);
+}
+
+.fb-file .fb-file-icon.fa-file-text-o {
+    color: rgb(127, 127, 127);
+}
+
+.fb-file .fb-file-icon.fa-file-powerpoint-o {
+    color: rgb(255, 187, 120);
+}
+
+.fb-file .fb-file-icon.fa-file-code-o {
+    color: rgb(102, 170, 0);
+}
+
+ul#fb-files-container li.ui-selected .fb-file-name, #fb-files-container li.ui-selecting .fb-file-name {
+	word-break: break-word;
+}
+
+ul#fb-files-container {
+    min-height: 100%;
+}
+
+.fb-file span.fb-file-icon::before {
+    background-color: #FFF;
+    border-top-right-radius: 50%;
+}
+
+.fb-file-name {
+	color: #555;
+	font-size: 12px;
+	cursor: default;
+}
+
+.fb-view-list .fb-file-name {
+	font-size: 14px;
+}
+.fb-view-grid .fb-file-icon {
+    font-size: 32px;
+}
+
+.file-browser-container {
+    border:1px solid #DDD;
+}
+
+.files-container {
+    background-color: #FAFAFA;
+    box-shadow: inset 0 1px 2px rgba(0,0,0,0.075);
+}
+
+.file-browser-search {
+    width: 100%;
+}
+
+.fb-dropdown {
+    position: absolute;
+	padding-top: 9px;
+	border: 1px solid #DDD;
+	box-shadow: 1px 1px 5px #E8E8E8;
+	-moz-box-shadow: 1px 1px 5px #E8E8E8;
+	-webkit-box-shadow: 1px 1px 5px #E8E8E8;
+}
+
+.fb-dropdown .glyphicon {
+    font-size: 16px;
+    margin: 0;
+    margin-right: 10px;
+    float: left;
+    padding: 0;
+}
+
+.fb-dropdown li {
+    background: #FFF;
+    border-bottom: 0;
+    border-top: 0;
+}
+
+.selection-menu li:not(.divider) {
+    padding: 4px 8px;
+    cursor: pointer;
+}
+
+.selection-menu li:hover {
+    background-color:#DDD;
+}
+
+.selection-menu li.disabled, #fb-inner-controls button.disabled > span {
+	color: #999;
+	pointer-events:none;
+}
+
+.selection-menu li.disabled span {
+	color: #999;
+	text-shadow: initial;
+}
+
+#fb-files-container.fb-view-grid .fb-file-type, #fb-files-container.fb-view-grid .fb-file-size {
+	display: none;
+}
+
+#fb-files-container.fb-view-list .fb-file-type, #fb-files-container.fb-view-list .fb-file-size {
+	float: right;
+	display: inline-block;
+	width: 15%;
+	color: #777;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+	overflow: hidden;
+}
+
+.fb-input-search {
+    padding-left: 25px;
+	padding-right: 35px;
+}
+
+button.fb-control-round {
+    border-radius: 50%;
+    width: 36px;
+    height: 36px;
+    margin-right: 10px;
+    padding-left: 10px;
+    padding-top: 8px;
+}
+
+span.fb-control-square {
+	border-radius: 2px;
+	width: 36px;
+	height: 36px;
+	margin-right: 10px;
+	padding-left: 10px;
+	padding-top: 8px;
+}
+
+.files-container ul li a {
+	padding: 10px;
+}
+
+#fb-files-container li.fb-cutting, #fb-files-container li.fb-drag-cutting {
+	border: 1px dashed #999 !important;
+	opacity: 0.75;
+	padding: 9px;
+	box-shadow: 1px 1px 5px #ececec;
+}
+
+.fb-space-right {
+	margin-right: 15px;
+}
+
+.selection-menu .fa {
+	font-size: 18px;
+	margin-right: 10px;
+}
+
+div.fb-upload-caption {
+	padding: 8px;
+	border: 1px solid #DDD;
+	border-top: 0;
+    background: #fafafa;
+    color: #555;
+	margin-bottom: 20px;
+}
+
+div.fb-upload-caption a {
+	cursor: pointer;
+}
+
+.dropzone {
+	padding: 0 !important;
+}
+
+.fb-drag-flag {
+	position: absolute;
+	font-size: 32px;
+	text-align: center;
+	color: rgba(66, 139, 202, 0.51);
+	margin-top: 62px;
+	margin-left: calc(50% - 80px);
+	display: none;
+	pointer-events: none;
+}
+
+.dz-default.dz-message {
+	display: none;
+}
+
+.fb-view-grid {
+	padding: 10px 36px;
+	padding-left: 10px;
+	margin: 0;
+}
+
+.fb-view-list {
+    padding: 10px;
+	margin: 0;
+}
+
+.fb-view-list > li {
+	float: initial;
+	width: 85%;
+}
+
+.fb-view-grid > li {
+	float: left;
+	text-align: center;
+}
+
+.fb-view-grid .fb-file-icon {
+	display: block;
+}
+
+.fb-view-grid .fb-file-name {
+	display: block;
+	text-overflow: ellipsis;
+    overflow: hidden;
+}
+
+.fb-view-list .fb-file-icon {
+	margin-right: 10px;
+	margin-left: 10px;
+	font-size: 18px;
+}
+
+.file-browser-controls button:focus, .file-browser-breadcrumb button:focus, #fb-inner-controls button:focus {
+  outline: none;
+}
+
+#fb-inner-buttons {
+	padding: 8px;
+	border-bottom: 1px solid #DDD;
+	background: rgb(255, 255, 255);
+	background: -moz-linear-gradient(top, rgba(255, 255, 255, 1) 0%, rgba(246, 246, 246, 1) 47%, rgba(237, 237, 237, 1) 100%);
+	background: -webkit-linear-gradient(top, rgba(255, 255, 255, 1) 0%, rgba(246, 246, 246, 1) 47%, rgba(237, 237, 237, 1) 100%);
+	background: linear-gradient(to bottom, rgba(255, 255, 255, 1) 0%, rgba(246, 246, 246, 1) 47%, rgba(237, 237, 237, 1) 100%);
+	filter: progid:DXImageTransform.Microsoft.gradient(startColorstr='#ffffff', endColorstr='#ededed', GradientType=0);
+}
+
+div#fb-inner-controls {
+	padding: 0;
+	padding-bottom: 0;
+    border-bottom: 1px solid #DDD;
+}
+
+div#fb-inner-controls {
+	min-height: 34px;
+}
+
+div#fb-inner-controls button, .file-browser-search {
+	margin-bottom: 8px;
+}
+
+#fb-file-operations-controls > button {
+	filter: progid:DXImageTransform.Microsoft.Gradient(enabled='false');
+	-webkit-box-shadow: none;
+	-moz-box-shadow: none;
+	box-shadow: none;
+	background-image: none;
+	border: 0;
+	background: transparent;
+}
+
+#fb-file-operations-controls > button.disabled {
+	pointer-events: none;
+}
+
+#fb-file-operations-controls > button {
+	margin-top: 8px;
+	text-shadow: 0 1px 0 #fff;
+	border: 1px solid transparent;
+}
+
+div#fb-file-operations-controls {
+    font-size: 16px;
+}
+
+#fb-file-operations-controls > button:not(.disabled):hover {
+	border: 1px solid #DDD;
+	box-shadow: 1px 1px 3px #e2e2e2;
+	/* Permalink - use to edit and share this gradient: http://colorzilla.com/gradient-editor/#ffffff+0,f6f6f6+47,ededed+100;White+3D+%231 */
+	background: rgb(255, 255, 255); /* Old browsers */
+	background: -moz-linear-gradient(top, rgba(255, 255, 255, 1) 0%, rgba(246, 246, 246, 1) 47%, rgba(237, 237, 237, 1) 100%); /* FF3.6-15 */
+	background: -webkit-linear-gradient(top, rgba(255, 255, 255, 1) 0%, rgba(246, 246, 246, 1) 47%, rgba(237, 237, 237, 1) 100%); /* Chrome10-25,Safari5.1-6 */
+	background: linear-gradient(to bottom, rgba(255, 255, 255, 1) 0%, rgba(246, 246, 246, 1) 47%, rgba(237, 237, 237, 1) 100%); /* W3C, IE10+, FF16+, Chrome26+, Opera12+, Safari7+ */
+	filter: progid:DXImageTransform.Microsoft.gradient(startColorstr='#ffffff', endColorstr='#ededed', GradientType=0); /* IE6-9 */
+}
+
+#fb-file-operations-controls > button:not(.disabled):active {
+	border: 1px solid #DDD;
+	/* Permalink - use to edit and share this gradient: http://colorzilla.com/gradient-editor/#f7f7f7+0,e5e5e5+100 */
+	background: rgb(247, 247, 247); /* Old browsers */
+	background: -moz-linear-gradient(top, rgba(247, 247, 247, 1) 0%, rgba(229, 229, 229, 1) 100%); /* FF3.6-15 */
+	background: -webkit-linear-gradient(top, rgba(247, 247, 247, 1) 0%, rgba(229, 229, 229, 1) 100%); /* Chrome10-25,Safari5.1-6 */
+	background: linear-gradient(to bottom, rgba(247, 247, 247, 1) 0%, rgba(229, 229, 229, 1) 100%); /* W3C, IE10+, FF16+, Chrome26+, Opera12+, Safari7+ */
+	filter: progid:DXImageTransform.Microsoft.gradient(startColorstr='#f7f7f7', endColorstr='#e5e5e5', GradientType=0); /* IE6-9 */
+}
+
+#hsDropzone {
+	resize: vertical;
+	border: 0;
+}
+.fb-loading-spinner {
+	list-style: none;
+    width: 100%;
+	margin-top: 50px;
+}
+
+#flag-uploading {
+    border-top: 1px solid #DDD;
+    padding: 4px;
+    background: #f9f9f9;
+}
+
+#previews {
+	display: none;
+}
+
+#btn-group-view button.active {
+	pointer-events: none;
+}
+
+.glow-blue {
+	box-shadow: inset 0 0 10px #00b4ff;
+}
+
+#rename-dialog .input-group {
+	width: 100%;
 }

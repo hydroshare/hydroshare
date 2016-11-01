@@ -90,7 +90,7 @@ def post_add_files_to_resource_handler(sender, **kwargs):
     uploaded_file_to_process = None
     uploaded_file_ext = ''
     for res_file in resource.files.all():
-        res_file_name, uploaded_file_ext = utils.get_resource_file_name_and_extension(res_file)
+        _, res_file_name, uploaded_file_ext = utils.get_resource_file_name_and_extension(res_file)
         if res_file_name == uploaded_file.name:
             uploaded_file_to_process = res_file
             break
@@ -116,7 +116,7 @@ def post_create_resource_handler(sender, **kwargs):
     res_file = resource.files.all().first()
     if res_file:
         # check if the uploaded file is a sqlite file or csv file
-        file_ext = utils.get_resource_file_name_and_extension(res_file)[1]
+        file_ext = utils.get_resource_file_name_and_extension(res_file)[2]
         if file_ext == '.sqlite':
             _process_uploaded_sqlite_file(user, resource, res_file, validate_files_dict,
                                           delete_existing_metadata=False)
@@ -217,7 +217,7 @@ def _process_uploaded_csv_file(resource, res_file, validate_files_dict, user,
 def _process_uploaded_sqlite_file(user, resource, res_file, validate_files_dict,
                                   delete_existing_metadata=True):
     # check if it a sqlite file
-    fl_ext = utils.get_resource_file_name_and_extension(res_file)[1]
+    fl_ext = utils.get_resource_file_name_and_extension(res_file)[2]
 
     if fl_ext == '.sqlite':
         # get the file from iRODS to a temp directory
@@ -895,6 +895,6 @@ def _validate_odm2_db_file(uploaded_sqlite_file_name):
 
 def _delete_resource_file(resource, file_ext):
     for res_file in resource.files.all():
-        _, res_file_ext = utils.get_resource_file_name_and_extension(res_file)
+        _, _, res_file_ext = utils.get_resource_file_name_and_extension(res_file)
         if res_file_ext == file_ext:
             delete_resource_file_only(resource, res_file)

@@ -40,6 +40,7 @@ from hs_core.hydroshare.resource import METADATA_STATUS_SUFFICIENT, METADATA_STA
 
 from . import resource_rest_api
 from . import user_rest_api
+from . import resource_folder_hierarchy
 
 from hs_core.hydroshare import utils
 
@@ -80,9 +81,18 @@ def verify(request, *args, **kwargs):
     return HttpResponseRedirect('/')
 
 
-def add_file_to_resource(request, shortkey, *args, **kwargs):
-    resource, _, _ = authorize(request, shortkey, needed_permission=ACTION_TO_AUTHORIZE.EDIT_RESOURCE)
-    res_files = request.FILES.getlist('files')
+def add_files_to_resource(request, shortkey, *args, **kwargs):
+    """
+    This view function is called by AJAX in the folder implementation
+    :param request: AJAX request
+    :param shortkey: resource uuid
+    :param args:
+    :param kwargs:
+    :return: JSON response with status code indicating success or failure
+    """
+    resource, _, _ = authorize(request, shortkey,
+                               needed_permission=ACTION_TO_AUTHORIZE.EDIT_RESOURCE)
+    res_files = request.FILES.values()
     extract_metadata = request.REQUEST.get('extract-metadata', 'No')
     extract_metadata = True if extract_metadata.lower() == 'yes' else False
 
@@ -91,21 +101,22 @@ def add_file_to_resource(request, shortkey, *args, **kwargs):
                                             extract_metadata=extract_metadata)
 
     except hydroshare.utils.ResourceFileSizeException as ex:
-        request.session['file_size_error'] = ex.message
-        return HttpResponseRedirect(request.META['HTTP_REFERER'])
+        msg = {'file_size_error': ex.message}
+        return HttpResponse(json.dumps(msg), content_type='application/json', status=500)
 
     except (hydroshare.utils.ResourceFileValidationException, Exception) as ex:
-        request.session['validation_error'] = ex.message
-        return HttpResponseRedirect(request.META['HTTP_REFERER'])
+        msg = {'validation_error': ex.message}
+        return HttpResponse(json.dumps(msg), content_type='application/json', status=500)
 
     try:
         hydroshare.utils.resource_file_add_process(resource=resource, files=res_files, user=request.user,
                                                    extract_metadata=extract_metadata)
 
     except (hydroshare.utils.ResourceFileValidationException, Exception) as ex:
-        request.session['validation_error'] = ex.message
+        msg = {'validation_error': ex.message}
+        return HttpResponse(json.dumps(msg), content_type='application/json', status=500)
 
-    return HttpResponseRedirect(request.META['HTTP_REFERER'])
+    return HttpResponse(content_type="application/json", status=200)
 
 
 def _get_resource_sender(element_name, resource):
@@ -262,7 +273,15 @@ def update_metadata_element(request, shortkey, element_name, element_id, *args, 
                 element_data_dict = response['element_data_dict']
                 try:
                     res.metadata.update_element(element_name, element_id, **element_data_dict)
+                    post_handler_response = post_metadata_element_update.send(sender=sender_resource, element_name=element_name, element_id=element_id)
                     is_update_success = True
+                    # this is how we handle if a post_metadata_element_update receiver
+                    # is not implemented in the resource type's receivers.py
+                    element_exists = True
+                    for receiver, response in post_handler_response:
+                        if 'element_exists' in response:
+                            element_exists = response['element_exists']
+
                 except ValidationError as exp:
                     err_msg = err_msg.format(element_name, exp.message)
                     request.session['validation_error'] = err_msg
@@ -293,10 +312,13 @@ def update_metadata_element(request, shortkey, element_name, element_id, *args, 
                 ajax_response_data = {'status': 'success',
                                       'element_name': element_name,
                                       'spatial_coverage': spatial_coverage_dict,
-                                      'metadata_status': metadata_status}
+                                      'metadata_status': metadata_status,
+                                      'element_exists':element_exists}
             else:
-                ajax_response_data = {'status': 'success', 'element_name': element_name,
-                                      'metadata_status': metadata_status}
+                ajax_response_data = {'status': 'success',
+                                      'element_name': element_name,
+                                      'metadata_status': metadata_status,
+                                      'element_exists':element_exists}
 
             return JsonResponse(ajax_response_data)
         else:
@@ -331,7 +353,27 @@ def delete_metadata_element(request, shortkey, element_name, element_id, *args, 
 def delete_file(request, shortkey, f, *args, **kwargs):
     res, _, user = authorize(request, shortkey, needed_permission=ACTION_TO_AUTHORIZE.EDIT_RESOURCE)
     hydroshare.delete_resource_file(shortkey, f, user)
+    request.session['resource-mode'] = 'edit'
+    return HttpResponseRedirect(request.META['HTTP_REFERER'])
 
+
+def delete_multiple_files(request, shortkey, *args, **kwargs):
+    res, _, user = authorize(request, shortkey, needed_permission=ACTION_TO_AUTHORIZE.EDIT_RESOURCE)
+    # file_ids is a string of file ids separated by comma
+    f_ids = request.POST['file_ids']
+    f_id_list = f_ids.split(',')
+    for f_id in f_id_list:
+        f_id = f_id.strip()
+        try:
+            hydroshare.delete_resource_file(shortkey, f_id, user)
+        except ObjectDoesNotExist as ex:
+            # Since some specific resource types such as feature resource type delete all other
+            # dependent content files together when one file is deleted, we make this specific
+            # ObjectDoesNotExist exception as legitimate in deplete_multiple_files() without
+            # raising this specific exceptoin
+            logger.debug(ex.message)
+            continue
+    request.session['resource-mode'] = 'edit'
     return HttpResponseRedirect(request.META['HTTP_REFERER'])
 
 

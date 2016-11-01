@@ -349,7 +349,7 @@ def add_zip_file_contents_to_resource_async(resource, f):
 def create_resource(
         resource_type, owner, title,
         edit_users=None, view_users=None, edit_groups=None, view_groups=None,
-        keywords=(), metadata=None,
+        keywords=(), metadata=None, extra_metadata=None,
         files=(), fed_res_file_names='', fed_res_path='', fed_copy_or_move=None,
         create_metadata=True,
         create_bag=True, unpack_file=False, **kwargs):
@@ -394,6 +394,7 @@ def create_resource(
     :param view_groups: list of group names or Group instances who will be given view permissions
     :param keywords: string list. list of keywords to add to the resource
     :param metadata: list of dicts containing keys (element names) and corresponding values as dicts { 'creator': {'name':'John Smith'}}.
+    :param extra_metadata: one dict containing keys and corresponding values { 'Outlet Point Latitude': '40', 'Outlet Point Longitude': '-110'}.
     :param files: list of Django File or UploadedFile objects to be attached to the resource
     :param fed_res_file_names: the file names separated by comma from a federated zone to be
                                used to create the resource in the federated zone, default is empty string
@@ -431,6 +432,10 @@ def create_resource(
 
         if not metadata:
             metadata = []
+
+        if extra_metadata is not None:
+            resource.extra_metadata = extra_metadata
+            resource.save()
 
         fed_zone_home_path = ''
         if fed_res_path:
@@ -758,6 +763,7 @@ def add_resource_files(pk, *files, **kwargs):
     fed_zone_home_path = kwargs.pop('fed_zone_home_path', '')
     # for adding files to existing resources, the default action is copy
     fed_copy_or_move = kwargs.pop('fed_copy_or_move', 'copy')
+
     for f in files:
         if fed_zone_home_path:
             # user has selected files from a federated iRODS zone, so files uploaded from local disk
@@ -778,6 +784,9 @@ def add_resource_files(pk, *files, **kwargs):
         for ifname in ifnames:
             ret.append(utils.add_file_to_resource(resource, None, fed_res_file_name_or_path=ifname,
                                                   fed_copy_or_move=fed_copy_or_move))
+    if not ret:
+        # no file has been added, make sure data/contents directory exists if no file is added
+        utils.create_empty_contents_directory(resource)
     return ret
 
 
@@ -928,6 +937,26 @@ def delete_resource_file_only(resource, f):
     return file_name
 
 
+def delete_format_metadata_after_delete_file(resource, file_name):
+    """
+    delete format metadata as appropriate after a file is deleted.
+    :param resource: BaseResource object representing a HydroShare resource
+    :param file_name: the file name to be deleted
+    :return:
+    """
+    delete_file_mime_type = utils.get_file_mime_type(file_name)
+    delete_file_extension = os.path.splitext(file_name)[1]
+
+    # if there is no other resource file with the same extension as the
+    # file just deleted then delete the matching format metadata element for the resource
+    resource_file_extensions = [os.path.splitext(get_resource_file_name(f))[1] for f in
+                                    resource.files.all()]
+    if delete_file_extension not in resource_file_extensions:
+        format_element = resource.metadata.formats.filter(value=delete_file_mime_type).first()
+        if format_element:
+            resource.metadata.delete_element(format_element.term, format_element.id)
+
+
 def delete_resource_file(pk, filename_or_id, user):
     """
     Deletes an individual file from a HydroShare resource. If the file does not exist, the Exceptions.NotFound exception
@@ -978,16 +1007,8 @@ def delete_resource_file(pk, filename_or_id, user):
             # send signal
             signals.pre_delete_file_from_resource.send(sender=res_cls, file=f, resource=resource, user=user)
             file_name = delete_resource_file_only(resource, f)
-            delete_file_mime_type = utils.get_file_mime_type(file_name)
-            delete_file_extension = os.path.splitext(file_name)[1]
 
-            # if there is no other resource file with the same extension as the
-            # file just deleted then delete the matching format metadata element for the resource
-            resource_file_extensions = [os.path.splitext(f.resource_file.name)[1] for f in resource.files.all()]
-            if delete_file_extension not in resource_file_extensions:
-                format_element = resource.metadata.formats.filter(value=delete_file_mime_type).first()
-                if format_element:
-                    resource.metadata.delete_element(format_element.term, format_element.id)
+            delete_format_metadata_after_delete_file(resource, file_name)
             break
     else:
         raise ObjectDoesNotExist(filename_or_id)
