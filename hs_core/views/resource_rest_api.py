@@ -42,6 +42,7 @@ class ResourceToListItemMixin(object):
         site_url = hydroshare.utils.current_site_url()
         bag_url = site_url + AbstractResource.bag_url(r.short_id)
         science_metadata_url = site_url + reverse('get_update_science_metadata', args=[r.short_id])
+        resource_map_url = site_url + reverse('get_resource_map', args=[r.short_id])
         resource_url = site_url + r.get_absolute_url()
         resource_list_item = serializers.ResourceListItem(resource_type=r.resource_type,
                                                           resource_id=r.short_id,
@@ -56,6 +57,7 @@ class ResourceToListItemMixin(object):
                                                           date_last_updated=r.updated,
                                                           bag_url=bag_url,
                                                           science_metadata_url=science_metadata_url,
+                                                          resource_map_url=resource_map_url,
                                                           resource_url=resource_url)
         return resource_list_item
 
@@ -627,6 +629,31 @@ class ScienceMetadataRetrieveUpdate(APIView):
             return Response(data={'resource_id': pk}, status=status.HTTP_202_ACCEPTED)
         finally:
             shutil.rmtree(tmp_dir)
+
+
+class ResourceMapRetrieve(APIView):
+    """
+    Retrieve resource map
+
+    REST URL: hsapi/resource/{pk}/map
+    HTTP method: GET
+
+    :type pk: str
+    :param pk: id of the resource
+    :return: resource map as XML document
+    :rtype: str
+    :raises:
+    NotFound: return json format: {'detail': 'No resource was found for resource id:pk'}
+    PermissionDenied: return json format: {'detail': 'You do not have permission to perform
+    this action.'}
+    """
+    allowed_methods = ('GET')
+
+    def get(self, request, pk):
+        view_utils.authorize(request, pk, needed_permission=ACTION_TO_AUTHORIZE.VIEW_METADATA)
+
+        resmap_url = hydroshare.utils.current_site_url() + AbstractResource.resmap_url(pk)
+        return redirect(resmap_url)
 
 
 class ResourceFileCRUD(APIView):
