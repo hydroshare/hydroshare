@@ -40,7 +40,8 @@ class ToolResourceMeta(GenericResourceMeta):
             # Get value
             value_lit = self._rmeta_graph.value(o, hsterms.value)
             if value_lit is None:
-                msg = "RequestUrlBase for ToolResource was not found for resource {0}".format(self.root_uri)
+                msg = "RequestUrlBase for ToolResource was not found for resource {0}".\
+                    format(self.root_uri)
                 raise GenericResourceMeta.ResourceMetaException(msg)
             self.url_base = str(value_lit)
 
@@ -56,7 +57,8 @@ class ToolResourceMeta(GenericResourceMeta):
             # Get value
             value_lit = self._rmeta_graph.value(o, hsterms.value)
             if value_lit is None:
-                msg = "ToolVersion for ToolResource was not found for resource {0}".format(self.root_uri)
+                msg = "ToolVersion for ToolResource was not found for resource {0}".\
+                    format(self.root_uri)
                 raise GenericResourceMeta.ResourceMetaException(msg)
             self.version = str(value_lit)
 

@@ -1,6 +1,6 @@
 from django.db import models
 from django.contrib.contenttypes.fields import GenericRelation
-from django.core.exceptions import ObjectDoesNotExist, ValidationError
+from django.core.exceptions import ValidationError
 
 from mezzanine.pages.page_processors import processor_for
 
@@ -36,6 +36,15 @@ class ToolResource(BaseResource):
         return self._get_metadata(md)
 
 processor_for(ToolResource)(resource_processor)
+
+
+class AppHomePageUrl(AbstractMetaDataElement):
+    term = 'AppHomePageUrl'
+    value = models.CharField(max_length=1024, null=True)
+
+    class Meta:
+        # AppHomePageUrl element is not repeatable
+        unique_together = ("content_type", "object_id")
 
 
 class RequestUrlBase(AbstractMetaDataElement):
@@ -126,7 +135,8 @@ class SupportedSharingStatus(AbstractMetaDataElement):
             metadata_obj = kwargs['content_object']
             new_meta_instance = SupportedSharingStatus.objects.create(content_object=metadata_obj)
             for sharing_status in kwargs['sharing_status']:
-                qs = SupportedSharingStatusChoices.objects.filter(description__iexact=sharing_status)
+                qs = SupportedSharingStatusChoices.\
+                    objects.filter(description__iexact=sharing_status)
                 if qs.exists():
                     new_meta_instance.sharing_status.add(qs[0])
                 else:
@@ -141,8 +151,8 @@ class SupportedSharingStatus(AbstractMetaDataElement):
         if 'sharing_status' in kwargs:
             meta_instance.sharing_status.clear()
             for sharing_status in kwargs['sharing_status']:
-                qs = SupportedSharingStatusChoices.objects.filter\
-                    (description__iexact=sharing_status)
+                qs = SupportedSharingStatusChoices.\
+                    objects.filter(description__iexact=sharing_status)
                 if qs.exists():
                     meta_instance.sharing_status.add(qs[0])
                 else:
@@ -151,7 +161,6 @@ class SupportedSharingStatus(AbstractMetaDataElement):
         else:
             raise ValidationError("No sharing_status parameter "
                                   "was found in the **kwargs list")
-
 
     @classmethod
     def remove(cls, element_id):
@@ -173,6 +182,7 @@ class ToolMetaData(CoreMetaData):
     supported_res_types = GenericRelation(SupportedResTypes)
     tool_icon = GenericRelation(ToolIcon)
     supported_sharing_status = GenericRelation(SupportedSharingStatus)
+    homepage_url = GenericRelation(AppHomePageUrl)
 
     @property
     def resource(self):
@@ -186,6 +196,7 @@ class ToolMetaData(CoreMetaData):
         elements.append('SupportedResTypes')
         elements.append('ToolIcon')
         elements.append('SupportedSharingStatus')
+        elements.append('AppHomePageUrl')
         return elements
 
     def has_all_required_elements(self):
@@ -195,10 +206,11 @@ class ToolMetaData(CoreMetaData):
 
     def get_required_missing_elements(self):  # show missing required meta
         missing_required_elements = super(ToolMetaData, self).get_required_missing_elements()
+
         if not self.url_bases.all().first():
-            missing_required_elements.append('App Url')
+            missing_required_elements.append('App-launching Url Pattern')
         elif not self.url_bases.all().first().value:
-            missing_required_elements.append('App Url')
+            missing_required_elements.append('App-launching Url Pattern')
 
         if not self.supported_res_types.all().first():
             missing_required_elements.append('Supported Resource Types')
@@ -218,5 +230,4 @@ class ToolMetaData(CoreMetaData):
         self.supported_res_types.all().delete()
         self.tool_icon.all().delete()
         self.supported_sharing_status.all().delete()
-
-import receivers # never delete this otherwise non of the receiver function will work
+        self.homepage_url.all().delete()
