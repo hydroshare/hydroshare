@@ -1,6 +1,6 @@
 from django.db import models
 from django.contrib.contenttypes.fields import GenericRelation
-from django.core.exceptions import ObjectDoesNotExist, ValidationError
+from django.core.exceptions import ValidationError
 
 from mezzanine.pages.page_processors import processor_for
 
@@ -135,7 +135,8 @@ class SupportedSharingStatus(AbstractMetaDataElement):
             metadata_obj = kwargs['content_object']
             new_meta_instance = SupportedSharingStatus.objects.create(content_object=metadata_obj)
             for sharing_status in kwargs['sharing_status']:
-                qs = SupportedSharingStatusChoices.objects.filter(description__iexact=sharing_status)
+                qs = SupportedSharingStatusChoices.\
+                    objects.filter(description__iexact=sharing_status)
                 if qs.exists():
                     new_meta_instance.sharing_status.add(qs[0])
                 else:
@@ -150,8 +151,8 @@ class SupportedSharingStatus(AbstractMetaDataElement):
         if 'sharing_status' in kwargs:
             meta_instance.sharing_status.clear()
             for sharing_status in kwargs['sharing_status']:
-                qs = SupportedSharingStatusChoices.objects.filter\
-                    (description__iexact=sharing_status)
+                qs = SupportedSharingStatusChoices.\
+                    objects.filter(description__iexact=sharing_status)
                 if qs.exists():
                     meta_instance.sharing_status.add(qs[0])
                 else:
@@ -160,7 +161,6 @@ class SupportedSharingStatus(AbstractMetaDataElement):
         else:
             raise ValidationError("No sharing_status parameter "
                                   "was found in the **kwargs list")
-
 
     @classmethod
     def remove(cls, element_id):
@@ -231,5 +231,3 @@ class ToolMetaData(CoreMetaData):
         self.tool_icon.all().delete()
         self.supported_sharing_status.all().delete()
         self.homepage_url.all().delete()
-
-import receivers # never delete this otherwise non of the receiver function will work

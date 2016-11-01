@@ -9,6 +9,7 @@ from hs_tools_resource.forms import SupportedResTypesValidationForm,  VersionFor
                                     SupportedSharingStatusValidationForm, \
                                     AppHomePageUrlValidationForm
 
+
 @receiver(pre_create_resource, sender=ToolResource)
 def webapp_pre_create_resource(sender, **kwargs):
     metadata = kwargs['metadata']
@@ -29,8 +30,8 @@ def metadata_element_pre_update_handler(sender, **kwargs):
     request = kwargs['request']
     element_name = kwargs['element_name'].lower()
     return validate_form(request, element_name)
-    
-    
+
+
 def validate_form(request, element_name):
     if element_name == 'requesturlbase':
         element_form = UrlBaseValidationForm(data=request.POST)

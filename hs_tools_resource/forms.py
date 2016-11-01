@@ -1,4 +1,4 @@
-from django.forms import ModelForm, BaseFormSet
+from django.forms import ModelForm
 from django import forms
 
 from crispy_forms.layout import Layout, Field
@@ -10,22 +10,30 @@ from hs_core.forms import BaseFormHelper
 
 # TODO: reference hs_core.forms
 class UrlBaseFormHelper(BaseFormHelper):
-    def __init__(self, allow_edit=True, res_short_id=None, element_id=None, element_name=None,  *args, **kwargs):
+    def __init__(self, allow_edit=True, res_short_id=None,
+                 element_id=None, element_name=None,  *args, **kwargs):
 
-        # the order in which the model fields are listed for the FieldSet is the order these fields will be displayed
+        # the order in which the model fields are listed
+        # for the FieldSet is the order these fields will be displayed
         field_width = 'form-control input-sm'
         layout = Layout(
             Field('value', css_class=field_width)
         )
-        kwargs['element_name_label'] = "App-launching URL Pattern <a href='/terms#AppURLPattern' target='_blank'><font size='3'>Help</font></a>"
+        kwargs['element_name_label'] = \
+            "App-launching URL Pattern <a href='/terms#AppURLPattern' target='_blank'>" \
+            "<font size='3'>Help</font></a>"
 
-        super(UrlBaseFormHelper, self).__init__(allow_edit, res_short_id, element_id, element_name, layout,  *args, **kwargs)
+        super(UrlBaseFormHelper, self).\
+            __init__(allow_edit, res_short_id, element_id, element_name, layout,  *args, **kwargs)
 
 
 class UrlBaseForm(ModelForm):
     def __init__(self, allow_edit=True, res_short_id=None, element_id=None, *args, **kwargs):
         super(UrlBaseForm, self).__init__(*args, **kwargs)
-        self.helper = UrlBaseFormHelper(allow_edit, res_short_id, element_id, element_name='RequestUrlBase')
+        self.helper = UrlBaseFormHelper(allow_edit,
+                                        res_short_id,
+                                        element_id,
+                                        element_name='RequestUrlBase')
         self.fields['value'].label = ''
 
     class Meta:
@@ -39,22 +47,28 @@ class UrlBaseValidationForm(forms.Form):
 
 
 class AppHomePageUrlFormHelper(BaseFormHelper):
-    def __init__(self, allow_edit=True, res_short_id=None, element_id=None, element_name=None,  *args, **kwargs):
+    def __init__(self, allow_edit=True, res_short_id=None,
+                 element_id=None, element_name=None,  *args, **kwargs):
 
-        # the order in which the model fields are listed for the FieldSet is the order these fields will be displayed
+        # the order in which the model fields are listed
+        # for the FieldSet is the order these fields will be displayed
         field_width = 'form-control input-sm'
         layout = Layout(
             Field('value', css_class=field_width)
         )
         kwargs['element_name_label'] = "App Home Page URL"
 
-        super(AppHomePageUrlFormHelper, self).__init__(allow_edit, res_short_id, element_id, element_name, layout,  *args, **kwargs)
+        super(AppHomePageUrlFormHelper, self).\
+            __init__(allow_edit, res_short_id, element_id, element_name, layout,  *args, **kwargs)
 
 
 class AppHomePageUrlForm(ModelForm):
     def __init__(self, allow_edit=True, res_short_id=None, element_id=None, *args, **kwargs):
         super(AppHomePageUrlForm, self).__init__(*args, **kwargs)
-        self.helper = AppHomePageUrlFormHelper(allow_edit, res_short_id, element_id, element_name='AppHomePageUrl')
+        self.helper = AppHomePageUrlFormHelper(allow_edit,
+                                               res_short_id,
+                                               element_id,
+                                               element_name='AppHomePageUrl')
         self.fields['value'].label = ''
 
     class Meta:
@@ -68,20 +82,31 @@ class AppHomePageUrlValidationForm(forms.Form):
 
 
 class VersionFormHelper(BaseFormHelper):
-    def __init__(self, allow_edit=True, res_short_id=None, element_id=None, element_name=None, *args, **kwargs):
-        # the order in which the model fields are listed for the FieldSet is the order these fields will be displayed
+    def __init__(self, allow_edit=True, res_short_id=None,
+                 element_id=None, element_name=None, *args, **kwargs):
+        # the order in which the model fields are
+        # listed for the FieldSet is the order these fields will be displayed
         field_width = 'form-control input-sm'
         layout = Layout(
                 Field('value', css_class=field_width),
         )
         kwargs['element_name_label'] = 'Version'
-        super(VersionFormHelper, self).__init__(allow_edit, res_short_id, element_id, element_name, layout,  *args, **kwargs)
+        super(VersionFormHelper, self).__init__(allow_edit,
+                                                res_short_id,
+                                                element_id,
+                                                element_name,
+                                                layout,
+                                                *args,
+                                                **kwargs)
 
 
 class VersionForm(ModelForm):
     def __init__(self, allow_edit=True, res_short_id=None, element_id=None, *args, **kwargs):
         super(VersionForm, self).__init__(*args, **kwargs)
-        self.helper = VersionFormHelper(allow_edit, res_short_id, element_id, element_name='ToolVersion')
+        self.helper = VersionFormHelper(allow_edit,
+                                        res_short_id,
+                                        element_id,
+                                        element_name='ToolVersion')
         self.fields['value'].label = ""
 
     class Meta:
@@ -95,20 +120,31 @@ class VersionValidationForm(forms.Form):
 
 
 class ToolIconFormHelper(BaseFormHelper):
-    def __init__(self, allow_edit=True, res_short_id=None, element_id=None, element_name=None, *args, **kwargs):
-        # the order in which the model fields are listed for the FieldSet is the order these fields will be displayed
+    def __init__(self, allow_edit=True, res_short_id=None,
+                 element_id=None, element_name=None, *args, **kwargs):
+        # the order in which the model fields are listed for the
+        # FieldSet is the order these fields will be displayed
         field_width = 'form-control input-sm'
         layout = Layout(
                 Field('url', css_class=field_width)
         )
         kwargs['element_name_label'] = 'Icon URL'
-        super(ToolIconFormHelper, self).__init__(allow_edit, res_short_id, element_id, element_name, layout,  *args, **kwargs)
+        super(ToolIconFormHelper, self).__init__(allow_edit,
+                                                 res_short_id,
+                                                 element_id,
+                                                 element_name,
+                                                 layout,
+                                                 *args,
+                                                 **kwargs)
 
 
 class ToolIconForm(ModelForm):
     def __init__(self, allow_edit=True, res_short_id=None, element_id=None, *args, **kwargs):
         super(ToolIconForm, self).__init__(*args, **kwargs)
-        self.helper = ToolIconFormHelper(allow_edit, res_short_id, element_id, element_name='ToolIcon')
+        self.helper = ToolIconFormHelper(allow_edit,
+                                         res_short_id,
+                                         element_id,
+                                         element_name='ToolIcon')
         self.fields['url'].label = ""
 
     class Meta:
@@ -141,9 +177,14 @@ class MetadataField(Field):
 
 
 class SupportedResTypeFormHelper(BaseFormHelper):
-    def __init__(self, allow_edit=True, res_short_id=None, element_id=None, element_name=None,  *args, **kwargs):
+    def __init__(self, allow_edit=True,
+                 res_short_id=None,
+                 element_id=None,
+                 element_name=None,
+                 *args, **kwargs):
 
-        # the order in which the model fields are listed for the FieldSet is the order these fields will be displayed
+        # the order in which the model fields are listed for
+        # the FieldSet is the order these fields will be displayed
         layout = Layout(MetadataField('supported_res_types'))
         kwargs['element_name_label'] = 'Supported Resource Types'
         super(SupportedResTypeFormHelper, self).__init__(allow_edit, res_short_id, element_id,
@@ -151,9 +192,10 @@ class SupportedResTypeFormHelper(BaseFormHelper):
 
 
 class SupportedResTypesForm(ModelForm):
-    supported_res_types = forms.MultipleChoiceField(choices=SupportedResTypes_choices,
-                                                    widget=forms.CheckboxSelectMultiple(
-                                                            attrs={'style': 'width:auto;margin-top:-5px'}))
+    supported_res_types = forms.\
+        MultipleChoiceField(choices=SupportedResTypes_choices,
+                            widget=forms.CheckboxSelectMultiple(
+                                    attrs={'style': 'width:auto;margin-top:-5px'}))
 
     def __init__(self, allow_edit=True, res_short_id=None, element_id=None, *args, **kwargs):
         model_instance = kwargs.get('instance')
@@ -174,15 +216,14 @@ class SupportedResTypesForm(ModelForm):
             else:
                 self.initial['supported_res_types'] = []
 
-
     class Meta:
         model = SupportedResTypes
         fields = ('supported_res_types',)
 
 
 class SupportedResTypesValidationForm(forms.Form):
-    supported_res_types = forms.MultipleChoiceField(choices=SupportedResTypes_choices, required=False)
-
+    supported_res_types = forms.MultipleChoiceField(choices=SupportedResTypes_choices,
+                                                    required=False)
 
 SupportedSharingStatus_choices = (
     ('Published', 'Published'),
@@ -223,7 +264,6 @@ class SupportedSharingStatusForm(ModelForm):
                     [parameter.description for parameter in supported_sharing_status]
             else:
                 self.initial['sharing_status'] = []
-
 
     class Meta:
         model = SupportedSharingStatus
