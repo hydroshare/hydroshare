@@ -26,3 +26,5 @@ class CompositeResource(BaseResource):
 # this would allow us to pick up additional form elements for the template before the template
 # is displayed
 processor_for(CompositeResource)(resource_processor)
+
+import receivers
