@@ -133,7 +133,6 @@ class Command(BaseCommand):
             'title',
             'resource type',
             'size',
-            'federated resource file size',
             'publication status'
         ]
         w.writerow(fields)
@@ -148,15 +147,14 @@ class Command(BaseCommand):
                 f_sizes = [int(f.fed_resource_file_size)
                            if f.fed_resource_file_size else 0
                            for f in r.files.all()]
-                federated_resource_file_size = sum()
+                total_file_size += sum(f_sizes)
             except SessionException:
-                federated_resource_file_size = "SessionException"
+                pass
             values = [
                 r.metadata.dates.get(type="created").start_date.strftime("%m/%d/%Y"),
                 r.metadata.title.value,
                 r.resource_type,
                 total_file_size,
-                federated_resource_file_size,
                 r.raccess.sharing_status,
             ]
             w.writerow([unicode(v).encode("utf-8") for v in values])
