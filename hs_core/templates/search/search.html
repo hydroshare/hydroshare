@@ -146,10 +146,10 @@
                     </table>
                 </form>
                 <br>
-                <div id="resource-search" style="display:none">
+                <div id="resource-search" class="hidden">
                     <div id="coverages-master-list"></div>
                     <br />
-                    <table id="lat-lng-labels" style="display:none">
+                    <table id="lat-lng-labels" class="hidden">
                         <tr>
                             <td>
                                 North Latitude: <label for="ne-lat-value"></label>
@@ -1013,17 +1013,17 @@
             map.controls[google.maps.ControlPosition.RIGHT_TOP].push(map_legend);
             map.controls[google.maps.ControlPosition.LEFT_BOTTOM].push(geo_coder);
             map.controls[google.maps.ControlPosition.RIGHT_BOTTOM].push(reset_zoom_button);
-            var legend_content = [];
             var geocoder_content = [];
             var resetButton_content = [];
-            legend_content.push("<p><img src='//cdn.rawgit.com/Concept211/Google-Maps-Markers/master/images/marker_red.png'> Point Coverage Locations </p>");
-            legend_content.push("<p><img src='//cdn.rawgit.com/Concept211/Google-Maps-Markers/master/images/marker_blue.png'> Box Coverage Centers </p>");
-            legend_content.push("<p><img src='//cdn.rawgit.com/googlemaps/js-marker-clusterer/gh-pages/images/m2.png'> Clusters </p>");
+            var legend_table = "<table class='table table-sm'>";
+            legend_table += "<tr height='33%'><td><img src='{{ STATIC_URL }}img/discover_map_red_marker.png'></td><td>Point Coverage Locations</td></tr>";
+            legend_table += "<tr height='33%'><td><img src='{{ STATIC_URL }}img/discover_map_blue_marker.png'></td><td>Box Coverage Centers</td></tr>";
+            legend_table += "<tr height='33%'><td><img src='{{ STATIC_URL }}img/discover_map_cluster_icon.png'></td><td>Clusters</td></tr></table>";
             geocoder_content.push("<input id='geocoder-address' type='textbox' placeholder='Search Locations...'>");
             geocoder_content.push("<a id='geocoder-submit' style='margin-left:10px' class='btn btn-default' role='button'><span class='glyphicon glyphicon-zoom-in'></span> Go </a>");
             resetButton_content.push("<a id='reset-zoom-btn' data-toggle='tooltip' title='Reset Zoom' class='btn btn-default btn-sm' onclick='resetMapZoom()'>");
             resetButton_content.push("<span class='glyphicon glyphicon-fullscreen'></span></a>");
-            map_legend.innerHTML = legend_content.join('');
+            map_legend.innerHTML = legend_table;
             geo_coder.innerHTML = geocoder_content.join('');
             reset_zoom_button.innerHTML = resetButton_content.join('');
         };
