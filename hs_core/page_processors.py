@@ -171,6 +171,7 @@ def get_page_context(page, user, resource_edit=False, extended_metadata_layout=N
         abstract = content_model.metadata.description.abstract if content_model.metadata.description else None
 
         context = {
+                   'resource_edit_mode': resource_edit,
                    'metadata_form': None,
                    'citation': content_model.get_citation(),
                    'title': title,
@@ -375,6 +376,7 @@ def get_page_context(page, user, resource_edit=False, extended_metadata_layout=N
                                  extended_metadata_layout=extended_metadata_layout)
 
     context = {
+               'resource_edit_mode': resource_edit,
                'metadata_form': metadata_form,
                'title_form': title_form,
                'creator_formset': creator_formset,

@@ -4,6 +4,7 @@ from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.core.exceptions import ValidationError
 from django.db import Error
+from rest_framework import status
 
 from hs_core.views.utils import ACTION_TO_AUTHORIZE, authorize
 from .utils import set_file_to_geo_raster_file_type
@@ -11,25 +12,25 @@ from .models import GeoRasterLogicalFile
 
 @login_required
 def set_file_type(request, resource_id, file_id, hs_file_type,  **kwargs):
+    """This view function must be called using ajax call"""
     res, _, _ = authorize(request, resource_id, needed_permission=ACTION_TO_AUTHORIZE.EDIT_RESOURCE)
+
     if res.resource_type != "CompositeResource":
         err_msg = "File type can be set only for files in composite resource."
-        messages.error(request, err_msg)
-        return HttpResponseRedirect(request.META['HTTP_REFERER'])
+        return JsonResponse({'message': err_msg}, status=status.HTTP_400_BAD_REQUEST)
+
     if hs_file_type != "GeoRaster":
         err_msg = "Currently a file can be set to Geo Raster file type."
-        messages.error(request, err_msg)
-        return HttpResponseRedirect(request.META['HTTP_REFERER'])
+        return JsonResponse({'message': err_msg}, status=status.HTTP_400_BAD_REQUEST)
 
     try:
         set_file_to_geo_raster_file_type(resource=res, file_id=file_id, user=request.user)
         msg = "File was successfully set to Geo Raster file type. " \
               "Raster metadata extraction was successful."
-        messages.success(request, msg)
-    except ValidationError as ex:
-        messages.error(request, ex.message)
+        return JsonResponse({'message': msg}, status=status.HTTP_200_OK)
 
-    return HttpResponseRedirect(request.META['HTTP_REFERER'])
+    except ValidationError as ex:
+        return JsonResponse({'message': ex.message}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
 @login_required
@@ -61,6 +62,7 @@ def delete_file_type(request, resource_id, hs_file_type, file_type_id, **kwargs)
     msg = "Geo Raster file type was deleted."
     messages.success(request, msg)
     return HttpResponseRedirect(request.META['HTTP_REFERER'])
+
 
 @login_required
 def update_metadata_element(request, hs_file_type, file_type_id, element_name,

@@ -488,8 +488,13 @@ def rename_irods_file_or_folder_in_django(resource, src_name, tgt_name):
             # since resource_file is a FileField which cannot be directly renamed,
             # this old ResourceFile object has to be deleted followed by creation of
             # a new ResourceFile with new file associated that replace the old one
+            logical_file = res_file_obj[0].logical_file if res_file_obj[0].has_logical_file else None
+
             res_file_obj[0].delete()
-            ResourceFile.objects.create(content_object=resource, resource_file=tgt_name)
+            res_file = ResourceFile.objects.create(content_object=resource, resource_file=tgt_name)
+            if logical_file is not None:
+                res_file.logical_file_content_object = logical_file
+                res_file.save()
         else:
             # src_name and tgt_name are folder names
             res_file_objs = \
@@ -498,8 +503,13 @@ def rename_irods_file_or_folder_in_django(resource, src_name, tgt_name):
             for fobj in res_file_objs:
                 old_str = fobj.resource_file.name
                 new_str = old_str.replace(src_name, tgt_name)
+                logical_file = fobj.logical_file if fobj.has_logical_file else None
                 fobj.delete()
-                ResourceFile.objects.create(content_object=resource, resource_file=new_str)
+                res_file = ResourceFile.objects.create(content_object=resource,
+                                                       resource_file=new_str)
+                if logical_file is not None:
+                    res_file.logical_file_content_object = logical_file
+                    res_file.save()
 
 
 def remove_irods_folder_in_django(resource, istorage, foldername):

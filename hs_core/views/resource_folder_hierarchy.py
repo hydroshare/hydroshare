@@ -60,12 +60,17 @@ def data_store_structure(request):
                 mtype = mtype[idx + 1:]
             f_pk = ''
             f_url = ''
+            logical_file_type = ''
             for f in ResourceFile.objects.filter(object_id=resource.id):
                 if fname == get_resource_file_name_and_extension(f)[1]:
                     f_pk = f.pk
                     f_url = get_resource_file_url(f)
+                    if resource.resource_type == "CompositeResource":
+                        logical_file_type = f.logical_file_type_name
                     break
-            files.append({'name': fname, 'size': size, 'type': mtype, 'pk': f_pk, 'url': f_url})
+
+            files.append({'name': fname, 'size': size, 'type': mtype, 'pk': f_pk, 'url': f_url,
+                          'logical_type': logical_file_type})
     except SessionException as ex:
         logger.error(ex.stderr)
         return HttpResponse(content_type='application/json', status=500)

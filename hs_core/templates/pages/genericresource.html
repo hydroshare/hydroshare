@@ -132,6 +132,12 @@
                             <span class="glyphicon glyphicon-download icon-blue"></span>
                             <span>Download</span>
                         </li>
+                        {% if page.perms.change and resource_edit_mode and cm.resource_type == "CompositeResource"%}
+                            <li id="btn-set-geo-file-type" data-menu-name="setgeorasterfiletype">
+                                <span class="glyphicon glyphicon-download icon-blue"></span>
+                                <span>Set Geo Raster File Type</span>
+                            </li>
+                        {%  endif %}
                     </ul>
 
                     {# POPUP MENU - Right clicking empty space in file browser #}
@@ -371,6 +377,13 @@
                                                         <span class="glyphicon glyphicon-download icon-blue"></span>
                                                     </button>
 
+                                                    {% if page.perms.change and resource_edit_mode %}
+                                                        <button id="fb-set-geo-file-type"
+                                                                class="disabled"
+                                                                title="Set Geo Raster File Type">
+                                                            <span class="glyphicon glyphicon-download icon-blue"></span>
+                                                        </button>
+                                                     {% endif %}
                                                     {% if page.perms.change and metadata_form %}
                                                         <button id="fb-delete"
                                                                 class="disabled"
@@ -572,6 +585,14 @@
                                         <a href="#connectionsTab" data-toggle="tab" title="Connections">
                                             <span class="glyphicon glyphicon-fullscreen"> </span>
                                             &nbspConnections
+                                        </a>
+                                     </li>
+                                {% endif %}
+                                {% if cm.resource_type == "CompositeResource" %}
+                                    <li class="col-xs-2 col-md-2">
+                                        <a href="#fileTypeMetaDataTab" data-toggle="tab" title="File Metadata">
+                                            <span class="glyphicon glyphicon-fullscreen"> </span>
+                                            &nbspFile Metadata
                                         </a>
                                      </li>
                                 {% endif %}
@@ -1354,7 +1375,92 @@
 
                                 </div>
                                 {% endif %}
+                                {# ===========   File Type Metadata Tab ================== #}
+                                {% if cm.resource_type == "CompositeResource" %}
+                                    <div class="tab-pane" id="fileTypeMetaDataTab">
+                                        {% for lf in cm.logical_files %}
+                                            {% if lf.type_name == "GeoRasterLogicalFile" %}
+                                                <tr>
+                                                    <td>
+                                                        <img title="Geo Raster File" class="table-res-type-icon" alt="Geo Raster File" src="/static/img/resource-icons/geographicraster48x48.png">
 
+
+                                                        <span><strong>Geo Raster: {{ lf.dataset_name }}</strong></span>
+                                                        <p class="label-file-size">
+                                                            {{ lf.size|filesizeformat }}
+                                                        </p>
+                                                    </td>
+                                                    <td>
+                                                        {% if page.perms.change and resource_edit_mode %}
+                                                            <a href="/hsapi/_internal/{{ cm.short_id }}/GeoRaster/{{ lf.id }}/delete-file-type/">
+                                                                <span data-placement="auto" title="Delete"
+                                                                    class="glyphicon glyphicon-trash icon-button btn-remove">
+                                                                </span>
+                                                            </a>
+                                                       {% endif %}
+                                                    </td>
+                                                </tr>
+                                                {% for f in lf.files.all %}
+{#                                                  show files in a logical file #}
+                                                    <tr>
+                                                        <td>
+                                                            <span class="glyphicon glyphicon-file file-icon" style="margin-left:20px;"></span>
+                                                            <span>
+                                                                <span class="label-file-name" >
+                                                                    {{ f.resource_file.name|slice:"33:" }}
+                                                                </span>
+                                                                <p class="label-file-size" style="margin-left:20px;">
+                                                                    {{ f.size|filesizeformat }}
+                                                                </p>
+                                                           </span>
+                                                            <td>
+                                                            <a href="{{ f.url }}"><span data-toggle="tooltip"
+                                                                                                          data-placement="auto"
+                                                                                                          title="Download"
+                                                                                                          class="glyphicon glyphicon-download icon-button btn-download"></span></a>
+                                                            </td>
+                                                        </td>
+                                                    </tr>
+                                                {% endfor %}
+                                            {% elif lf.type_name == "GenericLogicalFile" %}
+                                                {% for f in lf.files.all %}
+{#                                                  show files in a logical file #}
+                                                    <tr>
+                                                        <td>
+                                                            <span class="glyphicon glyphicon-file file-icon" style="margin-left:20px;"></span>
+                                                            <span>
+                                                                <span class="label-file-name" >
+                                                                    {{ f.resource_file.name|slice:"33:" }}
+                                                                </span>
+                                                                <p class="label-file-size" style="margin-left:20px;">
+                                                                    {{ f.size|filesizeformat }}
+                                                                </p>
+                                                           </span>
+                                                            {% if f.extension == '.tif' or f.extension == '.zip' %}
+                                                                <td>
+                                                                <a href="/hsapi/_internal/{{ cm.short_id }}/{{ f.pk }}/GeoRaster/set-file-type/" class="pull-right">Set Geo Raster File Type
+                                                                    <span class="btn-primary" data-placement="auto"></span>
+                                                                </a>
+                                                                </td>
+                                                            {% endif %}
+                                                            <td>
+                                                            <a href="{{ f.url }}"><span data-toggle="tooltip"
+                                                                                                          data-placement="auto"
+                                                                                                          title="Download"
+                                                                                                          class="glyphicon glyphicon-download icon-button btn-download"></span></a>
+                                                            </td>
+                                                        </td>
+                                                    </tr>
+                                                {%  endfor %}
+                                            {% endif %}
+                                        {% endfor %}
+                                        {% if file_metadata_forms and metadata_form %}
+                                            {% crispy file_metadata_forms %}
+                                         {% else %}
+                                            {{ file_type_obj.get_html |safe }}
+                                        {% endif %}
+                                    </div>
+                                {% endif %}
                             </div>
                         </div>
                     </div>

@@ -17,7 +17,7 @@ function getFolderTemplateInstance(folderName) {
 }
 
 // Associates file icons with file extensions. Could be improved with a dictionary.
-function getFileTemplateInstance(fileName, fileType, fileSize, pk, url) {
+function getFileTemplateInstance(fileName, fileType, logical_type, fileSize, pk, url) {
     var fileTypeExt = fileName.substr(fileName.lastIndexOf(".") + 1, fileName.length);
     var extIcon = "fa-file-o";
 
@@ -54,10 +54,17 @@ function getFileTemplateInstance(fileName, fileType, fileSize, pk, url) {
         }
     }
 
-    return "<li data-pk='" + pk + "' data-url='" + url + "' class='fb-file draggable' title='" + fileName + "&#13;Type: " + fileType + "&#13;Size: " + formatBytes(parseInt(fileSize)) +  "'>" +
+    if (logical_type.length > 0){
+        var title = '' + fileName + "&#13;Type: " + fileType + "&#13;Size: " + formatBytes(parseInt(fileSize)) + "&#13;Logical Type: " + logical_type;
+    }
+    else {
+        var title = '' + fileName + "&#13;Type: " + fileType + "&#13;Size: " + formatBytes(parseInt(fileSize));
+    }
+    return "<li data-pk='" + pk + "' data-url='" + url + "' class='fb-file draggable' title='" + title + "'>" +
         "<span class='fb-file-icon fa " + extIcon + "'></span>" +
         "<span class='fb-file-name'>" + fileName + "</span>" +
         "<span class='fb-file-type'>" + fileType + " File</span>" +
+        "<span class='fb-logical-file-type' data-logical-file-type=" + logical_type + ">" + logical_type + "</span>" +
         "<span class='fb-file-size' data-file-size=" + fileSize + "'>" + formatBytes(parseInt(fileSize)) + "</span></li>"
 }
 
@@ -80,12 +87,14 @@ function updateSelectionMenuContext() {
     var flagDisableUnzip = false;
     var flagDisableCut = false;
     var flagDisableDelete = false;
+    var flagDisableSetGeoRasterFileType = false;
 
     if (selected.length > 1) {
         flagDisableRename = true; 
         flagDisableOpen = true;
         flagDisablePaste = true;
         flagDisableZip = true;
+        flagDisableSetGeoRasterFileType = true;
     }
     else if (selected.length == 1) {    // Unused for now
 
@@ -117,8 +126,13 @@ function updateSelectionMenuContext() {
     for (var i = 0; i < selected.length; i++) {
         var fileName = $(selected[i]).children(".fb-file-name").text();
         var fileExt = fileName.substr(fileName.lastIndexOf(".") + 1, fileName.length);
+        var logicalFileType = $(selected[i]).children(".fb-logical-file-type").text();
+        console.log(logicalFileType);
         if (fileExt.toUpperCase() != "ZIP") {
             flagDisableUnzip = true;
+        }
+        if ((fileExt.toUpperCase() != "TIF" && fileExt.toUpperCase() != "ZIP") || logicalFileType != "GenericLogicalFile") {
+            flagDisableSetGeoRasterFileType = true;
         }
     }
     
@@ -135,6 +149,10 @@ function updateSelectionMenuContext() {
     // Download
     menu.children("li[data-menu-name='download']").toggleClass("disabled", flagDisableDownload);
     $("#fb-download").toggleClass("disabled", flagDisableDownload);
+
+    // set Geo Raster file type
+    menu.children("li[data-menu-name='setgeorasterfiletype']").toggleClass("disabled", flagDisableSetGeoRasterFileType);
+    $("#fb-geo-file-type").toggleClass("disabled", flagDisableSetGeoRasterFileType);
 
     // Rename
     menu.children("li[data-menu-name='rename']").toggleClass("disabled", flagDisableRename);
@@ -938,6 +956,20 @@ $(document).ready(function () {
         link.click();
         link.remove();
     }
+
+    // set geo raster file type method
+     $("#btn-set-geo-file-type").click(function () {
+         var file_id = $("#fb-files-container li.ui-selected").attr("data-pk");
+         var resID = $("#hs-file-browser").attr("data-res-id");
+         var url = "/hsapi/_internal/" + resID + "/" + file_id + "/GeoRaster/set-file-type/";
+         $(".file-browser-container, #fb-files-container").css("cursor", "progress");
+         var calls = [];
+         calls.push(set_file_type_ajax_submit(url));
+         // Wait for the asynchronous calls to finish to get new folder structure
+         $.when.apply($, calls).done(function () {
+            refreshFileBrowser();
+         });
+      });
 
     // Zip method
     $("#btn-confirm-zip").click(function () {

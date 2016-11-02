@@ -440,6 +440,20 @@ function makeTimeSeriesMetaDataElementFormReadOnly(form_id, element_id){
         $('#' + form_id + ' :input').attr('readonly', 'readonly');
     }
 }
+
+function set_file_type_ajax_submit(url) {
+    return $.ajax({
+        type: "POST",
+        url: url,
+        dataType: 'html',
+        async: true,
+        success: function (result) {
+        },
+        error: function (XMLHttpRequest, textStatus, errorThrown) {
+        }
+    });
+}
+
 function get_user_info_ajax_submit(url, obj) {
     var entry = $(obj).parent().parent().parent().parent().find("#id_user-deck > .hilight");
     if (entry.length < 1) {
@@ -507,7 +521,7 @@ function get_irods_folder_struct_ajax_submit(res_id, store_path) {
             $('#fb-files-container').empty();
             if (files.length > 0) {
                 $.each(files, function(i, v) {
-                    $('#fb-files-container').append(getFileTemplateInstance(v['name'], v['type'], v['size'], v['pk'], v['url']));
+                    $('#fb-files-container').append(getFileTemplateInstance(v['name'], v['type'], v['logical_type'], v['size'], v['pk'], v['url']));
                 });
             }
             if (folders.length > 0) {

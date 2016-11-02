@@ -4116,11 +4116,13 @@ ul#fb-files-container {
 	text-shadow: initial;
 }
 
-#fb-files-container.fb-view-grid .fb-file-type, #fb-files-container.fb-view-grid .fb-file-size {
+#fb-files-container.fb-view-grid .fb-file-type, #fb-files-container.fb-view-grid .fb-file-size,
+#fb-files-container.fb-view-grid .fb-logical-file-type {
 	display: none;
 }
 
-#fb-files-container.fb-view-list .fb-file-type, #fb-files-container.fb-view-list .fb-file-size {
+#fb-files-container.fb-view-list .fb-file-type, #fb-files-container.fb-view-list .fb-file-size,
+#fb-files-container.fb-view-list .fb-logical-file-type {
 	float: right;
 	display: inline-block;
 	width: 15%;
