@@ -767,8 +767,11 @@ def add_resource_files(pk, *files, **kwargs):
     for f in files:
         if fed_zone_home_path:
             # user has selected files from a federated iRODS zone, so files uploaded from local disk
-            # need to be stored to the federated iRODS zone rather than HydroShare zone as well
-            ret.append(utils.add_file_to_resource(resource, f, fed_res_file_name_or_path=fed_zone_home_path))
+            # need to be stored to the federated iRODS zone rather than HydroShare zone. A typical
+            # case is when user selected one file from federated zone, and select one file from
+            # local disk, in which case both files will be added to the federated user zone
+            ret.append(utils.add_file_to_resource(resource, f,
+                                                  fed_res_file_name_or_path=fed_zone_home_path))
         elif resource.resource_federation_path:
             # file needs to be added to a resource in a federated zone
             ret.append(utils.add_file_to_resource(resource, f, fed_res_file_name_or_path=resource.resource_federation_path))
