@@ -134,8 +134,14 @@
                         </li>
                         {% if page.perms.change and resource_edit_mode and cm.resource_type == "CompositeResource"%}
                             <li id="btn-set-geo-file-type" data-menu-name="setgeorasterfiletype">
-                                <span class="glyphicon glyphicon-download icon-blue"></span>
+                                <span class="glyphicon glyphicon-check icon-blue"></span>
                                 <span>Set Geo Raster File Type</span>
+                            </li>
+                        {%  endif %}
+                        {% if page.perms.change and cm.resource_type == "CompositeResource"%}
+                            <li id="btn-show-file-metadata" data-menu-name="showfilemetadata">
+                                <span class="glyphicon glyphicon-list-alt icon-blue"></span>
+                                <span>Show Metadata</span>
                             </li>
                         {%  endif %}
                     </ul>
@@ -381,9 +387,15 @@
                                                         <button id="fb-set-geo-file-type"
                                                                 class="disabled"
                                                                 title="Set Geo Raster File Type">
-                                                            <span class="glyphicon glyphicon-download icon-blue"></span>
+                                                            <span class="glyphicon glyphicon-check icon-blue"></span>
                                                         </button>
                                                      {% endif %}
+                                                    <button id="fb-show-file-metadata"
+                                                                class="disabled"
+                                                                title="Show Metadata">
+                                                            <span class="glyphicon glyphicon-list-alt icon-blue"></span>
+                                                    </button>
+
                                                     {% if page.perms.change and metadata_form %}
                                                         <button id="fb-delete"
                                                                 class="disabled"
@@ -548,7 +560,7 @@
                                 {% if extended_metadata_exists or metadata_form %}
                                     {#  Resource specific metadata can't be edited for HIS Referenced Time Series #}
                                     {% if cm|resource_type != "HIS Referenced Time Series" or not metadata_form %}
-                                        {% if  cm|resource_type != "Generic" %}
+                                        {% if  cm|resource_type != "Generic" and cm.resource_type != "CompositeResource"%}
                                             {% if  cm|resource_type|lower != "collection resource" %}
                                                 {% if is_resource_specific_tab_active %}
                                                     <li class="active col-xs-2 col-md-2">
@@ -591,7 +603,7 @@
                                 {% if cm.resource_type == "CompositeResource" %}
                                     <li class="col-xs-2 col-md-2">
                                         <a href="#fileTypeMetaDataTab" data-toggle="tab" title="File Metadata">
-                                            <span class="glyphicon glyphicon-fullscreen"> </span>
+                                            <span class="glyphicon glyphicon-list-alt"> </span>
                                             &nbspFile Metadata
                                         </a>
                                      </li>
@@ -1285,7 +1297,7 @@
                                 {% if site or extended_metadata_exists or res_add_metadata or metadata_form %}
                                     {#  Resource specific metadata can't be edited for HIS Referenced Time Series #}
                                     {% if cm|resource_type != "HIS Referenced Time Series" or not metadata_form %}
-                                        {% if  cm|resource_type != "Generic" %}
+                                        {% if  cm|resource_type != "Generic" and cm.resource_type != "CompositeResource" %}
                                             {% if  cm|resource_type|lower != "collection resource" %}
                                                 {% if not is_resource_specific_tab_active %}
                                                     <div class="tab-pane" id="resourceSpecificTab">
@@ -1378,87 +1390,9 @@
                                 {# ===========   File Type Metadata Tab ================== #}
                                 {% if cm.resource_type == "CompositeResource" %}
                                     <div class="tab-pane" id="fileTypeMetaDataTab">
-                                        {% for lf in cm.logical_files %}
-                                            {% if lf.type_name == "GeoRasterLogicalFile" %}
-                                                <tr>
-                                                    <td>
-                                                        <img title="Geo Raster File" class="table-res-type-icon" alt="Geo Raster File" src="/static/img/resource-icons/geographicraster48x48.png">
-
-
-                                                        <span><strong>Geo Raster: {{ lf.dataset_name }}</strong></span>
-                                                        <p class="label-file-size">
-                                                            {{ lf.size|filesizeformat }}
-                                                        </p>
-                                                    </td>
-                                                    <td>
-                                                        {% if page.perms.change and resource_edit_mode %}
-                                                            <a href="/hsapi/_internal/{{ cm.short_id }}/GeoRaster/{{ lf.id }}/delete-file-type/">
-                                                                <span data-placement="auto" title="Delete"
-                                                                    class="glyphicon glyphicon-trash icon-button btn-remove">
-                                                                </span>
-                                                            </a>
-                                                       {% endif %}
-                                                    </td>
-                                                </tr>
-                                                {% for f in lf.files.all %}
-{#                                                  show files in a logical file #}
-                                                    <tr>
-                                                        <td>
-                                                            <span class="glyphicon glyphicon-file file-icon" style="margin-left:20px;"></span>
-                                                            <span>
-                                                                <span class="label-file-name" >
-                                                                    {{ f.resource_file.name|slice:"33:" }}
-                                                                </span>
-                                                                <p class="label-file-size" style="margin-left:20px;">
-                                                                    {{ f.size|filesizeformat }}
-                                                                </p>
-                                                           </span>
-                                                            <td>
-                                                            <a href="{{ f.url }}"><span data-toggle="tooltip"
-                                                                                                          data-placement="auto"
-                                                                                                          title="Download"
-                                                                                                          class="glyphicon glyphicon-download icon-button btn-download"></span></a>
-                                                            </td>
-                                                        </td>
-                                                    </tr>
-                                                {% endfor %}
-                                            {% elif lf.type_name == "GenericLogicalFile" %}
-                                                {% for f in lf.files.all %}
-{#                                                  show files in a logical file #}
-                                                    <tr>
-                                                        <td>
-                                                            <span class="glyphicon glyphicon-file file-icon" style="margin-left:20px;"></span>
-                                                            <span>
-                                                                <span class="label-file-name" >
-                                                                    {{ f.resource_file.name|slice:"33:" }}
-                                                                </span>
-                                                                <p class="label-file-size" style="margin-left:20px;">
-                                                                    {{ f.size|filesizeformat }}
-                                                                </p>
-                                                           </span>
-                                                            {% if f.extension == '.tif' or f.extension == '.zip' %}
-                                                                <td>
-                                                                <a href="/hsapi/_internal/{{ cm.short_id }}/{{ f.pk }}/GeoRaster/set-file-type/" class="pull-right">Set Geo Raster File Type
-                                                                    <span class="btn-primary" data-placement="auto"></span>
-                                                                </a>
-                                                                </td>
-                                                            {% endif %}
-                                                            <td>
-                                                            <a href="{{ f.url }}"><span data-toggle="tooltip"
-                                                                                                          data-placement="auto"
-                                                                                                          title="Download"
-                                                                                                          class="glyphicon glyphicon-download icon-button btn-download"></span></a>
-                                                            </td>
-                                                        </td>
-                                                    </tr>
-                                                {%  endfor %}
-                                            {% endif %}
-                                        {% endfor %}
-                                        {% if file_metadata_forms and metadata_form %}
-                                            {% crispy file_metadata_forms %}
-                                         {% else %}
-                                            {{ file_type_obj.get_html |safe }}
-                                        {% endif %}
+                                        <div class="alert alert-warning alert-dismissible" role="alert">
+                                            <h4>Right click on a file and select option "Show Metadata" to see file type metadata.</h4>
+                                        </div>
                                     </div>
                                 {% endif %}
                             </div>
@@ -1811,6 +1745,7 @@
             });
         }
 
+
         $(document).ready(function () {
             var task_id = $('#task_id').val();
             var download_path = $('#download_path').val();
@@ -2001,7 +1936,7 @@
             }
 
             // Apply theme to comment's submit button
-            $("#comment input[type='submit']").removeClass()
+            $("#comment input[type='submit']").removeClass();
             $("#comment input[type='submit']").addClass("btn btn-default");
 
             $(".list-separator").parent().hover(function(){
@@ -2160,16 +2095,7 @@
             }
 
             // show "Save changes" button when form editing starts
-            $(".form-control").each(function () {
-                $(this).on('input', function (e) {
-                    //$(this).css('border-color', 'gray');
-                    $(this).closest("form").find("button").show();
-                });
-                $(this).on('change', function (e) {
-                    //$(this).css('border-color', 'gray');
-                    $(this).closest("form").find("button").show();
-                });
-            });
+            showMetadataFormSaveChangesButton();
 
             // Initialize date pickers
             $(".dateinput").each(function () {

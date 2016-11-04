@@ -3,6 +3,9 @@ from functools import partial, wraps
 from django.db import models
 from django.contrib.contenttypes.fields import GenericRelation
 from django.forms.models import formset_factory
+from django.template import Template, Context
+
+from dominate.tags import *
 
 from hs_core.models import Coverage
 
@@ -58,13 +61,66 @@ class GeoRasterFileMetaData(AbstractFileMetaData, GeoRasterMetaDataMixin):
         return True
 
     def get_html(self):
-        # in the template we can insert necessary html code for displaying all
-        # file type metadata associated with a logical file using this
-        # single line: {{ logical_file.metadata.get_html |safe }}
-        html_string = ''
-        for element in (self.originalCoverage, self.cellInformation, self.bandInformation):
-            html_string += element.get_html() + "\n"
-        return html_string
+        """
+        generates template based html for all metadata associated with raster logical file
+        that can be dynamically injected to existing html document for metadata viewing or can be
+        included as part of the html document using this
+        single line: {{ logical_file.metadata.get_html }}
+        """
+
+        html_string = self.coverage.get_html()
+        html_string += self.originalCoverage.get_html()
+        html_string += self.cellInformation.get_html()
+        band_legend = legend("Band Information", cls="pull-left", style="margin-left:10px;")
+        html_string += band_legend.render()
+        for band_info in self.bandInformations:
+            html_string += band_info.get_html()
+
+        template = Template(html_string)
+        context = Context({})
+        return template.render(context)
+
+    def get_html_forms(self):
+        """
+        generates html form code for all metadata associated with raster file type
+        that can by dynamically injected to existing html document using jquery or loaded
+        into an html document by including this single line:
+        {{ logical_file.metadata.get_html_forms }}
+        """
+        root_div = div("{% load crispy_forms_tags %}")
+        with root_div:
+            with div(cls="col-lg-6 col-xs-12"):
+                div("{% crispy coverage_form %}")
+            with div(cls="col-lg-6 col-xs-12"):
+                div("{% crispy orig_coverage_form %}")
+            with div(cls="col-lg-6 col-xs-12"):
+                div("{% crispy cellinfo_form %}")
+            with div(cls="pull-left col-sm-12"):
+                with div(cls="well", id="variables"):
+                    with div(cls="row"):
+                        div("{% for form in bandinfo_formset_forms %}")
+                        with div(cls="col-sm-6 col-xs-12"):
+                            with form(id="{{ form.form_id }}", action="{{ form.action }}",
+                                      method="post", enctype="multipart/form-data"):
+                                div("{% crispy form %}")
+                                with div(cls="row", style="margin-top:10px;"):
+                                    with div(cls="col-md-offset-10 col-xs-offset-6 "
+                                                 "col-md-2 col-xs-6"):
+                                        button("Save changes", type="button",
+                                               cls="btn btn-primary pull-right",
+                                               style="display: none;",
+                                               onclick="metadata_update_ajax_submit({{ "
+                                                       "form.form_id_button }}); return false;")
+                        div("{% endfor %}")
+
+        template = Template(root_div.render())
+        context_dict = dict()
+        context_dict["coverage_form"] = self.coverage.get_html_form(resource=None)
+        context_dict["orig_coverage_form"] = self.originalCoverage.get_html_form(resource=None)
+        context_dict["cellinfo_form"] = self.cellInformation.get_html_form(resource=None)
+        context_dict["bandinfo_formset_forms"] = self.get_bandinfo_formset().forms
+        context = Context(context_dict)
+        return template.render(context)
 
     def get_coverage_form(self):
         return self.coverage.get_html_form(resource=None)

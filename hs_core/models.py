@@ -1572,6 +1572,24 @@ class AbstractResource(ResourcePermissionsMixin):
                     non_logical_files_list.append(res_file)
         return non_logical_files_list
 
+    @property
+    def generic_logical_files(self):
+        generic_logical_files_list = []
+        for res_file in self.files.all():
+            if res_file.has_generic_logical_file:
+                if res_file.logical_file not in generic_logical_files_list:
+                    generic_logical_files_list.append(res_file.logical_file)
+        return generic_logical_files_list
+
+    def get_logical_files(self, logical_file_class_name):
+        logical_files_list = []
+        for res_file in self.files.all():
+            if res_file.logical_file is not None:
+                if res_file.logical_file_type_name == logical_file_class_name:
+                    if res_file.logical_file not in logical_files_list:
+                        logical_files_list.append(res_file.logical_file)
+        return logical_files_list
+
     class Meta:
         abstract = True
         unique_together = ("content_type", "object_id")
@@ -1636,6 +1654,10 @@ class ResourceFile(models.Model):
         return self.logical_file_content_object.__class__.__name__
 
     @property
+    def has_generic_logical_file(self):
+        return self.logical_file_type_name == "GenericLogicalFile"
+
+    @property
     def metadata(self):
         if self.logical_file is not None:
             return self.logical_file.metadata
@@ -1648,7 +1670,9 @@ class ResourceFile(models.Model):
 
     @property
     def can_set_file_type(self):
-        return self.extension in ('.tif', '.zip') and self.logical_file is None
+        return self.extension in ('.tif', '.zip') and (self.logical_file is None or
+                                                       self.logical_file_type_name ==
+                                                       "GenericLogicalFile")
 
     @property
     def size(self):

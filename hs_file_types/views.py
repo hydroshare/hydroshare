@@ -8,7 +8,8 @@ from rest_framework import status
 
 from hs_core.views.utils import ACTION_TO_AUTHORIZE, authorize
 from .utils import set_file_to_geo_raster_file_type
-from .models import GeoRasterLogicalFile
+from .models import GeoRasterLogicalFile, GenericLogicalFile
+
 
 @login_required
 def set_file_type(request, resource_id, file_id, hs_file_type,  **kwargs):
@@ -71,13 +72,13 @@ def update_metadata_element(request, hs_file_type, file_type_id, element_name,
     if hs_file_type != "GeoRaster":
         err_msg = "Currently only metadata can be updated for Geo Raster file type."
         ajax_response_data = {'status': 'error', 'message': err_msg}
-        return JsonResponse(ajax_response_data)
+        return JsonResponse(ajax_response_data, status=status.HTTP_400_BAD_REQUEST)
 
     logical_file = GeoRasterLogicalFile.objects.filter(id=file_type_id).first()
     if logical_file is None:
         err_msg = "No matching Geo Raster file type was found."
         ajax_response_data = {'status': 'error', 'message': err_msg}
-        return JsonResponse(ajax_response_data)
+        return JsonResponse(ajax_response_data, status=status.HTTP_400_BAD_REQUEST)
 
     resource = logical_file.resource
     res, _, _ = authorize(request, resource.short_id,
@@ -100,7 +101,48 @@ def update_metadata_element(request, hs_file_type, file_type_id, element_name,
     if is_update_success:
         ajax_response_data = {'status': 'success', 'element_name': element_name,
                               'metadata_status': "Update was successful"}
+        return JsonResponse(ajax_response_data, status=status.HTTP_200_OK)
     else:
         ajax_response_data = {'status': 'error', 'message': err_msg}
+        # need to return http status 200 to show form errors
+        return JsonResponse(ajax_response_data, status=status.HTTP_200_OK)
 
-    return JsonResponse(ajax_response_data)
+
+@login_required
+def get_metadata(request, hs_file_type, file_type_id, metadata_mode):
+    """
+    Gets metadata html for the logical file type
+    :param request:
+    :param hs_file_type: HydroShare supported logical file type class name
+    :param file_type_id: id of the logical file object for which metadata in html format is needed
+    :param metadata_mode: a value of either edit or view. In edit mode metadata html form elements
+                          are returned. In view mode normal html for display of metadata is returned
+    :return: html string
+    """
+    if hs_file_type != "GeoRasterLogicalFile" and hs_file_type != "GenericLogicalFile":
+        err_msg = "Invalid file type found."
+        ajax_response_data = {'status': 'error', 'message': err_msg}
+        return JsonResponse(ajax_response_data, status=status.HTTP_400_BAD_REQUEST)
+
+    if metadata_mode != "edit" and metadata_mode != 'view':
+        err_msg = "Invalid metadata type request."
+        ajax_response_data = {'status': 'error', 'message': err_msg}
+        return JsonResponse(ajax_response_data, status=status.HTTP_400_BAD_REQUEST)
+
+    if hs_file_type == "GeoRasterLogicalFile":
+        logical_file = GeoRasterLogicalFile.objects.filter(id=file_type_id).first()
+    else:
+        logical_file = GenericLogicalFile.objects.filter(id=file_type_id).first()
+
+    if logical_file is None:
+        err_msg = "No matching file type was found."
+        ajax_response_data = {'status': 'error', 'message': err_msg}
+        return JsonResponse(ajax_response_data, status=status.HTTP_400_BAD_REQUEST)
+
+    if metadata_mode == 'view':
+        metadata = logical_file.metadata.get_html()
+    else:
+        metadata = logical_file.metadata.get_html_forms()
+
+    ajax_response_data = {'status': 'success', 'metadata': metadata}
+    return JsonResponse(ajax_response_data, status=status.HTTP_200_OK)

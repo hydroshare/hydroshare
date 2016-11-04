@@ -17,7 +17,7 @@ function getFolderTemplateInstance(folderName) {
 }
 
 // Associates file icons with file extensions. Could be improved with a dictionary.
-function getFileTemplateInstance(fileName, fileType, logical_type, fileSize, pk, url) {
+function getFileTemplateInstance(fileName, fileType, logical_type, logical_file_id, fileSize, pk, url) {
     var fileTypeExt = fileName.substr(fileName.lastIndexOf(".") + 1, fileName.length);
     var extIcon = "fa-file-o";
 
@@ -60,7 +60,7 @@ function getFileTemplateInstance(fileName, fileType, logical_type, fileSize, pk,
     else {
         var title = '' + fileName + "&#13;Type: " + fileType + "&#13;Size: " + formatBytes(parseInt(fileSize));
     }
-    return "<li data-pk='" + pk + "' data-url='" + url + "' class='fb-file draggable' title='" + title + "'>" +
+    return "<li data-pk='" + pk + "' data-url='" + url + "' data-logical-file-id='" + logical_file_id + "' class='fb-file draggable' title='" + title + "'>" +
         "<span class='fb-file-icon fa " + extIcon + "'></span>" +
         "<span class='fb-file-name'>" + fileName + "</span>" +
         "<span class='fb-file-type'>" + fileType + " File</span>" +
@@ -88,6 +88,7 @@ function updateSelectionMenuContext() {
     var flagDisableCut = false;
     var flagDisableDelete = false;
     var flagDisableSetGeoRasterFileType = false;
+    var flagDisableShowFileMetadata = false;
 
     if (selected.length > 1) {
         flagDisableRename = true; 
@@ -95,6 +96,7 @@ function updateSelectionMenuContext() {
         flagDisablePaste = true;
         flagDisableZip = true;
         flagDisableSetGeoRasterFileType = true;
+        flagDisableShowFileMetadata = true;
     }
     else if (selected.length == 1) {    // Unused for now
 
@@ -117,6 +119,7 @@ function updateSelectionMenuContext() {
     if (selected.hasClass("fb-folder")) {
         flagDisableDownload = true;
         flagDisableUnzip = true;
+        flagDisableShowFileMetadata = true;
     }
 
     if (!sourcePaths.length) {
@@ -133,6 +136,10 @@ function updateSelectionMenuContext() {
         }
         if ((fileExt.toUpperCase() != "TIF" && fileExt.toUpperCase() != "ZIP") || logicalFileType != "GenericLogicalFile") {
             flagDisableSetGeoRasterFileType = true;
+        }
+
+        if (logicalFileType.length == 0){
+            flagDisableShowFileMetadata = true;
         }
     }
     
@@ -153,6 +160,10 @@ function updateSelectionMenuContext() {
     // set Geo Raster file type
     menu.children("li[data-menu-name='setgeorasterfiletype']").toggleClass("disabled", flagDisableSetGeoRasterFileType);
     $("#fb-geo-file-type").toggleClass("disabled", flagDisableSetGeoRasterFileType);
+
+    // show file type metadata
+    menu.children("li[data-menu-name='showfilemetadata']").toggleClass("disabled", flagDisableShowFileMetadata);
+    $("#fb-show-file-metadata").toggleClass("disabled", flagDisableShowFileMetadata);
 
     // Rename
     menu.children("li[data-menu-name='rename']").toggleClass("disabled", flagDisableRename);
@@ -968,6 +979,25 @@ $(document).ready(function () {
          // Wait for the asynchronous calls to finish to get new folder structure
          $.when.apply($, calls).done(function () {
             refreshFileBrowser();
+         });
+      });
+
+    // show file type metadata
+    $("#btn-show-file-metadata").click(function () {
+         var logical_file_id = $("#fb-files-container li.ui-selected").attr("data-logical-file-id");
+         var logical_type = $("#fb-files-container li").children('span.fb-logical-file-type').attr("data-logical-file-type");
+         var resource_mode = $("#resource-mode").val();
+         resource_mode = resource_mode.toLowerCase();
+         var url = "/hsapi/_internal/" + logical_type + "/" + logical_file_id + "/" + resource_mode + "/get-file-metadata/";
+         $(".file-browser-container, #fb-files-container").css("cursor", "progress");
+         var calls = [];
+         calls.push(get_file_type_metadata_ajax_submit(url));
+         // Wait for the asynchronous calls to finish to get new folder structure
+         $.when.apply($, calls).done(function (result) {
+             var json_response = JSON.parse(result);
+             $("#fileTypeMetaDataTab").html(json_response.metadata);
+             $(".file-browser-container, #fb-files-container").css("cursor", "auto");
+             showMetadataFormSaveChangesButton();
          });
       });
 

@@ -454,6 +454,19 @@ function set_file_type_ajax_submit(url) {
     });
 }
 
+function get_file_type_metadata_ajax_submit(url) {
+    return $.ajax({
+        type: "POST",
+        url: url,
+        dataType: 'html',
+        async: false,
+        success: function (result) {
+        },
+        error: function (XMLHttpRequest, textStatus, errorThrown) {
+        }
+    });
+}
+
 function get_user_info_ajax_submit(url, obj) {
     var entry = $(obj).parent().parent().parent().parent().find("#id_user-deck > .hilight");
     if (entry.length < 1) {
@@ -521,7 +534,7 @@ function get_irods_folder_struct_ajax_submit(res_id, store_path) {
             $('#fb-files-container').empty();
             if (files.length > 0) {
                 $.each(files, function(i, v) {
-                    $('#fb-files-container').append(getFileTemplateInstance(v['name'], v['type'], v['logical_type'], v['size'], v['pk'], v['url']));
+                    $('#fb-files-container').append(getFileTemplateInstance(v['name'], v['type'], v['logical_type'], v['logical_file_id'], v['size'], v['pk'], v['url']));
                 });
             }
             if (folders.length > 0) {
@@ -654,5 +667,17 @@ function move_or_rename_irods_file_or_folder_ajax_submit(res_id, source_path, ta
         },
         error: function(xhr, errmsg, err){
         }
+    });
+}
+
+// show "Save changes" button when metadata form editing starts
+function showMetadataFormSaveChangesButton(){
+    $(".form-control").each(function () {
+        $(this).on('input', function (e) {
+            $(this).closest("form").find("button").show();
+        });
+        $(this).on('change', function (e) {
+            $(this).closest("form").find("button").show();
+        });
     });
 }
