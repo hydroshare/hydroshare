@@ -4348,7 +4348,15 @@ div#fb-file-operations-controls {
 }
 
 .discover-loading-icon {
-	margin: auto;
-	width: 30%;
+    height: 0;
+    float: left;
+    margin-top: -13px;
 	display: none;
+}
+
+#discover-map-legend{
+	z-index: 0;
+	position: absolute;
+	top: 0px;
+	right:0px;
 }

@@ -185,9 +185,9 @@
                     </div>
                     <br />
                     <br />
-                    <div id="discover-list-loading-spinner" class="discover-loading-icon">
-                        <i class="fa fa-spinner fa-spin fa-3x fa-fw"></i>
-                    </div>
+                    <span id="discover-list-loading-spinner" class="discover-loading-icon icon-blue">
+                          <i class="fa fa-spinner fa-spin fa-2x fa-fw"></i>
+                    </span>
                     <br />
                     <table class="table-hover table-striped resource-custom-table" id="items-discovered">
                         <thead>
@@ -474,9 +474,9 @@
                 <div id="map-view" class="tab-pane fade">
                     <div class="row">
                         <div class="col-xs-12">
-                            <div id="discover-map-loading-spinner" class="discover-loading-icon">
-                                <i class="fa fa-spinner fa-spin fa-3x fa-fw"></i>
-                            </div>
+                            <span id="discover-map-loading-spinner" class="discover-loading-icon icon-blue">
+                                  <i class="fa fa-spinner fa-spin fa-2x fa-fw"></i>
+                            </span>
                             <br />
                             <form id="covereage-search-fields" method="get" action="." class="hidden">
                                 {% for field in form %}
@@ -1023,10 +1023,10 @@
             map.controls[google.maps.ControlPosition.RIGHT_BOTTOM].push(reset_zoom_button);
             var geocoder_content = [];
             var resetButton_content = [];
-            var legend_table = "<table class='table table-sm'>";
-            legend_table += "<tr height='33%'><td><img src='{{ STATIC_URL }}img/discover_map_red_marker.png'></td><td>Point Coverage Locations</td></tr>";
-            legend_table += "<tr height='33%'><td><img src='{{ STATIC_URL }}img/discover_map_blue_marker.png'></td><td>Box Coverage Centers</td></tr>";
-            legend_table += "<tr height='33%'><td><img src='{{ STATIC_URL }}img/discover_map_cluster_icon.png'></td><td>Clusters</td></tr></table>";
+            var legend_table = "<table><tbody>";
+            legend_table += "<tr><td class='text-center'><img src='{{ STATIC_URL }}img/discover_map_red_marker.png'></td><td>Point Coverage Locations</td></tr>";
+            legend_table += "<tr><td class='text-center'><img src='{{ STATIC_URL }}img/discover_map_blue_marker.png'></td><td>Box Coverage Centers</td></tr>";
+            legend_table += "<tr><td class='text-center'><img src='{{ STATIC_URL }}img/discover_map_cluster_icon.png'></td><td>Clusters</td></tr></tbody></table>";
             geocoder_content.push("<input id='geocoder-address' type='textbox' placeholder='Search Locations...'>");
             geocoder_content.push("<a id='geocoder-submit' style='margin-left:10px' class='btn btn-default' role='button'><span class='glyphicon glyphicon-zoom-in'></span> Go </a>");
             resetButton_content.push("<a id='reset-zoom-btn' data-toggle='tooltip' title='Reset Zoom' class='btn btn-default btn-sm' onclick='resetMapZoom()'>");
