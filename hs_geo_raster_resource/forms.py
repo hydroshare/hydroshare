@@ -16,6 +16,8 @@ class OriginalCoverageFormHelper(BaseFormHelper):
         field_width = 'form-control input-sm'
         layout = Layout(
                         Field('projection', css_class=field_width),
+                        Field('datum', css_class=field_width),
+                        Field('projection_string', css_class=field_width),
                         Field('units', css_class=field_width),
                         Field('northlimit', css_class=field_width),
                         Field('westlimit', css_class=field_width),
@@ -33,6 +35,8 @@ class OriginalCoverageSpatialForm(forms.Form):
     southlimit = forms.DecimalField(label='South Extent', widget=forms.TextInput(attrs={'readonly': 'readonly'}))
     westlimit = forms.DecimalField(label='West Extent', widget=forms.TextInput(attrs={'readonly': 'readonly'}))
     units = forms.CharField(max_length=50, label='Coordinate Reference System Unit', widget=forms.TextInput(attrs={'readonly': 'readonly'}))
+    projection_string = forms.CharField(required=False, label='Coordinate String', widget=forms.Textarea(attrs={'readonly': 'readonly'}))
+    datum = forms.CharField(max_length=1000, required=False, label='Datum', widget=forms.TextInput(attrs={'readonly': 'readonly'}))
 
     def __init__(self, allow_edit=True, res_short_id=None, element_id=None, *args, **kwargs):
         super(OriginalCoverageSpatialForm, self).__init__(*args, **kwargs)
@@ -77,13 +81,19 @@ class OriginalCoverageSpatialForm(forms.Form):
         if 'projection' in temp_cleaned_data:
             if len(temp_cleaned_data['projection']) == 0:
                 del temp_cleaned_data['projection']
+        if 'projection_string' in temp_cleaned_data:
+            if len(temp_cleaned_data['projection_string']) == 0:
+                del temp_cleaned_data['projection_string']
+        if 'datum' in temp_cleaned_data:
+            if len(temp_cleaned_data['datum']) == 0:
+                del temp_cleaned_data['datum']
 
         self.cleaned_data['value'] = copy.deepcopy(temp_cleaned_data)
 
         if 'northlimit' in self.cleaned_data:
-                del self.cleaned_data['northlimit']
+            del self.cleaned_data['northlimit']
         if 'eastlimit' in self.cleaned_data:
-                del self.cleaned_data['eastlimit']
+            del self.cleaned_data['eastlimit']
         if 'southlimit' in self.cleaned_data:
             del self.cleaned_data['southlimit']
         if 'westlimit' in self.cleaned_data:
@@ -92,6 +102,10 @@ class OriginalCoverageSpatialForm(forms.Form):
             del self.cleaned_data['units']
         if 'projection' in self.cleaned_data:
             del self.cleaned_data['projection']
+        if 'projection_string' in self.cleaned_data:
+            del self.cleaned_data['projection_string']
+        if 'datum' in self.cleaned_data:
+            del self.cleaned_data['datum']
 
         return self.cleaned_data
 

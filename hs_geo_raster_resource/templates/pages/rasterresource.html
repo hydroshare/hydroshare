@@ -19,6 +19,18 @@
                         </tr>
 
                         <tr>
+                            <th class="text-muted">Datum</th>
+                            <td>{{ originalCoverage.datum }}</td>
+                        </tr>
+
+                        <tr>
+                            <th class="text-muted">Coordinate String</th>
+                            <td style="word-break:break-word">
+                                        {{ originalCoverage.projection_string }}
+                            </td>
+                        </tr>
+
+                        <tr>
                             <th class="text-muted">Coordinate Reference System Unit</th>
                             <td>{{ originalCoverage.units }}</td>
                         </tr>

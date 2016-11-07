@@ -24,9 +24,14 @@ class OriginalCoverage(AbstractMetaDataElement):
                 'southlimit':southernmost coordinate value,
                 'westlimit':westernmost coordinate value,
                 'units:units applying to 4 limits (north, east, south & east),
-                'projection': name of the projection (optional)}"
+                'projection': name of the projection (optional),
+                'projection_string: OGC WKT string of the projection (optional),
+                'datum: projection datum name (optional),
+                }"
     """
     _value = models.CharField(max_length=1024, null=True)
+    # projection_string = models.TextField(null=True, blank=True)
+    # datum = models.CharField(max_length=1000, null=True, blank=True)
 
     class Meta:
         # OriginalCoverage element is not repeatable
@@ -59,7 +64,7 @@ class OriginalCoverage(AbstractMetaDataElement):
                     raise ValidationError("For coverage of type 'box' values for one or more bounding box limits or 'units' is missing.")
 
             value_dict = {k: v for k, v in value_arg_dict.iteritems()
-                          if k in ('units', 'northlimit', 'eastlimit', 'southlimit', 'westlimit', 'projection')}
+                          if k in ('units', 'northlimit', 'eastlimit', 'southlimit', 'westlimit', 'projection', 'projection_string', 'datum')}
 
             value_json = json.dumps(value_dict)
             if 'value' in kwargs:
@@ -259,13 +264,16 @@ class RasterMetaData(CoreMetaData):
             cov_term = '{%s}' + 'box'
             coverage_terms = etree.SubElement(cov, cov_term % self.NAMESPACES['hsterms'])
             rdf_coverage_value = etree.SubElement(coverage_terms, '{%s}value' % self.NAMESPACES['rdf'])
-            #raster original coverage is of box type
+            # raster original coverage is of box type
             cov_value = 'northlimit=%s; eastlimit=%s; southlimit=%s; westlimit=%s; units=%s' \
                         %(ori_coverage.value['northlimit'], ori_coverage.value['eastlimit'],
                           ori_coverage.value['southlimit'], ori_coverage.value['westlimit'], ori_coverage.value['units'])
 
-            if 'projection' in ori_coverage.value:
-                cov_value = cov_value + '; projection=%s' % ori_coverage.value['projection']
+            for meta_element in ori_coverage.value:
+                if meta_element == 'projection':
+                    cov_value += '; projection_name={}'.format(ori_coverage.value[meta_element])
+                if meta_element in ['projection_string', 'datum']:
+                    cov_value += '; {}={}'.format(meta_element, ori_coverage.value[meta_element])
 
             rdf_coverage_value.text = cov_value
 
