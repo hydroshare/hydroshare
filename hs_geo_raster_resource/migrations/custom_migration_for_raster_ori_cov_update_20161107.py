@@ -55,12 +55,10 @@ def migrate_tif_file(apps, schema_editor):
 
                 # update original coverage information for datum and coordinate string in django
                 if res.metadata.originalCoverage:
-                    original_value = res.metadata.originalCoverage.value
-                    if res_md_dict['spatial_coverage_info']['original_coverage_info']['datum']:
-                        res.metadata.originalCoverage.delete()
-                        v = {'value': res_md_dict['spatial_coverage_info']['original_coverage_info']}
-                        res.metadata.create_element('OriginalCoverage', **v)
-                        meta_updated = True
+                    res.metadata.originalCoverage.delete()
+                    v = {'value': res_md_dict['spatial_coverage_info']['original_coverage_info']}
+                    res.metadata.create_element('OriginalCoverage', **v)
+                    meta_updated = True
 
                 # update the bag if meta is updated
                 if meta_updated:
@@ -73,9 +71,6 @@ def migrate_tif_file(apps, schema_editor):
 
             except Exception as e:
                 log.exception(e.message)
-                if original_value:
-                    v = {'value': original_value}
-                    res.metadata.create_element('OriginalCoverage', **v)
                 meta_update_fail.append('{}:{}'.format(res.short_id, res.metadata.title.value))
 
     # Print migration results
