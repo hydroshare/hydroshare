@@ -222,7 +222,17 @@ def check_crs(res_type, fpath):
         'new_wkt': None
     }
     crs = get_crs_from_resource(res_type, fpath)
+    if not crs:
+        reproject_to_3857(fpath)
+        return_obj['success'] = True
+        return return_obj
+
     code = get_epsg_code_from_wkt(crs)
+
+    if not code:
+        reproject_to_3857(fpath)
+        return_obj['success'] = True
+        return return_obj
 
     if res_type == 'RasterResource':
         if code not in crs:
@@ -246,11 +256,14 @@ def get_crs_from_resource(res_type, fpath):
         start = 'Coordinate System is:'
         length = len(start)
         end = 'Origin ='
-        if gdal_info.find(start) != -1:
-            start_index = gdal_info.find(start) + length
-            end_index = gdal_info.find(end)
-            crs_raw = gdal_info[start_index:end_index]
-            crs = ''.join(crs_raw.split())
+
+        if gdal_info.find(start) == -1:
+            return None
+
+        start_index = gdal_info.find(start) + length
+        end_index = gdal_info.find(end)
+        crs_raw = gdal_info[start_index:end_index]
+        crs = ''.join(crs_raw.split())
     else:
         with open(fpath) as f:
             crs = f.read()
@@ -266,54 +279,50 @@ def get_epsg_code_from_wkt(wkt):
         'terms': wkt
     }
     crs_is_unknown = True
+
     try:
         while crs_is_unknown:
             r = get(url, params=params)
-
             if '50' in str(r.status_code):
                 raise Exception
             elif r.status_code == 200:
                 response = r.json()
-
                 if 'errors' in response:
                     errs = response['errors']
-
                     if 'Invalid WKT syntax' in errs:
                         err = errs.split(':')[2]
-
                         if err and 'Parameter' in err:
                             crs_param = err.split('"')[1]
-                            rm_indx_start = wkt.find(crs_param)
+                            rm_indx_start = crs.find(crs_param)
                             rm_indx_end = None
-                            sub_str = wkt[rm_indx_start:]
+                            sub_str = crs[rm_indx_start:]
                             counter = 0
                             check = False
                             for i, c in enumerate(sub_str):
-
                                 if c == '[':
                                     counter += 1
                                     check = True
                                 elif c == ']':
                                     counter -= 1
                                     check = True
-
                                 if check:
                                     if counter == 0:
                                         rm_indx_end = i + rm_indx_start + 1
                                         break
-                            wkt = wkt[:rm_indx_start] + wkt[rm_indx_end:]
-
-                            if ',' in wkt[:-4]:
-                                i = wkt.rfind(',')
-                                wkt = wkt[:i] + wkt[i + 1:]
-                            params['terms'] = wkt
+                            crs = crs[:rm_indx_start] + crs[rm_indx_end:]
+                            if ',' in crs[:-4]:
+                                i = crs.rfind(',')
+                                crs = crs[:i] + crs[i + 1:]
+                            params['terms'] = crs
                         else:
                             break
                     else:
                         break
                 else:
                     crs_is_unknown = False
-                    code = response['codes'][0]['code']
+                    codes = response['codes']
+                    if len(codes) != 0:
+                        code = response['codes'][0]['code']
             else:
                 params['mode'] = 'keywords'
                 continue
@@ -337,3 +346,50 @@ def get_wkt_from_epsg_code(code):
     wkt = ''.join(tmp_list)
 
     return wkt
+
+
+def reproject_to_3857(fpath):
+    new_fpath = fpath + '_reprojected'
+    os.system('gdal_translate -a_srs {0} {1} {2}'.format('EPSG:3857', fpath, new_fpath))
+    print os.listdir('/tmp/')
+    os.remove(fpath)
+    os.rename(new_fpath, fpath)
+
+
+def get_ogc_layer_bbox(res_id, res_type):
+    bbox = None
+    try:
+        if res_type.lower() == 'rasterresource':
+            store_type = 'coveragestores'
+            store_name = 'coverages'
+        else:
+            store_type = 'datastores'
+            store_name = 'featuretypes'
+
+        url = '{0}/workspaces/{1}/{2}/{3}/{4}/{5}.json'.format(endpoint,
+                                                               workspace,
+                                                               store_type,
+                                                               res_id,
+                                                               store_name,
+                                                               res_id)
+        r = get(url, auth=(username, password))
+        if r.status_code != 200:
+            return
+        else:
+            json = r.json()
+
+            if res_type == 'GeographicFeatureResource':
+                extents = json['featureType']['latLonBoundingBox']
+            else:
+                extents = json['coverage']['latLonBoundingBox']
+
+        bbox = {
+            'westlimit': extents['minx'],
+            'southlimit': extents['miny'],
+            'eastlimit': extents['maxx'],
+            'northlimit': extents['maxy']
+        }
+    except Exception:
+        pass
+
+    return bbox

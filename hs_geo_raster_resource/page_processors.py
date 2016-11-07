@@ -6,7 +6,7 @@ from hs_core import page_processors
 from django.forms.models import formset_factory
 from hs_core.views import *
 from functools import partial, wraps
-from hs_core.ogc_services_utility import preview_res_layer_url_pattern
+from hs_core.ogc_services_utility import preview_res_layer_url_pattern, get_ogc_layer_bbox
 
 # page processor to populate raster resource specific metadata into my-resources template page
 @processor_for(RasterResource)
@@ -40,16 +40,21 @@ def landing_page(request, page):
             md_obj = content_model.metadata.ogcWebServices
             if md_obj.wmsEndpoint != pending_text:
                 if md_obj.layerName != pending_text:
-                    bbox = content_model.metadata.coverages.first().value
-                    url = preview_res_layer_url_pattern.format(wms_endpoint=md_obj.wmsEndpoint,
-                                                               layer_name=md_obj.layerName,
-                                                               bbox='%s,%s,%s,%s' % (bbox['westlimit'],
-                                                                                     bbox['southlimit'],
-                                                                                     bbox['eastlimit'],
-                                                                                     bbox['northlimit']),
-                                                               epsg_code='4326'
-                                                               )
-                    context['previewLayerURL'] = url
+                    coverage_md = content_model.metadata.coverages.first()
+                    if coverage_md:
+                        bbox = coverage_md.value
+                    else:
+                        bbox = get_ogc_layer_bbox(content_model.short_id, content_model.resource_type)
+
+                    if bbox:
+                        url = preview_res_layer_url_pattern.format(wms_endpoint=md_obj.wmsEndpoint,
+                                                                   layer_name=md_obj.layerName,
+                                                                   bbox='%s,%s,%s,%s' % (bbox['westlimit'],
+                                                                                         bbox['southlimit'],
+                                                                                         bbox['eastlimit'],
+                                                                                         bbox['northlimit']),
+                                                                   epsg_code='4326')
+                        context['previewLayerURL'] = url
         context['ogcWebServices'] = content_model.metadata.ogcWebServices
     else:
         # cellinfo_form
