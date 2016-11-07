@@ -471,3 +471,174 @@ function get_user_info_ajax_submit(url, obj) {
         }
     });
 }
+
+function delete_folder_ajax_submit(res_id, folder_path) {
+    $(".file-browser-container, #fb-files-container").css("cursor", "progress");
+
+    return $.ajax({
+        type: "POST",
+        url: '/hsapi/_internal/data-store-delete-folder/',
+        async: true,
+        data: {
+            res_id: res_id,
+            folder_path: folder_path
+        },
+        success: function (result) {
+        },
+        error: function(xhr, errmsg, err){
+        }
+    });
+}
+
+// This method is called to refresh the loader with the most recent structure after every other call
+function get_irods_folder_struct_ajax_submit(res_id, store_path) {
+    $("#fb-files-container, #fb-files-container").css("cursor", "progress");
+    return $.ajax({
+        type: "POST",
+        url: '/hsapi/_internal/data-store-structure/',
+        async: true,
+        data: {
+            res_id: res_id,
+            store_path: store_path
+        },
+        success: function (result) {
+            var files = result.files;
+            var folders = result.folders;
+            $('#fb-files-container').empty();
+            if (files.length > 0) {
+                $.each(files, function(i, v) {
+                    $('#fb-files-container').append(getFileTemplateInstance(v['name'], v['type'], v['size'], v['pk'], v['url']));
+                });
+            }
+            if (folders.length > 0) {
+                $.each(folders, function(i, v) {
+                    $('#fb-files-container').append(getFolderTemplateInstance(v));
+                });
+            }
+            if (!files.length && !folders.length) {
+                $('#fb-files-container').append('<span class="text-muted">This directory is empty</span>');
+            }
+
+            onSort();
+
+            bindFileBrowserItemEvents();
+
+            $("#hs-file-browser").attr("data-current-path", store_path);
+            $("#hs-file-browser").attr("data-res-id", res_id);
+
+            // strip the 'data' folder from the path
+            setBreadCrumbs(store_path.replace("data/", ""));
+
+            if ($("#hsDropzone").hasClass("dropzone")) {
+                // If no multiple files allowed and a file already exists, disable upload
+                var allowMultiple = $("#hs-file-browser").attr("data-allow-multiple-files") == "True";
+                if (!allowMultiple && files.length > 0) {
+                    $('.dz-input').hide();
+                    $(".fb-upload-caption").toggleClass("hidden", true);
+                }
+                else {
+                    $('.dz-input').show();
+                    $(".fb-upload-caption").toggleClass("hidden", false);
+                    Dropzone.forElement("#hsDropzone").files = [];
+                }
+            }
+
+            updateNavigationState();
+            $(".selection-menu").hide();
+            $("#flag-uploading").remove();
+            $("#fb-files-container, #fb-files-container").css("cursor", "default");
+        },
+        error: function(xhr, errmsg, err){
+            $(".selection-menu").hide();
+            $("#flag-uploading").remove();
+            $("#fb-files-container, #fb-files-container").css("cursor", "default");
+            $('#fb-files-container').empty();
+            setBreadCrumbs(store_path);
+            $("#fb-files-container").prepend("<span>No files to display.</span>")
+        }
+    });
+}
+
+function zip_irods_folder_ajax_submit(res_id, input_coll_path, fileName) {
+    $("#fb-files-container, #fb-files-container").css("cursor", "progress");
+    return $.ajax({
+        type: "POST",
+        url: '/hsapi/_internal/data-store-folder-zip/',
+        async: true,
+        data: {
+            res_id: res_id,
+            input_coll_path: input_coll_path,
+            output_zip_file_name: fileName,
+            remove_original_after_zip: "false"
+        },
+        success: function (result) {
+        },
+        error: function (xhr, errmsg, err) {
+        }
+    });
+}
+
+function unzip_irods_file_ajax_submit(res_id, zip_with_rel_path) {
+    $("#fb-files-container, #fb-files-container").css("cursor", "progress");
+    return $.ajax({
+        type: "POST",
+        url: '/hsapi/_internal/data-store-folder-unzip/',
+        async: true,
+        data: {
+            res_id: res_id,
+            zip_with_rel_path: zip_with_rel_path,
+            remove_original_zip: "false"
+        },
+        success: function (result) {
+            // TODO: handle "File already exists" errors
+        },
+        error: function (xhr, errmsg, err) {
+
+        }
+    });
+}
+
+function create_irods_folder_ajax_submit(res_id, folder_path) {
+    $("#fb-files-container, #fb-files-container").css("cursor", "progress");
+    return $.ajax({
+        type: "POST",
+        url: '/hsapi/_internal/data-store-create-folder/',
+        async: true,
+        data: {
+            res_id: res_id,
+            folder_path: folder_path
+        },
+        success: function (result) {
+            var new_folder_rel_path = result.new_folder_rel_path;
+            if (new_folder_rel_path.length > 0) {
+                $('#create-folder-dialog').modal('hide');
+                $("#txtFolderName").val("");
+            }
+
+        },
+        error: function(xhr, errmsg, err){
+        }
+    });
+}
+
+function move_or_rename_irods_file_or_folder_ajax_submit(res_id, source_path, target_path) {
+    $("#fb-files-container, #fb-files-container").css("cursor", "progress");
+    return $.ajax({
+        type: "POST",
+        url: '/hsapi/_internal/data-store-move-or-rename/',
+        async: true,
+        data: {
+            res_id: res_id,
+            source_path: source_path,
+            target_path: target_path
+        },
+        success: function (result) {
+            var target_rel_path = result.target_rel_path;
+            if (target_rel_path.length > 0) {
+                $("#fb-files-container li").removeClass("fb-cutting");
+            }
+        },
+        error: function(xhr, errmsg, err){
+        }
+    });
+}
