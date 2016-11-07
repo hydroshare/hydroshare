@@ -568,7 +568,19 @@ class TestRasterMetaData(MockIRODSTestCaseMixin, TransactionTestCase):
         self.assertEquals(ori_coverage.value['southlimit'], 4612592.446916306)
         self.assertEquals(ori_coverage.value['westlimit'], 432404.01909127034)
         self.assertEquals(ori_coverage.value['units'], 'meter')
-        self.assertEquals(ori_coverage.value['projection'], 'NAD83 / UTM zone 12N Transverse_Mercator')
+        self.assertEquals(ori_coverage.value['projection'], "NAD83 / UTM zone 12N")
+        self.assertEquals(ori_coverage.value['datum'], "North_American_Datum_1983")
+        projection_string = u'PROJCS["NAD83 / UTM zone 12N",GEOGCS["NAD83",DATUM["North_American_Datum_1983",' \
+                            u'SPHEROID["GRS 1980",6378137,298.257222101,AUTHORITY["EPSG","7019"]],' \
+                            u'TOWGS84[0,0,0,0,0,0,0],AUTHORITY["EPSG","6269"]],' \
+                            u'PRIMEM["Greenwich",0,AUTHORITY["EPSG","8901"]],' \
+                            u'UNIT["degree",0.0174532925199433,AUTHORITY["EPSG","9122"]],' \
+                            u'AUTHORITY["EPSG","4269"]],PROJECTION["Transverse_Mercator"],' \
+                            u'PARAMETER["latitude_of_origin",0],PARAMETER["central_meridian",-111],' \
+                            u'PARAMETER["scale_factor",0.9996],PARAMETER["false_easting",500000],' \
+                            u'PARAMETER["false_northing",0],UNIT["metre",1,AUTHORITY["EPSG","9001"]],' \
+                            u'AXIS["Easting",EAST],AXIS["Northing",NORTH],AUTHORITY["EPSG","26912"]]'
+        self.assertEquals(ori_coverage.value['projection_string'], projection_string)
 
         # testing extended metadata element: cell information
         cell_info = self.resRaster.metadata.cellInformation

@@ -88,7 +88,8 @@ class OriginalCoverage(AbstractMetaDataElement):
         if 'value' in kwargs:
             value_dict = cov.value
 
-            for item_name in ('units', 'northlimit', 'eastlimit', 'southlimit', 'westlimit', 'projection'):
+            for item_name in ('units', 'northlimit', 'eastlimit', 'southlimit', 'westlimit',
+                              'projection_name', 'projection_string', 'datum'):
                 if item_name in kwargs['value']:
                     value_dict[item_name] = kwargs['value'][item_name]
 
