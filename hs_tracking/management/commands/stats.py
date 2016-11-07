@@ -1,6 +1,7 @@
 import csv
 import datetime
 import sys
+import logging 
 from calendar import monthrange
 from optparse import make_option
 
@@ -14,6 +15,12 @@ from theme.models import UserProfile
 
 from ... import models as hs_tracking
 
+# Add logger for stderr messages.
+err = logging.getLogger('stats-command')
+err.setLevel(logging.ERROR)
+handler = logging.StreamHandler(stream=sys.stderr)
+handler.setFormatter(logging.Formatter("%(asctime)s - %(levelname)s - %(funcName)s - line %(lineno)s - %(message)s"))
+err.addHandler(handler)
 
 def month_year_iter(start, end):
     ym_start = 12 * start.year + start.month - 1
@@ -23,7 +30,6 @@ def month_year_iter(start, end):
         m += 1
         d = monthrange(y, m)[1]
         yield timezone.datetime(y, m, d, tzinfo=timezone.pytz.utc)
-
 
 class Command(BaseCommand):
     help = "Output engagement stats about HydroShare"
@@ -63,7 +69,7 @@ class Command(BaseCommand):
             "--yesterdays-variables",
             dest="yesterdays_variables",
             action="store_true",
-            help="dump tracking variables collected today",
+            help="dump tracking variables collected today, test",
         ),
     )
 
@@ -139,17 +145,21 @@ class Command(BaseCommand):
 
         resources = BaseResource.objects.all()
         for r in resources:
-            f_sizes = [f.resource_file.size
-                       if f.resource_file else 0
-                       for f in r.files.all()]
-            total_file_size = sum(f_sizes)
+            total_file_size = 0
             try:
-                f_sizes = [int(f.fed_resource_file_size)
-                           if f.fed_resource_file_size else 0
+                f_sizes = [f.resource_file.size
+                           if f.resource_file else 0
                            for f in r.files.all()]
                 total_file_size += sum(f_sizes)
-            except SessionException:
-                pass
+ 
+                fed_f_sizes = [int(f.fed_resource_file_size)
+                           if f.fed_resource_file_size else 0
+                           for f in r.files.all()]
+                total_file_size += sum(fed_f_sizes)
+            except SessionException as e:
+                # write the error to stderr
+                err.error(e)
+
             values = [
                 r.metadata.dates.get(type="created").start_date.strftime("%m/%d/%Y"),
                 r.metadata.title.value,
