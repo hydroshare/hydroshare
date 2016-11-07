@@ -261,7 +261,9 @@ def raster_pre_create_resource_trigger(sender, **kwargs):
              ('northlimit', None),
              ('southlimit', None),
              ('eastlimit', None),
-             ('westlimit', None)
+             ('westlimit', None),
+             ('projection_string', None),
+             ('datum', None),
         ])
 
         # Save extended meta to metadata variable
