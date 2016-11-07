@@ -56,8 +56,8 @@ def migrate_tif_file(apps, schema_editor):
                 # update original coverage information for datum and coordinate string in django
                 if res.metadata.originalCoverage:
                     original_value = res.metadata.originalCoverage.value
-                    res.metadata.originalCoverage.delete()
                     if res_md_dict['spatial_coverage_info']['original_coverage_info']['datum']:
+                        res.metadata.originalCoverage.delete()
                         v = {'value': res_md_dict['spatial_coverage_info']['original_coverage_info']}
                         res.metadata.create_element('OriginalCoverage', **v)
                         meta_updated = True
