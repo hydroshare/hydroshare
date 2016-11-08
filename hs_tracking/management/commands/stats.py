@@ -1,7 +1,7 @@
 import csv
 import datetime
 import sys
-import logging 
+import logging
 from calendar import monthrange
 from optparse import make_option
 
@@ -19,8 +19,14 @@ from ... import models as hs_tracking
 err = logging.getLogger('stats-command')
 err.setLevel(logging.ERROR)
 handler = logging.StreamHandler(stream=sys.stderr)
-handler.setFormatter(logging.Formatter("%(asctime)s - %(levelname)s - %(funcName)s - line %(lineno)s - %(message)s"))
+formatter = logging.Formatter("%(asctime)s - "
+                              "%(levelname)s - "
+                              "%(funcName)s - "
+                              "line %(lineno)s - "
+                              "%(message)s")
+handler.setFormatter(formatter)
 err.addHandler(handler)
+
 
 def month_year_iter(start, end):
     ym_start = 12 * start.year + start.month - 1
@@ -30,6 +36,7 @@ def month_year_iter(start, end):
         m += 1
         d = monthrange(y, m)[1]
         yield timezone.datetime(y, m, d, tzinfo=timezone.pytz.utc)
+
 
 class Command(BaseCommand):
     help = "Output engagement stats about HydroShare"
@@ -151,10 +158,10 @@ class Command(BaseCommand):
                            if f.resource_file else 0
                            for f in r.files.all()]
                 total_file_size += sum(f_sizes)
- 
+
                 fed_f_sizes = [int(f.fed_resource_file_size)
-                           if f.fed_resource_file_size else 0
-                           for f in r.files.all()]
+                               if f.fed_resource_file_size else 0
+                               for f in r.files.all()]
                 total_file_size += sum(fed_f_sizes)
             except SessionException as e:
                 # write the error to stderr
