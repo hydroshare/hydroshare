@@ -12,14 +12,13 @@ from django.core.files.uploadedfile import UploadedFile
 
 from django_irods.storage import IrodsStorage
 from hs_core import hydroshare
-from hs_core.hydroshare.utils import resource_modified
+from hs_core.hydroshare.utils import resource_modified, get_file_from_irods
 from hs_geo_raster_resource.models import RasterResource
 from hs_geo_raster_resource import raster_meta_extract
 
 
 def migrate_tif_file(apps, schema_editor):
     log = logging.getLogger()
-    istorage = IrodsStorage()
 
     copy_res_fail = []
     meta_update_fail = []
@@ -29,11 +28,12 @@ def migrate_tif_file(apps, schema_editor):
     for res in RasterResource.objects.all():
         if res.files.all():
             # copy all the resource files to temp dir
+            temp_dir = tempfile.mkdtemp()
             try:
-                temp_dir = tempfile.mkdtemp()
                 for res_file in res.files.all():
-                    shutil.copy(res_file.resource_file.file.name,
-                                os.path.join(temp_dir, os.path.basename(res_file.resource_file.name)))
+                    res_file_tmp_path = get_file_from_irods(res_file)
+                    shutil.copy(res_file_tmp_path,
+                                os.path.join(temp_dir, os.path.basename(res_file_tmp_path)))
 
                 vrt_file_path = [os.path.join(temp_dir, f) for f in os.listdir(temp_dir) if '.vrt' == f[-4:]].pop()
 
@@ -63,6 +63,7 @@ def migrate_tif_file(apps, schema_editor):
                 # update the bag if meta is updated
                 if meta_updated:
                     bag_name = 'bags/{res_id}.zip'.format(res_id=res.short_id)
+                    istorage = res.get_irods_storage()
                     if istorage.exists(bag_name):
                         # delete the resource bag as the old bag is not valid
                         istorage.delete(bag_name)
