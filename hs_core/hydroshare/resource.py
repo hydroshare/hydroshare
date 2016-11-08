@@ -558,6 +558,7 @@ def create_new_version_resource(ori_res, new_res, user):
     utils.copy_resource_files_and_AVUs(ori_res.short_id, new_res.short_id, set_to_private)
 
     # link copied resource files to Django resource model
+    res_id_len = len(ori_res.short_id)
     files = ResourceFile.objects.filter(object_id=ori_res.id)
     for n, f in enumerate(files):
         if f.fed_resource_file_name_or_path:
@@ -568,8 +569,8 @@ def create_new_version_resource(ori_res, new_res, user):
         elif f.fed_resource_file:
             ori_file_path = f.fed_resource_file.name
             idx1 = ori_file_path.find(settings.HS_LOCAL_PROXY_USER_IN_FED_ZONE)
-            # resource uuid is 32 bits, find idx2 to start right after resource id
-            idx2 = idx1 + len(settings.HS_LOCAL_PROXY_USER_IN_FED_ZONE) + 1 + 32
+            # find idx2 to start right after resource id
+            idx2 = idx1 + len(settings.HS_LOCAL_PROXY_USER_IN_FED_ZONE) + 1 + res_id_len
             if idx1 > 0:
                 new_file_path = ori_file_path[0:idx1] + \
                                 settings.HS_LOCAL_PROXY_USER_IN_FED_ZONE + \
@@ -577,7 +578,7 @@ def create_new_version_resource(ori_res, new_res, user):
                 ResourceFile.objects.create(content_object=new_res, fed_resource_file=new_file_path)
         elif f.resource_file:
             ori_file_path = f.resource_file.name
-            new_file_path = new_res.short_id + ori_file_path[32:]
+            new_file_path = new_res.short_id + ori_file_path[res_id_len:]
             ResourceFile.objects.create(content_object=new_res, resource_file=new_file_path)
 
     # copy metadata from source resource to target new-versioned resource except three elements
