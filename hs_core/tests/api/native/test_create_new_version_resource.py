@@ -80,9 +80,6 @@ class TestNewVersionResource(TestCase):
 
     def tearDown(self):
         super(TestNewVersionResource, self).tearDown()
-        BaseResource.objects.all().delete()
-        Group.objects.all().delete()
-        User.objects.all().delete()
         self.test_file1.close()
         os.remove(self.test_file1.name)
         self.test_file2.close()
