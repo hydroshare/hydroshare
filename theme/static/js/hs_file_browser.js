@@ -919,14 +919,28 @@ $(document).ready(function () {
         });
     });
 
-     // Download method
+    // Download method
     $("#btn-download, #fb-download").click(function () {
         var downloadList = $("#fb-files-container li.ui-selected");
+
+        // Remove previous temporary download frames
+        $(".temp-download-frame").remove();
+
         if (downloadList.length) {
-            for (var i = 0; i < downloadList.length; i++) {
-                var url = $(downloadList[i]).attr("data-url");
-                var fileName = $(downloadList[i]).children(".fb-file-name").text();
-                downloadURI(url, fileName);
+            // Workaround for Firefox and IE
+            if (jQuery.browser.mozilla == true || !!navigator.userAgent.match(/Trident\/7\./)) {
+                for (var i = 0; i < downloadList.length; i++) {
+                    var url = $(downloadList[i]).attr("data-url");
+                    var frameID = "download-frame-" + i;
+                    $("body").append("<iframe class='temp-download-frame' id='" + frameID + "' style='display:none;' src='" + url + "'></iframe>");
+                }
+            }
+            else {
+                for (var i = 0; i < downloadList.length; i++) {
+                    var url = $(downloadList[i]).attr("data-url");
+                    var fileName = $(downloadList[i]).children(".fb-file-name").text();
+                    downloadURI(url, fileName);
+                }
             }
         }
     });
