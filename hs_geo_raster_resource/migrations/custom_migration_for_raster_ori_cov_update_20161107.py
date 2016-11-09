@@ -28,16 +28,24 @@ def migrate_tif_file(apps, schema_editor):
     for res in RasterResource.objects.all():
         if res.files.all():
             # copy all the resource files to temp dir
-            temp_dir = tempfile.mkdtemp()
+            temp_dir = ''
+            res_file_tmp_path = ''
+
             try:
+                temp_dir = tempfile.mkdtemp()
                 for res_file in res.files.all():
                     res_file_tmp_path = get_file_from_irods(res_file)
                     shutil.copy(res_file_tmp_path,
                                 os.path.join(temp_dir, os.path.basename(res_file_tmp_path)))
+                    shutil.rmtree(os.path.dirname(res_file_tmp_path))
 
                 vrt_file_path = [os.path.join(temp_dir, f) for f in os.listdir(temp_dir) if '.vrt' == f[-4:]].pop()
 
             except Exception as e:
+                if os.path.isdir(temp_dir):
+                    shutil.rmtree(temp_dir)
+                if os.path.isfile(res_file_tmp_path):
+                    shutil.rmtree(os.path.dirname(res_file_tmp_path))
                 log.exception(e.message)
                 copy_res_fail.append('{}:{}'.format(res.short_id, res.metadata.title.value))
                 continue
@@ -71,6 +79,8 @@ def migrate_tif_file(apps, schema_editor):
                     meta_update_success.append('{}:{}'.format(res.short_id, res.metadata.title.value))
 
             except Exception as e:
+                if os.path.isdir(temp_dir):
+                    shutil.rmtree(temp_dir)
                 log.exception(e.message)
                 meta_update_fail.append('{}:{}'.format(res.short_id, res.metadata.title.value))
 
