@@ -76,7 +76,7 @@ class Command(BaseCommand):
             "--yesterdays-variables",
             dest="yesterdays_variables",
             action="store_true",
-            help="dump tracking variables collected today, test",
+            help="dump tracking variables collected today",
         ),
     )
 
