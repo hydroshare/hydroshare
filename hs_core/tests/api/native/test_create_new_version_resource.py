@@ -2,13 +2,13 @@ import os
 import tempfile
 import shutil
 
-from django.contrib.auth.models import User, Group
+from django.contrib.auth.models import Group
 from django.test import TestCase
 from django.core.exceptions import ValidationError
 from django.core.files.uploadedfile import UploadedFile
 
 from hs_core import hydroshare
-from hs_core.models import GenericResource, BaseResource
+from hs_core.models import GenericResource
 from hs_core.hydroshare import utils
 from hs_access_control.models import PrivilegeCodes
 from hs_geo_raster_resource.models import RasterResource, OriginalCoverage, CellInformation, \
