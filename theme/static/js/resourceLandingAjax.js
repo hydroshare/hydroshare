@@ -377,14 +377,20 @@ function metadata_update_ajax_submit(form_id){
                 $form.find("button.btn-primary").hide();
                 if (json_response.hasOwnProperty('element_id')){
                     form_update_action = $form.attr('action');
-                    res_short_id = form_update_action.split('/')[3];
-                    update_url = "/hsapi/_internal/" + res_short_id + "/" + json_response.element_name +"/" + json_response.element_id + "/update-metadata/"
+                    if (!json_response.hasOwnProperty('form_action')){
+                        res_short_id = form_update_action.split('/')[3];
+                        update_url = "/hsapi/_internal/" + res_short_id + "/" + json_response.element_name +"/" + json_response.element_id + "/update-metadata/";
+                    }
+                    else {
+                        update_url = json_response.form_action
+                    }
+
                     $form.attr('action', update_url);
                 }
                 if (json_response.element_exists == false){
                     form_update_action = $form.attr('action');
                     res_short_id = form_update_action.split('/')[3];
-                    update_url = "/hsapi/_internal/" + res_short_id + "/" + json_response.element_name + "/add-metadata/"
+                    update_url = "/hsapi/_internal/" + res_short_id + "/" + json_response.element_name + "/add-metadata/";
                     $form.attr('action', update_url);
                 }
                 if (json_response.hasOwnProperty('element_name')){
@@ -679,5 +685,54 @@ function showMetadataFormSaveChangesButton(){
         $(this).on('change', function (e) {
             $(this).closest("form").find("button").show();
         });
+    });
+}
+
+// Initialize date pickers
+function initializeDatePickers(){
+    $(".dateinput").each(function () {
+        $(this).datepicker({
+            format: 'mm-dd-yyyy',
+            yearRange: "-1000:+1000",
+            changeMonth: true,
+            changeYear: true
+        });
+        $(this).on('change', function () {
+            $(this).closest("form").find("button").show();
+        });
+    });
+}
+
+// act on spatial coverage type change
+function setFileTypeSpatialCoverageFormFields(){
+    $("#div_id_type_filetype input:radio").change(function () {
+        if ($(this).val() == "point" && $(this).attr("checked") == "checked") {
+            $("#div_id_north_filetype").show();
+            $("#div_id_east_filetype").show();
+            $("#div_id_elevation_filetype").show();
+            $("#div_id_northlimit_filetype").hide();
+            $("#div_id_eastlimit_filetype").hide();
+            $("#div_id_southlimit_filetype").hide();
+            $("#div_id_westlimit_filetype").hide();
+            $("#div_id_uplimit_filetype").hide();
+            $("#div_id_downlimit_filetype").hide();
+            //drawMarkerOnTextChange();
+            //drawingManager.setDrawingMode(google.maps.drawing.OverlayType.MARKER);
+        }
+        else {
+            $("#div_id_north_filetype").hide();
+            $("#div_id_east_filetype").hide();
+            $("#div_id_elevation_filetype").hide();
+            $("#div_id_northlimit_filetype").show();
+            $("#div_id_eastlimit_filetype").show();
+            $("#div_id_southlimit_filetype").show();
+            $("#div_id_westlimit_filetype").show();
+            $("#div_id_uplimit_filetype").show();
+            $("#div_id_downlimit_filetype").show();
+            // drawRectangleOnTextChange();
+            // drawingManager.setDrawingMode(google.maps.drawing.OverlayType.RECTANGLE);
+        }
+        // Show save changes button
+        $("#id-coverage-spatial-filetype").find(".btn-primary").show();
     });
 }

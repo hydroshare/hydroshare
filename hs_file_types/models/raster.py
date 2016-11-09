@@ -8,6 +8,7 @@ from django.template import Template, Context
 from dominate.tags import *
 
 from hs_core.models import Coverage
+from hs_core.forms import CoverageTemporalForm
 
 from hs_geo_raster_resource.models import CellInformation, BandInformation, OriginalCoverage, \
     GeoRasterMetaDataMixin
@@ -20,7 +21,9 @@ class GeoRasterFileMetaData(AbstractFileMetaData, GeoRasterMetaDataMixin):
     _cell_information = GenericRelation(CellInformation)
     _band_information = GenericRelation(BandInformation)
     _ori_coverage = GenericRelation(OriginalCoverage)
-    _coverages = GenericRelation(Coverage)
+
+    # TODO: move this to base class
+    coverages = GenericRelation(Coverage)
 
     @classmethod
     def get_supported_element_names(cls):
@@ -31,13 +34,18 @@ class GeoRasterFileMetaData(AbstractFileMetaData, GeoRasterMetaDataMixin):
         elements.append('Coverage')
         return elements
 
+    # TODO: move this to base class
     @property
-    def coverage(self):
-        return self._coverages.all().first()
+    def spatial_coverage(self):
+        return self.coverages.exclude(type='period').first()
+
+    # TODO: move this to base class
+    @property
+    def temporal_coverage(self):
+        return self.coverages.filter(type='period').first()
 
     def delete_all_elements(self):
-        if self.coverage:
-            self.coverage.delete()
+        self.coverages.all().delete()
         if self.cellInformation:
             self.cellInformation.delete()
         if self.originalCoverage:
@@ -46,7 +54,7 @@ class GeoRasterFileMetaData(AbstractFileMetaData, GeoRasterMetaDataMixin):
         self.bandInformations.all().delete()
 
     def has_all_required_elements(self):
-        if not self.coverage:
+        if not self.coverages.count() == 0:
             return False
 
         if not self.cellInformation:
@@ -68,9 +76,11 @@ class GeoRasterFileMetaData(AbstractFileMetaData, GeoRasterMetaDataMixin):
         single line: {{ logical_file.metadata.get_html }}
         """
 
-        html_string = self.coverage.get_html()
+        html_string = self.spatial_coverage.get_html()
         html_string += self.originalCoverage.get_html()
         html_string += self.cellInformation.get_html()
+        if self.temporal_coverage:
+            html_string += self.temporal_coverage.get_html()
         band_legend = legend("Band Information", cls="pull-left", style="margin-left:10px;")
         html_string += band_legend.render()
         for band_info in self.bandInformations:
@@ -89,12 +99,26 @@ class GeoRasterFileMetaData(AbstractFileMetaData, GeoRasterMetaDataMixin):
         """
         root_div = div("{% load crispy_forms_tags %}")
         with root_div:
+            with div(cls="well", id="variables"):
+                with div(cls="col-lg-6 col-xs-12"):
+                    with form(id="id-coverage_temporal-file-type", action="{{ temp_form.action }}",
+                              method="post", enctype="multipart/form-data"):
+                        div("{% crispy temp_form %}")
+                        with div(cls="row", style="margin-top:10px;"):
+                            with div(cls="col-md-offset-10 col-xs-offset-6 "
+                                         "col-md-2 col-xs-6"):
+                                button("Save changes", type="button",
+                                       cls="btn btn-primary pull-right",
+                                       style="display: none;",
+                                       onclick="metadata_update_ajax_submit("
+                                               "'id-coverage_temporal-file-type'); return false;")
             with div(cls="col-lg-6 col-xs-12"):
                 div("{% crispy coverage_form %}")
             with div(cls="col-lg-6 col-xs-12"):
                 div("{% crispy orig_coverage_form %}")
             with div(cls="col-lg-6 col-xs-12"):
                 div("{% crispy cellinfo_form %}")
+
             with div(cls="pull-left col-sm-12"):
                 with div(cls="well", id="variables"):
                     with div(cls="row"):
@@ -115,15 +139,51 @@ class GeoRasterFileMetaData(AbstractFileMetaData, GeoRasterMetaDataMixin):
 
         template = Template(root_div.render())
         context_dict = dict()
-        context_dict["coverage_form"] = self.coverage.get_html_form(resource=None)
-        context_dict["orig_coverage_form"] = self.originalCoverage.get_html_form(resource=None)
-        context_dict["cellinfo_form"] = self.cellInformation.get_html_form(resource=None)
+        context_dict["coverage_form"] = self.get_spatial_coverage_form()
+        context_dict["orig_coverage_form"] = self.get_original_coverage_form()
+        context_dict["cellinfo_form"] = self.get_cellinfo_form()
+        temp_cov_form = Coverage.get_temporal_html_form(resource=None,
+                                                        element=self.temporal_coverage)
+
+        update_action = "/hsapi/_internal/GeoRasterLogicalFile/{0}/{1}/{2}/update-file-metadata/"
+        create_action = "/hsapi/_internal/GeoRasterLogicalFile/{0}/{1}/add-file-metadata/"
+        if self.temporal_coverage:
+            temp_action = update_action.format(self.logical_file.id, "coverage",
+                                               self.temporal_coverage.id)
+            temp_cov_form.action = temp_action
+        else:
+            temp_action = create_action.format(self.logical_file.id, "coverage")
+            temp_cov_form.action = temp_action
+
+        context_dict["temp_form"] = temp_cov_form
         context_dict["bandinfo_formset_forms"] = self.get_bandinfo_formset().forms
         context = Context(context_dict)
-        return template.render(context)
+        rendered_html = template.render(context)
 
-    def get_coverage_form(self):
-        return self.coverage.get_html_form(resource=None)
+        # file level form field ids need to changed so that they are different from
+        # the ids used at the resource level for the same type of metadata elements
+        rendered_html = rendered_html.replace("div_id_start", "div_id_start_filetype")
+        rendered_html = rendered_html.replace("div_id_end", "div_id_end_filetype")
+        rendered_html = rendered_html.replace("id_start", "id_start_filetype")
+        rendered_html = rendered_html.replace("id_end", "id_end_filetype")
+        for spatial_element_id in ('div_id_northlimit', 'div_id_southlimit', 'div_id_westlimit',
+                                   'div_id_eastlimit'):
+            rendered_html = rendered_html.replace(spatial_element_id,
+                                                  spatial_element_id + "_filetype", 1)
+        for spatial_element_id in ('div_id_type', 'div_id_north', 'div_id_east'):
+            rendered_html = rendered_html.replace(spatial_element_id,
+                                                  spatial_element_id + "_filetype", 1)
+        return rendered_html
+
+    def get_spatial_coverage_form(self):
+        # TODO: use this code line instead:
+        # return Coverage.get_spatial_html_form(resource=None, element=self.spatial_coverage)
+        # once the above replacement code seems to work, delete the get_html_form() from the
+        # Coverage class
+        return self.spatial_coverage.get_html_form(resource=None)
+
+    def get_temporal_coverage(self):
+        return Coverage.get_temporal_html_form(resource=None, element=self.temporal_coverage)
 
     def get_cellinfo_form(self):
         return self.cellInformation.get_html_form(resource=None)
@@ -141,7 +201,7 @@ class GeoRasterFileMetaData(AbstractFileMetaData, GeoRasterMetaDataMixin):
         for form in bandinfo_formset.forms:
             if len(form.initial) > 0:
                 form.action = "/hsapi/_internal/%s/%s/bandinformation/%s/update-file-metadata/" % (
-                "GeoRaster", self.logical_file.id, form.initial['id'])
+                "GeoRasterLogicalFile", self.logical_file.id, form.initial['id'])
                 form.number = form.initial['id']
 
         return bandinfo_formset
@@ -162,10 +222,16 @@ class GeoRasterFileMetaData(AbstractFileMetaData, GeoRasterMetaDataMixin):
                 matching_key = [key for key in request.POST if '-' + field_name in key][0]
                 form_data[field_name] = request.POST[matching_key]
             element_form = BandInfoValidationForm(form_data)
-            if element_form.is_valid():
-                return {'is_valid': True, 'element_data_dict': element_form.cleaned_data}
-            else:
-                return {'is_valid': False, 'element_data_dict': None, "errors": element_form.errors}
+
+        else:
+            # element_name must be coverage
+            # here we are assuming temporal coverage
+            element_form = CoverageTemporalForm(data=request.POST)
+
+        if element_form.is_valid():
+            return {'is_valid': True, 'element_data_dict': element_form.cleaned_data}
+        else:
+            return {'is_valid': False, 'element_data_dict': None, "errors": element_form.errors}
 
 
 class GeoRasterLogicalFile(AbstractLogicalFile):

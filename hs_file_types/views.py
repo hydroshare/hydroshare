@@ -4,6 +4,8 @@ from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.core.exceptions import ValidationError
 from django.db import Error
+from django.contrib.contenttypes.models import ContentType
+
 from rest_framework import status
 
 from hs_core.views.utils import ACTION_TO_AUTHORIZE, authorize
@@ -69,16 +71,13 @@ def delete_file_type(request, resource_id, hs_file_type, file_type_id, **kwargs)
 def update_metadata_element(request, hs_file_type, file_type_id, element_name,
                             element_id, **kwargs):
     err_msg = "Failed to update metadata element '{}'. {}."
-    if hs_file_type != "GeoRaster":
-        err_msg = "Currently only metadata can be updated for Geo Raster file type."
-        ajax_response_data = {'status': 'error', 'message': err_msg}
-        return JsonResponse(ajax_response_data, status=status.HTTP_400_BAD_REQUEST)
-
-    logical_file = GeoRasterLogicalFile.objects.filter(id=file_type_id).first()
+    content_type = ContentType.objects.get(app_label="hs_file_types", model=hs_file_type.lower())
+    logical_file_type_class = content_type.model_class()
+    logical_file = logical_file_type_class.objects.filter(id=file_type_id).first()
     if logical_file is None:
-        err_msg = "No matching Geo Raster file type was found."
+        err_msg = "No matching logical file type was found."
         ajax_response_data = {'status': 'error', 'message': err_msg}
-        return JsonResponse(ajax_response_data, status=status.HTTP_400_BAD_REQUEST)
+        return JsonResponse(ajax_response_data, status=status.HTTP_200_OK)
 
     resource = logical_file.resource
     res, _, _ = authorize(request, resource.short_id,
@@ -101,6 +100,50 @@ def update_metadata_element(request, hs_file_type, file_type_id, element_name,
     if is_update_success:
         ajax_response_data = {'status': 'success', 'element_name': element_name,
                               'metadata_status': "Update was successful"}
+        return JsonResponse(ajax_response_data, status=status.HTTP_200_OK)
+    else:
+        ajax_response_data = {'status': 'error', 'message': err_msg}
+        # need to return http status 200 to show form errors
+        return JsonResponse(ajax_response_data, status=status.HTTP_200_OK)
+
+
+@login_required
+def add_metadata_element(request, hs_file_type, file_type_id, element_name, **kwargs):
+    err_msg = "Failed to create metadata element '{}'. {}."
+    content_type = ContentType.objects.get(app_label="hs_file_types", model=hs_file_type.lower())
+    logical_file_type_class = content_type.model_class()
+    logical_file = logical_file_type_class.objects.filter(id=file_type_id).first()
+    if logical_file is None:
+        err_msg = "No matching logical file type was found."
+        ajax_response_data = {'status': 'error', 'message': err_msg}
+        return JsonResponse(ajax_response_data, status=status.HTTP_200_OK)
+
+    resource = logical_file.resource
+    res, _, _ = authorize(request, resource.short_id,
+                          needed_permission=ACTION_TO_AUTHORIZE.EDIT_RESOURCE)
+
+    validation_response = logical_file.metadata.validate_element_data(request, element_name)
+    is_add_success = False
+    if validation_response['is_valid']:
+        element_data_dict = validation_response['element_data_dict']
+        try:
+            element = logical_file.metadata.create_element(element_name, **element_data_dict)
+            is_add_success = True
+        except ValidationError as ex:
+            err_msg = err_msg.format(element_name, ex.message)
+        except Error as ex:
+            err_msg = err_msg.format(element_name, ex.message)
+    else:
+        err_msg = err_msg.format(element_name, validation_response['errors'])
+
+    if is_add_success:
+        form_action = "/hsapi/_internal/{0}/{1}/{2}/{3}/update-file-metadata/"
+        form_action = form_action.format(logical_file.type_name(), logical_file.id, element_name,
+                                         element.id)
+
+        ajax_response_data = {'status': 'success', 'logical_file_type': logical_file.type_name(),
+                              'element_name': element_name, 'form_action': form_action,
+                              'element_id': element.id, 'metadata_status': "Update was successful"}
         return JsonResponse(ajax_response_data, status=status.HTTP_200_OK)
     else:
         ajax_response_data = {'status': 'error', 'message': err_msg}

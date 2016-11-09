@@ -18,6 +18,11 @@ urlpatterns = patterns('',
         views.update_metadata_element,
         name="update_file_metadata"),
 
+    url(r'^_internal/(?P<hs_file_type>[A-z]+)/(?P<file_type_id>[0-9]+)/(?P<element_name>[A-z]+)/'
+        r'add-file-metadata/$',
+        views.add_metadata_element,
+        name="add_file_metadata"),
+
     url(r'^_internal/(?P<hs_file_type>[A-z]+)/(?P<file_type_id>[0-9]+)/(?P<metadata_mode>[a-z]+)/'
         r'get-file-metadata/$', views.get_metadata, name="get_file_metadata"),
     )

@@ -1,32 +1,177 @@
 # coding=utf-8
 from django.contrib.contenttypes.fields import GenericRelation
 from django.db import models
+from django.template import Template, Context
+
+from dominate.tags import *
 
 from hs_core.models import Coverage
+from hs_core.forms import CoverageTemporalForm, CoverageSpatialForm
 
 from base import AbstractFileMetaData, AbstractLogicalFile
 
 
 class GenericFileMetaData(AbstractFileMetaData):
-    _coverages = GenericRelation(Coverage)
+    # TODO: move this to base class
+    coverages = GenericRelation(Coverage)
 
     @classmethod
     def get_supported_element_names(cls):
         return ['Coverage']
 
+    # TODO: move this to base class
     @property
-    def coverage(self):
-        return self._coverages.all().first()
+    def spatial_coverage(self):
+        return self.coverages.exclude(type='period').first()
+
+    # TODO: move this to base class
+    @property
+    def temporal_coverage(self):
+        return self.coverages.filter(type='period').first()
+
+    @property
+    def has_metadata(self):
+        if not self.coverages.all() and not self.extra_metadata:
+            return False
+        return True
 
     def delete_all_elements(self):
-        if self.coverage:
-            self.coverage.delete()
+        if self.coverages:
+            self.coverages.all().delete()
 
     def has_all_required_elements(self):
-        if not self.coverage:
-            return False
-
         return True
+
+    def get_html(self):
+        # in the template we can insert necessary html code for displaying all
+        # file type metadata associated with a logical file using this
+        # single line: {{ logical_file.metadata.get_html |safe }}
+
+        html_string = ''
+        if not self.has_metadata:
+            root_div = div(cls="alert alert-warning alert-dismissible", role="alert")
+            with root_div:
+                h4("No file level metadata exists for the selected file.")
+            html_string = root_div.render()
+        else:
+            if self.temporal_coverage:
+                html_string = self.temporal_coverage.get_html()
+
+            if self.spatial_coverage:
+                html_string += self.spatial_coverage.get_html()
+
+        template = Template(html_string)
+        context = Context({})
+        return template.render(context)
+
+    def get_html_forms(self):
+        # in the template we can insert necessary html code for displaying all
+        # file type metadata associated with a logical file using this
+        # single line: {{ logical_file.metadata.get_html |safe }}
+
+        # TODO: Refactor
+        root_div = div("{% load crispy_forms_tags %}")
+        with root_div:
+            with div(cls="col-lg-6 col-xs-12"):
+                with form(id="id-coverage_temporal-file-type", action="{{ temp_form.action }}",
+                          method="post", enctype="multipart/form-data"):
+                    div("{% crispy temp_form %}")
+                    with div(cls="row", style="margin-top:10px;"):
+                        with div(cls="col-md-offset-10 col-xs-offset-6 "
+                                     "col-md-2 col-xs-6"):
+                            button("Save changes", type="button",
+                                   cls="btn btn-primary pull-right",
+                                   style="display: none;",
+                                   onclick="metadata_update_ajax_submit("
+                                           "'id-coverage_temporal-file-type'); return false;")
+
+            with div(cls="col-lg-6 col-xs-12"):
+                with form(id="id-coverage-spatial-filetype", action="{{ spatial_form.action }}",
+                          method="post", enctype="multipart/form-data"):
+                    div("{% crispy spatial_form %}")
+                    with div(cls="row", style="margin-top:10px;"):
+                        with div(cls="col-md-offset-10 col-xs-offset-6 "
+                                     "col-md-2 col-xs-6"):
+                            button("Save changes", type="button",
+                                   cls="btn btn-primary pull-right",
+                                   style="display: none;",
+                                   onclick="metadata_update_ajax_submit("
+                                           "'id-coverage-spatial-filetype'); return false;")
+
+        template = Template(root_div.render())
+        context_dict = dict()
+        temp_cov_form = Coverage.get_temporal_html_form(resource=None,
+                                                        element=self.temporal_coverage)
+        spatial_cov_form = Coverage.get_spatial_html_form(resource=None,
+                                                          element=self.spatial_coverage)
+        update_action = "/hsapi/_internal/GenericLogicalFile/{0}/{1}/{2}/update-file-metadata/"
+        create_action = "/hsapi/_internal/GenericLogicalFile/{0}/{1}/add-file-metadata/"
+
+        if self.temporal_coverage or self.spatial_coverage:
+            if self.temporal_coverage:
+                temp_action = update_action.format(self.logical_file.id, "coverage",
+                                                   self.temporal_coverage.id)
+                temp_cov_form.action = temp_action
+            else:
+                temp_action = create_action.format(self.logical_file.id, "coverage")
+                temp_cov_form.action = temp_action
+
+            if self.spatial_coverage:
+                spatial_action = update_action.format(self.logical_file.id, "coverage",
+                                                      self.spatial_coverage.id)
+                spatial_cov_form.action = spatial_action
+            else:
+                spatial_action = create_action.format(self.logical_file.id, "coverage")
+                spatial_cov_form.action = spatial_action
+        else:
+            action = create_action.format(self.logical_file.id, "coverage")
+            temp_cov_form.action = action
+            spatial_cov_form.action = action
+
+        context_dict["temp_form"] = temp_cov_form
+        context_dict["spatial_form"] = spatial_cov_form
+        context = Context(context_dict)
+        rendered_html = template.render(context)
+        rendered_html = rendered_html.replace("div_id_start", "div_id_start_filetype")
+        rendered_html = rendered_html.replace("div_id_end", "div_id_end_filetype")
+        rendered_html = rendered_html.replace("id_start", "id_start_filetype")
+        rendered_html = rendered_html.replace("id_end", "id_end_filetype")
+
+        for spatial_element_id in ('div_id_northlimit', 'div_id_southlimit', 'div_id_westlimit',
+                                   'div_id_eastlimit'):
+            rendered_html = rendered_html.replace(spatial_element_id,
+                                                  spatial_element_id + "_filetype", 1)
+        for spatial_element_id in ('div_id_type', 'div_id_north', 'div_id_east'):
+            rendered_html = rendered_html.replace(spatial_element_id,
+                                                  spatial_element_id + "_filetype", 1)
+
+        return rendered_html
+
+    @classmethod
+    def validate_element_data(cls, request, element_name):
+        # overidding the base class method
+
+        if element_name.lower() not in [el_name.lower() for el_name
+                                        in cls.get_supported_element_names()]:
+            err_msg = "{} is nor a supported metadata element for Generic file type"
+            err_msg = err_msg.format(element_name)
+            return {'is_valid': False, 'element_data_dict': None, "errors": err_msg}
+        element_name = element_name.lower()
+        if element_name == "coverage":
+            if 'type' in request.POST:
+                if request.POST['type'].lower() == 'point' or request.POST['type'].lower() == 'box':
+                    element_form = CoverageSpatialForm(data=request.POST)
+                else:
+                    element_form = CoverageTemporalForm(data=request.POST)
+            else:
+                element_form = CoverageTemporalForm(data=request.POST)
+        else:
+            element_form = CoverageTemporalForm(data=request.POST)
+
+        if element_form.is_valid():
+            return {'is_valid': True, 'element_data_dict': element_form.cleaned_data}
+        else:
+            return {'is_valid': False, 'element_data_dict': None, "errors": element_form.errors}
 
 
 class GenericLogicalFile(AbstractLogicalFile):

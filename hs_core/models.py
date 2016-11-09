@@ -913,7 +913,6 @@ class Coverage(AbstractMetaDataElement):
         to dictionaries.
         """
 
-        # TODO: validate coordinate values
         if 'type' in kwargs:
             # check the type doesn't already exists - we allow only one coverage type per resource
             metadata_obj = kwargs['content_object']
@@ -1094,7 +1093,8 @@ class Coverage(AbstractMetaDataElement):
     def get_html(self, pretty=True):
         # Using the dominate module to generate the
         # html to display data for this element (resource view mode)
-        # this function should be used only for displaying spatial coverage
+        # this function should be used for displaying one spatial coverage element
+        # or one temporal coverage element
         root_div = div(cls="col-xs-6 col-sm-6", style="margin-bottom:40px;")
 
         def get_th(heading_name):
@@ -1135,6 +1135,16 @@ class Coverage(AbstractMetaDataElement):
                         with tr():
                             get_th('Eest')
                             td(self.value['east'])
+            else:
+                legend('Temporal Coverage')
+                with table(cls='custom-table'):
+                    with tbody():
+                        with tr():
+                            get_th('Start Date')
+                            td(self.value['start'])
+                        with tr():
+                            get_th('End Date')
+                            td(self.value['end'])
 
         return root_div.render(pretty=pretty)
 
@@ -1158,10 +1168,48 @@ class Coverage(AbstractMetaDataElement):
             coverage_data_dict['elevation'] = self.value.get('elevation', None)
 
         coverage_form = CoverageSpatialForm(initial=coverage_data_dict, allow_edit=False,
-                                                       res_short_id=resource.short_id if resource else None,
-                                                       element_id=self.id if self else None)
+                                            res_short_id=resource.short_id if resource else None,
+                                            element_id=self.id if self else None)
 
         return coverage_form
+
+    @classmethod
+    def get_temporal_html_form(cls, resource, element=None):
+        from .forms import CoverageTemporalForm
+        coverage_data_dict = dict()
+        if element is not None:
+            coverage_data_dict['start'] = element.value['start']
+            coverage_data_dict['end'] = element.value['end']
+
+        coverage_form = CoverageTemporalForm(initial=coverage_data_dict, allow_edit=True,
+                                             res_short_id=resource.short_id if resource else None,
+                                             element_id=element.id if element else None)
+        return coverage_form
+
+    @classmethod
+    def get_spatial_html_form(cls, resource, element=None):
+        from .forms import  CoverageSpatialForm
+        coverage_data_dict = dict()
+        # coverage_data_dict['projection'] = 'WGS 84 EPSG:4326'
+        # coverage_data_dict['units'] = 'Decimal degrees'
+        if element is not None:
+            coverage_data_dict['type'] = element.type
+            coverage_data_dict['name'] = element.value.get('name', "")
+            if element.type == 'box':
+                coverage_data_dict['northlimit'] = element.value['northlimit']
+                coverage_data_dict['eastlimit'] = element.value['eastlimit']
+                coverage_data_dict['southlimit'] = element.value['southlimit']
+                coverage_data_dict['westlimit'] = element.value['westlimit']
+            else:
+                coverage_data_dict['east'] = element.value['east']
+                coverage_data_dict['north'] = element.value['north']
+                coverage_data_dict['elevation'] = element.value.get('elevation', None)
+
+        coverage_form = CoverageSpatialForm(initial=coverage_data_dict, allow_edit=True,
+                                            res_short_id=resource.short_id if resource else None,
+                                            element_id=element.id if element else None)
+        return coverage_form
+
 
 class Format(AbstractMetaDataElement):
     term = 'Format'

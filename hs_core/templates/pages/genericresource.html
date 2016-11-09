@@ -1391,7 +1391,7 @@
                                 {% if cm.resource_type == "CompositeResource" %}
                                     <div class="tab-pane" id="fileTypeMetaDataTab">
                                         <div class="alert alert-warning alert-dismissible" role="alert">
-                                            <h4>Right click on a file and select option "Show Metadata" to see file type metadata.</h4>
+                                            <h4>Select a file to see file type metadata.</h4>
                                         </div>
                                     </div>
                                 {% endif %}
@@ -2098,17 +2098,7 @@
             showMetadataFormSaveChangesButton();
 
             // Initialize date pickers
-            $(".dateinput").each(function () {
-                $(this).datepicker({
-                    format: 'mm-dd-yyyy',
-                    yearRange: "-1000:+1000",
-                    changeMonth: true,
-                    changeYear: true
-                });
-                $(this).on('change', function () {
-                    $(this).closest("form").find("button").show();
-                });
-            });
+            initializeDatePickers();
 
             // init ExtraMetadata Table
             extraMetaTable = $("#extraMetaTable").DataTable({
