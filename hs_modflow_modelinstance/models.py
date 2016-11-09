@@ -313,12 +313,15 @@ class BoundaryCondition(AbstractMetaDataElement):
             other_head_dependent_flux_boundary_packages=kwargs.get(
                 'other_head_dependent_flux_boundary_packages', '')
                     )
-        model_boundary_condition._add_specified_head_boundary_packages(
-            kwargs['specified_head_boundary_packages'])
-        model_boundary_condition._add_specified_flux_boundary_packages(
-            kwargs['specified_flux_boundary_packages'])
-        model_boundary_condition._add_head_dependent_flux_boundary_packages(
-            kwargs['head_dependent_flux_boundary_packages'])
+        if kwargs.get('specified_head_boundary_packages'):
+            model_boundary_condition._add_specified_head_boundary_packages(
+                kwargs['specified_head_boundary_packages'])
+        if kwargs.get('specified_flux_boundary_packages'):
+            model_boundary_condition._add_specified_flux_boundary_packages(
+                kwargs['specified_flux_boundary_packages'])
+        if kwargs.get('head_dependent_flux_boundary_packages'):
+            model_boundary_condition._add_head_dependent_flux_boundary_packages(
+                kwargs['head_dependent_flux_boundary_packages'])
 
         return model_boundary_condition
 
@@ -495,15 +498,14 @@ class GeneralElements(AbstractMetaDataElement):
     @classmethod
     def create(cls, **kwargs):
         kwargs = cls._validate_params(**kwargs)
-        general_elements = super(GeneralElements, cls).create(content_object=kwargs[
-                                                                  'content_object'],
-                                                              modelParameter=kwargs[
-                                                                  'modelParameter'],
-                                                              modelSolver=kwargs[
-                                                                  'modelSolver'],
-                                                              subsidencePackage=kwargs[
-                                                                  'subsidencePackage'])
-        general_elements._add_output_control_package(kwargs['output_control_package'])
+        general_elements = super(GeneralElements, cls).create(
+            content_object=kwargs['content_object'],
+            modelParameter=kwargs.get('modelParameter'),
+            modelSolver=kwargs.get('modelSolver'),
+            subsidencePackage=kwargs.get('subsidencePackage')
+        )
+        if kwargs.get('output_control_package'):
+            general_elements._add_output_control_package(kwargs['output_control_package'])
 
         return general_elements
 
@@ -516,9 +518,10 @@ class GeneralElements(AbstractMetaDataElement):
                 general_elements = super(GeneralElements, cls).update(
                     general_elements.id,
                     content_object=kwargs['content_object'],
-                    modelParameter=kwargs['modelParameter'],
-                    modelSolver=kwargs['modelSolver'],
-                    subsidencePackage=kwargs['subsidencePackage'])
+                    modelParameter=kwargs.get('modelParameter'),
+                    modelSolver=kwargs.get('modelSolver'),
+                    subsidencePackage=kwargs.get('subsidencePackage')
+                )
 
                 general_elements.output_control_package.clear()
                 general_elements._add_output_control_package(kwargs['output_control_package'])
@@ -557,7 +560,7 @@ class MODFLOWModelInstanceResource(BaseResource):
 
     def has_required_content_files(self):
         if self.files.all().count() >= 1:
-            nam_files, reqd_files, existing_files = self.find_content_files()
+            nam_files, reqd_files, existing_files, model_packages = self.find_content_files()
             if nam_files != 1:
                 return False
             else:
@@ -581,7 +584,7 @@ class MODFLOWModelInstanceResource(BaseResource):
         """
         missing_files = []
         if self.files.all().count() >= 1:
-            nam_files, reqd_files, existing_files = self.find_content_files()
+            nam_files, reqd_files, existing_files, model_packages = self.find_content_files()
             if not nam_files:
                 return ['.nam']
             else:
@@ -604,10 +607,13 @@ class MODFLOWModelInstanceResource(BaseResource):
                  -reqd_files, (list of strings), the files listed in the .nam file that should be
                  included for the model to run
                  -existing_files, (list of strings), the names of files that have been uploaded
+                 -model packages (list of strings), the names of the packages for the uploaded model
+                 found in the .nam file
         """
         nam_file_count = 0
         existing_files = []
         reqd_files = []
+        model_packages = []
         for res_file in self.files.all():
                 ext = os.path.splitext(res_file.resource_file.name)[-1]
                 existing_files.append(res_file.resource_file.name.split("/")[-1])
@@ -621,7 +627,8 @@ class MODFLOWModelInstanceResource(BaseResource):
                         if not r.startswith('#') and r != '' and r.lower() != 'list' \
                                 and r.lower() != 'data' and r.lower() != 'data(binary)':
                             reqd_files.append(row[-1].strip())
-        return nam_file_count, reqd_files, existing_files
+                            model_packages.append(row[0].strip())
+        return nam_file_count, reqd_files, existing_files, model_packages
 
 
 processor_for(MODFLOWModelInstanceResource)(resource_processor)

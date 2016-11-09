@@ -2,7 +2,8 @@ from django.dispatch import receiver
 from django.core.exceptions import ObjectDoesNotExist
 
 from hs_core.signals import pre_metadata_element_create, pre_metadata_element_update, \
-    pre_create_resource, post_metadata_element_update
+    pre_create_resource, post_metadata_element_update, post_add_files_to_resource, \
+    post_create_resource
 
 import hs_modflow_modelinstance.models as modflow_models
 
@@ -10,6 +11,7 @@ from hs_modflow_modelinstance.forms import ModelOutputValidationForm, ExecutedBy
     StudyAreaValidationForm, GridDimensionsValidationForm, StressPeriodValidationForm,\
     GroundWaterFlowValidationForm, BoundaryConditionValidationForm, ModelCalibrationValidationForm,\
     ModelInputValidationForm, GeneralElementsValidationForm
+from django.core.exceptions import ValidationError
 
 
 @receiver(pre_create_resource, sender=modflow_models.MODFLOWModelInstanceResource)
@@ -89,3 +91,133 @@ def _process_metadata_update_create(update_or_create, **kwargs):
         return {'is_valid': True, 'element_data_dict': element_form.cleaned_data}
     else:
         return {'is_valid': False, 'element_data_dict': None, "errors": element_form.errors}
+
+
+@receiver(post_add_files_to_resource, sender=modflow_models.MODFLOWModelInstanceResource)
+def post_add_files_to_resource_handler(sender, **kwargs):
+    resource = kwargs['resource']
+
+    # extract metadata from the just uploaded file
+    res_file = resource.files.all().first()
+    if res_file:
+        _process_package_info(resource)
+
+
+@receiver(post_create_resource, sender=modflow_models.MODFLOWModelInstanceResource)
+def post_create_resource_handler(sender, **kwargs):
+    resource = kwargs['resource']
+    user = kwargs['user']
+
+    # extract metadata from the just uploaded file
+    res_file = resource.files.all().first()
+    if res_file:
+        _process_package_info(resource)
+
+
+def _process_package_info(resource):
+    # check if only one .nam file is uploaded
+    nam_file_count, reqd_files, existing_files, packages = resource.find_content_files()
+    if nam_file_count == 1:
+        if packages:
+            # make list for many to many relations so that more than one can be added
+            output_control_package_list = []
+            specified_head_boundary_package_list = []
+            specified_flux_boundary_packages_list = []
+            head_dependent_flux_boundary_packages = []
+
+            # loop through packages from .nam file to see if they match any of the controlled terms
+            for p in packages:
+                # check each term
+                # StressPeriod
+                if p in modflow_models.uncouple(
+                        modflow_models.StressPeriod.stressPeriodTypeChoices):
+                    # create if does not exist, update if it does exist
+                    _create_or_update_from_package(resource, modflow_models.StressPeriod,
+                                                   stressPeriodType=p)
+                if p in modflow_models.uncouple(
+                        modflow_models.StressPeriod.transientStateValueTypeChoices):
+                    # create if does not exist, update if it does exist
+                    _create_or_update_from_package(resource, modflow_models.StressPeriod,
+                                                   transientStateValueType=p)
+                # GroundWaterFlow
+                if p in modflow_models.uncouple(
+                        modflow_models.GroundWaterFlow.flowPackageChoices):
+                    # create if does not exist, update if it does exist
+                    _create_or_update_from_package(resource, modflow_models.GroundWaterFlow,
+                                                   flowPackage=p)
+                if p in modflow_models.uncouple(
+                        modflow_models.GroundWaterFlow.flowParameterChoices):
+                    # create if does not exist, update if it does exist
+                    _create_or_update_from_package(resource, modflow_models.GroundWaterFlow,
+                                                   flowParameter=p)
+                # BoundaryCondition
+                if p in modflow_models.uncouple(
+                        modflow_models.BoundaryCondition.specifiedHeadBoundaryPackageChoices):
+                    # create if does not exist, update if it does exist
+                    specified_head_boundary_package_list.append(p)
+                    _create_or_update_from_package(
+                        resource, modflow_models.BoundaryCondition,
+                        specified_head_boundary_packages=specified_head_boundary_package_list)
+                if p in modflow_models.uncouple(
+                        modflow_models.BoundaryCondition.specifiedFluxBoundaryPackageChoices):
+                    # create if does not exist, update if it does exist
+                    specified_flux_boundary_packages_list.append(p)
+                    _create_or_update_from_package(
+                        resource, modflow_models.BoundaryCondition,
+                        specified_flux_boundary_packages=specified_flux_boundary_packages_list)
+                if p in modflow_models.uncouple(
+                        modflow_models.BoundaryCondition.headDependentFluxBoundaryPackageChoices):
+                    # create if does not exist, update if it does exist
+                    head_dependent_flux_boundary_packages.append(p)
+                    _create_or_update_from_package(
+                        resource, modflow_models.BoundaryCondition,
+                        head_dependent_flux_boundary_packages=head_dependent_flux_boundary_packages)
+                # ModelCalibration
+                if p in modflow_models.uncouple(
+                        modflow_models.ModelCalibration.observationProcessPackageChoices):
+                    # create if does not exist, update if it does exist
+                    _create_or_update_from_package(resource, modflow_models.ModelCalibration,
+                                                   observationProcessPackage=p)
+                # GeneralElements
+                if p in modflow_models.uncouple(
+                        modflow_models.GeneralElements.modelSolverChoices):
+                    # create if does not exist, update if it does exist
+                    _create_or_update_from_package(resource, modflow_models.GeneralElements,
+                                                   modelSolver=p)
+                if p in modflow_models.uncouple(
+                        modflow_models.GeneralElements.outputControlPackageChoices):
+                    # create if does not exist, update if it does exist
+                    output_control_package_list.append(p)
+                    _create_or_update_from_package(
+                        resource, modflow_models.GeneralElements,
+                        output_control_package=output_control_package_list)
+                if p in modflow_models.uncouple(
+                        modflow_models.GeneralElements.subsidencePackageChoices):
+                    # create if does not exist, update if it does exist
+                    _create_or_update_from_package(resource, modflow_models.GeneralElements,
+                                                   subsidencePackage=p)
+
+
+def _create_or_update_from_package(resource, term, **kwargs):
+    if term.term == 'StressPeriod':
+        t = 'stress_period'
+    if term.term == 'GroundWaterFlow':
+        t = 'ground_water_flow'
+    if term.term == 'BoundaryCondition':
+        t = 'boundary_condition'
+    if term.term == 'ModelCalibration':
+        t = 'model_calibration'
+    if term.term == 'GeneralElements':
+        t = 'general_elements'
+    metadata_term_obj = getattr(resource.metadata, t)
+    if not metadata_term_obj:
+        resource.metadata.create_element(
+            term.term,
+            **kwargs
+        )
+    else:
+        resource.metadata.update_element(
+            term.term,
+            metadata_term_obj.id,
+            **kwargs
+        )
