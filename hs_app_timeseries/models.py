@@ -559,7 +559,7 @@ class TimeSeriesResource(BaseResource):
     @property
     def has_sqlite_file(self):
         for res_file in self.files.all():
-            fl_ext = utils.get_resource_file_name_and_extension(res_file)[1]
+            fl_ext = utils.get_resource_file_name_and_extension(res_file)[2]
             if fl_ext == '.sqlite':
                 return True
         return False
@@ -567,7 +567,7 @@ class TimeSeriesResource(BaseResource):
     @property
     def has_csv_file(self):
         for res_file in self.files.all():
-            fl_ext = utils.get_resource_file_name_and_extension(res_file)[1]
+            fl_ext = utils.get_resource_file_name_and_extension(res_file)[2]
             if fl_ext == '.csv':
                 return True
         return False

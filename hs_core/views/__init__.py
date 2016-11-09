@@ -40,6 +40,7 @@ from hs_core.hydroshare.resource import METADATA_STATUS_SUFFICIENT, METADATA_STA
 
 from . import resource_rest_api
 from . import user_rest_api
+from . import resource_folder_hierarchy
 
 from hs_core.hydroshare import utils
 
@@ -80,9 +81,18 @@ def verify(request, *args, **kwargs):
     return HttpResponseRedirect('/')
 
 
-def add_file_to_resource(request, shortkey, *args, **kwargs):
-    resource, _, _ = authorize(request, shortkey, needed_permission=ACTION_TO_AUTHORIZE.EDIT_RESOURCE)
-    res_files = request.FILES.getlist('files')
+def add_files_to_resource(request, shortkey, *args, **kwargs):
+    """
+    This view function is called by AJAX in the folder implementation
+    :param request: AJAX request
+    :param shortkey: resource uuid
+    :param args:
+    :param kwargs:
+    :return: HTTP response with status code indicating success or failure
+    """
+    resource, _, _ = authorize(request, shortkey,
+                               needed_permission=ACTION_TO_AUTHORIZE.EDIT_RESOURCE)
+    res_files = request.FILES.values()
     extract_metadata = request.REQUEST.get('extract-metadata', 'No')
     extract_metadata = True if extract_metadata.lower() == 'yes' else False
 
@@ -91,21 +101,22 @@ def add_file_to_resource(request, shortkey, *args, **kwargs):
                                             extract_metadata=extract_metadata)
 
     except hydroshare.utils.ResourceFileSizeException as ex:
-        request.session['file_size_error'] = ex.message
-        return HttpResponseRedirect(request.META['HTTP_REFERER'])
+        msg = 'file_size_error: ' + ex.message
+        return HttpResponse(msg, status=500)
 
     except (hydroshare.utils.ResourceFileValidationException, Exception) as ex:
-        request.session['validation_error'] = ex.message
-        return HttpResponseRedirect(request.META['HTTP_REFERER'])
+        msg = 'validation_error: ' + ex.message
+        return HttpResponse(msg, status=500)
 
     try:
         hydroshare.utils.resource_file_add_process(resource=resource, files=res_files, user=request.user,
                                                    extract_metadata=extract_metadata)
 
     except (hydroshare.utils.ResourceFileValidationException, Exception) as ex:
-        request.session['validation_error'] = ex.message
+        msg = 'validation_error: ' + ex.message
+        return HttpResponse(msg, status=500)
 
-    return HttpResponseRedirect(request.META['HTTP_REFERER'])
+    return HttpResponse(status=200)
 
 
 def _get_resource_sender(element_name, resource):
@@ -342,7 +353,27 @@ def delete_metadata_element(request, shortkey, element_name, element_id, *args, 
 def delete_file(request, shortkey, f, *args, **kwargs):
     res, _, user = authorize(request, shortkey, needed_permission=ACTION_TO_AUTHORIZE.EDIT_RESOURCE)
     hydroshare.delete_resource_file(shortkey, f, user)
+    request.session['resource-mode'] = 'edit'
+    return HttpResponseRedirect(request.META['HTTP_REFERER'])
 
+
+def delete_multiple_files(request, shortkey, *args, **kwargs):
+    res, _, user = authorize(request, shortkey, needed_permission=ACTION_TO_AUTHORIZE.EDIT_RESOURCE)
+    # file_ids is a string of file ids separated by comma
+    f_ids = request.POST['file_ids']
+    f_id_list = f_ids.split(',')
+    for f_id in f_id_list:
+        f_id = f_id.strip()
+        try:
+            hydroshare.delete_resource_file(shortkey, f_id, user)
+        except ObjectDoesNotExist as ex:
+            # Since some specific resource types such as feature resource type delete all other
+            # dependent content files together when one file is deleted, we make this specific
+            # ObjectDoesNotExist exception as legitimate in deplete_multiple_files() without
+            # raising this specific exceptoin
+            logger.debug(ex.message)
+            continue
+    request.session['resource-mode'] = 'edit'
     return HttpResponseRedirect(request.META['HTTP_REFERER'])
 
 
@@ -1300,8 +1331,9 @@ def _set_resource_sharing_status(request, user, resource, flag_to_set, flag_valu
         istorage.setAVU(res_coll, "isPublic", str(resource.raccess.public))
 
         # run script to update hyrax input files when a private netCDF resource is made public
-        if flag_to_set=='public' and flag_value and settings.RUN_HYRAX_UPDATE and resource.resource_type=='NetcdfResource':
-            run_script_to_update_hyrax_input_files()
+        if flag_to_set=='public' and flag_value and settings.RUN_HYRAX_UPDATE and \
+                        resource.resource_type=='NetcdfResource':
+            run_script_to_update_hyrax_input_files(resource.short_id)
 
 
 def _get_message_for_setting_resource_flag(has_files, has_metadata, resource_flag):

@@ -1,16 +1,19 @@
 
 from urlparse import urlparse, parse_qs
 
-from django.test import TestCase, TransactionTestCase
-from django.contrib.auth.models import Group, User
-from django.http import HttpRequest, QueryDict
+from django.test import TransactionTestCase
+from django.contrib.auth.models import Group
+from django.http import HttpRequest
 
 from hs_core.hydroshare import resource
 from hs_core import hydroshare
 
-from hs_tools_resource.models import RequestUrlBase, ToolVersion, SupportedResTypes, ToolResource, ToolIcon
-from hs_tools_resource.receivers import metadata_element_pre_create_handler, metadata_element_pre_update_handler
+from hs_tools_resource.models import RequestUrlBase, ToolVersion, SupportedResTypes, ToolResource,\
+                                     ToolIcon, AppHomePageUrl
+from hs_tools_resource.receivers import metadata_element_pre_create_handler, \
+                                        metadata_element_pre_update_handler
 from hs_tools_resource.utils import parse_app_url_template
+
 
 class TestWebAppFeature(TransactionTestCase):
 
@@ -40,14 +43,14 @@ class TestWebAppFeature(TransactionTestCase):
 
     def test_web_app_res_specific_metadata(self):
 
-        #######################
         # Class: RequestUrlBase
-        #######################
         # no RequestUrlBase obj
         self.assertEqual(RequestUrlBase.objects.all().count(), 0)
 
         # create 1 RequestUrlBase obj with required params
-        resource.create_metadata_element(self.resWebApp.short_id, 'RequestUrlBase', value='https://www.google.com')
+        resource.create_metadata_element(self.resWebApp.short_id,
+                                         'RequestUrlBase',
+                                         value='https://www.google.com')
         self.assertEqual(RequestUrlBase.objects.all().count(), 1)
 
         # may not create additional instance of RequestUrlBase
@@ -68,9 +71,7 @@ class TestWebAppFeature(TransactionTestCase):
                                          element_id=RequestUrlBase.objects.first().id)
         self.assertEqual(RequestUrlBase.objects.all().count(), 0)
 
-        ####################
         # Class: ToolVersion
-        ####################
         # verify no ToolVersion obj
         self.assertEqual(ToolVersion.objects.all().count(), 0)
 
@@ -97,9 +98,7 @@ class TestWebAppFeature(TransactionTestCase):
                                          element_id=ToolVersion.objects.first().id)
         self.assertEqual(ToolVersion.objects.all().count(), 0)
 
-        ##########################
         # Class: SupportedResTypes
-        ##########################
         # no SupportedResTypes obj
         self.assertEqual(SupportedResTypes.objects.all().count(), 0)
 
@@ -123,9 +122,7 @@ class TestWebAppFeature(TransactionTestCase):
                                              element_id=SupportedResTypes.objects.first().id)
         self.assertEqual(SupportedResTypes.objects.all().count(), 2)
 
-        ####################
         # Class: ToolIcon
-        ####################
         # verify no ToolIcon obj
         self.assertEqual(ToolIcon.objects.all().count(), 0)
 
@@ -133,12 +130,16 @@ class TestWebAppFeature(TransactionTestCase):
         self.assertEqual(ToolIcon.objects.all().count(), 0)
 
         # create 1 ToolIcon obj with required params
-        resource.create_metadata_element(self.resWebApp.short_id, 'ToolIcon', url='https://test_icon_url.png')
+        resource.create_metadata_element(self.resWebApp.short_id,
+                                         'ToolIcon',
+                                         url='https://test_icon_url.png')
         self.assertEqual(ToolIcon.objects.all().count(), 1)
 
         # may not create additional instance of ToolIcon
         with self.assertRaises(Exception):
-            resource.create_metadata_element(self.resWebApp.short_id, 'ToolIcon', url='https://test_icon_url_2.png')
+            resource.create_metadata_element(self.resWebApp.short_id,
+                                             'ToolIcon',
+                                             url='https://test_icon_url_2.png')
         self.assertEqual(ToolIcon.objects.all().count(), 1)
 
         # update existing meta
@@ -152,7 +153,36 @@ class TestWebAppFeature(TransactionTestCase):
                                          element_id=ToolIcon.objects.first().id)
         self.assertEqual(ToolIcon.objects.all().count(), 0)
 
+        # Class: AppHomePageUrl
+        # verify no AppHomePageUrl obj
+        self.assertEqual(AppHomePageUrl.objects.all().count(), 0)
+
+        # create 1 AppHomePageUrl obj with required params
+        resource.create_metadata_element(self.resWebApp.short_id,
+                                         'AppHomePageUrl',
+                                         value='https://my_web_app.com')
+        self.assertEqual(AppHomePageUrl.objects.all().count(), 1)
+
+        # may not create additional instance of AppHomePageUrl
+        with self.assertRaises(Exception):
+            resource.create_metadata_element(self.resWebApp.short_id,
+                                             'AppHomePageUrl',
+                                             value='https://my_web_app_2.com')
+        self.assertEqual(AppHomePageUrl.objects.all().count(), 1)
+
+        # update existing meta
+        resource.update_metadata_element(self.resWebApp.short_id, 'AppHomePageUrl',
+                                         element_id=AppHomePageUrl.objects.first().id,
+                                         value='http://my_web_app_3.com')
+        self.assertEqual(AppHomePageUrl.objects.first().value, 'http://my_web_app_3.com')
+
+        # delete AppHomePageUrl obj
+        resource.delete_metadata_element(self.resWebApp.short_id, 'AppHomePageUrl',
+                                         element_id=AppHomePageUrl.objects.first().id)
+        self.assertEqual(AppHomePageUrl.objects.all().count(), 0)
+
     def test_metadata_element_pre_create_and_update(self):
+
         request = HttpRequest()
 
         # RequestUrlBase
@@ -199,10 +229,14 @@ class TestWebAppFeature(TransactionTestCase):
         self.assertTrue(data["is_valid"])
 
     def test_utils(self):
-        url_template_string = "http://www.google.com/?resid=${HS_RES_ID}&restype=${HS_RES_TYPE}&user=${HS_USR_NAME}"
+        url_template_string = "http://www.google.com/?" \
+                              "resid=${HS_RES_ID}&restype=${HS_RES_TYPE}&" \
+                              "user=${HS_USR_NAME}"
 
         term_dict_user = {"HS_USR_NAME": self.user.username}
-        new_url_string = parse_app_url_template(url_template_string, [self.resGeneric.get_hs_term_dict(), term_dict_user])
+        new_url_string = parse_app_url_template(url_template_string,
+                                                [self.resGeneric.get_hs_term_dict(),
+                                                 term_dict_user])
         o = urlparse(new_url_string)
         query = parse_qs(o.query)
 
@@ -210,6 +244,10 @@ class TestWebAppFeature(TransactionTestCase):
         self.assertEqual(query["restype"][0], "GenericResource")
         self.assertEqual(query["user"][0], self.user.username)
 
-        url_template_string = "http://www.google.com/?resid=${HS_RES_ID}&restype=${HS_RES_TYPE}&mypara=${HS_UNDEFINED_TERM}&user=${HS_USR_NAME}"
-        new_url_string = parse_app_url_template(url_template_string, [self.resGeneric.get_hs_term_dict(), term_dict_user])
+        url_template_string = "http://www.google.com/?" \
+                              "resid=${HS_RES_ID}&restype=${HS_RES_TYPE}&" \
+                              "mypara=${HS_UNDEFINED_TERM}&user=${HS_USR_NAME}"
+        new_url_string = parse_app_url_template(url_template_string,
+                                                [self.resGeneric.get_hs_term_dict(),
+                                                 term_dict_user])
         self.assertEqual(new_url_string, None)

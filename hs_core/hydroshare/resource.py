@@ -558,6 +558,7 @@ def create_new_version_resource(ori_res, new_res, user):
     utils.copy_resource_files_and_AVUs(ori_res.short_id, new_res.short_id, set_to_private)
 
     # link copied resource files to Django resource model
+    res_id_len = len(ori_res.short_id)
     files = ResourceFile.objects.filter(object_id=ori_res.id)
     for n, f in enumerate(files):
         if f.fed_resource_file_name_or_path:
@@ -566,15 +567,19 @@ def create_new_version_resource(ori_res, new_res, user):
                                         fed_resource_file_name_or_path=f.fed_resource_file_name_or_path,
                                         fed_resource_file_size=f.fed_resource_file_size)
         elif f.fed_resource_file:
-            ResourceFile.objects.create(content_object=new_res,
-                                        fed_resource_file=os.path.join('{zone}/{res_id}/data/contents/{file_name}'.format(
-                                            zone=ori_res.resource_federation_path, res_id=new_res.short_id,
-                                            file_name=os.path.basename(f.fed_resource_file.name))))
+            ori_file_path = f.fed_resource_file.name
+            idx1 = ori_file_path.find(settings.HS_LOCAL_PROXY_USER_IN_FED_ZONE)
+            # find idx2 to start right after resource id
+            idx2 = idx1 + len(settings.HS_LOCAL_PROXY_USER_IN_FED_ZONE) + 1 + res_id_len
+            if idx1 > 0:
+                new_file_path = ori_file_path[0:idx1] + \
+                                settings.HS_LOCAL_PROXY_USER_IN_FED_ZONE + \
+                                '/' + new_res.short_id + ori_file_path[idx2:]
+                ResourceFile.objects.create(content_object=new_res, fed_resource_file=new_file_path)
         elif f.resource_file:
-            ResourceFile.objects.create(content_object=new_res,
-                resource_file = os.path.join('{res_id}/data/contents/{file_name}'.format(
-                            res_id=new_res.short_id,
-                            file_name=os.path.basename(f.resource_file.name))))
+            ori_file_path = f.resource_file.name
+            new_file_path = new_res.short_id + ori_file_path[res_id_len:]
+            ResourceFile.objects.create(content_object=new_res, resource_file=new_file_path)
 
     # copy metadata from source resource to target new-versioned resource except three elements
     exclude_elements = ['identifier', 'publisher', 'date']
@@ -763,6 +768,7 @@ def add_resource_files(pk, *files, **kwargs):
     fed_zone_home_path = kwargs.pop('fed_zone_home_path', '')
     # for adding files to existing resources, the default action is copy
     fed_copy_or_move = kwargs.pop('fed_copy_or_move', 'copy')
+
     for f in files:
         if fed_zone_home_path:
             # user has selected files from a federated iRODS zone, so files uploaded from local disk
@@ -783,6 +789,9 @@ def add_resource_files(pk, *files, **kwargs):
         for ifname in ifnames:
             ret.append(utils.add_file_to_resource(resource, None, fed_res_file_name_or_path=ifname,
                                                   fed_copy_or_move=fed_copy_or_move))
+    if not ret:
+        # no file has been added, make sure data/contents directory exists if no file is added
+        utils.create_empty_contents_directory(resource)
     return ret
 
 
@@ -933,6 +942,26 @@ def delete_resource_file_only(resource, f):
     return file_name
 
 
+def delete_format_metadata_after_delete_file(resource, file_name):
+    """
+    delete format metadata as appropriate after a file is deleted.
+    :param resource: BaseResource object representing a HydroShare resource
+    :param file_name: the file name to be deleted
+    :return:
+    """
+    delete_file_mime_type = utils.get_file_mime_type(file_name)
+    delete_file_extension = os.path.splitext(file_name)[1]
+
+    # if there is no other resource file with the same extension as the
+    # file just deleted then delete the matching format metadata element for the resource
+    resource_file_extensions = [os.path.splitext(get_resource_file_name(f))[1] for f in
+                                    resource.files.all()]
+    if delete_file_extension not in resource_file_extensions:
+        format_element = resource.metadata.formats.filter(value=delete_file_mime_type).first()
+        if format_element:
+            resource.metadata.delete_element(format_element.term, format_element.id)
+
+
 def delete_resource_file(pk, filename_or_id, user):
     """
     Deletes an individual file from a HydroShare resource. If the file does not exist, the Exceptions.NotFound exception
@@ -983,16 +1012,8 @@ def delete_resource_file(pk, filename_or_id, user):
             # send signal
             signals.pre_delete_file_from_resource.send(sender=res_cls, file=f, resource=resource, user=user)
             file_name = delete_resource_file_only(resource, f)
-            delete_file_mime_type = utils.get_file_mime_type(file_name)
-            delete_file_extension = os.path.splitext(file_name)[1]
 
-            # if there is no other resource file with the same extension as the
-            # file just deleted then delete the matching format metadata element for the resource
-            resource_file_extensions = [os.path.splitext(f.resource_file.name)[1] for f in resource.files.all()]
-            if delete_file_extension not in resource_file_extensions:
-                format_element = resource.metadata.formats.filter(value=delete_file_mime_type).first()
-                if format_element:
-                    resource.metadata.delete_element(format_element.term, format_element.id)
+            delete_format_metadata_after_delete_file(resource, file_name)
             break
     else:
         raise ObjectDoesNotExist(filename_or_id)
