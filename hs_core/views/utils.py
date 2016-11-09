@@ -444,12 +444,13 @@ def link_irods_folder_to_django(resource, istorage, foldername, exclude=()):
     """
     if resource and istorage and foldername:
         store = istorage.listdir(foldername)
-        # add the unzipped files into Django resource model
+        # add files into Django resource model
         for file in store[1]:
             if file not in exclude:
                 file_path = os.path.join(foldername, file)
                 size = istorage.size(file_path)
                 link_irods_file_to_django(resource, file_path, size)
+        # recursively add sub-folders into Django resource model
         for folder in store[0]:
             link_irods_folder_to_django(resource,
                                         istorage, os.path.join(foldername, folder), exclude)
