@@ -962,7 +962,7 @@ $(document).ready(function () {
     });
 
     // Unzip method
-    $("#btn-unzip").click(function () {
+    $("#btn-unzip, #fb-unzip").click(function () {
         var currentPath = $("#hs-file-browser").attr("data-current-path");
         var files = $("#fb-files-container li.ui-selected");
 
