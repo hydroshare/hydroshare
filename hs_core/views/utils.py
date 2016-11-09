@@ -586,7 +586,7 @@ def unzip_file(user, res_id, zip_with_rel_path, bool_remove_original):
 
     unzip_path = os.path.dirname(zip_with_full_path)
     zip_fname = os.path.basename(zip_with_rel_path)
-    istorage.session.run("ibun", None, '-xfDzip', zip_with_full_path, unzip_path)
+    istorage.session.run("ibun", None, '-xDzip', zip_with_full_path, unzip_path)
     link_irods_folder_to_django(resource, istorage, unzip_path, (zip_fname,))
 
     if bool_remove_original:

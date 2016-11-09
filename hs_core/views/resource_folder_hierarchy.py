@@ -172,7 +172,9 @@ def data_store_folder_unzip(request):
     try:
         unzip_file(user, res_id, zip_with_rel_path, bool_remove_original)
     except SessionException as ex:
-        return HttpResponse(ex.stderr, status=500)
+        specific_msg = "We don't allow unzipping to override existing files. " \
+                       "Please check to make sure this is not the case - "
+        return HttpResponse(specific_msg + ex.stderr, status=500)
 
     # this unzipped_path can be used for POST request input to data_store_structure()
     # to list the folder structure after unzipping
