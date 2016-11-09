@@ -75,7 +75,6 @@ class StudyArea(AbstractMetaDataElement):
                         ['totalLength', 'totalWidth', 'maximumElevation', 'minimumElevation'])
 
 
-
 class GridDimensions(AbstractMetaDataElement):
     term = 'GridDimensions'
     gridTypeChoices = (('Regular', 'Regular'), ('Irregular', 'Irregular'),)
