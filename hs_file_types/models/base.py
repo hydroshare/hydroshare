@@ -2,7 +2,7 @@ from django.db import models
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.contenttypes.fields import GenericRelation
 from django.core.exceptions import ValidationError, ObjectDoesNotExist
-from hs_core.models import AbstractMetaDataElement
+from hs_core.models import AbstractMetaDataElement, Coverage
 from django.contrib.postgres.fields import HStoreField
 
 from hs_core.models import ResourceFile
@@ -11,6 +11,8 @@ from hs_core.models import ResourceFile
 class AbstractFileMetaData(models.Model):
     """ base class for HydroShare file type metadata """
 
+    # one temporal coverage and one spatial coverage
+    coverages = GenericRelation(Coverage)
     # kye/value metadata
     extra_metadata = HStoreField(default={})
 
@@ -18,8 +20,8 @@ class AbstractFileMetaData(models.Model):
         abstract = True
 
     def delete_all_elements(self):
-        # subclass must implement
-        raise NotImplementedError
+        self.coverages.all().delete()
+
 
     def get_html(self):
         # subclass must implement
@@ -27,15 +29,25 @@ class AbstractFileMetaData(models.Model):
         raise NotImplementedError
 
     def has_all_required_elements(self):
-        # subclass must implement
-        # returns True/False
-        raise NotImplementedError
+        return True
 
     @classmethod
     def get_supported_element_names(cls):
-        # subclass must implement
-        # returns a list of metadata element names supported by this metadata group
-        raise NotImplementedError
+        return ['Coverage']
+
+    @property
+    def has_metadata(self):
+        if not self.coverages.all() and not self.extra_metadata:
+            return False
+        return True
+
+    @property
+    def spatial_coverage(self):
+        return self.coverages.exclude(type='period').first()
+
+    @property
+    def temporal_coverage(self):
+        return self.coverages.filter(type='period').first()
 
     def create_element(self, element_model_name, **kwargs):
         model_type = self._get_metadata_element_model_type(element_model_name)

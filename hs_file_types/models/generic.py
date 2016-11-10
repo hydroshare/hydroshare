@@ -12,35 +12,6 @@ from base import AbstractFileMetaData, AbstractLogicalFile
 
 
 class GenericFileMetaData(AbstractFileMetaData):
-    # TODO: move this to base class
-    coverages = GenericRelation(Coverage)
-
-    @classmethod
-    def get_supported_element_names(cls):
-        return ['Coverage']
-
-    # TODO: move this to base class
-    @property
-    def spatial_coverage(self):
-        return self.coverages.exclude(type='period').first()
-
-    # TODO: move this to base class
-    @property
-    def temporal_coverage(self):
-        return self.coverages.filter(type='period').first()
-
-    @property
-    def has_metadata(self):
-        if not self.coverages.all() and not self.extra_metadata:
-            return False
-        return True
-
-    def delete_all_elements(self):
-        if self.coverages:
-            self.coverages.all().delete()
-
-    def has_all_required_elements(self):
-        return True
 
     def get_html(self):
         # in the template we can insert necessary html code for displaying all
@@ -180,5 +151,6 @@ class GenericLogicalFile(AbstractLogicalFile):
 
     @classmethod
     def create(cls):
+        # this custom method MUST be used to create an instance of this class
         generic_metadata = GenericFileMetaData.objects.create()
         return cls.objects.create(metadata=generic_metadata)

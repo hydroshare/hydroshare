@@ -22,30 +22,17 @@ class GeoRasterFileMetaData(AbstractFileMetaData, GeoRasterMetaDataMixin):
     _band_information = GenericRelation(BandInformation)
     _ori_coverage = GenericRelation(OriginalCoverage)
 
-    # TODO: move this to base class
-    coverages = GenericRelation(Coverage)
-
     @classmethod
     def get_supported_element_names(cls):
-        elements = list()
+        elements = super(GeoRasterFileMetaData, cls).get_supported_element_names()
         elements.append('CellInformation')
         elements.append('BandInformation')
         elements.append('OriginalCoverage')
-        elements.append('Coverage')
         return elements
 
-    # TODO: move this to base class
-    @property
-    def spatial_coverage(self):
-        return self.coverages.exclude(type='period').first()
-
-    # TODO: move this to base class
-    @property
-    def temporal_coverage(self):
-        return self.coverages.filter(type='period').first()
-
     def delete_all_elements(self):
-        self.coverages.all().delete()
+        # self.coverages.all().delete()
+        super(GeoRasterFileMetaData, self).delete_all_elements()
         if self.cellInformation:
             self.cellInformation.delete()
         if self.originalCoverage:
@@ -54,15 +41,14 @@ class GeoRasterFileMetaData(AbstractFileMetaData, GeoRasterMetaDataMixin):
         self.bandInformations.all().delete()
 
     def has_all_required_elements(self):
+        if not super(GeoRasterFileMetaData, self).has_all_required_elements():
+            return False
         if not self.coverages.count() == 0:
             return False
-
         if not self.cellInformation:
             return False
-
         if not self.originalCoverage:
             return False
-
         if self.bandInformations.count() == 0:
             return False
 
@@ -249,6 +235,7 @@ class GeoRasterLogicalFile(AbstractLogicalFile):
 
     @classmethod
     def create(cls):
+        # this custom method MUST be used to create an instance of this class
         raster_metadata = GeoRasterFileMetaData.objects.create()
         return cls.objects.create(metadata=raster_metadata)
 
