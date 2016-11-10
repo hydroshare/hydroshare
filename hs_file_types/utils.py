@@ -87,6 +87,8 @@ def set_file_to_geo_raster_file_type(resource, file_id, user):
             try:
                 # create a folder for the raster file type using the base file name as the
                 # name for the new folder
+                # TODO: Probably the folder path would be different if the resource is a federated
+                # resource
                 new_folder_path = 'data/contents/{}'.format(file_name)
                 # TODO: to avoid folder creation failure when there is already matching
                 # directory path, add uuid to folder path to make it unique

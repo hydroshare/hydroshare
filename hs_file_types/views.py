@@ -160,22 +160,16 @@ def get_metadata(request, hs_file_type, file_type_id, metadata_mode):
     :param file_type_id: id of the logical file object for which metadata in html format is needed
     :param metadata_mode: a value of either edit or view. In edit mode metadata html form elements
                           are returned. In view mode normal html for display of metadata is returned
-    :return: html string
+    :return: json data containing html string
     """
-    if hs_file_type != "GeoRasterLogicalFile" and hs_file_type != "GenericLogicalFile":
-        err_msg = "Invalid file type found."
-        ajax_response_data = {'status': 'error', 'message': err_msg}
-        return JsonResponse(ajax_response_data, status=status.HTTP_400_BAD_REQUEST)
-
     if metadata_mode != "edit" and metadata_mode != 'view':
         err_msg = "Invalid metadata type request."
         ajax_response_data = {'status': 'error', 'message': err_msg}
         return JsonResponse(ajax_response_data, status=status.HTTP_400_BAD_REQUEST)
 
-    if hs_file_type == "GeoRasterLogicalFile":
-        logical_file = GeoRasterLogicalFile.objects.filter(id=file_type_id).first()
-    else:
-        logical_file = GenericLogicalFile.objects.filter(id=file_type_id).first()
+    content_type = ContentType.objects.get(app_label="hs_file_types", model=hs_file_type.lower())
+    logical_file_type_class = content_type.model_class()
+    logical_file = logical_file_type_class.objects.filter(id=file_type_id).first()
 
     if logical_file is None:
         err_msg = "No matching file type was found."
