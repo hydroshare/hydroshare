@@ -164,7 +164,8 @@ class GeoRasterFileMetaData(AbstractFileMetaData, GeoRasterMetaDataMixin):
         return rendered_html
 
     def get_spatial_coverage_form(self):
-        return Coverage.get_spatial_html_form(resource=None, element=self.spatial_coverage)
+        return Coverage.get_spatial_html_form(resource=None, element=self.spatial_coverage,
+                                              allow_edit=False)
 
     def get_temporal_coverage_form(self):
         return Coverage.get_temporal_html_form(resource=None, element=self.temporal_coverage)

@@ -1162,7 +1162,7 @@ class Coverage(AbstractMetaDataElement):
         return coverage_form
 
     @classmethod
-    def get_spatial_html_form(cls, resource, element=None):
+    def get_spatial_html_form(cls, resource, element=None, allow_edit=True):
         from .forms import CoverageSpatialForm
         coverage_data_dict = dict()
         # coverage_data_dict['projection'] = 'WGS 84 EPSG:4326'
@@ -1180,7 +1180,7 @@ class Coverage(AbstractMetaDataElement):
                 coverage_data_dict['north'] = element.value['north']
                 coverage_data_dict['elevation'] = element.value.get('elevation', None)
 
-        coverage_form = CoverageSpatialForm(initial=coverage_data_dict, allow_edit=True,
+        coverage_form = CoverageSpatialForm(initial=coverage_data_dict, allow_edit=allow_edit,
                                             res_short_id=resource.short_id if resource else None,
                                             element_id=element.id if element else None)
         return coverage_form

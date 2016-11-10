@@ -400,16 +400,20 @@ function showFileTypeMetadata(){
              showMetadataFormSaveChangesButton();
              initializeDatePickers();
              setFileTypeSpatialCoverageFormFields();
+             var $spatial_type_radio_button_1 = $("#div_id_type_filetype").find("#id_type_1");
+             var $spatial_type_radio_button_2 = $("#div_id_type_filetype").find("#id_type_2");
              if (logical_type === "GeoRasterLogicalFile"){
-                 $("#div_id_type_filetype").find("#id_type_1").prop("checked", true);
+                 $spatial_type_radio_button_1.prop("checked", true);
                  $("#div_id_type_filetype input:radio").trigger("change");
+                 $spatial_type_radio_button_1.attr('onclick', 'return false');
+                 $spatial_type_radio_button_2.attr('onclick', 'return false');
              }
              else {
-                 if ($("#div_id_type_filetype").find("#id_type_1").attr('checked') == 'checked'){
-                     $("#div_id_type_filetype").find("#id_type_1").prop("checked", true);
+                 if ($spatial_type_radio_button_1.attr('checked') == 'checked'){
+                     $spatial_type_radio_button_1.prop("checked", true);
                  }
                  else {
-                     $("#div_id_type_filetype").find("#id_type_2").prop("checked", true);
+                     $spatial_type_radio_button_2.prop("checked", true);
                  }
              }
 

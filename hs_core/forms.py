@@ -1263,25 +1263,28 @@ class CoverageSpatialForm(forms.Form):
         ('point', 'Point')
     )
 
-    type = forms.ChoiceField(choices=TYPE_CHOICES, widget=forms.RadioSelect(renderer=HorizontalRadioRenderer), label='')
+    type = forms.ChoiceField(choices=TYPE_CHOICES,
+                             widget=forms.RadioSelect(renderer=HorizontalRadioRenderer), label='')
     name = forms.CharField(max_length=200, required=False, label='Place/Area Name')
-    projection = forms.CharField(max_length=100, required=False, label='Coordinate System/Geographic Projection')
+    projection = forms.CharField(max_length=100, required=False,
+                                 label='Coordinate System/Geographic Projection')
 
-    east = forms.DecimalField(label='Longitude (WGS 84 decimal degrees)', widget=forms.TextInput())
-    north = forms.DecimalField(label='Latitude (WGS 84 decimal degrees)', widget=forms.TextInput())
+    east = forms.DecimalField(label='Longitude', widget=forms.TextInput())
+    north = forms.DecimalField(label='Latitude', widget=forms.TextInput())
     units = forms.CharField(max_length=50, label='Coordinate Units')
     #elevation = forms.DecimalField(required=False, widget=forms.TextInput())
     #zunits = forms.CharField(max_length=50, required=False, label='Elevation Units', help_text='e.g., meters')
-    northlimit = forms.DecimalField(label='North Latitude (WGS 84 decimal degrees)', widget=forms.TextInput())
-    eastlimit = forms.DecimalField(label='East Longitude (WGS 84 decimal degrees)', widget=forms.TextInput())
-    southlimit = forms.DecimalField(label='South Latitude (WGS 84 decimal degrees)', widget=forms.TextInput())
-    westlimit = forms.DecimalField(label='West Longitude (WGS 84 decimal degrees)', widget=forms.TextInput())
+    northlimit = forms.DecimalField(label='North Latitude', widget=forms.TextInput())
+    eastlimit = forms.DecimalField(label='East Longitude', widget=forms.TextInput())
+    southlimit = forms.DecimalField(label='South Latitude', widget=forms.TextInput())
+    westlimit = forms.DecimalField(label='West Longitude', widget=forms.TextInput())
     #uplimit = forms.DecimalField(required=False, label='Up Limit', widget=forms.TextInput())
     #downlimit = forms.DecimalField(required=False, label='Down Limit', widget=forms.TextInput())
 
     def __init__(self, allow_edit=True, res_short_id=None, element_id=None, *args, **kwargs):
         super(CoverageSpatialForm, self).__init__(*args, **kwargs)
-        self.helper = CoverageSpatialFormHelper(allow_edit, res_short_id, element_id, element_name='Spatial Coverage')
+        self.helper = CoverageSpatialFormHelper(allow_edit, res_short_id, element_id,
+                                                element_name='Spatial Coverage')
         self.number = 0
         self.delete_modal_form = None
         if self.errors:
