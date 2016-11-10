@@ -26,11 +26,11 @@ fi
 
 if [[ "${1}" == "--persist" ]]; then
     # mkdir for ${IRODS_HOST} and ${HS_USER_ZONE_HOST} persistence files
-    if [[ ! -d /home/${USER}icat1 ]]; then
+    if [[ ! -d /home/${USER}/icat1 ]]; then
         mkdir -p /home/${USER}/icat1/vault
         mkdir -p /home/${USER}/icat1/pgdata
     fi
-    if [[ ! -d /home/${USER}icat2 ]]; then
+    if [[ ! -d /home/${USER}/icat2 ]]; then
         mkdir -p /home/${USER}/icat2/vault
         mkdir -p /home/${USER}/icat2/pgdata
     fi
