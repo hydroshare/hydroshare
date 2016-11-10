@@ -128,8 +128,10 @@ class GeoRasterFileMetaData(AbstractFileMetaData, GeoRasterMetaDataMixin):
         context_dict["coverage_form"] = self.get_spatial_coverage_form()
         context_dict["orig_coverage_form"] = self.get_original_coverage_form()
         context_dict["cellinfo_form"] = self.get_cellinfo_form()
-        temp_cov_form = Coverage.get_temporal_html_form(resource=None,
-                                                        element=self.temporal_coverage)
+        # temp_cov_form = Coverage.get_temporal_html_form(resource=None,
+        #                                                 element=self.temporal_coverage)
+
+        temp_cov_form = self.get_temporal_coverage_form()
 
         update_action = "/hsapi/_internal/GeoRasterLogicalFile/{0}/{1}/{2}/update-file-metadata/"
         create_action = "/hsapi/_internal/GeoRasterLogicalFile/{0}/{1}/add-file-metadata/"
@@ -162,13 +164,9 @@ class GeoRasterFileMetaData(AbstractFileMetaData, GeoRasterMetaDataMixin):
         return rendered_html
 
     def get_spatial_coverage_form(self):
-        # TODO: use this code line instead:
-        # return Coverage.get_spatial_html_form(resource=None, element=self.spatial_coverage)
-        # once the above replacement code seems to work, delete the get_html_form() from the
-        # Coverage class
-        return self.spatial_coverage.get_html_form(resource=None)
+        return Coverage.get_spatial_html_form(resource=None, element=self.spatial_coverage)
 
-    def get_temporal_coverage(self):
+    def get_temporal_coverage_form(self):
         return Coverage.get_temporal_html_form(resource=None, element=self.temporal_coverage)
 
     def get_cellinfo_form(self):

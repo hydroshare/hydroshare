@@ -12,7 +12,6 @@ from base import AbstractFileMetaData, AbstractLogicalFile
 
 
 class GenericFileMetaData(AbstractFileMetaData):
-
     def get_html(self):
         # in the template we can insert necessary html code for displaying all
         # file type metadata associated with a logical file using this
@@ -71,31 +70,30 @@ class GenericFileMetaData(AbstractFileMetaData):
 
         template = Template(root_div.render())
         context_dict = dict()
-        temp_cov_form = Coverage.get_temporal_html_form(resource=None,
-                                                        element=self.temporal_coverage)
-        spatial_cov_form = Coverage.get_spatial_html_form(resource=None,
-                                                          element=self.spatial_coverage)
+        temp_cov_form = self.get_temporal_coverage_form()
+        spatial_cov_form = self.get_spatial_coverage_form()
         update_action = "/hsapi/_internal/GenericLogicalFile/{0}/{1}/{2}/update-file-metadata/"
         create_action = "/hsapi/_internal/GenericLogicalFile/{0}/{1}/add-file-metadata/"
 
+        element_name = "coverage"
         if self.temporal_coverage or self.spatial_coverage:
             if self.temporal_coverage:
-                temp_action = update_action.format(self.logical_file.id, "coverage",
+                temp_action = update_action.format(self.logical_file.id, element_name,
                                                    self.temporal_coverage.id)
                 temp_cov_form.action = temp_action
             else:
-                temp_action = create_action.format(self.logical_file.id, "coverage")
+                temp_action = create_action.format(self.logical_file.id, element_name)
                 temp_cov_form.action = temp_action
 
             if self.spatial_coverage:
-                spatial_action = update_action.format(self.logical_file.id, "coverage",
+                spatial_action = update_action.format(self.logical_file.id, element_name,
                                                       self.spatial_coverage.id)
                 spatial_cov_form.action = spatial_action
             else:
-                spatial_action = create_action.format(self.logical_file.id, "coverage")
+                spatial_action = create_action.format(self.logical_file.id, element_name)
                 spatial_cov_form.action = spatial_action
         else:
-            action = create_action.format(self.logical_file.id, "coverage")
+            action = create_action.format(self.logical_file.id, element_name)
             temp_cov_form.action = action
             spatial_cov_form.action = action
 
@@ -117,6 +115,12 @@ class GenericFileMetaData(AbstractFileMetaData):
                                                   spatial_element_id + "_filetype", 1)
 
         return rendered_html
+
+    def get_spatial_coverage_form(self):
+        return Coverage.get_spatial_html_form(resource=None, element=self.spatial_coverage)
+
+    def get_temporal_coverage_form(self):
+        return Coverage.get_temporal_html_form(resource=None, element=self.temporal_coverage)
 
     @classmethod
     def validate_element_data(cls, request, element_name):

@@ -1148,31 +1148,6 @@ class Coverage(AbstractMetaDataElement):
 
         return root_div.render(pretty=pretty)
 
-    def get_html_form(self, resource):
-        from .forms import CoverageSpatialForm
-
-        coverage_data_dict = dict()
-        coverage_data_dict['name'] = self.value.get('name', None)
-        coverage_data_dict['units'] = self.value['units']
-        coverage_data_dict['projection'] = self.value.get('projection', None)
-        coverage_data_dict['type'] = self.type
-
-        if self.type == 'box':
-            coverage_data_dict['northlimit'] = self.value['northlimit']
-            coverage_data_dict['eastlimit'] = self.value['eastlimit']
-            coverage_data_dict['southlimit'] = self.value['southlimit']
-            coverage_data_dict['westlimit'] = self.value['westlimit']
-        else:
-            coverage_data_dict['east'] = self.value['east']
-            coverage_data_dict['north'] = self.value['north']
-            coverage_data_dict['elevation'] = self.value.get('elevation', None)
-
-        coverage_form = CoverageSpatialForm(initial=coverage_data_dict, allow_edit=False,
-                                            res_short_id=resource.short_id if resource else None,
-                                            element_id=self.id if self else None)
-
-        return coverage_form
-
     @classmethod
     def get_temporal_html_form(cls, resource, element=None):
         from .forms import CoverageTemporalForm
@@ -1188,7 +1163,7 @@ class Coverage(AbstractMetaDataElement):
 
     @classmethod
     def get_spatial_html_form(cls, resource, element=None):
-        from .forms import  CoverageSpatialForm
+        from .forms import CoverageSpatialForm
         coverage_data_dict = dict()
         # coverage_data_dict['projection'] = 'WGS 84 EPSG:4326'
         # coverage_data_dict['units'] = 'Decimal degrees'
