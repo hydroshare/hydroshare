@@ -6,6 +6,8 @@
 
 # Pull in environment variables to use for federated local iRODS
 source env-files/use-local-irods.env
+ADD_IRODS_TO_GROUP=$(id -g ${USER})
+ADD_POSTGRES_TO_GROUP=$(id -g ${USER})
 
 # Remove ${IRODS_HOST} and ${HS_USER_ZONE_HOST} containers if the already exist
 ISICAT1=$(docker ps -a | rev | cut -d ' ' -f 1 | rev | grep ${IRODS_HOST})
@@ -22,26 +24,66 @@ if [[ "${ISICAT2}" == "${HS_USER_ZONE_HOST}" ]]; then
     docker stop ${HS_USER_ZONE_HOST} && docker rm -fv ${HS_USER_ZONE_HOST}
 fi
 
-# Create ${IRODS_HOST} container from irods v.4.1.8
-echo "CREATE: ${IRODS_HOST} container"
-docker run -d --name ${IRODS_HOST} \
-    -e IRODS_ZONE_NAME=${IRODS_ZONE} \
-    -e IRODS_SERVER_ZONE_KEY=${IRODS_ZONE}_KEY \
-    -e IRODS_DATABASE_SERVER_HOSTNAME=${IRODS_HOST} \
-    -p ${IRODS_PORT} \
-    --hostname ${IRODS_HOST} \
-    mjstealey/docker-irods-icat:4.1.8
+if [[ "${1}" == "--persist" ]]; then
+    # mkdir for ${IRODS_HOST} and ${HS_USER_ZONE_HOST} persistence files
+    if [[ ! -d /home/${USER}icat1 ]]; then
+        mkdir -p /home/${USER}/icat1/vault
+        mkdir -p /home/${USER}/icat1/pgdata
+    fi
+    if [[ ! -d /home/${USER}icat2 ]]; then
+        mkdir -p /home/${USER}/icat2/vault
+        mkdir -p /home/${USER}/icat2/pgdata
+    fi
+    # Create ${IRODS_HOST} container from irods v.4.1.8
+    echo "CREATE: ${IRODS_HOST} container"
+    docker run -d --name ${IRODS_HOST} \
+        -v /home/${USER}/icat1/vault:/var/lib/irods/iRODS/Vault \
+        -v /home/${USER}/icat1/pgdata:/var/lib/postgresql/data \
+        -e ADD_IRODS_TO_GROUP=${ADD_IRODS_TO_GROUP} \
+        -e ADD_POSTGRES_TO_GROUP=${ADD_POSTGRES_TO_GROUP} \
+        -e IRODS_ZONE_NAME=${IRODS_ZONE} \
+        -e IRODS_SERVER_ZONE_KEY=${IRODS_ZONE}_KEY \
+        -e IRODS_DATABASE_SERVER_HOSTNAME=${IRODS_HOST} \
+        -p ${IRODS_PORT} \
+        --hostname ${IRODS_HOST} \
+        mjstealey/docker-irods-icat:4.1.8
 
-# Create ${HS_USER_ZONE_HOST} container from irods v.4.1.8
-echo "CREATE: ${HS_USER_ZONE_HOST} container"
-docker run -d --name ${HS_USER_ZONE_HOST} \
-    -e IRODS_ZONE_NAME=${HS_USER_IRODS_ZONE} \
-    -e IRODS_SERVER_ZONE_KEY=${HS_USER_IRODS_ZONE}_KEY \
-    -e IRODS_DATABASE_SERVER_HOSTNAME=${HS_USER_ZONE_HOST} \
-    -p 1247 \
-    -p 22 \
-    --hostname ${HS_USER_ZONE_HOST} \
-    mjstealey/docker-irods-icat:4.1.8
+    # Create ${HS_USER_ZONE_HOST} container from irods v.4.1.8
+    echo "CREATE: ${HS_USER_ZONE_HOST} container"
+    docker run -d --name ${HS_USER_ZONE_HOST} \
+        -v /home/${USER}/icat2/vault:/var/lib/irods/iRODS/Vault \
+        -v /home/${USER}/icat2/pgdata:/var/lib/postgresql/data \
+        -e ADD_IRODS_TO_GROUP=${ADD_IRODS_TO_GROUP} \
+        -e ADD_POSTGRES_TO_GROUP=${ADD_POSTGRES_TO_GROUP} \
+        -e IRODS_ZONE_NAME=${HS_USER_IRODS_ZONE} \
+        -e IRODS_SERVER_ZONE_KEY=${HS_USER_IRODS_ZONE}_KEY \
+        -e IRODS_DATABASE_SERVER_HOSTNAME=${HS_USER_ZONE_HOST} \
+        -p 1247 \
+        -p 22 \
+        --hostname ${HS_USER_ZONE_HOST} \
+        mjstealey/docker-irods-icat:4.1.8
+else
+    # Create ${IRODS_HOST} container from irods v.4.1.8
+    echo "CREATE: ${IRODS_HOST} container"
+    docker run -d --name ${IRODS_HOST} \
+        -e IRODS_ZONE_NAME=${IRODS_ZONE} \
+        -e IRODS_SERVER_ZONE_KEY=${IRODS_ZONE}_KEY \
+        -e IRODS_DATABASE_SERVER_HOSTNAME=${IRODS_HOST} \
+        -p ${IRODS_PORT} \
+        --hostname ${IRODS_HOST} \
+        mjstealey/docker-irods-icat:4.1.8
+
+    # Create ${HS_USER_ZONE_HOST} container from irods v.4.1.8
+    echo "CREATE: ${HS_USER_ZONE_HOST} container"
+    docker run -d --name ${HS_USER_ZONE_HOST} \
+        -e IRODS_ZONE_NAME=${HS_USER_IRODS_ZONE} \
+        -e IRODS_SERVER_ZONE_KEY=${HS_USER_IRODS_ZONE}_KEY \
+        -e IRODS_DATABASE_SERVER_HOSTNAME=${HS_USER_ZONE_HOST} \
+        -p 1247 \
+        -p 22 \
+        --hostname ${HS_USER_ZONE_HOST} \
+        mjstealey/docker-irods-icat:4.1.8
+fi
 
 # wait for ${IRODS_HOST} and ${HS_USER_ZONE_HOST} to finish standing up
 echo "INFO: allow data.local.org and users.local.org to stand up and be configured"
