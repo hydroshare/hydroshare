@@ -122,7 +122,7 @@ class UserGroupPrivilege(models.Model):
                                 help_text='grantor of privilege')
 
     class Meta:
-        unique_together = ('user', 'group', 'grantor')
+        unique_together = ('user', 'group')
 
 
 class UserResourcePrivilege(models.Model):
@@ -157,7 +157,7 @@ class UserResourcePrivilege(models.Model):
                                 help_text='grantor of privilege')
 
     class Meta:
-        unique_together = ('user', 'resource', 'grantor')
+        unique_together = ('user', 'resource')
 
 
 class GroupResourcePrivilege(models.Model):
@@ -192,7 +192,7 @@ class GroupResourcePrivilege(models.Model):
                                 help_text='grantor of privilege')
 
     class Meta:
-        unique_together = ('group', 'resource', 'grantor')
+        unique_together = ('group', 'resource')
 
 
 class UserAccess(models.Model):
