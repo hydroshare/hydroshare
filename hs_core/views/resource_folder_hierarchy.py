@@ -173,8 +173,8 @@ def data_store_folder_unzip(request):
         unzip_file(user, res_id, zip_with_rel_path, bool_remove_original)
     except SessionException as ex:
         specific_msg = "iRODS error resulted in unzip being cancelled. This may be due to " \
-                       "protecting from overwriting existing files. Unzip in a different " \
-                       "localation (e.g., folder) or move or rename the file being overwritten. " \
+                       "protection from overwriting existing files. Unzip in a different " \
+                       "location (e.g., folder) or move or rename the file being overwritten. " \
                        "iRODS error follows: "
         return HttpResponse(specific_msg + ex.stderr, status=500)
 
