@@ -1811,9 +1811,9 @@
                         var resourceType = $("#resource-type").val();
                         var spatialCoverageType = $("#spatial-coverage-type").val();
                         // Center the map
-                        if (shapeType || resourceType === "Time Series") {
+                        if (shapeType || resourceType === "Time Series" || resourceType === "Composite") {
                             deleteAllShapes();
-                            if (shapeType == "point" || (resourceType === "Time Series" && spatialCoverageType == "point")) {
+                            if (shapeType == "point" || (resourceType === "Time Series" && spatialCoverageType == "point") || (resourceType === "Composite" && spatialCoverageType === "point")) {
                                 var myLatLng;
                                 if (shapeType == "point") {
                                     // resource view mode
@@ -1823,13 +1823,15 @@
                                     };
                                 }
                                 else {
-                                    // time series resource in edit mode
+                                    // time series resource/composite resource in edit mode
                                     myLatLng = {
                                         lat: parseFloat($("#id_north").val()),
                                         lng: parseFloat($("#id_east").val())
                                     };
-                                    if ($('#id_north').val()) {
-                                        $("#id_name").prop('readonly', false);
+                                    if (resourceType === "Time Series"){
+                                        if ($('#id_north').val()) {
+                                            $("#id_name").prop('readonly', false);
+                                        }
                                     }
                                 }
 
@@ -1848,7 +1850,7 @@
                                     coverageMap.setCenter(marker.getPosition());
                                 });
                             }
-                            else if (shapeType == "box" || (resourceType === "Time Series" && spatialCoverageType == "box")) {
+                            else if (shapeType == "box" || (resourceType === "Time Series" && spatialCoverageType == "box") || (resourceType === "Composite" && spatialCoverageType === "box")) {
                                 var bounds;
                                 if (shapeType == "box") {
                                     //resource view mode
@@ -1860,16 +1862,19 @@
                                     };
                                 }
                                 else {
-                                    // time series resource edit mode
+                                    // time series resource/composite resource edit mode
                                     bounds = {
                                         north: parseFloat($("#id_northlimit").val()),
                                         south: parseFloat($("#id_southlimit").val()),
                                         east: parseFloat($("#id_eastlimit").val()),
                                         west: parseFloat($("#id_westlimit").val())
                                     };
-                                    if ($('#id_northlimit').val()) {
-                                        $("#id_name").prop('readonly', false);
+                                    if (resourceType === "Time Series"){
+                                        if ($('#id_northlimit').val()) {
+                                            $("#id_name").prop('readonly', false);
+                                        }
                                     }
+
                                 }
 
                                 if (!bounds.north || !bounds.south || !bounds.east || !bounds.west) {
