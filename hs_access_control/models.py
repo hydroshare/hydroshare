@@ -744,17 +744,18 @@ class UserAccess(models.Model):
         # proceed to change the record if present
 
         # This logic implicitly limits one to one record per resource and requester.
-        with transaction.atomic(): 
+        with transaction.atomic():  # get_or_create observed to be non-atomic in testing..
             record, created = UserGroupPrivilege.objects.get_or_create(group=this_group,
                                                                        user=this_user,
-                                                                       grantor=self.user,
-                                                                       defaults = { 'privilege' : this_privilege })
+                                                                       defaults = { 'grantor': self.user, 
+                                                                                    'privilege' : this_privilege })
             if not created:
                 if record.privilege == PrivilegeCodes.OWNER \
                         and this_privilege!=PrivilegeCodes.OWNER \
                         and access_group.owners.count()==1:
                     raise PermissionDenied("Cannot remove sole owner of group")
-                record.privilege=this_privilege
+                record.privilege = this_privilege
+                record.grantor = self.user
                 record.save()
 
         # owner overrides all lesser privilege
@@ -1727,11 +1728,11 @@ class UserAccess(models.Model):
                 raise PermissionDenied("User has insufficient privilege over resource")
 
         # This logic implicitly limits one to one record per resource and requester.
-        with transaction.atomic():
+        with transaction.atomic():  # get_or_create observed to be non-atomic in testing..
             record, create = UserResourcePrivilege.objects.get_or_create(resource=this_resource,
                                                                          user=this_user,
-                                                                         grantor=self.user,
-                                                                         defaults = {'privilege': this_privilege})
+                                                                         defaults = {'grantor': self.user, 
+                                                                                     'privilege': this_privilege})
             if record.privilege == PrivilegeCodes.OWNER \
                     and this_privilege != PrivilegeCodes.OWNER \
                     and access_resource.owners.count() == 1:
@@ -1739,6 +1740,7 @@ class UserAccess(models.Model):
 
             if not create:
                 record.privilege = this_privilege
+                record.grantor = self.user 
                 record.save()
 
         # if there exist higher privileges than what was granted now 
@@ -2034,13 +2036,14 @@ class UserAccess(models.Model):
         with transaction.atomic():  # get_or_create observed to be non-atomic in testing..
             record, created = GroupResourcePrivilege.objects.get_or_create(resource=this_resource,
                                                                            group=this_group,
-                                                                           grantor=self.user,
-                                                                           defaults={'privilege': this_privilege})
+                                                                           defaults={'grantor': self.user, 
+                                                                                     'privilege': this_privilege})
 
             # record.start=timezone.now() # now automatically set
             if not created:
                 # no need to check for owner privilege; impossible
-                record.privilege=this_privilege
+                record.privilege = this_privilege
+                record.grantor = self.user
                 record.save()
 
         # owner overrides all lesser privilege
