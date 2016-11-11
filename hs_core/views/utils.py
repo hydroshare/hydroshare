@@ -512,6 +512,8 @@ def remove_irods_folder_in_django(resource, istorage, foldername):
     :return:
     """
     if resource and istorage and foldername:
+        if not foldername.endswith('/'):
+            foldername += '/'
         if resource.resource_federation_path:
             res_file_set = ResourceFile.objects.filter(
                 object_id=resource.id, fed_resource_file_name_or_path__icontains=foldername)
