@@ -1,3 +1,6 @@
+import json
+from dateutil import parser
+
 from django.db import models
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.contenttypes.fields import GenericRelation
@@ -53,12 +56,19 @@ class AbstractFileMetaData(models.Model):
         model_type = self._get_metadata_element_model_type(element_model_name)
         kwargs['content_object'] = self
         element = model_type.model_class().create(**kwargs)
+        if element_model_name.lower() == "coverage":
+            resource = element.metadata.logical_file.resource
+            _update_resource_coverage_element(resource)
         return element
 
     def update_element(self, element_model_name, element_id, **kwargs):
         model_type = self._get_metadata_element_model_type(element_model_name)
         kwargs['content_object'] = self
         model_type.model_class().update(element_id, **kwargs)
+        if element_model_name.lower() == "coverage":
+            element = model_type.model_class().objects.get(id=element_id)
+            resource = element.metadata.logical_file.resource
+            _update_resource_coverage_element(resource)
 
     def delete_element(self, element_model_name, element_id):
         model_type = self._get_metadata_element_model_type(element_model_name)
@@ -158,4 +168,86 @@ class AbstractLogicalFile(models.Model):
             self.metadata.delete_all_elements()
 
 
+def _update_resource_coverage_element(resource):
+    # TODO: This needs to be unit tested
+    # update resource spatial coverage
+    bbox_value = {}
+    spatial_coverages = [lf.metadata.spatial_coverage for lf in resource.logical_files
+                         if lf.metadata.spatial_coverage is not None]
 
+    cov_type = "point"
+    if len(spatial_coverages) > 1:
+        bbox_value = {'northlimit': -90, 'southlimit': 90, 'eastlimit': -180, 'westlimit': 180,
+                      'projection': 'WGS 84 EPSG:4326', 'units': "Decimal degrees"}
+        cov_type = 'box'
+        for sp_cov in spatial_coverages:
+            if sp_cov.type == "box":
+                if bbox_value['northlimit'] < sp_cov.value['northlimit']:
+                    bbox_value['northlimit'] = sp_cov.value['northlimit']
+                if bbox_value['southlimit'] > sp_cov.value['southlimit']:
+                    bbox_value['southlimit'] = sp_cov.value['southlimit']
+                if bbox_value['eastlimit'] < sp_cov.value['eastlimit']:
+                    bbox_value['eastlimit'] = sp_cov.value['eastlimit']
+                if bbox_value['westlimit'] > sp_cov.value['westlimit']:
+                    bbox_value['westlimit'] = sp_cov.value['westlimit']
+            else:
+                # point type coverage
+                if bbox_value['northlimit'] < sp_cov.value['north']:
+                    bbox_value['northlimit'] = sp_cov.value['north']
+                if bbox_value['southlimit'] > sp_cov.value['north']:
+                    bbox_value['southlimit'] = sp_cov.value['north']
+                if bbox_value['eastlimit'] < sp_cov.value['east']:
+                    bbox_value['eastlimit'] = sp_cov.value['east']
+                if bbox_value['westlimit'] > sp_cov.value['east']:
+                    bbox_value['westlimit'] = sp_cov.value['east']
+
+    elif len(spatial_coverages) == 1:
+        sp_cov = spatial_coverages[0]
+        if sp_cov.type == "box":
+            bbox_limits = ['northlimit', 'southlimit', 'eastlimit', 'westlimit']
+            for limit in bbox_limits:
+                if bbox_value[limit] < sp_cov.value[limit]:
+                    bbox_value[limit] = sp_cov.value[limit]
+        else:
+            # point type coverage
+            bbox_value = {'north': -90, 'east': -180,
+                          'projection': 'WGS 84 EPSG:4326', 'units': "Decimal degrees"}
+            if bbox_value['north'] < sp_cov.value['north']:
+                bbox_value['north'] = sp_cov.value['north']
+            if bbox_value['east'] < sp_cov.value['east']:
+                bbox_value['east'] = sp_cov.value['east']
+
+    if bbox_value:
+        spatial_cov = resource.metadata.coverages.all().exclude(type='period').first()
+        if spatial_cov:
+            spatial_cov.type = cov_type
+            spatial_cov._value = json.dumps(bbox_value)
+            spatial_cov.save()
+        else:
+            resource.metadata.create_element("coverage", type=cov_type, value=bbox_value)
+
+    # update resource temporal coverage
+    temporal_coverages = [lf.metadata.temporal_coverage for lf in resource.logical_files
+                         if lf.metadata.temporal_coverage is not None]
+
+    date_data = {'start': None, 'end': None}
+    for temp_cov in temporal_coverages:
+        if date_data['start'] is None:
+            date_data['start'] = temp_cov.value['start']
+        else:
+            if parser.parse(date_data['start']) > parser.parse(temp_cov.value['start']):
+                date_data['start'] = temp_cov.value['start']
+
+        if date_data['end'] is None:
+            date_data['end'] = temp_cov.value['end']
+        else:
+            if parser.parse(date_data['end']) < parser.parse(temp_cov.value['end']):
+                date_data['end'] = temp_cov.value['end']
+
+    if date_data['start'] is not None and date_data['end'] is not None:
+        temp_cov = resource.metadata.coverages.all().filter(type='period').first()
+        if temp_cov:
+            temp_cov._value = json.dumps(date_data)
+            temp_cov.save()
+        else:
+            resource.metadata.create_element("coverage", type='period', value=date_data)
