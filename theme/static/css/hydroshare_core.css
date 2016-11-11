@@ -3937,14 +3937,11 @@ form#covereage-search-fields {
 
 #fb-sort ul {
 	background :#FFF;
+	padding: 1px;
 }
 
 #fb-sort ul li.active {
 	pointer-events: none;
-}
-
-#fb-sort ul li:not(.divider) {
-	padding: 4px 8px;
 }
 
 .fb-folder, .fb-file {
@@ -4076,7 +4073,7 @@ ul#fb-files-container {
 
 .fb-dropdown {
     position: absolute;
-	padding-top: 9px;
+	padding: 1px;
 	border: 1px solid #DDD;
 	box-shadow: 1px 1px 5px #E8E8E8;
 	-moz-box-shadow: 1px 1px 5px #E8E8E8;
@@ -4107,7 +4104,7 @@ ul#fb-files-container {
 }
 
 .selection-menu li.disabled, #fb-inner-controls button.disabled > span {
-	color: #999;
+	color: #b3b3b3;
 	pointer-events:none;
 }
 
@@ -4345,4 +4342,18 @@ div#fb-file-operations-controls {
 
 #rename-dialog .input-group {
 	width: 100%;
+}
+
+.discover-loading-icon {
+    height: 0;
+    float: left;
+    margin-top: -13px;
+	display: none;
+}
+
+#discover-map-legend{
+	z-index: 0;
+	position: absolute;
+	top: 0px;
+	right:0px;
 }

@@ -558,6 +558,7 @@ def create_new_version_resource(ori_res, new_res, user):
     utils.copy_resource_files_and_AVUs(ori_res.short_id, new_res.short_id, set_to_private)
 
     # link copied resource files to Django resource model
+    res_id_len = len(ori_res.short_id)
     files = ResourceFile.objects.filter(object_id=ori_res.id)
     for n, f in enumerate(files):
         if f.fed_resource_file_name_or_path:
@@ -566,15 +567,19 @@ def create_new_version_resource(ori_res, new_res, user):
                                         fed_resource_file_name_or_path=f.fed_resource_file_name_or_path,
                                         fed_resource_file_size=f.fed_resource_file_size)
         elif f.fed_resource_file:
-            ResourceFile.objects.create(content_object=new_res,
-                                        fed_resource_file=os.path.join('{zone}/{res_id}/data/contents/{file_name}'.format(
-                                            zone=ori_res.resource_federation_path, res_id=new_res.short_id,
-                                            file_name=os.path.basename(f.fed_resource_file.name))))
+            ori_file_path = f.fed_resource_file.name
+            idx1 = ori_file_path.find(settings.HS_LOCAL_PROXY_USER_IN_FED_ZONE)
+            # find idx2 to start right after resource id
+            idx2 = idx1 + len(settings.HS_LOCAL_PROXY_USER_IN_FED_ZONE) + 1 + res_id_len
+            if idx1 > 0:
+                new_file_path = ori_file_path[0:idx1] + \
+                                settings.HS_LOCAL_PROXY_USER_IN_FED_ZONE + \
+                                '/' + new_res.short_id + ori_file_path[idx2:]
+                ResourceFile.objects.create(content_object=new_res, fed_resource_file=new_file_path)
         elif f.resource_file:
-            ResourceFile.objects.create(content_object=new_res,
-                resource_file = os.path.join('{res_id}/data/contents/{file_name}'.format(
-                            res_id=new_res.short_id,
-                            file_name=os.path.basename(f.resource_file.name))))
+            ori_file_path = f.resource_file.name
+            new_file_path = new_res.short_id + ori_file_path[res_id_len:]
+            ResourceFile.objects.create(content_object=new_res, resource_file=new_file_path)
 
     # copy metadata from source resource to target new-versioned resource except three elements
     exclude_elements = ['identifier', 'publisher', 'date']
