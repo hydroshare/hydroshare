@@ -172,8 +172,10 @@ def data_store_folder_unzip(request):
     try:
         unzip_file(user, res_id, zip_with_rel_path, bool_remove_original)
     except SessionException as ex:
-        specific_msg = "We don't allow unzipping to override existing files. " \
-                       "Please check to make sure this is not the case - "
+        specific_msg = "iRODS error resulted in unzip being cancelled. This may be due to " \
+                       "protecting from overwriting existing files. Unzip in a different " \
+                       "localation (e.g., folder) or move or rename the file being overwritten. " \
+                       "iRODS error follows: "                        
         return HttpResponse(specific_msg + ex.stderr, status=500)
 
     # this unzipped_path can be used for POST request input to data_store_structure()
