@@ -2,7 +2,7 @@
 {% load geoanalytics_tags pages_tags mezzanine_tags keyword_tags comment_tags hydroshare_tags %}
 {% block title %}Discovery{% endblock %}
 {% block main %}
-<div class="container" id="main">
+<div class="container" id="discover-main">
     <div class="row">
         <div class="col-sm-12">
             <h2 class="page-title">Discover
@@ -145,6 +145,26 @@
                     </table>
                 </form>
                 <br>
+                <div id="resource-search" class="hidden">
+                    <div id="coverages-master-list"></div>
+                    <br />
+                    <table id="lat-lng-labels" class="hidden">
+                        <tr>
+                            <td>
+                                North Latitude: <label for="ne-lat-value"></label>
+                            </td>
+                            <td>
+                                East Longitude: <label for="ne-lng-value"></label>
+                            </td>
+                            <td>
+                                South Latitude: <label for="sw-lat-value"></label>
+                            </td>
+                            <td>
+                                West Longitude: <label for="sw-lng-value"></label>
+                            </td>
+                        </tr>
+                    </table>
+                </div>
             </div>
 
             <ul id="switch-view" class="nav nav-tabs">
@@ -163,7 +183,10 @@
                             <input type="radio" name="results-selection" id="all-results-selected" value="all-results-selected">All Results
                         </label>
                     </div>
-
+                    <span id="discover-list-loading-spinner" class="discover-loading-icon icon-blue">
+                          <i class="fa fa-spinner fa-spin fa-2x fa-fw"></i>
+                    </span>
+                    <br />
                     <table class="table-hover table-striped resource-custom-table" id="items-discovered">
                         <thead>
                             <tr>
@@ -449,35 +472,17 @@
                 <div id="map-view" class="tab-pane fade">
                     <div class="row">
                         <div class="col-xs-12">
-                            <form id="covereage-search-fields" method="get" action="." style="display: none">
+                            <span id="discover-map-loading-spinner" class="discover-loading-icon icon-blue">
+                                  <i class="fa fa-spinner fa-spin fa-2x fa-fw"></i>
+                            </span>
+                            <br />
+                            <form id="covereage-search-fields" method="get" action="." class="hidden">
                                 {% for field in form %}
                                     {% if field.auto_id  == "id_NElat" or field.auto_id  == "id_NElng" or field.auto_id  == "id_SWlat" or field.auto_id  == "id_SWlng" %}
                                         {{ field }}
                                     {% endif %}
                                 {% endfor %}
                             </form>
-
-                            <div id="resource-search" style="display:none">
-                                <div id="coverages-master-list"></div>
-                                <br />
-                                <table id="lat-lng-labels" style="display:none">
-                                    <tr>
-                                        <td>
-                                            North Latitude: <label for="ne-lat-value"></label>
-                                        </td>
-                                        <td>
-                                            East Longitude: <label for="ne-lng-value"></label>
-                                        </td>
-                                        <td>
-                                            South Latitude: <label for="sw-lat-value"></label>
-                                        </td>
-                                        <td>
-                                            West Longitude: <label for="sw-lng-value"></label>
-                                        </td>
-                                    </tr>
-                                </table>
-                            </div>
-                            <br />
 
                             <div id="geocoder-panel"></div>
 
@@ -532,7 +537,6 @@
             info_window = new google.maps.InfoWindow();
 
             setMarkers(json_results);
-
             var bounds = (markers.length > 0) ? createBoundsForMarkers(markers) : map.setZoom(2);
             if (bounds) {
                 var ne = bounds.getNorthEast();
@@ -631,12 +635,11 @@
                 createPointResourceMarker(point);
             });
 
-
-            drawShadeRectangles(boxes_data);
-
             modified_boxes_data.forEach(function(box){
                 createBoxResourceMarker (box);
             });
+
+            drawShadeRectangles(boxes_data);
 
             shade_rects.forEach(function(rect){
                 google.maps.event.addListener(rect,'click',function(e){
@@ -649,7 +652,6 @@
                     map_items_table.draw();
                 });
             });
-
             markerCluster = new MarkerClusterer(map, markers, {
                 styles:[{
                     height: 55,
@@ -669,7 +671,7 @@
                     rect.setOptions({fillOpacity: 0});
                 }
             });
-        }
+        };
 
         var drawShadeRectangles = function(boxes) {
             for (var i = 0; i < boxes.length; i++) {
@@ -681,8 +683,6 @@
 
                 var box_ne = new google.maps.LatLng(northlimit, eastlimit);
                 var box_sw = new google.maps.LatLng(southlimit, westlimit);
-
-                var box_bound = new google.maps.LatLngBounds(box_ne, box_sw);
 
                 var rectCoords = [
                   {lat: northlimit, lng: westlimit},
@@ -727,7 +727,8 @@
                 }
             });
 
-        }
+        };
+
         var buildMapItemsTableDataforMarkers = function (resources_list, map_resources) {
             resources_list.forEach(function(resource) {
                 var northlimit = parseFloat(resource.northlimit);
@@ -747,7 +748,8 @@
                 var map_resource = [resource, resource.resource_type, resource_title, author_name];
                 map_resources.push(map_resource);
             });
-        }
+        };
+
         var setMapItemsList = function(json_results, latLng) {
             var map_resources = [];
             buildMapItemsTableData(json_results, map_resources, latLng);
@@ -758,6 +760,9 @@
                 "scrollCollapse": true,
                 "paging": false,
                 "bDestroy": true,
+                "language": {
+                    "emptyTable": "Click on map to explore resource data."
+                },
                 columns: [
                     { title: "Show on Map"},
                     { title: "Resource Type" },
@@ -765,22 +770,33 @@
                     { title: "First Author" }
                 ],
                 "columnDefs": [ {
-                    "targets": 0,
+                    "targets": [0],
+                    "width": "90px",
                     "data": null,
                     "defaultContent": '<a class="btn btn-default" role="button"><span class="glyphicon glyphicon-zoom-in"></span></button>'
-                } ]
-            } );
-
-            $('#map-items tbody').on( 'click', '[role="button"]', function () {
-                var data = mapItems.row( $(this).parents('tr') ).data();
-                showBoxMarker(data[0], true);
-            } );
-            $('#map-items tbody').on( 'hover', 'tr', function () {
-                var data = mapItems.row( this ).data();
-                showBoxMarker(data[0], false);
+                },
+                {
+                   "targets": [1],     // Resource type
+                    "width": "110px"
+                }]
             });
+            setMapFunctions(mapItems);
         };
 
+        var setMapFunctions = function (datatable) {
+
+                $('#map-items tbody').on( 'click', '[role="button"]', function () {
+                    var data = datatable.row( $(this).parents('tr') ).data();
+                    showBoxMarker(data[0], true);
+                } );
+                $('#map-items tbody').on( 'hover', 'tr', function () {
+                    var data = datatable.row(this).data();
+                    if (data) {
+                        showBoxMarker(data[0], false);
+                    }
+                });
+
+        }
 
         var showBoxMarker = function(box, zoom_on_map) {
             var northlimit = parseFloat(box.northlimit);
@@ -802,16 +818,14 @@
 
         var clientUpdateMarkers = function(filtered_results) {
             removeMarkers();
-            var data_lat = 0;
-            var data_lng = 0;
             var bnds = map.getBounds();
             if (bnds) {
                 for (var  i = 0; i < raw_results.length; i++ ) {
                     if (raw_results[i].coverage_type == 'point') {
-                        data_lat = parseFloat(raw_results[i].north);
-                        data_lng = parseFloat(raw_results[i].east);
+                        var data_lat = parseFloat(raw_results[i].north);
+                        var data_lng = parseFloat(raw_results[i].east);
                         var latlng = new google.maps.LatLng(data_lat, data_lng);
-                        if (map.getBounds().contains(latlng)) {
+                        if (bnds.contains(latlng)) {
                             filtered_results.push(raw_results[i]);
                         }
                     } else if (raw_results[i].coverage_type == 'box') {
@@ -821,8 +835,8 @@
                         var westlimit = parseFloat(raw_results[i].westlimit);
                         var ne_latlng = new google.maps.LatLng(northlimit, eastlimit);
                         var sw_latlng = new google.maps.LatLng(southlimit, westlimit);
-                        var latlng = new google.maps.LatLng(data_lat, data_lng);
-                        if (map.getBounds().contains(ne_latlng) || map.getBounds().contains(sw_latlng)) {
+                        var box_bound = new google.maps.LatLngBounds(sw_latlng, ne_latlng);
+                        if (bnds.intersects(box_bound)) {
                             filtered_results.push(raw_results[i]);
                         }
                     }
@@ -862,10 +876,13 @@
                 if (lat_diff < minFloatingNumber && lng_diff < minFloatingNumber) {
                     item.info_link = item.info_link + '<br />' + '<a href="' + test.get_absolute_url + '">' + test.title +'</a>';
                     item.counter++;
+                    item.resources_list.push(test);
                     existed = true;
                 }
             });
             if (!existed) {
+                test.resources_list = [];
+                test.resources_list.push(test);
                 test.info_link = '<a href="' + test.get_absolute_url + '">' + test.title + '</a>';
                 test.counter = 1;
                 modified_points_data.push(test);
@@ -912,6 +929,12 @@
             });
             markers.push(marker);
             google.maps.event.addListener(marker, 'click', function() {
+                var map_resources = [];
+                buildMapItemsTableDataforMarkers(point.resources_list, map_resources);
+                var map_items_table = $('#map-items').DataTable();
+                map_items_table.clear();
+                map_items_table.rows.add(map_resources);
+                map_items_table.draw();
                 info_window.setContent(info_content);
                 info_window.open(map, marker);
 
@@ -996,17 +1019,17 @@
             map.controls[google.maps.ControlPosition.RIGHT_TOP].push(map_legend);
             map.controls[google.maps.ControlPosition.LEFT_BOTTOM].push(geo_coder);
             map.controls[google.maps.ControlPosition.RIGHT_BOTTOM].push(reset_zoom_button);
-            var legend_content = [];
             var geocoder_content = [];
             var resetButton_content = [];
-            legend_content.push("<p><img src='//cdn.rawgit.com/Concept211/Google-Maps-Markers/master/images/marker_red.png'> Point Coverage Resources </p>");
-            legend_content.push("<p><img src='//cdn.rawgit.com/Concept211/Google-Maps-Markers/master/images/marker_blue.png'> Box Coverage Resources </p>");
-            legend_content.push("<p><img src='//cdn.rawgit.com/googlemaps/js-marker-clusterer/gh-pages/images/m2.png'> number of sites </p>");
+            var legend_table = "<table><tbody>";
+            legend_table += "<tr><td class='text-center'><img src='{{ STATIC_URL }}img/discover_map_red_marker.png'></td><td>Point Coverage Locations</td></tr>";
+            legend_table += "<tr><td class='text-center'><img src='{{ STATIC_URL }}img/discover_map_blue_marker.png'></td><td>Box Coverage Centers</td></tr>";
+            legend_table += "<tr><td class='text-center'><img src='{{ STATIC_URL }}img/discover_map_cluster_icon.png'></td><td>Clusters</td></tr></tbody></table>";
             geocoder_content.push("<input id='geocoder-address' type='textbox' placeholder='Search Locations...'>");
             geocoder_content.push("<a id='geocoder-submit' style='margin-left:10px' class='btn btn-default' role='button'><span class='glyphicon glyphicon-zoom-in'></span> Go </a>");
             resetButton_content.push("<a id='reset-zoom-btn' data-toggle='tooltip' title='Reset Zoom' class='btn btn-default btn-sm' onclick='resetMapZoom()'>");
-            resetButton_content.push("<span class='glyphicon glyphicon-record'></span></a>");
-            map_legend.innerHTML = legend_content.join('');
+            resetButton_content.push("<span class='glyphicon glyphicon-fullscreen'></span></a>");
+            map_legend.innerHTML = legend_table;
             geo_coder.innerHTML = geocoder_content.join('');
             reset_zoom_button.innerHTML = resetButton_content.join('');
         };
@@ -1063,8 +1086,6 @@
             var filtered_results = [];
             clientUpdateMarkers(filtered_results);
             setMarkers(filtered_results);
-            //setBoxResourcesList(filtered_results);
-
             var results_selection = $('input:radio[name=results-selection]:checked').val();
             if (results_selection == 'map-results-selected') {
                 var bnds = map.getBounds();
@@ -1076,7 +1097,7 @@
                     var ne_lat = ne.lat();
                     var ne_lng = ne.lng();
                     var sw_lat = sw.lat();
-                    var sw_lng = value = sw.lng();
+                    var sw_lng = sw.lng();
                     var data = {
                         NElat: ne_lat,
                         NElng: ne_lng,
@@ -1090,9 +1111,7 @@
             }
         };
 
-        function updateListView (data) {
-            $('#items-discovered_wrapper').empty();
-            $("#discover-page-options").empty();
+        var updateListView = function (data) {
             var requestURL = "/search/";
 
             if (window.location.search.length == 0) {
@@ -1103,22 +1122,97 @@
                 requestURL += searchURL;
                 requestURL += buildURLOnCheckboxes();
             }
-
+            $("#discover-list-loading-spinner").show();
             $.ajax({
                 type: "GET",
                 url: requestURL,
                 data: data,
                 dataType: 'html',
                 success: function (data) {
+                    $('#items-discovered_wrapper').empty();
+                    $("#discover-page-options").empty();
                     var tableDiv = $("#items-discovered", data);
                     $("#items-discovered_wrapper").html(tableDiv);
                     var pageOptionDiv = $("#discover-page-options", data);
                     $("#discover-page-options").html(pageOptionDiv);
 
                     initializeTable();
+                    $("#discover-list-loading-spinner").hide();
                 },
                 failure: function (data) {
                     console.error("Ajax call for updating list-view data failed");
+                    $("#discover-list-loading-spinner").hide();
+                }
+            });
+        };
+
+        var updateFacetingItems = function (request_url) {
+            $("#discover-list-loading-spinner").show();
+            if (map != null) {
+                $("#discover-map-loading-spinner").show();
+                $.when(updateMapFaceting(), updateListFaceting(request_url)).done(function(){
+                    $("#discover-list-loading-spinner").hide();
+                    $("#discover-map-loading-spinner").hide();
+                });
+            } else {
+                $.when(updateListFaceting(request_url)).done(function(){
+                    $("#discover-list-loading-spinner").hide();
+                });
+            }
+        };
+
+        var updateListFaceting = function (request_url) {
+            return $.ajax({
+                type: "GET",
+                url: request_url,
+                dataType: 'html',
+                success: function (data) {
+                    $('#items-discovered_wrapper').empty();
+                    $("#discover-page-options").empty();
+                    var tableDiv = $("#items-discovered", data);
+                    $("#items-discovered_wrapper").html(tableDiv);
+                    var pageOptionDiv = $("#discover-page-options", data);
+                    $("#discover-page-options").html(pageOptionDiv);
+                    initializeTable();
+                },
+                failure: function (data) {
+                    console.error("Ajax call for updating list-view data failed");
+                }
+            });
+        };
+
+        var updateMapFaceting = function (){
+            var map_update_url = "/searchjson/";
+            var textSearch = $("#id_q").val();
+            var searchURL = "?q=" + textSearch;
+            map_update_url += searchURL;
+            map_update_url += buildURLOnCheckboxes();
+            var start_date = $("#id_start_date").val();
+            var end_date = $("#id_end_date").val();
+            removeMarkers();
+            return $.ajax({
+                type: "GET",
+                url: map_update_url,
+                data: {
+                    NElat: '',
+                    NElng: '',
+                    SWlat: '',
+                    SWlng: '',
+                    start_date: start_date,
+                    end_date: end_date
+                },
+                dataType: 'json',
+                success: function (data) {
+                    raw_results = [];
+                    for (var j = 0; j < data.length; j++) {
+                        var item = $.parseJSON(data[j]);
+                        raw_results.push(item);
+                    }
+
+                    updateMapView();
+                },
+                failure: function(data) {
+                    console.error("Ajax call for getting map data failed");
                 }
             });
         };
@@ -1190,23 +1284,6 @@
             var start_date = $("#id_start_date").val();
             var end_date = $("#id_end_date").val();
             return "&start_date="+start_date+"&end_date="+end_date;
-        };
-
-        var formLinkButtonURL = function(key, value) {
-            var textSearch = $("#id_q").val();
-            var searchURL = "?q=" + textSearch;
-            var geoSearchParams = formGeoParameters();
-            var dateSearchParams = formDateParameters();
-            var windowPath = window.location.pathname;
-            var requestURL =  windowPath + searchURL + geoSearchParams + dateSearchParams;
-            var checkboxId =  key + "-" + value;
-            var sessionStorageCheckboxId = 'search-' + checkboxId;
-            sessionStorage[sessionStorageCheckboxId] = 'true';
-            requestURL += buildURLOnCheckboxes();
-            if (window.location.hash) {
-                requestURL = requestURL + window.location.hash;
-            }
-            window.location = requestURL;
         };
 
         var buildURLOnCheckboxes = function () {
@@ -1299,6 +1376,7 @@
         }
 
         $(document).ready(function () {
+
             $("#id_start_date").datepicker({
                 dateFormat: 'mm/dd/yy',
                 changeMonth: true,
@@ -1325,9 +1403,6 @@
                     var dateSearchParams = formDateParameters();
                     var windowPath = window.location.pathname;
                     var requestURL =  windowPath + searchURL + geoSearchParams + dateSearchParams;
-                    if (window.location.hash) {
-                        requestURL = requestURL + window.location.hash;
-                    }
                     window.location = requestURL;
                 }
             });
@@ -1345,21 +1420,17 @@
                 window.location.hash = tabId;
                 if (tabId == "map-view" && map == null) {
                     var requestURL = "/searchjson/";
-                    if (window.location.search.length == 0) {
-                        requestURL += "?q=";
-                    } else {
-                        var textSearch = $("#id_q").val();
-                        var searchURL = "?q=" + textSearch;
-                        requestURL += searchURL;
-                        requestURL += buildURLOnCheckboxes();
-                    }
+                    var textSearch = $("#id_q").val();
+                    var searchURL = "?q=" + textSearch;
+                    requestURL += searchURL;
+                    requestURL += buildURLOnCheckboxes();
                     var ne_lat = document.getElementById("id_NElat").value;
                     var ne_lng = document.getElementById("id_NElng").value;
                     var sw_lat = document.getElementById("id_SWlat").value;
                     var sw_lng = document.getElementById("id_SWlng").value;
                     var start_date = $("#id_start_date").val();
                     var end_date = $("#id_end_date").val();
-
+                    $("#discover-map-loading-spinner").show();
                     $.ajax({
                         type: "GET",
                         url: requestURL,
@@ -1382,8 +1453,10 @@
                             initMap(json_results);
                             setMapItemsList([], null);
                             $("#resource-search").show();
+                            $("#discover-map-loading-spinner").hide();
                         },
                         failure: function(data) {
+                            $("#discover-map-loading-spinner").hide();
                             console.error("Ajax call for getting map data failed");
                         }
                     });
@@ -1474,21 +1547,14 @@
                     var sessionStorageCheckboxId = 'search-' + checkboxId;
                     sessionStorage[sessionStorageCheckboxId] = 'true';
                     requestURL = requestURL + geoSearchParams + dateSearchParams;
-                    if (window.location.hash) {
-                        requestURL = requestURL + window.location.hash;
-                    }
-                    window.location = requestURL;
+                    updateFacetingItems(requestURL);
                 }
                 else {
                     var checkboxId = $(this).attr("id");
                     var sessionStorageCheckboxId = 'search-' + checkboxId;
                     sessionStorage.removeItem(sessionStorageCheckboxId);
                     var updateURL =  windowPath + searchURL + buildURLOnCheckboxes() + geoSearchParams + dateSearchParams;
-                    updateURL += buildURLOnCheckboxes();
-                    if (window.location.hash) {
-                        updateURL = updateURL + window.location.hash;
-                    }
-                    window.location = updateURL;
+                    updateFacetingItems(updateURL);
                 }
             });
 

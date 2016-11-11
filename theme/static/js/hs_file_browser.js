@@ -239,7 +239,7 @@ function bindFileBrowserItemEvents() {
     $("#fb-files-container li").mouseup(function (e) {
         // Handle "select" of clicked elements - Mouse Up
         if (!e.ctrlKey && !e.metaKey) {
-            if (!isDragging && event.which == 1) {
+            if (!isDragging && e.which == 1) {
                 $("#fb-files-container li").removeClass("ui-selected");
             }
             $(this).addClass("ui-selected");
@@ -1007,7 +1007,7 @@ $(document).ready(function () {
     });
 
     // Unzip method
-    $("#btn-unzip").click(function () {
+    $("#btn-unzip, #fb-unzip").click(function () {
         var currentPath = $("#hs-file-browser").attr("data-current-path");
         var files = $("#fb-files-container li.ui-selected");
 
@@ -1041,7 +1041,7 @@ $(document).ready(function () {
         updateSelectionMenuContext();
     });
 
-    $(".modal input.modal-only-required").keyup(function() {
+    $(".modal input.modal-only-required").keyup(function(event) {
         var submitBtn = $(this).closest(".modal-content").find(".btn-primary");
         submitBtn.toggleClass("disabled", $(this).val().trim() == "");
         var key = event.which;
