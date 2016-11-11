@@ -175,7 +175,7 @@ def data_store_folder_unzip(request):
         specific_msg = "iRODS error resulted in unzip being cancelled. This may be due to " \
                        "protecting from overwriting existing files. Unzip in a different " \
                        "localation (e.g., folder) or move or rename the file being overwritten. " \
-                       "iRODS error follows: "                        
+                       "iRODS error follows: "
         return HttpResponse(specific_msg + ex.stderr, status=500)
 
     # this unzipped_path can be used for POST request input to data_store_structure()
