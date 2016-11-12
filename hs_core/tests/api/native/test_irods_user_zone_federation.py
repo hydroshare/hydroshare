@@ -2,7 +2,7 @@ import os
 from unittest import TestCase
 
 from django.conf import settings
-from django.contrib.auth.models import Group, User
+from django.contrib.auth.models import Group
 
 from django_irods.icommands import SessionException
 from django_irods.storage import IrodsStorage
@@ -19,9 +19,9 @@ class TestUserZoneIRODSFederation(TestCase):
     """
     This TestCase class tests all federation zone related functionalities for generic resource,
     in particular, only file operation-related functionalities need to be tested, including
-    creating resources in the federated user zone, adding files to resources in theuser  zone,
+    creating resources in the federated user zone, adding files to resources in the user zone,
     creating a new version of a resource in the user zone, deleting resources in the user zone,
-    and folder-related operations to the resource in the user zone. Federation zone related
+    and folder-related operations to the resources in the user zone. Federation zone related
     functionalities for specific resource types need to be tested in specific resource type unit
     tests just to make sure metadata extraction works to extract metadata from files coming from
     a federated user zone.
@@ -84,14 +84,13 @@ class TestUserZoneIRODSFederation(TestCase):
         test_file.close()
 
         # transfer files to user zone space
-        self.irods_storage = IrodsStorage()
-        self.irods_storage.set_user_session(username='testuser', password='testuser',
-                                       host=settings.HS_USER_ZONE_HOST, port=settings.IRODS_PORT,
-                                       zone=settings.HS_IRODS_LOCAL_ZONE_DEF_RES)
-        self.irods_storage.saveFile(self.file_one, self.file_one)
-        self.irods_storage.saveFile(self.file_two, self.file_two)
-        self.irods_storage.saveFile(self.file_three, self.file_three)
-        self.irods_storage.saveFile(self.file_to_be_deleted, self.file_to_be_deleted)
+        self.irods_storage = IrodsStorage('federated')
+        irods_target_path = '/' + settings.HS_USER_IRODS_ZONE + '/home/testuser/'
+        self.irods_storage.saveFile(self.file_one, irods_target_path + self.file_one)
+        self.irods_storage.saveFile(self.file_two, irods_target_path + self.file_two)
+        self.irods_storage.saveFile(self.file_three, irods_target_path + self.file_three)
+        self.irods_storage.saveFile(self.file_to_be_deleted,
+                                    irods_target_path + self.file_to_be_deleted)
 
     def tearDown(self):
         super(TestUserZoneIRODSFederation, self).tearDown()
@@ -119,27 +118,12 @@ class TestUserZoneIRODSFederation(TestCase):
             # there is an error from icommand run, report the error
             self.assertRaises(SessionException(-1, ex.message, ex.message))
 
-        self.user.uaccess.delete()
-        self.user.delete()
-        self.hs_group.delete()
-
-        User.objects.all().delete()
-        Group.objects.all().delete()
-        BaseResource.objects.all().delete()
-
         os.remove(self.file_one)
         os.remove(self.file_two)
         os.remove(self.file_three)
         os.remove(self.file_to_be_deleted)
 
-        # remove files from iRODS user zone as well
-        # don't need to remove file_to_be_deleted from iRODS user zone since it will be removed
-        # as part of tests
-        self.irods_storage.delete(self.file_one)
-        self.irods_storage.delete(self.file_two)
-        self.irods_storage.delete(self.file_three)
-
-    def test_resource_create_add_delete_in_user_zone(self):
+    def test_resource_operations_in_user_zone(self):
         # test resource creation and "move" option in federated user zone
         fed_test_file_full_path = '/{zone}/home/testuser/{fname}'.format(
             zone=settings.HS_USER_IRODS_ZONE, fname=self.file_to_be_deleted)
@@ -155,10 +139,11 @@ class TestUserZoneIRODSFederation(TestCase):
                          msg="Number of content files is not equal to 1")
         fed_path = '/{zone}/home/{user}'.format(zone=settings.HS_USER_IRODS_ZONE,
                                                 user=settings.HS_LOCAL_PROXY_USER_IN_FED_ZONE)
+        user_path = '/{zone}/home/testuser/'.format(zone=settings.HS_USER_IRODS_ZONE)
         self.assertEqual(new_res.resource_federation_path, fed_path)
         # test original file in user test zone is removed after resource creation
         # since 'move' is used for fed_copy_or_move when creating the resource
-        self.assertFalse(self.irods_storage.exists(self.file_to_be_deleted))
+        self.assertFalse(self.irods_storage.exists(user_path + self.file_to_be_deleted))
 
         # test resource file deletion
         new_res.files.all().delete()
@@ -188,15 +173,15 @@ class TestUserZoneIRODSFederation(TestCase):
                         msg='file 2 has not been added in the resource in user zone')
         # test original two files in user test zone still exist after adding them to the resource
         # since 'copy' is used for fed_copy_or_move when creating the resource
-        self.assertTrue(self.irods_storage.exists(self.file_one))
-        self.assertTrue(self.irods_storage.exists(self.file_two))
+        self.assertTrue(self.irods_storage.exists(user_path + self.file_one))
+        self.assertTrue(self.irods_storage.exists(user_path + self.file_two))
 
         # test resource deletion
         resource.delete_resource(new_res.short_id)
         self.assertEquals(BaseResource.objects.all().count(), 0,
                           msg='Number of resources not equal to 0')
 
-    def test_create_new_version_resource_in_user_zone(self):
+        # test create new version resource in user zone
         fed_test_file1_full_path = '/{zone}/home/testuser/{fname}'.format(
             zone=settings.HS_USER_IRODS_ZONE, fname=self.file_one)
         ori_res = resource.create_resource(
@@ -220,8 +205,11 @@ class TestUserZoneIRODSFederation(TestCase):
         self.assertEqual(ori_res.resource_federation_path, new_res.resource_federation_path)
         # ensure new versioned resource has the same number of content files as original resource
         self.assertEqual(ori_res.files.all().count(), new_res.files.all().count())
+        # delete resources to clean up
+        resource.delete_resource(new_res.short_id)
+        resource.delete_resource(ori_res.short_id)
 
-    def test_folder_operations_in_user_zone(self):
+        # test folder operations in user zone
         fed_file1_full_path = '/{zone}/home/testuser/{fname}'.format(
             zone=settings.HS_USER_IRODS_ZONE, fname=self.file_one)
         fed_file2_full_path = '/{zone}/home/testuser/{fname}'.format(
@@ -339,3 +327,6 @@ class TestUserZoneIRODSFederation(TestCase):
         res_fname = ResourceFile.objects.filter(
             object_id=new_res.id)[0].fed_resource_file_name_or_path
         self.assertEqual(res_fname, new_res.short_id + '/data/contents/file3_new.txt')
+
+        # delete resources to clean up
+        resource.delete_resource(new_res.short_id)
