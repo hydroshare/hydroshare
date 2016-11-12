@@ -16,8 +16,7 @@ from hs_core.hydroshare.utils import get_resource_file_name_and_extension
 class OriginalCoverage(AbstractMetaDataElement):
     PRO_STR_TYPES = (
         ('', '---------'),
-        ('EPSG Code', 'EPSG Code'),
-        ('OGC WKT Projection', 'OGC WKT Projection'),
+        ('WKT String', 'WKT String'),
         ('Proj4 String', 'Proj4 String')
     )
 
@@ -34,6 +33,7 @@ class OriginalCoverage(AbstractMetaDataElement):
     _value = models.CharField(max_length=1024, null=True)
     projection_string_type = models.CharField(max_length=20, choices=PRO_STR_TYPES, null=True)
     projection_string_text = models.TextField(null=True, blank=True)
+    datum = models.CharField(max_length=300, blank=True)
 
     class Meta:
         # OriginalCoverage element is not repeatable
@@ -243,9 +243,12 @@ class NetcdfMetaData(CoreMetaData):
             self.add_metadata_element_to_xml(container, variable, md_fields)
 
         if self.ori_coverage.all().first():
-            hsterms_ori_cov = etree.SubElement(container, '{%s}spatialReference' % self.NAMESPACES['hsterms'])
-            hsterms_ori_cov_rdf_Description = etree.SubElement(hsterms_ori_cov, '{%s}Description' % self.NAMESPACES['rdf'])
             ori_cov_obj = self.ori_coverage.all().first()
+            hsterms_ori_cov = etree.SubElement(container, '{%s}spatialReference' % self.NAMESPACES['hsterms'])
+            cov_term = '{%s}' + 'box'
+            hsterms_coverage_terms = etree.SubElement(hsterms_ori_cov, cov_term % self.NAMESPACES['hsterms'])
+            hsterms_ori_cov_rdf_Description = etree.SubElement(hsterms_coverage_terms, '{%s}value' % self.NAMESPACES['rdf'])
+            cov_box = ''
 
             # add extent info
             if ori_cov_obj.value:
@@ -253,21 +256,28 @@ class NetcdfMetaData(CoreMetaData):
                         %(ori_cov_obj.value['northlimit'], ori_cov_obj.value['eastlimit'],
                           ori_cov_obj.value['southlimit'], ori_cov_obj.value['westlimit'], ori_cov_obj.value['units'])
 
-                hsterms_ori_cov_box = etree.SubElement(hsterms_ori_cov_rdf_Description, '{%s}extent' % self.NAMESPACES['hsterms'])
-                hsterms_ori_cov_box.text = cov_box
-
-            # add crs info
             if ori_cov_obj.value.get('projection'):
-                hsterms_ori_cov_projection_name = etree.SubElement(hsterms_ori_cov_rdf_Description,
-                                                                   '{%s}crsName' % self.NAMESPACES['hsterms'])
-                hsterms_ori_cov_projection_name.text = ori_cov_obj.value['projection']
+                cov_box += '; projection_name={}'.format(ori_cov_obj.value['projection'])
 
             if ori_cov_obj.projection_string_text:
-                hsterms_ori_cov_projection_text = etree.SubElement(hsterms_ori_cov_rdf_Description, '{%s}crsRepresentationText' % self.NAMESPACES['hsterms'])
-                hsterms_ori_cov_projection_text.text = ori_cov_obj.projection_string_text
-                if ori_cov_obj.projection_string_type:
-                    hsterms_ori_cov_projection_type = etree.SubElement(hsterms_ori_cov_rdf_Description, '{%s}crsRepresentationType' % self.NAMESPACES['hsterms'])
-                    hsterms_ori_cov_projection_type.text = ori_cov_obj.projection_string_type
+                cov_box += '; projection_string={}'.format(ori_cov_obj.projection_string_text)
+
+            if ori_cov_obj.datum:
+                cov_box += '; datum={}'.format(ori_cov_obj.datum)
+
+            hsterms_ori_cov_rdf_Description.text = cov_box
+
+            # add crs info
+            # if ori_cov_obj.value.get('projection'):
+            #     hsterms_ori_cov_projection_name = etree.SubElement(hsterms_ori_cov_rdf_Description,
+            #                                                        '{%s}crsName' % self.NAMESPACES['hsterms'])
+            #     hsterms_ori_cov_projection_name.text = ori_cov_obj.value['projection']
+            # if ori_cov_obj.projection_string_text:
+            #     hsterms_ori_cov_projection_text = etree.SubElement(hsterms_ori_cov_rdf_Description, '{%s}crsRepresentationText' % self.NAMESPACES['hsterms'])
+            #     hsterms_ori_cov_projection_text.text = ori_cov_obj.projection_string_text
+            #     if ori_cov_obj.projection_string_type:
+            #         hsterms_ori_cov_projection_type = etree.SubElement(hsterms_ori_cov_rdf_Description, '{%s}crsRepresentationType' % self.NAMESPACES['hsterms'])
+            #         hsterms_ori_cov_projection_type.text = ori_cov_obj.projection_string_type
 
         return etree.tostring(RDF_ROOT, pretty_print=True)
 

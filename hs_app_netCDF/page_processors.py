@@ -49,6 +49,7 @@ def landing_page(request, page):
             ori_cov_dict['westlimit'] = ori_cov_obj.value['westlimit']
             ori_cov_dict['projection_string_type'] = ori_cov_obj.projection_string_type
             ori_cov_dict['projection_string_text'] = ori_cov_obj.projection_string_text
+            ori_cov_dict['datum'] = ori_cov_obj.datum
             context['original_coverage'] = ori_cov_dict
         else:
             context['original_coverage'] = None
@@ -68,6 +69,7 @@ def landing_page(request, page):
             ori_cov_dict['westlimit'] = ori_cov_obj.value['westlimit']
             ori_cov_dict['projection_string_type'] = ori_cov_obj.projection_string_type
             ori_cov_dict['projection_string_text'] = ori_cov_obj.projection_string_text
+            ori_cov_dict['datum'] = ori_cov_obj.datum
         else:
             ori_cov_obj = None
 

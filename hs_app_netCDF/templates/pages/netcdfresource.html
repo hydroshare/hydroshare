@@ -20,12 +20,16 @@
                                     <tr><th class="text-muted">Coordinate Reference System </th><td>{{ original_coverage.projection}}</td></tr>
                                 {% endif %}
 
+                                {% if original_coverage.datum %}
+                                    <tr><th class="text-muted">Datum </th><td>{{ original_coverage.datum}}</td></tr>
+                                {% endif %}
+
                                 {% if original_coverage.projection_string_type %}
-                                    <tr><th class="text-muted">Coordinate Reference System Representation Type </th><td>{{ original_coverage.projection_string_type}}</td></tr>
+                                    <tr><th class="text-muted">Coordinate String Type </th><td>{{ original_coverage.projection_string_type}}</td></tr>
                                 {% endif %}
 
                                 {% if original_coverage.projection_string_text %}
-                                    <tr><th class="text-muted">Coordinate Reference System Representation Text </th><td>{{ original_coverage.projection_string_text}}</td></tr>
+                                    <tr><th class="text-muted">Coordinate String </th><td>{{ original_coverage.projection_string_text}}</td></tr>
                                 {% endif %}
                             </tbody>
                         </table>

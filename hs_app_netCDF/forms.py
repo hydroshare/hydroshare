@@ -18,13 +18,15 @@ class OriginalCoverageFormHelper(BaseFormHelper):
         field_width = 'form-control input-sm'
         layout = Layout(
                         Field('projection', css_class=field_width),
+                        Field('datum', css_class=field_width),
                         Field('projection_string_type', css_class=field_width),
                         Field('projection_string_text', css_class=field_width),
+                        Field('units', css_class=field_width),
                         Field('northlimit', css_class=field_width),
                         Field('eastlimit', css_class=field_width),
                         Field('southlimit', css_class=field_width),
                         Field('westlimit', css_class=field_width),
-                        Field('units', css_class=field_width),
+
                  )
 
         super(OriginalCoverageFormHelper, self).__init__(allow_edit, res_short_id, element_id, element_name, layout, element_name_label='Spatial Reference',*args, **kwargs)
@@ -33,8 +35,7 @@ class OriginalCoverageFormHelper(BaseFormHelper):
 class OriginalCoverageForm(forms.Form):
     PRO_STR_TYPES = (
         ('', '---------'),
-        ('EPSG Code', 'EPSG Code'),
-        ('OGC WKT Projection', 'OGC WKT Projection'),
+        ('WKT String', 'WKT String'),
         ('Proj4 String', 'Proj4 String')
     )
 
@@ -44,8 +45,9 @@ class OriginalCoverageForm(forms.Form):
     southlimit = forms.DecimalField(label='South Extent', widget=forms.TextInput())
     westlimit = forms.DecimalField(label='West Extent', widget=forms.TextInput())
     units = forms.CharField(max_length=100, label='Extent Unit')
-    projection_string_type = forms.ChoiceField(choices=PRO_STR_TYPES, label='Coordinate Reference System Representation Type', required=False)
-    projection_string_text = forms.CharField(max_length=1000, label='Coordinate Reference System Representation Text', required=False, widget=forms.Textarea())
+    projection_string_type = forms.ChoiceField(choices=PRO_STR_TYPES, label='Coordinate String Type', required=False)
+    projection_string_text = forms.CharField(max_length=1000, label='Coordinate String', required=False, widget=forms.Textarea())
+    datum = forms.CharField(max_length=300, label='Datum', required=False, widget=forms.TextInput())
 
     def __init__(self, allow_edit=True, res_short_id=None, element_id=None, *args, **kwargs):
         super(OriginalCoverageForm, self).__init__(*args, **kwargs)
