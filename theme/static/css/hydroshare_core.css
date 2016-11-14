@@ -3475,6 +3475,11 @@ button.no-style:focus {
     line-height: 1.42857143;
     background-color: #fff;
     border: 1px solid #ddd;
+	height: 100%;
+}
+
+.group-container {
+    margin-bottom: 20px;
 }
 
 .group-thumbnail img {
@@ -3519,8 +3524,10 @@ button.no-style:focus {
     height: 150px;
     text-align: center;
     width: 100%;
-    background-size: cover;
+    background-size: contain;
+    background-repeat: no-repeat;
     background-position: center center;
+    background-color: #093e54;
 }
 
 .group-preview-image-default {
@@ -3536,8 +3543,10 @@ button.no-style:focus {
     height: 120px;
     text-align: center;
     width: 120px;
-    background-size: cover;
+    background-size: contain;
+    background-repeat: no-repeat;
     background-position: center center;
+    background-color: #093e54;
     display: inline-block;
 }
 
@@ -3568,9 +3577,11 @@ button.no-style:focus {
     height: 80px;
     text-align: center;
     width: 80px;
-    background-size: cover;
+    background-size: contain;
+	background-repeat: no-repeat;
     background-position: center center;
     display: inline-block;
+	background-color: #093e54;
 }
 
 .group-image-extra-small {
@@ -3676,6 +3687,8 @@ button.no-style:focus {
 
 .group-thumbnail-footer {
     padding-top: 10px;
+	position: absolute;
+	bottom: 14px;
 }
 
 .group-thumbnail-footer .btn-ask-to-join {
