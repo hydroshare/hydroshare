@@ -1,9 +1,11 @@
 from django.dispatch import receiver
 from django.core.exceptions import ObjectDoesNotExist
+from hs_core.hydroshare.hs_bagit import create_bag_files
 
 from hs_core.signals import pre_metadata_element_create, pre_metadata_element_update, \
     pre_create_resource, post_metadata_element_update, post_add_files_to_resource, \
     post_create_resource
+
 
 import hs_modflow_modelinstance.models as modflow_models
 
@@ -221,3 +223,4 @@ def _create_or_update_from_package(resource, term, **kwargs):
             metadata_term_obj.id,
             **kwargs
         )
+    create_bag_files(resource)
