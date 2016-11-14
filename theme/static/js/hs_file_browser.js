@@ -196,6 +196,11 @@ function bindFileBrowserItemEvents() {
                     refreshFileBrowser();
                     destination.removeClass("fb-drag-cutting");
                 });
+
+                $.when.apply($, calls).fail(function () {
+                    refreshFileBrowser();
+                    destination.removeClass("fb-drag-cutting");
+                });
                 
                 $("#fb-files-container li.ui-selected").fadeOut();
             },
@@ -476,6 +481,10 @@ function onOpenFolder() {
     $.when.apply($, calls).done(function () {
         updateSelectionMenuContext();
     });
+
+    $.when.apply($, calls).fail(function () {
+        updateSelectionMenuContext();
+    });
 }
 
 function updateNavigationState() {
@@ -496,6 +505,13 @@ function refreshFileBrowser() {
     calls.push(get_irods_folder_struct_ajax_submit(resID, currentPath));
 
     $.when.apply($, calls).done(function () {
+        $("#fb-files-container li").removeClass("fb-cutting");
+        $(".selection-menu").hide();
+        sourcePaths = [];
+        updateSelectionMenuContext();
+    });
+
+    $.when.apply($, calls).fail(function () {
         $("#fb-files-container li").removeClass("fb-cutting");
         $(".selection-menu").hide();
         sourcePaths = [];
@@ -764,6 +780,10 @@ $(document).ready(function () {
             $.when.apply($, calls).done(function () {
                 refreshFileBrowser();
             });
+
+            $.when.apply($, calls).fail(function () {
+                refreshFileBrowser();
+            });
         }
         return false;
     });
@@ -848,6 +868,13 @@ $(document).ready(function () {
             $("#fb-files-container li").removeClass("fb-cutting");
             updateSelectionMenuContext();
         });
+
+        $.when.apply($, calls).fail(function () {
+            refreshFileBrowser();
+            sourcePaths = [];
+            $("#fb-files-container li").removeClass("fb-cutting");
+            updateSelectionMenuContext();
+        });
     }
 
     // File(s) delete method
@@ -875,6 +902,16 @@ $(document).ready(function () {
 
             // Wait for the asynchronous calls to finish to get new folder structure
             $.when.apply($, calls).done(function () {
+                if (filesToDelete != "") {
+                    $("#fb-delete-files-form input[name='file_ids']").val(filesToDelete);
+                    $("#fb-delete-files-form").submit();
+                }
+                else {
+                    refreshFileBrowser();
+                }
+            });
+
+            $.when.apply($, calls).fail(function () {
                 if (filesToDelete != "") {
                     $("#fb-delete-files-form input[name='file_ids']").val(filesToDelete);
                     $("#fb-delete-files-form").submit();
@@ -917,6 +954,10 @@ $(document).ready(function () {
         $.when.apply($, calls).done(function () {
             refreshFileBrowser();
         });
+
+        $.when.apply($, calls).fail(function () {
+            refreshFileBrowser();
+        });
     });
 
      // Download method
@@ -953,6 +994,10 @@ $(document).ready(function () {
             $.when.apply($, calls).done(function () {
                 refreshFileBrowser();
             });
+
+            $.when.apply($, calls).fail(function () {
+                refreshFileBrowser();
+            });
         }
     });
 
@@ -974,6 +1019,10 @@ $(document).ready(function () {
 
         // Wait for the asynchronous calls to finish to get new folder structure
         $.when.apply($, calls).done(function () {
+            refreshFileBrowser();
+        });
+
+        $.when.apply($, calls).fail(function () {
             refreshFileBrowser();
         });
     });
