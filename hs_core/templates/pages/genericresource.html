@@ -1734,6 +1734,15 @@
             $("input[name='add_author_user_type']").click(onAddContributorTypeChange);
             $("input[name='add_contributor_user_type']").click(onAddContributorTypeChange);
 
+            // Display toggle for author type radio buttons ('person' or 'organization')
+            function onAuthorTypeChange() {
+                var type = $(this).val();
+                console.log(type);
+                $("div[data-hs-other-user-type]").hide();
+                $("div[data-hs-other-user-type='" + type + "']").show();
+            }
+            $("input[name='choose_user_type']").click(onAuthorTypeChange);
+
 
             $("#citation-text").on("click", function (e) {
                 // document.selection logic is added in for IE 8 and lower

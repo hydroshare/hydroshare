@@ -1353,42 +1353,47 @@ class AbstractResource(ResourcePermissionsMixin):
         CITATION_ERROR = "Failed to generate citation."
 
         first_author = self.metadata.creators.all().filter(order=1)[0]
-        name_parts = first_author.name.split()
+        name_parts = first_author.name.split(',')
+        last_names = name_parts[0]
         if len(name_parts) == 0:
             return CREATOR_NAME_ERROR
-
-        if len(name_parts) > 2:
-            author_name = "{last_name}, {first_initial}. {middle_initial}., "
-            author_name = author_name.format(last_name=name_parts[-1],
-                                             first_initial=name_parts[0][0],
-                                             middle_initial=name_parts[1][0])
+        elif len(name_parts) == 1:
+            author_name = last_names
+            citation_str_lst.append(author_name+", ")
+        elif len(name_parts) == 2:
+            first_names = name_parts[1]
+            first_names_list = first_names.split()
+            initials_list = [i[0] for i in first_names_list]
+            initials = ". ".join(initials_list) + "."
+            author_name = "{last_name}, {initials}, "
+            author_name = author_name.format(last_name=last_names,
+                                             initials=initials
+                                             )
             citation_str_lst.append(author_name)
-
         else:
-            author_name = "{last_name}, {first_initial}., "
-            author_name = author_name.format(last_name=name_parts[-1],
-                                             first_initial=name_parts[0][0])
-            citation_str_lst.append(author_name)
+            return CREATOR_NAME_ERROR
 
         other_authors = self.metadata.creators.all().filter(order__gt=1)
         for author in other_authors:
-            name_parts = author.name.split()
+            name_parts = author.name.split(',')
+            last_names = name_parts[0]
             if len(name_parts) == 0:
                 return CREATOR_NAME_ERROR
-
-            if len(name_parts) > 2:
-                author_name = "{first_initial}. {middle_initial}. {last_name}, "
-                author_name = author_name.format(first_initial=name_parts[0][0],
-                                                 middle_initial=name_parts[1][0],
-                                                 last_name=name_parts[-1])
+            elif len(name_parts) == 1:
+                author_name = last_names
+                citation_str_lst.append(author_name+", ")
+            elif len(name_parts) == 2:
+                first_names = name_parts[1]
+                first_names_list = first_names.split()
+                initials_list = [i[0] for i in first_names_list]
+                initials = ". ".join(initials_list) + "."
+                author_name = "{initials} {last_name}, "
+                author_name = author_name.format(last_name=last_names,
+                                                 initials=initials
+                                                 )
                 citation_str_lst.append(author_name)
-
             else:
-                author_name = "{first_initial}. {last_name}, "
-                author_name = author_name.format(first_initial=name_parts[0][0],
-                                                 last_name=name_parts[-1])
-
-                citation_str_lst.append(author_name)
+                return CREATOR_NAME_ERROR
 
         # remove the last added comma and the space
         if len(citation_str_lst[-1]) > 2:
