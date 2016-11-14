@@ -17,6 +17,7 @@ from django.db.models.signals import post_save
 from django.db import transaction
 from django.dispatch import receiver
 from django.utils.timezone import now
+from django_irods.icommands import SessionException
 from django_irods.storage import IrodsStorage
 from django.conf import settings
 from django.core.files.storage import DefaultStorage
@@ -1642,6 +1643,21 @@ class BaseResource(Page, AbstractResource):
 
         return '<?xml version="1.0" encoding="UTF-8"?>\n' + etree.tostring(
             ROOT, pretty_print=pretty_print)
+
+    @property
+    def size(self):
+        f_sizes = [f.resource_file.size
+                   if f.resource_file else 0
+                   for f in r.files.all()]
+        total_file_size = sum(f_sizes)
+        try:
+            f_sizes = [int(f.fed_resource_file_size)
+                       if f.fed_resource_file_size else 0
+                       for f in r.files.all()]
+            total_file_size += sum(f_sizes)
+        except SessionException:
+            pass
+        return total_file_size
 
     @property
     def verbose_name(self):
