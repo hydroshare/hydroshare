@@ -1331,8 +1331,9 @@ def _set_resource_sharing_status(request, user, resource, flag_to_set, flag_valu
         istorage.setAVU(res_coll, "isPublic", str(resource.raccess.public))
 
         # run script to update hyrax input files when a private netCDF resource is made public
-        if flag_to_set=='public' and flag_value and settings.RUN_HYRAX_UPDATE and resource.resource_type=='NetcdfResource':
-            run_script_to_update_hyrax_input_files()
+        if flag_to_set=='public' and flag_value and settings.RUN_HYRAX_UPDATE and \
+                        resource.resource_type=='NetcdfResource':
+            run_script_to_update_hyrax_input_files(resource.short_id)
 
 
 def _get_message_for_setting_resource_flag(has_files, has_metadata, resource_flag):

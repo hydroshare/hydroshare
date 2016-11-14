@@ -196,6 +196,11 @@ function bindFileBrowserItemEvents() {
                     refreshFileBrowser();
                     destination.removeClass("fb-drag-cutting");
                 });
+
+                $.when.apply($, calls).fail(function () {
+                    refreshFileBrowser();
+                    destination.removeClass("fb-drag-cutting");
+                });
                 
                 $("#fb-files-container li.ui-selected").fadeOut();
             },
@@ -234,7 +239,7 @@ function bindFileBrowserItemEvents() {
     $("#fb-files-container li").mouseup(function (e) {
         // Handle "select" of clicked elements - Mouse Up
         if (!e.ctrlKey && !e.metaKey) {
-            if (!isDragging && event.which == 1) {
+            if (!isDragging && e.which == 1) {
                 $("#fb-files-container li").removeClass("ui-selected");
             }
             $(this).addClass("ui-selected");
@@ -476,6 +481,10 @@ function onOpenFolder() {
     $.when.apply($, calls).done(function () {
         updateSelectionMenuContext();
     });
+
+    $.when.apply($, calls).fail(function () {
+        updateSelectionMenuContext();
+    });
 }
 
 function updateNavigationState() {
@@ -496,6 +505,13 @@ function refreshFileBrowser() {
     calls.push(get_irods_folder_struct_ajax_submit(resID, currentPath));
 
     $.when.apply($, calls).done(function () {
+        $("#fb-files-container li").removeClass("fb-cutting");
+        $(".selection-menu").hide();
+        sourcePaths = [];
+        updateSelectionMenuContext();
+    });
+
+    $.when.apply($, calls).fail(function () {
         $("#fb-files-container li").removeClass("fb-cutting");
         $(".selection-menu").hide();
         sourcePaths = [];
@@ -764,6 +780,10 @@ $(document).ready(function () {
             $.when.apply($, calls).done(function () {
                 refreshFileBrowser();
             });
+
+            $.when.apply($, calls).fail(function () {
+                refreshFileBrowser();
+            });
         }
         return false;
     });
@@ -848,6 +868,13 @@ $(document).ready(function () {
             $("#fb-files-container li").removeClass("fb-cutting");
             updateSelectionMenuContext();
         });
+
+        $.when.apply($, calls).fail(function () {
+            refreshFileBrowser();
+            sourcePaths = [];
+            $("#fb-files-container li").removeClass("fb-cutting");
+            updateSelectionMenuContext();
+        });
     }
 
     // File(s) delete method
@@ -875,6 +902,16 @@ $(document).ready(function () {
 
             // Wait for the asynchronous calls to finish to get new folder structure
             $.when.apply($, calls).done(function () {
+                if (filesToDelete != "") {
+                    $("#fb-delete-files-form input[name='file_ids']").val(filesToDelete);
+                    $("#fb-delete-files-form").submit();
+                }
+                else {
+                    refreshFileBrowser();
+                }
+            });
+
+            $.when.apply($, calls).fail(function () {
                 if (filesToDelete != "") {
                     $("#fb-delete-files-form input[name='file_ids']").val(filesToDelete);
                     $("#fb-delete-files-form").submit();
@@ -917,6 +954,10 @@ $(document).ready(function () {
         $.when.apply($, calls).done(function () {
             refreshFileBrowser();
         });
+
+        $.when.apply($, calls).fail(function () {
+            refreshFileBrowser();
+        });
     });
 
      // Download method
@@ -953,6 +994,10 @@ $(document).ready(function () {
             $.when.apply($, calls).done(function () {
                 refreshFileBrowser();
             });
+
+            $.when.apply($, calls).fail(function () {
+                refreshFileBrowser();
+            });
         }
     });
 
@@ -962,7 +1007,7 @@ $(document).ready(function () {
     });
 
     // Unzip method
-    $("#btn-unzip").click(function () {
+    $("#btn-unzip, #fb-unzip").click(function () {
         var currentPath = $("#hs-file-browser").attr("data-current-path");
         var files = $("#fb-files-container li.ui-selected");
 
@@ -974,6 +1019,10 @@ $(document).ready(function () {
 
         // Wait for the asynchronous calls to finish to get new folder structure
         $.when.apply($, calls).done(function () {
+            refreshFileBrowser();
+        });
+
+        $.when.apply($, calls).fail(function () {
             refreshFileBrowser();
         });
     });
@@ -992,7 +1041,7 @@ $(document).ready(function () {
         updateSelectionMenuContext();
     });
 
-    $(".modal input.modal-only-required").keyup(function() {
+    $(".modal input.modal-only-required").keyup(function(event) {
         var submitBtn = $(this).closest(".modal-content").find(".btn-primary");
         submitBtn.toggleClass("disabled", $(this).val().trim() == "");
         var key = event.which;

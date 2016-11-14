@@ -447,14 +447,13 @@ def serialize_system_metadata(res):
 def copy_resource_files_and_AVUs(src_res_id, dest_res_id, set_to_private=False):
     avu_list = ['bag_modified', 'isPublic', 'resourceType']
     src_res = get_resource_by_shortkey(src_res_id)
+    istorage = src_res.get_irods_storage()
     if src_res.resource_federation_path:
-        istorage = IrodsStorage('federated')
-        src_coll = os.path.join(src_res.resource_federation_path, src_res_id)
-        dest_coll = os.path.join(src_res.resource_federation_path, dest_res_id)
+        src_coll = os.path.join(src_res.resource_federation_path, src_res_id, 'data')
+        dest_coll = os.path.join(src_res.resource_federation_path, dest_res_id, '/')
     else:
-        istorage = IrodsStorage()
-        src_coll = src_res_id
-        dest_coll = dest_res_id
+        src_coll = src_res_id + '/data'
+        dest_coll = dest_res_id + '/'
     istorage.copyFiles(src_coll, dest_coll)
     for avu_name in avu_list:
         value = istorage.getAVU(src_coll, avu_name)

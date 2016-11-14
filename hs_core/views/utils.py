@@ -112,10 +112,10 @@ def run_ssh_command(host, uname, pwd, exec_cmd):
 # run the update script on hyrax server via ssh session for netCDF resources on demand
 # when private netCDF resources are made public so that all links of data services
 # provided by Hyrax service are instantaneously available on demand
-def run_script_to_update_hyrax_input_files():
+def run_script_to_update_hyrax_input_files(shortkey):
     run_ssh_command(host=settings.HYRAX_SSH_HOST, uname=settings.HYRAX_SSH_PROXY_USER,
                     pwd=settings.HYRAX_SSH_PROXY_USER_PWD,
-                    exec_cmd=settings.HYRAX_SCRIPT_RUN_COMMAND)
+                    exec_cmd=settings.HYRAX_SCRIPT_RUN_COMMAND + ' ' + shortkey)
 
 
 def authorize(request, res_id, needed_permission=ACTION_TO_AUTHORIZE.VIEW_RESOURCE,
@@ -444,12 +444,13 @@ def link_irods_folder_to_django(resource, istorage, foldername, exclude=()):
     """
     if resource and istorage and foldername:
         store = istorage.listdir(foldername)
-        # add the unzipped files into Django resource model
+        # add files into Django resource model
         for file in store[1]:
             if file not in exclude:
                 file_path = os.path.join(foldername, file)
                 size = istorage.size(file_path)
                 link_irods_file_to_django(resource, file_path, size)
+        # recursively add sub-folders into Django resource model
         for folder in store[0]:
             link_irods_folder_to_django(resource,
                                         istorage, os.path.join(foldername, folder), exclude)
@@ -511,6 +512,8 @@ def remove_irods_folder_in_django(resource, istorage, foldername):
     :return:
     """
     if resource and istorage and foldername:
+        if not foldername.endswith('/'):
+            foldername += '/'
         if resource.resource_federation_path:
             res_file_set = ResourceFile.objects.filter(
                 object_id=resource.id, fed_resource_file_name_or_path__icontains=foldername)
@@ -586,7 +589,7 @@ def unzip_file(user, res_id, zip_with_rel_path, bool_remove_original):
 
     unzip_path = os.path.dirname(zip_with_full_path)
     zip_fname = os.path.basename(zip_with_rel_path)
-    istorage.session.run("ibun", None, '-xfDzip', zip_with_full_path, unzip_path)
+    istorage.session.run("ibun", None, '-xDzip', zip_with_full_path, unzip_path)
     link_irods_folder_to_django(resource, istorage, unzip_path, (zip_fname,))
 
     if bool_remove_original:
