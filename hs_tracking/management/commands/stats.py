@@ -9,7 +9,6 @@ from django.contrib.auth.models import User
 from django.core.management.base import BaseCommand
 from django.db.models import Q
 from django.utils import timezone
-from django_irods.icommands import SessionException
 from hs_core.models import BaseResource
 from theme.models import UserProfile
 
@@ -171,7 +170,7 @@ class Command(BaseCommand):
                 r.metadata.dates.get(type="created").start_date.strftime("%m/%d/%Y"),
                 r.metadata.title.value,
                 r.resource_type,
-                total_file_size,
+                r.size,
                 r.raccess.sharing_status,
             ]
             w.writerow([unicode(v).encode("utf-8") for v in values])
