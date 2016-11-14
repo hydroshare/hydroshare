@@ -1,5 +1,6 @@
 from string import Template
 import logging
+from hs_core.hydroshare.utils import get_resource_types
 
 logger = logging.getLogger(__name__)
 
@@ -27,3 +28,25 @@ def parse_app_url_template(url_template_string, term_dict_list=()):
         new_url_string = None
     finally:
         return new_url_string
+
+
+def get_SupportedResTypes_choices():
+    """
+    This function harvests all existing resource types in system,
+    and puts them in a list (except for WebApp Resource type):
+    [
+        ["RESOURCE_CLASS_NAME_1", "RESOURCE_VERBOSE_NAME_1"],
+        ["RESOURCE_CLASS_NAME_2", "RESOURCE_VERBOSE_NAME_2"],
+        ...
+        ["RESOURCE_CLASS_NAME_N", "RESOURCE_VERBOSE_NAME_N"],
+    ]
+    """
+
+    result_list = []
+    res_types_list = get_resource_types()
+    for r_type in res_types_list:
+        class_name = r_type.__name__
+        verbose_name = r_type._meta.verbose_name
+        if "toolresource" not in class_name.lower():
+            result_list.append([class_name, verbose_name])
+    return result_list
