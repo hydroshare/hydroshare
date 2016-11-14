@@ -29,7 +29,11 @@
                                 {% endif %}
 
                                 {% if original_coverage.projection_string_text %}
-                                    <tr><th class="text-muted">Coordinate String </th><td>{{ original_coverage.projection_string_text}}</td></tr>
+                                    <tr><th class="text-muted">Coordinate String </th><td style="word-break:break-all" >{{ original_coverage.projection_string_text}}</td></tr>
+                                {% endif %}
+
+                                {% if original_coverage.units %}
+                                <tr><th class="text-muted">Coordinate System Unit</th><td>{{ original_coverage.units }}</td></tr>
                                 {% endif %}
                             </tbody>
                         </table>
@@ -52,10 +56,6 @@
 
                             {% if original_coverage.westlimit %}
                                 <tr><th class="text-muted">West </th><td>{{ original_coverage.westlimit }}</td></tr>
-                            {% endif %}
-
-                            {% if original_coverage.units %}
-                                <tr><th class="text-muted">Extent Unit </th><td>{{ original_coverage.units }}</td></tr>
                             {% endif %}
                         </table>
                     {% else %}

@@ -127,7 +127,8 @@ def netcdf_pre_create_resource(sender, **kwargs):
                 if res_dublin_core_meta.get('projection-info'):
                     ori_cov = {'originalcoverage': {'value': res_dublin_core_meta['original-box'],
                                                     'projection_string_type': res_dublin_core_meta['projection-info']['type'],
-                                                    'projection_string_text': res_dublin_core_meta['projection-info']['text']}}
+                                                    'projection_string_text': res_dublin_core_meta['projection-info']['text'],
+                                                    'datum': res_dublin_core_meta['projection-info']['datum']}}
                 else:
                     ori_cov = {'originalcoverage': {'value': res_dublin_core_meta['original-box']}}
 

@@ -63,7 +63,7 @@ def get_dublin_core_meta(nc_dataset):
 
     try:
         nc_coverage_meta = extract_nc_coverage_meta(nc_dataset)
-    except:
+    except Exception:
         nc_coverage_meta = {}
 
     dublin_core_meta = dict(nc_global_meta.items() + nc_coverage_meta.items())
@@ -120,6 +120,8 @@ def extract_nc_coverage_meta(nc_dataset):
     original_box_info = get_original_box_info(nc_dataset)
     for name in original_box_info.keys():
         original_box_info[name] = str(original_box_info[name])
+        if name == 'units' and original_box_info[name].lower() == 'm':
+            original_box_info[name] = 'Meter'
 
     box_info = get_box_info(nc_dataset)
     for name in box_info.keys():
@@ -142,11 +144,7 @@ def get_projection_info(nc_dataset):
 
     Return: the netCDF original projection proj4 string
     """
-    projection_info = {}
-    projection_text = get_nc_grid_mapping_projection_import_string(nc_dataset)
-    if projection_text:
-        projection_info['type'] = 'Proj4 String'
-        projection_info['text'] = projection_text
+    projection_info = get_nc_grid_mapping_projection_import_string_dict(nc_dataset)
 
     return projection_info
 
@@ -199,7 +197,7 @@ def get_period_info_by_data(nc_dataset):
                     period_info['start'] = limit_meta['start'].strftime('%Y-%m-%d %H:%M:%S')
                     period_info['end'] = limit_meta['end'].strftime('%Y-%m-%d %H:%M:%S')
                     break
-        except:
+        except Exception:
             continue
 
     return period_info
@@ -224,10 +222,10 @@ def get_box_info(nc_dataset):
             box_info['eastlimit'] = check_lon_limit(westlimit, eastlimit)[1]
 
         elif original_box_info.get('projection', ''):  # projection coor x, y
-            projection_import_string = get_nc_grid_mapping_projection_import_string(nc_dataset)
-            if projection_import_string:
+            projection_import_string_dict = get_nc_grid_mapping_projection_import_string_dict(nc_dataset)
+            if projection_import_string_dict.get('type') == 'Proj4 String':
                 try:
-                    ori_proj = Proj(projection_import_string)
+                    ori_proj = Proj(projection_import_string_dict['text'])
                     wgs84_proj = Proj(init='epsg:4326')
                     box_info['westlimit'], box_info['northlimit'] = transform(ori_proj, wgs84_proj,
                                                                               original_box_info['westlimit'],
@@ -235,7 +233,24 @@ def get_box_info(nc_dataset):
                     box_info['eastlimit'], box_info['southlimit'] = transform(ori_proj, wgs84_proj,
                                                                               original_box_info['eastlimit'],
                                                                               original_box_info['southlimit'])
-                except:
+                except Exception:
+                    pass
+            elif projection_import_string_dict.get('type') == 'WKT String':
+                try:
+                    # create wgs84 geographic coordinate system
+                    wgs84_cs = osr.SpatialReference()
+                    wgs84_cs.ImportFromEPSG(4326)
+                    original_cs = osr.SpatialReference()
+                    original_cs.ImportFromWkt(projection_import_string_dict.get('text'))
+                    crs_transform = osr.CoordinateTransformation(original_cs, wgs84_cs)
+                    box_info['westlimit'], box_info['northlimit'] = crs_transform.TransformPoint(
+                                                                        original_box_info['westlimit'],
+                                                                        original_box_info['northlimit'])[:2]
+
+                    box_info['eastlimit'], box_info['southlimit'] = crs_transform.TransformPoint(
+                                                                        original_box_info['eastlimit'],
+                                                                        original_box_info['southlimit'])[:2]
+                except Exception:
                     pass
 
     if box_info:
@@ -324,7 +339,7 @@ def get_original_box_info_by_data(nc_dataset):
         limits_info = get_limits_info(nc_dataset, info_source)
         if limits_info:
             original_box_info = limits_info
-            original_box_info['projection'] = get_nc_grid_mapping_projection_name(nc_dataset)
+            original_box_info['projection'] = get_nc_grid_mapping_crs_name(nc_dataset)
             break
 
     return original_box_info
@@ -465,7 +480,7 @@ def extract_nc_data_variables_meta(nc_data_variables):
                     nc_data_variables_meta[var_name]['type'] = 'Char' if '8' in var_obj.datatype.name else 'String'
                 else:
                     nc_data_variables_meta[var_name]['type'] = 'Unknown'
-            except:
+            except Exception:
                 nc_data_variables_meta[var_name]['type'] = 'Unknown'
         else:
             nc_data_variables_meta[var_name]['type'] = 'Unknown'

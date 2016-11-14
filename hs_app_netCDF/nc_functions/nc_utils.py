@@ -8,9 +8,11 @@ http://netcdf4-python.googlecode.com/svn/trunk/docs/netCDF4-module.html
 """
 
 
-import netCDF4
 import re
 from collections import OrderedDict
+
+import osr
+import netCDF4
 import numpy
 
 
@@ -359,86 +361,142 @@ def get_nc_grid_mapping_variable(nc_dataset):
 def get_nc_grid_mapping_projection_name(nc_dataset):
     """
     (object)-> string
-
     Return: the netCDF grid mapping projection name
     """
 
     nc_grid_mapping_variable = get_nc_grid_mapping_variable(nc_dataset)
-    if nc_grid_mapping_variable is not None:
-        nc_grid_mapping_projection_name = nc_grid_mapping_variable.grid_mapping_name
-    else:
-        nc_grid_mapping_projection_name = ''
+    nc_grid_mapping_projection_name = getattr(nc_grid_mapping_variable, 'grid_mapping_name', '')
 
     return nc_grid_mapping_projection_name
 
 
-def get_nc_grid_mapping_projection_import_string(nc_dataset):
+def get_nc_grid_mapping_crs_name(nc_dataset):
     """
     (object)-> string
 
-    Return: the netCDF grid mapping proj4 string used for creating projection object with pyproj.Proj()
-    Reference: Cf convention for grid mapping projection
+    Return: the netCDF grid mapping crs projection name. This will take the wkt name as the first option
+            and then take the grid mapping name as the second option.
     """
+
+    nc_grid_mapping_variable = get_nc_grid_mapping_variable(nc_dataset)
+    nc_grid_mapping_crs_name = ''
+
+    if hasattr(nc_grid_mapping_variable, 'crs_wkt')or hasattr(nc_grid_mapping_variable, 'spatial_ref'):
+        projection_string = nc_grid_mapping_variable.crs_wkt\
+                            if hasattr(nc_grid_mapping_variable, 'crs_wkt')\
+                            else nc_grid_mapping_variable.spatial_ref
+        try:
+            spatial_ref = osr.SpatialReference()
+            spatial_ref.ImportFromWkt(projection_string)
+            if spatial_ref.IsProjected():
+                nc_grid_mapping_crs_name = spatial_ref.GetAttrValue('projcs', 0)
+            else:
+                nc_grid_mapping_crs_name = spatial_ref.GetAttrValue('geogcs', 0)
+        except Exception:
+            pass
+
+    if nc_grid_mapping_crs_name == '':
+        nc_grid_mapping_crs_name = get_nc_grid_mapping_projection_name(nc_dataset)
+
+    return nc_grid_mapping_crs_name
+
+
+def get_nc_grid_mapping_projection_import_string_dict(nc_dataset):
+    """
+    (object)-> dict
+
+    Return: the netCDF grid mapping info dictionary proj4 or WKT string used for creating projection
+            object with pyproj.Proj() or gdal
+    Reference: Cf convention for grid mapping projection
+               http://cfconventions.org/Data/cf-conventions/cf-conventions-1.7/build/ch05s06.html
+    """
+
+    projection_import_string_dict = {}
 
     # get the proj name, proj variable
     nc_grid_mapping_projection_name = get_nc_grid_mapping_projection_name(nc_dataset)
     nc_grid_mapping_variable = get_nc_grid_mapping_variable(nc_dataset)
 
-    proj_names = {
-        'albers_conical_equal_area': 'aea',
-        'azimuthal_equidistant': 'aeqd',
-        'lambert_azimuthal_equal_area': 'laea',
-        'lambert_conformal_conic': 'lcc', # tested with prcp.nc
-        'lambert_cylindrical_equal_area': 'cea',
-        'mercator': 'merc',
-        'orthographic': 'ortho',
-        'polar_stereographic': 'stere',
-        'stereographic': 'stere',
-        'transverse_mercator': 'tmerc',# test with swe.nc
-        'vertical_perspective': 'geos',
-    }
+    # get the projection string and type
+    if hasattr(nc_grid_mapping_variable, 'crs_wkt')or hasattr(nc_grid_mapping_variable,'spatial_ref'):
+        projection_string = nc_grid_mapping_variable.crs_wkt\
+                            if hasattr(nc_grid_mapping_variable, 'crs_wkt') \
+                            else nc_grid_mapping_variable.spatial_ref
+        projection_type = 'WKT String'
+        try:
+            spatial_ref = osr.SpatialReference()
+            spatial_ref.ImportFromWkt(projection_string)
+            datum = spatial_ref.GetAttrValue("DATUM", 0) if spatial_ref.GetAttrValue("DATUM", 0) else ''
+        except Exception:
+            datum = ''
 
-    proj_paras = {
-        '+y_0': 'false_northing',
-        '+x_0': 'false_easting',
-        '+k_0': 'scale_factor_at_projection_origin,scale_factor_at_central_meridian',
-        '+lat_0': 'latitude_of_projection_origin',
-        '+lon_0': 'longitude_of_projection_origin,longitude_of_central_meridian,straight_vertical_longitude_from_pole',
-        '+h': 'perspective_point_height'
-    }
+    else:
+        proj_names = {
+            'albers_conical_equal_area': 'aea',
+            'azimuthal_equidistant': 'aeqd',
+            'lambert_azimuthal_equal_area': 'laea',
+            'lambert_conformal_conic': 'lcc',  # tested with prcp.nc
+            'lambert_cylindrical_equal_area': 'cea',
+            'mercator': 'merc',
+            'orthographic': 'ortho',
+            'polar_stereographic': 'stere',
+            'stereographic': 'stere',
+            'transverse_mercator': 'tmerc',# test with swe.nc
+            'vertical_perspective': 'geos',
+        }
 
-    standard_parallel_types = ['albers_conical_equal_area', 'lambert_conformal_conic']
+        proj_paras = {
+            '+y_0': 'false_northing',
+            '+x_0': 'false_easting',
+            '+k_0': 'scale_factor_at_projection_origin,scale_factor_at_central_meridian',
+            '+lat_0': 'latitude_of_projection_origin',
+            '+lon_0': 'longitude_of_projection_origin,longitude_of_central_meridian,straight_vertical_longitude_from_pole',
+            '+h': 'perspective_point_height',
+            '+a': 'semi_major_axis',
+            '+b': 'semi_minor_axis',
+        }
 
-    # create the projection import string
-    proj_info_list = []
+        standard_parallel_types = ['albers_conical_equal_area', 'lambert_conformal_conic']
 
-    if nc_grid_mapping_projection_name in proj_names .keys():
-        # add projection name
-        proj_info_list.append('+proj={0}'.format(proj_names[nc_grid_mapping_projection_name]))
+        # create the projection import string
+        proj_info_list = []
 
-        # add basic parameters
-        for proj4_para, cf_para in proj_paras.items():
-            for para in cf_para.split(','):
-                if hasattr(nc_grid_mapping_variable, para):
-                    proj_info_list.append('{0}={1}'.format(proj4_para, getattr(nc_grid_mapping_variable, para)))
-                    break
+        if nc_grid_mapping_projection_name in proj_names .keys():
+            # add projection name
+            proj_info_list.append('+proj={0}'.format(proj_names[nc_grid_mapping_projection_name]))
 
-        # add standard parallel para
-        if hasattr(nc_grid_mapping_variable, 'standard_parallel'):
-            if nc_grid_mapping_projection_name in standard_parallel_types:
-                str_value = str(nc_grid_mapping_variable.standard_parallel).strip('[]').split()
-                try:
-                    num_value = sorted([float(x) for x in str_value])
-                    if num_value.__len__() <= 2:
-                        proj_info_list.extend(['lat_{0}={1}'.format(i+1, j) for i, j in enumerate(num_value)])
-                except:
-                    pass
-            else:
-                proj_info_list.append('{0}={1}'.format('+lat_ts', nc_grid_mapping_variable.standard_parallel))
+            # add basic parameters
+            for proj4_para, cf_para in proj_paras.items():
+                for para in cf_para.split(','):
+                    if hasattr(nc_grid_mapping_variable, para):
+                        proj_info_list.append('{0}={1}'.format(proj4_para, getattr(nc_grid_mapping_variable, para)))
+                        break
 
-    nc_grid_mapping_projection_import_string = ' '.join(proj_info_list)
+            # add standard parallel para
+            if hasattr(nc_grid_mapping_variable, 'standard_parallel'):
+                if nc_grid_mapping_projection_name in standard_parallel_types:
+                    str_value = str(nc_grid_mapping_variable.standard_parallel).strip('[]').split()
+                    try:
+                        num_value = sorted([float(x) for x in str_value])
+                        if num_value.__len__() <= 2:
+                            proj_info_list.extend(['lat_{0}={1}'.format(i+1, j) for i, j in enumerate(num_value)])
+                    except:
+                        pass
+                else:
+                    proj_info_list.append('{0}={1}'.format('+lat_ts', nc_grid_mapping_variable.standard_parallel))
 
-    return nc_grid_mapping_projection_import_string
+        projection_string = ' '.join(proj_info_list)
+        projection_type = 'Proj4 String'
+        datum = ''
+
+    if projection_string:
+        projection_import_string_dict = {
+            'text': projection_string,
+            'type': projection_type,
+            'datum': datum,
+        }
+
+    return projection_import_string_dict
 
 
 
