@@ -8,9 +8,6 @@ from hs_core.views.utils import create_folder, move_or_rename_file_or_folder, zi
     unzip_file, remove_folder
 from django_irods.icommands import SessionException
 
-import logging
-
-logger = logging.getLogger('django')
 
 class MockIRODSTestCaseMixin(object):
     def setUp(self):
@@ -88,7 +85,6 @@ class TestCaseCommonUtilities(object):
             path_prefix = 'data/contents/'
         else:
             path_prefix = res.short_id + '/data/contents/'
-        logger.debug('in testing.py, updated_res_file_names='+' '.join(updated_res_file_names))
         self.assertIn(path_prefix + 'new_' + file_name_list[2], updated_res_file_names,
                       msg="resource does not contain the updated file new_" + file_name_list[2])
         self.assertNotIn(path_prefix + file_name_list[2], updated_res_file_names,
@@ -100,7 +96,8 @@ class TestCaseCommonUtilities(object):
                          msg='resource still contains the old ' + file_name_list[0] +
                              'after moving to a folder')
         self.assertIn(path_prefix + 'sub_test_dir/' + file_name_list[1], updated_res_file_names,
-                      msg='resource does not contain ' + file_name_list[1] + 'moved to a new folder')
+                      msg='resource does not contain ' + file_name_list[1] +
+                          'moved to a new folder')
         self.assertNotIn(path_prefix + file_name_list[1], updated_res_file_names,
                          msg='resource still contains the old ' + file_name_list[1] +
                              ' after moving to a folder')

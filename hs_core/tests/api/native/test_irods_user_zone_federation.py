@@ -40,7 +40,7 @@ class TestUserZoneIRODSFederation(TestCaseCommonUtilities, TransactionTestCase):
             username='testuser',
             first_name='some_first_name',
             last_name='some_last_name',
-            password = 'testuser',
+            password='testuser',
             superuser=False,
             groups=[self.hs_group]
         )
