@@ -288,4 +288,3 @@ class RasterMetaData(CoreMetaData):
             self.originalCoverage.delete()
         self.bandInformation.delete()
 
-import receivers
