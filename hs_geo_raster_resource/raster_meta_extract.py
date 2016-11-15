@@ -1,9 +1,12 @@
 """
-Module extracting metadata from raster file to complete part of the required HydroShare Raster Science Metadata.
+Module extracting metadata from raster file to complete part of the required HydroShare Raster
+Science Metadata.
 The expected metadata elements are defined in the HydroShare raster resource specification.
 Reference code:
-http://gis.stackexchange.com/questions/6669/converting-projected-geotiff-to-wgs84-with-gdal-and-python
-http://gis.stackexchange.com/questions/57834/how-to-get-raster-corner-coordinates-using-python-gdal-bindings
+http://gis.stackexchange.com/questions/6669/converting-projected-
+geotiff-to-wgs84-with-gdal-and-python
+http://gis.stackexchange.com/questions/57834/how-to-get-raster-corner-
+coordinates-using-python-gdal-bindings
 
 Update Notes
 This is used to process the vrt raster and to extract max, min value of each raster band.
@@ -11,7 +14,7 @@ This is used to process the vrt raster and to extract max, min value of each ras
 
 
 import gdal
-from gdalconst import *
+from gdalconst import GA_ReadOnly
 from osgeo import osr
 from collections import OrderedDict
 import re
@@ -46,7 +49,8 @@ def get_spatial_coverage_info(raster_file_name):
     """
     (string) --> dict
 
-    Return: meta of spatial extent and projection of raster includes both original info and wgs84 info
+    Return: meta of spatial extent and projection of raster includes both
+    original info and wgs84 info
     """
     raster_dataset = gdal.Open(raster_file_name, GA_ReadOnly)
     original_coverage_info = get_original_coverage_info(raster_dataset)
@@ -67,8 +71,9 @@ def get_original_coverage_info(raster_dataset):
     try:
         proj_wkt = raster_dataset.GetProjection()
     except Exception as ex:
-        # an exception occurs when doing GetGeoTransform, which means an invalid geotiff is uploaded, print exception
-        # to log without blocking the main resource creation workflow since we allow user to upload a tiff file without valid tags
+        # an exception occurs when doing GetGeoTransform, which means an invalid geotiff
+        # is uploaded, print exception to log without blocking the main resource creation workflow
+        # since we allow user to upload a tiff file without valid tags
         log = logging.getLogger()
         log.exception(ex.message)
         proj_wkt = None
@@ -79,7 +84,8 @@ def get_original_coverage_info(raster_dataset):
 
         # get projection string, datum
         projection_string = proj_wkt
-        datum = spatial_ref.GetAttrValue("DATUM", 0) if spatial_ref.GetAttrValue("DATUM", 0) else None
+        datum = spatial_ref.GetAttrValue("DATUM", 0) \
+            if spatial_ref.GetAttrValue("DATUM", 0) else None
 
         # get unit info and check spelling
         unit = spatial_ref.GetAttrValue("UNIT", 0)
@@ -102,8 +108,9 @@ def get_original_coverage_info(raster_dataset):
     try:
         gt = raster_dataset.GetGeoTransform()
     except Exception as ex:
-        # an exception occurs when doing GetGeoTransform, which means an invalid geotiff is uploaded, print exception
-        # to log without blocking the main resource creation workflow since we allow user to upload a tiff file without valid tags
+        # an exception occurs when doing GetGeoTransform, which means an invalid geotiff
+        # is uploaded, print exception to log without blocking the main resource creation workflow
+        # since we allow user to upload a tiff file without valid tags
         log = logging.getLogger()
         log.exception(ex.message)
         gt = None
@@ -155,8 +162,9 @@ def get_wgs84_coverage_info(raster_dataset):
     try:
         proj = raster_dataset.GetProjection()
     except Exception as ex:
-        # an exception occurs when doing GetGeoTransform, which means an invalid geotiff is uploaded, print exception
-        # to log without blocking the main resource creation workflow since we allow user to upload a tiff file without valid tags
+        # an exception occurs when doing GetGeoTransform, which means an invalid geotiff
+        # is uploaded, print exception to log without blocking the main resource creation workflow
+        # since we allow user to upload a tiff file without valid tags
         log = logging.getLogger()
         log.exception(ex.message)
         proj = None
@@ -189,8 +197,10 @@ def get_wgs84_coverage_info(raster_dataset):
         transform = osr.CoordinateTransformation(original_cs, wgs84_cs)
         if transform.this is not None:
             # transform original bounding box to wgs84 bounding box
-            wgs84_westlimit,wgs84_northlimit = transform.TransformPoint(original_westlimit, original_northlimit)[:2]
-            wgs84_eastlimit,wgs84_southlimit = transform.TransformPoint(original_eastlimit, original_southlimit)[:2]
+            wgs84_westlimit,wgs84_northlimit = transform.TransformPoint(original_westlimit,
+                                                                        original_northlimit)[:2]
+            wgs84_eastlimit,wgs84_southlimit = transform.TransformPoint(original_eastlimit,
+                                                                        original_southlimit)[:2]
 
             wgs84_coverage_info = OrderedDict([
                 ('northlimit', wgs84_northlimit),

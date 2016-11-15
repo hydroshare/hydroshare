@@ -1,5 +1,6 @@
-## Note: this module has been imported in the models.py in order to receive signals
-## at the end of the models.py for the import of this module
+# Note: this module has been imported in the models.py in order to receive signals
+# at the end of the models.py for the import of this module
+
 import tempfile
 import os
 import subprocess
@@ -9,7 +10,7 @@ from collections import OrderedDict
 import xml.etree.ElementTree as ET
 
 import gdal
-from gdalconst import GA_ReadOnly, GA_Update
+from gdalconst import GA_ReadOnly
 
 from django.core.files.uploadedfile import UploadedFile
 from django.dispatch import receiver
@@ -17,15 +18,15 @@ from django.dispatch import receiver
 from hs_core.hydroshare import utils
 from hs_core.hydroshare.resource import ResourceFile, \
     get_resource_file_name, delete_resource_file_only
-from hs_core.signals import pre_create_resource, pre_add_files_to_resource, pre_delete_file_from_resource, \
-    pre_metadata_element_create, pre_metadata_element_update
+from hs_core.signals import pre_create_resource, pre_add_files_to_resource, \
+    pre_delete_file_from_resource, pre_metadata_element_create, pre_metadata_element_update
 from forms import CellInfoValidationForm, BandInfoValidationForm, OriginalCoverageSpatialForm
 from models import RasterResource
 import raster_meta_extract
 
+
 # signal handler to extract metadata from uploaded geotiff file and return template contexts
 # to populate create-resource.html template page
-
 
 def raster_file_validation(files, ref_tmp_file_names=[]):
     error_info = []
@@ -45,7 +46,8 @@ def raster_file_validation(files, ref_tmp_file_names=[]):
         if ext == '.tif':
             temp_vrt_file_path, temp_dir = create_vrt_file(in_filename, file)
             if os.path.isfile(temp_vrt_file_path):
-                files.append(UploadedFile(file=open(temp_vrt_file_path, 'r'), name=os.path.basename(temp_vrt_file_path)))
+                files.append(UploadedFile(file=open(temp_vrt_file_path, 'r'),
+                                          name=os.path.basename(temp_vrt_file_path)))
 
         elif ext == '.zip':
             extract_file_paths, temp_dir = explode_zip_file(in_filename, file)
@@ -55,7 +57,8 @@ def raster_file_validation(files, ref_tmp_file_names=[]):
                 if len(ref_tmp_file_names) == 1:
                     del ref_tmp_file_names[0]
                 for file_path in extract_file_paths:
-                    files.append(UploadedFile(file=open(file_path, 'r'), name=os.path.basename(file_path)))
+                    files.append(UploadedFile(file=open(file_path, 'r'),
+                                              name=os.path.basename(file_path)))
 
     # check if raster is valid in format and data
     if len(files) >= 1:
@@ -87,7 +90,8 @@ def raster_file_validation(files, ref_tmp_file_names=[]):
         files_names.pop(files_ext.index('.vrt'))
 
         if len(files_names) > len(raster_file_names):
-            error_info.append('Please remove the extra raster files which are not specified in the .vrt file.')
+            error_info.append('Please remove the extra raster files which '
+                              'are not specified in the .vrt file.')
         else:
             for vrt_ref_raster_name in raster_file_names:
                 if vrt_ref_raster_name in files_names \
@@ -96,18 +100,23 @@ def raster_file_validation(files, ref_tmp_file_names=[]):
                     continue
                 elif os.path.basename(vrt_ref_raster_name) in files_names:
                     error_info.append('Please specify {} as {} in the .vrt file, '
-                                      'because it will be saved in the same folder with .vrt file in HydroShare'.
-                                      format(vrt_ref_raster_name, os.path.basename(vrt_ref_raster_name)))
+                                      'because it will be saved in the same '
+                                      'folder with .vrt file in HydroShare'.
+                                      format(vrt_ref_raster_name,
+                                             os.path.basename(vrt_ref_raster_name)))
                     break
                 else:
-                    error_info.append('Pleas provide the missing raster file {} which is specified in the .vrt file'.
+                    error_info.append('Pleas provide the missing raster file {} '
+                                      'which is specified in the .vrt file'.
                                       format(os.path.basename(vrt_ref_raster_name)))
                     break
 
     elif files_ext.count('.tif') == 1 and files_ext.count('.vrt') == 0:
-        error_info.append('Please define the .tif file with raster size, band, and georeference information.')
+        error_info.append('Please define the .tif file with raster size, '
+                          'band, and georeference information.')
     else:
-        error_info.append('The uploaded files should contain only one .vrt file and .tif files referenced by the .vrt file.')
+        error_info.append('The uploaded files should contain only one .vrt file and .tif files '
+                          'referenced by the .vrt file.')
 
     return error_info, vrt_file_path, temp_dir
 
@@ -124,11 +133,11 @@ def create_vrt_file(tif_file_name, file):
 
     with open(os.devnull, 'w') as fp:
         if file:
-            subprocess.Popen(['gdal_translate', '-of', 'VRT', file.file.name, vrt_file_path], stdout=fp,
-                             stderr=fp).wait()  # remember to add .wait()
+            subprocess.Popen(['gdal_translate', '-of', 'VRT', file.file.name, vrt_file_path],
+                             stdout=fp, stderr=fp).wait()  # remember to add .wait()
         else:
-            subprocess.Popen(['gdal_translate', '-of', 'VRT', tif_file_name, vrt_file_path], stdout=fp,
-                             stderr=fp).wait()  # remember to add .wait()
+            subprocess.Popen(['gdal_translate', '-of', 'VRT', tif_file_name, vrt_file_path],
+                             stdout=fp, stderr=fp).wait()  # remember to add .wait()
 
     # edit VRT contents
     try:
@@ -158,7 +167,7 @@ def explode_zip_file(zip_file_name, file):
 
         # get all the file abs names in temp_dir
         extract_file_paths = []
-        for dirpath,_,filenames in os.walk(temp_dir):
+        for dirpath, _, filenames in os.walk(temp_dir):
             for name in filenames:
                 file_path = os.path.abspath(os.path.join(dirpath, name))
                 if os.path.splitext(os.path.basename(file_path))[1] in ['.vrt', '.tif']:
@@ -190,7 +199,8 @@ def raster_pre_create_resource_trigger(sender, **kwargs):
         ref_tmpfiles = utils.get_fed_zone_files(fed_res_fnames)
         fed_tmpfile_name = ref_tmpfiles[0]
         # raster file validation
-        error_info, vrt_file_path, temp_dir = raster_file_validation(files, ref_tmp_file_names=ref_tmpfiles)
+        error_info, vrt_file_path, temp_dir = raster_file_validation(
+            files,  ref_tmp_file_names=ref_tmpfiles)
         ext = os.path.splitext(fed_res_fnames[0])[1]
         if ext == '.zip':
             # clear up the original zip file so that it will not be added into the resource
@@ -204,7 +214,8 @@ def raster_pre_create_resource_trigger(sender, **kwargs):
     if file_selected:
         # metadata extraction
         if not error_info:
-            temp_vrt_file_path = [os.path.join(temp_dir, f) for f in os.listdir(temp_dir) if '.vrt' == os.path.splitext(f)[1]].pop()
+            temp_vrt_file_path = [os.path.join(temp_dir, f) for f in os.listdir(temp_dir)
+                                  if '.vrt' == os.path.splitext(f)[1]].pop()
             res_md_dict = raster_meta_extract.get_raster_meta_dict(temp_vrt_file_path)
             wgs_cov_info = res_md_dict['spatial_coverage_info']['wgs84_coverage_info']
             # add core metadata coverage - box
@@ -213,7 +224,8 @@ def raster_pre_create_resource_trigger(sender, **kwargs):
                 metadata.append(box)
 
             # Save extended meta spatial reference
-            ori_cov = {'OriginalCoverage': {'value': res_md_dict['spatial_coverage_info']['original_coverage_info'] }}
+            ori_cov = {'OriginalCoverage': {
+                       'value': res_md_dict['spatial_coverage_info']['original_coverage_info']}}
             metadata.append(ori_cov)
 
             # Save extended meta cell info
@@ -225,7 +237,8 @@ def raster_pre_create_resource_trigger(sender, **kwargs):
                 metadata.append({'BandInformation': band_info})
         else:
             validate_files_dict['are_files_valid'] = False
-            validate_files_dict['message'] = 'Raster validation error. {0}'.format(' '.join(error_info))
+            validate_files_dict['message'] = 'Raster validation error. {0}'.\
+                format(' '.join(error_info))
 
         # remove temp vrt file
         if os.path.isdir(temp_dir):
@@ -287,7 +300,8 @@ def raster_pre_add_files_to_resource_trigger(sender, **kwargs):
         ref_tmpfiles = utils.get_fed_zone_files(fed_res_fnames)
         fed_tmpfile_name = ref_tmpfiles[0]
         # raster file validation
-        error_info, vrt_file_path, temp_dir = raster_file_validation(files, ref_tmp_file_names=ref_tmpfiles)
+        error_info, vrt_file_path, temp_dir = raster_file_validation(
+            files, ref_tmp_file_names=ref_tmpfiles)
         ext = os.path.splitext(fed_res_fnames[0])[1]
         if ext == '.zip':
             # remove the temp zip file retrieved from federated zone
@@ -299,23 +313,28 @@ def raster_pre_add_files_to_resource_trigger(sender, **kwargs):
     if file_selected:
         # metadata extraction
         if not error_info:
-            temp_vrt_file_path = [os.path.join(temp_dir, f) for f in os.listdir(temp_dir) if '.vrt' == os.path.splitext(f)[1]].pop()
+            temp_vrt_file_path = [os.path.join(temp_dir, f) for f in os.listdir(temp_dir)
+                                  if '.vrt' == os.path.splitext(f)[1]].pop()
             res_md_dict = raster_meta_extract.get_raster_meta_dict(temp_vrt_file_path)
 
             # update core metadata coverage - box
             wgs_cov_info = res_md_dict['spatial_coverage_info']['wgs84_coverage_info']
             if wgs_cov_info:
-                res.metadata.create_element('Coverage', type='box', value=res_md_dict['spatial_coverage_info']['wgs84_coverage_info'])
+                res.metadata.create_element(
+                    'Coverage', type='box',
+                    value=res_md_dict['spatial_coverage_info']['wgs84_coverage_info']
+                )
 
             # update extended original box coverage
             if res.metadata.originalCoverage:
                 res.metadata.originalCoverage.delete()
-            v = {'value': res_md_dict['spatial_coverage_info']['original_coverage_info'] }
+            v = {'value': res_md_dict['spatial_coverage_info']['original_coverage_info']}
             res.metadata.create_element('OriginalCoverage', **v)
 
             # update extended metadata CellInformation
             res.metadata.cellInformation.delete()
-            res.metadata.create_element('CellInformation', name=os.path.basename(vrt_file_path), rows=res_md_dict['cell_info']['rows'],
+            res.metadata.create_element('CellInformation', name=os.path.basename(vrt_file_path),
+                                        rows=res_md_dict['cell_info']['rows'],
                                         columns=res_md_dict['cell_info']['columns'],
                                         cellSizeXValue=res_md_dict['cell_info']['cellSizeXValue'],
                                         cellSizeYValue=res_md_dict['cell_info']['cellSizeYValue'],
@@ -329,8 +348,9 @@ def raster_pre_add_files_to_resource_trigger(sender, **kwargs):
             band_info = res_md_dict['band_info']
             for band in band_info.values():
                 res.metadata.create_element('BandInformation', name=band['name'], variableName='',
-                                            variableUnit=band['variableUnit'], method='', comment='',
-                                            noDataValue=band['noDataValue'], maximumValue=band['maximumValue'],
+                                            variableUnit=band['variableUnit'], method='',
+                                            comment='', noDataValue=band['noDataValue'],
+                                            maximumValue=band['maximumValue'],
                                             minimumValue=band['minimumValue']
                                             )
 
@@ -338,7 +358,8 @@ def raster_pre_add_files_to_resource_trigger(sender, **kwargs):
             validate_files_dict['are_files_valid'] = False
             validate_files_dict['message'] = 'Raster validation error. {0}' \
                                              'See http://www.gdal.org/gdal_vrttut.html ' \
-                                             'for information on the .vrt format.'.format(' '.join(error_info))
+                                             'for information on the .vrt format.'.\
+                                             format(' '.join(error_info))
 
         # remove temp dir
         if os.path.isdir(temp_dir):
@@ -346,6 +367,7 @@ def raster_pre_add_files_to_resource_trigger(sender, **kwargs):
         # remove the temp file retrieved from federated zone for metadata extraction
         if fed_res_fnames and fed_tmpfile_name:
             shutil.rmtree(os.path.dirname(fed_tmpfile_name))
+
 
 @receiver(pre_delete_file_from_resource, sender=RasterResource)
 def raster_pre_delete_file_from_resource_trigger(sender, **kwargs):
@@ -360,7 +382,8 @@ def raster_pre_delete_file_from_resource_trigger(sender, **kwargs):
 
     # reset extended metadata CellInformation now that the only file is deleted
     res.metadata.cellInformation.delete()
-    res.metadata.create_element('CellInformation', name=res.metadata.title.value, rows=None, columns=None,
+    res.metadata.create_element('CellInformation', name=res.metadata.title.value,
+                                rows=None, columns=None,
                                 cellSizeXValue=None, cellSizeYValue=None,
                                 cellDataType=None
                                 )
@@ -369,7 +392,8 @@ def raster_pre_delete_file_from_resource_trigger(sender, **kwargs):
     for band in res.metadata.bandInformation:
         band.delete()
     res.metadata.create_element('BandInformation', name='Band_1', variableName='', variableUnit='',
-                                method='', comment='', noDataValue=None, maximumValue=None, minimumValue=None)
+                                method='', comment='', noDataValue=None,
+                                maximumValue=None, minimumValue=None)
 
     # delete all the files that is not the user selected file
     for f in ResourceFile.objects.filter(object_id=res.id):
@@ -403,7 +427,6 @@ def metadata_element_pre_create_handler(sender, **kwargs):
 @receiver(pre_metadata_element_update, sender=RasterResource)
 def metadata_element_pre_update_handler(sender, **kwargs):
     element_name = kwargs['element_name'].lower()
-    element_id = kwargs['element_id']
     request = kwargs['request']
     if element_name == "cellinformation":
         element_form = CellInfoValidationForm(request.POST)
@@ -422,5 +445,6 @@ def metadata_element_pre_update_handler(sender, **kwargs):
         return {'is_valid': False, 'element_data_dict': None, "errors": element_form.errors}
 """
 Since each of the Raster metadata element is required no need to listen to any delete signal
-The Raster landing page should not have delete UI functionality for the resource specific metadata elements
+The Raster landing page should not have delete UI functionality for the resource
+specific metadata elements
 """
