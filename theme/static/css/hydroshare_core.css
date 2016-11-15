@@ -3403,7 +3403,7 @@ div.btn-update-picture:hover {
 }
 
 #user-profile-tabs {
-    margin-top: 20px;
+	margin-top: 20px;
 	margin-bottom: 60px;
 }
 
@@ -3470,12 +3470,12 @@ button.no-style:focus {
 }
 
 .group-thumbnail {
-    display: block;
-    padding: 4px;
-    margin-bottom: 20px;
-    line-height: 1.42857143;
-    background-color: #fff;
-    border: 1px solid #ddd;
+	display: block;
+	padding: 4px;
+	margin-bottom: 20px;
+	line-height: 1.42857143;
+	background-color: #fff;
+	border: 1px solid #ddd;
 	height: 100%;
 }
 
@@ -3580,8 +3580,8 @@ button.no-style:focus {
     width: 80px;
     background-size: contain;
 	background-repeat: no-repeat;
-    background-position: center center;
-    display: inline-block;
+	background-position: center center;
+	display: inline-block;
 	background-color: #093e54;
 }
 
