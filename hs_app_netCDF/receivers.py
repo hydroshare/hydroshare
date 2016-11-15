@@ -367,7 +367,9 @@ def netcdf_pre_add_files_to_resource(sender, **kwargs):
                     nc_res.metadata.create_element('originalcoverage',
                                                     value=res_dublin_core_meta['original-box'],
                                                     projection_string_type=res_dublin_core_meta['projection-info']['type'],
-                                                    projection_string_text=res_dublin_core_meta['projection-info']['text'])
+                                                    projection_string_text=res_dublin_core_meta['projection-info']['text'],
+                                                    datum=res_dublin_core_meta['projection-info']['datum']
+                                                   )
                 else:
                     nc_res.metadata.create_element('originalcoverage', value=res_dublin_core_meta['original-box'])
 

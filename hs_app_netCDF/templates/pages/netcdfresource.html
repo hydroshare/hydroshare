@@ -32,9 +32,7 @@
                                     <tr><th class="text-muted">Coordinate String </th><td style="word-break:break-all" >{{ original_coverage.projection_string_text}}</td></tr>
                                 {% endif %}
 
-                                {% if original_coverage.units %}
-                                <tr><th class="text-muted">Coordinate System Unit</th><td>{{ original_coverage.units }}</td></tr>
-                                {% endif %}
+
                             </tbody>
                         </table>
                         {% endif %}
@@ -42,6 +40,7 @@
                         <h4>Extent</h4>
 
                         <table class="custom-table">
+
                             {% if original_coverage.northlimit %}
                                 <tr><th class="text-muted">North </th><td>{{ original_coverage.northlimit }}</td></tr>
                             {% endif %}
@@ -57,6 +56,11 @@
                             {% if original_coverage.westlimit %}
                                 <tr><th class="text-muted">West </th><td>{{ original_coverage.westlimit }}</td></tr>
                             {% endif %}
+
+                            {% if original_coverage.units %}
+                                <tr><th class="text-muted">Extent Unit</th><td>{{ original_coverage.units }}</td></tr>
+                            {% endif %}
+
                         </table>
                     {% else %}
                         <p>Metadata information is not provided. </p>
