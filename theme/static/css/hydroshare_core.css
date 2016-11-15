@@ -3687,7 +3687,7 @@ button.no-style:focus {
 }
 
 .group-thumbnail-footer {
-    padding-top: 10px;
+	padding-top: 10px;
 	position: absolute;
 	bottom: 14px;
 }
