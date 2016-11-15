@@ -5,6 +5,7 @@ from django.contrib import messages
 from django.core.exceptions import ValidationError
 from django.db import Error
 from django.contrib.contenttypes.models import ContentType
+from django.template import Template, Context
 
 from rest_framework import status
 
@@ -152,6 +153,32 @@ def add_metadata_element(request, hs_file_type, file_type_id, element_name, **kw
 
 
 @login_required
+def update_key_value_metadata(request, hs_file_type, file_type_id, **kwargs):
+    """add/update key/value extended metadata for a given logical file
+    key/value data is expected as part of the request.POST data
+    If the key already exists, the value then gets updated, otherwise, the key/value is added
+    to the hstore dict type field
+    """
+    logical_file, json_response = _get_logical_file(hs_file_type, file_type_id)
+    if json_response is not None:
+        return json_response
+
+    key = request.POST['key']
+    value = request.POST['value']
+    logical_file.metadata.extra_metadata[key] = value
+    logical_file.metadata.save()
+    extra_metadata_div = super(logical_file.metadata.__class__,
+                               logical_file.metadata).get_html_forms()
+    context = Context({})
+    template = Template(extra_metadata_div.render())
+    rendered_html = template.render(context)
+    ajax_response_data = {'status': 'success', 'logical_file_type': logical_file.type_name(),
+                          'extra_metadata': rendered_html,
+                          'message': "Update was successful"}
+    return JsonResponse(ajax_response_data, status=status.HTTP_200_OK)
+
+
+@login_required
 def get_metadata(request, hs_file_type, file_type_id, metadata_mode):
     """
     Gets metadata html for the logical file type
@@ -183,3 +210,15 @@ def get_metadata(request, hs_file_type, file_type_id, metadata_mode):
 
     ajax_response_data = {'status': 'success', 'metadata': metadata}
     return JsonResponse(ajax_response_data, status=status.HTTP_200_OK)
+
+
+def _get_logical_file(hs_file_type, file_type_id):
+    content_type = ContentType.objects.get(app_label="hs_file_types", model=hs_file_type.lower())
+    logical_file_type_class = content_type.model_class()
+    logical_file = logical_file_type_class.objects.filter(id=file_type_id).first()
+    if logical_file is None:
+        err_msg = "No matching logical file type was found."
+        ajax_response_data = {'status': 'error', 'message': err_msg}
+        return None, JsonResponse(ajax_response_data, status=status.HTTP_200_OK)
+
+    return logical_file, None

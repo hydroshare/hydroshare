@@ -85,6 +85,7 @@ class GeoRasterFileMetaData(AbstractFileMetaData, GeoRasterMetaDataMixin):
         """
         root_div = div("{% load crispy_forms_tags %}")
         with root_div:
+            super(GeoRasterFileMetaData, self).get_html_forms()
             with div(cls="well", id="variables"):
                 with div(cls="col-lg-6 col-xs-12"):
                     with form(id="id-coverage_temporal-file-type", action="{{ temp_form.action }}",

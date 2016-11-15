@@ -1,14 +1,13 @@
-import json
-from dateutil import parser
-
 from django.db import models
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.contenttypes.fields import GenericRelation
 from django.core.exceptions import ValidationError, ObjectDoesNotExist
-from hs_core.models import AbstractMetaDataElement, Coverage
+
 from django.contrib.postgres.fields import HStoreField
 
-from hs_core.models import ResourceFile
+from dominate.tags import *
+
+from hs_core.models import ResourceFile, AbstractMetaDataElement, Coverage
 
 
 class AbstractFileMetaData(models.Model):
@@ -25,11 +24,59 @@ class AbstractFileMetaData(models.Model):
     def delete_all_elements(self):
         self.coverages.all().delete()
 
-
     def get_html(self):
-        # subclass must implement
+        # subclass must override
         # returns a string representing html code for display of metadata in view mode
-        raise NotImplementedError
+        # self.extra_metadata = {'key-1': 'value-1', 'key-2': 'value-2'}
+        if self.extra_metadata:
+            root_div = div(cls="col-sm-12 content-block")
+            with root_div:
+                legend('Extended Metadata')
+                with table(cls="table table-striped funding-agencies-table"):
+                    with tbody():
+                        with tr(cls="header-row"):
+                            th("Key")
+                            th("Value")
+                        for k, v in self.extra_metadata.iteritems():
+                            with tr(data_key=k):
+                                td(k)
+                                td(v)
+
+            return root_div.render()
+        else:
+            return ""
+
+    def get_html_forms(self):
+        # self.extra_metadata = {'key-1': 'value-1', 'key-2': 'value-2'}
+        if self.extra_metadata:
+            root_div = div(cls="col-sm-12 content-block", id="filetype-extra-metadata")
+            with root_div:
+                legend('Extended Metadata')
+                with a(cls="btn btn-success", type="button", data_toggle="modal",
+                       data_target="#add-keyvalue-filetype-modal"):
+                    with span(cls="glyphicon glyphicon-plus"):
+                        span("Add Key/Value", cls="button-label")
+                with table(cls="table table-striped funding-agencies-table"):
+                    with tbody():
+                        with tr(cls="header-row"):
+                            th("Key")
+                            th("Value")
+                            th("Actions")
+                        for k, v in self.extra_metadata.iteritems():
+                            with tr(data_key=k):
+                                td(k)
+                                td(v)
+                                with td():
+                                    a(data_toggle="modal", data_placement="auto", title="Edit",
+                                      cls="glyphicon glyphicon-pencil icon-button icon-blue",
+                                      data_target="#edit-keyvalue-filetype-{}".format(k))
+                                    a(data_toggle="modal", data_placement="auto", title="Remove",
+                                      cls="glyphicon glyphicon-trash icon-button btn-remove",
+                                      data_target="#delete-keyvalue-filetype-{}".format(k))
+                self._get_add_key_value_modal_form()
+            return root_div
+        else:
+            return self._get_add_key_value_modal_form()
 
     def has_all_required_elements(self):
         return True
@@ -53,22 +100,26 @@ class AbstractFileMetaData(models.Model):
         return self.coverages.filter(type='period').first()
 
     def create_element(self, element_model_name, **kwargs):
+        # had to import here to avoid circular import
+        from hs_file_types.utils import update_resource_coverage_element
         model_type = self._get_metadata_element_model_type(element_model_name)
         kwargs['content_object'] = self
         element = model_type.model_class().create(**kwargs)
         if element_model_name.lower() == "coverage":
             resource = element.metadata.logical_file.resource
-            _update_resource_coverage_element(resource)
+            update_resource_coverage_element(resource)
         return element
 
     def update_element(self, element_model_name, element_id, **kwargs):
+        # had to import here to avoid circular import
+        from hs_file_types.utils import update_resource_coverage_element
         model_type = self._get_metadata_element_model_type(element_model_name)
         kwargs['content_object'] = self
         model_type.model_class().update(element_id, **kwargs)
         if element_model_name.lower() == "coverage":
             element = model_type.model_class().objects.get(id=element_id)
             resource = element.metadata.logical_file.resource
-            _update_resource_coverage_element(resource)
+            update_resource_coverage_element(resource)
 
     def delete_element(self, element_model_name, element_id):
         model_type = self._get_metadata_element_model_type(element_model_name)
@@ -105,6 +156,47 @@ class AbstractFileMetaData(models.Model):
     @classmethod
     def validate_element_data(cls, request, element_name):
         raise NotImplementedError
+
+    def _get_add_key_value_modal_form(self):
+        form_action = "/hsapi/_internal/{0}/{1}/update-file-keyvalue-metadata/"
+        form_action = form_action.format(self.logical_file.__class__.__name__, self.logical_file.id)
+        modal_div = div(cls="modal fade", id="add-keyvalue-filetype-modal", tabindex="-1",
+                        role="dialog", aria_labelledby="add-key-value-metadata",
+                        aria_hidden="true")
+        with modal_div:
+            with div(cls="modal-dialog", role="document"):
+                with div(cls="modal-content"):
+                    with form(action=form_action, id="add-keyvalue-filetype-metadata",
+                              method="post", enctype="multipart/form-data"):
+                        div("{% csrf_token %}")
+                        with div(cls="modal-header"):
+                            button("x", type="button", cls="close", data_dismiss="modal",
+                                   aria_hidden="true")
+                            h4("Add/Update Key/Value Metadata", cls="modal-title",
+                               id="add-key-value-metadata")
+                        with div(cls="modal-body"):
+                            with div(cls="form-group"):
+                                with div(cls="control-group"):
+                                    label("Name", cls="control-label requiredField",
+                                          fr="file_extra_meta_name")
+                                    with div(cls="controls"):
+                                        input(cls="form-control input-sm textinput textInput",
+                                              id="file_extra_meta_name", maxlength="100",
+                                              name="name", type="text")
+                                with div(cls="control-group"):
+                                    label("Value", cls="control-label requiredField",
+                                          fr="file_extra_meta_value")
+                                    with div(cls="controls"):
+                                        textarea(cls="form-control input-sm textarea",
+                                                 cols="40", rows="10",
+                                                 id="file_extra_meta_value",
+                                                 name="value", type="text")
+                        with div(cls="modal-footer"):
+                            button("Cancel", type="button", cls="btn btn-default",
+                                   data_dismiss="modal")
+                            button("OK", type="button", cls="btn btn-primary",
+                                   onclick="updateFileTypeExtraMetadata(); return true;")
+        return modal_div
 
 
 class AbstractLogicalFile(models.Model):
@@ -166,88 +258,3 @@ class AbstractLogicalFile(models.Model):
         # delete all metadata associated with this file type
         if self.has_metadata:
             self.metadata.delete_all_elements()
-
-
-def _update_resource_coverage_element(resource):
-    # TODO: This needs to be unit tested
-    # update resource spatial coverage
-    bbox_value = {}
-    spatial_coverages = [lf.metadata.spatial_coverage for lf in resource.logical_files
-                         if lf.metadata.spatial_coverage is not None]
-
-    cov_type = "point"
-    if len(spatial_coverages) > 1:
-        bbox_value = {'northlimit': -90, 'southlimit': 90, 'eastlimit': -180, 'westlimit': 180,
-                      'projection': 'WGS 84 EPSG:4326', 'units': "Decimal degrees"}
-        cov_type = 'box'
-        for sp_cov in spatial_coverages:
-            if sp_cov.type == "box":
-                if bbox_value['northlimit'] < sp_cov.value['northlimit']:
-                    bbox_value['northlimit'] = sp_cov.value['northlimit']
-                if bbox_value['southlimit'] > sp_cov.value['southlimit']:
-                    bbox_value['southlimit'] = sp_cov.value['southlimit']
-                if bbox_value['eastlimit'] < sp_cov.value['eastlimit']:
-                    bbox_value['eastlimit'] = sp_cov.value['eastlimit']
-                if bbox_value['westlimit'] > sp_cov.value['westlimit']:
-                    bbox_value['westlimit'] = sp_cov.value['westlimit']
-            else:
-                # point type coverage
-                if bbox_value['northlimit'] < sp_cov.value['north']:
-                    bbox_value['northlimit'] = sp_cov.value['north']
-                if bbox_value['southlimit'] > sp_cov.value['north']:
-                    bbox_value['southlimit'] = sp_cov.value['north']
-                if bbox_value['eastlimit'] < sp_cov.value['east']:
-                    bbox_value['eastlimit'] = sp_cov.value['east']
-                if bbox_value['westlimit'] > sp_cov.value['east']:
-                    bbox_value['westlimit'] = sp_cov.value['east']
-
-    elif len(spatial_coverages) == 1:
-        sp_cov = spatial_coverages[0]
-        if sp_cov.type == "box":
-            bbox_limits = ['northlimit', 'southlimit', 'eastlimit', 'westlimit']
-            for limit in bbox_limits:
-                if bbox_value[limit] < sp_cov.value[limit]:
-                    bbox_value[limit] = sp_cov.value[limit]
-        else:
-            # point type coverage
-            bbox_value = {'north': -90, 'east': -180,
-                          'projection': 'WGS 84 EPSG:4326', 'units': "Decimal degrees"}
-            if bbox_value['north'] < sp_cov.value['north']:
-                bbox_value['north'] = sp_cov.value['north']
-            if bbox_value['east'] < sp_cov.value['east']:
-                bbox_value['east'] = sp_cov.value['east']
-
-    if bbox_value:
-        spatial_cov = resource.metadata.coverages.all().exclude(type='period').first()
-        if spatial_cov:
-            spatial_cov.type = cov_type
-            spatial_cov._value = json.dumps(bbox_value)
-            spatial_cov.save()
-        else:
-            resource.metadata.create_element("coverage", type=cov_type, value=bbox_value)
-
-    # update resource temporal coverage
-    temporal_coverages = [lf.metadata.temporal_coverage for lf in resource.logical_files
-                         if lf.metadata.temporal_coverage is not None]
-
-    date_data = {'start': None, 'end': None}
-    for temp_cov in temporal_coverages:
-        if date_data['start'] is None:
-            date_data['start'] = temp_cov.value['start']
-        else:
-            if parser.parse(date_data['start']) > parser.parse(temp_cov.value['start']):
-                date_data['start'] = temp_cov.value['start']
-
-        if date_data['end'] is None:
-            date_data['end'] = temp_cov.value['end']
-        else:
-            if parser.parse(date_data['end']) < parser.parse(temp_cov.value['end']):
-                date_data['end'] = temp_cov.value['end']
-
-    if date_data['start'] is not None and date_data['end'] is not None:
-        temp_cov = resource.metadata.coverages.all().filter(type='period').first()
-        if temp_cov:
-            temp_cov._value = json.dumps(date_data)
-            temp_cov.save()
-        else:
-            resource.metadata.create_element("coverage", type='period', value=date_data)

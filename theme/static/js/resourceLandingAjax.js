@@ -675,7 +675,42 @@ function move_or_rename_irods_file_or_folder_ajax_submit(res_id, source_path, ta
         }
     });
 }
+function updateFileTypeExtraMetadata(){
+    $form = $('#add-keyvalue-filetype-metadata');
+    var url = $form.attr('action');
+    var key = $("#file_extra_meta_name").val();
+    var value = $("#file_extra_meta_value").val();
 
+    $.ajax({
+        type: "POST",
+        url: url,
+        data: {
+            key: key,
+            value: value
+        },
+        success: function (result) {
+            var json_response = result;
+            if (json_response.status === "success"){
+                $("#add-keyvalue-filetype-modal").modal('hide');
+                $("div").removeClass("modal-backdrop");
+                $("body").removeClass("modal-open");
+                $("#filetype-extra-metadata").html(json_response.extra_metadata);
+            }
+            else {
+                $alert_error = $alert_error.replace("Metadata failed to update.", json_response.message);
+                $form.before($alert_error);
+                $(".alert-error").fadeTo(2000, 500).slideUp(1000, function(){
+                    $(".alert-error").alert('close');
+                });
+                $("#add-keyvalue-filetype-modal").modal('hide');
+                $("div").removeClass("modal-backdrop");
+                $("body").removeClass("modal-open");
+            }
+        },
+        error: function(xhr, errmsg, err){
+        }
+    });
+}
 // show "Save changes" button when metadata form editing starts
 function showMetadataFormSaveChangesButton(){
     $(".form-control").each(function () {

@@ -1,5 +1,4 @@
 # coding=utf-8
-from django.contrib.contenttypes.fields import GenericRelation
 from django.db import models
 from django.template import Template, Context
 
@@ -17,7 +16,7 @@ class GenericFileMetaData(AbstractFileMetaData):
         # file type metadata associated with a logical file using this
         # single line: {{ logical_file.metadata.get_html |safe }}
 
-        html_string = ''
+        html_string = super(GenericFileMetaData, self).get_html()
         if not self.has_metadata:
             root_div = div(cls="alert alert-warning alert-dismissible", role="alert")
             with root_div:
@@ -25,7 +24,7 @@ class GenericFileMetaData(AbstractFileMetaData):
             html_string = root_div.render()
         else:
             if self.temporal_coverage:
-                html_string = self.temporal_coverage.get_html()
+                html_string += self.temporal_coverage.get_html()
 
             if self.spatial_coverage:
                 html_string += self.spatial_coverage.get_html()
@@ -42,6 +41,7 @@ class GenericFileMetaData(AbstractFileMetaData):
         # TODO: Refactor
         root_div = div("{% load crispy_forms_tags %}")
         with root_div:
+            super(GenericFileMetaData, self).get_html_forms()
             with div(cls="col-lg-6 col-xs-12"):
                 with form(id="id-coverage_temporal-file-type", action="{{ temp_form.action }}",
                           method="post", enctype="multipart/form-data"):
@@ -66,7 +66,7 @@ class GenericFileMetaData(AbstractFileMetaData):
                                    cls="btn btn-primary pull-right",
                                    style="display: none;",
                                    onclick="metadata_update_ajax_submit("
-                                           "'id-coverage-spatial-filetype'); return false;")
+                                           "'id-coverage-spatial-filetype');")
 
         template = Template(root_div.render())
         context_dict = dict()
@@ -101,6 +101,8 @@ class GenericFileMetaData(AbstractFileMetaData):
         context_dict["spatial_form"] = spatial_cov_form
         context = Context(context_dict)
         rendered_html = template.render(context)
+        # file level form field ids need to changed so that they are different from
+        # the ids used at the resource level for the same type of metadata elements
         rendered_html = rendered_html.replace("div_id_start", "div_id_start_filetype")
         rendered_html = rendered_html.replace("div_id_end", "div_id_end_filetype")
         rendered_html = rendered_html.replace("id_start", "id_start_filetype")
