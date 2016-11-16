@@ -94,9 +94,9 @@ def get_original_coverage_info(raster_dataset):
 
         # get projection info
         if spatial_ref.IsProjected():
-            projection= spatial_ref.GetAttrValue('projcs', 0)
+            projection = spatial_ref.GetAttrValue('projcs', 0)
         else:
-            projection= spatial_ref.GetAttrValue('geogcs', 0)
+            projection = spatial_ref.GetAttrValue('geogcs', 0)
 
     else:
         unit = None
@@ -197,17 +197,17 @@ def get_wgs84_coverage_info(raster_dataset):
         transform = osr.CoordinateTransformation(original_cs, wgs84_cs)
         if transform.this is not None:
             # transform original bounding box to wgs84 bounding box
-            wgs84_westlimit,wgs84_northlimit = transform.TransformPoint(original_westlimit,
-                                                                        original_northlimit)[:2]
-            wgs84_eastlimit,wgs84_southlimit = transform.TransformPoint(original_eastlimit,
-                                                                        original_southlimit)[:2]
+            wgs84_westlimit, wgs84_northlimit = transform.TransformPoint(original_westlimit,
+                                                                         original_northlimit)[:2]
+            wgs84_eastlimit, wgs84_southlimit = transform.TransformPoint(original_eastlimit,
+                                                                         original_southlimit)[:2]
 
             wgs84_coverage_info = OrderedDict([
                 ('northlimit', wgs84_northlimit),
                 ('southlimit', wgs84_southlimit),
                 ('eastlimit', wgs84_eastlimit),
                 ('westlimit', wgs84_westlimit),
-                ('units','Decimal degrees'),
+                ('units', 'Decimal degrees'),
                 ('projection', 'WGS 84 EPSG:4326')
             ])
 
@@ -303,5 +303,3 @@ def get_band_info(raster_file_name):
     os.chdir(ori_dir)
 
     return band_info
-
-

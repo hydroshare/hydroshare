@@ -1,7 +1,7 @@
 from mezzanine.pages.page_processors import processor_for
 from models import RasterResource
 from crispy_forms.layout import Layout, HTML
-from forms import CellInfoForm, BandInfoForm, BaseBandInfoFormSet,OriginalCoverageSpatialForm, \
+from forms import CellInfoForm, BandInfoForm, BaseBandInfoFormSet, OriginalCoverageSpatialForm, \
     BandInfoLayoutEdit
 from hs_core import page_processors
 from django.forms.models import formset_factory
@@ -103,7 +103,7 @@ def landing_page(request, page):
                                cellinfo_layout,
                                BandInfoLayoutEdit,
                                HTML("</div>")
-        )
+                               )
         context = page_processors.get_page_context(page, request.user, resource_edit=edit_resource,
                                                    extended_metadata_layout=ext_md_layout,
                                                    request=request)

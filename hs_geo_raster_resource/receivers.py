@@ -171,7 +171,7 @@ def explode_zip_file(zip_file_name, file):
             for name in filenames:
                 file_path = os.path.abspath(os.path.join(dirpath, name))
                 if os.path.splitext(os.path.basename(file_path))[1] in ['.vrt', '.tif']:
-                    shutil.move(file_path, os.path.join(temp_dir,name))
+                    shutil.move(file_path, os.path.join(temp_dir, name))
                     extract_file_paths.append(os.path.join(temp_dir, os.path.basename(file_path)))
 
     except Exception:

@@ -166,7 +166,7 @@ class CellInfoForm(ModelForm):
                    'cellSizeXValue': forms.TextInput(attrs={'readonly': 'readonly'}),
                    'cellSizeYValue': forms.TextInput(attrs={'readonly': 'readonly'}),
                    'cellDataType': forms.TextInput(attrs={'readonly': 'readonly'}),
-                }
+                   }
 
 
 class CellInfoValidationForm(forms.Form):

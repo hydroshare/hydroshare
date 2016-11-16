@@ -230,7 +230,7 @@ class TestRasterMetaData(MockIRODSTestCaseMixin, TransactionTestCase):
                                         extract_metadata=False)
 
         self._test_metadata_extraction()
-    
+
     def test_metadata_on_content_file_delete(self):
         # test that some of the metadata is not deleted on content file deletion
         files = [UploadedFile(file=self.raster_tif_file_obj, name=self.raster_tif_file_name)]
@@ -548,7 +548,7 @@ class TestRasterMetaData(MockIRODSTestCaseMixin, TransactionTestCase):
 
         # adding required metadata
         self.resRaster.metadata.create_element('description', abstract='example abstract')
-        self.resRaster.metadata.create_element('subject',value='logan')
+        self.resRaster.metadata.create_element('subject', value='logan')
 
         self.assertTrue(self.resRaster.has_required_content_files())
         self.assertTrue(self.resRaster.metadata.has_all_required_elements())
@@ -626,5 +626,3 @@ class TestRasterMetaData(MockIRODSTestCaseMixin, TransactionTestCase):
         self.assertEqual(band_info.noDataValue, '-3.40282346639e+38')
         self.assertEqual(band_info.maximumValue, '3031.44311523')
         self.assertEqual(band_info.minimumValue, '1358.33459473')
-
-

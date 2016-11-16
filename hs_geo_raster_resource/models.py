@@ -2,12 +2,12 @@ import json
 
 from django.contrib.contenttypes.fields import GenericRelation
 from django.db import models
-from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import ValidationError
 
 from mezzanine.pages.page_processors import processor_for
 
-from hs_core.models import BaseResource, ResourceManager, resource_processor, CoreMetaData, AbstractMetaDataElement
+from hs_core.models import BaseResource, ResourceManager, resource_processor, CoreMetaData, \
+    AbstractMetaDataElement
 
 
 # extended metadata for raster resource type to store the original box type coverage
@@ -261,11 +261,11 @@ class RasterMetaData(CoreMetaData):
 
         for band_info in self.bandInformation:
             bandinfo_fields = ['name', 'variableName', 'variableUnit', 'noDataValue',
-                               'maximumValue', 'minimumValue','method', 'comment']
+                               'maximumValue', 'minimumValue', 'method', 'comment']
             self.add_metadata_element_to_xml(container, band_info, bandinfo_fields)
 
         if self.originalCoverage:
-            ori_coverage = self.originalCoverage;
+            ori_coverage = self.originalCoverage
             cov = etree.SubElement(container, '{%s}spatialReference' % self.NAMESPACES['hsterms'])
             cov_term = '{%s}' + 'box'
             coverage_terms = etree.SubElement(cov, cov_term % self.NAMESPACES['hsterms'])
@@ -294,4 +294,3 @@ class RasterMetaData(CoreMetaData):
         if self.originalCoverage:
             self.originalCoverage.delete()
         self.bandInformation.delete()
-
