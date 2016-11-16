@@ -163,8 +163,33 @@ def update_key_value_metadata(request, hs_file_type, file_type_id, **kwargs):
     if json_response is not None:
         return json_response
 
+    def validate_key():
+        if key in logical_file.metadata.extra_metadata.keys():
+            ajax_response_data = {'status': 'error',
+                                  'logical_file_type': logical_file.type_name(),
+                                  'message': "Update failed. Key already exists."}
+            return False, JsonResponse(ajax_response_data, status=status.HTTP_200_OK)
+        return True, None
+
+    key_original = request.POST.get('key_original', None)
     key = request.POST['key']
     value = request.POST['value']
+    if key_original is not None:
+        # user trying to update an existing pair of key/value
+        if key != key_original:
+            # user is updating the key
+            is_valid, json_response = validate_key()
+            if not is_valid:
+                return json_response
+            else:
+                if key_original in logical_file.metadata.extra_metadata.keys():
+                    del logical_file.metadata.extra_metadata[key_original]
+    else:
+        # user trying to add a new pair of key/value
+        is_valid, json_response = validate_key()
+        if not is_valid:
+            return json_response
+
     logical_file.metadata.extra_metadata[key] = value
     logical_file.metadata.save()
     extra_metadata_div = super(logical_file.metadata.__class__,

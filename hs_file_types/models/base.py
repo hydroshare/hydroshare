@@ -62,18 +62,21 @@ class AbstractFileMetaData(models.Model):
                             th("Key")
                             th("Value")
                             th("Actions")
+                        counter = 0
                         for k, v in self.extra_metadata.iteritems():
+                            counter += 1
                             with tr(data_key=k):
                                 td(k)
                                 td(v)
                                 with td():
                                     a(data_toggle="modal", data_placement="auto", title="Edit",
                                       cls="glyphicon glyphicon-pencil icon-button icon-blue",
-                                      data_target="#edit-keyvalue-filetype-{}".format(k))
+                                      data_target="#edit-keyvalue-filetype-modal-{}".format(counter))
                                     a(data_toggle="modal", data_placement="auto", title="Remove",
                                       cls="glyphicon glyphicon-trash icon-button btn-remove",
-                                      data_target="#delete-keyvalue-filetype-{}".format(k))
+                                      data_target="#delete-keyvalue-filetype-modal-{}".format(counter))
                 self._get_add_key_value_modal_form()
+                self._get_edit_key_value_modal_forms()
             return root_div
         else:
             return self._get_add_key_value_modal_form()
@@ -172,12 +175,12 @@ class AbstractFileMetaData(models.Model):
                         with div(cls="modal-header"):
                             button("x", type="button", cls="close", data_dismiss="modal",
                                    aria_hidden="true")
-                            h4("Add/Update Key/Value Metadata", cls="modal-title",
+                            h4("Add Key/Value Metadata", cls="modal-title",
                                id="add-key-value-metadata")
                         with div(cls="modal-body"):
                             with div(cls="form-group"):
                                 with div(cls="control-group"):
-                                    label("Name", cls="control-label requiredField",
+                                    label("Key", cls="control-label requiredField",
                                           fr="file_extra_meta_name")
                                     with div(cls="controls"):
                                         input(cls="form-control input-sm textinput textInput",
@@ -195,8 +198,74 @@ class AbstractFileMetaData(models.Model):
                             button("Cancel", type="button", cls="btn btn-default",
                                    data_dismiss="modal")
                             button("OK", type="button", cls="btn btn-primary",
-                                   onclick="updateFileTypeExtraMetadata(); return true;")
+                                   onclick="addFileTypeExtraMetadata(); return true;")
         return modal_div
+
+    def _get_edit_key_value_modal_forms(self):
+        # TODO: See if can use one modal dialog to edit any pair of key/value
+        form_action = "/hsapi/_internal/{0}/{1}/update-file-keyvalue-metadata/"
+        form_action = form_action.format(self.logical_file.__class__.__name__, self.logical_file.id)
+        counter = 0
+        root_div = div(id="edit-keyvalue-filetype-modals")
+        with root_div:
+            for k, v in self.extra_metadata.iteritems():
+                counter += 1
+                modal_div = div(cls="modal fade",
+                                id="edit-keyvalue-filetype-modal-{}".format(counter),
+                                tabindex="-1",
+                                role="dialog", aria_labelledby="edit-key-value-metadata",
+                                aria_hidden="true")
+                with modal_div:
+                    with div(cls="modal-dialog", role="document"):
+                        with div(cls="modal-content"):
+                            form_id = "edit-keyvalue-filetype-metadata-{}".format(counter)
+                            with form(action=form_action,
+                                      id=form_id, data_counter="{}".format(counter),
+                                      method="post", enctype="multipart/form-data"):
+                                div("{% csrf_token %}")
+                                with div(cls="modal-header"):
+                                    button("x", type="button", cls="close", data_dismiss="modal",
+                                           aria_hidden="true")
+                                    h4("Update Key/Value Metadata", cls="modal-title",
+                                       id="edit-key-value-metadata")
+                                with div(cls="modal-body"):
+                                    with div(cls="form-group"):
+                                        with div(cls="control-group"):
+                                            label("Key(Original)",
+                                                  cls="control-label requiredField",
+                                                  fr="file_extra_meta_key_original")
+                                            with div(cls="controls"):
+                                                input(value=k, readonly="readonly",
+                                                      cls="form-control input-sm textinput "
+                                                          "textInput",
+                                                      id="file_extra_meta_key_original",
+                                                      maxlength="100",
+                                                      name="key_original", type="text")
+                                        with div(cls="control-group"):
+                                            label("Key", cls="control-label requiredField",
+                                                  fr="file_extra_meta_key")
+                                            with div(cls="controls"):
+                                                input(value=k,
+                                                      cls="form-control input-sm textinput "
+                                                          "textInput",
+                                                      id="file_extra_meta_key", maxlength="100",
+                                                      name="key", type="text")
+                                        with div(cls="control-group"):
+                                            label("Value", cls="control-label requiredField",
+                                                  fr="file_extra_meta_value")
+                                            with div(cls="controls"):
+                                                textarea(v,
+                                                         cls="form-control input-sm textarea",
+                                                         cols="40", rows="10",
+                                                         id="file_extra_meta_value",
+                                                         name="value", type="text")
+                                with div(cls="modal-footer"):
+                                    button("Cancel", type="button", cls="btn btn-default",
+                                           data_dismiss="modal")
+                                    button("OK", type="button", cls="btn btn-primary",
+                                           onclick="updateFileTypeExtraMetadata('{}'); "
+                                                   "return true;".format(form_id))
+            return root_div
 
 
 class AbstractLogicalFile(models.Model):

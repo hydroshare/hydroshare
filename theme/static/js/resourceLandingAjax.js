@@ -675,11 +675,16 @@ function move_or_rename_irods_file_or_folder_ajax_submit(res_id, source_path, ta
         }
     });
 }
-function updateFileTypeExtraMetadata(){
+function addFileTypeExtraMetadata(){
     $form = $('#add-keyvalue-filetype-metadata');
     var url = $form.attr('action');
     var key = $("#file_extra_meta_name").val();
     var value = $("#file_extra_meta_value").val();
+    $alert_error = '<div class="alert alert-danger" id="error-alert"> \
+        <button type="button" class="close" data-dismiss="alert">x</button> \
+        <strong>Error! </strong> \
+        Metadata failed to update.\
+    </div>';
 
     $.ajax({
         type: "POST",
@@ -697,20 +702,61 @@ function updateFileTypeExtraMetadata(){
                 $("#filetype-extra-metadata").html(json_response.extra_metadata);
             }
             else {
-                $alert_error = $alert_error.replace("Metadata failed to update.", json_response.message);
-                $form.before($alert_error);
-                $(".alert-error").fadeTo(2000, 500).slideUp(1000, function(){
-                    $(".alert-error").alert('close');
-                });
                 $("#add-keyvalue-filetype-modal").modal('hide');
                 $("div").removeClass("modal-backdrop");
                 $("body").removeClass("modal-open");
+                $alert_error = $alert_error.replace("Metadata failed to update.", json_response.message);
+                $("#filetype-extra-metadata").before($alert_error);
+                $(".alert-error").fadeTo(2000, 500).slideUp(1000, function(){
+                    $(".alert-error").alert('close');
+                });
+
             }
         },
         error: function(xhr, errmsg, err){
         }
     });
 }
+
+function updateFileTypeExtraMetadata(form_id){
+    $form = $('#' + form_id);
+    var datastring = $form.serialize();
+    var url = $form.attr('action');
+    var form_counter = $form.attr('data-counter');
+    $alert_error = '<div class="alert alert-danger" id="error-alert"> \
+        <button type="button" class="close" data-dismiss="alert">x</button> \
+        <strong>Error! </strong> \
+        Metadata failed to update.\
+    </div>';
+
+    $.ajax({
+        type: "POST",
+        url: url,
+        data: datastring,
+        success: function (result) {
+            var json_response = result;
+            if (json_response.status === "success"){
+                $("#edit-keyvalue-filetype-modal-" + form_counter).modal('hide');
+                $("div").removeClass("modal-backdrop");
+                $("body").removeClass("modal-open");
+                $("#filetype-extra-metadata").html(json_response.extra_metadata);
+            }
+            else {
+                $("#edit-keyvalue-filetype-modal-" + form_counter).modal('hide');
+                $("div").removeClass("modal-backdrop");
+                $("body").removeClass("modal-open");
+                $alert_error = $alert_error.replace("Metadata failed to update.", json_response.message);
+                $("#filetype-extra-metadata").before($alert_error);
+                $(".alert-error").fadeTo(2000, 500).slideUp(1000, function(){
+                    $(".alert-error").alert('close');
+                });
+            }
+        },
+        error: function(xhr, errmsg, err){
+        }
+    });
+}
+
 // show "Save changes" button when metadata form editing starts
 function showMetadataFormSaveChangesButton(){
     $(".form-control").each(function () {
