@@ -155,7 +155,8 @@ def add_metadata_element(request, hs_file_type, file_type_id, element_name, **kw
 @login_required
 def update_key_value_metadata(request, hs_file_type, file_type_id, **kwargs):
     """add/update key/value extended metadata for a given logical file
-    key/value data is expected as part of the request.POST data
+    key/value data is expected as part of the request.POST data for adding
+    key/value/key_original is expected as part of the request.POST data for updating
     If the key already exists, the value then gets updated, otherwise, the key/value is added
     to the hstore dict type field
     """
@@ -200,6 +201,32 @@ def update_key_value_metadata(request, hs_file_type, file_type_id, **kwargs):
     ajax_response_data = {'status': 'success', 'logical_file_type': logical_file.type_name(),
                           'extra_metadata': rendered_html,
                           'message': "Update was successful"}
+    return JsonResponse(ajax_response_data, status=status.HTTP_200_OK)
+
+
+@login_required
+def delete_key_value_metadata(request, hs_file_type, file_type_id, **kwargs):
+    """deletes one pair of key/value extended metadata for a given logical file
+    key data is expected as part of the request.POST data
+    If key is found the matching key/value pair is deleted from the hstore dict type field
+    """
+    logical_file, json_response = _get_logical_file(hs_file_type, file_type_id)
+    if json_response is not None:
+        return json_response
+
+    key = request.POST['key']
+    if key in logical_file.metadata.extra_metadata.keys():
+        del logical_file.metadata.extra_metadata[key]
+        logical_file.metadata.save()
+
+    extra_metadata_div = super(logical_file.metadata.__class__,
+                               logical_file.metadata).get_html_forms()
+    context = Context({})
+    template = Template(extra_metadata_div.render())
+    rendered_html = template.render(context)
+    ajax_response_data = {'status': 'success', 'logical_file_type': logical_file.type_name(),
+                          'extra_metadata': rendered_html,
+                          'message': "Delete was successful"}
     return JsonResponse(ajax_response_data, status=status.HTTP_200_OK)
 
 

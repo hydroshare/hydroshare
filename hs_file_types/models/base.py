@@ -71,12 +71,16 @@ class AbstractFileMetaData(models.Model):
                                 with td():
                                     a(data_toggle="modal", data_placement="auto", title="Edit",
                                       cls="glyphicon glyphicon-pencil icon-button icon-blue",
-                                      data_target="#edit-keyvalue-filetype-modal-{}".format(counter))
+                                      data_target="#edit-keyvalue-filetype-modal"
+                                                  "-{}".format(counter))
                                     a(data_toggle="modal", data_placement="auto", title="Remove",
                                       cls="glyphicon glyphicon-trash icon-button btn-remove",
-                                      data_target="#delete-keyvalue-filetype-modal-{}".format(counter))
+                                      data_target="#delete-keyvalue-filetype-modal"
+                                                  "-{}".format(counter))
+
                 self._get_add_key_value_modal_form()
                 self._get_edit_key_value_modal_forms()
+                self._get_delete_key_value_modal_forms()
             return root_div
         else:
             return self._get_add_key_value_modal_form()
@@ -266,6 +270,59 @@ class AbstractFileMetaData(models.Model):
                                            onclick="updateFileTypeExtraMetadata('{}'); "
                                                    "return true;".format(form_id))
             return root_div
+
+    def _get_delete_key_value_modal_forms(self):
+        form_action = "/hsapi/_internal/{0}/{1}/delete-file-keyvalue-metadata/"
+        form_action = form_action.format(self.logical_file.__class__.__name__, self.logical_file.id)
+        counter = 0
+        root_div = div(id="delete-keyvalue-filetype-modals")
+        with root_div:
+            for k, v in self.extra_metadata.iteritems():
+                counter += 1
+                modal_div = div(cls="modal fade",
+                                id="delete-keyvalue-filetype-modal-{}".format(counter),
+                                tabindex="-1",
+                                role="dialog", aria_labelledby="delete-key-value-metadata",
+                                aria_hidden="true")
+                with modal_div:
+                    with div(cls="modal-dialog", role="document"):
+                        with div(cls="modal-content"):
+                            form_id = "delete-keyvalue-filetype-metadata-{}".format(counter)
+                            with form(action=form_action,
+                                      id=form_id,
+                                      method="post", enctype="multipart/form-data"):
+                                div("{% csrf_token %}")
+                                with div(cls="modal-header"):
+                                    button("x", type="button", cls="close", data_dismiss="modal",
+                                           aria_hidden="true")
+                                    h4("Confirm to Delete Key/Value Metadata", cls="modal-title",
+                                       id="delete-key-value-metadata")
+                                with div(cls="modal-body"):
+                                    with div(cls="form-group"):
+                                        with div(cls="control-group"):
+                                            label("Key", cls="control-label requiredField",
+                                                  fr="file_extra_meta_name")
+                                            with div(cls="controls"):
+                                                input(cls="form-control input-sm textinput "
+                                                          "textInput", value=k,
+                                                      id="file_extra_meta_key", maxlength="100",
+                                                      name="key", type="text", readonly="readonly")
+                                        with div(cls="control-group"):
+                                            label("Value", cls="control-label requiredField",
+                                                  fr="file_extra_meta_value")
+                                            with div(cls="controls"):
+                                                textarea(v, cls="form-control input-sm textarea",
+                                                         cols="40", rows="10",
+                                                         id="file_extra_meta_value",
+                                                         name="value", type="text",
+                                                         readonly="readonly")
+                                with div(cls="modal-footer"):
+                                    button("Cancel", type="button", cls="btn btn-default",
+                                           data_dismiss="modal")
+                                    button("Delete", type="button", cls="btn btn-primary",
+                                           onclick="deleteFileTypeExtraMetadata('{}'); "
+                                                   "return true;".format(form_id))
+        return root_div
 
 
 class AbstractLogicalFile(models.Model):
