@@ -2,7 +2,6 @@
 
 {% load mezzanine_tags static blog_tags accounts_tags %}
 
-
 {% block main %}
     {% if user.is_anonymous %}
         <div>
@@ -22,6 +21,7 @@
             </div>
         </div>
     {% endif %}
+
     <div id="home-page-carousel" class="carousel slide" data-ride="carousel">
         <!-- Indicators -->
         <ol class="carousel-indicators">
