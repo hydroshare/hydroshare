@@ -757,6 +757,45 @@ function updateFileTypeExtraMetadata(form_id){
     });
 }
 
+function deleteFileTypeExtraMetadata(form_id){
+    $form = $('#' + form_id);
+    var datastring = $form.serialize();
+    var url = $form.attr('action');
+    var form_counter = $form.attr('data-counter');
+    $alert_error = '<div class="alert alert-danger" id="error-alert"> \
+        <button type="button" class="close" data-dismiss="alert">x</button> \
+        <strong>Error! </strong> \
+        Metadata failed to update.\
+    </div>';
+
+    $.ajax({
+        type: "POST",
+        url: url,
+        data: datastring,
+        success: function (result) {
+            var json_response = result;
+            if (json_response.status === "success"){
+                $("#delete-keyvalue-filetype-modal-" + form_counter).modal('hide');
+                $("div").removeClass("modal-backdrop");
+                $("body").removeClass("modal-open");
+                $("#filetype-extra-metadata").html(json_response.extra_metadata);
+            }
+            else {
+                $("#delete-keyvalue-filetype-modal-" + form_counter).modal('hide');
+                $("div").removeClass("modal-backdrop");
+                $("body").removeClass("modal-open");
+                $alert_error = $alert_error.replace("Metadata failed to update.", json_response.message);
+                $("#filetype-extra-metadata").before($alert_error);
+                $(".alert-error").fadeTo(2000, 500).slideUp(1000, function(){
+                    $(".alert-error").alert('close');
+                });
+            }
+        },
+        error: function(xhr, errmsg, err){
+        }
+    });
+}
+
 // show "Save changes" button when metadata form editing starts
 function showMetadataFormSaveChangesButton(){
     $(".form-control").each(function () {
