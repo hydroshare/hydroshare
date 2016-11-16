@@ -4,11 +4,13 @@ Module used to get the header info of netcdf file
 WORKFLOW:
 There are two ways to get the netcdf header string.
 1) method1 run ncdump -h by python subprocess module: get_nc_dump_string_by_ncdump()
-2) method2 use the netCDF4 python lib to look into the netcdf to extract the the header info: get_nc_dump_string()
+2) method2 use the netCDF4 python lib to look into the netcdf to extract the the header info:
+   get_nc_dump_string()
 3) get_netcdf_header_file() will try the first method and if it fails it will call the second method
 
 NOTES:
-1) make sure the 'ncdump' is registered by the system path. otherwise suprocess won't recoganize the ncdump command
+1) make sure the 'ncdump' is registered by the system path. otherwise suprocess won't recoganize
+   the ncdump command
 
 REF
 ncdump c code:
@@ -17,15 +19,18 @@ json dump dict in pretty format:
     http://stackoverflow.com/questions/3229419/pretty-printing-nested-dictionaries-in-python
 subprocess call:
     https://docs.python.org/2/library/subprocess.html
-    http://stackoverflow.com/questions/923079/how-can-i-capture-the-stdout-output-of-a-child-process/923108#923108
+    http://stackoverflow.com/questions/923079/how-can-i-capture-the-stdout-output-of-a-child
+    -process/923108#923108
 """
 
 from collections import OrderedDict
 from os.path import basename
-from nc_utils import *
 import os
 import json
 import subprocess
+
+import netCDF4
+from nc_utils import get_nc_dataset
 
 
 def get_netcdf_header_file(nc_file_name, dump_folder=''):
@@ -36,14 +41,15 @@ def get_netcdf_header_file(nc_file_name, dump_folder=''):
     """
 
     # create a new text file
-    nc_file_basename = '.'.join(basename(nc_file_name).split('.')[:-1]) # name with no file extension
+    # name with no file extension
+    nc_file_basename = '.'.join(basename(nc_file_name).split('.')[:-1])
     nc_dump_file_folder = dump_folder if dump_folder else os.getcwd()
     nc_dump_file_name = nc_dump_file_folder+'/'+nc_file_basename+'_header_info.txt'
     nc_dump_file = open(nc_dump_file_name, 'w')
 
     # write the nc_dump string in text fle
-    dump_string = get_nc_dump_string_by_ncdump(nc_file_name) if get_nc_dump_string_by_ncdump(nc_file_name) \
-        else get_nc_dump_string(nc_file_name)
+    dump_string = get_nc_dump_string_by_ncdump(nc_file_name) \
+        if get_nc_dump_string_by_ncdump(nc_file_name) else get_nc_dump_string(nc_file_name)
     if dump_string:
         nc_dump_file.write(dump_string)
         print '{0}_header_info.txt is created'.format(nc_file_basename)
@@ -62,7 +68,7 @@ def get_nc_dump_string_by_ncdump(nc_file_name):
     try:
         process = subprocess.Popen(['ncdump', '-h', nc_file_name], stdout=subprocess.PIPE)
         nc_dump_string = process.communicate()[0]
-    except:
+    except Exception:
         nc_dump_string = ''
 
     return nc_dump_string
@@ -82,8 +88,8 @@ def get_nc_dump_string(nc_file_name):
             nc_dump_string = 'netcdf {0} \n'.format(nc_file_basename)
             nc_dump_string += json.dumps(nc_dump_dict, indent=4)
         else:
-            nc_dump_string =''
-    except:
+            nc_dump_string = ''
+    except Exception:
         nc_dump_string = ''
 
     return nc_dump_string
@@ -107,8 +113,8 @@ def get_nc_dump_dict(nc_group):
         if nc_group.groups:
             for group_name, group_obj in nc_group.groups.items():
                 try:
-                    info['group: '+ group_name] = get_nc_dump_dict(group_obj)
-                except:
+                    info['group: ' + group_name] = get_nc_dump_dict(group_obj)
+                except Exception:
                     continue
 
     return info
@@ -171,9 +177,7 @@ def get_variables_info(nc_group):
                 for name, val in var_obj.__dict__.items():
                     value = str(val).split('\n') if '\n' in str(val) else str(val)
                     variables_info[var_title][name] = value
-            except:
+            except Exception:
                 continue
 
     return variables_info
-
-

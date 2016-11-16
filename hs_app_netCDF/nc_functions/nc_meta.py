@@ -1,9 +1,11 @@
 """
-Module extracts metadata from NetCDF file to complete the required HydroShare NetCDF Science Metadata
+Module extracts metadata from NetCDF file to complete the required HydroShare NetCDF
+Science Metadata
 
 References
 reprojection
-    http://gis.stackexchange.com/questions/78838/how-to-convert-projected-coordinates-to-lat-lon-using-python
+    http://gis.stackexchange.com/questions/78838/how-to-convert-projected-coordinates-to-
+    lat-lon-using-python
 datatype
     http://docs.scipy.org/doc/numpy/reference/arrays.dtypes.html
     http://docs.scipy.org/doc/numpy/user/basics.types.html
@@ -13,10 +15,16 @@ coverage info by acdd:
 
 """
 
-from nc_utils import *
 import json
+
+import re
+import osr
 import netCDF4
 from pyproj import Proj, transform
+
+from nc_utils import get_nc_dataset, get_nc_grid_mapping_projection_import_string_dict,\
+    get_nc_variables_coordinate_type_mapping, get_nc_grid_mapping_crs_name, \
+    get_nc_variable_coordinate_meta
 
 
 def get_nc_meta_json(nc_file_name):
@@ -51,7 +59,7 @@ def get_nc_meta_dict(nc_file_name):
     return nc_meta_dict
 
 
-# Functions for dublin  core meta #####################################################################################
+# Functions for dublin  core meta ###############################################################
 def get_dublin_core_meta(nc_dataset):
     """
     (object)-> dict
@@ -80,6 +88,8 @@ def extract_nc_global_meta(nc_dataset):
 
     nc_global_meta = {}
 
+    # key is the dublincore attributes,
+    # value is corresponding attributes from ACDD and CF convention
     dublincore_vs_convention = {
         'creator_name': ['creator_name'],
         'creator_email': ['creator_email'],
@@ -93,7 +103,7 @@ def extract_nc_global_meta(nc_dataset):
         'references': ['references'],
         'source': ['source']
 
-    }  # key is the dublincore attributes, value is corresponding attributes from ACDD and CF convention
+    }
 
     for dublincore, convention in dublincore_vs_convention.items():
         for option in convention:
@@ -126,7 +136,6 @@ def extract_nc_coverage_meta(nc_dataset):
     box_info = get_box_info(nc_dataset)
     for name in box_info.keys():
         box_info[name] = str(box_info[name])
-
 
     nc_coverage_meta = {
         'projection-info': projection_info,
@@ -173,7 +182,8 @@ def get_period_info_by_acdd_convention(nc_dataset):
 
     period_info = {}
 
-    if nc_dataset.__dict__.get('time_coverage_start', '') and nc_dataset.__dict__.get('time_coverage_end', ''):
+    if nc_dataset.__dict__.get('time_coverage_start', '') and \
+            nc_dataset.__dict__.get('time_coverage_end', ''):
         period_info['start'] = str(nc_dataset.__dict__['time_coverage_start'])
         period_info['end'] = str(nc_dataset.__dict__['time_coverage_end'])
 
@@ -222,17 +232,20 @@ def get_box_info(nc_dataset):
             box_info['eastlimit'] = check_lon_limit(westlimit, eastlimit)[1]
 
         elif original_box_info.get('projection', ''):  # projection coor x, y
-            projection_import_string_dict = get_nc_grid_mapping_projection_import_string_dict(nc_dataset)
+            projection_import_string_dict = \
+                get_nc_grid_mapping_projection_import_string_dict(nc_dataset)
             if projection_import_string_dict.get('type') == 'Proj4 String':
                 try:
                     ori_proj = Proj(projection_import_string_dict['text'])
                     wgs84_proj = Proj(init='epsg:4326')
-                    box_info['westlimit'], box_info['northlimit'] = transform(ori_proj, wgs84_proj,
-                                                                              original_box_info['westlimit'],
-                                                                              original_box_info['northlimit'])
-                    box_info['eastlimit'], box_info['southlimit'] = transform(ori_proj, wgs84_proj,
-                                                                              original_box_info['eastlimit'],
-                                                                              original_box_info['southlimit'])
+                    box_info['westlimit'], box_info['northlimit'] = transform(
+                        ori_proj, wgs84_proj,
+                        original_box_info['westlimit'],
+                        original_box_info['northlimit'])
+                    box_info['eastlimit'], box_info['southlimit'] = transform(
+                        ori_proj, wgs84_proj,
+                        original_box_info['eastlimit'],
+                        original_box_info['southlimit'])
                 except Exception:
                     pass
             elif projection_import_string_dict.get('type') == 'WKT String':
@@ -244,12 +257,10 @@ def get_box_info(nc_dataset):
                     original_cs.ImportFromWkt(projection_import_string_dict.get('text'))
                     crs_transform = osr.CoordinateTransformation(original_cs, wgs84_cs)
                     box_info['westlimit'], box_info['northlimit'] = crs_transform.TransformPoint(
-                                                                        original_box_info['westlimit'],
-                                                                        original_box_info['northlimit'])[:2]
+                        original_box_info['westlimit'], original_box_info['northlimit'])[:2]
 
                     box_info['eastlimit'], box_info['southlimit'] = crs_transform.TransformPoint(
-                                                                        original_box_info['eastlimit'],
-                                                                        original_box_info['southlimit'])[:2]
+                        original_box_info['eastlimit'], original_box_info['southlimit'])[:2]
                 except Exception:
                     pass
 
@@ -267,15 +278,15 @@ def check_lon_limit(westlimit, eastlimit):
     """
     (num, num)-> [num,num]
 
-    Return: given the original westlimit and eastlimit values in degree units, convert them in -180-180 range and
-            make sure eastlimit > westlimit
+    Return: given the original westlimit and eastlimit values in degree units,
+    convert them in -180-180 range and make sure eastlimit > westlimit
     """
 
-    # chech if limit is in range of -180-180
+    # check if limit is in range of -180-180
     if westlimit > 180:
-        westlimit -=360
+        westlimit -= 360
     if eastlimit > 180:
-        eastlimit -=360
+        eastlimit -= 360
 
     # check if westlimit < eastlimit
     if westlimit == eastlimit:
@@ -314,8 +325,10 @@ def get_original_box_info_by_acdd_convention(nc_dataset):
     """
 
     original_box_info = {}
-    if nc_dataset.__dict__.get('geospatial_lat_min', '') and nc_dataset.__dict__.get('geospatial_lat_max', '')\
-            and nc_dataset.__dict__.get('geospatial_lon_min', '') and nc_dataset.__dict__.get('geospatial_lon_max', ''):
+    if nc_dataset.__dict__.get('geospatial_lat_min', '') \
+            and nc_dataset.__dict__.get('geospatial_lat_max', '')\
+            and nc_dataset.__dict__.get('geospatial_lon_min', '') \
+            and nc_dataset.__dict__.get('geospatial_lon_max', ''):
         original_box_info['southlimit'] = str(nc_dataset.__dict__['geospatial_lat_min'])
         original_box_info['northlimit'] = str(nc_dataset.__dict__['geospatial_lat_max'])
         original_box_info['westlimit'] = str(nc_dataset.__dict__['geospatial_lon_min'])
@@ -372,7 +385,8 @@ def get_limit_meta_by_coor_type(nc_dataset, coor_type, coor_type_mapping):
     """
     (obj, str, dict) -> dict
 
-    Return: based on the coordinate type (XA,YA,XC,YC,TA,TC) return the limits start and end values and units
+    Return: based on the coordinate type (XA,YA,XC,YC,TA,TC) return the limits
+            start and end values and units
     """
 
     limit_meta = {}
@@ -425,7 +439,7 @@ def get_limit_meta_by_coor_type(nc_dataset, coor_type, coor_type_mapping):
     return limit_meta
 
 
-# Functions for type specific meta ##################################################################################
+# Functions for type specific meta ##############################################
 def get_type_specific_meta(nc_dataset):
     """
     (object)-> dict
@@ -433,7 +447,7 @@ def get_type_specific_meta(nc_dataset):
     Return: the netCDF type specific metadata
     """
 
-    nc_data_variables = nc_dataset.variables #get_nc_data_variables(nc_dataset)
+    nc_data_variables = nc_dataset.variables  # get_nc_data_variables(nc_dataset)
     type_specific_meta = extract_nc_data_variables_meta(nc_data_variables)
 
     return type_specific_meta
@@ -452,7 +466,8 @@ def extract_nc_data_variables_meta(nc_data_variables):
             'unit': var_obj.units if (hasattr(var_obj, 'units') and var_obj.units) else 'Unknown',
             'shape': ','.join(var_obj.dimensions) if var_obj.dimensions else 'Not defined',
             'descriptive_name': var_obj.long_name if hasattr(var_obj, 'long_name') else '',
-            'missing_value': str(var_obj.missing_value if hasattr(var_obj, 'missing_value') else ''),
+            'missing_value': str(var_obj.missing_value
+                                 if hasattr(var_obj, 'missing_value') else ''),
             'method': str(var_obj.comment if hasattr(var_obj, 'comment') else ''),
         }
 
@@ -472,12 +487,15 @@ def extract_nc_data_variables_meta(nc_data_variables):
 
         if var_obj.dimensions:
             try:
-                if isinstance(var_obj.datatype, netCDF4.CompoundType) or isinstance(var_obj.datatype, netCDF4.VLType):
+                if isinstance(var_obj.datatype, netCDF4.CompoundType) or \
+                   isinstance(var_obj.datatype, netCDF4.VLType):
                     nc_data_variables_meta[var_name]['type'] = 'User Defined Type'
                 elif var_obj.datatype.name in nc_data_type_dict.keys():
-                    nc_data_variables_meta[var_name]['type'] = nc_data_type_dict[var_obj.datatype.name]
+                    nc_data_variables_meta[var_name]['type'] = \
+                        nc_data_type_dict[var_obj.datatype.name]
                 elif ('string' in var_obj.datatype.name) or ('unicode' in var_obj.datatype.name):
-                    nc_data_variables_meta[var_name]['type'] = 'Char' if '8' in var_obj.datatype.name else 'String'
+                    nc_data_variables_meta[var_name]['type'] = 'Char' \
+                        if '8' in var_obj.datatype.name else 'String'
                 else:
                     nc_data_variables_meta[var_name]['type'] = 'Unknown'
             except Exception:
@@ -485,8 +503,4 @@ def extract_nc_data_variables_meta(nc_data_variables):
         else:
             nc_data_variables_meta[var_name]['type'] = 'Unknown'
 
-
     return nc_data_variables_meta
-
-
-

@@ -8,10 +8,12 @@ import netCDF4
 from django.dispatch import receiver
 from django.core.files.uploadedfile import InMemoryUploadedFile
 
-from hs_core.signals import *
+from hs_core.signals import pre_create_resource, pre_add_files_to_resource, \
+    pre_delete_file_from_resource, pre_metadata_element_create, pre_metadata_element_update
 from hs_core.hydroshare.resource import ResourceFile, delete_resource_file_only
 from hs_core.hydroshare import utils
-from hs_app_netCDF.forms import *
+from hs_app_netCDF.forms import VariableValidationForm, OriginalCoverageForm, VariableForm
+from hs_app_netCDF.models import NetcdfResource
 import nc_functions.nc_utils as nc_utils
 import nc_functions.nc_dump as nc_dump
 import nc_functions.nc_meta as nc_meta

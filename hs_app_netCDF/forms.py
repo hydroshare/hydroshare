@@ -1,4 +1,4 @@
-from django.forms import ModelForm, BaseFormSet
+from django.forms import ModelForm
 from django import forms
 from crispy_forms.layout import Layout, HTML, Fieldset
 from crispy_forms.helper import FormHelper
@@ -50,8 +50,8 @@ class OriginalCoverageForm(forms.Form):
     southlimit = forms.DecimalField(label='South Extent', widget=forms.TextInput())
     westlimit = forms.DecimalField(label='West Extent', widget=forms.TextInput())
     units = forms.CharField(max_length=100, label='Extent Unit')
-    projection_string_type = forms.ChoiceField(choices=PRO_STR_TYPES, label='Coordinate String Type'
-                                               , required=False)
+    projection_string_type = forms.ChoiceField(choices=PRO_STR_TYPES,
+                                               label='Coordinate String Type', required=False)
     projection_string_text = forms.CharField(max_length=1000, label='Coordinate String',
                                              required=False, widget=forms.Textarea())
     datum = forms.CharField(max_length=300, label='Datum', required=False, widget=forms.TextInput())
@@ -66,12 +66,12 @@ class OriginalCoverageForm(forms.Form):
 
     @property
     def form_id(self):
-        form_id = 'id_original_coverage_%s'% self.number
+        form_id = 'id_original_coverage_%s' % self.number
         return form_id
 
     @property
     def form_if_button(self):
-        form_id = 'id_original_coverage_%s'% self.number
+        form_id = 'id_original_coverage_%s' % self.number
         return "'" + form_id + "'"
 
     def clean(self):
@@ -80,7 +80,7 @@ class OriginalCoverageForm(forms.Form):
         is_form_errors = False
 
         # check required element info
-        for key in ('northlimit','eastlimit', 'southlimit', 'westlimit', 'units'):
+        for key in ('northlimit', 'eastlimit', 'southlimit', 'westlimit', 'units'):
             value = temp_cleaned_data.get(key, None)
             if not value:
                 self._errors[key] = ["Info for $s is missing" % key]
@@ -156,7 +156,7 @@ class VariableFormHelper(FormHelper):
                      Field('descriptive_name', css_class=field_width),
                      Field('method', css_class=field_width),
                      Field('missing_value', css_class=field_width)
-                ),
+                     ),
             )
 
         # super(VariableFormHelper, self).__init__(allow_edit, res_short_id,

@@ -31,7 +31,7 @@ class TestNetcdfMetaData(MockIRODSTestCaseMixin, TransactionTestCase):
             groups=[self.group]
         )
 
-        self.resNetcdf= hydroshare.create_resource(
+        self.resNetcdf = hydroshare.create_resource(
             resource_type='NetcdfResource',
             owner=self.user,
             title='Snow water equivalent estimation at TWDEF site from Oct 2009 to June 2010'
@@ -102,7 +102,8 @@ class TestNetcdfMetaData(MockIRODSTestCaseMixin, TransactionTestCase):
         # file pre add process should raise validation error if we try to add a
         # 2nd file when the resource has already 2 content files
         with self.assertRaises(utils.ResourceFileValidationException):
-            utils.resource_file_add_pre_process(resource=self.resNetcdf, files=files, user=self.user,
+            utils.resource_file_add_pre_process(resource=self.resNetcdf, files=files,
+                                                user=self.user,
                                                 extract_metadata=False)
 
     def test_metadata_extraction_on_resource_creation(self):
@@ -468,13 +469,16 @@ class TestNetcdfMetaData(MockIRODSTestCaseMixin, TransactionTestCase):
         self.assertEqual(ori_coverage.value['projection'], 'NAD83 / UTM zone 12N')
 
         self.assertEqual(ori_coverage.projection_string_type, 'WKT String')
-        proj_text = 'PROJCS["NAD83 / UTM zone 12N",GEOGCS["NAD83",DATUM["North_American_Datum_1983",' \
+        proj_text = 'PROJCS["NAD83 / UTM zone 12N",GEOGCS["NAD83",' \
+                    'DATUM["North_American_Datum_1983",' \
                     'SPHEROID["GRS 1980",6378137,298.2572221010002,AUTHORITY["EPSG","7019"]],' \
-                    'AUTHORITY["EPSG","6269"]],PRIMEM["Greenwich",0],UNIT["degree",0.0174532925199433],' \
+                    'AUTHORITY["EPSG","6269"]],PRIMEM["Greenwich",0],' \
+                    'UNIT["degree",0.0174532925199433],' \
                     'AUTHORITY["EPSG","4269"]],PROJECTION["Transverse_Mercator"],' \
                     'PARAMETER["latitude_of_origin",0],PARAMETER["central_meridian",-111],' \
                     'PARAMETER["scale_factor",0.9996],PARAMETER["false_easting",500000],' \
-                    'PARAMETER["false_northing",0],UNIT["metre",1,AUTHORITY["EPSG","9001"]],AUTHORITY["EPSG","26912"]]'
+                    'PARAMETER["false_northing",0],UNIT["metre",1,AUTHORITY["EPSG","9001"]],' \
+                    'AUTHORITY["EPSG","26912"]]'
         self.assertEqual(ori_coverage.projection_string_text, proj_text)
         self.assertEqual(ori_coverage.datum, 'North_American_Datum_1983')
 
@@ -483,13 +487,15 @@ class TestNetcdfMetaData(MockIRODSTestCaseMixin, TransactionTestCase):
         self.assertEqual(self.resNetcdf.files.all().count(), 2)
 
         # test core metadata after metadata extraction
-        extracted_title = "Snow water equivalent estimation at TWDEF site from Oct 2009 to June 2010"
+        extracted_title = "Snow water equivalent estimation at TWDEF site from " \
+                          "Oct 2009 to June 2010"
         self.assertEqual(self.resNetcdf.metadata.title.value, extracted_title)
 
         # there should be an abstract element
         self.assertNotEquals(self.resNetcdf.metadata.description, None)
-        extracted_abstract = "This netCDF data is the simulation output from Utah Energy Balance (UEB) model." \
-                             "It includes the simulation result of snow water equivalent during the period " \
+        extracted_abstract = "This netCDF data is the simulation output from Utah Energy " \
+                             "Balance (UEB) model.It includes the simulation result " \
+                             "of snow water equivalent during the period " \
                              "Oct. 2009 to June 2010 for TWDEF site in Utah."
         self.assertEqual(self.resNetcdf.metadata.description.abstract, extracted_abstract)
 
@@ -522,13 +528,17 @@ class TestNetcdfMetaData(MockIRODSTestCaseMixin, TransactionTestCase):
         self.assertEqual(box_coverage.value['westlimit'], -111.51138808)
 
         temporal_coverage = self.resNetcdf.metadata.coverages.all().filter(type='period').first()
-        self.assertEqual(parser.parse(temporal_coverage.value['start']).date(), parser.parse('10/01/2009').date())
-        self.assertEqual(parser.parse(temporal_coverage.value['end']).date(), parser.parse('05/30/2010').date())
+        self.assertEqual(parser.parse(temporal_coverage.value['start']).date(),
+                         parser.parse('10/01/2009').date())
+        self.assertEqual(parser.parse(temporal_coverage.value['end']).date(),
+                         parser.parse('05/30/2010').date())
 
         # there should be 2 format elements
         self.assertEqual(self.resNetcdf.metadata.formats.all().count(), 2)
-        self.assertEqual(self.resNetcdf.metadata.formats.all().filter(value='text/plain').count(), 1)
-        self.assertEqual(self.resNetcdf.metadata.formats.all().filter(value='application/x-netcdf').count(), 1)
+        self.assertEqual(self.resNetcdf.metadata.formats.all().
+                         filter(value='text/plain').count(), 1)
+        self.assertEqual(self.resNetcdf.metadata.formats.all().
+                         filter(value='application/x-netcdf').count(), 1)
 
         # there should be one subject element
         self.assertEqual(self.resNetcdf.metadata.subjects.all().count(), 1)
@@ -586,10 +596,9 @@ class TestNetcdfMetaData(MockIRODSTestCaseMixin, TransactionTestCase):
         self.assertEqual(var_swe.missing_value, '-9999')
 
         # test grid mapping variable
-        var_grid = self.resNetcdf.metadata.variables.all().filter(name='transverse_mercator').first()
+        var_grid = self.resNetcdf.metadata.variables.all().\
+            filter(name='transverse_mercator').first()
         self.assertNotEquals(var_grid, None)
         self.assertEqual(var_grid.unit, 'Unknown')
         self.assertEqual(var_grid.type, 'Unknown')
         self.assertEqual(var_grid.shape, 'Not defined')
-
-
