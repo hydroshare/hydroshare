@@ -304,4 +304,3 @@ class NetcdfMetaData(CoreMetaData):
         self.ori_coverage.all().delete()
         self.variables.all().delete()
 
-import receivers  # never delete this otherwise non of the receiver function will work

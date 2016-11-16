@@ -4,8 +4,6 @@ import tempfile
 import shutil
 from dateutil import parser
 
-from xml.etree import ElementTree as ET
-
 from django.test import TransactionTestCase
 from django.core.exceptions import ValidationError
 from django.core.files.uploadedfile import UploadedFile
@@ -53,7 +51,6 @@ class TestNetcdfMetaData(MockIRODSTestCaseMixin, TransactionTestCase):
         shutil.copy(self.netcdf_file_crs, target_temp_netcdf_file_crs)
         self.netcdf_file_obj_crs = open(target_temp_netcdf_file_crs, 'r')
 
-
         self.netcdf_bad_file_name = 'netcdf_invalid.nc'
         self.netcdf_bad_file = 'hs_app_netCDF/tests/{}'.format(self.netcdf_bad_file_name)
         target_temp_bad_netcdf_file = os.path.join(self.temp_dir, self.netcdf_bad_file_name)
@@ -81,14 +78,16 @@ class TestNetcdfMetaData(MockIRODSTestCaseMixin, TransactionTestCase):
         # trying to add a text file to this resource should raise exception
         files = [UploadedFile(file=self.text_file_obj, name=self.text_file_obj.name)]
         with self.assertRaises(utils.ResourceFileValidationException):
-            utils.resource_file_add_pre_process(resource=self.resNetcdf, files=files, user=self.user,
+            utils.resource_file_add_pre_process(resource=self.resNetcdf, files=files,
+                                                user=self.user,
                                                 extract_metadata=False)
 
         # trying to add bad .nc file should raise file validation error
         files = [UploadedFile(file=self.netcdf_bad_file_obj, name=self.netcdf_bad_file_name)]
         with self.assertRaises(utils.ResourceFileValidationException):
-            utils.resource_file_add_pre_process(resource=self.resNetcdf, files=files, user=self.user,
-                                            extract_metadata=False)
+            utils.resource_file_add_pre_process(resource=self.resNetcdf, files=files,
+                                                user=self.user,
+                                                extract_metadata=False)
 
         # trying to add valid .nc file should pass the file check
         files = [UploadedFile(file=self.netcdf_file_obj, name=self.netcdf_file_name)]
@@ -100,23 +99,24 @@ class TestNetcdfMetaData(MockIRODSTestCaseMixin, TransactionTestCase):
         # there should be 2 content file: with ncdump file created by system
         self.assertEqual(self.resNetcdf.files.all().count(), 2)
 
-        # file pre add process should raise validation error if we try to add a 2nd file when the resource has
-        # already 2 content files
+        # file pre add process should raise validation error if we try to add a
+        # 2nd file when the resource has already 2 content files
         with self.assertRaises(utils.ResourceFileValidationException):
             utils.resource_file_add_pre_process(resource=self.resNetcdf, files=files, user=self.user,
                                                 extract_metadata=False)
 
     def test_metadata_extraction_on_resource_creation(self):
-        # passing the file object that points to the temp dir doesn't work - create_resource throws error
+        # passing the file object that points to the temp dir doesn't
+        # work - create_resource throws error
         # open the file from the fixed file location
         files = [UploadedFile(file=self.netcdf_file_obj, name=self.netcdf_file_name)]
-        _, _, metadata, _ = utils.resource_pre_create_actions(resource_type='NetcdfResource',
-                                                                          resource_title='Snow water equivalent '
-                                                                                         'estimation at TWDEF site '
-                                                                                         'from Oct 2009 to June 2010',
-                                                                          page_redirect_url_key=None,
-                                                                          files=files,
-                                                                          metadata=None,)
+        _, _, metadata, _ = utils.resource_pre_create_actions(
+            resource_type='NetcdfResource',
+            resource_title='Snow water equivalent estimation at TWDEF site from '
+                           'Oct 2009 to June 2010',
+            page_redirect_url_key=None,
+            files=files,
+            metadata=None,)
 
         self.resNetcdf = hydroshare.create_resource(
             'NetcdfResource',
@@ -130,7 +130,9 @@ class TestNetcdfMetaData(MockIRODSTestCaseMixin, TransactionTestCase):
 
     def test_metadata_extraction_on_content_file_add(self):
         # test the core metadata at this point
-        self.assertEqual(self.resNetcdf.metadata.title.value, 'Snow water equivalent estimation at TWDEF site from Oct 2009 to June 2010')
+        self.assertEqual(
+            self.resNetcdf.metadata.title.value,
+            'Snow water equivalent estimation at TWDEF site from Oct 2009 to June 2010')
 
         # there shouldn't any abstract element
         self.assertEqual(self.resNetcdf.metadata.description, None)
@@ -310,35 +312,39 @@ class TestNetcdfMetaData(MockIRODSTestCaseMixin, TransactionTestCase):
     def test_extended_metadata_CRUD(self):
         # create original coverage element
         self.assertEqual(self.resNetcdf.metadata.ori_coverage.all().count(), 0)
-        value = {"northlimit": '12', "projection": "transverse_mercator", "units": "meter", "southlimit": '10',
-                    "eastlimit": '23', "westlimit": '2'}
-        self.resNetcdf.metadata.create_element('originalcoverage',
-                                               value=value,
-                                               projection_string_text='+proj=tmerc +lon_0=-111.0 '
-                                                                      '+lat_0=0.0 +x_0=500000.0 +y_0=0.0 +k_0=0.9996',
-                                               projection_string_type='Proj4 String'
-                                               )
+        value = {"northlimit": '12', "projection": "transverse_mercator",
+                 "units": "meter", "southlimit": '10',
+                 "eastlimit": '23', "westlimit": '2'}
+        self.resNetcdf.metadata.create_element(
+            'originalcoverage',
+            value=value,
+            projection_string_text='+proj=tmerc +lon_0=-111.0 +lat_0=0.0 +x_0=500000.0 '
+                                   '+y_0=0.0 +k_0=0.9996',
+            projection_string_type='Proj4 String'
+            )
 
         ori_coverage = self.resNetcdf.metadata.ori_coverage.all().first()
         self.assertEqual(ori_coverage.value, value)
-        self.assertEqual(ori_coverage.projection_string_text, '+proj=tmerc +lon_0=-111.0 +lat_0=0.0 +x_0=500000.0 '
-                                                               '+y_0=0.0 +k_0=0.9996')
+        self.assertEqual(ori_coverage.projection_string_text,
+                         '+proj=tmerc +lon_0=-111.0 +lat_0=0.0 +x_0=500000.0 +y_0=0.0 +k_0=0.9996')
         self.assertEqual(ori_coverage.projection_string_type, 'Proj4 String')
 
         # multiple original coverage elements are not allowed - should raise exception
         with self.assertRaises(IntegrityError):
-            self.resNetcdf.metadata.create_element('originalcoverage',
-                                                   value=value,
-                                                   projection_string_text='+proj=tmerc +lon_0=-111.0 '
-                                                                          '+lat_0=0.0 +x_0=500000.0 +y_0=0.0 +k_0=0.9996',
-                                                   projection_string_type='Proj4 String'
+            self.resNetcdf.metadata.create_element(
+                'originalcoverage',
+                value=value,
+                projection_string_text='+proj=tmerc +lon_0=-111.0 '
+                                       '+lat_0=0.0 +x_0=500000.0 +y_0=0.0 +k_0=0.9996',
+                projection_string_type='Proj4 String'
                                                    )
         # create variable element
         self.assertEqual(self.resNetcdf.metadata.variables.all().count(), 0)
         self.resNetcdf.metadata.create_element('variable', name='SWE', type='Float',
-                                                   shape='y,x,time', unit='m',
-                                                   missing_value='-9999', descriptive_name='Snow water equivalent',
-                                                   method='model simulation of UEB')
+                                               shape='y,x,time', unit='m',
+                                               missing_value='-9999',
+                                               descriptive_name='Snow water equivalent',
+                                               method='model simulation of UEB')
 
         variable_element = self.resNetcdf.metadata.variables.all().first()
         self.assertEqual(variable_element.name, 'SWE')
@@ -351,19 +357,21 @@ class TestNetcdfMetaData(MockIRODSTestCaseMixin, TransactionTestCase):
 
         # multiple variable elements are allowed
         self.resNetcdf.metadata.create_element('variable', name='x', type='Float',
-                                                   shape='x', unit='m',
-                                                   descriptive_name='x coordinate of projection')
+                                               shape='x', unit='m',
+                                               descriptive_name='x coordinate of projection')
         self.assertEqual(self.resNetcdf.metadata.variables.all().count(), 2)
 
         # delete
         # variable deletion is not allowed
         with self.assertRaises(ValidationError):
-            self.resNetcdf.metadata.delete_element('variable', self.resNetcdf.metadata.variables.all().filter(name='SWE').first().id)
+            self.resNetcdf.metadata.delete_element(
+                'variable', self.resNetcdf.metadata.variables.all().filter(name='SWE').first().id)
 
         # update
         # update original coverage element
-        value_2 = {"northlimit": '12.5', "projection": "transverse_mercator", "units": "meter", "southlimit": '10.5',
-            "eastlimit": '23.5', "westlimit": '2.5'}
+        value_2 = {"northlimit": '12.5', "projection": "transverse_mercator",
+                   "units": "meter", "southlimit": '10.5',
+                   "eastlimit": '23.5', "westlimit": '2.5'}
         self.resNetcdf.metadata.update_element('originalcoverage',
                                                ori_coverage.id,
                                                value=value_2,
@@ -378,11 +386,14 @@ class TestNetcdfMetaData(MockIRODSTestCaseMixin, TransactionTestCase):
         # update variable element
         variable = self.resNetcdf.metadata.variables.all().filter(name='SWE').first()
         self.resNetcdf.metadata.update_element('variable', variable.id,
-                                                   name='SWE2', type='Double',
-                                                   shape='y,x,time', unit='m',
-                                                   missing_value='-999', descriptive_name='snow water equivalent',
-                                                   method='model result of UEB')
-        variable = self.resNetcdf.metadata.variables.all().filter(name='SWE2').first()  # need to refer to the variable again!
+                                               name='SWE2', type='Double',
+                                               shape='y,x,time', unit='m',
+                                               missing_value='-999',
+                                               descriptive_name='snow water equivalent',
+                                               method='model result of UEB')
+        # need to refer to the variable again!
+        variable = self.resNetcdf.metadata.variables.all().filter(name='SWE2').first()
+
         self.assertEqual(variable.name, 'SWE2')
         self.assertEqual(variable.type, 'Double')
         self.assertEqual(variable.shape, 'y,x,time')
@@ -417,13 +428,13 @@ class TestNetcdfMetaData(MockIRODSTestCaseMixin, TransactionTestCase):
 
     def test_metadata_extraction_of_wkt_crs_on_resource_creation(self):
         files = [UploadedFile(file=self.netcdf_file_obj_crs, name=self.netcdf_file_name_crs)]
-        _, _, metadata, _ = utils.resource_pre_create_actions(resource_type='NetcdfResource',
-                                                                          resource_title='Snow water equivalent '
-                                                                                         'estimation at TWDEF site '
-                                                                                         'from Oct 2009 to June 2010',
-                                                                          page_redirect_url_key=None,
-                                                                          files=files,
-                                                                          metadata=None,)
+        _, _, metadata, _ = utils.resource_pre_create_actions(
+            resource_type='NetcdfResource',
+            resource_title='Snow water equivalent estimation at TWDEF site '
+                           'from Oct 2009 to June 2010',
+            page_redirect_url_key=None,
+            files=files,
+            metadata=None,)
 
         self.resNetcdf = hydroshare.create_resource(
             'NetcdfResource',
