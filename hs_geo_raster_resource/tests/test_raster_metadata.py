@@ -9,6 +9,7 @@ from django.core.exceptions import ValidationError
 from django.core.files.uploadedfile import UploadedFile
 from django.contrib.auth.models import Group
 from django.db import IntegrityError
+from django.conf import settings
 
 from hs_core import hydroshare
 from hs_core.hydroshare import utils
@@ -31,6 +32,10 @@ class TestRasterMetaData(MockIRODSTestCaseMixin, TransactionTestCase):
             superuser=False,
             groups=[self.group]
         )
+
+        if settings.REMOTE_USE_IRODS and settings.HS_USER_ZONE_HOST == 'users.local.org' \
+                and settings.IRODS_HOST == 'data.local.org':
+            pass
 
         # even there is no file uploaded to resource, there are default extended automatically metadata created
         _, _, metadata, _ = utils.resource_pre_create_actions(resource_type='RasterResource',

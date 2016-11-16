@@ -30,7 +30,8 @@ class TestUserZoneIRODSFederation(TestCaseCommonUtilities, TransactionTestCase):
         super(TestUserZoneIRODSFederation, self).setUp()
         # only do federation testing when REMOTE_USE_IRODS is True and irods docker containers
         # are set up properly
-        if not settings.REMOTE_USE_IRODS or settings.HS_USER_ZONE_HOST != 'users.local.org':
+        if not settings.REMOTE_USE_IRODS or settings.HS_USER_ZONE_HOST != 'users.local.org' \
+                or settings.IRODS_HOST != 'data.local.org':
             return
 
         self.hs_group, _ = Group.objects.get_or_create(name='Hydroshare Author')
@@ -95,7 +96,8 @@ class TestUserZoneIRODSFederation(TestCaseCommonUtilities, TransactionTestCase):
     def tearDown(self):
         super(TestUserZoneIRODSFederation, self).tearDown()
         # no need for further cleanup if federation testing is not setup in the first place
-        if not settings.REMOTE_USE_IRODS or settings.HS_USER_ZONE_HOST != 'users.local.org':
+        if not settings.REMOTE_USE_IRODS or settings.HS_USER_ZONE_HOST != 'users.local.org' \
+                or settings.IRODS_HOST != 'data.local.org':
             return
 
         # delete irods test user in user zone
@@ -126,7 +128,8 @@ class TestUserZoneIRODSFederation(TestCaseCommonUtilities, TransactionTestCase):
     def test_resource_operations_in_user_zone(self):
         # only do federation testing when REMOTE_USE_IRODS is True and irods docker containers
         # are set up properly
-        if not settings.REMOTE_USE_IRODS or settings.HS_USER_ZONE_HOST != 'users.local.org':
+        if not settings.REMOTE_USE_IRODS or settings.HS_USER_ZONE_HOST != 'users.local.org' \
+                or settings.IRODS_HOST != 'data.local.org':
             return
         # test resource creation and "move" option in federated user zone
         fed_test_file_full_path = '/{zone}/home/testuser/{fname}'.format(
