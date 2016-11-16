@@ -15,7 +15,7 @@ from hs_core.hydroshare import utils
 from hs_core.models import CoreMetaData, Creator, Contributor, Coverage, Rights, Title, Language, \
     Publisher, Identifier, Type, Subject, Description, Date, Format, Relation, Source
 from hs_core.testing import MockIRODSTestCaseMixin
-from hs_app_netCDF.models import NetcdfResource,Variable, OriginalCoverage
+from hs_app_netCDF.models import NetcdfResource, Variable, OriginalCoverage
 
 
 class TestNetcdfMetaData(MockIRODSTestCaseMixin, TransactionTestCase):

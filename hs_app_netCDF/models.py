@@ -66,7 +66,8 @@ class OriginalCoverage(AbstractMetaDataElement):
                                           "box limits or 'units' is missing.")
 
             value_dict = {k: v for k, v in value_arg_dict.iteritems()
-                          if k in ('units', 'northlimit', 'eastlimit', 'southlimit', 'westlimit', 'projection')}
+                          if k in ('units', 'northlimit', 'eastlimit', 'southlimit',
+                                   'westlimit', 'projection')}
 
             value_json = json.dumps(value_dict)
             if 'value' in kwargs:
