@@ -6,6 +6,8 @@ from hs_core.models import ResourceFile
 from hs_core.hydroshare import add_resource_files
 from hs_core.views.utils import create_folder, move_or_rename_file_or_folder, zip_folder, \
     unzip_file, remove_folder
+from hs_core.views.utils import run_ssh_command
+from theme.models import UserProfile
 from django_irods.icommands import SessionException
 
 
@@ -33,6 +35,47 @@ class MockIRODSTestCaseMixin(object):
 
 
 class TestCaseCommonUtilities(object):
+    def create_irods_user_in_user_zone(self):
+        # create corresponding irods account in user zone
+        try:
+            exec_cmd = "{0} {1} {2}".format(settings.HS_USER_ZONE_PROXY_USER_CREATE_USER_CMD,
+                                            self.user.username, self.user.username)
+            output = run_ssh_command(host=settings.HS_USER_ZONE_HOST,
+                                     uname=settings.HS_USER_ZONE_PROXY_USER,
+                                     pwd=settings.HS_USER_ZONE_PROXY_USER_PWD,
+                                     exec_cmd=exec_cmd)
+            if output:
+                if 'ERROR:' in output.upper():
+                    # irods account failed to create
+                    self.assertRaises(SessionException(-1, output, output))
+
+            user_profile = UserProfile.objects.filter(user=self.user).first()
+            user_profile.create_irods_user_account = True
+            user_profile.save()
+        except Exception as ex:
+            self.assertRaises(SessionException(-1, ex.message, ex.message))
+
+    def delete_irods_user_in_user_zone(self):
+        # delete irods test user in user zone
+        try:
+            exec_cmd = "{0} {1}".format(settings.HS_USER_ZONE_PROXY_USER_DELETE_USER_CMD,
+                                        self.user.username)
+            output = run_ssh_command(host=settings.HS_USER_ZONE_HOST,
+                                     uname=settings.HS_USER_ZONE_PROXY_USER,
+                                     pwd=settings.HS_USER_ZONE_PROXY_USER_PWD,
+                                     exec_cmd=exec_cmd)
+            if output:
+                if 'ERROR:' in output.upper():
+                    # there is an error from icommand run, report the error
+                    self.assertRaises(SessionException(-1, output, output))
+
+            user_profile = UserProfile.objects.filter(user=self.user).first()
+            user_profile.create_irods_user_account = False
+            user_profile.save()
+        except Exception as ex:
+            # there is an error from icommand run, report the error
+            self.assertRaises(SessionException(-1, ex.message, ex.message))
+
     def resource_file_oprs(self):
         """
         This is a common test utility function to be called by both regular folder operation

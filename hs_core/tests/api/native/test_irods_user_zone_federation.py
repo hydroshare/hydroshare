@@ -4,14 +4,11 @@ from django.test import TransactionTestCase
 from django.conf import settings
 from django.contrib.auth.models import Group
 
-from django_irods.icommands import SessionException
 from django_irods.storage import IrodsStorage
 
 from hs_core.models import BaseResource
 from hs_core.hydroshare import resource
 from hs_core import hydroshare
-from hs_core.views.utils import run_ssh_command
-from theme.models import UserProfile
 from hs_core.testing import TestCaseCommonUtilities
 
 
@@ -47,23 +44,7 @@ class TestUserZoneIRODSFederation(TestCaseCommonUtilities, TransactionTestCase):
         )
 
         # create corresponding irods account in user zone
-        try:
-            exec_cmd = "{0} {1} {2}".format(settings.HS_USER_ZONE_PROXY_USER_CREATE_USER_CMD,
-                                            'testuser', 'testuser')
-            output = run_ssh_command(host=settings.HS_USER_ZONE_HOST,
-                                     uname=settings.HS_USER_ZONE_PROXY_USER,
-                                     pwd=settings.HS_USER_ZONE_PROXY_USER_PWD,
-                                     exec_cmd=exec_cmd)
-            if output:
-                if 'ERROR:' in output.upper():
-                    # irods account failed to create
-                    self.assertRaises(SessionException(-1, output, output))
-
-            user_profile = UserProfile.objects.filter(user=self.user).first()
-            user_profile.create_irods_user_account = True
-            user_profile.save()
-        except Exception as ex:
-            self.assertRaises(SessionException(-1, ex.message, ex.message))
+        super(TestUserZoneIRODSFederation, self).create_irods_user_in_user_zone()
 
         # create files
         self.file_one = "file1.txt"
@@ -101,24 +82,7 @@ class TestUserZoneIRODSFederation(TestCaseCommonUtilities, TransactionTestCase):
             return
 
         # delete irods test user in user zone
-        try:
-            exec_cmd = "{0} {1}".format(settings.HS_USER_ZONE_PROXY_USER_DELETE_USER_CMD,
-                                        'testuser')
-            output = run_ssh_command(host=settings.HS_USER_ZONE_HOST,
-                                     uname=settings.HS_USER_ZONE_PROXY_USER,
-                                     pwd=settings.HS_USER_ZONE_PROXY_USER_PWD,
-                                     exec_cmd=exec_cmd)
-            if output:
-                if 'ERROR:' in output.upper():
-                    # there is an error from icommand run, report the error
-                    self.assertRaises(SessionException(-1, output, output))
-
-            user_profile = UserProfile.objects.filter(user=self.user).first()
-            user_profile.create_irods_user_account = False
-            user_profile.save()
-        except Exception as ex:
-            # there is an error from icommand run, report the error
-            self.assertRaises(SessionException(-1, ex.message, ex.message))
+        super(TestUserZoneIRODSFederation, self).delete_irods_user_in_user_zone()
 
         os.remove(self.file_one)
         os.remove(self.file_two)
