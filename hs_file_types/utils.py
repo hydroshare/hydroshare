@@ -90,11 +90,17 @@ def set_file_to_geo_raster_file_type(resource, file_id, user):
             try:
                 # create a folder for the raster file type using the base file name as the
                 # name for the new folder
-                # TODO: Probably the folder path would be different if the resource is a federated
-                # resource
                 new_folder_path = 'data/contents/{}'.format(file_name)
-                # TODO: to avoid folder creation failure when there is already matching
-                # directory path, add uuid to folder path to make it unique
+                # To avoid folder creation failure when there is already matching
+                # directory path, first check that the folder does not exist
+                # If folder path exists then change the folder name by adding a number to the end
+                istorage = resource.get_irods_storage()
+                counter = 0
+                while istorage.exists(os.path.join(resource.short_id, new_folder_path)):
+                    new_file_name = file_name + "_{}".format(counter)
+                    new_folder_path = 'data/contents/{}'.format(new_file_name)
+                    counter += 1
+
                 create_folder(resource.short_id, new_folder_path)
                 log.info("Folder created:{}".format(new_folder_path))
 
