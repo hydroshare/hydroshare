@@ -25,7 +25,7 @@ from ga_resources.utils import get_user
 from hs_core import hydroshare
 from hs_core.hydroshare import check_resource_type, delete_resource_file
 from hs_core.models import AbstractMetaDataElement, GenericResource, Relation, ResourceFile
-from hs_core.signals import pre_metadata_element_create
+from hs_core.signals import pre_metadata_element_create, post_delete_file_from_resource
 from hs_core.hydroshare import FILE_SIZE_LIMIT
 from hs_core.hydroshare.utils import raise_file_size_exception, get_file_mime_type
 from django_irods.storage import IrodsStorage
@@ -512,12 +512,13 @@ def rename_irods_file_or_folder_in_django(resource, src_name, tgt_name):
                     res_file.save()
 
 
-def remove_irods_folder_in_django(resource, istorage, foldername):
+def remove_irods_folder_in_django(resource, istorage, foldername, user):
     """
     Remove all files inside a folder in Django DB after the folder is removed from iRODS
     :param resource: the BaseResource object representing a HydroShare resource
     :param istorage: IrodsStorage object
     :param foldername: the folder name that has been removed from iRODS
+    :user  user who initiated the folder delete operation
     :return:
     """
     if resource and istorage and foldername:
@@ -527,10 +528,21 @@ def remove_irods_folder_in_django(resource, istorage, foldername):
         else:
             res_file_set = ResourceFile.objects.filter(
                 object_id=resource.id, resource_file__icontains=foldername)
+
+        # delete all uniqie logicalfiles associated with all resource files to be deleted
+        # from django as they need to be deleted differently
+        logical_files = list(set([f.logical_file for f in res_file_set if f.has_logical_file]))
+        for lf in logical_files:
+            lf.logical_delete(user, delete_res_files=False)
+
+        # delete resource file objects
         for f in res_file_set:
             filename = hydroshare.get_resource_file_name(f)
             f.delete()
             hydroshare.delete_format_metadata_after_delete_file(resource, filename)
+
+        # send the signal
+        post_delete_file_from_resource.send(sender=resource.__class__, resource=resource)
 
 
 def zip_folder(user, res_id, input_coll_path, output_zip_fname, bool_remove_original):
@@ -642,7 +654,7 @@ def remove_folder(user, res_id, folder_path):
 
     istorage.delete(coll_path)
 
-    remove_irods_folder_in_django(resource, istorage, coll_path)
+    remove_irods_folder_in_django(resource, istorage, coll_path, user)
 
     if resource.raccess.public or resource.raccess.discoverable:
         if not resource.can_be_public_or_discoverable:

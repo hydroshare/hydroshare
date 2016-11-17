@@ -13,6 +13,7 @@ from hs_core import hydroshare
 from hs_core.models import Coverage
 from hs_core.hydroshare.utils import resource_post_create_actions, \
     get_resource_file_name_and_extension
+from hs_core.views.utils import remove_folder
 
 from hs_file_types.utils import set_file_to_geo_raster_file_type
 from hs_file_types.models import GeoRasterLogicalFile, GeoRasterFileMetaData, GenericLogicalFile
@@ -656,6 +657,51 @@ class RasterFileTypeMetaData(MockIRODSTestCaseMixin, TransactionTestCase):
         # test deleting of vrt file
         self._content_file_delete('.vrt')
 
+    def test_raster_file_type_folder_delete(self):
+        # when  a file is set to georasterlogical file type
+        # system automatically creates folder using the name of the file
+        # that was used to set the file type
+        # Here we need to test that when that folder gets deleted, all files
+        # in that folder gets deleted, the logicalfile object gets deleted and
+        # the associated metadata objects get deleted
+        self.raster_file_obj = open(self.raster_file, 'r')
+        self._create_composite_resource()
+        res_file = self.composite_resource.files.first()
+
+        # extract metadata from the tif file
+        set_file_to_geo_raster_file_type(self.composite_resource, res_file.id, self.user)
+
+        # test that we have one logical file of type GeoRasterFileType as a result
+        # of metadata extraction
+        self.assertEqual(GeoRasterLogicalFile.objects.count(), 1)
+        logical_file = GeoRasterLogicalFile.objects.first()
+        # should have one GeoRasterFileMetadata object
+        self.assertEqual(GeoRasterFileMetaData.objects.count(), 1)
+
+        # there should be 2 content files
+        self.assertEqual(self.composite_resource.files.count(), 2)
+        # test that there are metadata associated with the logical file
+        self.assertNotEqual(Coverage.objects.count(), 0)
+        self.assertNotEqual(OriginalCoverage.objects.count(), 0)
+        self.assertNotEqual(CellInformation.objects.count(), 0)
+        self.assertNotEqual(BandInformation.objects.count(), 0)
+
+        # delete the folder for the logical file
+        folder_path = "data/contents/small_logan"
+        remove_folder(self.user, self.composite_resource.short_id, folder_path)
+        # there should no content files
+        self.assertEqual(self.composite_resource.files.count(), 0)
+
+        # there should not be any GeoRaster logical file or metadata file
+        self.assertEqual(GeoRasterLogicalFile.objects.count(), 0)
+        self.assertEqual(GeoRasterFileMetaData.objects.count(), 0)
+
+        # test that all metadata associated with the logical file got deleted
+        self.assertEqual(Coverage.objects.count(), 0)
+        self.assertEqual(OriginalCoverage.objects.count(), 0)
+        self.assertEqual(CellInformation.objects.count(), 0)
+        self.assertEqual(BandInformation.objects.count(), 0)
+
     def test_metadata_element_html(self):
         # here we are testing the get_html() function of the metadata element
         # we have implemented get_html() for only CellInformation element
@@ -692,9 +738,9 @@ class RasterFileTypeMetaData(MockIRODSTestCaseMixin, TransactionTestCase):
             files=(self.raster_file_obj,)
         )
 
+        # set the logical file
         resource_post_create_actions(resource=self.composite_resource, user=self.user,
                                      metadata=self.composite_resource.metadata)
-
 
     def _test_file_metadata_on_file_delete(self, ext):
         self.raster_file_obj = open(self.raster_file, 'r')

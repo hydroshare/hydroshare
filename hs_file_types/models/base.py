@@ -419,14 +419,15 @@ class AbstractLogicalFile(models.Model):
     def resource(self):
         return self.files.all().first().resource
 
-    def logical_delete(self, user):
+    def logical_delete(self, user, delete_res_files=True):
         # deletes the logical file as well as all resource files associated with this logical file
         from hs_core.hydroshare.resource import delete_resource_file
         self.delete_metadata()
         # delete all resource files associated with this instance of logical file
-        for f in self.files.all():
-            delete_resource_file(f.resource.short_id, f.id, user,
-                                 delete_logical_file=False)
+        if delete_res_files:
+            for f in self.files.all():
+                delete_resource_file(f.resource.short_id, f.id, user,
+                                     delete_logical_file=False)
 
         # delete logical file first then delete the associated metadata file object
         metadata = self.metadata
