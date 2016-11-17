@@ -221,7 +221,7 @@
 
                                     <div class="input-group">
                                         <span class="input-group-btn">
-                                            <span id="cv-custom-upload" class="btn btn-default btn-file">
+                                            <span id="group-image-upload" class="btn btn-default btn-file">
                                                 Browse&hellip; <input class="upload-picture" type="file" name="picture">
                                             </span>
                                         </span>
@@ -298,7 +298,7 @@
                 error: function (XMLHttpRequest, textStatus, errorThrown) {
                     console.log("error");
                 }
-            });9
+            });
             //don't submit the form
             return false;
         }
@@ -339,40 +339,17 @@
 
             $('.group-thumbnails').find('div.group-container').height("initial");   // Reset height
 
-            var delta;
-            if (current == "xs") {
-                return; // Delta is 1. No need to adjust
-            }
-            else if (current == "sm") {
-                delta = 2;
-            }
-            else if (current == "md" || current == "lg") {
-                delta = 3;
-            }
-
             var containers = $('.group-thumbnails').find('div.group-container');
 
-            // Fix height of containers for each row. One row every delta items.
-            for (var i = 0; i < containers.length - delta; i += delta) {
-                var maxHeight = 0;
-                for (var j = 0; j < delta; j++) {
-                    maxHeight = Math.max($(containers[i + j]).height(), maxHeight);
-                }
-                for (var j = 0; j < delta; j++) {
-                    $(containers[i + j]).height(maxHeight);
-                }
+            var maxHeight = 0;
+            for (var i = 0; i < containers.length; i ++) {
+                maxHeight = Math.max($(containers[i]).height() + $(containers[i]).find(".group-thumbnail-footer").height(), maxHeight);
             }
-        }
 
-        // Preview profile picture
-        function readURL(input) {
-            if (input.files && input.files[0]) {
-                var reader = new FileReader();
-                reader.onload = function (e) {
-
-                };
-
-                reader.readAsDataURL(input.files[0]);
+            // set to new max height
+            for (var i = 0; i < containers.length; i++) {
+                $(containers[i]).height(maxHeight);
+                $(containers[i]).find(".group-thumbnail-footer").width($(containers[i]).find(".group-description").width())
             }
         }
 
@@ -406,7 +383,6 @@
             });
 
         });
-
 
         // Uses bootstrap toolkit to trigger FixViewPort on bootstrap responsive breakpoints
         (function ($, viewport) {
