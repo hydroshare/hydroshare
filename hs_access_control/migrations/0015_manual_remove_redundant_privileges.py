@@ -35,10 +35,6 @@ def remove_extra_privileges(apps, schema_editor):
 
     for u in User.objects.all():
         for g in Group.objects.all():
-            print(type(u))
-            print(" ")
-            print(type(g))
-            print("\n")
             
             records = UserGroupPrivilege.objects.filter(user=u, group=g)
             if records.count() > 1:  # do nothing if there are no duplicates
