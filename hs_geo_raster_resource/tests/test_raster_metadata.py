@@ -1,4 +1,3 @@
-
 import os
 import tempfile
 import shutil
@@ -15,11 +14,13 @@ from hs_core import hydroshare
 from hs_core.hydroshare import utils
 from hs_core.models import CoreMetaData, Creator, Contributor, Coverage, Rights, Title, Language, \
     Publisher, Identifier, Type, Subject, Description, Date, Format, Relation, Source
-from hs_core.testing import MockIRODSTestCaseMixin
-from hs_geo_raster_resource.models import RasterResource, OriginalCoverage, BandInformation, CellInformation
+from hs_core.testing import MockIRODSTestCaseMixin, TestCaseCommonUtilities
+from hs_geo_raster_resource.models import RasterResource, OriginalCoverage, BandInformation, \
+    CellInformation
+from django_irods.storage import IrodsStorage
 
 
-class TestRasterMetaData(MockIRODSTestCaseMixin, TransactionTestCase):
+class TestRasterMetaData(MockIRODSTestCaseMixin, TestCaseCommonUtilities, TransactionTestCase):
     def setUp(self):
         super(TestRasterMetaData, self).setUp()
         self.group, _ = Group.objects.get_or_create(name='Hydroshare Author')
@@ -35,19 +36,19 @@ class TestRasterMetaData(MockIRODSTestCaseMixin, TransactionTestCase):
 
         if settings.REMOTE_USE_IRODS and settings.HS_USER_ZONE_HOST == 'users.local.org' \
                 and settings.IRODS_HOST == 'data.local.org':
-            pass
+            super(TestRasterMetaData, self).create_irods_user_in_user_zone()
 
-        # even there is no file uploaded to resource, there are default extended automatically metadata created
-        _, _, metadata, _ = utils.resource_pre_create_actions(resource_type='RasterResource',
-                                                          resource_title='My Test Raster Resource',
-                                                          page_redirect_url_key=None,
-                                                          metadata=None,)
-        self.resRaster = hydroshare.create_resource(
+        # even there is no file uploaded to resource, there are default extended metadata created
+        # automatically
+        _, _, metadata, _ = utils.resource_pre_create_actions(
             resource_type='RasterResource',
-            owner=self.user,
-            title='My Test Raster Resource',
-            metadata=metadata
-        )
+            resource_title='My Test Raster Resource',
+            page_redirect_url_key=None,
+            metadata=None,)
+        self.resRaster = hydroshare.create_resource(resource_type='RasterResource',
+                                                    owner=self.user,
+                                                    title='My Test Raster Resource',
+                                                    metadata=metadata)
 
         self.temp_dir = tempfile.mkdtemp()
         self.raster_tif_file_name = 'raster_tif_valid.tif'
@@ -56,8 +57,23 @@ class TestRasterMetaData(MockIRODSTestCaseMixin, TransactionTestCase):
         shutil.copy(self.raster_tif_file, target_temp_raster_tif_file)
         self.raster_tif_file_obj = open(target_temp_raster_tif_file, 'r')
 
+        # transfer this valid tif file to user zone space for testing
+        # only need to test that tif file stored in iRODS user zone space can be used to create a
+        # raster resource with metadata automatically extracted. Other relevant tests are
+        # adding a tif file to an existing resource, deleting a file in a raster resource from
+        # iRODS user zone, and deleting a resource stored in iRODS user zone. Other detailed tests
+        # don't need to be retested for irods user zone space scenario since as long as the tif
+        # file in iRODS user zone space can be read with metadata extracted correctly, other
+        # functionalities are done with the same common functions regardless of where the tif file
+        # comes from, either from local disk or from a federated user zone
+        self.irods_storage = IrodsStorage('federated')
+        irods_target_path = '/' + settings.HS_USER_IRODS_ZONE + '/home/' + self.user.username + '/'
+        self.irods_storage.saveFile(target_temp_raster_tif_file,
+                                    irods_target_path + self.raster_tif_file_name)
+
         self.raster_bad_tif_file_name = 'raster_tif_invalid.tif'
-        self.raster_bad_tif_file = 'hs_geo_raster_resource/tests/{}'.format(self.raster_bad_tif_file_name)
+        self.raster_bad_tif_file = 'hs_geo_raster_resource/tests/{}'.format(
+            self.raster_bad_tif_file_name)
         target_temp_raster_bad_tif_file = os.path.join(self.temp_dir, self.raster_bad_tif_file_name)
         shutil.copy(self.raster_bad_tif_file, target_temp_raster_bad_tif_file)
         self.raster_bad_tif_file_obj = open(target_temp_raster_bad_tif_file, 'r')
@@ -69,7 +85,8 @@ class TestRasterMetaData(MockIRODSTestCaseMixin, TransactionTestCase):
         self.raster_zip_file_obj = open(target_temp_raster_zip_file, 'r')
 
         self.raster_bad_zip_file_name = 'raster_zip_invalid.zip'
-        self.raster_bad_zip_file = 'hs_geo_raster_resource/tests/{}'.format(self.raster_bad_zip_file_name)
+        self.raster_bad_zip_file = 'hs_geo_raster_resource/tests/{}'.format(
+            self.raster_bad_zip_file_name)
         target_temp_raster_bad_zip_file = os.path.join(self.temp_dir, self.raster_bad_zip_file_name)
         shutil.copy(self.raster_bad_zip_file, target_temp_raster_bad_zip_file)
         self.raster_bad_zip_file_obj = open(target_temp_raster_bad_zip_file, 'r')
@@ -78,9 +95,14 @@ class TestRasterMetaData(MockIRODSTestCaseMixin, TransactionTestCase):
         text_file = open(temp_text_file, 'w')
         text_file.write("Raster records")
         self.text_file_obj = open(temp_text_file, 'r')
+        # this test_user_zone variable is used to indicate whether user zone case is being tested
+        self.test_user_zone = False
 
     def tearDown(self):
         super(TestRasterMetaData, self).tearDown()
+        if settings.REMOTE_USE_IRODS and settings.HS_USER_ZONE_HOST == 'users.local.org' \
+                and settings.IRODS_HOST == 'data.local.org':
+            super(TestRasterMetaData, self).delete_irods_user_in_user_zone()
         if os.path.exists(self.temp_dir):
             shutil.rmtree(self.temp_dir)
 
@@ -88,27 +110,32 @@ class TestRasterMetaData(MockIRODSTestCaseMixin, TransactionTestCase):
         # test allowed file type is '.tif, .zip'
         self.assertIn('.tif', RasterResource.get_supported_upload_file_types())
         self.assertIn('.zip', RasterResource.get_supported_upload_file_types())
-        self.assertEquals(len(RasterResource.get_supported_upload_file_types()), 2)
+        self.assertEqual(len(RasterResource.get_supported_upload_file_types()), 2)
 
         # there should not be any content file
-        self.assertEquals(self.resRaster.files.all().count(), 0)
+        self.assertEqual(self.resRaster.files.all().count(), 0)
 
         # trying to add a text file to this resource should raise exception
         files = [UploadedFile(file=self.text_file_obj, name=self.text_file_obj.name)]
         with self.assertRaises(utils.ResourceFileValidationException):
-            utils.resource_file_add_pre_process(resource=self.resRaster, files=files, user=self.user,
+            utils.resource_file_add_pre_process(resource=self.resRaster, files=files,
+                                                user=self.user,
                                                 extract_metadata=False)
 
         # trying to add bad .tif file should raise file validation error
-        files = [UploadedFile(file=self.raster_bad_tif_file_obj, name=self.raster_bad_tif_file_name)]
+        files = [UploadedFile(file=self.raster_bad_tif_file_obj,
+                              name=self.raster_bad_tif_file_name)]
         with self.assertRaises(utils.ResourceFileValidationException):
-            utils.resource_file_add_pre_process(resource=self.resRaster, files=files, user=self.user,
+            utils.resource_file_add_pre_process(resource=self.resRaster, files=files,
+                                                user=self.user,
                                                 extract_metadata=False)
 
         # trying to add bad .zip file should raise file validation error
-        files = [UploadedFile(file=self.raster_bad_zip_file_obj, name=self.raster_bad_zip_file_name)]
+        files = [UploadedFile(file=self.raster_bad_zip_file_obj,
+                              name=self.raster_bad_zip_file_name)]
         with self.assertRaises(utils.ResourceFileValidationException):
-            utils.resource_file_add_pre_process(resource=self.resRaster, files=files, user=self.user,
+            utils.resource_file_add_pre_process(resource=self.resRaster, files=files,
+                                                user=self.user,
                                                 extract_metadata=False)
 
         # trying to add good .tif file should pass the file check
@@ -119,12 +146,13 @@ class TestRasterMetaData(MockIRODSTestCaseMixin, TransactionTestCase):
                                         extract_metadata=False)
 
         # there should be 2 content file: with .vrt file created by system
-        self.assertEquals(self.resRaster.files.all().count(), 2)
+        self.assertEqual(self.resRaster.files.all().count(), 2)
         file_names = [os.path.basename(f.resource_file.name) for f in self.resRaster.files.all()]
         self.assertIn('raster_tif_valid.vrt', file_names)
 
         # delete content file that we added above
-        hydroshare.delete_resource_file(self.resRaster.short_id, self.raster_tif_file_name, self.user)
+        hydroshare.delete_resource_file(self.resRaster.short_id, self.raster_tif_file_name,
+                                        self.user)
 
         # there should be no content file
         self.assertEqual(self.resRaster.files.all().count(), 0)
@@ -139,76 +167,97 @@ class TestRasterMetaData(MockIRODSTestCaseMixin, TransactionTestCase):
         # there should be 10 content file:
         self.assertEqual(self.resRaster.files.all().count(), 10)
 
-        # file pre add process should raise validation error if we try to add a 2nd file when the resource has
-        # already content files
+        # file pre add process should raise validation error if we try to add a 2nd file when
+        # the resource has already content files
         with self.assertRaises(utils.ResourceFileValidationException):
-            utils.resource_file_add_pre_process(resource=self.resRaster, files=files, user=self.user,
+            utils.resource_file_add_pre_process(resource=self.resRaster, files=files,
+                                                user=self.user,
                                                 extract_metadata=False)
 
     def test_metadata_initialization_for_empty_resource(self):
         # there should be default cell information:
         cell_info = self.resRaster.metadata.cellInformation
         self.assertNotEqual(cell_info, None)
-        self.assertEquals(cell_info.rows, None)
-        self.assertEquals(cell_info.columns, None)
-        self.assertEquals(cell_info.cellSizeXValue, None)
-        self.assertEquals(cell_info.cellSizeYValue, None)
-        self.assertEquals(cell_info.cellDataType, None)
+        self.assertEqual(cell_info.rows, None)
+        self.assertEqual(cell_info.columns, None)
+        self.assertEqual(cell_info.cellSizeXValue, None)
+        self.assertEqual(cell_info.cellSizeYValue, None)
+        self.assertEqual(cell_info.cellDataType, None)
 
 
         # there should be default spatial reference info
         ori_coverage = self.resRaster.metadata.originalCoverage
         self.assertNotEquals(ori_coverage, None)
-        self.assertEquals(ori_coverage.value['northlimit'], None)
-        self.assertEquals(ori_coverage.value['eastlimit'], None)
-        self.assertEquals(ori_coverage.value['southlimit'], None)
-        self.assertEquals(ori_coverage.value['westlimit'], None)
-        self.assertEquals(ori_coverage.value['units'], None)
-        self.assertEquals(ori_coverage.value['projection'], None)
+        self.assertEqual(ori_coverage.value['northlimit'], None)
+        self.assertEqual(ori_coverage.value['eastlimit'], None)
+        self.assertEqual(ori_coverage.value['southlimit'], None)
+        self.assertEqual(ori_coverage.value['westlimit'], None)
+        self.assertEqual(ori_coverage.value['units'], None)
+        self.assertEqual(ori_coverage.value['projection'], None)
 
         # there should be default band information:
         band_info = self.resRaster.metadata.bandInformation.first()
         self.assertNotEqual(band_info, 0)
-        self.assertEquals(band_info.variableName, None)
-        self.assertEquals(band_info.variableUnit, None)
+        self.assertEqual(band_info.variableName, None)
+        self.assertEqual(band_info.variableUnit, None)
 
     def test_metadata_extraction_on_resource_creation(self):
-        # passing the file object that points to the temp dir doesn't work - create_resource throws error
-        # open the file from the fixed file location
+        # Passing the file object that points to the temp dir doesn't work - create_resource
+        # throws error. Open the file from the fixed file location
         files = [UploadedFile(file=self.raster_tif_file_obj, name=self.raster_tif_file_name)]
-        _, _, metadata, _ = utils.resource_pre_create_actions(resource_type='RasterResource',
-                                                          resource_title='My Test Raster Resource',
-                                                          page_redirect_url_key=None,
-                                                          files=files,
-                                                          metadata=None,)
-        self.resRaster = hydroshare.create_resource(
-            'RasterResource',
-            self.user,
-            'My Test Raster Resource',
+        _, _, metadata, _ = utils.resource_pre_create_actions(
+            resource_type='RasterResource',
+            resource_title='My Test Raster Resource',
+            page_redirect_url_key=None,
             files=files,
-            metadata=metadata
-            )
+            metadata=None,)
+        self.resRaster = hydroshare.create_resource('RasterResource',
+                                                    self.user,
+                                                    'My Test Raster Resource',
+                                                    files=files,
+                                                    metadata=metadata)
 
         self._test_metadata_extraction()
 
+    def test_metadata_extraction_on_resource_creation_in_user_zone(self):
+        if settings.REMOTE_USE_IRODS and settings.HS_USER_ZONE_HOST == 'users.local.org' \
+                and settings.IRODS_HOST == 'data.local.org':
+            # test metadata extraction with tif file coming from user zone space
+            fed_test_file_full_path = '/{zone}/home/{username}/{fname}'.format(
+                zone=settings.HS_USER_IRODS_ZONE, username=self.user.username,
+                fname=self.raster_tif_file_name)
+            _, _, metadata, _ = utils.resource_pre_create_actions(
+                resource_type='RasterResource',
+                resource_title='My Test Raster Resource',
+                page_redirect_url_key=None,
+                fed_res_file_names=[fed_test_file_full_path])
+            self.resRasterUserZone = hydroshare.create_resource(
+                'RasterResource',
+                self.user,
+                'My Test Raster Resource',
+                fed_res_file_names=[fed_test_file_full_path],
+                metadata=metadata)
+            self.test_user_zone = True
+            self._test_metadata_extraction()
+
     def test_metadata_extraction_on_content_file_add(self):
         # test the core metadata at this point
-        self.assertEquals(self.resRaster.metadata.title.value, 'My Test Raster Resource')
+        self.assertEqual(self.resRaster.metadata.title.value, 'My Test Raster Resource')
 
         # there shouldn't any abstract element
-        self.assertEquals(self.resRaster.metadata.description, None)
+        self.assertEqual(self.resRaster.metadata.description, None)
 
         # there shouldn't any coverage element
-        self.assertEquals(self.resRaster.metadata.coverages.all().count(), 0)
+        self.assertEqual(self.resRaster.metadata.coverages.all().count(), 0)
 
         # there shouldn't any format element
-        self.assertEquals(self.resRaster.metadata.formats.all().count(), 0)
+        self.assertEqual(self.resRaster.metadata.formats.all().count(), 0)
 
         # there shouldn't any subject element
-        self.assertEquals(self.resRaster.metadata.subjects.all().count(), 0)
+        self.assertEqual(self.resRaster.metadata.subjects.all().count(), 0)
 
         # there shouldn't any contributor element
-        self.assertEquals(self.resRaster.metadata.contributors.all().count(), 0)
+        self.assertEqual(self.resRaster.metadata.contributors.all().count(), 0)
 
         # there should be default extended metadata
         self.assertNotEquals(self.resRaster.metadata.originalCoverage, None)
@@ -224,6 +273,23 @@ class TestRasterMetaData(MockIRODSTestCaseMixin, TransactionTestCase):
 
         self._test_metadata_extraction()
     
+    def test_metadata_extraction_on_content_file_add_in_user_zone(self):
+        if settings.REMOTE_USE_IRODS and settings.HS_USER_ZONE_HOST == 'users.local.org' \
+                and settings.IRODS_HOST == 'data.local.org':
+            # test metadata extraction with a valid tif file being added coming from user zone space
+            fed_test_file_full_path = '/{zone}/home/{username}/{fname}'.format(
+                zone=settings.HS_USER_IRODS_ZONE, username=self.user.username,
+                fname=self.raster_tif_file_name)
+            utils.resource_file_add_pre_process(resource=self.resRaster,
+                                                files=[],
+                                                user=self.user,
+                                                fed_res_file_names=[fed_test_file_full_path,])
+            utils.resource_file_add_process(resource=self.resRaster,
+                                            files=[],
+                                            user=self.user,
+                                            fed_res_file_names=[fed_test_file_full_path,])
+            self._test_metadata_extraction()
+
     def test_metadata_on_content_file_delete(self):
         # test that some of the metadata is not deleted on content file deletion
         files = [UploadedFile(file=self.raster_tif_file_obj, name=self.raster_tif_file_name)]
@@ -233,47 +299,109 @@ class TestRasterMetaData(MockIRODSTestCaseMixin, TransactionTestCase):
         utils.resource_file_add_process(resource=self.resRaster, files=files, user=self.user,
                                         extract_metadata=True)
         # there should be 2 content files
-        self.assertEquals(self.resRaster.files.all().count(), 2)
+        self.assertEqual(self.resRaster.files.all().count(), 2)
 
         # there should be 2 format elements
-        self.assertEquals(self.resRaster.metadata.formats.all().count(), 2)
-        self.assertEquals(self.resRaster.metadata.formats.all().filter(value='application/vrt').count(), 1)
-        self.assertEquals(self.resRaster.metadata.formats.all().filter(value='image/tiff').count(), 1)
+        self.assertEqual(self.resRaster.metadata.formats.all().count(), 2)
+        self.assertEqual(self.resRaster.metadata.formats.all().filter(
+            value='application/vrt').count(), 1)
+        self.assertEqual(self.resRaster.metadata.formats.all().filter(
+            value='image/tiff').count(), 1)
 
         # delete content file that we added above
-        hydroshare.delete_resource_file(self.resRaster.short_id, self.raster_tif_file_name, self.user)
+        hydroshare.delete_resource_file(self.resRaster.short_id, self.raster_tif_file_name,
+                                        self.user)
 
         # there should no content file
-        self.assertEquals(self.resRaster.files.all().count(), 0)
+        self.assertEqual(self.resRaster.files.all().count(), 0)
 
         # there should be a title element
         self.assertNotEquals(self.resRaster.metadata.title, None)
 
         # there should be no abstract element
-        self.assertEquals(self.resRaster.metadata.description, None)
+        self.assertEqual(self.resRaster.metadata.description, None)
 
         # there should be 1 creator element
-        self.assertEquals(self.resRaster.metadata.creators.all().count(), 1)
+        self.assertEqual(self.resRaster.metadata.creators.all().count(), 1)
 
         # there should be no contributor element
-        self.assertEquals(self.resRaster.metadata.contributors.all().count(), 0)
+        self.assertEqual(self.resRaster.metadata.contributors.all().count(), 0)
 
         # there should be no coverage element
-        self.assertEquals(self.resRaster.metadata.coverages.all().count(), 0)
+        self.assertEqual(self.resRaster.metadata.coverages.all().count(), 0)
 
         # there should be no format element
-        self.assertEquals(self.resRaster.metadata.formats.all().count(), 0)
+        self.assertEqual(self.resRaster.metadata.formats.all().count(), 0)
 
         # there should be no subject element
-        self.assertEquals(self.resRaster.metadata.subjects.all().count(), 0)
+        self.assertEqual(self.resRaster.metadata.subjects.all().count(), 0)
 
         # testing extended metadata elements
-        self.assertEquals(self.resRaster.metadata.originalCoverage, None)
+        self.assertEqual(self.resRaster.metadata.originalCoverage, None)
         self.assertNotEquals(self.resRaster.metadata.cellInformation, None)
         self.assertNotEquals(self.resRaster.metadata.bandInformation.count, 0)
 
+    def test_metadata_on_content_file_delete_in_user_zone(self):
+        if settings.REMOTE_USE_IRODS and settings.HS_USER_ZONE_HOST == 'users.local.org' \
+                and settings.IRODS_HOST == 'data.local.org':
+            # add tif file to resource to prepare for file deletion
+            fed_test_file_full_path = '/{zone}/home/{username}/{fname}'.format(
+                zone=settings.HS_USER_IRODS_ZONE, username=self.user.username,
+                fname=self.raster_tif_file_name)
+            utils.resource_file_add_pre_process(resource=self.resRaster,
+                                                files=[],
+                                                user=self.user,
+                                                fed_res_file_names=[fed_test_file_full_path,])
+            utils.resource_file_add_process(resource=self.resRaster,
+                                            files=[],
+                                            user=self.user,
+                                            fed_res_file_names=[fed_test_file_full_path,])
+            # there should be 2 content file: tif file and vrt file
+            self.assertEqual(self.resRaster.files.all().count(), 2)
+
+            # there should be 2 format elements
+            self.assertEqual(self.resRaster.metadata.formats.all().count(), 2)
+            self.assertEqual(self.resRaster.metadata.formats.all().filter(
+                value='application/vrt').count(), 1)
+            self.assertEqual(self.resRaster.metadata.formats.all().filter(
+                value='image/tiff').count(), 1)
+
+            # delete content file that we added above
+            hydroshare.delete_resource_file(self.resRaster.short_id, self.raster_tif_file_name,
+                                            self.user)
+
+            # there should be no content file
+            self.assertEqual(self.resRaster.files.all().count(), 0)
+
+            # there should be a title element
+            self.assertNotEquals(self.resRaster.metadata.title, None)
+
+            # there should be no abstract element
+            self.assertEqual(self.resRaster.metadata.description, None)
+
+            # there should be 1 creator element
+            self.assertEqual(self.resRaster.metadata.creators.all().count(), 1)
+
+            # there should be no contributor element
+            self.assertEqual(self.resRaster.metadata.contributors.all().count(), 0)
+
+            # there should be no coverage element
+            self.assertEqual(self.resRaster.metadata.coverages.all().count(), 0)
+
+            # there should be no format element
+            self.assertEqual(self.resRaster.metadata.formats.all().count(), 0)
+
+            # there should be no subject element
+            self.assertEqual(self.resRaster.metadata.subjects.all().count(), 0)
+
+            # testing extended metadata elements
+            self.assertEqual(self.resRaster.metadata.originalCoverage, None)
+            self.assertNotEquals(self.resRaster.metadata.cellInformation, None)
+            self.assertNotEquals(self.resRaster.metadata.bandInformation.count, 0)
+
     def test_metadata_delete_on_resource_delete(self):
-        # adding a valid raster tif file should generate some core metadata and all extended metadata
+        # adding a valid raster tif file should generate some core metadata and all extended
+        # metadata
         files = [UploadedFile(file=self.raster_tif_file_obj, name=self.raster_tif_file_name)]
         utils.resource_file_add_pre_process(resource=self.resRaster, files=files, user=self.user,
                                             extract_metadata=False)
@@ -284,7 +412,7 @@ class TestRasterMetaData(MockIRODSTestCaseMixin, TransactionTestCase):
         # before resource delete
         # resource core metadata
         raster_metadata_obj = self.resRaster.metadata
-        self.assertEquals(CoreMetaData.objects.all().count(), 1)
+        self.assertEqual(CoreMetaData.objects.all().count(), 1)
         # there should be Creator metadata objects
         self.assertTrue(Creator.objects.filter(object_id=raster_metadata_obj.id).exists())
         # there should be no Contributor metadata objects
@@ -326,7 +454,7 @@ class TestRasterMetaData(MockIRODSTestCaseMixin, TransactionTestCase):
 
         # delete resource
         hydroshare.delete_resource(self.resRaster.short_id)
-        self.assertEquals(CoreMetaData.objects.all().count(), 0)
+        self.assertEqual(CoreMetaData.objects.all().count(), 0)
 
         # there should be no Creator metadata objects
         self.assertFalse(Creator.objects.filter(object_id=raster_metadata_obj.id).exists())
@@ -367,6 +495,33 @@ class TestRasterMetaData(MockIRODSTestCaseMixin, TransactionTestCase):
         # there should be bandInformation metadata objects
         self.assertFalse(BandInformation.objects.filter(object_id=raster_metadata_obj.id).exists())
 
+    def test_metadata_delete_on_resource_delete_in_user_zone(self):
+        if settings.REMOTE_USE_IRODS and settings.HS_USER_ZONE_HOST == 'users.local.org' \
+                and settings.IRODS_HOST == 'data.local.org':
+            # create a resource in user zone to prepare for resource deletion testing
+            fed_test_file_full_path = '/{zone}/home/{username}/{fname}'.format(
+                zone=settings.HS_USER_IRODS_ZONE, username=self.user.username,
+                fname=self.raster_tif_file_name)
+            _, _, metadata, _ = utils.resource_pre_create_actions(
+                resource_type='RasterResource',
+                resource_title='My Test Raster Resource',
+                page_redirect_url_key=None,
+                fed_res_file_names=[fed_test_file_full_path, ])
+            self.resRaster = hydroshare.create_resource(
+                'RasterResource',
+                self.user,
+                'My Test Raster Resource',
+                fed_res_file_names=[fed_test_file_full_path, ],
+                metadata=metadata)
+
+            # resource core metadata exists before resource deletion
+            self.assertEqual(CoreMetaData.objects.all().count(), 1)
+
+            # delete resource
+            hydroshare.delete_resource(self.resRaster.short_id)
+            # resource core metadata is deleted after resource deletion
+            self.assertEqual(CoreMetaData.objects.all().count(), 0)
+
     def test_extended_metadata_CRUD(self):
         # delete default original coverage metadata
         self.assertNotEquals(self.resRaster.metadata.originalCoverage, None)
@@ -377,7 +532,7 @@ class TestRasterMetaData(MockIRODSTestCaseMixin, TransactionTestCase):
                 "eastlimit": 23, "westlimit": 2}
         self.resRaster.metadata.create_element('originalcoverage', value=value)
 
-        self.assertEquals(self.resRaster.metadata.originalCoverage.value, value)
+        self.assertEqual(self.resRaster.metadata.originalCoverage.value, value)
 
         # multiple original coverage elements are not allowed - should raise exception
         with self.assertRaises(IntegrityError):
@@ -393,11 +548,11 @@ class TestRasterMetaData(MockIRODSTestCaseMixin, TransactionTestCase):
                                                )
 
         cell_info = self.resRaster.metadata.cellInformation
-        self.assertEquals(cell_info.rows, 1660)
-        self.assertEquals(cell_info.columns, 985)
-        self.assertEquals(cell_info.cellSizeXValue, 30.0)
-        self.assertEquals(cell_info.cellSizeYValue, 30.0)
-        self.assertEquals(cell_info.cellDataType, 'Float32')
+        self.assertEqual(cell_info.rows, 1660)
+        self.assertEqual(cell_info.columns, 985)
+        self.assertEqual(cell_info.cellSizeXValue, 30.0)
+        self.assertEqual(cell_info.cellSizeYValue, 30.0)
+        self.assertEqual(cell_info.cellDataType, 'Float32')
 
 
         # multiple cell Information elements are not allowed - should raise exception
@@ -420,14 +575,14 @@ class TestRasterMetaData(MockIRODSTestCaseMixin, TransactionTestCase):
                                                maximumValue=1000, minimumValue=0, noDataValue=-9999)
 
         band_info = self.resRaster.metadata.bandInformation.first()
-        self.assertEquals(band_info.name, 'bandinfo')
-        self.assertEquals(band_info.variableName, 'diginal elevation')
-        self.assertEquals(band_info.variableUnit, 'meter')
-        self.assertEquals(band_info.method, 'this is method')
-        self.assertEquals(band_info.comment, 'this is comment')
-        self.assertEquals(band_info.maximumValue, '1000')
-        self.assertEquals(band_info.minimumValue, '0')
-        self.assertEquals(band_info.noDataValue, '-9999')
+        self.assertEqual(band_info.name, 'bandinfo')
+        self.assertEqual(band_info.variableName, 'diginal elevation')
+        self.assertEqual(band_info.variableUnit, 'meter')
+        self.assertEqual(band_info.method, 'this is method')
+        self.assertEqual(band_info.comment, 'this is comment')
+        self.assertEqual(band_info.maximumValue, '1000')
+        self.assertEqual(band_info.minimumValue, '0')
+        self.assertEqual(band_info.noDataValue, '-9999')
 
         # multiple band information elements are allowed
         self.resRaster.metadata.create_element('bandinformation', name='bandinfo',
@@ -436,7 +591,7 @@ class TestRasterMetaData(MockIRODSTestCaseMixin, TransactionTestCase):
                                                method='this is method',
                                                comment='this is comment',
                                                maximumValue=1000, minimumValue=0, noDataValue=-9999)
-        self.assertEquals(self.resRaster.metadata.bandInformation.all().count(), 2)
+        self.assertEqual(self.resRaster.metadata.bandInformation.all().count(), 2)
 
         # delete
         # original coverage deletion is not allowed
@@ -457,7 +612,7 @@ class TestRasterMetaData(MockIRODSTestCaseMixin, TransactionTestCase):
                     "eastlimit": 23.5, "westlimit": 2.5}
         self.resRaster.metadata.update_element('originalcoverage', self.resRaster.metadata.originalCoverage.id, value=value_2)
 
-        self.assertEquals(self.resRaster.metadata.originalCoverage.value, value_2)
+        self.assertEqual(self.resRaster.metadata.originalCoverage.value, value_2)
 
         # update cell info element
         self.resRaster.metadata.update_element('cellinformation',
@@ -468,11 +623,11 @@ class TestRasterMetaData(MockIRODSTestCaseMixin, TransactionTestCase):
                                                )
 
         cell_info = self.resRaster.metadata.cellInformation
-        self.assertEquals(cell_info.rows, 166)
-        self.assertEquals(cell_info.columns, 98)
-        self.assertEquals(cell_info.cellSizeXValue, 3.0)
-        self.assertEquals(cell_info.cellSizeYValue, 3.0)
-        self.assertEquals(cell_info.cellDataType, 'Double')
+        self.assertEqual(cell_info.rows, 166)
+        self.assertEqual(cell_info.columns, 98)
+        self.assertEqual(cell_info.cellSizeXValue, 3.0)
+        self.assertEqual(cell_info.cellSizeYValue, 3.0)
+        self.assertEqual(cell_info.cellDataType, 'Double')
 
 
         # update band info element
@@ -487,14 +642,14 @@ class TestRasterMetaData(MockIRODSTestCaseMixin, TransactionTestCase):
                                                )
 
         band_info = self.resRaster.metadata.bandInformation.first()
-        self.assertEquals(band_info.name, 'bandinfo')
-        self.assertEquals(band_info.variableName, 'precipitation')
-        self.assertEquals(band_info.variableUnit, 'mm/h')
-        self.assertEquals(band_info.method, 'this is method2')
-        self.assertEquals(band_info.comment, 'this is comment2')
-        self.assertEquals(band_info.maximumValue, '1001')
-        self.assertEquals(band_info.minimumValue, '1')
-        self.assertEquals(band_info.noDataValue, '-9998')
+        self.assertEqual(band_info.name, 'bandinfo')
+        self.assertEqual(band_info.variableName, 'precipitation')
+        self.assertEqual(band_info.variableUnit, 'mm/h')
+        self.assertEqual(band_info.method, 'this is method2')
+        self.assertEqual(band_info.comment, 'this is comment2')
+        self.assertEqual(band_info.maximumValue, '1001')
+        self.assertEqual(band_info.minimumValue, '1')
+        self.assertEqual(band_info.noDataValue, '-9998')
 
     def test_get_xml(self):
         # add a valid raster file to generate metadata
@@ -537,57 +692,59 @@ class TestRasterMetaData(MockIRODSTestCaseMixin, TransactionTestCase):
         self.assertTrue(self.resRaster.can_be_public_or_discoverable)
 
     def _test_metadata_extraction(self):
+        if self.test_user_zone:
+            test_raster_res = self.resRasterUserZone
+        else:
+            test_raster_res = self.resRaster
 
         # there should be 2 content files
-        self.assertEquals(self.resRaster.files.all().count(), 2)
+        self.assertEqual(test_raster_res.files.all().count(), 2)
 
         # test core metadata after metadata extraction
         extracted_title = "My Test Raster Resource"
-        self.assertEquals(self.resRaster.metadata.title.value, extracted_title)
+        self.assertEqual(test_raster_res.metadata.title.value, extracted_title)
 
         # there should be 1 creator
-        self.assertEquals(self.resRaster.metadata.creators.all().count(), 1)
+        self.assertEqual(test_raster_res.metadata.creators.all().count(), 1)
 
         # there should be 1 coverage element - box type
-        self.assertEquals(self.resRaster.metadata.coverages.all().count(), 1)
-        self.assertEquals(self.resRaster.metadata.coverages.all().filter(type='box').count(), 1)
+        self.assertEqual(test_raster_res.metadata.coverages.all().count(), 1)
+        self.assertEqual(test_raster_res.metadata.coverages.all().filter(type='box').count(), 1)
 
-        box_coverage = self.resRaster.metadata.coverages.all().filter(type='box').first()
-        self.assertEquals(box_coverage.value['projection'], 'WGS 84 EPSG:4326')
-        self.assertEquals(box_coverage.value['units'], 'Decimal degrees')
-        self.assertEquals(box_coverage.value['northlimit'], 42.11071605314457)
-        self.assertEquals(box_coverage.value['eastlimit'], -111.45699925047542)
-        self.assertEquals(box_coverage.value['southlimit'], 41.66417975061928)
-        self.assertEquals(box_coverage.value['westlimit'], -111.81761887121905)
+        box_coverage = test_raster_res.metadata.coverages.all().filter(type='box').first()
+        self.assertEqual(box_coverage.value['projection'], 'WGS 84 EPSG:4326')
+        self.assertEqual(box_coverage.value['units'], 'Decimal degrees')
+        self.assertEqual(box_coverage.value['northlimit'], 42.11071605314457)
+        self.assertEqual(box_coverage.value['eastlimit'], -111.45699925047542)
+        self.assertEqual(box_coverage.value['southlimit'], 41.66417975061928)
+        self.assertEqual(box_coverage.value['westlimit'], -111.81761887121905)
 
         # there should be 2 format elements
-        self.assertEquals(self.resRaster.metadata.formats.all().count(), 2)
-        self.assertEquals(self.resRaster.metadata.formats.all().filter(value='application/vrt').count(), 1)
-        self.assertEquals(self.resRaster.metadata.formats.all().filter(value='image/tiff').count(), 1)
+        self.assertEqual(test_raster_res.metadata.formats.all().count(), 2)
+        self.assertEqual(test_raster_res.metadata.formats.all().filter(value='application/vrt').count(), 1)
+        self.assertEqual(test_raster_res.metadata.formats.all().filter(value='image/tiff').count(), 1)
 
         # testing extended metadata element: original coverage
-        ori_coverage = self.resRaster.metadata.originalCoverage
+        ori_coverage = test_raster_res.metadata.originalCoverage
         self.assertNotEquals(ori_coverage, None)
-        self.assertEquals(ori_coverage.value['northlimit'], 4662392.446916306)
-        self.assertEquals(ori_coverage.value['eastlimit'], 461954.01909127034)
-        self.assertEquals(ori_coverage.value['southlimit'], 4612592.446916306)
-        self.assertEquals(ori_coverage.value['westlimit'], 432404.01909127034)
-        self.assertEquals(ori_coverage.value['units'], 'meter')
-        self.assertEquals(ori_coverage.value['projection'], 'NAD83 / UTM zone 12N Transverse_Mercator')
+        self.assertEqual(ori_coverage.value['northlimit'], 4662392.446916306)
+        self.assertEqual(ori_coverage.value['eastlimit'], 461954.01909127034)
+        self.assertEqual(ori_coverage.value['southlimit'], 4612592.446916306)
+        self.assertEqual(ori_coverage.value['westlimit'], 432404.01909127034)
+        self.assertEqual(ori_coverage.value['units'], 'meter')
+        self.assertEqual(ori_coverage.value['projection'], 'NAD83 / UTM zone 12N Transverse_Mercator')
 
         # testing extended metadata element: cell information
-        cell_info = self.resRaster.metadata.cellInformation
-        self.assertEquals(cell_info.rows, 1660)
-        self.assertEquals(cell_info.columns, 985)
-        self.assertEquals(cell_info.cellSizeXValue, 30.0)
-        self.assertEquals(cell_info.cellSizeYValue, 30.0)
-        self.assertEquals(cell_info.cellDataType, 'Float32')
+        cell_info = test_raster_res.metadata.cellInformation
+        self.assertEqual(cell_info.rows, 1660)
+        self.assertEqual(cell_info.columns, 985)
+        self.assertEqual(cell_info.cellSizeXValue, 30.0)
+        self.assertEqual(cell_info.cellSizeYValue, 30.0)
+        self.assertEqual(cell_info.cellDataType, 'Float32')
 
         # testing extended metadata element: band information
-        self.assertEquals(self.resRaster.metadata.bandInformation.count(), 1)
-        band_info = self.resRaster.metadata.bandInformation.first()
-        self.assertEquals(band_info.noDataValue, '-3.40282346639e+38')
-        self.assertEquals(band_info.maximumValue, '3031.44311523')
-        self.assertEquals(band_info.minimumValue, '1358.33459473')
-
-
+        self.assertEqual(test_raster_res.metadata.bandInformation.count(), 1)
+        band_info = test_raster_res.metadata.bandInformation.first()
+        self.assertEqual(band_info.noDataValue, '-3.40282346639e+38')
+        self.assertEqual(band_info.maximumValue, '3031.44311523')
+        self.assertEqual(band_info.minimumValue, '1358.33459473')

@@ -1,26 +1,25 @@
-
 import os
 import tempfile
 import shutil
 from dateutil import parser
-
-from xml.etree import ElementTree as ET
 
 from django.test import TransactionTestCase
 from django.core.exceptions import ValidationError
 from django.core.files.uploadedfile import UploadedFile
 from django.contrib.auth.models import Group
 from django.db import IntegrityError
+from django.conf import settings
 
 from hs_core import hydroshare
 from hs_core.hydroshare import utils
 from hs_core.models import CoreMetaData, Creator, Contributor, Coverage, Rights, Title, Language, \
     Publisher, Identifier, Type, Subject, Description, Date, Format, Relation, Source
-from hs_core.testing import MockIRODSTestCaseMixin
+from hs_core.testing import MockIRODSTestCaseMixin, TestCaseCommonUtilities
 from hs_app_netCDF.models import NetcdfResource,Variable, OriginalCoverage
+from django_irods.storage import IrodsStorage
 
 
-class TestNetcdfMetaData(MockIRODSTestCaseMixin, TransactionTestCase):
+class TestNetcdfMetaData(MockIRODSTestCaseMixin, TestCaseCommonUtilities, TransactionTestCase):
     def setUp(self):
         super(TestNetcdfMetaData, self).setUp()
         self.group, _ = Group.objects.get_or_create(name='Hydroshare Author')
@@ -32,6 +31,10 @@ class TestNetcdfMetaData(MockIRODSTestCaseMixin, TransactionTestCase):
             superuser=False,
             groups=[self.group]
         )
+
+        if settings.REMOTE_USE_IRODS and settings.HS_USER_ZONE_HOST == 'users.local.org' \
+                and settings.IRODS_HOST == 'data.local.org':
+            super(TestNetcdfMetaData, self).create_irods_user_in_user_zone()
 
         self.resNetcdf= hydroshare.create_resource(
             resource_type='NetcdfResource',
@@ -45,6 +48,20 @@ class TestNetcdfMetaData(MockIRODSTestCaseMixin, TransactionTestCase):
         target_temp_netcdf_file = os.path.join(self.temp_dir, self.netcdf_file_name)
         shutil.copy(self.netcdf_file, target_temp_netcdf_file)
         self.netcdf_file_obj = open(target_temp_netcdf_file, 'r')
+
+        # transfer this valid netCDF file to user zone space for testing.
+        # only need to test that netCDF file stored in iRODS user zone space can be used to create
+        # a netcdf resource with metadata automatically extracted. Other relevant tests are
+        # adding a netCDF file to an existing resource, deleting a file in a netCDF resource from
+        # iRODS user zone, and deleting a resource stored in iRODS user zone. Other detailed tests
+        # don't need to be retested for irods user zone space scenario since as long as the netCDF
+        # file in iRODS user zone space can be read with metadata extracted correctly, other
+        # functionalities are done with the same common functions regardless of where the netCDF
+        # file comes from, either from local disk or from a federated user zone
+        self.irods_storage = IrodsStorage('federated')
+        irods_target_path = '/' + settings.HS_USER_IRODS_ZONE + '/home/' + self.user.username + '/'
+        self.irods_storage.saveFile(target_temp_netcdf_file,
+                                    irods_target_path + self.netcdf_file_name)
 
         self.netcdf_bad_file_name = 'netcdf_invalid.nc'
         self.netcdf_bad_file = 'hs_app_netCDF/tests/{}'.format(self.netcdf_bad_file_name)
