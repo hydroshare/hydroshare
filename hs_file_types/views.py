@@ -194,7 +194,7 @@ def update_key_value_metadata(request, hs_file_type, file_type_id, **kwargs):
     logical_file.metadata.extra_metadata[key] = value
     logical_file.metadata.save()
     extra_metadata_div = super(logical_file.metadata.__class__,
-                               logical_file.metadata).get_html_forms()
+                               logical_file.metadata).get_html_forms(datatset_name_form=False)
     context = Context({})
     template = Template(extra_metadata_div.render())
     rendered_html = template.render(context)
@@ -220,13 +220,28 @@ def delete_key_value_metadata(request, hs_file_type, file_type_id, **kwargs):
         logical_file.metadata.save()
 
     extra_metadata_div = super(logical_file.metadata.__class__,
-                               logical_file.metadata).get_html_forms()
+                               logical_file.metadata).get_html_forms(datatset_name_form=False)
     context = Context({})
     template = Template(extra_metadata_div.render())
     rendered_html = template.render(context)
     ajax_response_data = {'status': 'success', 'logical_file_type': logical_file.type_name(),
                           'extra_metadata': rendered_html,
                           'message': "Delete was successful"}
+    return JsonResponse(ajax_response_data, status=status.HTTP_200_OK)
+
+@login_required
+def update_dataset_name(request, hs_file_type, file_type_id, **kwargs):
+    """updates the dataset_name (title) attribute of the specified logical file object
+    """
+    logical_file, json_response = _get_logical_file(hs_file_type, file_type_id)
+    if json_response is not None:
+        return json_response
+
+    dataset_name = request.POST['dataset_name']
+    logical_file.dataset_name = dataset_name
+    logical_file.save()
+    ajax_response_data = {'status': 'success', 'logical_file_type': logical_file.type_name(),
+                          'element_name': 'datatset_name', 'message': "Update was successful"}
     return JsonResponse(ajax_response_data, status=status.HTTP_200_OK)
 
 

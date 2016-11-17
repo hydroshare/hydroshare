@@ -62,7 +62,8 @@ class GeoRasterFileMetaData(AbstractFileMetaData, GeoRasterMetaDataMixin):
         single line: {{ logical_file.metadata.get_html }}
         """
 
-        html_string = self.spatial_coverage.get_html()
+        html_string = super(GeoRasterFileMetaData, self).get_html()
+        html_string += self.spatial_coverage.get_html()
         html_string += self.originalCoverage.get_html()
         html_string += self.cellInformation.get_html()
         if self.temporal_coverage:

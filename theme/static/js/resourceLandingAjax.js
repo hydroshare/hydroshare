@@ -699,7 +699,7 @@ function addFileTypeExtraMetadata(){
                 $("#add-keyvalue-filetype-modal").modal('hide');
                 $("div").removeClass("modal-backdrop");
                 $("body").removeClass("modal-open");
-                $("#filetype-extra-metadata").html(json_response.extra_metadata);
+                $("#filetype-extra-metadata").replaceWith(json_response.extra_metadata);
             }
             else {
                 $("#add-keyvalue-filetype-modal").modal('hide');
@@ -739,7 +739,7 @@ function updateFileTypeExtraMetadata(form_id){
                 $("#edit-keyvalue-filetype-modal-" + form_counter).modal('hide');
                 $("div").removeClass("modal-backdrop");
                 $("body").removeClass("modal-open");
-                $("#filetype-extra-metadata").html(json_response.extra_metadata);
+                $("#filetype-extra-metadata").replaceWith(json_response.extra_metadata);
             }
             else {
                 $("#edit-keyvalue-filetype-modal-" + form_counter).modal('hide');
@@ -778,7 +778,7 @@ function deleteFileTypeExtraMetadata(form_id){
                 $("#delete-keyvalue-filetype-modal-" + form_counter).modal('hide');
                 $("div").removeClass("modal-backdrop");
                 $("body").removeClass("modal-open");
-                $("#filetype-extra-metadata").html(json_response.extra_metadata);
+                $("#filetype-extra-metadata").replaceWith(json_response.extra_metadata);
             }
             else {
                 $("#delete-keyvalue-filetype-modal-" + form_counter).modal('hide');

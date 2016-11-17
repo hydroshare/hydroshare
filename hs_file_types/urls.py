@@ -33,6 +33,11 @@ urlpatterns = patterns('',
         views.delete_key_value_metadata,
         name="delete_file_keyvalue_metadata"),
 
+    url(r'^_internal/(?P<hs_file_type>[A-z]+)/(?P<file_type_id>[0-9]+)/'
+        r'update-filetype-dataset-name/$',
+        views.update_dataset_name,
+        name="update_filetype_datatset_name"),
+
     url(r'^_internal/(?P<hs_file_type>[A-z]+)/(?P<file_type_id>[0-9]+)/(?P<metadata_mode>[a-z]+)/'
         r'get-file-metadata/$', views.get_metadata, name="get_file_metadata"),
     )
