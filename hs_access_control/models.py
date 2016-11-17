@@ -13,7 +13,7 @@ This module implements access control for hydroshare.  Privilege models act on u
 
    1) allow accounting for what happened.
    2) allow "undo" operations.
-   3) limit each grantor to granting one privilege
+   3) limit each user to accumulating one privilege over a thing
 
 Notes and quandaries
 --------------------
@@ -2663,7 +2663,7 @@ class ResourceAccess(models.Model):
                                                   user=this_user) 
             response1 = p.privilege
         except UserResourcePrivilege.DoesNotExist: 
-            response1 = None
+            response1 = PrivilegeCodes.NONE
 
         # Group privileges must be aggregated 
         group_priv = GroupResourcePrivilege.objects\
