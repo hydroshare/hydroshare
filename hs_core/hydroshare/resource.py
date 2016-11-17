@@ -1023,6 +1023,7 @@ def delete_resource_file(pk, filename_or_id, user, delete_logical_file=True):
             resource.raccess.discoverable = False
             resource.raccess.save()
 
+    signals.post_delete_file_from_resource.send(sender=res_cls, resource=resource)
     # generate bag
     utils.resource_modified(resource, user)
 
