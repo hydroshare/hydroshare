@@ -26,6 +26,7 @@ def migrate_nc_file(apps, schema_editor):
                 res_file_tmp_path = get_file_from_irods(res_file)
                 if os.path.splitext(res_file_tmp_path)[1] == '.nc':
                     break
+                    print res_file_tmp_path
                 else:
                     shutil.rmtree(res_file_tmp_path)
 
@@ -33,27 +34,28 @@ def migrate_nc_file(apps, schema_editor):
             if os.path.isfile(res_file_tmp_path):
                 res_md_dict = get_nc_meta_dict(res_file_tmp_path)
                 res_dublin_core_meta = res_md_dict['dublin_core_meta']
-                shutil.rmtree(res_file_tmp_path)
-
-                # update the original spatial coverage meta
-                if res_dublin_core_meta.get('original-box'):
-                    res.metadata.ori_coverage.all().delete()
-                    if res_dublin_core_meta.get('projection-info'):
-                        res.metadata.create_element(
-                            'originalcoverage',
-                            value=res_dublin_core_meta['original-box'],
-                            projection_string_type=res_dublin_core_meta['projection-info']['type'],
-                            projection_string_text=res_dublin_core_meta['projection-info']['text'],
-                            datum=res_dublin_core_meta['projection-info']['datum'])
-                    else:
-                        res.metadata.create_element(
-                            'originalcoverage',
-                            value=res_dublin_core_meta['original-box'])
-
-                    # update the resource status
-                    resource_modified(res, res.creator)
-                    meta_update_success.append(
-                        '{}:{}'.format(res.short_id, res.metadata.title.value))
+                print res_dublin_core_meta['original-box']
+                # shutil.rmtree(res_file_tmp_path)
+                #
+                # # update the original spatial coverage meta
+                # if res_dublin_core_meta.get('original-box'):
+                #     res.metadata.ori_coverage.all().delete()
+                #     if res_dublin_core_meta.get('projection-info'):
+                #         res.metadata.create_element(
+                #             'originalcoverage',
+                #             value=res_dublin_core_meta['original-box'],
+                #             projection_string_type=res_dublin_core_meta['projection-info']['type'],
+                #             projection_string_text=res_dublin_core_meta['projection-info']['text'],
+                #             datum=res_dublin_core_meta['projection-info']['datum'])
+                #     else:
+                #         res.metadata.create_element(
+                #             'originalcoverage',
+                #             value=res_dublin_core_meta['original-box'])
+                #
+                #     # update the resource status
+                #     resource_modified(res, res.creator)
+                #     meta_update_success.append(
+                #         '{}:{}'.format(res.short_id, res.metadata.title.value))
 
         except Exception as e:
             if os.path.isfile(res_file_tmp_path):
@@ -73,7 +75,7 @@ def undo_migrate_nc_file(apps, schema_editor):
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('hs_app_netCDF', '0005_auto_20161111_2322.py'),
+        ('hs_app_netCDF', '0005_auto_20161111_2322'),
     ]
 
     operations = [
