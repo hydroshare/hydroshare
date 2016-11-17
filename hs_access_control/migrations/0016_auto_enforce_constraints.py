@@ -7,7 +7,7 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('hs_access_control', '0014_auto_20160424_1628'),
+        ('hs_access_control', '0015_manual_remove_redundant_privileges'),
     ]
 
     operations = [

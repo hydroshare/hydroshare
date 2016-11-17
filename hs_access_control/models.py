@@ -2491,14 +2491,15 @@ class GroupAccess(models.Model):
         :param this_user: User to check
         :return: Privilege code 1-4
         """
-        p = UserGroupPrivilege.objects.filter(group=self.group,
-                                              user=this_user,
-                                              user__is_active=True)\
-            .aggregate(models.Min('privilege'))
-        val = p['privilege__min']
-        if val is None:
-            val = PrivilegeCodes.NONE
-        return val
+        
+        if not this_user.is_active: 
+            return PrivilegeCodes.NONE
+        try: 
+            p = UserGroupPrivilege.objects.get(group=self.group,
+                                               user=this_user) 
+            return p.privilege
+        except UserGroupPrivilege.DoesNotExist: 
+            return PrivilegeCodes.NONE
 
 
 class ResourceAccess(models.Model):
@@ -2657,27 +2658,20 @@ class ResourceAccess(models.Model):
             return PrivilegeCodes.OWNER
 
         # compute simple user privilege over resource
-        user_priv = UserResourcePrivilege.objects\
-            .filter(user=this_user,
-                    user__is_active=True,
-                    resource=self.resource)\
-            .aggregate(models.Min('privilege'))
+        try: 
+            p = UserResourcePrivilege.objects.get(resource=self.resource,
+                                                  user=this_user) 
+            response1 = p.privilege
+        except UserResourcePrivilege.DoesNotExist: 
+            response1 = None
 
-        # this realizes the query early, but can't be helped, because otherwise,
-        # I would be stuck with a possibility of a None return from the two unrealized queries.
-        response1 = user_priv['privilege__min']
-        if response1 is None:
-            response1 = PrivilegeCodes.NONE
-
+        # Group privileges must be aggregated 
         group_priv = GroupResourcePrivilege.objects\
             .filter(resource=self.resource,
                     group__gaccess__active=True,
-                    group__g2ugp__user=this_user,
-                    group__g2ugp__user__is_active=True)\
+                    group__g2ugp__user=this_user)\
             .aggregate(models.Min('privilege'))
 
-        # this realizes the query early, but can't be helped, because otherwise,
-        # I would be stuck with a possibility of a None return from the two unrealized queries.
         response2 = group_priv['privilege__min']
         if response2 is None:
             response2 = PrivilegeCodes.NONE
