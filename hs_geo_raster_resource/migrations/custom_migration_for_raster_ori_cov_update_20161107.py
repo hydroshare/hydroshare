@@ -73,11 +73,6 @@ def migrate_tif_file(apps, schema_editor):
 
                 # update the bag if meta is updated
                 if meta_updated:
-                    bag_name = 'bags/{res_id}.zip'.format(res_id=res.short_id)
-                    istorage = res.get_irods_storage()
-                    if istorage.exists(bag_name):
-                        # delete the resource bag as the old bag is not valid
-                        istorage.delete(bag_name)
                     resource_modified(res, res.creator)
                     meta_update_success.append('{}:{}'.format(res.short_id, res.metadata.title.value))
 
