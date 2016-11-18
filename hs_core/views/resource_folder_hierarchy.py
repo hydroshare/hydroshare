@@ -45,14 +45,16 @@ def data_store_structure(request):
     istorage = resource.get_irods_storage()
     if resource.resource_federation_path:
         res_coll = os.path.join(resource.resource_federation_path, res_id, store_path)
+        rel_path = store_path
     else:
         res_coll = os.path.join(res_id, store_path)
-
+        rel_path = res_coll
     try:
         store = istorage.listdir(res_coll)
         files = []
         for fname in store[1]:
             name_with_full_path = os.path.join(res_coll, fname)
+            name_with_rel_path = os.path.join(rel_path, fname)
             size = istorage.size(name_with_full_path)
             mtype = get_file_mime_type(fname)
             idx = mtype.find('/')
@@ -60,8 +62,9 @@ def data_store_structure(request):
                 mtype = mtype[idx + 1:]
             f_pk = ''
             f_url = ''
+
             for f in ResourceFile.objects.filter(object_id=resource.id):
-                if fname == get_resource_file_name_and_extension(f)[1]:
+                if name_with_rel_path == get_resource_file_name_and_extension(f)[0]:
                     f_pk = f.pk
                     f_url = get_resource_file_url(f)
                     break
