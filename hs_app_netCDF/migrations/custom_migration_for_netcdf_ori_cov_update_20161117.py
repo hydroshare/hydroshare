@@ -37,18 +37,19 @@ def migrate_nc_file(apps, schema_editor):
 
                 # update the original spatial coverage meta
                 if res_dublin_core_meta.get('original-box'):
-                    res.metadata.ori_coverage.all().delete()
-                    if res_dublin_core_meta.get('projection-info'):
-                        res.metadata.create_element(
-                            'originalcoverage',
-                            value=res_dublin_core_meta['original-box'],
-                            projection_string_type=res_dublin_core_meta['projection-info']['type'],
-                            projection_string_text=res_dublin_core_meta['projection-info']['text'],
-                            datum=res_dublin_core_meta['projection-info']['datum'])
-                    else:
-                        res.metadata.create_element(
-                            'originalcoverage',
-                            value=res_dublin_core_meta['original-box'])
+                    # res.metadata.ori_coverage.all().delete()
+                    # if res_dublin_core_meta.get('projection-info'):
+                    #
+                    #     res.metadata.create_element(
+                    #         'originalcoverage',
+                    #         value=res_dublin_core_meta['original-box'],
+                    #         projection_string_type=res_dublin_core_meta['projection-info']['type'],
+                    #         projection_string_text=res_dublin_core_meta['projection-info']['text'],
+                    #         datum=res_dublin_core_meta['projection-info']['datum'])
+                    # else:
+                    #     res.metadata.create_element(
+                    #         'originalcoverage',
+                    #         value=res_dublin_core_meta['original-box'])
 
                     # update the resource status
                     resource_modified(res, res.creator)
