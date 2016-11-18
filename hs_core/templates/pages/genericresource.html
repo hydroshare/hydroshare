@@ -310,7 +310,7 @@
                                             <div class="row">
                                                 <div id="fb-file-operations-controls" class="col-xs-12 col-sm-12 height-fix">
                                                     {% if page.perms.change and metadata_form %}
-                                                        {% if cm|resource_type == "Generic" or cm|resource_type == "Model Program Resource" or cm|resource_type == "MODFLOW Model Instance Resource" or cm|resource_type == "SWAT Model Instance Resource" or cm|resource_type == "Model Instance Resource" %}
+                                                        {% if cm|resource_type == "Generic" or cm|resource_type == "Model Program Resource" or cm|resource_type == "MODFLOW Model Instance Resource" or cm|resource_type == "SWAT Model Instance Resource" or cm|resource_type == "Model Instance Resource" or cm|resource_type == "Composite"  %}
                                                             <button id="fb-create-folder" class="fb-space-right"
                                                                     data-toggle="modal"
                                                                     data-target="#create-folder-dialog"
