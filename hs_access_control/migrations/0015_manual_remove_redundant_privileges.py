@@ -40,12 +40,12 @@ def remove_extra_privileges(apps, schema_editor):
                 if to_keep.count() == 1:
                     # print("   one UNIQUE start record: {}", str(to_keep[0]))
                     to_delete = records.exclude(pk__in=to_keep)
-                    UserResourcePrivilege.objects.delete(pk__in=to_delete)
+                    to_delete.delete()
                 elif to_keep.count() > 1:  # unlikely
                     kept = records[0]  # choose first one arbitrarily
                     # print("   choosing arbitrary record: {}", str(kept))
                     to_delete = records.exclude(pk=kept)
-                    UserResourcePrivilege.objects.delete(pk__in=to_delete)
+                    to_delete.delete()
 
     for u in User.objects.all():
         for g in Group.objects.all():
@@ -73,13 +73,13 @@ def remove_extra_privileges(apps, schema_editor):
                 if to_keep.count() == 1:
                     # print("   one UNIQUE start record: {}", str(to_keep[0]))
                     to_delete = records.exclude(pk__in=to_keep)
-                    UserGroupPrivilege.objects.delete(pk__in=to_delete)
+                    to_delete.delete()
 
                 elif to_keep.count() > 1:  # unlikely
                     kept = records[0]  # choose first one arbitrarily
                     # print("   choosing arbitrary record: {}", str(kept))
                     to_delete = records.exclude(pk=kept)
-                    UserGroupPrivilege.objects.delete(pk__in=to_delete)
+                    to_delete.delete()
 
     for g in Group.objects.all():
         for r in BaseResource.objects.all():
@@ -106,13 +106,13 @@ def remove_extra_privileges(apps, schema_editor):
                 if to_keep.count() == 1:
                     # print("   one UNIQUE start record: {}", str(to_keep[0]))
                     to_delete = records.exclude(pk__in=to_keep)
-                    GroupResourcePrivilege.objects.delete(pk__in=to_delete)
+                    to_delete.delete()
 
                 elif to_keep.count() > 1:  # unlikely
                     kept = records[0]  # choose first one arbitrarily
                     # print("   choosing arbitrary record: {}", str(kept))
                     to_delete = records.exclude(pk=kept)
-                    GroupResourcePrivilege.objects.delete(pk__in=to_delete)
+                    to_delete.delete()
 
 
 class Migration(migrations.Migration):
