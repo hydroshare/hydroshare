@@ -1,0 +1,109 @@
+postgis:
+  image: mjstealey/hs_postgres:9.4.7
+  container_name: postgis
+  volumes:
+    - "/var/lib/postgresql/data"
+redis:
+  image: redis:2.8
+  container_name: redis
+rabbitmq:
+  image: rabbitmq:3.5
+  container_name: rabbitmq
+solr:
+  image: makuk66/docker-solr:4.10.4
+  container_name: solr
+  volumes:
+    # hydroshare repository
+    - "HS_PATH:/hydroshare"
+  ports:
+    - "8983"
+  command: [sh, -c, /bin/bash /opt/solr/bin/solr -f]
+hydroshare:
+  build: .
+  container_name: hydroshare
+  cap_add:
+    - SYS_ADMIN
+  devices:
+    - "/dev/fuse"
+  privileged: true
+  environment:
+    POSTGIS_HOST: postgis
+    POSTGIS_PORT: 5432
+    REDIS_HOST: redis
+    REDIS_PORT: 6379
+    POSTGIS_PASSWORD: postgres
+    POSTGIS_DB: postgres
+    POSTGIS_USER: postgres
+    PGPASSWORD: postgres
+    SOLR_HOST: solr
+  volumes:
+    # hydroshare repository
+    - "HS_PATH:/hydroshare"
+    # pycharm debugging
+    # - "/home/hydro/pycharm-debug:/pycharm-debug"
+    # log files
+    - "HS_LOG_FILES:/hydroshare/log"
+    # shared location for gunicorn.sock between containers
+    - "/hs_tmp"
+    # temp directory shared with celery workers
+    - "/shared_tmp"
+  ports:
+    - "1338:2022"
+    - "8000:8000"
+  links:
+    - postgis:postgis
+    - redis:redis
+    - rabbitmq:rabbitmq
+    - solr:solr
+  extra_hosts:
+    - "IRODS_DATA_HOSTNAME:IRODS_DATA_IP"
+    - "IRODS_USER_HOSTNAME:IRODS_USER_IP"
+  command: /bin/bash init-hydroshare
+defaultworker:
+  build: .
+  container_name: defaultworker
+  environment:
+    POSTGIS_HOST: postgis
+    POSTGIS_PORT: 5432
+    REDIS_HOST: redis
+    REDIS_PORT: 6379
+    POSTGIS_PASSWORD: postgres
+    POSTGIS_DB: postgres
+    PGPASSWORD: postgres
+    C_FORCE_ROOT: 1
+  volumes_from:
+    - hydroshare
+  volumes:
+    - "/var/run/docker.sock:/docker.sock"
+  links:
+    - postgis:postgis
+    - redis:redis
+    - rabbitmq:rabbitmq
+  extra_hosts:
+    - "IRODS_DATA_HOSTNAME:IRODS_DATA_IP"
+    - "IRODS_USER_HOSTNAME:IRODS_USER_IP"
+  command: /bin/bash init-defaultworker
+dockerworker:
+  build: .
+  container_name: dockerworker
+  environment:
+    POSTGIS_HOST: postgis
+    POSTGIS_PORT: 5432
+    REDIS_HOST: redis
+    REDIS_PORT: 6379
+    POSTGIS_PASSWORD: postgres
+    POSTGIS_DB: postgres
+    PGPASSWORD: postgres
+    C_FORCE_ROOT: 1
+  volumes_from:
+    - hydroshare
+  volumes:
+    - "/var/run/docker.sock:/docker.sock"
+  links:
+    - postgis:postgis
+    - redis:redis
+    - rabbitmq:rabbitmq
+  extra_hosts:
+    - "IRODS_DATA_HOSTNAME:IRODS_DATA_IP"
+    - "IRODS_USER_HOSTNAME:IRODS_USER_IP"
+  command: /bin/bash init-dockerworker

@@ -76,8 +76,10 @@
                 <tr>
                     <th class="text-muted">SWAT model objectives</th>
                     <td>
-                        {% if model_objective.other_objectives %}
+                        {% if model_objective.get_swat_model_objectives and model_objective.other_objectives %}
                             {{ model_objective.get_swat_model_objectives }}, {{ model_objective.other_objectives }}
+                         {% elif not model_objective.get_swat_model_objectives%}
+                            {{ model_objective.other_objectives }}
                         {% else %}
                             {{ model_objective.get_swat_model_objectives }}
                         {% endif %}
@@ -135,8 +137,10 @@
                 <tr>
                     <th class="text-muted">SWAT model used parameters</th>
                     <td>
-                        {% if model_parameter.other_parameters %}
+                        {% if model_parameter.other_parameters and model_parameter.get_swat_model_parameters%}
                             {{ model_parameter.get_swat_model_parameters }}, {{ model_parameter.other_parameters }}
+                        {% elif not model_parameter.get_swat_model_parameters%}
+                            {{ model_parameter.other_parameters }}
                         {% else %}
                             {{ model_parameter.get_swat_model_parameters }}
                         {% endif %}

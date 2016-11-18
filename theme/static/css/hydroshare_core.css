@@ -3403,7 +3403,8 @@ div.btn-update-picture:hover {
 }
 
 #user-profile-tabs {
-    margin-top: 20px;
+	margin-top: 20px;
+	margin-bottom: 60px;
 }
 
 .form-invalid {
@@ -3469,12 +3470,17 @@ button.no-style:focus {
 }
 
 .group-thumbnail {
-    display: block;
-    padding: 4px;
+	display: block;
+	padding: 4px;
+	margin-bottom: 20px;
+	line-height: 1.42857143;
+	background-color: #fff;
+	border: 1px solid #ddd;
+	height: 100%;
+}
+
+.group-container {
     margin-bottom: 20px;
-    line-height: 1.42857143;
-    background-color: #fff;
-    border: 1px solid #ddd;
 }
 
 .group-thumbnail img {
@@ -3519,8 +3525,10 @@ button.no-style:focus {
     height: 150px;
     text-align: center;
     width: 100%;
-    background-size: cover;
+    background-size: contain;
+    background-repeat: no-repeat;
     background-position: center center;
+    background-color: #093e54;
 }
 
 .group-preview-image-default {
@@ -3536,8 +3544,10 @@ button.no-style:focus {
     height: 120px;
     text-align: center;
     width: 120px;
-    background-size: cover;
+    background-size: contain;
+    background-repeat: no-repeat;
     background-position: center center;
+    background-color: #093e54;
     display: inline-block;
 }
 
@@ -3568,9 +3578,11 @@ button.no-style:focus {
     height: 80px;
     text-align: center;
     width: 80px;
-    background-size: cover;
-    background-position: center center;
-    display: inline-block;
+    background-size: contain;
+	background-repeat: no-repeat;
+	background-position: center center;
+	display: inline-block;
+	background-color: #093e54;
 }
 
 .group-image-extra-small {
@@ -3675,7 +3687,9 @@ button.no-style:focus {
 }
 
 .group-thumbnail-footer {
-    padding-top: 10px;
+	padding-top: 10px;
+	position: absolute;
+	bottom: 14px;
 }
 
 .group-thumbnail-footer .btn-ask-to-join {
@@ -3937,14 +3951,11 @@ form#covereage-search-fields {
 
 #fb-sort ul {
 	background :#FFF;
+	padding: 1px;
 }
 
 #fb-sort ul li.active {
 	pointer-events: none;
-}
-
-#fb-sort ul li:not(.divider) {
-	padding: 4px 8px;
 }
 
 .fb-folder, .fb-file {
@@ -4076,7 +4087,7 @@ ul#fb-files-container {
 
 .fb-dropdown {
     position: absolute;
-	padding-top: 9px;
+	padding: 1px;
 	border: 1px solid #DDD;
 	box-shadow: 1px 1px 5px #E8E8E8;
 	-moz-box-shadow: 1px 1px 5px #E8E8E8;
@@ -4107,7 +4118,7 @@ ul#fb-files-container {
 }
 
 .selection-menu li.disabled, #fb-inner-controls button.disabled > span {
-	color: #999;
+	color: #b3b3b3;
 	pointer-events:none;
 }
 
@@ -4347,4 +4358,18 @@ div#fb-file-operations-controls {
 
 #rename-dialog .input-group {
 	width: 100%;
+}
+
+.discover-loading-icon {
+    height: 0;
+    float: left;
+    margin-top: -13px;
+	display: none;
+}
+
+#discover-map-legend{
+	z-index: 0;
+	position: absolute;
+	top: 0px;
+	right:0px;
 }

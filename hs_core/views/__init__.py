@@ -88,7 +88,7 @@ def add_files_to_resource(request, shortkey, *args, **kwargs):
     :param shortkey: resource uuid
     :param args:
     :param kwargs:
-    :return: JSON response with status code indicating success or failure
+    :return: HTTP response with status code indicating success or failure
     """
     resource, _, _ = authorize(request, shortkey,
                                needed_permission=ACTION_TO_AUTHORIZE.EDIT_RESOURCE)
@@ -101,22 +101,22 @@ def add_files_to_resource(request, shortkey, *args, **kwargs):
                                             extract_metadata=extract_metadata)
 
     except hydroshare.utils.ResourceFileSizeException as ex:
-        msg = {'file_size_error': ex.message}
-        return HttpResponse(json.dumps(msg), content_type='application/json', status=500)
+        msg = 'file_size_error: ' + ex.message
+        return HttpResponse(msg, status=500)
 
     except (hydroshare.utils.ResourceFileValidationException, Exception) as ex:
-        msg = {'validation_error': ex.message}
-        return HttpResponse(json.dumps(msg), content_type='application/json', status=500)
+        msg = 'validation_error: ' + ex.message
+        return HttpResponse(msg, status=500)
 
     try:
         hydroshare.utils.resource_file_add_process(resource=resource, files=res_files, user=request.user,
                                                    extract_metadata=extract_metadata)
 
     except (hydroshare.utils.ResourceFileValidationException, Exception) as ex:
-        msg = {'validation_error': ex.message}
-        return HttpResponse(json.dumps(msg), content_type='application/json', status=500)
+        msg = 'validation_error: ' + ex.message
+        return HttpResponse(msg, status=500)
 
-    return HttpResponse(content_type="application/json", status=200)
+    return HttpResponse(status=200)
 
 
 def _get_resource_sender(element_name, resource):
@@ -1331,8 +1331,9 @@ def _set_resource_sharing_status(request, user, resource, flag_to_set, flag_valu
         istorage.setAVU(res_coll, "isPublic", str(resource.raccess.public))
 
         # run script to update hyrax input files when a private netCDF resource is made public
-        if flag_to_set=='public' and flag_value and settings.RUN_HYRAX_UPDATE and resource.resource_type=='NetcdfResource':
-            run_script_to_update_hyrax_input_files()
+        if flag_to_set=='public' and flag_value and settings.RUN_HYRAX_UPDATE and \
+                        resource.resource_type=='NetcdfResource':
+            run_script_to_update_hyrax_input_files(resource.short_id)
 
 
 def _get_message_for_setting_resource_flag(has_files, has_metadata, resource_flag):

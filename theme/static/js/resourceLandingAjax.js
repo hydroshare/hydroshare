@@ -505,6 +505,23 @@ function get_user_info_ajax_submit(url, obj) {
     });
 }
 
+function display_error_message(title, err_msg) {
+    $("#fb-alerts .upload-failed-alert").remove();
+    $("#hsDropzone").toggleClass("glow-blue", false);
+
+    $("#fb-alerts").append(
+        '<div class="alert alert-danger alert-dismissible upload-failed-alert" role="alert">' +
+        '<button type="button" class="close" data-dismiss="alert" aria-label="Close">' +
+        '<span aria-hidden="true">&times;</span></button>' +
+        '<div>' +
+        '<strong>' + title + '</strong>' +
+        '</div>' +
+        '<div>' +
+        '<span>' + err_msg + '</span>' +
+        '</div>' +
+        '</div>').fadeIn(200);
+}
+
 function delete_folder_ajax_submit(res_id, folder_path) {
     $(".file-browser-container, #fb-files-container").css("cursor", "progress");
 
@@ -519,6 +536,7 @@ function delete_folder_ajax_submit(res_id, folder_path) {
         success: function (result) {
         },
         error: function(xhr, errmsg, err){
+            display_error_message('Folder Deletion Failed', xhr.responseText);
         }
     });
 }
@@ -607,6 +625,7 @@ function zip_irods_folder_ajax_submit(res_id, input_coll_path, fileName) {
         success: function (result) {
         },
         error: function (xhr, errmsg, err) {
+            display_error_message('Folder Zipping Failed', xhr.responseText);
         }
     });
 }
@@ -626,7 +645,7 @@ function unzip_irods_file_ajax_submit(res_id, zip_with_rel_path) {
             // TODO: handle "File already exists" errors
         },
         error: function (xhr, errmsg, err) {
-
+            display_error_message('File Unzipping Failed', xhr.responseText);
         }
     });
 }
@@ -650,6 +669,7 @@ function create_irods_folder_ajax_submit(res_id, folder_path) {
 
         },
         error: function(xhr, errmsg, err){
+            display_error_message('Folder Creation Failed', xhr.responseText);
         }
     });
 }
@@ -672,6 +692,7 @@ function move_or_rename_irods_file_or_folder_ajax_submit(res_id, source_path, ta
             }
         },
         error: function(xhr, errmsg, err){
+            display_error_message('File Moving/Renaming Failed', xhr.responseText);
         }
     });
 }
