@@ -159,37 +159,36 @@ def parse_shp_xml(shp_xml_full_path):
         if os.path.isfile(shp_xml_full_path):
             with open(shp_xml_full_path) as fd:
                 xml_dict = xmltodict.parse(fd.read())
-                if 'metadata' in xml_dict:
-                    if 'dataIdInfo' in xml_dict['metadata']:
-                        dataIdInfo_dict = xml_dict['metadata']['dataIdInfo']
-                        if 'idCitation' in dataIdInfo_dict:
-                            if 'resTitle' in dataIdInfo_dict['idCitation']:
-                                if '#text' in dataIdInfo_dict['idCitation']['resTitle']:
-                                    title_value = dataIdInfo_dict['idCitation']['resTitle']['#text']
-                                else:
-                                    title_value = dataIdInfo_dict['idCitation']['resTitle']
 
-                                title_max_length = Title._meta.get_field('value').max_length
-                                if len(title_value) > title_max_length:
-                                    title_value = title_value[:title_max_length-1]
-                                title = {'title': {'value': title_value}}
-                                metadata.append(title)
+                dataIdInfo_dict = xml_dict['metadata']['dataIdInfo']
+                if 'idCitation' in dataIdInfo_dict:
+                    if 'resTitle' in dataIdInfo_dict['idCitation']:
+                        if '#text' in dataIdInfo_dict['idCitation']['resTitle']:
+                            title_value = dataIdInfo_dict['idCitation']['resTitle']['#text']
+                        else:
+                            title_value = dataIdInfo_dict['idCitation']['resTitle']
 
-                        if 'idAbs' in dataIdInfo_dict:
-                            description_value = clean_text(dataIdInfo_dict['idAbs'])
-                            description = {'description': {'abstract': description_value}}
-                            metadata.append(description)
+                        title_max_length = Title._meta.get_field('value').max_length
+                        if len(title_value) > title_max_length:
+                            title_value = title_value[:title_max_length-1]
+                        title = {'title': {'value': title_value}}
+                        metadata.append(title)
 
-                        if 'searchKeys' in dataIdInfo_dict:
-                            searchKeys_dict = dataIdInfo_dict['searchKeys']
-                            if 'keyword' in searchKeys_dict:
-                                keyword_list = []
-                                if type(searchKeys_dict["keyword"]) is list:
-                                    keyword_list += searchKeys_dict["keyword"]
-                                else:
-                                    keyword_list.append(searchKeys_dict["keyword"])
-                                for k in keyword_list:
-                                    metadata.append({'subject': {'value': k}})
+                if 'idAbs' in dataIdInfo_dict:
+                    description_value = clean_text(dataIdInfo_dict['idAbs'])
+                    description = {'description': {'abstract': description_value}}
+                    metadata.append(description)
+
+                if 'searchKeys' in dataIdInfo_dict:
+                    searchKeys_dict = dataIdInfo_dict['searchKeys']
+                    if 'keyword' in searchKeys_dict:
+                        keyword_list = []
+                        if type(searchKeys_dict["keyword"]) is list:
+                            keyword_list += searchKeys_dict["keyword"]
+                        else:
+                            keyword_list.append(searchKeys_dict["keyword"])
+                        for k in keyword_list:
+                            metadata.append({'subject': {'value': k}})
 
     except Exception:
         # Catch any exception silently and return an empty list
