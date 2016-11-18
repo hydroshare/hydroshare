@@ -405,6 +405,10 @@ def delete_resource(request, shortkey, *args, **kwargs):
              )
         o.resource_owners.add(*owners_list)
 
+    post_delete_resource.send(sender=type(res), request=request, user=user,
+                              resource_shortkey=shortkey, resource=res,
+                              resource_title=res_title, resource_type=res_type, **kwargs)
+
     return HttpResponseRedirect('/my-resources/')
 
 
@@ -900,7 +904,7 @@ def create_resource(request, *args, **kwargs):
     #     return render_to_response('pages/create-resource.html', context, context_instance=RequestContext(request))
 
     try:
-        utils.resource_post_create_actions(resource=resource, user=request.user, metadata=metadata, **kwargs)
+        utils.resource_post_create_actions(request=request, resource=resource, user=request.user, metadata=metadata, **kwargs)
     except (utils.ResourceFileValidationException, Exception) as ex:
         request.session['validation_error'] = ex.message
 
