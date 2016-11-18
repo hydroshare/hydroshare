@@ -9,6 +9,7 @@ from django.db import migrations
 
 from hs_core.hydroshare.utils import resource_modified, get_file_from_irods
 from hs_geo_raster_resource import raster_meta_extract
+from hs_geo_raster_resource.models import RasterResource
 
 
 def migrate_tif_file(apps, schema_editor):
@@ -19,8 +20,6 @@ def migrate_tif_file(apps, schema_editor):
     meta_update_success = []
 
     # start migration for each raster resource that has raster files
-    RasterResource = apps.get_model('hs_geo_raster_resource', 'RasterResource')
-
     for res in RasterResource.objects.all():
 
         # copy all the resource files to temp dir
