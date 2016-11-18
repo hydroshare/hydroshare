@@ -88,7 +88,6 @@ function updateSelectionMenuContext() {
     var flagDisableCut = false;
     var flagDisableDelete = false;
     var flagDisableSetGeoRasterFileType = false;
-    var flagDisableShowFileMetadata = false;
 
     if (selected.length > 1) {
         flagDisableRename = true; 
@@ -96,7 +95,6 @@ function updateSelectionMenuContext() {
         flagDisablePaste = true;
         flagDisableZip = true;
         flagDisableSetGeoRasterFileType = true;
-        flagDisableShowFileMetadata = true;
     }
     else if (selected.length == 1) {    // Unused for now
 
@@ -119,7 +117,6 @@ function updateSelectionMenuContext() {
     if (selected.hasClass("fb-folder")) {
         flagDisableDownload = true;
         flagDisableUnzip = true;
-        flagDisableShowFileMetadata = true;
     }
 
     if (!sourcePaths.length) {
@@ -138,8 +135,9 @@ function updateSelectionMenuContext() {
             flagDisableSetGeoRasterFileType = true;
         }
 
-        if (logicalFileType.length == 0){
-            flagDisableShowFileMetadata = true;
+        if(logicalFileType === "GeoRasterLogicalFile"){
+            flagDisableDelete = true;
+            flagDisableRename = true;
         }
     }
     
@@ -160,10 +158,6 @@ function updateSelectionMenuContext() {
     // set Geo Raster file type
     menu.children("li[data-menu-name='setgeorasterfiletype']").toggleClass("disabled", flagDisableSetGeoRasterFileType);
     $("#fb-geo-file-type").toggleClass("disabled", flagDisableSetGeoRasterFileType);
-
-    // show file type metadata
-    menu.children("li[data-menu-name='showfilemetadata']").toggleClass("disabled", flagDisableShowFileMetadata);
-    $("#fb-show-file-metadata").toggleClass("disabled", flagDisableShowFileMetadata);
 
     // Rename
     menu.children("li[data-menu-name='rename']").toggleClass("disabled", flagDisableRename);
