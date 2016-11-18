@@ -134,12 +134,6 @@
                                 <span>Set Geo Raster File Type</span>
                             </li>
                         {%  endif %}
-                        {% if page.perms.change and cm.resource_type == "CompositeResource"%}
-                            <li id="btn-show-file-metadata" data-menu-name="showfilemetadata">
-                                <span class="glyphicon glyphicon-list-alt icon-blue"></span>
-                                <span>Show Metadata</span>
-                            </li>
-                        {%  endif %}
                     </ul>
 
                     {# POPUP MENU - Right clicking empty space in file browser #}
@@ -386,11 +380,6 @@
                                                             <span class="glyphicon glyphicon-check icon-blue"></span>
                                                         </button>
                                                      {% endif %}
-                                                    <button id="fb-show-file-metadata"
-                                                                class="disabled"
-                                                                title="Show Metadata">
-                                                            <span class="glyphicon glyphicon-list-alt icon-blue"></span>
-                                                    </button>
 
                                                     {% if page.perms.change and metadata_form %}
                                                         <button id="fb-delete"
