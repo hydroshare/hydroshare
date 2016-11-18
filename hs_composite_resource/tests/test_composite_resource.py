@@ -124,6 +124,24 @@ class CompositeResourceTest(MockIRODSTestCaseMixin, TransactionTestCase):
         # TODO: implement this test
         pass
 
+    def test_resource_coverage_auto_update(self):
+        # this is to test that the spatial coverage and temporal coverage
+        # for composite resource get updated by the system based on the
+        # coverage metadata that all logical file objects of the resource have at anytime
+        # TODO: implement this test
+        # 1. test that resource coverages get updated on LFO level metadata creation
+        # 2. test that resource coverages get updated on LFO level metadata update
+        # 3. test that resource coverages get updated on content file delete
+        pass
+
+    def test_file_rename_or_move(self):
+        # test that file can't be moved or rename for any resource file
+        # that's part of the GeoRaster logical file
+        # test that resource file that belongs to GenericLogicalFile object
+        # can be moved or renamed
+        # TODO: Implement this test
+        pass
+
     def test_can_be_public_or_discoverable(self):
         self.composite_resource = hydroshare.create_resource(
             resource_type='CompositeResource',
