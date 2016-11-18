@@ -16,11 +16,13 @@ from hs_core.testing import MockIRODSTestCaseMixin
 
 from hs_access_control.tests.utilities import *
 
+import logging
 
 class T05ShareResource(MockIRODSTestCaseMixin, TestCase):
     def setUp(self):
         super(T05ShareResource, self).setUp()
         global_reset()
+        self.logger = logging.getLogger('django')
         self.group, _ = Group.objects.get_or_create(name='Hydroshare Author')
         self.admin = hydroshare.create_account(
             'admin@gmail.com',
@@ -76,6 +78,7 @@ class T05ShareResource(MockIRODSTestCaseMixin, TestCase):
         self.assertTrue(cat.uaccess.owns_resource(holes))
         self.assertTrue(cat.uaccess.can_change_resource(holes))
         self.assertTrue(cat.uaccess.can_view_resource(holes))
+        self.assertEqual(1, UserResourcePrivilege.objects.filter(user=cat, resource=holes).count())
 
         self.assertTrue(is_equal_to_as_set([cat], holes.raccess.owners))
         self.assertTrue(is_equal_to_as_set([cat], holes.raccess.view_users))
@@ -103,6 +106,7 @@ class T05ShareResource(MockIRODSTestCaseMixin, TestCase):
         self.assertFalse(dog.uaccess.owns_resource(holes))
         self.assertFalse(dog.uaccess.can_change_resource(holes))
         self.assertFalse(dog.uaccess.can_view_resource(holes))
+        self.assertEqual(0, UserResourcePrivilege.objects.filter(user=dog, resource=holes).count())
 
         # composite django state
         self.assertFalse(dog.uaccess.can_change_resource(holes))
@@ -140,6 +144,7 @@ class T05ShareResource(MockIRODSTestCaseMixin, TestCase):
         self.assertTrue(cat.uaccess.owns_resource(holes))
         self.assertTrue(cat.uaccess.can_change_resource(holes))
         self.assertTrue(cat.uaccess.can_view_resource(holes))
+        self.assertEqual(1, UserResourcePrivilege.objects.filter(user=cat, resource=holes).count())
 
         # composite django state
         self.assertTrue(cat.uaccess.can_change_resource_flags(holes))
@@ -152,6 +157,7 @@ class T05ShareResource(MockIRODSTestCaseMixin, TestCase):
         self.assertFalse(dog.uaccess.owns_resource(holes))
         self.assertFalse(dog.uaccess.can_change_resource(holes))
         self.assertFalse(dog.uaccess.can_view_resource(holes))
+        self.assertEqual(0, UserResourcePrivilege.objects.filter(user=dog, resource=holes).count())
 
         # composite django state
         self.assertFalse(dog.uaccess.can_change_resource_flags(holes))
@@ -188,6 +194,7 @@ class T05ShareResource(MockIRODSTestCaseMixin, TestCase):
         self.assertTrue(cat.uaccess.owns_resource(holes))
         self.assertTrue(cat.uaccess.can_change_resource(holes))
         self.assertTrue(cat.uaccess.can_view_resource(holes))
+        self.assertEqual(1, UserResourcePrivilege.objects.filter(user=cat, resource=holes).count())
 
         # composite django state
         self.assertTrue(cat.uaccess.can_change_resource_flags(holes))
@@ -200,6 +207,8 @@ class T05ShareResource(MockIRODSTestCaseMixin, TestCase):
         self.assertTrue(dog.uaccess.owns_resource(holes))
         self.assertTrue(dog.uaccess.can_change_resource(holes))
         self.assertTrue(dog.uaccess.can_view_resource(holes))
+        self.assertEqual(1, UserResourcePrivilege.objects.filter(user=dog, resource=holes).count())
+        self.assertEqual(cat, UserResourcePrivilege.objects.get(user=dog, resource=holes).grantor)
 
         # composite django state
         self.assertTrue(dog.uaccess.can_change_resource_flags(holes))
@@ -236,6 +245,8 @@ class T05ShareResource(MockIRODSTestCaseMixin, TestCase):
         self.assertTrue(dog.uaccess.owns_resource(holes))
         self.assertTrue(dog.uaccess.can_change_resource(holes))
         self.assertTrue(dog.uaccess.can_view_resource(holes))
+        self.assertEqual(1, UserResourcePrivilege.objects.filter(user=dog, resource=holes).count())
+        self.assertEqual(cat, UserResourcePrivilege.objects.get(user=dog, resource=holes).grantor)
 
         # composite django state
         self.assertTrue(dog.uaccess.can_change_resource_flags(holes))
@@ -283,6 +294,7 @@ class T05ShareResource(MockIRODSTestCaseMixin, TestCase):
         self.assertFalse(dog.uaccess.owns_resource(holes))
         self.assertFalse(dog.uaccess.can_change_resource(holes))
         self.assertFalse(dog.uaccess.can_view_resource(holes))
+        self.assertEqual(0, UserResourcePrivilege.objects.filter(user=dog, resource=holes).count())
 
         # composite django state
         self.assertFalse(dog.uaccess.can_change_resource_flags(holes))
@@ -1421,4 +1433,17 @@ class T05ShareResource(MockIRODSTestCaseMixin, TestCase):
         self.assertFalse(dog.uaccess.can_share_resource(holes, PrivilegeCodes.CHANGE))
         self.assertFalse(dog.uaccess.can_share_resource(holes, PrivilegeCodes.VIEW))
 
+    def test_13_debugging_print_strings(self):
+        """ test stringification of records """
+        cat = self.cat
+        holes = self.holes 
+        meowers = self.meowers
+        cat.uaccess.share_resource_with_group(holes, meowers, PrivilegeCodes.VIEW) 
 
+        # format sharing record for user
+        foo = str(UserResourcePrivilege.objects.get(user=cat, resource=holes))
+        self.assertTrue(foo.find(holes.short_id.encode('ascii')) >= 0)
+
+        # format sharing record for group 
+        foo = str(GroupResourcePrivilege.objects.get(group=meowers, resource=holes))
+        self.assertTrue(foo.find(holes.short_id.encode('ascii')) >= 0)

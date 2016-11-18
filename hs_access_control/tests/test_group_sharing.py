@@ -141,3 +141,15 @@ class T09GroupSharing(MockIRODSTestCaseMixin, TestCase):
         dog.uaccess.unshare_resource_with_group(scratching, felines)
         self.assertEqual(felines.gaccess.view_resources.count(), 0)
 
+    def test_03_group_share_debugging(self): 
+        """ test group share record printing """
+        dog = self.dog
+        scratching = self.scratching
+        felines = self.felines
+        dog.uaccess.share_resource_with_group(scratching, felines, PrivilegeCodes.CHANGE)
+
+        text = str(GroupResourcePrivilege.objects.get(resource=scratching, group=felines)) 
+        self.assertTrue(text.find(felines.name) >= 0) 
+
+        text = str(UserGroupPrivilege.objects.get(user=dog, group=felines)) 
+        self.assertTrue(text.find(felines.name) >= 0) 

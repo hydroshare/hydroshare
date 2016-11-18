@@ -78,6 +78,8 @@ class PrivilegeCodes(object):
         (VIEW, 'View')
         # (NONE, 'None') : disallow "no privilege" lines
     )
+    # Names of privileges for printing 
+    PRIVILEGE_NAMES = ( 'Unspecified', 'Owner', 'Change', 'View', 'None'  )
 
 
 class CommandCodes(object):
@@ -124,6 +126,18 @@ class UserGroupPrivilege(models.Model):
     class Meta:
         unique_together = ('user', 'group')
 
+    def __str__(self): 
+        """ Return printed depiction for debugging """
+        return str.format("<user '{}' (id={}) holds {} ({})"
+                          + " over group '{}' (id={})"
+                          + " via grantor '{}' (id={})>", 
+                          str(self.user.username), str(self.user.id), 
+                          PrivilegeCodes.PRIVILEGE_NAMES[self.privilege], 
+                          str(self.privilege), 
+                          str(self.group.name), str(self.group.id), 
+                          str(self.grantor.username), str(self.grantor.id)) 
+
+
 
 class UserResourcePrivilege(models.Model):
     """ Privileges of a user over a resource
@@ -159,6 +173,18 @@ class UserResourcePrivilege(models.Model):
     class Meta:
         unique_together = ('user', 'resource')
 
+    def __str__(self): 
+        """ Return printed depiction for debugging """
+        return str.format("<user '{}' (id={}) holds {} ({})"
+                          + " over resource '{}' (id={})" 
+                          + " via grantor '{}' (id={})>", 
+                          str(self.user.username), str(self.user.id), 
+                          PrivilegeCodes.PRIVILEGE_NAMES[self.privilege], 
+                          str(self.privilege),
+                          str(self.resource.title).encode('ascii'), 
+                          str(self.resource.short_id).encode('ascii'), 
+                          str(self.grantor.username), str(self.grantor.id)) 
+
 
 class GroupResourcePrivilege(models.Model):
     """ Privileges of a group over a resource.
@@ -193,6 +219,18 @@ class GroupResourcePrivilege(models.Model):
 
     class Meta:
         unique_together = ('group', 'resource')
+
+    def __str__(self): 
+        """ Return printed depiction for debugging """
+        return str.format("<group '{}' (id={}) holds {} ({})" 
+                          + " over resource '{}' (id={})" 
+                          + " via grantor '{}' (id={})>", 
+                          str(self.group.name), str(self.group.id), 
+                          PrivilegeCodes.PRIVILEGE_NAMES[self.privilege], 
+                          str(self.privilege),
+                          str(self.resource.title).encode('ascii'), 
+                          str(self.resource.short_id).encode('ascii'), 
+                          str(self.grantor.username), str(self.grantor.id)) 
 
 
 class UserAccess(models.Model):
