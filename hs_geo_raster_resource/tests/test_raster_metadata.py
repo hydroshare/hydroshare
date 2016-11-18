@@ -230,6 +230,7 @@ class TestRasterMetaData(MockIRODSTestCaseMixin, TestCaseCommonUtilities, Transa
                 resource_type='RasterResource',
                 resource_title='My Test Raster Resource',
                 page_redirect_url_key=None,
+                files=[],
                 fed_res_file_names=[fed_test_file_full_path])
             self.resRasterUserZone = hydroshare.create_resource(
                 'RasterResource',
@@ -283,11 +284,11 @@ class TestRasterMetaData(MockIRODSTestCaseMixin, TestCaseCommonUtilities, Transa
             utils.resource_file_add_pre_process(resource=self.resRaster,
                                                 files=[],
                                                 user=self.user,
-                                                fed_res_file_names=[fed_test_file_full_path,])
+                                                fed_res_file_names=[fed_test_file_full_path])
             utils.resource_file_add_process(resource=self.resRaster,
                                             files=[],
                                             user=self.user,
-                                            fed_res_file_names=[fed_test_file_full_path,])
+                                            fed_res_file_names=[fed_test_file_full_path])
             self._test_metadata_extraction()
 
     def test_metadata_on_content_file_delete(self):
@@ -351,11 +352,11 @@ class TestRasterMetaData(MockIRODSTestCaseMixin, TestCaseCommonUtilities, Transa
             utils.resource_file_add_pre_process(resource=self.resRaster,
                                                 files=[],
                                                 user=self.user,
-                                                fed_res_file_names=[fed_test_file_full_path,])
+                                                fed_res_file_names=[fed_test_file_full_path])
             utils.resource_file_add_process(resource=self.resRaster,
                                             files=[],
                                             user=self.user,
-                                            fed_res_file_names=[fed_test_file_full_path,])
+                                            fed_res_file_names=[fed_test_file_full_path])
             # there should be 2 content file: tif file and vrt file
             self.assertEqual(self.resRaster.files.all().count(), 2)
 
@@ -506,12 +507,13 @@ class TestRasterMetaData(MockIRODSTestCaseMixin, TestCaseCommonUtilities, Transa
                 resource_type='RasterResource',
                 resource_title='My Test Raster Resource',
                 page_redirect_url_key=None,
-                fed_res_file_names=[fed_test_file_full_path, ])
+                files=[],
+                fed_res_file_names=[fed_test_file_full_path])
             self.resRaster = hydroshare.create_resource(
                 'RasterResource',
                 self.user,
                 'My Test Raster Resource',
-                fed_res_file_names=[fed_test_file_full_path, ],
+                fed_res_file_names=[fed_test_file_full_path],
                 metadata=metadata)
 
             # resource core metadata exists before resource deletion
