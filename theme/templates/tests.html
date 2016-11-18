@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block meta_title %}QUnit Test Suite{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" type="text/css" href="{% static "css/qunit-2.0.1.css" %}" />
+{% endblock %}
+{% block extra_js %}
+<script src="{% static "js/qunit-2.0.1.js" %}"></script>
+<script src="{% static "js/hs_resource_table.js" %}"></script>
+<script src="{% static "tests/test_resource_table.js" %}"></script>
+{% endblock %}
+
+{% block main %}
+
+<div id="qunit"></div>
+<div id="qunit-fixture"></div>
+
+{% endblock %}

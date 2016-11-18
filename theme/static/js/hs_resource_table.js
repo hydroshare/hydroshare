@@ -3,7 +3,7 @@
  */
 var resourceTable;
 
-$(document).ready(function () {
+function start_resource_table() {
 /*==================================================
     Table columns
     0 - actions
@@ -148,7 +148,7 @@ $(document).ready(function () {
     updateLabelLists();
     updateLabelCount();
 
-});
+}
 
 function label_ajax_submit() {
     var el = $(this);
@@ -597,126 +597,124 @@ function typeQueryStrings () {
 ==================================================*/
 
 /* Custom filtering function which will search data for the values in the custom filter dropdown or query strings */
-$.fn.dataTable.ext.search.push (
-        function (settings, data, dataIndex) {
-            var inputString = $("#resource-search-input").val().toLowerCase();
-            // Matches occurrences of query strings. i.e.: author:mauriel
-            var regExp = /\[(type|author|subject):[^\]|^\[]+]/g;
-            var occurrences = inputString.match(regExp);
+function hs_resource_table_custom_search(settings, data, dataIndex) {
+    var inputString = $("#resource-search-input").val().toLowerCase();
+    // Matches occurrences of query strings. i.e.: author:mauriel
+    var regExp = /\[(type|author|subject):[^\]|^\[]+]/g;
+    var occurrences = inputString.match(regExp);
 
-            var inputType = "";
-            var inputSubject = "";
-            var inputAuthor = "";
+    var inputType = "";
+    var inputSubject = "";
+    var inputAuthor = "";
 
-            // Split the occurrences at ':' and move to an array.
-            var collection = [];
-            if (occurrences) {
-                for (var item in occurrences) {
-                    var content = occurrences[item].replace("[", "").replace("]", "").split(":");
-                    collection.push(content);
-                }
-            }
-
-            // Extract the pieces of information
-            for (var item in collection) {
-                if (collection[item][0].toUpperCase() == "TYPE") {
-                    inputType = collection[item][1];
-                }
-                else if (collection[item][0].toUpperCase() == "AUTHOR") {
-                    inputAuthor = collection[item][1];
-                }
-                else if (collection[item][0].toUpperCase() == "SUBJECT") {
-                    inputSubject = collection[item][1];
-                }
-            }
-
-            // Filter the table for each value
-
-            if (inputType && data[1].toUpperCase().indexOf(inputType.toUpperCase()) == -1) {
-                return false;
-            }
-
-            if (inputSubject && data[5].toUpperCase().indexOf(inputSubject.toUpperCase()) == -1) {
-                return false;
-            }
-
-            if (inputAuthor && data[6].toUpperCase().indexOf(inputAuthor.toUpperCase()) == -1) {
-                return false;
-            }
-
-            //---------------- Facets filter--------------------
-            // Owned by me
-            if ($('#filter input[type="checkbox"][value="Owned"]').prop("checked") == true) {
-                if (data[7] != "Owned") {
-                    return false;
-                }
-            }
-
-            // Editable by me
-            if ($('#filter input[type="checkbox"][value="Editable"]').prop("checked") == true) {
-                // published resources are not editable
-                var sharingStatus = data[11].trim();
-                if (sharingStatus.indexOf('Published') != -1)
-                    return false;
-
-                if (data[7] != "Owned" && data[7] != "Editable") {
-                    return false;
-                }
-            }
-
-            // Viewable by me
-            if ($('#filter input[type="checkbox"][value="View"]').prop("checked") == true) {
-                // published resources are viewable
-                var sharingStatus = data[11].trim();
-                if (sharingStatus.indexOf('Published') != -1)
-                    return true;
-
-                if (data[7] != "Owned" && data[7] != "Viewable" && data[7] != "Editable") {
-                    return false;
-                }
-            }
-
-            // Shared by - Used in group resource listing
-            var grantors = $('#filter-shared-by .grantor:checked');
-            if (grantors.length) {
-                var grantorFlag = false;
-                for (var i = 0; i < grantors.length; i++) {
-                    var user = parseInt($(grantors[i]).attr("data-grantor-id"));
-                    if (parseInt(data[12]) == user) {
-                        grantorFlag = true;
-                    }
-                }
-
-                if (!grantorFlag) {
-                    return false;
-                }
-            }
-
-            // Labels - Check if the label exists in the table
-            var labelCheckboxes = $("#user-labels-left input[type='checkbox']");
-            for (var i = 0; i < labelCheckboxes.length; i++) {
-                if ($(labelCheckboxes[i]).prop("checked") == true) {
-                    var label = $(labelCheckboxes[i]).attr("data-label");
-
-                    var dataColLabels = data[8].replace(/\s+/g,' ').split(",");
-                    for (var h = 0; h < dataColLabels.length; h++) {
-                        dataColLabels[h] = dataColLabels[h].trim();
-                    }
-
-                    if (dataColLabels.indexOf(label) == -1) {
-                        return false;
-                    }
-                }
-            }
-
-            // Favorite
-            if ($('#filter input[type="checkbox"][value="Favorites"]').prop("checked") == true) {
-                if (data[9] != "Favorite") {
-                    return false;
-                }
-            }
-
-            // Default
-            return true;
+    // Split the occurrences at ':' and move to an array.
+    var collection = [];
+    if (occurrences) {
+        for (var item in occurrences) {
+            var content = occurrences[item].replace("[", "").replace("]", "").split(":");
+            collection.push(content);
         }
-);
+    }
+
+    // Extract the pieces of information
+    for (var item in collection) {
+        if (collection[item][0].toUpperCase() == "TYPE") {
+            inputType = collection[item][1];
+        }
+        else if (collection[item][0].toUpperCase() == "AUTHOR") {
+            inputAuthor = collection[item][1];
+        }
+        else if (collection[item][0].toUpperCase() == "SUBJECT") {
+            inputSubject = collection[item][1];
+        }
+    }
+
+    // Filter the table for each value
+
+    if (inputType && data[1].toUpperCase().indexOf(inputType.toUpperCase()) == -1) {
+        return false;
+    }
+
+    if (inputSubject && data[5].toUpperCase().indexOf(inputSubject.toUpperCase()) == -1) {
+        return false;
+    }
+
+    if (inputAuthor && data[6].toUpperCase().indexOf(inputAuthor.toUpperCase()) == -1) {
+        return false;
+    }
+
+    //---------------- Facets filter--------------------
+    // Owned by me
+    if ($('#filter input[type="checkbox"][value="Owned"]').prop("checked") == true) {
+        if (data[7] != "Owned") {
+            return false;
+        }
+    }
+
+    // Editable by me
+    if ($('#filter input[type="checkbox"][value="Editable"]').prop("checked") == true) {
+        // published resources are not editable
+        var sharingStatus = data[11].trim();
+        if (sharingStatus.indexOf('Published') != -1)
+            return false;
+
+        if (data[7] != "Owned" && data[7] != "Editable") {
+            return false;
+        }
+    }
+
+    // Viewable by me
+    if ($('#filter input[type="checkbox"][value="View"]').prop("checked") == true) {
+        // published resources are viewable
+        var sharingStatus = data[11].trim();
+        if (sharingStatus.indexOf('Published') != -1)
+            return true;
+
+        if (data[7] != "Owned" && data[7] != "Viewable" && data[7] != "Editable") {
+            return false;
+        }
+    }
+
+    // Shared by - Used in group resource listing
+    var grantors = $('#filter-shared-by .grantor:checked');
+    if (grantors.length) {
+        var grantorFlag = false;
+        for (var i = 0; i < grantors.length; i++) {
+            var user = parseInt($(grantors[i]).attr("data-grantor-id"));
+            if (parseInt(data[12]) == user) {
+                grantorFlag = true;
+            }
+        }
+
+        if (!grantorFlag) {
+            return false;
+        }
+    }
+
+    // Labels - Check if the label exists in the table
+    var labelCheckboxes = $("#user-labels-left input[type='checkbox']");
+    for (var i = 0; i < labelCheckboxes.length; i++) {
+        if ($(labelCheckboxes[i]).prop("checked") == true) {
+            var label = $(labelCheckboxes[i]).attr("data-label");
+
+            var dataColLabels = data[8].replace(/\s+/g,' ').split(",");
+            for (var h = 0; h < dataColLabels.length; h++) {
+                dataColLabels[h] = dataColLabels[h].trim();
+            }
+
+            if (dataColLabels.indexOf(label) == -1) {
+                return false;
+            }
+        }
+    }
+
+    // Favorite
+    if ($('#filter input[type="checkbox"][value="Favorites"]').prop("checked") == true) {
+        if (data[9] != "Favorite") {
+            return false;
+        }
+    }
+
+    // Default
+    return true;
+}
