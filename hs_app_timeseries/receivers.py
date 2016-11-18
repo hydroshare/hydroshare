@@ -2,18 +2,21 @@ import os
 import sqlite3
 import shutil
 import logging
+import csv
+from dateutil import parser
+import tempfile
 
 from django.dispatch import receiver
 
 from hs_core.signals import pre_create_resource, pre_add_files_to_resource, \
     pre_delete_file_from_resource, post_add_files_to_resource, post_create_resource, \
-    pre_metadata_element_create, pre_metadata_element_update, pre_download_file
+    pre_metadata_element_create, pre_metadata_element_update
 from hs_core.hydroshare import utils, delete_resource_file_only
 from hs_app_timeseries.models import TimeSeriesResource, CVVariableType, CVVariableName, \
     CVSpeciation, CVSiteType, CVElevationDatum, CVMethodType, CVUnitsType, CVStatus, CVMedium, \
     CVAggregationStatistic, TimeSeriesMetaData
 from forms import SiteValidationForm, VariableValidationForm, MethodValidationForm, \
-    ProcessingLevelValidationForm, TimeSeriesResultValidationForm
+    ProcessingLevelValidationForm, TimeSeriesResultValidationForm, UTCOffSetValidationForm
 
 
 FILE_UPLOAD_ERROR_MESSAGE = "(Uploaded file was not added to the resource)"
@@ -27,16 +30,24 @@ def resource_pre_create_handler(sender, **kwargs):
 
 @receiver(pre_add_files_to_resource, sender=TimeSeriesResource)
 def pre_add_files_to_resource_handler(sender, **kwargs):
-    # if needed more actions can be taken here before content file is added to a TimeSeries resource
-    pass
+    # file upload is not allowed if the resource already
+    # has either a sqlite file or a csv file
+    resource = kwargs['resource']
+    files = kwargs['files']
+    validate_files_dict = kwargs['validate_files']
+    fed_res_fnames = kwargs['fed_res_file_names']
+
+    if files or fed_res_fnames:
+        if resource.has_sqlite_file or resource.has_csv_file:
+            validate_files_dict['are_files_valid'] = False
+            validate_files_dict['message'] = 'Resource already has the necessary content files.'
 
 
 @receiver(pre_delete_file_from_resource, sender=TimeSeriesResource)
 def pre_delete_file_from_resource_handler(sender, **kwargs):
-    # if the deleted file is the sqlite file then reset the 'is_dirty' attribute
+    # if any of the content files (sqlite or csv) is deleted then reset the 'is_dirty' attribute
     # for all extracted metadata to False
     resource = kwargs['resource']
-    del_file = kwargs['file']
 
     def reset_metadata_elements_is_dirty(elements):
         # filter out any non-dirty element
@@ -45,9 +56,7 @@ def pre_delete_file_from_resource_handler(sender, **kwargs):
             element.is_dirty = False
             element.save()
 
-    # check if it is a sqlite file
-    fl_ext = utils.get_resource_file_name_and_extension(del_file)[1]
-    if fl_ext == '.sqlite' and resource.metadata.is_dirty:
+    if resource.metadata.is_dirty:
         TimeSeriesMetaData.objects.filter(id=resource.metadata.id).update(is_dirty=False)
         # metadata object is_dirty attribute for some reason can't be set using the following
         # 2 lines of code
@@ -73,14 +82,28 @@ def pre_delete_file_from_resource_handler(sender, **kwargs):
 @receiver(post_add_files_to_resource, sender=TimeSeriesResource)
 def post_add_files_to_resource_handler(sender, **kwargs):
     resource = kwargs['resource']
+    uploaded_file = kwargs['files'][0]
     validate_files_dict = kwargs['validate_files']
     user = kwargs['user']
 
     # extract metadata from the just uploaded file
-    res_file = resource.files.all().first()
-    if res_file:
-        _process_uploaded_sqlite_file(user, resource, res_file, validate_files_dict,
-                                      delete_existing_metadata=True)
+    uploaded_file_to_process = None
+    uploaded_file_ext = ''
+    for res_file in resource.files.all():
+        _, res_file_name, uploaded_file_ext = utils.get_resource_file_name_and_extension(res_file)
+        if res_file_name == uploaded_file.name:
+            uploaded_file_to_process = res_file
+            break
+
+    if uploaded_file_to_process:
+        if uploaded_file_ext == ".sqlite":
+            _process_uploaded_sqlite_file(user, resource, uploaded_file_to_process,
+                                          validate_files_dict,
+                                          delete_existing_metadata=True)
+
+        elif uploaded_file_ext == ".csv":
+            _process_uploaded_csv_file(resource, uploaded_file_to_process, validate_files_dict,
+                                       user, delete_existing_metadata=True)
 
 
 @receiver(post_create_resource, sender=TimeSeriesResource)
@@ -92,14 +115,109 @@ def post_create_resource_handler(sender, **kwargs):
     # extract metadata from the just uploaded file
     res_file = resource.files.all().first()
     if res_file:
-        _process_uploaded_sqlite_file(user, resource, res_file, validate_files_dict,
-                                      delete_existing_metadata=False)
+        # check if the uploaded file is a sqlite file or csv file
+        file_ext = utils.get_resource_file_name_and_extension(res_file)[2]
+        if file_ext == '.sqlite':
+            _process_uploaded_sqlite_file(user, resource, res_file, validate_files_dict,
+                                          delete_existing_metadata=False)
+        elif file_ext == '.csv':
+            _process_uploaded_csv_file(resource, res_file, validate_files_dict, user,
+                                       delete_existing_metadata=False)
+
+
+def _process_uploaded_csv_file(resource, res_file, validate_files_dict, user,
+                               delete_existing_metadata=True):
+    # get the csv file from iRODS to a temp directory
+    fl_obj_name = utils.get_file_from_irods(res_file)
+    validate_err_message = _validate_csv_file(resource, fl_obj_name)
+    if not validate_err_message:
+        # first delete relevant existing metadata elements
+        if delete_existing_metadata:
+            TimeSeriesMetaData.objects.filter(id=resource.metadata.id).update(is_dirty=False)
+            _delete_extracted_metadata(resource)
+
+        # delete the sqlite file if it exists
+        _delete_resource_file(resource, ".sqlite")
+
+        # add the blank sqlite file
+        resource.add_blank_sqlite_file(user)
+
+        # populate CV metadata django models from the blank sqlite file
+
+        # copy the blank sqlite file to a temp directory
+        temp_dir = tempfile.mkdtemp()
+        odm2_sqlite_file_name = 'ODM2.sqlite'
+        odm2_sqlite_file = 'hs_app_timeseries/files/{}'.format(odm2_sqlite_file_name)
+        target_temp_sqlite_file = os.path.join(temp_dir, odm2_sqlite_file_name)
+        shutil.copy(odm2_sqlite_file, target_temp_sqlite_file)
+
+        con = sqlite3.connect(target_temp_sqlite_file)
+        with con:
+            # get the records in python dictionary format
+            con.row_factory = sqlite3.Row
+            cur = con.cursor()
+
+            # populate the lookup CV tables that are needed later for metadata editing
+            _create_cv_lookup_models(cur, resource.metadata, 'CV_VariableType', CVVariableType)
+            _create_cv_lookup_models(cur, resource.metadata, 'CV_VariableName', CVVariableName)
+            _create_cv_lookup_models(cur, resource.metadata, 'CV_Speciation', CVSpeciation)
+            _create_cv_lookup_models(cur, resource.metadata, 'CV_SiteType', CVSiteType)
+            _create_cv_lookup_models(cur, resource.metadata, 'CV_ElevationDatum',
+                                     CVElevationDatum)
+            _create_cv_lookup_models(cur, resource.metadata, 'CV_MethodType', CVMethodType)
+            _create_cv_lookup_models(cur, resource.metadata, 'CV_UnitsType', CVUnitsType)
+            _create_cv_lookup_models(cur, resource.metadata, 'CV_Status', CVStatus)
+            _create_cv_lookup_models(cur, resource.metadata, 'CV_Medium', CVMedium)
+            _create_cv_lookup_models(cur, resource.metadata, 'CV_AggregationStatistic',
+                                     CVAggregationStatistic)
+
+        # save some data from the csv file
+        with open(fl_obj_name, 'r') as fl_obj:
+            csv_reader = csv.reader(fl_obj, delimiter=',')
+            # read the first row - header
+            header = csv_reader.next()
+            # read the 1st data row
+            start_date_str = csv_reader.next()[0]
+            last_row = None
+            data_row_count = 1
+            for row in csv_reader:
+                last_row = row
+                data_row_count += 1
+            end_date_str = last_row[0]
+
+            # save the series names along with number of data points for each series
+            # columns starting with the 2nd column are data series names
+            value_counts = {}
+            for data_col_name in header[1:]:
+                value_counts[data_col_name] = str(data_row_count)
+
+            TimeSeriesMetaData.objects.filter(id=resource.metadata.id).update(
+                value_counts=value_counts)
+
+            # create the temporal coverage element
+            resource.metadata.create_element('coverage', type='period',
+                                             value={'start': start_date_str, 'end': end_date_str})
+
+        # cleanup the temp sqlite file directory
+        if os.path.exists(temp_dir):
+            shutil.rmtree(temp_dir)
+
+    else:  # file validation failed
+        # delete the invalid file just uploaded
+        delete_resource_file_only(resource, res_file)
+        validate_files_dict['are_files_valid'] = False
+        validate_err_message += "{}".format(FILE_UPLOAD_ERROR_MESSAGE)
+        validate_files_dict['message'] = validate_err_message
+
+    # cleanup the temp csv file
+    if os.path.exists(fl_obj_name):
+        shutil.rmtree(os.path.dirname(fl_obj_name))
 
 
 def _process_uploaded_sqlite_file(user, resource, res_file, validate_files_dict,
                                   delete_existing_metadata=True):
     # check if it a sqlite file
-    fl_ext = utils.get_resource_file_name_and_extension(res_file)[1]
+    fl_ext = utils.get_resource_file_name_and_extension(res_file)[2]
 
     if fl_ext == '.sqlite':
         # get the file from iRODS to a temp directory
@@ -120,6 +238,10 @@ def _process_uploaded_sqlite_file(user, resource, res_file, validate_files_dict,
                 extract_err_message += "{}".format(FILE_UPLOAD_ERROR_MESSAGE)
                 validate_files_dict['message'] = extract_err_message
             else:
+                # set metadata is_dirty to False
+                TimeSeriesMetaData.objects.filter(id=resource.metadata.id).update(is_dirty=False)
+                # delete the csv file if it exists
+                _delete_resource_file(resource, ".csv")
                 utils.resource_modified(resource, user)
 
         else:   # file validation failed
@@ -166,20 +288,15 @@ def _validate_metadata(request, element_name):
         element_form = ProcessingLevelValidationForm(request.POST)
     elif element_name == 'timeseriesresult':
         element_form = TimeSeriesResultValidationForm(request.POST)
+    elif element_name == 'utcoffset':
+        element_form = UTCOffSetValidationForm(request.POST)
     else:
         raise Exception("Invalid metadata element name:{}".format(element_name))
 
     if element_form.is_valid():
         return {'is_valid': True, 'element_data_dict': element_form.cleaned_data}
     else:
-        return {'is_valid': False, 'element_data_dict': None}
-
-
-@receiver(pre_download_file, sender=TimeSeriesResource)
-def file_pre_download_handler(sender, **kwargs):
-    resource = kwargs['resource']
-    if resource.metadata.is_dirty:
-        resource.metadata.update_sqlite_file()
+        return {'is_valid': False, 'element_data_dict': None, "errors": element_form.errors}
 
 
 def _extract_metadata(resource, sqlite_file_name):
@@ -278,22 +395,29 @@ def _extract_metadata(resource, sqlite_file_name):
                     cur.execute("SELECT * FROM Sites WHERE SamplingFeatureID=?",
                                 (feature_action["SamplingFeatureID"],))
                     site = cur.fetchone()
+                    if not any(sampling_feature["SamplingFeatureCode"] == s.site_code for s
+                               in resource.metadata.sites):
 
-                    data_dict = {}
-                    data_dict['series_ids'] = [result["ResultUUID"]]
-                    data_dict['site_code'] = sampling_feature["SamplingFeatureCode"]
-                    data_dict['site_name'] = sampling_feature["SamplingFeatureName"]
-                    if sampling_feature["Elevation_m"]:
-                        data_dict["elevation_m"] = sampling_feature["Elevation_m"]
+                        data_dict = {}
+                        data_dict['series_ids'] = [result["ResultUUID"]]
+                        data_dict['site_code'] = sampling_feature["SamplingFeatureCode"]
+                        data_dict['site_name'] = sampling_feature["SamplingFeatureName"]
+                        if sampling_feature["Elevation_m"]:
+                            data_dict["elevation_m"] = sampling_feature["Elevation_m"]
 
-                    if sampling_feature["ElevationDatumCV"]:
-                        data_dict["elevation_datum"] = sampling_feature["ElevationDatumCV"]
+                        if sampling_feature["ElevationDatumCV"]:
+                            data_dict["elevation_datum"] = sampling_feature["ElevationDatumCV"]
 
-                    if site["SiteTypeCV"]:
-                        data_dict["site_type"] = site["SiteTypeCV"]
+                        if site["SiteTypeCV"]:
+                            data_dict["site_type"] = site["SiteTypeCV"]
 
-                    # create site element
-                    resource.metadata.create_element('site', **data_dict)
+                        data_dict["latitude"] = site["Latitude"]
+                        data_dict["longitude"] = site["Longitude"]
+
+                        # create site element
+                        resource.metadata.create_element('site', **data_dict)
+                    else:
+                        _update_element_series_ids(resource.metadata.sites[0], result["ResultUUID"])
                 else:
                     _update_element_series_ids(resource.metadata.sites[0], result["ResultUUID"])
 
@@ -303,20 +427,26 @@ def _extract_metadata(resource, sqlite_file_name):
                     cur.execute("SELECT * FROM Variables WHERE VariableID=?",
                                 (result["VariableID"],))
                     variable = cur.fetchone()
-                    data_dict = {}
-                    data_dict['series_ids'] = [result["ResultUUID"]]
-                    data_dict['variable_code'] = variable["VariableCode"]
-                    data_dict["variable_name"] = variable["VariableNameCV"]
-                    data_dict['variable_type'] = variable["VariableTypeCV"]
-                    data_dict["no_data_value"] = variable["NoDataValue"]
-                    if variable["VariableDefinition"]:
-                        data_dict["variable_definition"] = variable["VariableDefinition"]
+                    if not any(variable["VariableCode"] == v.variable_code for v
+                               in resource.metadata.variables):
 
-                    if variable["SpeciationCV"]:
-                        data_dict["speciation"] = variable["SpeciationCV"]
+                        data_dict = {}
+                        data_dict['series_ids'] = [result["ResultUUID"]]
+                        data_dict['variable_code'] = variable["VariableCode"]
+                        data_dict["variable_name"] = variable["VariableNameCV"]
+                        data_dict['variable_type'] = variable["VariableTypeCV"]
+                        data_dict["no_data_value"] = variable["NoDataValue"]
+                        if variable["VariableDefinition"]:
+                            data_dict["variable_definition"] = variable["VariableDefinition"]
 
-                    # create variable element
-                    resource.metadata.create_element('variable', **data_dict)
+                        if variable["SpeciationCV"]:
+                            data_dict["speciation"] = variable["SpeciationCV"]
+
+                        # create variable element
+                        resource.metadata.create_element('variable', **data_dict)
+                    else:
+                        _update_element_series_ids(resource.metadata.variables[0],
+                                                   result["ResultUUID"])
                 else:
                     _update_element_series_ids(resource.metadata.variables[0], result["ResultUUID"])
 
@@ -329,20 +459,26 @@ def _extract_metadata(resource, sqlite_file_name):
                     action = cur.fetchone()
                     cur.execute("SELECT * FROM Methods WHERE MethodID=?", (action["MethodID"],))
                     method = cur.fetchone()
-                    data_dict = {}
-                    data_dict['series_ids'] = [result["ResultUUID"]]
-                    data_dict['method_code'] = method["MethodCode"]
-                    data_dict["method_name"] = method["MethodName"]
-                    data_dict['method_type'] = method["MethodTypeCV"]
+                    if not any(method["MethodCode"] == m.method_code for m
+                               in resource.metadata.methods):
 
-                    if method["MethodDescription"]:
-                        data_dict["method_description"] = method["MethodDescription"]
+                        data_dict = {}
+                        data_dict['series_ids'] = [result["ResultUUID"]]
+                        data_dict['method_code'] = method["MethodCode"]
+                        data_dict["method_name"] = method["MethodName"]
+                        data_dict['method_type'] = method["MethodTypeCV"]
 
-                    if method["MethodLink"]:
-                        data_dict["method_link"] = method["MethodLink"]
+                        if method["MethodDescription"]:
+                            data_dict["method_description"] = method["MethodDescription"]
 
-                    # create method element
-                    resource.metadata.create_element('method', **data_dict)
+                        if method["MethodLink"]:
+                            data_dict["method_link"] = method["MethodLink"]
+
+                        # create method element
+                        resource.metadata.create_element('method', **data_dict)
+                    else:
+                        _update_element_series_ids(resource.metadata.methods[0],
+                                                   result["ResultUUID"])
                 else:
                     _update_element_series_ids(resource.metadata.methods[0], result["ResultUUID"])
 
@@ -353,17 +489,23 @@ def _extract_metadata(resource, sqlite_file_name):
                     cur.execute("SELECT * FROM ProcessingLevels WHERE ProcessingLevelID=?",
                                 (result["ProcessingLevelID"],))
                     pro_level = cur.fetchone()
-                    data_dict = {}
-                    data_dict['series_ids'] = [result["ResultUUID"]]
-                    data_dict['processing_level_code'] = pro_level["ProcessingLevelCode"]
-                    if pro_level["Definition"]:
-                        data_dict["definition"] = pro_level["Definition"]
+                    if not any(pro_level["ProcessingLevelCode"] == p.processing_level_code for p
+                               in resource.metadata.processing_levels):
 
-                    if pro_level["Explanation"]:
-                        data_dict["explanation"] = pro_level["Explanation"]
+                        data_dict = {}
+                        data_dict['series_ids'] = [result["ResultUUID"]]
+                        data_dict['processing_level_code'] = pro_level["ProcessingLevelCode"]
+                        if pro_level["Definition"]:
+                            data_dict["definition"] = pro_level["Definition"]
 
-                    # create processinglevel element
-                    resource.metadata.create_element('processinglevel', **data_dict)
+                        if pro_level["Explanation"]:
+                            data_dict["explanation"] = pro_level["Explanation"]
+
+                        # create processinglevel element
+                        resource.metadata.create_element('processinglevel', **data_dict)
+                    else:
+                        _update_element_series_ids(resource.metadata.processing_levels[0],
+                                                   result["ResultUUID"])
                 else:
                     _update_element_series_ids(resource.metadata.processing_levels[0],
                                                result["ResultUUID"])
@@ -399,9 +541,9 @@ def _extract_metadata(resource, sqlite_file_name):
 
     except sqlite3.Error as ex:
         sqlite_err_msg = str(ex.args[0])
-        log.error((sqlite_err_msg))
+        log.error(sqlite_err_msg)
         return sqlite_err_msg
-    except Exception, ex:
+    except Exception as ex:
         log.error(ex.message)
         return err_message
 
@@ -595,6 +737,8 @@ def _delete_extracted_metadata(resource):
     if resource.metadata.description:
         resource.metadata.description.delete()
 
+    TimeSeriesMetaData.objects.filter(id=resource.metadata.id).update(value_counts={})
+
     resource.metadata.creators.all().delete()
     resource.metadata.contributors.all().delete()
     resource.metadata.coverages.all().delete()
@@ -606,6 +750,8 @@ def _delete_extracted_metadata(resource):
     resource.metadata.methods.delete()
     resource.metadata.processing_levels.delete()
     resource.metadata.time_series_results.delete()
+    if resource.metadata.utc_offset:
+        resource.metadata.utc_offset.delete()
 
     # delete CV lookup django tables
     resource.metadata.cv_variable_types.all().delete()
@@ -636,11 +782,73 @@ def _delete_extracted_metadata(resource):
                                      order=1)
 
 
-def _validate_odm2_db_file(uploaded_file_sqlite_file_name):
+def _validate_csv_file(resource, uploaded_csv_file_name):
+    err_message = "Uploaded file is not a valid timeseries csv file."
+    log = logging.getLogger()
+    with open(uploaded_csv_file_name, 'r') as fl_obj:
+        csv_reader = csv.reader(fl_obj, delimiter=',')
+        # read the first row
+        header = csv_reader.next()
+        header = [el.strip() for el in header]
+        if any(len(h) == 0 for h in header):
+            err_message += " Column heading is missing."
+            log.error(err_message)
+            return err_message
+
+        # check that there are at least 2 headings
+        if len(header) < 2:
+            err_message += " There needs to be at least 2 columns of data."
+            log.error(err_message)
+            return err_message
+
+        # check the header has only string values
+        for hdr in header:
+            try:
+                float(hdr)
+                err_message += " Column heading must be a string."
+                log.error(err_message)
+                return err_message
+            except ValueError:
+                pass
+
+        # check that there are no duplicate column headings
+        if len(header) != len(set(header)):
+            err_message += " There are duplicate column headings."
+            log.error(err_message)
+            return err_message
+
+        # process data rows
+        for row in csv_reader:
+            # check that data row has the same number of columns as the header
+            if len(row) != len(header):
+                err_message += " Number of columns in the header is not same as the data columns."
+                log.error(err_message)
+                return err_message
+            # check that the first column data is of type datetime
+            try:
+                parser.parse(row[0])
+            except Exception:
+                err_message += " Data for the first column must be a date value."
+                log.error(err_message)
+                return err_message
+
+            # check that the data values (2nd column onwards) are of numeric
+            for data_value in row[1:]:
+                try:
+                    float(data_value)
+                except ValueError:
+                    err_message += " Data values must be numeric."
+                    log.error(err_message)
+                    return err_message
+
+    return None
+
+
+def _validate_odm2_db_file(uploaded_sqlite_file_name):
     err_message = "Uploaded file is not a valid ODM2 SQLite file."
     log = logging.getLogger()
     try:
-        con = sqlite3.connect(uploaded_file_sqlite_file_name)
+        con = sqlite3.connect(uploaded_sqlite_file_name)
         with con:
 
             # TODO: check that each of the core tables has the necessary columns
@@ -683,3 +891,10 @@ def _validate_odm2_db_file(uploaded_file_sqlite_file_name):
     except Exception, e:
         log.error(e.message)
         return e.message
+
+
+def _delete_resource_file(resource, file_ext):
+    for res_file in resource.files.all():
+        _, _, res_file_ext = utils.get_resource_file_name_and_extension(res_file)
+        if res_file_ext == file_ext:
+            delete_resource_file_only(resource, res_file)

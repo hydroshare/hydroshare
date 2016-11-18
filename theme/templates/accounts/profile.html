@@ -580,6 +580,10 @@
                                             <td><span>Model Program</span></td>
                                             <td><span class="badge">0</span></td>
                                         </tr>
+                                        <tr id="badge-modflow" data-type="type-MODFLOW Model Instance Resource">
+                                            <td><span>MODFLOW Model Instance Resource</span></td>
+                                            <td><span class="badge">0</span></td>
+                                        </tr>
                                         <tr id="badge-multidimensional" data-type="type-Multidimensional (NetCDF)">
                                             <td><span>Multidimensional (NetCDF)</span></td>
                                             <td><span class="badge">0</span></td>
@@ -658,9 +662,12 @@
                                                 <img src="{{ STATIC_URL }}img/resource-icons/webapp48x48.png"
                                                      alt="{{ res|resource_type }}"
                                                      title="{{ res|resource_type }}"/>
-
                                             {% elif res|resource_type == "Collection Resource" %}
                                                 <img src="{{ STATIC_URL }}img/resource-icons/collection48x48.png"
+                                                     alt="{{ res|resource_type }}"
+                                                     title="{{ res|resource_type }}"/>
+                                            {% elif res|resource_type == "MODFLOW Model Instance Resource" %}
+                                                <img src="{{ STATIC_URL }}img/resource-icons/modflow48x48.png"
                                                      alt="{{ res|resource_type }}"
                                                      title="{{ res|resource_type }}"/>
                                             {% endif %}

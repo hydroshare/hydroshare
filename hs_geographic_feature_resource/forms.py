@@ -1,12 +1,14 @@
-
 from django import forms
-from crispy_forms.layout import Layout, Field, HTML
+from crispy_forms.layout import Layout, Field
 from hs_core.forms import BaseFormHelper
 
-class OriginalCoverageFormHelper(BaseFormHelper):
-    def __init__(self, allow_edit=True, res_short_id=None, element_id=None, element_name=None,  *args, **kwargs):
 
-        # the order in which the model fields are listed for the FieldSet is the order these fields will be displayed
+class OriginalCoverageFormHelper(BaseFormHelper):
+    def __init__(self, allow_edit=True, res_short_id=None,
+                 element_id=None, element_name=None,  *args, **kwargs):
+
+        # the order in which the model fields are listed for
+        # the FieldSet is the order these fields will be displayed
         field_width = 'form-control input-sm'
         layout = Layout(
                         Field('projection_name', css_class=field_width),
@@ -19,13 +21,17 @@ class OriginalCoverageFormHelper(BaseFormHelper):
                         Field('westlimit', css_class=field_width),
                        )
 
-        super(OriginalCoverageFormHelper, self).__init__(allow_edit, res_short_id, element_id, element_name, layout,
-                                                         element_name_label='Spatial Reference', *args, **kwargs)
+        super(OriginalCoverageFormHelper, self).\
+            __init__(allow_edit, res_short_id, element_id, element_name, layout,
+                     element_name_label='Spatial Reference', *args, **kwargs)
+
 
 class OriginalCoverageForm(forms.Form):
     projection_string = forms.CharField(required=False, label='Coordinate String',
                                         widget=forms.Textarea())
-    projection_name = forms.CharField(max_length=256, required=False, label='Coordinate Reference System')
+    projection_name = forms.CharField(max_length=256,
+                                      required=False,
+                                      label='Coordinate Reference System')
     datum = forms.CharField(max_length=256, required=False, label='Datum')
     unit = forms.CharField(max_length=256, required=False, label='Unit')
 
@@ -36,7 +42,10 @@ class OriginalCoverageForm(forms.Form):
 
     def __init__(self, allow_edit=True, res_short_id=None, element_id=None, *args, **kwargs):
         super(OriginalCoverageForm, self).__init__(*args, **kwargs)
-        self.helper = OriginalCoverageFormHelper(allow_edit, res_short_id, element_id, element_name='OriginalCoverage')
+        self.helper = OriginalCoverageFormHelper(allow_edit,
+                                                 res_short_id,
+                                                 element_id,
+                                                 element_name='OriginalCoverage')
         self.delete_modal_form = None
         self.number = 0
         self.allow_edit = allow_edit
@@ -46,6 +55,7 @@ class OriginalCoverageForm(forms.Form):
             for field in self.fields.values():
                 field.widget.attrs['readonly'] = True
                 field.widget.attrs['style'] = "background-color:white;"
+
 
 class OriginalCoverageValidationForm(forms.Form):
     northlimit = forms.FloatField(required=True)
@@ -59,26 +69,34 @@ class OriginalCoverageValidationForm(forms.Form):
 
 
 class GeometryInformationFormHelper(BaseFormHelper):
-    def __init__(self, allow_edit=True, res_short_id=None, element_id=None, element_name=None,  *args, **kwargs):
+    def __init__(self, allow_edit=True, res_short_id=None, element_id=None,
+                 element_name=None,  *args, **kwargs):
 
-        # the order in which the model fields are listed for the FieldSet is the order these fields will be displayed
+        # the order in which the model fields are listed for the FieldSet
+        # is the order these fields will be displayed
         field_width = 'form-control input-sm'
         layout = Layout(
                         Field('geometryType', css_class=field_width),
                         Field('featureCount', css_class=field_width),
                        )
 
-        super(GeometryInformationFormHelper, self).__init__(allow_edit, res_short_id, element_id, element_name,
-                                                            layout, element_name_label='Geometry Information',
-                                                            *args, **kwargs)
+        super(GeometryInformationFormHelper, self)\
+            .__init__(allow_edit, res_short_id, element_id, element_name,
+                      layout, element_name_label='Geometry Information',
+                      *args, **kwargs)
+
 
 class GeometryInformationForm(forms.Form):
     geometryType = forms.CharField(max_length=128, required=True, label='Geometry Type')
-    featureCount = forms.IntegerField(label='Feature Count', required=True, widget=forms.TextInput())
+    featureCount = forms.IntegerField(label='Feature Count',
+                                      required=True,
+                                      widget=forms.TextInput())
 
     def __init__(self, allow_edit=True, res_short_id=None, element_id=None, *args, **kwargs):
         super(GeometryInformationForm, self).__init__(*args, **kwargs)
-        self.helper = GeometryInformationFormHelper(allow_edit, res_short_id, element_id,\
+        self.helper = GeometryInformationFormHelper(allow_edit,
+                                                    res_short_id,
+                                                    element_id,
                                                     element_name='GeometryInformation')
         self.delete_modal_form = None
         self.number = 0
@@ -90,9 +108,11 @@ class GeometryInformationForm(forms.Form):
                 field.widget.attrs['readonly'] = True
                 field.widget.attrs['style'] = "background-color:white;"
 
+
 class GeometryInformationValidationForm(forms.Form):
     featureCount = forms.IntegerField(required=True)
     geometryType = forms.CharField(max_length=128, required=True)
+
 
 class FieldInformationValidationForm(forms.Form):
     fieldName = forms.CharField(required=True, max_length=128)

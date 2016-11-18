@@ -51,8 +51,17 @@ class TestResourceFile(HSRESTTestCase):
 
         super(TestResourceFile, self).tearDown()
 
-    def test_resource_file_list(self):
+    def test_DEPRECATED_resource_file_list(self):
         response = self.client.get("/hsapi/resource/{pid}/file_list/".format(pid=self.pid),
+                                   format='json')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        content = json.loads(response.content)
+        self.assertEqual(content['count'], 2)
+        self.assertEqual(os.path.basename(content['results'][0]['url']), self.txt_file_name)
+        self.assertEqual(os.path.basename(content['results'][1]['url']), self.raster_file_name)
+
+    def test_resource_file_list(self):
+        response = self.client.get("/hsapi/resource/{pid}/files/".format(pid=self.pid),
                                    format='json')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         content = json.loads(response.content)

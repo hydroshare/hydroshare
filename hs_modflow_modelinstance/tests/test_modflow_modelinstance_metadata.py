@@ -966,8 +966,12 @@ class TestMODFLOWModelInstanceMetaData(MockIRODSTestCaseMixin, TransactionTestCa
         self.assertFalse(self.res.has_required_content_files())
         self.assertFalse(self.res.can_be_public_or_discoverable)
 
-    def test_multiple_content_files(self):
+    def test_can_have_multiple_content_files(self):
         self.assertTrue(self.res.can_have_multiple_files())
+
+    def test_can_upload_multiple_content_files(self):
+        # more than one file can be uploaded
+        self.assertTrue(self.res.allow_multiple_file_upload())
 
     def test_get_xml(self):
         self.res.metadata.create_element('Description', abstract="test abstract")

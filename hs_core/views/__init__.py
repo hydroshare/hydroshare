@@ -40,6 +40,7 @@ from hs_core.hydroshare.resource import METADATA_STATUS_SUFFICIENT, METADATA_STA
 
 from . import resource_rest_api
 from . import user_rest_api
+from . import resource_folder_hierarchy
 
 from hs_core.hydroshare import utils
 
@@ -80,9 +81,18 @@ def verify(request, *args, **kwargs):
     return HttpResponseRedirect('/')
 
 
-def add_file_to_resource(request, shortkey, *args, **kwargs):
-    resource, _, _ = authorize(request, shortkey, needed_permission=ACTION_TO_AUTHORIZE.EDIT_RESOURCE)
-    res_files = request.FILES.getlist('files')
+def add_files_to_resource(request, shortkey, *args, **kwargs):
+    """
+    This view function is called by AJAX in the folder implementation
+    :param request: AJAX request
+    :param shortkey: resource uuid
+    :param args:
+    :param kwargs:
+    :return: HTTP response with status code indicating success or failure
+    """
+    resource, _, _ = authorize(request, shortkey,
+                               needed_permission=ACTION_TO_AUTHORIZE.EDIT_RESOURCE)
+    res_files = request.FILES.values()
     extract_metadata = request.REQUEST.get('extract-metadata', 'No')
     extract_metadata = True if extract_metadata.lower() == 'yes' else False
 
@@ -91,21 +101,22 @@ def add_file_to_resource(request, shortkey, *args, **kwargs):
                                             extract_metadata=extract_metadata)
 
     except hydroshare.utils.ResourceFileSizeException as ex:
-        request.session['file_size_error'] = ex.message
-        return HttpResponseRedirect(request.META['HTTP_REFERER'])
+        msg = 'file_size_error: ' + ex.message
+        return HttpResponse(msg, status=500)
 
     except (hydroshare.utils.ResourceFileValidationException, Exception) as ex:
-        request.session['validation_error'] = ex.message
-        return HttpResponseRedirect(request.META['HTTP_REFERER'])
+        msg = 'validation_error: ' + ex.message
+        return HttpResponse(msg, status=500)
 
     try:
         hydroshare.utils.resource_file_add_process(resource=resource, files=res_files, user=request.user,
                                                    extract_metadata=extract_metadata)
 
     except (hydroshare.utils.ResourceFileValidationException, Exception) as ex:
-        request.session['validation_error'] = ex.message
+        msg = 'validation_error: ' + ex.message
+        return HttpResponse(msg, status=500)
 
-    return HttpResponseRedirect(request.META['HTTP_REFERER'])
+    return HttpResponse(status=200)
 
 
 def _get_resource_sender(element_name, resource):
@@ -129,11 +140,11 @@ def get_supported_file_types_for_resource_type(request, resource_type, *args, **
         return HttpResponseRedirect(request.META['HTTP_REFERER'])
 
 
-def is_multiple_file_allowed_for_resource_type(request, resource_type, *args, **kwargs):
+def is_multiple_file_upload_allowed(request, resource_type, *args, **kwargs):
     resource_cls = hydroshare.check_resource_type(resource_type)
     if request.is_ajax:
         # TODO: use try catch
-        ajax_response_data = {'allow_multiple_file': resource_cls.can_have_multiple_files()}
+        ajax_response_data = {'allow_multiple_file': resource_cls.allow_multiple_file_upload()}
         return HttpResponse(json.dumps(ajax_response_data))
     else:
         return HttpResponseRedirect(request.META['HTTP_REFERER'])
@@ -207,9 +218,15 @@ def add_metadata_element(request, shortkey, element_name, *args, **kwargs):
                         # some database error occurred
                         err_msg = err_msg.format(element_name, exp.message)
                         request.session['validation_error'] = err_msg
+                    except Exception as exp:
+                        # some other error occurred
+                        err_msg = err_msg.format(element_name, exp.message)
+                        request.session['validation_error'] = err_msg
 
                 if is_add_success:
                     resource_modified(res, request.user)
+            elif "errors" in response:
+                err_msg = err_msg.format(element_name, response['errors'])
 
     if request.is_ajax():
         if is_add_success:
@@ -220,14 +237,22 @@ def add_metadata_element(request, shortkey, element_name, *args, **kwargs):
 
             if element_name == 'subject':
                 ajax_response_data = {'status': 'success', 'element_name': element_name, 'metadata_status': metadata_status}
+            elif element_name.lower() == 'site' and res.resource_type == 'TimeSeriesResource':
+                # get the spatial coverage element
+                spatial_coverage_dict = _get_spatial_coverage_data(res)
+                ajax_response_data = {'status': 'success', 'element_id': element.id,
+                                      'element_name': element_name,
+                                      'spatial_coverage': spatial_coverage_dict,
+                                      'metadata_status': metadata_status}
             else:
-                ajax_response_data = {'status': 'success', 'element_id': element.id, 'element_name': element_name, 'metadata_status': metadata_status}
+                ajax_response_data = {'status': 'success', 'element_id': element.id,
+                                      'element_name': element_name,
+                                      'metadata_status': metadata_status}
 
-            return HttpResponse(json.dumps(ajax_response_data))
-
+            return JsonResponse(ajax_response_data)
         else:
             ajax_response_data = {'status': 'error', 'message': err_msg}
-            return HttpResponse (json.dumps(ajax_response_data))
+            return JsonResponse(ajax_response_data)
 
     if 'resource-mode' in request.POST:
         request.session['resource-mode'] = 'edit'
@@ -248,7 +273,15 @@ def update_metadata_element(request, shortkey, element_name, element_id, *args, 
                 element_data_dict = response['element_data_dict']
                 try:
                     res.metadata.update_element(element_name, element_id, **element_data_dict)
+                    post_handler_response = post_metadata_element_update.send(sender=sender_resource, element_name=element_name, element_id=element_id)
                     is_update_success = True
+                    # this is how we handle if a post_metadata_element_update receiver
+                    # is not implemented in the resource type's receivers.py
+                    element_exists = True
+                    for receiver, response in post_handler_response:
+                        if 'element_exists' in response:
+                            element_exists = response['element_exists']
+
                 except ValidationError as exp:
                     err_msg = err_msg.format(element_name, exp.message)
                     request.session['validation_error'] = err_msg
@@ -264,6 +297,8 @@ def update_metadata_element(request, shortkey, element_name, element_id, *args, 
 
                 if is_update_success:
                     resource_modified(res, request.user)
+            elif "errors" in response:
+                err_msg = err_msg.format(element_name, response['errors'])
 
     if request.is_ajax():
         if is_update_success:
@@ -271,12 +306,24 @@ def update_metadata_element(request, shortkey, element_name, element_id, *args, 
                 metadata_status = METADATA_STATUS_SUFFICIENT
             else:
                 metadata_status = METADATA_STATUS_INSUFFICIENT
+            if element_name.lower() == 'site' and res.resource_type == 'TimeSeriesResource':
+                # get the spatial coverage element
+                spatial_coverage_dict = _get_spatial_coverage_data(res)
+                ajax_response_data = {'status': 'success',
+                                      'element_name': element_name,
+                                      'spatial_coverage': spatial_coverage_dict,
+                                      'metadata_status': metadata_status,
+                                      'element_exists':element_exists}
+            else:
+                ajax_response_data = {'status': 'success',
+                                      'element_name': element_name,
+                                      'metadata_status': metadata_status,
+                                      'element_exists':element_exists}
 
-            ajax_response_data = {'status': 'success', 'element_name': element_name, 'metadata_status': metadata_status}
-            return HttpResponse(json.dumps(ajax_response_data))
+            return JsonResponse(ajax_response_data)
         else:
             ajax_response_data = {'status': 'error', 'message': err_msg}
-            return HttpResponse(json.dumps(ajax_response_data))
+            return JsonResponse(ajax_response_data)
 
     if 'resource-mode' in request.POST:
         request.session['resource-mode'] = 'edit'
@@ -306,7 +353,27 @@ def delete_metadata_element(request, shortkey, element_name, element_id, *args, 
 def delete_file(request, shortkey, f, *args, **kwargs):
     res, _, user = authorize(request, shortkey, needed_permission=ACTION_TO_AUTHORIZE.EDIT_RESOURCE)
     hydroshare.delete_resource_file(shortkey, f, user)
+    request.session['resource-mode'] = 'edit'
+    return HttpResponseRedirect(request.META['HTTP_REFERER'])
 
+
+def delete_multiple_files(request, shortkey, *args, **kwargs):
+    res, _, user = authorize(request, shortkey, needed_permission=ACTION_TO_AUTHORIZE.EDIT_RESOURCE)
+    # file_ids is a string of file ids separated by comma
+    f_ids = request.POST['file_ids']
+    f_id_list = f_ids.split(',')
+    for f_id in f_id_list:
+        f_id = f_id.strip()
+        try:
+            hydroshare.delete_resource_file(shortkey, f_id, user)
+        except ObjectDoesNotExist as ex:
+            # Since some specific resource types such as feature resource type delete all other
+            # dependent content files together when one file is deleted, we make this specific
+            # ObjectDoesNotExist exception as legitimate in deplete_multiple_files() without
+            # raising this specific exceptoin
+            logger.debug(ex.message)
+            continue
+    request.session['resource-mode'] = 'edit'
     return HttpResponseRedirect(request.META['HTTP_REFERER'])
 
 
@@ -317,6 +384,7 @@ def delete_resource(request, shortkey, *args, **kwargs):
     res_id = shortkey
     res_type = res.resource_type
     resource_related_collections = [col for col in res.collections.all()]
+    owners_list = [owner for owner in res.raccess.owners.all()]
 
     try:
         hydroshare.delete_resource(shortkey)
@@ -328,11 +396,14 @@ def delete_resource(request, shortkey, *args, **kwargs):
     # create a CollectionDeletedResource object which can then be used to list collection deleted
     # resources on collection resource landing page
     for collection_res in resource_related_collections:
-        CollectionDeletedResource.objects.create(resource_title=res_title,
-                                                 deleted_by=user,
-                                                 resource_id=res_id,
-                                                 resource_type=res_type,
-                                                 collection=collection_res)
+        o=CollectionDeletedResource.objects.create(
+             resource_title=res_title,
+             deleted_by=user,
+             resource_id=res_id,
+             resource_type=res_type,
+             collection=collection_res
+             )
+        o.resource_owners.add(*owners_list)
 
     return HttpResponseRedirect('/my-resources/')
 
@@ -726,6 +797,7 @@ class GroupUpdateForm(GroupForm):
 @processor_for('my-resources')
 @login_required
 def my_resources(request, page):
+
     resource_collection = get_my_resources_list(request)
     context = {'collection': resource_collection}
     
@@ -1116,6 +1188,24 @@ def get_user_data(request, user_id, *args, **kwargs):
 
     return JsonResponse(user_data)
 
+
+def _get_spatial_coverage_data(resource):
+    spatial_coverage = resource.metadata.coverages.exclude(type='period').first()
+    spatial_coverage_dict = {}
+    if spatial_coverage:
+        spatial_coverage_dict['type'] = spatial_coverage.type
+        if spatial_coverage.type == 'point':
+            spatial_coverage_dict['east'] = spatial_coverage.value['east']
+            spatial_coverage_dict['north'] = spatial_coverage.value['north']
+        else:
+            # type is box
+            spatial_coverage_dict['eastlimit'] = spatial_coverage.value['eastlimit']
+            spatial_coverage_dict['northlimit'] = spatial_coverage.value['northlimit']
+            spatial_coverage_dict['westlimit'] = spatial_coverage.value['westlimit']
+            spatial_coverage_dict['southlimit'] = spatial_coverage.value['southlimit']
+
+    return spatial_coverage_dict
+
 def _send_email_on_group_membership_acceptance(membership_request):
     """
     Sends email notification of group membership acceptance
@@ -1241,8 +1331,9 @@ def _set_resource_sharing_status(request, user, resource, flag_to_set, flag_valu
         istorage.setAVU(res_coll, "isPublic", str(resource.raccess.public))
 
         # run script to update hyrax input files when a private netCDF resource is made public
-        if flag_to_set=='public' and flag_value and settings.RUN_HYRAX_UPDATE and resource.resource_type=='NetcdfResource':
-            run_script_to_update_hyrax_input_files()
+        if flag_to_set=='public' and flag_value and settings.RUN_HYRAX_UPDATE and \
+                        resource.resource_type=='NetcdfResource':
+            run_script_to_update_hyrax_input_files(resource.short_id)
 
 
 def _get_message_for_setting_resource_flag(has_files, has_metadata, resource_flag):

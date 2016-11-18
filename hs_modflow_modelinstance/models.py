@@ -68,6 +68,12 @@ class StudyArea(AbstractMetaDataElement):
         # StudyArea element is not repeatable
         unique_together = ("content_type", "object_id")
 
+    @classmethod
+    def update(cls, element_id, **kwargs):
+        study_area = super(StudyArea, cls).update(element_id, **kwargs)
+        delete_if_empty(study_area,
+                        ['totalLength', 'totalWidth', 'maximumElevation', 'minimumElevation'])
+
 
 class GridDimensions(AbstractMetaDataElement):
     term = 'GridDimensions'
@@ -637,6 +643,10 @@ class MODFLOWModelInstanceMetaData(ModelInstanceMetaData):
     _model_calibration = GenericRelation(ModelCalibration)
     _model_input = GenericRelation(ModelInput)
     _general_elements = GenericRelation(GeneralElements)
+
+    @property
+    def resource(self):
+        return MODFLOWModelInstanceResource.objects.filter(object_id=self.id).first()
 
     @property
     def study_area(self):

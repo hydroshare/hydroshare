@@ -75,9 +75,11 @@
                         <span>A collection must contain at least one resource before it can be published, public or discoverable.</span>
                     {% endif %}
                 {% endif %}
-                <hr>
-                <span class="glyphicon glyphicon-question-sign"></span>
-                <small> Click on the edit button ( <span class="glyphicon glyphicon-pencil"></span> ) below to edit this resource.</small>
+                {% if not metadata_form %}
+                    <hr>
+                    <span class="glyphicon glyphicon-question-sign"></span>
+                    <small> Click on the edit button ( <span class="glyphicon glyphicon-pencil"></span> ) below to edit this resource.</small>
+                {% endif %}
             </div>
         </div>
     {% endif %}
@@ -87,8 +89,13 @@
 <div class="col-sm-12">
     {% if not metadata_form %}
         <h2 id="resource-title">{{ title }}</h2>
+        {% if tool_homepage_url %}
+            <span id="apps-dropdown"/>
+            <a class='btn btn-primary' href="{{ tool_homepage_url }}" target="_blank">Open WebApp</a>
+        {% endif %}
+
         {% if relevant_tools %}
-            <span id="apps-dropdown">
+            <span id="apps-dropdown"/>
             <button class="btn btn-primary dropdown-toggle" type="button" data-toggle="dropdown">Open with...
                 <span class="caret"></span></button>
             <ul class="dropdown-menu">

@@ -28,8 +28,11 @@ class DiscoveryJsonView(FacetedSearchView):
 
                 # assign title and url values to the object
                 json_obj['title'] = result.object.metadata.title.value
+                json_obj['resource_type'] = result.object.verbose_name
                 json_obj['get_absolute_url'] = result.object.get_absolute_url()
-
+                json_obj['first_author'] = result.object.first_creator.name
+                if result.object.first_creator.description:
+                    json_obj['first_author_description'] = result.object.first_creator.description
                 # iterate all the coverage values
                 for coverage in result.object.metadata.coverages.all():
 

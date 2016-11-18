@@ -282,12 +282,13 @@ def get_file_from_irods(res_file):
     return copied_file
 
 
-def replace_resource_file_on_irods(new_file, original_resource_file):
+def replace_resource_file_on_irods(new_file, original_resource_file, user):
     """
     Replaces the specified resource file with file (new_file) by copying to iRODS
     (local or federated zone)
     :param new_file: file path for the file to be copied to iRODS
     :param original_resource_file: an instance of ResourceFile that is to be replaced
+    :param user: user who is replacing the resource file.
     :return:
     """
 
@@ -304,12 +305,16 @@ def replace_resource_file_on_irods(new_file, original_resource_file):
                                             original_resource_file.fed_resource_file_name_or_path)
     istorage.saveFile(new_file, destination_file, True)
 
+    # need to do this so that the bag will be regenerated prior to download of the bag
+    resource_modified(ori_res, by_user=user, overwrite_bag=False)
+
 
 def get_resource_file_name_and_extension(res_file):
     """
-    Gets the file name and extension of the specified resource file
+    Gets the full file name with path, file base name, and extension of the specified resource file
     :param res_file: an instance of ResourceFile for which file extension to be retrieved
-    :return: (full filename, file extension) ex: "/my_path_to/ABC.nc" --> ("ABC.nc", ".nc")
+    :return: (full filename with path, full file base name, file extension)
+             ex: "/my_path_to/ABC.nc" --> ("/my_path_to/ABC.nc", "ABC.nc", ".nc")
     """
     f_fullname = None
     if res_file.resource_file:
@@ -319,10 +324,38 @@ def get_resource_file_name_and_extension(res_file):
     elif res_file.fed_resource_file_name_or_path:
         f_fullname = res_file.fed_resource_file_name_or_path
 
-    f_fullname = os.path.basename(f_fullname)
+    f_basename = os.path.basename(f_fullname)
     _, file_ext = os.path.splitext(f_fullname)
 
-    return f_fullname, file_ext
+    return f_fullname, f_basename, file_ext
+
+
+def get_resource_file_url(res_file):
+    """
+    Gets the download url of the specified resource file
+    :param res_file: an instance of ResourceFile for which download url is to be retrieved
+    :return: download url for the resource file
+    """
+    if res_file.resource_file:
+        f_url = res_file.resource_file.url
+    elif res_file.fed_resource_file:
+        idx = res_file.fed_resource_file.url.find('/data/contents/')
+        f_url = res_file.fed_resource_file.url[idx + 1:]
+    elif res_file.fed_resource_file_name_or_path:
+        f_url = res_file.fed_resource_file_name_or_path
+    else:
+        f_url = ''
+
+    return f_url
+
+
+def get_resource_files_by_extension(resource, file_extension):
+    matching_files = []
+    for res_file in resource.files.all():
+        _, _, file_ext = get_resource_file_name_and_extension(res_file)
+        if file_ext == file_extension:
+            matching_files.append(res_file)
+    return matching_files
 
 
 def delete_fed_zone_file(file_name_with_full_path):
@@ -414,14 +447,13 @@ def serialize_system_metadata(res):
 def copy_resource_files_and_AVUs(src_res_id, dest_res_id, set_to_private=False):
     avu_list = ['bag_modified', 'isPublic', 'resourceType']
     src_res = get_resource_by_shortkey(src_res_id)
+    istorage = src_res.get_irods_storage()
     if src_res.resource_federation_path:
-        istorage = IrodsStorage('federated')
-        src_coll = os.path.join(src_res.resource_federation_path, src_res_id)
-        dest_coll = os.path.join(src_res.resource_federation_path, dest_res_id)
+        src_coll = os.path.join(src_res.resource_federation_path, src_res_id, 'data')
+        dest_coll = os.path.join(src_res.resource_federation_path, dest_res_id, '/')
     else:
-        istorage = IrodsStorage()
-        src_coll = src_res_id
-        dest_coll = dest_res_id
+        src_coll = src_res_id + '/data'
+        dest_coll = dest_res_id + '/'
     istorage.copyFiles(src_coll, dest_coll)
     for avu_name in avu_list:
         value = istorage.getAVU(src_coll, avu_name)
@@ -446,6 +478,12 @@ def resource_modified(resource, by_user=None, overwrite_bag=True):
     if overwrite_bag:
         create_bag_files(resource, fed_zone_home_path=resource.resource_federation_path)
 
+    # set bag_modified-true AVU pair for the modified resource in iRODS to indicate
+    # the resource is modified for on-demand bagging.
+    set_dirty_bag_flag(resource)
+
+
+def set_dirty_bag_flag(resource):
     # set bag_modified-true AVU pair for the modified resource in iRODS to indicate
     # the resource is modified for on-demand bagging.
     res_coll = resource.short_id
@@ -542,7 +580,7 @@ def validate_resource_file_count(resource_cls, files, resource=None):
         err_msg = "Multiple content files are not supported in {res_type} resource"
         err_msg = err_msg.format(res_type=resource_cls)
         if len(files) > 1:
-            if not resource_cls.can_have_multiple_files():
+            if not resource_cls.allow_multiple_file_upload():
                 raise ResourceFileValidationException(err_msg)
 
         if resource is not None and resource.files.all().count() > 0:
@@ -733,6 +771,19 @@ def resource_file_add_process(resource, files, user, extract_metadata=False,
 
     resource_modified(resource, user)
     return resource_file_objects
+
+
+def create_empty_contents_directory(resource):
+    res_id = resource.short_id
+    if resource.resource_federation_path:
+        istorage = IrodsStorage('federated')
+        res_contents_dir = '{}/{}/data/contents'.format(resource.resource_federation_path,
+                                                        res_id)
+    else:
+        istorage = IrodsStorage()
+        res_contents_dir = '{}/data/contents'.format(res_id)
+    if not istorage.exists(res_contents_dir):
+        istorage.session.run("imkdir", None, '-p', res_contents_dir)
 
 
 def add_file_to_resource(resource, f, fed_res_file_name_or_path='', fed_copy_or_move=None):

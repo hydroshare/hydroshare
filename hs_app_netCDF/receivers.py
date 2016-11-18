@@ -199,7 +199,7 @@ def netcdf_pre_create_resource(sender, **kwargs):
 def netcdf_pre_delete_file_from_resource(sender, **kwargs):
     nc_res = kwargs['resource']
     del_file = kwargs['file']
-    del_file_ext = utils.get_resource_file_name_and_extension(del_file)[1]
+    del_file_ext = utils.get_resource_file_name_and_extension(del_file)[2]
 
     # update resource modification info
     user = nc_res.creator
@@ -212,7 +212,7 @@ def netcdf_pre_delete_file_from_resource(sender, **kwargs):
     if del_file_ext in file_ext:
         del file_ext[del_file_ext]
         for f in ResourceFile.objects.filter(object_id=nc_res.id):
-            ext = utils.get_resource_file_name_and_extension(f)[1]
+            ext = utils.get_resource_file_name_and_extension(f)[2]
             if ext in file_ext:
                 delete_resource_file_only(nc_res, f)
                 nc_res.metadata.formats.filter(value=file_ext[ext]).delete()
@@ -441,7 +441,7 @@ def metadata_element_pre_create_handler(sender, **kwargs):
     if element_form.is_valid():
         return {'is_valid': True, 'element_data_dict': element_form.cleaned_data}
     else:
-        return {'is_valid': False, 'element_data_dict': None}
+        return {'is_valid': False, 'element_data_dict': None, "errors": element_form.errors}
 
 
 # This handler is executed only when a metadata element is added as part of editing a resource
@@ -464,5 +464,4 @@ def metadata_element_pre_update_handler(sender, **kwargs):
     if element_form.is_valid():
         return {'is_valid': True, 'element_data_dict': element_form.cleaned_data}
     else:
-        # TODO: need to return form errors
-        return {'is_valid': False, 'element_data_dict': None}
+        return {'is_valid': False, 'element_data_dict': None, "errors": element_form.errors}
