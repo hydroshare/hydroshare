@@ -5,13 +5,14 @@ import logging
 from django.db import migrations
 
 from hs_core.hydroshare.utils import resource_modified
-from hs_app_netCDF.models import NetcdfResource
 
 
 def migrate_nc_file(apps, schema_editor):
     log = logging.getLogger()
     meta_update_fail = []
     meta_update_success = []
+
+    NetcdfResource = apps.get_model('hs_app_netCDF', 'NetcdfResource')
 
     for res in NetcdfResource.objects.all():
         try:
@@ -25,7 +26,8 @@ def migrate_nc_file(apps, schema_editor):
 
     print 'Meta update success: Number: {} List {}'.format(len(meta_update_success),
                                                            meta_update_success)
-    print 'Meta update fail: Number: {} List {}'.format(len(meta_update_fail), meta_update_fail)
+    print 'Meta update fail: Number: {} List {}'.format(len(meta_update_fail),
+                                                        meta_update_fail)
 
 
 def undo_migrate_nc_file(apps, schema_editor):
