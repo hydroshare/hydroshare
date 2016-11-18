@@ -636,6 +636,25 @@ def create_folder(res_id, folder_path):
     else:
         coll_path = os.path.join(res_id, folder_path)
 
+    # TODO: (Pabitra) handle this in a signal handler in composite resource
+    if resource.resource_type == "CompositeResource":
+        path_parts = coll_path.split("/")
+        # remove the new folder name from the path
+        path_parts = path_parts[:-1]
+        path_to_check = "/".join(path_parts)
+        err_msg = "Folder creation not allowed here."
+        if resource.resource_federation_path:
+            res_file_objs = resource.files.filter(object_id=resource.id,
+                                                  fed_resource_file_name_or_path__contains=
+                                                  path_to_check).all()
+        else:
+            res_file_objs = resource.files.filter(object_id=resource.id,
+                                                  resource_file__contains=path_to_check).all()
+        for res_file_obj in res_file_objs:
+            if not res_file_obj.logical_file.allow_resource_file_rename or \
+                    not res_file_obj.logical_file.allow_resource_file_move:
+                raise ValidationError(err_msg)
+
     istorage.session.run("imkdir", None, '-p', coll_path)
 
 
@@ -696,9 +715,33 @@ def move_or_rename_file_or_folder(user, res_id, src_path, tgt_path):
     if src_file_dir != tgt_file_dir and tgt_file_name != src_file_name:
         tgt_full_path = os.path.join(tgt_full_path, src_file_name)
 
+    # TODO: (Pabitra) this checking for composite resource should be handled in a signal handler
     # check if this resource file move or rename is allowed
     # if the resource type is composite resource
     if resource.resource_type == "CompositeResource":
+        err_msg = "File/folder move/rename is not allowed."
+
+        def check_targe_directory(tgt_file_dir):
+            path_to_check = ''
+            if istorage.exists(tgt_file_dir):
+                path_to_check = tgt_file_dir
+            else:
+                if tgt_file_dir.startswith(src_file_dir):
+                    path_to_check = src_file_dir
+
+            if path_to_check:
+                if resource.resource_federation_path:
+                    res_file_objs = resource.files.filter(object_id=resource.id,
+                                                          fed_resource_file_name_or_path__contains=
+                                                          path_to_check).all()
+                else:
+                    res_file_objs = resource.files.filter(object_id=resource.id,
+                                                          resource_file__contains=path_to_check).all()
+                for res_file_obj in res_file_objs:
+                    if not res_file_obj.logical_file.allow_resource_file_rename or \
+                            not res_file_obj.logical_file.allow_resource_file_move:
+                        raise ValidationError(err_msg)
+
         if resource.resource_federation_path:
             res_file_obj = resource.files.filter(object_id=resource.id,
                                                  fed_resource_file_name_or_path=
@@ -707,9 +750,19 @@ def move_or_rename_file_or_folder(user, res_id, src_path, tgt_path):
             res_file_obj = resource.files.filter(object_id=resource.id,
                                                  resource_file=src_full_path).first()
         if res_file_obj is not None:
+            # src_full_path contains file name
             if not res_file_obj.logical_file.allow_resource_file_rename or \
                     not res_file_obj.logical_file.allow_resource_file_move:
-                raise Exception("File/folder move/rename is not allowed.")
+                raise ValidationError(err_msg)
+
+            # check if the target directory allows stuff to b
+            check_targe_directory(tgt_file_dir)
+        else:
+            # src_full_path is a folder path without file name
+            # tgt_full_path also must be a folder path without file name
+            # check that if the target folder contains any files and if any of those files
+            # allow moving stuff there
+            check_targe_directory(tgt_file_dir)
 
     istorage.moveFile(src_full_path, tgt_full_path)
 

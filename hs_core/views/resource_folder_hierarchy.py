@@ -3,7 +3,7 @@ import logging
 import os
 
 from django.http import HttpResponse
-from rest_framework.exceptions import NotFound, PermissionDenied
+from rest_framework.exceptions import NotFound, PermissionDenied, ValidationError
 
 from django_irods.icommands import SessionException
 
@@ -228,6 +228,8 @@ def data_store_create_folder(request):
         create_folder(res_id, folder_path)
     except SessionException as ex:
         return HttpResponse(ex.stderr, status=500)
+    except ValidationError as ex:
+        return HttpResponse(ex.message, status=500)
 
     return_object = {'new_folder_rel_path': folder_path}
 
@@ -309,6 +311,9 @@ def data_store_file_or_folder_move_or_rename(request):
         move_or_rename_file_or_folder(user, res_id, src_path, tgt_path)
     except SessionException as ex:
         return HttpResponse(ex.stderr, status=500)
+    except ValidationError as ex:
+        return HttpResponse(ex.message, status=500)
+
 
     return_object = {'target_rel_path': tgt_path}
 
