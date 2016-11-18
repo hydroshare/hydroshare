@@ -419,6 +419,14 @@ class AbstractLogicalFile(models.Model):
     def resource(self):
         return self.files.all().first().resource
 
+    @property
+    def allow_resource_file_move(self):
+        return True
+
+    @property
+    def allow_resource_file_rename(self):
+        return True
+
     def logical_delete(self, user, delete_res_files=True):
         # deletes the logical file as well as all resource files associated with this logical file
         from hs_core.hydroshare.resource import delete_resource_file

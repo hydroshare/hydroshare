@@ -693,6 +693,21 @@ def move_or_rename_file_or_folder(user, res_id, src_path, tgt_path):
     if src_file_dir != tgt_file_dir and tgt_file_name != src_file_name:
         tgt_full_path = os.path.join(tgt_full_path, src_file_name)
 
+    # check if this resource file move or rename is allowed
+    # if the resource type is composite resource
+    if resource.resource_type == "CompositeResource":
+        if resource.resource_federation_path:
+            res_file_obj = resource.files.filter(object_id=resource.id,
+                                                 fed_resource_file_name_or_path=
+                                                 src_full_path).first()
+        else:
+            res_file_obj = resource.files.filter(object_id=resource.id,
+                                                 resource_file=src_full_path).first()
+        if res_file_obj is not None:
+            if not res_file_obj.logical_file.allow_resource_file_rename or \
+                    not res_file_obj.logical_file.allow_resource_file_move:
+                raise Exception("File/folder move/rename is not allowed.")
+
     istorage.moveFile(src_full_path, tgt_full_path)
 
     rename_irods_file_or_folder_in_django(resource, src_full_path, tgt_full_path)

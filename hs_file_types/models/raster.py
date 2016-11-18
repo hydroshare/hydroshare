@@ -240,4 +240,12 @@ class GeoRasterLogicalFile(AbstractLogicalFile):
         raster_metadata = GeoRasterFileMetaData.objects.create()
         return cls.objects.create(metadata=raster_metadata)
 
+    @property
+    def allow_resource_file_move(self):
+        # resource files that are part of this logical file can't be moved
+        return False
 
+    @property
+    def allow_resource_file_rename(self):
+        # resource files that are part of this logical file can't be renamed
+        return False
