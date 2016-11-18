@@ -4,16 +4,10 @@ import os
 import shutil
 import logging
 import tempfile
-import subprocess
-import xml.etree.ElementTree as ET
 
 from django.db import migrations
-from django.core.files.uploadedfile import UploadedFile
 
-from django_irods.storage import IrodsStorage
-from hs_core import hydroshare
 from hs_core.hydroshare.utils import resource_modified, get_file_from_irods
-from hs_geo_raster_resource.models import RasterResource
 from hs_geo_raster_resource import raster_meta_extract
 
 
@@ -25,6 +19,8 @@ def migrate_tif_file(apps, schema_editor):
     meta_update_success = []
 
     # start migration for each raster resource that has raster files
+    RasterResource = apps.get_model('hs_geo_raster_resource', 'RasterResource')
+
     for res in RasterResource.objects.all():
 
         # copy all the resource files to temp dir
@@ -39,7 +35,8 @@ def migrate_tif_file(apps, schema_editor):
                             os.path.join(temp_dir, os.path.basename(res_file_tmp_path)))
                 shutil.rmtree(os.path.dirname(res_file_tmp_path))
 
-            vrt_file_path = [os.path.join(temp_dir, f) for f in os.listdir(temp_dir) if '.vrt' == f[-4:]].pop()
+            vrt_file_path = [os.path.join(temp_dir, f)
+                             for f in os.listdir(temp_dir) if '.vrt' == f[-4:]].pop()
 
         except Exception as e:
             if os.path.isdir(temp_dir):
@@ -56,8 +53,9 @@ def migrate_tif_file(apps, schema_editor):
                 meta_updated = False
 
                 # extract meta.
-                # the reason to change current working directory to temp_dir is to make sure the raster files can be
-                # found by Gdal for metadata extraction when "relativeToVRT" parameter is set as "0"
+                # the reason to change current working directory to temp_dir is to make sure
+                # the raster files can be found by Gdal for metadata extraction
+                # when "relativeToVRT" parameter is set as "0"
                 ori_dir = os.getcwd()
                 os.chdir(temp_dir)
                 res_md_dict = raster_meta_extract.get_raster_meta_dict(vrt_file_path)
@@ -74,7 +72,8 @@ def migrate_tif_file(apps, schema_editor):
                 # update the bag if meta is updated
                 if meta_updated:
                     resource_modified(res, res.creator)
-                    meta_update_success.append('{}:{}'.format(res.short_id, res.metadata.title.value))
+                    meta_update_success.append('{}:{}'.format(res.short_id,
+                                                              res.metadata.title.value))
 
         except Exception as e:
             if os.path.isdir(temp_dir):
@@ -83,8 +82,10 @@ def migrate_tif_file(apps, schema_editor):
             meta_update_fail.append('{}:{}'.format(res.short_id, res.metadata.title.value))
 
     # Print migration results
-    print 'Copy resource to temp folder failure: Number: {} List: {}'.format(len(copy_res_fail), copy_res_fail)
-    print 'Meta update success: Number: {} List {}'.format(len(meta_update_success), meta_update_success)
+    print 'Copy resource to temp folder failure: Number: {} List: {}'.\
+        format(len(copy_res_fail), copy_res_fail)
+    print 'Meta update success: Number: {} List {}'.\
+        format(len(meta_update_success), meta_update_success)
     print 'Meta update fail: Number: {} List {}'.format(len(meta_update_fail), meta_update_fail)
 
 
