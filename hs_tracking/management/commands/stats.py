@@ -176,23 +176,23 @@ class Command(BaseCommand):
             w.writerow([unicode(v).encode("utf-8") for v in values])
 
     def yesterdays_variables(self):
-        w = csv.writer(sys.stdout)
-        fields = [
-            'timestamp',
-            'user id',
-            'session id',
-            'name',
-            'type',
-            'value',
-        ]
-        w.writerow(fields)
+        # w = csv.writer(sys.stdout)
+        # fields = [
+        #     'timestamp',
+        #     'user id',
+        #     'session id',
+        #     'name',
+        #     'type',
+        #     'value',
+        # ]
+        # w.writerow(fields)
 
-        today_start = timezone.datetime.now().replace(
-            hour=0,
-            minute=0,
-            second=0,
-            microsecond=0
-        )
+        today_start = timezone.datetime.now() #.replace(
+            # hour=0,
+            # minute=0,
+            # second=0,
+            # microsecond=0
+        # )
         yesterday_start = today_start - datetime.timedelta(days=1)
         variables = hs_tracking.Variable.objects.filter(
             timestamp__gte=yesterday_start,
@@ -200,15 +200,26 @@ class Command(BaseCommand):
         )
         for v in variables:
             uid = v.session.visitor.user.id if v.session.visitor.user else None
-            values = [
-                v.timestamp,
-                uid,
-                v.session.id,
-                v.name,
-                v.type,
-                v.value,
-            ]
-            w.writerow([unicode(v).encode("utf-8") for v in values])
+            # values = [
+            #     v.timestamp,
+            #     uid,
+            #     v.session.id,
+            #     v.name,
+            #     v.type,
+            #     v.value,
+            # ]
+
+            # encode variables as key value pairs (except for timestamp)
+            values = [unicode(v.timestamp).encode('utf-8'),
+                      'user_id=%s' % unicode(uid).encode(),
+                      'session_id=%s' % unicode(v.session.id).encode(),
+                      'action=%s' % unicode(v.name).encode(),
+                      # 'type=%s' % unicode(v.type).encode(),
+                      v.value]
+            print(' '.join(values))
+            # values.extend(v.value.split(','))
+
+            # w.writerow([unicode(v).encode("utf-8") for v in values])
 
     def handle(self, *args, **options):
         START_YEAR = 2016
