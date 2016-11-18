@@ -36,9 +36,9 @@ def landing_page(request, page):
                 supported_res_types.first().get_supported_res_types_str()
             supported_res_types_array = supported_res_types_str.split(',')
             for type_name in supported_res_types_array:
-                for display_name_tuple in get_SupportedResTypes_choices():
-                    if type_name.lower() == display_name_tuple[0].lower():
-                        new_supported_res_types_array += [display_name_tuple[1]]
+                for class_verbose_list in get_SupportedResTypes_choices():
+                    if type_name.lower() == class_verbose_list[0].lower():
+                        new_supported_res_types_array += [class_verbose_list[1]]
                         break
 
             context['supported_res_types'] = ", ".join(new_supported_res_types_array)
