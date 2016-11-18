@@ -2,7 +2,7 @@
     {% if abstract %}
         <div class="col-sm-12 content-block">
             <h3>Abstract</h3>
-            <span class="abstract">{{ abstract|linebreaks }}</span>
+            <span class="abstract">{{ abstract|urlize|linebreaks }}</span>
         </div>
     {% endif %}
 {% else %}

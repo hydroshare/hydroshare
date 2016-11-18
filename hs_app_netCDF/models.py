@@ -120,14 +120,14 @@ class Variable(AbstractMetaDataElement):
     )
     term = 'Variable'
     # required variable attributes
-    name = models.CharField(max_length=100)
-    unit = models.CharField(max_length=100)
-    type = models.CharField(max_length=100, choices=VARIABLE_TYPES)
-    shape = models.CharField(max_length=100)
+    name = models.CharField(max_length=1000)
+    unit = models.CharField(max_length=1000)
+    type = models.CharField(max_length=1000, choices=VARIABLE_TYPES)
+    shape = models.CharField(max_length=1000)
     # optional variable attributes
-    descriptive_name = models.CharField(max_length=100, null=True, blank=True, verbose_name='long name')
+    descriptive_name = models.CharField(max_length=1000, null=True, blank=True, verbose_name='long name')
     method = models.TextField(null=True, blank=True, verbose_name='comment')
-    missing_value = models.CharField(max_length=100, null=True, blank=True)
+    missing_value = models.CharField(max_length=1000, null=True, blank=True)
 
     def __unicode__(self):
         return self.name
@@ -152,6 +152,11 @@ class NetcdfResource(BaseResource):
         return (".nc",)
 
     @classmethod
+    def allow_multiple_file_upload(cls):
+        # can upload only 1 file
+        return False
+
+    @classmethod
     def can_have_multiple_files(cls):
         # can have only 1 file
         return False
@@ -163,7 +168,7 @@ class NetcdfResource(BaseResource):
         # add new terms for NetCDF res
         hs_term_dict["HS_NETCDF_FILE_NAME"] = ""
         for res_file in self.files.all():
-            f_fullname, f_ext = get_resource_file_name_and_extension(res_file)
+            _, f_fullname, f_ext = get_resource_file_name_and_extension(res_file)
             if f_ext.lower() == '.nc':
                 hs_term_dict["HS_NETCDF_FILE_NAME"] = f_fullname
                 break
@@ -189,6 +194,10 @@ class NetcdfMetaData(CoreMetaData):
         elements.append('Variable')
         elements.append('OriginalCoverage')
         return elements
+
+    @property
+    def resource(self):
+        return NetcdfResource.objects.filter(object_id=self.id).first()
 
     def has_all_required_elements(self):
         if not super(NetcdfMetaData, self).has_all_required_elements():  # check required meta

@@ -108,13 +108,27 @@
             <li><strong>Description: </strong> a text statement that points to a rights
                 management or usage statement for the resource.</li>
         </ul>
-
+        <a name="isCopiedFrom"></a>
         <ul>
             <li><strong>Term: </strong>URL</li>
             <li><strong>URI: </strong><a href="#URL">http://www.hydroshare.org/terms/URL</a></li>
             <li><strong>Label: </strong>Uniform Resource Locator</li>
             <li><strong>Description: </strong>URL that points to a rights
                 management or usage statement for the resource.</li>
+        </ul>
+        <a name="isHostedBy"></a>
+        <ul >
+            <li><strong>Term: </strong>isCopiedFrom</li>
+            <li><strong>URI: </strong><a href="#isCopiedFrom">http://www.hydroshare.org/terms/isCopiedFrom</a></li>
+            <li><strong>Label: </strong>Copied From</li>
+            <li><strong>Description: </strong>Name or URL of the source from which a resource is copied.</li>
+        </ul>
+
+        <ul >
+            <li><strong>Term: </strong>isHostedBy</li>
+            <li><strong>URI: </strong><a href="#isHostedBy">http://www.hydroshare.org/terms/isHostedBy</a></li>
+            <li><strong>Label: </strong>Hosted By</li>
+            <li><strong>Description: </strong>Name or URL of the external system where a resource is located.</li>
         </ul>
 
 
@@ -1323,12 +1337,12 @@
     <p>
         A Web App resource is a shortcut (or reference) to an external web application that can work with HydroShare data resources. A Web App might be a simple webpage, a resource viewer, a data editor, or a complicated scientific model. Third-party web applications can easily access HydroShare data resources using the HydroShare REST API, and can be linked to specific HydroShare resource types and made discoverable within HydroShare by registering them as a Web App resource.
     </p>
-    <a name="AppURL"></a>
+    <a name="AppURLPattern"></a>
         <ul >
-            <li><strong>Term: </strong>AppURL</li>
-            <li><strong>URI: </strong><a href="#AppURL">http://www.hydroshare.org/terms/AppURL</a></li>
-            <li><strong>Label: </strong>App URL</li>
-            <li><strong>Description: </strong>In most cases, an app will have been programmed to expect certain parameters in its App URL which send the app important information, such as which HydroShare resource to retrieve and process. HydroShare provides predefined parameters to achieve this. These predefined parameters can be appended to your App URL. They will be dynamically replaced at run-time when a user launches your app from a resource landing page. This approach gives you greater flexibility when customizing App URL. <br>Currently, HydroShare supports the following parameters:
+            <li><strong>Term: </strong>AppURLPattern</li>
+            <li><strong>URI: </strong><a href="#AppURLPattern">http://www.hydroshare.org/terms/AppURLPattern</a></li>
+            <li><strong>Label: </strong>App-launching URL Pattern</li>
+            <li><strong>Description: </strong>In most cases, an app will have been programmed to expect certain parameters in its App-launching URL which send the app important information, such as which HydroShare resource to retrieve and process. HydroShare provides predefined parameters to achieve this. These predefined parameters can be appended to your App-launching URL. They will be dynamically replaced at run-time when a user launches your app from a resource landing page. This approach gives you greater flexibility when customizing App-launching URL. <br>Currently, HydroShare supports the following parameters:
             <ul>
                 <li> <strong>${HS_RES_ID}</strong>: Resource ID</li>
                 <li> <strong>${HS_RES_TYPE}</strong>: Resource Type</li>

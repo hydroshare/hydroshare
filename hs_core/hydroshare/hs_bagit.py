@@ -1,10 +1,11 @@
-import arrow
 import os
 import shutil
 import errno
 import tempfile
 import mimetypes
 import zipfile
+
+from uuid import uuid4
 
 from foresite import utils, Aggregation, AggregatedResource, RdfLibSerializer
 from rdflib import Namespace, URIRef
@@ -72,9 +73,9 @@ def create_bag_files(resource, fed_zone_home_path=''):
     else:
         istorage = IrodsStorage()
 
-    dest_prefix = os.path.join(getattr(settings, 'IRODS_ROOT', '/tmp'), 'hydroshare')
-    bagit_path = os.path.join(dest_prefix, resource.short_id,
-                              arrow.get(resource.updated).format("YYYY.MM.DD.HH.mm.ss"))
+    # has to make bagit_path unique even for the same resource with same update time
+    # to accommodate asynchronous multiple file move operations for the same resource
+    bagit_path = os.path.join(getattr(settings, 'IRODS_ROOT', '/tmp'), uuid4().hex)
 
     try:
         os.makedirs(bagit_path)
@@ -107,13 +108,8 @@ def create_bag_files(resource, fed_zone_home_path=''):
 
     # make the resource map
     current_site_url = current_site_url()
-    if fed_zone_home_path:
-        hs_res_url = '{hs_url}/resource{zone}/{res_id}/data'.format(hs_url=current_site_url,
-                                                                    zone=fed_zone_home_path,
-                                                                    res_id=resource.short_id)
-    else:
-        hs_res_url = '{hs_url}/resource/{res_id}/data'.format(hs_url=current_site_url,
-                                                              res_id=resource.short_id)
+    hs_res_url = '{hs_url}/resource/{res_id}/data'.format(hs_url=current_site_url,
+                                                          res_id=resource.short_id)
     metadata_url = os.path.join(hs_res_url, 'resourcemetadata.xml')
     res_map_url = os.path.join(hs_res_url, 'resourcemap.xml')
 
@@ -149,37 +145,31 @@ def create_bag_files(resource, fed_zone_home_path=''):
     files = ResourceFile.objects.filter(object_id=resource.id)
     resFiles = []
     for n, f in enumerate(files):
+        prefix_str = 'data/contents/'
+        prefix_len = len(prefix_str)
+
+        file_name_with_rel_path = ''
         if f.fed_resource_file_name_or_path:
             # move or copy the file under the user account to under local hydro proxy account
             # in federated zone
-            from_fname = f.fed_resource_file_name_or_path
-            filename = from_fname.rsplit('/')[-1]
-            res_path = os.path.join(
-                '{hs_url}/resource{zone}/{res_id}/data/contents/{file_name}'.format(
-                    hs_url=current_site_url,
-                    zone=resource.resource_federation_path,
-                    res_id=resource.short_id,
-                    file_name=filename))
+            idx = f.fed_resource_file_name_or_path.find(prefix_str)
+            if idx >= 0:
+                file_name_with_rel_path = f.fed_resource_file_name_or_path[idx+prefix_len:]
         elif f.resource_file:
-            filename = os.path.basename(f.resource_file.name)
-            res_path = os.path.join('{hs_url}/resource/{res_id}/data/contents/{file_name}'.format(
-                    hs_url=current_site_url,
-                    res_id=resource.short_id,
-                    file_name=filename))
+            idx = f.resource_file.name.find(prefix_str)
+            file_name_with_rel_path = f.resource_file.name[idx+prefix_len:]
         elif f.fed_resource_file:
-            filename = os.path.basename(f.fed_resource_file.name)
-            res_path = os.path.join(
-                '{hs_url}/resource{zone}/{res_id}/data/contents/{file_name}'.format(
-                    hs_url=current_site_url,
-                    zone=resource.resource_federation_path,
-                    res_id=resource.short_id,
-                    file_name=filename))
-        else:
-            filename = ''
-        if filename:
+            idx = f.fed_resource_file.name.find(prefix_str)
+            file_name_with_rel_path = f.fed_resource_file.name[idx+prefix_len:]
+
+        if file_name_with_rel_path:
+            res_path = '{hs_url}/resource/{res_id}/data/contents/{file_name}'.format(
+                hs_url=current_site_url,
+                res_id=resource.short_id,
+                file_name=file_name_with_rel_path)
             resFiles.append(AggregatedResource(res_path))
             resFiles[n]._ore.isAggregatedBy = ag_url
-            resFiles[n]._dc.format = get_file_mime_type(filename)
+            resFiles[n]._dc.format = get_file_mime_type(os.path.basename(file_name_with_rel_path))
 
     # Add the resource files to the aggregation
     a.add_resource(resMetaFile)
@@ -191,15 +181,10 @@ def create_bag_files(resource, fed_zone_home_path=''):
     if resource.resource_type == "CollectionResource" and resource.resources:
         for contained_res in resource.resources.all():
             contained_res_id = contained_res.short_id
-            if contained_res.resource_federation_path:
-                resource_map_url = '{hs_url}/resource{zone}/{res_id}/data/resourcemap.xml'.format(
-                    hs_url=current_site_url,
-                    zone=contained_res.resource_federation_path,
-                    res_id=contained_res_id)
-            else:
-                resource_map_url = '{hs_url}/resource/{res_id}/data/resourcemap.xml'.format(
+            resource_map_url = '{hs_url}/resource/{res_id}/data/resourcemap.xml'.format(
                     hs_url=current_site_url,
                     res_id=contained_res_id)
+
             ar = AggregatedResource(resource_map_url)
             ar._ore.isAggregatedBy = ag_url
             ar._dc.format = "application/rdf+xml"
@@ -233,7 +218,7 @@ def create_bag_files(resource, fed_zone_home_path=''):
 
     istorage.saveFile(from_file_name, to_file_name, False)
 
-    shutil.rmtree(dest_prefix)
+    shutil.rmtree(bagit_path)
     return istorage
 
 

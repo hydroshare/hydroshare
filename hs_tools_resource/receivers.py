@@ -6,7 +6,9 @@ from hs_core.signals import pre_metadata_element_create, pre_metadata_element_up
 from hs_tools_resource.models import ToolResource
 from hs_tools_resource.forms import SupportedResTypesValidationForm,  VersionForm, \
                                     ToolIconForm, UrlBaseValidationForm, \
-                                    SupportedSharingStatusValidationForm
+                                    SupportedSharingStatusValidationForm, \
+                                    AppHomePageUrlValidationForm
+
 
 @receiver(pre_create_resource, sender=ToolResource)
 def webapp_pre_create_resource(sender, **kwargs):
@@ -28,8 +30,8 @@ def metadata_element_pre_update_handler(sender, **kwargs):
     request = kwargs['request']
     element_name = kwargs['element_name'].lower()
     return validate_form(request, element_name)
-    
-    
+
+
 def validate_form(request, element_name):
     if element_name == 'requesturlbase':
         element_form = UrlBaseValidationForm(data=request.POST)
@@ -41,11 +43,12 @@ def validate_form(request, element_name):
         element_form = ToolIconForm(data=request.POST)
     elif element_name == 'supportedsharingstatus':
         element_form = SupportedSharingStatusValidationForm(data=request.POST)
+    elif element_name == 'apphomepageurl':
+        element_form = AppHomePageUrlValidationForm(data=request.POST)
     else:
         return {'is_valid': False, 'element_data_dict': None}
 
     if element_form.is_valid():
         return {'is_valid': True, 'element_data_dict': element_form.cleaned_data}
     else:
-        # TODO: need to return form errors
-        return {'is_valid': False, 'element_data_dict': None}
+        return {'is_valid': False, 'element_data_dict': None, "errors": element_form.errors}

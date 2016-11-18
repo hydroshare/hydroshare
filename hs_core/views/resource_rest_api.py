@@ -42,6 +42,7 @@ class ResourceToListItemMixin(object):
         site_url = hydroshare.utils.current_site_url()
         bag_url = site_url + AbstractResource.bag_url(r.short_id)
         science_metadata_url = site_url + reverse('get_update_science_metadata', args=[r.short_id])
+        resource_map_url = site_url + reverse('get_resource_map', args=[r.short_id])
         resource_url = site_url + r.get_absolute_url()
         resource_list_item = serializers.ResourceListItem(resource_type=r.resource_type,
                                                           resource_id=r.short_id,
@@ -56,6 +57,7 @@ class ResourceToListItemMixin(object):
                                                           date_last_updated=r.updated,
                                                           bag_url=bag_url,
                                                           science_metadata_url=science_metadata_url,
+                                                          resource_map_url=resource_map_url,
                                                           resource_url=resource_url)
         return resource_list_item
 
@@ -131,6 +133,7 @@ class ResourceTypes(generics.ListAPIView):
 class ResourceList(ResourceToListItemMixin, generics.ListAPIView):
     """
     Get a list of resources based on the following filter query parameters
+    DEPRECATED: See GET /resource/ in CreateResource
 
     For an anonymous user, all public resources will be listed.
     For any authenticated user with no other query parameters provided in the request, all
@@ -226,7 +229,7 @@ class CheckTaskStatus(generics.RetrieveAPIView):
 
 class ResourceReadUpdateDelete(ResourceToListItemMixin, generics.RetrieveUpdateDestroyAPIView):
     """
-    Create, read, or delete a resource
+    Read, update, or delete a resource
 
     REST URL: hsapi/resource/{pk}
     HTTP method: GET
@@ -257,7 +260,7 @@ class ResourceReadUpdateDelete(ResourceToListItemMixin, generics.RetrieveUpdateD
     """
     pagination_class = PageNumberPagination
 
-    allowed_methods = ('GET', 'POST', 'PUT', 'DELETE')
+    allowed_methods = ('GET', 'PUT', 'DELETE')
 
     def get(self, request, pk):
         """ Get resource in zipped BagIt format
@@ -291,11 +294,11 @@ class ResourceReadUpdateDelete(ResourceToListItemMixin, generics.RetrieveUpdateD
         return serializers.ResourceListItemSerializer
 
 
-class ResourceCreate(generics.CreateAPIView):
+class ResourceListCreate(ResourceToListItemMixin, generics.ListCreateAPIView):
     """
-    Create a new resource
+    Create a new resource or list existing resources
 
-    REST URL: hsapi/resource
+    REST URL: hsapi/resource/
     HTTP method: POST
 
     Request data payload parameters:
@@ -322,6 +325,10 @@ class ResourceCreate(generics.CreateAPIView):
     Note: the parameter 'metadata' can't be used for passing data for the following core metadata
     elements:
     Title, Description (abstract), Subject (keyword), Date, Publisher, Type, Format
+    :param  extra_metadata: (optional) data for any user-defined key/value pair metadata elements
+    of the resource can be passed as json string
+    example :
+    {'Outlet Point Latitude': '40', 'Outlet Point Longitude': '-110'}
     :return: id and type of the resource created
     :rtype: json string of the format: {'resource-id':id, 'resource_type': resource type}
     :raises:
@@ -329,12 +336,64 @@ class ResourceCreate(generics.CreateAPIView):
     provided.'}
     ValidationError: return json format: {parameter-1':['error message-1'], 'parameter-2':
     ['error message-2'], .. }
+
+    REST URL: hsapi/resource/
+    HTTP method: GET
+
+    Supported query parameters (all are optional):
+
+    :type   owner: str
+    :type   types: list of resource type class names
+    :type   from_date:  str (e.g., 2015-04-01)
+    :type   to_date:    str (e.g., 2015-05-01)
+    :type   edit_permission: bool
+    :param  owner: (optional) - to get a list of resources owned by a specified username
+    :param  types: (optional) - to get a list of resources of the specified resource types
+    :param  from_date: (optional) - to get a list of resources created on or after this date
+    :param  to_date: (optional) - to get a list of resources created on or before this date
+    :param  edit_permission: (optional) - to get a list of resources for which the authorised user
+    has edit permission
+    :rtype:  json string
+    :return:  a paginated list of resources with data for resource id, title, resource type,
+    creator, public, date created, date last updated, resource bag url path, and science
+    metadata url path
+
+    example return JSON format for GET /hsapi/resourceList:
+
+        {   "count":n
+            "next": link to next page
+            "previous": link to previous page
+            "results":[
+                    {"resource_type": resource type, "resource_title": resource title,
+                    "resource_id": resource id,
+                    "creator": creator name, "date_created": date resource created,
+                    "date_last_updated": date resource last updated, "public": true or false,
+                    "discoverable": true or false, "shareable": true or false,
+                    "immutable": true or false,
+                    "published": true or false, "bag_url": link to bag file,
+                    "science_metadata_url": link to science metadata,
+                    "resource_url": link to resource landing HTML page},
+                    {"resource_type": resource type, "resource_title": resource title,
+                    "resource_id": resource id,
+                    "creator": creator name, "date_created": date resource created,
+                    "date_last_updated": date resource last updated, "public": true or false,
+                    "discoverable": true or false, "shareable": true or false,
+                    "immutable": true or false,
+                    "published": true or false, "bag_url": link to bag file,
+                    "science_metadata_url": link to science metadata,
+                    "resource_url": link to resource landing HTML page},
+            ]
+        }
     """
     def initialize_request(self, request, *args, **kwargs):
         """
         Hack to work around the following issue in django-rest-framework:
 
         https://github.com/tomchristie/django-rest-framework/issues/3951
+
+        Couch: This issue was recently closed (10/12/2016, 2 days before this writing)
+        and is slated to be incorporated in the Django REST API 3.5.0 release.
+        At that time, we should remove this hack.
 
         :param request:
         :param args:
@@ -345,13 +404,17 @@ class ResourceCreate(generics.CreateAPIView):
             # Don't deep copy the file data as it may contain an open file handle
             old_file_data = copy.copy(request.FILES)
             old_post_data = copy.deepcopy(request.POST)
-            request = super(ResourceCreate, self).initialize_request(request, *args, **kwargs)
+            request = super(ResourceListCreate, self).initialize_request(request, *args, **kwargs)
             request.POST.update(old_post_data)
             request.FILES.update(old_file_data)
         return request
 
-    def get_serializer_class(self):
-        return serializers.ResourceCreateRequestValidator
+    # Couch: This is called explicitly in the overrided create() method and thus this
+    # declaration does nothing. Thus, it can be changed to whatever is convenient.
+    # Currently, it is convenient to use the listing serializer instead, so that
+    # it will be the default output serializer.
+    # def get_serializer_class(self):
+    #     return serializers.ResourceCreateRequestValidator
 
     def post(self, request):
         return self.create(request)
@@ -373,8 +436,11 @@ class ResourceCreate(generics.CreateAPIView):
         keywords = validated_request_data.get('keywords', None)
         abstract = validated_request_data.get('abstract', None)
         metadata = validated_request_data.get('metadata', None)
+        extra_metadata = validated_request_data.get('extra_metadata', None)
 
         num_files = len(request.FILES)
+        # TODO: (Couch) reconsider whether multiple file upload should be
+        # supported when multipart bug fixed.
         if num_files > 0:
             if num_files > 1:
                 raise ValidationError(detail={'file': 'Multiple file upload is not allowed on '
@@ -391,10 +457,15 @@ class ResourceCreate(generics.CreateAPIView):
             metadata = json.loads(metadata)
             _validate_metadata(metadata)
 
+        if extra_metadata is not None:
+            extra_metadata = json.loads(extra_metadata)
+            # TODO: validate extra metadata here
+
         try:
             _, res_title, metadata, _ = hydroshare.utils.resource_pre_create_actions(
-                resource_type=resource_type, resource_title=res_title, page_redirect_url_key=None,
-                files=files, metadata=metadata,  **kwargs)
+                resource_type=resource_type, resource_title=res_title,
+                page_redirect_url_key=None, files=files, metadata=metadata,
+                **kwargs)
         except Exception as ex:
             error_msg = {'resource': "Resource creation failed. %s" % ex.message}
             raise ValidationError(detail=error_msg)
@@ -410,6 +481,7 @@ class ResourceCreate(generics.CreateAPIView):
                     view_groups=validated_request_data.get('view_groups', None),
                     keywords=keywords,
                     metadata=metadata,
+                    extra_metadata=extra_metadata,
                     files=files
             )
             if abstract:
@@ -421,10 +493,44 @@ class ResourceCreate(generics.CreateAPIView):
         response_data = {'resource_type': resource_type, 'resource_id': resource.short_id}
         return Response(data=response_data,  status=status.HTTP_201_CREATED)
 
+    pagination_class = PageNumberPagination
+
+    def get(self, request):
+        return self.list(request)
+
+    # needed for list of resources
+    # copied from ResourceList
+    def get_queryset(self):
+        resource_list_request_validator = serializers.ResourceListRequestValidator(
+            data=self.request.query_params)
+        if not resource_list_request_validator.is_valid():
+            raise ValidationError(detail=resource_list_request_validator.errors)
+
+        filter_parms = resource_list_request_validator.validated_data
+        filter_parms['user'] = (self.request.user if self.request.user.is_authenticated() else None)
+        if len(filter_parms['type']) == 0:
+            filter_parms['type'] = None
+        else:
+            filter_parms['type'] = list(filter_parms['type'])
+
+        filter_parms['public'] = not self.request.user.is_authenticated()
+
+        filtered_res_list = []
+
+        for r in hydroshare.get_resource_list(**filter_parms):
+            resource_list_item = self.resourceToResourceListItem(r)
+            filtered_res_list.append(resource_list_item)
+
+        return filtered_res_list
+
+    # covers serialization of output from GET request
+    def get_serializer_class(self):
+        return serializers.ResourceListItemSerializer
+
 
 class SystemMetadataRetrieve(ResourceToListItemMixin, APIView):
     """
-    Retrieve resource science metadata
+    Retrieve resource system metadata
 
     REST URL: hsapi/sysmeta/{pk}
     HTTP method: GET
@@ -475,13 +581,15 @@ class AccessRulesUpdate(APIView):
     """
     Set access rules for a resource
 
-    REST URL: hsapi/resource/accessRules/{pk}
+    REST URL: hsapi/resource/{pk}/access
+    DEPRECATED: hsapi/resource/accessRules/{pk}
     HTTP method: PUT
 
     :type pk: str
     :param pk: id of the resource
     :return: No content.  Status code will 200 (OK)
     """
+    # TODO: (Couch) Need GET as well.
     allowed_methods = ('PUT',)
 
     def put(self, request, pk):
@@ -620,6 +728,31 @@ class ScienceMetadataRetrieveUpdate(APIView):
             shutil.rmtree(tmp_dir)
 
 
+class ResourceMapRetrieve(APIView):
+    """
+    Retrieve resource map
+
+    REST URL: hsapi/resource/{pk}/map
+    HTTP method: GET
+
+    :type pk: str
+    :param pk: id of the resource
+    :return: resource map as XML document
+    :rtype: str
+    :raises:
+    NotFound: return json format: {'detail': 'No resource was found for resource id:pk'}
+    PermissionDenied: return json format: {'detail': 'You do not have permission to perform
+    this action.'}
+    """
+    allowed_methods = ('GET')
+
+    def get(self, request, pk):
+        view_utils.authorize(request, pk, needed_permission=ACTION_TO_AUTHORIZE.VIEW_METADATA)
+
+        resmap_url = hydroshare.utils.current_site_url() + AbstractResource.resmap_url(pk)
+        return redirect(resmap_url)
+
+
 class ResourceFileCRUD(APIView):
     """
     Retrieve, add, update or delete a resource file
@@ -634,7 +767,8 @@ class ResourceFileCRUD(APIView):
     :return: resource file data
     :rtype: file data bytes
 
-    REST URL: POST hsapi/resource/{pk}/files
+    REST URL: POST hsapi/resource/{pk}/files/
+    UNUSED: See ResourceFileListCreate for details.
     HTTP method: POST
 
     Request post data: file data (required)
@@ -678,6 +812,10 @@ class ResourceFileCRUD(APIView):
 
         https://github.com/tomchristie/django-rest-framework/issues/3951
 
+        Couch: This issue was recently closed (10/12/2016, 2 days before this writing)
+        and is slated to be incorporated in the Django REST API 3.5.0 release.
+        At that time, we should remove this hack.
+
         :param request:
         :param args:
         :param kwargs:
@@ -703,6 +841,7 @@ class ResourceFileCRUD(APIView):
 
         # redirects to django_irods/views.download function
         # use new internal url for rest call
+        # TODO: (Couch) Migrate model (with a "data migration") so that this hack is not needed.
         redirect_url = f.url.replace('django_irods/download/', 'django_irods/rest_download/')
         return HttpResponseRedirect(redirect_url)
 
@@ -724,7 +863,7 @@ class ResourceFileCRUD(APIView):
                                  'added at a time.'}
             raise ValidationError(detail=error_msg)
 
-        # TODO: I know there has been some discussion when to validate a file
+        # TODO: (Brian) I know there has been some discussion when to validate a file
         # I agree that we should not validate and extract metadata as part of the file add api
         # Once we have a decision, I will change this implementation accordingly. In that case
         # we have to implement additional rest endpoints for file validation and extraction.
@@ -768,17 +907,17 @@ class ResourceFileCRUD(APIView):
         return Response(data=response_data, status=status.HTTP_200_OK)
 
     def put(self, request, pk, filename):
-        # TODO: Currently we do not have this action for the front end. Will implement
-        # in the next iteration
-        # Implement only after we have a decision when to validate a file
+        # TODO: (Brian) Currently we do not have this action for the front end. Will implement
+        # in the next iteration. Implement only after we have a decision on when to validate a file
         raise NotImplementedError()
 
 
-class ResourceFileList(ResourceFileToListItemMixin, generics.ListAPIView):
+class ResourceFileListCreate(ResourceFileToListItemMixin, generics.ListCreateAPIView):
     """
-    Retrieve a list of resource files for a resource
+    Create a resource file or retrieve a list of resource files
 
-    REST URL: hsapi/resource/{pk}/file_list/
+    REST URL: hsapi/resource/{pk}/files/
+    DEPRECATED: hsapi/resource/{pk}/file_list/
     HTTP method: GET
 
     :type pk: str
@@ -786,6 +925,15 @@ class ResourceFileList(ResourceFileToListItemMixin, generics.ListAPIView):
     :param pk: resource id
     :param filename: name of the file to retrieve/download
     :return: JSON representation of list of files of the form:
+
+    REST URL: POST hsapi/resource/{pk}/files/
+    HTTP method: POST
+
+    Request post data: file data (required)
+    :type pk: str
+    :param pk: resource id
+    :return: id of the resource and name of the file added
+    :rtype: json string of format: {'resource_id':pk, 'file_name': name of the file added}
 
     {
         "count": 2,
@@ -812,8 +960,34 @@ class ResourceFileList(ResourceFileToListItemMixin, generics.ListAPIView):
     NotFound: return json format: {'detail': 'No resource was found for resource id':pk}
     PermissionDenied: return json format: {'detail': 'You do not have permission to perform
     this action.'}
+
     """
-    allowed_methods = ('GET',)
+    allowed_methods = ('GET', 'POST')
+
+    def initialize_request(self, request, *args, **kwargs):
+        """
+        Hack to work around the following issue in django-rest-framework:
+
+        https://github.com/tomchristie/django-rest-framework/issues/3951
+
+        Couch: This issue was recently closed (10/12/2016, 2 days before this writing)
+        and is slated to be incorporated in the Django REST API 3.5.0 release.
+        At that time, we should remove this hack.
+
+        :param request:
+        :param args:
+        :param kwargs:
+        :return:
+        """
+        if not isinstance(request, Request):
+            # Don't deep copy the file data as it may contain an open file handle
+            old_file_data = copy.copy(request.FILES)
+            old_post_data = copy.deepcopy(request.POST)
+            request = super(ResourceFileListCreate, self).initialize_request(
+                                request, *args, **kwargs)
+            request.POST.update(old_post_data)
+            request.FILES.update(old_file_data)
+        return request
 
     def get(self, request, pk):
         """
@@ -834,6 +1008,54 @@ class ResourceFileList(ResourceFileToListItemMixin, generics.ListAPIView):
 
     def get_serializer_class(self):
         return serializers.ResourceFileSerializer
+
+    def post(self, request, pk):
+        """
+        Add a file to a resource.
+        :param request:
+        :param pk: Primary key of the resource (i.e. resource short ID)
+        :return:
+        """
+        resource, _, _ = view_utils.authorize(request, pk,
+                                              needed_permission=ACTION_TO_AUTHORIZE.EDIT_RESOURCE)
+        resource_files = request.FILES.values()
+        if len(resource_files) == 0:
+            error_msg = {'file': 'No file was found to add to the resource.'}
+            raise ValidationError(detail=error_msg)
+        elif len(resource_files) > 1:
+            error_msg = {'file': 'More than one file was found. Only one file can be '
+                                 'added at a time.'}
+            raise ValidationError(detail=error_msg)
+
+        # TODO: (Brian) I know there has been some discussion when to validate a file
+        # I agree that we should not validate and extract metadata as part of the file add api
+        # Once we have a decision, I will change this implementation accordingly. In that case
+        # we have to implement additional rest endpoints for file validation and extraction.
+        try:
+            hydroshare.utils.resource_file_add_pre_process(resource=resource,
+                                                           files=[resource_files[0]],
+                                                           user=request.user, extract_metadata=True)
+
+        except (hydroshare.utils.ResourceFileSizeException,
+                hydroshare.utils.ResourceFileValidationException, Exception) as ex:
+            error_msg = {'file': 'Adding file to resource failed. %s' % ex.message}
+            raise ValidationError(detail=error_msg)
+
+        try:
+            res_file_objects = hydroshare.utils.resource_file_add_process(resource=resource,
+                                                                          files=[resource_files[0]],
+                                                                          user=request.user,
+                                                                          extract_metadata=True)
+
+        except (hydroshare.utils.ResourceFileValidationException, Exception) as ex:
+            error_msg = {'file': 'Adding file to resource failed. %s' % ex.message}
+            raise ValidationError(detail=error_msg)
+
+        # prepare response data
+        file_name = os.path.basename(res_file_objects[0].resource_file.name)
+        response_data = {'resource_id': pk, 'file_name': file_name}
+        resource_modified(resource, request.user)
+        return Response(data=response_data, status=status.HTTP_201_CREATED)
 
 
 def _validate_metadata(metadata_list):

@@ -300,7 +300,7 @@ function metadata_update_ajax_submit(form_id){
     </div>';
 
     var flagAsync = (form_id == "id-subject" ? false : true);   // Run keyword related changes synchronously to prevent integrity error
-
+    var resourceType = $("#resource-type").val();
     $form = $('#' + form_id);
     var datastring = $form.serialize();
     $.ajax({
@@ -316,17 +316,75 @@ function metadata_update_ajax_submit(form_id){
             json_response = JSON.parse(result);
             if (json_response.status === 'success')
             {
-                if (($form.attr("id") == "id-site" || $form.attr("id") == "id-variable" ||
-                    $form.attr("id") == "id-method" || $form.attr("id") == "id-processinglevel" ||
-                    $form.attr("id") == "id-timeseriesresult") && ($("#has-sqlite-file").val()) === "True") {
+                // start timeseries resource specific DOM manipulation
+                if ($("#can-update-sqlite-file").val() === "True") {
                     $("#sql-file-update").show();
                 }
+                else if(json_response.metadata_status === "Sufficient to publish or make public"){
+                    $("#sql-file-update").show();
+                }
+
+                // dynamically update resource coverage when timeseries 'site' element gets updated
+                if (json_response.element_name.toLowerCase() === 'site' && resourceType === 'Time Series'){
+                    var spatialCoverage = json_response.spatial_coverage;
+                    $("#spatial-coverage-type").val(spatialCoverage.type);
+                    if (spatialCoverage.type === 'point'){
+                        $("#id_type_2").attr('checked', 'checked');
+                        $("#id_north").val(spatialCoverage.north);
+                        $("#id_east").val(spatialCoverage.east);
+                        $("#div_id_north").show();
+                        $("#div_id_east").show();
+                        $("#div_id_elevation").show();
+                        $("#div_id_northlimit").hide();
+                        $("#div_id_eastlimit").hide();
+                        $("#div_id_southlimit").hide();
+                        $("#div_id_westlimit").hide();
+                        $("#div_id_uplimit").hide();
+                        $("#div_id_downlimit").hide();
+                    }
+                    else { //coverage type is 'box'
+                        $("#id_type_1").attr('checked', 'checked');
+                        $("#id_eastlimit").val(spatialCoverage.eastlimit);
+                        $("#id_northlimit").val(spatialCoverage.northlimit);
+                        $("#id_westlimit").val(spatialCoverage.westlimit);
+                        $("#id_southlimit").val(spatialCoverage.southlimit);
+                        $("#div_id_north").hide();
+                        $("#div_id_east").hide();
+                        $("#div_id_elevation").hide();
+                        $("#div_id_northlimit").show();
+                        $("#div_id_eastlimit").show();
+                        $("#div_id_southlimit").show();
+                        $("#div_id_westlimit").show();
+                        $("#div_id_uplimit").show();
+                        $("#div_id_downlimit").show();
+                    }
+                }
+                if (($form.attr("id") == "id-site")){
+                    makeTimeSeriesMetaDataElementFormReadOnly(form_id, "id_site");
+                }
+                else if (($form.attr("id") == "id-variable")){
+                    makeTimeSeriesMetaDataElementFormReadOnly(form_id, "id_variable");
+                }
+                else if (($form.attr("id") == "id-method")){
+                    makeTimeSeriesMetaDataElementFormReadOnly(form_id, "id_method");
+                }
+                else if (($form.attr("id") == "id-processinglevel")){
+                    makeTimeSeriesMetaDataElementFormReadOnly(form_id, "id_processinglevel");
+                }
+                // end of timeseries specific DOM manipulation
+
                 $(document).trigger("submit-success");
                 $form.find("button.btn-primary").hide();
                 if (json_response.hasOwnProperty('element_id')){
                     form_update_action = $form.attr('action');
                     res_short_id = form_update_action.split('/')[3];
                     update_url = "/hsapi/_internal/" + res_short_id + "/" + json_response.element_name +"/" + json_response.element_id + "/update-metadata/"
+                    $form.attr('action', update_url);
+                }
+                if (json_response.element_exists == false){
+                    form_update_action = $form.attr('action');
+                    res_short_id = form_update_action.split('/')[3];
+                    update_url = "/hsapi/_internal/" + res_short_id + "/" + json_response.element_name + "/add-metadata/"
                     $form.attr('action', update_url);
                 }
                 if (json_response.hasOwnProperty('element_name')){
@@ -357,10 +415,10 @@ function metadata_update_ajax_submit(form_id){
                 });
             }
             else{
-                $('body > .container').append($alert_error);
-                $(".alert-danger").fadeTo(3000, 500).fadeOut(1000, function(){
-                    $(document).trigger("submit-error");
-                    $(".alert-danger").alert('close');
+                $alert_error = $alert_error.replace("Metadata failed to update.", json_response.message);
+                $('#' + form_id).before($alert_error);
+                $(".alert-error").fadeTo(2000, 500).slideUp(1000, function(){
+                    $(".alert-error").alert('close');
                 });
             }
         },
@@ -376,6 +434,12 @@ function metadata_update_ajax_submit(form_id){
     return false;
 }
 
+function makeTimeSeriesMetaDataElementFormReadOnly(form_id, element_id){
+    $element_selection_dropdown = $('#' + element_id + '_code_choices');
+    if ($element_selection_dropdown.length && $element_selection_dropdown.attr('type') !== "hidden"){
+        $('#' + form_id + ' :input').attr('readonly', 'readonly');
+    }
+}
 function get_user_info_ajax_submit(url, obj) {
     var entry = $(obj).parent().parent().parent().parent().find("#id_user-deck > .hilight");
     if (entry.length < 1) {
@@ -404,6 +468,198 @@ function get_user_info_ajax_submit(url, obj) {
         },
         error: function(XMLHttpRequest, textStatus, errorThrown){
 
+        }
+    });
+}
+
+function display_error_message(title, err_msg) {
+    $("#fb-alerts .upload-failed-alert").remove();
+    $("#hsDropzone").toggleClass("glow-blue", false);
+
+    $("#fb-alerts").append(
+        '<div class="alert alert-danger alert-dismissible upload-failed-alert" role="alert">' +
+        '<button type="button" class="close" data-dismiss="alert" aria-label="Close">' +
+        '<span aria-hidden="true">&times;</span></button>' +
+        '<div>' +
+        '<strong>' + title + '</strong>' +
+        '</div>' +
+        '<div>' +
+        '<span>' + err_msg + '</span>' +
+        '</div>' +
+        '</div>').fadeIn(200);
+}
+
+function delete_folder_ajax_submit(res_id, folder_path) {
+    $(".file-browser-container, #fb-files-container").css("cursor", "progress");
+
+    return $.ajax({
+        type: "POST",
+        url: '/hsapi/_internal/data-store-delete-folder/',
+        async: true,
+        data: {
+            res_id: res_id,
+            folder_path: folder_path
+        },
+        success: function (result) {
+        },
+        error: function(xhr, errmsg, err){
+            display_error_message('Folder Deletion Failed', xhr.responseText);
+        }
+    });
+}
+
+// This method is called to refresh the loader with the most recent structure after every other call
+function get_irods_folder_struct_ajax_submit(res_id, store_path) {
+    $("#fb-files-container, #fb-files-container").css("cursor", "progress");
+    return $.ajax({
+        type: "POST",
+        url: '/hsapi/_internal/data-store-structure/',
+        async: true,
+        data: {
+            res_id: res_id,
+            store_path: store_path
+        },
+        success: function (result) {
+            var files = result.files;
+            var folders = result.folders;
+            $('#fb-files-container').empty();
+            if (files.length > 0) {
+                $.each(files, function(i, v) {
+                    $('#fb-files-container').append(getFileTemplateInstance(v['name'], v['type'], v['size'], v['pk'], v['url']));
+                });
+            }
+            if (folders.length > 0) {
+                $.each(folders, function(i, v) {
+                    $('#fb-files-container').append(getFolderTemplateInstance(v));
+                });
+            }
+            if (!files.length && !folders.length) {
+                $('#fb-files-container').append('<span class="text-muted">This directory is empty</span>');
+            }
+
+            onSort();
+
+            bindFileBrowserItemEvents();
+
+            $("#hs-file-browser").attr("data-current-path", store_path);
+            $("#hs-file-browser").attr("data-res-id", res_id);
+
+            // strip the 'data' folder from the path
+            setBreadCrumbs(store_path.replace("data/", ""));
+
+            if ($("#hsDropzone").hasClass("dropzone")) {
+                // If no multiple files allowed and a file already exists, disable upload
+                var allowMultiple = $("#hs-file-browser").attr("data-allow-multiple-files") == "True";
+                if (!allowMultiple && files.length > 0) {
+                    $('.dz-input').hide();
+                    $(".fb-upload-caption").toggleClass("hidden", true);
+                }
+                else {
+                    $('.dz-input').show();
+                    $(".fb-upload-caption").toggleClass("hidden", false);
+                    Dropzone.forElement("#hsDropzone").files = [];
+                }
+            }
+
+            updateNavigationState();
+            $(".selection-menu").hide();
+            $("#flag-uploading").remove();
+            $("#fb-files-container, #fb-files-container").css("cursor", "default");
+        },
+        error: function(xhr, errmsg, err){
+            $(".selection-menu").hide();
+            $("#flag-uploading").remove();
+            $("#fb-files-container, #fb-files-container").css("cursor", "default");
+            $('#fb-files-container').empty();
+            setBreadCrumbs(store_path);
+            $("#fb-files-container").prepend("<span>No files to display.</span>")
+        }
+    });
+}
+
+function zip_irods_folder_ajax_submit(res_id, input_coll_path, fileName) {
+    $("#fb-files-container, #fb-files-container").css("cursor", "progress");
+    return $.ajax({
+        type: "POST",
+        url: '/hsapi/_internal/data-store-folder-zip/',
+        async: true,
+        data: {
+            res_id: res_id,
+            input_coll_path: input_coll_path,
+            output_zip_file_name: fileName,
+            remove_original_after_zip: "false"
+        },
+        success: function (result) {
+        },
+        error: function (xhr, errmsg, err) {
+            display_error_message('Folder Zipping Failed', xhr.responseText);
+        }
+    });
+}
+
+function unzip_irods_file_ajax_submit(res_id, zip_with_rel_path) {
+    $("#fb-files-container, #fb-files-container").css("cursor", "progress");
+    return $.ajax({
+        type: "POST",
+        url: '/hsapi/_internal/data-store-folder-unzip/',
+        async: true,
+        data: {
+            res_id: res_id,
+            zip_with_rel_path: zip_with_rel_path,
+            remove_original_zip: "false"
+        },
+        success: function (result) {
+            // TODO: handle "File already exists" errors
+        },
+        error: function (xhr, errmsg, err) {
+            display_error_message('File Unzipping Failed', xhr.responseText);
+        }
+    });
+}
+
+function create_irods_folder_ajax_submit(res_id, folder_path) {
+    $("#fb-files-container, #fb-files-container").css("cursor", "progress");
+    return $.ajax({
+        type: "POST",
+        url: '/hsapi/_internal/data-store-create-folder/',
+        async: true,
+        data: {
+            res_id: res_id,
+            folder_path: folder_path
+        },
+        success: function (result) {
+            var new_folder_rel_path = result.new_folder_rel_path;
+            if (new_folder_rel_path.length > 0) {
+                $('#create-folder-dialog').modal('hide');
+                $("#txtFolderName").val("");
+            }
+
+        },
+        error: function(xhr, errmsg, err){
+            display_error_message('Folder Creation Failed', xhr.responseText);
+        }
+    });
+}
+
+function move_or_rename_irods_file_or_folder_ajax_submit(res_id, source_path, target_path) {
+    $("#fb-files-container, #fb-files-container").css("cursor", "progress");
+    return $.ajax({
+        type: "POST",
+        url: '/hsapi/_internal/data-store-move-or-rename/',
+        async: true,
+        data: {
+            res_id: res_id,
+            source_path: source_path,
+            target_path: target_path
+        },
+        success: function (result) {
+            var target_rel_path = result.target_rel_path;
+            if (target_rel_path.length > 0) {
+                $("#fb-files-container li").removeClass("fb-cutting");
+            }
+        },
+        error: function(xhr, errmsg, err){
+            display_error_message('File Moving/Renaming Failed', xhr.responseText);
         }
     });
 }

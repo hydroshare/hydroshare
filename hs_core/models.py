@@ -420,6 +420,16 @@ class Description(AbstractMetaDataElement):
         unique_together = ("content_type", "object_id")
 
     @classmethod
+    def update(cls, element_id, **kwargs):
+        element = Description.objects.get(id=element_id)
+        resource = element.metadata.resource
+        if resource.resource_type == "TimeSeriesResource":
+            element.metadata.is_dirty = True
+            element.metadata.save()
+
+        super(Description, cls).update(element_id, **kwargs)
+
+    @classmethod
     def remove(cls, element_id):
         raise ValidationError("Description element of a resource can't be deleted.")
 
@@ -433,6 +443,16 @@ class Title(AbstractMetaDataElement):
 
     class Meta:
         unique_together = ("content_type", "object_id")
+
+    @classmethod
+    def update(cls, element_id, **kwargs):
+        element = Title.objects.get(id=element_id)
+        resource = element.metadata.resource
+        if resource.resource_type == "TimeSeriesResource":
+            element.metadata.is_dirty = True
+            element.metadata.save()
+
+        super(Title, cls).update(element_id, **kwargs)
 
     @classmethod
     def remove(cls, element_id):
@@ -564,6 +584,7 @@ class Relation(AbstractMetaDataElement):
         ('isHostedBy', 'Hosted By'),
         ('isCopiedFrom', 'Copied From'),
         ('isPartOf', 'Part Of'),
+        ('hasPart', 'Has Part'),
         ('isExecutedBy', 'Executed By'),
         ('isCreatedBy', 'Created By'),
         ('isVersionOf', 'Version Of'),
@@ -584,52 +605,76 @@ class Relation(AbstractMetaDataElement):
     def __unicode__(self):
         return "{type} {value}".format(type=self.type, value=self.value)
 
-    class Meta:
-        unique_together = ("type", "content_type", "object_id")
-
     @classmethod
     def create(cls, **kwargs):
-        if 'type' in kwargs:
-            if not kwargs['type'] in dict(cls.SOURCE_TYPES).keys():
-                raise ValidationError('Invalid relation type:%s' % kwargs['type'])
+        if 'type' not in kwargs:
+            ValidationError("Type of relation element is missing.")
+        if 'value' not in kwargs:
+            ValidationError("Value of relation element is missing.")
 
-            # ensure isHostedBy and isCopiedFrom are mutually exclusive
-            metadata_obj = kwargs['content_object']
-            metadata_type = ContentType.objects.get_for_model(metadata_obj)
-            if kwargs['type'] == 'isHostedBy' and \
-               Relation.objects.filter(type='isCopiedFrom', object_id=metadata_obj.id,
-                                       content_type=metadata_type).exists():
-                raise ValidationError('Relation type:%s cannot be created since '
-                                      'isCopiedFrom relation already exists.' % kwargs['type'])
-            elif kwargs['type'] == 'isCopiedFrom' and \
-                    Relation.objects.filter(type='isHostedBy', object_id=metadata_obj.id,
-                                            content_type=metadata_type).exists():
-                raise ValidationError('Relation type:%s cannot be created since '
-                                      'isHostedBy relation already exists.' % kwargs['type'])
+        if not kwargs['type'] in dict(cls.SOURCE_TYPES).keys():
+            raise ValidationError('Invalid relation type:%s' % kwargs['type'])
 
-            return super(Relation, cls).create(**kwargs)
-        else:
-            raise ValidationError("Type of relation element is missing.")
+        # ensure isHostedBy and isCopiedFrom are mutually exclusive
+        metadata_obj = kwargs['content_object']
+        metadata_type = ContentType.objects.get_for_model(metadata_obj)
+
+        # avoid creating duplicate element (same type and same value)
+        if Relation.objects.filter(type=kwargs['type'],
+                                   value=kwargs['value'],
+                                   object_id=metadata_obj.id,
+                                   content_type=metadata_type).exists():
+            raise ValidationError('Relation element of the same type '
+                                  'and value already exists.')
+
+        if kwargs['type'] == 'isHostedBy' and \
+           Relation.objects.filter(type='isCopiedFrom', object_id=metadata_obj.id,
+                                   content_type=metadata_type).exists():
+            raise ValidationError('Relation type:%s cannot be created since '
+                                  'isCopiedFrom relation already exists.' % kwargs['type'])
+        elif kwargs['type'] == 'isCopiedFrom' and \
+                Relation.objects.filter(type='isHostedBy', object_id=metadata_obj.id,
+                                        content_type=metadata_type).exists():
+            raise ValidationError('Relation type:%s cannot be created since '
+                                  'isHostedBy relation already exists.' % kwargs['type'])
+
+        return super(Relation, cls).create(**kwargs)
 
     @classmethod
     def update(cls, element_id, **kwargs):
-        if 'type' in kwargs:
-            if not kwargs['type'] in dict(cls.SOURCE_TYPES).keys():
-                raise ValidationError('Invalid relation type:%s' % kwargs['type'])
+        if 'type' not in kwargs:
+            ValidationError("Type of relation element is missing.")
+        if 'value' not in kwargs:
+            ValidationError("Value of relation element is missing.")
 
-            # ensure isHostedBy and isCopiedFrom are mutually exclusive
-            rel = Relation.objects.get(id=element_id)
-            if rel.type != kwargs['type']:
-                if kwargs['type'] == 'isHostedBy' and \
-                     Relation.objects.filter(type='isCopiedFrom', object_id=rel.object_id,
-                                             content_type__pk=rel.content_type.id).exists():
-                    raise ValidationError('Relation type:%s cannot be updated since '
-                                          'isCopiedFrom relation already exists.' % rel.type)
-                elif kwargs['type'] == 'isCopiedFrom' and \
-                        Relation.objects.filter(type='isHostedBy', object_id=rel.object_id,
-                                                content_type__pk=rel.content_type.id).exists():
-                    raise ValidationError('Relation type:%s cannot be updated since '
-                                          'isHostedBy relation already exists.' % rel.type)
+        if not kwargs['type'] in dict(cls.SOURCE_TYPES).keys():
+            raise ValidationError('Invalid relation type:%s' % kwargs['type'])
+
+        # ensure isHostedBy and isCopiedFrom are mutually exclusive
+        rel = Relation.objects.get(id=element_id)
+        if rel.type != kwargs['type']:
+            if kwargs['type'] == 'isHostedBy' and \
+                 Relation.objects.filter(type='isCopiedFrom', object_id=rel.object_id,
+                                         content_type__pk=rel.content_type.id).exists():
+                raise ValidationError('Relation type:%s cannot be updated since '
+                                      'isCopiedFrom relation already exists.' % rel.type)
+            elif kwargs['type'] == 'isCopiedFrom' and \
+                    Relation.objects.filter(type='isHostedBy', object_id=rel.object_id,
+                                            content_type__pk=rel.content_type.id).exists():
+                raise ValidationError('Relation type:%s cannot be updated since '
+                                      'isHostedBy relation already exists.' % rel.type)
+
+        # avoid changing this relation to an existing relation of same type and same value
+        metadata_obj = kwargs['content_object']
+        metadata_type = ContentType.objects.get_for_model(metadata_obj)
+        qs = Relation.objects.filter(type=kwargs['type'],
+                                     value=kwargs['value'],
+                                     object_id=metadata_obj.id,
+                                     content_type=metadata_type)
+
+        if qs.exists() and qs.first() != rel:
+            # this update will create a duplicate relation element
+            raise ValidationError('A relation element of the same type and value already exists.')
 
         super(Relation, cls).update(element_id, **kwargs)
 
@@ -896,7 +941,7 @@ class Coverage(AbstractMetaDataElement):
             elif '_value' in kwargs:
                 value_arg_dict = json.loads(kwargs['_value'])
 
-            if value_arg_dict:
+            if value_arg_dict is not None:
                 cls._validate_coverage_type_value_attributes(kwargs['type'], value_arg_dict)
 
                 if kwargs['type'] == 'period':
@@ -911,6 +956,10 @@ class Coverage(AbstractMetaDataElement):
                                   if k in ('units', 'northlimit', 'eastlimit', 'southlimit',
                                            'westlimit', 'name', 'uplimit', 'downlimit',
                                            'zunits', 'projection')}
+
+                if kwargs['type'] == 'box' or kwargs['type'] == 'point':
+                    if 'projection' not in value_dict:
+                        value_dict['projection'] = 'WGS 84 EPSG:4326'
 
                 value_json = json.dumps(value_dict)
                 if 'value' in kwargs:
@@ -1208,19 +1257,18 @@ class AbstractResource(ResourcePermissionsMixin):
 
     extra_metadata = HStoreField(default={})
 
+    # this field is for specific resource types to store extra key:value pairs
+    # for internal use only
+    # this field WILL NOT get recorded in bag and SHOULD NEVER be used for storing metadata
+    extra_data = HStoreField(default={})
+
     @classmethod
     def bag_url(cls, resource_id):
-        from hs_core.hydroshare.utils import get_resource_by_shortkey
         bagit_path = getattr(settings, 'IRODS_BAGIT_PATH', 'bags')
         bagit_postfix = getattr(settings, 'IRODS_BAGIT_POSTFIX', 'zip')
         bag_path = "{path}/{resource_id}.{postfix}".format(path=bagit_path,
                                                            resource_id=resource_id,
                                                            postfix=bagit_postfix)
-        res = get_resource_by_shortkey(resource_id)
-        if res.resource_federation_path:
-            rel_fed_path = res.resource_federation_path[1:]
-            bag_path = os.path.join(rel_fed_path, bag_path)
-
         istorage = IrodsStorage()
         bag_url = istorage.url(bag_path)
 
@@ -1231,6 +1279,12 @@ class AbstractResource(ResourcePermissionsMixin):
         scimeta_path = "{resource_id}/data/resourcemetadata.xml".format(resource_id=resource_id)
         scimeta_url = reverse('rest_download', kwargs={'path': scimeta_path})
         return scimeta_url
+
+    @classmethod
+    def resmap_url(cls, resource_id):
+        resmap_path = "{resource_id}/data/resourcemap.xml".format(resource_id=resource_id)
+        resmap_url = reverse('rest_download', kwargs={'path': resmap_path})
+        return resmap_url
 
     @classmethod
     def sysmeta_path(cls, resource_id):
@@ -1252,7 +1306,7 @@ class AbstractResource(ResourcePermissionsMixin):
                 fl.resource_file.delete()
             elif fl.fed_resource_file:
                 fl.fed_resource_file.delete()
-
+            fl.delete()
         hs_bagit.delete_bag(self)
 
         self.metadata.delete_all_elements()
@@ -1399,6 +1453,14 @@ class AbstractResource(ResourcePermissionsMixin):
         return (".*",)
 
     @classmethod
+    def allow_multiple_file_upload(cls):
+        # NOTES FOR ANY SUBCLASS OF THIS CLASS TO OVERRIDE THIS FUNCTION:
+        # to allow multiple files to be uploaded return True, otherwise return False
+
+        # resource by default allows multiple file upload
+        return True
+
+    @classmethod
     def can_have_multiple_files(cls):
         # NOTES FOR ANY SUBCLASS OF THIS CLASS TO OVERRIDE THIS FUNCTION:
         # to allow resource to have only 1 file or no file, return False
@@ -1519,6 +1581,12 @@ class BaseResource(Page, AbstractResource):
 
     def can_view(self, request):
         return AbstractResource.can_view(self, request)
+
+    def get_irods_storage(self):
+        if self.resource_federation_path:
+            return IrodsStorage('federated')
+        else:
+            return IrodsStorage()
 
     # create crossref deposit xml for resource publication
     def get_crossref_deposit_xml(self, pretty_print=True):
@@ -1709,9 +1777,10 @@ class CoreMetaData(models.Model):
                 'Publisher',
                 'FundingAgency']
 
-    # this method needs to be overriden by any subclass of this class
-    # if they implement additional metadata elements that are required
     def has_all_required_elements(self):
+        # this method needs to be overriden by any subclass of this class
+        # if they implement additional metadata elements that are required
+
         if not self.title:
             return False
         elif self.title.value.lower() == 'untitled resource':
@@ -1735,9 +1804,9 @@ class CoreMetaData(models.Model):
 
         return True
 
-    # this method needs to be overriden by any subclass of this class
-    # if they implement additional metadata elements that are required
     def get_required_missing_elements(self):
+        # this method needs to be overriden by any subclass of this class
+        # if they implement additional metadata elements that are required
         missing_required_elements = []
 
         if not self.title:
@@ -1751,8 +1820,10 @@ class CoreMetaData(models.Model):
 
         return missing_required_elements
 
-    # this method needs to be overriden by any subclass of this class
     def delete_all_elements(self):
+        # this method needs to be overriden by any subclass of this class if that class
+        # has additional metadata elements
+
         if self.title:
             self.title.delete()
         if self.description:

@@ -7,6 +7,7 @@ from hs_core.models import BaseResource, ResourceManager, resource_processor
 
 
 class CollectionResource(BaseResource):
+
     objects = ResourceManager('CollectionResource')
 
     class Meta:
@@ -17,6 +18,11 @@ class CollectionResource(BaseResource):
     def get_supported_upload_file_types(cls):
         # no file types are supported
         return ()
+
+    @classmethod
+    def allow_multiple_file_upload(cls):
+        # cannot upload any file
+        return False
 
     @classmethod
     def can_have_multiple_files(cls):
@@ -41,6 +47,10 @@ class CollectionResource(BaseResource):
             return False
         return not self.resources.all().filter(raccess__published=False).exists()
 
+    @property
+    def update_text_file(self):
+        return self.extra_data.get('update_text_file', 'True')
+
 
 processor_for(CollectionResource)(resource_processor)
 
@@ -52,3 +62,4 @@ class CollectionDeletedResource(models.Model):
     collection = models.ForeignKey(BaseResource)
     resource_id = models.CharField(max_length=32)
     resource_type = models.CharField(max_length=50)
+    resource_owners = models.ManyToManyField(User, related_name='collectionDeleted')
