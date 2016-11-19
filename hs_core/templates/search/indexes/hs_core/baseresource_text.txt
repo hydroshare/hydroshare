@@ -7,7 +7,6 @@
 {{ object.discoverable }}
 {{ object.created }}
 {{ object.modified }}
-{{ object.rating_sum }}
 {{ object.metadata.publisher.name }}
 {{ object.metadata.language.code }}
 {{ object.resource_type }}
