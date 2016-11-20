@@ -758,6 +758,32 @@ class UserAccess(models.Model):
 
         return True
 
+    def can_share_group_with_user(self, this_group, this_user, this_privilege): 
+        """
+        Return True if a given user can share this group with a specified user with a given privilege.
+
+        :param this_group: group to check
+        :param this_user: user to check
+        :param this_privilege: privilege to assign to user
+        :return: True if sharing is possible, otherwise false.
+
+        This determines whether the current user can share a group with a specific user. 
+
+        Usage:
+        ------
+
+            if my_user.can_share_group_with_user(some_group, some_user, PrivilegeCodes.VIEW):
+                # ...time passes, forms are created, requests are made...
+                my_user.share_group_with_user(some_group, some_user, PrivilegeCodes.VIEW)
+
+        In practice:
+        ------------
+
+        If this returns False, UserAccess.share_group_with_user will raise an exception
+        for the corresponding arguments -- *guaranteed*.
+        """
+        return self.can_share_group(this_group, this_privilege, user=this_user)
+
     def share_group_with_user(self, this_group, this_user, this_privilege):
         """
         :param this_group: Group to be affected.
@@ -768,9 +794,7 @@ class UserAccess(models.Model):
         User self must be one of:
 
                 * admin
-
                 * group owner
-
                 * group member with shareable=True
 
         and have equivalent or greater privilege over group.
@@ -986,9 +1010,7 @@ class UserAccess(models.Model):
         A user can be unshared with a group if:
 
             * The user is self
-
             * Self is group owner.
-
             * Self has admin privilege.
 
         except that a user in the QuerySet cannot be the last owner of the group.
@@ -1024,7 +1046,7 @@ class UserAccess(models.Model):
                 return access_group.members
 
         # unprivileged user can only remove grants to self, if any
-        elif self in access_group.members:
+        elif self.user in access_group.members:
             if access_group.owners.count() == 1:
                 # if self is not an owner,
                 if not UserGroupPrivilege.objects\
@@ -1404,6 +1426,20 @@ class UserAccess(models.Model):
 
         return True 
 
+    def can_share_resource_with_user(self, this_resource, this_user, this_privilege): 
+        """
+        Check whether one can share a resource with a user.
+
+        :param this_resource: resource to share.
+        :param this_user: user with which to share it.
+        :param this_privilege: privilege level of sharing.
+        :return: Boolean: whether one can share.
+
+        This function returns False exactly when share_resource_with_group will raise
+        an exception if called.
+        """
+        return self.can_share_resource(this_resource, this_privilege, user=this_user)
+
     def can_share_resource_with_group(self, this_resource, this_group, this_privilege):
         """
         Check whether one can share a resource with a group.
@@ -1763,7 +1799,7 @@ class UserAccess(models.Model):
             if access_resource.owners.count() == 1:
                 # get list of owners to exclude from main list
                 # This should be one user but can be two due to race conditions.
-                # Avoid races by excluding action in that case.
+                # Avoid races by excluding whole action in that case.
                 users_to_exclude = User.objects.filter(is_active=True,
                                                        u2urp__resource=this_resource,
                                                        u2urp__privilege=PrivilegeCodes.OWNER)
@@ -1772,11 +1808,8 @@ class UserAccess(models.Model):
                 return access_resource.view_users
 
         # unprivileged user can only remove grants to self, if any
-        elif self in access_resource.view_users:
+        elif self.user in access_resource.view_users:
             if access_resource.owners.count() == 1:
-                users_to_exclude = User.objects.filter(is_active=True,
-                                                       u2urp__resource=this_resource,
-                                                       u2urp__privilege=PrivilegeCodes.OWNER)
                 # if self is not an owner,
                 if not UserResourcePrivilege.objects\
                         .filter(user=self.user, resource=this_resource, privilege=PrivilegeCodes.OWNER).exists():
