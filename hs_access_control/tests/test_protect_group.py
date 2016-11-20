@@ -111,7 +111,7 @@ class T06ProtectGroup(MockIRODSTestCaseMixin, TestCase):
         # dog should not be able to modify group members
         with self.assertRaises(PermissionDenied) as cm:
             dog.uaccess.share_group_with_user(polyamory, dog, PrivilegeCodes.CHANGE)
-        self.assertEqual(cm.exception.message, 'User has insufficient privilege over group')
+        self.assertEqual(cm.exception.message, 'User has no privilege over group')
 
     def test_03_share_rw(self):
         "Sharing with PrivilegeCodes.CHANGE privilege allows group changes "

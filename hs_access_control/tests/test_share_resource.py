@@ -698,15 +698,16 @@ class T05ShareResource(MockIRODSTestCaseMixin, TestCase):
         # (originally granted by cat) to view
         with self.assertRaises(PermissionDenied): 
             self.mouse.uaccess.share_resource_with_user(holes, dog, PrivilegeCodes.VIEW)
-
-        # non owner (mouse) should be able to downgrade privilege of a user (dog) originally granted by the same
-        # non owner (mouse)
         self.cat.uaccess.unshare_resource_with_user(holes, dog)
         self.assertEqual(self.holes.raccess.get_effective_privilege(self.dog), PrivilegeCodes.NONE)
+
+        # non owner (mouse) should NOT be able to downgrade privilege of a user (dog) originally 
+        # granted by the same non owner (mouse). This is the new semantics. 
         self.mouse.uaccess.share_resource_with_user(holes, dog, PrivilegeCodes.CHANGE)
         self.assertEqual(self.holes.raccess.get_effective_privilege(self.dog), PrivilegeCodes.CHANGE)
-        self.mouse.uaccess.share_resource_with_user(holes, dog, PrivilegeCodes.VIEW)
-        self.assertEqual(self.holes.raccess.get_effective_privilege(self.dog), PrivilegeCodes.VIEW)
+        with self.assertRaises(PermissionDenied): 
+            self.mouse.uaccess.share_resource_with_user(holes, dog, PrivilegeCodes.VIEW)
+        self.assertEqual(self.holes.raccess.get_effective_privilege(self.dog), PrivilegeCodes.CHANGE)
 
         # django admin should be able to downgrade privilege
         self.cat.uaccess.share_resource_with_user(holes, dog, PrivilegeCodes.OWNER)
@@ -1395,7 +1396,7 @@ class T05ShareResource(MockIRODSTestCaseMixin, TestCase):
         dog = self.dog
         cat.uaccess.share_resource_with_user(holes, dog, PrivilegeCodes.CHANGE)
 
-        self.assertTrue(dog.uaccess.can_share_resource_with_user(holes, dog, PrivilegeCodes.VIEW) 
+        self.assertTrue(dog.uaccess.can_share_resource(holes, PrivilegeCodes.VIEW, user=dog))
         dog.uaccess.share_resource_with_user(holes, dog, PrivilegeCodes.VIEW) 
 
         # simple sharing state
@@ -1411,7 +1412,7 @@ class T05ShareResource(MockIRODSTestCaseMixin, TestCase):
         self.assertTrue(dog.uaccess.can_share_resource(holes, PrivilegeCodes.VIEW))
 
         # self-unshare 
-        self.assertTrue(dog.uaccess.can_unshare_resource_with_user(holes, dog) 
+        self.assertTrue(dog.uaccess.can_unshare_resource_with_user(holes, dog))
         dog.uaccess.unshare_resource_with_user(holes, dog) 
         
         # simple sharing state
