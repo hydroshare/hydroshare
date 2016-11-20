@@ -91,9 +91,7 @@ class T05ShareResource(MockIRODSTestCaseMixin, TestCase):
         self.assertTrue(is_equal_to_as_set([], holes.raccess.view_groups))
         self.assertTrue(is_equal_to_as_set([], holes.raccess.edit_groups))
         self.assertTrue(is_equal_to_as_set([], cat.uaccess.get_resource_unshare_users(holes)))
-        self.assertTrue(is_equal_to_as_set([], cat.uaccess.get_resource_undo_users(holes)))
         self.assertTrue(is_equal_to_as_set([], cat.uaccess.get_resource_unshare_groups(holes)))
-        self.assertTrue(is_equal_to_as_set([], cat.uaccess.get_resource_undo_groups(holes)))
 
         # metadata state
         self.assertFalse(holes.raccess.public)
@@ -133,9 +131,7 @@ class T05ShareResource(MockIRODSTestCaseMixin, TestCase):
         self.assertTrue(is_equal_to_as_set([], holes.raccess.view_groups))
         self.assertTrue(is_equal_to_as_set([], holes.raccess.edit_groups))
         self.assertTrue(is_equal_to_as_set([], cat.uaccess.get_resource_unshare_users(holes)))
-        self.assertTrue(is_equal_to_as_set([], cat.uaccess.get_resource_undo_users(holes)))
         self.assertTrue(is_equal_to_as_set([], cat.uaccess.get_resource_unshare_groups(holes)))
-        self.assertTrue(is_equal_to_as_set([], cat.uaccess.get_resource_undo_groups(holes)))
 
         self.assertEqual(holes.raccess.owners.count(), 1)
         self.assertEqual(holes.raccess.view_users.count(), 1)
@@ -181,10 +177,7 @@ class T05ShareResource(MockIRODSTestCaseMixin, TestCase):
         self.assertTrue(is_equal_to_as_set([], holes.raccess.edit_groups))
 
         self.assertTrue(is_equal_to_as_set([cat, dog], cat.uaccess.get_resource_unshare_users(holes)))
-        # the answer to the following should be dog, but cat is self-shared with the resource. Fixed.
-        self.assertTrue(is_equal_to_as_set([dog], cat.uaccess.get_resource_undo_users(holes)))
         self.assertTrue(is_equal_to_as_set([], cat.uaccess.get_resource_unshare_groups(holes)))
-        self.assertTrue(is_equal_to_as_set([], cat.uaccess.get_resource_undo_groups(holes)))
 
         self.assertEqual(holes.raccess.owners.count(), 2)
         self.assertEqual(holes.raccess.view_users.count(), 2)
@@ -303,16 +296,12 @@ class T05ShareResource(MockIRODSTestCaseMixin, TestCase):
         self.assertFalse(dog.uaccess.can_share_resource(holes, PrivilegeCodes.CHANGE))
         self.assertFalse(dog.uaccess.can_share_resource(holes, PrivilegeCodes.VIEW))
 
-        self.assertFalse(cat.uaccess.can_undo_share_resource_with_user(holes, dog))
         self.assertFalse(cat.uaccess.can_unshare_resource_with_user(holes, dog))
-        self.assertTrue(is_equal_to_as_set([], cat.uaccess.get_resource_undo_users(holes)))
         self.assertTrue(is_equal_to_as_set([], cat.uaccess.get_resource_unshare_users(holes)))
 
         # share with dog at rw privilege
         cat.uaccess.share_resource_with_user(holes, dog, PrivilegeCodes.CHANGE)
-        self.assertTrue(cat.uaccess.can_undo_share_resource_with_user(holes, dog))
         self.assertTrue(cat.uaccess.can_unshare_resource_with_user(holes, dog))
-        self.assertTrue(is_equal_to_as_set([dog], cat.uaccess.get_resource_undo_users(holes)))
         self.assertTrue(is_equal_to_as_set([dog], cat.uaccess.get_resource_unshare_users(holes)))
 
         # initial state
@@ -907,16 +896,12 @@ class T05ShareResource(MockIRODSTestCaseMixin, TestCase):
         self.assertFalse(dog.uaccess.can_share_group(meowers, PrivilegeCodes.VIEW))
 
         # share with dog at rw privilege
-        self.assertFalse(cat.uaccess.can_undo_share_group_with_user(meowers, dog))
         self.assertFalse(cat.uaccess.can_unshare_group_with_user(meowers, dog))
-        self.assertTrue(is_equal_to_as_set([], cat.uaccess.get_group_undo_users(meowers)))
         self.assertTrue(is_equal_to_as_set([], cat.uaccess.get_group_unshare_users(meowers)))
 
         cat.uaccess.share_group_with_user(meowers, dog, PrivilegeCodes.CHANGE)
 
-        self.assertTrue(cat.uaccess.can_undo_share_group_with_user(meowers, dog))
         self.assertTrue(cat.uaccess.can_unshare_group_with_user(meowers, dog))
-        self.assertTrue(is_equal_to_as_set([dog], cat.uaccess.get_group_undo_users(meowers)))
         self.assertTrue(is_equal_to_as_set([dog], cat.uaccess.get_group_unshare_users(meowers)))
 
         # check other state for this change
@@ -950,10 +935,8 @@ class T05ShareResource(MockIRODSTestCaseMixin, TestCase):
         self.assertTrue(dog.uaccess.can_share_group(meowers, PrivilegeCodes.VIEW))
 
         # test for idempotence of sharing
-        self.assertTrue(cat.uaccess.can_undo_share_group_with_user(meowers, dog))
         self.assertTrue(cat.uaccess.can_unshare_group_with_user(meowers, dog))
         cat.uaccess.share_group_with_user(meowers, dog, PrivilegeCodes.CHANGE)
-        self.assertTrue(cat.uaccess.can_undo_share_group_with_user(meowers, dog))
         self.assertTrue(cat.uaccess.can_unshare_group_with_user(meowers, dog))
 
         # check for unchanged configuration
@@ -1028,12 +1011,10 @@ class T05ShareResource(MockIRODSTestCaseMixin, TestCase):
         self.assertFalse(dog.uaccess.can_share_group(meowers, PrivilegeCodes.VIEW))
 
         # share with view privilege
-        self.assertFalse(cat.uaccess.can_undo_share_group_with_user(meowers, dog))
         self.assertFalse(cat.uaccess.can_unshare_group_with_user(meowers, dog))
 
         cat.uaccess.share_group_with_user(meowers, dog, PrivilegeCodes.VIEW)
 
-        self.assertTrue(cat.uaccess.can_undo_share_group_with_user(meowers, dog))
         self.assertTrue(cat.uaccess.can_unshare_group_with_user(meowers, dog))
 
         # shared state
@@ -1067,10 +1048,8 @@ class T05ShareResource(MockIRODSTestCaseMixin, TestCase):
         self.assertTrue(dog.uaccess.can_share_group(meowers, PrivilegeCodes.VIEW))
 
         # check for idempotence
-        self.assertTrue(cat.uaccess.can_undo_share_group_with_user(meowers, dog))
         self.assertTrue(cat.uaccess.can_unshare_group_with_user(meowers, dog))
         cat.uaccess.share_group_with_user(meowers, dog, PrivilegeCodes.VIEW)
-        self.assertTrue(cat.uaccess.can_undo_share_group_with_user(meowers, dog))
         self.assertTrue(cat.uaccess.can_unshare_group_with_user(meowers, dog))
 
         # shared state
@@ -1145,10 +1124,8 @@ class T05ShareResource(MockIRODSTestCaseMixin, TestCase):
         self.assertFalse(dog.uaccess.can_share_group(meowers, PrivilegeCodes.VIEW))
 
         # share as owner
-        self.assertFalse(cat.uaccess.can_undo_share_group_with_user(meowers, dog))
         self.assertFalse(cat.uaccess.can_unshare_group_with_user(meowers, dog))
         cat.uaccess.share_group_with_user(meowers, dog, PrivilegeCodes.OWNER)
-        self.assertTrue(cat.uaccess.can_undo_share_group_with_user(meowers, dog))
         self.assertTrue(cat.uaccess.can_unshare_group_with_user(meowers, dog))
 
         self.assertTrue(is_equal_to_as_set([cat, dog], meowers.gaccess.owners))
@@ -1186,10 +1163,8 @@ class T05ShareResource(MockIRODSTestCaseMixin, TestCase):
         self.assertTrue(meowers.gaccess.shareable)
 
         # downgrade from OWNER to CHANGE
-        self.assertTrue(cat.uaccess.can_undo_share_group_with_user(meowers, dog))
         self.assertTrue(cat.uaccess.can_unshare_group_with_user(meowers, dog))
         cat.uaccess.share_group_with_user(meowers, dog, PrivilegeCodes.CHANGE)
-        self.assertTrue(cat.uaccess.can_undo_share_group_with_user(meowers, dog))
         self.assertTrue(cat.uaccess.can_unshare_group_with_user(meowers, dog))
 
         # check for correctness
@@ -1223,10 +1198,8 @@ class T05ShareResource(MockIRODSTestCaseMixin, TestCase):
         self.assertTrue(dog.uaccess.can_share_group(meowers, PrivilegeCodes.VIEW))
 
         # downgrade from CHANGE to VIEW
-        self.assertTrue(cat.uaccess.can_undo_share_group_with_user(meowers, dog))
         self.assertTrue(cat.uaccess.can_unshare_group_with_user(meowers, dog))
         cat.uaccess.share_group_with_user(meowers, dog, PrivilegeCodes.VIEW)
-        self.assertTrue(cat.uaccess.can_undo_share_group_with_user(meowers, dog))
         self.assertTrue(cat.uaccess.can_unshare_group_with_user(meowers, dog))
 
         # initial state
@@ -1260,11 +1233,8 @@ class T05ShareResource(MockIRODSTestCaseMixin, TestCase):
         self.assertTrue(dog.uaccess.can_share_group(meowers, PrivilegeCodes.VIEW))
 
         # downgrade to no privilege
-        self.assertTrue(cat.uaccess.can_undo_share_group_with_user(meowers, dog))
         self.assertTrue(cat.uaccess.can_unshare_group_with_user(meowers, dog))
-        # TODO: test undo_share
         cat.uaccess.unshare_group_with_user(meowers, dog)
-        self.assertFalse(cat.uaccess.can_undo_share_group_with_user(meowers, dog))
         self.assertFalse(cat.uaccess.can_unshare_group_with_user(meowers, dog))
 
         # back to initial state
@@ -1329,8 +1299,6 @@ class T05ShareResource(MockIRODSTestCaseMixin, TestCase):
 
         self.assertTrue(cat.uaccess.can_share_resource(holes, PrivilegeCodes.OWNER))
         self.assertFalse(cat.uaccess.can_unshare_resource_with_user(holes, dog))
-        self.assertFalse(cat.uaccess.can_undo_share_resource_with_user(holes, dog))
-        self.assertTrue(is_equal_to_as_set([], cat.uaccess.get_resource_undo_users(holes)))
 
         self.assertTrue(is_equal_to_as_set([], cat.uaccess.get_resource_unshare_users(holes)))
 
@@ -1343,28 +1311,19 @@ class T05ShareResource(MockIRODSTestCaseMixin, TestCase):
 
         self.assertTrue(cat.uaccess.can_share_resource(holes, PrivilegeCodes.OWNER))
         self.assertTrue(cat.uaccess.can_unshare_resource_with_user(holes, dog))
-        self.assertTrue(cat.uaccess.can_undo_share_resource_with_user(holes, dog))
-        # dog is an owner; owner rule no longer applies!
         self.assertTrue(cat.uaccess.can_unshare_resource_with_user(holes, cat))
-        self.assertFalse(cat.uaccess.can_undo_share_resource_with_user(holes, cat))
         self.assertTrue(dog.uaccess.can_unshare_resource_with_user(holes, dog))
-        self.assertFalse(dog.uaccess.can_undo_share_resource_with_user(holes, dog))
         self.assertTrue(dog.uaccess.can_unshare_resource_with_user(holes, cat))
-        self.assertFalse(dog.uaccess.can_undo_share_resource_with_user(holes, cat))
 
         # test list access functions for unshare targets
-        self.assertTrue(is_equal_to_as_set([dog], cat.uaccess.get_resource_undo_users(holes)))
         self.assertTrue(is_equal_to_as_set([cat, dog], cat.uaccess.get_resource_unshare_users(holes)))
 
-        # the following is correct only because  dog is an owner of holes
-        self.assertTrue(is_equal_to_as_set([cat], dog.uaccess.get_resource_undo_users(holes)))
         self.assertTrue(is_equal_to_as_set([cat, dog], dog.uaccess.get_resource_unshare_users(holes)))
 
         # test idempotence of sharing
         cat.uaccess.share_resource_with_user(holes, dog, PrivilegeCodes.OWNER)
         self.assertTrue(cat.uaccess.can_share_resource(holes, PrivilegeCodes.OWNER))
         self.assertTrue(cat.uaccess.can_unshare_resource_with_user(holes, dog))
-        self.assertTrue(cat.uaccess.can_undo_share_resource_with_user(holes, dog))
         self.assertTrue(is_equal_to_as_set([cat, dog], holes.raccess.owners))
         self.assertTrue(is_equal_to_as_set([cat, dog], holes.raccess.view_users))
         self.assertTrue(dog.uaccess.owns_resource(holes))
@@ -1395,10 +1354,8 @@ class T05ShareResource(MockIRODSTestCaseMixin, TestCase):
         self.assertTrue(cat.uaccess.can_share_resource(holes, PrivilegeCodes.CHANGE))
         self.assertTrue(cat.uaccess.can_share_resource(holes, PrivilegeCodes.OWNER))
         self.assertFalse(cat.uaccess.can_unshare_resource_with_group(holes, meowers))
-        self.assertFalse(cat.uaccess.can_undo_share_resource_with_group(holes, meowers))
         cat.uaccess.share_resource_with_group(holes, meowers, PrivilegeCodes.CHANGE)
         self.assertTrue(cat.uaccess.can_unshare_resource_with_group(holes, meowers))
-        self.assertTrue(cat.uaccess.can_undo_share_resource_with_group(holes, meowers))
         self.assertTrue(is_equal_to_as_set([cat, dog], holes.raccess.view_users))
 
         # simple sharing state
@@ -1419,8 +1376,6 @@ class T05ShareResource(MockIRODSTestCaseMixin, TestCase):
         self.assertTrue(cat.uaccess.can_share_resource(holes, PrivilegeCodes.CHANGE))
         self.assertTrue(cat.uaccess.can_share_resource(holes, PrivilegeCodes.OWNER))
         self.assertFalse(cat.uaccess.can_unshare_resource_with_group(holes, meowers))
-        self.assertFalse(cat.uaccess.can_undo_share_resource_with_group(holes, meowers))
-
         # simple sharing state
         self.assertFalse(dog.uaccess.owns_resource(holes))
         self.assertFalse(dog.uaccess.can_change_resource(holes))
@@ -1433,8 +1388,46 @@ class T05ShareResource(MockIRODSTestCaseMixin, TestCase):
         self.assertFalse(dog.uaccess.can_share_resource(holes, PrivilegeCodes.CHANGE))
         self.assertFalse(dog.uaccess.can_share_resource(holes, PrivilegeCodes.VIEW))
 
-    def test_13_debugging_print_strings(self):
-        """ test stringification of records """
+    def test_13_self_reduction_of_privilege(self): 
+        """ Test that a non-owner can self-degrade CHANGE to VIEW and from VIEW to NONE """
+        holes = self.holes
+        cat = self.cat
+        dog = self.dog
+        cat.uaccess.share_resource_with_user(holes, dog, PrivilegeCodes.CHANGE)
+
+        self.assertTrue(dog.uaccess.can_share_resource_with_user(holes, dog, PrivilegeCodes.VIEW) 
+        dog.uaccess.share_resource_with_user(holes, dog, PrivilegeCodes.VIEW) 
+
+        # simple sharing state
+        self.assertFalse(dog.uaccess.owns_resource(holes))
+        self.assertFalse(dog.uaccess.can_change_resource(holes))
+        self.assertTrue(dog.uaccess.can_view_resource(holes))
+
+        # composite django state
+        self.assertFalse(dog.uaccess.can_change_resource_flags(holes))
+        self.assertFalse(dog.uaccess.can_delete_resource(holes))
+        self.assertFalse(dog.uaccess.can_share_resource(holes, PrivilegeCodes.OWNER))
+        self.assertFalse(dog.uaccess.can_share_resource(holes, PrivilegeCodes.CHANGE))
+        self.assertTrue(dog.uaccess.can_share_resource(holes, PrivilegeCodes.VIEW))
+
+        # self-unshare 
+        self.assertTrue(dog.uaccess.can_unshare_resource_with_user(holes, dog) 
+        dog.uaccess.unshare_resource_with_user(holes, dog) 
+        
+        # simple sharing state
+        self.assertFalse(dog.uaccess.owns_resource(holes))
+        self.assertFalse(dog.uaccess.can_change_resource(holes))
+        self.assertFalse(dog.uaccess.can_view_resource(holes))
+
+        # composite django state
+        self.assertFalse(dog.uaccess.can_change_resource_flags(holes))
+        self.assertFalse(dog.uaccess.can_delete_resource(holes))
+        self.assertFalse(dog.uaccess.can_share_resource(holes, PrivilegeCodes.OWNER))
+        self.assertFalse(dog.uaccess.can_share_resource(holes, PrivilegeCodes.CHANGE))
+        self.assertFalse(dog.uaccess.can_share_resource(holes, PrivilegeCodes.VIEW))
+
+    def test_14_debugging_print_strings(self):
+        """ test stringification of sharing records for debugging """
         cat = self.cat
         holes = self.holes 
         meowers = self.meowers

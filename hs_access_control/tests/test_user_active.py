@@ -99,12 +99,6 @@ class T12UserActive(MockIRODSTestCaseMixin, TestCase):
         with self.assertRaises(PermissionDenied): 
             cat.uaccess.can_unshare_group_with_user(felines, dog)
         with self.assertRaises(PermissionDenied): 
-            cat.uaccess.undo_share_group_with_user(felines, dog)
-        with self.assertRaises(PermissionDenied): 
-            cat.uaccess.can_undo_share_group_with_user(felines, dog)
-        with self.assertRaises(PermissionDenied): 
-            cat.uaccess.get_group_undo_users(felines)
-        with self.assertRaises(PermissionDenied): 
             cat.uaccess.get_group_unshare_users(felines)
         with self.assertRaises(PermissionDenied): 
             cat.uaccess.view_resources
@@ -129,19 +123,11 @@ class T12UserActive(MockIRODSTestCaseMixin, TestCase):
         with self.assertRaises(PermissionDenied): 
             cat.uaccess.can_share_resource_with_group(scratching, felines, PrivilegeCodes.VIEW)
         with self.assertRaises(PermissionDenied): 
-            cat.uaccess.undo_share_resource_with_group(scratching, felines)
-        with self.assertRaises(PermissionDenied): 
-            cat.uaccess.can_undo_share_resource_with_group(scratching, felines)
-        with self.assertRaises(PermissionDenied): 
             cat.uaccess.share_resource_with_user(scratching, dog, PrivilegeCodes.VIEW)
         with self.assertRaises(PermissionDenied): 
             cat.uaccess.unshare_resource_with_user(scratching, dog)
         with self.assertRaises(PermissionDenied): 
             cat.uaccess.can_unshare_resource_with_user(scratching, dog)
-        with self.assertRaises(PermissionDenied): 
-            cat.uaccess.undo_share_resource_with_user(scratching, dog)
-        with self.assertRaises(PermissionDenied): 
-            cat.uaccess.can_undo_share_resource_with_user(scratching, dog)
         with self.assertRaises(PermissionDenied): 
             cat.uaccess.share_resource_with_group(scratching, felines, PrivilegeCodes.VIEW)
         with self.assertRaises(PermissionDenied): 
@@ -149,11 +135,7 @@ class T12UserActive(MockIRODSTestCaseMixin, TestCase):
         with self.assertRaises(PermissionDenied): 
             cat.uaccess.can_unshare_resource_with_group(scratching, felines)
         with self.assertRaises(PermissionDenied): 
-            cat.uaccess.get_resource_undo_users(scratching)
-        with self.assertRaises(PermissionDenied): 
             cat.uaccess.get_resource_unshare_users(scratching)
-        with self.assertRaises(PermissionDenied): 
-            cat.uaccess.get_resource_undo_groups(scratching)
         with self.assertRaises(PermissionDenied): 
             cat.uaccess.get_resource_unshare_groups(scratching)
 
@@ -168,8 +150,6 @@ class T12UserActive(MockIRODSTestCaseMixin, TestCase):
         cat.uaccess.share_group_with_user(felines, dog, PrivilegeCodes.OWNER) 
 
         self.assertTrue(is_equal_to_as_set(cat.uaccess.get_group_unshare_users(felines), [cat, dog]))
-        self.assertTrue(is_equal_to_as_set(cat.uaccess.get_group_undo_users(felines), [dog]))
-        self.assertTrue(is_equal_to_as_set(cat.uaccess.get_resource_undo_users(scratching), [dog]))
         self.assertTrue(is_equal_to_as_set(cat.uaccess.get_resource_unshare_users(scratching), [cat, dog]))
 
         self.assertTrue(is_equal_to_as_set(felines.gaccess.members, [cat, dog]))
@@ -183,8 +163,6 @@ class T12UserActive(MockIRODSTestCaseMixin, TestCase):
         dog.save()
 
         self.assertTrue(is_equal_to_as_set(cat.uaccess.get_group_unshare_users(felines), []))
-        self.assertTrue(is_equal_to_as_set(cat.uaccess.get_group_undo_users(felines), []))
-        self.assertTrue(is_equal_to_as_set(cat.uaccess.get_resource_undo_users(scratching), []))
         self.assertTrue(is_equal_to_as_set(cat.uaccess.get_resource_unshare_users(scratching), []))
 
         self.assertTrue(is_equal_to_as_set(felines.gaccess.members, [cat]))

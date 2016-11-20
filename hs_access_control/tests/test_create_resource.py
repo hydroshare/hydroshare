@@ -84,11 +84,8 @@ class T03CreateResource(MockIRODSTestCaseMixin, TestCase):
         self.assertTrue(cat.uaccess.can_share_resource(holes, PrivilegeCodes.VIEW))
 
         # unsharing with cat would violate owner constraint
-
-        self.assertTrue(is_equal_to_as_set([], cat.uaccess.get_resource_undo_users(holes)))
         self.assertTrue(is_equal_to_as_set([], cat.uaccess.get_resource_unshare_users(holes)))
         self.assertFalse(cat.uaccess.can_unshare_resource_with_user(holes, cat))
-        self.assertFalse(cat.uaccess.can_undo_share_resource_with_user(holes, cat))
 
     def test_02_isolate(self):
         """A user who didn't create a resource cannot access it"""
@@ -126,9 +123,7 @@ class T03CreateResource(MockIRODSTestCaseMixin, TestCase):
 
         # test list access functions for unshare targets
         # these return empty because allowing this would violate the last owner rule
-        self.assertTrue(is_equal_to_as_set([], cat.uaccess.get_resource_undo_users(holes)))
         self.assertTrue(is_equal_to_as_set([], cat.uaccess.get_resource_unshare_users(holes)))
-        self.assertTrue(is_equal_to_as_set([], dog.uaccess.get_resource_undo_users(holes)))
         self.assertTrue(is_equal_to_as_set([], dog.uaccess.get_resource_unshare_users(holes)))
 
     def test_06_check_flag_immutable(self):
