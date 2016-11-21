@@ -1560,7 +1560,49 @@ class T05ShareResource(MockIRODSTestCaseMixin, TestCase):
         self.assertFalse(dog.uaccess.can_share_resource(holes, PrivilegeCodes.CHANGE))
         self.assertFalse(dog.uaccess.can_share_resource(holes, PrivilegeCodes.VIEW))
 
-    def test_14_debugging_print_strings(self):
+    def test_14_non_idempotence_of_unprivileged_share(self):
+        """ test that unprivileged shares are not repeatable """
+        cat = self.cat
+        dog = self.dog
+        mouse = self.mouse
+        holes = self.holes
+        meowers = self.meowers
+
+        # for resources:
+        cat.uaccess.share_resource_with_user(holes, dog, PrivilegeCodes.VIEW)
+        self.assertTrue(dog.uaccess.can_share_resource_with_user(holes, mouse, PrivilegeCodes.VIEW))
+        dog.uaccess.share_resource_with_user(holes, mouse, PrivilegeCodes.VIEW)
+        self.assertFalse(dog.uaccess.can_share_resource_with_user(holes, mouse, PrivilegeCodes.VIEW))
+        with self.assertRaises(PermissionDenied): # not idempotent
+            dog.uaccess.share_resource_with_user(holes, mouse, PrivilegeCodes.VIEW)
+        # but can increase privilege
+        cat.uaccess.share_resource_with_user(holes, dog, PrivilegeCodes.CHANGE)
+        self.assertTrue(dog.uaccess.can_share_resource_with_user(holes, mouse, PrivilegeCodes.CHANGE))
+        dog.uaccess.share_resource_with_user(holes, mouse, PrivilegeCodes.CHANGE)
+        self.assertFalse(dog.uaccess.can_share_resource_with_user(holes, mouse, PrivilegeCodes.CHANGE))
+        with self.assertRaises(PermissionDenied):  # not idempotent
+            dog.uaccess.share_resource_with_user(holes, mouse, PrivilegeCodes.CHANGE)
+        self.assertFalse(dog.uaccess.can_share_resource_with_user(holes, mouse, PrivilegeCodes.VIEW))
+        with self.assertRaises(PermissionDenied):  # unpriviliged user cannot downgrade
+            dog.uaccess.share_resource_with_user(holes, mouse, PrivilegeCodes.VIEW)
+
+        # for groups:
+        cat.uaccess.share_group_with_user(meowers, dog, PrivilegeCodes.CHANGE)
+        self.assertTrue(dog.uaccess.can_share_group_with_user(meowers, mouse, PrivilegeCodes.VIEW))
+        dog.uaccess.share_group_with_user(meowers, mouse, PrivilegeCodes.VIEW)
+        self.assertFalse(dog.uaccess.can_share_group_with_user(meowers, mouse, PrivilegeCodes.VIEW))
+        with self.assertRaises(PermissionDenied):  # non-idempotent
+            dog.uaccess.share_group_with_user(meowers, mouse, PrivilegeCodes.VIEW)
+        # but can raise privilege
+        cat.uaccess.share_group_with_user(meowers, dog, PrivilegeCodes.CHANGE)
+        self.assertTrue(dog.uaccess.can_share_group_with_user(meowers, mouse, PrivilegeCodes.CHANGE))
+        dog.uaccess.share_group_with_user(meowers, mouse, PrivilegeCodes.CHANGE)
+        # and raised privilege is not idempotent
+        self.assertFalse(dog.uaccess.can_share_group_with_user(meowers, mouse, PrivilegeCodes.CHANGE))
+        with self.assertRaises(PermissionDenied):
+            dog.uaccess.share_group_with_user(meowers, mouse, PrivilegeCodes.CHANGE)
+
+    def test_15_debugging_print_strings(self):
         """ test stringification of sharing records for debugging """
         cat = self.cat
         holes = self.holes 

@@ -671,7 +671,7 @@ class UserAccess(models.Model):
 
         return self.user.is_superuser or self.owns_group(this_group)
 
-    def can_share_group(self, this_group, this_privilege, this_user=None):
+    def can_share_group(self, this_group, this_privilege, user=None):
         """
         Return True if a given user can share this group with a given privilege.
 
@@ -699,13 +699,13 @@ class UserAccess(models.Model):
         if __debug__:  # during testing only, check argument types and preconditions
             assert isinstance(this_group, Group)
             assert this_privilege >= PrivilegeCodes.OWNER and this_privilege <= PrivilegeCodes.VIEW
-            if this_user is not None: 
-                assert isinstance(this_user, User)
+            if user is not None:
+                assert isinstance(user, User)
 
         if not self.user.is_active: raise PermissionDenied("Requesting user is not active")
         if not this_group.gaccess.active: raise PermissionDenied("Group is not active")
-        if this_user is not None: 
-            if not this_user.is_active: raise PermissionDenied("Grantee user is not active")
+        if user is not None:
+            if not user.is_active: raise PermissionDenied("Grantee user is not active")
 
         access_group = this_group.gaccess
 
@@ -722,8 +722,8 @@ class UserAccess(models.Model):
         # cannot downgrade privilege just by having sharing privilege. 
       
         grantor_priv = access_group.get_effective_privilege(self.user)
-        if this_user is not None: 
-            grantee_priv = access_group.get_effective_privilege(this_user)
+        if user is not None:
+            grantee_priv = access_group.get_effective_privilege(user)
 
         # check for user authorization
         if self.user.is_superuser:
@@ -739,18 +739,18 @@ class UserAccess(models.Model):
             if grantor_priv > this_privilege:
                 return False  # raise PermissionDenied("User has insufficient privilege over group")
 
-            if this_user is not None: 
+            if user is not None:
                 if grantee_priv == this_privilege: 
                     return False  # raise PermissionDenied("User cannot reshare at same privilege")
 
-                if this_privilege > grantee_priv and this_user != self.user: 
+                if this_privilege > grantee_priv and user != self.user:
                     return False  # raise PermissionDenied("Non-owners cannot decrease privileges for others")
 
         else:
             return False  # raise PermissionDenied("User must own group or have sharing privilege")
 
         # regardless of privilege, cannot remove last owner 
-        if this_user is not None: 
+        if user is not None:
             if grantee_priv == PrivilegeCodes.OWNER \
                     and this_privilege != PrivilegeCodes.OWNER \
                     and access_group.owners.count() == 1: 
@@ -1010,7 +1010,9 @@ class UserAccess(models.Model):
         A user can be unshared with a group if:
 
             * The user is self
+
             * Self is group owner.
+
             * Self has admin privilege.
 
         except that a user in the QuerySet cannot be the last owner of the group.
@@ -1793,13 +1795,12 @@ class UserAccess(models.Model):
         if not self.user.is_active: raise PermissionDenied("Requesting user is not active")
 
         access_resource = this_resource.raccess
-
         if self.user.is_superuser or self.owns_resource(this_resource):
             # everyone who holds this resource, minus potential sole owners
             if access_resource.owners.count() == 1:
                 # get list of owners to exclude from main list
                 # This should be one user but can be two due to race conditions.
-                # Avoid races by excluding whole action in that case.
+                # Avoid races by excluding action in that case.
                 users_to_exclude = User.objects.filter(is_active=True,
                                                        u2urp__resource=this_resource,
                                                        u2urp__privilege=PrivilegeCodes.OWNER)
@@ -1810,6 +1811,9 @@ class UserAccess(models.Model):
         # unprivileged user can only remove grants to self, if any
         elif self.user in access_resource.view_users:
             if access_resource.owners.count() == 1:
+                users_to_exclude = User.objects.filter(is_active=True,
+                                                       u2urp__resource=this_resource,
+                                                       u2urp__privilege=PrivilegeCodes.OWNER)
                 # if self is not an owner,
                 if not UserResourcePrivilege.objects\
                         .filter(user=self.user, resource=this_resource, privilege=PrivilegeCodes.OWNER).exists():
