@@ -30,9 +30,6 @@ def capture_download(**kwargs):
     # retrieve session
     session = Session.objects.for_request(request, user)
 
-    # calculate total file size
-    res_size = resource.get_file_size()
-
     # get the user info
     usertype = get_user_type(session)
     emaildomain = get_user_email_domain(session)
@@ -41,7 +38,7 @@ def capture_download(**kwargs):
     # format the 'create' kwargs
     msg = Variable.format_kwargs(user_ip=ip,
                                  filename=filename,
-                                 resource_size_bytes=res_size,
+                                 resource_size_bytes=resource.size,
                                  resource_type=resource.resource_type,
                                  resource_guid=resource.short_id,
                                  user_type=usertype,
@@ -62,9 +59,6 @@ def capture_resource_create(**kwargs):
     # retrieve session
     session = Session.objects.for_request(request, user)
 
-    # calculate total file size
-    res_size = resource.get_file_size()
-
     # get the user info
     usertype = get_user_type(session)
     emaildomain = get_user_email_domain(session)
@@ -72,7 +66,7 @@ def capture_resource_create(**kwargs):
 
     # format the 'download' kwargs
     msg = Variable.format_kwargs(user_ip=ip,
-                                 resource_size_bytes=res_size,
+                                 resource_size_bytes=resource.size,
                                  resource_type=resource.resource_type,
                                  resource_guid=resource.short_id,
                                  user_type=usertype,

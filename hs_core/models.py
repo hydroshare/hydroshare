@@ -1589,13 +1589,13 @@ class BaseResource(Page, AbstractResource):
         else:
             return IrodsStorage()
 
-    def get_file_size(self):
-        res_size = 0
-        files = self.files.get_queryset()
-        for f in files:
-            res_size += f.resource_file.size or 0
-            res_size += f.fed_resource_file_size or 0
-        return res_size
+    # def get_file_size(self):
+    #     res_size = 0
+    #     files = self.files.get_queryset()
+    #     for f in files:
+    #         res_size += f.resource_file.size or 0
+    #         res_size += f.fed_resource_file_size or 0
+    #     return res_size
 
     # create crossref deposit xml for resource publication
     def get_crossref_deposit_xml(self, pretty_print=True):
@@ -1656,12 +1656,12 @@ class BaseResource(Page, AbstractResource):
     def size(self):
         f_sizes = [f.resource_file.size
                    if f.resource_file else 0
-                   for f in r.files.all()]
+                   for f in self.files.all()]
         total_file_size = sum(f_sizes)
         try:
             f_sizes = [int(f.fed_resource_file_size)
                        if f.fed_resource_file_size else 0
-                       for f in r.files.all()]
+                       for f in self.files.all()]
             total_file_size += sum(f_sizes)
         except SessionException:
             pass
