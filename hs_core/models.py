@@ -1281,6 +1281,12 @@ class AbstractResource(ResourcePermissionsMixin):
         return scimeta_url
 
     @classmethod
+    def resmap_url(cls, resource_id):
+        resmap_path = "{resource_id}/data/resourcemap.xml".format(resource_id=resource_id)
+        resmap_url = reverse('rest_download', kwargs={'path': resmap_path})
+        return resmap_url
+
+    @classmethod
     def sysmeta_path(cls, resource_id):
         return "{resource_id}/data/resourcemap.xml".format(resource_id=resource_id)
 
@@ -1300,7 +1306,7 @@ class AbstractResource(ResourcePermissionsMixin):
                 fl.resource_file.delete()
             elif fl.fed_resource_file:
                 fl.fed_resource_file.delete()
-
+            fl.delete()
         hs_bagit.delete_bag(self)
 
         self.metadata.delete_all_elements()
@@ -1575,6 +1581,12 @@ class BaseResource(Page, AbstractResource):
 
     def can_view(self, request):
         return AbstractResource.can_view(self, request)
+
+    def get_irods_storage(self):
+        if self.resource_federation_path:
+            return IrodsStorage('federated')
+        else:
+            return IrodsStorage()
 
     # create crossref deposit xml for resource publication
     def get_crossref_deposit_xml(self, pretty_print=True):

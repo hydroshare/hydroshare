@@ -122,15 +122,21 @@
             {% block download_bag %}
                 <div>
                     {% for b in cm.bags.all %}
-                        <a id="btn-download-all" type="button" class="btn btn-default row-selector"
-                           href="{{ bag_url }}">
-                    <span class="glyphicon glyphicon-download-alt">
-                        <span title='Download Collection List as Zipped BagIt Archive' class="button-label">Download Collection List Bag</span>
-                    </span>
+                        <div>
+                            <a id="btn-download-all" type="button" class="btn btn-default row-selector"
+                               href="{{ bag_url }}">
+                                    <span class="glyphicon glyphicon-download-alt">
+                                        <span title='Download All Content as Zipped BagIt Archive'
+                                              class="button-label">Download All Content as Zipped BagIt Archive</span>
+                                    </span>
+                            </a>
+                        </div>
+                        <div>
                             <a target="_blank" href="http://en.wikipedia.org/wiki/BagIt">Learn more about the Bagit
                                 archive format</a>
-                        </a>
+                        </div>
                     {% endfor %}
+
                 </div>
             {% endblock %}
         </div>

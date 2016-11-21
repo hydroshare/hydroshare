@@ -1,7 +1,19 @@
-
+import os
+import xmltodict
+import re
 from osgeo import ogr, osr
+try:
+    #  Python 2.6-2.7
+    from HTMLParser import HTMLParser
+except ImportError:
+    #  Python 3
+    from html.parser import HTMLParser
+
+from hs_core.models import Title
+
 
 UNKNOWN_STR = "unknown"
+
 
 def parse_shp(file_path):
     # output dictionary format
@@ -10,18 +22,21 @@ def parse_shp(file_path):
     # shp_metadata_dict["origin_datum"]: origin_datum
     # shp_metadata_dict["origin_unit"]: origin_unit
     # shp_metadata_dict["field_meta_dict"]["field_list"]: list [fieldname1, fieldname2...]
-    # shp_metadata_dict["field_meta_dict"]["field_attr_dic"]: dict {"fieldname": dict {
-    #                                                                        "fieldName":fieldName,
-    #                                                                        "fieldTypeCode":fieldTypeCode,
-    #                                                                        "fieldType":fieldType,
-    #                                                                        "fieldWidth:fieldWidth,
-    #                                                                        "fieldPrecision:fieldPrecision"
-    #                                                                                 }
-    #                                                               }
+    # shp_metadata_dict["field_meta_dict"]["field_attr_dic"]:
+    #   dict {"fieldname": dict {
+    #                         "fieldName":fieldName,
+    #                         "fieldTypeCode":fieldTypeCode,
+    #                         "fieldType":fieldType,
+    #                         "fieldWidth:fieldWidth,
+    #                         "fieldPrecision:fieldPrecision"
+    #                          }
+    #         }
     # shp_metadata_dict["feature_count"]: feature count
     # shp_metadata_dict["geometry_type"]: geometry_type
-    # shp_metadata_dict["origin_extent_dict"]: dict{"west": east, "north":north, "east":east, "south":south}
-    # shp_metadata_dict["wgs84_extent_dict"]: dict{"west": east, "north":north, "east":east, "south":south}
+    # shp_metadata_dict["origin_extent_dict"]:
+    # dict{"west": east, "north":north, "east":east, "south":south}
+    # shp_metadata_dict["wgs84_extent_dict"]:
+    # dict{"west": east, "north":north, "east":east, "south":south}
 
     shp_metadata_dict = {}
     # read shapefile
@@ -50,7 +65,7 @@ def parse_shp(file_path):
 
     field_list = []
     filed_attr_dic = {}
-    field_meta_dict = {"field_list":field_list, "field_attr_dict":filed_attr_dic}
+    field_meta_dict = {"field_list": field_list, "field_attr_dict": filed_attr_dic}
     shp_metadata_dict["field_meta_dict"] = field_meta_dict
     # get Attributes
     layerDefinition = layer.GetLayerDefn()
@@ -95,9 +110,9 @@ def parse_shp(file_path):
 
     # create two key points from layer extent
     left_upper_point = ogr.Geometry(ogr.wkbPoint)
-    left_upper_point.AddPoint(layer_extent[0], layer_extent[3]) # left-upper
+    left_upper_point.AddPoint(layer_extent[0], layer_extent[3])  # left-upper
     right_lower_point = ogr.Geometry(ogr.wkbPoint)
-    right_lower_point.AddPoint(layer_extent[1], layer_extent[2]) # right-lower
+    right_lower_point.AddPoint(layer_extent[1], layer_extent[2])  # right-lower
 
     # source map always has extent, even projection is unknown
     shp_metadata_dict["origin_extent_dict"] = {}
@@ -130,3 +145,71 @@ def parse_shp(file_path):
         shp_metadata_dict["wgs84_extent_dict"]["units"] = UNKNOWN_STR
 
     return shp_metadata_dict
+
+
+def parse_shp_xml(shp_xml_full_path):
+    """
+    Parse ArcGIS 10.X ESRI Shapefile Metadata XML.
+    :param shp_xml_full_path: Expected fullpath to the .shp.xml file
+    :return: a list of metadata dict
+    """
+    metadata = []
+
+    try:
+        if os.path.isfile(shp_xml_full_path):
+            with open(shp_xml_full_path) as fd:
+                xml_dict = xmltodict.parse(fd.read())
+
+                dataIdInfo_dict = xml_dict['metadata']['dataIdInfo']
+                if 'idCitation' in dataIdInfo_dict:
+                    if 'resTitle' in dataIdInfo_dict['idCitation']:
+                        if '#text' in dataIdInfo_dict['idCitation']['resTitle']:
+                            title_value = dataIdInfo_dict['idCitation']['resTitle']['#text']
+                        else:
+                            title_value = dataIdInfo_dict['idCitation']['resTitle']
+
+                        title_max_length = Title._meta.get_field('value').max_length
+                        if len(title_value) > title_max_length:
+                            title_value = title_value[:title_max_length-1]
+                        title = {'title': {'value': title_value}}
+                        metadata.append(title)
+
+                if 'idAbs' in dataIdInfo_dict:
+                    description_value = clean_text(dataIdInfo_dict['idAbs'])
+                    description = {'description': {'abstract': description_value}}
+                    metadata.append(description)
+
+                if 'searchKeys' in dataIdInfo_dict:
+                    searchKeys_dict = dataIdInfo_dict['searchKeys']
+                    if 'keyword' in searchKeys_dict:
+                        keyword_list = []
+                        if type(searchKeys_dict["keyword"]) is list:
+                            keyword_list += searchKeys_dict["keyword"]
+                        else:
+                            keyword_list.append(searchKeys_dict["keyword"])
+                        for k in keyword_list:
+                            metadata.append({'subject': {'value': k}})
+
+    except Exception:
+        # Catch any exception silently and return an empty list
+        # Due to the variant format of ESRI Shapefile Metadata XML
+        # among different ArcGIS versions, an empty list will be returned
+        # if any exception occurs
+        metadata = []
+    finally:
+        return metadata
+
+
+def clean_text(text):
+    #  Decode html
+
+    h = HTMLParser()
+    return h.unescape(clean_html(text))
+
+
+def clean_html(raw_html):
+    # Remove html tag from raw_html
+
+    cleanr = re.compile('<.*?>')
+    cleantext = re.sub(cleanr, '', raw_html)
+    return cleantext

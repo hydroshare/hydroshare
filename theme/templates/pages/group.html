@@ -382,9 +382,7 @@
                                             {% endif %}
                                         </td>
                                         <td>
-                                            <h4><strong><a
-                                                    href="#">{{ pendingrequest.request_from|best_name }}</a></strong>
-                                            </h4>
+                                            <h4><strong><a>{{ pendingrequest.request_from|contact|safe }}</a></strong></h4>
                                             {% if  pendingrequest.request_from.userprofile.title %}
                                                 <span class="text-muted">{{ pendingrequest.request_from.userprofile.title }}</span>
                                             {% endif %}
@@ -487,12 +485,11 @@
                                     <div id="search-container" class="input-group">
                                         <span class="glyphicon glyphicon-search search-icon"></span>
                                         <input id="resource-search-input" type="text" class="form-control" placeholder="Search"/>
+                                        <span id="btn-clear-search-input" class="glyphicon glyphicon-remove-sign btn-clear-search"></span>
 
                                         <div class="input-group-btn">
                                             <div class="btn-group" role="group">
                                                 <div class="dropdown dropdown-lg">
-                                                    <span id="btn-clear-search-input" class="glyphicon glyphicon-remove-sign btn-clear-search"></span>
-
                                                     <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown"
                                                             aria-expanded="false"><span class="caret"></span></button>
 
