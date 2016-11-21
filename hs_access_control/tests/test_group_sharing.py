@@ -97,14 +97,19 @@ class T09GroupSharing(MockIRODSTestCaseMixin, TestCase):
         self.assertTrue(dog.uaccess.can_change_resource(scratching))
         self.assertTrue(dog.uaccess.owns_resource(scratching))
 
+        assertGroupResourceUnshareCoherence(self)
+
     def test_01_cannot_share_own(self):
         """Groups cannot 'own' resources"""
         scratching = self.scratching
         felines = self.felines
         dog = self.dog
+        self.assertFalse(dog.uaccess.can_share_resource_with_group(scratching, felines, PrivilegeCodes.OWNER))
         with self.assertRaises(PermissionDenied) as cm:
             dog.uaccess.share_resource_with_group(scratching, felines, PrivilegeCodes.OWNER)
         self.assertEqual(cm.exception.message, 'Groups cannot own resources')
+        
+        assertGroupResourceUnshareCoherence(self) 
 
     def test_02_share_rw(self):
         """An owner can share with CHANGE privileges"""
@@ -114,6 +119,7 @@ class T09GroupSharing(MockIRODSTestCaseMixin, TestCase):
         cat = self.cat
         nobody = self.nobody
 
+        self.assertTrue(dog.uaccess.can_share_resource_with_group(scratching, felines, PrivilegeCodes.CHANGE))
         dog.uaccess.share_resource_with_group(scratching, felines, PrivilegeCodes.CHANGE)
 
         # is the resource just shared with this group?
@@ -131,21 +137,25 @@ class T09GroupSharing(MockIRODSTestCaseMixin, TestCase):
         self.assertTrue(cat.uaccess.can_change_resource(scratching))
         self.assertTrue(cat.uaccess.can_view_resource(scratching))
 
-        # todo: check advanced sharing semantics:
         # should be able to unshare anything one shared.
-
         with self.assertRaises(PermissionDenied) as cm:
             nobody.uaccess.unshare_resource_with_group(scratching, felines)
         self.assertEqual(cm.exception.message, 'Insufficient privilege to unshare resource')
 
+        assertGroupResourceUnshareCoherence(self) 
+
+        self.assertTrue(dog.uaccess.can_unshare_resource_with_group(scratching, felines))
         dog.uaccess.unshare_resource_with_group(scratching, felines)
         self.assertEqual(felines.gaccess.view_resources.count(), 0)
+
+        assertGroupResourceUnshareCoherence(self)
 
     def test_03_group_share_debugging(self): 
         """ test group share record printing """
         dog = self.dog
         scratching = self.scratching
         felines = self.felines
+        self.assertTrue(dog.uaccess.can_share_resource_with_group(scratching, felines, PrivilegeCodes.CHANGE))
         dog.uaccess.share_resource_with_group(scratching, felines, PrivilegeCodes.CHANGE)
 
         text = str(GroupResourcePrivilege.objects.get(resource=scratching, group=felines)) 

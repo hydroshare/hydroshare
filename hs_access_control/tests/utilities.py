@@ -535,3 +535,26 @@ def assertUserGroupUnshareCoherence(self):
                     with self.assertRaises(PermissionDenied):
                         u.uaccess.unshare_group_with_user(g,v)
 
+def assertGroupResourceUnshareCoherence(self):
+    """
+    Assert that the routines managing unshare for resources are coherent over all users.
+
+    This tests that a user is in the list of unshare users whenever the unshare routine will work
+    and whenever the can_unshare routine will return True.
+
+    :param self: an instance of testCase
+    :return: None
+    """
+    for r in BaseResource.objects.all():  # all resources
+        for u in User.objects.all():  # all instigating users
+            for g in Group.objects.all().exclude(pk=self.group.pk):  # all groups except "author"
+                if u.uaccess.can_unshare_resource_with_group(r,g):
+                    self.assertTrue(g in u.uaccess.get_resource_unshare_groups(r))
+                    record = GroupResourcePrivilege.objects.get(group=g, resource=r)
+                    if not u.is_superuser:  # can only undo unshare in this case(!)
+                        u.uaccess.unshare_resource_with_group(r,g)
+                        record.grantor.uaccess.share_resource_with_group(r, g, record.privilege)
+                else:
+                    self.assertFalse(g in u.uaccess.get_resource_unshare_groups(r))
+                    with self.assertRaises(PermissionDenied):
+                        u.uaccess.unshare_resource_with_group(r,g)
