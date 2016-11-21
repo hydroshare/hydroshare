@@ -18,11 +18,11 @@ def migrate_nc_file(apps, schema_editor):
         try:
             resource_modified(res, res.creator)
             meta_update_success.append(
-                '{}:{}'.format(res.short_id))
+                '{}'.format(res.short_id))
 
         except Exception as e:
             log.exception(e.message)
-            meta_update_fail.append('{}:{}'.format(res.short_id))
+            meta_update_fail.append('{}'.format(res.short_id))
 
     print 'Meta update success: Number: {} List {}'.format(len(meta_update_success),
                                                            meta_update_success)
