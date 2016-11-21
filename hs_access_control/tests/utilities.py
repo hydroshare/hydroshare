@@ -487,4 +487,51 @@ def printUserGroupState(this_user):
 def printGroupResourceState(this_group):
     pprint({'resources':{this_group: getGroupResourceState(this_group)}})
 
+def assertUserResourceUnshareCoherence(self):
+    """
+    Assert that the routines managing unshare for resources are coherent over all users.
+
+    This tests that a user is in the list of unshare users whenever the unshare routine will work
+    and whenever the can_unshare routine will return True.
+
+    :param self: an instance of testCase
+    :return: None
+    """
+    for r in BaseResource.objects.all():  # all resources
+        for u in User.objects.all():  # all instigating users
+            for v in User.objects.all():  # all target users
+                if u.uaccess.can_unshare_resource_with_user(r,v):
+                    self.assertTrue(v in u.uaccess.get_resource_unshare_users(r))
+                    record = UserResourcePrivilege.objects.get(user=v, resource=r)
+                    if u != v and not u.is_superuser and record.grantor != v:  # can only undo unshare in this case(!)
+                        u.uaccess.unshare_resource_with_user(r,v)
+                        record.grantor.uaccess.share_resource_with_user(r, v, record.privilege)
+                else:
+                    self.assertFalse(v in u.uaccess.get_resource_unshare_users(r))
+                    with self.assertRaises(PermissionDenied):
+                        u.uaccess.unshare_resource_with_user(r,v)
+
+def assertUserGroupUnshareCoherence(self):
+    """
+    Assert that the routines managing unshare for groups are coherent over all users.
+
+    This tests that a user is in the list of unshare users whenever the unshare routine will work
+    and whenever the can_unshare routine will return True.
+
+    :param self: an instance of testCase
+    :return: None
+    """
+    for g in Group.objects.all().exclude(pk=self.group.pk):  # all groups except Hydroshare Author
+        for u in User.objects.all():  # all instigating users
+            for v in User.objects.all():  # all target users
+                if u.uaccess.can_unshare_group_with_user(g,v):
+                    self.assertTrue(v in u.uaccess.get_group_unshare_users(g))
+                    record = UserGroupPrivilege.objects.get(user=v, group=g)
+                    if u != v and not u.is_superuser and record.grantor != v:  # can only undo unshare in this case(!)
+                        u.uaccess.unshare_group_with_user(g,v)
+                        record.grantor.uaccess.share_group_with_user(g, v, record.privilege)
+                else:
+                    self.assertFalse(v in u.uaccess.get_group_unshare_users(g))
+                    with self.assertRaises(PermissionDenied):
+                        u.uaccess.unshare_group_with_user(g,v)
 
