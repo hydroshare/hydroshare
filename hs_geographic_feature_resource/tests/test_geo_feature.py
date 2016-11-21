@@ -593,7 +593,7 @@ class TestGeoFeature(TransactionTestCase):
                       resGeoFeature2.metadata.description.abstract)
 
         # test title
-        self.assertIn("Ponds and wetlands impounded by beaver dams as of 1940",
+        self.assertIn("beaver_ponds_1940",
                       resGeoFeature2.metadata.title.value)
 
         # test keywords
