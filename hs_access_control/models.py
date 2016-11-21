@@ -680,7 +680,7 @@ class UserAccess(models.Model):
         :return: True if sharing is possible, otherwise false.
 
         This determines whether the current user can share a group, independent of
-        what entity it might be shared with. An optional this_user parameter determines
+        what entity it might be shared with. An optional user parameter determines
         the target of the sharing. 
 
         Usage:
