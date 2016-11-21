@@ -740,8 +740,9 @@ class UserAccess(models.Model):
                 return False  # raise PermissionDenied("User has insufficient privilege over group")
 
             if user is not None:
+                # enforce non-idempotence for unprivileged users 
                 if grantee_priv == this_privilege: 
-                    return False  # raise PermissionDenied("User cannot reshare at same privilege")
+                    return False  # raise PermissionDenied("Non-owners cannot reshare at existing privilege")
 
                 if this_privilege > grantee_priv and user != self.user:
                     return False  # raise PermissionDenied("Non-owners cannot decrease privileges for others")
@@ -855,8 +856,9 @@ class UserAccess(models.Model):
             if grantor_priv > this_privilege:
                 raise PermissionDenied("User has insufficient privilege over group")
 
+            # enforce non-idempotence for unprivileged users 
             if grantee_priv == this_privilege: 
-                raise PermissionDenied("User cannot reshare at same privilege")
+                raise PermissionDenied("Non-owners cannot reshare at existing privilege")
 
             if this_privilege > grantee_priv and this_user != self.user: 
                 raise PermissionDenied("Non-owners cannot decrease privileges for others")
@@ -1010,9 +1012,7 @@ class UserAccess(models.Model):
         A user can be unshared with a group if:
 
             * The user is self
-
             * Self is group owner.
-
             * Self has admin privilege.
 
         except that a user in the QuerySet cannot be the last owner of the group.
@@ -1410,8 +1410,9 @@ class UserAccess(models.Model):
 
             # Cannot check these without extra information that is optional 
             if user is not None: 
+                # enforce non-idempotence for unprivileged users 
                 if grantee_priv == this_privilege: 
-                    return False  # raise PermissionDenied("Cannot reshare at same privilege")
+                    return False  # raise PermissionDenied("Non-owners cannot reshare at existing privilege")
                 if this_privilege > grantee_priv and user != self.user: 
                     return False  # raise PermissionDenied("Non-owners cannot decrease privileges for others")
 
@@ -1474,6 +1475,14 @@ class UserAccess(models.Model):
         if self.user not in this_group.gaccess.members and not self.user.is_superuser:
             return False
 
+        # enforce non-idempotence for unprivileged users 
+        try: 
+            current_priv = GroupResourcePrivilege.objects.get(group=this_group, resource=this_resource).privilege
+            if current_priv == this_privilege:
+                return False 
+        except GroupResourcePrivilege.DoesNotExist: 
+            pass  # no problem if record does not exist
+
         return True
 
     #################################
@@ -1530,8 +1539,9 @@ class UserAccess(models.Model):
             if grantor_priv > this_privilege:
                 raise PermissionDenied("User has insufficient privilege over resource")
 
+            # enforce non-idempotence for unprivileged users 
             if grantee_priv == this_privilege: 
-                raise PermissionDenied("User cannot reshare at same privilege")
+                raise PermissionDenied("Non-owners cannot reshare at existing privilege")
 
             if this_privilege > grantee_priv and this_user != self.user: 
                 raise PermissionDenied("Non-owners cannot decrease privileges for others")
@@ -1684,6 +1694,15 @@ class UserAccess(models.Model):
         if self.user not in access_group.members and not self.user.is_superuser:
             raise PermissionDenied("User is not a member of the group and not an admin")
 
+        # enforce non-idempotence for unprivileged users 
+        try: 
+            current_priv = GroupResourcePrivilege.objects.get(group=this_group, resource=this_resource).privilege
+            if current_priv == this_privilege:
+                raise PermissionDenied("Non-owners cannot reshare at existing privilege")
+
+        except GroupResourcePrivilege.DoesNotExist: 
+            pass  # no problem if record does not exist
+
         # user is authorized and privilege is appropriate
         # proceed to change the record if present
 
@@ -1795,12 +1814,13 @@ class UserAccess(models.Model):
         if not self.user.is_active: raise PermissionDenied("Requesting user is not active")
 
         access_resource = this_resource.raccess
+
         if self.user.is_superuser or self.owns_resource(this_resource):
             # everyone who holds this resource, minus potential sole owners
             if access_resource.owners.count() == 1:
                 # get list of owners to exclude from main list
                 # This should be one user but can be two due to race conditions.
-                # Avoid races by excluding action in that case.
+                # Avoid races by excluding whole action in that case.
                 users_to_exclude = User.objects.filter(is_active=True,
                                                        u2urp__resource=this_resource,
                                                        u2urp__privilege=PrivilegeCodes.OWNER)
@@ -1811,9 +1831,6 @@ class UserAccess(models.Model):
         # unprivileged user can only remove grants to self, if any
         elif self.user in access_resource.view_users:
             if access_resource.owners.count() == 1:
-                users_to_exclude = User.objects.filter(is_active=True,
-                                                       u2urp__resource=this_resource,
-                                                       u2urp__privilege=PrivilegeCodes.OWNER)
                 # if self is not an owner,
                 if not UserResourcePrivilege.objects\
                         .filter(user=self.user, resource=this_resource, privilege=PrivilegeCodes.OWNER).exists():

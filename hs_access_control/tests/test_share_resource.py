@@ -1602,6 +1602,19 @@ class T05ShareResource(MockIRODSTestCaseMixin, TestCase):
         with self.assertRaises(PermissionDenied):
             dog.uaccess.share_group_with_user(meowers, mouse, PrivilegeCodes.CHANGE)
 
+        # for resources over groups
+        self.assertTrue(dog.uaccess.can_share_resource_with_group(holes, meowers, PrivilegeCodes.VIEW))
+        dog.uaccess.share_resource_with_group(holes, meowers, PrivilegeCodes.VIEW)
+        self.assertFalse(dog.uaccess.can_share_resource_with_group(holes, meowers, PrivilegeCodes.VIEW))
+        with self.assertRaises(PermissionDenied):
+            dog.uaccess.share_resource_with_group(holes, meowers, PrivilegeCodes.VIEW)
+        cat.uaccess.share_resource_with_user(holes, dog, PrivilegeCodes.CHANGE)
+        self.assertTrue(dog.uaccess.can_share_resource_with_group(holes, meowers, PrivilegeCodes.CHANGE))
+        dog.uaccess.share_resource_with_group(holes, meowers, PrivilegeCodes.CHANGE)
+        self.assertFalse(dog.uaccess.can_share_resource_with_group(holes, meowers, PrivilegeCodes.CHANGE))
+        with self.assertRaises(PermissionDenied):
+            dog.uaccess.share_resource_with_group(holes, meowers, PrivilegeCodes.CHANGE)
+
     def test_15_debugging_print_strings(self):
         """ test stringification of sharing records for debugging """
         cat = self.cat
