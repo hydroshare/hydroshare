@@ -5,7 +5,8 @@ from hs_core.signals import pre_download_file, post_delete_resource, post_create
 
 from .models import Session
 from .models import Variable
-from .utils import *
+from .utils import get_client_ip, get_user_type, get_user_email_domain
+
 
 @receiver(user_logged_in, dispatch_uid='id_capture_login')
 def capture_login(sender, **kwargs):
@@ -17,6 +18,7 @@ def capture_login(sender, **kwargs):
 def capture_logout(sender, **kwargs):
     session = Session.objects.for_request(kwargs['request'], kwargs['user'])
     session.record('logout')
+
 
 @receiver(pre_download_file)
 def capture_download(**kwargs):
@@ -47,6 +49,7 @@ def capture_download(**kwargs):
 
     # record the action
     session.record('download', value=msg)
+
 
 @receiver(post_create_resource)
 def capture_resource_create(**kwargs):
@@ -103,4 +106,3 @@ def capture_resource_delete(**kwargs):
 
     # record the action
     session.record('delete', value=msg)
-

@@ -134,7 +134,7 @@ class Variable(models.Model):
     @classmethod
     def format_kwargs(cls, **kwargs):
         msg_items = []
-        for k,v in kwargs.iteritems():
+        for k, v in kwargs.iteritems():
             msg_items.append('%s=%s' % (unicode(k).encode(), unicode(v).encode()))
         return ' '.join(msg_items)
 
@@ -164,6 +164,3 @@ class Variable(models.Model):
         else:
             raise ValueError("Unknown type (%s) for tracking variable: %r",
                              type(value).__name__, value)
-
-
-

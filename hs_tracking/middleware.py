@@ -1,7 +1,6 @@
-import re
 from .models import Session
-import hs_core.hydroshare.utils as hs_utils
 import utils
+
 
 class Tracking(object):
     """The default tracking middleware logs all successful responses as a 'visit' variable with
@@ -40,5 +39,3 @@ class Tracking(object):
         session.record('visit', msg)
 
         return response
-
-
