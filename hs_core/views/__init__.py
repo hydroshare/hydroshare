@@ -1387,7 +1387,7 @@ class GroupView(TemplateView):
         # for each of the resources this group has access to, set resource dynamic
         # attributes (grantor - group member who granted access to the resource) and (date_granted)
         for res in g.gaccess.view_resources:
-            grp = GroupResourcePrivilege.objects.filter(resource=res, group=g).first()
+            grp = GroupResourcePrivilege.objects.get(resource=res, group=g)
             res.grantor = grp.grantor
             res.date_granted = grp.start
             group_resources.append(res)
