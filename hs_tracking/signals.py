@@ -1,7 +1,7 @@
 from django.contrib.auth.signals import user_logged_in, user_logged_out
 from django.dispatch import receiver
 
-from hs_core.signals import *
+from hs_core.signals import pre_download_file, post_delete_resource, post_create_resource
 
 from .models import Session
 from .models import Variable
