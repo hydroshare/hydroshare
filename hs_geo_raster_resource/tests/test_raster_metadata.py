@@ -13,12 +13,12 @@ from hs_core import hydroshare
 from hs_core.hydroshare import utils
 from hs_core.models import CoreMetaData, Creator, Contributor, Coverage, Rights, Title, Language, \
     Publisher, Identifier, Type, Subject, Description, Date, Format, Relation, Source
-from hs_core.testing import MockIRODSTestCaseMixin
+from hs_core.testing import MockIRODSTestCaseMixin, TestCaseCommonUtilities
 from hs_geo_raster_resource.models import RasterResource, OriginalCoverage, BandInformation, \
     CellInformation
 
 
-class TestRasterMetaData(MockIRODSTestCaseMixin, TransactionTestCase):
+class TestRasterMetaData(MockIRODSTestCaseMixin, TestCaseCommonUtilities, TransactionTestCase):
     def setUp(self):
         super(TestRasterMetaData, self).setUp()
         self.group, _ = Group.objects.get_or_create(name='Hydroshare Author')
@@ -193,8 +193,7 @@ class TestRasterMetaData(MockIRODSTestCaseMixin, TransactionTestCase):
             files=files,
             metadata=metadata
             )
-
-        self._test_metadata_extraction()
+        super(TestRasterMetaData, self).raster_metadata_extraction()
 
     def test_metadata_extraction_on_content_file_add(self):
         # test the core metadata at this point
@@ -227,7 +226,7 @@ class TestRasterMetaData(MockIRODSTestCaseMixin, TransactionTestCase):
         utils.resource_file_add_process(resource=self.resRaster, files=files, user=self.user,
                                         extract_metadata=False)
 
-        self._test_metadata_extraction()
+        super(TestRasterMetaData, self).raster_metadata_extraction()
     
     def test_metadata_on_content_file_delete(self):
         # test that some of the metadata is not deleted on content file deletion
@@ -553,60 +552,3 @@ class TestRasterMetaData(MockIRODSTestCaseMixin, TransactionTestCase):
         self.assertTrue(self.resRaster.has_required_content_files())
         self.assertTrue(self.resRaster.metadata.has_all_required_elements())
         self.assertTrue(self.resRaster.can_be_public_or_discoverable)
-
-    def _test_metadata_extraction(self):
-
-        # there should be 2 content files
-        self.assertEqual(self.resRaster.files.all().count(), 2)
-
-        # test core metadata after metadata extraction
-        extracted_title = "My Test Raster Resource"
-        self.assertEqual(self.resRaster.metadata.title.value, extracted_title)
-
-        # there should be 1 creator
-        self.assertEqual(self.resRaster.metadata.creators.all().count(), 1)
-
-        # there should be 1 coverage element - box type
-        self.assertEqual(self.resRaster.metadata.coverages.all().count(), 1)
-        self.assertEqual(self.resRaster.metadata.coverages.all().filter(type='box').count(), 1)
-
-        box_coverage = self.resRaster.metadata.coverages.all().filter(type='box').first()
-        self.assertEqual(box_coverage.value['projection'], 'WGS 84 EPSG:4326')
-        self.assertEqual(box_coverage.value['units'], 'Decimal degrees')
-        self.assertEqual(box_coverage.value['northlimit'], 42.11071605314457)
-        self.assertEqual(box_coverage.value['eastlimit'], -111.45699925047542)
-        self.assertEqual(box_coverage.value['southlimit'], 41.66417975061928)
-        self.assertEqual(box_coverage.value['westlimit'], -111.81761887121905)
-
-        # there should be 2 format elements
-        self.assertEqual(self.resRaster.metadata.formats.all().count(), 2)
-        self.assertEqual(self.resRaster.metadata.formats.all().filter(
-            value='application/vrt').count(), 1)
-        self.assertEqual(self.resRaster.metadata.formats.all().filter(
-            value='image/tiff').count(), 1)
-
-        # testing extended metadata element: original coverage
-        ori_coverage = self.resRaster.metadata.originalCoverage
-        self.assertNotEquals(ori_coverage, None)
-        self.assertEqual(ori_coverage.value['northlimit'], 4662392.446916306)
-        self.assertEqual(ori_coverage.value['eastlimit'], 461954.01909127034)
-        self.assertEqual(ori_coverage.value['southlimit'], 4612592.446916306)
-        self.assertEqual(ori_coverage.value['westlimit'], 432404.01909127034)
-        self.assertEqual(ori_coverage.value['units'], 'meter')
-        self.assertEqual(ori_coverage.value['projection'],
-                         'NAD83 / UTM zone 12N Transverse_Mercator')
-
-        # testing extended metadata element: cell information
-        cell_info = self.resRaster.metadata.cellInformation
-        self.assertEqual(cell_info.rows, 1660)
-        self.assertEqual(cell_info.columns, 985)
-        self.assertEqual(cell_info.cellSizeXValue, 30.0)
-        self.assertEqual(cell_info.cellSizeYValue, 30.0)
-        self.assertEqual(cell_info.cellDataType, 'Float32')
-
-        # testing extended metadata element: band information
-        self.assertEqual(self.resRaster.metadata.bandInformation.count(), 1)
-        band_info = self.resRaster.metadata.bandInformation.first()
-        self.assertEqual(band_info.noDataValue, '-3.40282346639e+38')
-        self.assertEqual(band_info.maximumValue, '3031.44311523')
-        self.assertEqual(band_info.minimumValue, '1358.33459473')
