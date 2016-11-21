@@ -24,7 +24,6 @@ class FunctionalTests(StaticLiveServerTestCase):
         """The login link and form should not be displayed on the home page on mobile"""
         self.mobile_browser.get(self.live_server_url)
         mobile_login_link = self.mobile_browser.find_element_by_id('signin-menu')
-        self.mobile_browser.get_screenshot_as_file("mobile.png")
         self.assertFalse(mobile_login_link.is_displayed(),
                          'Login link should not be visible on mobile.')
 
@@ -32,6 +31,5 @@ class FunctionalTests(StaticLiveServerTestCase):
         """The login link but not form should be displayed on the home page"""
         self.desktop_browser.get(self.live_server_url)
         desktop_login_link = self.desktop_browser.find_element_by_id('signin-menu')
-        self.desktop_browser.get_screenshot_as_file("desktop.png")
         self.assertTrue(desktop_login_link.is_displayed(),
                         'Login link should be visible on desktop.')
