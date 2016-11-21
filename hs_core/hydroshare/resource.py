@@ -1005,15 +1005,19 @@ def delete_resource_file(pk, filename_or_id, user):
         filter_condition = lambda fl: fl.id == file_id
     except ValueError:
         if fed_path:
-            filter_condition = lambda fl: os.path.basename(fl.fed_resource_file_name_or_path) == filename_or_id \
-                                          or os.path.basename(fl.fed_resource_file.name) == filename_or_id
+            filter_condition = lambda fl: \
+                os.path.basename(fl.fed_resource_file_name_or_path) == filename_or_id \
+                    if fl.fed_resource_file_name_or_path else \
+                    os.path.basename(fl.fed_resource_file.name) == filename_or_id \
+                        if fl.fed_resource_file else False
         else:
             filter_condition = lambda fl: os.path.basename(fl.resource_file.name) == filename_or_id
 
     for f in ResourceFile.objects.filter(object_id=resource.id):
         if filter_condition(f):
             # send signal
-            signals.pre_delete_file_from_resource.send(sender=res_cls, file=f, resource=resource, user=user)
+            signals.pre_delete_file_from_resource.send(sender=res_cls, file=f, resource=resource,
+                                                       user=user)
             file_name = delete_resource_file_only(resource, f)
 
             delete_format_metadata_after_delete_file(resource, file_name)
