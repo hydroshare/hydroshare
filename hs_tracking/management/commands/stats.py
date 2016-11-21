@@ -149,23 +149,7 @@ class Command(BaseCommand):
         ]
         w.writerow(fields)
 
-        resources = BaseResource.objects.all()
-        for r in resources:
-            total_file_size = 0
-            try:
-                f_sizes = [f.resource_file.size
-                           if f.resource_file else 0
-                           for f in r.files.all()]
-                total_file_size += sum(f_sizes)
-
-                fed_f_sizes = [int(f.fed_resource_file_size)
-                               if f.fed_resource_file_size else 0
-                               for f in r.files.all()]
-                total_file_size += sum(fed_f_sizes)
-            except SessionException as e:
-                # write the error to stderr
-                err.error(e)
-
+        for r in BaseResource.objects.all():
             values = [
                 r.metadata.dates.get(type="created").start_date.strftime("%m/%d/%Y"),
                 r.metadata.title.value,
