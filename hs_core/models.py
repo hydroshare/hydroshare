@@ -1427,8 +1427,8 @@ class AbstractResource(ResourcePermissionsMixin):
         elif repl_rel:
             citation_str_lst.append(u", {repl_rel_value}, accessed {creation_date}, replicated in "
                                     u"HydroShare at: {url}".format(repl_rel_value=repl_rel.value,
-                                                                  creation_date=date_str,
-                                                                  url=hs_identifier.url))
+                                                                   creation_date=date_str,
+                                                                   url=hs_identifier.url))
         else:
             citation_str_lst.append(", HydroShare, {url}".format(url=hs_identifier.url))
 
