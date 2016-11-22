@@ -4,7 +4,7 @@ from django.conf import settings
 
 from hs_core import hydroshare
 from hs_core.hydroshare import utils
-from hs_core.models import CoreMetaData, Creator
+from hs_core.models import CoreMetaData
 from hs_core.testing import TestCaseCommonUtilities
 from django_irods.storage import IrodsStorage
 
