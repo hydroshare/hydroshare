@@ -137,7 +137,7 @@ class TestRasterMetaData(TestCaseCommonUtilities, TransactionTestCase):
         super(TestRasterMetaData, self).raster_metadata_extraction()
 
         # test metadata deletion when deleting a resource in user zone space
-        self.assertGreater(CoreMetaData.objects.all().count(), 0)
+        self.assertEqual(CoreMetaData.objects.all().count(), 1)
 
         # delete resource
         hydroshare.delete_resource(self.resRaster.short_id)

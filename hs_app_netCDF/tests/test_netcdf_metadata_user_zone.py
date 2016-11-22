@@ -27,12 +27,6 @@ class TestNetcdfMetaData(TestCaseCommonUtilities, TransactionTestCase):
 
         super(TestNetcdfMetaData, self).create_irods_user_in_user_zone()
 
-        self.resNetcdf = hydroshare.create_resource(
-            resource_type='NetcdfResource',
-            owner=self.user,
-            title='Snow water equivalent estimation at TWDEF site from Oct 2009 to June 2010'
-        )
-
         self.netcdf_file_name = 'netcdf_valid.nc'
         self.netcdf_file = 'hs_app_netCDF/tests/{}'.format(self.netcdf_file_name)
 
@@ -137,12 +131,7 @@ class TestNetcdfMetaData(TestCaseCommonUtilities, TransactionTestCase):
                                         fed_res_file_names=[fed_test_file_full_path])
 
         super(TestNetcdfMetaData, self).netcdf_metadata_extraction()
-
-        # test metadata deletion when deleting a resource in user zone space
-        # for some reason, before deleting the resource core_metadata_ori_cnt is 2, and
-        # after deleting the resource, the count is 1, i.e., reduced by 1 but not zero.
-        # Not sure whether this is expected or not
-        core_metadata_ori_cnt = CoreMetaData.objects.all().count()
+        self.assertEqual(CoreMetaData.objects.all().count(), 1)
         # delete resource
         hydroshare.delete_resource(self.resNetcdf.short_id)
-        self.assertEqual(CoreMetaData.objects.all().count(), core_metadata_ori_cnt-1)
+        self.assertEqual(CoreMetaData.objects.all().count(), 0)
