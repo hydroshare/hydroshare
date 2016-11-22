@@ -34,10 +34,10 @@ class TestRasterMetaData(MockIRODSTestCaseMixin, TestCaseCommonUtilities, Transa
 
         # even there is no file uploaded to resource, there are default extended automatically
         # metadata created
-        _, _, metadata, _ = utils.resource_pre_create_actions(resource_type='RasterResource',
-                                                          resource_title='My Test Raster Resource',
-                                                          page_redirect_url_key=None,
-                                                          metadata=None,)
+        _, _, metadata, _ = utils.resource_pre_create_actions(
+            resource_type='RasterResource',
+            resource_title='My Test Raster Resource',
+            page_redirect_url_key=None, metadata=None,)
         self.resRaster = hydroshare.create_resource(
             resource_type='RasterResource',
             owner=self.user,
@@ -160,7 +160,6 @@ class TestRasterMetaData(MockIRODSTestCaseMixin, TestCaseCommonUtilities, Transa
         self.assertEqual(cell_info.cellSizeYValue, None)
         self.assertEqual(cell_info.cellDataType, None)
 
-
         # there should be default spatial reference info
         ori_coverage = self.resRaster.metadata.originalCoverage
         self.assertNotEqual(ori_coverage, None)
@@ -181,11 +180,11 @@ class TestRasterMetaData(MockIRODSTestCaseMixin, TestCaseCommonUtilities, Transa
         # passing the file object that points to the temp dir doesn't work - create_resource throws
         # error. open the file from the fixed file location
         files = [UploadedFile(file=self.raster_tif_file_obj, name=self.raster_tif_file_name)]
-        _, _, metadata, _ = utils.resource_pre_create_actions(resource_type='RasterResource',
-                                                          resource_title='My Test Raster Resource',
-                                                          page_redirect_url_key=None,
-                                                          files=files,
-                                                          metadata=None,)
+        _, _, metadata, _ = utils.resource_pre_create_actions(
+            resource_type='RasterResource',
+            resource_title='My Test Raster Resource',
+            page_redirect_url_key=None,
+            files=files, metadata=None,)
         self.resRaster = hydroshare.create_resource(
             'RasterResource',
             self.user,
@@ -227,7 +226,7 @@ class TestRasterMetaData(MockIRODSTestCaseMixin, TestCaseCommonUtilities, Transa
                                         extract_metadata=False)
 
         super(TestRasterMetaData, self).raster_metadata_extraction()
-    
+
     def test_metadata_on_content_file_delete(self):
         # test that some of the metadata is not deleted on content file deletion
         files = [UploadedFile(file=self.raster_tif_file_obj, name=self.raster_tif_file_name)]
@@ -409,7 +408,6 @@ class TestRasterMetaData(MockIRODSTestCaseMixin, TestCaseCommonUtilities, Transa
         self.assertEqual(cell_info.cellSizeYValue, 30.0)
         self.assertEqual(cell_info.cellDataType, 'Float32')
 
-
         # multiple cell Information elements are not allowed - should raise exception
         with self.assertRaises(IntegrityError):
             self.resRaster.metadata.create_element('cellinformation', name='cellinfo',
@@ -491,7 +489,6 @@ class TestRasterMetaData(MockIRODSTestCaseMixin, TestCaseCommonUtilities, Transa
         self.assertEqual(cell_info.cellSizeYValue, 3.0)
         self.assertEqual(cell_info.cellDataType, 'Double')
 
-
         # update band info element
         self.resRaster.metadata.update_element('bandinformation',
                                                self.resRaster.metadata.bandInformation.first().id,
@@ -547,7 +544,7 @@ class TestRasterMetaData(MockIRODSTestCaseMixin, TestCaseCommonUtilities, Transa
 
         # adding required metadata
         self.resRaster.metadata.create_element('description', abstract='example abstract')
-        self.resRaster.metadata.create_element('subject',value='logan')
+        self.resRaster.metadata.create_element('subject', value='logan')
 
         self.assertTrue(self.resRaster.has_required_content_files())
         self.assertTrue(self.resRaster.metadata.has_all_required_elements())

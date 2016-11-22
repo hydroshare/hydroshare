@@ -13,7 +13,7 @@ from hs_core.hydroshare import utils
 from hs_core.models import CoreMetaData, Creator, Contributor, Coverage, Rights, Title, Language, \
     Publisher, Identifier, Type, Subject, Description, Date, Format, Relation, Source
 from hs_core.testing import MockIRODSTestCaseMixin, TestCaseCommonUtilities
-from hs_app_netCDF.models import NetcdfResource,Variable, OriginalCoverage
+from hs_app_netCDF.models import NetcdfResource, Variable, OriginalCoverage
 
 
 class TestNetcdfMetaData(MockIRODSTestCaseMixin, TestCaseCommonUtilities, TransactionTestCase):
@@ -29,7 +29,7 @@ class TestNetcdfMetaData(MockIRODSTestCaseMixin, TestCaseCommonUtilities, Transa
             groups=[self.group]
         )
 
-        self.resNetcdf= hydroshare.create_resource(
+        self.resNetcdf = hydroshare.create_resource(
             resource_type='NetcdfResource',
             owner=self.user,
             title='Snow water equivalent estimation at TWDEF site from Oct 2009 to June 2010'
@@ -78,7 +78,7 @@ class TestNetcdfMetaData(MockIRODSTestCaseMixin, TestCaseCommonUtilities, Transa
         with self.assertRaises(utils.ResourceFileValidationException):
             utils.resource_file_add_pre_process(resource=self.resNetcdf, files=files,
                                                 user=self.user,
-                                            extract_metadata=False)
+                                                extract_metadata=False)
 
         # trying to add valid .nc file should pass the file check
         files = [UploadedFile(file=self.netcdf_file_obj, name=self.netcdf_file_name)]
@@ -305,7 +305,7 @@ class TestNetcdfMetaData(MockIRODSTestCaseMixin, TestCaseCommonUtilities, Transa
         self.assertEqual(self.resNetcdf.metadata.ori_coverage.all().count(), 0)
         value = {"northlimit": '12', "projection": "transverse_mercator",
                  "units": "meter", "southlimit": '10',
-                "eastlimit": '23', "westlimit": '2'}
+                 "eastlimit": '23', "westlimit": '2'}
         self.resNetcdf.metadata.create_element(
             'originalcoverage',
             value=value,
@@ -346,8 +346,8 @@ class TestNetcdfMetaData(MockIRODSTestCaseMixin, TestCaseCommonUtilities, Transa
 
         # multiple variable elements are allowed
         self.resNetcdf.metadata.create_element('variable', name='x', type='Float',
-                                                   shape='x', unit='m',
-                                                   descriptive_name='x coordinate of projection')
+                                               shape='x', unit='m',
+                                               descriptive_name='x coordinate of projection')
         self.assertEqual(self.resNetcdf.metadata.variables.all().count(), 2)
 
         # delete

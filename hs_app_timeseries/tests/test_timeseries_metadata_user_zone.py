@@ -122,33 +122,6 @@ class TestTimeSeriesMetaData(TestCaseCommonUtilities, TransactionTestCase):
         self.assertNotEqual(self.resTimeSeries.metadata.cv_mediums.all().count(), 0)
         self.assertNotEqual(self.resTimeSeries.metadata.cv_aggregation_statistics.all().count(), 0)
 
-        # resource creation with uploaded sqlite file
-        # test the core metadata at this point
-        self.assertEqual(self.resTimeSeries.metadata.title.value, 'Test Time Series Resource')
-
-        # there shouldn't any abstract element
-        self.assertEqual(self.resTimeSeries.metadata.description, None)
-
-        # there shouldn't any coverage element
-        self.assertEqual(self.resTimeSeries.metadata.coverages.all().count(), 0)
-
-        # there shouldn't any format element
-        self.assertEqual(self.resTimeSeries.metadata.formats.all().count(), 0)
-
-        # there shouldn't any subject element
-        self.assertEqual(self.resTimeSeries.metadata.subjects.all().count(), 0)
-
-        # there shouldn't any contributor element
-        self.assertEqual(self.resTimeSeries.metadata.contributors.all().count(), 0)
-
-        # check that there are no extended metadata elements at this point
-        self.assertEqual(self.resTimeSeries.metadata.sites.all().count(), 0)
-        self.assertEqual(self.resTimeSeries.metadata.variables.all().count(), 0)
-        self.assertEqual(self.resTimeSeries.metadata.methods.all().count(), 0)
-        self.assertEqual(self.resTimeSeries.metadata.processing_levels.all().count(), 0)
-        self.assertEqual(self.resTimeSeries.metadata.time_series_results.all().count(), 0)
-        self.assertEqual(self.resTimeSeries.metadata.utc_offset, None)
-
         # test metadata extraction with a valid ODM2 sqlite file being added coming from user zone
         # space
         res_add_files = []
