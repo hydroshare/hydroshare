@@ -90,5 +90,3 @@ print 'Copy resource to temp folder failure: Number: {} List: {}'.\
 print 'Meta update success: Number: {} List {}'.\
     format(len(meta_update_success), meta_update_success)
 print 'Meta update fail: Number: {} List {}'.format(len(meta_update_fail), meta_update_fail)
-
-
