@@ -882,6 +882,61 @@ def add_file_to_resource(resource, f, fed_res_file_name_or_path='', fed_copy_or_
     return ret
 
 
+def add_metadata_element_to_xml(root, md_element, md_fields):
+    """
+    helper function to generate xml elements for a given metadata element that belongs to
+    'hsterms' namespace
+
+    :param root: the xml document root element to which xml elements for the specified
+    metadata element needs to be added
+    :param md_element: the metadata element object. The term attribute of the metadata
+    element object is used for naming the root xml element for this metadata element.
+    If the root xml element needs to be named differently, then this needs to be a tuple
+    with first element being the metadata element object and the second being the name
+    for the root element. Example: md_element=self.Creat or    # the term attribute of the
+    Creator object will be used md_element=(self.Creator, 'Author') # 'Author' will be used
+
+    :param md_fields: a list of attribute names of the metadata element (if the name to be used
+     in generating the xml element name is same as the attribute name then include the
+     attribute name as a list item. if xml element name needs to be different from the
+     attribute name then the list item must be a tuple with first element of the tuple being
+     the attribute name and the second element being what will be used in naming the xml
+     element) Example: [('first_name', 'firstName'), 'phone', 'email']
+     # xml sub-elements names: firstName, phone, email
+    """
+    from lxml import etree
+    from hs_core.models import CoreMetaData
+
+    name_spaces = CoreMetaData.NAMESPACES
+    if isinstance(md_element, tuple):
+        element_name = md_element[1]
+        md_element = md_element[0]
+    else:
+        element_name = md_element.term
+
+    hsterms_newElem = etree.SubElement(root,
+                                       "{{{ns}}}{new_element}".format(
+                                           ns=name_spaces['hsterms'],
+                                           new_element=element_name))
+    hsterms_newElem_rdf_Desc = etree.SubElement(
+        hsterms_newElem, "{{{ns}}}Description".format(ns=name_spaces['rdf']))
+    for md_field in md_fields:
+        if isinstance(md_field, tuple):
+            field_name = md_field[0]
+            xml_element_name = md_field[1]
+        else:
+            field_name = md_field
+            xml_element_name = md_field
+
+        if hasattr(md_element, field_name):
+            attr = getattr(md_element, field_name)
+            if attr:
+                field = etree.SubElement(hsterms_newElem_rdf_Desc,
+                                         "{{{ns}}}{field}".format(ns=name_spaces['hsterms'],
+                                                                  field=xml_element_name))
+                field.text = str(attr)
+
+
 class ZipContents(object):
     """
     Extract the contents of a zip file one file at a time
