@@ -223,7 +223,7 @@ def get_box_info(nc_dataset):
     original_box_info = get_original_box_info(nc_dataset)
 
     if original_box_info:
-        if original_box_info.get('units', '') == 'degree':  # geographic coor x, y
+        if original_box_info.get('units', '').lower() == 'degree':  # geographic coor x, y
             box_info = original_box_info
             # check if the westlimit and eastlimit are in -180-180
             westlimit = float(box_info['westlimit'])
@@ -307,12 +307,12 @@ def get_original_box_info(nc_dataset):
 
     Return: the netCDF original coverage box info
     """
-    original_box_info = {}
 
-    if get_original_box_info_by_acdd_convention(nc_dataset):
+    original_box_info = get_original_box_info_by_data(nc_dataset)
+
+    if original_box_info.get('units', '') == 'degree' and \
+            get_original_box_info_by_acdd_convention(nc_dataset):
         original_box_info = get_original_box_info_by_acdd_convention(nc_dataset)
-    else:
-        original_box_info = get_original_box_info_by_data(nc_dataset)
 
     return original_box_info
 
@@ -334,6 +334,7 @@ def get_original_box_info_by_acdd_convention(nc_dataset):
         original_box_info['westlimit'] = str(nc_dataset.__dict__['geospatial_lon_min'])
         original_box_info['eastlimit'] = str(nc_dataset.__dict__['geospatial_lon_max'])
         original_box_info['units'] = 'degree'
+        original_box_info['projection'] = get_nc_grid_mapping_crs_name(nc_dataset)
     # TODO: check the geospatial_bounds and geospatial_bounds_crs attributes
 
     return original_box_info
