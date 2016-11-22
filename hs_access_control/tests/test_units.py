@@ -1,5 +1,3 @@
-
-
 import unittest
 from django.http import Http404
 from django.test import TestCase
@@ -144,6 +142,13 @@ class UnitTests(MockIRODSTestCaseMixin, TestCase):
         self.assertTrue(george.uaccess.can_share_group(bikers, PrivilegeCodes.VIEW))
         self.assertFalse(alva.uaccess.can_share_group(bikers, PrivilegeCodes.VIEW))
 
+    def test_user_can_share_group_with_user(self):
+        george = self.george
+        alva = self.alva
+        bikers = self.bikers
+        self.assertTrue(george.uaccess.can_share_group_with_user(bikers, alva, PrivilegeCodes.VIEW))
+        self.assertFalse(alva.uaccess.can_share_group_with_user(bikers, george, PrivilegeCodes.VIEW))
+
     def test_user_share_group_with_user(self):
         george = self.george
         alva = self.alva
@@ -274,6 +279,13 @@ class UnitTests(MockIRODSTestCaseMixin, TestCase):
         bikes = self.bikes
         self.assertTrue(george.uaccess.can_share_resource(bikes, PrivilegeCodes.VIEW))
         self.assertFalse(alva.uaccess.can_share_resource(bikes, PrivilegeCodes.VIEW))
+
+    def test_user_can_share_resource_with_user(self): 
+        george = self.george
+        alva = self.alva
+        bikes = self.bikes
+        self.assertTrue(george.uaccess.can_share_resource_with_user(bikes, alva, PrivilegeCodes.VIEW))
+        self.assertFalse(alva.uaccess.can_share_resource_with_user(bikes, george, PrivilegeCodes.VIEW))
 
     def test_user_can_share_resource_with_group(self):
         george = self.george
