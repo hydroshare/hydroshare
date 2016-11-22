@@ -45,7 +45,7 @@ class TestGeoFeature(TestCaseCommonUtilities, TransactionTestCase):
         self.irods_storage.saveFile(self.valid_file, irods_target_path + self.valid_file_name)
         self.valid_file_name2 = 'gis.osm_adminareas_v06_with_folder.zip'
         self.valid_file2 = 'hs_geographic_feature_resource/tests/{}'.format(self.valid_file_name2)
-        self.irods_storage.saveFile(self.valid_file, irods_target_path + self.valid_file_name2)
+        self.irods_storage.saveFile(self.valid_file2, irods_target_path + self.valid_file_name2)
 
     def tearDown(self):
         super(TestGeoFeature, self).tearDown()
