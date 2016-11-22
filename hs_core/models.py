@@ -1025,6 +1025,57 @@ class Coverage(AbstractMetaDataElement):
     def remove(cls, element_id):
         raise ValidationError("Coverage element can't be deleted.")
 
+    def add_to_xml_container(self, container):
+        NAMESPACES = CoreMetaData.NAMESPACES
+        dc_coverage = etree.SubElement(container, '{%s}coverage' % NAMESPACES['dc'])
+        cov_dcterm = '{%s}' + self.type
+        dc_coverage_dcterms = etree.SubElement(dc_coverage,
+                                               cov_dcterm % NAMESPACES['dcterms'])
+        rdf_coverage_value = etree.SubElement(dc_coverage_dcterms,
+                                              '{%s}value' % NAMESPACES['rdf'])
+        if self.type == 'period':
+            start_date = parser.parse(self.value['start'])
+            end_date = parser.parse(self.value['end'])
+            cov_value = 'start=%s; end=%s; scheme=W3C-DTF' % (start_date.isoformat(),
+                                                              end_date.isoformat())
+
+            if 'name' in self.value:
+                cov_value = 'name=%s; ' % self.value['name'] + cov_value
+
+        elif self.type == 'point':
+            cov_value = 'east=%s; north=%s; units=%s' % (self.value['east'],
+                                                         self.value['north'],
+                                                         self.value['units'])
+            if 'name' in self.value:
+                cov_value = 'name=%s; ' % self.value['name'] + cov_value
+            if 'elevation' in self.value:
+                cov_value += '; elevation=%s' % self.value['elevation']
+                if 'zunits' in self.value:
+                    cov_value += '; zunits=%s' % self.value['zunits']
+            if 'projection' in self.value:
+                cov_value += '; projection=%s' % self.value['projection']
+
+        else:
+            # this is box type
+            cov_value = 'northlimit=%s; eastlimit=%s; southlimit=%s; westlimit=%s; units=%s' \
+                        % (self.value['northlimit'], self.value['eastlimit'],
+                           self.value['southlimit'], self.value['westlimit'],
+                           self.value['units'])
+
+            if 'name' in self.value:
+                cov_value = 'name=%s; ' % self.value['name'] + cov_value
+            if 'uplimit' in self.value:
+                cov_value += '; uplimit=%s' % self.value['uplimit']
+            if 'downlimit' in self.value:
+                cov_value += '; downlimit=%s' % self.value['downlimit']
+            if 'uplimit' in self.value or 'downlimit' in self.value:
+                cov_value += '; zunits=%s' % self.value['zunits']
+            if 'projection' in self.value:
+                cov_value += '; projection=%s' % self.value['projection']
+
+        rdf_coverage_value.text = cov_value
+
+
     @classmethod
     def _validate_coverage_type_value_attributes(cls, coverage_type, value_dict):
         if coverage_type == 'period':
@@ -1423,6 +1474,12 @@ class AbstractResource(ResourcePermissionsMixin):
     def first_creator(self):
         first_creator = self.metadata.creators.filter(order=1).first()
         return first_creator
+
+    def get_metadata_xml(self, pretty_print=True):
+        # Resource types that support file types
+        # must override this method. See Composite Resource
+        # type as an example
+        return self.metadata.get_xml()
 
     def _get_metadata(self, metatdata_obj):
         md_type = ContentType.objects.get_for_model(metatdata_obj)
@@ -2176,6 +2233,8 @@ class CoreMetaData(models.Model):
             self._create_person_element(etree, rdf_Description, contributor)
 
         for coverage in self.coverages.all():
+            # TODO: (Pabitra) use the coverage element's add_to_xml_container()
+            # to replace the following code
             dc_coverage = etree.SubElement(rdf_Description, '{%s}coverage' % self.NAMESPACES['dc'])
             cov_dcterm = '{%s}' + coverage.type
             dc_coverage_dcterms = etree.SubElement(dc_coverage,
@@ -2344,6 +2403,8 @@ class CoreMetaData(models.Model):
 
         return self.XML_HEADER + '\n' + etree.tostring(RDF_ROOT, pretty_print=pretty_print)
 
+    # TODO: (Pabitra, Dt:11/21/2016) need to delete this method and users of this method
+    # need to use the same method from the hydroshare.utils.py
     def add_metadata_element_to_xml(self, root, md_element, md_fields):
         """
         helper function to generate xml elements for a given metadata element that belongs to

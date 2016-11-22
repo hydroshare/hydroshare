@@ -6,8 +6,10 @@ from django.core.exceptions import ValidationError, ObjectDoesNotExist
 from django.contrib.postgres.fields import HStoreField
 
 from dominate.tags import *
+from lxml import etree
 
-from hs_core.models import ResourceFile, AbstractMetaDataElement, Coverage
+from hs_core.hydroshare.utils import get_resource_file_name_and_extension
+from hs_core.models import ResourceFile, AbstractMetaDataElement, Coverage, CoreMetaData
 
 
 class AbstractFileMetaData(models.Model):
@@ -132,6 +134,51 @@ class AbstractFileMetaData(models.Model):
     @property
     def temporal_coverage(self):
         return self.coverages.filter(type='period').first()
+
+    def add_to_xml_container(self, container):
+        NAMESPACES = CoreMetaData.NAMESPACES
+        dataset_container = etree.SubElement(
+            container, '{%s}Dataset' % NAMESPACES['hsterms'])
+        rdf_Description = etree.SubElement(dataset_container, '{%s}Description' % NAMESPACES['rdf'])
+        hsterms_datatype = etree.SubElement(rdf_Description, '{%s}dataType' % NAMESPACES['hsterms'])
+        hsterms_datatype.text = self.logical_file.data_type
+        if self.logical_file.dataset_name:
+            hsterms_datatitle = etree.SubElement(rdf_Description,
+                                                '{%s}dataTitle' % NAMESPACES['hsterms'])
+            hsterms_datatitle.text = self.logical_file.dataset_name
+
+        # add fileType node
+        for res_file in self.logical_file.files.all():
+            hsterms_datafile = etree.SubElement(rdf_Description,
+                                                '{%s}dataFile' % NAMESPACES['hsterms'])
+            dc_title = etree.SubElement(hsterms_datafile,
+                                        '{%s}title' % NAMESPACES['dc'])
+
+            file_name = get_resource_file_name_and_extension(res_file)[1]
+            dc_title.text = file_name
+
+            dc_format = etree.SubElement(hsterms_datafile, '{%s}format' % NAMESPACES['dc'])
+            dc_format.text = res_file.mime_type
+
+            # TODO: check if we should include the file size here
+
+        self.add_extra_metadata_to_xml_container(rdf_Description)
+        for coverage in self.coverages.all():
+            coverage.add_to_xml_container(dataset_container)
+        return rdf_Description
+
+    def add_extra_metadata_to_xml_container(self, container):
+        for key, value in self.extra_metadata.iteritems():
+            hsterms_key_value = etree.SubElement(
+                container, '{%s}extendedMetadata' % CoreMetaData.NAMESPACES['hsterms'])
+            hsterms_key_value_rdf_Description = etree.SubElement(
+                hsterms_key_value, '{%s}Description' % CoreMetaData.NAMESPACES['rdf'])
+            hsterms_key = etree.SubElement(hsterms_key_value_rdf_Description,
+                                           '{%s}key' % CoreMetaData.NAMESPACES['hsterms'])
+            hsterms_key.text = key
+            hsterms_value = etree.SubElement(hsterms_key_value_rdf_Description,
+                                             '{%s}value' % CoreMetaData.NAMESPACES['hsterms'])
+            hsterms_value.text = value
 
     def create_element(self, element_model_name, **kwargs):
         # had to import here to avoid circular import
@@ -388,6 +435,9 @@ class AbstractLogicalFile(models.Model):
                             object_id_field='logical_file_object_id')
     # the dataset name will allow us to identify a logical file group on user interface
     dataset_name = models.CharField(max_length=255, null=True, blank=True)
+    # this will be used for hsterms:dataType in resourcemetadata.xml
+    # each specific logical type needs to rest this field
+    data_type = "Generic data"
 
     class Meta:
         abstract = True

@@ -33,7 +33,7 @@ class GenericFileMetaData(AbstractFileMetaData):
         context = Context({})
         return template.render(context)
 
-    def get_html_forms(self):
+    def get_html_forms(self, datatset_name_form=True):
         # in the template we can insert necessary html code for displaying all
         # file type metadata associated with a logical file using this
         # single line: {{ logical_file.metadata.get_html |safe }}
@@ -154,6 +154,7 @@ class GenericFileMetaData(AbstractFileMetaData):
 class GenericLogicalFile(AbstractLogicalFile):
     # each resource file is assigned this logical file type on upload to Composite Resource
     metadata = models.OneToOneField(GenericFileMetaData, related_name="logical_file")
+    data_type = "Generic data"
 
     @classmethod
     def create(cls):

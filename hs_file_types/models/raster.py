@@ -77,7 +77,7 @@ class GeoRasterFileMetaData(AbstractFileMetaData, GeoRasterMetaDataMixin):
         context = Context({})
         return template.render(context)
 
-    def get_html_forms(self):
+    def get_html_forms(self, datatset_name_form=True):
         """
         generates html form code for all metadata associated with raster file type
         that can by dynamically injected to existing html document using jquery or loaded
@@ -130,9 +130,6 @@ class GeoRasterFileMetaData(AbstractFileMetaData, GeoRasterMetaDataMixin):
         context_dict["coverage_form"] = self.get_spatial_coverage_form()
         context_dict["orig_coverage_form"] = self.get_original_coverage_form()
         context_dict["cellinfo_form"] = self.get_cellinfo_form()
-        # temp_cov_form = Coverage.get_temporal_html_form(resource=None,
-        #                                                 element=self.temporal_coverage)
-
         temp_cov_form = self.get_temporal_coverage_form()
 
         update_action = "/hsapi/_internal/GeoRasterLogicalFile/{0}/{1}/{2}/update-file-metadata/"
@@ -220,9 +217,19 @@ class GeoRasterFileMetaData(AbstractFileMetaData, GeoRasterMetaDataMixin):
         else:
             return {'is_valid': False, 'element_data_dict': None, "errors": element_form.errors}
 
+    def add_to_xml_container(self, container):
+        container_to_add_to = super(GeoRasterFileMetaData, self).add_to_xml_container(container)
+        if self.originalCoverage:
+            self.originalCoverage.add_to_xml_container(container_to_add_to)
+        if self.cellInformation:
+            self.cellInformation.add_to_xml_container(container_to_add_to)
+        for bandinfo in self.bandInformations:
+            bandinfo.add_to_xml_container(container_to_add_to)
+
 
 class GeoRasterLogicalFile(AbstractLogicalFile):
     metadata = models.OneToOneField(GeoRasterFileMetaData, related_name="logical_file")
+    data_type = "Geo Raster data"
 
     @classmethod
     def get_allowed_uploaded_file_types(cls):
