@@ -470,6 +470,8 @@ def rename_irods_file_or_folder_in_django(resource, src_name, tgt_name):
         if res_file_obj.exists():
             # src_name and tgt_name are file names - replace src_name with tgt_name
             res_file_obj[0].fed_resource_file_name_or_path = tgt_name
+            res_file_obj[0].mime_type = get_file_mime_type(
+                res_file_obj[0].fed_resource_file_name_or_path)
             res_file_obj[0].save()
         else:
             # src_name and tgt_name are folder names
@@ -480,6 +482,7 @@ def rename_irods_file_or_folder_in_django(resource, src_name, tgt_name):
                 old_str = fobj.fed_resource_file_name_or_path
                 new_str = old_str.replace(src_name, tgt_name)
                 fobj.fed_resource_file_name_or_path = new_str
+                fobj.mime_type = get_file_mime_type(fobj.fed_resource_file_name_or_path)
                 fobj.save()
     else:
         res_file_obj = ResourceFile.objects.filter(object_id=resource.id,
@@ -493,9 +496,11 @@ def rename_irods_file_or_folder_in_django(resource, src_name, tgt_name):
 
             res_file_obj[0].delete()
             res_file = ResourceFile.objects.create(content_object=resource, resource_file=tgt_name)
+            res_file.mime_type = get_file_mime_type(res_file.resource_file.name)
             if logical_file is not None:
                 res_file.logical_file_content_object = logical_file
-                res_file.save()
+            res_file.save()
+
         else:
             # src_name and tgt_name are folder names
             res_file_objs = \
@@ -508,9 +513,10 @@ def rename_irods_file_or_folder_in_django(resource, src_name, tgt_name):
                 fobj.delete()
                 res_file = ResourceFile.objects.create(content_object=resource,
                                                        resource_file=new_str)
+                res_file.mime_type = get_file_mime_type(res_file.resource_file.name)
                 if logical_file is not None:
                     res_file.logical_file_content_object = logical_file
-                    res_file.save()
+                res_file.save()
 
 
 def remove_irods_folder_in_django(resource, istorage, foldername, user):
