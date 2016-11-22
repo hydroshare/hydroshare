@@ -69,13 +69,15 @@ class TestNetcdfMetaData(MockIRODSTestCaseMixin, TestCaseCommonUtilities, Transa
         # trying to add a text file to this resource should raise exception
         files = [UploadedFile(file=self.text_file_obj, name=self.text_file_obj.name)]
         with self.assertRaises(utils.ResourceFileValidationException):
-            utils.resource_file_add_pre_process(resource=self.resNetcdf, files=files, user=self.user,
+            utils.resource_file_add_pre_process(resource=self.resNetcdf, files=files,
+                                                user=self.user,
                                                 extract_metadata=False)
 
         # trying to add bad .nc file should raise file validation error
         files = [UploadedFile(file=self.netcdf_bad_file_obj, name=self.netcdf_bad_file_name)]
         with self.assertRaises(utils.ResourceFileValidationException):
-            utils.resource_file_add_pre_process(resource=self.resNetcdf, files=files, user=self.user,
+            utils.resource_file_add_pre_process(resource=self.resNetcdf, files=files,
+                                                user=self.user,
                                             extract_metadata=False)
 
         # trying to add valid .nc file should pass the file check
@@ -88,23 +90,24 @@ class TestNetcdfMetaData(MockIRODSTestCaseMixin, TestCaseCommonUtilities, Transa
         # there should be 2 content file: with ncdump file created by system
         self.assertEqual(self.resNetcdf.files.all().count(), 2)
 
-        # file pre add process should raise validation error if we try to add a 2nd file when the resource has
-        # already 2 content files
+        # file pre add process should raise validation error if we try to add a 2nd file
+        # when the resource has already 2 content files
         with self.assertRaises(utils.ResourceFileValidationException):
-            utils.resource_file_add_pre_process(resource=self.resNetcdf, files=files, user=self.user,
+            utils.resource_file_add_pre_process(resource=self.resNetcdf, files=files,
+                                                user=self.user,
                                                 extract_metadata=False)
 
     def test_metadata_extraction_on_resource_creation(self):
-        # passing the file object that points to the temp dir doesn't work - create_resource throws error
-        # open the file from the fixed file location
+        # passing the file object that points to the temp dir doesn't work - create_resource
+        # throws error open the file from the fixed file location
         files = [UploadedFile(file=self.netcdf_file_obj, name=self.netcdf_file_name)]
-        _, _, metadata, _ = utils.resource_pre_create_actions(resource_type='NetcdfResource',
-                                                                          resource_title='Snow water equivalent '
-                                                                                         'estimation at TWDEF site '
-                                                                                         'from Oct 2009 to June 2010',
-                                                                          page_redirect_url_key=None,
-                                                                          files=files,
-                                                                          metadata=None,)
+        _, _, metadata, _ = utils.resource_pre_create_actions(
+            resource_type='NetcdfResource',
+            resource_title='Snow water equivalent estimation at TWDEF site '
+                           'from Oct 2009 to June 2010',
+            page_redirect_url_key=None,
+            files=files,
+            metadata=None,)
 
         self.resNetcdf = hydroshare.create_resource(
             'NetcdfResource',

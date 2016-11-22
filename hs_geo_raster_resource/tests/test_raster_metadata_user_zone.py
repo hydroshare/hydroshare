@@ -5,11 +5,11 @@ from django.conf import settings
 from hs_core import hydroshare
 from hs_core.hydroshare import utils
 from hs_core.models import CoreMetaData
-from hs_core.testing import MockIRODSTestCaseMixin, TestCaseCommonUtilities
+from hs_core.testing import TestCaseCommonUtilities
 from django_irods.storage import IrodsStorage
 
 
-class TestRasterMetaData(MockIRODSTestCaseMixin, TestCaseCommonUtilities, TransactionTestCase):
+class TestRasterMetaData(TestCaseCommonUtilities, TransactionTestCase):
     def setUp(self):
         super(TestRasterMetaData, self).setUp()
         if not settings.REMOTE_USE_IRODS or settings.HS_USER_ZONE_HOST != 'users.local.org' \
@@ -99,7 +99,7 @@ class TestRasterMetaData(MockIRODSTestCaseMixin, TestCaseCommonUtilities, Transa
         self.assertEqual(self.resRaster.files.all().count(), 0)
 
         # there should be a title element
-        self.assertNotEquals(self.resRaster.metadata.title, None)
+        self.assertNotEqual(self.resRaster.metadata.title, None)
 
         # there should be no abstract element
         self.assertEqual(self.resRaster.metadata.description, None)
@@ -121,8 +121,8 @@ class TestRasterMetaData(MockIRODSTestCaseMixin, TestCaseCommonUtilities, Transa
 
         # testing extended metadata elements
         self.assertEqual(self.resRaster.metadata.originalCoverage, None)
-        self.assertNotEquals(self.resRaster.metadata.cellInformation, None)
-        self.assertNotEquals(self.resRaster.metadata.bandInformation.count, 0)
+        self.assertNotEqual(self.resRaster.metadata.cellInformation, None)
+        self.assertNotEqual(self.resRaster.metadata.bandInformation.count, 0)
 
         # test metadata extraction with a valid tif file being added coming from user zone space
         res_add_files = []

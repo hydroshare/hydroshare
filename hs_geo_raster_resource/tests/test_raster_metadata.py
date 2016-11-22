@@ -163,7 +163,7 @@ class TestRasterMetaData(MockIRODSTestCaseMixin, TestCaseCommonUtilities, Transa
 
         # there should be default spatial reference info
         ori_coverage = self.resRaster.metadata.originalCoverage
-        self.assertNotEquals(ori_coverage, None)
+        self.assertNotEqual(ori_coverage, None)
         self.assertEqual(ori_coverage.value['northlimit'], None)
         self.assertEqual(ori_coverage.value['eastlimit'], None)
         self.assertEqual(ori_coverage.value['southlimit'], None)
@@ -215,9 +215,9 @@ class TestRasterMetaData(MockIRODSTestCaseMixin, TestCaseCommonUtilities, Transa
         self.assertEqual(self.resRaster.metadata.contributors.all().count(), 0)
 
         # there should be default extended metadata
-        self.assertNotEquals(self.resRaster.metadata.originalCoverage, None)
-        self.assertNotEquals(self.resRaster.metadata.cellInformation, None)
-        self.assertNotEquals(self.resRaster.metadata.bandInformation, None)
+        self.assertNotEqual(self.resRaster.metadata.originalCoverage, None)
+        self.assertNotEqual(self.resRaster.metadata.cellInformation, None)
+        self.assertNotEqual(self.resRaster.metadata.bandInformation, None)
 
         # adding a valid tiff file should generate some core metadata and all extended metadata
         files = [UploadedFile(file=self.raster_tif_file_obj, name=self.raster_tif_file_name)]
@@ -254,7 +254,7 @@ class TestRasterMetaData(MockIRODSTestCaseMixin, TestCaseCommonUtilities, Transa
         self.assertEqual(self.resRaster.files.all().count(), 0)
 
         # there should be a title element
-        self.assertNotEquals(self.resRaster.metadata.title, None)
+        self.assertNotEqual(self.resRaster.metadata.title, None)
 
         # there should be no abstract element
         self.assertEqual(self.resRaster.metadata.description, None)
@@ -276,8 +276,8 @@ class TestRasterMetaData(MockIRODSTestCaseMixin, TestCaseCommonUtilities, Transa
 
         # testing extended metadata elements
         self.assertEqual(self.resRaster.metadata.originalCoverage, None)
-        self.assertNotEquals(self.resRaster.metadata.cellInformation, None)
-        self.assertNotEquals(self.resRaster.metadata.bandInformation.count, 0)
+        self.assertNotEqual(self.resRaster.metadata.cellInformation, None)
+        self.assertNotEqual(self.resRaster.metadata.bandInformation.count, 0)
 
     def test_metadata_delete_on_resource_delete(self):
         # adding a valid raster tif file should generate some core metadata and all extended
@@ -377,7 +377,7 @@ class TestRasterMetaData(MockIRODSTestCaseMixin, TestCaseCommonUtilities, Transa
 
     def test_extended_metadata_CRUD(self):
         # delete default original coverage metadata
-        self.assertNotEquals(self.resRaster.metadata.originalCoverage, None)
+        self.assertNotEqual(self.resRaster.metadata.originalCoverage, None)
         self.resRaster.metadata.originalCoverage.delete()
 
         # create new original coverage metadata with meaningful value
@@ -392,7 +392,7 @@ class TestRasterMetaData(MockIRODSTestCaseMixin, TestCaseCommonUtilities, Transa
             self.resRaster.metadata.create_element('originalcoverage', value=value)
 
         # delete default cell information element
-        self.assertNotEquals(self.resRaster.metadata.cellInformation, None)
+        self.assertNotEqual(self.resRaster.metadata.cellInformation, None)
         self.resRaster.metadata.cellInformation.delete()
 
         # create new cell information metadata with meaningful value
@@ -419,7 +419,7 @@ class TestRasterMetaData(MockIRODSTestCaseMixin, TestCaseCommonUtilities, Transa
                                                    )
 
         # delete default band information element
-        self.assertNotEquals(self.resRaster.metadata.bandInformation, None)
+        self.assertNotEqual(self.resRaster.metadata.bandInformation, None)
         self.resRaster.metadata.bandInformation.first().delete()
 
         # create band information element with meaningful value
