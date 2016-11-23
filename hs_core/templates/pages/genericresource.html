@@ -1735,13 +1735,20 @@
             $("input[name='add_contributor_user_type']").click(onAddContributorTypeChange);
 
             // Display toggle for author type radio buttons ('person' or 'organization')
-            function onAuthorTypeChange() {
+            function onOrgTypeChange() {
                 var type = $(this).val();
-                console.log(type);
-                $("div[data-hs-other-user-type]").hide();
-                $("div[data-hs-other-user-type='" + type + "']").show();
+                $("div[data-hs-org-type]").hide();
+                $("div[data-hs-org-type='" + type + "']").show();
             }
-            $("input[name='choose_user_type']").click(onAuthorTypeChange);
+            $("input[name='choose_org_type']").click(onOrgTypeChange);
+
+            // Display toggle for author type radio buttons ('person' or 'organization')
+            function onPersonTypeChange() {
+                var type = $(this).val();
+                $("div[data-hs-person-type]").hide();
+                $("div[data-hs-person-type='" + type + "']").show();
+            }
+            $("input[name='add_author_person']").click(onPersonTypeChange);
 
 
             $("#citation-text").on("click", function (e) {
