@@ -1348,6 +1348,7 @@ class AbstractResource(ResourcePermissionsMixin):
 
     def parse_name(self, name, first_author=False):
         CREATOR_NAME_ERROR = "Failed to generate citation - invalid creator name."
+        first_names = None
         if "," in name:
             name_parts = name.split(",")
             if len(name_parts) == 0:
@@ -1370,15 +1371,19 @@ class AbstractResource(ResourcePermissionsMixin):
             else:
                 last_names = name_parts[0]
 
-        initials_list = [i[0] for i in first_names]
-        initials = ". ".join(initials_list) + "."
-        if first_author:
-            author_name = "{last_name}, {initials}"
+        if first_names:
+            initials_list = [i[0] for i in first_names]
+            initials = ". ".join(initials_list) + "."
+            if first_author:
+                author_name = "{last_name}, {initials}"
+            else:
+                author_name = "{initials} {last_name}"
+            author_name = author_name.format(last_name=last_names,
+                                             initials=initials
+                                             )
         else:
-            author_name = "{initials} {last_name}"
-        author_name = author_name.format(last_name=last_names,
-                                         initials=initials
-                                         )
+            author_name = "{last_name}".format(last_name=last_names)
+
         return author_name + ", "
 
     def get_citation(self):
@@ -1387,11 +1392,14 @@ class AbstractResource(ResourcePermissionsMixin):
         CITATION_ERROR = "Failed to generate citation."
 
         first_author = self.metadata.creators.all().filter(order=1)[0]
-        citation_str_lst.append(self.parse_name(first_author.name, first_author=True))
+        if first_author.organization and not first_author.name:
+            citation_str_lst.append(first_author.organization + ", ")
+        else:
+            citation_str_lst.append(self.parse_name(first_author.name, first_author=True))
 
-        other_authors = self.metadata.creators.all().filter(order__gt=1)
-        for author in other_authors:
-            citation_str_lst.append(self.parse_name(author.name))
+            other_authors = self.metadata.creators.all().filter(order__gt=1)
+            for author in other_authors:
+                citation_str_lst.append(self.parse_name(author.name))
 
         # remove the last added comma and the space
         if len(citation_str_lst[-1]) > 2:
