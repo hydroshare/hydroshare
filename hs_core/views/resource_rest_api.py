@@ -722,7 +722,7 @@ class ScienceMetadataRetrieveUpdate(APIView):
             except HsDeserializationException as e:
                 raise ValidationError(detail=e.message)
 
-            resource_modified(resource, request.user)
+            resource_modified(resource, request.user, overwrite_bag=False)
             return Response(data={'resource_id': pk}, status=status.HTTP_202_ACCEPTED)
         finally:
             shutil.rmtree(tmp_dir)
@@ -890,7 +890,7 @@ class ResourceFileCRUD(APIView):
         # prepare response data
         file_name = os.path.basename(res_file_objects[0].resource_file.name)
         response_data = {'resource_id': pk, 'file_name': file_name}
-        resource_modified(resource, request.user)
+        resource_modified(resource, request.user, overwrite_bag=False)
         return Response(data=response_data, status=status.HTTP_201_CREATED)
 
     def delete(self, request, pk, filename):
@@ -903,7 +903,7 @@ class ResourceFileCRUD(APIView):
 
         # prepare response data
         response_data = {'resource_id': pk, 'file_name': filename}
-        resource_modified(resource, request.user)
+        resource_modified(resource, request.user, overwrite_bag=False)
         return Response(data=response_data, status=status.HTTP_200_OK)
 
     def put(self, request, pk, filename):
@@ -1054,7 +1054,7 @@ class ResourceFileListCreate(ResourceFileToListItemMixin, generics.ListCreateAPI
         # prepare response data
         file_name = os.path.basename(res_file_objects[0].resource_file.name)
         response_data = {'resource_id': pk, 'file_name': file_name}
-        resource_modified(resource, request.user)
+        resource_modified(resource, request.user, overwrite_bag=False)
         return Response(data=response_data, status=status.HTTP_201_CREATED)
 
 
