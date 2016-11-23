@@ -217,7 +217,8 @@ def create_bag_files(resource, fed_zone_home_path=''):
             rel_path=to_file_name)
 
     istorage.saveFile(from_file_name, to_file_name, False)
-
+    res_coll = resource.get_irods_collection_path()
+    istorage.setAVU(res_coll, 'metadata_dirty', "false")
     shutil.rmtree(bagit_path)
     return istorage
 
