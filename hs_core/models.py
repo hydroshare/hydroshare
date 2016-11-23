@@ -1842,6 +1842,12 @@ class BaseResource(Page, AbstractResource):
         else:
             return IrodsStorage()
 
+    def get_irods_collection_path(self):
+        res_coll = self.short_id
+        if self.resource_federation_path:
+            res_coll = os.path.join(self.resource_federation_path, res_coll)
+        return res_coll
+
     # create crossref deposit xml for resource publication
     def get_crossref_deposit_xml(self, pretty_print=True):
         # importing here to avoid circular import problem
