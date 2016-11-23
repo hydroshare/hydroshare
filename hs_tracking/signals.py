@@ -79,6 +79,7 @@ def capture_resource_create(**kwargs):
     # record the action
     session.record('create', value=msg)
 
+
 @receiver(post_delete_resource)
 def capture_resource_delete(**kwargs):
 

@@ -16,6 +16,7 @@ def get_user_type(session):
         usertype = user.userprofile.user_type or 'undefined'
     return usertype
 
+
 def get_user_email_domain(session):
     user = session.visitor.user
     emaildomain = 'None'
