@@ -476,7 +476,7 @@ def rename_irods_file_or_folder_in_django(resource, src_name, tgt_name):
             # direct replacement does not work
             res_file_obj[0].delete()
             ResourceFile.objects.create(content_object=resource,
-                                        fed_resource_file_name_or_path = tgt_name)
+                                        fed_resource_file_name_or_path=tgt_name)
         else:
             # src_name and tgt_name are folder names
             res_file_objs = \
