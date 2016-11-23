@@ -18,7 +18,13 @@ from .models import GeoRasterLogicalFile
 @login_required
 def set_file_type(request, resource_id, file_id, hs_file_type,  **kwargs):
     """This view function must be called using ajax call"""
-    res, _, _ = authorize(request, resource_id, needed_permission=ACTION_TO_AUTHORIZE.EDIT_RESOURCE)
+    res, authorized, _ = authorize(request, resource_id,
+                                   needed_permission=ACTION_TO_AUTHORIZE.EDIT_RESOURCE,
+                                   raises_exception=False)
+
+    if not authorized:
+        err_msg = "Permission denied"
+        return JsonResponse({'message': err_msg}, status=status.HTTP_401_UNAUTHORIZED)
 
     if res.resource_type != "CompositeResource":
         err_msg = "File type can be set only for files in composite resource."
@@ -83,9 +89,15 @@ def update_metadata_element(request, hs_file_type, file_type_id, element_name,
         ajax_response_data = {'status': 'error', 'message': err_msg}
         return JsonResponse(ajax_response_data, status=status.HTTP_200_OK)
 
-    resource = logical_file.resource
-    res, _, _ = authorize(request, resource.short_id,
-                          needed_permission=ACTION_TO_AUTHORIZE.EDIT_RESOURCE)
+    resource_id = logical_file.resource.short_id
+    resource, authorized, _ = authorize(request, resource_id,
+                                        needed_permission=ACTION_TO_AUTHORIZE.EDIT_RESOURCE,
+                                        raises_exception=False)
+
+    if not authorized:
+        ajax_response_data = {'status': 'error', 'logical_file_type': logical_file.type_name(),
+                              'element_name': element_name, 'message': "Permission denied"}
+        return JsonResponse(ajax_response_data, status=status.HTTP_200_OK)
 
     validation_response = logical_file.metadata.validate_element_data(request, element_name)
     is_update_success = False
@@ -93,7 +105,7 @@ def update_metadata_element(request, hs_file_type, file_type_id, element_name,
         element_data_dict = validation_response['element_data_dict']
         try:
             logical_file.metadata.update_element(element_name, element_id, **element_data_dict)
-            resource_modified(logical_file.resource, request.user)
+            resource_modified(resource, request.user)
             is_update_success = True
         except ValidationError as ex:
             err_msg = err_msg.format(element_name, ex.message)
@@ -118,14 +130,21 @@ def add_metadata_element(request, hs_file_type, file_type_id, element_name, **kw
     content_type = ContentType.objects.get(app_label="hs_file_types", model=hs_file_type.lower())
     logical_file_type_class = content_type.model_class()
     logical_file = logical_file_type_class.objects.filter(id=file_type_id).first()
+
     if logical_file is None:
         err_msg = "No matching logical file type was found."
         ajax_response_data = {'status': 'error', 'message': err_msg}
         return JsonResponse(ajax_response_data, status=status.HTTP_200_OK)
 
-    resource = logical_file.resource
-    res, _, _ = authorize(request, resource.short_id,
-                          needed_permission=ACTION_TO_AUTHORIZE.EDIT_RESOURCE)
+    resource_id = logical_file.resource.short_id
+    resource, authorized, _ = authorize(request, resource_id,
+                                        needed_permission=ACTION_TO_AUTHORIZE.EDIT_RESOURCE,
+                                        raises_exception=False)
+
+    if not authorized:
+        ajax_response_data = {'status': 'error', 'logical_file_type': logical_file.type_name(),
+                              'element_name': element_name, 'message': "Permission denied"}
+        return JsonResponse(ajax_response_data, status=status.HTTP_200_OK)
 
     validation_response = logical_file.metadata.validate_element_data(request, element_name)
     is_add_success = False
@@ -169,6 +188,16 @@ def update_key_value_metadata(request, hs_file_type, file_type_id, **kwargs):
     if json_response is not None:
         return json_response
 
+    resource_id = logical_file.resource.short_id
+    resource, authorized, _ = authorize(request, resource_id,
+                                        needed_permission=ACTION_TO_AUTHORIZE.EDIT_RESOURCE,
+                                        raises_exception=False)
+
+    if not authorized:
+        ajax_response_data = {'status': 'error', 'logical_file_type': logical_file.type_name(),
+                              'element_name': 'key_value', 'message': "Permission denied"}
+        return JsonResponse(ajax_response_data, status=status.HTTP_200_OK)
+
     def validate_key():
         if key in logical_file.metadata.extra_metadata.keys():
             ajax_response_data = {'status': 'error',
@@ -198,7 +227,7 @@ def update_key_value_metadata(request, hs_file_type, file_type_id, **kwargs):
 
     logical_file.metadata.extra_metadata[key] = value
     logical_file.metadata.save()
-    resource_modified(logical_file.resource, request.user)
+    resource_modified(resource, request.user)
     extra_metadata_div = super(logical_file.metadata.__class__,
                                logical_file.metadata).get_html_forms(datatset_name_form=False)
     context = Context({})
@@ -220,11 +249,20 @@ def delete_key_value_metadata(request, hs_file_type, file_type_id, **kwargs):
     if json_response is not None:
         return json_response
 
+    resource_id = logical_file.resource.short_id
+    resource, authorized, _ = authorize(request, resource_id,
+                                        needed_permission=ACTION_TO_AUTHORIZE.EDIT_RESOURCE,
+                                        raises_exception=False)
+    if not authorized:
+        ajax_response_data = {'status': 'error', 'logical_file_type': logical_file.type_name(),
+                              'element_name': 'key_value', 'message': "Permission denied"}
+        return JsonResponse(ajax_response_data, status=status.HTTP_200_OK)
+
     key = request.POST['key']
     if key in logical_file.metadata.extra_metadata.keys():
         del logical_file.metadata.extra_metadata[key]
         logical_file.metadata.save()
-        resource_modified(logical_file.resource, request.user)
+        resource_modified(resource, request.user)
 
     extra_metadata_div = super(logical_file.metadata.__class__,
                                logical_file.metadata).get_html_forms(datatset_name_form=False)
@@ -241,14 +279,24 @@ def delete_key_value_metadata(request, hs_file_type, file_type_id, **kwargs):
 def update_dataset_name(request, hs_file_type, file_type_id, **kwargs):
     """updates the dataset_name (title) attribute of the specified logical file object
     """
+
     logical_file, json_response = _get_logical_file(hs_file_type, file_type_id)
     if json_response is not None:
         return json_response
 
+    resource_id = logical_file.resource.short_id
+    resource, authorized, _ = authorize(request, resource_id,
+                                        needed_permission=ACTION_TO_AUTHORIZE.EDIT_RESOURCE,
+                                        raises_exception=False)
+    if not authorized:
+        ajax_response_data = {'status': 'error', 'logical_file_type': logical_file.type_name(),
+                              'element_name': 'datatset_name', 'message': "Permission denied"}
+        return JsonResponse(ajax_response_data, status=status.HTTP_200_OK)
+
     dataset_name = request.POST['dataset_name']
     logical_file.dataset_name = dataset_name
     logical_file.save()
-    resource_modified(logical_file.resource, request.user)
+    resource_modified(resource, request.user)
     ajax_response_data = {'status': 'success', 'logical_file_type': logical_file.type_name(),
                           'element_name': 'datatset_name', 'message': "Update was successful"}
     return JsonResponse(ajax_response_data, status=status.HTTP_200_OK)
@@ -270,14 +318,9 @@ def get_metadata(request, hs_file_type, file_type_id, metadata_mode):
         ajax_response_data = {'status': 'error', 'message': err_msg}
         return JsonResponse(ajax_response_data, status=status.HTTP_400_BAD_REQUEST)
 
-    content_type = ContentType.objects.get(app_label="hs_file_types", model=hs_file_type.lower())
-    logical_file_type_class = content_type.model_class()
-    logical_file = logical_file_type_class.objects.filter(id=file_type_id).first()
-
-    if logical_file is None:
-        err_msg = "No matching file type was found."
-        ajax_response_data = {'status': 'error', 'message': err_msg}
-        return JsonResponse(ajax_response_data, status=status.HTTP_400_BAD_REQUEST)
+    logical_file, json_response = _get_logical_file(hs_file_type, file_type_id)
+    if json_response is not None:
+        return json_response
 
     if metadata_mode == 'view':
         metadata = logical_file.metadata.get_html()

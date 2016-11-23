@@ -1479,7 +1479,7 @@ class AbstractResource(ResourcePermissionsMixin):
         # Resource types that support file types
         # must override this method. See Composite Resource
         # type as an example
-        return self.metadata.get_xml()
+        return self.metadata.get_xml(pretty_print=pretty_print)
 
     def _get_metadata(self, metatdata_obj):
         md_type = ContentType.objects.get_for_model(metatdata_obj)

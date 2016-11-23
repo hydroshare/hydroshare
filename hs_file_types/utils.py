@@ -120,7 +120,8 @@ def set_file_to_geo_raster_file_type(resource, file_id, user):
                     # rename/move the file to the new folder - keep the original file name
                     src_path = 'data/contents/{}'.format(new_res_file_base_name)
                     tgt_path = os.path.join(new_folder_path, os.path.basename(f))
-                    move_or_rename_file_or_folder(user, resource.short_id, src_path, tgt_path)
+                    move_or_rename_file_or_folder(user, resource.short_id, src_path, tgt_path,
+                                                  validate_move_rename=False)
 
                 log.info("Geo raster file type - new files were added to the resource.")
             except Exception as ex:

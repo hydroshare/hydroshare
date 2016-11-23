@@ -693,7 +693,7 @@ def remove_folder(user, res_id, folder_path):
     hydroshare.utils.resource_modified(resource, user)
 
 
-def move_or_rename_file_or_folder(user, res_id, src_path, tgt_path):
+def move_or_rename_file_or_folder(user, res_id, src_path, tgt_path, validate_move_rename=True):
     """
     Move or rename a file or folder in hydroshareZone or any federated zone used for HydroShare
     resource backend store.
@@ -724,7 +724,7 @@ def move_or_rename_file_or_folder(user, res_id, src_path, tgt_path):
     # TODO: (Pabitra) this checking for composite resource should be handled in a signal handler
     # check if this resource file move or rename is allowed
     # if the resource type is composite resource
-    if resource.resource_type == "CompositeResource":
+    if resource.resource_type == "CompositeResource" and validate_move_rename:
         err_msg = "File/folder move/rename is not allowed."
 
         def check_targe_directory(tgt_file_dir):
