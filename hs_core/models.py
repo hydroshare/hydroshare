@@ -262,7 +262,9 @@ class Party(AbstractMetaDataElement):
                 creator_order = party.order + 1
             if 'name' in kwargs:
                 if len(kwargs['name'].strip()) == 0:
-                    raise ValidationError("Invalid name for the %s." % element_name.lower())
+                    if 'organization' in kwargs:
+                        if len(kwargs['organization'].strip()) == 0:
+                            raise ValidationError("Invalid name or organization for the %s." % element_name.lower())
 
             kwargs['order'] = creator_order
             party = super(Party, cls).create(**kwargs)
@@ -1399,7 +1401,8 @@ class AbstractResource(ResourcePermissionsMixin):
 
             other_authors = self.metadata.creators.all().filter(order__gt=1)
             for author in other_authors:
-                citation_str_lst.append(self.parse_name(author.name))
+                if author.name and author.name != "":
+                    citation_str_lst.append(self.parse_name(author.name))
 
         # remove the last added comma and the space
         if len(citation_str_lst[-1]) > 2:

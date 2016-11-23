@@ -960,14 +960,21 @@
                             <div class="form-group">
                                 {% csrf_token %}
                                 <fieldset>
-                                    <div id="div_id_name" class="control-group">
-                                        <label for="id_name" class="control-label requiredField">Organization Name<span
-                                                class="asteriskField">*</span></label>
+                                    <div id="div_id_name" class="control-group" style="display:none">
+                                        <label for="id_name" class="control-label">Name</label>
 
                                         <div class="controls"><input class="form-control input-sm textinput textInput"
-                                                                     id="id_name" maxlength="100" name="organization"
-                                                                     required="required" type="text" placeholder="e.g. 'U.S. Army Corps of Engineers'">
+                                                                     id="id_name" maxlength="100" name="name"
+                                                                      type="text" placeholder="e.g. 'U.S. Army Corps of Engineers'">
                                         </div>
+                                    </div>
+                                    <div id="div_id_organization" class="control-group">
+                                        <label for="id_organization" class="control-label requiredField">Organization Name<span
+                                                class="asteriskField">*</span></label>
+                                        <div class="controls"><input class="form-control input-sm textinput textInput"
+                                                                     id="id_organization" maxlength="200"
+                                                                     name="organization" type="text" placeholder="e.g. 'U.S. Army Corps of Engineers'"
+                                                                     required="required"></div>
                                     </div>
                                     <div id="div_id_email" class="control-group">
                                         <label for="id_email" class="control-label">Email</label>
