@@ -495,15 +495,15 @@ def resource_modified(resource, by_user=None, overwrite_bag=True):
 
 
 def set_dirty_bag_flag(resource):
-    # set bag_modified-true AVU pair for the modified resource in iRODS to indicate
+    # set bag_modified (AVU) to 'true' for the modified resource in iRODS to indicate
     # the resource is modified for on-demand bagging.
-    res_coll = resource.short_id
-    if resource.resource_federation_path:
-        istorage = IrodsStorage('federated')
-        res_coll = os.path.join(resource.resource_federation_path, res_coll)
-    else:
-        istorage = IrodsStorage()
+    # set metadata_dirty (AVU) to 'true' to indicate that metadata has been modified for the
+    # resource so that xml metadata files need to be generated on-demand
+
+    istorage = resource.get_irods_storage()
+    res_coll = resource.get_irods_collection_path()
     istorage.setAVU(res_coll, "bag_modified", "true")
+    istorage.setAVU(res_coll, "metadata_dirty", "true")
 
 
 def _validate_email(email):
@@ -781,7 +781,7 @@ def resource_file_add_process(resource, files, user, extract_metadata=False,
 
     check_file_dict_for_error(file_validation_dict)
 
-    resource_modified(resource, user)
+    resource_modified(resource, user, overwrite_bag=False)
     return resource_file_objects
 
 
