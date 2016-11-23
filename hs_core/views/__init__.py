@@ -32,10 +32,10 @@ from django_irods.storage import IrodsStorage
 from django_irods.icommands import SessionException
 
 from hs_core import hydroshare
-from hs_core.hydroshare.utils import get_resource_by_shortkey, resource_modified
+from hs_core.hydroshare.utils import get_resource_by_shortkey, resource_modified, set_dirty_bag_flag
 from .utils import authorize, upload_from_irods, ACTION_TO_AUTHORIZE, run_script_to_update_hyrax_input_files, \
     get_my_resources_list, send_action_to_take_email
-from hs_core.models import GenericResource, resource_processor, CoreMetaData, Relation
+from hs_core.models import GenericResource, resource_processor, CoreMetaData
 from hs_core.hydroshare.resource import METADATA_STATUS_SUFFICIENT, METADATA_STATUS_INSUFFICIENT
 
 from . import resource_rest_api
@@ -168,7 +168,7 @@ def update_key_value_metadata(request, shortkey, *args, **kwargs):
         err_message = ex.message
 
     if is_update_success:
-        resource_modified(res, request.user)
+        resource_modified(res, request.user, overwrite_bag=False)
 
     if request.is_ajax():
         if is_update_success:
@@ -224,7 +224,7 @@ def add_metadata_element(request, shortkey, element_name, *args, **kwargs):
                         request.session['validation_error'] = err_msg
 
                 if is_add_success:
-                    resource_modified(res, request.user)
+                    resource_modified(res, request.user, overwrite_bag=False)
             elif "errors" in response:
                 err_msg = err_msg.format(element_name, response['errors'])
 
@@ -296,7 +296,7 @@ def update_metadata_element(request, shortkey, element_name, element_id, *args, 
                             res.raccess.save()
 
                 if is_update_success:
-                    resource_modified(res, request.user)
+                    resource_modified(res, request.user, overwrite_bag=False)
             elif "errors" in response:
                 err_msg = err_msg.format(element_name, response['errors'])
 
@@ -345,7 +345,7 @@ def file_download_url_mapper(request, shortkey):
 def delete_metadata_element(request, shortkey, element_name, element_id, *args, **kwargs):
     res, _, _ = authorize(request, shortkey, needed_permission=ACTION_TO_AUTHORIZE.EDIT_RESOURCE)
     res.metadata.delete_element(element_name, element_id)
-    resource_modified(res, request.user)
+    resource_modified(res, request.user, overwrite_bag=False)
     request.session['resource-mode'] = 'edit'
     return HttpResponseRedirect(request.META['HTTP_REFERER'])
 
@@ -797,7 +797,6 @@ class GroupUpdateForm(GroupForm):
 @processor_for('my-resources')
 @login_required
 def my_resources(request, page):
-
     resource_collection = get_my_resources_list(request)
     context = {'collection': resource_collection}
     
