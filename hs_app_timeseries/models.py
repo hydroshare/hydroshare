@@ -639,7 +639,7 @@ class TimeSeriesResource(BaseResource):
             log.info("Blank SQLite file was added.")
 
             # need to do this so that the bag will be regenerated prior to download of the bag
-            utils.resource_modified(self, by_user=user)
+            utils.resource_modified(self, by_user=user, overwrite_bag=False)
         except Exception as ex:
             log.exception("Error when adding the blank SQLite file. Error:{}".format(ex.message))
             raise ex
