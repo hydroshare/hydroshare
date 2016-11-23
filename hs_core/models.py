@@ -229,7 +229,7 @@ class ExternalProfileLink(models.Model):
 
 class Party(AbstractMetaDataElement):
     description = models.URLField(null=True, blank=True, validators=[validate_user_url])
-    name = models.CharField(max_length=100)
+    name = models.CharField(max_length=100, null=True, blank=True)
     organization = models.CharField(max_length=200, null=True, blank=True)
     email = models.EmailField(null=True, blank=True)
     address = models.CharField(max_length=250, null=True, blank=True)
@@ -1346,54 +1346,52 @@ class AbstractResource(ResourcePermissionsMixin):
         """
         return None
 
-    def get_citation(self):
-        citation_str_lst = []
-
+    def parse_name(self, name, first_author=False):
         CREATOR_NAME_ERROR = "Failed to generate citation - invalid creator name."
-        CITATION_ERROR = "Failed to generate citation."
-
-        first_author = self.metadata.creators.all().filter(order=1)[0]
-        name_parts = first_author.name.split(',')
-        last_names = name_parts[0]
-        if len(name_parts) == 0:
-            return CREATOR_NAME_ERROR
-        elif len(name_parts) == 1:
-            author_name = last_names
-            citation_str_lst.append(author_name+", ")
-        elif len(name_parts) == 2:
-            first_names = name_parts[1]
-            first_names_list = first_names.split()
-            initials_list = [i[0] for i in first_names_list]
-            initials = ". ".join(initials_list) + "."
-            author_name = "{last_name}, {initials}, "
-            author_name = author_name.format(last_name=last_names,
-                                             initials=initials
-                                             )
-            citation_str_lst.append(author_name)
-        else:
-            return CREATOR_NAME_ERROR
-
-        other_authors = self.metadata.creators.all().filter(order__gt=1)
-        for author in other_authors:
-            name_parts = author.name.split(',')
-            last_names = name_parts[0]
+        if "," in name:
+            name_parts = name.split(",")
             if len(name_parts) == 0:
                 return CREATOR_NAME_ERROR
             elif len(name_parts) == 1:
-                author_name = last_names
-                citation_str_lst.append(author_name+", ")
+                last_names = name_parts[0]
             elif len(name_parts) == 2:
                 first_names = name_parts[1]
-                first_names_list = first_names.split()
-                initials_list = [i[0] for i in first_names_list]
-                initials = ". ".join(initials_list) + "."
-                author_name = "{initials} {last_name}, "
-                author_name = author_name.format(last_name=last_names,
-                                                 initials=initials
-                                                 )
-                citation_str_lst.append(author_name)
+                first_names = first_names.split()
+                last_names = name_parts[0]
             else:
                 return CREATOR_NAME_ERROR
+        else:
+            name_parts = name.split()
+            if len(name_parts) == 0:
+                return CREATOR_NAME_ERROR
+            elif len(name_parts) > 1:
+                first_names = name_parts[:-1]
+                last_names = name_parts[-1]
+            else:
+                last_names = name_parts[0]
+
+        initials_list = [i[0] for i in first_names]
+        initials = ". ".join(initials_list) + "."
+        if first_author:
+            author_name = "{last_name}, {initials}"
+        else:
+            author_name = "{initials} {last_name}"
+        author_name = author_name.format(last_name=last_names,
+                                         initials=initials
+                                         )
+        return author_name + ", "
+
+    def get_citation(self):
+        citation_str_lst = []
+
+        CITATION_ERROR = "Failed to generate citation."
+
+        first_author = self.metadata.creators.all().filter(order=1)[0]
+        citation_str_lst.append(self.parse_name(first_author.name, first_author=True))
+
+        other_authors = self.metadata.creators.all().filter(order__gt=1)
+        for author in other_authors:
+            citation_str_lst.append(self.parse_name(author.name))
 
         # remove the last added comma and the space
         if len(citation_str_lst[-1]) > 2:
