@@ -266,6 +266,7 @@
                 <div class="modal-body">
                     <div class="form-group">
                         <fieldset>
+                            {% if author.name %}
                             <div id="div_id_name" class="control-group">
                                 <label class="control-label requiredField">Name<span
                                         class="asteriskField">*</span></label>
@@ -275,6 +276,17 @@
                                         id="id_creator-{{ author.order|add:"- 1" }}-name" maxlength="100" name="creator-{{ author.order|add:"- 1" }}-name"
                                         required="required" type="text" value="{% if author.name %}{{ author.name }}{% endif %}"></div>
                             </div>
+                            {% else %}
+                            <div id="div_id_name" class="control-group" style="display:none">
+                                <label class="control-label requiredField">Name<span
+                                        class="asteriskField">*</span></label>
+
+                                <div class="controls"><input
+                                        class="form-control input-sm textinput textInput"
+                                        id="id_creator-{{ author.order|add:"- 1" }}-name" maxlength="100" name="creator-{{ author.order|add:"- 1" }}-name"
+                                        type="text" value="{% if author.name %}{{ author.name }}{% endif %}"></div>
+                            </div>
+                            {% endif %}
                             {% if author.description %}
                                 <div id="div_id_description" class="control-group">
                                     <label class="control-label">HydroShare User Identifier (URL)</label>
@@ -287,6 +299,8 @@
                                             readonly></div>
                                 </div>
                             {% endif %}
+                            <!--If you don't have an author name you need an organization-->
+                            {% if author.name %}
                             <div id="div_id_organization" class="control-group">
                                 <label class="control-label">Organization</label>
 
@@ -295,6 +309,17 @@
                                         id="id_creator-{{ author.order|add:"- 1" }}-organization" maxlength="200"
                                         name="creator-{{ author.order|add:"- 1" }}-organization" type="text" value="{% if author.organization %}{{ author.organization }}{% endif %}"></div>
                             </div>
+                            {% else %}
+                            <div id="div_id_organization" class="control-group requiredField">
+                                <label class="control-label">Organization<span
+                                        class="asteriskField">*</span></label>
+
+                                <div class="controls"><input
+                                        class="form-control input-sm textinput textInput"
+                                        id="id_creator-{{ author.order|add:"- 1" }}-organization" maxlength="200"
+                                        required="required" name="creator-{{ author.order|add:"- 1" }}-organization" type="text" value="{% if author.organization %}{{ author.organization }}{% endif %}"></div>
+                            </div>
+                            {% endif %}
                             <div id="div_id_email" class="control-group">
                                 <label class="control-label">Email</label>
 
@@ -871,7 +896,7 @@
                 {# Existing HS Group#}
                 <div data-hs-org-type="hs_group">
                     <div class="modal-body">
-                        {{ add_view_user_form.user }}
+                        {{ add_view_group_form.group }}
                     </div>
 
                     <form action="/hsapi/_internal/{{ cm.short_id }}/creator/add-metadata/" method="POST"
