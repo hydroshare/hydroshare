@@ -36,7 +36,7 @@ def set_file_type(request, resource_id, file_id, hs_file_type,  **kwargs):
 
     try:
         set_file_to_geo_raster_file_type(resource=res, file_id=file_id, user=request.user)
-        resource_modified(res, request.user)
+        resource_modified(res, request.user, overwrite_bag=False)
         msg = "File was successfully set to Geo Raster file type. " \
               "Raster metadata extraction was successful."
         return JsonResponse({'message': msg}, status=status.HTTP_200_OK)
@@ -71,7 +71,7 @@ def delete_file_type(request, resource_id, hs_file_type, file_type_id, **kwargs)
         return HttpResponseRedirect(request.META['HTTP_REFERER'])
 
     logical_file_to_delete.logical_delete(request.user)
-    resource_modified(res, request.user)
+    resource_modified(res, request.user, overwrite_bag=False)
     msg = "Geo Raster file type was deleted."
     messages.success(request, msg)
     return HttpResponseRedirect(request.META['HTTP_REFERER'])
@@ -105,7 +105,7 @@ def update_metadata_element(request, hs_file_type, file_type_id, element_name,
         element_data_dict = validation_response['element_data_dict']
         try:
             logical_file.metadata.update_element(element_name, element_id, **element_data_dict)
-            resource_modified(resource, request.user)
+            resource_modified(resource, request.user, overwrite_bag=False)
             is_update_success = True
         except ValidationError as ex:
             err_msg = err_msg.format(element_name, ex.message)
@@ -152,7 +152,7 @@ def add_metadata_element(request, hs_file_type, file_type_id, element_name, **kw
         element_data_dict = validation_response['element_data_dict']
         try:
             element = logical_file.metadata.create_element(element_name, **element_data_dict)
-            resource_modified(logical_file.resource, request.user)
+            resource_modified(logical_file.resource, request.user, overwrite_bag=False)
             is_add_success = True
         except ValidationError as ex:
             err_msg = err_msg.format(element_name, ex.message)
@@ -227,7 +227,7 @@ def update_key_value_metadata(request, hs_file_type, file_type_id, **kwargs):
 
     logical_file.metadata.extra_metadata[key] = value
     logical_file.metadata.save()
-    resource_modified(resource, request.user)
+    resource_modified(resource, request.user, overwrite_bag=False)
     extra_metadata_div = super(logical_file.metadata.__class__,
                                logical_file.metadata).get_html_forms(datatset_name_form=False)
     context = Context({})
@@ -262,7 +262,7 @@ def delete_key_value_metadata(request, hs_file_type, file_type_id, **kwargs):
     if key in logical_file.metadata.extra_metadata.keys():
         del logical_file.metadata.extra_metadata[key]
         logical_file.metadata.save()
-        resource_modified(resource, request.user)
+        resource_modified(resource, request.user, overwrite_bag=False)
 
     extra_metadata_div = super(logical_file.metadata.__class__,
                                logical_file.metadata).get_html_forms(datatset_name_form=False)
@@ -296,7 +296,7 @@ def update_dataset_name(request, hs_file_type, file_type_id, **kwargs):
     dataset_name = request.POST['dataset_name']
     logical_file.dataset_name = dataset_name
     logical_file.save()
-    resource_modified(resource, request.user)
+    resource_modified(resource, request.user, overwrite_bag=False)
     ajax_response_data = {'status': 'success', 'logical_file_type': logical_file.type_name(),
                           'element_name': 'datatset_name', 'message': "Update was successful"}
     return JsonResponse(ajax_response_data, status=status.HTTP_200_OK)
