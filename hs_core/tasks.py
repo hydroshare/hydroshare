@@ -21,6 +21,7 @@ from celery import shared_task
 
 from hs_core.models import BaseResource
 from hs_core.hydroshare import utils
+from hs_core.hydroshare.hs_bagit import create_bag_files
 from hs_core.hydroshare.resource import get_activated_doi, get_resource_doi, \
     get_crossref_url, deposit_res_metadata_with_crossref
 from django_irods.storage import IrodsStorage
@@ -166,6 +167,15 @@ def create_bag_by_irods(resource_id, istorage=None):
     from hs_core.hydroshare.utils import get_resource_by_shortkey
 
     res = get_resource_by_shortkey(resource_id)
+    try:
+        # we will create xml metadata files every time prior to creating the bag
+        # the assumption here is that bag is being created due to the resource
+        # modified (AVU)
+        create_bag_files(res, fed_zone_home_path=res.resource_federation_path)
+    except Exception as ex:
+        logger.error('Failed to create bag files. Error:{}'.format(ex.message))
+        return False
+
     is_exist = False
     is_bagit_readme_exist = False
 

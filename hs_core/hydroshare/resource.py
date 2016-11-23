@@ -628,7 +628,7 @@ def create_new_version_resource(ori_res, new_res, user):
     hs_bagit.create_bag(new_res, ori_res.resource_federation_path)
 
     # since an isReplaceBy relation element is added to original resource, needs to call resource_modified() for original resource
-    utils.resource_modified(ori_res, user)
+    utils.resource_modified(ori_res, user, overwrite_bag=False)
     # if everything goes well up to this point, set original resource to be immutable so that obsoleted resources cannot be modified from REST API
     ori_res.raccess.immutable = True
     ori_res.raccess.save()
@@ -1030,7 +1030,7 @@ def delete_resource_file(pk, filename_or_id, user, delete_logical_file=True):
 
     signals.post_delete_file_from_resource.send(sender=res_cls, resource=resource)
     # generate bag
-    utils.resource_modified(resource, user)
+    utils.resource_modified(resource, user, overwrite_bag=False)
 
     return filename_or_id
 
@@ -1153,7 +1153,7 @@ def publish_resource(user, pk):
                'url': get_activated_doi(resource.doi)}
     resource.metadata.create_element('Identifier', **md_args)
 
-    utils.resource_modified(resource, user)
+    utils.resource_modified(resource, user, overwrite_bag=False)
 
     return pk
 
