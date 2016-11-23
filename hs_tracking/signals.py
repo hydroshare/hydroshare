@@ -23,19 +23,25 @@ def capture_logout(sender, **kwargs):
 @receiver(pre_download_file)
 def capture_download(**kwargs):
 
+
     # get input kwargs
     resource = kwargs['resource']
     filename = kwargs['download_file_name']
-    request = kwargs['request']
-    user = request.user
 
-    # retrieve session
-    session = Session.objects.for_request(request, user)
+    # set session, user, and ip to None if a request object was not passed as an input kwarg.
+    if 'request' not in kwargs.keys():
+        session = None
+        user = None
+        ip = None
+    else:
+        request = kwargs['request']
+        user = request.user
+        session = Session.objects.for_request(request, user)
+        ip = get_client_ip(request)
 
     # get the user info
     usertype = get_user_type(session)
     emaildomain = get_user_email_domain(session)
-    ip = get_client_ip(request)
 
     # format the 'create' kwargs
     msg = Variable.format_kwargs(user_ip=ip,
@@ -57,15 +63,19 @@ def capture_resource_create(**kwargs):
     # get input kwargs
     resource = kwargs['resource']
     user = kwargs['user']
-    request = kwargs['request']
-
-    # retrieve session
-    session = Session.objects.for_request(request, user)
+    
+    # set session, user, and ip to None if a request object was not passed as an input kwarg.
+    if 'request' not in kwargs.keys():
+        session = None
+        ip = None
+    else:
+        request = kwargs['request']
+        session = Session.objects.for_request(request, user)
+        ip = get_client_ip(request)
 
     # get the user info
     usertype = get_user_type(session)
     emaildomain = get_user_email_domain(session)
-    ip = get_client_ip(request)
 
     # format the 'download' kwargs
     msg = Variable.format_kwargs(user_ip=ip,
@@ -87,15 +97,19 @@ def capture_resource_delete(**kwargs):
     resource_type = kwargs['resource_type']
     resource_shortid = kwargs['resource_shortkey']
     user = kwargs['user']
-    request = kwargs['request']
-
-    # retrieve session
-    session = Session.objects.for_request(request, user)
+    
+    # set session, user, and ip to None if a request object was not passed as an input kwarg.
+    if 'request' not in kwargs.keys():
+        session = None
+        ip = None
+    else:
+        request = kwargs['request']
+        session = Session.objects.for_request(request, user)
+        ip = get_client_ip(request)
 
     # get the user info
     usertype = get_user_type(session)
     emaildomain = get_user_email_domain(session)
-    ip = get_client_ip(request)
 
     # formate the 'delete' kwargs
     msg = Variable.format_kwargs(user_ip=ip,
