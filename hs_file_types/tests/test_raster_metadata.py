@@ -72,55 +72,6 @@ class RasterFileTypeMetaData(MockIRODSTestCaseMixin, TransactionTestCase):
         if os.path.exists(self.temp_dir):
             shutil.rmtree(self.temp_dir)
 
-    def test_generic_logical_file(self):
-        # test that when any file is uploaded to Composite Resource
-        # the file is assigned to GenericLogicalFile type
-        self.raster_file_obj = open(self.invalid_raster_file, 'r')
-        self._create_composite_resource()
-
-        # there should be one resource file
-        self.assertEqual(self.composite_resource.files.all().count(), 1)
-        res_file = self.composite_resource.files.first()
-        # check that the resource file is associated with GenericLogicalFile
-        self.assertEqual(res_file.has_logical_file, True)
-        self.assertEqual(res_file.logical_file_type_name, "GenericLogicalFile")
-
-        logical_file = res_file.logical_file
-        # check that the logical file has metadata object
-        self.assertNotEqual(logical_file.metadata, None)
-
-        # there should be no coverage element at this point
-        self.assertEqual(logical_file.metadata.coverage, None)
-
-        # there should not be any extra_metadata (key/value) at this point
-        self.assertEqual(logical_file.metadata.extra_metadata, {})
-        # create key/vale metadata
-        logical_file.metadata.extra_metadata = {'key1': 'value 1', 'key2': 'value 2'}
-        logical_file.metadata.save()
-        res_file = self.composite_resource.files.first()
-        logical_file = res_file.logical_file
-        self.assertEqual(logical_file.metadata.extra_metadata,
-                         {'key1': 'value 1', 'key2': 'value 2'})
-
-        # update key/value metadata
-        logical_file.metadata.extra_metadata = {'key1': 'value 1', 'key2': 'value 2',
-                                                'key 3': 'value3'}
-        logical_file.metadata.save()
-        res_file = self.composite_resource.files.first()
-        logical_file = res_file.logical_file
-        self.assertEqual(logical_file.metadata.extra_metadata,
-                         {'key1': 'value 1', 'key2': 'value 2', 'key 3': 'value3'})
-
-        # delete key/value metadata
-        logical_file.metadata.extra_metadata = {}
-        logical_file.metadata.save()
-        res_file = self.composite_resource.files.first()
-        logical_file = res_file.logical_file
-        self.assertEqual(logical_file.metadata.extra_metadata, {})
-
-        # test coverage element CRUD
-        # TODO: need to implement
-
     def test_tif_set_file_type_to_geo_raster(self):
         # here we are using a valid raster tif file for setting it
         # to Geo Raster file type which includes metadata extraction
@@ -195,10 +146,10 @@ class RasterFileTypeMetaData(MockIRODSTestCaseMixin, TransactionTestCase):
         self.assertEqual(logical_file.metadata.has_all_required_elements(), True)
 
         # there should be 1 coverage element - box type
-        self.assertNotEqual(logical_file.metadata.coverage, None)
-        self.assertEqual(logical_file.metadata.coverage.type, 'box')
+        self.assertNotEqual(logical_file.metadata.spatial_coverage, None)
+        self.assertEqual(logical_file.metadata.spatial_coverage.type, 'box')
 
-        box_coverage = logical_file.metadata.coverage
+        box_coverage = logical_file.metadata.spatial_coverage
         self.assertEqual(box_coverage.value['projection'], 'WGS 84 EPSG:4326')
         self.assertEqual(box_coverage.value['units'], 'Decimal degrees')
         self.assertEqual(box_coverage.value['northlimit'], 42.049364058252266)
@@ -290,10 +241,10 @@ class RasterFileTypeMetaData(MockIRODSTestCaseMixin, TransactionTestCase):
         self.assertEqual(logical_file.metadata.has_all_required_elements(), True)
 
         # there should be 1 coverage element - box type
-        self.assertNotEqual(logical_file.metadata.coverage, None)
-        self.assertEqual(logical_file.metadata.coverage.type, 'box')
+        self.assertNotEqual(logical_file.metadata.spatial_coverage, None)
+        self.assertEqual(logical_file.metadata.spatial_coverage.type, 'box')
 
-        box_coverage = logical_file.metadata.coverage
+        box_coverage = logical_file.metadata.spatial_coverage
         self.assertEqual(box_coverage.value['projection'], 'WGS 84 EPSG:4326')
         self.assertEqual(box_coverage.value['units'], 'Decimal degrees')
         self.assertEqual(box_coverage.value['northlimit'], 42.04959948647449)
@@ -371,6 +322,7 @@ class RasterFileTypeMetaData(MockIRODSTestCaseMixin, TransactionTestCase):
         self._test_invalid_file()
 
     def test_metadata_CRUD(self):
+        # this is test metadata related to GeoRasterLogicalFile
         self.raster_file_obj = open(self.raster_file, 'r')
         self._create_composite_resource()
 
@@ -382,8 +334,15 @@ class RasterFileTypeMetaData(MockIRODSTestCaseMixin, TransactionTestCase):
 
         # test that we can update raster specific metadata at the file level
 
-        # delete default original coverage metadata
+        # test that we can update dataset_name of the logical file object
         logical_file = res_file.logical_file
+        self.assertEqual(logical_file.dataset_name, 'small_logan')
+        logical_file.dataset_name = "big_logan"
+        logical_file.save()
+        logical_file = res_file.logical_file
+        self.assertEqual(logical_file.dataset_name, 'big_logan')
+
+        # delete default original coverage metadata
         self.assertNotEquals(logical_file.metadata.originalCoverage, None)
         logical_file.metadata.originalCoverage.delete()
 
@@ -570,15 +529,19 @@ class RasterFileTypeMetaData(MockIRODSTestCaseMixin, TransactionTestCase):
         self.assertEqual(GeoRasterLogicalFile.objects.count(), 1)
         self.assertEqual(GeoRasterFileMetaData.objects.count(), 1)
 
+        res_file = self.composite_resource.files.first()
+        logical_file = res_file.logical_file
         # test that we have the metadata elements
-        self.assertEqual(Coverage.objects.count(), 1)
+        # there should be 2 Coverage objects - one at the resource level and
+        # the other one at the file type level
+        self.assertEqual(Coverage.objects.count(), 2)
+        self.assertEqual(self.composite_resource.metadata.coverages.all().count(), 1)
+        self.assertEqual(logical_file.metadata.coverages.all().count(), 1)
         self.assertEqual(OriginalCoverage.objects.count(), 1)
         self.assertEqual(CellInformation.objects.count(), 1)
         self.assertEqual(BandInformation.objects.count(), 1)
 
         # delete the logical file
-        res_file = self.composite_resource.files.first()
-        logical_file = res_file.logical_file
         logical_file.logical_delete(self.user)
         # test that we have no logical file of type GeoRasterFileType
         self.assertEqual(GeoRasterLogicalFile.objects.count(), 0)
@@ -606,7 +569,9 @@ class RasterFileTypeMetaData(MockIRODSTestCaseMixin, TransactionTestCase):
         self.assertEqual(GeoRasterFileMetaData.objects.count(), 1)
 
         # test that we have the metadata elements
-        self.assertEqual(Coverage.objects.count(), 1)
+        # there should be 2 Coverage objects - one at the resource level and
+        # the other one at the file type level
+        self.assertEqual(Coverage.objects.count(), 2)
         self.assertEqual(OriginalCoverage.objects.count(), 1)
         self.assertEqual(CellInformation.objects.count(), 1)
         self.assertEqual(BandInformation.objects.count(), 1)
@@ -702,6 +667,12 @@ class RasterFileTypeMetaData(MockIRODSTestCaseMixin, TransactionTestCase):
         self.assertEqual(CellInformation.objects.count(), 0)
         self.assertEqual(BandInformation.objects.count(), 0)
 
+    def test_file_rename_or_move(self):
+        # test that file can't be moved or rename for any resource file
+        # that's part of the GeoRaster logical file
+        # TODO: Implement this test
+        pass
+
     def test_metadata_element_html(self):
         # here we are testing the get_html() function of the metadata element
         # we have implemented get_html() for only CellInformation element
@@ -756,13 +727,16 @@ class RasterFileTypeMetaData(MockIRODSTestCaseMixin, TransactionTestCase):
 
         res_file = self.composite_resource.files.first()
         logical_file = res_file.logical_file
-        # there should be 1 coverage element
-        self.assertNotEqual(logical_file.metadata.coverage, None)
+        # there should be 1 coverage element of type spatial
+        self.assertEqual(logical_file.metadata.coverages.all().count(), 1)
+        self.assertNotEqual(logical_file.metadata.spatial_coverage, None)
         self.assertNotEqual(logical_file.metadata.originalCoverage, None)
         self.assertNotEqual(logical_file.metadata.cellInformation, None)
         self.assertNotEqual(logical_file.metadata.bandInformations, None)
 
-        self.assertEqual(Coverage.objects.count(), 1)
+        # there should be 2 coverage objects - one at the resource level
+        # and the other one at the file type level
+        self.assertEqual(Coverage.objects.count(), 2)
         self.assertEqual(OriginalCoverage.objects.count(), 1)
         self.assertEqual(CellInformation.objects.count(), 1)
         self.assertEqual(BandInformation.objects.count(), 1)
