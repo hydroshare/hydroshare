@@ -1658,7 +1658,7 @@ class T05ShareResource(MockIRODSTestCaseMixin, TestCase):
         with self.assertRaises(PermissionDenied):
             dog.uaccess.share_resource_with_group(holes, meowers, PrivilegeCodes.CHANGE)
 
-    def test_15_debugging_print_strings(self):
+    def test_15_share_record_printing(self):
         """ test stringification of sharing records for debugging """
         cat = self.cat
         holes = self.holes 

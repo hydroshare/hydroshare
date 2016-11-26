@@ -150,7 +150,7 @@ class T09GroupSharing(MockIRODSTestCaseMixin, TestCase):
 
         assertGroupResourceUnshareCoherence(self)
 
-    def test_03_group_share_debugging(self): 
+    def test_03_group_share_printing(self): 
         """ test group share record printing """
         dog = self.dog
         scratching = self.scratching

@@ -123,8 +123,6 @@ def assertResourceEditorsAre(self, this_resource, these_users):
         self.assertTrue(u in this_resource.raccess.view_users)
         self.assertTrue(u not in this_resource.raccess.owners)
         self.assertTrue(u in this_resource.raccess.edit_users)
-        # if not this_resource.raccess.immutable:
-        #     self.assertEqual(this_resource.raccess.get_combined_privilege(u), PrivilegeCodes.CHANGE)
         self.assertEqual(this_resource.raccess.get_effective_privilege(u), PrivilegeCodes.CHANGE)
 
 def assertResourceViewersAre(self, this_resource, these_users):
@@ -148,8 +146,6 @@ def assertResourceViewersAre(self, this_resource, these_users):
         self.assertTrue(u in this_resource.raccess.view_users)
         self.assertTrue(u not in this_resource.raccess.owners)
         self.assertTrue(u not in this_resource.raccess.edit_users)
-        # if not this_resource.raccess.immutable:
-        #     self.assertEqual(this_resource.raccess.get_combined_privilege(u), PrivilegeCodes.VIEW)
         self.assertEqual(this_resource.raccess.get_effective_privilege(u), PrivilegeCodes.VIEW)
 
 def assertResourceUserState(self, this_resource, owners, editors, viewers):
@@ -185,7 +181,6 @@ def assertOwnedResourcesAre(self, this_user, these_resources):
             self.assertTrue(this_user not in r.raccess.edit_users)
             self.assertTrue(r not in this_user.uaccess.edit_resources)
         self.assertTrue(this_user in r.raccess.view_users)
-        # self.assertEqual(r.raccess.get_combined_privilege(this_user), PrivilegeCodes.OWNER)
         self.assertEqual(r.raccess.get_effective_privilege(this_user), PrivilegeCodes.OWNER)
 
 def assertEditableResourcesAre(self, this_user, these_resources):
@@ -229,8 +224,6 @@ def assertViewableResourcesAre(self, this_user, these_resources):
         self.assertTrue(this_user not in r.raccess.owners)
         self.assertTrue(this_user not in r.raccess.edit_users)
         self.assertTrue(this_user in r.raccess.view_users)
-        # if not r.raccess.immutable:
-        #     self.assertEqual(r.raccess.get_combined_privilege(this_user), PrivilegeCodes.VIEW)
         self.assertEqual(r.raccess.get_effective_privilege(this_user), PrivilegeCodes.VIEW)
 
 def assertUserResourceState(self, this_user, owned, editable, viewable):
@@ -413,7 +406,6 @@ def assertResourceGroupEditorsAre(self, this_resource, these_groups):
         self.assertTrue(this_resource not in g.gaccess.get_resources_with_explicit_access(PrivilegeCodes.OWNER))
         self.assertTrue(this_resource in g.gaccess.get_resources_with_explicit_access(PrivilegeCodes.CHANGE))
         self.assertTrue(this_resource not in g.gaccess.get_resources_with_explicit_access(PrivilegeCodes.VIEW))
-        # self.assertEqual(this_resource.raccess.get_group_privilege(g), PrivilegeCodes.CHANGE)
 
 def assertResourceGroupViewersAre(self, this_resource, these_groups):
     """ these groups are all editors without ownership """
