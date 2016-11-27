@@ -429,7 +429,40 @@ class CompositeResourceTest(MockIRODSTestCaseMixin, TransactionTestCase):
     def test_can_be_public_or_discoverable(self):
         self._create_composite_resource()
 
-        # TODO: implement the tests
+        # at this point resource can't be public or discoverable as some core metadata missing
+        self.assertEqual(self.composite_resource.can_be_public_or_discoverable, False)
+        # add a text file
+        self.generic_file_obj = open(self.generic_file, 'r')
+        resource_file_add_process(resource=self.composite_resource,
+                                  files=(self.generic_file_obj,), user=self.user)
+
+        # at this point still resource can't be public or discoverable - as some core metadata
+        # is missing
+        self.assertEqual(self.composite_resource.can_be_public_or_discoverable, False)
+        # add a raster file to the resource to auto create format element
+        self.raster_file_obj = open(self.raster_file, 'r')
+        resource_file_add_process(resource=self.composite_resource,
+                                  files=(self.raster_file_obj,), user=self.user)
+
+        # at this point still resource can't be public or discoverable - as some core metadata
+        # is missing
+        self.assertEqual(self.composite_resource.can_be_public_or_discoverable, False)
+
+        # there should be 3 required core metadata elements missing at this point
+        missing_elements = self.composite_resource.metadata.get_required_missing_elements()
+        self.assertEqual(len(missing_elements), 2)
+        self.assertIn('Abstract', missing_elements)
+        self.assertIn('Keywords', missing_elements)
+
+        # add the above missing elements
+        # create abstract
+        metadata = self.composite_resource.metadata
+        # add Abstract (element name is description)
+        metadata.create_element('description', abstract='new abstract for the resource')
+        # add keywords (element name is subject)
+        metadata.create_element('subject', value='sub-1')
+        # at this point resource can be public or discoverable
+        self.assertEqual(self.composite_resource.can_be_public_or_discoverable, True)
 
     def _create_composite_resource(self):
         self.composite_resource = hydroshare.create_resource(
