@@ -31,7 +31,6 @@ class GeoRasterFileMetaData(AbstractFileMetaData, GeoRasterMetaDataMixin):
         return elements
 
     def delete_all_elements(self):
-        # self.coverages.all().delete()
         super(GeoRasterFileMetaData, self).delete_all_elements()
         if self.cellInformation:
             self.cellInformation.delete()
@@ -43,7 +42,7 @@ class GeoRasterFileMetaData(AbstractFileMetaData, GeoRasterMetaDataMixin):
     def has_all_required_elements(self):
         if not super(GeoRasterFileMetaData, self).has_all_required_elements():
             return False
-        if not self.coverages.count() == 0:
+        if self.coverages.count() == 0:
             return False
         if not self.cellInformation:
             return False
