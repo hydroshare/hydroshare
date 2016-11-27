@@ -420,11 +420,173 @@ class CompositeResourceTest(MockIRODSTestCaseMixin, TransactionTestCase):
         # this is to test that the spatial coverage and temporal coverage
         # for composite resource get updated by the system based on the
         # coverage metadata that all logical file objects of the resource have at anytime
-        # TODO: implement this test
+
         # 1. test that resource coverages get updated on LFO level metadata creation
         # 2. test that resource coverages get updated on LFO level metadata update
         # 3. test that resource coverages get updated on content file delete
-        pass
+
+        # create a composite resource with no content file
+        self._create_composite_resource()
+        # at this point the there should not be any resource level coverage metadata
+        self.assertEqual(self.composite_resource.metadata.coverages.count(), 0)
+        # now add the raster tif file to the resource - which should put this file as
+        # part of a GenericLogicalFile object
+        self.raster_file_obj = open(self.raster_file, 'r')
+        resource_file_add_process(resource=self.composite_resource,
+                                  files=(self.raster_file_obj,), user=self.user)
+
+        res_file = self.composite_resource.files.all().first()
+        set_file_to_geo_raster_file_type(self.composite_resource, res_file.id, self.user)
+        # raster logical file should have a coverage element of type box
+        res_file = [f for f in self.composite_resource.files.all()
+                    if f.logical_file_type_name == "GeoRasterLogicalFile"][0]
+
+        raster_logical_file = res_file.logical_file
+        self.assertEqual(raster_logical_file.metadata.coverages.count(), 1)
+        self.assertEqual(raster_logical_file.metadata.coverages.all().filter(
+            type='box').count(), 1)
+        # now the resource should have a coverage metadata element of type box
+        self.assertEqual(self.composite_resource.metadata.coverages.count(), 1)
+        self.assertEqual(self.composite_resource.metadata.coverages.all().filter(
+            type='box').count(), 1)
+
+        # the spatial coverage at the file type level should be exactly the same as the
+        # resource level - due to auto update feature in composite resource
+        res_coverage = self.composite_resource.metadata.coverages.all().filter(type='box').first()
+        raster_lfo_coverage = raster_logical_file.metadata.coverages.all().filter(
+            type='box').first()
+        self.assertEqual(res_coverage.value['projection'], raster_lfo_coverage.value['projection'])
+        self.assertEqual(res_coverage.value['units'], raster_lfo_coverage.value['units'])
+        self.assertEqual(res_coverage.value['northlimit'], raster_lfo_coverage.value['northlimit'])
+        self.assertEqual(res_coverage.value['southlimit'], raster_lfo_coverage.value['southlimit'])
+        self.assertEqual(res_coverage.value['eastlimit'], raster_lfo_coverage.value['eastlimit'])
+        self.assertEqual(res_coverage.value['westlimit'], raster_lfo_coverage.value['westlimit'])
+
+        # At this point there is not temporal coverage either at the file type level or resource
+        # level
+        self.assertEqual(self.composite_resource.metadata.coverages.all().filter(
+            type='period').count(), 0)
+        self.assertEqual(raster_logical_file.metadata.coverages.all().filter(
+            type='period').count(), 0)
+
+        # addding temporal coverage to the logical file should add the temporal coverage to the
+        # resource
+        value_dict = {'start': '1/1/2010', 'end': '12/12/2015'}
+        raster_logical_file.metadata.create_element('coverage', type='period', value=value_dict)
+        self.assertEqual(self.composite_resource.metadata.coverages.all().filter(
+            type='period').count(), 1)
+        self.assertEqual(raster_logical_file.metadata.coverages.all().filter(
+            type='period').count(), 1)
+        res_coverage = self.composite_resource.metadata.coverages.all().filter(
+            type='period').first()
+        raster_lfo_coverage = raster_logical_file.metadata.coverages.all().filter(
+            type='period').first()
+        self.assertEqual(res_coverage.value['start'], raster_lfo_coverage.value['start'])
+        self.assertEqual(res_coverage.value['end'], raster_lfo_coverage.value['end'])
+        self.assertEqual(res_coverage.value['start'], '1/1/2010')
+        self.assertEqual(res_coverage.value['end'], '12/12/2015')
+
+        # test updating the temporal coverage for file type should update the temporal coverage
+        # for the resource
+        value_dict = {'start': '12/1/2010', 'end': '12/1/2015'}
+        raster_logical_file.metadata.update_element('coverage', raster_lfo_coverage.id,
+                                                    type='period', value=value_dict)
+        res_coverage = self.composite_resource.metadata.coverages.all().filter(
+            type='period').first()
+        raster_lfo_coverage = raster_logical_file.metadata.coverages.all().filter(
+            type='period').first()
+        self.assertEqual(res_coverage.value['start'], raster_lfo_coverage.value['start'])
+        self.assertEqual(res_coverage.value['end'], raster_lfo_coverage.value['end'])
+        self.assertEqual(res_coverage.value['start'], '12/1/2010')
+        self.assertEqual(res_coverage.value['end'], '12/1/2015')
+
+        # test that the resource coverage is superset of file type coverages
+        self.generic_file_obj = open(self.generic_file, 'r')
+        resource_file_add_process(resource=self.composite_resource,
+                                  files=(self.generic_file_obj,), user=self.user)
+
+        res_file = [f for f in self.composite_resource.files.all()
+                    if f.logical_file_type_name == "GenericLogicalFile"][0]
+
+        generic_logical_file = res_file.logical_file
+        # there should not be any coverage for the generic LFO at this point
+        self.assertEqual(generic_logical_file.metadata.coverages.count(), 0)
+        # create temporal coverage for generic LFO
+        value_dict = {'start': '1/1/2009', 'end': '1/1/2015'}
+        generic_logical_file.metadata.create_element('coverage', type='period', value=value_dict)
+        self.assertEqual(generic_logical_file.metadata.coverages.count(), 1)
+        res_coverage = self.composite_resource.metadata.coverages.all().filter(
+            type='period').first()
+        # resource temporal coverage is now super set of the 2 temporal coverages
+        # in 2 LFOs
+        self.assertEqual(res_coverage.value['start'], '1/1/2009')
+        self.assertEqual(res_coverage.value['end'], '12/1/2015')
+        # test resource superset spatial coverage
+        res_coverage = self.composite_resource.metadata.coverages.all().filter(
+            type='box').first()
+        self.assertEqual(res_coverage.value['projection'], 'WGS 84 EPSG:4326')
+        self.assertEqual(res_coverage.value['units'], 'Decimal degrees')
+        self.assertEqual(res_coverage.value['northlimit'], 42.049364058252266)
+        self.assertEqual(res_coverage.value['eastlimit'], -111.57773718106195)
+        self.assertEqual(res_coverage.value['southlimit'], 41.987884327209976)
+        self.assertEqual(res_coverage.value['westlimit'], -111.69756293084055)
+        value_dict = {'east': '-110.88845678', 'north': '43.6789', 'units': 'Decimal deg'}
+        generic_logical_file.metadata.create_element('coverage', type='point', value=value_dict)
+        res_coverage = self.composite_resource.metadata.coverages.all().filter(
+            type='box').first()
+        self.assertEqual(res_coverage.value['projection'], 'WGS 84 EPSG:4326')
+        self.assertEqual(res_coverage.value['units'], 'Decimal degrees')
+        self.assertEqual(res_coverage.value['northlimit'], 43.6789)
+        self.assertEqual(res_coverage.value['eastlimit'], -110.88845678)
+        self.assertEqual(res_coverage.value['southlimit'], 41.987884327209976)
+        self.assertEqual(res_coverage.value['westlimit'], -111.69756293084055)
+        # update the LFO coverage to box type
+        value_dict = {'eastlimit': '-110.88845678', 'northlimit': '43.6789',
+                      'westlimit': '-112.78967', 'southlimit': '40.12345',
+                      'units': 'Decimal deg'}
+        lfo_spatial_coverage = generic_logical_file.metadata.spatial_coverage
+        generic_logical_file.metadata.update_element('coverage', lfo_spatial_coverage.id,
+                                                     type='box', value=value_dict)
+        res_coverage = self.composite_resource.metadata.coverages.all().filter(
+            type='box').first()
+        self.assertEqual(res_coverage.value['projection'], 'WGS 84 EPSG:4326')
+        self.assertEqual(res_coverage.value['units'], 'Decimal degrees')
+        self.assertEqual(res_coverage.value['northlimit'], 43.6789)
+        self.assertEqual(res_coverage.value['eastlimit'], -110.88845678)
+        self.assertEqual(res_coverage.value['southlimit'], 40.12345)
+        self.assertEqual(res_coverage.value['westlimit'], -112.78967)
+
+        # deleting the generic file should reset the coverage of the resource to that of the
+        # raster LFO
+        res_file = [f for f in self.composite_resource.files.all()
+                    if f.logical_file_type_name == "GenericLogicalFile"][0]
+        hydroshare.delete_resource_file(self.composite_resource.short_id, res_file.id, self.user)
+        res_coverage = self.composite_resource.metadata.coverages.all().filter(
+            type='box').first()
+        raster_lfo_coverage = raster_logical_file.metadata.coverages.all().filter(
+            type='box').first()
+        self.assertEqual(res_coverage.value['projection'], raster_lfo_coverage.value['projection'])
+        self.assertEqual(res_coverage.value['units'], raster_lfo_coverage.value['units'])
+        self.assertEqual(res_coverage.value['northlimit'], raster_lfo_coverage.value['northlimit'])
+        self.assertEqual(res_coverage.value['southlimit'], raster_lfo_coverage.value['southlimit'])
+        self.assertEqual(res_coverage.value['eastlimit'], raster_lfo_coverage.value['eastlimit'])
+        self.assertEqual(res_coverage.value['westlimit'], raster_lfo_coverage.value['westlimit'])
+        res_coverage = self.composite_resource.metadata.coverages.all().filter(
+            type='period').first()
+        raster_lfo_coverage = raster_logical_file.metadata.coverages.all().filter(
+            type='period').first()
+        self.assertEqual(res_coverage.value['start'], raster_lfo_coverage.value['start'])
+        self.assertEqual(res_coverage.value['end'], raster_lfo_coverage.value['end'])
+        self.assertEqual(res_coverage.value['start'], '12/1/2010')
+        self.assertEqual(res_coverage.value['end'], '12/1/2015')
+
+        # deleting the remaining content file from resource should leave the resource
+        # with no coverage element
+        res_file = [f for f in self.composite_resource.files.all()
+                    if f.logical_file_type_name == "GeoRasterLogicalFile"][0]
+        hydroshare.delete_resource_file(self.composite_resource.short_id, res_file.id, self.user)
+        self.assertEqual(self.composite_resource.files.count(), 0)
+        self.assertEqual(self.composite_resource.metadata.coverages.count(), 0)
 
     def test_can_be_public_or_discoverable(self):
         self._create_composite_resource()

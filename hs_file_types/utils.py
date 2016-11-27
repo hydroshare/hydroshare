@@ -306,7 +306,6 @@ def explode_zip_file(zip_file):
 
 
 def update_resource_coverage_element(resource):
-    # TODO: This needs to be unit tested
     # update resource spatial coverage
     spatial_coverages = [lf.metadata.spatial_coverage for lf in resource.logical_files
                          if lf.metadata.spatial_coverage is not None]
@@ -317,19 +316,18 @@ def update_resource_coverage_element(resource):
                              'eastlimit': 'east', 'westlimit': 'east'}
                    }
 
-    def set_coverage_data(coverage_value, coverage_element, box_limits):
+    def set_coverage_data(res_coverage_value, lfo_coverage_element, box_limits):
         comparison_operator = {'northlimit': lt, 'southlimit': gt, 'eastlimit': lt,
                                'westlimit': gt}
         for key in comparison_operator.keys():
-            if comparison_operator[key](coverage_value[box_limits[key]],
-                                        coverage_element.value[box_limits[key]]):
-                coverage_value[box_limits[key]] = coverage_element.value[box_limits[key]]
+            if comparison_operator[key](res_coverage_value[key],
+                                        lfo_coverage_element.value[box_limits[key]]):
+                res_coverage_value[key] = lfo_coverage_element.value[box_limits[key]]
 
     cov_type = "point"
     bbox_value = {'northlimit': -90, 'southlimit': 90, 'eastlimit': -180, 'westlimit': 180,
                   'projection': 'WGS 84 EPSG:4326', 'units': "Decimal degrees"}
-    point_value = {'north': -90, 'east': -180,
-                   'projection': 'WGS 84 EPSG:4326', 'units': "Decimal degrees"}
+
     if len(spatial_coverages) > 1:
         cov_type = 'box'
         for sp_cov in spatial_coverages:
@@ -339,24 +337,26 @@ def update_resource_coverage_element(resource):
             else:
                 # point type coverage
                 box_limits = bbox_limits['point']
-                set_coverage_data(point_value, sp_cov, box_limits)
+                set_coverage_data(bbox_value, sp_cov, box_limits)
 
     elif len(spatial_coverages) == 1:
         sp_cov = spatial_coverages[0]
         if sp_cov.type == "box":
-            box_limits = bbox_limits['box']
             cov_type = 'box'
+            bbox_value['projection'] = 'WGS 84 EPSG:4326'
+            bbox_value['units'] = 'Decimal degrees'
+            bbox_value['northlimit'] = sp_cov.value['northlimit']
+            bbox_value['eastlimit'] = sp_cov.value['eastlimit']
+            bbox_value['southlimit'] = sp_cov.value['southlimit']
+            bbox_value['westlimit'] = sp_cov.value['westlimit']
         else:
             # point type coverage
             cov_type = "point"
-            box_limits = bbox_limits['point']
             bbox_value = dict()
             bbox_value['projection'] = 'WGS 84 EPSG:4326'
             bbox_value['units'] = 'Decimal degrees'
             bbox_value['north'] = sp_cov.value['north']
             bbox_value['east'] = sp_cov.value['east']
-
-        set_coverage_data(bbox_value, sp_cov, box_limits)
 
     spatial_cov = resource.metadata.coverages.all().exclude(type='period').first()
     if len(spatial_coverages) > 0:
