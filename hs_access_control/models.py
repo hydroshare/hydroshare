@@ -1421,7 +1421,9 @@ class UserAccess(models.Model):
         #   Permission for self
         # cannot downgrade privilege just by having sharing privilege. 
 
-        grantor_priv = access_resource.get_effective_privilege(self.user)
+        # self can only use user privileges in sharing with a group 
+        grantor_priv = access_resource.get_effective_user_privilege(self.user)
+        # target of sharing has all privileges accorded by group, user 
         if user is not None: 
             grantee_priv = access_resource.get_effective_privilege(user) 
 
@@ -2264,18 +2266,16 @@ class ResourceAccess(models.Model):
         else:
             return []
 
-    def __get_combined_privilege(self, this_user):
+
+    def __get_raw_user_privilege(self, this_user):
         """
-        Return the total privilege of a specific user over this resource
+        Return the user-based privilege of a specific user over this resource
 
         :param this_user: the user upon which to report
         :return: integer privilege 1-4 (PrivilegeCodes)
 
-        This reports combined privilege of a user due to user permissions and group permissions, but does
-        not account for resource flags.
+        This does not account for resource flags. 
 
-        Note that this privilege is the privilege that the user holds, not the privilege
-        in effect due to flags.  See "get_effective_privilege" to account for flags.
         """
         if __debug__:  # during testing only, check argument types and preconditions
             assert isinstance(this_user, User)
@@ -2293,6 +2293,25 @@ class ResourceAccess(models.Model):
         except UserResourcePrivilege.DoesNotExist: 
             response1 = PrivilegeCodes.NONE
 
+        return response1 
+
+    def __get_raw_group_privilege(self, this_user):
+        """
+        Return the group-based privilege of a specific user over this resource
+
+        :param this_user: the user upon which to report
+        :return: integer privilege 1-4 (PrivilegeCodes)
+
+        This does not account for resource flags. 
+        """
+        if __debug__:  # during testing only, check argument types and preconditions
+            assert isinstance(this_user, User)
+
+        if not this_user.is_active: raise PermissionDenied("Grantee user is not active")
+
+        if this_user.is_superuser:
+            return PrivilegeCodes.OWNER
+
         # Group privileges must be aggregated 
         group_priv = GroupResourcePrivilege.objects\
             .filter(resource=self.resource,
@@ -2303,8 +2322,37 @@ class ResourceAccess(models.Model):
         response2 = group_priv['privilege__min']
         if response2 is None:
             response2 = PrivilegeCodes.NONE
+        return response2 
 
-        return min(response1, response2)
+    def get_effective_user_privilege(self, this_user): 
+        """
+        Return the effective user-based privilege of a specific user over this resource
+
+        :param this_user: the user upon which to report
+        :return: integer privilege 1-4 (PrivilegeCodes)
+
+        This accounts for resource flags by revoking CHANGE on immutable resources. 
+        """
+        user_priv = self.__get_raw_user_privilege(this_user)
+        if self.immutable and user_priv == PrivilegeCodes.CHANGE:
+            return PrivilegeCodes.VIEW
+        else:
+            return user_priv
+
+    def get_effective_group_privilege(self, this_user): 
+        """
+        Return the effective group-based privilege of a specific user over this resource
+
+        :param this_user: the user upon which to report
+        :return: integer privilege 1-4 (PrivilegeCodes)
+
+        This accounts for resource flags by revoking CHANGE on immutable resources. 
+        """
+        group_priv = self.__get_raw_group_privilege(this_user)
+        if self.immutable and group_priv == PrivilegeCodes.CHANGE:
+            return PrivilegeCodes.VIEW
+        else:
+            return group_priv
 
     def get_effective_privilege(self, this_user):
         """
@@ -2336,11 +2384,9 @@ class ResourceAccess(models.Model):
 
         if not this_user.is_active: raise PermissionDenied("Grantee user is not active")
 
-        user_priv = self.__get_combined_privilege(this_user)
-        if self.immutable and user_priv == PrivilegeCodes.CHANGE:
-            return PrivilegeCodes.VIEW
-        else:
-            return user_priv
+        user_priv = self.get_effective_user_privilege(this_user)
+        group_priv = self.get_effective_group_privilege(this_user)
+        return min(user_priv, group_priv) 
 
     @property
     def sharing_status(self):

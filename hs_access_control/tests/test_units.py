@@ -466,6 +466,23 @@ class UnitTests(MockIRODSTestCaseMixin, TestCase):
         george.uaccess.share_resource_with_user(bikes, alva, PrivilegeCodes.OWNER)
         self.assertTrue(is_equal_to_as_set(bikes.raccess.owners, [george, alva]))
 
+    def test_resource_get_effective_user_privilege(self):
+        george = self.george
+        alva = self.alva
+        bikes = self.bikes
+        self.assertEqual(bikes.raccess.get_effective_user_privilege(george), PrivilegeCodes.OWNER)
+        self.assertEqual(bikes.raccess.get_effective_user_privilege(alva), PrivilegeCodes.NONE)
+
+    def test_resource_get_effective_group_privilege(self):
+        george = self.george
+        alva = self.alva
+        bikes = self.bikes
+        bikers = self.bikers
+        george.uaccess.share_resource_with_group(bikes, bikers, PrivilegeCodes.CHANGE)
+        self.assertEqual(bikes.raccess.get_effective_group_privilege(alva), PrivilegeCodes.NONE)
+        george.uaccess.share_group_with_user(bikers, alva, PrivilegeCodes.VIEW)
+        self.assertEqual(bikes.raccess.get_effective_group_privilege(alva), PrivilegeCodes.CHANGE)
+
     def test_resource_get_effective_privilege(self):
         george = self.george
         alva = self.alva

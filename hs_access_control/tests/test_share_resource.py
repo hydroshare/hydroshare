@@ -1538,8 +1538,8 @@ class T05ShareResource(MockIRODSTestCaseMixin, TestCase):
         self.assertFalse(dog.uaccess.can_change_resource_flags(holes))
         self.assertFalse(dog.uaccess.can_delete_resource(holes))
         self.assertFalse(dog.uaccess.can_share_resource(holes, PrivilegeCodes.OWNER))
-        self.assertTrue(dog.uaccess.can_share_resource(holes, PrivilegeCodes.CHANGE))
-        self.assertTrue(dog.uaccess.can_share_resource(holes, PrivilegeCodes.VIEW))
+        self.assertFalse(dog.uaccess.can_share_resource(holes, PrivilegeCodes.CHANGE))
+        self.assertFalse(dog.uaccess.can_share_resource(holes, PrivilegeCodes.VIEW))
 
         # turn off group sharing
         cat.uaccess.unshare_resource_with_group(holes, meowers)
