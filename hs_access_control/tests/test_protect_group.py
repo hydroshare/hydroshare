@@ -1,23 +1,17 @@
-
-import unittest
-from django.http import Http404
 from django.test import TestCase
-from django.utils import timezone
 from django.core.exceptions import PermissionDenied
-from django.contrib.auth.models import User, Group
-from pprint import pprint
+from django.contrib.auth.models import Group
 
-from hs_access_control.models import UserAccess, GroupAccess, ResourceAccess, \
-    UserResourcePrivilege, GroupResourcePrivilege, UserGroupPrivilege, PrivilegeCodes
+from hs_access_control.models import PrivilegeCodes
 
 from hs_core import hydroshare
-from hs_core.models import GenericResource, BaseResource
 from hs_core.testing import MockIRODSTestCaseMixin
 
-from hs_access_control.tests.utilities import *
+from hs_access_control.tests.utilities import global_reset, is_equal_to_as_set
 
 
 class T06ProtectGroup(MockIRODSTestCaseMixin, TestCase):
+
     def setUp(self):
         super(T06ProtectGroup, self).setUp()
         global_reset()
@@ -62,7 +56,8 @@ class T06ProtectGroup(MockIRODSTestCaseMixin, TestCase):
         "Initial group state is correct"
 
         cat = self.cat
-        polyamory = cat.uaccess.create_group(title='polyamory', description="We are the polyamory")
+        polyamory = cat.uaccess.create_group(
+            title='polyamory', description="We are the polyamory")
 
         # flag state
         self.assertTrue(polyamory.gaccess.public)
@@ -77,21 +72,34 @@ class T06ProtectGroup(MockIRODSTestCaseMixin, TestCase):
         # composite django state
         self.assertTrue(cat.uaccess.can_change_group_flags(polyamory))
         self.assertTrue(cat.uaccess.can_delete_group(polyamory))
-        self.assertTrue(cat.uaccess.can_share_group(polyamory, PrivilegeCodes.OWNER))
-        self.assertTrue(cat.uaccess.can_share_group(polyamory, PrivilegeCodes.CHANGE))
-        self.assertTrue(cat.uaccess.can_share_group(polyamory, PrivilegeCodes.VIEW))
+        self.assertTrue(
+            cat.uaccess.can_share_group(
+                polyamory,
+                PrivilegeCodes.OWNER))
+        self.assertTrue(
+            cat.uaccess.can_share_group(
+                polyamory,
+                PrivilegeCodes.CHANGE))
+        self.assertTrue(
+            cat.uaccess.can_share_group(
+                polyamory,
+                PrivilegeCodes.VIEW))
 
         # membership
         self.assertTrue(cat in polyamory.gaccess.members)
 
         # ensure that this group was created and current user is a member
-        self.assertTrue(is_equal_to_as_set([polyamory], cat.uaccess.view_groups))
+        self.assertTrue(
+            is_equal_to_as_set(
+                [polyamory],
+                cat.uaccess.view_groups))
 
     def test_02_isolate(self):
         "Groups cannot be changed by non-members"
         cat = self.cat
         dog = self.dog
-        polyamory = cat.uaccess.create_group(title='polyamory', description="We are the polyamory")
+        polyamory = cat.uaccess.create_group(
+            title='polyamory', description="We are the polyamory")
 
         # dog should not have access to the group privilege
         self.assertFalse(dog.uaccess.owns_group(polyamory))
@@ -101,26 +109,43 @@ class T06ProtectGroup(MockIRODSTestCaseMixin, TestCase):
         # composite django state
         self.assertFalse(dog.uaccess.can_change_group_flags(polyamory))
         self.assertFalse(dog.uaccess.can_delete_group(polyamory))
-        self.assertFalse(dog.uaccess.can_share_group(polyamory, PrivilegeCodes.OWNER))
-        self.assertFalse(dog.uaccess.can_share_group(polyamory, PrivilegeCodes.CHANGE))
-        self.assertFalse(dog.uaccess.can_share_group(polyamory, PrivilegeCodes.VIEW))
+        self.assertFalse(
+            dog.uaccess.can_share_group(
+                polyamory,
+                PrivilegeCodes.OWNER))
+        self.assertFalse(
+            dog.uaccess.can_share_group(
+                polyamory,
+                PrivilegeCodes.CHANGE))
+        self.assertFalse(
+            dog.uaccess.can_share_group(
+                polyamory,
+                PrivilegeCodes.VIEW))
 
         # dog's groups should be unchanged
         self.assertTrue(is_equal_to_as_set([], dog.uaccess.view_groups))
 
         # dog should not be able to modify group members
         with self.assertRaises(PermissionDenied) as cm:
-            dog.uaccess.share_group_with_user(polyamory, dog, PrivilegeCodes.CHANGE)
-        self.assertEqual(cm.exception.message, 'User has no privilege over group')
+            dog.uaccess.share_group_with_user(
+                polyamory, dog, PrivilegeCodes.CHANGE)
+        self.assertEqual(
+            cm.exception.message,
+            'User has no privilege over group')
 
     def test_03_share_rw(self):
         "Sharing with PrivilegeCodes.CHANGE privilege allows group changes "
         cat = self.cat
         dog = self.dog
         bat = self.bat
-        polyamory = cat.uaccess.create_group(title='polyamory', description="We are the polyamory")
-        self.assertTrue(cat.uaccess.can_share_group(polyamory, PrivilegeCodes.CHANGE))
-        cat.uaccess.share_group_with_user(polyamory, dog, PrivilegeCodes.CHANGE)
+        polyamory = cat.uaccess.create_group(
+            title='polyamory', description="We are the polyamory")
+        self.assertTrue(
+            cat.uaccess.can_share_group(
+                polyamory,
+                PrivilegeCodes.CHANGE))
+        cat.uaccess.share_group_with_user(
+            polyamory, dog, PrivilegeCodes.CHANGE)
 
         # now check the state of 'dog'
         # dog should not have access to the group privilege
@@ -131,13 +156,26 @@ class T06ProtectGroup(MockIRODSTestCaseMixin, TestCase):
         # composite django state
         self.assertFalse(dog.uaccess.can_change_group_flags(polyamory))
         self.assertFalse(dog.uaccess.can_delete_group(polyamory))
-        self.assertFalse(dog.uaccess.can_share_group(polyamory, PrivilegeCodes.OWNER))
-        self.assertTrue(dog.uaccess.can_share_group(polyamory, PrivilegeCodes.CHANGE))
-        self.assertTrue(dog.uaccess.can_share_group(polyamory, PrivilegeCodes.VIEW))
+        self.assertFalse(
+            dog.uaccess.can_share_group(
+                polyamory,
+                PrivilegeCodes.OWNER))
+        self.assertTrue(
+            dog.uaccess.can_share_group(
+                polyamory,
+                PrivilegeCodes.CHANGE))
+        self.assertTrue(
+            dog.uaccess.can_share_group(
+                polyamory,
+                PrivilegeCodes.VIEW))
 
         # try to add someone to group
-        self.assertTrue(dog.uaccess.can_share_group(polyamory, PrivilegeCodes.CHANGE))
-        dog.uaccess.share_group_with_user(polyamory, bat, PrivilegeCodes.CHANGE)
+        self.assertTrue(
+            dog.uaccess.can_share_group(
+                polyamory,
+                PrivilegeCodes.CHANGE))
+        dog.uaccess.share_group_with_user(
+            polyamory, bat, PrivilegeCodes.CHANGE)
 
         # bat should not have access to dog's privileges
         self.assertFalse(bat.uaccess.owns_group(polyamory))
@@ -147,16 +185,26 @@ class T06ProtectGroup(MockIRODSTestCaseMixin, TestCase):
         # composite django state
         self.assertFalse(bat.uaccess.can_change_group_flags(polyamory))
         self.assertFalse(bat.uaccess.can_delete_group(polyamory))
-        self.assertFalse(bat.uaccess.can_share_group(polyamory, PrivilegeCodes.OWNER))
-        self.assertTrue(bat.uaccess.can_share_group(polyamory, PrivilegeCodes.CHANGE))
-        self.assertTrue(bat.uaccess.can_share_group(polyamory, PrivilegeCodes.VIEW))
+        self.assertFalse(
+            bat.uaccess.can_share_group(
+                polyamory,
+                PrivilegeCodes.OWNER))
+        self.assertTrue(
+            bat.uaccess.can_share_group(
+                polyamory,
+                PrivilegeCodes.CHANGE))
+        self.assertTrue(
+            bat.uaccess.can_share_group(
+                polyamory,
+                PrivilegeCodes.VIEW))
 
     def test_04_share_ro(self):
         "Sharing with PrivilegeCodes.VIEW privilege disallows group changes "
         cat = self.cat
         dog = self.dog
         bat = self.bat
-        polyamory = cat.uaccess.create_group(title='polyamory', description="We are the polyamory")
+        polyamory = cat.uaccess.create_group(
+            title='polyamory', description="We are the polyamory")
         cat.uaccess.share_group_with_user(polyamory, dog, PrivilegeCodes.VIEW)
 
         # now check the state of 'dog'
@@ -167,9 +215,18 @@ class T06ProtectGroup(MockIRODSTestCaseMixin, TestCase):
         # composite django state
         self.assertFalse(dog.uaccess.can_change_group_flags(polyamory))
         self.assertFalse(dog.uaccess.can_delete_group(polyamory))
-        self.assertFalse(dog.uaccess.can_share_group(polyamory, PrivilegeCodes.OWNER))
-        self.assertFalse(dog.uaccess.can_share_group(polyamory, PrivilegeCodes.CHANGE))
-        self.assertTrue(dog.uaccess.can_share_group(polyamory, PrivilegeCodes.VIEW))
+        self.assertFalse(
+            dog.uaccess.can_share_group(
+                polyamory,
+                PrivilegeCodes.OWNER))
+        self.assertFalse(
+            dog.uaccess.can_share_group(
+                polyamory,
+                PrivilegeCodes.CHANGE))
+        self.assertTrue(
+            dog.uaccess.can_share_group(
+                polyamory,
+                PrivilegeCodes.VIEW))
 
         # try to add someone to group
         dog.uaccess.share_group_with_user(polyamory, bat, PrivilegeCodes.VIEW)
@@ -182,8 +239,15 @@ class T06ProtectGroup(MockIRODSTestCaseMixin, TestCase):
         # composite django state
         self.assertFalse(bat.uaccess.can_change_group_flags(polyamory))
         self.assertFalse(bat.uaccess.can_delete_group(polyamory))
-        self.assertFalse(bat.uaccess.can_share_group(polyamory, PrivilegeCodes.OWNER))
-        self.assertFalse(bat.uaccess.can_share_group(polyamory, PrivilegeCodes.CHANGE))
-        self.assertTrue(bat.uaccess.can_share_group(polyamory, PrivilegeCodes.VIEW))
-
-
+        self.assertFalse(
+            bat.uaccess.can_share_group(
+                polyamory,
+                PrivilegeCodes.OWNER))
+        self.assertFalse(
+            bat.uaccess.can_share_group(
+                polyamory,
+                PrivilegeCodes.CHANGE))
+        self.assertTrue(
+            bat.uaccess.can_share_group(
+                polyamory,
+                PrivilegeCodes.VIEW))

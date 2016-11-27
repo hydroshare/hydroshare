@@ -1,21 +1,15 @@
-
-
-import unittest
-from django.http import Http404
 from django.test import TestCase
-from django.utils import timezone
-from django.core.exceptions import PermissionDenied
-from django.contrib.auth.models import User, Group
-from pprint import pprint
+from django.contrib.auth.models import Group
 
-from hs_access_control.models import UserAccess, GroupAccess, ResourceAccess, \
-    UserResourcePrivilege, GroupResourcePrivilege, UserGroupPrivilege, PrivilegeCodes
+from hs_access_control.models import PrivilegeCodes
 
 from hs_core import hydroshare
-from hs_core.models import GenericResource, BaseResource
+from hs_core.models import GenericResource
 from hs_core.testing import MockIRODSTestCaseMixin
 
-from hs_access_control.tests.utilities import *
+from hs_access_control.tests.utilities import global_reset, is_equal_to_as_set, \
+    assertUserResourceState, assertResourceUserState
+
 
 class T03CreateResource(MockIRODSTestCaseMixin, TestCase):
 
@@ -79,13 +73,23 @@ class T03CreateResource(MockIRODSTestCaseMixin, TestCase):
         # composite django state
         self.assertTrue(cat.uaccess.can_change_resource_flags(holes))
         self.assertTrue(cat.uaccess.can_delete_resource(holes))
-        self.assertTrue(cat.uaccess.can_share_resource(holes, PrivilegeCodes.OWNER))
-        self.assertTrue(cat.uaccess.can_share_resource(holes, PrivilegeCodes.CHANGE))
-        self.assertTrue(cat.uaccess.can_share_resource(holes, PrivilegeCodes.VIEW))
+        self.assertTrue(
+            cat.uaccess.can_share_resource(
+                holes, PrivilegeCodes.OWNER))
+        self.assertTrue(
+            cat.uaccess.can_share_resource(
+                holes, PrivilegeCodes.CHANGE))
+        self.assertTrue(
+            cat.uaccess.can_share_resource(
+                holes, PrivilegeCodes.VIEW))
 
         # unsharing with cat would violate owner constraint
-        self.assertTrue(is_equal_to_as_set([], cat.uaccess.get_resource_unshare_users(holes)))
-        self.assertFalse(cat.uaccess.can_unshare_resource_with_user(holes, cat))
+        self.assertTrue(
+            is_equal_to_as_set(
+                [], cat.uaccess.get_resource_unshare_users(holes)))
+        self.assertFalse(
+            cat.uaccess.can_unshare_resource_with_user(
+                holes, cat))
 
     def test_02_isolate(self):
         """A user who didn't create a resource cannot access it"""
@@ -117,14 +121,25 @@ class T03CreateResource(MockIRODSTestCaseMixin, TestCase):
         # composite django state for non-owner
         self.assertFalse(dog.uaccess.can_change_resource_flags(holes))
         self.assertFalse(dog.uaccess.can_delete_resource(holes))
-        self.assertFalse(dog.uaccess.can_share_resource(holes, PrivilegeCodes.OWNER))
-        self.assertFalse(dog.uaccess.can_share_resource(holes, PrivilegeCodes.CHANGE))
-        self.assertFalse(dog.uaccess.can_share_resource(holes, PrivilegeCodes.VIEW))
+        self.assertFalse(
+            dog.uaccess.can_share_resource(
+                holes, PrivilegeCodes.OWNER))
+        self.assertFalse(
+            dog.uaccess.can_share_resource(
+                holes, PrivilegeCodes.CHANGE))
+        self.assertFalse(
+            dog.uaccess.can_share_resource(
+                holes, PrivilegeCodes.VIEW))
 
         # test list access functions for unshare targets
-        # these return empty because allowing this would violate the last owner rule
-        self.assertTrue(is_equal_to_as_set([], cat.uaccess.get_resource_unshare_users(holes)))
-        self.assertTrue(is_equal_to_as_set([], dog.uaccess.get_resource_unshare_users(holes)))
+        # these return empty because allowing this would violate the last owner
+        # rule
+        self.assertTrue(
+            is_equal_to_as_set(
+                [], cat.uaccess.get_resource_unshare_users(holes)))
+        self.assertTrue(
+            is_equal_to_as_set(
+                [], dog.uaccess.get_resource_unshare_users(holes)))
 
     def test_06_check_flag_immutable(self):
         """Resource owner can set and reset immutable flag"""
@@ -155,9 +170,15 @@ class T03CreateResource(MockIRODSTestCaseMixin, TestCase):
         # composite django state
         self.assertTrue(cat.uaccess.can_change_resource_flags(holes))
         self.assertTrue(cat.uaccess.can_delete_resource(holes))
-        self.assertTrue(cat.uaccess.can_share_resource(holes, PrivilegeCodes.OWNER))
-        self.assertTrue(cat.uaccess.can_share_resource(holes, PrivilegeCodes.CHANGE))
-        self.assertTrue(cat.uaccess.can_share_resource(holes, PrivilegeCodes.VIEW))
+        self.assertTrue(
+            cat.uaccess.can_share_resource(
+                holes, PrivilegeCodes.OWNER))
+        self.assertTrue(
+            cat.uaccess.can_share_resource(
+                holes, PrivilegeCodes.CHANGE))
+        self.assertTrue(
+            cat.uaccess.can_share_resource(
+                holes, PrivilegeCodes.VIEW))
 
         # make it immutable: what changes?
         holes.raccess.immutable = True
@@ -179,9 +200,15 @@ class T03CreateResource(MockIRODSTestCaseMixin, TestCase):
         # composite django state
         self.assertTrue(cat.uaccess.can_change_resource_flags(holes))
         self.assertTrue(cat.uaccess.can_delete_resource(holes))
-        self.assertTrue(cat.uaccess.can_share_resource(holes, PrivilegeCodes.OWNER))
-        self.assertTrue(cat.uaccess.can_share_resource(holes, PrivilegeCodes.CHANGE))
-        self.assertTrue(cat.uaccess.can_share_resource(holes, PrivilegeCodes.VIEW))
+        self.assertTrue(
+            cat.uaccess.can_share_resource(
+                holes, PrivilegeCodes.OWNER))
+        self.assertTrue(
+            cat.uaccess.can_share_resource(
+                holes, PrivilegeCodes.CHANGE))
+        self.assertTrue(
+            cat.uaccess.can_share_resource(
+                holes, PrivilegeCodes.VIEW))
 
         # django admin access
         self.assertFalse(self.admin.uaccess.owns_resource(holes))
@@ -189,14 +216,22 @@ class T03CreateResource(MockIRODSTestCaseMixin, TestCase):
         self.assertTrue(self.admin.uaccess.can_view_resource(holes))
         self.assertTrue(self.admin.uaccess.can_change_resource_flags(holes))
         self.assertTrue(self.admin.uaccess.can_delete_resource(holes))
-        self.assertTrue(self.admin.uaccess.can_share_resource(holes, PrivilegeCodes.OWNER))
-        self.assertTrue(self.admin.uaccess.can_share_resource(holes, PrivilegeCodes.CHANGE))
-        self.assertTrue(self.admin.uaccess.can_share_resource(holes, PrivilegeCodes.VIEW))
+        self.assertTrue(
+            self.admin.uaccess.can_share_resource(
+                holes, PrivilegeCodes.OWNER))
+        self.assertTrue(
+            self.admin.uaccess.can_share_resource(
+                holes, PrivilegeCodes.CHANGE))
+        self.assertTrue(
+            self.admin.uaccess.can_share_resource(
+                holes, PrivilegeCodes.VIEW))
 
         # change squash
-        self.cat.uaccess.share_resource_with_user(holes, dog, PrivilegeCodes.CHANGE)
+        self.cat.uaccess.share_resource_with_user(
+            holes, dog, PrivilegeCodes.CHANGE)
 
-        assertUserResourceState(self, dog, [], [], [holes])  # CHANGE squashed to VIEW
+        # CHANGE squashed to VIEW
+        assertUserResourceState(self, dog, [], [], [holes])
 
         # now no longer immutable
         holes.raccess.immutable = False
@@ -221,9 +256,15 @@ class T03CreateResource(MockIRODSTestCaseMixin, TestCase):
         # composite django state
         self.assertTrue(cat.uaccess.can_change_resource_flags(holes))
         self.assertTrue(cat.uaccess.can_delete_resource(holes))
-        self.assertTrue(cat.uaccess.can_share_resource(holes, PrivilegeCodes.OWNER))
-        self.assertTrue(cat.uaccess.can_share_resource(holes, PrivilegeCodes.CHANGE))
-        self.assertTrue(cat.uaccess.can_share_resource(holes, PrivilegeCodes.VIEW))
+        self.assertTrue(
+            cat.uaccess.can_share_resource(
+                holes, PrivilegeCodes.OWNER))
+        self.assertTrue(
+            cat.uaccess.can_share_resource(
+                holes, PrivilegeCodes.CHANGE))
+        self.assertTrue(
+            cat.uaccess.can_share_resource(
+                holes, PrivilegeCodes.VIEW))
 
     def test_07_check_flag_discoverable(self):
         """Resource owner can set and reset discoverable flag"""
@@ -250,21 +291,36 @@ class T03CreateResource(MockIRODSTestCaseMixin, TestCase):
         # composite django state
         self.assertTrue(cat.uaccess.can_change_resource_flags(holes))
         self.assertTrue(cat.uaccess.can_delete_resource(holes))
-        self.assertTrue(cat.uaccess.can_share_resource(holes, PrivilegeCodes.OWNER))
-        self.assertTrue(cat.uaccess.can_share_resource(holes, PrivilegeCodes.CHANGE))
-        self.assertTrue(cat.uaccess.can_share_resource(holes, PrivilegeCodes.VIEW))
+        self.assertTrue(
+            cat.uaccess.can_share_resource(
+                holes, PrivilegeCodes.OWNER))
+        self.assertTrue(
+            cat.uaccess.can_share_resource(
+                holes, PrivilegeCodes.CHANGE))
+        self.assertTrue(
+            cat.uaccess.can_share_resource(
+                holes, PrivilegeCodes.VIEW))
 
         # is it listed as discoverable?
-        self.assertTrue(is_equal_to_as_set([], GenericResource.discoverable_resources.all()))
-        self.assertTrue(is_equal_to_as_set([], GenericResource.public_resources.all()))
+        self.assertTrue(
+            is_equal_to_as_set(
+                [], GenericResource.discoverable_resources.all()))
+        self.assertTrue(
+            is_equal_to_as_set(
+                [], GenericResource.public_resources.all()))
 
         # make it discoverable
         holes.raccess.discoverable = True
         holes.raccess.save()
 
         # is it listed as discoverable?
-        self.assertTrue(is_equal_to_as_set([holes], GenericResource.discoverable_resources.all()))
-        self.assertTrue(is_equal_to_as_set([], GenericResource.public_resources.all()))
+        self.assertTrue(
+            is_equal_to_as_set(
+                [holes],
+                GenericResource.discoverable_resources.all()))
+        self.assertTrue(
+            is_equal_to_as_set(
+                [], GenericResource.public_resources.all()))
 
         # metadata state
         self.assertFalse(holes.raccess.immutable)
@@ -281,9 +337,15 @@ class T03CreateResource(MockIRODSTestCaseMixin, TestCase):
         # composite django state
         self.assertTrue(cat.uaccess.can_change_resource_flags(holes))
         self.assertTrue(cat.uaccess.can_delete_resource(holes))
-        self.assertTrue(cat.uaccess.can_share_resource(holes, PrivilegeCodes.OWNER))
-        self.assertTrue(cat.uaccess.can_share_resource(holes, PrivilegeCodes.CHANGE))
-        self.assertTrue(cat.uaccess.can_share_resource(holes, PrivilegeCodes.VIEW))
+        self.assertTrue(
+            cat.uaccess.can_share_resource(
+                holes, PrivilegeCodes.OWNER))
+        self.assertTrue(
+            cat.uaccess.can_share_resource(
+                holes, PrivilegeCodes.CHANGE))
+        self.assertTrue(
+            cat.uaccess.can_share_resource(
+                holes, PrivilegeCodes.VIEW))
 
         # make it not discoverable
         holes.raccess.discoverable = False
@@ -304,16 +366,29 @@ class T03CreateResource(MockIRODSTestCaseMixin, TestCase):
         # composite django state
         self.assertTrue(cat.uaccess.can_change_resource_flags(holes))
         self.assertTrue(cat.uaccess.can_delete_resource(holes))
-        self.assertTrue(cat.uaccess.can_share_resource(holes, PrivilegeCodes.OWNER))
-        self.assertTrue(cat.uaccess.can_share_resource(holes, PrivilegeCodes.CHANGE))
-        self.assertTrue(cat.uaccess.can_share_resource(holes, PrivilegeCodes.VIEW))
+        self.assertTrue(
+            cat.uaccess.can_share_resource(
+                holes, PrivilegeCodes.OWNER))
+        self.assertTrue(
+            cat.uaccess.can_share_resource(
+                holes, PrivilegeCodes.CHANGE))
+        self.assertTrue(
+            cat.uaccess.can_share_resource(
+                holes, PrivilegeCodes.VIEW))
 
-        # django admin should have full access to any not discoverable  resource
+        # django admin should have full access to any not discoverable
+        # resource
         self.assertTrue(self.admin.uaccess.can_change_resource_flags(holes))
         self.assertTrue(self.admin.uaccess.can_delete_resource(holes))
-        self.assertTrue(self.admin.uaccess.can_share_resource(holes, PrivilegeCodes.OWNER))
-        self.assertTrue(self.admin.uaccess.can_share_resource(holes, PrivilegeCodes.CHANGE))
-        self.assertTrue(self.admin.uaccess.can_share_resource(holes, PrivilegeCodes.VIEW))
+        self.assertTrue(
+            self.admin.uaccess.can_share_resource(
+                holes, PrivilegeCodes.OWNER))
+        self.assertTrue(
+            self.admin.uaccess.can_share_resource(
+                holes, PrivilegeCodes.CHANGE))
+        self.assertTrue(
+            self.admin.uaccess.can_share_resource(
+                holes, PrivilegeCodes.VIEW))
 
         # TODO: test get_discoverable_resources and get_public_resources
 
@@ -343,9 +418,15 @@ class T03CreateResource(MockIRODSTestCaseMixin, TestCase):
         # composite django state
         self.assertTrue(cat.uaccess.can_change_resource_flags(holes))
         self.assertTrue(cat.uaccess.can_delete_resource(holes))
-        self.assertTrue(cat.uaccess.can_share_resource(holes, PrivilegeCodes.OWNER))
-        self.assertTrue(cat.uaccess.can_share_resource(holes, PrivilegeCodes.CHANGE))
-        self.assertTrue(cat.uaccess.can_share_resource(holes, PrivilegeCodes.VIEW))
+        self.assertTrue(
+            cat.uaccess.can_share_resource(
+                holes, PrivilegeCodes.OWNER))
+        self.assertTrue(
+            cat.uaccess.can_share_resource(
+                holes, PrivilegeCodes.CHANGE))
+        self.assertTrue(
+            cat.uaccess.can_share_resource(
+                holes, PrivilegeCodes.VIEW))
 
         # make it published
         holes.raccess.published = True
@@ -366,9 +447,15 @@ class T03CreateResource(MockIRODSTestCaseMixin, TestCase):
         # composite django state
         self.assertFalse(cat.uaccess.can_change_resource_flags(holes))
         self.assertFalse(cat.uaccess.can_delete_resource(holes))
-        self.assertTrue(cat.uaccess.can_share_resource(holes, PrivilegeCodes.OWNER))
-        self.assertTrue(cat.uaccess.can_share_resource(holes, PrivilegeCodes.CHANGE))
-        self.assertTrue(cat.uaccess.can_share_resource(holes, PrivilegeCodes.VIEW))
+        self.assertTrue(
+            cat.uaccess.can_share_resource(
+                holes, PrivilegeCodes.OWNER))
+        self.assertTrue(
+            cat.uaccess.can_share_resource(
+                holes, PrivilegeCodes.CHANGE))
+        self.assertTrue(
+            cat.uaccess.can_share_resource(
+                holes, PrivilegeCodes.VIEW))
 
         # django admin access for published resource
         self.assertFalse(self.admin.uaccess.owns_resource(holes))
@@ -378,9 +465,15 @@ class T03CreateResource(MockIRODSTestCaseMixin, TestCase):
         self.assertTrue(self.admin.uaccess.can_change_resource_flags(holes))
         # admin even can delete a published resource
         self.assertTrue(self.admin.uaccess.can_delete_resource(holes))
-        self.assertTrue(self.admin.uaccess.can_share_resource(holes, PrivilegeCodes.OWNER))
-        self.assertTrue(self.admin.uaccess.can_share_resource(holes, PrivilegeCodes.CHANGE))
-        self.assertTrue(self.admin.uaccess.can_share_resource(holes, PrivilegeCodes.VIEW))
+        self.assertTrue(
+            self.admin.uaccess.can_share_resource(
+                holes, PrivilegeCodes.OWNER))
+        self.assertTrue(
+            self.admin.uaccess.can_share_resource(
+                holes, PrivilegeCodes.CHANGE))
+        self.assertTrue(
+            self.admin.uaccess.can_share_resource(
+                holes, PrivilegeCodes.VIEW))
 
         # make it not published
         holes.raccess.published = False
@@ -401,9 +494,15 @@ class T03CreateResource(MockIRODSTestCaseMixin, TestCase):
         # composite django state
         self.assertTrue(cat.uaccess.can_change_resource_flags(holes))
         self.assertTrue(cat.uaccess.can_delete_resource(holes))
-        self.assertTrue(cat.uaccess.can_share_resource(holes, PrivilegeCodes.OWNER))
-        self.assertTrue(cat.uaccess.can_share_resource(holes, PrivilegeCodes.CHANGE))
-        self.assertTrue(cat.uaccess.can_share_resource(holes, PrivilegeCodes.VIEW))
+        self.assertTrue(
+            cat.uaccess.can_share_resource(
+                holes, PrivilegeCodes.OWNER))
+        self.assertTrue(
+            cat.uaccess.can_share_resource(
+                holes, PrivilegeCodes.CHANGE))
+        self.assertTrue(
+            cat.uaccess.can_share_resource(
+                holes, PrivilegeCodes.VIEW))
 
     def test_09_check_flag_public(self):
         """Resource owner can set and reset public flag"""
@@ -431,21 +530,37 @@ class T03CreateResource(MockIRODSTestCaseMixin, TestCase):
         # composite django state
         self.assertTrue(cat.uaccess.can_change_resource_flags(holes))
         self.assertTrue(cat.uaccess.can_delete_resource(holes))
-        self.assertTrue(cat.uaccess.can_share_resource(holes, PrivilegeCodes.OWNER))
-        self.assertTrue(cat.uaccess.can_share_resource(holes, PrivilegeCodes.CHANGE))
-        self.assertTrue(cat.uaccess.can_share_resource(holes, PrivilegeCodes.VIEW))
+        self.assertTrue(
+            cat.uaccess.can_share_resource(
+                holes, PrivilegeCodes.OWNER))
+        self.assertTrue(
+            cat.uaccess.can_share_resource(
+                holes, PrivilegeCodes.CHANGE))
+        self.assertTrue(
+            cat.uaccess.can_share_resource(
+                holes, PrivilegeCodes.VIEW))
 
         # is it listed as discoverable?
-        self.assertTrue(is_equal_to_as_set([], GenericResource.discoverable_resources.all()))
-        self.assertTrue(is_equal_to_as_set([], GenericResource.public_resources.all()))
+        self.assertTrue(
+            is_equal_to_as_set(
+                [], GenericResource.discoverable_resources.all()))
+        self.assertTrue(
+            is_equal_to_as_set(
+                [], GenericResource.public_resources.all()))
 
         # make it public
         holes.raccess.public = True
         holes.raccess.save()
 
         # is it listed as discoverable?
-        self.assertTrue(is_equal_to_as_set([holes], GenericResource.discoverable_resources.all()))
-        self.assertTrue(is_equal_to_as_set([holes], GenericResource.public_resources.all()))
+        self.assertTrue(
+            is_equal_to_as_set(
+                [holes],
+                GenericResource.discoverable_resources.all()))
+        self.assertTrue(
+            is_equal_to_as_set(
+                [holes],
+                GenericResource.public_resources.all()))
 
         # metadata state
         self.assertFalse(holes.raccess.immutable)
@@ -462,9 +577,15 @@ class T03CreateResource(MockIRODSTestCaseMixin, TestCase):
         # composite django state
         self.assertTrue(cat.uaccess.can_change_resource_flags(holes))
         self.assertTrue(cat.uaccess.can_delete_resource(holes))
-        self.assertTrue(cat.uaccess.can_share_resource(holes, PrivilegeCodes.OWNER))
-        self.assertTrue(cat.uaccess.can_share_resource(holes, PrivilegeCodes.CHANGE))
-        self.assertTrue(cat.uaccess.can_share_resource(holes, PrivilegeCodes.VIEW))
+        self.assertTrue(
+            cat.uaccess.can_share_resource(
+                holes, PrivilegeCodes.OWNER))
+        self.assertTrue(
+            cat.uaccess.can_share_resource(
+                holes, PrivilegeCodes.CHANGE))
+        self.assertTrue(
+            cat.uaccess.can_share_resource(
+                holes, PrivilegeCodes.VIEW))
 
         # make it not public
         holes.raccess.public = False
@@ -485,16 +606,26 @@ class T03CreateResource(MockIRODSTestCaseMixin, TestCase):
         # composite django state
         self.assertTrue(cat.uaccess.can_change_resource_flags(holes))
         self.assertTrue(cat.uaccess.can_delete_resource(holes))
-        self.assertTrue(cat.uaccess.can_share_resource(holes, PrivilegeCodes.OWNER))
-        self.assertTrue(cat.uaccess.can_share_resource(holes, PrivilegeCodes.CHANGE))
-        self.assertTrue(cat.uaccess.can_share_resource(holes, PrivilegeCodes.VIEW))
+        self.assertTrue(
+            cat.uaccess.can_share_resource(
+                holes, PrivilegeCodes.OWNER))
+        self.assertTrue(
+            cat.uaccess.can_share_resource(
+                holes, PrivilegeCodes.CHANGE))
+        self.assertTrue(
+            cat.uaccess.can_share_resource(
+                holes, PrivilegeCodes.VIEW))
 
         # django admin should have full access to any private resource
         self.assertFalse(self.admin.uaccess.owns_resource(holes))
         self.assertTrue(self.admin.uaccess.can_change_resource_flags(holes))
         self.assertTrue(self.admin.uaccess.can_delete_resource(holes))
-        self.assertTrue(self.admin.uaccess.can_share_resource(holes, PrivilegeCodes.OWNER))
-        self.assertTrue(self.admin.uaccess.can_share_resource(holes, PrivilegeCodes.CHANGE))
-        self.assertTrue(self.admin.uaccess.can_share_resource(holes, PrivilegeCodes.VIEW))
-
-
+        self.assertTrue(
+            self.admin.uaccess.can_share_resource(
+                holes, PrivilegeCodes.OWNER))
+        self.assertTrue(
+            self.admin.uaccess.can_share_resource(
+                holes, PrivilegeCodes.CHANGE))
+        self.assertTrue(
+            self.admin.uaccess.can_share_resource(
+                holes, PrivilegeCodes.VIEW))

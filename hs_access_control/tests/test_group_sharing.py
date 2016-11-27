@@ -1,23 +1,18 @@
-
-import unittest
-from django.http import Http404
 from django.test import TestCase
-from django.utils import timezone
 from django.core.exceptions import PermissionDenied
-from django.contrib.auth.models import User, Group
-from pprint import pprint
+from django.contrib.auth.models import Group
 
-from hs_access_control.models import UserAccess, GroupAccess, ResourceAccess, \
-    UserResourcePrivilege, GroupResourcePrivilege, UserGroupPrivilege, PrivilegeCodes
+from hs_access_control.models import GroupResourcePrivilege, UserGroupPrivilege, PrivilegeCodes
 
 from hs_core import hydroshare
-from hs_core.models import GenericResource, BaseResource
 from hs_core.testing import MockIRODSTestCaseMixin
 
-from hs_access_control.tests.utilities import *
+from hs_access_control.tests.utilities import global_reset, is_equal_to_as_set, \
+    assertGroupResourceUnshareCoherence
 
 
 class T09GroupSharing(MockIRODSTestCaseMixin, TestCase):
+
     def setUp(self):
         super(T09GroupSharing, self).setUp()
         global_reset()
@@ -67,21 +62,24 @@ class T09GroupSharing(MockIRODSTestCaseMixin, TestCase):
             groups=[]
         )
 
-        self.scratching = hydroshare.create_resource(resource_type='GenericResource',
-                                                     owner=self.dog,
-                                                     title='all about sofas as scrathing posts',
-                                                     metadata=[],)
+        self.scratching = hydroshare.create_resource(
+            resource_type='GenericResource',
+            owner=self.dog,
+            title='all about sofas as scrathing posts',
+            metadata=[],
+        )
 
         # dog owns felines group
-        self.felines = self.dog.uaccess.create_group(title='felines', description="We are the felines")
-        self.dog.uaccess.share_group_with_user(self.felines, self.cat, PrivilegeCodes.VIEW)  # poetic justice
+        self.felines = self.dog.uaccess.create_group(
+            title='felines', description="We are the felines")
+        self.dog.uaccess.share_group_with_user(
+            self.felines, self.cat, PrivilegeCodes.VIEW)  # poetic justice
 
     def test_00_defaults(self):
         """Defaults are correct when creating groups"""
         scratching = self.scratching
         felines = self.felines
         dog = self.dog
-        cat = self.cat
 
         # TODO: check for group existence via uuid handle
 
@@ -104,12 +102,15 @@ class T09GroupSharing(MockIRODSTestCaseMixin, TestCase):
         scratching = self.scratching
         felines = self.felines
         dog = self.dog
-        self.assertFalse(dog.uaccess.can_share_resource_with_group(scratching, felines, PrivilegeCodes.OWNER))
+        self.assertFalse(
+            dog.uaccess.can_share_resource_with_group(
+                scratching, felines, PrivilegeCodes.OWNER))
         with self.assertRaises(PermissionDenied) as cm:
-            dog.uaccess.share_resource_with_group(scratching, felines, PrivilegeCodes.OWNER)
+            dog.uaccess.share_resource_with_group(
+                scratching, felines, PrivilegeCodes.OWNER)
         self.assertEqual(cm.exception.message, 'Groups cannot own resources')
-        
-        assertGroupResourceUnshareCoherence(self) 
+
+        assertGroupResourceUnshareCoherence(self)
 
     def test_02_share_rw(self):
         """An owner can share with CHANGE privileges"""
@@ -119,12 +120,20 @@ class T09GroupSharing(MockIRODSTestCaseMixin, TestCase):
         cat = self.cat
         nobody = self.nobody
 
-        self.assertTrue(dog.uaccess.can_share_resource_with_group(scratching, felines, PrivilegeCodes.CHANGE))
-        dog.uaccess.share_resource_with_group(scratching, felines, PrivilegeCodes.CHANGE)
+        self.assertTrue(
+            dog.uaccess.can_share_resource_with_group(
+                scratching,
+                felines,
+                PrivilegeCodes.CHANGE))
+        dog.uaccess.share_resource_with_group(
+            scratching, felines, PrivilegeCodes.CHANGE)
 
         # is the resource just shared with this group?
         self.assertEqual(felines.gaccess.view_resources.count(), 1)
-        self.assertTrue(is_equal_to_as_set([scratching], felines.gaccess.view_resources))
+        self.assertTrue(
+            is_equal_to_as_set(
+                [scratching],
+                felines.gaccess.view_resources))
 
         # check that flags haven't changed
         self.assertTrue(felines.gaccess.discoverable)
@@ -140,26 +149,37 @@ class T09GroupSharing(MockIRODSTestCaseMixin, TestCase):
         # should be able to unshare anything one shared.
         with self.assertRaises(PermissionDenied) as cm:
             nobody.uaccess.unshare_resource_with_group(scratching, felines)
-        self.assertEqual(cm.exception.message, 'Insufficient privilege to unshare resource')
+        self.assertEqual(cm.exception.message,
+                         'Insufficient privilege to unshare resource')
 
-        assertGroupResourceUnshareCoherence(self) 
+        assertGroupResourceUnshareCoherence(self)
 
-        self.assertTrue(dog.uaccess.can_unshare_resource_with_group(scratching, felines))
+        self.assertTrue(
+            dog.uaccess.can_unshare_resource_with_group(
+                scratching, felines))
         dog.uaccess.unshare_resource_with_group(scratching, felines)
         self.assertEqual(felines.gaccess.view_resources.count(), 0)
 
         assertGroupResourceUnshareCoherence(self)
 
-    def test_03_group_share_printing(self): 
+    def test_03_group_share_printing(self):
         """ test group share record printing """
         dog = self.dog
         scratching = self.scratching
         felines = self.felines
-        self.assertTrue(dog.uaccess.can_share_resource_with_group(scratching, felines, PrivilegeCodes.CHANGE))
-        dog.uaccess.share_resource_with_group(scratching, felines, PrivilegeCodes.CHANGE)
+        self.assertTrue(
+            dog.uaccess.can_share_resource_with_group(
+                scratching,
+                felines,
+                PrivilegeCodes.CHANGE))
+        dog.uaccess.share_resource_with_group(
+            scratching, felines, PrivilegeCodes.CHANGE)
 
-        text = str(GroupResourcePrivilege.objects.get(resource=scratching, group=felines)) 
-        self.assertTrue(text.find(felines.name) >= 0) 
+        text = str(
+            GroupResourcePrivilege.objects.get(
+                resource=scratching,
+                group=felines))
+        self.assertTrue(text.find(felines.name) >= 0)
 
-        text = str(UserGroupPrivilege.objects.get(user=dog, group=felines)) 
-        self.assertTrue(text.find(felines.name) >= 0) 
+        text = str(UserGroupPrivilege.objects.get(user=dog, group=felines))
+        self.assertTrue(text.find(felines.name) >= 0)

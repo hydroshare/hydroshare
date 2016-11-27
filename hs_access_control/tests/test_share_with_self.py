@@ -14,6 +14,7 @@ import logging
 
 
 class T05ShareResource(MockIRODSTestCaseMixin, TestCase):
+
     def setUp(self):
         super(T05ShareResource, self).setUp()
         global_reset()
@@ -55,13 +56,15 @@ class T05ShareResource(MockIRODSTestCaseMixin, TestCase):
             superuser=False,
             groups=[]
         )
-        self.holes = hydroshare.create_resource(resource_type='GenericResource',
-                                                owner=self.cat,
-                                                title='all about dog holes',
-                                                metadata=[],)
+        self.holes = hydroshare.create_resource(
+            resource_type='GenericResource',
+            owner=self.cat,
+            title='all about dog holes',
+            metadata=[],
+        )
 
-        self.meowers = self.cat.uaccess.create_group(title='some random meowers',
-                                                     description="some random group")
+        self.meowers = self.cat.uaccess.create_group(
+            title='some random meowers', description="some random group")
 
     def test_01_self_unshare_resource(self):
         """A user can unshare a resource with self"""
@@ -71,11 +74,16 @@ class T05ShareResource(MockIRODSTestCaseMixin, TestCase):
         cat.uaccess.share_resource_with_user(holes, dog, PrivilegeCodes.CHANGE)
         self.assertTrue(dog in holes.raccess.edit_users)
         self.assertTrue(dog in holes.raccess.view_users)
-        self.assertTrue(is_equal_to_as_set([dog], dog.uaccess.get_resource_unshare_users(holes)))
+        self.assertTrue(
+            is_equal_to_as_set(
+                [dog],
+                dog.uaccess.get_resource_unshare_users(holes)))
         dog.uaccess.unshare_resource_with_user(holes, dog)
         self.assertFalse(dog in holes.raccess.edit_users)
         self.assertFalse(dog in holes.raccess.view_users)
-        self.assertTrue(is_equal_to_as_set([], dog.uaccess.get_resource_unshare_users(holes)))
+        self.assertTrue(
+            is_equal_to_as_set(
+                [], dog.uaccess.get_resource_unshare_users(holes)))
 
     def test_02_self_downgrade_resource(self):
         """can downgrade privilege for a resource to which one has access"""
@@ -85,11 +93,17 @@ class T05ShareResource(MockIRODSTestCaseMixin, TestCase):
         cat.uaccess.share_resource_with_user(holes, dog, PrivilegeCodes.CHANGE)
         self.assertTrue(dog in holes.raccess.edit_users)
         self.assertTrue(dog in holes.raccess.view_users)
-        self.assertTrue(is_equal_to_as_set([dog], dog.uaccess.get_resource_unshare_users(holes)))
+        self.assertTrue(
+            is_equal_to_as_set(
+                [dog],
+                dog.uaccess.get_resource_unshare_users(holes)))
         dog.uaccess.share_resource_with_user(holes, dog, PrivilegeCodes.VIEW)
         self.assertFalse(dog in holes.raccess.edit_users)
         self.assertTrue(dog in holes.raccess.view_users)
-        self.assertTrue(is_equal_to_as_set([dog], dog.uaccess.get_resource_unshare_users(holes)))
+        self.assertTrue(
+            is_equal_to_as_set(
+                [dog],
+                dog.uaccess.get_resource_unshare_users(holes)))
 
     def test_03_self_cannot_upgrade_resource(self):
         """cannot upgrade privilege for a resource to which one has access"""
@@ -99,13 +113,21 @@ class T05ShareResource(MockIRODSTestCaseMixin, TestCase):
         cat.uaccess.share_resource_with_user(holes, dog, PrivilegeCodes.VIEW)
         self.assertFalse(dog in holes.raccess.edit_users)
         self.assertTrue(dog in holes.raccess.view_users)
-        self.assertTrue(is_equal_to_as_set([dog], dog.uaccess.get_resource_unshare_users(holes)))
+        self.assertTrue(
+            is_equal_to_as_set(
+                [dog],
+                dog.uaccess.get_resource_unshare_users(holes)))
         with self.assertRaises(PermissionDenied):
-            dog.uaccess.share_resource_with_user(holes, dog, PrivilegeCodes.VIEW)
+            dog.uaccess.share_resource_with_user(
+                holes, dog, PrivilegeCodes.VIEW)
         with self.assertRaises(PermissionDenied):
-            dog.uaccess.share_resource_with_user(holes, dog, PrivilegeCodes.CHANGE)
+            dog.uaccess.share_resource_with_user(
+                holes, dog, PrivilegeCodes.CHANGE)
         self.assertTrue(dog in holes.raccess.view_users)
-        self.assertTrue(is_equal_to_as_set([dog], dog.uaccess.get_resource_unshare_users(holes)))
+        self.assertTrue(
+            is_equal_to_as_set(
+                [dog],
+                dog.uaccess.get_resource_unshare_users(holes)))
 
     def test_04_self_unshare_group(self):
         """A user can unshare a group with self"""
@@ -115,11 +137,16 @@ class T05ShareResource(MockIRODSTestCaseMixin, TestCase):
         cat.uaccess.share_group_with_user(meowers, dog, PrivilegeCodes.CHANGE)
         self.assertTrue(dog in meowers.gaccess.edit_users)
         self.assertTrue(dog in meowers.gaccess.members)
-        self.assertTrue(is_equal_to_as_set([dog], dog.uaccess.get_group_unshare_users(meowers)))
+        self.assertTrue(
+            is_equal_to_as_set(
+                [dog],
+                dog.uaccess.get_group_unshare_users(meowers)))
         dog.uaccess.unshare_group_with_user(meowers, dog)
         self.assertFalse(dog in meowers.gaccess.edit_users)
         self.assertFalse(dog in meowers.gaccess.members)
-        self.assertTrue(is_equal_to_as_set([], dog.uaccess.get_group_unshare_users(meowers)))
+        self.assertTrue(
+            is_equal_to_as_set(
+                [], dog.uaccess.get_group_unshare_users(meowers)))
 
     def test_05_self_can_downgrade_group(self):
         """can downgrade privilege for a group of which one is a member """
@@ -129,11 +156,17 @@ class T05ShareResource(MockIRODSTestCaseMixin, TestCase):
         cat.uaccess.share_group_with_user(meowers, dog, PrivilegeCodes.CHANGE)
         self.assertTrue(dog in meowers.gaccess.edit_users)
         self.assertTrue(dog in meowers.gaccess.members)
-        self.assertTrue(is_equal_to_as_set([dog], dog.uaccess.get_group_unshare_users(meowers)))
+        self.assertTrue(
+            is_equal_to_as_set(
+                [dog],
+                dog.uaccess.get_group_unshare_users(meowers)))
         dog.uaccess.share_group_with_user(meowers, dog, PrivilegeCodes.VIEW)
         self.assertFalse(dog in meowers.gaccess.edit_users)
         self.assertTrue(dog in meowers.gaccess.members)
-        self.assertTrue(is_equal_to_as_set([dog], dog.uaccess.get_group_unshare_users(meowers)))
+        self.assertTrue(
+            is_equal_to_as_set(
+                [dog],
+                dog.uaccess.get_group_unshare_users(meowers)))
 
     def test_06_self_cannot_upgrade_group(self):
         """cannot upgrade privilege for a group of which one is a member """
@@ -143,10 +176,18 @@ class T05ShareResource(MockIRODSTestCaseMixin, TestCase):
         cat.uaccess.share_group_with_user(meowers, dog, PrivilegeCodes.VIEW)
         self.assertFalse(dog in meowers.gaccess.edit_users)
         self.assertTrue(dog in meowers.gaccess.members)
-        self.assertTrue(is_equal_to_as_set([dog], dog.uaccess.get_group_unshare_users(meowers)))
+        self.assertTrue(
+            is_equal_to_as_set(
+                [dog],
+                dog.uaccess.get_group_unshare_users(meowers)))
         with self.assertRaises(PermissionDenied):
-            dog.uaccess.share_group_with_user(meowers, dog, PrivilegeCodes.VIEW)
+            dog.uaccess.share_group_with_user(
+                meowers, dog, PrivilegeCodes.VIEW)
         with self.assertRaises(PermissionDenied):
-            dog.uaccess.share_group_with_user(meowers, dog, PrivilegeCodes.CHANGE)
+            dog.uaccess.share_group_with_user(
+                meowers, dog, PrivilegeCodes.CHANGE)
         self.assertTrue(dog in meowers.gaccess.members)
-        self.assertTrue(is_equal_to_as_set([dog], dog.uaccess.get_group_unshare_users(meowers)))
+        self.assertTrue(
+            is_equal_to_as_set(
+                [dog],
+                dog.uaccess.get_group_unshare_users(meowers)))
