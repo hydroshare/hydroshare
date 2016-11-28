@@ -1746,7 +1746,7 @@ class ResourceFile(models.Model):
     @property
     def extension(self):
         from .hydroshare.utils import get_resource_file_name_and_extension
-        return get_resource_file_name_and_extension(self)[1]
+        return get_resource_file_name_and_extension(self)[2]
 
     @property
     def can_set_file_type(self):
