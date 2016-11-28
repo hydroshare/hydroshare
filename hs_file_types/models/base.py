@@ -428,8 +428,6 @@ class AbstractFileMetaData(models.Model):
 class AbstractLogicalFile(models.Model):
     """ base class for HydroShare file types """
 
-    # mime type of the dominant file in the group - not sure if we need this
-    mime_type = models.CharField(max_length=1000, default='')
     # files associated with this logical file group
     files = GenericRelation(ResourceFile, content_type_field='logical_file_content_type',
                             object_id_field='logical_file_object_id')
@@ -479,6 +477,10 @@ class AbstractLogicalFile(models.Model):
 
     def logical_delete(self, user, delete_res_files=True):
         # deletes the logical file as well as all resource files associated with this logical file
+        # mostly this will be used by the system to delete logical file object and associated
+        # metadata as part of deleting a resource file object. However, if custom logic requires
+        # deleting logical file object (lfo) then instead of using lfo.delete(), you must use
+        # lfo.logical_delete()
         from hs_core.hydroshare.resource import delete_resource_file
         self.delete_metadata()
         # delete all resource files associated with this instance of logical file
