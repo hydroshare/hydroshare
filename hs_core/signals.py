@@ -9,9 +9,14 @@ post_delete_file_from_resource = django.dispatch.Signal(providing_args=['resourc
 post_add_files_to_resource = django.dispatch.Signal(providing_args=['files', 'resource'])
 
 pre_metadata_element_create = django.dispatch.Signal(providing_args=['element_name', 'request'])
-pre_metadata_element_update = django.dispatch.Signal(providing_args=['element_name', 'element_id', 'request'])
+pre_metadata_element_update = django.dispatch.Signal(providing_args=['element_name', 'element_id',
+                                                                     'request'])
 post_metadata_element_update = django.dispatch.Signal(providing_args=['element_name', 'element_id'])
 
 pre_download_file = django.dispatch.Signal(providing_args=['resource', 'download_file_name'])
 
 pre_check_bag_flag = django.dispatch.Signal(providing_args=['resource'])
+
+pre_move_or_rename_file_or_folder = django.dispatch.Signal(providing_args=['resource',
+                                                                           'src_full_path',
+                                                                           'tgt_full_path'])

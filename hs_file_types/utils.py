@@ -76,11 +76,10 @@ def set_file_to_geo_raster_file_type(resource, file_id, user):
             log.info("Geo raster file type metadata extraction was successful.")
             # first delete the raster file that we retrieved from irods
             logical_file_to_delete = res_file.logical_file
+            # TODO: modify delete_resource_file_only() to delete logical file
             delete_resource_file_only(resource, res_file)
             if logical_file_to_delete is not None:
                 logical_file_to_delete.logical_delete(user)
-
-            # TODO: modify delete_resource_file_only() to delete logical file
 
             # create a geo raster logical file object to be associated with resource files
             logical_file = GeoRasterLogicalFile.create()

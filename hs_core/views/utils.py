@@ -25,7 +25,8 @@ from ga_resources.utils import get_user
 from hs_core import hydroshare
 from hs_core.hydroshare import check_resource_type, delete_resource_file
 from hs_core.models import AbstractMetaDataElement, GenericResource, Relation, ResourceFile
-from hs_core.signals import pre_metadata_element_create, post_delete_file_from_resource
+from hs_core.signals import pre_metadata_element_create, post_delete_file_from_resource, \
+    pre_move_or_rename_file_or_folder
 from hs_core.hydroshare import FILE_SIZE_LIMIT
 from hs_core.hydroshare.utils import raise_file_size_exception, get_file_mime_type
 from django_irods.storage import IrodsStorage
@@ -701,6 +702,8 @@ def move_or_rename_file_or_folder(user, res_id, src_path, tgt_path, validate_mov
     :param res_id: resource uuid
     :param src_path: the relative paths for the source file or folder under res_id collection
     :param tgt_path: the relative paths for the target file or folder under res_id collection
+    :param validate_move_rename: if True, then signal is sent for resource type to check if
+    move/rename is allowed or not.
     :return:
     """
     resource = hydroshare.utils.get_resource_by_shortkey(res_id)
@@ -721,54 +724,11 @@ def move_or_rename_file_or_folder(user, res_id, src_path, tgt_path, validate_mov
     if src_file_dir != tgt_file_dir and tgt_file_name != src_file_name:
         tgt_full_path = os.path.join(tgt_full_path, src_file_name)
 
-    # TODO: (Pabitra) this checking for composite resource should be handled in a signal handler
-    # check if this resource file move or rename is allowed
-    # if the resource type is composite resource
-    if resource.resource_type == "CompositeResource" and validate_move_rename:
-        err_msg = "File/folder move/rename is not allowed."
-
-        def check_targe_directory(tgt_file_dir):
-            path_to_check = ''
-            if istorage.exists(tgt_file_dir):
-                path_to_check = tgt_file_dir
-            else:
-                if tgt_file_dir.startswith(src_file_dir):
-                    path_to_check = src_file_dir
-
-            if path_to_check:
-                if resource.resource_federation_path:
-                    res_file_objs = resource.files.filter(object_id=resource.id,
-                                                          fed_resource_file_name_or_path__contains=
-                                                          path_to_check).all()
-                else:
-                    res_file_objs = resource.files.filter(object_id=resource.id,
-                                                          resource_file__contains=path_to_check).all()
-                for res_file_obj in res_file_objs:
-                    if not res_file_obj.logical_file.allow_resource_file_rename or \
-                            not res_file_obj.logical_file.allow_resource_file_move:
-                        raise ValidationError(err_msg)
-
-        if resource.resource_federation_path:
-            res_file_obj = resource.files.filter(object_id=resource.id,
-                                                 fed_resource_file_name_or_path=
-                                                 src_full_path).first()
-        else:
-            res_file_obj = resource.files.filter(object_id=resource.id,
-                                                 resource_file=src_full_path).first()
-        if res_file_obj is not None:
-            # src_full_path contains file name
-            if not res_file_obj.logical_file.allow_resource_file_rename or \
-                    not res_file_obj.logical_file.allow_resource_file_move:
-                raise ValidationError(err_msg)
-
-            # check if the target directory allows stuff to b
-            check_targe_directory(tgt_file_dir)
-        else:
-            # src_full_path is a folder path without file name
-            # tgt_full_path also must be a folder path without file name
-            # check that if the target folder contains any files and if any of those files
-            # allow moving stuff there
-            check_targe_directory(tgt_file_dir)
+    if validate_move_rename:
+        # this must raise ValidationError if move/rename is not allowed by specific resource type
+        pre_move_or_rename_file_or_folder.send(sender=resource.__class__, resource=resource,
+                                               src_full_path=src_full_path,
+                                               tgt_full_path=tgt_full_path)
 
     istorage.moveFile(src_full_path, tgt_full_path)
 

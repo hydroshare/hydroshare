@@ -9,7 +9,6 @@ from django.contrib.auth.models import Group
 from django.core.files.uploadedfile import UploadedFile
 from django.core.exceptions import ValidationError
 
-from rest_framework.exceptions import ValidationError as rest_ValidationError
 from hs_core.testing import MockIRODSTestCaseMixin
 from hs_core import hydroshare
 from hs_core.models import Coverage
@@ -683,23 +682,23 @@ class RasterFileTypeMetaData(MockIRODSTestCaseMixin, TransactionTestCase):
         self.assertEqual(self.composite_resource.files.count(), 2)
         src_path = 'data/contents/small_logan/small_logan.tif'
         tgt_path = "data/contents/small_logan/small_logan_1.tif"
-        with self.assertRaises(rest_ValidationError):
+        with self.assertRaises(ValidationError):
             move_or_rename_file_or_folder(self.user, self.composite_resource.short_id, src_path,
                                           tgt_path)
         src_path = 'data/contents/small_logan/small_logan.vrt'
         tgt_path = "data/contents/small_logan/small_logan_1.vrt"
-        with self.assertRaises(rest_ValidationError):
+        with self.assertRaises(ValidationError):
             move_or_rename_file_or_folder(self.user, self.composite_resource.short_id, src_path,
                                           tgt_path)
         # test moving the files associated with geo raster LFO
         src_path = 'data/contents/small_logan/small_logan.tif'
         tgt_path = "data/contents/big_logan/small_logan.tif"
-        with self.assertRaises(rest_ValidationError):
+        with self.assertRaises(ValidationError):
             move_or_rename_file_or_folder(self.user, self.composite_resource.short_id, src_path,
                                           tgt_path)
         src_path = 'data/contents/small_logan/small_logan.vrt'
         tgt_path = "data/contents/big_logan/small_logan.vrt"
-        with self.assertRaises(rest_ValidationError):
+        with self.assertRaises(ValidationError):
             move_or_rename_file_or_folder(self.user, self.composite_resource.short_id, src_path,
                                           tgt_path)
 
