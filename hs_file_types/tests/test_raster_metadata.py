@@ -6,14 +6,16 @@ import shutil
 from django.test import TransactionTestCase
 from django.db import IntegrityError
 from django.contrib.auth.models import Group
+from django.core.files.uploadedfile import UploadedFile
 from django.core.exceptions import ValidationError
 
+from rest_framework.exceptions import ValidationError as rest_ValidationError
 from hs_core.testing import MockIRODSTestCaseMixin
 from hs_core import hydroshare
 from hs_core.models import Coverage
 from hs_core.hydroshare.utils import resource_post_create_actions, \
     get_resource_file_name_and_extension
-from hs_core.views.utils import remove_folder
+from hs_core.views.utils import remove_folder, move_or_rename_file_or_folder
 
 from hs_file_types.utils import set_file_to_geo_raster_file_type
 from hs_file_types.models import GeoRasterLogicalFile, GeoRasterFileMetaData, GenericLogicalFile
@@ -668,10 +670,38 @@ class RasterFileTypeMetaData(MockIRODSTestCaseMixin, TransactionTestCase):
         self.assertEqual(BandInformation.objects.count(), 0)
 
     def test_file_rename_or_move(self):
-        # test that file can't be moved or rename for any resource file
-        # that's part of the GeoRaster logical file
-        # TODO: Implement this test
-        pass
+        # test that file can't be moved or renamed for any resource file
+        # that's part of the GeoRaster logical file object (LFO)
+
+        self.raster_file_obj = open(self.raster_file, 'r')
+        self._create_composite_resource()
+        res_file = self.composite_resource.files.first()
+
+        # extract metadata from the tif file
+        set_file_to_geo_raster_file_type(self.composite_resource, res_file.id, self.user)
+        # test renaming of files that are associated with raster LFO - which should raise exception
+        self.assertEqual(self.composite_resource.files.count(), 2)
+        src_path = 'data/contents/small_logan/small_logan.tif'
+        tgt_path = "data/contents/small_logan/small_logan_1.tif"
+        with self.assertRaises(rest_ValidationError):
+            move_or_rename_file_or_folder(self.user, self.composite_resource.short_id, src_path,
+                                          tgt_path)
+        src_path = 'data/contents/small_logan/small_logan.vrt'
+        tgt_path = "data/contents/small_logan/small_logan_1.vrt"
+        with self.assertRaises(rest_ValidationError):
+            move_or_rename_file_or_folder(self.user, self.composite_resource.short_id, src_path,
+                                          tgt_path)
+        # test moving the files associated with geo raster LFO
+        src_path = 'data/contents/small_logan/small_logan.tif'
+        tgt_path = "data/contents/big_logan/small_logan.tif"
+        with self.assertRaises(rest_ValidationError):
+            move_or_rename_file_or_folder(self.user, self.composite_resource.short_id, src_path,
+                                          tgt_path)
+        src_path = 'data/contents/small_logan/small_logan.vrt'
+        tgt_path = "data/contents/big_logan/small_logan.vrt"
+        with self.assertRaises(rest_ValidationError):
+            move_or_rename_file_or_folder(self.user, self.composite_resource.short_id, src_path,
+                                          tgt_path)
 
     def test_metadata_element_html(self):
         # here we are testing the get_html() function of the metadata element
@@ -702,11 +732,13 @@ class RasterFileTypeMetaData(MockIRODSTestCaseMixin, TransactionTestCase):
         # TODO: test get_html() for remaining elements
 
     def _create_composite_resource(self):
+        uploaded_file = UploadedFile(file=self.raster_file_obj,
+                                     name=os.path.basename(self.raster_file_obj.name))
         self.composite_resource = hydroshare.create_resource(
             resource_type='CompositeResource',
             owner=self.user,
             title='Test Raster File Type Metadata',
-            files=(self.raster_file_obj,)
+            files=(uploaded_file,)
         )
 
         # set the logical file
