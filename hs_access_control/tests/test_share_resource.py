@@ -2082,10 +2082,10 @@ class T05ShareResource(MockIRODSTestCaseMixin, TestCase):
         self.assertFalse(
             dog.uaccess.can_share_resource(
                 holes, PrivilegeCodes.OWNER))
-        self.assertFalse(
+        self.assertTrue(
             dog.uaccess.can_share_resource(
                 holes, PrivilegeCodes.CHANGE))
-        self.assertFalse(
+        self.assertTrue(
             dog.uaccess.can_share_resource(
                 holes, PrivilegeCodes.VIEW))
 
