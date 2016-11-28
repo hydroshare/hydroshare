@@ -6,6 +6,7 @@ from crispy_forms.layout import Layout, Field
 from models import RequestUrlBase, ToolVersion, SupportedResTypes, ToolIcon,\
     SupportedSharingStatus, AppHomePageUrl
 from hs_core.forms import BaseFormHelper
+from utils import get_SupportedResTypes_choices
 
 
 # TODO: reference hs_core.forms
@@ -156,19 +157,6 @@ class ToolIconForm(ModelForm):
 class ToolIconValidationForm(forms.Form):
     url = forms.CharField(max_length=1024)
 
-SupportedResTypes_choices = (
-    ('GenericResource', 'Generic Resource'),
-    ('RasterResource', 'Raster Resource'),
-    ('RefTimeSeriesResource', 'HIS Referenced Time Series Resource'),
-    ('TimeSeriesResource', 'Time Series Resource'),
-    ('NetcdfResource', 'NetCDF Resource'),
-    ('ModelProgramResource', 'Model Program Resource'),
-    ('ModelInstanceResource', 'Model Instance Resource'),
-    ('SWATModelInstanceResource', 'SWAT Model Instance Resource'),
-    ('GeographicFeatureResource', 'Geographic Feature Resource'),
-    ('ScriptResource', 'Script Resource'),
-)
-
 
 class MetadataField(Field):
     def __init__(self, *args, **kwargs):
@@ -193,7 +181,7 @@ class SupportedResTypeFormHelper(BaseFormHelper):
 
 class SupportedResTypesForm(ModelForm):
     supported_res_types = forms.\
-        MultipleChoiceField(choices=SupportedResTypes_choices,
+        MultipleChoiceField(choices=get_SupportedResTypes_choices(),
                             widget=forms.CheckboxSelectMultiple(
                                     attrs={'style': 'width:auto;margin-top:-5px'}))
 
@@ -222,7 +210,7 @@ class SupportedResTypesForm(ModelForm):
 
 
 class SupportedResTypesValidationForm(forms.Form):
-    supported_res_types = forms.MultipleChoiceField(choices=SupportedResTypes_choices,
+    supported_res_types = forms.MultipleChoiceField(choices=get_SupportedResTypes_choices(),
                                                     required=False)
 
 SupportedSharingStatus_choices = (
