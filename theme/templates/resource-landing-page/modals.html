@@ -439,9 +439,11 @@
             </div>
             <div class="modal-body">
                 Creating a new version will obsolete this resource. This resource will be still available in HydroShare,
-                but only the newer version will be discoverable via the HydroShare search interface. A link to this
-                resource will be created on the landing page of the new version. Only one newer version
-                is allowed for each resource.
+                but only the newer version will be discoverable via the HydroShare search interface. The new version is
+                a complete new resource with new identifier. It will contain a link back to the previous version and the
+                previous version will have a link to the next version. This can be repeated resulting in a sequence of
+                multiple versions each linked to next and previous versions. Only the most recent version can be edited
+                or deleted. If you delete the most recent version, the previous version becomes the most recent and editable.
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
