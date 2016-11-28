@@ -3,7 +3,8 @@ import logging
 import os
 
 from django.http import HttpResponse
-from rest_framework.exceptions import NotFound, PermissionDenied, ValidationError
+from django.core.exceptions import ValidationError
+from rest_framework.exceptions import NotFound, PermissionDenied
 
 from django_irods.icommands import SessionException
 
