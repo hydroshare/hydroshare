@@ -9,11 +9,11 @@ from django.contrib.auth.models import Group
 from hs_core.testing import MockIRODSTestCaseMixin
 from hs_core import hydroshare
 from hs_core.models import BaseResource
-from hs_core.signals import post_add_files_to_resource
 from hs_core.hydroshare.utils import resource_file_add_process, resource_post_create_actions
 
 from hs_file_types.models import GenericLogicalFile
 from hs_file_types.utils import set_file_to_geo_raster_file_type
+
 
 class CompositeResourceTest(MockIRODSTestCaseMixin, TransactionTestCase):
     def setUp(self):

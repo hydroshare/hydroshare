@@ -315,7 +315,6 @@ def data_store_file_or_folder_move_or_rename(request):
     except ValidationError as ex:
         return HttpResponse(ex.message, status=500)
 
-
     return_object = {'target_rel_path': tgt_path}
 
     return HttpResponse(

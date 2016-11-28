@@ -30,7 +30,7 @@ from mezzanine.generic.fields import CommentsField, RatingField
 from mezzanine.conf import settings as s
 from mezzanine.pages.managers import PageManager
 
-from dominate.tags import *
+from dominate.tags import div, legend, table, tbody, tr, th, td, h4
 
 
 class GroupOwnership(models.Model):

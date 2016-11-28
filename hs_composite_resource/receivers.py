@@ -58,22 +58,22 @@ def pre_move_or_rename_file_or_folder_handler(sender, **kwargs):
 
         if path_to_check:
             if resource.resource_federation_path:
-                res_file_objs = resource.files.filter(object_id=resource.id,
-                                                      fed_resource_file_name_or_path__contains=
-                                                      path_to_check).all()
+                res_file_objs = resource.files.filter(
+                    object_id=resource.id,
+                    fed_resource_file_name_or_path__contains=path_to_check).all()
             else:
-                res_file_objs = resource.files.filter(object_id=resource.id,
-                                                      resource_file__contains=
-                                                      path_to_check).all()
+                res_file_objs = resource.files.filter(
+                    object_id=resource.id,
+                    resource_file__contains=path_to_check).all()
             for res_file_obj in res_file_objs:
                 if not res_file_obj.logical_file.allow_resource_file_rename or \
                         not res_file_obj.logical_file.allow_resource_file_move:
                     raise ValidationError(err_msg)
 
     if resource.resource_federation_path:
-        res_file_obj = resource.files.filter(object_id=resource.id,
-                                             fed_resource_file_name_or_path=
-                                             src_full_path).first()
+        res_file_obj = resource.files.filter(
+            object_id=resource.id,
+            fed_resource_file_name_or_path=src_full_path).first()
     else:
         res_file_obj = resource.files.filter(object_id=resource.id,
                                              resource_file=src_full_path).first()

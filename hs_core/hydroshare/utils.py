@@ -369,6 +369,7 @@ def get_resource_file_by_name(resource, file_name):
 def get_resource_file_by_id(resource, file_id):
     return resource.files.filter(id=file_id).first()
 
+
 def delete_fed_zone_file(file_name_with_full_path):
     '''
     Args:
