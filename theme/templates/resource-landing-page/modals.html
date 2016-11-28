@@ -423,8 +423,36 @@
                 <input type="checkbox" id="agree-chk"><label for="agree-chk" class="checkbox-label">I accept the HydroShare Publication Agreement.</label>
             </div>
             <div class="modal-footer">
+                <button class="btn btn-default" data-dismiss="modal">Cancel</button>
+                <button class="btn btn-danger" id="publish-btn" data-toggle="modal" data-dismiss="modal" data-target="#submit-for-publication-dialog-2" disabled>Publish</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="submit-for-publication-dialog-2" tabindex="-1" role="dialog"
+     aria-labelledby="myModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                <h4 class="modal-title" id="submit-for-publication-title">Are you sure you want to formally publish this resource?</h4>
+            </div>
+            <div class="modal-body">
+                <p>
+                    <strong>Are you sure you want to formally publish this resource?</strong> You will <strong>NOT</strong>
+                    be able to edit your resource or its metadata if you proceed. This is a permanent step and should only
+                    be done when you are finished modifying your resource and you are ready to formally publish it.
+                </p>
+                <p>
+                    If you want to make your resource public or share with specific HydroShare users without formally
+                    publishing it, click <strong>"Cancel"</strong> and use the manage access panel or toggle your resource
+                    to be public instead.
+                </p>
+            </div>
+            <div class="modal-footer">
                 <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
-                <a type="button" id="publish-btn" class="btn btn-danger" href="/hsapi/_internal/{{ cm.short_id }}/publish/" disabled>Publish</a>
+                <a type="button" id="publish-btn-2" class="btn btn-danger" href="/hsapi/_internal/{{ cm.short_id }}/publish/">Publish</a>
             </div>
         </div>
     </div>
