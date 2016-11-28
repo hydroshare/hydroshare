@@ -414,7 +414,10 @@ class CompositeResourceTest(MockIRODSTestCaseMixin, TransactionTestCase):
         raster_logical_file.metadata.create_element('coverage', type='period', value=value_dict)
 
         # test no exception raised when generating the metadata xml for this resource type
-        self.composite_resource.get_metadata_xml()
+        try:
+            self.composite_resource.get_metadata_xml()
+        except Exception as ex:
+            self.fail("Failed to generate metadata in xml format. Error:{}".format(ex.message))
 
     def test_resource_coverage_auto_update(self):
         # this is to test that the spatial coverage and temporal coverage
