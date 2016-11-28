@@ -144,27 +144,29 @@ class AbstractFileMetaData(models.Model):
         hsterms_datatype.text = self.logical_file.data_type
         if self.logical_file.dataset_name:
             hsterms_datatitle = etree.SubElement(rdf_Description,
-                                                '{%s}dataTitle' % NAMESPACES['hsterms'])
+                                                 '{%s}dataTitle' % NAMESPACES['hsterms'])
             hsterms_datatitle.text = self.logical_file.dataset_name
 
         # add fileType node
         for res_file in self.logical_file.files.all():
             hsterms_datafile = etree.SubElement(rdf_Description,
                                                 '{%s}dataFile' % NAMESPACES['hsterms'])
-            dc_title = etree.SubElement(hsterms_datafile,
+            rdf_dataFile_Description = etree.SubElement(hsterms_datafile,
+                                                        '{%s}Description' % NAMESPACES['rdf'])
+            dc_title = etree.SubElement(rdf_dataFile_Description,
                                         '{%s}title' % NAMESPACES['dc'])
 
             file_name = get_resource_file_name_and_extension(res_file)[1]
             dc_title.text = file_name
 
-            dc_format = etree.SubElement(hsterms_datafile, '{%s}format' % NAMESPACES['dc'])
+            dc_format = etree.SubElement(rdf_dataFile_Description, '{%s}format' % NAMESPACES['dc'])
             dc_format.text = res_file.mime_type
 
             # TODO: check if we should include the file size here
 
         self.add_extra_metadata_to_xml_container(rdf_Description)
         for coverage in self.coverages.all():
-            coverage.add_to_xml_container(dataset_container)
+            coverage.add_to_xml_container(rdf_Description)
         return rdf_Description
 
     def add_extra_metadata_to_xml_container(self, container):
