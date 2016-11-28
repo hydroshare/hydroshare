@@ -217,10 +217,10 @@ class NetcdfMetaData(CoreMetaData):
 
         return missing_required_elements
 
-    def get_xml(self):
+    def get_xml(self, pretty_print=True):
         from lxml import etree
         # get the xml string representation of the core metadata elements
-        xml_string = super(NetcdfMetaData, self).get_xml(pretty_print=False)
+        xml_string = super(NetcdfMetaData, self).get_xml(pretty_print=pretty_print)
 
         # create an etree xml object
         RDF_ROOT = etree.fromstring(xml_string)
@@ -269,7 +269,7 @@ class NetcdfMetaData(CoreMetaData):
                     hsterms_ori_cov_projection_type = etree.SubElement(hsterms_ori_cov_rdf_Description, '{%s}crsRepresentationType' % self.NAMESPACES['hsterms'])
                     hsterms_ori_cov_projection_type.text = ori_cov_obj.projection_string_type
 
-        return etree.tostring(RDF_ROOT, pretty_print=True)
+        return etree.tostring(RDF_ROOT, pretty_print=pretty_print)
 
     def add_metadata_element_to_xml(self, root, md_element, md_fields):
         from lxml import etree

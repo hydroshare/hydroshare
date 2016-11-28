@@ -387,11 +387,11 @@ class GeoRasterMetaDataMixin(models.Model):
 
         return missing_required_elements
 
-    def get_xml(self):
+    def get_xml(self, pretty_print=True):
         from lxml import etree
         # get the xml string representation of the core metadata elements
         # this works because the superclass we want is listed first
-        xml_string = super(type(self), self).get_xml(pretty_print=False)
+        xml_string = super(type(self), self).get_xml(pretty_print=pretty_print)
 
         # create an etree xml object
         RDF_ROOT = etree.fromstring(xml_string)
@@ -435,7 +435,7 @@ class GeoRasterMetaDataMixin(models.Model):
 
             rdf_coverage_value.text = cov_value
 
-        return etree.tostring(RDF_ROOT, pretty_print=True)
+        return etree.tostring(RDF_ROOT, pretty_print=pretty_print)
 
     def delete_all_elements(self):
         # this works because the superclass we want is listed first

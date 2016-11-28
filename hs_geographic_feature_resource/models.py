@@ -153,7 +153,7 @@ class GeographicFeatureMetaData(CoreMetaData):
 
         return missing_required_elements
 
-    def get_xml(self):
+    def get_xml(self, pretty_print=True):
         # get the xml string representation of the core metadata elements
         xml_string = super(GeographicFeatureMetaData, self).get_xml(pretty_print=False)
 
@@ -199,7 +199,7 @@ class GeographicFeatureMetaData(CoreMetaData):
 
             rdf_coverage_value.text = cov_value
 
-        return etree.tostring(RDF_ROOT, pretty_print=True)
+        return etree.tostring(RDF_ROOT, pretty_print=pretty_print)
 
     def delete_all_elements(self):
         super(GeographicFeatureMetaData, self).delete_all_elements()

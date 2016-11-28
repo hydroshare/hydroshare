@@ -96,10 +96,10 @@ class ScriptMetaData(CoreMetaData):
 
         return missing_required_elements
 
-    def get_xml(self):
+    def get_xml(self, pretty_print=True):
 
         # get the xml string for R Script
-        xml_string = super(ScriptMetaData, self).get_xml(pretty_print=False)
+        xml_string = super(ScriptMetaData, self).get_xml(pretty_print=pretty_print)
 
         # create  etree element
         RDF_ROOT = etree.fromstring(xml_string)
@@ -128,7 +128,7 @@ class ScriptMetaData(CoreMetaData):
             script_code_repository = etree.SubElement(container, '{%s}scriptCodeRepository' % self.NAMESPACES['hsterms'])
             script_code_repository.text = self.program.scriptCodeRepository
 
-        xml_string = etree.tostring(RDF_ROOT, pretty_print=True)
+        xml_string = etree.tostring(RDF_ROOT, pretty_print=pretty_print)
 
         return xml_string
 
