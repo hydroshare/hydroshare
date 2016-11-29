@@ -1505,7 +1505,6 @@ class UserAccess(models.Model):
         #   Permission for self
         # cannot downgrade privilege just by having sharing privilege.
 
-        # self can only use user privileges in sharing with a group
         grantor_priv = access_resource.get_effective_privilege(self.user)
         # target of sharing has all privileges accorded by group, user
         if user is not None:
