@@ -5,7 +5,7 @@ from django.contrib.contenttypes.fields import GenericRelation
 from django.forms.models import formset_factory
 from django.template import Template, Context
 
-from dominate.tags import *
+from dominate.tags import div, legend, form, button
 
 from hs_core.models import Coverage
 from hs_core.forms import CoverageTemporalForm
@@ -24,6 +24,7 @@ class GeoRasterFileMetaData(AbstractFileMetaData, GeoRasterMetaDataMixin):
 
     @classmethod
     def get_supported_element_names(cls):
+        # TODO: check if this method has been unit tested
         elements = super(GeoRasterFileMetaData, cls).get_supported_element_names()
         elements.append('CellInformation')
         elements.append('BandInformation')
@@ -40,6 +41,7 @@ class GeoRasterFileMetaData(AbstractFileMetaData, GeoRasterMetaDataMixin):
         self.bandInformations.all().delete()
 
     def has_all_required_elements(self):
+        # TODO: check if this method has been unit tested
         if not super(GeoRasterFileMetaData, self).has_all_required_elements():
             return False
         if self.coverages.count() == 0:
@@ -184,7 +186,7 @@ class GeoRasterFileMetaData(AbstractFileMetaData, GeoRasterMetaDataMixin):
         for form in bandinfo_formset.forms:
             if len(form.initial) > 0:
                 form.action = "/hsapi/_internal/%s/%s/bandinformation/%s/update-file-metadata/" % (
-                "GeoRasterLogicalFile", self.logical_file.id, form.initial['id'])
+                    "GeoRasterLogicalFile", self.logical_file.id, form.initial['id'])
                 form.number = form.initial['id']
 
         return bandinfo_formset
@@ -237,6 +239,7 @@ class GeoRasterLogicalFile(AbstractLogicalFile):
 
     @classmethod
     def get_allowed_storage_file_types(cls):
+        # TODO: check if there is a unit test for this method
         # file types allowed in this logical file group are: .tif and .vrt
         return [".tif", ".vrt"]
 

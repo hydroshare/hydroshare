@@ -5,7 +5,9 @@ from django.core.exceptions import ValidationError, ObjectDoesNotExist
 
 from django.contrib.postgres.fields import HStoreField
 
-from dominate.tags import *
+from dominate.tags import div, legend, table, tr, tbody, td, th, span, a, form, button, label, \
+    textarea, h4
+
 from lxml import etree
 
 from hs_core.hydroshare.utils import get_resource_file_name_and_extension

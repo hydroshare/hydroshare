@@ -236,7 +236,7 @@ class RasterFileTypeMetaData(MockIRODSTestCaseMixin, TransactionTestCase):
         # test that size property of the logical file is equal to sun of size of all files
         # that are part of the logical file
         self.assertEqual(logical_file.size, sum([f.size for f in logical_file.files.all()]))
-        
+
         # test extracted metadata for the file type
         # geo raster file type should have all the metadata elements
         self.assertEqual(logical_file.metadata.has_all_required_elements(), True)
@@ -431,7 +431,7 @@ class RasterFileTypeMetaData(MockIRODSTestCaseMixin, TransactionTestCase):
         # band information deletion is not allowed
         with self.assertRaises(ValidationError):
             logical_file.metadata.delete_element('bandinformation',
-                                                logical_file.metadata.bandInformations.first().id)
+                                                 logical_file.metadata.bandInformations.first().id)
 
         # test metadata update
 
@@ -451,7 +451,7 @@ class RasterFileTypeMetaData(MockIRODSTestCaseMixin, TransactionTestCase):
                                              name='cellinfo', cellDataType='Double',
                                              rows=166, columns=98,
                                              cellSizeXValue=3.0, cellSizeYValue=3.0,
-                                            )
+                                             )
 
         cell_info = logical_file.metadata.cellInformation
         self.assertEquals(cell_info.rows, 166)
@@ -640,7 +640,6 @@ class RasterFileTypeMetaData(MockIRODSTestCaseMixin, TransactionTestCase):
         # test that we have one logical file of type GeoRasterFileType as a result
         # of metadata extraction
         self.assertEqual(GeoRasterLogicalFile.objects.count(), 1)
-        logical_file = GeoRasterLogicalFile.objects.first()
         # should have one GeoRasterFileMetadata object
         self.assertEqual(GeoRasterFileMetaData.objects.count(), 1)
 

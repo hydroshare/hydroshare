@@ -1075,7 +1075,6 @@ class Coverage(AbstractMetaDataElement):
 
         rdf_coverage_value.text = cov_value
 
-
     @classmethod
     def _validate_coverage_type_value_attributes(cls, coverage_type, value_dict):
         if coverage_type == 'period':

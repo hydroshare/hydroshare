@@ -651,9 +651,9 @@ def create_folder(res_id, folder_path):
         path_to_check = "/".join(path_parts)
         err_msg = "Folder creation not allowed here."
         if resource.resource_federation_path:
-            res_file_objs = resource.files.filter(object_id=resource.id,
-                                                  fed_resource_file_name_or_path__contains=
-                                                  path_to_check).all()
+            res_file_objs = resource.files.filter(
+                object_id=resource.id,
+                fed_resource_file_name_or_path__contains=path_to_check).all()
         else:
             res_file_objs = resource.files.filter(object_id=resource.id,
                                                   resource_file__contains=path_to_check).all()
