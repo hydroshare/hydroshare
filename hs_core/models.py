@@ -261,7 +261,7 @@ class Party(AbstractMetaDataElement):
             if party:
                 creator_order = party.order + 1
 
-            if not 'name' in kwargs and not 'organization' in kwargs:
+            if 'name' not in kwargs and 'organization' not in kwargs:
                 raise ValidationError(
                     "Either an organization or name is required for a creator element")
 

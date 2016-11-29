@@ -4,7 +4,7 @@ from hs_core.hydroshare import resource
 from django.contrib.auth.models import Group, User
 from hs_core.models import GenericResource, Creator, Contributor, CoreMetaData, \
     Coverage, Rights, Title, Language, Publisher, Identifier, \
-    Type, Subject, Description, Date, Format, Relation, Source, FundingAgency
+    Type, Subject, Description, Date, Format, Relation, Source
 from hs_core import hydroshare
 from hs_core.testing import MockIRODSTestCaseMixin
 
