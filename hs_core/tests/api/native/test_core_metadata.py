@@ -177,6 +177,29 @@ class TestCoreMetadata(MockIRODSTestCaseMixin, TestCase):
         resource.update_metadata_element(self.res.short_id,'creator', cr_john.id, order=4)
         self.assertEqual(cr_john.order, 3)
 
+        # try to add a creator with no name
+        resource.create_metadata_element(self.res.short_id, 'creator',
+                                         organization='test org',
+                                         description='test desc',
+                                         email='test@test.com',
+                                         address='test address',
+                                         phone='111-111-1111',
+                                         homepage='http://www.test.com',
+                                         )
+        self.assertEqual(self.res.metadata.creators.all().count(), 4)
+        self.assertIn('test org', [cr.organization for cr in self.res.metadata.creators.all()],
+                      msg="Creator 'test org' was not found")
+
+        # try to add a creator with no name or organization should raise error
+        with self.assertRaises(ValidationError):
+            resource.create_metadata_element(self.res.short_id, 'creator',
+                                             description='test desc',
+                                             email='test@test.com',
+                                             address='test address',
+                                             phone='111-111-1111',
+                                             homepage='http://www.test.com',
+                                             )
+
         # delete Mike's home page
         resource.update_metadata_element(self.res.short_id,'creator', cr_mike.id, homepage=None)
         cr_mike = self.res.metadata.creators.all().filter(email=cr_email).first()
