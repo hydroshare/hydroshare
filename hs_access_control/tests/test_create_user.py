@@ -1,21 +1,11 @@
-
-
-import unittest
-from django.http import Http404
 from django.test import TestCase
-from django.utils import timezone
-from django.core.exceptions import PermissionDenied
-from django.contrib.auth.models import User, Group
-from pprint import pprint
-
-from hs_access_control.models import UserAccess, GroupAccess, ResourceAccess, \
-    UserResourcePrivilege, GroupResourcePrivilege, UserGroupPrivilege, PrivilegeCodes
+from django.contrib.auth.models import Group
 
 from hs_core import hydroshare
-from hs_core.models import GenericResource, BaseResource
 from hs_core.testing import MockIRODSTestCaseMixin
 
-from hs_access_control.tests.utilities import *
+from hs_access_control.tests.utilities import global_reset, \
+    assertUserResourceState, assertUserGroupState
 
 
 class T01CreateUser(MockIRODSTestCaseMixin, TestCase):

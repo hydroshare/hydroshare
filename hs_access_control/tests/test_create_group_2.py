@@ -1,24 +1,15 @@
-
-import unittest
-from django.http import Http404
 from django.test import TestCase
-from django.utils import timezone
-from django.core.exceptions import PermissionDenied
-from django.contrib.auth.models import User, Group
-from pprint import pprint
-
-from hs_access_control.models import UserAccess, GroupAccess, ResourceAccess, \
-    UserResourcePrivilege, GroupResourcePrivilege, UserGroupPrivilege, PrivilegeCodes
+from django.contrib.auth.models import Group
 
 from hs_core import hydroshare
-from hs_core.models import GenericResource, BaseResource
 from hs_core.testing import MockIRODSTestCaseMixin
 
-from hs_access_control.tests.utilities import *
+from hs_access_control.tests.utilities import global_reset
 
 
 class T15CreateGroup(MockIRODSTestCaseMixin, TestCase):
     "Test creatng a group"
+
     def setUp(self):
         super(T15CreateGroup, self).setUp()
         global_reset()
@@ -50,7 +41,8 @@ class T15CreateGroup(MockIRODSTestCaseMixin, TestCase):
             groups=[]
         )
 
-        self.meowers = self.cat.uaccess.create_group(title='meowers', description='We are the meowers')
+        self.meowers = self.cat.uaccess.create_group(
+            title='meowers', description='We are the meowers')
 
     def test_01_default_group_ownership(self):
         "Defaults for group ownership are correct"
@@ -102,7 +94,6 @@ class T15CreateGroup(MockIRODSTestCaseMixin, TestCase):
         self.assertTrue(self.admin.uaccess.can_change_group(meowers))
         self.assertTrue(self.admin.uaccess.can_view_group(meowers))
 
-
     def test_03_change_group_not_discoverable(self):
         "Can make a group not discoverable"
         dog = self.dog
@@ -120,7 +111,8 @@ class T15CreateGroup(MockIRODSTestCaseMixin, TestCase):
         self.assertFalse(meowers.gaccess.discoverable)
         self.assertTrue(meowers.gaccess.shareable)
 
-        # public -> discoverable; test that an unprivileged user can read the group now
+        # public -> discoverable; test that an unprivileged user can read the
+        # group now
         self.assertTrue(dog.uaccess.can_view_group(meowers))
         self.assertFalse(dog.uaccess.can_change_group(meowers))
         self.assertFalse(dog.uaccess.owns_group(meowers))
@@ -129,5 +121,3 @@ class T15CreateGroup(MockIRODSTestCaseMixin, TestCase):
         self.assertTrue(self.admin.uaccess.can_view_group(meowers))
         self.assertTrue(self.admin.uaccess.can_change_group(meowers))
         self.assertFalse(self.admin.uaccess.owns_group(meowers))
-
-
