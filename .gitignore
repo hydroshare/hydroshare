@@ -21,3 +21,4 @@ init-dockerworker
 init-hydroshare
 run-server
 schema.xml
+*.sublime-*
