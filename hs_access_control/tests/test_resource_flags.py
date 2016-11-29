@@ -1,23 +1,19 @@
-
-import unittest
 from django.http import Http404
 from django.test import TestCase
-from django.utils import timezone
 from django.core.exceptions import PermissionDenied
-from django.contrib.auth.models import User, Group
-from pprint import pprint
+from django.contrib.auth.models import Group
 
-from hs_access_control.models import UserAccess, GroupAccess, ResourceAccess, \
-    UserResourcePrivilege, GroupResourcePrivilege, UserGroupPrivilege, PrivilegeCodes
+from hs_access_control.models import PrivilegeCodes
 
 from hs_core import hydroshare
-from hs_core.models import GenericResource, BaseResource
+from hs_core.models import GenericResource
 from hs_core.testing import MockIRODSTestCaseMixin
 
-from hs_access_control.tests.utilities import *
+from hs_access_control.tests.utilities import global_reset, is_equal_to_as_set
 
 
 class T08ResourceFlags(MockIRODSTestCaseMixin, TestCase):
+
     def setUp(self):
         super(T08ResourceFlags, self).setUp()
         global_reset()
@@ -67,15 +63,19 @@ class T08ResourceFlags(MockIRODSTestCaseMixin, TestCase):
             groups=[]
         )
 
-        self.bones = hydroshare.create_resource(resource_type='GenericResource',
-                                                owner=self.dog,
-                                                title='all about dog bones',
-                                                metadata=[],)
+        self.bones = hydroshare.create_resource(
+            resource_type='GenericResource',
+            owner=self.dog,
+            title='all about dog bones',
+            metadata=[],
+        )
 
-        self.chewies = hydroshare.create_resource(resource_type='GenericResource',
-                                                  owner=self.dog,
-                                                  title='all about dog chewies',
-                                                  metadata=[],)
+        self.chewies = hydroshare.create_resource(
+            resource_type='GenericResource',
+            owner=self.dog,
+            title='all about dog chewies',
+            metadata=[],
+        )
 
     def test_01_default_flags(self):
         "Flag defaults are correct when resource is created"
@@ -114,7 +114,8 @@ class T08ResourceFlags(MockIRODSTestCaseMixin, TestCase):
         self.assertTrue(cat.uaccess.can_view_resource(bones))
 
         # django admin should be able share even if shareable is False
-        self.admin.uaccess.share_resource_with_user(bones, cat, PrivilegeCodes.CHANGE)
+        self.admin.uaccess.share_resource_with_user(
+            bones, cat, PrivilegeCodes.CHANGE)
 
     def test_03_not_shareable(self):
         "Resource that is not shareable cannot be shared by non-owner"
@@ -129,11 +130,14 @@ class T08ResourceFlags(MockIRODSTestCaseMixin, TestCase):
 
         # cat should not be able to reshare
         with self.assertRaises(PermissionDenied) as cm:
-            cat.uaccess.share_resource_with_user(bones, bat, PrivilegeCodes.VIEW)
-        self.assertEqual(cm.exception.message, 'User must own resource or have sharing privilege')
+            cat.uaccess.share_resource_with_user(
+                bones, bat, PrivilegeCodes.VIEW)
+        self.assertEqual(cm.exception.message,
+                         'User must own resource or have sharing privilege')
 
         # django admin still can share
-        self.admin.uaccess.share_resource_with_user(bones, bat, PrivilegeCodes.VIEW)
+        self.admin.uaccess.share_resource_with_user(
+            bones, bat, PrivilegeCodes.VIEW)
 
     def test_04_transitive_sharing(self):
         """Resource shared with one user can be shared with another"""
@@ -174,7 +178,10 @@ class T08ResourceFlags(MockIRODSTestCaseMixin, TestCase):
         self.assertTrue(bones.raccess.discoverable)
         self.assertTrue(bones.raccess.shareable)
 
-        self.assertTrue(is_equal_to_as_set([bones], GenericResource.discoverable_resources.all()))
+        self.assertTrue(
+            is_equal_to_as_set(
+                [bones],
+                GenericResource.discoverable_resources.all()))
 
     def test_06_not_discoverable(self):
         """Resource can be made not discoverable and not public"""
@@ -208,7 +215,8 @@ class T08ResourceFlags(MockIRODSTestCaseMixin, TestCase):
         self.assertFalse(bones.raccess.discoverable)
         self.assertTrue(bones.raccess.shareable)
 
-        # ownership should survive downgrading to immutable; otherwise one cuts out ownership privilege completely
+        # ownership should survive downgrading to immutable; otherwise one cuts
+        # out ownership privilege completely
         self.assertTrue(dog.uaccess.owns_resource(bones))
         self.assertFalse(dog.uaccess.can_change_resource(bones))
         self.assertTrue(dog.uaccess.can_view_resource(bones))
@@ -240,7 +248,6 @@ class T08ResourceFlags(MockIRODSTestCaseMixin, TestCase):
     def test_08_public(self):
         """Public resources show up in public listings"""
         chewies = self.chewies
-        dog = self.dog
         nobody = self.nobody
 
         self.assertFalse(chewies.raccess.immutable)
@@ -258,8 +265,14 @@ class T08ResourceFlags(MockIRODSTestCaseMixin, TestCase):
         self.assertFalse(chewies.raccess.discoverable)
         self.assertTrue(chewies.raccess.shareable)
 
-        self.assertTrue(is_equal_to_as_set([chewies], GenericResource.public_resources.all()))
-        self.assertTrue(is_equal_to_as_set([chewies], GenericResource.discoverable_resources.all()))
+        self.assertTrue(
+            is_equal_to_as_set(
+                [chewies],
+                GenericResource.public_resources.all()))
+        self.assertTrue(
+            is_equal_to_as_set(
+                [chewies],
+                GenericResource.discoverable_resources.all()))
 
         # can 'nobody' see the public resource owned by 'dog'
         # but not explicitly shared with 'nobody'.
@@ -289,11 +302,18 @@ class T08ResourceFlags(MockIRODSTestCaseMixin, TestCase):
         self.assertTrue(chewies.raccess.shareable)
 
         # discoverable doesn't mean public
-        # TODO: get_public_resources and get_discoverable_resources should be static methods
-        self.assertTrue(is_equal_to_as_set([], GenericResource.public_resources.all()))
-        self.assertTrue(is_equal_to_as_set([chewies], GenericResource.discoverable_resources.all()))
+        # TODO: get_public_resources and get_discoverable_resources should be
+        # static methods
+        self.assertTrue(
+            is_equal_to_as_set(
+                [], GenericResource.public_resources.all()))
+        self.assertTrue(
+            is_equal_to_as_set(
+                [chewies],
+                GenericResource.discoverable_resources.all()))
 
-        # can 'nobody' see the public resource owned by 'dog' but not explicitly shared with 'nobody'.
+        # can 'nobody' see the public resource owned by 'dog' but not
+        # explicitly shared with 'nobody'.
         self.assertFalse(nobody.uaccess.owns_resource(chewies))
         self.assertFalse(nobody.uaccess.can_change_resource(chewies))
         self.assertFalse(nobody.uaccess.can_view_resource(chewies))
@@ -305,4 +325,3 @@ class T08ResourceFlags(MockIRODSTestCaseMixin, TestCase):
         hydroshare.delete_resource(chewies.short_id)
         with self.assertRaises(Http404):
             hydroshare.get_resource(resource_short_id)
-
