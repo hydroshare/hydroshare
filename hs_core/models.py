@@ -260,11 +260,18 @@ class Party(AbstractMetaDataElement):
             creator_order = 1
             if party:
                 creator_order = party.order + 1
+
+            if not 'name' in kwargs and not 'organization' in kwargs:
+                raise ValidationError(
+                    "Either an organization or name is required for a creator element")
+
             if 'name' in kwargs:
                 if len(kwargs['name'].strip()) == 0:
                     if 'organization' in kwargs:
                         if len(kwargs['organization'].strip()) == 0:
-                            raise ValidationError("Invalid name or organization for the %s." % element_name.lower())
+                            raise ValidationError(
+                                "Either the name or organization must not be blank for the creator "
+                                "element")
 
             kwargs['order'] = creator_order
             party = super(Party, cls).create(**kwargs)
@@ -1348,7 +1355,7 @@ class AbstractResource(ResourcePermissionsMixin):
         """
         return None
 
-    def parse_name(self, name, first_author=False):
+    def parse_citation_name(self, name, first_author=False):
         CREATOR_NAME_ERROR = "Failed to generate citation - invalid creator name."
         first_names = None
         if "," in name:
@@ -1397,12 +1404,14 @@ class AbstractResource(ResourcePermissionsMixin):
         if first_author.organization and not first_author.name:
             citation_str_lst.append(first_author.organization + ", ")
         else:
-            citation_str_lst.append(self.parse_name(first_author.name, first_author=True))
+            citation_str_lst.append(self.parse_citation_name(first_author.name, first_author=True))
 
-            other_authors = self.metadata.creators.all().filter(order__gt=1)
-            for author in other_authors:
-                if author.name and author.name != "":
-                    citation_str_lst.append(self.parse_name(author.name))
+        other_authors = self.metadata.creators.all().filter(order__gt=1)
+        for author in other_authors:
+            if author.organization and not author.name:
+                citation_str_lst.append(author.organization + ", ")
+            elif author.name and author.name != "":
+                citation_str_lst.append(self.parse_citation_name(author.name))
 
         # remove the last added comma and the space
         if len(citation_str_lst[-1]) > 2:
