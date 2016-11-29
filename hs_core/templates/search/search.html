@@ -174,15 +174,6 @@
 
             <div class="tab-content">
                 <div id="list-view" class="tab-pane fade in active">
-                    <div id="list-data-options">
-                        <label class="radio-inline">
-                            <input type="radio" name="results-selection" id="map-results-selected" value="map-results-selected">Map Results
-                        </label>
-
-                        <label class="radio-inline">
-                            <input type="radio" name="results-selection" id="all-results-selected" value="all-results-selected">All Results
-                        </label>
-                    </div>
                     <span id="discover-list-loading-spinner" class="discover-loading-icon icon-blue">
                           <i class="fa fa-spinner fa-spin fa-2x fa-fw"></i>
                     </span>
@@ -519,7 +510,6 @@
         var raw_results = [];
         var markerCluster = null;
         var info_window = null;
-        var rectangle = null;
         var shade_rects = [];
 
         var initMap = function(json_results) {
@@ -1052,33 +1042,26 @@
             setMarkers(raw_results);
             var map_items_table = $('#map-items').DataTable();
             map_items_table.clear().draw();
+            var $mapDiv = $("#discover-map");
+            var mapDim = {
+                height: $mapDiv.height(),
+                width: $mapDiv.width()
+            };
 
             var bounds = (markers.length > 0) ? createBoundsForMarkers(markers) : map.setZoom(2);
+            map.fitBounds(bounds);
+            var zoom_level = getBoundsZoomLevel(bounds, mapDim);
+            var reset_center = bounds.getCenter();
             if (bounds) {
                 map.fitBounds(bounds);
                 var listener = google.maps.event.addListener(map, "idle", function () {
-                    map.setZoom(map_default_zoom);
-                    map.setCenter(map_default_center);
+                    map.setZoom(zoom_level);
+                    map.setCenter(reset_center);
                     google.maps.event.removeListener(listener);
                 });
+            } else {
+                map.setZoom(map_default_zoom);
             }
-            if (rectangle != null) {
-                rectangle.setMap(null);
-            }
-            rectangle = new google.maps.Rectangle({
-                strokeColor: '#FF0000',
-                strokeOpacity: 0.15,
-                strokeWeight: 2,
-                fillColor: '#FF0000',
-                fillOpacity: 0,
-                map: map,
-                bounds: {
-                    north: 0,
-                    south: 0,
-                    east: 0,
-                    west: 0
-                }
-            });
         };
 
 
@@ -1086,29 +1069,6 @@
             var filtered_results = [];
             clientUpdateMarkers(filtered_results);
             setMarkers(filtered_results);
-            var results_selection = $('input:radio[name=results-selection]:checked').val();
-            if (results_selection == 'map-results-selected') {
-                var bnds = map.getBounds();
-                var start_date = $("#id_start_date").val();
-                var end_date = $("#id_end_date").val();
-                if (bnds) {
-                    var ne = bnds.getNorthEast();
-                    var sw = bnds.getSouthWest();
-                    var ne_lat = ne.lat();
-                    var ne_lng = ne.lng();
-                    var sw_lat = sw.lat();
-                    var sw_lng = sw.lng();
-                    var data = {
-                        NElat: ne_lat,
-                        NElng: ne_lng,
-                        SWlat: sw_lat,
-                        SWlng: sw_lng,
-                        start_date: start_date,
-                        end_date: end_date
-                    };
-                    updateListView(data);
-                }
-            }
         };
 
         var updateListView = function (data) {
@@ -1267,16 +1227,7 @@
 
         var formGeoParameters = function() {
             var selected_results = $('input[name=results-selection]:checked').val();
-            var geoSearchParams = "";
-            if (selected_results == 'map-results-selected') {
-                var ne_lat = document.getElementById("id_NElat").value;
-                var ne_lng = document.getElementById("id_NElng").value;
-                var sw_lat = document.getElementById("id_SWlat").value;
-                var sw_lng = document.getElementById("id_SWlng").value;
-                geoSearchParams = "&NElat=" + ne_lat + "&NElng=" + ne_lng + "&SWlat=" + sw_lat + "&SWlng=" + sw_lng;
-            } else {
-                geoSearchParams = "&NElat=&NElng=&SWlat=&SWlng=";
-            }
+            var geoSearchParams = "&NElat=&NElng=&SWlat=&SWlng=";
             return geoSearchParams
         };
 
@@ -1299,16 +1250,6 @@
                 }
             });
             return requestURL;
-        };
-
-        var popRadioButtons = function() {
-            if (sessionStorage["map-results-selected"] == undefined && sessionStorage["all-results-selected"] == undefined) {
-               $("#all-results-selected").prop("checked", true);
-            } else if (sessionStorage["map-results-selected"] == 'true') {
-                $("#map-results-selected").prop("checked", true);
-            } else if (sessionStorage["all-results-selected"] == 'true') {
-                $("#all-results-selected").prop("checked", true);
-            }
         };
 
         var popCheckboxes = function() {
@@ -1413,7 +1354,6 @@
 
             initializeTable();
             popCheckboxes();
-            popRadioButtons();
 
             $("ul.nav-tabs > li > a").on("shown.bs.tab", function (e) {
                 var tabId = $(e.target).attr("href").substr(1);
@@ -1461,42 +1401,6 @@
                         }
                     });
                 }
-            });
-
-            $('input[type=radio][name=results-selection]').change(function() {
-                var data;
-                var start_date = $("#id_start_date").val();
-                var end_date = $("#id_end_date").val();
-
-                if (this.value == 'map-results-selected') {
-                    var ne_lat = document.getElementById("id_NElat").value;
-                    var ne_lng = document.getElementById("id_NElng").value;
-                    var sw_lat = document.getElementById("id_SWlat").value;
-                    var sw_lng = document.getElementById("id_SWlng").value;
-                    data = {
-                        NElat: ne_lat,
-                        NElng: ne_lng,
-                        SWlat: sw_lat,
-                        SWlng: sw_lng,
-                        start_date: start_date,
-                        end_date: end_date
-                    };
-                    sessionStorage['map-results-selected'] = 'true';
-                    sessionStorage['all-results-selected'] = 'false';
-                }
-                else {
-                    data = {
-                        NElat: '',
-                        NElng: '',
-                        SWlat: '',
-                        SWlng: '',
-                        start_date: start_date,
-                        end_date: end_date
-                    };
-                    sessionStorage['all-results-selected'] = 'true';
-                    sessionStorage['map-results-selected'] = 'false';
-                }
-                updateListView(data);
             });
 
             $(".nav-tabs a").click(function() {

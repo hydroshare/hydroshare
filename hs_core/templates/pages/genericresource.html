@@ -68,9 +68,6 @@
                 {% block content_block %}
                 {# ======= Content (code moved here because django does not render blocks inside included templates) ======= #}
                 {% if cm.resource_type != "ToolResource" %}
-                    {# Used to force browser to download a file instead of opening it #}
-                    <iframe id="download-frame" style="display:none;"></iframe>
-
                     {# POPUP MENU - Right clicking items #}
                     <ul id="right-click-menu" class="dropdown-menu fb-dropdown selection-menu">
                         {% if cm|resource_type == "Generic" or cm|resource_type == "Model Program Resource" or cm|resource_type == "MODFLOW Model Instance Resource" or cm|resource_type == "SWAT Model Instance Resource" or cm|resource_type == "Model Instance Resource" %}

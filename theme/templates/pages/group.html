@@ -382,9 +382,7 @@
                                             {% endif %}
                                         </td>
                                         <td>
-                                            <h4><strong><a
-                                                    href="#">{{ pendingrequest.request_from|best_name }}</a></strong>
-                                            </h4>
+                                            <h4><strong><a>{{ pendingrequest.request_from|contact|safe }}</a></strong></h4>
                                             {% if  pendingrequest.request_from.userprofile.title %}
                                                 <span class="text-muted">{{ pendingrequest.request_from.userprofile.title }}</span>
                                             {% endif %}

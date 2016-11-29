@@ -68,6 +68,12 @@ class StudyArea(AbstractMetaDataElement):
         # StudyArea element is not repeatable
         unique_together = ("content_type", "object_id")
 
+    @classmethod
+    def update(cls, element_id, **kwargs):
+        study_area = super(StudyArea, cls).update(element_id, **kwargs)
+        delete_if_empty(study_area,
+                        ['totalLength', 'totalWidth', 'maximumElevation', 'minimumElevation'])
+
 
 class GridDimensions(AbstractMetaDataElement):
     term = 'GridDimensions'
