@@ -28,7 +28,7 @@ class OriginalCoverage(AbstractMetaDataElement):
                 'datum: projection datum name (optional),
                 }"
     """
-    _value = models.CharField(max_length=1024, null=True)
+    _value = models.CharField(max_length=10000, null=True)
     # projection_string = models.TextField(null=True, blank=True)
     # datum = models.CharField(max_length=1000, null=True, blank=True)
 

@@ -39,8 +39,9 @@ def landing_page(request, page):
             ori_coverage_data_dict['westlimit'] = content_model.metadata.originalCoverage.\
                 value['westlimit']
             ori_coverage_data_dict['projection_string'] = content_model.metadata.originalCoverage.\
-                value['projection_string']
-            ori_coverage_data_dict['datum'] = content_model.metadata.originalCoverage.value['datum']
+                value.get('projection_string', None)
+            ori_coverage_data_dict['datum'] = content_model.metadata.originalCoverage.\
+                value.get('datum', None)
             context['originalCoverage'] = ori_coverage_data_dict
         context['cellInformation'] = content_model.metadata.cellInformation
         context['bandInformation'] = content_model.metadata.bandInformation
