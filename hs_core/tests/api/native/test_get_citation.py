@@ -138,4 +138,4 @@ class TestGetCitation(MockIRODSTestCaseMixin, TestCase):
 
         name = "Smith Tanner, John Morley"
         parsed_name = self.res.parse_citation_name(name)
-        self.assertEqual(parsed_name, 'J. M. Smith Tanner')
+        self.assertEqual(parsed_name, 'J. M. Smith Tanner, ')
