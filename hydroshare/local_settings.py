@@ -180,3 +180,8 @@ EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 #DEFAULT_SUPPORT_EMAIL=''
 
 HYDROSHARE_SHARED_TEMP = '/shared_tmp'
+
+GEOSERVER_ENDPOINT = "http://apps.hydroshare.org:8181/geoserver/rest"
+GEOSERVER_WORKSPACE = "hydroshare_resources"
+GEOSERVER_USERNAME = "admin"
+GEOSERVER_PASSWORD = "hydroshare"

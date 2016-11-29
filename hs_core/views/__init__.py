@@ -379,6 +379,7 @@ def delete_multiple_files(request, shortkey, *args, **kwargs):
 
 def delete_resource(request, shortkey, *args, **kwargs):
     res, _, user = authorize(request, shortkey, needed_permission=ACTION_TO_AUTHORIZE.DELETE_RESOURCE)
+    pre_delete_resource.send(sender=type(res), request=request, resource=res)
 
     res_title = res.metadata.title
     res_id = shortkey

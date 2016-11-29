@@ -2,6 +2,7 @@ import django.dispatch
 
 pre_create_resource = django.dispatch.Signal(providing_args=['metadata', 'files'])
 post_create_resource = django.dispatch.Signal(providing_args=['resource', 'metadata'])
+pre_delete_resource = django.dispatch.Signal(providing_args=['resource'])
 
 pre_add_files_to_resource = django.dispatch.Signal(providing_args=['files', 'resource'])
 pre_delete_file_from_resource = django.dispatch.Signal(providing_args=['file', 'resource'])

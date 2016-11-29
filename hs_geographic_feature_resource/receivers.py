@@ -11,9 +11,7 @@ from django.core.files.uploadedfile import UploadedFile
 from hs_core.hydroshare import utils
 from hs_core.hydroshare.resource import ResourceFile, \
     get_resource_file_name, delete_resource_file_only
-from hs_core.signals import pre_create_resource, pre_metadata_element_create,\
-                            pre_metadata_element_update, pre_delete_file_from_resource,\
-                            pre_add_files_to_resource, post_add_files_to_resource
+from hs_core.signals import *
 
 
 from hs_geographic_feature_resource.parse_lib import parse_shp, UNKNOWN_STR, parse_shp_xml
@@ -21,6 +19,7 @@ from hs_geographic_feature_resource.forms import OriginalCoverageValidationForm,
                                                  GeometryInformationValidationForm,\
                                                  FieldInformationValidationForm
 from hs_geographic_feature_resource.models import GeographicFeatureResource
+from hs_core.ogc_services_utility import add_ogc_services, remove_ogc_services
 
 logger = logging.getLogger(__name__)
 
@@ -190,6 +189,15 @@ def parse_shp_zshp(uploadedFileType, baseFilename,
         metadata_array = []
         metadata_dict = {}
 
+        # OGC Web Services metadata
+        ogcWebServices_dict = {
+            'layerName': "Pending...",
+            'wmsEndpoint': "Pending...",
+            'wfsEndpoint': "Pending..."
+        }
+        metadata_array.append({"OGCWebServices": ogcWebServices_dict})
+        metadata_dict["ogcWebServices"] = ogcWebServices_dict
+
         # fileTypeInfo_dict
         originalFileInfo_dict = {}
         originalFileInfo_dict["fileType"] = "SHP" if uploadedFileType == "shp" else "ZSHP"
@@ -344,6 +352,12 @@ def geofeature_pre_create_resource(sender, **kwargs):
                                              "three mandatory files (.shp, .shx, .dbf) " \
                                              "of ESRI Shapefiles should be uploaded at the " \
                                              "same time (or in a zip file)."
+            ogc_web_services_info = {
+                'layerName': None,
+                'wmsEndpoint': None,
+                'wfsEndpoint': None,
+            }
+            metadata.append({'OGCWebServices': ogc_web_services_info})
     except Exception as ex:
         validate_files_dict['are_files_valid'] = False
         validate_files_dict['message'] = 'Uploaded files are invalid or corrupt.'
@@ -355,6 +369,19 @@ def geofeature_pre_create_resource(sender, **kwargs):
         if fed_res_fnames and fed_tmpfile_name_list:
             for file_path in fed_tmpfile_name_list:
                 shutil.rmtree(os.path.dirname(file_path))
+
+
+@receiver(post_create_resource, sender=GeographicFeatureResource)
+def geographic_feature_post_create_resource_trigger(sender, **kwargs):
+    resource = kwargs['resource']
+    if len(resource.files.all()) > 0:
+        add_ogc_services.apply_async([resource])
+
+
+@receiver(pre_delete_resource, sender=GeographicFeatureResource)
+def geographic_feature_pre_delete_resource_trigger(sender, **kwargs):
+    resource = kwargs['resource']
+    remove_ogc_services.apply_async([resource])
 
 
 # This handler is executed only when a metadata element is added as part of editing a resource
@@ -433,6 +460,16 @@ def geofeature_pre_delete_file_from_resource(sender, **kwargs):
             res_obj.metadata.fieldinformation.all().delete()
             res_obj.metadata.originalcoverage.all().delete()
             res_obj.metadata.coverages.all().delete()
+
+            md_id = res_obj.metadata.ogcWebServices.first().id
+            ogc_metadata = {
+                'wmsEndpoint': None,
+                'wfsEndpoint': None,
+                'layerName': None
+            }
+            res_obj.metadata.update_element("OGCWebServices", md_id, **ogc_metadata)
+
+            remove_ogc_services.apply_async([res_obj])
 
 
 @receiver(pre_add_files_to_resource, sender=GeographicFeatureResource)
@@ -641,6 +678,16 @@ def geofeature_post_add_files_to_resource_handler(sender, **kwargs):
     resource = kwargs['resource']
     res_id = resource.short_id
     validate_files_dict = kwargs['validate_files']
+
+    add_ogc_services.apply_async([resource])
+    md_id = resource.metadata.ogcWebServices.first().id
+    ogc_metadata = {
+        'wmsEndpoint': "Pending...",
+        'wfsEndpoint': "Pending...",
+        'layerName': "Pending..."
+    }
+    resource.metadata.update_element("OGCWebServices", md_id, **ogc_metadata)
+
     try:
         files = kwargs['files']
         fed_res_fnames = kwargs.get('fed_res_file_names', [])
