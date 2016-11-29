@@ -183,11 +183,11 @@ class GeoRasterFileMetaData(AbstractFileMetaData, GeoRasterMetaDataMixin):
         bandinfo_formset = BandInfoFormSetEdit(
             initial=self.bandInformations.values(), prefix='BandInformation')
 
-        for form in bandinfo_formset.forms:
-            if len(form.initial) > 0:
-                form.action = "/hsapi/_internal/%s/%s/bandinformation/%s/update-file-metadata/" % (
-                    "GeoRasterLogicalFile", self.logical_file.id, form.initial['id'])
-                form.number = form.initial['id']
+        for frm in bandinfo_formset.forms:
+            if len(frm.initial) > 0:
+                frm.action = "/hsapi/_internal/%s/%s/bandinformation/%s/update-file-metadata/" % (
+                    "GeoRasterLogicalFile", self.logical_file.id, frm.initial['id'])
+                frm.number = frm.initial['id']
 
         return bandinfo_formset
 

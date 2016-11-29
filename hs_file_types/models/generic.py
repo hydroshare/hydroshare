@@ -2,7 +2,7 @@
 from django.db import models
 from django.template import Template, Context
 
-from dominate.tags import *
+from dominate.tags import div, form, button, h4
 
 from hs_core.models import Coverage
 from hs_core.forms import CoverageTemporalForm, CoverageSpatialForm
