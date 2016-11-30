@@ -192,4 +192,4 @@ class TestGetUserData(TestCase):
         request = self.factory.post(url, data=post_data)
         request.user = self.mike
         with self.assertRaises(Http404):
-            get_user_data(request, user_id=non_existing_user_id)
+            get_user_data(request, user_id=non_existing_user_id, is_group='false')
