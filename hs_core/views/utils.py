@@ -25,8 +25,7 @@ from ga_resources.utils import get_user
 from hs_core import hydroshare
 from hs_core.hydroshare import check_resource_type, delete_resource_file
 from hs_core.models import AbstractMetaDataElement, GenericResource, Relation, ResourceFile
-from hs_core.signals import pre_metadata_element_create, post_delete_file_from_resource, \
-    pre_move_or_rename_file_or_folder
+from hs_core.signals import pre_metadata_element_create, post_delete_file_from_resource
 from hs_core.hydroshare import FILE_SIZE_LIMIT
 from hs_core.hydroshare.utils import raise_file_size_exception, get_file_mime_type
 from django_irods.storage import IrodsStorage
@@ -714,7 +713,7 @@ def move_or_rename_file_or_folder(user, res_id, src_path, tgt_path, validate_mov
     if validate_move_rename:
         # this must raise ValidationError if move/rename is not allowed by specific resource type
         resource.check_move_or_rename_file_or_folder(src_full_path, tgt_full_path)
-        
+
     istorage.moveFile(src_full_path, tgt_full_path)
 
     rename_irods_file_or_folder_in_django(resource, src_full_path, tgt_full_path)
