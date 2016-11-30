@@ -1358,14 +1358,14 @@ class AbstractResource(ResourcePermissionsMixin):
             return CREATOR_NAME_ERROR
 
         if len(name_parts) > 2:
-            author_name = "{last_name}, {first_initial}. {middle_initial}., "
+            author_name = u"{last_name}, {first_initial}. {middle_initial}., "
             author_name = author_name.format(last_name=name_parts[-1],
                                              first_initial=name_parts[0][0],
                                              middle_initial=name_parts[1][0])
             citation_str_lst.append(author_name)
 
         else:
-            author_name = "{last_name}, {first_initial}., "
+            author_name = u"{last_name}, {first_initial}., "
             author_name = author_name.format(last_name=name_parts[-1],
                                              first_initial=name_parts[0][0])
             citation_str_lst.append(author_name)
@@ -1377,14 +1377,14 @@ class AbstractResource(ResourcePermissionsMixin):
                 return CREATOR_NAME_ERROR
 
             if len(name_parts) > 2:
-                author_name = "{first_initial}. {middle_initial}. {last_name}, "
+                author_name = u"{first_initial}. {middle_initial}. {last_name}, "
                 author_name = author_name.format(first_initial=name_parts[0][0],
                                                  middle_initial=name_parts[1][0],
                                                  last_name=name_parts[-1])
                 citation_str_lst.append(author_name)
 
             else:
-                author_name = "{first_initial}. {last_name}, "
+                author_name = u"{first_initial}. {last_name}, "
                 author_name = author_name.format(first_initial=name_parts[0][0],
                                                  last_name=name_parts[-1])
 
@@ -1421,14 +1421,14 @@ class AbstractResource(ResourcePermissionsMixin):
         date_str = "%s/%s/%s" % (citation_date.start_date.month, citation_date.start_date.day,
                                  citation_date.start_date.year)
         if ref_rel:
-            citation_str_lst.append(", {ref_rel_value}, last accessed {creation_date}.".format(
+            citation_str_lst.append(u", {ref_rel_value}, last accessed {creation_date}.".format(
                 ref_rel_value=ref_rel.value,
                 creation_date=date_str))
         elif repl_rel:
-            citation_str_lst.append(", {repl_rel_value}, accessed {creation_date}, replicated in "
-                                    "HydroShare at: {url}".format(repl_rel_value=repl_rel.value,
-                                                                  creation_date=date_str,
-                                                                  url=hs_identifier.url))
+            citation_str_lst.append(u", {repl_rel_value}, accessed {creation_date}, replicated in "
+                                    u"HydroShare at: {url}".format(repl_rel_value=repl_rel.value,
+                                                                   creation_date=date_str,
+                                                                   url=hs_identifier.url))
         else:
             citation_str_lst.append(", HydroShare, {url}".format(url=hs_identifier.url))
 

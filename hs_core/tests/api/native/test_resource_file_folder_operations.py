@@ -8,6 +8,7 @@ from hs_core.models import GenericResource, ResourceFile
 from hs_core.testing import MockIRODSTestCaseMixin
 from hs_core.views.utils import create_folder, move_or_rename_file_or_folder, zip_folder, \
     unzip_file, remove_folder
+from django_irods.icommands import SessionException
 
 
 class TestResourceFileFolderOprsAPI(MockIRODSTestCaseMixin, TransactionTestCase):
@@ -128,7 +129,35 @@ class TestResourceFileFolderOprsAPI(MockIRODSTestCaseMixin, TransactionTestCase)
         self.assertEqual(self.new_res.files.all().count(), 2,
                          msg="resource file count didn't match")
 
-        # unzip the file
+        # test unzip does not allow override of existing files
+        # add an existing file in the zip to the resource
+        hydroshare.add_resource_files(self.new_res.short_id, self.test_file_1)
+        create_folder(self.new_res.short_id, 'data/contents/sub_test_dir')
+        move_or_rename_file_or_folder(self.user_creator, self.new_res.short_id,
+                                      'data/contents/file1.txt',
+                                      'data/contents/sub_test_dir/file1.txt')
+        # Now resource should contain three files: file3_new.txt, sub_test_dir.zip, and file1.txt
+        self.assertEqual(self.new_res.files.all().count(), 3,
+                         msg="resource file count didn't match")
+        with self.assertRaises(SessionException):
+            unzip_file(self.user_creator, self.new_res.short_id, 'data/contents/sub_test_dir.zip',
+                       False)
+
+        # Resource should still contain three files: file3_new.txt, sub_test_dir.zip, and file1.txt
+        file_cnt = self.new_res.files.all().count()
+        self.assertEqual(file_cnt, 3,
+                         msg="resource file count didn't match - " + str(file_cnt) + " != 3")
+        with self.assertRaises(SessionException):
+            unzip_file(self.user_creator, self.new_res.short_id,
+                       'data/contents/sub_test_dir.zip',
+                       False)
+
+        # test unzipping the file succeeds now after deleting the existing file
+        remove_folder(self.user_creator, self.new_res.short_id, 'data/contents/sub_test_dir')
+        # Now resource should contain two files: file3_new.txt and sub_test_dir.zip
+        file_cnt = self.new_res.files.all().count()
+        self.assertEqual(file_cnt, 2,
+                         msg="resource file count didn't match - " + str(file_cnt) + " != 2")
         unzip_file(self.user_creator, self.new_res.short_id, 'data/contents/sub_test_dir.zip', True)
         # Now resource should contain three files: file1.txt, file2.txt, and file3_new.txt
         self.assertEqual(self.new_res.files.all().count(), 3,

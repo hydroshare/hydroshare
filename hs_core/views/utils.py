@@ -512,6 +512,8 @@ def remove_irods_folder_in_django(resource, istorage, foldername):
     :return:
     """
     if resource and istorage and foldername:
+        if not foldername.endswith('/'):
+            foldername += '/'
         if resource.resource_federation_path:
             res_file_set = ResourceFile.objects.filter(
                 object_id=resource.id, fed_resource_file_name_or_path__icontains=foldername)
@@ -587,7 +589,7 @@ def unzip_file(user, res_id, zip_with_rel_path, bool_remove_original):
 
     unzip_path = os.path.dirname(zip_with_full_path)
     zip_fname = os.path.basename(zip_with_rel_path)
-    istorage.session.run("ibun", None, '-xfDzip', zip_with_full_path, unzip_path)
+    istorage.session.run("ibun", None, '-xDzip', zip_with_full_path, unzip_path)
     link_irods_folder_to_django(resource, istorage, unzip_path, (zip_fname,))
 
     if bool_remove_original:

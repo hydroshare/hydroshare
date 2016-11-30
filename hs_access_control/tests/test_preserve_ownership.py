@@ -1,23 +1,17 @@
-
-import unittest
-from django.http import Http404
 from django.test import TestCase
-from django.utils import timezone
 from django.core.exceptions import PermissionDenied
-from django.contrib.auth.models import User, Group
-from pprint import pprint
+from django.contrib.auth.models import Group
 
-from hs_access_control.models import UserAccess, GroupAccess, ResourceAccess, \
-    UserResourcePrivilege, GroupResourcePrivilege, UserGroupPrivilege, PrivilegeCodes
+from hs_access_control.models import PrivilegeCodes
 
 from hs_core import hydroshare
-from hs_core.models import GenericResource, BaseResource
 from hs_core.testing import MockIRODSTestCaseMixin
 
-from hs_access_control.tests.utilities import *
+from hs_access_control.tests.utilities import global_reset
 
 
 class T11PreserveOwnership(MockIRODSTestCaseMixin, TestCase):
+
     def setUp(self):
         super(T11PreserveOwnership, self).setUp()
         global_reset()
@@ -67,14 +61,18 @@ class T11PreserveOwnership(MockIRODSTestCaseMixin, TestCase):
             groups=[]
         )
 
-        self.scratching = hydroshare.create_resource(resource_type='GenericResource',
-                                                     owner=self.dog,
-                                                     title='all about sofas as scrathing posts',
-                                                     metadata=[],)
+        self.scratching = hydroshare.create_resource(
+            resource_type='GenericResource',
+            owner=self.dog,
+            title='all about sofas as scrathing posts',
+            metadata=[],
+        )
 
         # dog owns felines group
-        self.felines = self.dog.uaccess.create_group(title='felines', description="We are the felines")
-        self.dog.uaccess.share_group_with_user(self.felines, self.cat, PrivilegeCodes.VIEW)  # poetic justice
+        self.felines = self.dog.uaccess.create_group(
+            title='felines', description="We are the felines")
+        self.dog.uaccess.share_group_with_user(
+            self.felines, self.cat, PrivilegeCodes.VIEW)  # poetic justice
 
     def test_01_remove_last_owner_of_group(self):
         """Cannot remove last owner of a group"""
@@ -85,8 +83,11 @@ class T11PreserveOwnership(MockIRODSTestCaseMixin, TestCase):
 
         # try to downgrade your own privilege
         with self.assertRaises(PermissionDenied) as cm:
-            dog.uaccess.share_group_with_user(felines, dog, PrivilegeCodes.VIEW)
-        self.assertEqual(cm.exception.message, 'Cannot remove sole owner of group')
+            dog.uaccess.share_group_with_user(
+                felines, dog, PrivilegeCodes.VIEW)
+        self.assertEqual(
+            cm.exception.message,
+            'Cannot remove sole owner of group')
 
     def test_01_remove_last_owner_of_resource(self):
         """Cannot remove last owner of a resource"""
@@ -97,7 +98,8 @@ class T11PreserveOwnership(MockIRODSTestCaseMixin, TestCase):
 
         # try to downgrade your own privilege
         with self.assertRaises(PermissionDenied) as cm:
-            dog.uaccess.share_resource_with_user(scratching, dog, PrivilegeCodes.VIEW)
-        self.assertEqual(cm.exception.message, 'Cannot remove sole owner of resource')
-
-
+            dog.uaccess.share_resource_with_user(
+                scratching, dog, PrivilegeCodes.VIEW)
+        self.assertEqual(
+            cm.exception.message,
+            'Cannot remove sole owner of resource')
