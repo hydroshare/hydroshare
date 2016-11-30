@@ -6,8 +6,19 @@
         <tr><th>Authors:</th><td id="authors">
             {% for cr in creators %}
                 {% if forloop.counter0 != 0 %} <span>·</span> {% endif %}
-                {% if cr.description %}<a href="{{ cr.description }}">{{ cr.name }}</a>
-                {% else %}<span>{{ cr.name }}</span>{% endif %}
+                {% if cr.name %}
+                    {% if cr.description %}
+                        <a href="{{ cr.description }}">{{ cr.name }}</a>
+                    {% else %}
+                        <span>{{ cr.name }}</span>
+                    {% endif %}
+                {% else %}
+                    {% if cr.description %}
+                        <a href="{{ cr.description }}">{{ cr.organization }}</a>
+                    {% else %}
+                        <span>{{ cr.organization }}</span>
+                    {% endif %}
+                {% endif %}
             {% endfor %}
         </td></tr>
         <tr><th>Owners:</th><td>
