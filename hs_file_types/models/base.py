@@ -6,7 +6,7 @@ from django.core.exceptions import ValidationError, ObjectDoesNotExist
 from django.contrib.postgres.fields import HStoreField
 
 from dominate.tags import div, legend, table, tr, tbody, td, th, span, a, form, button, label, \
-    textarea, h4
+    textarea, h4, input
 
 from lxml import etree
 
@@ -27,6 +27,8 @@ class AbstractFileMetaData(models.Model):
 
     def delete_all_elements(self):
         self.coverages.all().delete()
+        self.extra_metadata = {}
+        self.save()
 
     def get_html(self):
         # subclass must override
