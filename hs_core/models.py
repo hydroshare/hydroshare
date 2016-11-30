@@ -2235,9 +2235,10 @@ class CoreMetaData(models.Model):
         dc_person_rdf_Description = etree.SubElement(dc_person,
                                                      '{%s}Description' % self.NAMESPACES['rdf'])
 
-        hsterms_name = etree.SubElement(dc_person_rdf_Description,
-                                        '{%s}name' % self.NAMESPACES['hsterms'])
-        hsterms_name.text = person.name
+        if person.name:
+            hsterms_name = etree.SubElement(dc_person_rdf_Description,
+                                            '{%s}name' % self.NAMESPACES['hsterms'])
+            hsterms_name.text = person.name
         if person.description:
             dc_person_rdf_Description.set('{%s}about' % self.NAMESPACES['rdf'],
                                           current_site_url() + person.description)
