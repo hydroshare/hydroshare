@@ -51,6 +51,7 @@ class DiscoveryForm(FacetedSearchForm):
         public_sq = SQ()
         owner_sq = SQ()
         discoverable_sq = SQ()
+        published_sq = SQ()
 
         # We need to process each facet to ensure that the field name and the
         # value are quoted correctly and separately:
@@ -80,6 +81,9 @@ class DiscoveryForm(FacetedSearchForm):
                 elif "discoverable" in field:
                     discoverable_sq.add(SQ(discoverable=sqs.query.clean(value)), SQ.OR)
 
+                elif "published" in field:
+                    published_sq.add(SQ(published=sqs.query.clean(value)), SQ.OR)
+
                 else:
                     continue
 
@@ -95,5 +99,7 @@ class DiscoveryForm(FacetedSearchForm):
             sqs = sqs.filter(owner_sq)
         if discoverable_sq:
             sqs = sqs.filter(discoverable_sq)
+        if published_sq:
+            sqs = sqs.filter(published_sq)
 
         return sqs
