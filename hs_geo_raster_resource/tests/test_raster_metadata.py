@@ -13,6 +13,7 @@ from hs_core import hydroshare
 from hs_core.hydroshare import utils
 from hs_core.models import CoreMetaData, Creator, Contributor, Coverage, Rights, Title, Language, \
     Publisher, Identifier, Type, Subject, Description, Date, Format, Relation, Source
+
 from hs_core.testing import MockIRODSTestCaseMixin, TestCaseCommonUtilities
 from hs_geo_raster_resource.models import RasterResource, OriginalCoverage, BandInformation, \
     CellInformation
@@ -179,12 +180,14 @@ class TestRasterMetaData(MockIRODSTestCaseMixin, TestCaseCommonUtilities, Transa
     def test_metadata_extraction_on_resource_creation(self):
         # passing the file object that points to the temp dir doesn't work - create_resource throws
         # error. open the file from the fixed file location
+
         files = [UploadedFile(file=self.raster_tif_file_obj, name=self.raster_tif_file_name)]
         _, _, metadata, _ = utils.resource_pre_create_actions(
             resource_type='RasterResource',
             resource_title='My Test Raster Resource',
             page_redirect_url_key=None,
             files=files, metadata=None,)
+
         self.resRaster = hydroshare.create_resource(
             'RasterResource',
             self.user,
@@ -227,6 +230,7 @@ class TestRasterMetaData(MockIRODSTestCaseMixin, TestCaseCommonUtilities, Transa
 
         super(TestRasterMetaData, self).raster_metadata_extraction()
 
+
     def test_metadata_on_content_file_delete(self):
         # test that some of the metadata is not deleted on content file deletion
         files = [UploadedFile(file=self.raster_tif_file_obj, name=self.raster_tif_file_name)]
@@ -242,6 +246,7 @@ class TestRasterMetaData(MockIRODSTestCaseMixin, TestCaseCommonUtilities, Transa
         self.assertEqual(self.resRaster.metadata.formats.all().count(), 2)
         self.assertEqual(self.resRaster.metadata.formats.all().filter(
             value='application/vrt').count(), 1)
+
         self.assertEqual(self.resRaster.metadata.formats.all().filter(value='image/tiff').count(),
                          1)
 
@@ -275,6 +280,7 @@ class TestRasterMetaData(MockIRODSTestCaseMixin, TestCaseCommonUtilities, Transa
 
         # testing extended metadata elements
         self.assertEqual(self.resRaster.metadata.originalCoverage, None)
+
         self.assertNotEqual(self.resRaster.metadata.cellInformation, None)
         self.assertNotEqual(self.resRaster.metadata.bandInformation.count, 0)
 

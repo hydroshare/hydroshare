@@ -616,14 +616,9 @@ def unshare_resource_with_user(request, shortkey, user_id, *args, **kwargs):
     user_to_unshare_with = utils.user_from_id(user_id)
 
     try:
-        if user.uaccess.can_unshare_resource_with_user(res, user_to_unshare_with):
-            # requesting user is the resource owner or user is self unsharing (user is user_to_unshare_with)
-            user.uaccess.unshare_resource_with_user(res, user_to_unshare_with)
-        else:
-            # requesting user is the original grantor of privilege to user_to_unshare_with
-            # COUCH: This can raise a PermissionDenied exception without a guard such as
-            # user.uaccess.can_undo_share_resource_with_user(res, user_to_unshare_with)
-            user.uaccess.undo_share_resource_with_user(res, user_to_unshare_with)
+        # requesting user is the resource owner or user is self unsharing (user is user_to_unshare_with)
+        # COUCH: no need for undo_share; doesn't do what is intended 11/19/2016
+        user.uaccess.unshare_resource_with_user(res, user_to_unshare_with)
 
         messages.success(request, "Resource unsharing was successful")
         if not user.uaccess.can_view_resource(res):
@@ -640,12 +635,9 @@ def unshare_resource_with_group(request, shortkey, group_id, *args, **kwargs):
     group_to_unshare_with = utils.group_from_id(group_id)
 
     try:
-        if user.uaccess.can_unshare_resource_with_group(res, group_to_unshare_with):
-            # requesting user is the resource owner or admin
-            user.uaccess.unshare_resource_with_group(res, group_to_unshare_with)
-        else:
-            # requesting user is the original grantor of privilege to group_to_unshare_with
-            user.uaccess.undo_share_resource_with_group(res, group_to_unshare_with)
+        # requesting user is the resource owner or admin or already has privilege
+        # COUCH: no need for undo_share; doesn't do what is intended 11/19/2016
+        user.uaccess.unshare_resource_with_group(res, group_to_unshare_with)
 
         messages.success(request, "Resource unsharing was successful")
         if not user.uaccess.can_view_resource(res):
@@ -1268,14 +1260,9 @@ def _unshare_resource_with_users(request, requesting_user, users_to_unshare_with
     for user in all_shared_users:
         if user not in users_to_keep:
             try:
-                if requesting_user.uaccess.can_unshare_resource_with_user(resource, user):
-                    # requesting user is the resource owner or requesting_user is self unsharing
-                    requesting_user.uaccess.unshare_resource_with_user(resource, user)
-                else:
-                    # requesting user is the original grantor of privilege to user
-                    # TODO from @alvacouch: This can raise a PermissionDenied exception without a guard such as
-                    # user.uaccess.can_undo_share_resource_with_user(res, user_to_unshare_with)
-                    requesting_user.uaccess.undo_share_resource_with_user(resource, user)
+                # requesting user is the resource owner or requesting_user is self unsharing
+                # COUCH: no need for undo_share; doesn't do what is intended 11/19/2016
+                requesting_user.uaccess.unshare_resource_with_user(resource, user)
 
                 if requesting_user == user and not resource.raccess.public:
                     go_to_resource_listing_page = True
@@ -1400,7 +1387,7 @@ class GroupView(TemplateView):
         # for each of the resources this group has access to, set resource dynamic
         # attributes (grantor - group member who granted access to the resource) and (date_granted)
         for res in g.gaccess.view_resources:
-            grp = GroupResourcePrivilege.objects.filter(resource=res, group=g).first()
+            grp = GroupResourcePrivilege.objects.get(resource=res, group=g)
             res.grantor = grp.grantor
             res.date_granted = grp.start
             group_resources.append(res)
