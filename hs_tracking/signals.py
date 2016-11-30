@@ -23,7 +23,6 @@ def capture_logout(sender, **kwargs):
 @receiver(pre_download_file)
 def capture_download(**kwargs):
 
-
     # get input kwargs
     resource = kwargs['resource']
     filename = kwargs['download_file_name']
@@ -63,7 +62,7 @@ def capture_resource_create(**kwargs):
     # get input kwargs
     resource = kwargs['resource']
     user = kwargs['user']
-    
+
     # set session, user, and ip to None if a request object was not passed as an input kwarg.
     if 'request' not in kwargs.keys():
         session = None
@@ -97,7 +96,7 @@ def capture_resource_delete(**kwargs):
     resource_type = kwargs['resource_type']
     resource_shortid = kwargs['resource_shortkey']
     user = kwargs['user']
-    
+
     # set session, user, and ip to None if a request object was not passed as an input kwarg.
     if 'request' not in kwargs.keys():
         session = None
