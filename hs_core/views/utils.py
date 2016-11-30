@@ -644,24 +644,7 @@ def create_folder(res_id, folder_path):
     else:
         coll_path = os.path.join(res_id, folder_path)
 
-    # TODO: (Pabitra) handle this in a signal handler in composite resource
-    if resource.resource_type == "CompositeResource":
-        path_parts = coll_path.split("/")
-        # remove the new folder name from the path
-        path_parts = path_parts[:-1]
-        path_to_check = "/".join(path_parts)
-        err_msg = "Folder creation not allowed here."
-        if resource.resource_federation_path:
-            res_file_objs = resource.files.filter(
-                object_id=resource.id,
-                fed_resource_file_name_or_path__contains=path_to_check).all()
-        else:
-            res_file_objs = resource.files.filter(object_id=resource.id,
-                                                  resource_file__contains=path_to_check).all()
-        for res_file_obj in res_file_objs:
-            if not res_file_obj.logical_file.allow_resource_file_rename or \
-                    not res_file_obj.logical_file.allow_resource_file_move:
-                raise ValidationError(err_msg)
+    resource.check_folder_creation(coll_path)
 
     istorage.session.run("imkdir", None, '-p', coll_path)
 
@@ -682,6 +665,7 @@ def remove_folder(user, res_id, folder_path):
     else:
         coll_path = os.path.join(res_id, folder_path)
 
+    # TODO: Pabitra - resource should check here if folder can be removed
     istorage.delete(coll_path)
 
     remove_irods_folder_in_django(resource, istorage, coll_path, user)
@@ -703,8 +687,10 @@ def move_or_rename_file_or_folder(user, res_id, src_path, tgt_path, validate_mov
     :param res_id: resource uuid
     :param src_path: the relative paths for the source file or folder under res_id collection
     :param tgt_path: the relative paths for the target file or folder under res_id collection
-    :param validate_move_rename: if True, then signal is sent for resource type to check if
-    move/rename is allowed or not.
+    :param validate_move_rename: if True, then only ask resource type to check if this action is
+            allowed. Sometimes resource types internally want to take this action but disallow
+            this action by a user. In that case resource types set this parameter to True to allow
+            this action.
     :return:
     """
     resource = hydroshare.utils.get_resource_by_shortkey(res_id)
@@ -727,10 +713,8 @@ def move_or_rename_file_or_folder(user, res_id, src_path, tgt_path, validate_mov
 
     if validate_move_rename:
         # this must raise ValidationError if move/rename is not allowed by specific resource type
-        pre_move_or_rename_file_or_folder.send(sender=resource.__class__, resource=resource,
-                                               src_full_path=src_full_path,
-                                               tgt_full_path=tgt_full_path)
-
+        resource.check_move_or_rename_file_or_folder(src_full_path, tgt_full_path)
+        
     istorage.moveFile(src_full_path, tgt_full_path)
 
     rename_irods_file_or_folder_in_django(resource, src_full_path, tgt_full_path)
