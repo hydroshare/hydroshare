@@ -1150,41 +1150,50 @@ def get_metadata_terms_page(request, *args, **kwargs):
 
 
 @login_required
-def get_user_data(request, user_id, *args, **kwargs):
+def get_user_data(request, user_id, is_group, *args, **kwargs):
     """
     This view function must be called as an AJAX call
 
     :param user_id: id if the user for whom data is needed
     :return: JsonResponse() containing user data
     """
-    user = utils.user_from_id(user_id)
+    user_data = {}
+    if is_group == 'false':
+        user = utils.user_from_id(user_id)
 
-    if user.userprofile.middle_name:
-        user_name = "{} {} {}".format(user.first_name, user.userprofile.middle_name, user.last_name)
-    else:
-        user_name = "{} {}".format(user.first_name, user.last_name)
-
-    user_data = {'name': user_name, 'email': user.email}
-    user_data['url'] = '{domain}/user/{uid}/'.format(domain=utils.current_site_url(), uid=user.pk)
-    if user.userprofile.phone_1:
-        user_data['phone'] = user.userprofile.phone_1
-    elif user.userprofile.phone_2:
-        user_data['phone'] = user.userprofile.phone_2
-    else:
-        user_data['phone'] = ''
-
-    address = ''
-    if user.userprofile.state and user.userprofile.state.lower() != 'unspecified':
-        address = user.userprofile.state
-    if user.userprofile.country and user.userprofile.country.lower() != 'unspecified':
-        if len(address) > 0:
-            address += ', ' + user.userprofile.country
+        if user.userprofile.middle_name:
+            user_name = "{} {} {}".format(user.first_name, user.userprofile.middle_name, user.last_name)
         else:
-            address = user.userprofile.country
+            user_name = "{} {}".format(user.first_name, user.last_name)
 
-    user_data['address'] = address
-    user_data['organization'] = user.userprofile.organization if user.userprofile.organization else ''
-    user_data['website'] = user.userprofile.website if user.userprofile.website else ''
+        user_data['name'] = user_name
+        user_data['email'] = user.email
+        user_data['url'] = '{domain}/user/{uid}/'.format(domain=utils.current_site_url(), uid=user.pk)
+        if user.userprofile.phone_1:
+            user_data['phone'] = user.userprofile.phone_1
+        elif user.userprofile.phone_2:
+            user_data['phone'] = user.userprofile.phone_2
+        else:
+            user_data['phone'] = ''
+
+        address = ''
+        if user.userprofile.state and user.userprofile.state.lower() != 'unspecified':
+            address = user.userprofile.state
+        if user.userprofile.country and user.userprofile.country.lower() != 'unspecified':
+            if len(address) > 0:
+                address += ', ' + user.userprofile.country
+            else:
+                address = user.userprofile.country
+
+        user_data['address'] = address
+        user_data['organization'] = user.userprofile.organization if user.userprofile.organization else ''
+        user_data['website'] = user.userprofile.website if user.userprofile.website else ''
+    else:
+        group = utils.group_from_id(user_id)
+        user_data['organization'] = group.name
+        user_data['url'] = '{domain}/user/{uid}/'.format(domain=utils.current_site_url(),
+                                                         uid=group.pk)
+        user_data['description'] = group.gaccess.description
 
     return JsonResponse(user_data)
 
