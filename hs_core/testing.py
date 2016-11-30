@@ -278,14 +278,30 @@ class TestCaseCommonUtilities(object):
 
         # testing extended metadata element: original coverage
         ori_coverage = self.resRaster.metadata.originalCoverage
-        self.assertNotEqual(ori_coverage, None)
+        self.assertNotEquals(ori_coverage, None)
         self.assertEqual(ori_coverage.value['northlimit'], 4662392.446916306)
         self.assertEqual(ori_coverage.value['eastlimit'], 461954.01909127034)
         self.assertEqual(ori_coverage.value['southlimit'], 4612592.446916306)
         self.assertEqual(ori_coverage.value['westlimit'], 432404.01909127034)
         self.assertEqual(ori_coverage.value['units'], 'meter')
-        self.assertEqual(ori_coverage.value['projection'],
-                         'NAD83 / UTM zone 12N Transverse_Mercator')
+        self.assertEqual(ori_coverage.value['projection'], "NAD83 / UTM zone 12N")
+        self.assertEqual(ori_coverage.value['datum'], "North_American_Datum_1983")
+        projection_string = u'PROJCS["NAD83 / UTM zone 12N",GEOGCS["NAD83",' \
+                            u'DATUM["North_American_Datum_1983",' \
+                            u'SPHEROID["GRS 1980",6378137,298.257222101,' \
+                            u'AUTHORITY["EPSG","7019"]],' \
+                            u'TOWGS84[0,0,0,0,0,0,0],AUTHORITY["EPSG","6269"]],' \
+                            u'PRIMEM["Greenwich",0,AUTHORITY["EPSG","8901"]],' \
+                            u'UNIT["degree",0.0174532925199433,AUTHORITY["EPSG","9122"]],' \
+                            u'AUTHORITY["EPSG","4269"]],PROJECTION["Transverse_Mercator"],' \
+                            u'PARAMETER["latitude_of_origin",0],' \
+                            u'PARAMETER["central_meridian",-111],' \
+                            u'PARAMETER["scale_factor",0.9996],PARAMETER["false_easting",500000],' \
+                            u'PARAMETER["false_northing",0],' \
+                            u'UNIT["metre",1,AUTHORITY["EPSG","9001"]],' \
+                            u'AXIS["Easting",EAST],AXIS["Northing",' \
+                            u'NORTH],AUTHORITY["EPSG","26912"]]'
+        self.assertEqual(ori_coverage.value['projection_string'], projection_string)
 
         # testing extended metadata element: cell information
         cell_info = self.resRaster.metadata.cellInformation
