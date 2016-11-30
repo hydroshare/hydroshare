@@ -1936,6 +1936,18 @@ class BaseResource(Page, AbstractResource):
 
         return hs_term_dict
 
+    def check_folder_creation(self, folder_full_path):
+        """this checks if it is allowed to create a folder by the given path
+        if not allowed then raises ValidationError. Subclasses need to override this method
+        """
+        pass
+
+    def check_move_or_rename_file_or_folder(self, src_full_path, tgt_full_path):
+        """checks if file/folder rename/move is allowed
+        If not allowed, raises ValidationError. Subclasses need to override this method
+        """
+        pass
+
 
 class GenericResource(BaseResource):
     objects = ResourceManager('GenericResource')
