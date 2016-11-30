@@ -129,7 +129,11 @@
                                         </td>
 
                                         <td>
-                                            <h4><a href="/group/{{ group.id }}">{{ group.name }}</a></h4>
+                                            {% if group.is_group_owner and not group.gaccess.active %}
+                                                <h4><a href="/group/{{ group.id }}">{{ group.name }} (<span style="color: red;">deleted</span>)</a></h4>
+                                            {% else %}
+                                                <h4><a href="/group/{{ group.id }}">{{ group.name }}</a></h4>
+                                            {%  endif %}
                                             {% if group.gaccess.public and group.gaccess.discoverable %}
                                                 <img src="/static/img/public.png" alt="Public Group" title="Public Group">
                                             {% elif not group.gaccess.public and group.gaccess.discoverable %}
