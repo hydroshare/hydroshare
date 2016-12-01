@@ -167,7 +167,7 @@ class MetadataElementsRetrieveUpdate(generics.RetrieveUpdateDestroyAPIView):
     ValidationError: return json format: {parameter-1': ['error message-1'],
     'parameter-2': ['error message-2'], .. }
     """
-    ACCEPT_FORMATS = ('application/xml', 'application/rdf+xml')
+    ACCEPT_FORMATS = ('application/json')
 
     allowed_methods = ('GET', 'PUT')
 
@@ -188,17 +188,11 @@ class MetadataElementsRetrieveUpdate(generics.RetrieveUpdateDestroyAPIView):
         if not authorized:
             raise PermissionDenied()
 
-        import sys
-        sys.path.append("/pycharm-debug")
-        import pydevd
-        pydevd.settrace('10.200.2.135', port=21000, suspend=False)
-
         metadata = []
         put_data = request.data
         keys_to_update = put_data.keys()
 
         try:
-
             if 'title' in keys_to_update:
                 metadata.append({"title": {"value": put_data.pop('title')}})
 
