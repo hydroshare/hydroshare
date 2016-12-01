@@ -17,7 +17,7 @@ class ResourceFolders(APIView):
     REST URL: hsapi/resource/{pk}/folders/{path}/
     HTTP methods: GET, PUT, DELETE
     """
-    allowed_methods = ['GET', 'PUT', 'DELETE']
+    allowed_methods = ('GET', 'PUT', 'DELETE')
 
     def get(self, request, pk, path):
         """
