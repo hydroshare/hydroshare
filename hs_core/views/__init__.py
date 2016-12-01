@@ -1150,16 +1150,17 @@ def get_metadata_terms_page(request, *args, **kwargs):
 
 
 @login_required
-def get_user_data(request, user_id, is_group, *args, **kwargs):
+def get_user_or_group_data(request, user_or_group_id, is_group, *args, **kwargs):
     """
     This view function must be called as an AJAX call
 
-    :param user_id: id if the user for whom data is needed
+    :param user_or_group_id: id if the user for whom data is needed
+    :param is_group : (string) 'false' if the id is for a group, 'true' if id is for a user
     :return: JsonResponse() containing user data
     """
     user_data = {}
     if is_group == 'false':
-        user = utils.user_from_id(user_id)
+        user = utils.user_from_id(user_or_group_id)
 
         if user.userprofile.middle_name:
             user_name = "{} {} {}".format(user.first_name, user.userprofile.middle_name, user.last_name)
@@ -1189,7 +1190,7 @@ def get_user_data(request, user_id, is_group, *args, **kwargs):
         user_data['organization'] = user.userprofile.organization if user.userprofile.organization else ''
         user_data['website'] = user.userprofile.website if user.userprofile.website else ''
     else:
-        group = utils.group_from_id(user_id)
+        group = utils.group_from_id(user_or_group_id)
         user_data['organization'] = group.name
         user_data['url'] = '{domain}/user/{uid}/'.format(domain=utils.current_site_url(),
                                                          uid=group.pk)
