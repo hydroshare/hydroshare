@@ -41,7 +41,7 @@ class TestGetUserData(TestCase):
 
     def test_get_user_data(self):
         post_data = {'user_id': self.john.id, 'is_group': 'false'}
-        url = reverse('get_user_data', kwargs=post_data)
+        url = reverse('get_user_or_group_data', kwargs=post_data)
         request = self.factory.post(url, data=post_data)
         request.user = self.mike
         response = get_user_or_group_data(request, user_or_group_id=self.john.id, is_group='false')
@@ -188,7 +188,7 @@ class TestGetUserData(TestCase):
         non_existing_user_id = 9999999
         self.assertEqual(User.objects.filter(id=non_existing_user_id).first(), None)
         post_data = {'user_id': non_existing_user_id, 'is_group': 'false'}
-        url = reverse('get_user_data', kwargs=post_data)
+        url = reverse('get_user_or_group_data', kwargs=post_data)
         request = self.factory.post(url, data=post_data)
         request.user = self.mike
         with self.assertRaises(Http404):
