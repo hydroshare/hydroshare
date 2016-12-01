@@ -765,13 +765,6 @@ class GroupCreateForm(GroupForm):
 
 
 class GroupUpdateForm(GroupForm):
-    active = forms.CharField(required=False)
-
-    def clean_active(self):
-        data = self.cleaned_data['active']
-        if data not in ('on', ''):
-            raise forms.ValidationError("Invalid active value.")
-        return data
 
     def update(self, group_to_update, request):
         frm_data = self.cleaned_data
@@ -779,7 +772,6 @@ class GroupUpdateForm(GroupForm):
         group_to_update.save()
         group_to_update.gaccess.description = frm_data['description']
         group_to_update.gaccess.purpose = frm_data['purpose']
-        group_to_update.gaccess.active = frm_data['active'] == 'on'
         if 'picture' in request.FILES:
             group_to_update.gaccess.picture = request.FILES['picture']
 
@@ -1375,15 +1367,25 @@ class MyGroupsView(TemplateView):
         u = User.objects.get(pk=self.request.user.id)
 
         groups = u.uaccess.view_groups
-        group_membership_requests = GroupMembershipRequest.objects.filter(invitation_to=u).exclude(group_to_join__gaccess__active=False).all()
+        group_membership_requests = GroupMembershipRequest.objects.filter(invitation_to=u).exclude(
+            group_to_join__gaccess__active=False).all()
         # for each group object, set a dynamic attribute to know if the user owns the group
-        for g in groups:
+        active_groups = [g for g in groups if g.gaccess.active is True]
+        inactive_groups = [g for g in groups if g.gaccess.active is False]
+
+        for g in active_groups:
             g.is_group_owner = u.uaccess.owns_group(g)
 
+        for g in inactive_groups:
+            g.is_group_owner = u.uaccess.owns_group(g)
+
+        my_pending_requests = GroupMembershipRequest.objects.filter(request_from=u).exclude(
+            group_to_join__gaccess__active=False)
         return {
             'profile_user': u,
-            'groups': groups,
-            'my_pending_requests': GroupMembershipRequest.objects.filter(request_from=u).exclude(group_to_join__gaccess__active=False),
+            'groups': active_groups,
+            'inactive_groups': inactive_groups,
+            'my_pending_requests': my_pending_requests,
             'group_membership_requests': group_membership_requests
         }
 

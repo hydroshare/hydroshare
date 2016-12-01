@@ -57,9 +57,11 @@
 
             {% if profile_user.is_group_owner or profile_user.is_group_editor or profile_user.is_group_viewer %}
                 <div class="col-sm-2">
-                    {% if profile_user.is_group_owner or profile_user.is_group_editor %}
-                        <a href="#" id="btn-edit-group" data-toggle="modal" data-target="#edit-group-dialog">
-                            <span class="glyphicon glyphicon-pencil icon-blue icon-button" data-toggle="tooltip" data-placement="auto" title="Edit Group"></span></a>
+                    {% if group.gaccess.active %}
+                        {% if profile_user.is_group_owner or profile_user.is_group_editor %}
+                            <a href="#" id="btn-edit-group" data-toggle="modal" data-target="#edit-group-dialog">
+                                <span class="glyphicon glyphicon-pencil icon-blue icon-button" data-toggle="tooltip" data-placement="auto" title="Edit Group"></span></a>
+                        {% endif %}
                     {% endif %}
                     <a href="#" id="btn-leave-group" data-toggle="modal" data-target="#leave-group-dialog">
                         <span class="glyphicon glyphicon-hand-left btn-remove icon-button" data-toggle="tooltip" data-placement="auto" title="Leave Group"></span></a>
@@ -809,13 +811,6 @@
                         <div class="modal-body">
                             {% csrf_token %}
                             <div class="row">
-                                <fieldset class="col-sm-12 pull-right">
-                                    <input id="active_flag" name="active" data-toggle="toggle" data-on="Delete"
-                                           data-off="Restore" type="checkbox"
-                                           data-onstyle="danger" data-offstyle="success"
-                                           {% if group.gaccess.active %}checked{% endif %} data-toggle="toggle">
-                                </fieldset>
-
                                 {# Group Name #}
                                 <fieldset class="col-sm-12">
                                     <label>Group Name *</label>
