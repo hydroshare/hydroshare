@@ -23,26 +23,25 @@ def capture_logout(sender, **kwargs):
 @receiver(pre_download_file)
 def capture_download(**kwargs):
 
+    # exit early if the request is not passed in as a kwarg
+    if 'request' not in kwargs.keys():
+        return
+
     # get input kwargs
     resource = kwargs['resource']
     filename = kwargs['download_file_name']
+    request = kwargs['request']
 
-    # set session, user, and ip to None if a request object was not passed as an input kwarg.
-    if 'request' not in kwargs.keys():
-        session = None
-        user = None
-        ip = None
-    else:
-        request = kwargs['request']
-        user = request.user
-        session = Session.objects.for_request(request, user)
-        ip = get_client_ip(request)
+    # get session object for the current user
+    user = request.user
+    session = Session.objects.for_request(request, user)
 
-    # get the user info
+    # get user-specific metadata
+    ip = get_client_ip(request)
     usertype = get_user_type(session)
     emaildomain = get_user_email_domain(session)
 
-    # format the 'create' kwargs
+    # format the 'download' kwargs
     msg = Variable.format_kwargs(user_ip=ip,
                                  filename=filename,
                                  resource_size_bytes=resource.size,
@@ -52,31 +51,31 @@ def capture_download(**kwargs):
                                  user_email_domain=emaildomain
                                  )
 
-    # record the action
+    # record the download action
     session.record('download', value=msg)
 
 
 @receiver(post_create_resource)
 def capture_resource_create(**kwargs):
 
-    # get input kwargs
+    # exit early if the request is not passed in as a kwarg
+    if 'request' not in kwargs.keys():
+        return
+
+    # get user-specific metadata
     resource = kwargs['resource']
     user = kwargs['user']
+    request = kwargs['request']
 
-    # set session, user, and ip to None if a request object was not passed as an input kwarg.
-    if 'request' not in kwargs.keys():
-        session = None
-        ip = None
-    else:
-        request = kwargs['request']
-        session = Session.objects.for_request(request, user)
-        ip = get_client_ip(request)
+    # get session object for the current user
+    session = Session.objects.for_request(request, user)
 
     # get the user info
     usertype = get_user_type(session)
     emaildomain = get_user_email_domain(session)
+    ip = get_client_ip(request)
 
-    # format the 'download' kwargs
+    # format the 'create' kwargs
     msg = Variable.format_kwargs(user_ip=ip,
                                  resource_size_bytes=resource.size,
                                  resource_type=resource.resource_type,
@@ -85,30 +84,30 @@ def capture_resource_create(**kwargs):
                                  user_email_domain=emaildomain
                                  )
 
-    # record the action
+    # record the create action
     session.record('create', value=msg)
 
 
 @receiver(post_delete_resource)
 def capture_resource_delete(**kwargs):
 
+    # exit early if the request object is not passed in as a kwarg
+    if 'request' not in kwargs.keys():
+        return
+
     # get input kwargs
     resource_type = kwargs['resource_type']
     resource_shortid = kwargs['resource_shortkey']
     user = kwargs['user']
+    request = kwargs['request']
 
-    # set session, user, and ip to None if a request object was not passed as an input kwarg.
-    if 'request' not in kwargs.keys():
-        session = None
-        ip = None
-    else:
-        request = kwargs['request']
-        session = Session.objects.for_request(request, user)
-        ip = get_client_ip(request)
+    # get the session object for the current user
+    session = Session.objects.for_request(request, user)
 
-    # get the user info
+    # get user-specific metadata
     usertype = get_user_type(session)
     emaildomain = get_user_email_domain(session)
+    ip = get_client_ip(request)
 
     # formate the 'delete' kwargs
     msg = Variable.format_kwargs(user_ip=ip,
@@ -118,5 +117,5 @@ def capture_resource_delete(**kwargs):
                                  user_email_domain=emaildomain
                                  )
 
-    # record the action
+    # record the delete action
     session.record('delete', value=msg)
