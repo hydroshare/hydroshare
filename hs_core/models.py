@@ -1410,7 +1410,7 @@ class AbstractResource(ResourcePermissionsMixin):
         for author in other_authors:
             if author.organization and not author.name:
                 citation_str_lst.append(author.organization + ", ")
-            elif author.name and len(author.name.strip()) !=0:
+            elif author.name and len(author.name.strip()) != 0:
                 citation_str_lst.append(self.parse_citation_name(author.name))
 
         # remove the last added comma and the space
