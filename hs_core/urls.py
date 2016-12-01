@@ -59,6 +59,10 @@ urlpatterns = patterns('',
         views.resource_rest_api.ResourceFileListCreate.as_view(),
         name='list_create_resource_file'),
 
+    url(r'^resource/(?P<pk>[0-9a-f-]+)/folders/(?P<path>.*)/$', 
+        views.resource_folder_api.ResourceFolders.as_view(),
+        name='list_manipulate_folders'),
+
     # DEPRECATED: use form above instead. Added unused POST for simplicity 
     url(r'^resource/(?P<pk>[0-9a-f-]+)/file_list/$', 
         views.resource_rest_api.ResourceFileListCreate.as_view(),

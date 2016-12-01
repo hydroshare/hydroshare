@@ -881,8 +881,7 @@ class Coverage(AbstractMetaDataElement):
                     'name':coverage name value here (optional),
                     'elevation': coordinate in the vertical direction (optional),
                     'zunits': units for elevation (optional),
-                    'projection': name of the projection (optional),
-                    }"
+                    'projection': name of the projection (optional)}"
 
      For coverage type: box
          _value = "{'northlimit':northenmost coordinate value,
@@ -1261,6 +1260,12 @@ class AbstractResource(ResourcePermissionsMixin):
     # for internal use only
     # this field WILL NOT get recorded in bag and SHOULD NEVER be used for storing metadata
     extra_data = HStoreField(default={})
+
+    # definition of resource logic 
+    @property
+    def supports_folders(self): 
+        """ returns whether folder operations are supported. Computed for polymorphic types"""
+        return False
 
     @classmethod
     def bag_url(cls, resource_id):
@@ -1680,6 +1685,10 @@ class BaseResource(Page, AbstractResource):
 
 class GenericResource(BaseResource):
     objects = ResourceManager('GenericResource')
+
+    @property
+    def supports_folders(self): 
+        return True
 
     class Meta:
         verbose_name = 'Generic'

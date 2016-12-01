@@ -646,6 +646,25 @@ def remove_folder(user, res_id, folder_path):
     hydroshare.utils.resource_modified(resource, user)
 
 
+def list_folder(user, res_id, folder_path):
+    """
+    remove a sub-folder/sub-collection in hydroshareZone or any federated zone used for HydroShare
+    resource backend store.
+    :param user: requesting user
+    :param res_id: resource uuid
+    :param folder_path: the relative path for the folder to be removed under res_id collection.
+    :return:
+    """
+    resource = hydroshare.utils.get_resource_by_shortkey(res_id)
+    istorage = resource.get_irods_storage()
+    if resource.resource_federation_path:
+        coll_path = os.path.join(resource.resource_federation_path, res_id, folder_path)
+    else:
+        coll_path = os.path.join(res_id, folder_path)
+
+    return istorage.listdir(coll_path)
+
+
 def move_or_rename_file_or_folder(user, res_id, src_path, tgt_path):
     """
     Move or rename a file or folder in hydroshareZone or any federated zone used for HydroShare
