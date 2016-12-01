@@ -93,9 +93,9 @@ class TestCaseCommonUtilities(object):
         in iRODS user zone to save ori_file to
         :return:
         """
-        irods_storage = IrodsStorage('federated')
+        self.irods_storage = IrodsStorage('federated')
         for file_name, target_name in file_name_to_target_name_dict.iteritems():
-            irods_storage.saveFile(file_name, target_name)
+            self.irods_storage.saveFile(file_name, target_name)
 
     def resource_file_oprs(self):
         """
