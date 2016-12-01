@@ -450,7 +450,8 @@ def copy_resource_files_and_AVUs(src_res_id, dest_res_id, set_to_private=False):
     istorage = src_res.get_irods_storage()
     if src_res.resource_federation_path:
         src_coll = os.path.join(src_res.resource_federation_path, src_res_id, 'data')
-        dest_coll = os.path.join(src_res.resource_federation_path, dest_res_id, '/')
+        dest_coll = os.path.join(src_res.resource_federation_path, dest_res_id)
+        dest_coll += '/'
     else:
         src_coll = src_res_id + '/data'
         dest_coll = dest_res_id + '/'

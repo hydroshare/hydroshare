@@ -411,6 +411,9 @@ def link_irods_file_to_django(resource, filename, size=0):
     b_add_file = False
     if resource:
         if resource.resource_federation_path:
+            if resource.resource_federation_path in filename:
+                start_idx = len(resource.resource_federation_path) + len(resource.short_id) + 2
+                filename = filename[start_idx:]
             if not ResourceFile.objects.filter(object_id=resource.id,
                                                fed_resource_file_name_or_path=filename).exists():
                 ResourceFile.objects.create(content_object=resource,
@@ -469,8 +472,11 @@ def rename_irods_file_or_folder_in_django(resource, src_name, tgt_name):
                                                    fed_resource_file_name_or_path=src_name)
         if res_file_obj.exists():
             # src_name and tgt_name are file names - replace src_name with tgt_name
-            res_file_obj[0].fed_resource_file_name_or_path = tgt_name
-            res_file_obj[0].save()
+            # have to delete the original one and create the new one;
+            # direct replacement does not work
+            res_file_obj[0].delete()
+            ResourceFile.objects.create(content_object=resource,
+                                        fed_resource_file_name_or_path=tgt_name)
         else:
             # src_name and tgt_name are folder names
             res_file_objs = \
@@ -479,8 +485,9 @@ def rename_irods_file_or_folder_in_django(resource, src_name, tgt_name):
             for fobj in res_file_objs:
                 old_str = fobj.fed_resource_file_name_or_path
                 new_str = old_str.replace(src_name, tgt_name)
-                fobj.fed_resource_file_name_or_path = new_str
-                fobj.save()
+                fobj.delete()
+                ResourceFile.objects.create(content_object=resource,
+                                            fed_resource_file_name_or_path=new_str)
     else:
         res_file_obj = ResourceFile.objects.filter(object_id=resource.id,
                                                    resource_file=src_name)
@@ -515,6 +522,9 @@ def remove_irods_folder_in_django(resource, istorage, foldername):
         if not foldername.endswith('/'):
             foldername += '/'
         if resource.resource_federation_path:
+            if resource.resource_federation_path in foldername:
+                start_idx = len(resource.resource_federation_path) + len(resource.short_id) + 2
+                foldername = foldername[start_idx:]
             res_file_set = ResourceFile.objects.filter(
                 object_id=resource.id, fed_resource_file_name_or_path__icontains=foldername)
         else:
@@ -557,6 +567,9 @@ def zip_folder(user, res_id, input_coll_path, output_zip_fname, bool_remove_orig
         for f in ResourceFile.objects.filter(object_id=resource.id):
             full_path_name, basename, _ = \
                 hydroshare.utils.get_resource_file_name_and_extension(f)
+            if resource.resource_federation_path:
+                full_path_name = os.path.join(resource.resource_federation_path, res_id,
+                                              full_path_name)
             if res_coll_input in full_path_name and output_zip_full_path not in full_path_name:
                 delete_resource_file(res_id, basename, user)
 
@@ -676,6 +689,9 @@ def move_or_rename_file_or_folder(user, res_id, src_path, tgt_path):
 
     istorage.moveFile(src_full_path, tgt_full_path)
 
-    rename_irods_file_or_folder_in_django(resource, src_full_path, tgt_full_path)
+    if resource.resource_federation_path:
+        rename_irods_file_or_folder_in_django(resource, src_path, tgt_path)
+    else:
+        rename_irods_file_or_folder_in_django(resource, src_full_path, tgt_full_path)
 
     hydroshare.utils.resource_modified(resource, user)
