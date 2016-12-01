@@ -7,14 +7,11 @@ from hs_core.models import ResourceFile, CoreMetaData
 from hs_core import hydroshare
 from hs_core.testing import TestCaseCommonUtilities
 
-from django_irods.storage import IrodsStorage
-
 
 class TestGeoFeature(TestCaseCommonUtilities, TransactionTestCase):
     def setUp(self):
         super(TestGeoFeature, self).setUp()
-        if not settings.REMOTE_USE_IRODS or settings.HS_USER_ZONE_HOST != 'users.local.org' \
-                or settings.IRODS_HOST != 'data.local.org':
+        if not super(TestGeoFeature, self).is_federated_irods_available():
             return
         self.group, _ = Group.objects.get_or_create(name='Hydroshare Author')
         self.user = hydroshare.create_account(
@@ -38,27 +35,26 @@ class TestGeoFeature(TestCaseCommonUtilities, TransactionTestCase):
         # file in iRODS user zone space can be read with metadata extracted correctly, other
         # functionalities are done with the same common functions regardless of where the
         # file comes from, either from local disk or from a federated user zone
-        self.irods_storage = IrodsStorage('federated')
         irods_target_path = '/' + settings.HS_USER_IRODS_ZONE + '/home/' + self.user.username + '/'
         self.valid_file_name = 'states_shp_sample.zip'
         self.valid_file = 'hs_geographic_feature_resource/tests/{}'.format(self.valid_file_name)
-        self.irods_storage.saveFile(self.valid_file, irods_target_path + self.valid_file_name)
         self.valid_file_name2 = 'gis.osm_adminareas_v06_with_folder.zip'
         self.valid_file2 = 'hs_geographic_feature_resource/tests/{}'.format(self.valid_file_name2)
-        self.irods_storage.saveFile(self.valid_file2, irods_target_path + self.valid_file_name2)
+        file_list_dict = {}
+        file_list_dict[self.valid_file] = irods_target_path + self.valid_file_name
+        file_list_dict[self.valid_file2] = irods_target_path + self.valid_file_name2
+        super(TestGeoFeature, self).save_files_to_user_zone(file_list_dict)
 
     def tearDown(self):
         super(TestGeoFeature, self).tearDown()
-        if not settings.REMOTE_USE_IRODS or settings.HS_USER_ZONE_HOST != 'users.local.org' \
-                or settings.IRODS_HOST != 'data.local.org':
+        if not super(TestGeoFeature, self).is_federated_irods_available():
             return
         super(TestGeoFeature, self).delete_irods_user_in_user_zone()
 
     def test_metadata_in_user_zone(self):
         # only do federation testing when REMOTE_USE_IRODS is True and irods docker containers
         # are set up properly
-        if not settings.REMOTE_USE_IRODS or settings.HS_USER_ZONE_HOST != 'users.local.org' \
-                or settings.IRODS_HOST != 'data.local.org':
+        if not super(TestGeoFeature, self).is_federated_irods_available():
             return
         # test metadata extraction with resource creation with file coming from user zone space
         resource_type = "GeographicFeatureResource"

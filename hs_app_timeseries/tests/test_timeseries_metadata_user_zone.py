@@ -6,14 +6,12 @@ from hs_core import hydroshare
 from hs_core.hydroshare import utils
 from hs_core.models import CoreMetaData
 from hs_core.testing import TestCaseCommonUtilities
-from django_irods.storage import IrodsStorage
 
 
 class TestTimeSeriesMetaData(TestCaseCommonUtilities, TransactionTestCase):
     def setUp(self):
         super(TestTimeSeriesMetaData, self).setUp()
-        if not settings.REMOTE_USE_IRODS or settings.HS_USER_ZONE_HOST != 'users.local.org' \
-                or settings.IRODS_HOST != 'data.local.org':
+        if not super(TestTimeSeriesMetaData, self).is_federated_irods_available():
             return
         self.group, _ = Group.objects.get_or_create(name='Hydroshare Author')
         self.user = hydroshare.create_account(
@@ -38,23 +36,22 @@ class TestTimeSeriesMetaData(TestCaseCommonUtilities, TransactionTestCase):
         # extracted correctly, other functionalities are done with the same common functions
         # regardless of where the file comes from, either from local disk or from a federated
         # user zone
-        self.irods_storage = IrodsStorage('federated')
+
         irods_target_path = '/' + settings.HS_USER_IRODS_ZONE + '/home/' + self.user.username + '/'
-        self.irods_storage.saveFile(self.odm2_sqlite_file,
-                                    irods_target_path + self.odm2_sqlite_file_name)
+        file_list_dict = {}
+        file_list_dict[self.odm2_sqlite_file] = irods_target_path + self.odm2_sqlite_file_name
+        super(TestTimeSeriesMetaData, self).save_files_to_user_zone(file_list_dict)
 
     def tearDown(self):
         super(TestTimeSeriesMetaData, self).tearDown()
-        if not settings.REMOTE_USE_IRODS or settings.HS_USER_ZONE_HOST != 'users.local.org' \
-                or settings.IRODS_HOST != 'data.local.org':
+        if not super(TestTimeSeriesMetaData, self).is_federated_irods_available():
             return
         super(TestTimeSeriesMetaData, self).delete_irods_user_in_user_zone()
 
     def test_metadata_in_user_zone(self):
         # only do federation testing when REMOTE_USE_IRODS is True and irods docker containers
         # are set up properly
-        if not settings.REMOTE_USE_IRODS or settings.HS_USER_ZONE_HOST != 'users.local.org' \
-                or settings.IRODS_HOST != 'data.local.org':
+        if not super(TestTimeSeriesMetaData, self).is_federated_irods_available():
             return
 
         # test metadata extraction with resource creation with file coming from user zone space

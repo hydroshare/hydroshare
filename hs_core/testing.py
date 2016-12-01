@@ -10,6 +10,7 @@ from hs_core.views.utils import create_folder, move_or_rename_file_or_folder, zi
 from hs_core.views.utils import run_ssh_command
 from theme.models import UserProfile
 from django_irods.icommands import SessionException
+from django_irods.storage import IrodsStorage
 
 
 class MockIRODSTestCaseMixin(object):
@@ -36,6 +37,13 @@ class MockIRODSTestCaseMixin(object):
 
 
 class TestCaseCommonUtilities(object):
+    def is_federated_irods_available(self):
+        if not settings.REMOTE_USE_IRODS or settings.HS_USER_ZONE_HOST != 'users.local.org' \
+                or settings.IRODS_HOST != 'data.local.org':
+            return False
+        else:
+            return True
+
     def create_irods_user_in_user_zone(self):
         # create corresponding irods account in user zone
         try:
@@ -76,6 +84,18 @@ class TestCaseCommonUtilities(object):
         except Exception as ex:
             # there is an error from icommand run, report the error
             self.assertRaises(SessionException(-1, ex.message, ex.message))
+
+    def save_files_to_user_zone(self, file_name_to_target_name_dict):
+        """
+        Save a list of files to iRODS user zone using the same IrodsStorage() object
+        :param file_name_to_target_name_dict: a dictionary in the form of {ori_file, target_file}
+        where ori_file is the file to be save to, and the target_file is the full path file name
+        in iRODS user zone to save ori_file to
+        :return:
+        """
+        irods_storage = IrodsStorage('federated')
+        for file_name, target_name in file_name_to_target_name_dict.iteritems():
+            irods_storage.saveFile(file_name, target_name)
 
     def resource_file_oprs(self):
         """

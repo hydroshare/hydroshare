@@ -4,8 +4,6 @@ from django.test import TransactionTestCase
 from django.conf import settings
 from django.contrib.auth.models import Group
 
-from django_irods.storage import IrodsStorage
-
 from hs_core.models import BaseResource
 from hs_core.hydroshare import resource
 from hs_core import hydroshare
@@ -27,8 +25,7 @@ class TestUserZoneIRODSFederation(TestCaseCommonUtilities, TransactionTestCase):
         super(TestUserZoneIRODSFederation, self).setUp()
         # only do federation testing when REMOTE_USE_IRODS is True and irods docker containers
         # are set up properly
-        if not settings.REMOTE_USE_IRODS or settings.HS_USER_ZONE_HOST != 'users.local.org' \
-                or settings.IRODS_HOST != 'data.local.org':
+        if not super(TestUserZoneIRODSFederation, self).is_federated_irods_available():
             return
 
         self.hs_group, _ = Group.objects.get_or_create(name='Hydroshare Author')
@@ -66,19 +63,18 @@ class TestUserZoneIRODSFederation(TestCaseCommonUtilities, TransactionTestCase):
         test_file.close()
 
         # transfer files to user zone space
-        self.irods_storage = IrodsStorage('federated')
         irods_target_path = '/' + settings.HS_USER_IRODS_ZONE + '/home/testuser/'
-        self.irods_storage.saveFile(self.file_one, irods_target_path + self.file_one)
-        self.irods_storage.saveFile(self.file_two, irods_target_path + self.file_two)
-        self.irods_storage.saveFile(self.file_three, irods_target_path + self.file_three)
-        self.irods_storage.saveFile(self.file_to_be_deleted,
-                                    irods_target_path + self.file_to_be_deleted)
+        file_list_dict = {}
+        file_list_dict[self.file_one] = irods_target_path + self.file_one
+        file_list_dict[self.file_two] = irods_target_path + self.file_two
+        file_list_dict[self.file_three] = irods_target_path + self.file_three
+        file_list_dict[self.file_to_be_deleted] = irods_target_path + self.file_to_be_deleted
+        super(TestUserZoneIRODSFederation, self).save_files_to_user_zone(file_list_dict)
 
     def tearDown(self):
         super(TestUserZoneIRODSFederation, self).tearDown()
         # no need for further cleanup if federation testing is not setup in the first place
-        if not settings.REMOTE_USE_IRODS or settings.HS_USER_ZONE_HOST != 'users.local.org' \
-                or settings.IRODS_HOST != 'data.local.org':
+        if not super(TestUserZoneIRODSFederation, self).is_federated_irods_available():
             return
 
         # delete irods test user in user zone
@@ -92,8 +88,7 @@ class TestUserZoneIRODSFederation(TestCaseCommonUtilities, TransactionTestCase):
     def test_resource_operations_in_user_zone(self):
         # only do federation testing when REMOTE_USE_IRODS is True and irods docker containers
         # are set up properly
-        if not settings.REMOTE_USE_IRODS or settings.HS_USER_ZONE_HOST != 'users.local.org' \
-                or settings.IRODS_HOST != 'data.local.org':
+        if not super(TestUserZoneIRODSFederation, self).is_federated_irods_available():
             return
         # test resource creation and "move" option in federated user zone
         fed_test_file_full_path = '/{zone}/home/testuser/{fname}'.format(
