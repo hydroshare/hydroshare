@@ -27,9 +27,8 @@
                         be shared with the group and other users cannot be invited.
                         <hr>
                         <span class="glyphicon glyphicon-question-sign"></span>
-                        <small> Click on the edit button ( <span class="glyphicon glyphicon-pencil"></span> ) below to
-                            if
-                            you want to make the group active again.
+                        <small> Click on the restore button ( <span class="glyphicon glyphicon-retweet"></span> ) below
+                            if you want to make the group active again.
                         </small>
                     </div>
                 {% endif %}
@@ -56,16 +55,22 @@
                 <p>{{ group.gaccess.description|linebreaks }}</p>
             </div>
 
-
             {% if profile_user.is_group_owner or profile_user.is_group_editor or profile_user.is_group_viewer %}
                 <div class="col-sm-2">
                     {% if profile_user.is_group_owner or profile_user.is_group_editor %}
                         <a href="#" id="btn-edit-group" data-toggle="modal" data-target="#edit-group-dialog">
                             <span class="glyphicon glyphicon-pencil icon-blue icon-button" data-toggle="tooltip" data-placement="auto" title="Edit Group"></span></a>
                     {% endif %}
-
                     <a href="#" id="btn-leave-group" data-toggle="modal" data-target="#leave-group-dialog">
                         <span class="glyphicon glyphicon-hand-left btn-remove icon-button" data-toggle="tooltip" data-placement="auto" title="Leave Group"></span></a>
+                    {% if profile_user.is_group_owner and group.gaccess.active %}
+                        <a href="#" id="btn-delete-group" data-toggle="modal" data-target="#delete-group-dialog">
+                        <span class="glyphicon glyphicon-trash icon-button btn-remove" data-toggle="tooltip" data-placement="auto" title="Delete Group"></span></a>
+                    {% endif %}
+                    {% if profile_user.is_group_owner and not group.gaccess.active %}
+                        <a href="{% url "restore_user_group" group.id %}">
+                        <span class="glyphicon glyphicon-retweet icon-button" data-toggle="tooltip" data-placement="auto" title="Restore Group"></span></a>
+                    {% endif %}
                 </div>
             {% endif %}
         </div>
@@ -761,7 +766,30 @@
                 </div>
             </div>
         </div>
+        <!-- Delete/Inactive Group Modal -->
+        <div class="modal fade" id="delete-group-dialog" tabindex="-1" role="dialog"
+             aria-labelledby="Delete">
+            <div class="modal-dialog" role="document">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <button type="button" class="close" data-dismiss="modal"
+                                aria-label="Close"><span aria-hidden="true">&times;</span>
+                        </button>
+                        <h4 class="modal-title" id="Delete">Delete Group</h4>
+                    </div>
+                    <form action="/hsapi/_internal/delete-user-group/{{ group.id }}">
+                        <div class="modal-body">
+                            <h5>Are you sure you want to delete this group? If you decide to delete, it is possible to restore it later.</h5>
+                        </div>
 
+                        <div class="modal-footer">
+                            <button type="submit" class="btn btn-primary">Confirm</button>
+                            <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
     {% endif %}
 
     {% if profile_user.is_group_owner or profile_user.is_group_editor %}

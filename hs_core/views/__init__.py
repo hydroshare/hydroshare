@@ -946,6 +946,34 @@ def update_user_group(request, group_id, *args, **kwargs):
 
     return HttpResponseRedirect(request.META['HTTP_REFERER'])
 
+@login_required
+def delete_user_group(request, group_id, *args, **kwargs):
+    """This one is not really deleting the group object, rather setting the active status
+    to False (delete) which can be later restored (undelete) )"""
+    return _delete_restore_user_group(request, group_id, 'delete')
+
+@login_required
+def restore_user_group(request, group_id, *args, **kwargs):
+    """This one is for setting the active status of the group back to True"""
+    return _delete_restore_user_group(request, group_id, 'restore')
+
+def _delete_restore_user_group(request, group_id, delete_or_restore):
+    """This one is not really deleting the group object, rather setting the active status
+    to False (delete) or True (restore)"""
+    user = request.user
+    group = utils.group_from_id(group_id)
+    status = False if delete_or_restore.lower() == 'delete' else True
+    action = 'delete' if delete_or_restore.lower() == 'delete' else 'restore'
+    if user.uaccess.can_change_group_flags(group):
+        group.gaccess.active = status
+        group.gaccess.save()
+        messages.success(request, "Group {} was successful.".format(action))
+    else:
+        messages.error(request, "Group {} errors: You don't have permission to {}"
+                                " this group.".format(action, action))
+
+    return HttpResponseRedirect(request.META['HTTP_REFERER'])
+
 
 @login_required
 def share_group_with_user(request, group_id, user_id, privilege, *args, **kwargs):
