@@ -1,5 +1,4 @@
 import logging
-import json
 
 from rest_framework.response import Response
 from rest_framework.exceptions import PermissionDenied, ValidationError
@@ -138,14 +137,14 @@ class CoreMetaDataSerializer(serializers.Serializer):
 
 class MetadataElementsRetrieveUpdate(generics.RetrieveUpdateDestroyAPIView):
     """
-    Retrieve resource Dublin Core metadata
+    Retrieve resource system (Dublin Core) metadata
 
     REST URL: /hsapi/resource/{pk}/scimeta/elements/
     HTTP method: GET
 
     :type pk: str
     :param pk: id of the resource
-    :return: resource metadata as JSON document
+    :return: resource system metadata as JSON document
     :rtype: str
     :raises:
     NotFound: return json format: {'detail': 'No resource was found for resource id:pk'}
@@ -157,10 +156,10 @@ class MetadataElementsRetrieveUpdate(generics.RetrieveUpdateDestroyAPIView):
 
     :type pk: str
     :param pk: id of the resource
-    :type metadata: json
-    :param metadata: resource metadata
-    :return: resource id
-    :rtype: json of the format: {'resource_id':pk}
+    :type request: JSON formatted string
+    :param request: resource metadata
+    :return: updated resource system metadata as JSON document
+    :rtype: str
     :raises:
     NotFound: return json format: {'detail': 'No resource was found for resource id':pk}
     PermissionDenied: return json format: {'detail': 'You do not have permission to perform
@@ -174,13 +173,11 @@ class MetadataElementsRetrieveUpdate(generics.RetrieveUpdateDestroyAPIView):
 
     serializer_class = CoreMetaDataSerializer
 
-
     def get(self, request, pk):
         view_utils.authorize(request, pk, needed_permission=ACTION_TO_AUTHORIZE.VIEW_METADATA)
         resource = hydroshare.get_resource_by_shortkey(shortkey=pk)
         serializer = CoreMetaDataSerializer(resource.content_object)
         return Response(data=serializer.data, status=status.HTTP_200_OK)
-
 
     def put(self, request, pk):
         # Update science metadata based on resourcemetadata.xml uploaded
@@ -196,22 +193,25 @@ class MetadataElementsRetrieveUpdate(generics.RetrieveUpdateDestroyAPIView):
         import pydevd
         pydevd.settrace('10.200.2.135', port=21000, suspend=False)
 
+        metadata = []
         put_data = request.data
+        keys_to_update = put_data.keys()
 
         try:
-            metadata = []
-            title = put_data.pop('title')
-            description = put_data.pop('description')
-            subjects = put_data.pop('subjects')
 
-            metadata.append({ "title": { "value": title }})
-            metadata.append({ "description": { "abstract": description }})
-            for subject in subjects:
-                metadata.append({"subject": {"value": subject['value']}})
+            if 'title' in keys_to_update:
+                metadata.append({"title": {"value": put_data.pop('title')}})
+
+            if 'description' in keys_to_update:
+                metadata.append({"description": {"abstract": put_data.pop('description')}})
+
+            if 'subjects' in keys_to_update:
+                for subject in put_data.pop('subjects'):
+                    metadata.append({"subject": {"value": subject['value']}})
 
             hydroshare.update_system_metadata(pk=pk, metadata=metadata)
         except Exception as ex:
-            error_msg = {'resource': "Resource metadata update failed. %s" % ex.message}
+            error_msg = {'resource': "Resource metadata update failed: %s, %s" % ex.__class__ % ex.message}
             raise ValidationError(detail=error_msg)
 
         resource = hydroshare.get_resource_by_shortkey(shortkey=pk)
