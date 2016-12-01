@@ -7,8 +7,8 @@ from rest_framework import generics
 from rest_framework import serializers
 
 from hs_core import hydroshare
-from hs_core.models import Contributor, CoreMetaData, Coverage, Creator, Date, ExternalProfileLink, \
-    Format, FundingAgency, Identifier, Subject, Source, Relation
+from hs_core.models import Contributor, CoreMetaData, Coverage, Creator, Date, \
+    ExternalProfileLink, Format, FundingAgency, Identifier, Subject, Source, Relation
 from hs_core.views import utils as view_utils
 from hs_core.views.utils import ACTION_TO_AUTHORIZE
 
@@ -38,7 +38,8 @@ class PartySerializer(serializers.Serializer):
 
     class Meta:
         model = Creator
-        fields = {'name', 'description', 'organization', 'email', 'address', 'phone', 'homepage', 'external_links'}
+        fields = {'name', 'description', 'organization', 'email',
+                  'address', 'phone', 'homepage', 'external_links'}
 
 
 class CreatorSerializer(PartySerializer):
@@ -205,7 +206,10 @@ class MetadataElementsRetrieveUpdate(generics.RetrieveUpdateDestroyAPIView):
 
             hydroshare.update_system_metadata(pk=pk, metadata=metadata)
         except Exception as ex:
-            error_msg = {'resource': "Resource metadata update failed: %s, %s" % ex.__class__ % ex.message}
+            error_msg = {
+                'resource': "Resource metadata update failed: %s, %s"
+                            % ex.__class__ % ex.message
+            }
             raise ValidationError(detail=error_msg)
 
         resource = hydroshare.get_resource_by_shortkey(shortkey=pk)
