@@ -187,7 +187,7 @@ class TestGetUserData(TestCase):
         # passing an id of a user that doesn't exist should raise exception
         non_existing_user_id = 9999999
         self.assertEqual(User.objects.filter(id=non_existing_user_id).first(), None)
-        post_data = {'user_id': non_existing_user_id}
+        post_data = {'user_id': non_existing_user_id, 'is_group': 'false'}
         url = reverse('get_user_data', kwargs=post_data)
         request = self.factory.post(url, data=post_data)
         request.user = self.mike
