@@ -2,6 +2,7 @@ import logging
 import json
 
 from rest_framework.response import Response
+from rest_framework.exceptions import PermissionDenied, ValidationError
 from rest_framework import status
 from rest_framework import generics
 from rest_framework import serializers
@@ -60,6 +61,7 @@ class DateSerializer(serializers.Serializer):
 
 class CoverageSerializer(serializers.Serializer):
     type = serializers.CharField(required=False)
+    value = serializers.CharField(required=False)
 
     class Meta:
         model = Coverage
@@ -172,83 +174,46 @@ class MetadataElementsRetrieveUpdate(generics.RetrieveUpdateDestroyAPIView):
 
     serializer_class = CoreMetaDataSerializer
 
+
     def get(self, request, pk):
         view_utils.authorize(request, pk, needed_permission=ACTION_TO_AUTHORIZE.VIEW_METADATA)
         resource = hydroshare.get_resource_by_shortkey(shortkey=pk)
         serializer = CoreMetaDataSerializer(resource.content_object)
         return Response(data=serializer.data, status=status.HTTP_200_OK)
 
-    # def put(self, request, pk):
-    #     # Update science metadata based on resourcemetadata.xml uploaded
-    #     resource, authorized, user = view_utils.authorize(
-    #         request, pk,
-    #         needed_permission=ACTION_TO_AUTHORIZE.EDIT_RESOURCE,
-    #         raises_exception=False)
-    #     if not authorized:
-    #         raise PermissionDenied()
 
-    #     files = request.FILES.values()
-    #     if len(files) == 0:
-    #         error_msg = {'file': 'No resourcemetadata.xml file was found to update resource '
-    #                              'metadata.'}
-    #         raise ValidationError(detail=error_msg)
-    #     elif len(files) > 1:
-    #         error_msg = {'file': ('More than one file was found. Only one file, named '
-    #                               'resourcemetadata.xml, '
-    #                               'can be used to update resource metadata.')}
-    #         raise ValidationError(detail=error_msg)
+    def put(self, request, pk):
+        # Update science metadata based on resourcemetadata.xml uploaded
+        resource, authorized, user = view_utils.authorize(
+            request, pk,
+            needed_permission=ACTION_TO_AUTHORIZE.EDIT_RESOURCE,
+            raises_exception=False)
+        if not authorized:
+            raise PermissionDenied()
 
-    #     scimeta = files[0]
-    #     if scimeta.content_type not in self.ACCEPT_FORMATS:
-    #         error_msg = {'file': ("Uploaded file has content type {t}, "
-    #                               "but only these types are accepted: {e}.").format(
-    #             t=scimeta.content_type, e=",".join(self.ACCEPT_FORMATS))}
-    #         raise ValidationError(detail=error_msg)
-    #     expect = 'resourcemetadata.xml'
-    #     if scimeta.name != expect:
-    #         error_msg = {'file': "Uploaded file has name {n}, but expected {e}.".format(
-    #             n=scimeta.name, e=expect)}
-    #         raise ValidationError(detail=error_msg)
+        import sys
+        sys.path.append("/pycharm-debug")
+        import pydevd
+        pydevd.settrace('10.200.2.135', port=21000, suspend=False)
 
-    #     # Temp directory to store resourcemetadata.xml
-    #     tmp_dir = tempfile.mkdtemp()
-    #     try:
-    #         # Fake the bag structure so that GenericResourceMeta.read_metadata_from_resource_bag
-    #         # can read and validate the system and science metadata for us.
-    #         bag_data_path = os.path.join(tmp_dir, 'data')
-    #         os.mkdir(bag_data_path)
-    #         # Copy new science metadata to bag data path
-    #         scimeta_path = os.path.join(bag_data_path, 'resourcemetadata.xml')
-    #         shutil.copy(scimeta.temporary_file_path(), scimeta_path)
-    #         # Copy existing resource map to bag data path
-    #         # (use a file-like object as the file may be in iRODS, so we can't
-    #         #  just copy it to a local path)
-    #         resmeta_path = os.path.join(bag_data_path, 'resourcemap.xml')
-    #         with open(resmeta_path, 'wb') as resmeta:
-    #             storage = get_file_storage()
-    #             resmeta_irods = storage.open(AbstractResource.sysmeta_path(pk))
-    #             shutil.copyfileobj(resmeta_irods, resmeta)
+        put_data = request.data
 
-    #         resmeta_irods.close()
+        try:
+            metadata = []
+            title = put_data.pop('title')
+            description = put_data.pop('description')
+            subjects = put_data.pop('subjects')
 
-    #         try:
-    #             # Read resource system and science metadata
-    #             domain = Site.objects.get_current().domain
-    #             rm = GenericResourceMeta.read_metadata_from_resource_bag(tmp_dir,
-    #                                                                      hydroshare_host=domain)
-    #             # Update resource metadata
-    #             rm.write_metadata_to_resource(resource, update_title=True, update_keywords=True)
-    #             create_bag_files(resource)
-    #         except HsDeserializationDependencyException as e:
-    #             msg = ("HsDeserializationDependencyException encountered when updating "
-    #                    "science metadata for resource {pk}; depedent resource was {dep}.")
-    #             msg = msg.format(pk=pk, dep=e.dependency_resource_id)
-    #             logger.error(msg)
-    #             raise ValidationError(detail=msg)
-    #         except HsDeserializationException as e:
-    #             raise ValidationError(detail=e.message)
+            metadata.append({ "title": { "value": title }})
+            metadata.append({ "description": { "abstract": description }})
+            for subject in subjects:
+                metadata.append({"subject": {"value": subject['value']}})
 
-    #         resource_modified(resource, request.user)
-    #         return Response(data={'resource_id': pk}, status=status.HTTP_202_ACCEPTED)
-    #     finally:
-    #         shutil.rmtree(tmp_dir)
+            hydroshare.update_system_metadata(pk=pk, metadata=metadata)
+        except Exception as ex:
+            error_msg = {'resource': "Resource metadata update failed. %s" % ex.message}
+            raise ValidationError(detail=error_msg)
+
+        resource = hydroshare.get_resource_by_shortkey(shortkey=pk)
+        serializer = CoreMetaDataSerializer(resource.content_object)
+        return Response(data=serializer.data, status=status.HTTP_202_ACCEPTED)
