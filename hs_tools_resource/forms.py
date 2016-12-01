@@ -44,7 +44,7 @@ class UrlBaseForm(ModelForm):
 
 
 class UrlBaseValidationForm(forms.Form):
-    value = forms.URLField(max_length=1024)
+    value = forms.URLField(max_length=1024, required=False)
 
 
 class AppHomePageUrlFormHelper(BaseFormHelper):
@@ -79,7 +79,7 @@ class AppHomePageUrlForm(ModelForm):
 
 
 class AppHomePageUrlValidationForm(forms.Form):
-    value = forms.URLField(max_length=1024)
+    value = forms.URLField(max_length=1024, required=False)
 
 
 class VersionFormHelper(BaseFormHelper):
@@ -155,7 +155,7 @@ class ToolIconForm(ModelForm):
 
 
 class ToolIconValidationForm(forms.Form):
-    url = forms.CharField(max_length=1024)
+    url = forms.URLField(max_length=1024, required=False)
 
 
 class MetadataField(Field):
