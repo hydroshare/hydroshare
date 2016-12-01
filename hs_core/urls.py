@@ -50,8 +50,8 @@ urlpatterns = patterns('',
     # url(r'^resource/(?P<pk>[A-z0-9]+)/files/$', views.resource_rest_api.ResourceFileCRUD.as_view(),
     #     name='add_resource_file'),
 
-    # TODO: (Couch) This pattern is much too permissive. Consider limiting it. 
-    url(r'^resource/(?P<pk>[0-9a-f-]+)/files/(?P<filename>[^/]+)/$',
+    # Patterns are now checked in the view class.
+    url(r'^resource/(?P<pk>[0-9a-f-]+)/files/(?P<filename>.*)/$',
         views.resource_rest_api.ResourceFileCRUD.as_view(), 
         name='get_update_delete_resource_file'),
 

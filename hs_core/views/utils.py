@@ -11,6 +11,7 @@ from django.core.urlresolvers import reverse
 from django.contrib.auth.models import Group, User
 from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import ObjectDoesNotExist
+from django.core.exceptions import SuspiciousFileOperation
 from django.core.files.uploadedfile import UploadedFile
 from django.utils.http import int_to_base36
 
@@ -698,3 +699,11 @@ def move_or_rename_file_or_folder(user, res_id, src_path, tgt_path):
     rename_irods_file_or_folder_in_django(resource, src_full_path, tgt_full_path)
 
     hydroshare.utils.resource_modified(resource, user)
+
+
+def irods_path_is_allowed(path):
+    """ paths containing '/../' are suspicious """
+    if path == "":
+        raise ValidationError("Empty file paths are not allowed")
+    if path.contains('/../'):
+        raise SuspiciousFileOperation("File paths cannot contain '/../'")

@@ -8,13 +8,6 @@ from hs_core.views import utils as view_utils
 from hs_core.views.utils import ACTION_TO_AUTHORIZE
 
 from django.core.exceptions import SessionException
-from django.core.exceptions import SuspiciousFileOperation
-
-
-def path_is_allowed(path):
-    """ paths containing '/../' are suspicious """
-    if path.contains('/../'):
-        raise SuspiciousFileOperation("File paths cannot contain '/../'")
 
 
 class ResourceFolders(APIView):
@@ -36,7 +29,7 @@ class ResourceFolders(APIView):
         """
         view_utils.authorize(
             request, pk, needed_permission=ACTION_TO_AUTHORIZE.VIEW_RESOURCE)
-        path_is_allowed(path)  # check for hacking attempts
+        view_utils.irods_path_is_allowed(path)  # check for hacking attempts
         try:
             contents = view_utils.list_folder(request.user, pk, path)
         except SessionException:
@@ -66,7 +59,7 @@ class ResourceFolders(APIView):
         """
         view_utils.authorize(
             request, pk, needed_permission=ACTION_TO_AUTHORIZE.EDIT_RESOURCE)
-        path_is_allowed(path)  # check for hacking attempts
+        view_utils.irods_path_is_allowed(path)  # check for hacking attempts
         resource = hydroshare.get_resource_from_id(pk)
 
         if not resource.supports_folders:
@@ -101,7 +94,7 @@ class ResourceFolders(APIView):
         view_utils.authorize(
             request, pk, needed_permission=ACTION_TO_AUTHORIZE.EDIT_RESOURCE)
 
-        path_is_allowed(path)  # check for hacking attempts
+        view_utils.irods_path_is_allowed(path)  # check for hacking attempts
 
         try:
             view_utils.list_folder(request.user, pk, path)

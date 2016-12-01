@@ -567,8 +567,8 @@ class SystemMetadataRetrieve(ResourceToListItemMixin, APIView):
     def get(self, request, pk):
         """ Get resource system metadata, as well as URLs to the bag and science metadata
         """
-        view_utils.authorize(request, pk, needed_permission=ACTION_TO_AUTHORIZE.VIEW_METADATA)
-        res = get_resource_by_shortkey(pk)
+        res, _, _ = view_utils.authorize(request, pk,
+                                         needed_permission=ACTION_TO_AUTHORIZE.VIEW_METADATA)
         ser = self.get_serializer_class()(self.resourceToResourceListItem(res))
 
         return Response(data=ser.data, status=status.HTTP_200_OK)
@@ -831,7 +831,13 @@ class ResourceFileCRUD(APIView):
         return request
 
     def get(self, request, pk, filename):
-        view_utils.authorize(request, pk, needed_permission=ACTION_TO_AUTHORIZE.VIEW_RESOURCE)
+        resource, _, _ = view_utils.authorize(
+                request, pk,
+                needed_permission=ACTION_TO_AUTHORIZE.VIEW_RESOURCE)
+        view_utils.irods_path_is_allowed(filename)
+        if not resource.supports_folders and filename.contains('/'):
+            raise ValidationError("Resource type does not support subfolders")
+
         try:
             f = hydroshare.get_resource_file(pk, filename)
         except ObjectDoesNotExist:
@@ -854,6 +860,7 @@ class ResourceFileCRUD(APIView):
         """
         resource, _, _ = view_utils.authorize(request, pk,
                                               needed_permission=ACTION_TO_AUTHORIZE.EDIT_RESOURCE)
+
         resource_files = request.FILES.values()
         if len(resource_files) == 0:
             error_msg = {'file': 'No file was found to add to the resource.'}
@@ -896,6 +903,10 @@ class ResourceFileCRUD(APIView):
     def delete(self, request, pk, filename):
         resource, _, user = view_utils.authorize(
             request, pk, needed_permission=ACTION_TO_AUTHORIZE.EDIT_RESOURCE)
+        view_utils.irods_path_is_allowed(filename)
+        if not resource.supports_folders and filename.contains('/'):
+            raise ValidationError("Resource type does not support folders")
+
         try:
             hydroshare.delete_resource_file(pk, filename, user)
         except ObjectDoesNotExist as ex:    # matching file not found
