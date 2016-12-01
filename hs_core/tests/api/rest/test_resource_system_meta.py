@@ -1,4 +1,4 @@
-import json
+# import json
 
 from rest_framework import status
 
@@ -40,4 +40,3 @@ class TestResourceSystemMetadata(HSRESTTestCase):
         response = self.client.put(sysmeta_url, put_data, format='json')
         self.assertEqual(response.status_code, status.HTTP_202_ACCEPTED)
         # content = json.loads(response.content)
-

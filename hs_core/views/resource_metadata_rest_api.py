@@ -167,7 +167,7 @@ class MetadataElementsRetrieveUpdate(generics.RetrieveUpdateDestroyAPIView):
     ValidationError: return json format: {parameter-1': ['error message-1'],
     'parameter-2': ['error message-2'], .. }
     """
-    ACCEPT_FORMATS = ('application/json')
+    ACCEPT_FORMATS = ('application/json',)
 
     allowed_methods = ('GET', 'PUT')
 
