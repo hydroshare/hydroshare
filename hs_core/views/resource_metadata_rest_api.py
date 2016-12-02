@@ -138,14 +138,14 @@ class CoreMetaDataSerializer(serializers.Serializer):
 
 class MetadataElementsRetrieveUpdate(generics.RetrieveUpdateDestroyAPIView):
     """
-    Retrieve resource system (Dublin Core) metadata
+    Retrieve resource science (Dublin Core) metadata
 
     REST URL: /hsapi/resource/{pk}/scimeta/elements/
     HTTP method: GET
 
     :type pk: str
     :param pk: id of the resource
-    :return: resource system metadata as JSON document
+    :return: resource science metadata as JSON document
     :rtype: str
     :raises:
     NotFound: return json format: {'detail': 'No resource was found for resource id:pk'}
@@ -159,7 +159,7 @@ class MetadataElementsRetrieveUpdate(generics.RetrieveUpdateDestroyAPIView):
     :param pk: id of the resource
     :type request: JSON formatted string
     :param request: resource metadata
-    :return: updated resource system metadata as JSON document
+    :return: updated resource science metadata as JSON document
     :rtype: str
     :raises:
     NotFound: return json format: {'detail': 'No resource was found for resource id':pk}
@@ -177,17 +177,14 @@ class MetadataElementsRetrieveUpdate(generics.RetrieveUpdateDestroyAPIView):
     def get(self, request, pk):
         view_utils.authorize(request, pk, needed_permission=ACTION_TO_AUTHORIZE.VIEW_METADATA)
         resource = hydroshare.get_resource_by_shortkey(shortkey=pk)
-        serializer = CoreMetaDataSerializer(resource.content_object)
+        serializer = CoreMetaDataSerializer(resource.metadata)
         return Response(data=serializer.data, status=status.HTTP_200_OK)
 
     def put(self, request, pk):
         # Update science metadata based on resourcemetadata.xml uploaded
         resource, authorized, user = view_utils.authorize(
             request, pk,
-            needed_permission=ACTION_TO_AUTHORIZE.EDIT_RESOURCE,
-            raises_exception=False)
-        if not authorized:
-            raise PermissionDenied()
+            needed_permission=ACTION_TO_AUTHORIZE.EDIT_RESOURCE)
 
         metadata = []
         put_data = request.data
@@ -204,7 +201,7 @@ class MetadataElementsRetrieveUpdate(generics.RetrieveUpdateDestroyAPIView):
                 for subject in put_data.pop('subjects'):
                     metadata.append({"subject": {"value": subject['value']}})
 
-            hydroshare.update_system_metadata(pk=pk, metadata=metadata)
+            hydroshare.update_science_metadata(pk=pk, metadata=metadata)
         except Exception as ex:
             error_msg = {
                 'resource': "Resource metadata update failed: %s, %s"
@@ -213,5 +210,5 @@ class MetadataElementsRetrieveUpdate(generics.RetrieveUpdateDestroyAPIView):
             raise ValidationError(detail=error_msg)
 
         resource = hydroshare.get_resource_by_shortkey(shortkey=pk)
-        serializer = CoreMetaDataSerializer(resource.content_object)
+        serializer = CoreMetaDataSerializer(resource.metadata)
         return Response(data=serializer.data, status=status.HTTP_202_ACCEPTED)

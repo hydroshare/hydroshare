@@ -6,10 +6,10 @@ from hs_core.hydroshare import resource
 from .base import HSRESTTestCase
 
 
-class TestResourceSystemMetadata(HSRESTTestCase):
+class TestResourceScienceMetadata(HSRESTTestCase):
 
     def setUp(self):
-        super(TestResourceSystemMetadata, self).setUp()
+        super(TestResourceScienceMetadata, self).setUp()
 
         self.rtype = 'GenericResource'
         self.title = 'My Test resource'
@@ -19,14 +19,14 @@ class TestResourceSystemMetadata(HSRESTTestCase):
         self.pid = res.short_id
         self.resources_to_delete.append(self.pid)
 
-    def test_get_sysmeta(self):
+    def test_get_scimeta(self):
         # Get the resource system metadata
         sysmeta_url = "/hsapi/resource/{res_id}/scimeta/elements/".format(res_id=self.pid)
         response = self.client.get(sysmeta_url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         # content = json.loads(response.content)
 
-    def test_put_sysmeta(self):
+    def test_put_scimeta(self):
         sysmeta_url = "/hsapi/resource/{res_id}/scimeta/elements/".format(res_id=self.pid)
         put_data = {
             "title": "New Title",
