@@ -2,31 +2,30 @@
 {% load pages_tags mezzanine_tags hydroshare_tags theme_tags %}
 
 {% block main %}
-    <div class="panel-body">
-        <strong>The resource you have attempted to access is private. </strong>
-        {% if request.user.is_authenticated %}
-            <strong>You can request access from the owner.</strong>
-        {% else %}
-            <strong><span id="signin-menu"><a href="{% url 'login' %}"><span class="glyphicon glyphicon-log-in"></span> Log in</a></span>
-                to see it if the owner has shared it with you, or to request access.</strong>
-        {% endif %}
-    </div>
     <div class="container" id="main">
         <div class="row">
             <div class="col-sm-12">
-                <h2 class="page-title">Resource Title</h2>
-                <table class="info-table">
-                    <tr>
-                        <th>Owners:</th>
-                        <td>
-                            <span>Hong Yi</span>
-                        {% for u in owners %}
-                            {% if forloop.counter0 != 0 %} <span class="list-separator">·</span> {% endif %}
-                            <span>{{ u|contact|safe }}</span>
-                        {% endfor %}
-                        </td>
-                    </tr>
-                </table>
+                <strong>The resource you have attempted to access is private. </strong>
+                {% if request.user.is_authenticated %}
+                    <strong>You can request access from the owner.</strong>
+                {% else %}
+                    <strong><span id="signin-menu"><a href="{% url 'login' %}"><span class="glyphicon glyphicon-log-in"></span> Log in</a></span>
+                        to see it if the owner has shared it with you, or to request access.</strong>
+                {% endif %}
+                {% with res=request.path|res_uuid_from_res_path|resource_from_uuid %}
+                    <h2 class="page-title">{{ res.metadata.title }}</h2>
+                    <table class="info-table">
+                        <tr>
+                            <th>Owners:</th>
+                            <td>
+                            {% for u in res.raccess.owners.all %}
+                                {% if forloop.counter0 != 0 %} <span class="list-separator">·</span> {% endif %}
+                                <span>{{ u|contact|safe }}</span>
+                            {% endfor %}
+                            </td>
+                        </tr>
+                    </table>
+                {% endwith %}
             </div>
         </div>
     </div>
