@@ -441,13 +441,18 @@ function makeTimeSeriesMetaDataElementFormReadOnly(form_id, element_id){
     }
 }
 function get_user_info_ajax_submit(url, obj) {
+    var is_group = false;
     var entry = $(obj).parent().parent().parent().parent().find("#id_user-deck > .hilight");
+    if (entry.length < 1) {
+        entry = $(obj).parent().parent().parent().parent().find("#id_group-deck > .hilight");
+        is_group = true;
+    }
     if (entry.length < 1) {
         return;
     }
 
     var userID = entry[0].getAttribute("data-value");
-    url = url + userID;
+    url = url + userID + "/" + is_group;
 
     $.ajax({
         type: "POST",
@@ -456,14 +461,19 @@ function get_user_info_ajax_submit(url, obj) {
         success: function (result) {
             var formContainer = $(obj).parent().parent();
             var json_response = JSON.parse(result);
-
-            formContainer.find("input[name='name']").val(json_response.name);
-            formContainer.find("input[name='description']").val(json_response.url);
-            formContainer.find("input[name='organization']").val(json_response.organization);
-            formContainer.find("input[name='email']").val(json_response.email);
-            formContainer.find("input[name='address']").val(json_response.address);
-            formContainer.find("input[name='phone']").val(json_response.phone);
-            formContainer.find("input[name='homepage']").val(json_response.website);
+            if (is_group){
+                formContainer.find("input[name='description']").val(json_response.url);
+                formContainer.find("input[name='organization']").val(json_response.organization);
+            }
+            else{
+                formContainer.find("input[name='name']").val(json_response.name);
+                formContainer.find("input[name='description']").val(json_response.url);
+                formContainer.find("input[name='organization']").val(json_response.organization);
+                formContainer.find("input[name='email']").val(json_response.email);
+                formContainer.find("input[name='address']").val(json_response.address);
+                formContainer.find("input[name='phone']").val(json_response.phone);
+                formContainer.find("input[name='homepage']").val(json_response.website);
+            }
             formContainer.submit();
         },
         error: function(XMLHttpRequest, textStatus, errorThrown){
