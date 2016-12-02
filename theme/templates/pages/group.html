@@ -423,8 +423,7 @@
                                                 {% endif %}
                                             </td>
                                             <td>
-                                                <h4><strong><a
-                                                        href="#">{{ pendingrequest.invitation_to|best_name }}</a></strong>
+                                                <h4><strong>{{ pendingrequest.invitation_to|contact|safe }}</strong>
                                                 </h4>
                                                 {% if  pendingrequest.invitation_to.userprofile.title %}
                                                     <span class="text-muted">{{ pendingrequest.invitation_to.userprofile.title }}</span>

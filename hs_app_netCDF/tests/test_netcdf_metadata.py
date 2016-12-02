@@ -1,8 +1,6 @@
-
 import os
 import tempfile
 import shutil
-from dateutil import parser
 
 from django.test import TransactionTestCase
 from django.core.exceptions import ValidationError
@@ -14,11 +12,11 @@ from hs_core import hydroshare
 from hs_core.hydroshare import utils
 from hs_core.models import CoreMetaData, Creator, Contributor, Coverage, Rights, Title, Language, \
     Publisher, Identifier, Type, Subject, Description, Date, Format, Relation, Source
-from hs_core.testing import MockIRODSTestCaseMixin
+from hs_core.testing import MockIRODSTestCaseMixin, TestCaseCommonUtilities
 from hs_app_netCDF.models import NetcdfResource, Variable, OriginalCoverage
 
 
-class TestNetcdfMetaData(MockIRODSTestCaseMixin, TransactionTestCase):
+class TestNetcdfMetaData(MockIRODSTestCaseMixin, TestCaseCommonUtilities, TransactionTestCase):
     def setUp(self):
         super(TestNetcdfMetaData, self).setUp()
         self.group, _ = Group.objects.get_or_create(name='Hydroshare Author')
@@ -99,22 +97,22 @@ class TestNetcdfMetaData(MockIRODSTestCaseMixin, TransactionTestCase):
         # there should be 2 content file: with ncdump file created by system
         self.assertEqual(self.resNetcdf.files.all().count(), 2)
 
-        # file pre add process should raise validation error if we try to add a
-        # 2nd file when the resource has already 2 content files
+        # file pre add process should raise validation error if we try to add a 2nd file
+        # when the resource has already 2 content files
+
         with self.assertRaises(utils.ResourceFileValidationException):
             utils.resource_file_add_pre_process(resource=self.resNetcdf, files=files,
                                                 user=self.user,
                                                 extract_metadata=False)
 
     def test_metadata_extraction_on_resource_creation(self):
-        # passing the file object that points to the temp dir doesn't
-        # work - create_resource throws error
-        # open the file from the fixed file location
+        # passing the file object that points to the temp dir doesn't work - create_resource
+        # throws error open the file from the fixed file location
         files = [UploadedFile(file=self.netcdf_file_obj, name=self.netcdf_file_name)]
         _, _, metadata, _ = utils.resource_pre_create_actions(
             resource_type='NetcdfResource',
-            resource_title='Snow water equivalent estimation at TWDEF site from '
-                           'Oct 2009 to June 2010',
+            resource_title='Snow water equivalent estimation at TWDEF site '
+                           'from Oct 2009 to June 2010',
             page_redirect_url_key=None,
             files=files,
             metadata=None,)
@@ -127,7 +125,7 @@ class TestNetcdfMetaData(MockIRODSTestCaseMixin, TransactionTestCase):
             metadata=metadata
             )
 
-        self._test_metadata_extraction()
+        super(TestNetcdfMetaData, self).netcdf_metadata_extraction()
 
     def test_metadata_extraction_on_content_file_add(self):
         # test the core metadata at this point
@@ -170,7 +168,7 @@ class TestNetcdfMetaData(MockIRODSTestCaseMixin, TransactionTestCase):
         utils.resource_file_add_process(resource=self.resNetcdf, files=files, user=self.user,
                                         extract_metadata=False)
 
-        self._test_metadata_extraction()
+        super(TestNetcdfMetaData, self).netcdf_metadata_extraction()
 
     def test_metadata_on_content_file_delete(self):
         # test that some of the metadata is not deleted on content file deletion
@@ -323,7 +321,6 @@ class TestNetcdfMetaData(MockIRODSTestCaseMixin, TransactionTestCase):
                                    '+y_0=0.0 +k_0=0.9996',
             projection_string_type='Proj4 String'
             )
-
         ori_coverage = self.resNetcdf.metadata.ori_coverage.all().first()
         self.assertEqual(ori_coverage.value, value)
         self.assertEqual(ori_coverage.projection_string_text,
@@ -337,8 +334,8 @@ class TestNetcdfMetaData(MockIRODSTestCaseMixin, TransactionTestCase):
                 value=value,
                 projection_string_text='+proj=tmerc +lon_0=-111.0 '
                                        '+lat_0=0.0 +x_0=500000.0 +y_0=0.0 +k_0=0.9996',
-                projection_string_type='Proj4 String'
-                                                   )
+                projection_string_type='Proj4 String')
+
         # create variable element
         self.assertEqual(self.resNetcdf.metadata.variables.all().count(), 0)
         self.resNetcdf.metadata.create_element('variable', name='SWE', type='Float',
@@ -394,7 +391,6 @@ class TestNetcdfMetaData(MockIRODSTestCaseMixin, TransactionTestCase):
                                                method='model result of UEB')
         # need to refer to the variable again!
         variable = self.resNetcdf.metadata.variables.all().filter(name='SWE2').first()
-
         self.assertEqual(variable.name, 'SWE2')
         self.assertEqual(variable.type, 'Double')
         self.assertEqual(variable.shape, 'y,x,time')
@@ -481,124 +477,3 @@ class TestNetcdfMetaData(MockIRODSTestCaseMixin, TransactionTestCase):
                     'AUTHORITY["EPSG","26912"]]'
         self.assertEqual(ori_coverage.projection_string_text, proj_text)
         self.assertEqual(ori_coverage.datum, 'North_American_Datum_1983')
-
-    def _test_metadata_extraction(self, create_res_mode=True):
-        # there should 2 content file
-        self.assertEqual(self.resNetcdf.files.all().count(), 2)
-
-        # test core metadata after metadata extraction
-        extracted_title = "Snow water equivalent estimation at TWDEF site from " \
-                          "Oct 2009 to June 2010"
-        self.assertEqual(self.resNetcdf.metadata.title.value, extracted_title)
-
-        # there should be an abstract element
-        self.assertNotEquals(self.resNetcdf.metadata.description, None)
-        extracted_abstract = "This netCDF data is the simulation output from Utah Energy " \
-                             "Balance (UEB) model.It includes the simulation result " \
-                             "of snow water equivalent during the period " \
-                             "Oct. 2009 to June 2010 for TWDEF site in Utah."
-        self.assertEqual(self.resNetcdf.metadata.description.abstract, extracted_abstract)
-
-        # there should be one source element
-        self.assertEqual(self.resNetcdf.metadata.sources.all().count(), 1)
-
-        # there should be one license element:
-        self.assertNotEquals(self.resNetcdf.metadata.rights.statement, 1)
-
-        # there should be one relation element
-        self.assertEqual(self.resNetcdf.metadata.relations.all().filter(type='cites').count(), 1)
-
-        # there should be 2 creator
-        self.assertEqual(self.resNetcdf.metadata.creators.all().count(), 2)
-
-        # there should be one contributor
-        self.assertEqual(self.resNetcdf.metadata.contributors.all().count(), 1)
-
-        # there should be 2 coverage element - box type and period type
-        self.assertEqual(self.resNetcdf.metadata.coverages.all().count(), 2)
-        self.assertEqual(self.resNetcdf.metadata.coverages.all().filter(type='box').count(), 1)
-        self.assertEqual(self.resNetcdf.metadata.coverages.all().filter(type='period').count(), 1)
-
-        box_coverage = self.resNetcdf.metadata.coverages.all().filter(type='box').first()
-        self.assertEqual(box_coverage.value['projection'], 'WGS 84 EPSG:4326')
-        self.assertEqual(box_coverage.value['units'], 'Decimal degrees')
-        self.assertEqual(box_coverage.value['northlimit'], 41.867126409)
-        self.assertEqual(box_coverage.value['eastlimit'], -111.505940368)
-        self.assertEqual(box_coverage.value['southlimit'], 41.8639080745)
-        self.assertEqual(box_coverage.value['westlimit'], -111.51138808)
-
-        temporal_coverage = self.resNetcdf.metadata.coverages.all().filter(type='period').first()
-        self.assertEqual(parser.parse(temporal_coverage.value['start']).date(),
-                         parser.parse('10/01/2009').date())
-        self.assertEqual(parser.parse(temporal_coverage.value['end']).date(),
-                         parser.parse('05/30/2010').date())
-
-        # there should be 2 format elements
-        self.assertEqual(self.resNetcdf.metadata.formats.all().count(), 2)
-        self.assertEqual(self.resNetcdf.metadata.formats.all().
-                         filter(value='text/plain').count(), 1)
-        self.assertEqual(self.resNetcdf.metadata.formats.all().
-                         filter(value='application/x-netcdf').count(), 1)
-
-        # there should be one subject element
-        self.assertEqual(self.resNetcdf.metadata.subjects.all().count(), 1)
-        subj_element = self.resNetcdf.metadata.subjects.all().first()
-        self.assertEqual(subj_element.value, 'Snow water equivalent')
-
-        # testing extended metadata element: original coverage
-        ori_coverage = self.resNetcdf.metadata.ori_coverage.all().first()
-        self.assertNotEquals(ori_coverage, None)
-        self.assertEqual(ori_coverage.projection_string_type, 'Proj4 String')
-        proj_text = u'+proj=tmerc +y_0=0.0 +k_0=0.9996 +x_0=500000.0 +lat_0=0.0 +lon_0=-111.0'
-        self.assertEqual(ori_coverage.projection_string_text, proj_text)
-        self.assertEqual(ori_coverage.value['northlimit'], '4.63515e+06')
-        self.assertEqual(ori_coverage.value['eastlimit'], '458010.0')
-        self.assertEqual(ori_coverage.value['southlimit'], '4.63479e+06')
-        self.assertEqual(ori_coverage.value['westlimit'], '457560.0')
-        self.assertEqual(ori_coverage.value['units'], 'Meter')
-        self.assertEqual(ori_coverage.value['projection'], 'transverse_mercator')
-
-        # testing extended metadata element: variables
-        self.assertEqual(self.resNetcdf.metadata.variables.all().count(), 5)
-
-        # test time variable
-        var_time = self.resNetcdf.metadata.variables.all().filter(name='time').first()
-        self.assertNotEquals(var_time, None)
-        self.assertEqual(var_time.unit, 'hours since 2009-10-1 0:0:00 UTC')
-        self.assertEqual(var_time.type, 'Float')
-        self.assertEqual(var_time.shape, 'time')
-        self.assertEqual(var_time.descriptive_name, 'time')
-
-        # test x variable
-        var_x = self.resNetcdf.metadata.variables.all().filter(name='x').first()
-        self.assertNotEquals(var_x, None)
-        self.assertEqual(var_x.unit, 'Meter')
-        self.assertEqual(var_x.type, 'Float')
-        self.assertEqual(var_x.shape, 'x')
-        self.assertEqual(var_x.descriptive_name, 'x coordinate of projection')
-
-        # test y variable
-        var_y = self.resNetcdf.metadata.variables.all().filter(name='y').first()
-        self.assertNotEquals(var_y, None)
-        self.assertEqual(var_y.unit, 'Meter')
-        self.assertEqual(var_y.type, 'Float')
-        self.assertEqual(var_y.shape, 'y')
-        self.assertEqual(var_y.descriptive_name, 'y coordinate of projection')
-
-        # test SWE variable
-        var_swe = self.resNetcdf.metadata.variables.all().filter(name='SWE').first()
-        self.assertNotEquals(var_swe, None)
-        self.assertEqual(var_swe.unit, 'm')
-        self.assertEqual(var_swe.type, 'Float')
-        self.assertEqual(var_swe.shape, 'y,x,time')
-        self.assertEqual(var_swe.descriptive_name, 'Snow water equivalent')
-        self.assertEqual(var_swe.method, 'model simulation of UEB model')
-        self.assertEqual(var_swe.missing_value, '-9999')
-
-        # test grid mapping variable
-        var_grid = self.resNetcdf.metadata.variables.all().\
-            filter(name='transverse_mercator').first()
-        self.assertNotEquals(var_grid, None)
-        self.assertEqual(var_grid.unit, 'Unknown')
-        self.assertEqual(var_grid.type, 'Unknown')
-        self.assertEqual(var_grid.shape, 'Not defined')
