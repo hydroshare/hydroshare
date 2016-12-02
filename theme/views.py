@@ -136,7 +136,7 @@ def rating(request):
     return response
 
 
-def signup(request, template="accounts/account_signup.html"):
+def signup(request):
     """
     Signup form.
     """
@@ -145,7 +145,6 @@ def signup(request, template="accounts/account_signup.html"):
         try:
             new_user = form.save()
         except ValidationError as e:
-            # form.add_error(None, e.message)
             messages.error(request, e.message)
             return HttpResponseRedirect(request.META['HTTP_REFERER'])
         else:
@@ -167,11 +166,22 @@ def signup(request, template="accounts/account_signup.html"):
                 info(request, _("Successfully signed up"))
                 auth_login(request, new_user)
                 return login_redirect(request)
-    context = {
-        "form": form,
-        "title": _("Sign up"),
-    }
-    return render(request, template, context)
+
+    # remove the key 'response' from errors as the user would have no idea what it means
+    form.errors.pop('response', None)
+    messages.error(request, form.errors)
+
+    # TODO: User entered data could be retained only if the following
+    # render function would work without messing up the css.
+    # template = "accounts/account_signup.html"
+    # context = {
+    #     "form": form,
+    #     "title": _("Sign up"),
+    # }
+    # render(request, template, context)
+
+    # This one keeps the css but not able to retained user entered data.
+    return HttpResponseRedirect(request.META['HTTP_REFERER'])
 
 
 @login_required
