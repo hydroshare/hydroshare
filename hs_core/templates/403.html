@@ -1,17 +1,33 @@
 {% extends 'pages/page.html' %}
-{% load pages_tags mezzanine_tags theme_tags %}
+{% load pages_tags mezzanine_tags hydroshare_tags theme_tags %}
 
 {% block main %}
-    <div class="alert alert-danger alert-dismissible" role="alert">
-        <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-        <strong>Permission Denied Error: You do not have permission to access this resource.</strong>
-    </div>
     <div class="panel-body">
+        <strong>The resource you have attempted to access is private. </strong>
         {% if request.user.is_authenticated %}
-            Please ask this resource owner to give you proper permission before you can access this resource.
+            <strong>You can request access from the owner.</strong>
         {% else %}
-            You have not signed in. Please sign in before accessing this resource.
-            <span id="signin-menu"><a href="{% url 'login' %}"><span class="glyphicon glyphicon-log-in"></span> Sign In</a></span>
+            <strong><span id="signin-menu"><a href="{% url 'login' %}"><span class="glyphicon glyphicon-log-in"></span> Log in</a></span>
+                to see it if the owner has shared it with you, or to request access.</strong>
         {% endif %}
+    </div>
+    <div class="container" id="main">
+        <div class="row">
+            <div class="col-sm-12">
+                <h2 class="page-title">Resource Title</h2>
+                <table class="info-table">
+                    <tr>
+                        <th>Owners:</th>
+                        <td>
+                            <span>Hong Yi</span>
+                        {% for u in owners %}
+                            {% if forloop.counter0 != 0 %} <span class="list-separator">·</span> {% endif %}
+                            <span>{{ u|contact|safe }}</span>
+                        {% endfor %}
+                        </td>
+                    </tr>
+                </table>
+            </div>
+        </div>
     </div>
 {% endblock %}
