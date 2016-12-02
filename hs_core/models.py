@@ -1589,14 +1589,6 @@ class BaseResource(Page, AbstractResource):
         else:
             return IrodsStorage()
 
-    # def get_file_size(self):
-    #     res_size = 0
-    #     files = self.files.get_queryset()
-    #     for f in files:
-    #         res_size += f.resource_file.size or 0
-    #         res_size += f.fed_resource_file_size or 0
-    #     return res_size
-
     # create crossref deposit xml for resource publication
     def get_crossref_deposit_xml(self, pretty_print=True):
         # importing here to avoid circular import problem
