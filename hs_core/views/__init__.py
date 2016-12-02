@@ -1154,7 +1154,7 @@ def get_user_or_group_data(request, user_or_group_id, is_group, *args, **kwargs)
     """
     This view function must be called as an AJAX call
 
-    :param user_or_group_id: id if the user for whom data is needed
+    :param user_or_group_id: id of the user or group for which data is needed
     :param is_group : (string) 'false' if the id is for a group, 'true' if id is for a user
     :return: JsonResponse() containing user data
     """
