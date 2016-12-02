@@ -1,7 +1,7 @@
 import logging
 
 from rest_framework.response import Response
-from rest_framework.exceptions import PermissionDenied, ValidationError
+from rest_framework.exceptions import ValidationError
 from rest_framework import status
 from rest_framework import generics
 from rest_framework import serializers
