@@ -82,16 +82,21 @@ def pre_delete_file_from_resource_handler(sender, **kwargs):
 @receiver(post_add_files_to_resource, sender=TimeSeriesResource)
 def post_add_files_to_resource_handler(sender, **kwargs):
     resource = kwargs['resource']
-    uploaded_file = kwargs['files'][0]
+    files = kwargs['files']
     validate_files_dict = kwargs['validate_files']
     user = kwargs['user']
+    fed_res_fnames = kwargs['fed_res_file_names']
+    if files:
+        file_name = files[0].name
+    elif fed_res_fnames:
+        file_name = os.path.basename(fed_res_fnames[0])
 
     # extract metadata from the just uploaded file
     uploaded_file_to_process = None
     uploaded_file_ext = ''
     for res_file in resource.files.all():
         _, res_file_name, uploaded_file_ext = utils.get_resource_file_name_and_extension(res_file)
-        if res_file_name == uploaded_file.name:
+        if res_file_name == file_name:
             uploaded_file_to_process = res_file
             break
 
