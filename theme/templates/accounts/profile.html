@@ -908,9 +908,10 @@
             return  flagRequiredElements && flagPasswords && flagEmail && flagUsername;
         }
 
-        // Only letters, numbers and dashes or underscore.
+        // Only letters, numbers, dashes, dot, underscore, +, or @
+        // to conform to the same user name validation rules in Django
         function validateUserName() {
-            var regex = /^[a-zA-Z0-9-_]+$/;
+            var regex = /^[a-zA-Z0-9-_.@+]+$/;
             var username = $("#id_username");
 
             if (!username.val()) {
