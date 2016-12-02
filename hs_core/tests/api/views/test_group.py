@@ -230,7 +230,7 @@ class TestGroup(MockIRODSTestCaseMixin, TestCase):
         url = reverse('update_user_group', kwargs=url_params)
         # update name, description, purpose
         grp_data = {'name': 'Test Group-2', 'description': 'This is a cool group-2',
-                    'purpose': 'This group now has purpose', 'privacy_level': 'public', 'active': 'on'}
+                    'purpose': 'This group now has purpose', 'privacy_level': 'public'}
         request = self.factory.post(url, data=grp_data)
 
         self._set_request_message_attributes(request)
@@ -249,8 +249,8 @@ class TestGroup(MockIRODSTestCaseMixin, TestCase):
         self.assertEqual(response['Location'], request.META['HTTP_REFERER'])
 
         # update group to remove purpose
-        grp_data = {'name': 'Test Group-2', 'description': 'This is a cool group-2', 'privacy_level': 'public',
-                    'active': 'on'}
+        grp_data = {'name': 'Test Group-2', 'description': 'This is a cool group-2',
+                    'privacy_level': 'public'}
         request = self.factory.post(url, data=grp_data)
 
         self._set_request_message_attributes(request)
@@ -269,8 +269,8 @@ class TestGroup(MockIRODSTestCaseMixin, TestCase):
         self.assertEqual(response['Location'], request.META['HTTP_REFERER'])
 
         # update privacy_level (set to private)- this set public to false and discoverable to false
-        grp_data = {'name': 'Test Group-2', 'description': 'This is a cool group-2', 'privacy_level': 'private',
-                    'active': 'on'}
+        grp_data = {'name': 'Test Group-2', 'description': 'This is a cool group-2',
+                    'privacy_level': 'private'}
         request = self.factory.post(url, data=grp_data)
 
         self._set_request_message_attributes(request)
@@ -289,8 +289,8 @@ class TestGroup(MockIRODSTestCaseMixin, TestCase):
         self.assertEqual(response['Location'], request.META['HTTP_REFERER'])
 
         # update privacy_level (set to public) - this set public to true and discoverable to true
-        grp_data = {'name': 'Test Group-2', 'description': 'This is a cool group-2', 'privacy_level': 'public',
-                    'active': 'on'}
+        grp_data = {'name': 'Test Group-2', 'description': 'This is a cool group-2',
+                    'privacy_level': 'public'}
         request = self.factory.post(url, data=grp_data)
 
         self._set_request_message_attributes(request)
@@ -308,9 +308,10 @@ class TestGroup(MockIRODSTestCaseMixin, TestCase):
         self.assertEqual(response.status_code, status.HTTP_302_FOUND)
         self.assertEqual(response['Location'], request.META['HTTP_REFERER'])
 
-        # update privacy_level (set to discoverable) - this should set discoverable to true and public to false
-        grp_data = {'name': 'Test Group-2', 'description': 'This is a cool group-2', 'privacy_level': 'discoverable',
-                    'active': 'on'}
+        # update privacy_level (set to discoverable) - this should set discoverable to
+        # true and public to false
+        grp_data = {'name': 'Test Group-2', 'description': 'This is a cool group-2',
+                    'privacy_level': 'discoverable'}
         request = self.factory.post(url, data=grp_data)
 
         self._set_request_message_attributes(request)
@@ -324,25 +325,6 @@ class TestGroup(MockIRODSTestCaseMixin, TestCase):
         self.assertEqual(new_group.gaccess.public, False)
         self.assertEqual(new_group.gaccess.discoverable, True)
         self.assertEqual(new_group.gaccess.active, True)
-
-        self.assertEqual(response.status_code, status.HTTP_302_FOUND)
-        self.assertEqual(response['Location'], request.META['HTTP_REFERER'])
-
-        # update active to make group inactive - this should set active to false
-        grp_data = {'name': 'Test Group-2', 'description': 'This is a cool group-2', 'privacy_level': 'discoverable'}
-        request = self.factory.post(url, data=grp_data)
-
-        self._set_request_message_attributes(request)
-        request.user = self.john
-        request.META['HTTP_REFERER'] = "/some_url/"
-        response = update_user_group(request, group_id=new_group.id)
-        new_group = Group.objects.filter(name='Test Group-2').first()
-        self.assertNotEqual(new_group, None)
-        self.assertEqual(new_group.gaccess.description, 'This is a cool group-2')
-        self.assertEqual(new_group.gaccess.purpose, '')
-        self.assertEqual(new_group.gaccess.public, False)
-        self.assertEqual(new_group.gaccess.discoverable, True)
-        self.assertEqual(new_group.gaccess.active, False)
 
         self.assertEqual(response.status_code, status.HTTP_302_FOUND)
         self.assertEqual(response['Location'], request.META['HTTP_REFERER'])
@@ -380,14 +362,15 @@ class TestGroup(MockIRODSTestCaseMixin, TestCase):
         self.assertEqual(response['Location'], request.META['HTTP_REFERER'])
 
         # test description is required -> update should fail
-        grp_data = {'name': 'Test Group-2', 'purpose': 'This group has purpose', 'privacy_level': 'public', 'active': 'on'}
+        grp_data = {'name': 'Test Group-2', 'purpose': 'This group has purpose',
+                    'privacy_level': 'public'}
         request = self.factory.post(url, data=grp_data)
 
         self._update_failure(new_group, request)
 
         # test privacy_level is required -> update should fail
-        grp_data = {'name': 'Test Group-2', 'description': 'This is a cool group', 'purpose': 'This group has purpose',
-                    'active': 'on'}
+        grp_data = {'name': 'Test Group-2', 'description': 'This is a cool group',
+                    'purpose': 'This group has purpose'}
         request = self.factory.post(url, data=grp_data)
 
         self._update_failure(new_group, request)
