@@ -15,7 +15,7 @@ from rest_framework import status
 from hs_core import hydroshare
 from hs_core.views import create_user_group, update_user_group, share_group_with_user, unshare_group_with_user, \
     make_group_membership_request, act_on_group_membership_request, share_resource_with_group, \
-    unshare_resource_with_group
+    unshare_resource_with_group, delete_user_group, restore_user_group
 from hs_core.testing import MockIRODSTestCaseMixin
 from hs_access_control.models import PrivilegeCodes
 
@@ -324,6 +324,49 @@ class TestGroup(MockIRODSTestCaseMixin, TestCase):
         self.assertEqual(new_group.gaccess.purpose, '')
         self.assertEqual(new_group.gaccess.public, False)
         self.assertEqual(new_group.gaccess.discoverable, True)
+        self.assertEqual(new_group.gaccess.active, True)
+
+        self.assertEqual(response.status_code, status.HTTP_302_FOUND)
+        self.assertEqual(response['Location'], request.META['HTTP_REFERER'])
+
+    def test_delete_restore_group(self):
+        # test a group can be deleted or restored
+
+        # first create a group to test updating group
+        url = reverse('create_user_group')
+        grp_data = {'name': 'Test Group-1', 'description': 'This is a cool group-1',
+                    'purpose': 'This group has no purpose', 'privacy_level': 'public'}
+        request = self.factory.post(url, data=grp_data)
+
+        self._set_request_message_attributes(request)
+        request.user = self.john
+        create_user_group(request)
+        new_group = Group.objects.filter(name='Test Group-1').first()
+        self.assertEqual(new_group.gaccess.active, True)
+
+        post_data = {'group_id': new_group.id}
+        url = reverse('delete_user_group', kwargs=post_data)
+        request = self.factory.post(url, data=post_data)
+
+        self._set_request_message_attributes(request)
+        request.user = self.john
+        request.META['HTTP_REFERER'] = "/some_url/"
+        response = delete_user_group(request, group_id=new_group.id)
+        new_group = Group.objects.filter(name='Test Group-1').first()
+        self.assertEqual(new_group.gaccess.active, False)
+
+        self.assertEqual(response.status_code, status.HTTP_302_FOUND)
+        self.assertEqual(response['Location'], request.META['HTTP_REFERER'])
+
+        # test undeleting the group
+        url = reverse('restore_user_group', kwargs=post_data)
+        request = self.factory.post(url, data=post_data)
+
+        self._set_request_message_attributes(request)
+        request.user = self.john
+        request.META['HTTP_REFERER'] = "/some_url/"
+        response = restore_user_group(request, group_id=new_group.id)
+        new_group = Group.objects.filter(name='Test Group-1').first()
         self.assertEqual(new_group.gaccess.active, True)
 
         self.assertEqual(response.status_code, status.HTTP_302_FOUND)
