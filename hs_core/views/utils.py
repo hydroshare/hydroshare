@@ -647,13 +647,13 @@ def remove_folder(user, res_id, folder_path):
     hydroshare.utils.resource_modified(resource, user)
 
 
-def list_folder(user, res_id, folder_path):
+def list_folder(res_id, folder_path):
     """
-    remove a sub-folder/sub-collection in hydroshareZone or any federated zone used for HydroShare
+    list a sub-folder/sub-collection in hydroshareZone or any federated zone used for HydroShare
     resource backend store.
     :param user: requesting user
     :param res_id: resource uuid
-    :param folder_path: the relative path for the folder to be removed under res_id collection.
+    :param folder_path: the relative path for the folder to be listed under res_id collection.
     :return:
     """
     resource = hydroshare.utils.get_resource_by_shortkey(res_id)
@@ -705,5 +705,5 @@ def irods_path_is_allowed(path):
     """ paths containing '/../' are suspicious """
     if path == "":
         raise ValidationError("Empty file paths are not allowed")
-    if path.contains('/../'):
+    if '/../' in path:
         raise SuspiciousFileOperation("File paths cannot contain '/../'")

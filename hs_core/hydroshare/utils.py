@@ -753,8 +753,10 @@ def resource_file_add_pre_process(resource, files, user, extract_metadata=False,
 
 def resource_file_add_process(resource, files, user, extract_metadata=False,
                               fed_res_file_names='', **kwargs):
+
     from .resource import add_resource_files
-    resource_file_objects = add_resource_files(resource.short_id, *files,
+    folders = kwargs.pop('folders', ['',] * len(files))
+    resource_file_objects = add_resource_files(resource.short_id, *files, folders=folders, 
                                                fed_res_file_names=fed_res_file_names,
                                                fed_zone_home_path=resource.resource_federation_path)
 
@@ -786,7 +788,8 @@ def create_empty_contents_directory(resource):
         istorage.session.run("imkdir", None, '-p', res_contents_dir)
 
 
-def add_file_to_resource(resource, f, fed_res_file_name_or_path='', fed_copy_or_move=None):
+def add_file_to_resource(resource, f, folder=None, fed_res_file_name_or_path='', 
+                         fed_copy_or_move=None):
     """
     Add a ResourceFile to a Resource.  Adds the 'format' metadata element to the resource.
     :param resource: Resource to which file should be added
@@ -817,10 +820,13 @@ def add_file_to_resource(resource, f, fed_res_file_name_or_path='', fed_copy_or_
                                               fed_resource_file=File(f) if not isinstance(
                                                   f, UploadedFile) else f)
         else:
+            # base = f.name.rsplit('/')[-1]
             ret = ResourceFile.objects.create(content_object=resource,
                                               resource_file=File(f) if not isinstance(
                                                   f, UploadedFile) else f,
                                               fed_resource_file=None)
+            # TODO: find way to assert path of resource file 
+                                              # name=os.path.join(folder, base))
         # add format metadata element if necessary
         file_format_type = get_file_mime_type(f.name)
     elif fed_res_file_name_or_path and (fed_copy_or_move == 'copy' or fed_copy_or_move == 'move'):

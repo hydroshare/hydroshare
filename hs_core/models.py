@@ -1504,9 +1504,7 @@ class ResourceFile(models.Model):
 
     content_object = GenericForeignKey('content_type', 'object_id')
     resource_file = models.FileField(upload_to=get_path, max_length=500, null=True, blank=True,
-                                     storage=IrodsStorage()
-                                     if getattr(settings, 'USE_IRODS', False)
-                                     else DefaultStorage())
+                                     storage=IrodsStorage())
     # the following optional fields are added for use by federated iRODS resources where
     # resources are created in the local federated zone rather than hydroshare zone, in
     # which case resource_file is empty, and we record iRODS logical resource file name
@@ -1515,8 +1513,7 @@ class ResourceFile(models.Model):
     # handles files uploaded from local disk and store the files to federated zone rather
     # than hydroshare zone.
     fed_resource_file = models.FileField(upload_to=get_path, max_length=500, null=True, blank=True,
-                                         storage=IrodsStorage('federated') if getattr(
-                                             settings, 'USE_IRODS', False) else DefaultStorage())
+                                         storage=IrodsStorage('federated'))
     fed_resource_file_name_or_path = models.CharField(max_length=255, null=True, blank=True)
     fed_resource_file_size = models.CharField(max_length=15, null=True, blank=True)
 

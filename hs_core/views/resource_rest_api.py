@@ -496,6 +496,7 @@ class ResourceListCreate(ResourceToListItemMixin, generics.ListCreateAPIView):
     pagination_class = PageNumberPagination
 
     def get(self, request):
+        print("called ResourceListCreate.get")
         return self.list(request)
 
     # needed for list of resources
@@ -835,7 +836,7 @@ class ResourceFileCRUD(APIView):
                 request, pk,
                 needed_permission=ACTION_TO_AUTHORIZE.VIEW_RESOURCE)
         view_utils.irods_path_is_allowed(filename)
-        if not resource.supports_folders and filename.contains('/'):
+        if not resource.supports_folders and '/' in filename:
             raise ValidationError("Resource type does not support subfolders")
 
         try:
@@ -851,11 +852,12 @@ class ResourceFileCRUD(APIView):
         redirect_url = f.url.replace('django_irods/download/', 'django_irods/rest_download/')
         return HttpResponseRedirect(redirect_url)
 
-    def post(self, request, pk):
+    def post(self, request, pk, folder=''):
         """
         Add a file to a resource.
         :param request:
         :param pk: Primary key of the resource (i.e. resource short ID)
+        :param folder: the path to the containing folder in the folder hierarchy (optional)
         :return:
         """
         resource, _, _ = view_utils.authorize(request, pk,
@@ -884,9 +886,14 @@ class ResourceFileCRUD(APIView):
             error_msg = {'file': 'Adding file to resource failed. %s' % ex.message}
             raise ValidationError(detail=error_msg)
 
+        if folder is None:
+            my_folders = ['']
+        else:
+            my_folders = [folder]
         try:
             res_file_objects = hydroshare.utils.resource_file_add_process(resource=resource,
                                                                           files=[resource_files[0]],
+                                                                          folders=my_folders,
                                                                           user=request.user,
                                                                           extract_metadata=True)
 
@@ -904,7 +911,7 @@ class ResourceFileCRUD(APIView):
         resource, _, user = view_utils.authorize(
             request, pk, needed_permission=ACTION_TO_AUTHORIZE.EDIT_RESOURCE)
         view_utils.irods_path_is_allowed(filename)
-        if not resource.supports_folders and filename.contains('/'):
+        if not resource.supports_folders and '/' in filename:
             raise ValidationError("Resource type does not support folders")
 
         try:

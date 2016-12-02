@@ -47,11 +47,12 @@ urlpatterns = patterns('',
 
     # Unused. See ResourceFileListCreate. This is now implemented there.
     # Older version based upon polymorphism of ResourceFileCRUD. 
-    # url(r'^resource/(?P<pk>[A-z0-9]+)/files/$', views.resource_rest_api.ResourceFileCRUD.as_view(),
+    # url(r'^resource/(?P<pk>[A-z0-9]+)/files/$', 
+    #     views.resource_rest_api.ResourceFileCRUD.as_view(),
     #     name='add_resource_file'),
 
     # Patterns are now checked in the view class.
-    url(r'^resource/(?P<pk>[0-9a-f-]+)/files/(?P<filename>.*)/$',
+    url(r'^resource/(?P<pk>[0-9a-f-]+)/files/(?P<filename>[^/]+)/$',
         views.resource_rest_api.ResourceFileCRUD.as_view(), 
         name='get_update_delete_resource_file'),
 

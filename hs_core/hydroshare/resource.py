@@ -768,17 +768,20 @@ def add_resource_files(pk, *files, **kwargs):
     fed_zone_home_path = kwargs.pop('fed_zone_home_path', '')
     # for adding files to existing resources, the default action is copy
     fed_copy_or_move = kwargs.pop('fed_copy_or_move', 'copy')
+    folders = kwargs.pop('folders', ['',] * len(files)) 
 
-    for f in files:
+    for i in range(len(files)): 
+        f = files[i]
+        p = folders[i]
         if fed_zone_home_path:
             # user has selected files from a federated iRODS zone, so files uploaded from local disk
             # need to be stored to the federated iRODS zone rather than HydroShare zone as well
-            ret.append(utils.add_file_to_resource(resource, f, fed_res_file_name_or_path=fed_zone_home_path))
+            ret.append(utils.add_file_to_resource(resource, f, folder=p, fed_res_file_name_or_path=fed_zone_home_path))
         elif resource.resource_federation_path:
             # file needs to be added to a resource in a federated zone
             ret.append(utils.add_file_to_resource(resource, f, fed_res_file_name_or_path=resource.resource_federation_path))
         else:
-            ret.append(utils.add_file_to_resource(resource, f))
+            ret.append(utils.add_file_to_resource(resource, f, folder=p))
     if fed_res_file_names:
         if isinstance(fed_res_file_names, basestring):
             ifnames = string.split(fed_res_file_names, ',')
