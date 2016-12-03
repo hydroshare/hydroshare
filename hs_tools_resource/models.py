@@ -169,7 +169,7 @@ class SupportedSharingStatus(AbstractMetaDataElement):
 
 class ToolIcon(AbstractMetaDataElement):
     term = 'ToolIcon'
-    url = models.CharField(max_length=1024, blank=True, default="")
+    value = models.CharField(max_length=1024, blank=True, default="")
 
     class Meta:
         # ToolVersion element is not repeatable

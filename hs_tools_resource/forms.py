@@ -43,7 +43,7 @@ class UrlBaseForm(ModelForm):
         exclude = ['content_object']
 
 
-class UrlBaseValidationForm(forms.Form):
+class UrlValidationForm(forms.Form):
     value = forms.URLField(max_length=1024, required=False)
 
 
@@ -76,10 +76,6 @@ class AppHomePageUrlForm(ModelForm):
         model = AppHomePageUrl
         fields = ['value']
         exclude = ['content_object']
-
-
-class AppHomePageUrlValidationForm(forms.Form):
-    value = forms.URLField(max_length=1024, required=False)
 
 
 class VersionFormHelper(BaseFormHelper):
@@ -127,7 +123,7 @@ class ToolIconFormHelper(BaseFormHelper):
         # FieldSet is the order these fields will be displayed
         field_width = 'form-control input-sm'
         layout = Layout(
-                Field('url', css_class=field_width)
+                Field('value', css_class=field_width)
         )
         kwargs['element_name_label'] = 'Icon URL'
         super(ToolIconFormHelper, self).__init__(allow_edit,
@@ -146,16 +142,12 @@ class ToolIconForm(ModelForm):
                                          res_short_id,
                                          element_id,
                                          element_name='ToolIcon')
-        self.fields['url'].label = ""
+        self.fields['value'].label = ""
 
     class Meta:
         model = ToolIcon
-        fields = ['url']
+        fields = ['value']
         exclude = ['content_object']
-
-
-class ToolIconValidationForm(forms.Form):
-    url = forms.URLField(max_length=1024, required=False)
 
 
 class MetadataField(Field):

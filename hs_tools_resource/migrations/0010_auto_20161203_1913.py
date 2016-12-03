@@ -11,6 +11,15 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
+        migrations.RemoveField(
+            model_name='toolicon',
+            name='url',
+        ),
+        migrations.AddField(
+            model_name='toolicon',
+            name='value',
+            field=models.CharField(default=b'', max_length=1024, blank=True),
+        ),
         migrations.AlterField(
             model_name='apphomepageurl',
             name='value',
@@ -30,10 +39,5 @@ class Migration(migrations.Migration):
             model_name='supportedsharingstatus',
             name='sharing_status',
             field=models.ManyToManyField(to='hs_tools_resource.SupportedSharingStatusChoices', blank=True),
-        ),
-        migrations.AlterField(
-            model_name='toolicon',
-            name='url',
-            field=models.CharField(default=b'', max_length=1024, blank=True),
         ),
     ]
