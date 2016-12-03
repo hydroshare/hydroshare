@@ -1490,11 +1490,22 @@ class AbstractResource(ResourcePermissionsMixin):
 
 
 def get_path(instance, filename):
+    """ 
+    Dynamically determine storage path for a FileField based upon whether resource is federated 
+
+    :param instance: instance of ResourceFile containing the FileField; 
+    :param filename: the filename to be used; derived from upload data 
+
+    The instance points to the Resource record, which contains the federation path. 
+    """
+    # retrieve federation path -- if any -- from Resource object containing FileField
     if instance.content_object.resource_federation_path:
+        # federation path is prefixed to iRODS path convention 
         return os.path.join(instance.content_object.resource_federation_path,
                             instance.content_object.short_id, 'data',
                             'contents', filename)
     else:
+        # local iRODS path convention
         return os.path.join(instance.content_object.short_id, 'data', 'contents', filename)
 
 
