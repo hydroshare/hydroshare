@@ -231,24 +231,30 @@ def add_metadata_element(request, shortkey, element_name, *args, **kwargs):
 
     if request.is_ajax():
         if is_add_success:
-            if res.metadata.has_all_required_elements():
+            res_public_status = 'public' if res.raccess.public else 'not public'
+            if res.can_be_public_or_discoverable:
                 metadata_status = METADATA_STATUS_SUFFICIENT
             else:
                 metadata_status = METADATA_STATUS_INSUFFICIENT
 
             if element_name == 'subject':
-                ajax_response_data = {'status': 'success', 'element_name': element_name, 'metadata_status': metadata_status}
+                ajax_response_data = {'status': 'success', 'element_name': element_name,
+                                      'metadata_status': metadata_status}
             elif element_name.lower() == 'site' and res.resource_type == 'TimeSeriesResource':
                 # get the spatial coverage element
                 spatial_coverage_dict = _get_spatial_coverage_data(res)
                 ajax_response_data = {'status': 'success', 'element_id': element.id,
                                       'element_name': element_name,
                                       'spatial_coverage': spatial_coverage_dict,
-                                      'metadata_status': metadata_status}
+                                      'metadata_status': metadata_status,
+                                      'res_public_status': res_public_status
+                                      }
             else:
                 ajax_response_data = {'status': 'success', 'element_id': element.id,
                                       'element_name': element_name,
-                                      'metadata_status': metadata_status}
+                                      'metadata_status': metadata_status,
+                                      'res_public_status': res_public_status
+                                      }
 
             return JsonResponse(ajax_response_data)
         else:
@@ -264,7 +270,8 @@ def add_metadata_element(request, shortkey, element_name, *args, **kwargs):
 def update_metadata_element(request, shortkey, element_name, element_id, *args, **kwargs):
     res, _, _ = authorize(request, shortkey, needed_permission=ACTION_TO_AUTHORIZE.EDIT_RESOURCE)
     sender_resource = _get_resource_sender(element_name, res)
-    handler_response = pre_metadata_element_update.send(sender=sender_resource, element_name=element_name,
+    handler_response = pre_metadata_element_update.send(sender=sender_resource,
+                                                        element_name=element_name,
                                                         element_id=element_id, request=request)
     is_update_success = False
     err_msg = "Failed to update metadata element '{}'. {}."
@@ -274,7 +281,8 @@ def update_metadata_element(request, shortkey, element_name, element_id, *args, 
                 element_data_dict = response['element_data_dict']
                 try:
                     res.metadata.update_element(element_name, element_id, **element_data_dict)
-                    post_handler_response = post_metadata_element_update.send(sender=sender_resource, element_name=element_name, element_id=element_id)
+                    post_handler_response = post_metadata_element_update.send(
+                        sender=sender_resource, element_name=element_name, element_id=element_id)
                     is_update_success = True
                     # this is how we handle if a post_metadata_element_update receiver
                     # is not implemented in the resource type's receivers.py
@@ -303,7 +311,8 @@ def update_metadata_element(request, shortkey, element_name, element_id, *args, 
 
     if request.is_ajax():
         if is_update_success:
-            if res.metadata.has_all_required_elements():
+            res_public_status = 'public' if res.raccess.public else 'not public'
+            if res.can_be_public_or_discoverable:
                 metadata_status = METADATA_STATUS_SUFFICIENT
             else:
                 metadata_status = METADATA_STATUS_INSUFFICIENT
@@ -314,12 +323,14 @@ def update_metadata_element(request, shortkey, element_name, element_id, *args, 
                                       'element_name': element_name,
                                       'spatial_coverage': spatial_coverage_dict,
                                       'metadata_status': metadata_status,
-                                      'element_exists':element_exists}
+                                      'res_public_status': res_public_status,
+                                      'element_exists': element_exists}
             else:
                 ajax_response_data = {'status': 'success',
                                       'element_name': element_name,
                                       'metadata_status': metadata_status,
-                                      'element_exists':element_exists}
+                                      'res_public_status': res_public_status,
+                                      'element_exists': element_exists}
 
             return JsonResponse(ajax_response_data)
         else:
@@ -405,6 +416,10 @@ def delete_resource(request, shortkey, *args, **kwargs):
              collection=collection_res
              )
         o.resource_owners.add(*owners_list)
+
+    post_delete_resource.send(sender=type(res), request=request, user=user,
+                              resource_shortkey=shortkey, resource=res,
+                              resource_title=res_title, resource_type=res_type, **kwargs)
 
     return HttpResponseRedirect('/my-resources/')
 
@@ -893,7 +908,7 @@ def create_resource(request, *args, **kwargs):
     #     return render_to_response('pages/create-resource.html', context, context_instance=RequestContext(request))
 
     try:
-        utils.resource_post_create_actions(resource=resource, user=request.user, metadata=metadata, **kwargs)
+        utils.resource_post_create_actions(request=request, resource=resource, user=request.user, metadata=metadata, **kwargs)
     except (utils.ResourceFileValidationException, Exception) as ex:
         request.session['validation_error'] = ex.message
 
@@ -1143,41 +1158,51 @@ def get_metadata_terms_page(request, *args, **kwargs):
 
 
 @login_required
-def get_user_data(request, user_id, *args, **kwargs):
+def get_user_or_group_data(request, user_or_group_id, is_group, *args, **kwargs):
     """
     This view function must be called as an AJAX call
 
-    :param user_id: id if the user for whom data is needed
+    :param user_or_group_id: id of the user or group for which data is needed
+    :param is_group : (string) 'false' if the id is for a group, 'true' if id is for a user
     :return: JsonResponse() containing user data
     """
-    user = utils.user_from_id(user_id)
+    user_data = {}
+    if is_group == 'false':
+        user = utils.user_from_id(user_or_group_id)
 
-    if user.userprofile.middle_name:
-        user_name = "{} {} {}".format(user.first_name, user.userprofile.middle_name, user.last_name)
-    else:
-        user_name = "{} {}".format(user.first_name, user.last_name)
-
-    user_data = {'name': user_name, 'email': user.email}
-    user_data['url'] = '{domain}/user/{uid}/'.format(domain=utils.current_site_url(), uid=user.pk)
-    if user.userprofile.phone_1:
-        user_data['phone'] = user.userprofile.phone_1
-    elif user.userprofile.phone_2:
-        user_data['phone'] = user.userprofile.phone_2
-    else:
-        user_data['phone'] = ''
-
-    address = ''
-    if user.userprofile.state and user.userprofile.state.lower() != 'unspecified':
-        address = user.userprofile.state
-    if user.userprofile.country and user.userprofile.country.lower() != 'unspecified':
-        if len(address) > 0:
-            address += ', ' + user.userprofile.country
+        if user.userprofile.middle_name:
+            user_name = "{} {} {}".format(user.first_name, user.userprofile.middle_name, user.last_name)
         else:
-            address = user.userprofile.country
+            user_name = "{} {}".format(user.first_name, user.last_name)
 
-    user_data['address'] = address
-    user_data['organization'] = user.userprofile.organization if user.userprofile.organization else ''
-    user_data['website'] = user.userprofile.website if user.userprofile.website else ''
+        user_data['name'] = user_name
+        user_data['email'] = user.email
+        user_data['url'] = '{domain}/user/{uid}/'.format(domain=utils.current_site_url(), uid=user.pk)
+        if user.userprofile.phone_1:
+            user_data['phone'] = user.userprofile.phone_1
+        elif user.userprofile.phone_2:
+            user_data['phone'] = user.userprofile.phone_2
+        else:
+            user_data['phone'] = ''
+
+        address = ''
+        if user.userprofile.state and user.userprofile.state.lower() != 'unspecified':
+            address = user.userprofile.state
+        if user.userprofile.country and user.userprofile.country.lower() != 'unspecified':
+            if len(address) > 0:
+                address += ', ' + user.userprofile.country
+            else:
+                address = user.userprofile.country
+
+        user_data['address'] = address
+        user_data['organization'] = user.userprofile.organization if user.userprofile.organization else ''
+        user_data['website'] = user.userprofile.website if user.userprofile.website else ''
+    else:
+        group = utils.group_from_id(user_or_group_id)
+        user_data['organization'] = group.name
+        user_data['url'] = '{domain}/user/{uid}/'.format(domain=utils.current_site_url(),
+                                                         uid=group.pk)
+        user_data['description'] = group.gaccess.description
 
     return JsonResponse(user_data)
 

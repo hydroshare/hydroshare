@@ -450,7 +450,8 @@ def copy_resource_files_and_AVUs(src_res_id, dest_res_id, set_to_private=False):
     istorage = src_res.get_irods_storage()
     if src_res.resource_federation_path:
         src_coll = os.path.join(src_res.resource_federation_path, src_res_id, 'data')
-        dest_coll = os.path.join(src_res.resource_federation_path, dest_res_id, '/')
+        dest_coll = os.path.join(src_res.resource_federation_path, dest_res_id)
+        dest_coll += '/'
     else:
         src_coll = src_res_id + '/data'
         dest_coll = dest_res_id + '/'
@@ -755,8 +756,8 @@ def resource_file_add_process(resource, files, user, extract_metadata=False,
                               fed_res_file_names='', **kwargs):
 
     from .resource import add_resource_files
-    folders = kwargs.pop('folders', ['',] * len(files))
-    resource_file_objects = add_resource_files(resource.short_id, *files, folders=folders, 
+    folder = kwargs.pop('folder', None)
+    resource_file_objects = add_resource_files(resource.short_id, *files, folder=folder,
                                                fed_res_file_names=fed_res_file_names,
                                                fed_zone_home_path=resource.resource_federation_path)
 
@@ -788,7 +789,7 @@ def create_empty_contents_directory(resource):
         istorage.session.run("imkdir", None, '-p', res_contents_dir)
 
 
-def add_file_to_resource(resource, f, folder=None, fed_res_file_name_or_path='', 
+def add_file_to_resource(resource, f, folder=None, fed_res_file_name_or_path='',
                          fed_copy_or_move=None):
     """
     Add a ResourceFile to a Resource.  Adds the 'format' metadata element to the resource.
@@ -815,18 +816,16 @@ def add_file_to_resource(resource, f, folder=None, fed_res_file_name_or_path='',
     """
     if f:
         if fed_res_file_name_or_path:
-            ret = ResourceFile.objects.create(content_object=resource,
+            ret = ResourceFile.objects.create(content_object=resource, file_folder=folder,
                                               resource_file=None,
                                               fed_resource_file=File(f) if not isinstance(
                                                   f, UploadedFile) else f)
         else:
             # base = f.name.rsplit('/')[-1]
-            ret = ResourceFile.objects.create(content_object=resource,
+            ret = ResourceFile.objects.create(content_object=resource, file_folder=folder,
                                               resource_file=File(f) if not isinstance(
                                                   f, UploadedFile) else f,
                                               fed_resource_file=None)
-            # TODO: find way to assert path of resource file 
-                                              # name=os.path.join(folder, base))
         # add format metadata element if necessary
         file_format_type = get_file_mime_type(f.name)
     elif fed_res_file_name_or_path and (fed_copy_or_move == 'copy' or fed_copy_or_move == 'move'):

@@ -1,11 +1,10 @@
 from rest_framework.views import APIView
 from rest_framework.response import Response
-from rest_framework.exceptions import ValidationError, PermissionDenied, NotFound
+from rest_framework.exceptions import ValidationError, NotFound
 from rest_framework import status
 
-from django.core.exceptions import SuspiciousFileOperation 
+from django.core.exceptions import SuspiciousFileOperation
 
-from hs_core import hydroshare
 from hs_core.views import utils as view_utils
 from hs_core.views.utils import ACTION_TO_AUTHORIZE
 
@@ -29,12 +28,12 @@ class ResourceFolders(APIView):
         """
         try:
             resource, authorized, user = view_utils.authorize(
-                request, pk, needed_permission=ACTION_TO_AUTHORIZE.VIEW_RESOURCE, 
+                request, pk, needed_permission=ACTION_TO_AUTHORIZE.VIEW_RESOURCE,
                 raises_exception=False)
         except NotFound as ex:
             return Response(ex.message, status=status.HTTP_404_NOT_FOUND)
-        if not authorized: 
-            return Response("Insufficient permission", status=status.HTTP_401_UNAUTHORIZED) 
+        if not authorized:
+            return Response("Insufficient permission", status=status.HTTP_401_UNAUTHORIZED)
 
         try:
             view_utils.irods_path_is_allowed(path)  # check for hacking attempts
@@ -45,7 +44,7 @@ class ResourceFolders(APIView):
 
         if not resource.supports_folders:
             return Response("Resource type does not support subfolders",
-                   status=status.HTTP_403_FORBIDDEN)
+                            status=status.HTTP_403_FORBIDDEN)
 
         try:
             contents = view_utils.list_folder(pk, path)
@@ -55,8 +54,8 @@ class ResourceFolders(APIView):
         return Response(
             {'resource_id': pk,
              'path': path,
-             'files': contents[1],
-             'folders': contents[0]},
+             'files': contents[0],
+             'folders': contents[1]},
             status=status.HTTP_200_OK)
 
     def put(self, request, pk, path):
@@ -65,12 +64,12 @@ class ResourceFolders(APIView):
         """
         try:
             resource, authorized, user = view_utils.authorize(
-                request, pk, needed_permission=ACTION_TO_AUTHORIZE.EDIT_RESOURCE, 
+                request, pk, needed_permission=ACTION_TO_AUTHORIZE.EDIT_RESOURCE,
                 raises_exception=False)
         except NotFound as ex:
             return Response(ex.message, status=status.HTTP_404_NOT_FOUND)
-        if not authorized: 
-            return Response("Insufficient permission", status=status.HTTP_401_UNAUTHORIZED) 
+        if not authorized:
+            return Response("Insufficient permission", status=status.HTTP_401_UNAUTHORIZED)
 
         try:
             view_utils.irods_path_is_allowed(path)  # check for hacking attempts
@@ -81,7 +80,7 @@ class ResourceFolders(APIView):
 
         if not resource.supports_folders:
             return Response("Resource type does not support subfolders",
-                   status=status.HTTP_403_FORBIDDEN)
+                            status=status.HTTP_403_FORBIDDEN)
 
         try:
             view_utils.create_folder(pk, path)
@@ -97,12 +96,12 @@ class ResourceFolders(APIView):
         """
         try:
             resource, authorized, user = view_utils.authorize(
-                request, pk, needed_permission=ACTION_TO_AUTHORIZE.EDIT_RESOURCE, 
+                request, pk, needed_permission=ACTION_TO_AUTHORIZE.EDIT_RESOURCE,
                 raises_exception=False)
         except NotFound as ex:
             return Response(ex.message, status=status.HTTP_404_NOT_FOUND)
-        if not authorized: 
-            return Response("Insufficient permission", status=status.HTTP_401_UNAUTHORIZED) 
+        if not authorized:
+            return Response("Insufficient permission", status=status.HTTP_401_UNAUTHORIZED)
 
         try:
             view_utils.irods_path_is_allowed(path)  # check for hacking attempts

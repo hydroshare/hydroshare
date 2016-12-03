@@ -2,8 +2,6 @@ import json
 from pprint import pprint
 from rest_framework import status
 
-from django_irods.icommands import SessionException
-
 from .base import HSRESTTestCase
 
 
@@ -28,15 +26,15 @@ class TestFolders(HSRESTTestCase):
 
         # should not be able to ls non-existent folder
         response = self.client.get(url2, {})
-        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND) 
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
         content = json.loads(response.content)
         self.assertEqual(content, 'Cannot list path')
 
         # should not be able to delete non-existent folder
         response = self.client.delete(url2, {})
-        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST) 
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         content = json.loads(response.content)
-        self.assertEqual(content, "Cannot remove folder") 
+        self.assertEqual(content, "Cannot remove folder")
 
         # create a folder
         response = self.client.put(url2, {})
@@ -48,9 +46,9 @@ class TestFolders(HSRESTTestCase):
 
         # list that folder: should work, should be empty
         response = self.client.get(url2, {})
-        pprint(response.content)
+        # pprint(response.content)
         content = json.loads(response.content)
-        pprint(content) 
+        # pprint(content)
         self.assertEqual(len(content['folders']), 0)
         self.assertEqual(len(content['files']), 0)
 
@@ -78,11 +76,18 @@ class TestFolders(HSRESTTestCase):
         response = self.client.put(url2, {})
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
-        # put a file into 'foo'
+        # put a file into folder 'foo'
         params = {'file': ('cea.tif',
                            open('hs_core/tests/data/cea.tif'),
                            'image/tiff')}
         response = self.client.put(url2, params)
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
-
+        # list that folder: should work, should contain one file
+        response = self.client.get(url2, {})
+        # pprint(response.content)
+        content = json.loads(response.content)
+        pprint(content)
+        self.assertEqual(len(content['folders']), 0)
+        self.assertEqual(len(content['files']), 1)
+        self.assertEqual(content['files'][0], 'cea.tif')

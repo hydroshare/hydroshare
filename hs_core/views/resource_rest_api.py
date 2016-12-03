@@ -496,7 +496,6 @@ class ResourceListCreate(ResourceToListItemMixin, generics.ListCreateAPIView):
     pagination_class = PageNumberPagination
 
     def get(self, request):
-        print("called ResourceListCreate.get")
         return self.list(request)
 
     # needed for list of resources

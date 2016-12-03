@@ -768,20 +768,18 @@ def add_resource_files(pk, *files, **kwargs):
     fed_zone_home_path = kwargs.pop('fed_zone_home_path', '')
     # for adding files to existing resources, the default action is copy
     fed_copy_or_move = kwargs.pop('fed_copy_or_move', 'copy')
-    folders = kwargs.pop('folders', ['',] * len(files)) 
+    folder = kwargs.pop('folder', None) 
 
-    for i in range(len(files)): 
-        f = files[i]
-        p = folders[i]
+    for f in files: 
         if fed_zone_home_path:
             # user has selected files from a federated iRODS zone, so files uploaded from local disk
             # need to be stored to the federated iRODS zone rather than HydroShare zone as well
-            ret.append(utils.add_file_to_resource(resource, f, folder=p, fed_res_file_name_or_path=fed_zone_home_path))
+            ret.append(utils.add_file_to_resource(resource, f, folder=folder, fed_res_file_name_or_path=fed_zone_home_path))
         elif resource.resource_federation_path:
             # file needs to be added to a resource in a federated zone
             ret.append(utils.add_file_to_resource(resource, f, fed_res_file_name_or_path=resource.resource_federation_path))
         else:
-            ret.append(utils.add_file_to_resource(resource, f, folder=p))
+            ret.append(utils.add_file_to_resource(resource, f, folder=folder))
     if fed_res_file_names:
         if isinstance(fed_res_file_names, basestring):
             ifnames = string.split(fed_res_file_names, ',')
@@ -1005,15 +1003,19 @@ def delete_resource_file(pk, filename_or_id, user):
         filter_condition = lambda fl: fl.id == file_id
     except ValueError:
         if fed_path:
-            filter_condition = lambda fl: os.path.basename(fl.fed_resource_file_name_or_path) == filename_or_id \
-                                          or os.path.basename(fl.fed_resource_file.name) == filename_or_id
+            filter_condition = lambda fl: \
+                os.path.basename(fl.fed_resource_file_name_or_path) == filename_or_id \
+                    if fl.fed_resource_file_name_or_path else \
+                    os.path.basename(fl.fed_resource_file.name) == filename_or_id \
+                        if fl.fed_resource_file else False
         else:
             filter_condition = lambda fl: os.path.basename(fl.resource_file.name) == filename_or_id
 
     for f in ResourceFile.objects.filter(object_id=resource.id):
         if filter_condition(f):
             # send signal
-            signals.pre_delete_file_from_resource.send(sender=res_cls, file=f, resource=resource, user=user)
+            signals.pre_delete_file_from_resource.send(sender=res_cls, file=f, resource=resource,
+                                                       user=user)
             file_name = delete_resource_file_only(resource, f)
 
             delete_format_metadata_after_delete_file(resource, file_name)
