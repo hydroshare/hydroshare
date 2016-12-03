@@ -230,24 +230,30 @@ def add_metadata_element(request, shortkey, element_name, *args, **kwargs):
 
     if request.is_ajax():
         if is_add_success:
-            if res.metadata.has_all_required_elements():
+            res_public_status = 'public' if res.raccess.public else 'not public'
+            if res.can_be_public_or_discoverable:
                 metadata_status = METADATA_STATUS_SUFFICIENT
             else:
                 metadata_status = METADATA_STATUS_INSUFFICIENT
 
             if element_name == 'subject':
-                ajax_response_data = {'status': 'success', 'element_name': element_name, 'metadata_status': metadata_status}
+                ajax_response_data = {'status': 'success', 'element_name': element_name,
+                                      'metadata_status': metadata_status}
             elif element_name.lower() == 'site' and res.resource_type == 'TimeSeriesResource':
                 # get the spatial coverage element
                 spatial_coverage_dict = _get_spatial_coverage_data(res)
                 ajax_response_data = {'status': 'success', 'element_id': element.id,
                                       'element_name': element_name,
                                       'spatial_coverage': spatial_coverage_dict,
-                                      'metadata_status': metadata_status}
+                                      'metadata_status': metadata_status,
+                                      'res_public_status': res_public_status
+                                      }
             else:
                 ajax_response_data = {'status': 'success', 'element_id': element.id,
                                       'element_name': element_name,
-                                      'metadata_status': metadata_status}
+                                      'metadata_status': metadata_status,
+                                      'res_public_status': res_public_status
+                                      }
 
             return JsonResponse(ajax_response_data)
         else:
@@ -263,7 +269,8 @@ def add_metadata_element(request, shortkey, element_name, *args, **kwargs):
 def update_metadata_element(request, shortkey, element_name, element_id, *args, **kwargs):
     res, _, _ = authorize(request, shortkey, needed_permission=ACTION_TO_AUTHORIZE.EDIT_RESOURCE)
     sender_resource = _get_resource_sender(element_name, res)
-    handler_response = pre_metadata_element_update.send(sender=sender_resource, element_name=element_name,
+    handler_response = pre_metadata_element_update.send(sender=sender_resource,
+                                                        element_name=element_name,
                                                         element_id=element_id, request=request)
     is_update_success = False
     err_msg = "Failed to update metadata element '{}'. {}."
@@ -273,7 +280,8 @@ def update_metadata_element(request, shortkey, element_name, element_id, *args, 
                 element_data_dict = response['element_data_dict']
                 try:
                     res.metadata.update_element(element_name, element_id, **element_data_dict)
-                    post_handler_response = post_metadata_element_update.send(sender=sender_resource, element_name=element_name, element_id=element_id)
+                    post_handler_response = post_metadata_element_update.send(
+                        sender=sender_resource, element_name=element_name, element_id=element_id)
                     is_update_success = True
                     # this is how we handle if a post_metadata_element_update receiver
                     # is not implemented in the resource type's receivers.py
@@ -302,7 +310,8 @@ def update_metadata_element(request, shortkey, element_name, element_id, *args, 
 
     if request.is_ajax():
         if is_update_success:
-            if res.metadata.has_all_required_elements():
+            res_public_status = 'public' if res.raccess.public else 'not public'
+            if res.can_be_public_or_discoverable:
                 metadata_status = METADATA_STATUS_SUFFICIENT
             else:
                 metadata_status = METADATA_STATUS_INSUFFICIENT
@@ -313,12 +322,14 @@ def update_metadata_element(request, shortkey, element_name, element_id, *args, 
                                       'element_name': element_name,
                                       'spatial_coverage': spatial_coverage_dict,
                                       'metadata_status': metadata_status,
-                                      'element_exists':element_exists}
+                                      'res_public_status': res_public_status,
+                                      'element_exists': element_exists}
             else:
                 ajax_response_data = {'status': 'success',
                                       'element_name': element_name,
                                       'metadata_status': metadata_status,
-                                      'element_exists':element_exists}
+                                      'res_public_status': res_public_status,
+                                      'element_exists': element_exists}
 
             return JsonResponse(ajax_response_data)
         else:
