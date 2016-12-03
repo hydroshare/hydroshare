@@ -9,7 +9,6 @@ from hs_tools_resource.forms import SupportedResTypesValidationForm,  VersionFor
                                     SupportedSharingStatusValidationForm
 
 
-
 @receiver(pre_create_resource, sender=ToolResource)
 def webapp_pre_create_resource(sender, **kwargs):
     metadata = kwargs['metadata']
