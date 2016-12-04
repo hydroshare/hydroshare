@@ -851,13 +851,16 @@ class ResourceFileCRUD(APIView):
         redirect_url = f.url.replace('django_irods/download/', 'django_irods/rest_download/')
         return HttpResponseRedirect(redirect_url)
 
-    def post(self, request, pk, folder=''):
+    def post(self, request, pk, filename):
         """
         Add a file to a resource.
         :param request:
         :param pk: Primary key of the resource (i.e. resource short ID)
-        :param folder: the path to the containing folder in the folder hierarchy (optional)
+        :param filename: the path to the containing folder in the folder hierarchy
         :return:
+
+        Leaving out filename results in calling a different class function
+        that stores in the root directory
         """
         resource, _, _ = view_utils.authorize(request, pk,
                                               needed_permission=ACTION_TO_AUTHORIZE.EDIT_RESOURCE)
@@ -885,14 +888,10 @@ class ResourceFileCRUD(APIView):
             error_msg = {'file': 'Adding file to resource failed. %s' % ex.message}
             raise ValidationError(detail=error_msg)
 
-        if folder is None:
-            my_folders = ['']
-        else:
-            my_folders = [folder]
         try:
             res_file_objects = hydroshare.utils.resource_file_add_process(resource=resource,
                                                                           files=[resource_files[0]],
-                                                                          folders=my_folders,
+                                                                          folder=filename,
                                                                           user=request.user,
                                                                           extract_metadata=True)
 

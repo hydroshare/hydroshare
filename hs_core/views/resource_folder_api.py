@@ -54,8 +54,8 @@ class ResourceFolders(APIView):
         return Response(
             {'resource_id': pk,
              'path': path,
-             'files': contents[0],
-             'folders': contents[1]},
+             'files': contents[1],
+             'folders': contents[0]},
             status=status.HTTP_200_OK)
 
     def put(self, request, pk, path):
