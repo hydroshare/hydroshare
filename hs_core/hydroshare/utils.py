@@ -816,14 +816,14 @@ def add_file_to_resource(resource, f, folder=None, fed_res_file_name_or_path='',
     """
     if f:
         if fed_res_file_name_or_path:
-            ret = ResourceFile.objects.create(content_object=resource, 
+            ret = ResourceFile.objects.create(content_object=resource,
                                               file_folder=folder,
                                               resource_file=None,
                                               fed_resource_file=File(f) if not isinstance(
                                                   f, UploadedFile) else f)
         else:
             # base = f.name.rsplit('/')[-1]
-            ret = ResourceFile.objects.create(content_object=resource, 
+            ret = ResourceFile.objects.create(content_object=resource,
                                               file_folder=folder,
                                               resource_file=File(f) if not isinstance(
                                                   f, UploadedFile) else f,
