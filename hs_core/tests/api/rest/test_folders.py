@@ -88,7 +88,7 @@ class TestFolders(HSRESTTestCase):
                            open('hs_core/tests/data/test.txt'),
                            'text/plain')}
         response = self.client.post(url4, params)
-        self.assertEqual(response.status_core, status.HTTP_200_OK)
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
         resfile = ResourceFile.objects.get(file_folder='foo')
         path = get_path(resfile, 'test.txt')
