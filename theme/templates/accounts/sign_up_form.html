@@ -28,12 +28,32 @@
 
       <div id="recaptcha-div"></div>
 
+      <div id="missing-data-div"></div>
+
       <input class="btn btn-primary" type="button" id="signup" value="Join HydroShare & start collaborating">
+
   </div>
 </form>
 
 <script type="text/javascript" src="//www.google.com/recaptcha/api/js/recaptcha_ajax.js"></script>
 <script type="text/javascript">
+    $(document).ready(function() {
+         $('input[type="button"]').prop('disabled', false);
+         // remove the content of the 'missing-data-div' upon data editing
+         var fieldsToCheck = ["#id_first_name", "#is_last_name", "#id_username", "#id_email",
+             "#id_password1", "#id_password2", "#recaptcha_response_field"];
+
+         var i;
+         for (i=0; i< fieldsToCheck.length; i++){
+             $(fieldsToCheck[i]).keyup(function () {
+                 $("#missing-data-div").html(" ");
+             });
+             $(fieldsToCheck[i]).change(function () {
+                 $("#missing-data-div").html(" ");
+             });
+         }
+    });
+
     $(function() {
         function cb() {
             $("#recaptcha_privacy").attr('style', "display:none");
@@ -47,13 +67,31 @@
         });
 
         $("#signup").click(function() {
-            var username = $("#username").val();
-            var firstName = $("#firstname").val();
-            var lastName = $("#lastname").val();
-            var email = $("#email").val();
-            var password = $("#password").val();
-            var pwconfirm = $("#pwconfirm").val();
-
+            var password = $("#id_password1").val();
+            var pwconfirm = $("#id_password2").val();
+            var fieldsToCheck = ["#id_username", "#id_email", "#id_password1", "#id_password2",
+                "#recaptcha_response_field"];
+            var fieldNames = [ 'User name', 'Email', 'Password', 'Password (again)', 'ReCaptcha'];
+            var empty = false;
+            var missingFields = 'Data missing for:';
+            var missingFieldCount = 0;
+            var j;
+            for(j=0; j< fieldsToCheck.length; j++){
+                if ($(fieldsToCheck[j]).val() == ''){
+                    empty = true;
+                    if (missingFieldCount == 0){
+                        missingFields += " " + fieldNames[j];
+                    }
+                    else {
+                        missingFields += ", " + fieldNames[j];
+                    }
+                    missingFieldCount++;
+                }
+           }
+           if(empty){
+               $("#missing-data-div").html('<p class="alert alert-danger">' + missingFields +'</p>');
+               return;
+           }
             function onSuccess() {
                 document.location.href = '/verify-account/';
             }
@@ -62,15 +100,16 @@
                 console.log(stuff);
                 alert('cannot create account');
             }
-            if (password === pwconfirm) {
-                $("[name=challenge]").val(Recaptcha.get_challenge());
-                $("[name=response]").val(Recaptcha.get_response());
-
-                $('#form-signup').submit();
-            } else {
-                $("#password").val('');
-                $("#pwconfirm").val('');
-                $("div.showcase").append('<p class="alert alert-danger">Passwords do not match</p>');
+            if (password && pwconfirm){
+                if (password === pwconfirm) {
+                    $("[name=challenge]").val(Recaptcha.get_challenge());
+                    $("[name=response]").val(Recaptcha.get_response());
+                    $('#form-signup').submit();
+                } else {
+                    $("#id_password1").val('');
+                    $("#id_password2").val('');
+                    $("#missing-data-div").append('<p class="alert alert-danger">Passwords do not match</p>');
+                }
             }
         });
     });

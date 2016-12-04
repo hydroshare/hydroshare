@@ -136,9 +136,9 @@ def rating(request):
     return response
 
 
-def signup(request):
+def signup(request, template="accounts/account_signup.html", extra_context=None):
     """
-    Signup form.
+    Signup form. Overriding mezzanine's view function for signup submit
     """
     form = SignupForm(request, request.POST, request.FILES)
     if request.method == "POST" and form.is_valid():
@@ -172,13 +172,14 @@ def signup(request):
     messages.error(request, form.errors)
 
     # TODO: User entered data could be retained only if the following
-    # render function would work without messing up the css.
-    # template = "accounts/account_signup.html"
+    # render function would work without messing up the css
+
     # context = {
     #     "form": form,
     #     "title": _("Sign up"),
     # }
-    # render(request, template, context)
+    # context.update(extra_context or {})
+    # return render(request, template, context)
 
     # This one keeps the css but not able to retained user entered data.
     return HttpResponseRedirect(request.META['HTTP_REFERER'])
