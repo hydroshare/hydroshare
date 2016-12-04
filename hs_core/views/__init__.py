@@ -942,30 +942,27 @@ def update_user_group(request, group_id, *args, **kwargs):
 def delete_user_group(request, group_id, *args, **kwargs):
     """This one is not really deleting the group object, rather setting the active status
     to False (delete) which can be later restored (undelete) )"""
-    return _delete_restore_user_group(request, group_id, 'delete')
+    try:
+        hydroshare.set_group_active_status(request.user, group_id, False)
+        messages.success(request, "Group delete was successful.")
+    except PermissionDenied:
+        messages.error(request, "Group delete errors: You don't have permission to delete"
+                                " this group.")
+
+    return HttpResponseRedirect(request.META['HTTP_REFERER'])
+
 
 @login_required
 def restore_user_group(request, group_id, *args, **kwargs):
     """This one is for setting the active status of the group back to True"""
-    return _delete_restore_user_group(request, group_id, 'restore')
-
-def _delete_restore_user_group(request, group_id, delete_or_restore):
-    """This one is not really deleting the group object, rather setting the active status
-    to False (delete) or True (restore)"""
-    user = request.user
-    group = utils.group_from_id(group_id)
-    status = False if delete_or_restore.lower() == 'delete' else True
-    action = 'delete' if delete_or_restore.lower() == 'delete' else 'restore'
-    if user.uaccess.can_change_group_flags(group):
-        group.gaccess.active = status
-        group.gaccess.save()
-        messages.success(request, "Group {} was successful.".format(action))
-    else:
-        messages.error(request, "Group {} errors: You don't have permission to {}"
-                                " this group.".format(action, action))
+    try:
+        hydroshare.set_group_active_status(request.user, group_id, True)
+        messages.success(request, "Group restore was successful.")
+    except PermissionDenied:
+        messages.error(request, "Group restore errors: You don't have permission to restore"
+                                " this group.")
 
     return HttpResponseRedirect(request.META['HTTP_REFERER'])
-
 
 @login_required
 def share_group_with_user(request, group_id, user_id, privilege, *args, **kwargs):
@@ -1370,15 +1367,11 @@ class MyGroupsView(TemplateView):
         group_membership_requests = GroupMembershipRequest.objects.filter(invitation_to=u).exclude(
             group_to_join__gaccess__active=False).all()
         # for each group object, set a dynamic attribute to know if the user owns the group
-        active_groups = [g for g in groups if g.gaccess.active is True]
-        inactive_groups = [g for g in groups if g.gaccess.active is False]
-
-        for g in active_groups:
+        for g in groups:
             g.is_group_owner = u.uaccess.owns_group(g)
 
-        for g in inactive_groups:
-            g.is_group_owner = u.uaccess.owns_group(g)
-
+        active_groups = [g for g in groups if g.gaccess.active]
+        inactive_groups = [g for g in groups if not g.gaccess.active]
         my_pending_requests = GroupMembershipRequest.objects.filter(request_from=u).exclude(
             group_to_join__gaccess__active=False)
         return {

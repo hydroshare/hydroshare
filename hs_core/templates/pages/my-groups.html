@@ -179,9 +179,9 @@
 
                                         <td>
                                             <h4><a href="/group/{{ group.id }}" style="color: red">{{ group.name }}</a></h4>
-                                            {% if group.gaccess.public and group.gaccess.discoverable %}
+                                            {% if group.gaccess.public %}
                                                 <img src="/static/img/public.png" alt="Public Group" title="Public Group">
-                                            {% elif not group.gaccess.public and group.gaccess.discoverable %}
+                                            {% elif group.gaccess.discoverable %}
                                                 <img src="/static/img/discoverable.png" alt="Discoverable Group" title="Discoverable Group">
                                             {% else %}
                                                 <img src="/static/img/private.png" alt="Private Group" title="Private Group">
