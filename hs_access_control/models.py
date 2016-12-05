@@ -2298,7 +2298,8 @@ class ResourceAccess(models.Model):
                                       u2urp__privilege__lte=PrivilegeCodes.VIEW) |
                                     Q(u2ugp__group__g2grp__resource=self.resource,
                                       u2ugp__group__g2grp__privilege__lte=PrivilegeCodes.VIEW)))\
-                           .exclude(u2ugp__group__gaccess__active=False).distinct()
+                           .exclude(Q(u2ugp__group__gaccess__active=False,
+                                      u2ugp__group__g2grp__resource=self.resource)).distinct()
 
     @property
     def edit_users(self):
@@ -2319,7 +2320,8 @@ class ResourceAccess(models.Model):
                                   u2urp__privilege__lte=PrivilegeCodes.CHANGE) |
                                 Q(u2ugp__group__g2grp__resource=self.resource,
                                   u2ugp__group__g2grp__privilege__lte=PrivilegeCodes.CHANGE)))\
-                       .exclude(u2ugp__group__gaccess__active=False).distinct()
+                       .exclude(Q(u2ugp__group__gaccess__active=False,
+                                  u2ugp__group__g2grp__resource=self.resource)).distinct()
 
     @property
     def view_groups(self):
