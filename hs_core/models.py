@@ -1517,7 +1517,9 @@ def get_path(instance, filename):
     Dynamically determine storage path for a FileField based upon whether resource is federated
 
     :param instance: instance of ResourceFile containing the FileField;
-    :param filename: the filename to be used; derived from upload data
+    :param filename: the filename to be used; derived from upload data.
+
+    The filename is always a basename. The folder must be determined separately.
 
     The instance points to the Resource record, which contains the federation path.
     """
@@ -1544,8 +1546,7 @@ class ResourceFile(models.Model):
     content_object = GenericForeignKey('content_type', 'object_id')
     file_folder = models.CharField(max_length=255, null=True)
     resource_file = models.FileField(upload_to=get_path, max_length=500,
-                                     null=True, blank=True,
-                                     storage=IrodsStorage())
+                                     null=True, blank=True, storage=IrodsStorage())
     # the following optional fields are added for use by federated iRODS resources where
     # resources are created in the local federated zone rather than hydroshare zone, in
     # which case resource_file is empty, and we record iRODS logical resource file name
@@ -1554,14 +1555,93 @@ class ResourceFile(models.Model):
     # handles files uploaded from local disk and store the files to federated zone rather
     # than hydroshare zone.
     fed_resource_file = models.FileField(upload_to=get_path, max_length=500,
-                                         null=True, blank=True,
-                                         storage=IrodsStorage('federated'))
+                                         null=True, blank=True, storage=IrodsStorage('federated'))
+    # DEPRECATED: utilize set_storage_path instead.
     fed_resource_file_name_or_path = models.CharField(max_length=255, null=True, blank=True)
+    # TODO: why is size a CharField???
     fed_resource_file_size = models.CharField(max_length=15, null=True, blank=True)
 
     @property
     def resource(self):
         return self.content_object
+
+    @property
+    def storage_path(self):
+        if self.content_object.resource_federation_path is None: 
+            print("federation path is none") 
+        elif self.content_object.resource_federation_path is not None and \
+            self.content_object.resource_federation_path == "": 
+            print("federation path is empty") 
+        else: 
+            print("federation path is "+self.content_object.resource_federation_path)
+        if self.content_object.resource_federation_path is not None and \
+           self.content_object.resource_federation_path != '':
+            return self.fed_resource_file.name
+        else:
+            return self.resource_file.name
+
+    # ResourceFile API handles file operations
+
+    def set_storage_path(self, path):
+        """
+        Bind this ResourceFile instance to an existing file.
+
+        :param path: the path of the object.
+
+        Path can be absolute or relative.
+
+            * absolute paths start with '/' and contain full irods path to federated object.
+            * relative paths start with anything else and contain optional folder
+
+        :raises ValidationError: if the pathname is inconsistent with resource configuration.
+
+        """
+        if path.startswith('/'):
+            # strip absolute prefix
+            if self.content_object.resource_federation_path is None:
+                raise ValidationError("Not a federated resource")
+
+            if not path.startswith(self.content_object.resource_federation_path + '/'):
+                raise ValidationError("Path is not a valid federation path")
+            plen = len(self.content_object.resource_federation_path)
+            relpath = path[plen+1:]  # omit /
+
+            # strip resource id from path
+            if not relpath.startswith(self.content_object.short_id + '/'):
+                raise ValidationError("Path does not contain correct resource identifier")
+            else:
+                plen = len(self.content_object.short_id)
+                relpath = relpath[plen+1:]  # omit /
+
+            # strip target directory from path
+            local_prefix = os.path.join("data", "contents")
+            if not relpath.startswith(local_prefix + '/'):
+                raise ValidationError("Path does not contain proper subfolder")
+            plen = len(local_prefix)
+            relpath = relpath[plen+1:]  # omit /
+        else:
+            # strip optional local path prefix
+            relpath = path
+            if path.startswith(self.content_object.short_id + '/'):
+                plen = len(self.content_object.short_id)
+                relpath = relpath[plen+1:]  # omit /
+                local_prefix = os.path.join("data", "contents")
+                if not relpath.startswith(local_prefix + '/'):
+                    raise ValidationError("Path does not contain proper subfolder")
+                plen = len(local_prefix)
+                relpath = relpath[plen+1:]  # omit /
+
+        # now we have folder/file. We could have gotten this from the input, or
+        # from stripping qualification folders.
+        if '/' in relpath:
+            folder, base = relpath.rsplit('/', 1)
+        else:
+            folder = None
+            base = path
+        print(str.format("folder: {}", folder))
+        print(str.format("base: {}", base))
+        self.resource_file = base
+        self.file_folder = folder
 
 
 class Bags(models.Model):
