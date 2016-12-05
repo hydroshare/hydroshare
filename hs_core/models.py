@@ -1686,6 +1686,12 @@ class BaseResource(Page, AbstractResource):
     def verbose_name(self):
         return self.get_content_model()._meta.verbose_name
 
+    @property
+    def can_be_published(self):
+        if self.can_be_public_or_discoverable() and self.resource_type != 'ToolResource':
+            return True
+        return False
+
     @classmethod
     def get_supported_upload_file_types(cls):
         # all file types are supported
