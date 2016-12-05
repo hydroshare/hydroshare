@@ -1,6 +1,7 @@
 import requests
 
 from django import forms
+from django.core import validators
 from django.utils.translation import ugettext, ugettext_lazy as _
 from django_comments.signals import comment_was_posted
 from django_comments.forms import CommentSecurityForm
@@ -225,6 +226,12 @@ class SignupForm(forms.ModelForm):
         model = User
         exclude = ['last_login', 'date_joined', 'password']
 
+    # redefining the Django username model field in order to change the invalid username message
+    # original message indicates that / is a valid character
+    username = forms.CharField(validators=[validators.RegexValidator(r'^[\w.@+-]+$',
+                                      _('Enter a valid username. '
+                                        'This value may contain only letters, numbers '
+                                        'and @ . + - _ characters.'), 'invalid')])
     password1 = forms.CharField(label="Password", widget=forms.PasswordInput())
     password2 = forms.CharField(label="Confirm Password", widget=forms.PasswordInput())
 
