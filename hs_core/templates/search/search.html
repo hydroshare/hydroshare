@@ -182,6 +182,7 @@
                                 <th>Type</th>
                                 <th>Title</th>
                                 <th>First Author</th>
+                                <th>Date Created</th>
                                 <th>Last Modified</th>
                                 <th>Last modified</th>{# Used in table sorting #}
                             </tr>
@@ -282,6 +283,7 @@
                                     {% else %}
                                         <td>{{ result.object.first_creator.name }}</td>
                                     {% endif %}
+                                    <td>{{ result.object.created|date:"m/d/Y" }}, {{ result.object.created|time }}</td>
                                     <td>{{ result.object.updated|date:"m/d/Y" }}, {{ result.object.updated|time }}</td>
                                     <td>{{ result.object.updated|date:"Y/m/d H:i:s" }}</td> {# Used in table sorting #}
                                 </tr>
@@ -620,19 +622,17 @@
         };
 
         var setMapFunctions = function (datatable) {
-
-                $('#map-items tbody').on( 'click', '[role="button"]', function () {
-                    var data = datatable.row( $(this).parents('tr') ).data();
-                    showBoxMarker(data[0], true);
-                } );
-                $('#map-items tbody').on( 'hover', 'tr', function () {
-                    var data = datatable.row(this).data();
-                    if (data) {
-                        showBoxMarker(data[0], false);
-                    }
-                });
-
-        }
+            $('#map-items tbody').on('click', '[role="button"]', function () {
+                var data = datatable.row($(this).parents('tr')).data();
+                showBoxMarker(data[0], true);
+            });
+            $('#map-items tbody').on('hover', 'tr', function () {
+                var data = datatable.row(this).data();
+                if (data) {
+                    showBoxMarker(data[0], false);
+                }
+            });
+        };
 
         var showBoxMarker = function(box, zoom_on_map) {
             var northlimit = parseFloat(box.northlimit);
@@ -1074,7 +1074,7 @@
         var formGeoParameters = function() {
             var selected_results = $('input[name=results-selection]:checked').val();
             var geoSearchParams = "&NElat=&NElng=&SWlat=&SWlng=";
-            return geoSearchParams
+            return geoSearchParams;
         };
 
         var formDateParameters = function() {
@@ -1144,11 +1144,11 @@
                     "width": "110px"
                 },
                 {
-                    "targets": [3],     // Last modified
-                    "iDataSort": 4
+                    "targets": [4],     // Last modified
+                    "iDataSort": 5
                 },
                 {
-                    "targets": [4],     // Last modified (for sorting)
+                    "targets": [5],     // Last modified (for sorting)
                     "visible": false
                 }
             ];

@@ -16,7 +16,8 @@ var LABELS_COL = 9;
 var FAVORITE_COL = 10;
 var LAST_MODIF_SORT_COL = 11;
 var SHARING_STATUS_COL = 12;
-var ACCESS_GRANTOR_COL = 13;
+var DATE_CREATED_SORT_COL = 13;
+var ACCESS_GRANTOR_COL = 14;
 
 $(document).ready(function () {
 /*==================================================
@@ -34,6 +35,8 @@ $(document).ready(function () {
     10 - Favorite
     11 - Last modified (sortable format)
     12 - Sharing Status
+    13 - Date created (sortable format)
+    14 - Access Grantor
 ==================================================*/
 
     resourceTable = $("#item-selectors").DataTable({
@@ -608,7 +611,8 @@ function typeQueryStrings () {
     10 - Favorite
     11 - Last modified (sortable format)
     12 - Sharing Status
-    13 - Access Grantor
+    13 - Date created (sortable format)
+    14 - Access Grantor
 ==================================================*/
 
 /* Custom filtering function which will search data for the values in the custom filter dropdown or query strings */
