@@ -1693,9 +1693,7 @@ class BaseResource(Page, AbstractResource):
         publication such as the Web App resource
         :return:
         """
-        if self.can_be_public_or_discoverable():
-            return True
-        return False
+        return self.can_be_public_or_discoverable()
 
     @classmethod
     def get_supported_upload_file_types(cls):
