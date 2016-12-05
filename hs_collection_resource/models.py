@@ -49,8 +49,8 @@ class CollectionResource(BaseResource):
 
     @property
     def can_be_published(self):
-        return self.can_be_public_or_discoverable() and \
-               self.are_all_contained_resources_published()
+        return self.can_be_public_or_discoverable and \
+               self.are_all_contained_resources_published
 
     @property
     def update_text_file(self):
