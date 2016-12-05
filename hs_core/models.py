@@ -1686,6 +1686,15 @@ class BaseResource(Page, AbstractResource):
     def verbose_name(self):
         return self.get_content_model()._meta.verbose_name
 
+    @property
+    def can_be_published(self):
+        """
+        The property can be overriden by specific resource type which is not appropriate for
+        publication such as the Web App resource
+        :return:
+        """
+        return self.can_be_public_or_discoverable
+
     @classmethod
     def get_supported_upload_file_types(cls):
         # all file types are supported

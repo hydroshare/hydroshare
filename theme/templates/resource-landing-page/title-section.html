@@ -34,9 +34,11 @@
                 {% if missing_metadata_elements %}
                     {% if just_created %}
                         <strong>Congratulations! </strong>
-                        <span>Now that your resource has been created the following metadata are still required to publish it or make it public or discoverable:</span>
+                        <span>Now that your resource has been created the following metadata are still required to
+                            {% if cm.resource_type != 'ToolResource' %}publish it or {% endif %}make it public or discoverable:</span>
                     {% else %}
-                        <span>The following metadata are still required to publish the resource or make the resource public or discoverable:</span>
+                        <span>The following metadata are still required to
+                            {% if cm.resource_type != 'ToolResource' %}publish the resource or {% endif %}make the resource public or discoverable:</span>
                     {% endif %}
                     <ul>
                         {% for element in missing_metadata_elements %}

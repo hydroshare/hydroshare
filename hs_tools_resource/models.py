@@ -35,6 +35,10 @@ class ToolResource(BaseResource):
         md = ToolMetaData()
         return self._get_metadata(md)
 
+    @property
+    def can_be_published(self):
+        return False
+
 processor_for(ToolResource)(resource_processor)
 
 
