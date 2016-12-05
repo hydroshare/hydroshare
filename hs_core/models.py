@@ -1688,7 +1688,12 @@ class BaseResource(Page, AbstractResource):
 
     @property
     def can_be_published(self):
-        if self.can_be_public_or_discoverable() and self.resource_type != 'ToolResource':
+        """
+        The property can be overriden by specific resource type which is not appropriate for
+        publication such as the Web App resource
+        :return:
+        """
+        if self.can_be_public_or_discoverable():
             return True
         return False
 
