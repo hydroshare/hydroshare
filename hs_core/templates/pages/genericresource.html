@@ -128,6 +128,11 @@
                             <span class="glyphicon glyphicon-download icon-blue"></span>
                             <span>Download</span>
                         </li>
+
+                        <li id="btn-get-link" data-menu-name="get-link" data-toggle="modal" data-target="#get-file-url-dialog">
+                            <span class="fa fa-link icon-blue"></span>
+                            <span>Get file URL</span>
+                        </li>
                     </ul>
 
                     {# POPUP MENU - Right clicking empty space in file browser #}
@@ -365,6 +370,12 @@
                                                             class="disabled"
                                                             title="Download">
                                                         <span class="glyphicon glyphicon-download icon-blue"></span>
+                                                    </button>
+
+                                                    <button id="fb-get-link" data-toggle="modal"
+                                                            class="disabled" data-target="#get-file-url-dialog"
+                                                            title="Get file URL">
+                                                        <span class="fa fa-link icon-blue"></span>
                                                     </button>
 
                                                     {% if page.perms.change and metadata_form %}
