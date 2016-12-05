@@ -183,6 +183,7 @@
                                 <th>Title</th>
                                 <th>First Author</th>
                                 <th>Date Created</th>
+                                <th>Date Created</th>{# Used in table sorting #}
                                 <th>Last Modified</th>
                                 <th>Last modified</th>{# Used in table sorting #}
                             </tr>
@@ -284,6 +285,7 @@
                                         <td>{{ result.object.first_creator.name }}</td>
                                     {% endif %}
                                     <td>{{ result.object.created|date:"m/d/Y" }}, {{ result.object.created|time }}</td>
+                                    <td>{{ result.object.created|date:"Y/m/d H:i:s" }}</td> {# Used in table sorting #}
                                     <td>{{ result.object.updated|date:"m/d/Y" }}, {{ result.object.updated|time }}</td>
                                     <td>{{ result.object.updated|date:"Y/m/d H:i:s" }}</td> {# Used in table sorting #}
                                 </tr>
@@ -1138,17 +1140,33 @@
         };
 
         function initializeTable() {
+            var RESOURCE_TYPE_COL = 0;
+            var TITLE_COL = 1;
+            var OWNER_COL = 2;
+            var DATE_CREATED_COL = 3;
+            var DATE_CREATED_SORT_COL = 4;
+            var LAST_MODIFIED_COL = 5;
+            var LAST_MODIF_SORT_COL = 6;
+
             var colDefs = [
                 {
-                    "targets": [0],     // Resource type
+                    "targets": [RESOURCE_TYPE_COL],     // Resource type
                     "width": "110px"
                 },
                 {
-                    "targets": [4],     // Last modified
-                    "iDataSort": 5
+                    "targets": [DATE_CREATED_COL],     // Date created
+                    "iDataSort": DATE_CREATED_SORT_COL
                 },
                 {
-                    "targets": [5],     // Last modified (for sorting)
+                    "targets": [LAST_MODIFIED_COL],     // Last modified
+                    "iDataSort": LAST_MODIF_SORT_COL
+                },
+                {
+                    "targets": [LAST_MODIF_SORT_COL],     // Last modified (for sorting)
+                    "visible": false
+                },
+                {
+                    "targets": [DATE_CREATED_SORT_COL],     // Last modified (for sorting)
                     "visible": false
                 }
             ];
@@ -1157,13 +1175,12 @@
                 "paging": false,
                 "searching": false,
                 "info": false,
-                "order": [[0, "asc"]],
+                "order": [[TITLE_COL, "asc"]],
                 "columnDefs": colDefs
             });
         }
 
         $(document).ready(function () {
-
             $("#id_start_date").datepicker({
                 dateFormat: 'mm/dd/yy',
                 changeMonth: true,
