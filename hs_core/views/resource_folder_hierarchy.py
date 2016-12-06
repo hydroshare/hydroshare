@@ -71,11 +71,10 @@ def data_store_structure(request):
             files.append({'name': fname, 'size': size, 'type': mtype, 'pk': f_pk, 'url': f_url})
     except SessionException as ex:
         return HttpResponse(ex.stderr, status=500)
-
-    can_be_public = "true" if resource.can_be_public_or_discoverable else 'false'
+        
     return_object = {'files': files,
                      'folders': store[0],
-                     'can_be_public': can_be_public}
+                     'can_be_public': resource.can_be_public_or_discoverable}
 
     return HttpResponse(
         json.dumps(return_object),

@@ -556,7 +556,7 @@ function get_irods_folder_struct_ajax_submit(res_id, store_path) {
             if (!files.length && !folders.length) {
                 $('#fb-files-container').append('<span class="text-muted">This directory is empty</span>');
             }
-            if (can_be_public === "true") {
+            if (can_be_public) {
                 $("#missing-metadata-or-file").fadeOut();
             }
             onSort();
