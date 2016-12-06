@@ -60,7 +60,11 @@
                 {% include "resource-landing-page/abstract.html" %}
 
                 {# ======= Citation ======= #}
-                {% include "resource-landing-page/citation.html" %}
+                {% if metadata_form %}
+                    {% include "resource-landing-page/citation.html" with resource_mode="edit" %}
+                {% else %}
+                    {% include "resource-landing-page/citation.html" with resource_mode="view" %}
+                {% endif %}
 
                 {# ======= Subject ======= #}
                 {% include "resource-landing-page/subject.html" %}
@@ -1715,6 +1719,16 @@
                 else
                     $('#publish-btn').attr('disabled', 'disabled');
             });
+            // add input element to each of the comment/rating forms to track resource mode (edit or view)
+            var resourceMode = $("#resource-mode").val().toLowerCase();
+            var inputElementToAdd = '<input type="hidden" name="resource-mode" value="mode_to_replace" />';
+            inputElementToAdd = inputElementToAdd.replace('mode_to_replace', resourceMode);
+            $("[id^=comment-]").find('form').each(function () {
+                $(this).append(inputElementToAdd);
+            });
+            // new comment form
+            $("#comment").append(inputElementToAdd);
+
             // On manage access interface, prevent form submission when pressing the enter key on the search box.
             $('#id_user-autocomplete').keypress(function (e) {
                 e = e || event;
