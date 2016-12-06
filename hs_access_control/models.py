@@ -1172,9 +1172,8 @@ class UserAccess(models.Model):
 
         # need distinct due to duplicates invoked via Q expressions
         return BaseResource.objects.filter(Q(r2urp__user=self.user) |
-                                           Q(r2grp__group__g2ugp__user=self.user))\
-                                   .exclude(r2grp__group__gaccess__active=False)\
-                                   .distinct()
+                                           Q(r2grp__group__gaccess__active=True,
+                                               r2grp__group__g2ugp__user=self.user)).distinct()
 
     @property
     def owned_resources(self):
@@ -1208,9 +1207,10 @@ class UserAccess(models.Model):
         return BaseResource.objects.filter(Q(raccess__immutable=False) &
                                            (Q(r2urp__user=self.user,
                                               r2urp__privilege__lte=PrivilegeCodes.CHANGE) |
-                                            Q(r2grp__group__g2ugp__user=self.user,
+                                            Q(r2grp__group__gaccess__active=True,
+                                                r2grp__group__g2ugp__user=self.user,
                                               r2grp__privilege__lte=PrivilegeCodes.CHANGE)))\
-                                   .exclude(r2grp__group__gaccess__active=False).distinct()
+                                   .distinct()
 
     # TODO: make this conformant to Sphinx conventions.
     def get_resources_with_explicit_access(self, this_privilege):
@@ -2296,9 +2296,10 @@ class ResourceAccess(models.Model):
         return User.objects.filter(Q(is_active=True) &
                                    (Q(u2urp__resource=self.resource,
                                       u2urp__privilege__lte=PrivilegeCodes.VIEW) |
-                                    Q(u2ugp__group__g2grp__resource=self.resource,
+                                    Q(u2ugp__group__gaccess__active=True,
+                                      u2ugp__group__g2grp__resource=self.resource,
                                       u2ugp__group__g2grp__privilege__lte=PrivilegeCodes.VIEW)))\
-                           .exclude(u2ugp__group__gaccess__active=False).distinct()
+                           .distinct()
 
     @property
     def edit_users(self):
@@ -2317,9 +2318,10 @@ class ResourceAccess(models.Model):
                        .filter(Q(is_active=True) &
                                (Q(u2urp__resource=self.resource,
                                   u2urp__privilege__lte=PrivilegeCodes.CHANGE) |
-                                Q(u2ugp__group__g2grp__resource=self.resource,
+                                Q(u2ugp__group__gaccess__active=True,
+                                  u2ugp__group__g2grp__resource=self.resource,
                                   u2ugp__group__g2grp__privilege__lte=PrivilegeCodes.CHANGE)))\
-                       .exclude(u2ugp__group__gaccess__active=False).distinct()
+                .distinct()
 
     @property
     def view_groups(self):
