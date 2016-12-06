@@ -87,6 +87,8 @@ def comment(request, template="generic/comments.html"):
     if isinstance(response, HttpResponse):
         return response
     obj, post_data = response
+    resource_mode = post_data.get('resource-mode', 'view')
+    request.session['resource-mode'] = resource_mode
     form = ThreadedCommentForm(request, obj, post_data)
     if form.is_valid():
         url = obj.get_absolute_url()
@@ -120,6 +122,8 @@ def rating(request):
     obj, post_data = response
     url = add_cache_bypass(obj.get_absolute_url().split("#")[0])
     response = redirect(url + "#rating-%s" % obj.id)
+    resource_mode = post_data.get('resource-mode', 'view')
+    request.session['resource-mode'] = resource_mode
     rating_form = RatingForm(request, obj, post_data)
     if rating_form.is_valid():
         rating_form.save()
