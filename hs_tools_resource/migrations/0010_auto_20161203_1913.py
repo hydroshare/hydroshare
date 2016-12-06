@@ -11,14 +11,15 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
-        migrations.RemoveField(
+        migrations.AlterField(
             model_name='toolicon',
             name='url',
-        ),
-        migrations.AddField(
-            model_name='toolicon',
-            name='value',
             field=models.CharField(default=b'', max_length=1024, blank=True),
+        ),
+        migrations.RenameField(
+            model_name='toolicon',
+            old_name='url',
+            new_name='value'
         ),
         migrations.AlterField(
             model_name='apphomepageurl',
