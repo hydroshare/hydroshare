@@ -410,6 +410,7 @@ function metadata_update_ajax_submit(form_id){
                             }
                             $("#btn-public").prop("disabled", false);
                             $("#btn-discoverable").prop("disabled", false);
+                            $("#missing-metadata-or-file").fadeOut();
                         }
                     }
                 }
@@ -540,6 +541,7 @@ function get_irods_folder_struct_ajax_submit(res_id, store_path) {
         success: function (result) {
             var files = result.files;
             var folders = result.folders;
+            var can_be_public = result.can_be_public;
             $('#fb-files-container').empty();
             if (files.length > 0) {
                 $.each(files, function(i, v) {
@@ -554,7 +556,9 @@ function get_irods_folder_struct_ajax_submit(res_id, store_path) {
             if (!files.length && !folders.length) {
                 $('#fb-files-container').append('<span class="text-muted">This directory is empty</span>');
             }
-
+            if (can_be_public === "true") {
+                $("#missing-metadata-or-file").fadeOut();
+            }
             onSort();
 
             bindFileBrowserItemEvents();
