@@ -1383,16 +1383,16 @@ class AbstractResource(ResourcePermissionsMixin):
 
         if first_names:
             initials_list = [i[0] for i in first_names]
-            initials = ". ".join(initials_list) + "."
+            initials = u". ".join(initials_list) + "."
             if first_author:
-                author_name = "{last_name}, {initials}"
+                author_name = u"{last_name}, {initials}"
             else:
-                author_name = "{initials} {last_name}"
+                author_name = u"{initials} {last_name}"
             author_name = author_name.format(last_name=last_names,
                                              initials=initials
                                              )
         else:
-            author_name = "{last_name}".format(last_name=last_names)
+            author_name = u"{last_name}".format(last_name=last_names)
 
         return author_name + ", "
 

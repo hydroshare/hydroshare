@@ -73,7 +73,8 @@ def data_store_structure(request):
         return HttpResponse(ex.stderr, status=500)
 
     return_object = {'files': files,
-                     'folders': store[0]}
+                     'folders': store[0],
+                     'can_be_public': resource.can_be_public_or_discoverable}
 
     return HttpResponse(
         json.dumps(return_object),

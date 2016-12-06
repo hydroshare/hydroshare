@@ -527,6 +527,7 @@ def set_resource_flag(request, shortkey, *args, **kwargs):
     elif t == 'make_shareable':
        _set_resource_sharing_status(request, user, res, flag_to_set='shareable', flag_value=True)
 
+    request.session['resource-mode'] = request.POST.get('resource-mode', 'view')
     return HttpResponseRedirect(request.META['HTTP_REFERER'])
 
 

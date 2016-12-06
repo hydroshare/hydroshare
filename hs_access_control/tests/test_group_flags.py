@@ -336,7 +336,7 @@ class T10GroupFlags(MockIRODSTestCaseMixin, TestCase):
         with self.assertRaises(PermissionDenied):
             dog.uaccess.unshare_resource_with_group(self.scratching, felines)
 
-        # group owner (dog) can invite a user to join an inactive group
+        # group owner (dog) can't invite a user to join an inactive group
         with self.assertRaises(PermissionDenied):
             dog.uaccess.create_group_membership_request(felines, self.bat)
 
@@ -408,12 +408,12 @@ class T10GroupFlags(MockIRODSTestCaseMixin, TestCase):
         # permission
         self.assertEqual(len(self.scratching.raccess.edit_groups), 0)
 
-        # for the inactive group the resource should have no user with view
+        # for the inactive group the resource should have 1 user (resource owner) with view
         # permission
-        self.assertEqual(len(self.scratching.raccess.view_users), 0)
-        # for the inactive group the resource should have no user with edit
+        self.assertEqual(len(self.scratching.raccess.view_users), 1)
+        # for the inactive group the resource should have 1 user (resource owner) with edit
         # permission
-        self.assertEqual(len(self.scratching.raccess.edit_users), 0)
+        self.assertEqual(len(self.scratching.raccess.edit_users), 1)
 
         # user cat should have no editable resource via group access since the
         # group is inactive
