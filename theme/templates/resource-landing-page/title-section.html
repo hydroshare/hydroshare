@@ -28,7 +28,7 @@
 {% if page.perms.change and not is_replaced_by %}
     {% if missing_metadata_elements or title|stringformat:"s" == "Untitled resource" or not cm.has_required_content_files %}
         <div class="col-sm-12">
-            <div class="alert {% if just_created %}alert-success{% else %}alert-warning{% endif %} alert-dismissible" role="alert">
+            <div id="missing-metadata-or-file" class="alert {% if just_created %}alert-success{% else %}alert-warning{% endif %} alert-dismissible" role="alert">
                 <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span
                         aria-hidden="true">&times;</span></button>
                 {% if missing_metadata_elements %}
