@@ -60,7 +60,11 @@
                 {% include "resource-landing-page/abstract.html" %}
 
                 {# ======= Citation ======= #}
-                {% include "resource-landing-page/citation.html" %}
+                {% if metadata_form %}
+                    {% include "resource-landing-page/citation.html" with resource_mode="edit" %}
+                {% else %}
+                    {% include "resource-landing-page/citation.html" with resource_mode="view" %}
+                {% endif %}
 
                 {# ======= Subject ======= #}
                 {% include "resource-landing-page/subject.html" %}
