@@ -20,7 +20,7 @@ from django.utils.timezone import now
 from django_irods.icommands import SessionException
 from django_irods.storage import IrodsStorage
 from django.conf import settings
-from django.core.exceptions import ObjectDoesNotExist, ValidationError
+from django.core.exceptions import ObjectDoesNotExist, ValidationError, SuspiciousFileOperation
 from django.forms.models import model_to_dict
 from django.core.urlresolvers import reverse
 
@@ -1522,14 +1522,26 @@ def get_path(instance, filename):
     The filename is always a basename. The folder must be determined separately.
 
     The instance points to the Resource record, which contains the federation path.
+
     """
+
     # retrieve federation path -- if any -- from Resource object containing FileField
     if instance.content_object.resource_federation_path:
-        # federated iRODS storage
+        # return FQN if set via resource_file = text_path
+        if filename.startswith(instance.content_object.resource_federation_path):
+            return filename
+        # federated iRODS storage prefix contains server reference
         prefix = os.path.join(instance.content_object.resource_federation_path,
                               instance.content_object.short_id, 'data', 'contents')
     else:
         # local iRODS storage
+        # return FQNs set via resource_file = "text_path" unchanged.
+        if filename.startswith(instance.content_object.short_id):
+            return filename
+
+        # else interpret the current value of path as relative to a prefix,
+        # with a possible additional folder
+        # Compute FQN prefix
         prefix = os.path.join(instance.content_object.short_id, 'data', 'contents')
 
     if instance.file_folder is not None:
@@ -1540,10 +1552,19 @@ def get_path(instance, filename):
         return os.path.join(prefix, filename)
 
 
+def _path_is_allowed(path):
+    """ paths containing '/../' are suspicious """
+    if path == "":
+        raise ValidationError("Empty file paths are not allowed")
+    if '/../' in path:
+        raise SuspiciousFileOperation("File paths cannot contain '/../'")
+
+
 class ResourceFile(models.Model):
     object_id = models.PositiveIntegerField()
     content_type = models.ForeignKey(ContentType)
     content_object = GenericForeignKey('content_type', 'object_id')
+    # the file_folder attribute makes uploads work properly. It is otherwise not used.
     file_folder = models.CharField(max_length=255, null=True)
     resource_file = models.FileField(upload_to=get_path, max_length=500,
                                      null=True, blank=True, storage=IrodsStorage())
@@ -1556,7 +1577,7 @@ class ResourceFile(models.Model):
     # than hydroshare zone.
     fed_resource_file = models.FileField(upload_to=get_path, max_length=500,
                                          null=True, blank=True, storage=IrodsStorage('federated'))
-    # DEPRECATED: utilize set_storage_path instead.
+    # DEPRECATED: utilize resfile.set_storage_path(path) and resfile.storage_path.
     fed_resource_file_name_or_path = models.CharField(max_length=255, null=True, blank=True)
     # TODO: why is size a CharField???
     fed_resource_file_size = models.CharField(max_length=15, null=True, blank=True)
@@ -1567,21 +1588,22 @@ class ResourceFile(models.Model):
 
     @property
     def storage_path(self):
-        if self.content_object.resource_federation_path is None: 
-            print("federation path is none") 
-        elif self.content_object.resource_federation_path is not None and \
-            self.content_object.resource_federation_path == "": 
-            print("federation path is empty") 
-        else: 
-            print("federation path is "+self.content_object.resource_federation_path)
-        if self.content_object.resource_federation_path is not None and \
-           self.content_object.resource_federation_path != '':
+        """
+        Return the qualified name for a file in the storage hierarchy.
+        This is a valid input to IrodsStorage for manipulating the file.
+        The output depends upon whether the IrodsStorage instance is running
+        in federated mode.
+
+        The heavy lifting in this routine is accomplished via get_path.
+        Regardless of whether the internal file name is qualified or not, get_path
+        makes it fully qualified.
+        """
+        if self.content_object.resource_federation_path:  # false if None or empty
             return self.fed_resource_file.name
         else:
             return self.resource_file.name
 
     # ResourceFile API handles file operations
-
     def set_storage_path(self, path):
         """
         Bind this ResourceFile instance to an existing file.
@@ -1594,11 +1616,26 @@ class ResourceFile(models.Model):
             * relative paths start with anything else and contain optional folder
 
         :raises ValidationError: if the pathname is inconsistent with resource configuration.
+        It is rather important that applications call this rather than simply calling
+        resource_file = "text path" because it takes the trouble of making that path
+        fully qualified so that IrodsStorage will work properly.
 
         """
+        folder, _ = self.path_is_acceptable(path)
+        self.file_folder = folder
+        if self.content_object.resource_federation_path:
+            # uses file_folder; must come after that setting.
+            self.fed_resource_file = get_path(self, path)
+            self.resource_file = None
+        else:
+            self.fed_resource_file = None
+            self.resource_file = get_path(self, path)
+
+    def path_is_acceptable(self, path):
+        """ Determine whether a path is acceptable for this resource file """
         if path.startswith('/'):
             # strip absolute prefix
-            if self.content_object.resource_federation_path is None:
+            if not self.content_object.resource_federation_path:
                 raise ValidationError("Not a federated resource")
 
             if not path.startswith(self.content_object.resource_federation_path + '/'):
@@ -1616,20 +1653,23 @@ class ResourceFile(models.Model):
             # strip target directory from path
             local_prefix = os.path.join("data", "contents")
             if not relpath.startswith(local_prefix + '/'):
-                raise ValidationError("Path does not contain proper subfolder")
+                raise ValidationError("Path does not place file properly in hierarchy")
             plen = len(local_prefix)
             relpath = relpath[plen+1:]  # omit /
         else:
             # strip optional local path prefix
             relpath = path
-            if path.startswith(self.content_object.short_id + '/'):
+            print("found local path " + relpath) 
+            if relpath.startswith(os.path.join(self.content_object.short_id + 
+                                  'data' + 'contents') + '/'):
                 plen = len(self.content_object.short_id)
-                relpath = relpath[plen+1:]  # omit /
-                local_prefix = os.path.join("data", "contents")
-                if not relpath.startswith(local_prefix + '/'):
-                    raise ValidationError("Path does not contain proper subfolder")
-                plen = len(local_prefix)
-                relpath = relpath[plen+1:]  # omit /
+                relpath = relpath[plen+1:]  # strip local prefix, omit /
+            elif relpath.startswith(self.content_object.short_id): 
+                raise ValidationError("Malformed local path") 
+
+            # TODO: better detection of common path errors than this
+            # elif self.content_object.short_id in relpath:
+            #     raise ValidationError("Malformed local path") 
 
         # now we have folder/file. We could have gotten this from the input, or
         # from stripping qualification folders.
@@ -1637,11 +1677,40 @@ class ResourceFile(models.Model):
             folder, base = relpath.rsplit('/', 1)
         else:
             folder = None
-            base = path
-        print(str.format("folder: {}", folder))
-        print(str.format("base: {}", base))
-        self.resource_file = base
-        self.file_folder = folder
+            base = relpath
+
+        return folder, base
+
+    # def rename(self, new_name):
+    #     """ rename a file, setting all path variables appropriately """
+    #     pass
+
+    # def copy_irods(self, source_path, dest_path=None):
+    #     """ copy an irods file into this FileField, setting all paths appropriately """
+    #     pass
+
+    # def move_irods(self, source_path, dest_path=None):
+    #     """ move an irods file into this object, setting all paths appropriately """
+
+    # classmethods do things that affect all files.
+
+    @classmethod
+    def create_folder(cls, resource, folder):
+        """ create a folder for a resource """
+        # avoid import loop
+        from hs_core.views.utils import create_folder
+        _path_is_allowed(folder)
+        # TODO: move code from location used below to here
+        create_folder(resource.short_id, folder)
+
+    @classmethod
+    def remove_folder(cls, resource, folder):
+        """ remove a folder for a resource """
+        # avoid import loop
+        from hs_core.views.utils import remove_folder
+        _path_is_allowed(folder)
+        # TODO: move code from location used below to here
+        remove_folder(resource.short_id, folder)
 
 
 class Bags(models.Model):
@@ -1683,7 +1752,10 @@ class BaseResource(Page, AbstractResource):
     # stored. The default is empty string meaning the resource is stored in HydroShare
     # zone. If a resource is stored in a fedearated zone, the field should store the
     # federated root path in the format of /federated_zone/home/localHydroProxy
+
+    # TODO: change to null=True, default=None to simplify logic elsewhere
     resource_federation_path = models.CharField(max_length=100, blank=True, default='')
+
     objects = models.Manager()
     public_resources = PublicResourceManager()
     discoverable_resources = DiscoverableResourceManager()
