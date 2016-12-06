@@ -61,10 +61,13 @@ class DateSerializer(serializers.Serializer):
 
 class CoverageSerializer(serializers.Serializer):
     type = serializers.CharField(required=False)
-    value = serializers.CharField(required=False)
+    value = serializers.SerializerMethodField(required=False)
 
     class Meta:
         model = Coverage
+
+    def get_value(self, obj):
+        return obj.value
 
 
 class FormatSerializer(serializers.Serializer):
@@ -200,6 +203,22 @@ class MetadataElementsRetrieveUpdate(generics.RetrieveUpdateDestroyAPIView):
             if 'subjects' in keys_to_update:
                 for subject in put_data.pop('subjects'):
                     metadata.append({"subject": {"value": subject['value']}})
+
+            if 'creators' in keys_to_update:
+                for creator in put_data.pop('creators'):
+                    metadata.append({"creator": creator})
+
+            if 'contributors' in keys_to_update:
+                for contributor in put_data.pop('contributors'):
+                    metadata.append({"contributor": contributor})
+
+            if 'coverages' in keys_to_update:
+                for coverage in put_data.pop('coverages'):
+                    metadata.append({"coverage": coverage})
+
+            # if 'funding_agencies' in keys_to_update:
+            #     for agency in put_data.pop('funding_agencies'):
+            #         metadata.append({"agency": agency})
 
             hydroshare.update_science_metadata(pk=pk, metadata=metadata)
         except Exception as ex:

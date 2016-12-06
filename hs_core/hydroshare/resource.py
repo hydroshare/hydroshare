@@ -798,14 +798,6 @@ def add_resource_files(pk, *files, **kwargs):
     return ret
 
 
-# TODO: Incorrect implementation. Needs fixing if we ever need this api
-def update_system_metadata(pk, **kwargs):
-    """
-
-    """
-    return update_science_metadata(pk, **kwargs)
-
-
 def update_science_metadata(pk, metadata):
     """
     Updates science metadata for a resource
