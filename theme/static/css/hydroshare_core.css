@@ -3952,6 +3952,10 @@ form#covereage-search-fields {
 	padding: 1px;
 }
 
+.click-select-all {
+	cursor: default !important;
+}
+
 #fb-sort ul li.active {
 	pointer-events: none;
 }
@@ -4177,7 +4181,7 @@ span.fb-control-square {
 	margin-right: 15px;
 }
 
-.selection-menu .fa {
+.selection-menu .fa, .selection-menu .glyphicon {
 	font-size: 18px;
 	margin-right: 10px;
 }

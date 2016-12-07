@@ -2069,6 +2069,35 @@
     </div>
 </div>
 
+
+<div class="modal fade in" id="get-file-url-dialog" tabindex="-1" role="dialog"
+     aria-labelledby="rename" aria-hidden="false">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+                <h4 class="modal-title">Get file URL</h4>
+            </div>
+
+            <div class="modal-body">
+                <div class="row">
+                    <fieldset class="col-sm-12">
+                        <div class="input-group">
+                            <input readonly id="txtFileURL" type="text" class="form-control click-select-all">
+                            <span class="input-group-addon"><span class="fa fa-link"></span></span>
+                        </div>
+                    </fieldset>
+                </div>
+            </div>
+
+            <div class="modal-footer">
+                <button type="button" id="btn-confirm-zip" class="btn btn-default" data-dismiss="modal">Dismiss</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
 {% block extra_js %}
     <script type="text/javascript">
         function rep_res_to_irods_user_zone_ajax_submit(res_id) {
