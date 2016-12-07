@@ -2,8 +2,28 @@
 
 {% load mezzanine_tags static blog_tags accounts_tags %}
 
+{% block meta_title %}Share and Collaborate{% endblock %}
 
 {% block main %}
+    {% if user.is_anonymous %}
+        <div>
+            <div class="container">
+                <div class="row home-page-block">
+                    <div class="col-xs-12">
+                        <center><strong><h3 class="home-page-block-title">Join the community to start sharing</h3>
+                        </strong>
+                        </center>
+                        <center>
+                            <span>HydroShare is an online collaboration environment for sharing data, models, and code.</span>
+                        </center>
+                        <center><a class="btn btn-primary btn-signup slideInBlock" href="sign-up/">Sign up now</a>
+                        </center>
+                    </div>
+                </div>
+            </div>
+        </div>
+    {% endif %}
+
     <div id="home-page-carousel" class="carousel slide" data-ride="carousel">
         <!-- Indicators -->
         <ol class="carousel-indicators">
@@ -13,7 +33,7 @@
         </ol>
         <!-- Wrapper for slides -->
         <div class="carousel-inner" role="listbox">
-            <div class="item active" style="background-image: url({{ STATIC_URL }}img/home-page/carousel/bg3.jpg)">
+            <div class="item active parallax-window" style="background-image: url({{ STATIC_URL }}img/home-page/carousel/bg3.jpg)">
                 <div class="caption-wrapper">
                     <div class="item-caption">
                         <h1><strong>Share your data and models with colleagues</strong></h1>
@@ -23,7 +43,7 @@
                 </div>
             </div>
 
-            <div class="item" style="background-image: url({{ STATIC_URL }}img/home-page/carousel/bg1.jpg)">
+            <div class="item parallax-window" style="background-image: url({{ STATIC_URL }}img/home-page/carousel/bg1.jpg)">
                 <div class="caption-wrapper">
                     <div class="item-caption">
                         <h1><strong>Discover</strong></h1>
@@ -33,7 +53,7 @@
                 </div>
             </div>
 
-            <div class="item" style="background-image: url({{ STATIC_URL }}img/home-page/carousel/bg2.JPG)">
+            <div class="item parallax-window" style="background-image: url({{ STATIC_URL }}img/home-page/carousel/bg2.JPG)">
                 <div class="caption-wrapper">
                     <div class="item-caption">
                         <h1><strong>Collaborate</strong></h1>
@@ -53,22 +73,70 @@
             <span class="sr-only">Next</span>
         </a>
     </div>
-    {% if user.is_anonymous %}
-    <div>
-        <div class="container">
-            <div class="row home-page-block">
-                <div class="col-xs-12">
-                    <center><strong><h3 class="home-page-block-title">Join the community to start sharing</h3></strong>
-                    </center>
-                    <center>
-                        <span>HydroShare is an online collaboration environment for sharing data, models, and code.</span>
-                    </center>
-                    <center><a class="btn btn-primary btn-signup slideInBlock" href="sign-up/">Sign up now</a></center>
+
+    <div class="container">
+        <h2 class="home-page-block-title">How it works</h2>
+        <div class="row home-page-block">
+            <div class="steps-container">
+                <div class="col-xs-12 col-sm-3 step-wrapper slideInBlock">
+                    <div class="step-item">
+                        <div class="step-number">1</div>
+                        <h4>Create data</h4>
+                        <div class="description-container table-display">
+                            <span class="step-description table-cell-display">Collect your data using the same methods you use now. HydroShare supports a broad set of hydrologic data types.</span>
+                        </div>
+                        <div>
+                            <img class="img-responsive img-step" src="{{ STATIC_URL }}img/home-page/step1.png"
+                                 alt="Create data">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-xs-12 col-sm-3 step-wrapper slideInBlock">
+                    <div class="step-item">
+                        <div class="step-number">2</div>
+                        <h4>Upload to HydroShare</h4>
+                        <div class="description-container table-display">
+                            <span class="step-description table-cell-display">Upload your data files to HydroShare through the web user interface. HydroShare will automatically extract as much metadata as it can from the files you upload.</span>
+                        </div>
+                        <div>
+                            <img class="img-responsive img-step" src="{{ STATIC_URL }}img/home-page/step2.png"
+                                 alt="Upload to HydroShare">
+                        </div>
+                    </div>
+
+                </div>
+
+                <div class="col-xs-12 col-sm-3 step-wrapper slideInBlock">
+                    <div class="step-item">
+                        <div class="step-number">3</div>
+                        <h4>Describe with metadata</h4>
+                        <div class="description-container table-display">
+                            <span class="step-description table-cell-display">Use HydroShare's simple metadata entry forms to finish describing your data so that your colleagues can find, access, and interpret it.</span>
+                        </div>
+                        <div>
+                            <img class="img-responsive img-step" src="{{ STATIC_URL }}img/home-page/step3.png"
+                                 alt="Describe with metadata">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-xs-12 col-sm-3 step-wrapper slideInBlock">
+                    <div class="step-item">
+                        <div class="step-number">4</div>
+                        <h4>Share with colleagues</h4>
+                        <div class="description-container table-display">
+                            <span class="step-description table-cell-display">You choose who has access to the data and models you have uploaded to HydroShare. You can share with individual users or publish your resources for everyone to access.</span>
+                        </div>
+                        <div>
+                            <img class="img-responsive img-step" src="{{ STATIC_URL }}img/home-page/step4.png"
+                                 alt="Share with colleagues">
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
-    {% endif %}
 
     <div>
         <div class="container home-page-block">
@@ -90,70 +158,6 @@
                 <div class="col-xs-12- col-sm-5 slideInBlock">
                     <img class="img-responsive" src="{{ STATIC_URL }}img/home-page/laptop.png"
                          alt="Browsing HydroShare">
-                </div>
-            </div>
-        </div>
-
-        <div class="container">
-            <h2 class="home-page-block-title">How it works</h2>
-            <div class="row home-page-block">
-                <div class="steps-container">
-                    <div class="col-xs-12 col-sm-3 step-wrapper slideInBlock">
-                        <div class="step-item">
-                            <div class="step-number">1</div>
-                            <h4>Create data</h4>
-                            <div class="description-container table-display">
-                                <span class="step-description table-cell-display">Collect your data using the same methods you use now. HydroShare supports a broad set of hydrologic data types.</span>
-                            </div>
-                            <div>
-                                <img class="img-responsive img-step" src="{{ STATIC_URL }}img/home-page/step1.png"
-                                     alt="Create data">
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="col-xs-12 col-sm-3 step-wrapper slideInBlock">
-                        <div class="step-item">
-                            <div class="step-number">2</div>
-                            <h4>Upload to HydroShare</h4>
-                            <div class="description-container table-display">
-                                <span class="step-description table-cell-display">Upload your data files to HydroShare through the web user interface. HydroShare will automatically extract as much metadata as it can from the files you upload.</span>
-                            </div>
-                            <div>
-                                <img class="img-responsive img-step" src="{{ STATIC_URL }}img/home-page/step2.png"
-                                     alt="Upload to HydroShare">
-                            </div>
-                        </div>
-
-                    </div>
-
-                    <div class="col-xs-12 col-sm-3 step-wrapper slideInBlock">
-                        <div class="step-item">
-                            <div class="step-number">3</div>
-                            <h4>Describe with metadata</h4>
-                            <div class="description-container table-display">
-                                <span class="step-description table-cell-display">Use HydroShare's simple metadata entry forms to finish describing your data so that your colleagues can find, access, and interpret it.</span>
-                            </div>
-                            <div>
-                                <img class="img-responsive img-step" src="{{ STATIC_URL }}img/home-page/step3.png"
-                                     alt="Describe with metadata">
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="col-xs-12 col-sm-3 step-wrapper slideInBlock">
-                        <div class="step-item">
-                            <div class="step-number">4</div>
-                            <h4>Share with colleagues</h4>
-                            <div class="description-container table-display">
-                                <span class="step-description table-cell-display">You choose who has access to the data and models you have uploaded to HydroShare. You can share with individual users or publish your resources for everyone to access.</span>
-                            </div>
-                            <div>
-                                <img class="img-responsive img-step" src="{{ STATIC_URL }}img/home-page/step4.png"
-                                     alt="Share with colleagues">
-                            </div>
-                        </div>
-                    </div>
                 </div>
             </div>
         </div>
