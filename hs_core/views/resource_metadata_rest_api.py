@@ -197,13 +197,6 @@ class MetadataElementsRetrieveUpdate(generics.RetrieveUpdateDestroyAPIView):
             if 'title' in keys_to_update:
                 metadata.append({"title": {"value": put_data.pop('title')}})
 
-            if 'description' in keys_to_update:
-                metadata.append({"description": {"abstract": put_data.pop('description')}})
-
-            if 'subjects' in keys_to_update:
-                for subject in put_data.pop('subjects'):
-                    metadata.append({"subject": {"value": subject['value']}})
-
             if 'creators' in keys_to_update:
                 for creator in put_data.pop('creators'):
                     metadata.append({"creator": creator})
@@ -216,9 +209,26 @@ class MetadataElementsRetrieveUpdate(generics.RetrieveUpdateDestroyAPIView):
                 for coverage in put_data.pop('coverages'):
                     metadata.append({"coverage": coverage})
 
-            # if 'funding_agencies' in keys_to_update:
-            #     for agency in put_data.pop('funding_agencies'):
-            #         metadata.append({"agency": agency})
+            if 'dates' in keys_to_update:
+                for date in put_data.pop('dates'):
+                    metadata.append({"date": date})
+
+            if 'description' in keys_to_update:
+                metadata.append({"description": {"abstract": put_data.pop('description')}})
+
+            if 'language' in keys_to_update:
+                metadata.append({"language": {"code": put_data.pop('language')}})
+
+            if 'rights' in keys_to_update:
+                metadata.append({"rights": {"statement": put_data.pop('rights')}})
+
+            if 'sources' in keys_to_update:
+                for source in put_data.pop('sources'):
+                    metadata.append({"source": source})
+
+            if 'subjects' in keys_to_update:
+                for subject in put_data.pop('subjects'):
+                    metadata.append({"subject": {"value": subject['value']}})
 
             hydroshare.update_science_metadata(pk=pk, metadata=metadata)
         except Exception as ex:
