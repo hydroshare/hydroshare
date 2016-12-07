@@ -50,7 +50,7 @@ def landing_page(request, page):
             context['supported_sharing_status'] = sharing_status_str
 
         if content_model.metadata.tool_icon.first():
-            context['tool_icon_url'] = content_model.metadata.tool_icon.first().url
+            context['tool_icon_url'] = content_model.metadata.tool_icon.first().value
 
         context['extended_metadata_exists'] = extended_metadata_exists
         context['url_base'] = content_model.metadata.url_bases.first()

@@ -21,11 +21,18 @@
     </li>
     {% endif %}
     {% if forloop.last %}
-    {% ifinstalled mezzanine.accounts %}
-    <!-- Profile links for extra small screens -->
-    <li class="visible-xs"><a href="{% url 'login' %}">Sign In</a></li>
-    <li  class="visible-xs"><a href="{% url 'logout' %}">Sign Out</a></li>
-    {% endifinstalled %}
+        {% if not user.is_anonymous %}
+            <li class="visible-xs"><a href="/user/{{ user.id }}/">Profile</a></li>
+        {% endif %}
+
+        {% ifinstalled mezzanine.accounts %}
+            <!-- Profile links for extra small screens -->
+            {% if not user.is_anonymous %}
+                <li class="visible-xs"><a href="{% url 'logout' %}"><span class="glyphicon glyphicon-log-out"></span> Sign Out</a></li>
+            {% else %}
+                <li class="visible-xs"><a href="{% url 'login' %}"><span class="glyphicon glyphicon-log-in"></span> Sign In</a></li>
+            {% endif %}
+        {% endifinstalled %}
     {% endif %}
     {% endfor %}
 </ul>
