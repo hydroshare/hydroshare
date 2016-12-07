@@ -17,7 +17,7 @@ class ResourceFolders(APIView):
 
     REST URL: hsapi/resource/{pk}/folders/{path}/
     HTTP methods: GET, PUT, DELETE
-    Returns HTTP 400, 401, 403, 404
+    Returns HTTP 400, 403, 404
     """
     allowed_methods = ('GET', 'PUT', 'DELETE')
 
@@ -33,7 +33,7 @@ class ResourceFolders(APIView):
         except NotFound as ex:
             return Response(ex.message, status=status.HTTP_404_NOT_FOUND)
         if not authorized:
-            return Response("Insufficient permission", status=status.HTTP_401_UNAUTHORIZED)
+            return Response("Insufficient permission", status=status.HTTP_403_FORBIDDEN)
 
         try:
             view_utils.irods_path_is_allowed(path)  # check for hacking attempts
