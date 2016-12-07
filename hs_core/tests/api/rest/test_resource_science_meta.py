@@ -35,6 +35,70 @@ class TestResourceScienceMetadata(HSRESTTestCase):
                 {"value": "subject1"},
                 {"value": "subject2"},
                 {"value": "subject3"}
+            ],
+            "contributors": [{
+                "name": "Test Name 1",
+                "description": "Desc 1",
+                "organization": "Org 1",
+                "email": "email1@email.com",
+                "address": "Address 1",
+                "phone": "1234567890",
+                "homepage": "http://homepage1.com"
+            },
+            {
+                "name": "Test Name 2",
+                "description": "Desc 2",
+                "organization": "Org 2",
+                "email": "email2@email.com",
+                "address": "Address 2",
+                "phone": "1234567891",
+                "homepage": "http://homepage2.com"
+            }],
+            "creators": [{
+                "name": "Creator",
+                "description": "Desc",
+                "organization": "Org 1",
+                "email": "email1@email.com",
+                "address": "Address 1",
+                "phone": "1234567890",
+                "homepage": "http://homepage1.com"
+            }],
+            "coverages": [{
+                "type": "box",
+                "value": {
+                    "northlimit": 43.19716728247476,
+                    "projection": "WGS 84 EPSG:4326",
+                    "name": "A whole bunch of the atlantic ocean",
+                    "units": "Decimal degrees",
+                    "southlimit": 23.8858376999,
+                    "eastlimit": -19.16015625,
+                    "westlimit": -62.75390625
+                }
+            }],
+            "dates": [
+                {
+                    "type": "valid",
+                    "start_date": "2016-12-07T00:00:00Z",
+                    "end_date": "2018-12-07T00:00:00Z"
+                }
+            ],
+            "language": "fre",
+            "rights": "This resource is shared under the Creative Commons Attribution CCC BY. http://creativecommons.org/licenses/by/4.0/ http://creativecommons.org/licenses/by/4.0/ http://creativecommons.org/licenses/by/4.0/ http://creativecommons.org/licenses/by/4.0/ http://creativecommons.org/licenses/by/4.0/ http://creativecommons.org/licenses/by/4.0/ http://creativecommons.org/licenses/by/4.0/ http://creativecommons.org/licenses/by/4.0/",
+            "sources": [
+                {
+                    "derived_from": "Source 3"
+                },
+                {
+                    "derived_from": "Source 2"
+                }
+            ],
+            "subjects": [
+                {
+                    "value": "Water"
+                },
+                {
+                    "value": "Picture"
+                }
             ]
         }
         response = self.client.put(sysmeta_url, put_data, format='json')
