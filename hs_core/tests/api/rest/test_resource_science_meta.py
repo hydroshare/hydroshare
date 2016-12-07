@@ -44,8 +44,7 @@ class TestResourceScienceMetadata(HSRESTTestCase):
                 "address": "Address 1",
                 "phone": "1234567890",
                 "homepage": "http://homepage1.com"
-            },
-            {
+            }, {
                 "name": "Test Name 2",
                 "description": "Desc 2",
                 "organization": "Org 2",
@@ -83,21 +82,13 @@ class TestResourceScienceMetadata(HSRESTTestCase):
                 }
             ],
             "language": "fre",
-            "rights": "This resource is shared under the Creative Commons Attribution CCC BY. http://creativecommons.org/licenses/by/4.0/ http://creativecommons.org/licenses/by/4.0/ http://creativecommons.org/licenses/by/4.0/ http://creativecommons.org/licenses/by/4.0/ http://creativecommons.org/licenses/by/4.0/ http://creativecommons.org/licenses/by/4.0/ http://creativecommons.org/licenses/by/4.0/ http://creativecommons.org/licenses/by/4.0/",
+            "rights": "CCC",
             "sources": [
                 {
                     "derived_from": "Source 3"
                 },
                 {
                     "derived_from": "Source 2"
-                }
-            ],
-            "subjects": [
-                {
-                    "value": "Water"
-                },
-                {
-                    "value": "Picture"
                 }
             ]
         }
