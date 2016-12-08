@@ -86,11 +86,22 @@ function unshare_resource_ajax_submit(form_id) {
         dataType: 'html',
         data: datastring,
         success: function (result) {
-            $form.parent().closest("tr").remove();
-            if ($(".access-table li.active[data-access-type='Is owner']").length == 1) {
-                $(".access-table li.active[data-access-type='Is owner']").closest("tr").addClass("hide-actions");
+            var json_response = JSON.parse(result);
+            if (json_response.status == "success") {
+                if (json_response.hasOwnProperty('redirect_to')){
+                    window.location.href = json_response.redirect_to;
+                }
+                $form.parent().closest("tr").remove();
+                if ($(".access-table li.active[data-access-type='Is owner']").length == 1) {
+                    $(".access-table li.active[data-access-type='Is owner']").closest("tr").addClass("hide-actions");
+                }
+                setPointerEvents(true);
             }
-            setPointerEvents(true);
+            else {
+                $("#div-invite-people").find(".label-danger").remove(); // Remove previous alerts
+                $("#div-invite-people").append("<span class='label label-danger'><strong>Error: </strong>" + json_response.message + "</span>");
+                setPointerEvents(true);
+            }
         },
         error: function(XMLHttpRequest, textStatus, errorThrown){
             $("#div-invite-people").find(".label-danger").remove(); // Remove previous alerts

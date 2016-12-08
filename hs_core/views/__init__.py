@@ -532,10 +532,12 @@ def set_resource_flag(request, shortkey, *args, **kwargs):
 
 
 def share_resource_with_user(request, shortkey, privilege, user_id, *args, **kwargs):
+    """this view function is expected to be called by ajax"""
     return _share_resource(request, shortkey, privilege, user_id, user_or_group='user')
 
 
 def share_resource_with_group(request, shortkey, privilege, group_id, *args, **kwargs):
+    """this view function is expected to be called by ajax"""
     return _share_resource(request, shortkey, privilege, group_id, user_or_group='group')
 
 
@@ -628,22 +630,23 @@ def _share_resource(request, shortkey, privilege, user_or_group_id, user_or_grou
 
 
 def unshare_resource_with_user(request, shortkey, user_id, *args, **kwargs):
+    """this view function is expected to be called by ajax"""
+
     res, _, user = authorize(request, shortkey, needed_permission=ACTION_TO_AUTHORIZE.VIEW_RESOURCE)
     user_to_unshare_with = utils.user_from_id(user_id)
-
+    ajax_response_data = {'status': 'success'}
     try:
-        # requesting user is the resource owner or user is self unsharing (user is user_to_unshare_with)
-        # COUCH: no need for undo_share; doesn't do what is intended 11/19/2016
+        # requesting user is the resource owner or user is self unsharing
+        # (user is user_to_unshare_with)
         user.uaccess.unshare_resource_with_user(res, user_to_unshare_with)
-
-        messages.success(request, "Resource unsharing was successful")
         if not user.uaccess.can_view_resource(res):
             # user has no access to the resource - redirect to resource listing page
-            return HttpResponseRedirect('/my-resources/')
+            ajax_response_data['redirect_to'] = '/my-resources/'
     except PermissionDenied as exp:
-        messages.error(request, exp.message)
+        ajax_response_data['status'] = 'error'
+        ajax_response_data['message'] = exp.message
 
-    return HttpResponseRedirect(request.META['HTTP_REFERER'])
+    return JsonResponse(ajax_response_data)
 
 
 def unshare_resource_with_group(request, shortkey, group_id, *args, **kwargs):
