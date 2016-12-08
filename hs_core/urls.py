@@ -21,8 +21,8 @@ urlpatterns = patterns('',
     url(r'^resource/(?P<pk>[0-9a-f-]+)/$', views.resource_rest_api.ResourceReadUpdateDelete.as_view(),
         name='get_update_delete_resource'),
 
-    url(r'^resource/(?P<pk>[0-9a-f-]+)/access/$', views.resource_rest_api.AccessRulesUpdate.as_view(),
-        name='update_access_rules'),
+    # url(r'^resource/(?P<pk>[0-9a-f-]+)/access/$', views.resource_rest_api.AccessRulesUpdate.as_view(),
+    #     name='update_access_rules'),
 
     # DEPRECATED: use form above instead 
     url(r'^resource/accessRules/(?P<pk>[0-9a-f-]+)/$', views.resource_rest_api.AccessRulesUpdate.as_view(),
@@ -70,6 +70,11 @@ urlpatterns = patterns('',
 
     url(r'^userInfo/$',
         views.user_rest_api.UserInfo.as_view(), name='get_logged_in_user_info'),
+
+    # Resource Access
+    url(r'^resource/(?P<pk>[0-9a-f-]+)/access/$',
+        views.resource_access_api.ResourceAccessUpdateDelete.as_view(),
+        name='get_update_delete_resource_access'),
 
     # internal API
 
